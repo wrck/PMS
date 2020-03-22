@@ -1,0 +1,31 @@
+<script>
+function showErrorMsgInInit()
+{
+	var msg = "";
+	
+    #if(!$accesskey)
+        #set($allerrors = $fieldErrors.values())
+        #foreach($errors in $allerrors)
+    		#if($velocityCount != 1)msg+="\n";#end
+    		#foreach($error in $errors)
+    			#if($velocityCount != 1)msg+="\n";#end
+    			msg+="$error.replaceAll("\"", "\\\"")";
+    			#if($onlyone)#stop#end
+    		#end
+    		#if($onlyone)#stop#end
+        #end
+    #else
+        #set($errors = $fieldErrors.get($accesskey))
+        #foreach($error in $errors)
+    		#if($velocityCount != 1)msg+="\n";#end
+    		msg+="$error.replaceAll("\"", "\\\"")"
+    		#if($onlyone)#stop#end
+    	#end
+    #end
+
+	if(msg.trim() != "")
+	{
+		alert(msg);
+	}
+}
+</script>

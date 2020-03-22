@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-autowire="byName"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 左菜单 -->
+	<bean id="SysLeftMenu" class="com.dp.plat.support.LeftMenu"
+		scope="prototype">
+		<property name="groups">
+			<list>
+				<ref bean="baselist"/>
+				<ref bean="workflowlist"/>
+				<ref bean="powerlist"/>
+			</list>
+		</property>
+	</bean>
+	<!-- 基础数据模块 -->
+	<bean id="baselist" class="com.dp.plat.support.LeftMenuGroup">
+		<property name="titlesrc" value="sys.leftmenu.basemanage"></property>
+		<property name="lis">
+			<list>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text" value="sys.leftmenu.usermanage"></property>
+					<property name="url" value="base/UserManage.action"></property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text" value="sys.leftmenu.rolemanage"></property>
+					<property name="url" value="base/RoleManage.action"></property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text" value="sys.leftmenu.departmentmanage"></property>
+					<property name="url" value="base/DepartmentManage.action"></property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text" value="fnd.basic.data"></property>
+					<property name="url" value="base/BasicdataManage.action"></property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text" value="pm.cl.quesMana"></property>
+					<property name="url" value="base/PmClosedLoopQuesnaire.action"></property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text" value="sys.subcontract.facilitator.management"></property>
+                    <property name="url" value="module/subcontract_facilitatorList.action"></property>
+                </bean>
+			</list>
+		</property>
+	</bean>
+	<!-- 工作流模块 -->
+	<bean id="workflowlist" class="com.dp.plat.support.LeftMenuGroup">
+		<property name="titlesrc">
+			<value>sys.leftmenu.workflowmanage</value>
+		</property>
+		<property name="lis">
+			<list>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>sys.leftmenu.deploymanage</value>
+					</property>
+					<property name="url">
+						<value>work/WorkFlowAction.action</value>
+					</property>
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>sys.leftmenu.task</value>
+					</property>
+					<property name="url">
+						<value>work/WorkFlowTaskManager.action</value>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<!-- 功能模块 -->
+	<bean id="powerlist" class="com.dp.plat.support.LeftMenuGroup">
+		<property name="titlesrc">
+			<value>sys.leftmenu.powermanage</value>
+		</property>
+		<property name="lis">
+			<list>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>sys.todo.options</value>
+					</property>
+					<property name="url">
+						<value>module/Workspace.action</value>
+					</property>				
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>sys.project.management</value>
+					</property>
+					<property name="url">
+						<value>module/ProjectManage.action</value>
+					</property>
+					<!-- <property name="childlis">
+						<list>
+							<bean class="com.dp.plat.support.LeftMenuLi">
+								<property name="text">
+									<value>pm.project.createproject</value>
+								</property>
+								<property name="url">
+									<value>module/ProjectCreate.action</value>
+								</property>
+							</bean>
+						</list>
+					</property> -->
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
+                        <value>sys.project.maintenance.management</value>
+                    </property>
+                    <property name="url">
+                        <value>module/maintenance.action</value>
+                    </property>
+                </bean>
+                
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
+                        <value>sys.project.supervision.management</value>
+                    </property>
+                    <property name="url">
+                        <value>module/supervision.action</value>
+                    </property>
+                </bean>
+                
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>pm.presales.flow</value>
+					</property>
+					<property name="url">
+						<value>module/presales_list.action</value>
+					</property>				
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>prob.manage</value>
+					</property>
+					<property name="url">
+						<value>module/prob_list.action</value>
+					</property>				
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
+                        <value>sys.subcontract.project.management</value>
+                    </property>
+                    <property name="url">
+                        <value>module/subcontract_list.action</value>
+                    </property>   
+                </bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+					<property name="text">
+						<value>pm.data.analysis</value>
+					</property>
+					<property name="url">
+						<value>module/report_show.action</value>
+					</property>				
+				</bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
+                        <value>sys.leftmenu.certificate</value>
+                    </property>
+                    <property name="url">
+                        <value>module/certificate.action</value>
+                    </property>
+                </bean>
+			</list>
+		</property>
+	</bean>
+</beans>

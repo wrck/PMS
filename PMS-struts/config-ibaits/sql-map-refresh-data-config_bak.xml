@@ -1,0 +1,922 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+	<select id="test" resultClass="int">
+		<![CDATA[
+			select count(1) from pm_column_of_relationship
+		]]>
+	</select>
+	<!-- 从ERP刷新订单信息 -->
+	<resultMap class="com.dp.plat.param.OrderBean" id="OrderBeans">
+		<result property="orderNumber" column="order_number"/>
+		<result property="contractNo" column="contract_number"/>
+		<result property="orderExecNumber" column="order_exec_number"/>
+		<result property="orderCreateTime" column="order_creation_date"/>
+		<result property="customerRequireTime" column="customer_require_date"/>
+		<result property="customerCode" column="customer_code"/>
+		<result property="customerName" column="customer_name"/>
+		<result property="projectName" column="project_name"/>
+		<result property="orderComment" column="comment"/>
+	</resultMap>
+	<select id="query_DP_V_SO_ORDER_4_PMS"  resultMap="OrderBeans">
+		<![CDATA[
+			SELECT * from dp_reports.DP_V_SO_ORDER_4_PMS 
+		]]>
+	</select>
+	<!-- 退货信息 -->
+	<resultMap class="com.dp.plat.param.OrderBean" id="RmaOrderBeans">
+		<result property="orderNumber" column="rma_order_number"/>
+		<result property="contractNo" column="contract_number"/>
+		<result property="orderExecNumber" column="order_exec_number"/>
+		<result property="orderCreateTime" column="order_creation_date"/>
+		<result property="customerRequireTime" column="customer_require_date"/>
+		<result property="customerCode" column="customer_code"/>
+		<result property="customerName" column="customer_name"/>
+		<result property="projectName" column="project_name"/>
+		<result property="orderComment" column="comment"/>
+	</resultMap>
+	<select id="query_DP_V_RMA_ORDER_4_PMS" resultMap="RmaOrderBeans">
+		<![CDATA[
+			SELECT * from dp_reports.DP_V_RMA_ORDER_4_PMS		
+		]]>
+	</select>
+	
+	<insert id="insert_pm_order_data" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO `pm_order_data_from_sap`( orderNumber ,contractNo , orderExecNumber , orderCreateTime ,customerRequireTime ,
+			 customerCode ,customerName,projectName,orderComment,orderType) values
+		]]>
+		<iterate conjunction="," property="list">
+			( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderCreateTime#,#list[].customerRequireTime#,
+				#list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#orderType#
+			)
+		</iterate>
+	</insert>
+	<delete id="delete_pm_order_data" >
+		<![CDATA[
+			truncate table pm_order_data_from_sap
+		]]>
+	</delete>
+	<resultMap class="com.dp.plat.param.OrderLineBean" id="orderLineBeans">
+		<result property="orderNumber" column="order_number"/>
+		<result property="lineNum" column="LineNum"/>
+		<result property="itemCode" column="item_code"/>
+		<result property="itemDesc" column="item_description"/>
+		<result property="orderQuantity" column="order_quantity" nullValue="0"/>
+		<result property="openQuantity" column="open_quantity" nullValue="0"/>
+		<result property="bundleCode" column="bundle_parent_item_code"/>
+		<result property="warrantyMonth" column="warranty_by_month" nullValue="0"/>
+	</resultMap>
+	<select id="query_DP_V_SO_LINE_4_PMS" resultMap="orderLineBeans">
+		<![CDATA[
+			select * from dp_reports.DP_V_SO_LINE_4_PMS
+		]]>
+	</select>
+	
+	<select id="query_DP_V_RMA_LINE_4_PMS" resultMap="orderLineBeans">
+		<![CDATA[
+			SELECT * from dp_reports.DP_V_RMA_LINE_4_PMS
+		]]>
+	</select>
+	<delete id="delete_pm_order_line" >
+		<![CDATA[
+			truncate table pm_order_line_from_sap
+		]]>
+	</delete>
+	<insert id="insert_pm_order_line" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO `pm_order_line_from_sap`(orderNumber ,lineNum ,itemCode ,itemDesc ,
+				orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType) values
+		]]>
+		<iterate conjunction="," property="lineList">
+			(
+			#lineList[].orderNumber#,#lineList[].lineNum#,#lineList[].itemCode#,#lineList[].itemDesc#,
+			#lineList[].orderQuantity#,#lineList[].openQuantity#,#lineList[].bundleCode#,#lineList[].warrantyMonth#,#lineType#
+			)
+		</iterate>
+	</insert>
+	<resultMap class="com.dp.plat.data.bean.Product" id="pm_product_list">
+		<result property="projectId" column="projectId"/>
+		<result property="contractNo" column="contractNo"/>
+	</resultMap>
+	<select id="query_pm_project_product_line" resultMap="pm_product_list">
+		<![CDATA[
+			SELECT DISTINCT projectId , contractNo FROM `pm_project_product_line` 
+			WHERE contractNo IS NOT NULL AND (projectQuantity IS NULL OR projectQuantity = 0);
+		]]>
+	</select>
+	
+	
+	<select id="query_2_DP_V_SO_LINE_4_PMS" parameterClass="string" resultMap="orderLineBeans">
+		<![CDATA[
+			SELECT b.* from dp_reports.DP_V_SO_ORDER_4_PMS a LEFT JOIN dp_reports.DP_V_SO_LINE_4_PMS b on 
+			a.order_number = b.order_number where a.contract_number = #contractNo# and  b.order_number is not null
+		]]>
+	</select>
+	
+	<delete id="delete_2_pm_project_product_line" parameterClass="com.dp.plat.data.bean.Product">
+		<![CDATA[
+			DELETE FROM `pm_project_product_line` WHERE projectId = #projectId# AND contractNo = #contractNo#
+		]]>
+	</delete>
+	
+	<insert id="insert_2_pm_project_product_line" parameterClass="java.util.Map" >
+		<![CDATA[
+			INSERT INTO `pm_project_product_line`(`projectId`,`contractNo`,`itemCode`,`itemName`,`orderQuantity`,`deliverQuantity`,`openQuantity`)
+			VALUES
+		]]>
+		<iterate conjunction="," property="productlist">
+			(#projectId# , #contractNo# ,#productlist[].itemCode# ,#productlist[].itemDesc# ,#productlist[].orderQuantity# ,#productlist[].deliverQuantity# ,#productlist[].openQuantity#)
+		</iterate>
+	</insert>
+	
+	<!-- 日志记录 -->
+	
+	<insert id="insert_fnd_data_refresh_log" parameterClass="java.util.Map" >
+		<![CDATA[
+			INSERT INTO fnd_data_refresh_log(refreshTaskName ,handleUser , dataFrom ,dataTo ,refreshFrom) 
+			values( #refreshTaskName# ,#handleUser# ,#dataFrom# , #dataTo# , now())
+		]]>
+		<selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id    
+        </selectKey>
+	</insert>
+	<update id="update_fnd_data_refresh_log_success" parameterClass="java.util.Map">
+		<![CDATA[
+			update fnd_data_refresh_log set refreshTo = now() , refreshState = #refreshState#
+			where id = #id#
+		]]>
+	</update>
+	<update id="update_fnd_data_refresh_log_fail" parameterClass="java.util.Map">
+		<![CDATA[
+			update fnd_data_refresh_log set refreshException = #refreshException#
+			where id = #id#
+		]]>
+	</update>
+	
+	<!-- 从SMS刷新项目信息 -->
+	<resultMap class="com.dp.plat.param.PrjProperty" id="prjPropertys">
+		<result property="orderExecNumber" column="orderCodeReal"/>
+		<result property="projectCode" column="projectCode"/>
+		<result property="salesManCode" column="usernamec"/>
+		<result property="salesManName" column="realName"/>
+		<result property="marketCode" column="marketCode"/>
+		<result property="marketName" column="marketName"/>
+		<result property="systemId" column="systemid" nullValue="-1"/>
+		<result property="systemName" column="systemName"/>
+		<result property="expendId" column="expendId" nullValue="-1"/>
+		<result property="expendName" column="expendName"/>
+		<result property="industryId" column="industryid" nullValue="-1"/>
+		<result property="industryName" column="industryName"/>
+		<result property="officeCode" column="officeCode"/>
+		<result property="officeName" column="officeName"/>
+		<result property="serviceTypeName" column="serviceTypeName"/>
+		<result property="channelName" column="channelName"/>
+		<result property="engineeFee" column="engineeFee"/>
+		<result property="objId" column="objId"/>
+		<result property="applyType" column="applyType"/>
+		<result property="corporationCode" column="corporationCode" nullValue="01"/>
+	</resultMap>
+	<select id="query_v_prj_property_4_pm" resultMap="prjPropertys">
+		<![CDATA[
+			SELECT * FROM v_prj_property_4_pm
+		]]>
+	</select>
+	<delete id="delete_pm_project_property_from_sms" >
+		<![CDATA[
+			truncate table pm_project_property_from_sms
+		]]>
+	</delete>
+	<insert id="insert_pm_project_property_from_sms" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO pm_project_property_from_sms(`orderExecNumber`,projectCode,`salesManCode`,`salesManName`,`marketCode`,`marketName`,`systemId`,
+				`systemName`,`expendId`,`expendName`,`industryId`,`industryName`, officeCode, officeName, 
+				serviceTypeName , channelName, engineeFee, objId, applyType, `corporationCode`
+				)
+			values
+		]]>
+		<iterate conjunction="," property="list">
+			(
+			 #list[].orderExecNumber# ,#list[].projectCode#,#list[].salesManCode# ,#list[].salesManName# ,#list[].marketCode# ,#list[].marketName# ,#list[].systemId# ,
+			 #list[].systemName# ,#list[].expendId# ,#list[].expendName# ,#list[].industryId# ,#list[].industryName#,#list[].officeCode#,#list[].officeName#,
+			 #list[].serviceTypeName# , #list[].channelName#, #list[].engineeFee#, #list[].objId#, #list[].applyType#, #list[].corporationCode#
+			)
+		</iterate>
+	</insert>
+	<!-- 刷新OA人员信息 -->
+	<resultMap class="com.dp.plat.param.Person" id="person">
+		<result property="salesmanCode" column="work_card_number"/>
+		<result property="salesmanName" column="staff_name"/>
+		<result property="salesmanMail" column="company_mail"/>
+		<result property="salesmanTel" column="phone"/>
+	</resultMap>
+	<select id="query_view_person_info_4_pms" resultMap="person" parameterClass="int">
+		<![CDATA[
+			select  * from view_person_info_4_pms where staff_status = #staffStatus#  and work_card_number is not NULL;		
+		]]>
+	</select>
+	<update id="update_project_member" parameterClass="string">
+		<![CDATA[
+			UPDATE pm_project_member SET effectiveTo = NOW() WHERE memberCode LIKE '%$jobNo$' AND memberRole = '10' AND effectiveTo IS NULL
+		]]>
+	</update>
+	<insert id="update_pm_salesmember_info">
+		<![CDATA[
+			INSERT INTO pm_project_member(projectId , memberRole ,memberCode , memberName , phoneNum ,email ,fromFlag ,createTime ,effectiveFrom )			
+			SELECT t1.`projectId` , 10 ,t3.`salesManCode` ,t3.`salesManName`, t4.salesManTel, t4.salesmanMail,1 , NOW() ,NOW() 
+			FROM pm_project_header t1
+			JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NOT NULL AND t2.`memberRole` = 10
+			LEFT JOIN pm_project_property_from_sms t3 ON LEFT(t1.projectCode ,14 )  = LEFT(t3.projectCode ,14 )
+			LEFT JOIN pm_person_from_oa t4 ON t4.salesmanCode = RIGHT(t3.`salesManCode` ,5)
+			JOIN ( 
+				SELECT MAX(id) AS memberId,projectId FROM pm_project_member WHERE memberRole = 10  GROUP BY projectId 
+			 ) t  ON t1.projectId = t.projectId AND t2.id = t.memberId
+			WHERE t1.`projectState` IN (30,31,32)  AND t2.`memberCode` != t3.`salesManCode` 
+		]]>
+	</insert>
+	
+	<delete id="delete_pm_person_from_oa">
+		<![CDATA[ truncate table pm_person_from_oa ]]>
+	</delete>
+	
+	<insert id="insert_pm_person_from_oa" parameterClass="java.util.Map">
+		<![CDATA[
+			insert into pm_person_from_oa(salesmanCode ,salesmanName ,salesmanMail ,salesmanTel)
+			values
+		]]>
+		<iterate conjunction="," property="list">
+			(
+			#list[].salesmanCode#,	#list[].salesmanName#, #list[].salesmanMail#, #list[].salesmanTel#
+			)
+		</iterate>
+	</insert>
+	<update id="update_keshanhui_from_oa" >
+		<![CDATA[
+			update pm_person_from_oa set salesmanCode='00260' where salesmanCode='02260';
+		]]>
+	</update>
+	<resultMap class="com.dp.plat.data.bean.MailSenderInfo" id="MailInfo">
+		<result property="subject" column="mailSubject"/>
+		<result property="id" column="id"/>
+		<result property="content" column="mailContent"/>
+		<result property="tos" column="mailTos"/>
+		<result property="ccs" column="mailCcs"/>
+		<result property="bcc" column="mailBcc"/>
+		<result property="attachFileNames" column="mailAttachFiles"/>
+		<result property="mailServerPort" column="mailserverPort"/>
+		<result property="mailServerHost" column="mailServerHost"/>
+		<result property="userName" column="mailUsername"/>
+		<result property="password" column="mailPassword"/>
+		<result property="fromAddress" column="mailFromaddress"/>
+	</resultMap>
+	<select id="query_waiting_mail" resultMap="MailInfo">
+		<![CDATA[
+			select id, mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc ,
+				mailAttachFiles, mailserverPort,mailServerHost ,mailUsername ,mailPassword, 
+				mailFromaddress from fnd_mails where sendFlag = 0 and 
+				mailExpectSendTime < now()
+		]]>
+	</select>
+	
+	<update id="update_waiting_mail" parameterClass="string">
+		<![CDATA[
+			update fnd_mails set mailSendTime = now(),	sendFlag = 1 where id in ($ids$)
+		]]>
+	</update>
+	
+	<!-- 判断表中字段是否存在 -->
+	<select id="describe_table_field" parameterClass="java.util.Map" resultClass="int">
+		<![CDATA[
+			SELECT COUNT(*) FROM information_schema.columns WHERE table_schema= '$dbname$'
+				AND table_name= '$tablename$'
+				AND column_name= '$fieldname$' 
+		]]>
+	</select>
+	<update id="add_field" parameterClass="java.util.Map">
+		<![CDATA[
+			ALTER TABLE $tablename$ ADD $fieldname$ $fieldtype$
+		]]>
+	</update>
+	
+	<update id="create_shipment_state_tmp">
+		<![CDATA[
+			CREATE TEMPORARY TABLE IF NOT EXISTS  tmp 
+			SELECT	projectId , CASE
+			WHEN SUM(openQuantity) = 0 THEN
+				-1
+			WHEN SUM(openQuantity) = SUM(orderQuantity) THEN
+				1
+			ELSE
+				2
+			END AS deliverstate FROM
+				pm_project_product_line GROUP BY projectId
+		]]>
+	</update>
+	
+	<update id="update_shipment_state" parameterClass="java.util.Map">
+		<![CDATA[
+			UPDATE pm_project_state t1 , tmp SET t1.`shipmentState` = tmp.deliverstate , t1.`shipmentTime` = NOW() WHERE t1.`projectId` = tmp.projectId ;
+		]]>
+	</update>
+	<resultMap class="com.dp.plat.param.LendInfoParam" id="LendInfoMap">
+		<result property="lendInfoId" column="lendInfoId"/>
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="dutyName" column="dutyName"/>
+		<result property="dutyContactWay" column="dutyContactWay"/>
+		<result property="decPath" column="decPath"/>
+		<result property="officeCode" column="officeCode"/>
+		<result property="marketName" column="marketName"/>
+		<result property="systemName" column="systemName"/>
+		<result property="expendName" column="expendName"/>
+		<result property="industryName" column="industryName"/>
+		<result property="pspm" column="pspm"/>
+	</resultMap>
+	<select id="query_lend_info_list" resultMap="LendInfoMap">
+		<![CDATA[ 
+			select * from v_lend_info_4_pms  
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.param.LendProductParam" id="LendProductMap">
+		<result property="lendInfoId" column="lendInfoId"/>
+		<result property="productFirstName" column="productfirstName"/>
+		<result property="productName" column="productName"/>
+		<result property="productSubCode" column="productsubCode"/>
+		<result property="productSubModel" column="productSubModel"/>
+		<result property="productSubName" column="productSubName"/>
+		<result property="lendNum" column="lendNum"/>
+		<result property="memo" column="memo"/>
+		<result property="orderNum" column="orderQty" nullValue="0"/>
+		<result property="deliverNum" column="dlvQty" nullValue="0"/>
+		<result property="hexiaoNum" column="rmaQty" nullValue="0"/>
+		<result property="transferNum" column="borrowNum" nullValue="0"/>
+	</resultMap>
+	<!-- <select id="query_lend_product_list" resultMap="LendProductMap"> -->
+	<select id="query_lend_product_list" resultClass="com.dp.plat.param.LendProductParam">
+		<![CDATA[ 
+			select * from v_lend_products_4_pms
+		]]>
+	</select>
+	<select id="query_lend_order_list" resultClass="java.util.HashMap">
+        <![CDATA[ 
+            select * from v_lend_products_sale_4_pm
+        ]]>
+    </select>
+	<delete id="delete_pm_presales_lend_info_from_sms">
+        truncate pm_presales_lend_info_from_sms;
+    </delete>
+    <delete id="delete_pm_presales_lend_product_from_sms">
+        truncate pm_presales_lend_product_from_sms;
+    </delete>
+    <delete id="delete_pm_presales_lend_order_from_sms">
+        truncate pm_presales_lend_order_from_sms;
+    </delete>
+	<insert id="insert_pm_presales_lend_info_from_sms" parameterClass="List">
+        <![CDATA[
+            INSERT INTO pm_presales_lend_info_from_sms( projectCode,  projectName,  marketName,  systemName,  expendName,
+             industryName,  officeCode,  dutyName,  pspm,  dutyContactWay,  lendInfoId,
+             decPath)
+            VALUES
+        ]]>
+        <iterate conjunction=",">
+            (
+            #[].projectCode#, #[].projectName#, #[].marketName#, #[].systemName#, #[].expendName#,
+            #[].industryName#, #[].officeCode#, #[].dutyName#, #[].pspm#, #[].dutyContactWay#, #[].lendInfoId#,
+            #[].decPath#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_product_from_sms" parameterClass="List">
+        <![CDATA[
+            INSERT INTO pm_presales_lend_product_from_sms(lendInfoId, productFirstName, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo
+            ) VALUES
+        ]]>
+        <iterate conjunction=",">
+            (
+                #[].lendInfoId# ,#[].productFirstName# ,#[].productName# ,#[].productSubCode# ,
+                #[].productSubModel# ,#[].productSubName# ,#[].lendNum# ,#[].memo#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_order_from_sms" parameterClass="List">
+        INSERT INTO `pm_presales_lend_order_from_sms` (`id`, `orderNumber`, `ppliCode`, `orderType`, `contract`, 
+	        `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
+	        `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
+	        `lineId`, `systemId`, `canceled`, `discountVersion`, `borrowNum`) 
+        VALUES 
+        <iterate conjunction=",">
+            (
+                #[].id#, #[].orderNumber#, #[].ppliCode#, #[].orderType#, #[].contract#, 
+	            #[].customer#, #[].projectName#, #[].businessunit#, #[].office#, #[].dutyperson#, #[].itemcode#, 
+	            #[].description#, #[].orderQty#, #[].dlvQty#, #[].rmaQty#, #[].lineStatus#, #[].createDate#, 
+	            #[].lineId#, #[].systemId#, #[].canceled#, #[].discountVersion#, #[].borrowNum#
+            )
+        </iterate>
+    </insert>
+    <update id="updatePresalesTransferState">
+        UPDATE 
+            pm_presales_project_header pph
+            LEFT JOIN 
+                (SELECT DISTINCT 
+                    contract AS projectCode, IF(borrowNum > 0, 1, 0) AS hasTransfer 
+                FROM
+                    `pm_presales_lend_order_from_sms` plr 
+                WHERE borrowNum > 0) plr 
+                ON pph.`projectCode` = plr.projectCode SET pph.hasTransfer = IFNULL(plr.hasTransfer, 0) 
+        WHERE plr.hasTransfer = 1
+    </update>
+	<resultMap class="int" id="lendIdMap">
+		<result property="lendInfoId" column="lendInfoId"/>
+	</resultMap>
+	<select id="query_lend_info_ids" resultMap="lendIdMap">
+		<![CDATA[
+			SELECT lendInfoId FROM pm_presales_project_header WHERE effectiveTo IS NULL  AND lendInfoId IS NOT NULL;
+		]]>
+	</select>
+	<insert id="insert_pm_presales_header" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO pm_presales_project_header(projectCode , projectName , marketName , systemName ,expendName ,industryName ,officeCode ,salesman ,
+			productManager ,salesmanLink ,lendInfoId, lendfiles ,effectiveFrom)
+			VALUES
+		]]>
+		<iterate conjunction="," property="list">
+			(
+			#list[].projectCode#, #list[].projectName#, #list[].marketName#, #list[].systemName#, #list[].expendName#,
+			#list[].industryName#, #list[].officeCode#, #list[].dutyName#, #list[].pspm#, #list[].dutyContactWay#, #list[].lendInfoId#,
+			#list[].decPath# ,now()
+			)
+		</iterate>
+	</insert>
+	
+	<insert id="insert_pm_presales_product" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO pm_presales_project_product_line( lendInfoId ,productFirstName ,productTypeName , itemCode ,itemModel ,
+				itemDesc ,productNum ,remark ,effectiveFrom,
+				orderNum, deliverNum, hexiaoNum, transferNum
+			) VALUES
+		]]>
+		<iterate conjunction="," property="plist">
+			(
+				#plist[].lendInfoId# ,#plist[].productFirstName# ,#plist[].productName# ,#plist[].productSubCode# ,
+				#plist[].productSubModel# ,#plist[].productSubName# ,#plist[].lendNum# ,#plist[].memo# ,now(),
+				#plist[].orderNum#, #plist[].deliverNum#, #plist[].hexiaoNum#, #plist[].transferNum#
+			)
+		</iterate>
+	</insert>
+	
+	<!-- 同步项目真实订单设备清单 -->
+	<select id="query_view_refer_product" resultClass="com.dp.plat.param.RealProductLineBean" >
+		<![CDATA[
+			SELECT * FROM view_refer_product
+		]]>
+	</select>
+	<delete id="delete_pm_project_real_product_line_from_sms" >
+		<![CDATA[
+			truncate table pm_project_real_product_line_from_sms
+		]]>
+	</delete>
+	<insert id="insert_pm_project_real_product_line_from_sms" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO pm_project_real_product_line_from_sms(projectCode ,orderExecNumber, productFirstName, productName, productSubCode ,productSubModel, productSubName, num, memo)
+			values
+		]]>
+		<iterate conjunction="," property="list">
+			(
+			 #list[].projectCode# ,#list[].orderExecNumber#,#list[].productFirstName# ,#list[].productName# ,#list[].productSubCode# ,#list[].productSubModel# ,#list[].productSubName# ,
+			 #list[].num# ,#list[].memo#
+			)
+		</iterate>
+	</insert>
+	
+	<delete id="delete_pm_project_product_line_real" >
+		<![CDATA[
+			truncate table pm_project_product_line_real
+		]]>
+	</delete>
+	<insert id="insert_pm_project_product_line_real">
+		<![CDATA[
+			INSERT INTO pm_project_product_line_real SELECT 
+			 NULL AS id, pph.`projectId`,podfs.`contractNo`, vrp.*  
+			FROM
+			  pm_project_real_product_line_from_sms vrp 
+			  INNER JOIN pm_order_data_from_sap podfs 
+			    ON vrp.`orderExecNumber` = podfs.`orderExecNumber` 
+			  INNER JOIN pm_project_contract ppc 
+			    ON ppc.`contractNo` = podfs.`contractNo` 
+			  INNER JOIN pm_project_group_relationship ppgr 
+			    ON ppc.`projectGroupCode` = ppgr.`projectGroupCode` 
+			  INNER JOIN pm_project_header pph 
+			    ON pph.`projectCode` = ppgr.`projectCode`
+		]]>
+	</insert>
+	
+	
+	<select id="query_pm_self_service_project" resultClass="com.dp.plat.data.bean.Project">
+	    <![CDATA[
+		    SELECT DISTINCT 
+			    `p`.`projectName` AS `projectName`, `p`.`contractNo` AS `contractNo`, `pp`.`officeCode` AS `column001` 
+			FROM
+			    `view_distinct_contract` `v` 
+			    LEFT JOIN `pm_order_data_from_sap` `p` 
+			        ON ((`v`.`id` = `p`.`id`)) 
+			    LEFT JOIN `pm_project_property_from_sms` `pp` 
+			        ON (
+			            (
+			                `p`.`orderExecNumber` = `pp`.`orderExecNumber`
+			            )
+			        ) 
+			    LEFT JOIN fnd_basic_data fbd 
+			        ON pp.serviceTypeName = fbd.basicDataId 
+			        AND fbd.dataTypeCode = 21 
+			        AND fbd.effectiveFrom <= NOW() 
+			        AND (
+			            fbd.effectiveTo > NOW() 
+			            OR fbd.effectiveTo IS NULL
+			        ) 
+			WHERE NOT EXISTS 
+			    (SELECT 
+			        1 
+			    FROM
+			        (
+			            `pm_project_contract` `t1` 
+			            JOIN `pm_project_group_relationship` `t2` 
+			                ON (
+			                    (
+			                        `t1`.`projectGroupCode` = `t2`.`projectGroupCode`
+			                    )
+			                )
+			        ) 
+			        JOIN `pm_project_header` `t3` 
+			            ON (
+			                `t2`.`projectCode` = `t3`.`projectCode`
+			            ) 
+			            AND (`t3`.`effectiveFrom` <= NOW()) 
+			            AND (
+			                (`t3`.`effectiveTo` > NOW()) 
+			                OR ISNULL(`t3`.`effectiveTo`)
+			            ) 
+			    WHERE (
+			            `p`.`contractNo` = `t1`.`contractNo`
+			        )) 
+			    AND v.contractNo IS NOT NULL
+			   AND fbd.`basicDataName` = 3
+	   ]]>
+	</select>
+	
+	<select id="query_project_serviceManager_by_officeCode" parameterClass="string" resultClass="com.dp.plat.data.bean.ProjectMember">
+        SELECT 
+		    CASE
+		        WHEN fui.username IS NOT NULL 
+		        THEN fui.username 
+		        ELSE fupt.username 
+		    END AS memberCode,
+		    CONCAT (CASE
+				        WHEN fui.username IS NOT NULL 
+				        THEN fui.username 
+				        ELSE fupt.username 
+			        END, "-", 
+			        CASE
+				        WHEN fui.username IS NOT NULL 
+				        THEN fui.realName 
+				        ELSE fupt.realName 
+		            END
+	        ) AS memberName
+		FROM
+		    `fnd_department` fd 
+		    LEFT JOIN fnd_user_info fui 
+		        ON fd.`departmentNum` = fui.`dpNo` 
+		        AND roleIds LIKE "%;11;%" 
+		        AND fui.status = 1 
+		    LEFT JOIN 
+		        (SELECT 
+		            fup.* ,fui2.realname
+		        FROM
+		            fnd_user_power fup 
+		            LEFT JOIN fnd_user_info fui2 
+		                ON fup.`fndUserId` = fui2.`id` 
+		            LEFT JOIN fnd_department fdt 
+		                ON fdt.departmentNum = fui2.dpNO 
+		        WHERE (
+		                roleIds LIKE "%;11;%" 
+		                AND fui2.status = 1 
+		                AND fup.effectiveTo IS NULL 
+		                AND fdt.isparam = 1
+		            ) 
+		            OR fui2.roleIds LIKE "%;13;%") fupt 
+		        ON fupt.`areapower` LIKE CONCAT("%", fd.`departmentNum`, "%") 
+		WHERE isparam = 1 and fd.departmentNum = #_parameter#
+	</select>
+	
+	<!-- <insert id="create_temporary_serviceType_and_channelName_table">
+	    <![CDATA[
+		    CREATE TEMPORARY TABLE serviceType_and_channelName_table 
+			SELECT 
+			    ph.`projectId`, ph.column012, ph.`columno12_readonly`, fbd.basicDataName, ppfs.`serviceTypeName`, ppfs.`channelName`, prp.id, prp.partyName 
+			FROM
+			    pm_project_header ph 
+			    LEFT JOIN 
+			        (SELECT 
+			            id, projectCode, serviceTypeName, channelName 
+			        FROM
+			            pm_project_property_from_sms t1 
+			        WHERE id IN 
+			            (SELECT 
+			                MAX(t2.id) 
+			            FROM
+			                pm_project_property_from_sms t2 
+			            GROUP BY t2.projectCode)) ppfs 
+			        ON ph.projectCode LIKE CONCAT(ppfs.projectCode, "%") 
+			    LEFT JOIN pm_project_related_party prp 
+			        ON ph.`projectId` = prp.projectId 
+			        AND prp.id IN 
+			        (SELECT 
+			            MAX(id) 
+			        FROM
+			            `pm_project_related_party` 
+			        WHERE partyRole = 30 
+			            AND effectiveTo IS NULL 
+			        GROUP BY projectId) 
+			    LEFT JOIN fnd_basic_data fbd 
+			        ON ppfs.serviceTypeName = fbd.basicDataId 
+			        AND fbd.dataTypeCode = 21 
+			        AND fbd.effectiveFrom <= NOW() 
+			        AND (
+			            fbd.effectiveTo > NOW() 
+			            OR fbd.effectiveTo IS NULL
+			        ) 
+			WHERE (
+			        NOT EXISTS 
+			        (SELECT 
+			            1 
+			        FROM
+			            pm_project_property_from_sms ppfs1 
+			            LEFT JOIN fnd_basic_data fbd 
+			                ON ppfs1.serviceTypeName = fbd.basicDataId 
+			                AND fbd.dataTypeCode = 21 
+			                AND fbd.effectiveFrom <= NOW() 
+			                AND (
+			                    fbd.effectiveTo > NOW() 
+			                    OR fbd.effectiveTo IS NULL
+			                ) 
+			        WHERE ppfs1.`id` = ppfs.`id` 
+			            AND ph.`columno12_readonly` = fbd.basicDataName) 
+			        OR (NOT EXISTS 
+			        (SELECT 
+			            1 
+			        FROM
+			            pm_project_related_party prp1 
+			        WHERE prp1.`id` = prp.`id` 
+			            AND (
+			                ppfs.`channelName` = prp1.`partyName` 
+			                OR ppfs.channelName IS NULL 
+			                OR ppfs.`channelName` = ''
+			            ))
+			            AND prp.id IS NOT NULL)
+			    ) 
+			    AND ppfs.`serviceTypeName` IS NOT NULL
+	   ]]>
+	</insert> -->
+	
+	<insert id="create_temp_max_ppfsId">
+        CREATE TEMPORARY TABLE temp_max_ppfsId (KEY id (id)) 
+		SELECT 
+		    MAX(t2.id) AS id 
+		FROM
+		    pm_project_property_from_sms t2 
+		GROUP BY t2.projectCode 
+	</insert>
+	
+	<insert id="create_temp_max_ppfs">
+        CREATE TEMPORARY TABLE temp_max_ppfs (KEY id (id), KEY projectCode (projectCode)) 
+		SELECT 
+		    id, projectCode, serviceTypeName, channelName, salesManCode, salesManName, corporationCode
+		FROM
+		    pm_project_property_from_sms t1 
+		WHERE id IN 
+		    (SELECT 
+		        id 
+		    FROM
+		        temp_max_ppfsId)
+    </insert>
+    
+    <insert id="create_temp_max_prpId">
+        CREATE TEMPORARY TABLE temp_max_prpId (KEY id (id)) 
+		SELECT 
+		    MAX(id) AS id
+		FROM
+		    `pm_project_related_party` 
+		WHERE partyRole = 30 
+		    AND effectiveTo IS NULL 
+		GROUP BY projectId
+	</insert>
+	
+	<insert id="create_temp_not_ppfs">
+	    CREATE TEMPORARY TABLE temp_not_ppfs (KEY id (id)) 
+		SELECT 
+		    ppfs1.id ,fbd.basicDataName
+		FROM
+		    pm_project_property_from_sms ppfs1 
+		    LEFT JOIN fnd_basic_data fbd 
+		        ON ppfs1.serviceTypeName = fbd.basicDataId 
+		        AND fbd.dataTypeCode = 21 
+		        AND fbd.effectiveFrom 
+    </insert>
+	
+	<insert id="create_temporary_serviceType_and_channelName_table">
+        <![CDATA[
+            CREATE TEMPORARY TABLE serviceType_and_channelName_table 
+            SELECT 
+			    ph.`projectId`, ppfs.projectCode, ph.column012, ph.`columno12_readonly`, fbd.basicDataName, ppfs.`serviceTypeName`, ppfs.`channelName`, prp.id, prp.partyName, ppfs.salesManCode, ppfs.salesManName
+			FROM
+			    pm_project_header ph 
+			    LEFT JOIN temp_max_ppfs ppfs 
+			        ON ppfs.projectCode = LEFT(ph.projectCode, 15) 
+			    LEFT JOIN pm_project_related_party prp 
+			        ON ph.`projectId` = prp.projectId 
+			        AND prp.id IN 
+			        (SELECT 
+			            id 
+			        FROM
+			            temp_max_prpId) 
+			    LEFT JOIN fnd_basic_data fbd 
+			        ON ppfs.serviceTypeName = fbd.basicDataId 
+			        AND fbd.dataTypeCode = 21 
+			        AND fbd.effectiveFrom <= NOW() 
+			        AND (
+			            fbd.effectiveTo > NOW() 
+			            OR fbd.effectiveTo IS NULL
+			        ) 
+			    LEFT JOIN temp_not_ppfs tppfs 
+			        ON tppfs.id = ppfs.id 
+			        AND ph.`columno12_readonly` = tppfs.basicDataName 
+			    LEFT JOIN pm_project_related_party prp1 
+			        ON prp1.`id` = prp.`id` 
+			        AND (
+			            ppfs.`channelName` = prp1.`partyName` 
+			            OR ppfs.channelName IS NULL 
+			            OR ppfs.`channelName` = ''
+			        ) 
+			WHERE (
+			        tppfs.id IS NULL 
+			        OR (
+			            prp1.id IS NULL 
+			            AND prp.id IS NOT NULL
+			        )
+			    ) 
+			    AND ppfs.`serviceTypeName` IS NOT NULL 
+       ]]>
+    </insert>
+    
+    <insert id="create_temp_project_sales_change">
+        CREATE TEMPORARY TABLE temp_project_sales_change
+		SELECT DISTINCT 
+		    t1.`projectId`, 10 AS memberRole, t3.`salesManCode` AS memberCode, t3.`salesManName` AS memberName, t4.salesManTel AS phoneNum, t4.salesmanMail AS email, 1 AS fromFlag, NOW() AS createTime, NOW() AS effectiveFrom 
+		FROM
+		    pm_project_header t1 
+		    LEFT JOIN temp_max_ppfs t3 
+		        ON t3.projectCode = LEFT(t1.projectCode, 15)
+		    LEFT JOIN 
+		        (SELECT 
+		            projectId, IFNULL(
+		                GROUP_CONCAT(DISTINCT memberCode), ''
+		            ) AS salesCodes 
+		        FROM
+		            pm_project_member 
+		        WHERE `memberRole` = 10 
+		            AND effectiveTo IS NULL 
+		        GROUP BY `projectId`) t2 
+		        ON t2.projectId = t1.`projectId` 
+		    LEFT JOIN 
+		        (SELECT 
+		            projectId, IFNULL(
+		                GROUP_CONCAT(DISTINCT memberCode), ''
+		            ) AS invalidSalesCodes 
+		        FROM
+		            pm_project_member 
+		        WHERE `memberRole` = 10 
+		            AND effectiveTo IS NOT NULL 
+		        GROUP BY `projectId`) tt2 
+		        ON tt2.projectId = t1.`projectId` 
+		    LEFT JOIN pm_person_from_oa t4 
+		        ON t4.salesmanCode = RIGHT(t3.`salesManCode`, 5) 
+		WHERE t1.`projectState` IN (30, 31, 32) 
+		    AND (
+		        FALSE = FIND_IN_SET(
+		            t3.`salesManCode`, CONCAT(
+		                IFNULL(t2.salesCodes, ""), ",", IFNULL(tt2.invalidSalesCodes, "")
+		            )
+		        ) 
+		        OR (
+		            t4.`salesmanCode` IS NOT NULL 
+		            AND FIND_IN_SET(
+		                t3.`salesManCode`, IFNULL(tt2.invalidSalesCodes, "")
+		            ) 
+		            AND FALSE = FIND_IN_SET(
+		                t3.`salesManCode`, IFNULL(t2.salesCodes, "")
+		            )
+		        )
+		    )
+    </insert>
+    
+	<update id="update_project_serviceType">
+       UPDATE 
+	       pm_project_header ph 
+	       INNER JOIN serviceType_and_channelName_table t 
+	           ON ph.`projectId` = t.projectId 
+       SET ph.`column012` = t.basicDataName, ph.`columno12_readonly` = t.basicDataName 
+	</update>
+	
+	<update id="update_project_channelName">
+       UPDATE 
+	       pm_project_related_party prp 
+	       INNER JOIN serviceType_and_channelName_table t 
+	           ON prp.`projectId` = t.projectId 
+	            AND t.id IS NOT NULL 
+       SET prp.`partyName` = t.channelName 
+	   WHERE prp.`partyRole` = 30 
+	       AND prp.`effectiveTo` IS NULL
+    </update>
+    
+    <update id="update_project_compId">
+		UPDATE 
+		    `pm_project_header` ph 
+		    INNER JOIN `temp_max_ppfs` ppfs 
+		        ON ppfs.`projectCode` = LEFT(ph.`projectCode`, 15) 
+		    LEFT JOIN fnd_company c FORCE KEY (CODE) 
+		        ON ppfs.`corporationCode` = c.code 
+		SET ph.`compId` = IFNULL(c.`id`, '0') 
+		WHERE ph.`compId` = '0'
+    </update>
+    
+    <delete id="drop_temp_max_ppfsId">
+       DROP TEMPORARY TABLE temp_max_ppfsId 
+    </delete>
+    
+    <delete id="drop_temp_max_ppfs">
+       DROP TEMPORARY TABLE temp_max_ppfs 
+    </delete>
+    
+    <delete id="drop_temp_max_prpId">
+       DROP TEMPORARY TABLE temp_max_prpId 
+    </delete>
+    
+    <delete id="drop_temp_not_ppfs">
+       DROP TEMPORARY TABLE temp_not_ppfs 
+    </delete>
+    
+    <delete id="drop_temporary_serviceType_and_channelName_table">
+       DROP TEMPORARY TABLE serviceType_and_channelName_table 
+    </delete>
+    
+    <delete id="drop_temp_project_sales_change">
+       DROP TEMPORARY TABLE temp_project_sales_change 
+    </delete>
+    
+    
+   <!--  <select id="query_project_sales_change" resultClass="java.util.HashMap">
+        SELECT 
+		    ph.`projectId`, ph.`projectCode`, ph.`projectName`, sl.`memberCode`, sl.`memberName`, ppfs.salesManCode, ppfs.salesManName 
+		FROM
+		    pm_project_header ph 
+		    LEFT JOIN temp_max_ppfs ppfs 
+		        ON ph.projectCode LIKE CONCAT(ppfs.projectCode, "%") 
+		    LEFT JOIN pm_project_member sl 
+		        ON sl.`memberRole` = '10' 
+		        AND ph.`projectId` = sl.`projectId`
+		        AND sl.`effectiveTo` IS NULL 
+		WHERE ph.`projectState` IN ("30", "31", "32") 
+		    AND ppfs.salesManCode != sl.`memberCode` 
+		GROUP BY ph.projectId
+    </select> -->
+    
+    <update id="invalid_project_invalid_sales">
+        UPDATE 
+		    pm_project_member pm 
+		SET
+		    effectiveTo = NOW() 
+		WHERE pm.`memberRole` = 10 
+		    AND pm.`effectiveTo` IS NULL 
+		    AND (
+		        pm.`projectId` IN 
+		        (SELECT 
+		            projectId 
+		        FROM
+		            temp_project_sales_change) 
+		        OR pm.`memberCode` = '' 
+		        OR pm.`memberCode` IS NULL
+		    )
+    </update>
+    
+    <insert id="insert_changed_project_sales">
+        INSERT INTO pm_project_member (
+		    projectId, memberRole, memberCode, memberName, phoneNum, email, fromFlag, createTime, effectiveFrom
+		) 
+		SELECT 
+		    projectId, memberRole, memberCode, memberName, phoneNum, email, fromFlag, createTime, effectiveFrom 
+		FROM
+		    temp_project_sales_change 
+    </insert>
+</sqlMap>

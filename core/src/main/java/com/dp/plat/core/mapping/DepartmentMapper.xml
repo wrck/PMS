@@ -1,0 +1,768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.DepartmentMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.Department">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="depCode" jdbcType="VARCHAR" property="depCode" />
+    <result column="depName" jdbcType="VARCHAR" property="depName" />
+    <result column="depAbbr" jdbcType="VARCHAR" property="depAbbr" />
+    <result column="compID" jdbcType="INTEGER" property="compID" />
+    <result column="adminID" jdbcType="INTEGER" property="adminID" />
+    <result column="depGrade" jdbcType="INTEGER" property="depGrade" />
+    <result column="depType" jdbcType="INTEGER" property="depType" />
+    <result column="depProperty" jdbcType="INTEGER" property="depProperty" />
+    <result column="depCost" jdbcType="INTEGER" property="depCost" />
+    <result column="director" jdbcType="INTEGER" property="director" />
+    <result column="director2" jdbcType="INTEGER" property="director2" />
+    <result column="depEmp" jdbcType="INTEGER" property="depEmp" />
+    <result column="depNum" jdbcType="INTEGER" property="depNum" />
+    <result column="state" jdbcType="BIT" property="state" />
+    <result column="effectiveForm" jdbcType="TIMESTAMP" property="effectiveForm" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="disabledTime" jdbcType="TIMESTAMP" property="disabledTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="depCustom1" jdbcType="INTEGER" property="depCustom1" />
+    <result column="depCustom2" jdbcType="INTEGER" property="depCustom2" />
+    <result column="depCustom3" jdbcType="VARCHAR" property="depCustom3" />
+    <result column="depCustom4" jdbcType="VARCHAR" property="depCustom4" />
+    <result column="depCustom5" jdbcType="VARCHAR" property="depCustom5" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, depCode, depName, depAbbr, compID, adminID, depGrade, depType, depProperty, depCost, 
+    director, director2, depEmp, depNum, state, effectiveForm, effectiveTo, disabledTime, 
+    remark, createBy, createTime, updateBy, updateTime, depCustom1, depCustom2, depCustom3, 
+    depCustom4, depCustom5
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_department
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_department
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.Department">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_department (depCode, depName, depAbbr, 
+      compID, adminID, depGrade, 
+      depType, depProperty, depCost, 
+      director, director2, depEmp, 
+      depNum, state, effectiveForm, 
+      effectiveTo, disabledTime, remark, 
+      createBy, createTime, updateBy, 
+      updateTime, depCustom1, depCustom2, 
+      depCustom3, depCustom4, depCustom5
+      )
+    values (#{depCode,jdbcType=VARCHAR}, #{depName,jdbcType=VARCHAR}, #{depAbbr,jdbcType=VARCHAR}, 
+      #{compID,jdbcType=INTEGER}, #{adminID,jdbcType=INTEGER}, #{depGrade,jdbcType=INTEGER}, 
+      #{depType,jdbcType=INTEGER}, #{depProperty,jdbcType=INTEGER}, #{depCost,jdbcType=INTEGER}, 
+      #{director,jdbcType=INTEGER}, #{director2,jdbcType=INTEGER}, #{depEmp,jdbcType=INTEGER}, 
+      #{depNum,jdbcType=INTEGER}, #{state,jdbcType=BIT}, #{effectiveForm,jdbcType=TIMESTAMP}, 
+      #{effectiveTo,jdbcType=TIMESTAMP}, #{disabledTime,jdbcType=TIMESTAMP}, #{remark,jdbcType=VARCHAR}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{depCustom1,jdbcType=INTEGER}, #{depCustom2,jdbcType=INTEGER}, 
+      #{depCustom3,jdbcType=VARCHAR}, #{depCustom4,jdbcType=VARCHAR}, #{depCustom5,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.Department">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_department
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="depCode != null">
+        depCode,
+      </if>
+      <if test="depName != null">
+        depName,
+      </if>
+      <if test="depAbbr != null">
+        depAbbr,
+      </if>
+      <if test="compID != null">
+        compID,
+      </if>
+      <if test="adminID != null">
+        adminID,
+      </if>
+      <if test="depGrade != null">
+        depGrade,
+      </if>
+      <if test="depType != null">
+        depType,
+      </if>
+      <if test="depProperty != null">
+        depProperty,
+      </if>
+      <if test="depCost != null">
+        depCost,
+      </if>
+      <if test="director != null">
+        director,
+      </if>
+      <if test="director2 != null">
+        director2,
+      </if>
+      <if test="depEmp != null">
+        depEmp,
+      </if>
+      <if test="depNum != null">
+        depNum,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="disabledTime != null">
+        disabledTime,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="depCustom1 != null">
+        depCustom1,
+      </if>
+      <if test="depCustom2 != null">
+        depCustom2,
+      </if>
+      <if test="depCustom3 != null">
+        depCustom3,
+      </if>
+      <if test="depCustom4 != null">
+        depCustom4,
+      </if>
+      <if test="depCustom5 != null">
+        depCustom5,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="depCode != null">
+        #{depCode,jdbcType=VARCHAR},
+      </if>
+      <if test="depName != null">
+        #{depName,jdbcType=VARCHAR},
+      </if>
+      <if test="depAbbr != null">
+        #{depAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="compID != null">
+        #{compID,jdbcType=INTEGER},
+      </if>
+      <if test="adminID != null">
+        #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="depGrade != null">
+        #{depGrade,jdbcType=INTEGER},
+      </if>
+      <if test="depType != null">
+        #{depType,jdbcType=INTEGER},
+      </if>
+      <if test="depProperty != null">
+        #{depProperty,jdbcType=INTEGER},
+      </if>
+      <if test="depCost != null">
+        #{depCost,jdbcType=INTEGER},
+      </if>
+      <if test="director != null">
+        #{director,jdbcType=INTEGER},
+      </if>
+      <if test="director2 != null">
+        #{director2,jdbcType=INTEGER},
+      </if>
+      <if test="depEmp != null">
+        #{depEmp,jdbcType=INTEGER},
+      </if>
+      <if test="depNum != null">
+        #{depNum,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveForm != null">
+        #{effectiveForm,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabledTime != null">
+        #{disabledTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="depCustom1 != null">
+        #{depCustom1,jdbcType=INTEGER},
+      </if>
+      <if test="depCustom2 != null">
+        #{depCustom2,jdbcType=INTEGER},
+      </if>
+      <if test="depCustom3 != null">
+        #{depCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="depCustom4 != null">
+        #{depCustom4,jdbcType=VARCHAR},
+      </if>
+      <if test="depCustom5 != null">
+        #{depCustom5,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.Department">
+    update t_department
+    <set>
+      <if test="depCode != null">
+        depCode = #{depCode,jdbcType=VARCHAR},
+      </if>
+      <if test="depName != null">
+        depName = #{depName,jdbcType=VARCHAR},
+      </if>
+      <if test="depAbbr != null">
+        depAbbr = #{depAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="compID != null">
+        compID = #{compID,jdbcType=INTEGER},
+      </if>
+      <if test="adminID != null">
+        adminID = #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="depGrade != null">
+        depGrade = #{depGrade,jdbcType=INTEGER},
+      </if>
+      <if test="depType != null">
+        depType = #{depType,jdbcType=INTEGER},
+      </if>
+      <if test="depProperty != null">
+        depProperty = #{depProperty,jdbcType=INTEGER},
+      </if>
+      <if test="depCost != null">
+        depCost = #{depCost,jdbcType=INTEGER},
+      </if>
+      <if test="director != null">
+        director = #{director,jdbcType=INTEGER},
+      </if>
+      <if test="director2 != null">
+        director2 = #{director2,jdbcType=INTEGER},
+      </if>
+      <if test="depEmp != null">
+        depEmp = #{depEmp,jdbcType=INTEGER},
+      </if>
+      <if test="depNum != null">
+        depNum = #{depNum,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm = #{effectiveForm,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabledTime != null">
+        disabledTime = #{disabledTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="depCustom1 != null">
+        depCustom1 = #{depCustom1,jdbcType=INTEGER},
+      </if>
+      <if test="depCustom2 != null">
+        depCustom2 = #{depCustom2,jdbcType=INTEGER},
+      </if>
+      <if test="depCustom3 != null">
+        depCustom3 = #{depCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="depCustom4 != null">
+        depCustom4 = #{depCustom4,jdbcType=VARCHAR},
+      </if>
+      <if test="depCustom5 != null">
+        depCustom5 = #{depCustom5,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.Department">
+    update t_department
+    set depCode = #{depCode,jdbcType=VARCHAR},
+      depName = #{depName,jdbcType=VARCHAR},
+      depAbbr = #{depAbbr,jdbcType=VARCHAR},
+      compID = #{compID,jdbcType=INTEGER},
+      adminID = #{adminID,jdbcType=INTEGER},
+      depGrade = #{depGrade,jdbcType=INTEGER},
+      depType = #{depType,jdbcType=INTEGER},
+      depProperty = #{depProperty,jdbcType=INTEGER},
+      depCost = #{depCost,jdbcType=INTEGER},
+      director = #{director,jdbcType=INTEGER},
+      director2 = #{director2,jdbcType=INTEGER},
+      depEmp = #{depEmp,jdbcType=INTEGER},
+      depNum = #{depNum,jdbcType=INTEGER},
+      state = #{state,jdbcType=BIT},
+      effectiveForm = #{effectiveForm,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      disabledTime = #{disabledTime,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=VARCHAR},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      depCustom1 = #{depCustom1,jdbcType=INTEGER},
+      depCustom2 = #{depCustom2,jdbcType=INTEGER},
+      depCustom3 = #{depCustom3,jdbcType=VARCHAR},
+      depCustom4 = #{depCustom4,jdbcType=VARCHAR},
+      depCustom5 = #{depCustom5,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.Department" resultMap="BaseResultMap">
+    select * from t_department
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCode != null and '' != depCode">
+				depCode = #{depCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depName != null and '' != depName">
+				depName = #{depName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depAbbr != null and '' != depAbbr">
+				depAbbr = #{depAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compID != null and '' != compID">
+				compID = #{compID, jdbcType=INTEGER} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="depGrade != null and '' != depGrade">
+				depGrade = #{depGrade, jdbcType=INTEGER} AND
+			</if>
+			<if test="depType != null and '' != depType">
+				depType = #{depType, jdbcType=INTEGER} AND
+			</if>
+			<if test="depProperty != null and '' != depProperty">
+				depProperty = #{depProperty, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCost != null and '' != depCost">
+				depCost = #{depCost, jdbcType=INTEGER} AND
+			</if>
+			<if test="director != null and '' != director">
+				director = #{director, jdbcType=INTEGER} AND
+			</if>
+			<if test="director2 != null and '' != director2">
+				director2 = #{director2, jdbcType=INTEGER} AND
+			</if>
+			<if test="depEmp != null and '' != depEmp">
+				depEmp = #{depEmp, jdbcType=INTEGER} AND
+			</if>
+			<if test="depNum != null and '' != depNum">
+				depNum = #{depNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveForm != null and '' != effectiveForm">
+				effectiveForm = #{effectiveForm, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabledTime != null and '' != disabledTime">
+				disabledTime = #{disabledTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="depCustom1 != null and '' != depCustom1">
+				depCustom1 = #{depCustom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCustom2 != null and '' != depCustom2">
+				depCustom2 = #{depCustom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCustom3 != null and '' != depCustom3">
+				depCustom3 = #{depCustom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depCustom4 != null and '' != depCustom4">
+				depCustom4 = #{depCustom4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depCustom5 != null and '' != depCustom5">
+				depCustom5 = #{depCustom5, jdbcType=VARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.Department" resultType="long">
+    select count(1) from t_department
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCode != null and '' != depCode">
+				depCode = #{depCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depName != null and '' != depName">
+				depName = #{depName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depAbbr != null and '' != depAbbr">
+				depAbbr = #{depAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compID != null and '' != compID">
+				compID = #{compID, jdbcType=INTEGER} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="depGrade != null and '' != depGrade">
+				depGrade = #{depGrade, jdbcType=INTEGER} AND
+			</if>
+			<if test="depType != null and '' != depType">
+				depType = #{depType, jdbcType=INTEGER} AND
+			</if>
+			<if test="depProperty != null and '' != depProperty">
+				depProperty = #{depProperty, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCost != null and '' != depCost">
+				depCost = #{depCost, jdbcType=INTEGER} AND
+			</if>
+			<if test="director != null and '' != director">
+				director = #{director, jdbcType=INTEGER} AND
+			</if>
+			<if test="director2 != null and '' != director2">
+				director2 = #{director2, jdbcType=INTEGER} AND
+			</if>
+			<if test="depEmp != null and '' != depEmp">
+				depEmp = #{depEmp, jdbcType=INTEGER} AND
+			</if>
+			<if test="depNum != null and '' != depNum">
+				depNum = #{depNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveForm != null and '' != effectiveForm">
+				effectiveForm = #{effectiveForm, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabledTime != null and '' != disabledTime">
+				disabledTime = #{disabledTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="depCustom1 != null and '' != depCustom1">
+				depCustom1 = #{depCustom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCustom2 != null and '' != depCustom2">
+				depCustom2 = #{depCustom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="depCustom3 != null and '' != depCustom3">
+				depCustom3 = #{depCustom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depCustom4 != null and '' != depCustom4">
+				depCustom4 = #{depCustom4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depCustom5 != null and '' != depCustom5">
+				depCustom5 = #{depCustom5, jdbcType=VARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_department
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCode != null and '' != model.depCode">
+					depCode = #{model.depCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depName != null and '' != model.depName">
+					depName = #{model.depName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depAbbr != null and '' != model.depAbbr">
+					depAbbr = #{model.depAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compID != null and '' != model.compID">
+					compID = #{model.compID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depGrade != null and '' != model.depGrade">
+					depGrade = #{model.depGrade, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depType != null and '' != model.depType">
+					depType = #{model.depType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depProperty != null and '' != model.depProperty">
+					depProperty = #{model.depProperty, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCost != null and '' != model.depCost">
+					depCost = #{model.depCost, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.director != null and '' != model.director">
+					director = #{model.director, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.director2 != null and '' != model.director2">
+					director2 = #{model.director2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depEmp != null and '' != model.depEmp">
+					depEmp = #{model.depEmp, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depNum != null and '' != model.depNum">
+					depNum = #{model.depNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveForm != null and '' != model.effectiveForm">
+					effectiveForm = #{model.effectiveForm, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabledTime != null and '' != model.disabledTime">
+					disabledTime = #{model.disabledTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.depCustom1 != null and '' != model.depCustom1">
+					depCustom1 = #{model.depCustom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCustom2 != null and '' != model.depCustom2">
+					depCustom2 = #{model.depCustom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCustom3 != null and '' != model.depCustom3">
+					depCustom3 = #{model.depCustom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depCustom4 != null and '' != model.depCustom4">
+					depCustom4 = #{model.depCustom4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depCustom5 != null and '' != model.depCustom5">
+					depCustom5 = #{model.depCustom5, jdbcType=VARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					depCode like CONCAT("%", #{fuzzy}, "%") or
+					depName like CONCAT("%", #{fuzzy}, "%") or
+					depAbbr like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					depCustom3 like CONCAT("%", #{fuzzy}, "%") or
+					depCustom4 like CONCAT("%", #{fuzzy}, "%") or
+					depCustom5 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_department
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCode != null and '' != model.depCode">
+					depCode = #{model.depCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depName != null and '' != model.depName">
+					depName = #{model.depName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depAbbr != null and '' != model.depAbbr">
+					depAbbr = #{model.depAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compID != null and '' != model.compID">
+					compID = #{model.compID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depGrade != null and '' != model.depGrade">
+					depGrade = #{model.depGrade, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depType != null and '' != model.depType">
+					depType = #{model.depType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depProperty != null and '' != model.depProperty">
+					depProperty = #{model.depProperty, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCost != null and '' != model.depCost">
+					depCost = #{model.depCost, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.director != null and '' != model.director">
+					director = #{model.director, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.director2 != null and '' != model.director2">
+					director2 = #{model.director2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depEmp != null and '' != model.depEmp">
+					depEmp = #{model.depEmp, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depNum != null and '' != model.depNum">
+					depNum = #{model.depNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveForm != null and '' != model.effectiveForm">
+					effectiveForm = #{model.effectiveForm, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabledTime != null and '' != model.disabledTime">
+					disabledTime = #{model.disabledTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.depCustom1 != null and '' != model.depCustom1">
+					depCustom1 = #{model.depCustom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCustom2 != null and '' != model.depCustom2">
+					depCustom2 = #{model.depCustom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depCustom3 != null and '' != model.depCustom3">
+					depCustom3 = #{model.depCustom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depCustom4 != null and '' != model.depCustom4">
+					depCustom4 = #{model.depCustom4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depCustom5 != null and '' != model.depCustom5">
+					depCustom5 = #{model.depCustom5, jdbcType=VARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					depCode like CONCAT("%", #{fuzzy}, "%") or
+					depName like CONCAT("%", #{fuzzy}, "%") or
+					depAbbr like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					depCustom3 like CONCAT("%", #{fuzzy}, "%") or
+					depCustom4 like CONCAT("%", #{fuzzy}, "%") or
+					depCustom5 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

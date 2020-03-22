@@ -1,0 +1,919 @@
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
+ "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="maintenance">
+    <!-- 项目维护记录 -->
+    <resultMap id="MaintenanceMap" class="com.dp.plat.data.bean.ProjectMaintenance">
+	    <result column="id" jdbcType="INTEGER" property="id" />
+	    <result column="projectId" jdbcType="INTEGER" property="projectId" />
+	    <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
+	    <result column="projectName" jdbcType="VARCHAR" property="projectName" />
+	    <result column="projectType" jdbcType="INTEGER" property="projectType" />
+	    <result column="projectExecutionState" jdbcType="VARCHAR" property="projectExecutionState" />
+	    <result column="contractNo" jdbcType="VARCHAR" property="contractNo" />
+	    <result column="officeCode" jdbcType="VARCHAR" property="officeCode" />
+	    <result column="type" jdbcType="VARCHAR" property="type" />
+	    <result column="category" jdbcType="VARCHAR" property="category" />
+	    <result column="subCategory" jdbcType="VARCHAR" property="subCategory" />
+	    <result column="processTime" jdbcType="TIMESTAMP" property="processTime" />
+	    <result column="processDesc" jdbcType="VARCHAR" property="processDesc" />
+	    <result column="processStep" jdbcType="VARCHAR" property="processStep" />
+	    <result column="remainProblem" jdbcType="VARCHAR" property="remainProblem" />
+	    <result column="transitHour" jdbcType="REAL" property="transitHour" />
+	    <result column="processHour" jdbcType="REAL" property="processHour" />
+	    <result column="itemModel" jdbcType="VARCHAR" property="itemModel" />
+	    <result column="softVersion" jdbcType="VARCHAR" property="softVersion" />
+	    <result column="enabledFeatures" jdbcType="VARCHAR" property="enabledFeatures" />
+	    <result column="customTos" jdbcType="VARCHAR" property="customTos" />
+	    <result column="customCcs" jdbcType="VARCHAR" property="customCcs" />
+	    <result column="hasReport" jdbcType="BIT" property="hasReport" />
+	    <result column="quesnaireId" jdbcType="INTEGER" property="quesnaireId" />
+	    <result column="deliverFileIds" jdbcType="VARCHAR" property="deliverFileIds" />
+	    <result column="remark" jdbcType="VARCHAR" property="remark" />
+	    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+	    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+	    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+	    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    </resultMap>
+  <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+    insert into pm_project_maintenance (id, projectId, projectCode, 
+      projectName, projectType, projectExecutionState, contractNo, officeCode, type, 
+      category, subCategory, processTime, 
+      processDesc, processStep, remainProblem, transitHour, 
+      processHour, itemModel, softVersion, 
+      enabledFeatures, customTos, customCcs, hasReport, quesnaireId, 
+      deliverFileIds, remark, createTime, 
+      createBy, updateTime, updateBy
+      )
+    values (#id#, #projectId#, #projectCode#, 
+      #projectName#, #projectType#, #projectExecutionState#, #contractNo#, #officeCode#, #type#, 
+      #category#, #subCategory#, #processTime#, 
+      #processDesc#, #processStep#, #remainProblem#, #transitHour#, 
+      #processHour#, #itemModel#, #softVersion#, 
+      #enabledFeatures#, #customTos#, #customCcs#, #hasReport#, #quesnaireId#, 
+      #deliverFileIds#, #remark#, #createTime#, 
+      #createBy#, #updateTime#, #updateBy#
+      )
+    <selectKey resultClass="int"  keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  <insert id="insertProjectMaintenanceSelective" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+    insert into pm_project_maintenance
+    <dynamic open="(" close=")" prepend=" ">
+      <isNotNull prepend="," property="id"> id </isNotNull>
+      <isNotNull prepend="," property="projectId"> projectId </isNotNull>
+      <isNotNull prepend="," property="projectCode"> projectCode </isNotNull>
+      <isNotNull prepend="," property="projectName"> projectName </isNotNull>
+      <isNotNull prepend="," property="projectType"> projectType </isNotNull>
+      <isNotNull prepend="," property="projectExecutionState"> projectExecutionState </isNotNull>
+      <isNotNull prepend="," property="contractNo"> contractNo </isNotNull>
+      <isNotNull prepend="," property="officeCode"> officeCode </isNotNull>
+      <isNotNull prepend="," property="type"> type </isNotNull>
+      <isNotNull prepend="," property="category"> category </isNotNull>
+      <isNotNull prepend="," property="subCategory"> subCategory </isNotNull>
+      <isNotNull prepend="," property="processTime"> processTime </isNotNull>
+      <isNotNull prepend="," property="processDesc"> processDesc </isNotNull>
+      <isNotNull prepend="," property="processStep"> processStep </isNotNull>
+      <isNotNull prepend="," property="remainProblem"> remainProblem </isNotNull>
+      <isNotNull prepend="," property="transitHour"> transitHour </isNotNull>
+      <isNotNull prepend="," property="processHour"> processHour </isNotNull>
+      <isNotNull prepend="," property="itemModel"> itemModel </isNotNull>
+      <isNotNull prepend="," property="softVersion"> softVersion </isNotNull>
+      <isNotNull prepend="," property="enabledFeatures"> enabledFeatures </isNotNull>
+      <isNotNull prepend="," property="customTos"> customTos </isNotNull>
+      <isNotNull prepend="," property="customCcs"> customCcs </isNotNull>
+      <isNotNull prepend="," property="hasReport"> hasReport </isNotNull>
+      <isNotNull prepend="," property="quesnaireId"> quesnaireId </isNotNull>
+      <isNotNull prepend="," property="deliverFileIds"> deliverFileIds </isNotNull>
+      <isNotNull prepend="," property="remark"> remark </isNotNull>
+      <isNotNull prepend="," property="createTime"> createTime </isNotNull>
+      <isNotNull prepend="," property="createBy"> createBy </isNotNull>
+      <isNotNull prepend="," property="updateTime"> updateTime </isNotNull>
+      <isNotNull prepend="," property="updateBy"> updateBy </isNotNull>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <isNotNull prepend="," property="id"> #id# </isNotNull>
+      <isNotNull prepend="," property="projectId"> #projectId# </isNotNull>
+      <isNotNull prepend="," property="projectCode"> #projectCode# </isNotNull>
+      <isNotNull prepend="," property="projectName"> #projectName# </isNotNull>
+      <isNotNull prepend="," property="projectType"> #projectType# </isNotNull>
+      <isNotNull prepend="," property="projectExecutionState"> #projectExecutionState# </isNotNull>
+      <isNotNull prepend="," property="contractNo"> #contractNo# </isNotNull>
+      <isNotNull prepend="," property="officeCode"> #officeCode# </isNotNull>
+      <isNotNull prepend="," property="type"> #type# </isNotNull>
+      <isNotNull prepend="," property="category"> #category# </isNotNull>
+      <isNotNull prepend="," property="subCategory"> #subCategory# </isNotNull>
+      <isNotNull prepend="," property="processTime"> #processTime# </isNotNull>
+      <isNotNull prepend="," property="processDesc"> #processDesc# </isNotNull>
+      <isNotNull prepend="," property="processStep"> #processStep# </isNotNull>
+      <isNotNull prepend="," property="remainProblem"> #remainProblem# </isNotNull>
+      <isNotNull prepend="," property="transitHour"> #transitHour# </isNotNull>
+      <isNotNull prepend="," property="processHour"> #processHour# </isNotNull>
+      <isNotNull prepend="," property="itemModel"> #itemModel# </isNotNull>
+      <isNotNull prepend="," property="softVersion"> #softVersion# </isNotNull>
+      <isNotNull prepend="," property="enabledFeatures"> #enabledFeatures# </isNotNull>
+      <isNotNull prepend="," property="customTos"> #customTos# </isNotNull>
+      <isNotNull prepend="," property="customCcs"> #customCcs# </isNotNull>
+      <isNotNull prepend="," property="hasReport"> #hasReport# </isNotNull>
+      <isNotNull prepend="," property="quesnaireId"> #quesnaireId# </isNotNull>
+      <isNotNull prepend="," property="deliverFileIds"> #deliverFileIds# </isNotNull>
+      <isNotNull prepend="," property="remark"> #remark# </isNotNull>
+      <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+      <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+      <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+      <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+    </dynamic>
+    <selectKey resultClass="int"  keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  <select id="selectProjectMaintenanceById" parameterClass="int" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+    select * from pm_project_maintenance
+    where id = #id#
+    limit 1
+  </select>
+  <select id="selectProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+    select m.* from pm_project_maintenance m
+        LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm 
+            ON m.`projectId` = pm.`projectId` 
+            AND pm.`memberRole` = '30' 
+            AND pm.`effectiveTo` IS NULL 
+            AND pm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm2 
+            ON m.`projectId` = pm2.`projectId` 
+            AND pm2.`memberRole` = '30' 
+            AND pm2.`effectiveTo` IS NULL 
+            AND pm2.`fromFlag` = 2 
+    <dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectCode"> m.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectName"> m.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectType"> m.projectType = #projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processTime"> m.processTime = #processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processDesc"> m.processDesc = #processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processStep"> m.processStep = #processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remainProblem"> m.remainProblem = #remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="transitHour"> m.transitHour = #transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processHour"> m.processHour = #processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemModel"> m.itemModel = #itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="softVersion"> m.softVersion = #softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="enabledFeatures"> m.enabledFeatures = #enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasReport"> m.hasReport = #hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="quesnaireId"> m.quesnaireId = #quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="deliverFileIds"> m.deliverFileIds = #deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> m.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> m.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> m.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> m.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> m.updateBy = #updateBy# </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="serviceManager"> sm.memberCode = #serviceManager# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="programManager"> (pm.memberCode = #programManager# or pm2.memberCode = #programManager#) </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="userPower" open="(" close=")">
+            (m.createBy = #userPower#
+                or sm.memberCode = #userPower# 
+                or pm.memberCode = #userPower# 
+                or pm2.memberCode = #userPower#)
+            <isNotEmpty prepend="OR" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isNotEmpty>
+        <isEmpty property="userPower">
+            <isNotEmpty prepend="AND" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isEmpty>
+        <isNotEmpty prepend="AND" property="processStartTime"> <![CDATA[ m.processTime >= #processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processEndTime"> <![CDATA[ m.processTime <= #processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
+    </dynamic>
+  </select>
+  <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="int">
+    select count(1) from pm_project_maintenance m
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm 
+            ON m.`projectId` = pm.`projectId` 
+            AND pm.`memberRole` = '30' 
+            AND pm.`effectiveTo` IS NULL 
+            AND pm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm2 
+            ON m.`projectId` = pm2.`projectId` 
+            AND pm2.`memberRole` = '30' 
+            AND pm2.`effectiveTo` IS NULL 
+            AND pm2.`fromFlag` = 2 
+    <dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectCode"> m.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectName"> m.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectType"> m.projectType = #projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processTime"> m.processTime = #processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processDesc"> m.processDesc = #processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processStep"> m.processStep = #processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remainProblem"> m.remainProblem = #remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="transitHour"> m.transitHour = #transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processHour"> m.processHour = #processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemModel"> m.itemModel = #itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="softVersion"> m.softVersion = #softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="enabledFeatures"> m.enabledFeatures = #enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasReport"> m.hasReport = #hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="quesnaireId"> m.quesnaireId = #quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="deliverFileIds"> m.deliverFileIds = #deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> m.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> m.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> m.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> m.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> m.updateBy = #updateBy# </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="serviceManager"> sm.memberCode = #serviceManager# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="programManager"> (pm.memberCode = #programManager# or pm2.memberCode = #programManager#) </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="userPower" open="(" close=")">
+            (m.createBy = #userPower#
+                or sm.memberCode = #userPower# 
+                or pm.memberCode = #userPower# 
+                or pm2.memberCode = #userPower#)
+            <isNotEmpty prepend="OR" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isNotEmpty>
+        <isEmpty property="userPower">
+            <isNotEmpty prepend="AND" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isEmpty>
+        <isNotEmpty prepend="AND" property="processStartTime"> <![CDATA[ m.processTime >= #processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processEndTime"> <![CDATA[ m.processTime <= #processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
+    </dynamic>
+  </select>
+  
+  <insert id="insertOrUpdateProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+    insert into pm_project_maintenance
+    <dynamic prepend=" " open="(" close=")">
+      <isNotNull prepend="," property="id"> id </isNotNull>
+      <isNotNull prepend="," property="projectId"> projectId </isNotNull>
+      <isNotNull prepend="," property="projectCode"> projectCode </isNotNull>
+      <isNotNull prepend="," property="projectName"> projectName </isNotNull>
+      <isNotNull prepend="," property="projectType"> projectType </isNotNull>
+      <isNotNull prepend="," property="projectExecutionState"> projectExecutionState </isNotNull>
+      <isNotNull prepend="," property="contractNo"> contractNo </isNotNull>
+      <isNotNull prepend="," property="officeCode"> officeCode </isNotNull>
+      <isNotNull prepend="," property="type"> type </isNotNull>
+      <isNotNull prepend="," property="category"> category </isNotNull>
+      <isNotNull prepend="," property="subCategory"> subCategory </isNotNull>
+      <isNotNull prepend="," property="processTime"> processTime </isNotNull>
+      <isNotNull prepend="," property="processDesc"> processDesc </isNotNull>
+      <isNotNull prepend="," property="processStep"> processStep </isNotNull>
+      <isNotNull prepend="," property="remainProblem"> remainProblem </isNotNull>
+      <isNotNull prepend="," property="transitHour"> transitHour </isNotNull>
+      <isNotNull prepend="," property="processHour"> processHour </isNotNull>
+      <isNotNull prepend="," property="itemModel"> itemModel </isNotNull>
+      <isNotNull prepend="," property="softVersion"> softVersion </isNotNull>
+      <isNotNull prepend="," property="enabledFeatures"> enabledFeatures </isNotNull>
+      <isNotNull prepend="," property="customTos"> customTos </isNotNull>
+      <isNotNull prepend="," property="customCcs"> customCcs </isNotNull>
+      <isNotNull prepend="," property="hasReport"> hasReport </isNotNull>
+      <isNotNull prepend="," property="quesnaireId"> quesnaireId </isNotNull>
+      <isNotNull prepend="," property="deliverFileIds"> deliverFileIds </isNotNull>
+      <isNotNull prepend="," property="remark"> remark </isNotNull>
+      <isNotNull prepend="," property="createTime"> createTime </isNotNull>
+      <isNotNull prepend="," property="createBy"> createBy </isNotNull>
+      <isNotNull prepend="," property="updateTime"> updateTime </isNotNull>
+      <isNotNull prepend="," property="updateBy"> updateBy </isNotNull>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <isNotNull prepend="," property="id"> #id# </isNotNull>
+      <isNotNull prepend="," property="projectId"> #projectId# </isNotNull>
+      <isNotNull prepend="," property="projectCode"> #projectCode# </isNotNull>
+      <isNotNull prepend="," property="projectName"> #projectName# </isNotNull>
+      <isNotNull prepend="," property="projectType"> #projectType# </isNotNull>
+      <isNotNull prepend="," property="projectExecutionState"> #projectExecutionState# </isNotNull>
+      <isNotNull prepend="," property="contractNo"> #contractNo# </isNotNull>
+      <isNotNull prepend="," property="officeCode"> #officeCode# </isNotNull>
+      <isNotNull prepend="," property="type"> #type# </isNotNull>
+      <isNotNull prepend="," property="category"> #category# </isNotNull>
+      <isNotNull prepend="," property="subCategory"> #subCategory# </isNotNull>
+      <isNotNull prepend="," property="processTime"> #processTime# </isNotNull>
+      <isNotNull prepend="," property="processDesc"> #processDesc# </isNotNull>
+      <isNotNull prepend="," property="processStep"> #processStep# </isNotNull>
+      <isNotNull prepend="," property="remainProblem"> #remainProblem# </isNotNull>
+      <isNotNull prepend="," property="transitHour"> #transitHour# </isNotNull>
+      <isNotNull prepend="," property="processHour"> #processHour# </isNotNull>
+      <isNotNull prepend="," property="itemModel"> #itemModel# </isNotNull>
+      <isNotNull prepend="," property="softVersion"> #softVersion# </isNotNull>
+      <isNotNull prepend="," property="enabledFeatures"> #enabledFeatures# </isNotNull>
+      <isNotNull prepend="," property="customTos"> #customTos# </isNotNull>
+      <isNotNull prepend="," property="customCcs"> #customCcs# </isNotNull>
+      <isNotNull prepend="," property="hasReport"> #hasReport# </isNotNull>
+      <isNotNull prepend="," property="quesnaireId"> #quesnaireId# </isNotNull>
+      <isNotNull prepend="," property="deliverFileIds"> #deliverFileIds# </isNotNull>
+      <isNotNull prepend="," property="remark"> #remark# </isNotNull>
+      <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+      <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+      <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+      <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+    </dynamic>
+    ON DUPLICATE KEY UPDATE
+    <dynamic prepend=" ">
+        <isNotNull prepend="," property="projectId"> projectId = VALUES(projectId) </isNotNull>
+        <isNotNull prepend="," property="projectCode"> projectCode = VALUES(projectCode) </isNotNull>
+        <isNotNull prepend="," property="projectName"> projectName = VALUES(projectName) </isNotNull>
+        <isNotNull prepend="," property="projectType"> projectType = VALUES(projectType) </isNotNull>
+        <isNotNull prepend="," property="projectExecutionState"> projectExecutionState = VALUES(projectExecutionState) </isNotNull>
+        <isNotNull prepend="," property="contractNo"> contractNo = VALUES(contractNo) </isNotNull>
+        <isNotNull prepend="," property="officeCode"> officeCode = VALUES(officeCode) </isNotNull>
+        <isNotNull prepend="," property="type"> type = VALUES(type) </isNotNull>
+        <isNotNull prepend="," property="category"> category = VALUES(category) </isNotNull>
+        <isNotNull prepend="," property="subCategory"> subCategory = VALUES(subCategory) </isNotNull>
+        <isNotNull prepend="," property="processTime"> processTime = VALUES(processTime) </isNotNull>
+        <isNotNull prepend="," property="processDesc"> processDesc = VALUES(processDesc) </isNotNull>
+        <isNotNull prepend="," property="processStep"> processStep = VALUES(processStep) </isNotNull>
+        <isNotNull prepend="," property="remainProblem"> remainProblem = VALUES(remainProblem) </isNotNull>
+        <isNotNull prepend="," property="transitHour"> transitHour = VALUES(transitHour) </isNotNull>
+        <isNotNull prepend="," property="processHour"> processHour = VALUES(processHour) </isNotNull>
+        <isNotNull prepend="," property="itemModel"> itemModel = VALUES(itemModel) </isNotNull>
+        <isNotNull prepend="," property="softVersion"> softVersion = VALUES(softVersion) </isNotNull>
+        <isNotNull prepend="," property="enabledFeatures"> enabledFeatures = VALUES(enabledFeatures) </isNotNull>
+        <isNotNull prepend="," property="customTos"> customTos = VALUES(customTos) </isNotNull>
+        <isNotNull prepend="," property="customCcs"> customCcs = VALUES(customCcs) </isNotNull>
+        <isNotNull prepend="," property="hasReport"> hasReport = VALUES(hasReport) </isNotNull>
+        <isNotNull prepend="," property="quesnaireId"> quesnaireId = VALUES(quesnaireId) </isNotNull>
+        <isNotNull prepend="," property="deliverFileIds"> deliverFileIds = VALUES(deliverFileIds) </isNotNull>
+        <isNotNull prepend="," property="remark"> remark = VALUES(remark) </isNotNull>
+        <isNotNull prepend="," property="createTime"> createTime = VALUES(createTime) </isNotNull>
+        <isNotNull prepend="," property="updateTime"> updateTime = VALUES(updateTime) </isNotNull>
+        <isNotNull prepend="," property="updateBy"> updateBy = VALUES(updateBy) </isNotNull>
+    </dynamic>
+    <selectKey resultClass="int"  keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  
+  <select id="selectSingleProjectMaintenanceMaxId" parameterClass="com.dp.plat.data.bean.ProjectMaintenance" resultClass="int">
+    SELECT IFNULL(MAX(id), 0) maxId FROM pm_project_maintenance 
+    WHERE projectId = #projectId# AND projectType = #projectType#
+    GROUP BY projectType, projectId
+  </select>
+  
+  <resultMap class="com.dp.plat.data.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
+    <result column="officeName" jdbcType="VARCHAR" property="officeName" />
+    <result column="typeName" jdbcType="VARCHAR" property="typeName" />
+    <result property="quesnaireResultList" column="id" resultMap="business.quesnaireResult"/>
+    <result property="deliverFileList" column="id" resultMap="business.deliverFile"/>
+  </resultMap>
+  <resultMap class="java.util.HashMap" id="ProjectMaintenanceMap" extends="MaintenanceMap" groupBy="id">
+    <result column="officeName" jdbcType="VARCHAR" property="officeName" />
+    <result column="typeName" jdbcType="VARCHAR" property="typeName" />
+    <result property="quesnaireResultList" column="id" resultMap="business.quesnaireResult"/>
+    <result property="deliverFileList" column="id" resultMap="business.deliverFile"/>
+  </resultMap>
+  <resultMap class="java.util.HashMap" id="business.quesnaireResult">
+    <result property="name" column="questionContent" />
+    <result property="result" column="questionOptionsContent"/>
+  </resultMap>
+  <resultMap class="com.dp.plat.param.FileParam" id="business.deliverFile">
+    <result property="id" column="fileId"/>
+    <result property="fileName" column="fileName" />
+    <result property="filePath" column="filePath"/>
+  </resultMap>
+  <!-- <select id="ProjectMaintenanceQuesnaireResultColumns" parameterClass="string" resultClass="java.util.HashMap">
+    SELECT DISTINCT 
+	    GROUP_CONCAT(
+	        DISTINCT CONCAT(
+	            'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+	                "questionResult", qrt.questionNum
+	            ), '`'
+	        )
+	    ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+	        CONCAT(
+	            "questionResult", qrt.questionNum
+	        ), "=", qrt.questionContent
+	    ) AS titles
+	FROM
+	    $quesType$_tempQuesnaireResultLineTable qrt 
+	GROUP BY qrt.`quesnaireResultHeaderId` 
+	ORDER BY qrt.`quesnaireResultHeaderId` DESC, maxCount DESC 
+	LIMIT 1
+  </select> -->
+  <select id="ProjectMaintenanceQuesnaireResultColumns" parameterClass="string" resultClass="java.util.HashMap">
+	SELECT 
+        GROUP_CONCAT(
+            DISTINCT CONCAT(
+                'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+                    "questionResult", @rowNo := @rowNo + 1
+                ), '`'
+            )
+        ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+            CONCAT("questionResult", @rowNo), "=", qrt.questionContent
+        ) AS titles 
+    FROM
+        (SELECT DISTINCT 
+            questionContent<!-- , questionOptionsContent  -->
+        FROM
+            $quesType$_tempQuesnaireResultLineTable
+        <dynamic prepend="where">
+           <isNotEmpty property="resultType"> questionType = #resultType# </isNotEmpty>
+        </dynamic>
+        ) qrt, 
+        (SELECT 
+            @rowNo := 0) b
+  </select>
+ 
+  <select id="selectProjectMaintenanceVOList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
+    SELECT 
+	    m.*, d.`departmentName` AS officeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName,
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName,
+	    qrt.questionContent, qrt.questionOptionsContent,
+        ff.`id` AS fileId, ff.`fileName`, ff.`filePath`
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm 
+	        ON m.`projectId` = pm.`projectId` 
+	        AND pm.`memberRole` = '30' 
+	        AND pm.`effectiveTo` IS NULL 
+	        AND pm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm2 
+	        ON m.`projectId` = pm2.`projectId` 
+	        AND pm2.`memberRole` = '30' 
+	        AND pm2.`effectiveTo` IS NULL 
+	        AND pm2.`fromFlag` = 2 
+	    LEFT JOIN projectMaintenance_tempQuesnaireResultLineTable qrt 
+            ON qrt.quesnaireResultHeaderId = m.`quesnaireId`
+	    LEFT JOIN `fnd_files` ff
+            ON FIND_IN_SET(ff.id, m.`deliverFileIds`)
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+            ON bd1.`basicDataId` = m.`category` 
+            AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON bd2.`basicDataId` = m.`subCategory` 
+            AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+        LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode` 
+    <dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectCode"> m.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectName"> m.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectType"> m.projectType = #projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processTime"> m.processTime = #processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processDesc"> m.processDesc = #processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processStep"> m.processStep = #processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remainProblem"> m.remainProblem = #remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="transitHour"> m.transitHour = #transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processHour"> m.processHour = #processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemModel"> m.itemModel = #itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="softVersion"> m.softVersion = #softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="enabledFeatures"> m.enabledFeatures = #enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasReport"> m.hasReport = #hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="quesnaireId"> m.quesnaireId = #quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="deliverFileIds"> m.deliverFileIds = #deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> m.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> m.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> m.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> m.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> m.updateBy = #updateBy# </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="serviceManager"> sm.memberCode = #serviceManager# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="programManager"> (pm.memberCode = #programManager# or pm2.memberCode = #programManager#) </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="userPower" open="(" close=")">
+            (m.createBy = #userPower#
+                or sm.memberCode = #userPower# 
+                or pm.memberCode = #userPower# 
+                or pm2.memberCode = #userPower#)
+            <isNotEmpty prepend="OR" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isNotEmpty>
+        <isEmpty property="userPower">
+            <isNotEmpty prepend="AND" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isEmpty>
+        <isNotEmpty prepend="AND" property="processStartTime"> <![CDATA[ m.processTime >= #processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processEndTime"> <![CDATA[ m.processTime <= #processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
+    </dynamic>
+    ORDER BY m.id desc
+  </select>
+  
+  <!-- <select id="selectProjectMaintenanceMapList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
+   -->
+  <select id="selectProjectMaintenanceMapList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+    SELECT 
+	    m.*, d.`departmentName` AS officeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName, 
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName
+	    <isNotEqual property="projectMaintenance.hideQuesnaire" compareValue="true" prepend=",">
+	        qrt.* 
+	    </isNotEqual>
+	    <isNotEqual property="hideFiles" compareValue="true" prepend=",">
+	        GROUP_CONCAT(
+		        CONCAT(ff.`id`, "$$", ff.`fileName`) SEPARATOR "||"
+		    ) AS deliverFiles,
+		    GROUP_CONCAT(ff.`fileType` SEPARATOR " | ") AS deliverTypes
+	    </isNotEqual>
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm 
+	        ON m.`projectId` = pm.`projectId` 
+	        AND pm.`memberRole` = '30' 
+	        AND pm.`effectiveTo` IS NULL 
+	        AND pm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm2 
+	        ON m.`projectId` = pm2.`projectId` 
+	        AND pm2.`memberRole` = '30' 
+	        AND pm2.`effectiveTo` IS NULL 
+	        AND pm2.`fromFlag` = 2 
+	<isNotEqual property="projectMaintenance.hideQuesnaire" compareValue="true">
+	    LEFT JOIN projectMaintenance_tempQuesnaireResultTable qrt 
+	        ON qrt.quesnaireResultHeaderId = m.`quesnaireId` 
+    </isNotEqual>
+    <isNotEqual property="hideFiles" compareValue="true">
+	    LEFT JOIN `fnd_files` ff
+            ON FIND_IN_SET(ff.id, m.`deliverFileIds`)
+    </isNotEqual>
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+            ON bd1.`basicDataId` = m.`category` 
+            AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON bd2.`basicDataId` = m.`subCategory` 
+            AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+        LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode`
+    <dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="projectMaintenance.id"> m.id = #projectMaintenance.id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.projectId"> m.projectId = #projectMaintenance.projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.projectCode"> m.projectCode like concat("%", #projectMaintenance.projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.projectName"> m.projectName like concat("%", #projectMaintenance.projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.projectType"> m.projectType = #projectMaintenance.projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.projectExecutionState"> m.projectExecutionState = #projectMaintenance.projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.contractNo"> m.contractNo = #projectMaintenance.contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.officeCode"> m.officeCode = #projectMaintenance.officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.type"> m.type = #projectMaintenance.type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.category"> m.category = #projectMaintenance.category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.subCategory"> m.subCategory = #projectMaintenance.subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.processTime"> m.processTime = #projectMaintenance.processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.processDesc"> m.processDesc = #projectMaintenance.processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.processStep"> m.processStep = #projectMaintenance.processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.remainProblem"> m.remainProblem = #projectMaintenance.remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.transitHour"> m.transitHour = #projectMaintenance.transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.processHour"> m.processHour = #projectMaintenance.processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.itemModel"> m.itemModel = #projectMaintenance.itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.softVersion"> m.softVersion = #projectMaintenance.softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.enabledFeatures"> m.enabledFeatures = #projectMaintenance.enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.hasReport"> m.hasReport = #projectMaintenance.hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.quesnaireId"> m.quesnaireId = #projectMaintenance.quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.deliverFileIds"> m.deliverFileIds = #projectMaintenance.deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.remark"> m.remark = #projectMaintenance.remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.createTime"> m.createTime = #projectMaintenance.createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.createBy"> m.createBy = #projectMaintenance.createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.updateTime"> m.updateTime = #projectMaintenance.updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.updateBy"> m.updateBy = #projectMaintenance.updateBy# </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="projectMaintenance.serviceManager"> sm.memberCode = #projectMaintenance.serviceManager# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.programManager"> (pm.memberCode = #projectMaintenance.programManager# or pm2.memberCode = #projectMaintenance.programManager#) </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="projectMaintenance.userPower" open="(" close=")">
+            (m.createBy = #projectMaintenance.userPower#
+                or sm.memberCode = #projectMaintenance.userPower# 
+                or pm.memberCode = #projectMaintenance.userPower# 
+                or pm2.memberCode = #projectMaintenance.userPower#
+                or m.createBy = #projectMaintenance.userPower#)
+            <isNotEmpty prepend="OR" property="projectMaintenance.areaPower"> FIND_IN_SET(m.officeCode, #projectMaintenance.areaPower#)</isNotEmpty>
+        </isNotEmpty>
+        <isEmpty property="projectMaintenance.userPower">
+            <isNotEmpty prepend="AND" property="projectMaintenance.areaPower"> FIND_IN_SET(m.officeCode, #projectMaintenance.areaPower#)</isNotEmpty>
+        </isEmpty>
+        
+        <isNotEmpty prepend="AND" property="projectMaintenance.processStartTime"> <![CDATA[ m.processTime >= #projectMaintenance.processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.processEndTime"> <![CDATA[ m.processTime <= #projectMaintenance.processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.createStartTime"> <![CDATA[ m.createTime >= #projectMaintenance.createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.createEndTime"> <![CDATA[ m.createTime <= #projectMaintenance.createEndTime# ]]> </isNotEmpty>
+    </dynamic>
+    GROUP BY m.id
+    ORDER BY m.id desc
+    <isNotEmpty property="displayParam.offset">
+        limit #displayParam.offset#, #displayParam.pagesize# 
+    </isNotEmpty>
+  </select>
+  
+  <select id="selectDailyMaintenanceMapList" parameterClass="map" resultClass="java.util.HashMap">
+    SELECT
+	    m.*, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName, 
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName, 
+	    SUM(DISTINCT ws.diff) AS diff, 
+	    CASE WHEN SUM(DISTINCT ws.diff) = -1 THEN '维保内'
+	    ELSE CASE WHEN SUM(DISTINCT ws.diff) = 0 THEN '部分保外'
+	         ELSE CASE WHEN SUM(DISTINCT ws.diff) = 1 THEN '维保外' ELSE NULL END
+	         END
+	    END AS diffName,
+	    CASE
+	        WHEN m.projectType = 10 
+	        THEN CONCAT(
+	            s.`memberCode`, "-", REPLACE(
+	                s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
+	            )
+	        ) 
+	        ELSE prh.salesman 
+	    END AS salerName
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN temp_maintenance_contractNo mc 
+	        ON mc.id = m.id 
+	    LEFT JOIN temp_warranty_state ws 
+	        ON mc.`contractNo` = ws.contractNo 
+	    LEFT JOIN `pm_project_member` s 
+	        ON s.`projectId` = m.`projectId` 
+	        AND s.`projectType` = m.`projectType` 
+	        AND m.`projectType` = 10 
+	        AND s.`memberRole` = 10 
+	        AND s.`effectiveTo` IS NULL 
+	    LEFT JOIN `pm_presales_project_header` prh 
+	        ON prh.`presalesId` = m.`projectId` 
+	        AND m.`projectType` = 20 
+	        AND prh.`effectiveTo` IS NULL 
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+	        ON bd1.`basicDataId` = m.`category` 
+	        AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+	    LEFT JOIN `fnd_basic_data` bd2 
+	        ON bd2.`basicDataId` = m.`subCategory` 
+	        AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+	    LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode` 
+	<dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectCode"> m.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectName"> m.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectType"> m.projectType = #projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processTime"> m.processTime = #processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processDesc"> m.processDesc = #processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processStep"> m.processStep = #processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remainProblem"> m.remainProblem = #remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="transitHour"> m.transitHour = #transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processHour"> m.processHour = #processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemModel"> m.itemModel = #itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="softVersion"> m.softVersion = #softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="enabledFeatures"> m.enabledFeatures = #enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasReport"> m.hasReport = #hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="quesnaireId"> m.quesnaireId = #quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="deliverFileIds"> m.deliverFileIds = #deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> m.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> m.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> m.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> m.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> m.updateBy = #updateBy# </isNotEmpty>
+        
+        <isEmpty property="userPower">
+            <isNotEmpty prepend="AND" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isEmpty>
+        
+        <isNotEmpty prepend="AND" property="processStartTime"> <![CDATA[ m.processTime >= #processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processEndTime"> <![CDATA[ m.processTime <= #processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
+        <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
+    </dynamic>
+	GROUP BY m.id
+  </select>
+  
+  <select id="selectDailyMaintenanceUsers" parameterClass="map" resultClass="string">
+    SELECT DISTINCT createBy FROM `pm_project_maintenance` m
+    <dynamic prepend="where">
+        <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectCode"> m.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectName"> m.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectType"> m.projectType = #projectType# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processTime"> m.processTime = #processTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processDesc"> m.processDesc = #processDesc# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processStep"> m.processStep = #processStep# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remainProblem"> m.remainProblem = #remainProblem# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="transitHour"> m.transitHour = #transitHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processHour"> m.processHour = #processHour# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemModel"> m.itemModel = #itemModel# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="softVersion"> m.softVersion = #softVersion# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="enabledFeatures"> m.enabledFeatures = #enabledFeatures# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasReport"> m.hasReport = #hasReport# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="quesnaireId"> m.quesnaireId = #quesnaireId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="deliverFileIds"> m.deliverFileIds = #deliverFileIds# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> m.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> m.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> m.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> m.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> m.updateBy = #updateBy# </isNotEmpty>
+        
+        <isEmpty property="userPower">
+            <isNotEmpty prepend="AND" property="areaPower"> FIND_IN_SET(m.officeCode, #areaPower#)</isNotEmpty>
+        </isEmpty>
+        
+        <isNotEmpty prepend="AND" property="processStartTime"> <![CDATA[ m.processTime >= #processStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="processEndTime"> <![CDATA[ m.processTime <= #processEndTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
+        
+        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
+        <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
+    </dynamic>
+  </select>
+  
+  <select id="queryQuesnaireResultColumns" parameterClass="map" resultClass="java.util.HashMap">
+    SELECT 
+        GROUP_CONCAT(
+            DISTINCT CONCAT(
+                'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+                    "questionResult", @rowNo := @rowNo + 1
+                ), '`'
+            )
+        ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+            CONCAT("questionResult", @rowNo), "=", qrt.questionContent
+        ) AS titles, CONCAT(
+	        "CONCAT(", GROUP_CONCAT(
+	            DISTINCT CONCAT(
+	                "'questionResult", @rowNo, "=', ", 'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, ''''))'
+	            ) SEPARATOR ",',',"
+	        ), ")"
+	    ) AS oneColumn
+    FROM
+        (SELECT DISTINCT 
+            questionContent<!-- , questionOptionsContent  -->
+        FROM
+            $quesType$_tempQuesnaireResultLineTable
+        <dynamic prepend="where">
+           <isNotEmpty property="resultType"> questionType = #resultType# </isNotEmpty>
+        </dynamic>
+        ) qrt, 
+        (SELECT 
+            @rowNo := 0) b
+  </select>
+  
+  <!-- 临时表一次查询不能使用多次，用内存表替代 -->
+  <insert id="createTempQuesnaireResultLineTable" parameterClass="string">
+    CREATE TEMPORARY TABLE IF NOT EXISTS $quesType$_tempQuesnaireResultLineTable (
+	    KEY id (id), KEY quesnaireId (quesnaireResultHeaderId), KEY quesnaireTemplateHeaderId (quesnaireTemplateHeaderId)
+	) <!-- ENGINE = HEAP  -->
+	SELECT 
+	    qrl.id, qrl.`quesnaireResultHeaderId`, qrl.`questionScore`, 
+	    qrl.`questionAnswer`, qtl.`quesnaireTemplateHeaderId`, 
+	    qtl.`questionType`, qtl.`questionTypeForCB`, 
+	    qtl.`questionNum`, qtl.`questionContent`, 
+	    <!-- qto.`questionOptionsContent`  -->
+	    IFNULL(qto.`questionOptionsContent`, qrl.questionAnswer) AS questionOptionsContent 
+	FROM
+	    `pm_cl_quesnaire_result_line` qrl 
+	    LEFT JOIN `pm_cl_quesnaire_template_line` qtl 
+	        ON qtl.`id` = qrl.`quesnaireTemplateLineId` 
+	    LEFT JOIN `pm_cl_quesnaire_template_header` qth 
+	        ON qtl.`quesnaireTemplateHeaderId` = qth.id 
+	    LEFT JOIN `pm_cl_quesnaire_template_options` qto 
+	        ON qto.`id` = qrl.`questionTemplateOptId`  
+	WHERE qth.quesType = #quesType#
+	ORDER BY qrl.`quesnaireResultHeaderId`, qtl.`questionNum`
+  </insert>
+  
+  <delete id="deleteTempQuesnaireResultLineTable" parameterClass="String">
+    DROP TABLE IF EXISTS $quesType$_tempQuesnaireResultLineTable;
+  </delete>
+  
+  <insert id="createTempQuesnaireResultTable" parameterClass="map">
+    CREATE TEMPORARY TABLE IF NOT EXISTS $quesType$_tempQuesnaireResultTable (
+        KEY quesnaireResultHeaderId (quesnaireResultHeaderId)
+    )
+    SELECT
+        qrt.`quesnaireResultHeaderId` 
+        <isEqual property="tempType" compareValue="oneColumn">
+            <isNotEmpty prepend="," property="oneColumn"> $oneColumn$ AS questionResults </isNotEmpty>
+        </isEqual>
+        <isNotEqual property="tempType" compareValue="oneColumn">
+	        <isNotEmpty prepend="," property="columns"> $columns$ </isNotEmpty>
+        </isNotEqual>
+    FROM
+        $quesType$_tempQuesnaireResultLineTable qrt
+	GROUP BY qrt.`quesnaireResultHeaderId` 
+	ORDER BY quesnaireResultHeaderId ASC
+  </insert>
+  
+  <delete id="deleteTempQuesnaireResultTable" parameterClass="String">
+    DROP TEMPORARY TABLE IF EXISTS $quesType$_tempQuesnaireResultTable;
+  </delete>
+  
+  <insert id="createTempMaintenanceContractNoTable">
+	<![CDATA[
+		CREATE TEMPORARY TABLE IF NOT EXISTS temp_maintenance_contractNo (
+		    KEY id (id), KEY contractNo (contractNo)
+		) 
+		SELECT DISTINCT 
+		    m.`id`, SUBSTRING_INDEX(
+		        SUBSTRING_INDEX(m.contractNo, ',', b.id + 1), ',', - 1
+		    ) AS contractNo 
+		FROM
+		    pm_project_maintenance m 
+		    LEFT JOIN FIND_IN_SET_HELP b 
+		        ON b.id < (
+		            LENGTH(m.contractNo) - LENGTH(REPLACE(m.contractNo, ',', '')) + 1
+		        ) 
+		WHERE m.`contractNo` > ''
+	]]>
+  </insert>
+  
+  <delete id="deleteTempMaintenanceContractNoTable">
+    DROP TEMPORARY TABLE IF EXISTS temp_maintenance_contractNo;
+  </delete>
+  
+  <insert id="createTempWarrantyStateTable">
+    <![CDATA[
+        CREATE TEMPORARY TABLE IF NOT EXISTS temp_warranty_state (KEY contractNo (contractNo)) AS
+		SELECT DISTINCT
+		    `contract_code` AS `contractNo`, IF(diff > 0, 1, IF (diff <= 0, - 1, NULL)) AS diff 
+		FROM
+		    `view_warranty`
+    ]]>
+  </insert>
+  
+  <delete id="deleteTempWarrantyStateTable">
+    DROP TEMPORARY TABLE IF EXISTS temp_warranty_state;
+  </delete>
+</sqlMap>

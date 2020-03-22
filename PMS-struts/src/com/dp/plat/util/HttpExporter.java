@@ -1,0 +1,94 @@
+package com.dp.plat.util;
+
+import java.io.File;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.jfree.chart.servlet.ServletUtilities;
+
+/**
+ * Servlet used for streaming charts to the client browser from the temporary
+ * directory. You need to add this servlet and mapping to your deployment
+ * descriptor (web.xml) in order to get it to work. The syntax is as follows:
+ * <xmp> <servlet> <servlet-name>DisplayChart</servlet-name>
+ * <servlet-class>org.jfree.chart.servlet.DisplayChart</servlet-class>
+ * </servlet> <servlet-mapping> <servlet-name>DisplayChart</servlet-name>
+ * <url-pattern>/servlet/DisplayChart</url-pattern> </servlet-mapping> </xmp>
+ */
+public class HttpExporter extends HttpServlet
+{
+
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+     * Default constructor.
+     */
+    public HttpExporter()
+    {
+        super();
+    }
+
+    /**
+     * Init method.
+     * 
+     * @throws ServletException
+     *             never.
+     */
+    public void init() throws ServletException
+    {
+        return;
+    }
+
+    /**
+     * Service method.
+     * 
+     * @param request
+     *            the request.
+     * @param response
+     *            the response.
+     * 
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void service(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        String filenameIn = request.getParameter("filename");
+        if (filenameIn == null)
+        {
+            throw new ServletException("Parameter 'filename' must be supplied");
+        }
+
+        String fileName = filenameIn;
+        String fullFileName = System.getProperty("java.io.tmpdir") + "/"
+                + fileName;
+
+        String filenameOut = new String(fileName.getBytes("gbk"), "iso-8859-1");
+
+        response.addHeader("Content-Disposition", "attachment;filename="
+                + filenameOut);
+        response.setContentType("application/octet-stream");
+        response.setCharacterEncoding("gbk");
+        response.setContentType("application/octet-stream");
+
+        fullFileName = ServletUtilities.searchReplace(fullFileName, "..", "");
+
+        File file = new File(fullFileName);
+        if (!file.exists())
+        {
+            throw new ServletException("File '" + file.getAbsolutePath()
+                    + "' does not exist");
+        }
+
+        ServletUtilities.sendTempFile(file, response);
+        return;
+    }
+
+}

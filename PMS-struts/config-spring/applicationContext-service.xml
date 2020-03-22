@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC 
+	"-//SPRING//DTD BEAN//EN" 
+	"http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-autowire="byName">
+	<import resource="applicationContext-dao.xml" />
+	<bean id="baseServce" abstract="true">
+		<property name="userContext">
+			<ref bean="userContext" />
+		</property>
+	</bean>
+
+	<!-- 管理员登陆 -->
+	<bean id="loginServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="loginService" />
+	</bean>
+	<bean id="loginService" class="com.dp.plat.service.LoginServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="loginDao" ref="loginDao"></property>
+	</bean>
+	
+	<!-- 用户管理 -->
+	<bean id="userManageServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="userManageService"></property>
+	</bean>
+	<bean id="userManageService" class="com.dp.plat.service.UserManageServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="userManageDao" ref="userManageDao"></property>
+	</bean>
+	
+	<!-- 角色管理 -->
+	<bean id="roleManageServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="roleManageService"></property>
+	</bean>
+	<bean id="roleManageService" class="com.dp.plat.service.RoleManageServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="roleManageDao" ref="roleManageDao"></property>
+	</bean>
+	
+	<!-- 部门管理 -->
+	<bean id="departmentManageServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="departmentManageService"></property>
+	</bean>
+	<bean id="departmentManageService" class="com.dp.plat.service.DepartmentManageServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="departmentManageDao" ref="departmentManageDao"></property>
+	</bean>
+	
+	<!-- 修改密码 -->
+	<bean id="passwordServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="passwordService"></property>
+	</bean>
+	<bean id="passwordService" class="com.dp.plat.service.PasswordServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="passwordDao" ref="passwordDao"></property>	
+	</bean>
+	<!-- 日志管理 -->
+	<bean id="opLogServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="opLogService" />
+	</bean>
+	<bean id="opLogService" class="com.dp.plat.service.OpLogServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="opLoggerDao" ref="opLoggerDao" />
+	</bean>
+	<!-- 工作台 -->
+	<bean id="workspaceServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="workspaceService"></property>
+	</bean>
+	<bean id="workspaceService" class="com.dp.plat.service.WorkSpaceServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="workspaceDao" ref="workspaceDao"></property>
+		<property name="workFlowService" ref="workFlowService"></property>
+		<property name="pmClosedLoopService" ref="pmClosedLoopService"></property>	
+		<property name="basicDataService" ref="basicDataService"></property>	
+	</bean>
+	<!-- 邮件服务 -->
+	<bean id="sendMailService" class="com.dp.plat.service.SendMailServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="sendMailDao" ref="sendMailDao"></property>	
+	</bean>
+	<bean id="sendMailServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="sendMailService"></property>
+	</bean>
+	<!-- 项目管理 -->
+	<bean id="projectServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="projectService" />
+	</bean>
+	<bean id="projectService" class="com.dp.plat.service.ProjectServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="projectDao" ref="projectDao"></property>	
+		<property name="callBackService" ref="callBackService"></property>
+	</bean>
+	<!-- 系统基础数据 -->
+	<bean id="basicDataService" class="com.dp.plat.service.BasicDataServiceImpl" 
+	 	lazy-init="false" parent="baseServce">
+	 	<property name="basicDataDao" ref="basicDataDao"></property>	
+	 </bean>
+	 <bean id="basicDataServiceAgent" parent="transactionBaseService">
+	 	<property name="target" ref="basicDataService"></property>
+	 </bean>
+	<!-- 项目计划 -->
+	<bean id="projectPlanService" class="com.dp.plat.service.ProjectPlanServiceImpl" 
+	 	lazy-init="false" parent="baseServce">
+	 	<property name="projectPlanDao" ref="projectPlanDao"></property>	
+	 </bean>
+	 <bean id="projectPlanServiceAgent" parent="transactionBaseService">
+	 	<property name="target" ref="projectPlanService"></property>
+	 </bean>
+	<!-- 项目闭环 -->
+	<bean id="pmClosedLoopServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="pmClosedLoopService"></property>
+	</bean> 
+	<bean id="pmClosedLoopService" class="com.dp.plat.service.PmClosedLoopServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="pmClosedLoopDao" ref="pmClosedLoopDao"></property>
+		<property name="workFlowService" ref="workFlowService"></property>
+		<property name="sendMailService" ref="sendMailService"></property>
+		<property name="userManageService" ref="userManageService"></property>
+		<property name="projectService" ref="projectService"></property>
+	</bean>
+	<!-- 回访流程 -->
+	<bean id="callBackService" class="com.dp.plat.service.CallBackServiceImpl" 
+		lazy-init="false" parent="baseServce">
+		<property name="workFlowService" ref="workFlowService"></property>
+		<property name="callBackDao" ref="callBackDao"></property>
+		<property name="pmClosedLoopDao" ref="pmClosedLoopDao"></property>
+	</bean>
+	 <bean id="callBackServiceAgent" parent="transactionBaseService">
+	 	<property name="target" ref="callBackService"></property>
+	 </bean>
+	<!-- 售前项目 -->
+	<bean id="presalesService" class="com.dp.plat.service.PresalesServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="workFlowService" ref="workFlowService"></property>
+		<property name="pmClosedLoopDao" ref="pmClosedLoopDao"></property>
+		<property name="presalesDao" ref="presalesDao"></property>
+		<property name="projectDao" ref="projectDao"></property>
+		<property name="userManageDao" ref="userManageDao"></property>
+		<property name="basicDataService" ref="basicDataService"></property>	
+	</bean>
+	<bean id="presalesServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="presalesService"></property>
+	</bean>
+	
+	<!-- 测评试卷维护 -->
+	<bean id="pmClosedLoopQuesnaireServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="pmClosedLoopQuesnaireService"></property>
+	</bean>
+	<bean id="pmClosedLoopQuesnaireService" class="com.dp.plat.service.PmClosedLoopQuesnaireServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="pmClosedLoopQuesnaireDao" ref="pmClosedLoopQuesnaireDao"></property>
+	</bean>
+	<!-- 数据统计 -->
+	<bean id="dataAnalysisServiceAgent" parent="transactionBaseService" >
+		<property name="target" ref="dataAnalysisService"></property>
+	</bean>
+	<bean id="dataAnalysisService" class="com.dp.plat.service.DataAnalysisServiceImpl" 
+		lazy-init="false" parent="baseServce">
+		<property name="dataAnalysisDao" ref="dataAnalysisDao"></property>	
+	</bean>
+	
+	<!-- 报表统计 -->
+	<bean id="report" class="com.dp.plat.service.ReportServiceImpl"
+		lazy-init="false" parent="baseServce" >
+		<property name="reportDao" ref="reportDao"></property>	
+	</bean>
+	<bean id="reportServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="report"></property>
+	</bean>
+	<!-- 技术公告管理 -->
+	<bean id="probManage" class="com.dp.plat.prob.service.ProbManageServiceImpl"
+		lazy-init="false" parent="baseServce">
+		<property name="probManageDao" ref="probManageDao"></property>
+		<property name="userManageDao" ref="userManageDao"></property>
+		<property name="basicDataDao" ref="basicDataDao"></property>
+	</bean>
+	<bean id="probManageServiceAgent" parent="transactionBaseService">
+		<property name="target" ref="probManage"></property>
+	</bean>
+	<!-- 项目转包 -->
+	<bean id="subcontractService" class="com.dp.plat.subcontract.service.impl.SubcontractServiceImpl"
+        lazy-init="false" parent="baseServce">
+        <property name="subcontractDao" ref="subcontractDao"></property>
+        <property name="basicDataService" ref="basicDataService"></property>
+        <property name="callBackService" ref="callBackService"></property>
+    </bean>
+    <bean id="subcontractServiceAgent" parent="transactionBaseService">
+        <property name="target" ref="subcontractService"></property>
+    </bean>
+    
+     <!-- 合格证查询接口 -->
+    <bean id="certificateServiceAgent" parent="transactionBaseService">
+        <property name="target" ref="certificateService"></property>
+    </bean>
+    <bean id="certificateService" class="com.dp.plat.plus.certificate.service.CertificateServiceImpl"
+        lazy-init="false" parent="baseServce">
+        <property name="certificateDao" ref="certificateDao"></property>
+    </bean>
+</beans>

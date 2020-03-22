@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMapConfig
+PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+"http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+	<settings cacheModelsEnabled="true" enhancementEnabled="true"
+		lazyLoadingEnabled="true" errorTracingEnabled="true" maxRequests="32" 
+		maxSessions="10" maxTransactions="5" useStatementNamespaces="false" />
+	<typeAlias type="com.dp.plat.util.DateTimeTypeHandler" alias="DateTimeHandler" />
+	<typeHandler javaType="com.dp.plat.type.DateTime" callback="DateTimeHandler"
+		jdbcType="int" />
+	<sqlMap resource="sql-map-admin-config.xml" />
+	<sqlMap resource="sql-map-project-config.xml" />
+	<sqlMap resource="sql-map-work-config.xml" />
+	<sqlMap resource="sql-map-activity-config.xml"/>
+	<sqlMap resource="sql-map-callback-config.xml"/>
+	<sqlMap resource="sql-map-report-config.xml"/>
+	<sqlMap resource="sql-map-presales-config.xml"/>
+	<sqlMap resource="sql-map-prob-config.xml"/>
+	<sqlMap resource="sql-map-subcontract-config.xml"/>
+	<sqlMap resource="sql-map-certificate-config.xml"/>
+	<sqlMap resource="sql-map-maintenance-config.xml"/>
+</sqlMapConfig>

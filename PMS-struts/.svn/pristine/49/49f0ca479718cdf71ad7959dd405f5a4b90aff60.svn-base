@@ -1,0 +1,48 @@
+﻿package com.dp.plat.type;
+
+import java.util.regex.Pattern;
+
+public class Validation
+{
+	public static String charName = "'<>&:;\"/";
+	public static String charNumber = "'<>&:;\"/";
+	public static String charPsw = "'<>&:;\"/";
+	public static String charRelation = "'<>&:;\"/";
+	public static String charEmail = "'<>&:;\"/";
+
+	public static boolean validName(String name)
+	{
+		Pattern pat = Pattern.compile("[^'<>&:;\"/]+");
+		return (!pat.matcher((String) name).matches());
+	}
+	
+	public static boolean validNumber(String number)
+	{
+		Pattern pat = Pattern.compile("[^'<>&:;\"/]+");
+		return (!pat.matcher((String) number).matches());
+	}
+	
+	public static boolean validPsw(String psw)
+	{
+		Pattern pat = Pattern.compile("[^'<>&:;\"/]+");
+		return (!pat.matcher((String) psw).matches());
+	}
+	
+	public static boolean validRelation(String relation)
+	{
+		Pattern pat = Pattern.compile("[^'<>&:;\"/]+");
+		return (!pat.matcher((String) relation).matches());
+	}
+	
+	public static boolean validEmail(String email)
+	{
+		Pattern pat = Pattern.compile("[^'<>&:;\"/]+");
+		return (!pat.matcher((String) email).matches());
+	}
+	
+	public static boolean validEmailFormat(String email)
+	{
+		Pattern pat = Pattern.compile("^[\\w-]+(\\.[\\w-]+)*@[\\w-]+(\\.[\\w-]+)+$");
+		return (!pat.matcher((String) email).matches());
+	}
+}

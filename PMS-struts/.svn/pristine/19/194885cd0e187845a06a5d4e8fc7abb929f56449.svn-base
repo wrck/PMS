@@ -1,0 +1,71 @@
+﻿package com.dp.plat.support;
+
+import java.util.Map;
+
+import javax.servlet.jsp.PageContext;
+
+import com.dp.plat.context.HttpContext;
+import com.dp.plat.context.UserContext;
+import com.dp.plat.context.VContext;
+
+public class LeftMenuGroup implements LeftMenuGroupInterface
+{
+	private String imgurl = "images/left_icon.gif"; //
+	private String titlesrc = "";
+	private LeftMenuLiInterface[] lis = null;
+	
+	@Override
+	public int gainPermission(String permissionKey) {
+		Map<String, Integer> map = UserContext.getUserContext().getPermissionMap();
+		try{
+			if(map.get(permissionKey)!=null){
+				return map.get(permissionKey);
+			}else{
+				return 0;
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+			return 0;
+		}
+		
+	}
+	
+	public void drow(PageContext pageContext)//画一级菜单
+	{
+		VContext.getVM(pageContext.getOut(),
+				"com/dp/plat/vmpage/LeftMenuGroup.vm", "imgurl", imgurl,
+				"title", HttpContext.getText(titlesrc), "lis", lis, "pageContext", pageContext);
+	}
+
+	public String getImgurl()
+	{
+		return imgurl;
+	}
+
+	public void setImgurl(String imgurl)
+	{
+		this.imgurl = imgurl;
+	}
+
+	public LeftMenuLiInterface[] getLis()
+	{
+		return lis;
+	}
+
+	public void setLis(LeftMenuLiInterface[] lis)
+	{
+		this.lis = lis;
+	}
+
+	public String getTitlesrc()
+	{
+		return titlesrc;
+	}
+
+	public void setTitlesrc(String titlesrc)
+	{
+		this.titlesrc = titlesrc;
+	}
+
+}

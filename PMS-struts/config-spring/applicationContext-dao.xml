@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-autowire="byName"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 只包含数据操作部分 -->
+	<bean id="baseDao" abstract="true">
+		<property name="sqlMapClientTemplate">
+			<ref bean="sqlMapClientTemplate" />
+		</property>
+	</bean>
+	<!--  日志操作相关操作的dao -->
+	<bean id="opLoggerDao" class="com.dp.plat.dao.OpLogDaoImpl"
+		scope="prototype" parent="baseDao">
+	</bean>
+		<!-- 包含数据库操作部分和用户上下文 -->
+	<bean id="baseContextLoggerDao" abstract="true" parent="baseDao">
+		<property name="opLoggerDao">
+			<ref bean="opLoggerDao" />
+		</property>
+	</bean>
+	
+	<!-- 管理员登陆 -->
+	<bean id="loginDao" class="com.dp.plat.dao.LoginDaoImpl"
+		scope="prototype" parent="baseContextLoggerDao"></bean>
+		
+	<!-- 用户管理 -->
+	<bean id="userManageDao" class="com.dp.plat.dao.UserManageDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+		
+	<!-- 角色管理 -->
+	<bean id="roleManageDao" class="com.dp.plat.dao.RoleManageDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+		
+	<!-- 部门管理 -->
+	<bean id="departmentManageDao" class="com.dp.plat.dao.DepartmentManageDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+		
+	<!-- 修改密码 -->
+	<bean id="passwordDao" class="com.dp.plat.dao.PasswordDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+		
+	<!-- 工作台 -->
+	<bean id="workspaceDao" class="com.dp.plat.dao.WorkSpaceDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+	<!-- 邮件服务 -->
+	<bean id="sendMailDao" class="com.dp.plat.dao.SendMailDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+
+	<!-- 项目闭环 -->	
+	<bean id="pmClosedLoopDao" class="com.dp.plat.dao.PmClosedLoopDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+	<!-- 测评试卷维护 -->
+	<bean id="pmClosedLoopQuesnaireDao" class="com.dp.plat.dao.PmClosedLoopQuesnaireDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+
+	<!-- 项目管理 -->
+	<bean id="projectDao" class="com.dp.plat.dao.ProjectDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+	<!-- 系统基础数据 -->
+	<bean id="basicDataDao" class="com.dp.plat.dao.BasicDataDaoImpl" 
+		scope="prototype" parent="baseDao" ></bean>		
+	<!-- 项目计划 -->
+	<bean id="projectPlanDao" class="com.dp.plat.dao.ProjectPlanDaoImpl" 
+		scope="prototype" parent="baseDao" ></bean>	
+	<!-- 数据统计 -->
+	<bean id="dataAnalysisDao" class="com.dp.plat.dao.DataAnalysisDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+	<!-- 工作流 -->
+	<bean id="workflowDao" class="com.dp.plat.dao.WorkflowDaoImpl"
+		scope="prototype" parent="baseDao"></bean>
+	<!-- 回访管理 -->
+	<bean id="callBackDao" class="com.dp.plat.dao.CallBackDaoImpl" scope="prototype" parent="baseDao"></bean>
+	<!-- 报表管理 -->
+	<bean id="reportDao" class="com.dp.plat.dao.ReportDaoImpl"
+		scope="prototype" parent="baseDao" ></bean>
+	<!-- 售前项目 -->
+	<bean id="presalesDao" class="com.dp.plat.dao.PresalesDaoImpl"
+		scope="prototype" parent="baseDao" ></bean>
+	<!-- 技术公告管理 -->
+	<bean id="probManageDao" class="com.dp.plat.prob.dao.ProbManageDaoImpl"
+		scope="prototype" parent="baseDao"></bean>	
+	<!-- 项目转包 -->
+    <bean id="subcontractDao" class="com.dp.plat.subcontract.dao.SubcontractDaoImpl"
+        scope="prototype" parent="baseDao"></bean>		
+    <!-- 合格证查询 -->    
+    <bean id="certificateDao" class="com.dp.plat.plus.certificate.dao.CertificateDaoImpl"
+        scope="prototype" parent="baseDao"></bean>
+</beans>

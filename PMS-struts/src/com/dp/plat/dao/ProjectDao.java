@@ -1,0 +1,1277 @@
+package com.dp.plat.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.dp.plat.data.bean.CallBack;
+import com.dp.plat.data.bean.Contract;
+import com.dp.plat.data.bean.Department;
+import com.dp.plat.data.bean.Instruction;
+import com.dp.plat.data.bean.Item;
+import com.dp.plat.data.bean.Notification;
+import com.dp.plat.data.bean.NotificationTemplate;
+import com.dp.plat.data.bean.OrderDataFromSap;
+import com.dp.plat.data.bean.Product;
+import com.dp.plat.data.bean.Project;
+import com.dp.plat.data.bean.ProjectDeliver;
+import com.dp.plat.data.bean.ProjectMaintenance;
+import com.dp.plat.data.bean.ProjectMember;
+import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectTask;
+import com.dp.plat.data.bean.ProjectWeekly;
+import com.dp.plat.data.bean.ShipmentInfo;
+import com.dp.plat.data.bean.SoftChangeLog;
+import com.dp.plat.data.bean.WeeklyContent;
+import com.dp.plat.data.bean.WeeklyFeedback;
+import com.dp.plat.data.vo.ProjectMaintenanceVO;
+import com.dp.plat.param.DisplayParam;
+import com.dp.plat.param.Person;
+import com.dp.plat.param.RealProductLineBean;
+import com.dp.plat.supervision.entity.ProjectSupervision;
+import com.dp.plat.supervision.vo.ProjectSupervisionVO;
+
+public interface ProjectDao {
+
+	List<Project> queryProjectList(Project project, DisplayParam displayParam);
+
+	/**
+	 * 保存项目信息
+	 * 
+	 * @param project
+	 */
+	Integer insertProject(Project project) throws Exception;
+
+	/**
+	 * 更新项目信息
+	 * 
+	 * @param project
+	 */
+	void updateProjectByProjectId(Project project);
+
+	/**
+	 * 查询销售人员信息
+	 * 
+	 * @return
+	 */
+	List<Person> queryPersonList();
+
+	/**
+	 * 查询总部批示信息
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<Instruction> queryInstructionList(int projectId);
+
+	/**
+	 * 查询针对批示的反馈信息
+	 * 
+	 * @param id
+	 * @return
+	 */
+	List<Instruction> queryFeedbackList(int id);
+
+	/**
+	 * 插入项目组表
+	 * 
+	 * @param project
+	 * @return
+	 */
+	void insertProjectGroup(Project project);
+
+	/**
+	 * 插入合同表
+	 * 
+	 * @param project
+	 */
+	void insertProjectContract(Project project);
+
+	/**
+	 * 插入项目组关系表
+	 * 
+	 * @param project
+	 */
+	void insertProjectGroupRelationship(Project project);
+
+	/**
+	 * 取最大的项目组编码
+	 * 
+	 * @return
+	 */
+	String queryMaxProjectGroupCode();
+
+	/**
+	 * 根据合同号查询项目信息
+	 * 
+	 * @param contractNo
+	 * @return
+	 */
+	Project queryProjectByContractNo(String contractNo);
+
+	/**
+	 * 插入项目成员表
+	 * 
+	 * @param project
+	 */
+	void insertProjectMember(Project project);
+
+	/**
+	 * 插入项目批示信息
+	 * 
+	 * @param instruction
+	 */
+	void insertInstruction(Instruction instruction);
+
+	/**
+	 * 根据projectId查询项目信息
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	Project queryProjectById(int projectId);
+
+    /**
+     * 查询项目简化信息，只包含服务经理，项目经理，部门
+     * @param projectId
+     * @return
+     */
+    Project queryProjectSimplifyByProjectId(Integer projectId);
+    
+	/**
+	 * 更新项目成员信息
+	 * 
+	 * @param project
+	 */
+	void updateProjectMember(Project project);
+
+	/**
+	 * 插入渠道表
+	 * 
+	 * @param project
+	 */
+	void insertProjectRelatedParty(Project project);
+
+	/**
+	 * 更新渠道信息
+	 * 
+	 * @param project
+	 */
+	void updateProjectRelatedParty(Project project);
+
+	/**
+	 * 根据权限查询项目信息
+	 * 
+	 * @param project
+	 * @param displayParam
+	 * @return
+	 */
+	List<Project> queryProjectListByPower(Project project, DisplayParam displayParam);
+
+	/**
+	 * 保存周报主数据
+	 * 
+	 * @param projectWeekly
+	 * @return
+	 */
+	int insertProjectWeekly(ProjectWeekly projectWeekly);
+
+	/**
+	 * 保存周报内容
+	 * 
+	 * @param paramMap
+	 */
+	void batchInsertWeeklyContent(Map<String, Object> paramMap);
+
+	/**
+	 * 根据projectid更新项目状态
+	 * 
+	 * @param project
+	 */
+	void updateProjectStateByProjectId(Project project);
+
+	/**
+	 * 根据projectid查询项目状态
+	 * 
+	 * @param project
+	 * @return
+	 */
+	String queryProjectStateByProjectId(Project project);
+
+	/**
+	 * 根据合同号和订单号查询产品数据
+	 * 
+	 * @param project
+	 * @return
+	 */
+	List<OrderDataFromSap> queryOrderLineFromSapByContractNo(Project project);
+
+	/**
+	 * 插入产品行信息
+	 * 
+	 * @param od
+	 */
+	void insertProjectProductLine(OrderDataFromSap od);
+
+	/**
+	 * 根据projectid查询产品信息
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<OrderDataFromSap> queryOrderDataListByProjectId(int projectId);
+
+	/**
+	 * 查询项目周报
+	 * 
+	 * @param projectId
+	 * @param weeklyState
+	 * @return
+	 */
+	List<ProjectWeekly> queryProjectWeeklyList(int projectId, int weeklyState);
+
+	/**
+	 * 查询周报基本信息
+	 * 
+	 * @param weeklyId
+	 * @return
+	 */
+	ProjectWeekly queryPorjectWeekly(int weeklyId);
+
+	/**
+	 * 查询周报内容信息
+	 * 
+	 * @param paramMap
+	 * @return
+	 */
+	List<WeeklyContent> queryWeeklyContentList(Map<String, Object> paramMap);
+
+	/**
+	 * 根据合同号查询序列号清单
+	 * 
+	 * @param contractNo
+	 * @param projectId
+	 * @return
+	 */
+	List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId);
+
+	/**
+	 * 根据合同号查询序列号清单,除去传出设备
+	 * 
+	 * @param contractNo
+	 * @param projectId
+	 * @param excludeTransferOut
+	 * @return
+	 */
+	List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, boolean excludeTransferOut);
+
+	/**
+	 * 更新项目周报信息
+	 * 
+	 * @param projectWeekly
+	 */
+	void updateProjectWeekly(ProjectWeekly projectWeekly);
+
+	/**
+	 * 删除周报内容
+	 * 
+	 * @param weeklyId
+	 */
+	void deleteWeeklyContent(int weeklyId);
+
+	/**
+	 * 删除周报附件
+	 * 
+	 * @param downFlileId
+	 */
+	void deleteFileById(int downFlileId);
+
+	/**
+	 * 更新项目状态
+	 * 
+	 * @param projectId
+	 * @param projectState
+	 */
+	void backToLastStep(int projectId, String projectState, String isback);
+
+	/**
+	 * 根据项目查询事件节点列表
+	 * 
+	 * @param project
+	 * @return
+	 */
+	List<ProjectPlanEvent> queryProjectPlanEventByProject(Project project);
+
+	/**
+	 * 项目成员查询
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectMember> queryProjectMembers(int projectId);
+
+	/**
+	 * 增加项目成员
+	 * 
+	 * @param member
+	 * @return
+	 */
+	int insertPorjectMember(ProjectMember member);
+
+	/**
+	 * 更新项目成员
+	 * 
+	 * @param member
+	 */
+	void updateProjectMember(ProjectMember member);
+
+	/**
+	 * 根据projectid更新项目计划
+	 * 
+	 * @param projectTask
+	 */
+	void updateProjectPlanByProjectId(ProjectTask projectTask);
+
+	/**
+	 * 插入项目计划记录
+	 * 
+	 * @param projectTask
+	 */
+	void insertProjectPlan(ProjectTask projectTask);
+
+	/**
+	 * 根据项目
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectTask> queryProjectTaskByProjectId(int projectId);
+
+	/**
+	 * 更新安装地址
+	 * 
+	 * @param paramMap
+	 */
+	void updateProjectShipment(Map<String, Object> paramMap);
+
+	/**
+	 * 插入安装地址
+	 * 
+	 * @param paramMap
+	 */
+	void insertProjectShipment(Map<String, Object> paramMap);
+
+	/**
+	 * 查询有无保存安装地址
+	 * 
+	 * @param barcode
+	 * @param projectId
+	 * @return
+	 */
+	int queryProjectShipment(Map<String, Object> paramMap);
+
+	/**
+	 * 插入项目周报回复内容
+	 * 
+	 * @param paramMap
+	 */
+	void insertWeeklyFeedback(Map<String, Object> paramMap);
+
+	/**
+	 * 查询项目周报回复列表
+	 * 
+	 * @param weeklyId
+	 * @return
+	 */
+	List<WeeklyFeedback> queryWeeklyFeedbackList(int weeklyId);
+
+	/**
+	 * 查询交付件下拉列表
+	 * 
+	 * @param projectDeliver
+	 * @return
+	 */
+	List<ProjectDeliver> queryProjectDeliverList(ProjectDeliver projectDeliver);
+
+	/**
+	 * 插入项目操作日志
+	 * 
+	 * @param paramMap
+	 * @return
+	 */
+	int insertProjecthandleLog(Map<String, Object> paramMap);
+
+	/**
+	 * 插入交付件
+	 * 
+	 * @param paramMap
+	 */
+	void batchInsertDeliverFiles(Map<String, Object> paramMap);
+
+	/**
+	 * 根据projectid查询交付件列表
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectDeliver> queryDeliverDetailByProjectId(int projectId);
+
+	/**
+	 * 根据交付件id删除交付件（软删除）
+	 * 
+	 * @param deliverid
+	 */
+	void deleteDeliverById(int deliverid);
+
+	/**
+	 * 根据主键更改回退状态和回退说明字段
+	 * 
+	 * @param projectId
+	 * @param isback
+	 * @param backCause
+	 */
+	void updateProjectIsbackByProjectId(int projectId, String isback, String backCause);
+
+	/**
+	 * 更新项目日志状态
+	 * 
+	 * @param paramMap
+	 */
+	void updateProjecthandleLog(Map<String, Object> paramMap);
+
+	/**
+	 * 根据projectid更新项目实施方式
+	 * 
+	 * @param project
+	 */
+	void updateProjectImplByProjectId(Project project);
+
+	/**
+	 * 根据code查询Person对象
+	 * 
+	 * @param code
+	 * @return
+	 */
+	Person queryPersonFromOaByCode(String code);
+
+	/**
+	 * 查询上期周报
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryLastWeeklyId(int projectId);
+
+	/**
+	 * 查询模板内容
+	 * 
+	 * @param notificationCodeWeeklySubmit
+	 * @return
+	 */
+	NotificationTemplate queryNotificationTemplate(String notificationCodeWeeklySubmit);
+
+	/**
+	 * 查询已上传的交付件是否全包含在模版中，0表示包含
+	 * 
+	 * @param pd
+	 * @return
+	 */
+	Integer queryDeliverDetailCountByProjectDeliver(ProjectDeliver pd);
+
+	/**
+	 * 更新完成时间
+	 * 
+	 * @param pt
+	 */
+	void updateEventActualFinishDateByTask(ProjectTask pt);
+
+	/**
+	 * 根据id查询交付件模版信息
+	 * 
+	 * @param id
+	 * @return
+	 */
+	ProjectDeliver queryProjectDeliverById(int id);
+
+	/**
+	 * 插入项目通知内容
+	 * 
+	 * @param notice
+	 * @return
+	 */
+	int insertNotification(Notification notice);
+
+	/**
+	 * 插入项目通知对象
+	 * 
+	 * @param notifyId
+	 * @param objs
+	 */
+	void notificationSetObjectList(int notifyId, List<String> objs);
+
+	/**
+	 * 根据插入的信息判断生效用户数
+	 * 
+	 * @param project
+	 * @return
+	 */
+	Integer queryProjectMemberCountByProject(Project project);
+
+	/**
+	 * 根据用户名查询用户邮箱
+	 * 
+	 * @param username
+	 * @return
+	 */
+	String queryMailByUsername(String username);
+
+	/**
+	 * 根据用户角色查询邮箱
+	 * 
+	 * @param roleId
+	 * @return
+	 */
+	String queryMailByRoleId(int roleId);
+
+	/**
+	 * 根据角色ID查询用户名称
+	 * 
+	 * @param roleId
+	 * @return
+	 */
+	String queryUsernamesByroleId(int roleId);
+
+	/**
+	 * 根据projectid查询项目名称
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	String queryProjectNameByProjectId(int projectId);
+
+	/**
+	 * 查询合同信息
+	 * 
+	 * @param paramMap
+	 * @return
+	 */
+	List<Contract> queryContractList(Map<String, Object> paramMap);
+
+	/**
+	 * 插入pm_project_contract
+	 * 
+	 * @param paramMap
+	 */
+	void insertMergeContract(Map<String, Object> paramMap);
+
+	/**
+	 * 插入产品
+	 * 
+	 * @param paramMap
+	 */
+	void insertMergeProduct(Map<String, Object> paramMap);
+
+	/**
+	 * 查询一个项目组下项目数量
+	 * 
+	 * @param projectCode
+	 * @return
+	 */
+	int queryProjectGroupSize(String projectCode);
+
+	/**
+	 * 增加项目在项目组中的信息
+	 * 
+	 * @param paramMap
+	 */
+	void insertProjectGroup(Map<String, Object> paramMap);
+
+	/**
+	 * 插入复制的项目信息
+	 * 
+	 * @param paramMap
+	 * @return
+	 */
+	int insertProjectInfo(Map<String, Object> paramMap);
+
+	/**
+	 * 复制插入项目组成员
+	 * 
+	 * @param paramMap
+	 */
+	void insertProjectMember(Map<String, Object> paramMap);
+
+	/**
+	 * 更新产品的项目数量
+	 * 
+	 * @param p
+	 */
+	void updateProjectProduct(Product p);
+
+	/**
+	 * 批量插入项目产品
+	 * 
+	 * @param paramMap
+	 */
+	void batchInsertProduct(Map<String, Object> paramMap);
+
+	/**
+	 * 合并项目时查询项目有无创建计划
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryProjectTaskSize(int projectId);
+
+	/**
+	 * 项目合并插入项目计划
+	 * 
+	 * @param paramMap
+	 */
+	void insertMergeTask(Map<String, Object> paramMap);
+
+	/**
+	 * 查询系统部集合
+	 * 
+	 * @return
+	 */
+	List<Department> querySystemList();
+
+	/**
+	 * 查询项目团队成员
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	String queryMemberAddress(int projectId);
+
+	/**
+	 * 服务经理选择不予跟踪时更新项目信息
+	 * 
+	 * @param paramMap
+	 */
+	void updateServiceProject(Map<String, Object> paramMap);
+
+	/**
+	 * 根据合同号查询合同表是否存在
+	 * 
+	 * @param contractNo
+	 * @return
+	 */
+	Integer queryProjectContractCountByContractNo(String contractNo);
+
+	/**
+	 * 失效项目主表数据
+	 * 
+	 * @param projectId
+	 */
+	void invalidProjectHeader(int projectId);
+
+	/**
+	 * 失效项目通知信息
+	 * 
+	 * @param projectId
+	 */
+	void invalidProjectNotification(int projectId);
+
+	/**
+	 * 失效项目关系表
+	 * 
+	 * @param projectId
+	 */
+	void invalidProjectGroupRelationship(int projectId);
+
+	/**
+	 * 查询已补充安装地址的设备
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryProjectShipmentSize(int projectId);
+
+	/**
+	 * 查询有无项目状态表记录
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryProjectState(int projectId);
+
+	/**
+	 * 增加项目状态记录
+	 * 
+	 * @param project
+	 */
+	void insertProjectState(Project project);
+
+	/**
+	 * 更新项目状态记录
+	 * 
+	 * @param project
+	 */
+	void updateProjectState(Project project);
+
+	/**
+	 * 查询项目发货状态
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryProjectShipmentState(int projectId);
+
+	/**
+	 * 根据项目ID查询项目状态
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	String queryPlanState(int projectId);
+
+	/**
+	 * 查询项目当前工程计划处于的阶段
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	String queryProjectCurrentPlan(int projectId);
+
+	/**
+	 * 更新项目闭环时间
+	 * 
+	 * @param closeObjId
+	 */
+	void updateProjectCloseTime(int closeObjId);
+
+	/**
+	 * 更新项目闭环时间
+	 * 
+	 * @param projectId
+	 */
+	void updateProjectDirectCloseTime(int projectId);
+
+	/**
+	 * 清空项目闭环时间
+	 * 
+	 * @param projectId
+	 */
+	void clearProjectDirectCloseTime(int projectId);
+
+	/**
+	 * 更新项目数据最新刷新时间
+	 * 
+	 * @param projectId
+	 */
+	void updateProjectLastRefreshTime(int projectId);
+
+	/**
+	 * 更新项目计划状态为"项目闭环"
+	 * 
+	 * @param closeObjId
+	 */
+	void updateProjectPlanStateToClose(int closeObjId);
+
+	/**
+	 * 查询上传的交付件类型名称
+	 * 
+	 * @param deliverId
+	 * @return
+	 */
+	String queryDeliverName(int deliverId);
+
+	/**
+	 * 根据 pm_basic_deliver_detail的ID获取交付件类型ID
+	 * 
+	 * @param deliverid
+	 * @return
+	 */
+	int queryDeliverTypeId(int deliverid);
+
+	/**
+	 * 根据项目闭环申请主表ID获取项目ID
+	 * 
+	 * @param closeObjId
+	 * @return
+	 */
+	int queryProjectIdBycloseId(int closeObjId);
+
+	/**
+	 * 查询回访流程任务
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<CallBack> queryCallBackList(int projectId);
+
+	/**
+	 * SELECT COUNT(*) FROM pm_cl_callback WHERE applyState = 1
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryCallBackingSize(int projectId);
+
+	/**
+	 * 查询软件版本
+	 * 
+	 * @param contractNo
+	 * @param projectId
+	 * @return
+	 */
+	List<ShipmentInfo> querySoftversionList(String contractNo, int projectId);
+
+	/**
+	 * 失效现有软件版本
+	 * 
+	 * @param projectId
+	 */
+	void updateInvalidSoftversion(int projectId);
+
+	/**
+	 * 插入软件版本
+	 * 
+	 * @param softversionList
+	 * @param logId
+	 */
+	void insertSoftVersionList(List<ShipmentInfo> softversionList, int logId);
+
+	/**
+	 * 查询已经有了几个版本
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int querySoftVersionNum(int projectId);
+
+	/**
+	 * 失效软件版本记录表最新记录
+	 * 
+	 * @param projectId
+	 */
+	void updateInvalidSoftVersionLog(int projectId);
+
+	/**
+	 * 插入版本变更记录
+	 * 
+	 * @param softChangeLog
+	 * @return
+	 */
+	int insertSoftVersionLog(SoftChangeLog softChangeLog);
+
+	/**
+	 * 查询软件版本历史变更
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<SoftChangeLog> queryHistSoftChangeLog(int projectId);
+
+	/**
+	 * 查询软件版本变更的具体信息
+	 * 
+	 * @param softChangeLog
+	 * @return
+	 */
+	List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog);
+
+	/**
+	 * 查询设备出厂版本具体信息
+	 * 
+	 * @param softChangeLog
+	 * @param contractNo
+	 * @return
+	 */
+	List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog, String contractNo);
+
+	/**
+	 * 查询单个版本更新日志
+	 * 
+	 * @param id
+	 * @return
+	 */
+	SoftChangeLog queryOneSoftChangeLog(int id);
+
+	/**
+	 * 查询发货数量
+	 * 
+	 * @param contractNos
+	 * @return
+	 */
+	int queryShipemntSizeByContractNo(String contractNos);
+
+	/**
+	 * 查询退货订单信息
+	 * 
+	 * @param contract
+	 * @return
+	 */
+	List<OrderDataFromSap> queryRmaOrderDataByContractNo(String contract);
+
+	/**
+	 * 查询项目列表根据office以及membercode
+	 * 
+	 * @param project
+	 * @return
+	 */
+	List<Project> queryProjectListByOfficeAndMemberCode(Project project);
+
+	/**
+	 * 查询项目实际发货清单数据
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<RealProductLineBean> queryRealOrderDataListByProjectId(int projectId);
+
+	/**
+	 * 查询项目实际发货清单数量
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryRealOrderDataSizeByProjectId(int projectId);
+
+	/**
+	 * @param contractNos
+	 * @return
+	 */
+	int queryShipmentInfoSizeByContractNo(String contractNos);
+
+	/**
+	 * 查询正在审批中的回访流程
+	 * 
+	 * @param param
+	 * @return
+	 */
+	List<CallBack> queryCallBackRunList(Map<String, Integer> params);
+
+	/**
+	 * 从同步的OA数据库表中查询邮件地址
+	 * 
+	 * @param userName
+	 * @return
+	 */
+	String queryMailByUserNameFromOA(String userName);
+
+	/**
+	 * 查询项目有效的成员，只包括销售，服务经理和项目经理
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectMember> queryValidMemberByProjectId(int projectId);
+
+	/**
+	 * 距离初验和终验计划时间前一个月的项目<br>
+	 * 具体为计划时间 - 当前时间 between 25 and 31 即距离一个月时间在一周内，定时器每周一跑
+	 * 
+	 * @return
+	 */
+	List<ProjectTask> queryProjectPreAndFinalInspection();
+
+	/**
+	 * 根据合同号批量删除项目
+	 * 
+	 * @param contractNos
+	 * @return
+	 */
+	int batchDeleteProject(String contractNos);
+
+	/**
+	 * 根据合同号查询已经创建的项目
+	 * 
+	 * @param contractNos
+	 * @return
+	 */
+	List<Project> queryExistsProjectByContractNos(String contractNos);
+
+	/**
+	 * 距离到货验收财务计划时间前10天，20天或者超期10天需要提醒的项目<br>
+	 * 具体为计划时间 - 当前时间 in (10,20,-10)，定时器每天跑
+	 * 
+	 * @return
+	 */
+	List<ProjectTask> queryProjectArrivalReceipt();
+
+	/**
+	 * 转移设备界面查询项目列表
+	 * 
+	 * @param project
+	 * @return
+	 */
+	List<Project> queryTransferProjectList(Project project);
+
+	/**
+	 * 查询可以转移的设备序列号
+	 * 
+	 * @param project
+	 * @param transferProjectId
+	 * @return
+	 */
+	List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId);
+
+	/**
+	 * 插入转移的设备序列号
+	 * 
+	 * @param paramMap
+	 */
+	void insertProjectTransferShipment(Map<String, Object> paramMap);
+
+	/**
+	 * 转移时更新设备序列号
+	 * 
+	 * @param paramMap
+	 */
+	void updateProjectTransferShipment(Map<String, Object> paramMap);
+
+	/**
+	 * 转移之后增加合同与项目的关联关系，插入pm_project_contract
+	 * 
+	 * @param paramMap
+	 */
+	void insertTransferContract(Map<String, Object> paramMap);
+
+	/**
+	 * 查询收货确认单，除去已转出的设备
+	 * 
+	 * @param contractNos
+	 * @param projectId
+	 * @return
+	 */
+	List<Map<String, String>> querySpotCheckList(String contractNos, int projectId);
+
+	/**
+	 * 批量插入现场验货单导出不需要序列号明细的item
+	 * @param itemList
+	 */
+	void batchInsertSpotCheckIgnoreItem(List<Item> itemList);
+
+	/**
+	 * 
+	 */
+	void truncateSpotCheckIgnoreItem();
+
+	/**
+	 * @param projectId
+	 * @param memberRoles
+	 * @return
+	 */
+	List<ProjectMember> queryValidMemberEmailByProjectIdAndRoles(int projectId, String memberRoles);
+
+	/**
+	 * @param projectId
+	 * @return
+	 */
+	List<Notification> queryNotifyList(int projectId);
+
+	/**
+	 * @param params
+	 * @return
+	 */
+	List<Map<String, Object>> queryProjectInspection(Map<String, Object> params);
+
+	/**
+	 * @return
+	 */
+	List<String> queryProjectInspectionOffice();
+
+	/**
+	 * @param projectIds
+	 * @param string
+	 * @return
+	 */
+	List<ProjectMember> queryValidMemberByProjectIdsAndRoles(String projectIds, String string);
+
+	/**
+	 * 
+	 */
+	List<Map<String, Object>> queryProjectInspectionCounts();
+
+    /**
+     * @param projectId
+     * @param dataTypeCode
+     * @return
+     */
+    List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode);
+
+    /**
+     * @param projectId
+     * @param projectType
+     * @return
+     */
+    List<ProjectDeliver> queryDeliverDetailByProjectIdAndProjectType(int projectId, String projectType);
+
+    /**
+     * @param projectMaintenance
+     * @return
+     */
+    List<ProjectMaintenanceVO> selectProjectMaintenanceList(ProjectMaintenanceVO projectMaintenance);
+
+    /**
+     * @param projectMaintenance
+     * @return 
+     */
+    Integer insertOrUpdateProjectMaintenance(ProjectMaintenance projectMaintenance);
+
+    /**
+     * @param id
+     * @return
+     */
+    ProjectMaintenanceVO selectProjectMaintenanceById(Integer id);
+
+    /**
+     * @param projectMaintenance
+     * @return
+     */
+    List<ProjectMaintenanceVO> selectProjectMaintenanceVOList(ProjectMaintenanceVO projectMaintenance);
+
+    /**
+     * @param projectMaintenance
+     * @return
+     */
+    List<Map<String, Object>> selectProjectMaintenanceMapList(ProjectMaintenanceVO projectMaintenance);
+
+    /**
+     * @param projectMaintenance
+     * @param displayParam
+     * @return
+     */
+    List<Map<String, Object>> selectProjectMaintenanceMapList(ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam);
+
+    /**
+     * @param projectDeliver
+     */
+    void updateProjectDeliverById(ProjectDeliver projectDeliver);
+
+    /**
+     * 查询未上传的必传交付件数量
+     * @param projectDeliver
+     * @return
+     */
+    int queryNeededUndelivedCount(ProjectDeliver projectDeliver);
+
+    /**
+     * 查询未上传的必传交付件
+     * @param projectDeliver
+     * @return
+     */
+    List<ProjectDeliver> queryNeededUndelivedProjectDeliverList(ProjectDeliver projectDeliver);
+    
+    /**
+     * @param id
+     * @return
+     */
+    ProjectSupervisionVO selectProjectSupervisionById(Integer id);
+
+    /**
+     * @param projectSupervision
+     * @return
+     */
+    List<ProjectSupervisionVO> selectProjectSupervisionList(ProjectSupervisionVO projectSupervision);
+
+    /**
+     * @param projectSupervision
+     * @return
+     */
+    List<ProjectSupervisionVO> selectProjectSupervisionVOList(ProjectSupervisionVO projectSupervision);
+
+    /**
+     * @param projectSupervision
+     * @return
+     */
+    List<Map<String, Object>> selectProjectSupervisionMapList(ProjectSupervisionVO projectSupervision);
+
+    /**
+     * @param projectSupervision
+     * @param displayParam
+     * @return
+     */
+    List<Map<String, Object>> selectProjectSupervisionMapList(ProjectSupervisionVO projectSupervision, DisplayParam displayParam);
+
+    /**
+     * @param projectSupervision
+     * @return
+     */
+    Integer insertOrUpdateProjectSupervision(ProjectSupervision projectSupervision);
+
+    /**
+     * 项目维护查询指定日期维护的维护人
+     * @param params
+     * @return
+     */
+    List<String> selectDailyMaintenanceUsers(Map<String, Object> params);
+    
+    /**
+     * 项目维护指定日期的维护记录
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectDailyMaintenanceMapList(Map<String, Object> params);
+
+    /**
+     * 查询单个项目中最大的维护记录id
+     * @param projectMaintenance
+     * @return maxId
+     */
+    Integer selectSingleProjectMaintenanceMaxId(ProjectMaintenance projectMaintenance);
+
+    /**
+     * 查询存在总代借货合同的项目
+     * @return
+     */
+    List<Project> querySoleAgentProject();
+
+    /**
+     * 查询项目历史的执行单和合同信息
+     * @param projectId
+     * @return {
+     *  projectId,
+     *  projectName,
+     *  orderExecNumber,
+     *  contractNo
+     * }
+     */
+    List<Map<String, Object>> queryProjectOldOrderContractInfo(Integer projectId);
+    
+    /**
+     * 查询项目新增的执行单和合同信息
+     * @param projectId
+     * @return {
+     *  projectId,
+     *  projectName,
+     *  orderExecNumber,
+     *  contractNo
+     * }
+     */
+    List<Map<String, Object>> queryProjectNewOrderContractInfo(Integer projectId);
+
+    /**
+     * 失效项目中已经不存在的合同以及失效项目中旧的借货合同
+     * @param paramMap
+     */
+    void invalidSoleAgentProjectContract(Map<String, Object> paramMap);
+
+    /**
+     * 删除项目原关联合同失效的产品清单信息
+     * @param projectId
+     */
+    void deleteProjectUnlinkedContractProductLine(Integer projectId);
+
+    /**
+     * 更新项目的销售类型
+     * @param projectId
+     * @param salesType
+     */
+    void updateProjectSalesType(Integer projectId, String salesType);
+
+    /**
+     * 更新项目的销售类型
+     * @param params {projectId, salesType}
+     */
+    void updateProjectSalesType(Map<String, Object> params);
+
+    /**
+     * 删除项目的发货安装信息
+     * @param projectId
+     */
+    void deleteShipmentInstallInfoByProjectId(int projectId);
+
+}

@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.MailInfoMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.MailInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="subject" jdbcType="VARCHAR" property="subject" />
+    <result column="sendTime" jdbcType="TIMESTAMP" property="sendTime" />
+    <result column="expectSendTime" jdbcType="TIMESTAMP" property="expectSendTime" />
+    <result column="sendFlag" jdbcType="BIT" property="sendFlag" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="content" jdbcType="LONGVARCHAR" property="content" />
+    <result column="tos" jdbcType="LONGVARCHAR" property="tos" />
+    <result column="ccs" jdbcType="LONGVARCHAR" property="ccs" />
+    <result column="bccs" jdbcType="LONGVARCHAR" property="bccs" />
+    <result column="actualSendAddress" jdbcType="LONGVARCHAR" property="actualSendAddress" />
+    <result column="attachFiles" jdbcType="LONGVARCHAR" property="attachFiles" />
+    <result column="isInner" jdbcType="BIT" property="isInner" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, subject, sendTime, expectSendTime, sendFlag, createBy, createTime, content, tos, ccs, bccs, actualSendAddress, attachFiles, isInner
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_mails
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_mails
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.MailInfo">
+    insert into t_mails (id, subject, sendTime, 
+      expectSendTime, sendFlag, createBy, 
+      createTime, content, tos, 
+      ccs, bccs, actualSendAddress, 
+      attachFiles, isInner)
+    values (#{id,jdbcType=INTEGER}, #{subject,jdbcType=VARCHAR}, #{sendTime,jdbcType=TIMESTAMP}, 
+      #{expectSendTime,jdbcType=TIMESTAMP}, #{sendFlag,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}, #{tos,jdbcType=LONGVARCHAR}, 
+      #{ccs,jdbcType=LONGVARCHAR}, #{bccs,jdbcType=LONGVARCHAR}, #{actualSendAddress,jdbcType=LONGVARCHAR}, 
+      #{attachFiles,jdbcType=LONGVARCHAR}, #{isInner,jdbcType=BIT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.MailInfo">
+    insert into t_mails
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="subject != null">
+        subject,
+      </if>
+      <if test="sendTime != null">
+        sendTime,
+      </if>
+      <if test="expectSendTime != null">
+        expectSendTime,
+      </if>
+      <if test="sendFlag != null">
+        sendFlag,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+      <if test="tos != null">
+        tos,
+      </if>
+      <if test="ccs != null">
+        ccs,
+      </if>
+      <if test="bccs != null">
+        bccs,
+      </if>
+      <if test="actualSendAddress != null">
+        actualSendAddress,
+      </if>
+      <if test="attachFiles != null">
+        attachFiles,
+      </if>
+      <if test="isInner != null">
+        isInner,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="subject != null">
+        #{subject,jdbcType=VARCHAR},
+      </if>
+      <if test="sendTime != null">
+        #{sendTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expectSendTime != null">
+        #{expectSendTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="sendFlag != null">
+        #{sendFlag,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="tos != null">
+        #{tos,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="ccs != null">
+        #{ccs,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="bccs != null">
+        #{bccs,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="actualSendAddress != null">
+        #{actualSendAddress,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="attachFiles != null">
+        #{attachFiles,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="isInner != null">
+        #{isInner,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.MailInfo">
+    update t_mails
+    <set>
+      <if test="subject != null">
+        subject = #{subject,jdbcType=VARCHAR},
+      </if>
+      <if test="sendTime != null">
+        sendTime = #{sendTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expectSendTime != null">
+        expectSendTime = #{expectSendTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="sendFlag != null">
+        sendFlag = #{sendFlag,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="tos != null">
+        tos = #{tos,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="ccs != null">
+        ccs = #{ccs,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="bccs != null">
+        bccs = #{bccs,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="actualSendAddress != null">
+        actualSendAddress = #{actualSendAddress,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="attachFiles != null">
+        attachFiles = #{attachFiles,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="isInner != null">
+        isInner = #{isInner,jdbcType=BIT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.MailInfo">
+    update t_mails
+    set subject = #{subject,jdbcType=VARCHAR},
+      sendTime = #{sendTime,jdbcType=TIMESTAMP},
+      expectSendTime = #{expectSendTime,jdbcType=TIMESTAMP},
+      sendFlag = #{sendFlag,jdbcType=BIT},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=LONGVARCHAR},
+      tos = #{tos,jdbcType=LONGVARCHAR},
+      ccs = #{ccs,jdbcType=LONGVARCHAR},
+      bccs = #{bccs,jdbcType=LONGVARCHAR},
+      actualSendAddress = #{actualSendAddress,jdbcType=LONGVARCHAR},
+      attachFiles = #{attachFiles,jdbcType=LONGVARCHAR},
+      isInner = #{isInner,jdbcType=BIT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_mails
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.subject != null and '' != model.subject">
+					subject = #{model.subject, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isInner != null">
+					isInner = #{model.isInner, jdbcType=BIT} AND
+				</if>
+				<if test="model.sendTime != null and '' != model.sendTime">
+					sendTime = #{model.sendTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.expectSendTime != null and '' != model.expectSendTime">
+					expectSendTime = #{model.expectSendTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.sendFlag != null">
+					sendFlag = #{model.sendFlag, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.content != null and '' != model.content">
+					content = #{model.content, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.tos != null and '' != model.tos">
+					tos = #{model.tos, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.ccs != null and '' != model.ccs">
+					ccs = #{model.ccs, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.bccs != null and '' != model.bccs">
+					bccs = #{model.bccs, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.actualSendAddress != null and '' != model.actualSendAddress">
+					actualSendAddress = #{model.actualSendAddress, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.attachFiles != null and '' != model.attachFiles">
+					attachFiles = #{model.attachFiles, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					subject like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					content like CONCAT("%", #{fuzzy}, "%") or
+					tos like CONCAT("%", #{fuzzy}, "%") or
+					ccs like CONCAT("%", #{fuzzy}, "%") or
+					bccs like CONCAT("%", #{fuzzy}, "%") or
+					actualSendAddress like CONCAT("%", #{fuzzy}, "%") or
+					attachFiles like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_mails
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.subject != null and '' != model.subject">
+					subject = #{model.subject, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isInner != null">
+					isInner = #{model.isInner, jdbcType=BIT} AND
+				</if>
+				<if test="model.sendTime != null and '' != model.sendTime">
+					sendTime = #{model.sendTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.expectSendTime != null and '' != model.expectSendTime">
+					expectSendTime = #{model.expectSendTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.sendFlag != null">
+					sendFlag = #{model.sendFlag, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.content != null and '' != model.content">
+					content = #{model.content, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.tos != null and '' != model.tos">
+					tos = #{model.tos, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.ccs != null and '' != model.ccs">
+					ccs = #{model.ccs, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.bccs != null and '' != model.bccs">
+					bccs = #{model.bccs, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.actualSendAddress != null and '' != model.actualSendAddress">
+					actualSendAddress = #{model.actualSendAddress, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.attachFiles != null and '' != model.attachFiles">
+					attachFiles = #{model.attachFiles, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					subject like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					content like CONCAT("%", #{fuzzy}, "%") or
+					tos like CONCAT("%", #{fuzzy}, "%") or
+					ccs like CONCAT("%", #{fuzzy}, "%") or
+					bccs like CONCAT("%", #{fuzzy}, "%") or
+					actualSendAddress like CONCAT("%", #{fuzzy}, "%") or
+					attachFiles like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="queryNotificationTemplate" parameterType="string" resultType="com.dp.plat.support.mail.NotificationTemplate">
+  	SELECT * from t_notify_template where templateCode = #{templateCode} 
+  	<![CDATA[
+  	     and effectiveFrom < now() and (effectiveTo is null or effectiveTo > now())
+  	]]>
+  </select>
+  
+  <select id="queryUnSendMails" resultType="com.dp.plat.support.mail.MailSenderInfo">
+     <![CDATA[
+     	select * from t_mails where sendFlag = false and expectSendTime < now()
+     ]]>
+  </select>
+  
+  <update id="updateMailWhenSendSuccess" parameterType="String">
+  	update 
+  	     t_mails 
+  	set sendFlag = true, sendTime = now() 
+  	<!-- where id in (${_parameter}) -->
+  	where FIND_IN_SET(id, #{_parameter})
+  </update>
+  
+  <insert id="updateOneMailInfoWhenSendSuccess" parameterType="com.dp.plat.support.mail.MailSenderInfo">
+    insert into t_mails (id, content, sendFlag, actualSendAddress, sendTime)
+    values (
+    	#{id}, "", #{sendFlag}, #{actualSendAddress},
+    	<if test="sendTime != null">
+	    	#{sendTime}
+	    </if>
+	    <if test="sendTime == null">
+	    	now()
+	    </if>
+    )
+    ON DUPLICATE KEY UPDATE sendFlag = VALUES(sendFlag), actualSendAddress = VALUES(actualSendAddress), sendTime = VALUES(sendTime)
+  </insert>
+  
+  <insert id="updateMailInfoWhenSendSuccess" parameterType="list">
+    insert into t_mails (id, content, sendFlag, actualSendAddress, sendTime)
+    values 
+    <foreach collection="list" item="item" index="index" separator=",">
+     (
+     	#{item.id}, "", #{item.sendFlag}, #{item.actualSendAddress},
+	    <if test="item.sendTime != null">
+	    	#{item.sendTime}
+	    </if>
+	    <if test="item.sendTime == null">
+	    	now()
+	    </if>
+     )
+    </foreach>
+    ON DUPLICATE KEY UPDATE sendFlag = VALUES(sendFlag), actualSendAddress = VALUES(actualSendAddress), sendTime = VALUES(sendTime)
+  </insert>
+</mapper>

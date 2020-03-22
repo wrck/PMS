@@ -1,0 +1,58 @@
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
+ "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="business">
+	<!--
+      - ===============================================
+      - 合格证信息查询
+      - @author Mission
+      - @date 2012-2-27
+      - ===============================================
+    -->
+	<select id="queryOQCInfo" parameterClass="string" resultClass="java.util.HashMap" remapResults="true">
+        SELECT 
+		    i.barcode, i.inspectUser, si.info 
+		FROM
+		    `mes_oqc_info` i 
+		    LEFT JOIN `mes_seal_info` si 
+		        ON i.`inspectUser` = si.`user` 
+		        AND (
+		            (
+		                i.`inspectTime` BETWEEN si.`takeTime` 
+		                AND DATE_FORMAT(si.`backTime`, "%Y-%m-%d 23:59:59")
+		            ) 
+		            OR (
+		                i.`inspectTime` >= si.`takeTime` 
+		                AND si.`backTime` IS NULL
+		            )
+		        )
+		        AND si.info like "QC PASS%"
+		WHERE i.barcode = #barcode#
+	</select>
+	
+	<!--
+      - ===============================================
+      - 印章信息批量导入
+      - @author Mission
+      - @date 2012-2-27
+      - ===============================================
+    -->
+    <parameterMap class="java.util.HashMap" id="sealInfo">
+        <parameter property="id" />
+        <parameter property="name"/>
+        <parameter property="info"/>
+        <parameter property="description"/>
+        <parameter property="takeTime"/>
+        <parameter property="backTime"/>
+        <parameter property="remark"/>
+        <parameter property="uploadBy"/>
+    </parameterMap>
+    <insert id="insertSealInfo" parameterMap="sealInfo">
+        insert into mes_seal_info
+        <dynamic prepend="values" open="(" close=")" >
+            #id#, #name#, #info#, #description#, #user#, #takeTime#, #backTime#, #remark#, #uploadBy#, now()
+        </dynamic>
+    </insert>
+	<delete id="truncateSealInfo">
+	   delete from mes_seal_info
+	</delete>
+</sqlMap>

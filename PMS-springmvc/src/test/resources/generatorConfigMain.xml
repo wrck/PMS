@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" ''>
+<generatorConfiguration>
+	<classPathEntry
+		location="D:\Maven\Repository\mysql\mysql-connector-java\5.1.44\mysql-connector-java-5.1.44.jar" />
+	<context id="MysqlTable" defaultModelType="flat" targetRuntime="Mybatis3">
+		<!-- 通过自定义插件类生成自定义注解和接口 -->
+		<plugin type="com.dp.plat.MyBatisGenerator.GenPlugin">
+			<property name="mappers" value="com.dp.plat.core.dao.AbstractBaseMapper" />
+		</plugin>
+		<commentGenerator>
+			<property name="suppressDate" value="true" />
+			<property name="suppressAllComments" value="true" />
+			<!-- 生成的Java文件的编码 -->
+			<property name="javaFileEncoding" value="UTF-8" />
+			<!-- 格式化XML代码 -->
+			<property name="xmlFormatter"
+				value="org.mybatis.generator.api.dom.DefaultXmlFormatter" />
+		</commentGenerator>
+		<!-- 数据库配置 -->
+		<jdbcConnection driverClass="com.mysql.jdbc.Driver"
+			connectionURL="jdbc:mysql://10.102.0.106:3306/dppms_mvc?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
+			userId="root" password="!Q@W3e4r" />
+		<!-- 生成Model类存放位置 -->
+		<javaModelGenerator targetPackage="com.dp.plat.pms.springmvc.entity"
+			targetProject="src/main/java">
+			<!-- 设置一个根对象， 如果设置了这个根对象，那么生成的keyClass或者recordClass会继承这个类；在Table的rootClass属性中可以覆盖该选项 
+				注意：如果在key class或者record class中有root class相同的属性，MBG就不会重新生成这些属性了，包括： 1，属性名相同，类型相同，有相同的getter/setter方法； -->
+			<property name="rootClass" value="com.dp.plat.core.entity.BaseEntity" />
+		</javaModelGenerator>
+		<!-- 生成映射文件存放位置 -->
+		<sqlMapGenerator targetPackage="com.dp.plat.pms.springmvc.mapping"
+			targetProject="src/main/java" />
+		<!-- java DAO 类存放位置 -->
+		<javaClientGenerator targetPackage="com.dp.plat.pms.springmvc.dao"
+			targetProject="src/main/java" type="XMLMAPPER">
+			<!-- 可以为所有生成的接口添加一个父接口，但是MBG只负责生成，不负责检查 -->
+			<!-- <property name="rootInterface" value="com.dp.plat.core.dao.AbstractBaseMapper"  /> -->
+		</javaClientGenerator>
+		<!-- java Service 类存放位置 -->
+        <javaServiceGenerator targetPackage="com.dp.plat.pms.springmvc.service"
+            targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
+        </javaServiceGenerator>
+		<!--生成对应表及类名 -->
+		<table tableName="data_field_relation" domainObjectName="DataFieldRelation"
+			enableInsert="true" enableSelectByPrimaryKey="true"
+			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
+			enableCountByExample="false" enableUpdateByExample="false"
+			enableDeleteByExample="false" enableSelectByExample="false"
+			selectByExampleQueryId="false">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+		</table>
+		
+	</context>
+</generatorConfiguration>

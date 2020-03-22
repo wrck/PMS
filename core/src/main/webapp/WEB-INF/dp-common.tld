@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN"
+                        "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+<taglib>
+	<tlib-version>1.0</tlib-version>
+	<jsp-version>1.2</jsp-version>
+	<short-name>myTag</short-name>
+	<uri>http://www.dptech.com/tags/myTag</uri>
+	<display-name>Dp tag library</display-name>
+	<description>Dp tag library</description>
+	<tag>
+		<name>leftmenu</name>
+		<tag-class>com.dp.plat.core.tags.LeftMenuTag</tag-class>
+		<attribute>  
+            <name>node</name>  
+            <required>true</required>  
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+	</tag>
+	<tag>
+        <name>changeCompany</name>
+        <tag-class>com.dp.plat.core.tags.ChangeCompanyTag</tag-class>
+        <attribute>
+            <name>isNav</name>
+        </attribute>
+    </tag>
+	<!-- csrf token  -->
+	<tag>
+		<!-- 标签名 -->
+		<name>csrftoken</name><!-- 你定义的标签的名称 -->
+		<!-- 标签助手类 -->
+		<tag-class>com.dp.plat.core.tags.CsrfTokenScriptTag</tag-class><!-- 对应的标签处理程序：包名+类名（全限定名） -->
+		<!-- 标签的内容类型：empty表示空标签(使用空标签会报错)，jsp表示可以为任何合法的JSP元素 -->
+		<body-content>JSP</body-content><!-- 标签体内容的格式 -->
+	</tag>
+	
+		<!-- 文件上传标签 -->
+	<tag>
+		<name>fileinput</name>
+		<tag-class>com.dp.plat.core.tags.FileInputTag</tag-class>
+		<attribute>  
+            <name>id</name>  
+            <required>true</required> 
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+		<attribute>  
+            <name>name</name> 
+            <required>true</required> 
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+		<attribute>  
+            <name>cssClass</name>  
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+		<attribute>  
+            <name>cssStyle</name>  
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+		<attribute>  
+            <name>fileType</name>  
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>  
+        </attribute> 
+        <attribute>
+        	<name>multiple</name> 
+        </attribute>
+	</tag>
+	
+</taglib>

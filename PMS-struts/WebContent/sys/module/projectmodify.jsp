@@ -1,0 +1,2774 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<%@page import="com.dp.plat.context.UserContext"%>
+<%@page import="com.dp.plat.context.SpringContext"%>
+<%@page import="com.dp.plat.util.StringEscUtil"%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<dp:base />
+<meta name="menu" content="SysLeftMenu">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="function" content="<s:text name='sys.project.management' />">
+<%-- <meta name="supfunction" content="<s:text name='sys.project.management' />"> --%>
+<style type="text/css">
+.instructionMark{
+	background-color: rgba(203, 227, 233, 0.11);
+}
+#displaytable1table tr{
+	height: 30px;
+}
+#displaytable1table input{
+	height: 25px;
+}
+input[type=file]{
+	display: inline-block;
+}
+li{
+	overflow: initial;
+}
+td a:VISITED {
+	color: #003300;
+}
+.rotate180 {
+    transform: rotate(180deg);
+}
+
+</style>
+<script>
+	var realnameArr=new Array();
+	var usernameArr=new Array();
+	
+	var realnameArr2=new Array();
+	var usernameArr2=new Array();
+	
+	var personcodeArr =new Array();
+	var personnameArr =new Array();
+	var persontelArr = new Array();
+	var personmailArr = new Array();
+	
+	var errCode = "<s:property value = 'project.errCode'/>";
+	var errMess = "<s:property value = 'project.errMess'/>";
+	var modifyflag = "<s:property value = 'modifyflag'/>";
+	var ekstr = "<s:property value='eventKeyStr'/>";
+	var evstr = "<s:property value='eventValueStr'/>";
+	var evdo = "<s:property value='eventDoingStr'/>";
+	var ppsize = "<s:property value = 'projectTaskList.size'/>";
+	ppsize = (ppsize == 0) ? "<s:property value = 'projectPlanEventList.size'/>" : ppsize;//projectTaskList.size为0，则取projectPlanEventList.size
+	var column012 = "<s:property value='project.column012'/>";
+	var eventPlanHappenDateENG = "eventPlanHappenDateENG", eventActualFinishDate = "eventActualFinishDate";
+	var resultArr = ["301", "303", "305", "307", "309", "310", "313", "314"];//result数组
+	var toArr = ["留言反馈", "序列号明细", "项目计划", "项目计划", "交付件查看" ,"局点信息", "维护记录", "督查记录"];// 对应action返回的result值判断跳转到哪个选项卡
+	$(document).ready(function(){
+		if(errCode == 2 || errCode == 1){//保存出错或成功，均进行提示
+// 			alert(errMess);
+		}
+		queryserviceuser(11);
+		$("#serviceManagerCodeforjson").autocomplete({
+			source: realnameArr
+		});
+		
+		queryprogramuser(12);
+		$("#programManagerCodeforjson").autocomplete({
+			source: realnameArr2
+		});
+		$("#programManagerCodeforjsonB").autocomplete({
+			source: realnameArr2
+		});
+		
+		queryPersonInfo();
+		
+		var loginname = "<s:property value='user.username'/>";
+		var servicename = "<s:property value='project.serviceManagerCode'/>";
+		var pm = "<s:property value='project.programManagerCode'/>";
+		var pmb = "<s:property value='project.programManagerCodeB'/>";
+		
+		$(".writeTxt").attr("disabled", "true");
+		if(("<s:property value =  'user.isHasRole(11)'/>" == "true" || "<s:property value = 'project.isback'/>" == "38")
+				&&"<s:property value='project.projectState'/>" != '20' 
+				&&	loginname == servicename
+			){//服务经理
+			$(".serviceManagerTxt").removeAttr("disabled");
+			$(".submitBtn").removeAttr("disabled");
+		}
+		
+		if((servicename == loginname && "<s:property value = 'project.isback'/>" == "38")
+				||("<s:property value =  'user.isHasRole(13)'/>" == "true" && "<s:property value = 'project.isback'/>" == "36")
+			){//服务经理，工程管理部查看回退原因
+			$("#agreeBackTo").show();
+			$("#agreeBackTo #backState").hide();
+			$("#agreeBackTo textarea").attr("readonly",true);
+			$("#agreeBackTo #notbackCause").attr("readonly", false).show();
+		}
+		
+		if("<s:property value =  'user.isHasRole(12)'/>" == "true" 
+			&&"<s:property value='project.projectState'/>" != '20'
+			&& (loginname == pm || loginname == pmb)
+			){//项目经理
+			$(".programManagerTxt").removeAttr("disabled");
+			$(".submitBtn").removeAttr("disabled");
+			$("#createWeely").show();
+			$("#callback").show();
+			
+		}
+		if("<s:property value =  'user.isHasRole(13)'/>" == "true" || "<s:property value = 'project.isback'/>" == "36"){//工程管理部
+			$(".engineeManagerTxt").removeAttr("disabled");
+			$(".submitBtn").removeAttr("disabled");
+		}
+		if("<s:property value =  'user.isHasRole(13)'/>" == "false"){
+			$("#newInstruction").html("");
+			$(".gcglb").html("");
+			$(".endelete").hide();
+		}
+		
+		//不能更改
+		if(modifyflag == 1){
+			$(".writeTxt").attr("disabled", "true");
+		}
+		
+		$(".dailishang").hide();
+		
+		$(".dailishanghide").show();
+		
+		var firstTab = "<s:property value='navTabList[0].basicDataId'/>";
+		
+		$("."+firstTab).removeClass("hideDiv");
+		
+		var result = '<s:property value="result"/>';
+		
+		if(result == 200){
+			var weeklyId = '<s:property value="projectWeekly.weeklyId"/>';
+			javascript:popWindow('module/sub/EditWeekly.action?projectWeekly.weeklyId='+weeklyId, 1100, 700,'查看周报', 'BudgetUpload', true);
+		}
+		
+		if(result == 302){
+			alert("合同合并到当前项目中已完成！谢谢");	
+			
+		}
+		
+		if(result == 202){
+			if(confirm("已成功拆分出新项目，请确认是否立即跳转到新创建项目进行查看操作？")){
+				var newProjectId = '<s:property value="paramId"/>';
+				window.location.href = "module/ProjectModify.action?project.paramId="+newProjectId;
+			}
+		}
+		if(result == 310){
+			$("li[name='navli'][onclick*='softversionDiv']").click();
+		}
+		for(var i = 0;i < resultArr.length;i++){
+			if(resultArr[i] == result){
+				showBarcode(toArr[i]);
+				break;
+			}
+		}
+		//渲染项目成员表
+		alterMemberTable();
+		
+		///渲染软件版本更新表单
+		//alterSoftWares();
+		var tabletr = "#displaytable1table tbody tr";
+		for(var i = 0;i < $(tabletr).length;i++){
+			date_picker(eventPlanHappenDateENG + i);
+			
+			var span1 = $("#eventPlanHappenDateENGSpan" + i).text().trim();
+			$("#eventPlanHappenDateENG" + i).val(span1);
+			
+			var span2 = $("#eventActualFinishDateSpan" + i).text().trim();
+			$("#eventActualFinishDate" + i).val(span2);
+			
+		}
+		
+		changeServiceManagerTxt("#programManagerTxt");
+		
+		var evdo0 = evdo.split(",")[0];
+		var evdo1 = evdo.split(",")[1];
+		var evdo2 = evdo.split(",")[2];
+		$("#currentStepVal").val(evdo0);
+		$("#stepbut").click();
+		$("#nowEventStr").text(evdo1);//当前步骤
+		$("#nowEventPlanDateENGStr").text(evdo2);//计划日期
+		$("#nowDate").text(CurentDate());//当前日期
+		
+		//判断实施方式是否可以修改
+		var column012Readonly = $("#column012Readonly").val();
+		if(column012Readonly != -1){
+			$("#programManagerTxt").attr("disabled","disabled");
+		}
+		
+		
+		//获取流程图
+		$("#queryCallBackView").click(function(){
+			$.ajax({
+				url:"viewDeployment.action",
+				type:"post",
+				dataType:"json",
+				data:{procdefKey:"CallBack"},
+				success:function(data){
+				  	window.open("work/WorkFlowViewImage.action?param.deploymentId="+data.deploymentId+"&param.imageName="+data.imageName);
+				},
+				error:function(){
+					alert('error!');
+				}
+			});
+			return false;
+		});
+		
+		/*
+			点击回访流程选项卡
+		*/
+		
+		if(parseInt("<s:property value='workSpaceReturnType'/>")==101){
+			var index = $("li[name='navli'][onclick*='callbackFlowDiv']").index();
+			clickNavLi(index,'callbackFlowDiv');
+		}
+		//发起回访流程后提示
+		var isCallBack = '<s:property value='isCallBack'/>';
+		if(isCallBack == 1){
+			alert("此项目将于一周内进行400回访，请知晓。");			
+		}
+	});
+	
+	function checkSubmit(){
+		/*var serviceChannel = $("#serviceChannel:visible").val();//服务提供商
+		if(serviceChannel == ''){
+			alert("请填写服务提供商");
+			$("#serviceChannel").focus();
+			return false;
+		}
+		 var agentChannel = $("#agentChannel:visible").val();//施工代理商
+		if(agentChannel == ''){
+			alert("请填写施工代理商");
+			$("#agentChannel").focus();
+			return false;
+		}
+		var column013 = $("#column013:visible").val();//最终客户
+		if(column013 == ''){
+			alert("请填写最终客户");
+			$("#column013").focus();
+			return false;
+		} */
+		var serviceManagerCodeforjson = $("#serviceManagerCodeforjson").val();//项目经理A
+        if(serviceManagerCodeforjson != ''){
+            var serviceManagerCode = $("#serviceManagerCode").val();
+            if (serviceManagerCode == '') {
+                alert("请选择服务经理");
+                $("#serviceManagerCodeforjson").focus();
+                return false;
+            }
+        }
+		var programManagerCodeforjson = $("#programManagerCodeforjson").val();//项目经理A
+        if(programManagerCodeforjson != ''){
+        	var programManagerCode = $("#programManagerCode").val();
+        	if (programManagerCode == '') {
+	            alert("请选择项目经理A");
+	            $("#programManagerCodeforjson").focus();
+	            return false;
+        	}
+        }
+        var programManagerCodeforjsonB = $("#programManagerCodeforjsonB").val();//项目经理B
+        if(programManagerCodeforjsonB != ''){
+            var programManagerCodeB = $("#programManagerCodeB").val();
+            if (programManagerCodeB == '') {
+                alert("请选择项目经理B");
+                $("#programManagerCodeforjsonB").focus();
+                return false;
+            }
+        }
+		$("#mainForm").submit();
+	}
+	/**
+	查询OA人员信息
+	*/
+	function queryPersonInfo(){
+		$.ajax({
+			url:"queryperson.action",
+			type:'post',
+			dataType:'json',
+			data:{},
+			success:queryPersonInfo2
+		});
+	}
+	
+	function queryPersonInfo2(json){
+		var userlist = json.personList;
+		for(var i = 0;i < userlist.length;i++){
+			personcodeArr[i] = userlist[i].salesmanCode;
+			personnameArr[i] = userlist[i].salesmanCode+"-"+userlist[i].salesmanName;
+			persontelArr[i] = userlist[i].salesmanTel;
+			personmailArr[i] = userlist[i].salesmanMail;
+		}
+	}
+	
+	/**
+	 * 更新isback字段
+	 **/
+	function updateprojectisback(projectId, isback, backCause,pm, rollback, disagree){
+		var data = {projectId: projectId, isback: isback, backCause: backCause,pm: pm};
+        if (disagree == 1) {
+        	data.message = "disagree";
+        	data.notbackCause = $("#notbackCause").val() || "驳回";
+        }
+		$.ajax({
+			url:'updateprojectisback.action',
+			type:'post',
+			dataType:'json',
+			data: data,
+			success: rollback
+		});
+	}
+	
+	/**
+     * 更新项目实施状态
+     **/
+    function updateProjectExecutionState(projectId){
+		if (!projectId) {
+			return false;
+		}
+		var executionState = $("#projectExecutionState").val();
+		if (!executionState) {
+			alert("请选择实施状态！");
+			return false;
+		}
+        var data = {"project.projectId": projectId, "project.executionState": executionState};
+        $.ajax({
+            url:'projectAjax_updateProjectExecutionState.action',
+            type:'post',
+            dataType:'json',
+            data: data,
+            success: function(data) {
+            	if (data.result == 313) {
+            		location.reload();
+            	} else {
+            		alert("更新失败!");
+            	}
+            },
+            error: function(err) {
+            	alert("更新失败！错误信息：\r" + JSON.stringify(err));
+            }
+        });
+    }
+	
+	function checkBack(){
+		$("div.backToDiv").toggle();
+	}
+	
+	function backClick(){
+		if(!confirm("系统将自动发送邮件，请等待审核")){
+			return;
+		}
+		var projectId = $("#projectId").val();
+		var isback = $("#backState").val();
+		var backCause = $("#backCause").val();
+		updateprojectisback(projectId, isback, backCause,'', checkBackSucc);
+	}
+	
+	function checkBackSucc(data){
+		if(data.result == 0){
+			alert("无权限更新");
+		}else{
+			alert("回退中，请等待审核");
+			location.reload(true);
+		}
+	}
+	//同意回退 30
+	function checkAgree(isback, disagree){
+		var projectId = $("#projectId").val();
+		var pm = $("#serviceManagerCode").val();
+		updateprojectisback(projectId, isback, '',pm, checkAgreeSucc, disagree);
+	}
+	
+	function checkAgreeSucc(data){
+		if(data.result == 0){
+			alert("回退失败");
+		}else if(data.result == 3){
+			alert("回退成功，请重新指定服务经理");
+			location.reload(true);
+		}else if(data.result == 4){
+			alert("回退成功，请重新指定项目经理");
+			location.reload(true);
+		}else if(data.result == -1){
+			window.location.href="module/ProjectManage.action";
+		} else if(data.result == -3){ // 工程管理部驳回
+            alert("回退驳回成功！");
+            location.reload(true);
+        } else if(data.result == -4){ // 服务经理驳回
+            alert("回退驳回成功！");
+            location.reload(true);
+        }
+	}
+	
+	function checkForm(){
+		var serviceManagerCode = $("#serviceManagerCode").val();//服务经理
+		if(serviceManagerCode == ''){
+			alert("请填写服务经理!");
+			$("#serviceManagerCodeforjson").focus();
+			return false;
+		}
+		return true;
+	}
+	
+	function queryserviceuser(obj){
+		$.ajax({
+			url:'queryalluser.action',
+			type:'post',
+			dataType:'json',
+			data:{roleid:obj},
+			success:queryserviceuser2
+		});
+	}
+	function queryserviceuser2(json){
+		var userlist = json.allusernameList;
+		for(var i = 0;i < userlist.length;i++){
+			usernameArr[i] = userlist[i].username;
+			realnameArr[i] = userlist[i].username+"-"+userlist[i].realName;
+		}
+	}
+	
+	function queryprogramuser(obj){
+		$.ajax({
+			url:'queryalluser.action',
+			type:'post',
+			dataType:'json',
+			data:{roleid:obj},
+			success:queryprogramuser2
+		});
+	}
+	function queryprogramuser2(json){
+		var userlist = json.allusernameList;
+		for(var i = 0;i < userlist.length;i++){
+			usernameArr2[i] = userlist[i].username;
+			realnameArr2[i] = userlist[i].username+"-"+userlist[i].realName;
+		}
+	}
+	
+	function fillservicemanager(){
+		commonfill("serviceManagerCodeforjson", "serviceManagerCode",usernameArr ,realnameArr);
+	}
+	/* function fillprogrammanager(){
+		commonfill("programManagerCodeforjson", "programManagerCode",usernameArr2,realnameArr2);
+	} */
+	function fillprogrammanager(obj){
+		if(obj.value==""){
+			$(obj).next().val("");
+		}
+		if(obj.value!=""){
+			var i=0;
+			for(;i<realnameArr2.length;i++){
+				if(realnameArr2[i]==obj.value){
+					break;
+				}
+			}
+			if(i==realnameArr2.length){
+				$(obj).next().val("");
+				return false;
+			} else{
+				$(obj).next().val(usernameArr2[i]);
+			}
+		}
+	}
+	
+	function commonfill(idjson, id ,usernameArr ,realnameArr){
+		var obj=document.getElementById(idjson);
+		if(obj.value==""){
+			document.getElementById(id).value="";
+		}
+		if(obj.value!=""){
+			var i=0;
+			for(;i<realnameArr.length;i++){
+				if(realnameArr[i]==obj.value){
+					break;
+				}
+			}
+			if(i==realnameArr.length){
+				$(obj).next().val("");
+				return false;
+			} else{
+				document.getElementById(id).value=usernameArr[i];
+			}
+		}
+	}
+	function over(obj){
+		if(!$(".feedback"+obj).is(":visible")){
+			$(".hideMark").hide();
+			$(".feedback"+obj).show();
+			$("#newInstruction").hide();
+		}else{
+			$(".hideMark").hide();
+			$(".feedback"+obj).hide();
+			$("#newInstruction").show();
+		}
+	}
+	
+	function createOver(){
+		$(".hideMark").hide();
+	}
+	//ajax提交用户回复批示
+	function instruction(obj){
+		var instructionId = $("#instructionId"+obj).val();
+		var instructionsInfo = $("#instructionsInfo"+obj).val();
+		var projectId = $("#projectId").val();
+		var instructionName = $("#instructionName").val();
+		var size = $(".feedback"+obj).size()+1;
+		var html = "<tr class='hideMark feedback"+obj+"'><td>"+size+"#</td><td style='width: 230px;height: 50px;border-right: 1px ridge;'>"+instructionName+"<br/><br/><br/>"+new Date().format("yyyy-MM-dd hh:mm:ss")+" </td><td>"+instructionsInfo+"</td></tr>";
+		
+		$.ajax({
+			url:"instruction.action",
+			type:"post",
+			dataType:'json',
+			data:{instructionId:instructionId ,instructionsInfo:instructionsInfo ,projectId:projectId  },
+			success:function(data){
+				var result = data.result;
+				if(result == 301){
+					$("#instruction"+obj).parent().parent().parent().before(html);
+					$("#instructionsInfo"+obj).val("");
+					$(".feedback"+obj).show();
+				}else{
+					alert("系统发生错误，请联系系统管理员!");
+				}
+			},
+		}); 
+	}
+	function showBarcode(text){
+		var li = "li[name='navli']";
+		for(var i = 0;i < $(li).length;i++){
+			if($(li).eq(i).children("a").text() == text){
+				$("li[name='navli']").eq(i).click();
+			}
+		}
+	}
+	
+	function addplan(){
+		var addTable = $("#addTable tbody").html();//需要增加的行
+		$("#displaytable1table tbody tr:last").after(addTable);
+		reid();
+	}
+	
+	function deleteplan(e){
+		$(e).parent().parent().remove();
+	}
+	
+	//重置id
+	function reid(){
+		var eventPlan = "input[name='projectTask.eventPlanHappenDateENGStr']";
+		var elen = $(eventPlan).length;
+		var id1 = $(eventPlan).eq(elen-3).attr("id").replace(eventPlanHappenDateENG, "");
+		var id2 = parseInt(id1) + 1;
+		if(isNaN(id2)){
+			$(eventPlan).eq(elen-2).attr("id", eventPlanHappenDateENG + 0);
+		}else{
+			$(eventPlan).eq(elen-2).attr("id", eventPlanHappenDateENG + id2);
+		}
+		date_picker($(eventPlan).eq(elen-2).attr("id"));
+	}
+	
+	function changeEvent(e){
+		var sel = $(e).val();
+		var projectId = $("#projectId").val();
+		var column010 = $("#column010").val();
+		var column011 = $("#column011").val();
+		$(e).parent().next().next().next().next().children("a").attr("onclick", "popWindow('module/sub/ToUploadDeliverableFile.action?projectDeliver.projectId=" + projectId + "&projectDeliver.column010=" + column010 +
+				"&projectDeliver.column011=" + column011 + "&projectDeliver.eventKey=" + sel + "' , 700, 450,'上传交付件', 'BudgetUpload', true);");
+	}
+	
+	function planformSubmit(){
+		for(var i = 0 ; i < ppsize ;i++){
+			var eventPlanHappenDateSpan = $("#eventPlanHappenDateSpan"+i).text();
+			if(eventPlanHappenDateSpan != undefined){
+				$("#eventPlanHappenDateStr"+i).val(eventPlanHappenDateSpan.trim());
+			}
+		}
+		if(!checkMember()){
+			return false;
+		}
+		if(!checkPlan()){
+			return false;
+		}
+		$("#planform").submit();
+	}
+	
+	function checkMember(){
+		var tr = "#memberDiv tbody tr";
+		for(var i = 1;i < $(tr).length;i++){
+			if($(tr).eq(i).children("td:eq(1)").text().trim() == "最终客户"){
+				return true;
+			}
+		}
+		alert("必须添加最终客户后才能进行后续操作");
+		clickNavLi(0, "memberDiv");
+		return false;
+	}
+	
+	function checkPlan(){
+		if($("#displaytable1table tbody tr").is(":visible").length <= 1){
+			alert("请至少增加一行计划");
+			addplan();
+			return false;
+		}
+		ppsize = $("input[name='projectTask.eventPlanHappenDateENGStr']").length-1;
+		for(var i = 0;i < ppsize;i++){
+			var epi = $("#" + eventPlanHappenDateENG + i);
+			if(epi.val() == ''){
+				alert("工程计划发生日期不能为空");
+				epi.focus();
+				return false;
+			}
+		}
+		var es = "select[name='projectTask.eventKeyStr']";
+		for(var i = 0;i < $(es).length - 1;i++){
+			if($(es).eq(i).val() == 0){
+				alert("参照事件不能为空");
+				$(es).eq(i).focus();
+				return false;
+			}
+		}
+		return true;
+	}
+	//ajax提交用户新建批示
+	function instructionNew(){
+		var instructionsInfo = $("#instructionsInfo").val();
+		var projectId = $("#projectId").val();
+		$.ajax({
+			url:"instruction.action",
+			type:"post",
+			dataType:'json',
+			data:{instructionsInfo:instructionsInfo ,projectId:projectId  },
+			success:function(data){
+				var result = data.result;
+				if(result == 301){
+					window.location.reload();
+				}else{
+					alert("系统发生错误，请联系系统管理员!");
+				}
+			},
+		}); 
+	}
+	
+	function back10Submit(){
+		if(confirm("请确定是否要继续跟踪此项目？")){
+			var projectId = $("#projectId").val();
+			$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{projectId:projectId ,projectState:'20',isback :'50'},
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("项目已返回工程管理部处，请等待处理！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("返回失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+	function back20Submit(){
+		var notGrantTailCause = $("#notGrantTailCause").val();
+		var column012 = $("#programManagerTxt").val();
+		var channelName = $("#agentChannel").val();
+		var column013 = $("#column013").val();
+		if(notGrantTailCause == ''){//不予跟踪原因为空
+			alert("不予跟踪原因不能为空！");
+		return false;
+		}
+		if(confirm("请确定是否不予跟踪此项目？")){
+			var projectId = $("#projectId").val();
+			$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{	projectId:projectId ,
+					 	projectState:'20',
+					 	isback:'40',
+					 	column012:column012,
+						channelName:channelName,
+						column013:column013,
+					 	notGrantTailCause:notGrantTailCause
+					},
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("不予跟踪，已通知服务经理/项目经理！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("更新失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+	function back20Submit_service(){
+		var column012 = $("#programManagerTxt").val();
+		var channelName = $("#agentChannel").val();
+		var column013 = $("#column013").val();
+		var notGrantTailCause = $("#notGrantTailCause").val();
+		if(channelName == ''){
+			alert("请填写代理商名称！");
+			return false;
+		}
+		if(confirm("请确定是否不予跟踪此项目？")){
+			var projectId = $("#projectId").val();
+		 	$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{	projectId:projectId ,
+						projectState:'20',
+						column012:column012,
+						channelName:channelName,
+						column013:column013,
+						notGrantTailCause:notGrantTailCause,
+						isback:"42",
+						isupdate :1},//项目经理表示不予跟踪
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("不予跟踪，请等待工程管理部确认处理！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("更新失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+	function back20Submit_sure(){
+		if(confirm("请确定是否不予跟踪此项目？")){
+			var projectId = $("#projectId").val();
+		 	$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{	projectId:projectId ,
+						projectState:'20',
+						isback:"30"
+						},//项目经理表示不予跟踪
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("已确认不予跟踪，请知悉！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("更新失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+	function back30Submit(){
+		if(confirm("请确定是否要跟踪此项目？")){
+			var projectId = $("#projectId").val();
+			$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{projectId:projectId ,projectState:'30',isback:'32'},
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("项目已返回服务经理处，请等待处理！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("更新失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+	function back30Submit_sure(){
+		if(confirm("请确定是否要跟踪此项目？")){
+			var projectId = $("#projectId").val();
+			$.ajax({
+				url:"backToLastStep.action",
+				type:"post",
+				dataType:"json",
+				data:{projectId:projectId ,projectState:'30',isback:'34'},
+				success:function(data){
+					var result = data.result;
+					if(result == 201){
+						alert("项目已可以继续跟踪，请知悉！");
+						window.location.href="module/ProjectManage.action";
+					}else{
+						alert("更新失败，请联系管理员!");
+					}
+				}
+			});
+		}
+	}
+
+/* ##########################项目闭环################################ */
+ var pmCLPersonRoleArr={pm:false,sm:false,cb:false,cl:false,proPm:false,proSm:false};
+ var pmCLProjectTaskId="";
+ var pmCLApproveStatus="";
+ var pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">查看审批</a>';
+ var pmClosedLoopResultTypeVal=0;
+ var viewCurrTaskId="";
+
+ 	$(function(){
+		pmCLIniFunVar();
+		pmCLPersonRole();
+				
+		var pmCLprojectCodeVal='<s:property value="project.projectCode"/>';
+		var paraData={
+				"project.projectCode":pmCLprojectCodeVal,
+				"project.projectId":'<s:property value="project.projectId"/>'};
+		
+		pmCLAJAX("pmCLoopAjax_execute.action",paraData,pmCliniPower); 
+	}); 
+	
+	function pmCLIniFunVar(){
+		$("#pmCLNextAcceptPerson").autocomplete({
+			source: realnameArr
+		});
+		
+		$("div[divshowArr='pmcl']").each(function(){
+			$(this).hide();
+		});
+	}
+	
+	function pmCliniPower(returnData){ //先判断项目状态projectProcessStatu,在判断任务ID
+		pmCLProjectTaskId=returnData.project.taskId;
+		viewCurrTaskId=returnData.viewCurrTaskId;
+		var flag01=true;
+		
+		//项目已关闭状态
+		if('<s:property value="project.projectState"/>'=="100" || '<s:property value="project.projectState"/>' == "20"){
+			pmCLApproveStatus='<s:property value="project.projectState"/>'=='100'?"已闭环":"不予跟踪";
+			pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">查看审批历史</a>';
+			pmClosedLoopResultTypeVal=100;
+		}else{
+			if(returnData.projectProcessStatu){	//项目闭环申请阶段
+				switch(parseInt(returnData.projectProcessStatu)){
+					case -1:
+						pmCLApproveStatus="项目闭环申请";
+						pmClosedLoopResultTypeVal=10;
+						if((!pmCLProjectTaskId)&&(pmCLPersonRoleArr.pm&&pmCLPersonRoleArr.proPm)){
+							$("#pmCLDiv").show();
+							flag01=false;
+							//获取流程图
+							pmCLProcessView(returnData.workflowCommonParam);
+						}	
+						break;
+					case 1:
+						pmCLApproveStatus="项目闭环申请";
+						pmClosedLoopResultTypeVal=10;
+						if((pmCLProjectTaskId)&&(pmCLPersonRoleArr.pm&&pmCLPersonRoleArr.proPm)){
+							/* $("#pmCLDiv").show(); */						
+							//获取流程图
+							pmCLProcessView(returnData.workflowCommonParam);
+							pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">办理任务</a>';
+						}	
+						break;
+					case 2:
+						pmCLApproveStatus="服务经理审核";
+						pmClosedLoopResultTypeVal=20;
+						if((pmCLProjectTaskId)&&(pmCLPersonRoleArr.sm&&pmCLPersonRoleArr.proSm)){
+							pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">办理任务</a>';
+						}
+						break;
+					case 3: 
+						pmCLApproveStatus="回访人员回访";
+						pmClosedLoopResultTypeVal=30;
+						if((returnData.project.taskId)&&(pmCLPersonRoleArr.cb)){
+							pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">办理任务</a>';
+						}
+						break;
+					case 4:
+						pmCLApproveStatus="工程人员闭环";
+						pmClosedLoopResultTypeVal=40;
+						if((returnData.project.taskId)&&(pmCLPersonRoleArr.cl)){
+							pmCLApproveStatusDo='<a id="pmCLExecudeA" href="javascript:void(0)" onclick="">办理任务</a>';
+						}
+						break;
+					default:
+						break;
+				}
+			}else{
+				alert("系统错误，请联系管理员！");
+			}
+		}	
+		if(flag01){
+			pmCLupdateList(returnData.pmClEvaluationHeaderList);
+		}
+		
+	}
+	
+	function pmCLProcessView(workData){
+		if(!workData){
+			alert("系统错误，请联系管理员！");
+			return;
+		}
+		var deploymentIdVal=workData.deploymentId;
+		var imageNameVal=workData.imageName;
+		var htmlVal='work/WorkFlowViewImage.action?param.deploymentId='+deploymentIdVal+'&param.imageName='+imageNameVal;
+		$("#queryProcessView").attr("href",htmlVal);
+		
+		$("#pmCLWarDom").hide();
+	}
+	
+	function pmCLPersonRole(){
+		pmCLPersonRoleArr.pm="<s:property value =  'user.isHasRole(12)'/>" == "true";
+		pmCLPersonRoleArr.sm="<s:property value =  'user.isHasRole(11)'/>" == "true";
+		pmCLPersonRoleArr.cb="<s:property value =  'user.isHasRole(14)'/>" == "true";
+		pmCLPersonRoleArr.cl="<s:property value =  'user.isHasRole(13)'/>" == "true";
+			
+		var nowUserName='<%out.print(UserContext.getUserContext().getUser().getUsername());%>';
+		var pmCLpmName='<s:property value="project.programManagerCode"/>';
+		var pmCLpmNameB='<s:property value="project.programManagerCodeB"/>';
+		var smCLpmName='<s:property value="project.serviceManagerCode"/>';
+		pmCLPersonRoleArr.proPm=((pmCLpmName&&nowUserName==pmCLpmName)||(pmCLpmNameB&&nowUserName==pmCLpmNameB))?true:false;
+		pmCLPersonRoleArr.proSm=(smCLpmName&&nowUserName==smCLpmName)?true:false;
+		
+	}
+	function pmCLAJAX(urlText,paraData,callBackFun){
+		$.ajax({
+			url:urlText,
+			type:"post",
+			dataType:"json",
+			data:paraData,
+			success:function(data){
+				callBackFun(data);
+			}
+		});
+	}
+	
+	
+	function pmCLupdateList(returnData){ 
+		var pmCLCreatedPerson="";
+		var pmCLCreatedTime="";
+		var nextAcceptPerson="";
+		$("#pmCLListBody").empty();
+		var htmlVal="";
+		var htmlVal2="";
+		if(viewCurrTaskId){
+			htmlVal2='<a id="querySmProcessView" target="_blank" href="" style="margin-left:4px;">'
+				+'<span class="panel-heading">查看当前流程&nbsp'
+				+'</a>';
+		}
+		 
+		 
+		$.each(returnData,function(i,val){
+			if(parseInt(val.evaluationType)==1){
+				pmCLCreatedPerson=val.evaluationPeopleName;
+				pmCLCreatedTime=val.createdTimeStr;
+				if(nextAcceptPerson!="")
+					return false;
+			}
+			if(i==0){
+				nextAcceptPerson=val.nextAcceptPersonName;
+				htmlVal="<tr>"+
+				+"</tr>"; 
+			}
+			
+		});
+		
+		if(htmlVal){
+			htmlVal="<tr>"+
+			"<td>"+pmCLCreatedPerson+"</td>"+
+			"<td>"+nextAcceptPerson+"</td>"+
+			"<td>"+pmCLApproveStatus+"</td>"+
+			"<td>"+pmCLCreatedTime+"</td>"+
+			"<td>"+pmCLApproveStatusDo+"</td>"+
+			"<td>"+htmlVal2+"</td>"+
+			+"</tr>"; 
+		}
+		$("#pmCLListBody").append(htmlVal);
+		
+		if($("#pmCLExecudeA").text()=="查看审批"){
+			pmClosedLoopResultTypeVal=-pmClosedLoopResultTypeVal;
+			$("#pmCLExecudeA").click(function(){
+				javascript:popWindow('module/sub/PmClosedLoopSub_execute.action?project.projectCode=<s:property value='project.projectCode'/>&pmClosedLoopResultType='+pmClosedLoopResultTypeVal+'&project.projectId=<s:property value='project.projectId'/>', 1000, 650,'<%=StringEscUtil.getText("pm.cl.cl") %>', 'BudgetUpload', true);
+			});
+		}else if($("#pmCLExecudeA").text()=="查看审批历史"){
+			pmClosedLoopResultTypeVal=-100;
+			$("#pmCLExecudeA").click(function(){
+				javascript:popWindow('module/sub/PmClosedLoopSub_execute.action?project.projectCode=<s:property value='project.projectCode'/>&pmClosedLoopResultType='+pmClosedLoopResultTypeVal+'&project.projectId=<s:property value='project.projectId'/>', 1000, 650,'<%=StringEscUtil.getText("pm.cl.cl") %>', 'BudgetUpload', true);
+			});
+		}else{
+			$("#pmCLExecudeA").click(function(){
+				javascript:popWindow('module/sub/PmClosedLoopSub_execute.action?project.projectCode=<s:property value='project.projectCode'/>&pmClosedLoopResultType='+pmClosedLoopResultTypeVal+'&project.projectId=<s:property value='project.projectId'/>'+questionType, 1000, 650,'<%=StringEscUtil.getText("pm.cl.cl") %>', 'BudgetUpload', true);
+			});
+		}
+		
+		
+		$("#querySmProcessView").attr("href","work/sub/WorkFlowViewCurrentImage.action?param.taskId="+viewCurrTaskId);
+		
+		if(parseInt("<s:property value='workSpaceReturnType'/>")==100){
+			$("#pmCLHeader").click();
+		} 
+	}
+/* ##########################项目闭环################################ */
+
+    function applyCallback(){
+    	if (!$("#callbacklist table tr:last .callbackPass").length || confirm("项目已通过回访，确定再次发起回访？")) {
+        	popWindow('module/sub/callback_input.action?project.projectId=<s:property value='project.projectId'/>', 1000, 650,'<%=StringEscUtil.getText("pm.project.callback.apply") %>', 'BudgetUpload', true);
+    	}
+    }
+
+	
+	function memberPlus(){
+		var len = $(".trSize").size();
+		var html = $("#copyTr").html();
+		html = html.toString().replace(new RegExp('\\[0\\]','gm') ,len);
+		$("#memberList").after(html);
+		$("#memberName_"+len).autocomplete({
+			source: personnameArr
+		});
+		date_picker("effectiveFrom"+len);
+		date_picker("effective_To"+len);
+	}
+	
+	function updateMember(obj){
+		var projectId = $("#projectId").val();
+		var effectiveTo = $("#effectiveTo"+obj).val();
+		var memberId = $("#memberId"+obj).val();
+		try {
+			$.ajax({
+				url:"updateMember.action",
+				type:"post",
+				dataType:"json",
+				data:{memberId:memberId,memberEffectiveTo:effectiveTo,projectId:projectId},
+				beforeSend:function(){
+					$("#ok"+obj).hide();
+					$("#loading"+obj).show();
+				},
+				success:function(data){
+					var result = data.result;
+					if(result != 0){
+						alert("更新成功！");
+					//	window.location.href="module/ProjectModify.action?project.projectId="+projectId;
+						window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val();
+					}else{
+						alert("更新失败!");
+					}
+				},
+				error:function(){
+					alert("更新发生错误，请检查输入!");
+				},
+				complete:function(){
+					$("#ok"+obj).show();
+					$("#loading"+obj).hide();
+				}
+			}); 
+		} catch (e) {
+			alert(e);
+		}
+		
+		
+	}
+	
+	function deleteMember(obj){
+		var projectId = $("#projectId").val();
+		var effectiveTo = CurentTime();
+		var memberId = $("#memberId"+obj).val();
+		if(confirm("确定要删除该成员么？")){
+			$.ajax({
+				url:"updateMember.action",
+				type:"post",
+				dataType:"json",
+				data:{memberId:memberId,memberEffectiveTo:effectiveTo,projectId:projectId},
+				success:function(data){
+					var result = data.result;
+					if(result != 0){
+						alert("更新成功！");
+						window.location.href="module/ProjectModify.action?project.projectId="+projectId;
+					}else{
+						alert("更新失败!");
+					}
+				}
+			}); 
+		}
+		
+	}
+	
+	function createMember(obj){
+		var projectId = $("#projectId").val();
+		var memberCode = $("#memberCode"+obj).val();
+		var memberName = $("#memberName"+obj).val();
+		var memberRole = $("#memberRole"+obj).val();
+		var memberRoleName =  $("#memberRole"+obj).find("option:selected").text();
+		var phoneNum = $("#phoneNum"+obj).val();
+		var email = $("#email"+obj).val();
+		var effectiveFrom = $("#effectiveFrom"+obj).val();
+		var effectiveTo = $("#effective_To"+obj).val();
+		if(memberName == ""){
+			memberName = $("#memberName_"+obj).val();
+			if(memberName == ""){
+				alert("请输入项目成员！");
+				$("#memberName_"+obj).focus();
+				return false;
+			}
+		}
+		if(memberRole == ""){
+			alert("请选择项目成员角色！");
+			$("#memberRole"+obj).focus();
+			return false;
+		}
+		if(memberRole == 60 && phoneNum == ""){//最终客户必填电话信息
+			alert("最终客户必须填写电话信息");
+			$("#phoneNum"+obj).focus();
+			return false;
+		}
+		$.ajax({
+			url:"createMember.action",
+			type:"post",
+			dataType:"json",
+			data:{
+					projectId :projectId,
+					memberCode:memberCode,
+					memberName:memberName,
+					memberRole:memberRole,
+					memberRoleName:memberRoleName,
+					phoneNum:phoneNum,
+					email:email,
+					memberEffectiveFrom:effectiveFrom,
+					memberEffectiveTo:effectiveTo
+				},
+			beforeSend:function(){
+				$("#ok"+obj).hide();
+				$("#loading"+obj).show();
+			},
+			success:function(data){
+				var result = data.result;
+				if(result != 0){
+					alert("更新成功！");
+				//	window.location.href="module/ProjectModify.action?project.projectId="+projectId;
+					window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val();
+				}else{
+					alert("更新失败!");
+				}
+			},
+			complete:function(){
+				$("#ok"+obj).show();
+				$("#loading"+obj).hide();
+			}
+		});
+	}
+	function removeMember(obj){
+		$(obj).parent().parent().html("");
+	}
+	
+	function fillhide(id){
+		fullfill("memberName_"+id , "memberCode"+id ,"memberName"+id ,"phoneNum"+id,"email"+id);
+	}
+	
+	function alterMemberTable(){
+		var size = "<s:property value='projectMemberList.size()'/>";
+		for(var i = 0; i < size; i++){
+			date_picker("effectiveTo"+i);
+			set_date("hideEffectiveTo"+i,"effectiveTo"+i);
+		}
+	}
+	function set_date(spanId ,inputId){
+		var time = $("#"+spanId).text();
+		$("#"+inputId).val(time);
+	}
+	
+	function fullfill(idjson, id , id_ ,phoneid,emailid){
+		var obj=document.getElementById(idjson);
+		if(obj.value==""){
+			document.getElementById(id).value="";
+		}
+		if(obj.value!=""){
+			var i=0;
+			for(;i<personnameArr.length;i++){
+				if(personnameArr[i]==obj.value){
+					break;
+				}
+			}
+			if(i==personnameArr.length){
+				return false;
+			} else{
+				document.getElementById(id).value=personcodeArr[i];
+				document.getElementById(id_).value=personnameArr[i];
+				document.getElementById(phoneid).value=persontelArr[i];
+				document.getElementById(emailid).value=personmailArr[i];
+			}
+		}
+	}
+	function morefile(e){
+		var upload = $("#uploaddivhidden").clone(true);
+		$("#add").after(upload.html());
+	}
+	function delfile(_this){
+		$(_this).prev().prev().remove();
+		$(_this).prev().remove();
+		$(_this).remove();
+	}
+	/*
+	  保存安装地址		
+	*/
+	function shipformSubmit(){
+		if(!checkshipform()){
+			return false;
+		}
+		var projectId = $("#projectId").val();
+		$.ajax({
+			url :"SaveInstallAdress.action",
+			type :"post",
+			dataType :"json",
+			data : $("#shipmentForm").serialize(),
+			beforeSend:function(){
+				$(".shipmentListDiv").html("<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'><img src='./images/loading-circle.gif'/></div>");
+			},
+			success:function(data){
+				var result = data.result;
+				if(result == 303){
+					if(pmCLPersonRoleArr.pm){
+						alert("更新成功!");
+						window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
+					}else{
+						checkShipmentInfo();
+						alert("更新成功!");
+					}
+				//	window.location.href="module/ProjectModify.action?project.projectId="+projectId+"&result="+result;
+				//	window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
+				}else{
+					alert("更新失败，请联系管理员!");
+				}
+			}
+		});
+	}
+	
+	function checkshipform(){
+		var receiveAddress = $("#receiveAddress").val();
+		if(receiveAddress == ""){
+			$("#receiveAddress").focus();
+			alert("请填写安装地址信息");
+			return false;
+		}
+		var sel = "input[name='selected']";
+		for(var i = 0;i < $(sel).length;i++){
+			if($(sel).eq(i).is(":checked")){
+				return true;
+			}
+		}
+		alert("请至少选择一条序列号信息");
+		return false;
+	}
+
+	function deleteDeliverById(deliverid, e){
+		if(!confirm("是否确认删除？")){
+			return;
+		}
+		$.ajax({
+			url :"deleteDeliverById.action",
+			type :"post",
+			dataType :"json",
+			data : {deliverid : deliverid},
+			success:function(data){
+				if(data.deliverid != 0){
+					alert("删除成功！");
+					var href = location.href + "";
+					if(href.indexOf("&result=") != -1){
+						var sp = href.split("&result=");
+						location.href = href.replace(sp[1], '309');
+					}
+				}else{
+					alert("删除失败！");
+				}
+			}
+		});
+	}
+	function changeServiceManagerTxt(e){
+		var sel = $(e).val();
+		$(".dailishang").hide();
+		$(".dailishanghide").show();
+		
+		if("<s:property value =  'user.isHasRole(13)'/>" == "false" ){
+			$("#notGrantTailCause").attr("disabled","disabled");
+		}
+		
+		var projectState = '<s:property value="project.projectState"/>';
+		if(sel == 0 || sel == 4){//原厂直服、原厂集成
+		//	$("#programManagerDiv1").show();
+			$("#programManagerDiv2").show();
+			$("#programManagerDiv3").hide();
+		}else if(sel == 1){
+		//	$("#programManagerDiv1").hide();
+			$("#programManagerDiv2").hide();
+			$("#programManagerDiv3").show();
+		}else if(sel == 3){
+		//	$("#programManagerDiv1").hide();
+			$("#programManagerDiv2").hide();
+			$("#programManagerDiv3").show();
+			//控制可选择不予跟踪
+			if(projectState != '20'&& "<s:property value =  'user.isHasRole(13)'/>" == "false" ){
+				$(".dailishang").show();
+			//	$(".dailishanghide").hide();
+				$("#notGrantTailCause").removeAttr("disabled","disabled");
+			}
+		}else{
+		//	$("#programManagerDiv1").hide();
+			$("#programManagerDiv2").hide();
+			$("#programManagerDiv3").hide();
+		}
+	}
+	
+	function mergeOrBranch(){
+		var projectId = $("#projectId").val();
+		var projectCode = $("#projectCode").val();
+		javascript:popWindow('module/sub/MergeOrBranchContract_toMergeOrBranch.action?project.projectId='+projectId+'&project.projectCode='+projectCode, 1100, 710,'合并/拆分', 'BudgetUpload', true);
+	}
+	
+	/* ###########################软件版本######################################## */
+	function softversion(_this){
+		if($("#softversionSee").is(":visible")){
+			$(_this).text('取消');
+			$("#softversionSee").hide();
+			$("#softversionEdit").show();
+			$("#updateSoftVersion").show();
+		}else{
+			$(_this).text('编辑');
+			$("#softversionSee").show();
+			$("#softversionEdit").hide();
+			$("#updateSoftVersion").hide();
+		}
+	}
+	
+	function updateSoftVersion(){
+		$changeRemark = $("textarea[name='softChangeLog.changeRemark']");
+		$(".software").each(function(){
+			$(this).val($(this).val().trim());
+		});
+		// 去除.bin后缀，软件版本只保留不带设备类型部分信息
+		$(".clearconp").each(function(){
+			var temp = $(this).val().trim();
+			temp = temp.replace(".bin", "");
+			temp = temp.split("-");
+			if (temp.length > 1) {
+				temp = temp[temp.length - 1];
+			}
+			$(this).val(temp);
+		})
+		
+		if($changeRemark.val().trim() == ''){
+			$("#changeRemarkMsg").text("请填写更新说明").addClass("redMark");
+			$changeRemark.focus();
+			$changeRemark.blur(function(){
+				if($changeRemark.val().trim() != ''){
+					$("#changeRemarkMsg").text("").removeClass("redMark");
+				}
+			});
+			return false;
+		}
+		$changeRemark.val($changeRemark.val().replace(/\n/g,"<br>"));
+		$.ajax({
+			url :"updateSoftVersion.action",
+			type :"post",
+			dataType :"json",
+			data : $("#softversionForm").serialize(),
+			success:function(data){
+				var result = data.result;
+				if(result == 310){
+					alert('更新成功');
+					window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
+				}else{
+					alert('更新失败');
+				}
+			}
+		});
+	}
+	//检索软件版本变更历史版本
+	function checkhistsoftversion(){
+		projectId = $("#projectId").val();
+		popWindow('module/sub/checkhistsoftversion.action?softChangeLog.projectId='+projectId+'&redirect='+window.location.href, 1100, 650,'查询历史软件版本', 'BudgetUpload', true);
+		return false;
+	}
+	function checkShipmentInfo1(){
+		var projectId = $("#projectId").val();
+		var contractNo = $("#contractNo").val();
+		var projectState = "${project.projectState}";
+		var officeCode = "${project.column001}";
+		popWindow('module/sub/checkShipmentInfo.action?project.projectId='+projectId+'&project.contractNo='+contractNo+'&project.projectState='+projectState+'&project.column001='+officeCode+'&redirect='+window.location.href, 1100, 650,'发货清单', 'BudgetUpload', true);
+		return false;
+	}
+	
+	//渲染软件版本更新表单
+	function alterSoftWares(){
+		$(".softUpdateExecuteTime").each(function(){
+			date_picker(this.id);
+		});
+		
+		$("input[name='executeTimeHeader']").change(function(){
+			time = this.value;
+			$(".softUpdateExecuteTime").each(function(){
+				$(this).val(time);
+			});
+		});
+		
+		$(".software").each(function(){
+			$(this).blur(function(){
+				bakvalue = $(this).attr("bakValue").trim();
+				if(bakvalue !=  $(this).val().trim()){
+					$("#"+this.id+"Change").val(1);
+				}else{
+					$("#"+this.id+"Change").val(0);
+				}
+			});
+		});
+	}
+	
+	function bacthUpdate(){
+		var softItemCode = $("#softItemCode").val().trim();
+		softType = $("#softType").val();
+		oldSoftVersion = $("#oldSoftVersion").val().trim();
+		newSoftVersion = $("#newSoftVersion").val().trim();
+		newSoftVersion = newSoftVersion.replace(".bin", "");
+		var temp = newSoftVersion.split("-");
+		if (temp.length > 1) {
+			newSoftVersion = temp[temp.length - 1];
+		}
+		if(newSoftVersion!= '' &&  oldSoftVersion != newSoftVersion){
+			size = $("#softversionEdit table tr").size() - 3;
+			for(i = 0; i < size ; i ++){
+				if (softItemCode) {
+					soft = $(".itemCode_" + softItemCode + " input[name='softversionList["+i+"]."+softType+"']");
+				} else {
+					soft = $("input[name='softversionList["+i+"]."+softType+"']");
+				}
+				if(soft.val() == oldSoftVersion){
+					soft.val(newSoftVersion);
+					bakvalue = soft.attr("bakValue").trim();
+					if(bakvalue !=  newSoftVersion){
+						$("#"+soft[0].id+"Change").val(1);
+					}else{
+						$("#"+soft[0].id+"Change").val(0);
+					}
+				}
+			}		
+		}
+	}
+	
+	function bacthReset(){
+		$(".software").each(function() {
+			var balvalue = $(this).attr("bakvalue").trim() || "";
+			$(this).val(balvalue);
+		});
+		$(".softChangeFlag").val(0);
+    }
+	
+	$(document).ready(function(){
+		var t1 = 0;
+		var t2 = 0;
+		$(window).scroll(function(){
+			var st=$(window).scrollTop();
+			var rheight = $(window).height();
+			var height = $("html").height();
+			if(st > rheight){
+			    $(".backTop").fadeIn(500);
+			}else{
+				$(".backTop").fadeOut(1000);
+			}
+			if(st > rheight && st < height - 2*rheight){
+                $(".rollBottom").fadeIn(500);
+            }else{
+                $(".rollBottom").fadeOut(1000);
+            }
+		})
+			 
+		$(document).on('click', ".backTop", function() {
+			/* var mainHeight = $("#mainForm").height();
+			var mainHeaderHeight = $(".mainframe_head").height();
+			var navHegiht = $(".navibar").height();
+			var st = mainHeight + navHegiht + mainHeaderHeight || 0; */
+			var st = 0;
+			$('body,html').animate({scrollTop: st},500);
+		});
+		$(document).on('click', ".rollBottom", function() {
+			var height = $("html").height();
+            $('body,html').animate({scrollTop: height},500);
+        });
+	});
+	/* ###########################软件版本######################################## */
+	
+	/* ###########################问卷选择######################################## */
+	$(document).ready(function(){
+		//回访人员权限
+		var cbRole = "<s:property value =  'user.isHasRole(14)'/>" == "true";
+		// 工程管理部权限
+		var gcbRole = "<s:property value =  'user.isHasRole(13)'/>" == "true";
+		questionType = "&pmClosedLoopQuesnaire.id=";
+		if(gcbRole){
+			questionType += 2;
+		}
+		if(cbRole){
+			var column12 = $("#programManagerTxt").val();
+			var column11 = $("#column011").val();
+			if(column11 == 20 && column12 == 1){
+				questionType += 5;
+			}else{
+				questionType += 1;
+			}
+		}
+		if($("#callback_question").length>0){
+			var callbackQuestionHref = $("#callback_question").attr("href");
+			var index = callbackQuestionHref.indexOf(",") - 1;
+			$("#callback_question").attr("href",callbackQuestionHref.substring(0,index)+questionType+callbackQuestionHref.substring(index));
+		}
+		// 查询发货数据
+		if(cbRole || gcbRole || "<s:property value =  'user.isHasRole(1)'/>" == "true"){
+			/* $("li.navli[onclick*='shipmentListDiv']").click(function(){
+				checkShipmentInfo();
+		    }); */
+		}else{
+			//checkShipmentInfo();
+		}
+		/* $(".shipmentListDiv").show(function(){
+			var height = $("#shipmentForm",$("#shipmentInfoIframe").contents()).height();
+			$(".shipmentListDiv").height(height+2);
+	    }); */
+		
+		
+	})
+	
+	/* ###########################问卷选择######################################## */
+	
+	/* ###########################设备清单######################################## */
+	var flag1 = true;
+	function checkOrderData(){
+		var projectId = $("#projectId").val();
+		var contractNo = $("#contractNo").val();
+		if(flag1){
+			flag1 = false;
+			$.ajax({
+				url:"module/sub/checkOrderData.action",
+				type:"post",
+				dataType:"html",
+				data:{"project.projectId":projectId,"project.contractNo":contractNo},
+				success:function(data){
+					data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+					$(".orderListDiv").html(data);
+				},
+				error:function(XMLHttpRequest,textStatus,errorThrown){
+					$(".orderListDiv").html("获取设备清单数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+				},
+				complete:function(data){
+					flag1 = true;
+				}
+			})
+		}
+		return false;
+	}
+	
+	function transferShipment(){
+        projectId = $("#projectId").val();
+        popWindow('module/sub/transferShipment.action?transferType=1&projectId='+projectId, 1100, 650,'转移设备', 'BudgetUpload', true);
+        return false;
+    }
+	
+	function transferProject(obj){
+	    window.open("module/ProjectModify.action?project.paramId="+obj);
+	}
+	
+	function importSpotCheckIgnoreItem(obj) {
+		popWindow('module/sub/importSpotCheckIgnoreItem.action', 1100, 650,'转移设备', 'BudgetUpload', true);
+	}
+	/* ###########################设备清单######################################## */
+	
+	/* ###########################实际发货清单######################################## */
+	var flag2 = true;
+	function checkRealOrderData(){
+		var projectId = $("#projectId").val();
+		if(flag2){
+			flag2 = false;
+			$.ajax({
+				url:"module/sub/checkRealOrderData.action",
+				type:"post",
+				dataType:"html",
+				data:{"project.projectId":projectId},
+				success:function(data){
+					data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+					$(".realOrderListDiv").html(data);
+				},
+				error:function(XMLHttpRequest,textStatus,errorThrown){
+					$(".realOrderListDiv").html("获取实际发货清单数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+				},
+				complete:function(data){
+					flag2 = true;
+				}
+			})
+		}
+		return false;
+	}
+	/* ###########################实际发货清单######################################## */
+	
+	/* ###########################序列号明细######################################## */
+	var flag = true;
+	function checkShipmentInfo(){
+		var projectId = $("#projectId").val();
+		var contractNo = $("#contractNo").val();
+		var projectState = "${project.projectState}";
+		var officeCode = "${project.column001}";
+		if(flag){
+			flag = false;
+			$.ajax({
+				url:"module/sub/checkShipmentInfo.action",
+				type:"post",
+				dataType:"html",
+				data:{"project.projectId":projectId,"project.contractNo":contractNo,"project.projectState":projectState, "project.column001": officeCode},
+				success:function(data){
+					data = data.substring(data.indexOf("<form"),data.indexOf("</form>")+7);
+					$(".shipmentListDiv").html(data);
+				},
+				error:function(XMLHttpRequest,textStatus,errorThrown){
+					$(".shipmentListDiv").html("获取发货数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+				},
+				complete:function(data){
+					flag = true;
+				}
+			})
+		}
+		return false;
+	}
+	
+	function exportSpotCheck() {
+		var projectId = $("#projectId").val();
+        window.open("module/exportSpotCheck.action?projectId=" + projectId);
+	}
+	/* ###########################序列号明细######################################## */
+    /* ###########################局点信息，软件版本######################################## */
+	var flag3 = true;
+	function checkSoftVesion(){
+		var projectId = $("#projectId").val();
+		var contractNo = $("#contractNo").val();
+		if(flag3){
+			flag3 = false;
+			$.ajax({
+				url:"module/sub/checkSoftVersion.action",
+				type:"post",
+				dataType:"html",
+				data:{"project.projectId":projectId,"project.contractNo":contractNo},
+				success:function(data){
+					data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+					$(".softversionDiv").html(data);
+					alterSoftWares();
+				},
+				error:function(XMLHttpRequest,textStatus,errorThrown){
+					$(".softversionDiv").html("获取局点信息数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+				},
+				complete:function(data){
+					flag3 = true;
+				}
+			})
+		}
+		return false;
+	}
+	/* ###########################局点信息，软件版本######################################## */
+	/* ###########################转包记录######################################## */
+    var flagS = true;
+    function querySubcontractInfo(){
+        var projectId = $("#projectId").val();
+        if(flagS){
+        	flagS = false;
+            $.ajax({
+                url:"module/sub/querySubcontractInfoForProject.action",
+                type:"post",
+                dataType:"html",
+                data:{"subcontractVO.projectId":projectId},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".subcontractListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".subcontractListDiv").html("获取转包记录数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                	flagS = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################转包记录######################################## */
+    /* ###########################系统通知######################################## */
+    var flagN = true;
+    function queryProjectNotify(){
+        var projectId = $("#projectId").val();
+        if(flagN){
+        	flagN = false;
+            $.ajax({
+                url:"module/sub/queryProjectNotification.action",
+                type:"post",
+                dataType:"html",
+                data:{"projectId":projectId},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".notificationListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".notificationListDiv").html("获取项目系统通知数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                	flagN = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################系统通知######################################## */
+    /* ###########################维护记录######################################## */
+    var flagM = true;
+    function queryProjectMaintenance(){
+        var projectId = $("#projectId").val();
+        var redirect = encodeURIComponent("module/ProjectModify.action?project.paramId="+$("#paramId").val() + "&result=313");
+        if(flagM){
+        	flagM = false;
+            $.ajax({
+                url:"module/sub/maintenance_projectMaintenance.action",
+                type:"post",
+                dataType:"html",
+                data:{
+                	"projectMaintenance.projectId":projectId,
+                	"projectMaintenance.projectType": 10,
+                    "projectMaintenance.officeCode": '${project.column001}', 
+                    "projectMaintenance.hideQuesnaire": true,
+                    redirect: redirect
+                },
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".maintenanceListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".maintenanceListDiv").html("获取项目维护记录数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                    flagM = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################维护记录######################################## */
+    /* ###########################督查记录######################################## */
+    var flagSU = true;
+    function queryProjectSupervision(){
+        var projectId = $("#projectId").val();
+        var redirect = encodeURIComponent("module/ProjectModify.action?project.paramId="+$("#paramId").val() + "&result=314");
+        if(flagSU){
+        	flagSU = false;
+            $.ajax({
+                url:"module/sub/supervision_projectSupervision.action",
+                type:"post",
+                dataType:"html",
+                data:{"projectSupervision.projectId":projectId, "projectSupervision.officeCode": '${project.column001}', redirect: redirect},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".supervisionListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".supervisionListDiv").html("获取项目督查记录数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                	flagSU = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################维护记录######################################## */
+	//定义show、hide事件，显示设备清单、序列号明细、实际发货清单、局点信息的Tab页时触发
+	(function ($) {
+		  $.each(['show', 'hide'], function (i, ev) {
+		    var el = $.fn[ev];
+		    $.fn[ev] = function () {
+		      this.trigger(ev);
+		      return el.apply(this, arguments);
+		    };
+		  });
+	})(jQuery);
+	$(document).on('show',".shipmentListDiv",function() {
+		if($(".shipmentListDiv form").length == 0){
+			checkShipmentInfo();
+		}
+	});
+	$(document).on('show',".orderListDiv",function() {
+		if($(".orderListDiv table").length == 0){
+			checkOrderData();
+		}
+	});
+	$(document).on('show',".realOrderListDiv",function() {
+		if($(".realOrderListDiv table").length == 0){
+			checkRealOrderData();
+		}
+	});
+	$(document).on('show',".softversionDiv",function() {
+		if($(".softversionDiv table").length == 0){
+			checkSoftVesion();
+		}
+	});
+	$(document).on('show',".subcontractListDiv",function() {
+        if($(".subcontractListDiv table").length == 0){
+        	querySubcontractInfo();
+        }
+    });
+	$(document).on('show',".notificationListDiv",function() {
+        if($(".notificationListDiv table").length == 0){
+            queryProjectNotify();
+        }
+    });
+	$(document).on('show',".maintenanceListDiv",function() {
+        if($(".maintenanceListDiv table").length == 0){
+            queryProjectMaintenance();
+        }
+    });
+	$(document).on('show',".supervisionListDiv",function() {
+        if($(".supervisionListDiv table").length == 0){
+            queryProjectSupervision();
+        }
+    });
+	
+	/* ###########################项目转包######################################## */
+	function subcontractApply() {
+		var projectId = $("#projectId").val();
+		var contractNos = $("#contractNo").val();
+		var basePath = $("base").attr("href");
+		window.open(basePath + "module/subcontract_input.action?subcontract.contractNos=" + contractNos + "&subcontract.projectIds=" + projectId);
+		//openWindowWithPost("module/subcontract_input.action", "_blank", null, null, null, ["subcontract.projectIds","subcontract.contractNos"], [projectId, contractNos]);
+	}
+	/**
+     * post 方式打开新窗口
+     * url:请求地址
+     * name:窗口名
+     * width:宽度
+     * height:高度
+     * resizable:是否可调整大小
+     * keys:参数名数组集合
+     * values:参数值数组集合
+     */
+    function openWindowWithPost(url, name, width, height, resizable, keys, values) {
+        var para = "";
+        var screenWidth = screen.availWidth, screenHeight = screen.availHeight;
+        para += 'width=' + (width ? width : screenWidth - 20);
+        para += ',height=' + (height ? height : screenHeight - 43);
+        para += ',left=' + (width ? (screenWidth-width)/2 : 0);
+        para += ',top=' + (height ? (screenHeight-height)/2 : 0);
+        para += ',fullscreen = yes';
+        if(resizable) para += ',resizable = yes';
+        if(!name) name = "";
+        
+        var newWindow = window.open("", name, para);
+        if (!newWindow){
+            return false;
+        }
+        
+        var html = "";
+        html += "<html><head></head><body><form id='formid' method='post' action='" + url + "'>";
+        if (keys && values && (keys.length == values.length)){
+            for ( var i = 0; i < keys.length; i++){
+                html += "<input type='hidden' name='" + keys[i] + "' value='" + values[i] + "'/>";
+            }
+        }
+        
+        html += "</form><script type='text/javascript'>document.getElementById(\"formid\").submit()<\/script><\/body><\/html>";
+        newWindow.document.write(html);
+        return newWindow;
+    }
+</script>
+</head>
+<body> 
+	<s:form enctype="multipart/form-data" method="POST" action="module/ProjectModify.action" cssClass="form-inline" id="mainForm">
+		<s:hidden value="%{isToCloseProject}"/>
+		<s:hidden name="project.projectId" id="projectId"></s:hidden>
+		<s:hidden name="project.paramId" id="paramId"></s:hidden>
+		<s:hidden name="project.contractNo" id="contractNo"></s:hidden>
+		<s:hidden name="project.projectCode" id="projectCode"></s:hidden>
+		<s:hidden name="project.validateFlag" value="保存成功"></s:hidden>
+		<s:hidden name="project.column012Readonly" id="column012Readonly"></s:hidden>
+		<div class="form-group form-group-query">
+			<label for="projectCode" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.projectCode" /></label>
+	    	<s:textfield disabled="true" name="project.projectCode" id="projectCode" placeholder="项目编码..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="projectName" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.projectName" /></label>
+	    	<s:textfield disabled="true" name="project.projectName" id="projectName" placeholder="项目名称..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="contractNo" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.contractNo" /></label>
+	    	<s:textfield disabled="true" name="project.contractNo" id="contractNo" placeholder="合同号..." cssClass="form-control" cssStyle="width: 400px;display: inline-block;" />
+		</div><br/>
+		<div class="form-group form-group-query">
+			<label for="usernamec" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.usernamec" /></label>
+	    	<s:textfield disabled="true" name="project.salesManName" id="salesManName" placeholder="销售代表..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="column001" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.officeName" /></label>
+            <s:textfield disabled="true" name="project.officeName" id="officeName" placeholder="办事处..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="column004" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.market" /></label>
+	    	<s:textfield disabled="true" name="project.column004" id="column004" placeholder="市场部..." cssClass="form-control" cssStyle="width: 98px;display: inline-block;" />
+	    	<s:textfield disabled="true" name="project.column005" id="column005" placeholder="系统部..." cssClass="form-control" cssStyle="width: 97px;display: inline-block;" />
+	    	<s:textfield disabled="true" name="project.column006" id="column006" placeholder="拓展部..." cssClass="form-control" cssStyle="width: 97px;display: inline-block;" />
+	    	<s:textfield disabled="true" name="project.column007" id="column007" placeholder="子行业..." cssClass="form-control" cssStyle="width: 97px;display: inline-block;" />
+		</div><br/>
+		
+		<div class="form-group form-group-query">
+			<label for="orderCreateTime" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.orderCreateTime" /></label>
+ 	    	<s:textfield disabled="true" name="project.orderCreateTime" id="orderCreateTime" placeholder="订单创建时间..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="projectStartTime" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.order.create.time" /></label>
+<!-- 	    	<s:textfield disabled="true" value="<s:date name='project.projectStartTime'/>" id="projectStartTime" placeholder="项目开始时间..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+ --> 		<s:if test="%{project.projectStartTime == null}">
+				<span class="form-control" style="width: 180px;display: inline-block;border: 1px solid rgb(129, 120, 120);line-height: 1.8;opacity:0.5;background-color: rgb(218, 218, 218)">
+ 					项目开始时间...
+	 			</span>
+ 			</s:if>
+ 			<s:else>
+ 				<span class="form-control" style="width: 180px;display: inline-block;border: 1px solid rgb(206, 199, 199);line-height: 1.8;background-color: rgb(238, 238, 238)">
+	 				<s:date name='project.projectStartTime' format="yyyy-MM-dd"/>
+	 			</span>	
+ 			</s:else>
+		</div>
+		<div class="form-group form-group-query">
+			<label for="projectCategory" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.projectCategory" /></label>
+	    	<s:select list="#{10:'直签', 20:'非直签'}" cssClass="form-control writeTxt engineeManagerTxt" cssStyle="width: 180px;display: inline-block;"
+	    		name="project.column011" id="column011" value="project.column011"></s:select>
+		</div>
+        <div class="form-group form-group-query">
+            <label for="compId" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.company" /></label>
+            <s:select list="companyList" cssClass="form-control" cssStyle="width: 180px;display: inline-block;"
+                headerKey="" headerValue="--请选择--" listKey="id" listValue="name"
+                value="project.compId" id="compId" disabled="true"></s:select>
+        </div>
+		<br/>
+		<div class="form-group form-group-query">
+			<label for="serviceManagerCode" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.serviceManager" /></label>
+	    	<s:textfield id="serviceManagerCodeforjson" placeholder="服务经理..." cssClass="form-control writeTxt engineeManagerTxt" name="project.serviceManagerCodeforjson"
+	    		cssStyle="width: 180px;display: inline-block;" onfocus="fillservicemanager()" onblur="fillservicemanager()" />
+			<s:textfield name="project.serviceManagerCode" type="hidden" id="serviceManagerCode"></s:textfield>
+			<s:textfield name="project.oldServiceManagerCode" value="%{project.serviceManagerCode}" type="hidden" id="oldServiceManagerCode"></s:textfield>
+		</div>
+		<div class="form-group form-group-query">
+			<label for="column010" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.projectType" /></label>
+	    	<s:select list="#{20:'工程类', 10:'普通类'}" cssClass="form-control writeTxt engineeManagerTxt" cssStyle="width: 180px;display: inline-block;"
+	    		name="project.column010" id="column010" value="project.column010"></s:select>
+		</div>
+		<div class="form-group form-group-query">
+			<label for="programManagerCode" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.programManager"/>A</label>
+	    	<s:textfield id="programManagerCodeforjson" placeholder="项目经理A..." cssClass="form-control writeTxt engineeManagerTxt serviceManagerTxt" name="project.programManagerCodeforjson"
+	    		cssStyle="width: 180px;display: inline-block;" onfocus="fillprogrammanager(this)" onblur="fillprogrammanager(this)" />
+			<s:textfield name="project.programManagerCode" type="hidden" id="programManagerCode"></s:textfield>
+			<s:textfield name="project.oldProgramManagerCode" value="%{project.programManagerCode}" type="hidden" id="oldProgramManagerCode"></s:textfield>
+		</div>
+		<div class="form-group form-group-query">
+			<label for="programManagerCodeB" style="width: 90px;"><s:text name="pm.project.programManager"/>B</label>
+	    	<s:textfield id="programManagerCodeforjsonB" placeholder="项目经理B..." cssClass="form-control writeTxt engineeManagerTxt serviceManagerTxt" name="project.programManagerCodeforjsonB"
+	    		cssStyle="width: 180px;display: inline-block;" onfocus="fillprogrammanager(this)" onblur="fillprogrammanager(this)" />
+			<s:textfield name="project.programManagerCodeB" type="hidden" id="programManagerCodeB"></s:textfield>
+			<s:textfield name="project.oldProgramManagerCodeB" value="%{project.programManagerCodeB}" type="hidden" id="oldProgramManagerCodeB"></s:textfield>
+		</div>
+		<br/>
+		
+		<div class="form-group form-group-query">
+			<label for="column012" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.implement" /></label>
+			<s:select name="project.column012" id="programManagerTxt" cssClass="form-control writeTxt engineeManagerTxt serviceManagerTxt" onchange="changeServiceManagerTxt(this)" 
+				list="#{0:'原厂直服',1:'原厂督导',4:'原厂集成',3:'代理商自服' }" style="width: 180px;display: inline-block;"/>
+		</div>
+		<!-- 出货渠道注销 -->
+		<%-- <div class="form-group form-group-query" style="display: none;" id="programManagerDiv1">
+			<label for="deliverChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.deliverChannel" /></label>
+	    	<s:textfield name="project.deliverChannel" id="deliverChannel" placeholder="出货渠道..." cssClass="form-control writeTxt engineeManagerTxt serviceManagerTxt" cssStyle="width: 180px;display: inline-block;" />
+		</div> --%>
+		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv2">
+			<label for="serviceChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.serviceChannel" /></label>
+	    	<s:textfield name="project.serviceChannel" id="serviceChannel" placeholder="服务提供商..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv3">
+			<label for="agentChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.agentChannel" /></label>
+	    	<s:textfield name="project.agentChannel" id="agentChannel" placeholder="施工代理商..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query">
+			<label for="column013" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.finalCustomerName" /></label>
+	    	<s:textfield name="project.column013" id="column013" placeholder="最终客户单位..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+        <div class="form-group form-group-query">
+            <label for="customerProjectName" style="width: 90px;"><s:text name="pm.project.customerProjectName" /></label>
+            <s:textfield disabled="true" name="project.customerProjectName" id="customerProjectName" placeholder="客户项目名称..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+        </div><br/>
+        <%-- <div class="form-group form-group-query">
+            <label for="salesType" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.salesType" /></label>
+            <s:select name="project.salesType" id="salesType" cssClass="form-control writeTxt engineeManagerTxt" onchange="changeProgramManagerTxt(this)" 
+                list="#{'01':'正常销售','02':'借转销', '14':'总代借货'}" style="width: 180px;display: inline-block;"/>
+        </div>
+        <br/> --%>
+		<div class="form-group form-group-query">
+			<label for="notGrantTailCause" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.notGrantTailCause" /></label>
+			<s:textarea cssClass="form-control" rows="3" name="project.column008" id="notGrantTailCause" cssStyle="width: 400px;" placeholder="不予跟踪原因..." ></s:textarea>
+		</div>
+		<s:if test="%{project.projectState != '100'}">
+			<div class="form-group form-group-query dailishanghide" >
+				<button type="button" onclick="checkSubmit()" class="btn btn-info btn-block writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.btn"></s:text></button>
+			</div>
+		</s:if>
+		<s:if test="%{ (user.getUsername() == project.programManagerCode || user.getUsername() == project.programManagerCodeB ) || user.getUsername() == project.serviceManagerCode}">
+			<div class="form-group form-group-query  dailishang" >
+					<button type="button" onclick="back20Submit_service()" class="btn btn-default btn-block submitBtn" style="width: 100px;"><s:text name="不予跟踪"></s:text></button>
+			</div>
+		</s:if>
+		<s:if test="%{user.isHasRole(11) && user.getUsername() == project.serviceManagerCode  && project.isback == 30 && project.projectState != '20'}">
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="checkBack()" class="btn btn-default btn-block writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.backbtn"></s:text></button>
+			</div>
+		</s:if>
+		<s:elseif test="%{user.isHasRole(12) && (user.getUsername() == project.programManagerCode || user.getUsername() == project.programManagerCodeB) && project.isback == 32}">
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="checkBack()" class="btn btn-default btn-block writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.backbtn"></s:text></button>
+			</div>
+		</s:elseif>
+		<s:elseif test="%{user.isHasRole(13) && project.isback == 36}">
+			<div class="form-group form-group-query btn-group" >
+				<button type="button" onclick="checkAgree(30)" class="btn btn-danger btn writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.agreebtn"></s:text></button>
+			    <button type="button" onclick="checkAgree(30, 1)" class="btn btn-danger btn writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.disagreebtn"></s:text></button>
+            </div>
+		</s:elseif>
+		<s:elseif test="%{user.isHasRole(11) && project.isback == 38 &&user.getUsername() == project.serviceManagerCode}">
+			<div class="form-group form-group-query btn-group" >
+				<button type="button" onclick="checkAgree(32)" class="btn btn-danger writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.agreebtn"></s:text></button>
+			    <button type="button" onclick="checkAgree(32, 1)" class="btn btn-danger writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.disagreebtn"></s:text></button>
+            </div>
+		</s:elseif>
+		<s:if test="%{user.isHasRole(11)&&project.projectState == '20'&&project.isback == '40' &&user.getUsername() == project.serviceManagerCode}"><!-- 有服务经理角色、项目状态为不予跟踪、在项目中的角色为服务经理且工程管理部选择不予跟踪才可以选择返回工程管理部 -->
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="back10Submit()" class="btn btn-default btn-block submitBtn" style="width: 110px;"><s:text name="返回工程管理部"></s:text></button>
+			</div>
+		</s:if>
+		<%-- <s:if test="%{project.projectState == '20'&&project.isback == '42'&&user.isHasRole(13)}"> --%>
+		<s:if test="%{project.isback == '42'&&user.isHasRole(13)}">
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="back20Submit_sure()" class="btn btn-default btn-block submitBtn" style="width: 100px;"><s:text name="确认不予跟踪"></s:text></button>
+			</div>
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="back30Submit_sure()" class="btn btn-default btn-block submitBtn" style="width: 100px;"><s:text name="驳回不予跟踪"></s:text></button>
+			</div>
+		</s:if>
+		<s:if test="%{((project.projectState == '20' && project.isback == '50')
+						|| project.projectState == '30' 
+						|| project.projectState == '31'
+						|| project.projectState == '32'
+						)&& user.isHasRole(13)}">
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="back20Submit()" class="btn btn-default btn-block submitBtn" style="width: 100px;">不予跟踪</button>
+			</div>
+		</s:if>
+		<s:if test="%{(project.projectState == '20' && project.isback == '50')&& user.isHasRole(13)}">
+			<div class="form-group form-group-query" >
+				<button type="button" onclick="back30Submit()" class="btn btn-default btn-block submitBtn" style="width: 100px;">可以跟踪</button>
+			</div>
+		</s:if>
+		<s:if test="%{user.isHasRole(13) && project.projectState != '20' &&  project.projectState != '100'}">
+		<!-- 合同合并 -->
+			<div class="form-group form-group-query">
+				<button type="button" onclick="mergeOrBranch()" class="btn btn-default"><s:text name="project.merge.contract"></s:text></button>
+			</div>
+		</s:if>
+		<s:if test="%{user.isHasRole(11) && user.getUsername() == project.serviceManagerCode}">
+            <div class="form-group form-group-query">
+                <button type="button" onclick="subcontractApply()" class="btn btn-default">申请转包</button>
+            </div>
+        </s:if>
+		<br/>
+		<div class="form-group form-group-query backToDiv" id="agreeBackTo" style="display: none;">
+			<label for="backCause" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.backCause" /></label>
+			<s:textarea cssClass="form-control" rows="3" name="project.column014" id="backCause" cssStyle="width: 400px;" value="%{project.column014}"></s:textarea>
+			<s:textarea cssClass="form-control" rows="3" name="notbackCause" id="notbackCause" cssStyle="width: 400px;display:none;" placeholder="回退驳回原因"></s:textarea>
+            <s:if test="%{user.isHasRole(12) && (user.getUsername() == project.programManagerCode || user.getUsername() == project.programManagerCodeB)}">
+				<s:select id="backState" cssClass="form-control" list="#{36:'工程管理部', 38:'服务经理'}" value="%{project.isBack}"></s:select>
+			</s:if>
+			<s:elseif test="%{user.isHasRole(11)&& user.getUsername() == project.serviceManagerCode}">
+				<s:select id="backState" cssClass="form-control" list="#{36:'工程管理部'}"></s:select>
+			</s:elseif>
+		</div>
+		<div class="form-group form-group-query backToDiv" style="display: none;">
+			<button type="button" onclick="backClick()" class="btn btn-default btn-block writeTxt submitBtn" style="width: 60px;"><s:text name="pm.project.btn"></s:text></button>
+		</div>
+        <br/>
+		<div class="form-group form-group-query">
+			<b>&nbsp;<s:text name="pm.project.state"/>:</b>
+			<span>
+				<s:property value="project.projectStateName"/>
+			</span>
+		</div>
+        <div class="form-group form-group-query">
+            <b>&nbsp;<s:text name="pm.project.executionState"/>:</b>
+            <span>
+                <s:property value="project.executionStateName"/>
+            </span>
+        </div>
+        <div class="form-group form-group-query">
+            <b>&nbsp;<s:text name="pm.project.closeProcessState"/>:</b>
+            <span>
+                <s:hidden name="project.closeProcessState"/>
+                <s:property value="project.closeProcessStateName"/>
+            </span>
+        </div>
+	</s:form>
+	
+	<nav class="navbar navbar-default" role="navigation" style="margin-top: 20px;">
+		<div>
+		    <ul class="nav navbar-nav">
+		    	<s:iterator value="navTabList" var="nav" status="index">
+		    		<s:if test="%{#index.index == 0}">
+		    			<li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+		    		</s:if>
+		    		<s:else>
+		    			<s:if test="%{#nav.basicDataId == 'closeFlowDiv'}">
+		    				<li id="pmCLHeader" name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+		    			</s:if>
+		    			<s:elseif test="%{#nav.basicDataId == 'instructionDiv'}">
+		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge "><s:property value="instructionList.size()"/></span></a></li>
+		    			</s:elseif>
+		    			<s:elseif test="%{#nav.basicDataId == 'weeklyDiv'}">
+		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge pull-right"><s:property value="weeklyList.size()"/></span></a></li>
+		    			</s:elseif>
+		    			<s:else>
+		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+		    			</s:else>
+		    		</s:else>
+		    	</s:iterator>
+			</ul>
+		</div>
+	</nav>
+	<!-- 项目组成员 -->
+	<div class="navDiv hideDiv memberDiv" id="memberDiv">
+		<table class="table">
+			<thead>
+				<tr>
+					<th ><s:text name="pm.member.name"></s:text></th>
+					<th ><s:text name="pm.member.role"></s:text></th>
+					<th ><s:text name="pm.member.phoneNum"></s:text></th>
+					<th ><s:text name="pm.member.email"></s:text></th>
+					<th width="120px"><s:text name="pm.member.effective.from"></s:text></th>
+					<th width="120px"><s:text name="pm.member.effective.to"></s:text></th>
+					<th ><s:text name="pm.member.createBy"></s:text></th>
+					<th><s:text name="pm.member.createTime"></s:text></th>
+					<%-- <s:if test="%{project.projectState != '100'}"> --%>
+                    <s:if test="%{(user.isHasRole(13) || user.isHasRole(1) || user.isHasRole(11) || user.isHasRole(12))}"> 
+						<th>
+							<a href="javascript:void(0)" title="点击添加项目干系人" class="btn btn-default btn-sm" onclick="memberPlus()"><span class="glyphicon glyphicon-plus"></span></a>	
+						</th>
+					</s:if>
+				</tr>
+			</thead>
+			<tbody id="memberList">
+			<!-- 下半部分，项目干系人，项目计划，交付件查看。。。遍历 -->
+			<s:iterator value="projectMemberList" var="m" status="index">
+				<s:if test="%{#m.dataState == 1}">
+					<tr class="trSize">
+						<td>
+							<s:hidden name="#m.id" id="memberId%{#index.index}"></s:hidden>
+							<s:property value="#m.memberName"/>
+						</td>
+						<td>
+							<s:property value="#m.memberRoleName"/>
+						</td>
+						<td>
+							<s:property value="#m.phoneNum"/>
+						</td>
+						<td>
+							<s:property value="#m.email"/>
+						</td>
+						<td>
+							<s:date name="#m.effectiveFrom" format="yyyy-MM-dd"/>
+						</td>
+						<td>
+							<s:if test="%{#m.memberRoleName == '服务经理' || #m.memberRoleName == '项目经理' || #m.memberRoleName == '销售人员'}">
+								<s:textfield cssClass="form-control" cssStyle="visibility: hidden;"></s:textfield>
+							</s:if>
+							<s:else>
+								<span id="hideEffectiveTo<s:property value='#index.index'/>" style="display:none"><s:date name="#m.effectiveTo" format="yyyy-MM-dd"/></span>
+								<s:textfield cssClass="form-control" id="effectiveTo%{#index.index}"></s:textfield>
+							</s:else>
+						</td>
+							<td>
+							<s:property value="#m.createBy"/>
+						</td>
+						<td>
+							<s:date name="#m.createTime" format="yyyy-MM-dd"/>
+						</td>
+						<%-- <s:if test="%{project.projectState != '100'&& (#m.memberRoleName != '服务经理' && #m.memberRoleName != '项目经理' &&#m.memberRoleName != '销售人员')}"><!-- 控制闭环状态不能再做操作 -->
+						 --%>
+                        <s:if test="%{((user.isHasRole(13) || user.isHasRole(1)) || user.isHasRole(11) || user.isHasRole(12)) && (#m.memberRoleName != '服务经理' && #m.memberRoleName != '项目经理' &&#m.memberRoleName != '销售人员')}"><!-- 控制闭环状态不能再做操作 -->
+                        	<td>
+								<s:if test="%{user.isHasRole(12) && user.returnSize() == 1 && (#m.memberRoleName == '服务经理' || #m.memberRoleName == '项目经理')}">
+									<a href="javascript:void(0)"  onclick="updateMember(<s:property value='#index.index'/>)" style="visibility: hidden;">
+							        	<span class="glyphicon glyphicon-ok"></span>
+							        </a>
+							        <a href="javascript:void(0)"  onclick="deleteMember(<s:property value='#index.index'/>)" style="visibility: hidden;">
+							        	<span class="glyphicon glyphicon-remove redMark"></span>
+								    </a>
+								</s:if>
+								<s:else>
+									<a href="javascript:void(0)"  onclick="updateMember(<s:property value='#index.index'/>)">
+							        	<span id="ok<s:property value='#index.index'/>" class="glyphicon glyphicon-ok"></span>
+							        </a>
+							        	 <img alt="" id="loading<s:property value='#index.index'/>" class="hideMark" width="30px" src="images/loading-2.jpg">
+							        <a href="javascript:void(0)"  onclick="deleteMember(<s:property value='#index.index'/>)">
+							        	<span class="glyphicon glyphicon-remove redMark"></span>
+								    </a>
+								</s:else>
+							</td>
+						</s:if>
+					</tr>
+				</s:if>
+			</s:iterator>
+			</tbody>
+			<s:iterator value="projectMemberList" var="m" status="index">
+				<s:if test="%{#m.dataState == -1}">
+					<tr style="height: 52px;background-color: #eee;color: goldenrod" title="历史记录">
+						<td>
+							<s:property value="#m.memberName"/>
+						</td>
+						<td>
+							<s:property value="#m.memberRoleName"/>
+						</td>
+						<td>
+							<s:property value="#m.phoneNum"/>
+						</td>
+						<td>
+							<s:property value="#m.email"/>
+						</td>
+						<td>
+							<s:date name="#m.effectiveFrom" format="yyyy-MM-dd"/>
+						</td>
+						<td>
+							<s:date name="#m.effectiveTo" format="yyyy-MM-dd"/>
+							
+						</td>
+							<td>
+							<s:property value="#m.createBy"/>
+						</td>
+						<td>
+							<s:date name="#m.createTime" format="yyyy-MM-dd"/>
+						</td>
+						<td>
+						</td>
+					</tr>
+				</s:if>
+			</s:iterator>
+		</table>
+		<div style="display:none">
+			<table id="copyTr">
+				<tr class="trSize">
+					<td>
+						<s:hidden  id="memberCode[0]"></s:hidden>
+						<s:hidden  id="memberName[0]"></s:hidden>
+						<s:textfield  id="memberName_[0]" onblur="fillhide([0])" placeholder="支持模糊搜索" onfocus="fillhide([0])" cssClass="form-control"></s:textfield>
+					</td>
+					<td>
+						<s:select cssClass="form-control" id="memberRole[0]" name="member.memberRole" list="memberRoleList" listKey="basicDataId" listValue="basicDataName" headerKey="" headerValue="--请选择--"></s:select>
+					</td>
+					<td>
+						<s:textfield id="phoneNum[0]" name="member.phoneNum" placeholder="最终客户必填" cssClass="form-control"></s:textfield>
+					</td>
+					<td>
+						<s:textfield id="email[0]" name="member.email" placeholder="非必填项" cssClass="form-control"></s:textfield>
+					</td>
+					<td>
+						<input name="member.effectiveFrom" class="form-control" placeholder="非必填项,默认当前时间生效" id="effectiveFrom[0]"/>
+					</td>
+					<td>
+						<input name="member.effectiveTo" class="form-control" placeholder="非必填项" id="effective_To[0]"/>
+					</td>
+					<td></td>
+					<td></td>
+					<td>
+						<a href="javascript:void(0)"  onclick="createMember([0])">
+					          <span id="ok[0]" class="glyphicon glyphicon-ok"></span>
+					     </a>
+					          <img alt="" width="30px" class="hideMark" id="loading[0]" src="images/loading-2.jpg"> 
+					     <a href="javascript:void(0)"  onclick="removeMember(this)">
+					          <span class="glyphicon glyphicon-remove redMark"></span>
+					     </a>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<!-- 项目计划 -->
+	<div class="navDiv hideDiv planDiv">
+		<div id="planDiv">
+			<s:form enctype="multipart/form-data" action="module/ProjectPlanEdit.action" method="post" id="planform">
+				<s:hidden name="project.projectId" id="projectId"></s:hidden>
+				<s:hidden name="project.contractNo" id="contractNoStr"></s:hidden>
+				<table id="displaytable1table" width="100%" class="table">
+					<thead>
+						<tr>
+							<th>
+								&nbsp;
+							</th>
+							<th>
+								<s:text name="sys.projectplan.contractNo"></s:text>
+							</th>
+							<th>
+								<s:text name="sys.projectplan.referenceEventName"></s:text>
+							</th>
+							<th>
+								<s:text name="sys.projectplan.eventPlanHappenDate"></s:text>
+							</th>
+							<th>
+								<s:text name="sys.projectplan.eventPlanHappenDateENG"></s:text>
+							</th>
+							<th>
+								<s:text name="sys.projectplan.eventActualFinishDate"></s:text>
+							</th>
+							<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+								<th>
+									<s:text name="sys.projectplan.attachment"></s:text>
+								</th>
+								<th>
+									<a href="javascript:void(0)" class="btn btn-default btn-sm endelete" onclick="addplan()"><span class="glyphicon glyphicon-plus"></span></a>	
+								</th>
+							</s:if>
+						</tr>
+					</thead>
+					<tbody>
+						<s:if test="projectTaskList == null || projectTaskList.size < 1">
+							<s:iterator value="projectPlanEventList" id="ppe" status="p">
+								<tr>
+									<td>
+										<input type="hidden" name="projectTask.eventKeyStr" value="<s:property value='#ppe.eventKey'/>">
+									</td>
+									<td>
+										&nbsp;
+									</td>
+									<td>
+										<s:property value='#ppe.eventValue'/>
+									</td>
+									<td>
+										<span id="eventPlanHappenDateSpan<s:property value='#p.index'/>">
+											<s:date name="#ppe.eventPlanHappenDate" format="yyyy-MM-dd"/>
+										</span>
+										<input type="hidden" id="eventPlanHappenDateStr<s:property value='#p.index'/>" 
+											name="projectTask.eventPlanHappenDateStr" value="<s:property value='#ppe.eventPlanHappenDate'/>">
+									</td>
+									<td>
+										<input type="text" value="<s:property value='#ppe.eventPlanHappenDateENG'/>" 
+											id="eventPlanHappenDateENG<s:property value='#p.index'/>" name="projectTask.eventPlanHappenDateENGStr">
+									</td>
+									<td>
+										
+									</td>
+									<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+										<td>
+											<a href="javascript:void(0)" class="showBarcode" 
+												onclick="javascript:alert('请先填写施工计划');">上传交付件</a>
+										</td>
+										<td>
+											<s:if test="#ppe.eventPlanHappenDate == null">
+												<a href="javascript:void(0)"  class="endelete" onclick="deleteplan(this)">
+													<span class="glyphicon glyphicon-remove"></span>
+												</a>
+											</s:if>
+										</td>
+									</s:if>
+								</tr>
+							</s:iterator>
+						</s:if>
+						<s:else>
+							<s:iterator value="projectTaskList" id="ppe" status="p">
+								<s:if test="#ppe.visibleFlag == 1">
+									<tr>
+								</s:if>
+								<s:else>
+									<tr style="display: none;">
+								</s:else>
+									<td>
+										<input type="hidden" name="projectTask.eventKeyStr" value="<s:property value='#ppe.eventKeyStr'/>">
+										<span id="visibleFlag<s:property value='#p.index'/>">
+											<input type="hidden" name="projectTask.visibleFlag" value="<s:property value='#ppe.visibleFlag'/>">
+										</span>
+									</td>
+									<td>
+										<input type="hidden" name="projectTask.contractNo" value="<s:property value='#ppe.contractNo'/>">
+										<s:property value='#ppe.contractNo'/>
+									</td>
+									<td>
+										<s:property value='#ppe.eventValue'/>
+									</td>
+									<td>
+										<span id="eventPlanHappenDateSpan<s:property value='#p.index'/>">
+											<s:date name="#ppe.eventPlanHappenDate" format="yyyy-MM-dd"/>
+										</span>
+										<input type="hidden" id="eventPlanHappenDateStr<s:property value='#p.index'/>" 
+											name="projectTask.eventPlanHappenDateStr" value="<s:property value='#ppe.eventPlanHappenDate'/>">
+									</td>
+									<td>
+										<span id="eventPlanHappenDateENGSpan<s:property value='#p.index'/>" style="display: none;">
+											<s:date name="#ppe.eventPlanHappenDateENG" format="yyyy-MM-dd"/>
+										</span>
+										<input type="text" id="eventPlanHappenDateENG<s:property value='#p.index'/>" name="projectTask.eventPlanHappenDateENGStr">
+									</td>
+									<td>
+										<span id="eventActualFinishDateSpan<s:property value='#p.index'/>" style="display: none;">
+											<s:date name="#ppe.eventActualFinishDate" format="yyyy-MM-dd"/>
+										</span>
+										<input type="hidden" id="eventActualFinishDate<s:property value='#p.index'/>" name="projectTask.eventActualFinishDateStr">
+										<s:date name="#ppe.eventActualFinishDate" format="yyyy-MM-dd"/>
+									</td>
+									<%-- <s:if test="%{project.projectState != '100'}"> --%><!-- 控制闭环状态不能再做操作 -->
+										<td>
+											<a href="javascript:void(0)" class="showBarcode" 
+												onclick="popWindow('module/sub/ToUploadDeliverableFile.action?projectDeliver.contractNo=<s:property value='#ppe.contractNo'/>&projectDeliver.projectId=<s:property value="project.projectId"/>&projectDeliver.column010=<s:property value="project.column010"/>&projectDeliver.column011=<s:property value="project.column011"/>&projectDeliver.eventKey=<s:property value='#ppe.eventKeyStr'/>'
+												, 700, 450,'上传交付件', 'BudgetUpload', true);">上传交付件</a>
+										</td>
+										<td>
+											<s:if test="#ppe.eventPlanHappenDate == null">
+												<a href="javascript:void(0)"  class="endelete"  onclick="deleteplan(this)">
+													<span class="glyphicon glyphicon-remove"></span>
+												</a>
+											</s:if>
+										</td>
+									<%-- </s:if> --%>
+								</tr>
+							</s:iterator>
+						</s:else>
+					</tbody>
+				</table>
+				<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+					<button type="button" onclick="planformSubmit()" class="btn btn-default btn-block writeTxt submitBtn" style="width: 60px;">
+						<s:text name="pm.project.btn"></s:text>
+					</button>
+				</s:if>
+			</s:form>
+			<div style="display: none;">
+				<table id="addTable">
+					<tr>
+						<td></td>
+						<td>
+						</td>
+						<td>
+							<s:select list="projectPlanEventList" listKey="eventKey" listValue="eventValue" name="projectTask.eventKeyStr" 
+								onchange="changeEvent(this)" headerKey="0" headerValue="请选择"></s:select>
+						</td>
+						<td>
+							
+						</td>
+						<td>
+							<input type="text" id="eventPlanHappenDateENG" name="projectTask.eventPlanHappenDateENGStr">
+						</td>
+						<td>
+							<input type="hidden" id="eventActualFinishDate" name="projectTask.eventActualFinishDateStr">
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="showBarcode">上传交付件</a>
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="endelete"  onclick="deleteplan(this)">
+								<span class="glyphicon glyphicon-remove"></span>
+							</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+	</div>
+<!-- 	交付件查看 -->
+	<div class="navDiv hideDiv deliverableDiv">
+		<display:table
+			name="deliverDetailList" pagesize="${deliverDetailList.size()}" id="displaytable4"
+			size="${deliverDetailList.size()}" sort="external" export="false"
+			decorator="com.dp.plat.decorators.Wrapper" class="displayTable table"
+			partialList="true">
+			<display:column property="id" titleKey="pm.deliverdetail.id"></display:column>
+			<display:column property="deliverableType" titleKey="pm.deliverdetail.basicDataName"></display:column>
+			<display:column property="deliverableName" titleKey="pm.deliverdetail.deliverableName"></display:column>
+			<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+				<display:column property="operate" titleKey="pm.deliverdetail.operate"></display:column>
+			</s:if>
+		</display:table>
+	</div>
+	<!-- 设备清单 -->
+	<div class="navDiv hideDiv orderListDiv">
+		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+			<img src='./images/loading-circle.gif'/>
+		</div>
+		<%-- <display:table
+			name="orderDataList" pagesize="${orderDataList.size()}" id="displaytable2"
+			size="${orderDataList.size()}" sort="external" export="true"
+			decorator="com.dp.plat.decorators.Wrapper" class="displayTable table"
+			requestURI="module/ProjectModify.action"
+			partialList="true">
+			<display:column property="contractNo" titleKey="pm.orderdata.contractNo"></display:column>
+			<display:column property="itemCode" titleKey="pm.orderdata.itemCode"></display:column>
+			<display:column property="model" titleKey="pm.orderdata.model"></display:column>
+			<display:column property="itemName" titleKey="pm.orderdata.itemName"></display:column>
+			<display:column property="projectQuantity" titleKey="project.product.quantity"></display:column>
+			<display:column property="orderQuantity" titleKey="pm.orderdata.orderQuantity"></display:column>
+			<display:column property="deliverQuantity" titleKey="pm.orderdata.deliverQuantity"></display:column>
+			<display:column property="openQuantity" titleKey="pm.orderdata.openQuantity"></display:column>
+			<display:column property="barcode" titleKey="pm.orderdata.barcode" media="html"></display:column>
+			<display:setProperty name="export.excel.filename" value='设备清单.xls'>
+					</display:setProperty>
+		</display:table> --%>
+	</div>
+	<!-- 发货信息 -->
+	<div class="navDiv hideDiv shipmentListDiv" >
+		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+			<img src='./images/loading-circle.gif'/>
+		</div>
+	</div>
+	<!-- 实际发货清单 -->
+	<div class="navDiv hideDiv realOrderListDiv">
+		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+			<img src='./images/loading-circle.gif'/>
+		</div>
+		<%-- <span class="redMark">因市场原因，此项目实际发货与订单不一致，现场施工以此清单为准，如有疑问请联系此项目销售确认。</span>
+		<display:table
+			name="realOrderDataList" pagesize="${realOrderDataList.size()}" id="displaytable5"
+			size="${realOrderDataList.size()}" sort="external" export="true"
+			decorator="com.dp.plat.decorators.Wrapper" class="displayTable table"
+			requestURI="module/ProjectModify.action"
+			partialList="true">
+			<display:column property="contractNo" titleKey="pm.orderdata.contractNo"></display:column>
+			<display:column property="productSubCode" titleKey="pm.orderdata.itemCode"></display:column>
+			<display:column property="productSubModel" titleKey="pm.orderdata.model"></display:column>
+			<display:column property="productSubName" titleKey="pm.orderdata.itemName"></display:column>
+			<display:column property="num" titleKey="pm.orderdata.orderQuantity"></display:column>
+			<display:setProperty name="export.excel.filename" value='实际发货清单.xls'/>
+		</display:table> --%>
+	</div>
+	<!-- 软件设备信息 -->
+	<div class="navDiv hideDiv softversionDiv" >
+		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+			<img src='./images/loading-circle.gif'/>
+		</div>
+	</div>
+	<!-- 周报 -->
+	<div class="navDiv hideDiv weeklyDiv">
+		<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+	  		<a href="javascript:void(0)" id="createWeely" onclick="javascript:popWindow('module/sub/CreateWeekly.action?project.projectId=<s:property value='project.projectId'/>', 1000, 650,'<%=StringEscUtil.getText("pm.create.weekly") %>', 'BudgetUpload', true);"
+		 	 class="btn btn-default btn-block" style="width: 100px;height: 30px;display: none;"  ><span class="glyphicon glyphicon-plus"></span> <s:text name='pm.create.weekly'/></a> 
+		</s:if> 
+		 <display:table
+			name="weeklyList" pagesize="${weeklyList.size()}" export="false"
+			size="${weeklyList.size()}" sort="external"
+			decorator="com.dp.plat.decorators.Wrapper" class="table"
+			partialList="true">
+			<display:column property="currentTask" titleKey="pm.current.task"></display:column>
+			<display:column property="weeklyStartTime" titleKey="pm.weekly.start" format="{0,date,yyyy-MM-dd}"></display:column>
+			<display:column property="weeklyEndTime" titleKey="pm.weekly.end" format="{0,date,yyyy-MM-dd}"></display:column>
+			<display:column property="weeklyStateName" titleKey="pm.weekly.state"></display:column>
+			<display:column style="width:35px" property="weeklyHandleWrapper" titleKey="sys.write"></display:column>
+		</display:table> 
+	</div>
+	<!-- 留言 -->
+	<div class="navDiv hideDiv instructionDiv">
+		<s:hidden name="project.projectId" id="projectId"></s:hidden>
+		<input type="hidden" id="instructionName" value='<%=((UserContext)SpringContext.getBean("userContext")).getUser().getRealName()%>' />
+		
+		<table class="table">
+			<thead>
+				<tr>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			</thead>
+			<s:iterator value="instructionList" var="instruction" status="index">
+			<tbody >
+				<tr class="instructionMark" onclick="over(<s:property value='#index.index'/>)">
+					<td width="20px">1#</td>
+					<td style="width: 230px;height: 50px;border-right: 1px ridge;">
+						<p style="font-size: small"><s:property value="#instruction.instructionsUser"/></p>  <br/><br/>
+						发表于<s:date name="#instruction.instructionsTime" format="yyyy-MM-dd HH:mm:ss"/>
+					</td>
+					<td>
+						<s:property value="#instruction.instructionsInfo"/>  
+					</td>
+				</tr>
+				<s:iterator value="#instruction.feedbackList" var="feedback" status="s">
+					<tr class="hideMark feedback<s:property value='#index.index'/>" >
+						<td><s:property value="#s.index+2"/>#</td>
+						<td style="width: 230px;height: 50px;border-right: 1px ridge;">
+						<p style="font-size: small"><s:property value="#feedback.instructionsUser"/></p>  <br/><br/>
+						发表于<s:date name="#feedback.instructionsTime" format="yyyy-MM-dd HH:mm:ss"/>
+						</td>
+						<td><s:property value="#feedback.instructionsInfo"/>  </td>
+					</tr>
+				</s:iterator>
+				<tr class="hideMark feedback<s:property value='#index.index'/>  gcglb" >
+					
+					<td colspan="2">回复</td>
+					<td>
+						<s:hidden name="" id="instructionId%{#index.index}" value="%{#instruction.id}"></s:hidden>
+						 <div class="form-group">
+						    <textarea class="form-control" id="instructionsInfo<s:property value='#index.index'/>" placeholder="请输入要回复的内容" style="width: 800px" rows="3"></textarea>
+						 </div>
+						 <div class="form-group col-sm-1">
+							<a id="instruction<s:property value='#index.index'/>"  onclick="instruction(<s:property value='#index.index'/>)" href="javascript:void(0)" class="btn btn-info btn-lg">
+	          					<span class="glyphicon glyphicon-ok"></span> <s:text name="pm.project.btn"></s:text>
+	       				 	</a>
+						 </div>
+					</td>
+				</tr>
+			</tbody>
+			</s:iterator>
+			<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+				<tr id="newInstruction" onclick="createOver()">
+					<td colspan="2">新建</td>
+					<td>
+						<form action="" role="form" class="form-horizontal">
+							 <div class="form-group">
+							    <textarea class="form-control" id="instructionsInfo" placeholder="请输入要批示的内容" style="width: 800px" rows="3"></textarea>
+							 </div>
+						  	<a href="javascript:void(0)" onclick="instructionNew()" class="btn btn-info btn-lg">
+		          				<span class="glyphicon glyphicon-ok"></span> <s:text name="pm.project.btn"></s:text>
+		       				 </a>
+						</form>
+					</td>
+				</tr>
+			</s:if>
+		</table>
+	</div>
+
+
+<!-- ###########################项目闭环######################################## -->
+	<div class="navDiv hideDiv closeFlowDiv">
+	
+		<div id="pmCLDiv" divshowArr="pmcl"><!-- 项目经理申请 -->
+			<div class="form-group form-group-query">
+			<s:if test="%{isToCloseProject == 1}">
+				<button onclick="javascript:popWindow('module/sub/PmClosedLoopSub_execute.action?project.projectCode=<s:property value='project.projectCode'/>&pmClosedLoopResultType=10&project.projectId=<s:property value='project.projectId'/>', 1000, 650,'<%=StringEscUtil.getText("pm.cl.cl") %>', 'BudgetUpload', true);" value="pmAddPCLQButton" type="button" class="btn btn-default" style="margin-right:4px;">
+				  	<span class="glyphicon glyphicon-plus" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;<s:text name='pm.cl.pmCreate'/></span>
+				</button>
+			</s:if>
+			<s:else>
+			    <span class="redMark">请先补充设备安装地址、服务提供商/施工代理商和最终客户单位(若是运营商直签项目请等待回访流程结束)，再进行闭环申请！</span>
+			</s:else> 
+                <span style="margin-left:4px;">
+        			<a id="queryProcessView" target="_blank" href="">
+        				<span class="panel-heading">查看项目闭环流程图&nbsp;</span><span class="glyphicon glyphicon-picture" style="font-size:12px; color:#428bca;"></span>
+        			</a>
+                </span>
+            <s:if test="%{isToCloseProject != 1 && (message != null || message != '')}">
+                <br/>
+                <span class="redMark"><s:property value="message" /></span>
+            </s:if>
+			</div>	 
+		</div>	
+
+		
+		<div id="pmCLList"><!-- 项目闭环历史列表 -->
+	      	<table class="table">
+				<thead>
+					<tr>
+						<th>闭环申请人</th>
+						<th>当前审核人</th>
+						<th>审核状态</th>
+						<th>创建时间</th>
+						<th>操作</th>
+						<th>当前流程</th>
+					</tr>
+					</thead>
+					<tbody id="pmCLListBody">
+					<tr class="empty"><td colspan="6" align="right">没有可显示的数据.</td></tr>
+				</tbody>
+			</table>
+		</div>
+		
+	</div>	
+<!-- ###########################项目闭环######################################## -->
+<!-- ###########################项目回访######################################## -->
+	<div class="navDiv hideDiv callbackFlowDiv">
+		<div id="callback" class="hideDiv"><!-- 发起回访申请 -->
+			<div class="form-group form-group-query">
+				<s:if test="%{isCallBacking == 0}">
+					<button onclick="applyCallback()" value="pmAddPCLQButton" type="button" class="btn btn-default" style="margin-right:4px;">
+					  	<span class="glyphicon glyphicon-plus" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;<s:text name='pm.project.callback.apply'/></span>
+					</button>
+				</s:if>
+                <span class="redMark" style="margin-left:4px;">该流程为闭环流程回访节点的独立子流程（如需发起闭环流程请在项目闭环页发起）</span>
+				<span style="margin-left:4px;">
+					<a id="queryCallBackView" target="_blank" href="">
+						<span class="panel-heading">查看回访流程图&nbsp;</span><span class="glyphicon glyphicon-picture" style="font-size:12px; color:#428bca;"></span>
+					</a>
+				</span>
+			</div>
+		</div>
+		<div id="callbacklist">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>回访申请人</th>
+						<th>当前审核人</th>
+						<th>审核状态</th>
+						<th>申请时间</th>
+						<th>操作</th>
+						<th>当前流程</th>
+					</tr>
+					</thead>
+					<tbody>
+						<s:iterator value="callBackList" var="cb">
+							<tr>
+								<td>
+								<s:property value="#cb.applyByname"/>
+								</td>
+								<td>
+								<s:if test="#cb.applyState == 1">
+									<s:property value="#cb.taskAssigneeName"/>
+								</s:if>
+								</td>
+								<td class="${cb.applyState == 2 ? 'callbackPass' : ''}">
+								<s:property value="#cb.applyStateName"/>
+								</td>
+								<td>
+								<s:date name="#cb.applyTime" format="yyyy-MM-dd HH:mm"/>
+								</td>
+								<td>
+					
+								<s:if test="%{#cb.applyState == 1 && ((user.username == #cb.taskAssignee  && user.username!= #cb.applyBy)|| (user.isHasRole(14) && #cb.taskAssignee == 'callbackRole'))}">
+									<a id="callback_question" href="javascript:popWindow('module/sub/callback_aduit.action?callBack.projectId=<s:property value='#cb.projectId'/>&callBack.taskId=<s:property value='#cb.taskId'/>&callBack.callBackId=<s:property value='#cb.callBackId'/>', 1000, 650,'回访申请审批', 'BudgetUpload', true);">办理</a>
+								</s:if>
+								<s:elseif test="#cb.applyState == 1 && #cb.taskAssignee == #cb.applyBy && user.username == #cb.taskAssignee">
+									<a href="javascript:popWindow('module/sub/callback_resubmit.action?callBack.projectId=<s:property value='#cb.projectId'/>&callBack.taskId=<s:property value='#cb.taskId'/>&callBack.callBackId=<s:property value='#cb.callBackId'/>', 1000, 650,'回访申请审批', 'BudgetUpload', true);">办理</a>
+								</s:elseif>
+								<s:else>
+									<a href="javascript:popWindow('module/sub/callback_read.action?callBack.projectId=<s:property value='#cb.projectId'/>&callBack.callBackId=<s:property value='#cb.callBackId'/>', 1000, 650,'回访申请查看', 'BudgetUpload', true);">查看</a>
+								</s:else>
+								</td>
+								<td>
+								<s:if test="%{#cb.applyState == 1 && #cb.taskId != null}">
+									<a target="_blank" href="work/sub/WorkFlowViewCurrentImage.action?param.taskId=<s:property value='#cb.taskId'/>">查看当前流程</a>
+								</s:if>
+								</td>
+							</tr>
+						</s:iterator>
+					</tbody>
+			</table>
+		</div>
+	</div>
+<!-- ###########################项目回访######################################## -->
+
+    <!-- 转包记录 -->
+    <div class="navDiv hideDiv subcontractListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- 系统通知 -->
+    <div class="navDiv hideDiv notificationListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- 维护记录 -->
+    <div class="navDiv hideDiv maintenanceListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- 督查记录 -->
+    <div class="navDiv hideDiv supervisionListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+</body>
+</html>

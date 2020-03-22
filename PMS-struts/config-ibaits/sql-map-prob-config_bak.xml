@@ -1,0 +1,1528 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd"> 
+<!-- 售前测试项目数据库操作--> 
+<sqlMap>
+	<typeAlias alias="Prob" type="com.dp.plat.prob.bean.Prob"/>
+	<select id="query_next_val" resultClass="int">
+		<![CDATA[
+			SELECT _nextval('probNum')
+		]]>	
+	</select>
+	<!-- 插入 -->
+	<insert id="insert_into_prob" parameterClass="Prob">
+		<![CDATA[
+			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
+				duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom)
+			VALUES(#probNum#,#watch#,#theme#,#desc#,#solution#,#status#,#startdate#,#duedate#,
+				#attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now())
+		]]>
+		<selectKey resultClass="int" keyProperty="probId">
+			SELECT last_insert_id() as id ;   
+		</selectKey>
+	</insert>
+	
+	<!-- 列表查询 -->
+	<select id="query_prob_count" parameterClass="Prob" resultClass="int">
+		<![CDATA[
+			SELECT count(*)
+			FROM prob_main t1 
+			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
+			AND t2.`effectiveTo` IS NULL
+		]]>	
+		<isNotEmpty prepend=" " property="affectedVersion"> left join (
+		SELECT 
+		  probId,  GROUP_CONCAT(
+		        CONCAT(
+		            "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, "")
+		        ) SEPARATOR ";"
+		    ) AS affectedVersion
+		FROM
+		    prob_softwares 
+		GROUP BY probId) a 
+		on a.probId = t1.id
+		</isNotEmpty>
+			where t1.effectiveTo is null
+		<isNotEmpty prepend="and" property="probNum"><![CDATA[ t1.probNum like '%$probNum$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="watch"><![CDATA[ t1.watch = #watch#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="theme"><![CDATA[ t1.theme like '%$theme$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="status"><![CDATA[ t1.`status` = #status#]]></isNotEmpty>
+		
+		<isNotEmpty prepend="and" property="productType"><![CDATA[ t1.productType like concat("%", #productType#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="desc"><![CDATA[ t1.desc like concat("%", #desc#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="affectedVersion"><![CDATA[ a.affectedVersion like concat("%", #affectedVersion#, "%")]]></isNotEmpty>
+		
+		<isNotEmpty property="visibleRange">
+            <isNotEqual prepend="and" property="visibleRange" compareValue="-1" open="(" close=")">
+                t1.visibleRange = #visibleRange#
+                <isNotEmpty prepend="or" property="trackingUser"> t1.trackingUser = #trackingUser# </isNotEmpty>
+            </isNotEqual>
+        </isNotEmpty>
+	</select>
+	<resultMap class="Prob" id="ProbMap">
+		<result property="probId" column="id"/>
+		<result property="probNum" column="probNum"/>
+		<result property="theme" column="theme"/>
+		<result property="priority" column="priority"/>
+		<result property="status" column="status"/>
+		<result property="statusName" column="statusName"/>
+		<result property="trackingUser" column="trackingUser"/>
+		<result property="trackingUsername" column="trackingUsername"/>
+		<result property="createTime" column="createTime"/>
+		<result property="updateTime" column="updateTime"/>
+		
+		<result property="productType" column="productType"/>
+		<result property="desc" column="desc"/>
+		<result property="solution" column="solution"/>
+		<result property="affectedVersion" column="affectedVersion"/>
+	</resultMap>
+	<select id="query_prob_list" parameterClass="java.util.Map" resultClass="Prob">
+		<![CDATA[
+			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime
+			, t1.desc, t1.solution, t1.productType, a.affectedVersion 
+			FROM prob_main t1 
+			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
+			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
+			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
+			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31'
+			AND t2.`effectiveTo` IS NULL
+		]]>
+			<!-- <isNotEmpty prepend=" " property="prob.affectedVersion">  -->
+			left join (
+		        SELECT 
+		          probId,  GROUP_CONCAT(
+		                CONCAT(
+		                    IFNULL(CONCAT("conp:",conp), ""), IFNULL(CONCAT(" cpld:", cpld), ""), IFNULL(CONCAT(" boot:", boot), ""), IFNULL(CONCAT(" pcb:", pcb), "")
+		                ) SEPARATOR ";<![CDATA[<br>]]>"
+		            ) AS affectedVersion
+		        FROM
+		            prob_softwares 
+		        GROUP BY probId) a 
+		        on a.probId = t1.id
+	     <!--    </isNotEmpty> -->
+		WHERE t1.effectiveTo IS NULL
+		<isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like '%$prob.probNum$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.theme"><![CDATA[ t1.theme like '%$prob.theme$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></isNotEmpty>
+		
+		<isNotEmpty prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.affectedVersion"><![CDATA[ a.affectedVersion like concat("%", #prob.affectedVersion#, "%")]]></isNotEmpty>
+        
+        <isNotEmpty property="prob.visibleRange">
+            <isNotEqual prepend="and" property="prob.visibleRange" compareValue="-1" open="(" close=")">
+                t1.visibleRange = #prob.visibleRange# 
+                <isNotEmpty prepend="or" property="prob.trackingUser"> t1.trackingUser = #prob.trackingUser# </isNotEmpty>
+            </isNotEqual>
+        </isNotEmpty>
+        
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </isEqual>
+		</isNotEmpty>
+		<isEmpty prepend=" order by " property="displayParam.sort">
+            t1.createTime desc
+        </isEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset#,  #displayParam.pagesize#
+		</isNotEmpty>
+	</select>
+	<resultMap class="Prob" id="ProbSingleMap">
+		<result property="probId" column="id"/>
+		<result property="probNum" column="probNum"/>
+		<result property="watch" column="watch"/>
+		<result property="watchName" column="watchName"/>
+		<result property="theme" column="theme"/>
+		<result property="desc" column="desc"/>
+		<result property="solution" column="solution"/>
+		<result property="status" column="status"/>
+		<result property="statusName" column="statusName"/>
+		<result property="startdate" column="startdate"/>
+		<result property="attachments" column="attachments"/>
+		<result property="productType" column="productType"/>
+		<result property="trackingUser" column="trackingUser"/>
+		<result property="trackingUsername" column="trackingUsername"/>
+		<result property="duedate" column="duedate"/>
+		<result property="priority" column="priority"/>
+		<result property="priorityName" column="priorityName"/>
+		<result property="createTime" column="createTime"/>
+		<result property="updateTime" column="updateTime"/>
+		<result property="remark" column="remark"/>
+		<result property="visibleRange" column="visibleRange"/>
+		<result property="readStatus" column="readStatus"/>
+	</resultMap>
+	<select id="query_prob_one" parameterClass="Prob" resultMap="ProbSingleMap">
+		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
+			, concat(t6.username, '-', t6.realName) as trackingUsername
+		    <isNotEmpty prepend="," property="reader"> IFNULL(rl.status, 0) as readStatus </isNotEmpty>
+		    <isEmpty prepend="," property="reader"> 0 as readStatus </isEmpty>
+		FROM prob_main t1 
+        <isNotEmpty property="reader">
+		   left join (select * from prob_read_log where probId = #probId# and reader = #reader# and status = 1 limit 1) rl
+              on t1.id = rl.probId and rl.status = 1
+        </isNotEmpty>
+        
+		LEFT JOIN fnd_basic_data t3 ON t1.`watch` = t3.`basicDataId` AND t3.`dataTypeCode` = '30' AND t3.`effectiveTo` IS NULL
+		LEFT JOIN fnd_basic_data t4 ON t1.`status` = t4.`basicDataId` AND t4.`dataTypeCode` = '31' AND t4.`effectiveTo` IS NULL
+		LEFT JOIN fnd_basic_data t5 ON t1.`priority` = t5.`basicDataId` AND t5.`dataTypeCode` = '32' AND t5.`effectiveTo` IS NULL
+		left join fnd_user_info t6 on t1.trackingUser = t6.username
+		
+		WHERE t1.id = #probId#
+	</select>
+	
+	<select id="query_prob_file_map" parameterClass="int" resultClass="java.util.HashMap">
+		<![CDATA[
+			SELECT t1.`id` AS fileId, t1.`fileName` AS fileName FROM fnd_files t1 
+			JOIN prob_main t2 ON FIND_IN_SET (t1.`id`, t2.`attachments`) 
+			WHERE t2.`id` = #probId#;
+		]]>
+	</select>
+	
+	<update id="update_prob" parameterClass="Prob">
+		<![CDATA[ update prob_main set id = #probId#, updateTime = now() ]]>
+		<isNotEmpty prepend="," property="probNum"><![CDATA[ probNum = #probNum#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="watch"><![CDATA[ watch = #watch#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="theme"><![CDATA[ theme = #theme#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="desc"><![CDATA[ `desc` = #desc#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="solution"><![CDATA[ solution = #solution#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="status"><![CDATA[ `status` = #status#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="startdate"><![CDATA[ startdate = #startdate#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="duedate"><![CDATA[ duedate = #duedate#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="priority"><![CDATA[ priority = #priority#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="productType"><![CDATA[ productType = #productType#]]> </isNotEmpty>
+		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',',$attachments$)]]></isNotEmpty>
+		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
+		<![CDATA[ where id = #probId#]]>
+	</update>
+	
+	<update id="update_prob_status" parameterClass="Prob">
+		<![CDATA[ update prob_main set id = #probId#, updateTime = now() ]]>
+		<isNotEmpty prepend="," property="probNum"><![CDATA[ probNum = #probNum#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="watch"><![CDATA[ watch = #watch#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="theme"><![CDATA[ theme = #theme#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="desc"><![CDATA[ `desc` = #desc#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="solution"><![CDATA[ solution = #solution#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="status"><![CDATA[ `status` = #status#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="startdate"><![CDATA[ startdate = #startdate#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="duedate"><![CDATA[ duedate = #duedate#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="priority"><![CDATA[ priority = #priority#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="productType"><![CDATA[ productType = #productType#]]> </isNotEmpty>
+		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',',$attachments$)]]></isNotEmpty>
+		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
+		<![CDATA[ where id = #probId#]]>
+	</update>
+	
+	<typeAlias alias="SoftVersion" type="com.dp.plat.prob.bean.SoftVersion"/>
+	<resultMap class="SoftVersion" id="SoftVersionMap">
+		<result property="conp" column="conp"/>
+		<result property="cpld" column="cpld"/>
+		<result property="boot" column="boot"/>
+		<result property="pcb" column="pcb"/>
+	</resultMap>
+	<select id="check_soft_version_list" parameterClass="SoftVersion" resultMap="SoftVersionMap"> 
+		SELECT  DISTINCT 
+		<isNotEmpty property="conp">
+			conp 
+		</isNotEmpty>
+		<isEmpty property="conp">
+			null as conp
+		</isEmpty>
+		<isNotEmpty property="cpld">
+			,cpld 
+		</isNotEmpty>
+		<isEmpty property="cpld">
+			,null as cpld 
+		</isEmpty>
+		<isNotEmpty property="boot">
+			,boot 
+		</isNotEmpty>
+		<isEmpty property="boot">
+			,null as boot
+		</isEmpty>
+		<isNotEmpty property="pcb">
+			,pcb
+		</isNotEmpty>
+		<isEmpty property="pcb">
+			,null as pcb
+		</isEmpty>
+		FROM 
+			(SELECT conp, cpld, boot, pcb  FROM fb_soft_version 
+		    UNION
+		    SELECT conp, cpld, boot, pcb FROM `pm_project_soft_version` 
+		    UNION
+            SELECT conp, cpld, boot, pcb FROM prob_soft_version) t
+		WHERE 1 = 1		
+		<isEqual property="conpCondition" compareValue="between">
+			<isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ #conp1# and #conp2# ]]> </isNotEmpty>
+		</isEqual>
+		<isNotEqual property="conpCondition" compareValue="between">
+		    <isEqual property="conpCondition" compareValue="regexp">
+	            <isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ #conp#]]> </isNotEmpty>
+	        </isEqual>
+	        <isNotEqual property="conpCondition" compareValue="regexp">
+				<isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ '%$conp$%']]> </isNotEmpty>
+            </isNotEqual>
+		</isNotEqual>
+		<isEqual property="cpldCondition" compareValue="between">
+		    <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ #cpld1# and #cpld2# ]]> </isNotEmpty>
+		</isEqual>
+		<isNotEqual property="cpldCondition" compareValue="between">
+		    <isEqual property="cpldCondition" compareValue="regexp">
+                <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ #cpld#]]> </isNotEmpty>
+            </isEqual>
+            <isNotEqual property="cpldCondition" compareValue="regexp">
+				<isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ '%$cpld$%']]> </isNotEmpty>
+            </isNotEqual>
+		</isNotEqual>
+		<isEqual property="bootCondition" compareValue="between">
+			<isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ #boot1# and #boot2# ]]> </isNotEmpty>
+		</isEqual>
+		<isNotEqual property="bootCondition" compareValue="between">
+		    <isEqual property="bootCondition" compareValue="regexp">
+                <isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ #boot#]]> </isNotEmpty>
+            </isEqual>
+            <isNotEqual property="bootCondition" compareValue="regexp">
+				<isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ '%$boot$%']]> </isNotEmpty>
+            </isNotEqual>
+		</isNotEqual>
+		<isEqual property="pcbCondition" compareValue="between">
+			<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ #pcb1# and #pcb2# ]]> </isNotEmpty>
+		</isEqual>
+		<isNotEqual property="pcbCondition" compareValue="between">
+		    <isEqual property="pcbCondition" compareValue="regexp">
+                <isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ #pcb#]]> </isNotEmpty>
+            </isEqual>
+            <isNotEqual property="pcbCondition" compareValue="regexp">
+				<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ '%$pcb$%']]> </isNotEmpty>
+            </isNotEqual>
+		</isNotEqual>
+		order by 1
+		<isNotEmpty prepend="," property="conp">
+			 conp 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="cpld">
+			cpld 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="boot">
+			boot 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="pcb">
+			pcb
+		</isNotEmpty>
+	</select>
+	
+	<update id="update_invalid_softversion" parameterClass="java.util.Map" >
+		<![CDATA[
+			UPDATE prob_softwares SET datastate = 0, updateBy = #updateBy#,  updateTime = NOW() WHERE probId = #probId#;
+		]]>
+	</update>
+	<insert id="insert_into_softversion" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb,datastate,createBy,  createTime) VALUES
+		]]>
+		<iterate conjunction="," property="list">
+			<![CDATA[ (#probId#, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#,  1, #createBy#, now() )]]>
+		</iterate>
+	</insert>
+	
+	<select id="query_prob_soft_version" parameterClass="int" resultMap="SoftVersionMap">
+		<![CDATA[
+			SELECT * FROM prob_softwares WHERE probId = #probId# AND datastate = 1
+		]]>
+	</select>
+	<typeAlias alias="Project" type="com.dp.plat.data.bean.Project"/>
+	<typeAlias alias="ProbRestore" type="com.dp.plat.prob.bean.ProbRestore"/>
+	<resultMap class="ProbRestore" id="ProbRestoreMap">
+		<result property="serialNum" column="serial_number"/>
+		<result property="itemModel" column="itemModel"/>
+		<result property="probId" column="probId" nullValue="0"/>
+		<result property="projectId" column="projectId" nullValue="0"/>
+		<result property="conp" column="conp"/>
+		<result property="cpld" column="cpld"/>
+		<result property="boot" column="boot"/>
+		<result property="pcb" column="pcb"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeCode" column="officeCode"/>
+		<result property="officeName" column="officeName"/>
+		<result property="contractNo" column="contractNo"/>
+	</resultMap>
+	<select id="query_prob_restore_list" parameterClass="java.util.Map" resultMap="ProbRestoreMap">
+		<!-- <![CDATA[
+			SELECT t1.* , b1.`itemname` as itemModel ,t6.`projectName` , t6.`column001`  AS officeCode , t9.`departmentName` AS officeName ,
+			t4.`contractNo` , t2.`probId` , t6.`projectId` FROM 
+			(SELECT a1.serial_number,CASE WHEN a2.conp IS NULL THEN a1.conp ELSE a2.conp END AS conp ,
+				CASE WHEN a2.boot IS NULL THEN a1.boot ELSE a2.boot END AS boot,
+				CASE WHEN a2.cpld IS NULL THEN a1.cpld ELSE a2.cpld END AS cpld,
+				CASE WHEN a2.pcb IS NULL THEN a1.pcb ELSE a2.pcb END AS pcb
+			 FROM fb_soft_version a1 
+			LEFT JOIN pm_project_soft_version a2 ON a1.`serial_number` = a2.`barcode` AND a2.`datastate` = 1 ) t1 
+			
+			LEFT JOIN prob_softwares t2 ON CASE WHEN t2.`conp` IS NOT NULL THEN t1.`conp` = t2.`conp` ELSE 1=1 END 
+			AND CASE WHEN t2.`boot` IS NOT NULL THEN t1.`boot` = t2.`boot` ELSE 1=1 END
+			AND CASE WHEN t2.`cpld` IS NOT NULL THEN t1.`cpld` = t2.`cpld` ELSE 1=1 END
+			AND CASE WHEN t2.`pcb` IS NOT NULL THEN t1.`pcb` = t2.`pcb` ELSE 1 =1 END
+			LEFT JOIN view_shipment_info_4_pm t3 ON t1.`serial_number` = t3.`barcode`
+			LEFT JOIN fb_items b1 ON t3.`itemCode` = b1.`item`
+			LEFT JOIN pm_project_contract t4 ON t3.`contract_code` = t4.`contractNo`
+			LEFT JOIN pm_project_group_relationship t5 ON t4.`projectGroupCode` = t5.`projectGroupCode`
+			LEFT JOIN pm_project_header t6 ON t5.`projectCode` = t6.`projectCode`
+			LEFT JOIN pm_project_member t7 ON t6.`projectId` = t7.`projectId` AND t7.`memberRole` = '30' AND t7.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t8 ON t6.`projectId` = t8.`projectId` AND t8.`memberRole` = '20' AND t8.`effectiveTo` IS NULL 
+			LEFT JOIN fnd_department t9 ON t6.`column001` = t9.`departmentNum` 
+			LEFT JOIN fnd_basic_data t10 ON t6.`projectState` = t10.`basicDataId` AND t10.`dataTypeCode` = '02' AND t10.`effectiveTo` IS NULL
+			WHERE t2.`datastate` = 1 AND t2.`probId` =  #probRestore.probId# AND t4.`contractNo` IS NOT NULL
+			AND t5.`projectCode` NOT LIKE '%his'
+			AND NOT EXISTS(SELECT * FROM prob_restore WHERE serialNum = t1.serial_number)  
+		]]> -->
+		<![CDATA[
+			SELECT t1.*, fi.`itemname` as itemModel, t6.`projectName`, t6.`column001` AS officeCode, t9.`departmentName` AS officeName, t4.`contractNo`,
+			t2.`probId`, MAX(t6.`projectId`) AS projectId  
+			FROM
+			    (SELECT * FROM prob_softwares WHERE datastate = 1 AND probId = #probRestore.probId#) t2 
+			    LEFT JOIN 
+			        (SELECT  a1.serial_number, 
+			            CASE WHEN a2.conp IS NULL THEN a1.conp ELSE a2.conp END AS conp, 
+			            CASE WHEN a2.boot IS NULL THEN a1.boot ELSE a2.boot END AS boot, 
+			            CASE WHEN a2.cpld IS NULL THEN a1.cpld ELSE a2.cpld END AS cpld, 
+			            CASE WHEN a2.pcb IS NULL THEN a1.pcb ELSE a2.pcb END AS pcb 
+			        FROM fb_soft_version a1 
+			            LEFT JOIN pm_project_soft_version a2 
+			                ON a1.`serial_number` = a2.`barcode` 
+			                AND a2.`datastate` = 1) t1  
+				ON  CASE WHEN t2.`conp` IS NOT NULL THEN t1.`conp` = t2.`conp` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`boot` IS NOT NULL THEN t1.`boot` = t2.`boot` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`cpld` IS NOT NULL THEN t1.`cpld` = t2.`cpld` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`pcb` IS NOT NULL THEN t1.`pcb` = t2.`pcb` ELSE 1 = 1 END 
+			    INNER JOIN fb_shipment_barcode fsb 
+			        ON fsb.`barcode` = t1.serial_number 
+			        AND (
+			            ISNULL(`fsb`.`rma_no`) 
+			            OR (`fsb`.`rma_no` = '') 
+			            OR (`fsb`.`rma_no` = 'null')
+			        ) 
+			    INNER JOIN fb_shipment fs ON fs.`packlist_id` = fsb.`pack_id` 
+			    INNER JOIN fb_contract fc ON fc.`contract_id` = fs.`con_id`
+			    INNER JOIN fb_items fi ON fi.`item` = fsb.`item`
+			    INNER JOIN pm_project_contract t4 ON fc.`contract_code` = t4.`contractNo` 
+			    INNER JOIN pm_project_group_relationship t5 ON t4.`projectGroupCode` = t5.`projectGroupCode` 
+			    INNER JOIN pm_project_header t6 ON t5.`projectCode` = t6.`projectCode`
+			    	AND (
+			            (
+			                column012 IS NOT NULL 
+			                AND column012 <> 3
+			            ) 
+			            OR (
+			                column012 IS NULL 
+			                AND `columno12_readonly` <> 3
+			            )
+			        )  
+			    LEFT JOIN fnd_department t9 ON t6.`column001` = t9.`departmentNum` 
+			    LEFT JOIN fnd_basic_data t10 ON t6.`projectState` = t10.`basicDataId` AND t10.`dataTypeCode` = '02' AND t10.`effectiveTo` IS NULL 
+			WHERE t4.`contractNo` IS NOT NULL 
+			    AND t5.`projectCode` NOT LIKE '%his' 
+			    AND NOT EXISTS 
+			    (SELECT * FROM prob_restore WHERE serialNum = t1.serial_number AND probId = #probRestore.probId#) 
+		]]>
+		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ t1.serial_number like '$probRestore.serialNum$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like '$probRestore.itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ t6.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ t4.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ t6.column001 = #probRestore.officeCode#]]></isNotEmpty>
+		<![CDATA[
+			GROUP BY t1.serial_number
+		]]>
+	</select>
+	<insert id="insert_batch_probRestore_task_list" parameterClass="java.util.Map" >
+		<![CDATA[
+			INSERT INTO prob_restore(probId, serialNum , itemModel, processId, officeCode, conp, boot, cpld, pcb, projectId,projectName,
+				contractNo,assignee, assigneeRole,  createBy,  createTime )
+			VALUES
+		]]>
+		<iterate conjunction="," property="list">
+			<isEqual compareValue="1" property="list[].ischecked">
+				<![CDATA[ ( #probRestore.probId# , #list[].serialNum# , #list[].itemModel# , #probRestore.processId# , #list[].officeCode# ,
+				#list[].conp# , #list[].boot# , #list[].cpld# , #list[].pcb# ,#list[].projectId# , #list[].projectName# ,
+				#list[].contractNo# , #probRestore.assignee# , #probRestore.assigneeRole# ,
+				#createBy# , now())]]>	
+			</isEqual>
+		</iterate>
+	</insert>
+	<select id="query_count_probRestore_task_project" parameterClass="ProbRestore" resultClass="int">
+		<![CDATA[
+			SELECT 
+			    COUNT(*) 
+			FROM
+			    (SELECT 
+			        a1.* 
+			    FROM
+			        prob_restore a1 
+			        LEFT JOIN prob_restore_process a4 
+			            ON a1.processId = a4.id 
+			    WHERE a1.probId = #probId#
+		]]>
+				<isNotEmpty prepend="and" property="assignee">
+					<![CDATA[
+						(a1.assignee = #assignee# 
+					]]>	
+					<isNotEmpty prepend="OR" property="areapower">
+						<![CDATA[ 
+							(a1.officeCode in ($areapower$) 
+						]]>	
+							<isNotEmpty prepend="and" property="assigneeRole"><![CDATA[ a1.assigneeRole = #assigneeRole#  ]]></isNotEmpty>
+							)
+					</isNotEmpty>
+					)
+				</isNotEmpty>
+				<!-- <isEmpty property="assignee">
+					<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
+				</isEmpty> -->
+				<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
+				<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like '%$projectName$%']]></isNotEmpty>
+				<isNotEmpty prepend="and" property="serialNum"><![CDATA[ a1.serialNum = #serialNum# ]]></isNotEmpty>
+				<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like '$itemModel$%']]></isNotEmpty>
+				<isNotEmpty prepend="and" property="contractNo"><![CDATA[ a1.contractNo = #contractNo#]]></isNotEmpty>
+				<isNotEqual prepend="and" property="restoreStatus" compareValue="0">
+					<![CDATA[ a4.restoreStatus = #restoreStatus#]]>
+				</isNotEqual>
+				GROUP BY a1.projectId, a1.assignee, a1.assigneeRole, a4.restoreStatus ) t
+	</select>
+	<select id="query_count_probRestore_task" parameterClass="ProbRestore" resultClass="int">
+		<![CDATA[
+			SELECT count(*) FROM prob_restore a1
+			left join prob_restore_process a4 on a1.processId = a4.id
+			WHERE a1.probId = #probId#
+		]]>
+		<isNotEmpty prepend="and" property="assignee">
+			<![CDATA[
+				(a1.assignee = #assignee# 
+			]]>	
+			<isNotEmpty prepend="OR" property="areapower">
+				<![CDATA[ 
+					(a1.officeCode in ($areapower$) 
+				]]>	
+					<isNotEmpty prepend="and" property="assigneeRole"><![CDATA[ a1.assigneeRole = #assigneeRole#  ]]></isNotEmpty>
+					)
+			</isNotEmpty>
+			)
+		</isNotEmpty>
+		<!-- <isEmpty property="assignee">
+			<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
+		</isEmpty> -->
+		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like '%$projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="serialNum"><![CDATA[ a1.serialNum = #serialNum# ]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like '$itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="contractNo"><![CDATA[ a1.contractNo = #contractNo#]]></isNotEmpty>
+		<isNotEqual prepend="and" property="restoreStatus" compareValue="0">
+			<![CDATA[ a4.restoreStatus = #restoreStatus#]]>
+		</isNotEqual>
+	</select>
+	<resultMap class="ProbRestore" id="ProbRestoreTaskList">
+		<result property="id" column="id"/>
+		<result property="serialNum" column="serialNum"/>
+		<result property="itemModel" column="itemModel"/>
+		<result property="probId" column="probId" nullValue="0"/>
+		<result property="projectId" column="projectId" nullValue="0"/>
+		<result property="processId" column="processId" nullValue="0"/>
+		<result property="conp" column="a1.conp"/>
+		<result property="cpld" column="a1.cpld"/>
+		<result property="boot" column="a1.boot"/>
+		<result property="pcb" column="a1.pcb"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeCode" column="officeCode"/>
+		<result property="officeName" column="officeName"/>
+		<result property="contractNo" column="contractNo"/>
+		<result property="restoreStatus" column="restoreStatus"/>
+		<result property="restoreStatusName" column="restoreStatusName"/>
+		<result property="restoreRemark" column="restoreRemark"/>
+		<result property="createTime" column="createTime"/>
+		<result property="createBy" column="createBy"/>
+		<result property="updateTime" column="updateTime"/>
+		<result property="updateBy" column="updateBy"/>
+		<result property="latestConp" column="a5.conp"/>
+		<result property="latestCpld" column="a5.cpld"/>
+		<result property="latestBoot" column="a5.boot"/>
+		<result property="latestPcb" column="a5.pcb"/>
+		<result property="executeTime" column="executeTime"/>
+		<result property="assignee" column="assigneeName"/>
+	</resultMap>
+	<select id="query_list_probRestore_task" parameterClass="java.util.Map" resultMap="ProbRestoreTaskList">
+		<![CDATA[
+			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
+				a4.restoreRemark ,a4.restoreStatus ,a5.`conp` , a5.`boot` ,a5.`cpld` ,a5.`pcb` ,a5.`executeTime` ,
+				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
+			  FROM prob_restore a1
+			LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
+			LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
+			LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
+			LEFT JOIN pm_project_soft_version a5 ON a1.`serialNum` = a5.`barcode` AND a5.`datastate` = 1 
+			LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
+			WHERE a1.probId = #probRestore.probId# 	
+		]]>
+		<isNotEmpty prepend="and" property="probRestore.assignee">
+			<![CDATA[
+				(a1.assignee = #probRestore.assignee# 
+			]]>	
+			<isNotEmpty prepend="OR" property="probRestore.areapower">
+				<![CDATA[ 
+					(a1.officeCode in ($probRestore.areapower$)
+				]]>	
+				<isNotEmpty prepend="and" property="probRestore.assigneeRole"><![CDATA[ a1.assigneeRole = #probRestore.assigneeRole#]]></isNotEmpty>
+					)
+			</isNotEmpty>
+			)
+		</isNotEmpty>
+		<!-- <isEmpty property="probRestore.assignee">
+			<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
+		</isEmpty> -->
+		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like '$probRestore.itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
+			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
+		</isNotEqual>
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset# , #displayParam.pagesize#
+		</isNotEmpty>
+	</select>
+	<select id="query_list_probRestore_task_project" parameterClass="java.util.Map" resultMap="ProbRestoreTaskList">
+		<![CDATA[
+			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
+				a4.restoreRemark ,a4.restoreStatus ,a5.`conp` , a5.`boot` ,a5.`cpld` ,a5.`pcb` ,a5.`executeTime` ,
+				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
+			  FROM prob_restore a1
+			LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
+			LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
+			LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
+			LEFT JOIN pm_project_soft_version a5 ON a1.`serialNum` = a5.`barcode` AND a5.`datastate` = 1 
+			LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
+			WHERE a1.probId = #probRestore.probId# 	
+		]]>
+		<isNotEmpty prepend="and" property="probRestore.assignee">
+			<![CDATA[
+				(a1.assignee = #probRestore.assignee# 
+			]]>	
+			<isNotEmpty prepend="OR" property="probRestore.areapower">
+				<![CDATA[ 
+					(a1.officeCode in ($probRestore.areapower$)
+				]]>	
+				<isNotEmpty prepend="and" property="probRestore.assigneeRole"><![CDATA[ a1.assigneeRole = #probRestore.assigneeRole#]]></isNotEmpty>
+					)
+			</isNotEmpty>
+			)
+		</isNotEmpty>
+		<!-- <isEmpty property="probRestore.assignee">
+			<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
+		</isEmpty> -->
+		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like '$probRestore.itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
+			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
+		</isNotEqual>
+		GROUP BY a1.projectId, a1.assignee, a1.assigneeRole, a4.restoreStatus 
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset# , #displayParam.pagesize#
+		</isNotEmpty>
+	</select>
+	<insert id="insert_restore_process" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_restore_process( probId ,restoreStatus ,restoreRemark ,createBy,createTime) 
+			VALUES(#probRestore.probId# , #probRestore.restoreStatus# ,#probRestore.restoreRemark# , #createBy# ,now())
+		]]>
+		<selectKey resultClass="int" keyProperty="id">
+			<![CDATA[ SELECT last_insert_id() as id ; ]]>
+		</selectKey>
+	</insert>
+	<update id="update_prob_restore_processId" parameterClass="java.util.Map">
+		<![CDATA[
+			UPDATE prob_restore SET processId = #processId# 
+		]]>
+		<isNotEmpty prepend="," property="assignee">
+		<![CDATA[ assignee = #assignee#]]>
+		</isNotEmpty>
+		<![CDATA[
+			,updateBy = #updateBy#,updateTime = now() WHERE id IN ($restoreIds$);
+		]]>
+	</update>
+	
+	<update id="update_prob_restore_assignee" parameterClass="java.util.Map">
+		<![CDATA[
+			UPDATE prob_restore SET assignee = #assignee#,assigneeRole = 0 ,updateBy = #updateBy#,updateTime = now()  WHERE id IN ($restoreIds$);
+		]]>
+	</update>
+	<select id="query_prob_restore_process_size" parameterClass="int" resultClass="int">
+		<![CDATA[
+			SELECT COUNT(*) FROM prob_restore_process WHERE probId = #probId#
+		]]>
+	</select>
+	<update id="delete_prob_info" parameterClass="java.util.Map">
+		<![CDATA[
+			UPDATE prob_main SET effectiveTo = NOW() ,updateBy = #updateBy#, updateTime = now() WHERE id = #probId# 
+		]]>
+	</update>
+	<resultMap class="com.dp.plat.prob.bean.ProbFile" id="ProbFile">
+		<result property="name" column="fileName"/>
+		<result property="path" column="filePath"/>
+	</resultMap>
+	<select id="query_prob_file_list" parameterClass="string" resultMap="ProbFile">
+		<![CDATA[
+			SELECT fileName,filePath FROM fnd_files WHERE FIND_IN_SET(id , '$fileIds$');
+		]]>
+	</select>
+	<insert id="insert_prob_task_weekly" parameterClass="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_restore_weekly(probId ,fileId,createBy ,createTime) 
+			VALUES(#probId# , #fileId# , #createBy# , now());
+		]]>
+	</insert>
+	<resultMap class="com.dp.plat.prob.bean.ProbRestoreWeekly" id="weeklyMap">
+		<result property="fileName" column="fileName"/>
+		<result property="uploadUser" column="uploadUser"/>
+		<result property="uploadTime" column="uploadTime"/>
+		<result property="fileId" column="fileId"/>
+	</resultMap>
+	<select id="query_prob_task_weekly" parameterClass="java.util.Map" resultMap="weeklyMap">
+		<![CDATA[
+			SELECT t2.`fileName` , CONCAT(t3.`username` , '-' , t3.`realName`) AS uploadUser , t2.`uploadTime` ,t1.`fileId`  FROM prob_restore_weekly t1 
+			LEFT JOIN fnd_files t2 ON t1.`fileId` = t2.`id`
+			LEFT JOIN fnd_user_info t3 ON t2.`uploadBy` = t3.`username` 
+			WHERE t1.`probId` = #probId# 
+		]]>
+		<isNotEmpty property="uploaduser">
+			<![CDATA[ AND t2.`uploadBy` = #uploaduser# ]]>
+		</isNotEmpty>
+	</select>
+	<select id="query_prob_assignee_emails" parameterClass="string" resultClass="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(DISTINCT t2.email SEPARATOR ';') as emails FROM prob_restore t1
+			LEFT JOIN fnd_user_info t2 ON t1.`assignee` = t2.`username` AND t2.`status` = 1
+			WHERE t1.`id` IN ($restoreIds$)
+		]]>
+	</select>
+	
+	<delete id="batch_delete_probRestores" parameterClass="string">
+		<![CDATA[
+			delete from prob_restore where id in ($probRestoreIds$)
+		]]>
+	</delete>
+	
+	<resultMap class="com.dp.plat.data.bean.ShipmentInfo" id="softVersionChangeList">
+		<result property="projectId" column="projectId"/>
+		<result property="barCode" column="barcode"/>
+		<result property="itemName" column="itemName"/>
+		<result property="conp" column="conp"/>
+		<result property="conpBak" column="conpBak"/>
+		<result property="conpChange" column="conpChange" nullValue="0"/>
+		<result property="boot" column="boot"/>
+		<result property="bootBak" column="bootBak"/>
+		<result property="bootChange" column="bootChange" nullValue="0"/>
+		<result property="cpld" column="cpld"/>
+		<result property="cpldBak" column="cpldBak"/>
+		<result property="cpldChange" column="cpldChange" nullValue="0"/>
+		<result property="pcb" column="pcb"/>
+		<result property="pcbBak" column="pcbBak"/>
+		<result property="pcbChange" column="pcbChange" nullValue="0"/>
+		<result property="executeTime" column="executeTime"/>
+		<result property="createTime" column="createTime"/>
+	</resultMap>
+	<select id="query_hist_soft_version_list_by_probRestoreIds" parameterClass="string" resultMap="softVersionChangeList">
+		<![CDATA[
+			SELECT 
+			    pr.`serialNum` AS barCode, pr.`itemModel` AS itemName, pr.`projectId`, sv.`conp`, sv.`conpBak`, sv.`conpChange`, sv.`boot`, sv.`bootBak`, sv.`bootChange`, sv.`cpld`, sv.`cpldBak`, sv.`cpldChange`, sv.`pcb`, sv.`pcbBak`, sv.`pcbChange`, sv.`executeTime`, sv.`createTime` 
+			FROM
+			    `prob_restore` pr 
+			    LEFT JOIN `pm_project_soft_version` sv 
+			        ON pr.`serialNum` = sv.`barcode` 
+			        AND sv.`datastate` = 1 
+			    LEFT JOIN `pm_project_soft_change_logs` scl 
+			        ON pr.`projectId` = scl.`projectId` 
+			        AND scl.`latest` = 1
+			WHERE pr.id IN ($restoreIds$)
+		]]>
+	</select>
+	
+	<select id="query_officeMails_by_probRestoreIds" parameterClass="string" resultClass="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(DISTINCT ui.email SEPARATOR ';') 
+			FROM
+			    `prob_restore` pr 
+			    LEFT JOIN fnd_user_info ui 
+			        ON pr.`officeCode` = ui.`dpNo` 
+			        AND ui.`status` = 1 
+	       	WHERE pr.id IN ($restoreIds$)
+		]]>
+	</select>
+	
+	<select id="query_exportProb_list" parameterClass="map" resultClass="Prob">
+		SELECT 
+		    t1.*, t2.`basicDataName` AS priorityName, t4.`basicDataName` AS watchName, t3.basicDataName AS statusName, CONCAT(t1.trackingUser, "-", ui.realName) AS trackingUsername, t.affectedVersion 
+		FROM
+		    prob_main t1 
+		    LEFT JOIN fnd_user_info ui 
+		        ON ui.username = t1.trackingUser 
+		    LEFT JOIN fnd_basic_data t2 
+		        ON t1.`priority` = t2.`basicDataId` 
+		        AND t2.`dataTypeCode` = '32' 
+		        AND t2.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t3 
+		        ON t1.`status` = t3.basicDataId 
+		        AND t3.dataTypeCode = '31' 
+		        AND t3.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t4 
+		        ON t1.`watch` = t4.basicDataId 
+		        AND t4.dataTypeCode = '30' 
+		        AND t4.`effectiveTo` IS NULL 
+		    LEFT JOIN 
+		        (SELECT 
+		            probId, GROUP_CONCAT(
+		                CONCAT_WS(
+		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("conp[", pcb, "]")
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion 
+		        FROM
+		            `prob_softwares` 
+		        WHERE datastate = 1 
+		        GROUP BY probId) t 
+		        ON t.probId = t1.`id` 
+		WHERE t1.effectiveTo IS NULL 
+	</select>
+	
+	<insert id="batch_add_softVersion" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT IGNORE INTO prob_soft_version(conp, cpld, boot, pcb, createdBy) VALUES
+        ]]>
+        <iterate conjunction="," property="list">
+            <![CDATA[ (#list[].conp#, #list[].cpld#, #list[].boot#, #list[].pcb#, #createdBy#)]]>
+        </iterate>
+    </insert>
+    
+    <select id="query_prob_statistics_count" parameterClass="com.dp.plat.prob.bean.ProbStatistic" resultClass="int">
+        select count(*) from statistic_tempTable
+        <!-- (
+	        SELECT 
+	             1
+	        FROM
+	            (SELECT 
+	                sv.`projectId`, fi.`itemname`, CONCAT(
+	                    "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(
+	                        CONCAT(
+	                            scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+	                            CASE
+	                                WHEN sv.`conpChange` = 1 
+	                                THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+	                                ELSE sv.`conp` 
+	                            END, "]", "，cpld:[", 
+	                            CASE
+	                                WHEN sv.`cpldChange` = 1 
+	                                THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+	                                ELSE sv.`cpld` 
+	                            END, "]", "，boot:[", 
+	                            CASE
+	                                WHEN sv.`bootChange` = 1 
+	                                THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+	                                ELSE sv.`boot` 
+	                            END, "]", "，pcb:[", 
+	                            CASE
+	                                WHEN sv.`pcbChange` = 1 
+	                                THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+	                                ELSE sv.`pcb` 
+	                            END, "]"
+	                        ) SEPARATOR ";\r\n"
+	                    )
+	                ) AS softInfo, COUNT(*) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+	            FROM
+	                pm_project_soft_version sv 
+	                LEFT JOIN pm_project_soft_change_logs scl 
+	                    ON sv.`projectId` = scl.projectId 
+	                    AND sv.`logId` = scl.id 
+	                LEFT JOIN fb_items fi 
+	                    ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+	                LEFT JOIN fb_soft_version fsv 
+	                    ON sv.`barcode` = fsv.`serial_number`
+	                LEFT JOIN `prob_softwares` ps 
+	                    ON 
+	                    CASE
+	                        WHEN ps.`conp` IS NOT NULL 
+	                        THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`cpld` IS NOT NULL 
+	                        THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`boot` IS NOT NULL 
+	                        THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`pcb` IS NOT NULL 
+	                        THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND ps.`datastate` = 1
+	            WHERE sv.`executeTime` >= #startTime#
+	            <isNotEmpty prepend="and" property="endTime">
+	               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+	            </isNotEmpty>
+	            GROUP BY sv.`projectId`, sv.`barcode`) sf 
+	            LEFT JOIN pm_project_header ph 
+	                ON sf.projectId = ph.`projectId` 
+	            LEFT JOIN pm_project_member pm1 
+	                ON ph.`projectId` = pm1.`projectId` 
+	                AND pm1.`memberRole` = "30" 
+	                AND pm1.`effectiveTo` IS NULL 
+	                AND pm1.`fromFlag` = 1 
+	            LEFT JOIN pm_project_member pm2 
+	                ON ph.`projectId` = pm2.`projectId` 
+	                AND pm2.`memberRole` = "30" 
+	                AND pm2.`effectiveTo` IS NULL 
+	                AND pm1.`fromFlag` = 2 
+	            LEFT JOIN pm_project_member sm 
+	                ON ph.`projectId` = sm.`projectId` 
+	                AND sm.`memberRole` = "20" 
+	                AND sm.`effectiveTo` IS NULL 
+	            LEFT JOIN fnd_department fd 
+	                ON ph.`column001` = fd.`departmentNum` 
+	            LEFT JOIN prob_main pbm 
+	                ON pbm.id = sf.probId 
+	        WHERE (
+	                (
+	                    ph.`column012` = 0 
+	                    OR ph.`column012` IS NULL
+	                ) 
+	                AND ph.columno12_readonly = - 1
+	            ) 
+	            OR ph.columno12_readonly = 0 
+	        GROUP BY sf.projectId, sf.itemName
+         ) t -->
+    </select>
+    
+    <select id="query_prob_statistics" parameterClass="map" resultClass="com.dp.plat.prob.bean.ProbStatistic">
+        <!-- SELECT 
+		    ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, ph.`column001` AS officeCode, fd.`departmentName` AS officeName, sm.`memberName` AS serviceManagerName, pm1.`memberName` AS programManagerNameA, pm2.`memberName` AS programManagerNameB, MAX(sf.executeTime) AS executeTime, sf.updateCount, MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+		FROM
+		    (SELECT 
+		        sv.`projectId`, fi.`itemname`, CONCAT(
+		            "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(
+		                CONCAT(
+		                    scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+		                    CASE
+		                        WHEN sv.`conpChange` = 1 
+		                        THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+		                        ELSE sv.`conp` 
+		                    END, "]", "，cpld:[", 
+		                    CASE
+		                        WHEN sv.`cpldChange` = 1 
+		                        THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+		                        ELSE sv.`cpld` 
+		                    END, "]", "，boot:[", 
+		                    CASE
+		                        WHEN sv.`bootChange` = 1 
+		                        THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+		                        ELSE sv.`boot` 
+		                    END, "]", "，pcb:[", 
+		                    CASE
+		                        WHEN sv.`pcbChange` = 1 
+		                        THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+		                        ELSE sv.`pcb` 
+		                    END, "]"
+		                ) SEPARATOR ";\r\n"
+		            )
+		        ) AS softInfo, COUNT(*) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+		    FROM
+		        pm_project_soft_version sv 
+		        LEFT JOIN pm_project_soft_change_logs scl 
+		            ON sv.`projectId` = scl.projectId 
+		            AND sv.`logId` = scl.id 
+		        LEFT JOIN fb_items fi 
+		            ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+		        LEFT JOIN fb_soft_version fsv 
+		            ON sv.`barcode` = fsv.`serial_number`
+		        LEFT JOIN `prob_softwares` ps 
+		            ON 
+		            CASE
+		                WHEN ps.`conp` IS NOT NULL 
+		                THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`cpld` IS NOT NULL 
+		                THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`boot` IS NOT NULL 
+		                THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`pcb` IS NOT NULL 
+		                THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND ps.`datastate` = 1
+		    WHERE sv.`executeTime` >= #probStatistic.startTime#
+		    <isNotEmpty prepend="and" property="probStatistic.endTime">
+		       <![CDATA[ sv.`executeTime` <= '$probStatistic.endTime$ 23:59:59']]>
+		    </isNotEmpty>
+		    GROUP BY sv.`projectId`, sv.`barcode`) sf 
+		    LEFT JOIN pm_project_header ph 
+		        ON sf.projectId = ph.`projectId` 
+		    LEFT JOIN pm_project_member pm1 
+		        ON ph.`projectId` = pm1.`projectId` 
+		        AND pm1.`memberRole` = "30" 
+		        AND pm1.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm2 
+		        ON ph.`projectId` = pm2.`projectId` 
+		        AND pm2.`memberRole` = "30" 
+		        AND pm2.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 2 
+		    LEFT JOIN pm_project_member sm 
+		        ON ph.`projectId` = sm.`projectId` 
+		        AND sm.`memberRole` = "20" 
+		        AND sm.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_department fd 
+		        ON ph.`column001` = fd.`departmentNum` 
+		    LEFT JOIN prob_main pbm 
+		        ON pbm.id = sf.probId 
+		WHERE (
+		        (
+		            ph.`column012` = 0 
+		            OR ph.`column012` IS NULL
+		        ) 
+		        AND ph.columno12_readonly = - 1
+		    ) 
+		    OR ph.columno12_readonly = 0 
+		GROUP BY sf.projectId, sf.itemName -->
+		select * from statistic_tempTable
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <isEqual prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </isEqual>
+            <isEqual prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </isEqual>
+        </isNotEmpty>
+        <isEmpty prepend=" order by " property="displayParam.sort">
+            executeTime desc
+        </isEmpty>
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </isNotEmpty>
+    </select>
+    
+    <!-- 设置group_contract的最大长度，默认1024 -->
+    <insert id="setMaxGroupContractLength" parameterClass="int">
+        SET group_concat_max_len=#_parameter#;
+    </insert>
+    <insert id="create_prob_softChangeLog_tempTable" parameterClass="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE softChangeLog_tempTable
+        SELECT 
+		    sv.`projectId`, fi.`itemname`, CONCAT(
+		        CASE
+		            WHEN fsv.`serial_number` IS NULL 
+		            THEN "出厂版本信息:[无];\r\n" 
+		            ELSE CONCAT(
+		                "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n"
+		            ) 
+		        END, GROUP_CONCAT(
+		            CONCAT(
+		                scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+		                CASE
+		                    WHEN sv.`conpChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`conpBak`, "->", - 1), "->", sv.`conp`
+		                    ) 
+		                    ELSE sv.`conp` 
+		                END, "]", "，cpld:[", 
+		                CASE
+		                    WHEN sv.`cpldChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1), "->", sv.`cpld`
+		                    ) 
+		                    ELSE sv.`cpld` 
+		                END, "]", "，boot:[", 
+		                CASE
+		                    WHEN sv.`bootChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`bootBak`, "->", - 1), "->", sv.`boot`
+		                    ) 
+		                    ELSE sv.`boot` 
+		                END, "]", "，pcb:[", 
+		                CASE
+		                    WHEN sv.`pcbChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1), "->", sv.`pcb`
+		                    ) 
+		                    ELSE sv.`pcb` 
+		                END, "]"
+		            ) SEPARATOR ";\r\n"
+		        )
+		    ) AS softInfo, COUNT(DISTINCT sv.id) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+		FROM
+		    pm_project_soft_version sv 
+		    LEFT JOIN pm_project_soft_change_logs scl 
+		        ON sv.`projectId` = scl.projectId 
+		        AND sv.`logId` = scl.id 
+		    LEFT JOIN fb_items fi 
+		        ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+		    LEFT JOIN fb_soft_version fsv 
+		        ON sv.`barcode` = fsv.`serial_number` 
+		    LEFT JOIN `prob_softwares` ps 
+		        ON 
+		        CASE
+		            WHEN ps.`conp` IS NOT NULL 
+		            THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`cpld` IS NOT NULL 
+		            THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`boot` IS NOT NULL 
+		            THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`pcb` IS NOT NULL 
+		            THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND ps.`datastate` = 1 
+		WHERE sv.`executeTime` >= #startTime#
+            <isNotEmpty prepend="and" property="endTime">
+               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+            </isNotEmpty>
+            and (sv.`conpChange` = 1 or sv.`bootChange` = 1 or sv.`cpldChange` = 1 or sv.`pcbChange` = 1)
+		GROUP BY sv.`projectId`, sv.`barcode`
+    </insert>
+    
+    <insert id="create_prob_statistics_tempTable" parameterClass="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS statistic_tempTable
+        SELECT 
+            ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, 
+            ph.`column001` AS officeCode, fd.`departmentName` AS officeName, 
+            sm.memberCode AS serviceManagerCode, sm.`memberName` AS serviceManagerName, 
+            pm1.memberCode AS programManagerCodeA, pm1.`memberName` AS programManagerNameA, 
+            pm2.memberCode AS programManagerCodeB, pm2.`memberName` AS programManagerNameB, 
+            MAX(sf.executeTime) AS executeTime, sf.updateCount, 
+            MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+        FROM
+            softChangeLog_tempTable sf 
+            LEFT JOIN pm_project_header ph 
+                ON sf.projectId = ph.`projectId` 
+            LEFT JOIN pm_project_member pm1 
+                ON ph.`projectId` = pm1.`projectId` 
+                AND pm1.`memberRole` = "30" 
+                AND pm1.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 1 
+            LEFT JOIN pm_project_member pm2 
+                ON ph.`projectId` = pm2.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 2 
+            LEFT JOIN pm_project_member sm 
+                ON ph.`projectId` = sm.`projectId` 
+                AND sm.`memberRole` = "20" 
+                AND sm.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_department fd 
+                ON ph.`column001` = fd.`departmentNum` 
+            LEFT JOIN prob_main pbm 
+                ON pbm.id = sf.probId 
+        <!-- WHERE (
+                (
+                    ph.`column012` = 0 
+                    OR ph.`column012` IS NULL
+                ) 
+                AND ph.columno12_readonly = - 1
+            ) 
+            OR ph.columno12_readonly = 0 --> 
+        GROUP BY sf.projectId, sf.itemName
+    </insert>
+    
+    <!-- <insert id="create_prob_statistics_tempTable" parameterClass="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS statistic_tempTable
+        SELECT 
+            ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, 
+            ph.`column001` AS officeCode, fd.`departmentName` AS officeName, 
+            sm.memberCode AS serviceManagerCode, sm.`memberName` AS serviceManagerName, 
+            pm1.memberCode AS programManagerCodeA, pm1.`memberName` AS programManagerNameA, 
+            pm2.memberCode AS programManagerCodeB, pm2.`memberName` AS programManagerNameB, 
+            MAX(sf.executeTime) AS executeTime, sf.updateCount, 
+            MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+        FROM
+            (SELECT 
+                sv.`projectId`, fi.`itemname`, CONCAT(
+                    "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(DISTINCT
+                        CONCAT(
+                            scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+                            CASE
+                                WHEN sv.`conpChange` = 1 
+                                THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+                                ELSE sv.`conp` 
+                            END, "]", "，cpld:[", 
+                            CASE
+                                WHEN sv.`cpldChange` = 1 
+                                THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+                                ELSE sv.`cpld` 
+                            END, "]", "，boot:[", 
+                            CASE
+                                WHEN sv.`bootChange` = 1 
+                                THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+                                ELSE sv.`boot` 
+                            END, "]", "，pcb:[", 
+                            CASE
+                                WHEN sv.`pcbChange` = 1 
+                                THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+                                ELSE sv.`pcb` 
+                            END, "]"
+                        ) SEPARATOR ";\r\n"
+                    )
+                ) AS softInfo, COUNT(DISTINCT sv.id) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+            FROM
+                pm_project_soft_version sv 
+                LEFT JOIN pm_project_soft_change_logs scl 
+                    ON sv.`projectId` = scl.projectId 
+                    AND sv.`logId` = scl.id 
+                LEFT JOIN fb_items fi 
+                    ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+                LEFT JOIN fb_soft_version fsv 
+                    ON sv.`barcode` = fsv.`serial_number`
+                LEFT JOIN `prob_softwares` ps 
+                    ON 
+                    CASE
+                        WHEN ps.`conp` IS NOT NULL 
+                        THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`cpld` IS NOT NULL 
+                        THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`boot` IS NOT NULL 
+                        THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`pcb` IS NOT NULL 
+                        THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND ps.`datastate` = 1
+            WHERE sv.`executeTime` >= #startTime#
+            <isNotEmpty prepend="and" property="endTime">
+               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+            </isNotEmpty>
+            GROUP BY sv.`projectId`, sv.`barcode`) sf 
+            LEFT JOIN pm_project_header ph 
+                ON sf.projectId = ph.`projectId` 
+            LEFT JOIN pm_project_member pm1 
+                ON ph.`projectId` = pm1.`projectId` 
+                AND pm1.`memberRole` = "30" 
+                AND pm1.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 1 
+            LEFT JOIN pm_project_member pm2 
+                ON ph.`projectId` = pm2.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 2 
+            LEFT JOIN pm_project_member sm 
+                ON ph.`projectId` = sm.`projectId` 
+                AND sm.`memberRole` = "20" 
+                AND sm.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_department fd 
+                ON ph.`column001` = fd.`departmentNum` 
+            LEFT JOIN prob_main pbm 
+                ON pbm.id = sf.probId 
+        WHERE (
+                (
+                    ph.`column012` = 0 
+                    OR ph.`column012` IS NULL
+                ) 
+                AND ph.columno12_readonly = - 1
+            ) 
+            OR ph.columno12_readonly = 0 
+        GROUP BY sf.projectId, sf.itemName
+    </insert> -->
+    
+    <delete id="drop_prob_statistics_tempTable">
+        DROP TEMPORARY TABLE IF EXISTS statistic_tempTable
+    </delete>
+    
+    <delete id="drop_prob_softChangeLog_tempTable">
+        DROP TEMPORARY TABLE IF EXISTS softChangeLog_tempTable
+    </delete>
+    
+    <select id="query_prob_statistics_report" resultClass="com.dp.plat.data.bean.ReportLineData">
+        SELECT 
+		    t.column001 AS officeCode, t.officeName,
+		    COUNT(DISTINCT s.projectId) AS conditionValue, COUNT(DISTINCT t.projectId) AS totalValue,
+		    CONCAT(ROUND(COUNT(DISTINCT s.projectId)/COUNT(DISTINCT t.projectId) * 100, 2) ,'%') AS specificValue
+		FROM
+		    projectTempTable t 
+		    LEFT JOIN statistic_tempTable s 
+		        ON s.projectId = t.projectId 
+		GROUP BY t.column001
+		ORDER BY specificValue DESC, conditionValue DESC, totalValue DESC
+    </select>
+    
+    <insert id="create_prob_statistics_projectTempTable" parameterClass="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS projectTempTable
+        SELECT 
+		    ph.*, GROUP_CONCAT(DISTINCT pc.`contractNo`) AS contractNo, 
+		    ph.column001 as officeCode, fd.departmentName AS officeName, fbd.`basicDataName` AS projectStateName,
+		    sm.`memberCode` AS serviceManagerCode, sm.`memberName` AS serviceManagerCodeforjson, 
+		    pm1.`memberCode` AS programManagerCodeA, pm1.`memberName` AS programManagerCodeforjson,
+		    pm2.`memberCode` AS programManagerCodeB, pm2.`memberName` AS programManagerCodeforjsonB 
+		FROM
+		    pm_project_header ph 
+		    LEFT JOIN pm_project_group_relationship pgr 
+		        ON ph.`projectCode` = pgr.`projectCode` 
+		    LEFT JOIN pm_project_group pg 
+		        ON pgr.`projectGroupCode` = pg.`projectGroupCode` 
+		    LEFT JOIN pm_project_contract pc 
+		        ON pc.`projectGroupCode` = pg.`projectGroupCode` 
+		    LEFT JOIN fnd_department fd 
+		        ON fd.`departmentNum` = ph.column001 
+		    LEFT JOIN fnd_basic_data fbd 
+		        ON fbd.`basicDataId` = ph.`projectState` 
+		        AND fbd.`dataTypeCode` = "02" 
+		    LEFT JOIN pm_project_member sm 
+		        ON sm.`projectId` = ph.`projectId` 
+		        AND sm.`memberRole` = "20" 
+		        AND sm.`effectiveTo` IS NULL 
+		        AND sm.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm1 
+		        ON pm1.`projectId` = ph.`projectId` 
+		        AND pm1.`memberRole` = "30" 
+		        AND pm1.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm2 
+                ON pm2.`projectId` = ph.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm2.`fromFlag` = 2 
+            LEFT JOIN `pm_project_soft_change_logs` pscl
+			    ON pscl.`projectId` = ph.`projectId`
+			        AND pscl.`latest` = 1 
+		WHERE (
+		        ph.`column012` = 0 
+		        OR ph.`columno12_readonly` = 0
+		        OR pscl.id IS NOT NULL
+		    ) 
+		    AND ph.`effectiveTo` IS NULL 
+		<!-- GROUP BY pgr.`projectGroupCode`, ph.`projectCode` -->
+		GROUP BY ph.`projectCode`
+    </insert>
+    
+     <delete id="drop_prob_statistics_projectTempTable">
+        DROP TEMPORARY TABLE IF EXISTS projectTempTable
+    </delete>
+    
+    <select id="query_prob_statistics_project_Count" parameterClass="com.dp.plat.prob.bean.ProbStatistic" resultClass="int">
+        select count(*) from projectTempTable
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="projectCode"> (projectCode like CONCAT("%", #projectCode#, "%") or contractNo like CONCAT("%", #projectCode#, "%"))</isNotEmpty>
+            <isNotEmpty prepend="and" property="projectName"> projectName like CONCAT("%", #projectName#, "%")</isNotEmpty>
+            <isNotEmpty prepend="and" property="officeCode"> officeCode = #officeCode#</isNotEmpty>
+            <isNotEmpty prepend="and" property="programManagerCode"> (programManagerCodeA = #programManagerCode# or programManagerCodeB = #programManagerCode#) </isNotEmpty>
+            <isNotEmpty prepend="and" property="serviceManagerCode"> serviceManagerCode = #serviceManagerCode#</isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="query_prob_statistics_project" parameterClass="map" resultClass="com.dp.plat.data.bean.Project">
+        select * from projectTempTable
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="probStatistic.projectCode"> (projectCode like CONCAT("%", #probStatistic.projectCode#, "%") or contractNo like CONCAT("%", #probStatistic.projectCode#, "%"))</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.projectName"> projectName like CONCAT("%", #probStatistic.projectName#, "%")</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.officeCode"> officeCode = #probStatistic.officeCode#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.programManagerCode"> (programManagerCodeA = #probStatistic.programManagerCode# or programManagerCodeB = #probStatistic.programManagerCode#) </isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.serviceManagerCode"> serviceManagerCode = #probStatistic.serviceManagerCode#</isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="query_prob_statistics_report_total" parameterClass="map" resultClass="com.dp.plat.data.bean.ReportLineData">
+        SELECT 
+		    "total" as officeCode, "全国" as officeName, SUM(conditionValue) AS conditionValue, SUM(totalValue) AS totalValue, CONCAT(
+		        ROUND(
+		            SUM(conditionValue) / SUM(totalValue) * 100, 2
+		        ), '%'
+		    ) AS specificValue 
+		FROM
+	        (SELECT 
+	            t.column001 AS officeCode, t.officeName,
+	            COUNT(DISTINCT s.projectId) AS conditionValue, COUNT(DISTINCT t.projectId) AS totalValue,
+	            CONCAT(ROUND(COUNT(DISTINCT s.projectId)/COUNT(DISTINCT t.projectId) * 100, 2) ,'%') AS specificValue
+	        FROM
+	            projectTempTable t 
+	            LEFT JOIN statistic_tempTable s 
+	                ON s.projectId = t.projectId 
+	        GROUP BY t.column001) t
+    </select>
+    
+    <insert id="insertProbReadLog" parameterClass="com.dp.plat.prob.bean.ProbReadLog" >
+        INSERT INTO `prob_read_log`
+        SELECT 
+            null, #probId#, #reader#, NOW(), GREATEST(IFNULL(MAX(status), #status#), #status#), 
+		    IFNULL(MIN(readTime), now()) AS firstTime, 
+		    IFNULL(Max(commitTime), IF(#status# = 1, now(), null)) AS commitTime
+		FROM
+		    `prob_read_log` 
+		WHERE probId = #probId# 
+		    AND reader = #reader#
+        <selectKey resultClass="int" keyProperty="id">
+            SELECT last_insert_id() as id ;   
+        </selectKey>
+    </insert>
+    <select id="count_prob_read_log" parameterClass="com.dp.plat.prob.bean.ProbReadLog" resultClass="int">
+        SELECT 
+            count(*)
+        FROM
+            prob_read_log rl 
+        where rl.probId = #probId#
+        <isNotEmpty prepend="and" property="reader"> rl.reader = #reader# </isNotEmpty>
+        <isNotEmpty prepend="and" property="status"> rl.status = #status# </isNotEmpty>
+    </select>
+    <select id="query_prob_read_log" parameterClass="map" resultClass="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+		    rl.*, IFNULL(
+		        CONCAT(ui.`username`, "-", ui.`realName`), rl.reader
+		    ) AS readerName 
+		FROM
+		    prob_read_log rl 
+		    LEFT JOIN fnd_user_info ui 
+		        ON rl.`reader` = ui.`username` 
+		where rl.probId = #probReadLog.probId#
+		<isNotEmpty prepend="and" property="probReadLog.reader"> rl.reader = #probReadLog.reader# </isNotEmpty>
+		<isNotEmpty prepend="and" property="probReadLog.status"> rl.status = #probReadLog.status# </isNotEmpty>
+        order by rl.readTime desc
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </isNotEmpty>
+    </select>
+    
+    <select id="query_prob_read_statistics" parameterClass="map" resultClass="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+		    p.probNum, p.`theme`, p.`watch`, bd1.`basicDataName` AS watchName, p.`status`, bd2.`basicDataName` AS statusName, 
+		    ui.`username` AS render, CONCAT(ui.username, "-", ui.realName) AS readerName, rl.firstTime, rl.commitTime, rl.readStatus
+		FROM
+		    prob_main p 
+		    LEFT JOIN `fnd_user_info` ui 
+		        ON FALSE = FIND_IN_SET(ui.`roleIds`, ";1;,;9;,;20;") 
+		    LEFT JOIN 
+		        (SELECT 
+		            probId, reader, MIN(readTime) AS firstTime, MAX(commitTime) AS commitTime, IFNULL(MAX(STATUS), 0) AS readStatus
+		        FROM
+		            prob_read_log 
+		        GROUP BY `probId`, `reader`) rl 
+		        ON ui.`username` = rl.`reader` 
+		    LEFT JOIN fnd_basic_data bd1 
+		        ON p.`watch` = bd1.`basicDataId` 
+		        AND bd1.`dataTypeCode` = '30' 
+		        AND bd1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data bd2 
+		        ON p.`priority` = bd2.`basicDataId` 
+		        AND bd2.`dataTypeCode` = '32' 
+		    LEFT JOIN fnd_basic_data bd3 
+		        ON p.`status` = bd3.basicDataId 
+		        AND bd3.dataTypeCode = '31' 
+		        AND bd3.`effectiveTo` IS NULL 
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="prob.probNum"> p.probNum = #probNum#</isNotEmpty>
+            <isNotEmpty prepend="and" property="prob.theme"> p.theme = #theme#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probReadLog.reader"> p.probNum = #probNum#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probNum"> p.probNum = #probNum#</isNotEmpty>
+        </dynamic>
+		ORDER BY p.visibleRange, p.`id`
+    </select>
+    
+    <select id="count_prob_read_statistics" parameterClass="map" resultClass="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+            p.probNum, p.`theme`, p.`watch`, bd1.`basicDataName` AS watchName, p.`status`, bd2.`basicDataName` AS statusName, CONCAT(ui.username, "-", ui.realName) AS readerName, rl.* 
+        FROM
+            prob_main p 
+            LEFT JOIN `fnd_user_info` ui 
+                ON FALSE = FIND_IN_SET(ui.`roleIds`, ";1;,;9;,;20;") 
+            LEFT JOIN 
+                (SELECT 
+                    probId, reader, MIN(readTime) AS firstTime, MAX(commitTime) AS commitTime, IFNULL(MAX(STATUS), 0) AS readStatus
+                FROM
+                    prob_read_log 
+                GROUP BY `probId`, `reader`) rl 
+                ON ui.`username` = rl.`reader` 
+            LEFT JOIN fnd_basic_data bd1 
+                ON p.`watch` = bd1.`basicDataId` 
+                AND bd1.`dataTypeCode` = '30' 
+                AND bd1.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_basic_data bd2 
+                ON p.`priority` = bd2.`basicDataId` 
+                AND bd2.`dataTypeCode` = '32' 
+            LEFT JOIN fnd_basic_data bd3 
+                ON p.`status` = bd3.basicDataId 
+                AND bd3.dataTypeCode = '31' 
+                AND bd3.`effectiveTo` IS NULL 
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="probNum"> p.probNum = #probNum#</isNotEmpty>
+            <isNotEmpty prepend="and" property="theme"> p.theme = #theme#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probNum"> p.probNum = #probNum#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probNum"> p.probNum = #probNum#</isNotEmpty>
+        </dynamic>
+        ORDER BY p.visibleRange, p.`id`
+    </select>
+</sqlMap>

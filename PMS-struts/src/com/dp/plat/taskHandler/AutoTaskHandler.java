@@ -1,0 +1,37 @@
+package com.dp.plat.taskHandler;
+
+import javax.servlet.ServletContext;
+
+import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.delegate.TaskListener;
+import org.apache.struts2.ServletActionContext;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.service.WorkFlowService;
+
+/**
+ * 自动完成任务
+ * @author 
+ *
+ */
+public class AutoTaskHandler implements TaskListener{
+
+	private static final long serialVersionUID = 1L;
+
+
+	@Override
+	public void notify(DelegateTask delegateTask) {
+		WorkflowCommonParam param = new WorkflowCommonParam();
+		String taskId = delegateTask.getId();
+		param.setTaskId(taskId);
+		
+		ServletContext sc = ServletActionContext.getServletContext();
+		WebApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(sc );
+		WorkFlowService workFlowService = ctx.getBean("workFlowService",WorkFlowService.class);
+		System.out.println("taskId  ;;  " +taskId);
+		workFlowService.submitTask(param);
+	}
+	
+}

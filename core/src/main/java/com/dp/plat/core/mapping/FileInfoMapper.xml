@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.FileInfoMapper">
+	
+	
+	<select id="selectFileTypeByCode" parameterType="string" resultType="com.dp.plat.core.pojo.FileType">
+		<![CDATA[
+			SELECT * FROM `t_file_type` WHERE `code` =  #{code}
+		]]>
+	</select>
+	
+	<insert id="insertFileInfo" parameterType="java.util.HashMap">
+		<![CDATA[
+			INSERT INTO t_file(typeId ,`name`,path,ext ,size,createBy )
+			VALUES (#{fileInfo.typeId} ,#{fileInfo.name},#{fileInfo.path},
+				#{fileInfo.ext},#{fileInfo.size},#{createBy})
+		]]>
+		<selectKey keyProperty="fileInfo.id" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID() 
+		</selectKey>
+	</insert>
+	
+	<select id="selectFileInfoById" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[
+			SELECT * FROM t_file WHERE id = #{fileId}
+		]]>
+	</select>
+	
+	<select id="selectFileInfoByIds" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[ SELECT * FROM t_file WHERE id in]]>
+		<foreach collection="ids" index="index" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+	
+	<insert id="insertdownlog" >
+		<![CDATA[
+			INSERT INTO t_down_log(fileIds ,ip,timeline) VALUES(#{fileIds} ,#{ip},UNIX_TIMESTAMP(NOW()))
+		]]>
+	</insert>
+	
+</mapper>

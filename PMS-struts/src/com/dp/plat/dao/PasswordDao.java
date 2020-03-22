@@ -1,0 +1,7 @@
+package com.dp.plat.dao;
+
+import com.dp.plat.param.PasswordEditParam;
+
+public interface PasswordDao {
+	void usChangelogin(PasswordEditParam param);
+}

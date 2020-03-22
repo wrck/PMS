@@ -1,0 +1,183 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<%@page import="com.dp.plat.util.StringEscUtil"%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<dp:base />
+<meta name="menu" content="SysMenuGroupUserManage">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.changepass' />">
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery-ui.js"></script>
+<script type="text/javascript" src="js/dp-ui.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/zxml.src.js"></script>
+<script type="text/javascript" src="js/zxmlqueue.js"></script>
+<script type="text/javascript" src="js/calendar.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript">
+var lold = 0, lnew = 0, lcon = 0, cold = 0, cnew = 0, ccon = 0;
+window.onload = function() {
+	showErrorMsgInInit();
+};
+
+function changelogin() {//11
+	$("#loginold").val(hex_md5($("#loginold").val()));
+	$("#loginnew").val(hex_md5($("#loginnew").val()));
+	$("#loginconform").val(hex_md5($("#loginconform").val()));
+}
+
+
+function checkloginold(item){
+	$("#lold").text("");
+	if($(item).val() != null && $(item).val() != ""){
+		lold = 1;
+	}else{
+		lold = 0;
+		$("#lold").text('<s:text name="sys.js.erorr"/>');
+	}
+	
+	cl();
+}
+function checkloginnew(item){
+	$("#lnew").text("");
+	if($(item).val() != null && $(item).val() != ""){
+		if($(item).val().length < 8){
+			lnew = 0;
+			$("#lnew").text('<s:text name="sys.js.toshort"/>');
+		} else {
+			if(Evaluate($(item).val()) < 2){
+				lnew = 0;
+				$("#lnew").text('<s:text name="sys.js.tosimple"/>');
+			}else {
+				lnew = 1;
+			}
+		}
+		checklogincon($("#loginconform"));
+	}else{
+		lnew = 0;
+		$("#lnew").text('<s:text name="sys.js.erorr"/>');
+	}
+	
+	cl();
+}
+function checklogincon(item){
+	$("#lcon").text("");
+	if($(item).val() != null && $(item).val() != ""){
+		if($(item).val() == $("#loginnew").val()){
+			lcon = 1;
+		} else {
+			lcon = 0;
+			$("#lcon").text('<s:text name="sys.js.nomatch"/>');
+		}
+	}else{
+		lcon = 0;
+		$("#lcon").text('<s:text name="sys.js.erorr"/>');
+	}
+	
+	cl();
+}
+
+function cl(){
+	if(lold == 1 && lnew == 1 && lcon == 1){
+		$("#logsub").attr("disabled", "");
+	} else {
+		$("#logsub").attr("disabled", "disabled");
+	}
+}
+
+
+function Evaluate(pass){
+	 return pass.match(/[a-z](?![^a-z]*[a-z])|[A-Z](?![^A-Z]*[A-Z])|\d(?![^\d]*\d)|[^a-zA-Z\d](?![a-zA-Z\d]*[^a-zA-Z\d])/g).length;
+}
+function showinfo(item){
+	$(item).text('<s:text name="sys.js.info"/>');
+}
+</script>
+</head>
+<body>
+<s:form method="post" action="sys/PasswordEditLogin.action"
+	id="pswrevise" onsubmit="changelogin()">
+	<table class="listView" cellSpacing="0" cellPadding="0">
+		<tbody>
+			<TR>
+				<TH class="tableHeader"><img src="images/right_zhishi.gif"
+					border="0"><s:text name="sys.changepass"></s:text></TH>
+			</TR>
+		</tbody>
+	</table>
+	<div class="editdiv">
+	<table width=100% cellSpacing="0" cellPadding="0">
+		<tbody>
+			<tr>
+				<td align="center" width="100%">
+				<table class="edittable" width="100%">
+					<tbody align="left">
+						<tr>
+							<td colspan="3"><br />
+							</td>
+						</tr>
+						<tr>
+							<dp:errormsg />
+						</tr>
+						<tr>
+							<td class="redmark" width="1%"></td>
+							<td class="normalText" width="12%" align="right"><SPAN
+								class="redmark">*</SPAN><s:text name="sys.oldpass" /></td>
+							<td><s:password name="passwordEditParam.oldPassword" maxlength="20"
+								cssClass="txtbox" id="loginold" onblur="checkloginold(this)"/>
+								<span class="redmark" id="lold"></span>
+							</td>
+						</tr>
+						<tr>
+							<td class="redmark" width="1%"></td>
+							<td class="normalText" width="12%" align="right"><SPAN
+								class="redmark">*</SPAN><s:text name="sys.newpass" /></td>
+							<td><s:password name="passwordEditParam.newPassword" maxlength="20"
+								cssClass="txtbox" id="loginnew" onfocus="showinfo($('#lnew'))" onblur="checkloginnew(this)"/>
+								<span class="redmark" id="lnew"></span>
+							</td>
+						</tr>
+						<tr>
+							<td class="redmark" width="1%"></td>
+							<td class="normalText" width="12%" align="right"><SPAN
+								class="redmark">*</SPAN><s:text name="sys.conform" /></td>
+							<td><s:password name="passwordEditParam.conformPassword" maxlength="20"
+								cssClass="txtbox" id="loginconform"  onblur="checklogincon(this)"/>
+								<span class="redmark" id="lcon"></span>
+							</td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr class="tableline">
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td>
+				<table width=100% cellSpacing="15">
+					<tbody>
+						<tr align="center">
+							<td align="center"><s:submit disabled="true"
+								value="%{getText('button.confirm')}" cssClass="buttonNormal" id="logsub"></s:submit>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<br>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+</s:form>
+
+</body>
+</html>

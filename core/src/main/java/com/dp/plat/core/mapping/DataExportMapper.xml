@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.DataExportMapper">
+  <resultMap id="UserDetailMap" type="com.dp.plat.core.vo.UserDetail">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="status" jdbcType="SMALLINT" property="status" />
+    <result column="userInfoId" jdbcType="INTEGER" property="userInfoId" />
+    <result column="realName" jdbcType="VARCHAR" property="realName" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="telphone" jdbcType="VARCHAR" property="telphone" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="sex" jdbcType="SMALLINT" property="sex" />
+    <result column="roles" jdbcType="VARCHAR" property="roles"/>
+  </resultMap>
+  <select id="exportUserDetail" parameterType="com.dp.plat.core.vo.PageParam" resultMap="UserDetailMap">
+  	SELECT 
+	    u.*, ui.id AS userInfoId, ui.realName, ui.mobile, ui.telphone, ui.avatar, ui.birthday, ui.email, ui.sex, GROUP_CONCAT(r.`role_name_zn`) AS roles 
+	FROM
+	    t_user u 
+	    LEFT JOIN t_user_info ui 
+	        ON u.user_id = ui.user_id 
+	    LEFT JOIN t_user_role ur 
+	        ON u.user_id = ur.`user_id` 
+	    LEFT JOIN t_role r 
+	        ON ur.`role_id` = r.`role_id` 
+  	<where>
+  		<if test="model !=null">
+        	<if test="model.userName != null">
+        		u.user_name like CONCAT("%", #{model.userName}, "%")
+       		</if>
+       		<if test="model.email != null">
+        		and ui.email like CONCAT("%", #{model.email}, "%")
+       		</if>
+       		<if test="model.realName != null">
+        		and ui.realName like CONCAT("%", #{model.realName}, "%")
+       		</if>
+       		<if test="model.sex != null">
+        		and ui.sex = #{model.sex}
+       		</if>
+       		<if test="model.roleId != null">
+        		and ur.role_id = #{model.roleId}
+       		</if>
+       		<if test="model.status != null">
+        		and u.status = #{model.status}
+       		</if>
+      	</if>
+      	<if test="fuzzySearch == true">
+      		and (
+      			u.user_name like CONCAT("%", #{fuzzy}, "%") or
+    			ui.email like CONCAT("%", #{fuzzy}, "%") or
+      			ui.realName like CONCAT("%", #{fuzzy}, "%") or
+      			r.role_name like CONCAT("%", #{fuzzy}, "%") or
+      			r.role_name_zn like CONCAT("%", #{fuzzy}, "%")
+      		)
+      	</if>
+  	</where>
+	GROUP BY u.user_id 
+  	<if test="orderBy != null">
+   		order by ${orderBy}
+    </if>
+  </select>
+  
+  <select id="queryDynamicColumn" resultType="com.dp.plat.core.vo.MapParam">
+  	<![CDATA[
+	SELECT  columnCode AS `key` ,columnName AS `value` FROM view_dynamic_column_4_export 
+	WHERE exportObject = #{objectName}
+  	]]>
+  </select>
+  
+</mapper>

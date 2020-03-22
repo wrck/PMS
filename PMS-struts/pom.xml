@@ -1,0 +1,587 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>com.dp.plat</groupId>
+		<artifactId>pms</artifactId>
+		<version>0.0.1</version>
+		<!-- <version>${project.parent.version}</version> -->
+	</parent>
+	
+	<artifactId>pms-struts</artifactId>
+	<name>PMS-struts</name>
+	<packaging>war</packaging>
+	
+	
+	<dependencies>
+	
+		<!-- <dependency>
+			<groupId>com.dp.plat</groupId>
+			<artifactId>cache-redis-mybatis</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.dp.plat</groupId>
+			<artifactId>cache-redis-mybatis</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency> -->
+
+		<!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<!-- Sturcts -->
+		<dependency>
+			<groupId>org.apache.struts</groupId>
+			<artifactId>struts2-core</artifactId>
+			<version>${struts2.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.struts</groupId>
+		    <artifactId>struts2-spring-plugin</artifactId>
+		    <version>${struts2.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.struts</groupId>
+		    <artifactId>struts2-json-plugin</artifactId>
+		    <version>${struts2.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.struts</groupId>
+		    <artifactId>struts2-sitemesh-plugin</artifactId>
+		    <version>${struts2.version}</version>
+		</dependency>
+				
+		<!-- 数据库相关 -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>${mysql.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>sqljdbc4</artifactId>
+		    <version>${sqljdbc4.version}</version>
+		</dependency>
+		<!-- <dependency>
+		    <groupId>com.ibatis</groupId>
+		    <artifactId>ibatis</artifactId>
+		    <version>${ibatis.version}</version>
+		</dependency> -->
+		<dependency>
+		    <groupId>org.apache.ibatis</groupId>
+		    <artifactId>ibatis-sqlmap</artifactId>
+		    <version>${ibatis-sqlmap.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.mybatis</groupId>
+		    <artifactId>mybatis-2-spring</artifactId>
+		    <version>1.1.0</version>
+		</dependency>
+		
+		<!-- 导入java ee jar 包 -->
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>${javaee-api.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+		    <groupId>javax.faces</groupId>
+		    <artifactId>javax.faces-api</artifactId>
+		    <version>${javax.faces-api.version}</version>
+		    <scope>compile</scope>
+		</dependency>
+		
+		<!-- CAS单点登录 -->
+		<dependency>
+		    <groupId>org.jasig.cas.client</groupId>
+		    <artifactId>cas-client-core</artifactId>
+		    <version>${cas.version}</version>
+		</dependency>
+		
+		<!-- quartz定时任务 -->
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>${quartz.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz-jobs</artifactId>
+			<version>${quartz.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Spring AOP 依赖 aspectj -->
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>${aspectj.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>${aspectj.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+			<version>${cglib.version}</version>
+		</dependency>
+		
+		<!-- <dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm</artifactId>
+			<version>${asm.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.ow2.asm</groupId>
+		    <artifactId>asm-commons</artifactId>
+		    <version>${asm.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.ow2.asm</groupId>
+		    <artifactId>asm-tree</artifactId>
+		    <version>${asm.version}</version>
+		</dependency> -->
+		
+
+		<!-- JSON -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>${fastjson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>${jackson-mapper-asl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson-databind.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>net.sf.json-lib</groupId>
+		    <artifactId>json-lib</artifactId>
+		    <version>2.4</version>
+		    <classifier>jdk15</classifier>
+		</dependency>
+
+		<!-- POI Excel导出相关 -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi-ooxml.version}</version>
+		</dependency>
+
+		<!-- 上传组件包 -->
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>${commons-fileupload.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${commons-io.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>${commons-lang.version}</version>
+		</dependency>
+		
+		<!-- Commons公共包 -->
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>${commons-beanutils.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons-lang3.version}</version>
+		</dependency>
+
+		<!-- slf4j -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>${commons-logging.version}</version>
+		</dependency>
+		<dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+		
+		<!-- Activiti -->
+		<dependency>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-engine</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>spring-beans</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-spring</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-bpmn-model</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-bpmn-converter</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-bpmn-layout</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-common-rest</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-json-converter</artifactId>
+			<version>${activiti.version}</version>
+			<exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<!-- <dependency>
+		    <groupId>org.activiti</groupId>
+		    <artifactId>activiti-image-generator</artifactId>
+		    <version>${activiti.version}</version>
+		    <exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.activiti</groupId>
+		    <artifactId>activiti-process-validation</artifactId>
+		    <version>${activiti.version}</version>
+		    <exclusions>
+				<exclusion>
+		          <groupId>*</groupId>
+		          <artifactId>*</artifactId>
+		        </exclusion>
+			</exclusions>
+		</dependency> -->
+		
+		<!-- 连接池 -->
+		<dependency>
+   			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<version>${commons-dbcp.version}</version>
+		</dependency>
+		<dependency>
+   			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>${commons-dbcp2.version}</version>
+		</dependency>
+		
+		<!-- DisplayTag -->
+		<dependency>
+		    <groupId>displaytag</groupId>
+		    <artifactId>displaytag</artifactId>
+		    <version>1.2</version>
+		    <exclusions>
+		    	<exclusion>
+		    		<artifactId>jcl104-over-slf4j</artifactId>
+		    		<groupId>org.slf4j</groupId>
+		    	</exclusion>
+		    </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>displaytag</groupId>
+		    <artifactId>displaytag-export-poi</artifactId>
+		    <version>1.2</version>
+		</dependency>
+		
+		<!-- 模板引擎 -->
+		<!-- velocity  -->
+		<dependency>
+		    <groupId>org.apache.velocity</groupId>
+		    <artifactId>velocity</artifactId>
+		    <version>${velocity.version}</version>
+		</dependency>
+		<!-- freemarker -->
+		<!-- <dependency>
+		    <groupId>org.freemarker</groupId>
+		    <artifactId>freemarker</artifactId>
+		    <version>2.3.29</version>
+		</dependency> -->
+		<dependency>
+		    <groupId>javax.servlet</groupId>
+		    <artifactId>jstl</artifactId>
+		    <version>1.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jfree</groupId>
+		    <artifactId>jfreechart</artifactId>
+		    <version>1.5.0</version>
+		</dependency>
+		
+		<!-- mail -->
+		<dependency>
+		    <groupId>javax.mail</groupId>
+		    <artifactId>javax.mail-api</artifactId>
+		    <version>1.6.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>${project.name}</finalName>
+		<sourceDirectory>src</sourceDirectory>
+	    <resources>
+	      <resource>
+	        <directory>src</directory>
+	        <excludes>
+	          <exclude>**/*.java</exclude>
+	        </excludes>
+	      </resource>
+	      <resource>
+	        <directory>config</directory>
+	        <excludes>
+	          <exclude>**/*.java</exclude>
+	        </excludes>
+	      </resource>
+	      <resource>
+	        <directory>config-ibaits</directory>
+	        <excludes>
+	          <exclude>**/*.java</exclude>
+	        </excludes>
+	      </resource>
+	      <resource>
+	        <directory>config-spring</directory>
+	        <excludes>
+	          <exclude>**/*.java</exclude>
+	        </excludes>
+	      </resource>
+	    </resources>
+		<!--必须配置测试资源文件，否则测试类无法加载资源文件 -->
+		<!-- <testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<filtering>true</filtering>
+			</testResource>
+		</testResources> -->
+		<plugins>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<warSourceDirectory>WebContent</warSourceDirectory>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<archiveClasses>false</archiveClasses>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>struts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<!-- 添加classifier修饰以区别于war，保证上传成功 -->
+							<classifier>core</classifier>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- compiler插件, 设定JDK版本 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${project.build.source}</source>
+					<target>${project.build.target}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<compilerArguments>
+						<Xlint>-Xlint:all</Xlint>
+						<extdirs>${basedir}/WebContent/WEB-INF/lib</extdirs>
+					</compilerArguments>
+					<showWarnings>false</showWarnings>
+					<showDeprecation>false</showDeprecation>
+				</configuration>
+			</plugin>
+			
+			<!-- 资源文件插件 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			
+			<!-- 生成sources源码包的插件 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<configuration>
+					<attach>true</attach>
+					<!-- <encoding>${project.build.sourceEncoding}</encoding> -->
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

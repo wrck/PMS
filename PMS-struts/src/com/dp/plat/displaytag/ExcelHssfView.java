@@ -1,0 +1,295 @@
+package com.dp.plat.displaytag;
+
+import java.io.OutputStream;
+import java.util.Iterator;
+
+import javax.servlet.jsp.JspException;
+
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.RichTextString;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.displaytag.Messages;
+import org.displaytag.exception.BaseNestableJspTagException;
+import org.displaytag.exception.SeverityEnum;
+import org.displaytag.export.BinaryExportView;
+import org.displaytag.model.Column;
+import org.displaytag.model.ColumnIterator;
+import org.displaytag.model.HeaderCell;
+import org.displaytag.model.Row;
+import org.displaytag.model.RowIterator;
+import org.displaytag.model.TableModel;
+import org.displaytag.util.HtmlAttributeMap;
+
+/**
+ * Excel exporter using POI HSSF.
+ * 
+ * @author Fabrizio Giustina
+ * @author rapruitt
+ * @version $Revision: 1086 $ ($Author: rapruitt $)
+ */
+public class ExcelHssfView implements BinaryExportView
+{
+
+	/**
+	 * TableModel to render.
+	 */
+	private TableModel model;
+
+	/**
+	 * export full list?
+	 */
+	private boolean exportFull;
+
+	/**
+	 * include header in export?
+	 */
+	private boolean header;
+
+	/**
+	 * decorate export?
+	 */
+	private boolean decorated;
+
+	/**
+	 * @see org.displaytag.export.ExportView#setParameters(TableModel, boolean,
+	 *      boolean, boolean)
+	 */
+	public void setParameters(TableModel tableModel, boolean exportFullList,
+			boolean includeHeader, boolean decorateValues)
+	{
+		this.model = tableModel;
+		this.exportFull = exportFullList;
+		this.header = includeHeader;
+		this.decorated = decorateValues;
+	}
+
+	/**
+	 * @return "application/vnd.ms-excel"
+	 * @see org.displaytag.export.BaseExportView#getMimeType()
+	 */
+	public String getMimeType()
+	{
+		return "application/vnd.ms-excel"; //$NON-NLS-1$
+	}
+
+	/**
+	 * @see org.displaytag.export.BinaryExportView#doExport(OutputStream)
+	 */
+	public void doExport(OutputStream out) throws JspException
+	{
+		try
+		{
+			Workbook wb = new HSSFWorkbook();
+			Sheet sheet = wb.createSheet("-");
+			sheet.setDefaultColumnWidth(Short.parseShort("20"));
+
+			int rowNum = 0;
+			int colNum = 0;
+
+			if (this.header)
+			{
+				// Create an header row
+				org.apache.poi.ss.usermodel.Row xlsRow = sheet.createRow(rowNum++);
+
+				CellStyle headerStyle = wb.createCellStyle();
+				headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				headerStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.SKY_BLUE.getIndex());
+				
+				Font bold = wb.createFont();
+				bold.setBold(true);
+				bold.setColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
+				headerStyle.setFont(bold);
+
+				Iterator<?> iterator = this.model.getHeaderCellList().iterator();
+
+				while (iterator.hasNext())
+				{
+					HeaderCell headerCell = (HeaderCell) iterator.next();
+
+					String columnHeader = headerCell.getTitle();
+
+					if (columnHeader == null)
+					{
+						columnHeader = StringUtils.capitalize(headerCell
+								.getBeanPropertyName());
+					}
+					
+					HtmlAttributeMap htmlAttributes = headerCell.getHeaderAttributes();
+                    if (htmlAttributes.isEmpty()) {
+                        htmlAttributes = headerCell.getHtmlAttributes();
+                    }
+					if (columnHeader != null && !htmlAttributes.isEmpty() && htmlAttributes.containsValue("splitCell=true")) {
+					    String[] tds = StringUtils.split(String.valueOf(columnHeader), "</th><th>");
+                        for (String td : tds) {
+                            Cell cell = xlsRow.createCell((short) colNum++);
+                            RichTextString riHeader = new HSSFRichTextString(td);
+                            cell.setCellValue(riHeader);
+                            cell.setCellStyle(headerStyle);
+                        }
+                    } else {
+                        Cell cell = xlsRow.createCell((short) colNum++);
+                        RichTextString riHeader = new HSSFRichTextString(columnHeader);
+                        cell.setCellValue(riHeader);
+                        cell.setCellStyle(headerStyle);
+                    }
+				}
+			}
+
+			// get the correct iterator (full or partial list according to the
+			// exportFull field)
+			RowIterator rowIterator = this.model
+					.getRowIterator(this.exportFull);
+			// iterator on rows
+
+			while (rowIterator.hasNext())
+			{
+				Row row = rowIterator.next();
+				org.apache.poi.ss.usermodel.Row xlsRow = sheet.createRow(rowNum++);
+				colNum = 0;
+
+				// iterator on columns
+				ColumnIterator columnIterator = row
+						.getColumnIterator(this.model.getHeaderCellList());
+
+				while (columnIterator.hasNext())
+				{
+					Column column = columnIterator.nextColumn();
+					
+					// Get the value to be displayed for the column
+					Object value = column.getValue(this.decorated);
+
+					// 获取表格列合并字段splitCell=true，进行分割，转换成多列
+					HtmlAttributeMap htmlAttributes = column.getHeaderCell().getHtmlAttributes();
+					if (htmlAttributes.isEmpty()) {
+					    htmlAttributes = column.getHeaderCell().getHeaderAttributes();
+					}
+					if (value != null && !htmlAttributes.isEmpty() && htmlAttributes.containsValue("splitCell=true")) {
+				        String[] tds = StringUtils.splitByWholeSeparatorPreserveAllTokens(String.valueOf(value), "</td><td>");
+				        for (String td : tds) {
+				            Cell cell = xlsRow.createCell((short) colNum++);
+				            writeCell(td, cell);
+                        }
+                    } else {
+    					Cell cell = xlsRow.createCell((short) colNum++);
+    					writeCell(value, cell);
+                    }
+				}
+			}
+			wb.write(out);
+		}
+		catch (Exception e)
+		{
+			throw new ExcelGenerationException(e);
+		}
+	}
+
+	/**
+	 * Write the value to the cell. Override this method if you have complex
+	 * data types that may need to be exported.
+	 * 
+	 * @param value
+	 *            the value of the cell
+	 * @param cell
+	 *            the cell to write it to
+	 */
+	protected void writeCell(Object value, Cell cell)
+	{
+		
+		if (value instanceof Number)
+		{
+			Number num = (Number) value;
+			cell.setCellValue(num.doubleValue());
+		}
+		/*
+		else if (value instanceof Date)
+		{
+			cell.setCellValue((Date) value);
+		}
+		else if (value instanceof Calendar)
+		{
+			cell.setCellValue((Calendar) value);
+		}
+		*/
+		else
+		{
+			RichTextString richValue = new HSSFRichTextString(escapeColumnValue(value));
+			cell.setCellValue(richValue);
+		}
+	}
+
+	// patch from Karsten Voges
+	/**
+	 * Escape certain values that are not permitted in excel cells.
+	 * 
+	 * @param rawValue
+	 *            the object value
+	 * @return the escaped value
+	 */
+	protected String escapeColumnValue(Object rawValue)
+	{
+		if (rawValue == null)
+		{
+			return null;
+		}
+		String returnString = ObjectUtils.toString(rawValue);
+		// escape the String to get the tabs, returns, newline explicit as \t \r
+		// \n
+		returnString = StringEscapeUtils.escapeJava(StringUtils
+				.trimToEmpty(returnString));
+		// remove tabs, insert four whitespaces instead
+		returnString = StringUtils.replace(StringUtils.trim(returnString),
+				"\\t", "    ");
+		// remove the return, only newline valid in excel
+		returnString = StringUtils.replace(StringUtils.trim(returnString),
+				"\\r", " ");
+		// unescape so that \n gets back to newline
+		returnString = StringEscapeUtils.unescapeJava(returnString);
+		return returnString;
+	}
+
+	/**
+	 * Wraps IText-generated exceptions.
+	 * 
+	 * @author Fabrizio Giustina
+	 * @version $Revision: 1086 $ ($Author: rapruitt $)
+	 */
+	static class ExcelGenerationException extends BaseNestableJspTagException
+	{
+
+		/**
+		 * D1597A17A6.
+		 */
+		private static final long serialVersionUID = 899149338534L;
+
+		/**
+		 * Instantiate a new PdfGenerationException with a fixed message and the
+		 * given cause.
+		 * 
+		 * @param cause
+		 *            Previous exception
+		 */
+		public ExcelGenerationException(Throwable cause)
+		{
+			super(ExcelHssfView.class, Messages
+					.getString("ExcelView.errorexporting"), cause); //$NON-NLS-1$
+		}
+
+		/**
+		 * @see org.displaytag.exception.BaseNestableJspTagException#getSeverity()
+		 */
+		public SeverityEnum getSeverity()
+		{
+			return SeverityEnum.ERROR;
+		}
+	}
+}

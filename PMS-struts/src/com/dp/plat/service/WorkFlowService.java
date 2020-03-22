@@ -1,0 +1,504 @@
+package com.dp.plat.service;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.activiti.engine.form.TaskFormData;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+
+import com.dp.plat.data.activity.ActComment;
+import com.dp.plat.data.activity.Procdef;
+import com.dp.plat.data.bean.DpActProcDesc;
+import com.dp.plat.data.bean.DpActProcType;
+import com.dp.plat.data.bean.ProcdefDelegate;
+import com.dp.plat.data.bean.SelfComment;
+import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.param.DisplayParam;
+
+
+public interface WorkFlowService {
+	/**
+	 * 发布流程
+	 * @param fileName
+	 * @param file
+	 */
+	public void deployFlow(String fileName,File file);
+	
+	/**
+	 * 部署查看
+	 * @return
+	 */
+	public List<Deployment> listDeployments();
+	/**
+	 * 流程定义查看
+	 * @return
+	 */
+	public List<ProcessDefinition> listProcessDefinition();
+	/**
+	 * 流程删除操作
+	 * @param deploymentId
+	 */
+	public void delDeployment(String deploymentId);
+	/**
+	 * 获取上传图片的输入流
+	 * @param deploymentId
+	 * @param imageName
+	 * @return
+	 */
+	public InputStream getInputStream(String deploymentId,String imageName);
+	/**
+	 * 启动流程
+	 * @param key
+	 * @param vars
+	 */
+	public ProcessInstance startProcess(String key,String businessKey, Map<String, Object> vars);
+	/**
+	 * 查询私有任务
+	 * @param userId
+	 * @return
+	 */
+	public List<Task> findPersonalTask(String userId);
+	
+	/**
+	 * 查询已知流程的私有任务
+	 * @param userId
+	 * @param procInstId
+	 * @return
+	 */
+	List<Task> findPersonalTask(String userId, String procInstId);
+	
+	/**
+	 * 
+	 * @title: 查询个人代办任务list
+	 * @desc: 扩展act任务描述功能
+	 * @param displayParam
+	 * @param dpActProcDesc
+	 * @return
+	 * @return: List<DpActProcDesc>
+	 * @throws
+	 */
+	public List<DpActProcDesc> findRunSelfTaskList(DisplayParam displayParam,DpActProcDesc dpActProcDesc);
+	/**
+	 * 
+	 * @title: 查询非个人代办但可以查看的任务list
+	 * @desc: 扩展act任务描述功能
+	 * @param displayParam
+	 * @param dpActProcDesc
+	 * @return
+	 * @return: List<DpActProcDesc>
+	 * @throws
+	 */
+	public List<DpActProcDesc> findRunVariableList(DisplayParam displayParam,DpActProcDesc dpActProcDesc);
+	/**
+	 * 
+	 * @title: 查看自己已办理任务
+	 * @desc: 描述
+	 * @param displayParam
+	 * @param dpActProcDesc
+	 * @return
+	 * @return: List<DpActProcDesc>
+	 * @throws
+	 */
+	public List<DpActProcDesc> findHisSelfTaskList(DisplayParam displayParam,DpActProcDesc dpActProcDesc);
+	/**
+	 * 
+	 * @title: 获取所有流程类型
+	 * @desc: 描述
+	 * @return
+	 * @return: List<DpActProcType>
+	 * @throws
+	 */
+	List<DpActProcType> findDpActProcTypeList();
+	
+	/**
+	 * 查询自己已办理的任务
+	 * @param userId
+	 * @return
+	 */
+	public List<HistoricTaskInstance> findHistoricPersonalTask(String userId);
+	/**
+	 * 通过任务ID获取到任务相关的表单信息
+	 * @param taskId
+	 * @return
+	 */
+	public TaskFormData getTaskFromData(String taskId);
+	
+	/**
+	 * 通过历史实例ID获取第一条 formKey值 对应url action
+	 * @param instId
+	 * @return
+	 */
+	public String getFormKey(String instId);
+	
+	/**
+	 * 通过任务ID获取到流程相关的业务对象ID
+	 * @param taskId
+	 * @return
+	 */
+	public String getBusinessObjId(String taskId);
+	
+	/**
+	 * 根据历史流程实例查询业务对象ID
+	 * @param instId
+	 * @return
+	 */
+	public String getHistBusinessObjId(String instId);
+	/**
+	 * 完成任务 
+	 * @param String taskId, String outcome,String comment
+	 */
+	public void submitTask(WorkflowCommonParam param);
+	/**
+	 * 办理任务 不需要添加批注信息
+	 * @param param vars
+	 */
+	public void submitTaskNoComment(WorkflowCommonParam param,Map<String, Object> vars);
+	
+	/**
+	 * @title: 办理任务
+	 * @desc: 办理自己被驳回的单据
+	 * @param param  input{taskId,outcome,comment,objId,type}
+	 * @param vars
+	 * @return: void
+	 * @throws
+	 */
+	public void submitSelfTask(WorkflowCommonParam param,Map<String, Object> vars);
+	/**
+	 * 查看当前任务相关的流程批注
+	 * @param taskId
+	 * @return
+	 */
+	public List<SelfComment> getProcessComments(String taskId,String instId);
+	/**
+	 * 查询流程定义对象
+	 * @param taskId
+	 * @return
+	 */
+	public ProcessDefinition getProcessDefinitionByTaskId(String taskId);
+	/**
+	 * 获取当前活动的坐标
+	 * @param taskId
+	 * @return
+	 */
+	public Map<String, Object> getCurrentActivityCoordinates(String taskId);
+	
+	/**
+	 * 获取当前流程实例中的任务id
+	 * @param piid
+	 * @param assignee
+	 * @return
+	 */
+	public Task getTaskIdByProcessInstanceId(String piid,String assignee);
+	
+	/**
+	 * 判断当前任务的下一节点是否存在nodeName
+	 * @param taskId
+	 * @param nodeName
+	 * @return
+	 */
+	public boolean isExistNextNode(String taskId,String nodeName);
+
+	
+	/**
+	 * 管理员查看所有在执行阶段的任务
+	 * @return
+	 */
+	public List<Task> findAllRunTask();
+
+	
+	/**
+	 * 管理员查看所有历史
+	 * @return
+	 */
+	public List<HistoricProcessInstance> findHisProcess();
+
+	
+	/**
+	 * 根据流程实例获取所有任务
+	 * @param procInstId
+	 * @return
+	 */
+	public List<Task> getTaskByInstId(String procInstId);
+	/**
+	 * 系统自动办理任务，目前供包含网关使用
+	 * @param task
+	 */
+	public void submitTaskSystemAuto(Task task);
+	
+
+	/**
+	 * 根据类型查询流程定义
+	 * @param simpleName
+	 * @return
+	 */
+	public ProcessDefinition getProcessDefinitionByClassType(String simpleName);
+
+	/**
+	 * 根据流程实例ID查询当前审批办理人和办理的taskId
+	 * @param instId
+	 * @return
+	 */
+	public List<Task> queryCurrentApprover(String instId);
+
+	/**
+	 * 根据bean查询当前已部署的最新流程id
+	 * @param string
+	 * @return
+	 */
+	public int querymaxdeploymentidByBean(String string);
+
+	/**
+	 * 
+	 * @title: 添加任务委派规则
+	 * @desc: 描述
+	 * @param ProcdefDelegate
+	 * @return: void
+	 * @throws
+	 */
+	void insertProcdefDelegate(ProcdefDelegate procdefDelegate);
+	/**
+	 * 
+	 * @title: 获取任务委派规则List
+	 * @desc: 描述
+	 * @param procdefDelegate
+	 * @return
+	 * @return: List<ProcdefDelegate>
+	 * @throws
+	 */
+	List<ProcdefDelegate> findProcdefDelegateList(ProcdefDelegate procdefDelegate);
+	/**
+	 * 
+	 * @title: 获取任务委派
+	 * @desc: 描述
+	 * @param id
+	 * @return
+	 * @return: ProcdefDelegate
+	 * @throws
+	 */
+	ProcdefDelegate findProcdefDelegateById(int id);
+	/**
+	 * 
+	 * @title: 修改任务委派规则
+	 * @desc: 根据id修改
+	 * @param procdefDelegate
+	 * @return: void
+	 * @throws
+	 */
+	void updateProcdefDelegate(ProcdefDelegate procdefDelegate);
+
+	/**
+	 * 获取工作流数量
+	 * @param countMap
+	 * @param dapdlist
+	 * @param dpActProcDesc
+	 * @param displayParam
+	 * @return
+	 */
+	public Map<String, Integer> getWorkFlowCountMap(
+			Map<String, Integer> countMap, List<DpActProcDesc> dapdlist,
+			DpActProcDesc dpActProcDesc, DisplayParam displayParam)throws Exception;
+	/**
+	 * 获取需要办理的任务
+	 * @param dpActProcDesc
+	 * @param displayParam
+	 * @return
+	 */
+	List<DpActProcDesc> getRunTask(DpActProcDesc dpActProcDesc ,DisplayParam displayParam);
+
+	/**
+	 * 获取需要办理的任务
+	 * @param dpActProcDesc
+	 * @param displayParam
+	 * @return
+	 */
+	List<DpActProcDesc> getRunVariable(DpActProcDesc dpActProcDesc, DisplayParam displayParam);
+	
+	/**
+	 * 根据BusinessKey获取任务
+	 * @param businessKey
+	 * @return
+	 */
+	Task queryTaskByBussinessKey(String businessKey);
+	
+	/**
+	 *根据流程定义Key获取最新版流程发布Id和流程发布图片
+	 * @param keyString
+	 * @param workflowCommonParam
+	 * @return
+	 */
+	void querymaxDefinitionObjByKey(String keyString,WorkflowCommonParam workflowCommonParam);
+	
+	/**
+	 * 根据流程实例BusinessKey获取流程变量
+	 * @param businessKey
+	 * @return
+	 */
+	Map<String, Object>queryProcessVarMap(String businessKey);
+	
+	/**
+	 * 根据BusinessKey和userId获取私有任务
+	 * @param businessKey
+	 * @return
+	 */
+	Task queryTaskByBussinessKeyUser(String businessKey,String userId);
+	
+	/**
+	 * 根据BusinessKey和userId获取公有任务
+	 * @param businessKey
+	 * @return
+	 */
+	Task queryPubTaskByBussinessKeyUser(String businessKey, String userId);
+	
+	/**
+	 *认领任务
+	 * @param taskId
+	 * @param userId
+	 */
+	void claimTask(String taskId, String userId);
+	
+	/**
+	 *根据User查询所有私有任务    
+	 * @param userId
+	 * @return
+	 */
+	List<Task> queryAllSelfTaskList(String userId);
+	
+	/**
+	 *根据User查询所有公有任务
+	 * @param userId
+	 * @return
+	 */
+	List<Task> queryAllPubTaskList(String userId);
+	
+	/**
+	 * 根据流程实例id集合查询历史流程实例
+	 * @param processIdSet
+	 * @return
+	 */
+	List<HistoricProcessInstance> queryHisProcessInstanceByIds(Set<String> processIdSet);
+	/**
+	 * 根据流程部署Key_获取流程定义信息
+	 * @param deployment
+	 * @return
+	 */
+	public Procdef getProcdef(Procdef procdef);
+	/**
+	 * 办理流程不处理业务逻辑
+	 * @param string 
+	 * @param taskId
+	 * @param vars
+	 */
+	void doSelfTask(Task task,  String instId , String comment, Map<String, Object> vars) ;
+	/**
+	 * 增加自定义的审批意见表
+	 * @param callBackId
+	 * @param procdefKey
+	 * @param id
+	 * @param instId
+	 * @param result
+	 * @param message
+	 */
+	public void addSelfActComment(int callBackId, String procdefKey, String taskId,
+			String instId, int result, String message);
+	
+	/**
+     * 增加自定义的审批意见表
+     * @param callBackId
+     * @param procdefKey
+     * @param taskKey
+     * @param taskId
+     * @param instId
+     * @param result
+     * @param message
+     * @return 
+     */
+	Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId,
+            String instId, int result, String message);
+	
+	/**
+	 * 增加自定义的审批意见表
+	 * @param callBackId
+	 * @param procdefKey
+	 * @param taskId
+	 * @param instId
+	 * @param result
+	 * @param message
+	 * @param nextAssignee
+	 * @param nextAssigneeName
+	 * @return 
+	 */
+	Integer addSelfActComment(int callBackId, String procdefKey, String taskId, String instId, int result, String message,
+			String nextAssignee, String nextAssigneeName);
+	
+	/**
+	 * @param callBackId
+	 * @param procdefKey
+	 * @param taskKey
+	 * @param taskId
+	 * @param instId
+	 * @param result
+	 * @param message
+	 * @param nextAssignee
+	 * @param nextAssigneeName
+	 */
+	Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId,
+			String instId, int result, String message, String nextAssignee, String nextAssigneeName);
+	
+	/**
+	 * 更新流程任务ID和流程实例Id
+	 * @param commentId
+	 * @param taskId
+	 * @param instId
+	 * @return 
+	 */
+	void updateSelfActComment(int commentId, String taskId, String instId);
+	
+	/**
+	 * 查询审批意见
+	 * @param objId
+	 * @param prodefKey
+	 * @return
+	 */
+	public List<ActComment> queryActComment(int objId , String prodefKey);
+	/**
+	 * 更新业务流程主表
+	 * @param tableName
+	 * @param instId
+	 * @param objId
+	 * @param objColumn 
+	 */
+	public void updateApplytableInfo(String tableName, String instId,
+			int objId, String objColumn);
+
+	/**
+	 * 更新办理人, 同时更新流程变量中保存的值
+	 * @param taskId
+	 * @param userId
+	 * @param variableName
+	 */
+	void assigneeTask(String taskId, String userId, String variableName);
+
+	/**
+	 * 根据实例Id，以及流程变量名和值，更新为新的流程变量值
+	 * 
+	 * @param InstId
+	 * @param variableName
+	 * @param value
+	 * @return
+	 */
+	void setVariable(String InstId, String variableName, String oldValue, String newValue);
+
+	/**
+	 * 删除流程
+	 */
+	public void deleteProcessInstance(String proInstId, String comment);
+
+}

@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.UserInfoMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.UserInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="workNo" jdbcType="VARCHAR" property="workNo" />
+    <result column="realName" jdbcType="VARCHAR" property="realName" />
+    <result column="eName" jdbcType="VARCHAR" property="eName" />
+    <result column="compID" jdbcType="INTEGER" property="compID" />
+    <result column="depID" jdbcType="INTEGER" property="depID" />
+    <result column="jobID" jdbcType="INTEGER" property="jobID" />
+    <result column="reportTo" jdbcType="INTEGER" property="reportTo" />
+    <result column="wfreportTo" jdbcType="INTEGER" property="wfreportTo" />
+    <result column="empStatus" jdbcType="INTEGER" property="empStatus" />
+    <result column="jobStatus" jdbcType="INTEGER" property="jobStatus" />
+    <result column="empType" jdbcType="INTEGER" property="empType" />
+    <result column="sex" jdbcType="SMALLINT" property="sex" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="telphone" jdbcType="VARCHAR" property="telphone" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="state" jdbcType="INTEGER" property="state" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="custom1" jdbcType="INTEGER" property="custom1" />
+    <result column="custom2" jdbcType="INTEGER" property="custom2" />
+    <result column="custom3" jdbcType="VARCHAR" property="custom3" />
+    <result column="custom4" jdbcType="VARCHAR" property="custom4" />
+    <result column="custom5" jdbcType="VARCHAR" property="custom5" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, workNo, realName, eName, compID, depID, jobID, reportTo, wfreportTo, empStatus, 
+    jobStatus, empType, sex, birthday, email, mobile, telphone, avatar, remark, state, 
+    user_id, custom1, custom2, custom3, custom4, custom5
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_user_info
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_user_info
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.UserInfo" keyProperty="id" useGeneratedKeys="true">
+    insert into t_user_info (workNo, realName, eName, 
+      compID, depID, jobID, 
+      reportTo, wfreportTo, empStatus, 
+      jobStatus, empType, sex, 
+      birthday, email, mobile, 
+      telphone, avatar, remark, 
+      state, user_id, custom1, 
+      custom2, custom3, custom4, 
+      custom5)
+    values (#{workNo,jdbcType=VARCHAR}, #{realName,jdbcType=VARCHAR}, #{eName,jdbcType=VARCHAR}, 
+      #{compID,jdbcType=INTEGER}, #{depID,jdbcType=INTEGER}, #{jobID,jdbcType=INTEGER}, 
+      #{reportTo,jdbcType=INTEGER}, #{wfreportTo,jdbcType=INTEGER}, #{empStatus,jdbcType=INTEGER}, 
+      #{jobStatus,jdbcType=INTEGER}, #{empType,jdbcType=INTEGER}, #{sex,jdbcType=SMALLINT}, 
+      #{birthday,jdbcType=DATE}, #{email,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, 
+      #{telphone,jdbcType=VARCHAR}, #{avatar,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{state,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{custom1,jdbcType=INTEGER}, 
+      #{custom2,jdbcType=INTEGER}, #{custom3,jdbcType=VARCHAR}, #{custom4,jdbcType=VARCHAR}, 
+      #{custom5,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.UserInfo" keyProperty="id" useGeneratedKeys="true">
+    insert into t_user_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="workNo != null">
+        workNo,
+      </if>
+      <if test="realName != null">
+        realName,
+      </if>
+      <if test="eName != null">
+        eName,
+      </if>
+      <if test="compID != null">
+        compID,
+      </if>
+      <if test="depID != null">
+        depID,
+      </if>
+      <if test="jobID != null">
+        jobID,
+      </if>
+      <if test="reportTo != null">
+        reportTo,
+      </if>
+      <if test="wfreportTo != null">
+        wfreportTo,
+      </if>
+      <if test="empStatus != null">
+        empStatus,
+      </if>
+      <if test="jobStatus != null">
+        jobStatus,
+      </if>
+      <if test="empType != null">
+        empType,
+      </if>
+      <if test="sex != null">
+        sex,
+      </if>
+      <if test="birthday != null">
+        birthday,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="mobile != null">
+        mobile,
+      </if>
+      <if test="telphone != null">
+        telphone,
+      </if>
+      <if test="avatar != null">
+        avatar,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="custom1 != null">
+        custom1,
+      </if>
+      <if test="custom2 != null">
+        custom2,
+      </if>
+      <if test="custom3 != null">
+        custom3,
+      </if>
+      <if test="custom4 != null">
+        custom4,
+      </if>
+      <if test="custom5 != null">
+        custom5,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="workNo != null">
+        #{workNo,jdbcType=VARCHAR},
+      </if>
+      <if test="realName != null">
+        #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="eName != null">
+        #{eName,jdbcType=VARCHAR},
+      </if>
+      <if test="compID != null">
+        #{compID,jdbcType=INTEGER},
+      </if>
+      <if test="depID != null">
+        #{depID,jdbcType=INTEGER},
+      </if>
+      <if test="jobID != null">
+        #{jobID,jdbcType=INTEGER},
+      </if>
+      <if test="reportTo != null">
+        #{reportTo,jdbcType=INTEGER},
+      </if>
+      <if test="wfreportTo != null">
+        #{wfreportTo,jdbcType=INTEGER},
+      </if>
+      <if test="empStatus != null">
+        #{empStatus,jdbcType=INTEGER},
+      </if>
+      <if test="jobStatus != null">
+        #{jobStatus,jdbcType=INTEGER},
+      </if>
+      <if test="empType != null">
+        #{empType,jdbcType=INTEGER},
+      </if>
+      <if test="sex != null">
+        #{sex,jdbcType=SMALLINT},
+      </if>
+      <if test="birthday != null">
+        #{birthday,jdbcType=DATE},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="telphone != null">
+        #{telphone,jdbcType=VARCHAR},
+      </if>
+      <if test="avatar != null">
+        #{avatar,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="custom1 != null">
+        #{custom1,jdbcType=INTEGER},
+      </if>
+      <if test="custom2 != null">
+        #{custom2,jdbcType=INTEGER},
+      </if>
+      <if test="custom3 != null">
+        #{custom3,jdbcType=VARCHAR},
+      </if>
+      <if test="custom4 != null">
+        #{custom4,jdbcType=VARCHAR},
+      </if>
+      <if test="custom5 != null">
+        #{custom5,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.UserInfo">
+    update t_user_info
+    <set>
+      <if test="workNo != null">
+        workNo = #{workNo,jdbcType=VARCHAR},
+      </if>
+      <if test="realName != null">
+        realName = #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="eName != null">
+        eName = #{eName,jdbcType=VARCHAR},
+      </if>
+      <if test="compID != null">
+        compID = #{compID,jdbcType=INTEGER},
+      </if>
+      <if test="depID != null">
+        depID = #{depID,jdbcType=INTEGER},
+      </if>
+      <if test="jobID != null">
+        jobID = #{jobID,jdbcType=INTEGER},
+      </if>
+      <if test="reportTo != null">
+        reportTo = #{reportTo,jdbcType=INTEGER},
+      </if>
+      <if test="wfreportTo != null">
+        wfreportTo = #{wfreportTo,jdbcType=INTEGER},
+      </if>
+      <if test="empStatus != null">
+        empStatus = #{empStatus,jdbcType=INTEGER},
+      </if>
+      <if test="jobStatus != null">
+        jobStatus = #{jobStatus,jdbcType=INTEGER},
+      </if>
+      <if test="empType != null">
+        empType = #{empType,jdbcType=INTEGER},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=SMALLINT},
+      </if>
+      <if test="birthday != null">
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="telphone != null">
+        telphone = #{telphone,jdbcType=VARCHAR},
+      </if>
+      <if test="avatar != null">
+        avatar = #{avatar,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="custom1 != null">
+        custom1 = #{custom1,jdbcType=INTEGER},
+      </if>
+      <if test="custom2 != null">
+        custom2 = #{custom2,jdbcType=INTEGER},
+      </if>
+      <if test="custom3 != null">
+        custom3 = #{custom3,jdbcType=VARCHAR},
+      </if>
+      <if test="custom4 != null">
+        custom4 = #{custom4,jdbcType=VARCHAR},
+      </if>
+      <if test="custom5 != null">
+        custom5 = #{custom5,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.UserInfo">
+    update t_user_info
+    set workNo = #{workNo,jdbcType=VARCHAR},
+      realName = #{realName,jdbcType=VARCHAR},
+      eName = #{eName,jdbcType=VARCHAR},
+      compID = #{compID,jdbcType=INTEGER},
+      depID = #{depID,jdbcType=INTEGER},
+      jobID = #{jobID,jdbcType=INTEGER},
+      reportTo = #{reportTo,jdbcType=INTEGER},
+      wfreportTo = #{wfreportTo,jdbcType=INTEGER},
+      empStatus = #{empStatus,jdbcType=INTEGER},
+      jobStatus = #{jobStatus,jdbcType=INTEGER},
+      empType = #{empType,jdbcType=INTEGER},
+      sex = #{sex,jdbcType=SMALLINT},
+      birthday = #{birthday,jdbcType=DATE},
+      email = #{email,jdbcType=VARCHAR},
+      mobile = #{mobile,jdbcType=VARCHAR},
+      telphone = #{telphone,jdbcType=VARCHAR},
+      avatar = #{avatar,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      state = #{state,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=INTEGER},
+      custom1 = #{custom1,jdbcType=INTEGER},
+      custom2 = #{custom2,jdbcType=INTEGER},
+      custom3 = #{custom3,jdbcType=VARCHAR},
+      custom4 = #{custom4,jdbcType=VARCHAR},
+      custom5 = #{custom5,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.UserInfo" resultMap="BaseResultMap">
+    select * from t_user_info
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="workNo != null and '' != workNo">
+				workNo = #{workNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="realName != null and '' != realName">
+				realName = #{realName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="eName != null and '' != eName">
+				eName = #{eName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compID != null and '' != compID">
+				compID = #{compID, jdbcType=INTEGER} AND
+			</if>
+			<if test="depID != null and '' != depID">
+				depID = #{depID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobID != null and '' != jobID">
+				jobID = #{jobID, jdbcType=INTEGER} AND
+			</if>
+			<if test="reportTo != null and '' != reportTo">
+				reportTo = #{reportTo, jdbcType=INTEGER} AND
+			</if>
+			<if test="wfreportTo != null and '' != wfreportTo">
+				wfreportTo = #{wfreportTo, jdbcType=INTEGER} AND
+			</if>
+			<if test="empStatus != null and '' != empStatus">
+				empStatus = #{empStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobStatus != null and '' != jobStatus">
+				jobStatus = #{jobStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="empType != null and '' != empType">
+				empType = #{empType, jdbcType=INTEGER} AND
+			</if>
+			<if test="sex != null and '' != sex">
+				sex = #{sex, jdbcType=SMALLINT} AND
+			</if>
+			<if test="birthday != null and '' != birthday">
+				birthday = #{birthday, jdbcType=DATE} AND
+			</if>
+			<if test="email != null and '' != email">
+				email = #{email, jdbcType=VARCHAR} AND
+			</if>
+			<if test="mobile != null and '' != mobile">
+				mobile = #{mobile, jdbcType=VARCHAR} AND
+			</if>
+			<if test="telphone != null and '' != telphone">
+				telphone = #{telphone, jdbcType=VARCHAR} AND
+			</if>
+			<if test="avatar != null and '' != avatar">
+				avatar = #{avatar, jdbcType=VARCHAR} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="userId != null and '' != userId">
+				user_id = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom1 != null and '' != custom1">
+				custom1 = #{custom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom2 != null and '' != custom2">
+				custom2 = #{custom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom3 != null and '' != custom3">
+				custom3 = #{custom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="custom4 != null and '' != custom4">
+				custom4 = #{custom4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="custom5 != null and '' != custom5">
+				custom5 = #{custom5, jdbcType=VARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.UserInfo" resultType="long">
+    select count(1) from t_user_info
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="workNo != null and '' != workNo">
+				workNo = #{workNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="realName != null and '' != realName">
+				realName = #{realName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="eName != null and '' != eName">
+				eName = #{eName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compID != null and '' != compID">
+				compID = #{compID, jdbcType=INTEGER} AND
+			</if>
+			<if test="depID != null and '' != depID">
+				depID = #{depID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobID != null and '' != jobID">
+				jobID = #{jobID, jdbcType=INTEGER} AND
+			</if>
+			<if test="reportTo != null and '' != reportTo">
+				reportTo = #{reportTo, jdbcType=INTEGER} AND
+			</if>
+			<if test="wfreportTo != null and '' != wfreportTo">
+				wfreportTo = #{wfreportTo, jdbcType=INTEGER} AND
+			</if>
+			<if test="empStatus != null and '' != empStatus">
+				empStatus = #{empStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobStatus != null and '' != jobStatus">
+				jobStatus = #{jobStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="empType != null and '' != empType">
+				empType = #{empType, jdbcType=INTEGER} AND
+			</if>
+			<if test="sex != null and '' != sex">
+				sex = #{sex, jdbcType=SMALLINT} AND
+			</if>
+			<if test="birthday != null and '' != birthday">
+				birthday = #{birthday, jdbcType=DATE} AND
+			</if>
+			<if test="email != null and '' != email">
+				email = #{email, jdbcType=VARCHAR} AND
+			</if>
+			<if test="mobile != null and '' != mobile">
+				mobile = #{mobile, jdbcType=VARCHAR} AND
+			</if>
+			<if test="telphone != null and '' != telphone">
+				telphone = #{telphone, jdbcType=VARCHAR} AND
+			</if>
+			<if test="avatar != null and '' != avatar">
+				avatar = #{avatar, jdbcType=VARCHAR} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="userId != null and '' != userId">
+				user_id = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom1 != null and '' != custom1">
+				custom1 = #{custom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom2 != null and '' != custom2">
+				custom2 = #{custom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="custom3 != null and '' != custom3">
+				custom3 = #{custom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="custom4 != null and '' != custom4">
+				custom4 = #{custom4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="custom5 != null and '' != custom5">
+				custom5 = #{custom5, jdbcType=VARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_user_info
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.workNo != null and '' != model.workNo">
+					workNo = #{model.workNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.realName != null and '' != model.realName">
+					realName = #{model.realName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.eName != null and '' != model.eName">
+					eName = #{model.eName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compID != null and '' != model.compID">
+					compID = #{model.compID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depID != null and '' != model.depID">
+					depID = #{model.depID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobID != null and '' != model.jobID">
+					jobID = #{model.jobID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.reportTo != null and '' != model.reportTo">
+					reportTo = #{model.reportTo, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.wfreportTo != null and '' != model.wfreportTo">
+					wfreportTo = #{model.wfreportTo, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.empStatus != null and '' != model.empStatus">
+					empStatus = #{model.empStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobStatus != null and '' != model.jobStatus">
+					jobStatus = #{model.jobStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.empType != null and '' != model.empType">
+					empType = #{model.empType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.sex != null and '' != model.sex">
+					sex = #{model.sex, jdbcType=SMALLINT} AND
+				</if>
+				<if test="model.birthday != null and '' != model.birthday">
+					birthday = #{model.birthday, jdbcType=DATE} AND
+				</if>
+				<if test="model.email != null and '' != model.email">
+					email = #{model.email, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.mobile != null and '' != model.mobile">
+					mobile = #{model.mobile, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.telphone != null and '' != model.telphone">
+					telphone = #{model.telphone, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.avatar != null and '' != model.avatar">
+					avatar = #{model.avatar, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userId != null and '' != model.userId">
+					user_id = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom1 != null and '' != model.custom1">
+					custom1 = #{model.custom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom2 != null and '' != model.custom2">
+					custom2 = #{model.custom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom3 != null and '' != model.custom3">
+					custom3 = #{model.custom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.custom4 != null and '' != model.custom4">
+					custom4 = #{model.custom4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.custom5 != null and '' != model.custom5">
+					custom5 = #{model.custom5, jdbcType=VARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					workNo like CONCAT("%", #{fuzzy}, "%") or
+					realName like CONCAT("%", #{fuzzy}, "%") or
+					eName like CONCAT("%", #{fuzzy}, "%") or
+					email like CONCAT("%", #{fuzzy}, "%") or
+					mobile like CONCAT("%", #{fuzzy}, "%") or
+					telphone like CONCAT("%", #{fuzzy}, "%") or
+					avatar like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					custom3 like CONCAT("%", #{fuzzy}, "%") or
+					custom4 like CONCAT("%", #{fuzzy}, "%") or
+					custom5 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_user_info
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.workNo != null and '' != model.workNo">
+					workNo = #{model.workNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.realName != null and '' != model.realName">
+					realName = #{model.realName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.eName != null and '' != model.eName">
+					eName = #{model.eName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compID != null and '' != model.compID">
+					compID = #{model.compID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.depID != null and '' != model.depID">
+					depID = #{model.depID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobID != null and '' != model.jobID">
+					jobID = #{model.jobID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.reportTo != null and '' != model.reportTo">
+					reportTo = #{model.reportTo, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.wfreportTo != null and '' != model.wfreportTo">
+					wfreportTo = #{model.wfreportTo, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.empStatus != null and '' != model.empStatus">
+					empStatus = #{model.empStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobStatus != null and '' != model.jobStatus">
+					jobStatus = #{model.jobStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.empType != null and '' != model.empType">
+					empType = #{model.empType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.sex != null and '' != model.sex">
+					sex = #{model.sex, jdbcType=SMALLINT} AND
+				</if>
+				<if test="model.birthday != null and '' != model.birthday">
+					birthday = #{model.birthday, jdbcType=DATE} AND
+				</if>
+				<if test="model.email != null and '' != model.email">
+					email = #{model.email, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.mobile != null and '' != model.mobile">
+					mobile = #{model.mobile, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.telphone != null and '' != model.telphone">
+					telphone = #{model.telphone, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.avatar != null and '' != model.avatar">
+					avatar = #{model.avatar, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userId != null and '' != model.userId">
+					user_id = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom1 != null and '' != model.custom1">
+					custom1 = #{model.custom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom2 != null and '' != model.custom2">
+					custom2 = #{model.custom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.custom3 != null and '' != model.custom3">
+					custom3 = #{model.custom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.custom4 != null and '' != model.custom4">
+					custom4 = #{model.custom4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.custom5 != null and '' != model.custom5">
+					custom5 = #{model.custom5, jdbcType=VARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					workNo like CONCAT("%", #{fuzzy}, "%") or
+					realName like CONCAT("%", #{fuzzy}, "%") or
+					eName like CONCAT("%", #{fuzzy}, "%") or
+					email like CONCAT("%", #{fuzzy}, "%") or
+					mobile like CONCAT("%", #{fuzzy}, "%") or
+					telphone like CONCAT("%", #{fuzzy}, "%") or
+					avatar like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					custom3 like CONCAT("%", #{fuzzy}, "%") or
+					custom4 like CONCAT("%", #{fuzzy}, "%") or
+					custom5 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="selectByUserId" parameterType="int" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from t_user_info where user_id = #{userId}
+  </select>
+  
+  <select id="selectOneByUserId" parameterType="int" resultType="com.dp.plat.core.vo.UserInfoVO">
+    select 
+	    ui.user_id as userId, ui.*, c.compName 
+	from
+	    t_user_info ui 
+	    left join t_company c 
+	        on ui.`compID` = c.`id` 
+    where user_id = #{userId} limit 1
+  </select>
+  
+  <select id="selectVOsByUserId" parameterType="int" resultType="com.dp.plat.core.vo.UserInfoVO">
+    select
+        ui.user_id as userId, ui.*, c.compName 
+    from
+        t_user_info ui 
+        left join t_company c 
+            on ui.`compID` = c.`id`
+    where user_id = #{userId}
+  </select>
+  
+  <select id="selectOneByUserIdAndCompId" parameterType="com.dp.plat.core.pojo.UserInfo" resultType="com.dp.plat.core.vo.UserInfoVO">
+    select 
+        ui.user_id as userId, ui.*, c.compName 
+    from
+        t_user_info ui 
+        left join t_company c 
+            on ui.`compID` = c.`id` 
+    where user_id = #{userId} and compID = #{compID}
+  </select>
+  
+  <update id="updateByUserId" parameterType="com.dp.plat.core.pojo.UserInfo">
+    update t_user_info
+    <set>
+      <if test="workNo != null">
+        workNo = #{workNo,jdbcType=VARCHAR},
+      </if>
+      <if test="realName != null">
+        realName = #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="eName != null">
+        eName = #{eName,jdbcType=VARCHAR},
+      </if>
+      <if test="compID != null">
+        compID = #{compID,jdbcType=INTEGER},
+      </if>
+      <if test="depID != null">
+        depID = #{depID,jdbcType=INTEGER},
+      </if>
+      <if test="jobID != null">
+        jobID = #{jobID,jdbcType=INTEGER},
+      </if>
+      <if test="reportTo != null">
+        reportTo = #{reportTo,jdbcType=INTEGER},
+      </if>
+      <if test="wfreportTo != null">
+        wfreportTo = #{wfreportTo,jdbcType=INTEGER},
+      </if>
+      <if test="empStatus != null">
+        empStatus = #{empStatus,jdbcType=INTEGER},
+      </if>
+      <if test="jobStatus != null">
+        jobStatus = #{jobStatus,jdbcType=INTEGER},
+      </if>
+      <if test="empType != null">
+        empType = #{empType,jdbcType=INTEGER},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=BIT},
+      </if>
+      <if test="birthday != null">
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="telphone != null">
+        telphone = #{telphone,jdbcType=VARCHAR},
+      </if>
+      <if test="avatar != null">
+        avatar = #{avatar,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="custom1 != null">
+        custom1 = #{custom1,jdbcType=INTEGER},
+      </if>
+      <if test="custom2 != null">
+        custom2 = #{custom2,jdbcType=INTEGER},
+      </if>
+      <if test="custom3 != null">
+        custom3 = #{custom3,jdbcType=VARCHAR},
+      </if>
+      <if test="custom4 != null">
+        custom4 = #{custom4,jdbcType=VARCHAR},
+      </if>
+      <if test="custom5 != null">
+        custom5 = #{custom5,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where 
+    <if test="id != null">
+        id = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="id == null">
+        user_id = #{userId,jdbcType=INTEGER} and compID = #{compID,jdbcType=INTEGER}
+    </if>
+  </update>
+  
+  <delete id="deleteByUserId" parameterType="java.lang.Integer">
+    delete from t_user_info
+    where user_id = #{userId,jdbcType=INTEGER}
+  </delete>
+  
+</mapper>

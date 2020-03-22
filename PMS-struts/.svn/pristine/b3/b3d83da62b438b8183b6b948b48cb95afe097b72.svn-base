@@ -1,0 +1,97 @@
+﻿package com.dp.plat.converter;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.apache.struts2.util.StrutsTypeConverter;
+
+import com.dp.plat.type.UserParamInterface;
+
+public class StandParamConverter extends StrutsTypeConverter
+{
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Object convertFromString(Map arg0, String[] arg1, Class arg2)
+	{
+		if(arg1.length>1)
+		{
+			ArrayList<UserParamInterface> list=new ArrayList<UserParamInterface>();
+			for(String str:arg1)
+			{
+				UserParamInterface upi;
+				try
+				{
+					upi = (UserParamInterface)arg2.newInstance();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+					continue;
+				}
+				
+				if(upi.parseFrom(str))
+				{
+					list.add(upi);
+				}
+				
+			}
+			if(list.isEmpty())
+			{
+				return null;
+			}
+			return list.toArray(new UserParamInterface[0]);
+		}
+		else
+		{
+			UserParamInterface upi;
+			try
+			{
+				upi = (UserParamInterface)arg2.newInstance();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				return null;
+			}
+			
+			if(upi.parseFrom(arg1[0]))
+			{
+				return upi;
+			}
+		}
+		
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public String convertToString(Map arg0, Object arg1)
+	{
+		if(arg1 instanceof UserParamInterface)
+		{
+			return ((UserParamInterface)arg1).formatTo();
+		}
+		else if(arg1 instanceof UserParamInterface[])
+		{
+			UserParamInterface[] array = (UserParamInterface[])arg1;
+			StringBuffer sb= new StringBuffer();
+			
+			sb.append("[");
+			int idx = 0;
+			for(UserParamInterface upi: array)
+			{
+				if(idx++ != 0)
+				{
+					sb.append(",");
+				}
+				sb.append(upi.formatTo());
+			}
+			sb.append("]");
+			return sb.toString();
+			
+		}
+		return null;
+	}
+
+}

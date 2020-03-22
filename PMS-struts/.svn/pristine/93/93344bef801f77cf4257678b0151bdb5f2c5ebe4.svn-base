@@ -1,0 +1,55 @@
+﻿/**
+ * 
+ */
+package com.dp.plat.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.dp.plat.dao.OpLogDao;
+import com.dp.plat.data.bean.OperateLog;
+import com.dp.plat.param.DisplayParam;
+
+/**
+ * @author Administrator
+ * 
+ */
+public class OpLogServiceImpl extends BaseServiceImpl implements OpLogService
+{
+	private OpLogDao opLoggerDao;
+
+	public OpLogDao getOpLoggerDao()
+	{
+		return opLoggerDao;
+	}
+
+	public void setOpLoggerDao(OpLogDao opLoggerService)
+	{
+		this.opLoggerDao = opLoggerService;
+	}
+
+	@Override
+	public void insertLog()
+	{
+		opLoggerDao.insertLog();
+	}
+
+	@Override
+	public List<OperateLog> queryLogList(DisplayParam displayParam)
+	{
+		return opLoggerDao.queryLogList(displayParam);
+	}
+	
+	@Override
+	public void delete(ArrayList<String> selected)
+	{
+		opLoggerDao.delete(selected);
+		
+	}
+
+	@Override
+	public List<com.dp.plat.data.OperateLog> queryLogAllList(DisplayParam displayParam) {
+		return opLoggerDao.queryLogAllList(displayParam);
+	}
+
+}

@@ -1,0 +1,9 @@
+﻿package com.dp.plat.support;
+
+public class SysModifyPwdLeftMenuLi extends LeftMenuLi implements
+		LeftMenuLiInterface {
+
+//	public int getRole() {		
+//		return super.getRole();
+//	}
+}

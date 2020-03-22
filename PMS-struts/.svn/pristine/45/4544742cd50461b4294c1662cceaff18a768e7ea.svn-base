@@ -1,0 +1,245 @@
+package com.dp.plat.subcontract.entity;
+
+import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+public class SubcontractPayment {
+	private Integer id;
+
+	// 转包项目Id
+	private Integer subcontractId;
+
+	// 比例
+	private String ratio;
+	
+	// 付款金额
+	private String amount;
+
+	// 提交时间
+	@JsonFormat(pattern = "yyyy-MM-dd", locale = "zh", timezone = "GMT+8")
+	private Date confirmTime;
+
+	// 付款时间
+	@JsonFormat(pattern = "yyyy-MM-dd", locale = "zh", timezone = "GMT+8")
+	private Date paymentTime;
+
+	// 备注
+	private String remark;
+	
+    // sse报销单审批行ID
+    private Integer sseId;
+
+	@JsonFormat(pattern = "yyyy-MM-dd mm:HH:ss", locale = "zh", timezone = "GMT+8")
+	private Date createTime;
+
+	private String createBy;
+
+	@JsonFormat(pattern = "yyyy-MM-dd mm:HH:ss", locale = "zh", timezone = "GMT+8")
+	private Date updateTime;
+
+	private String updateBy;
+
+	/**
+	 * @return id
+	 */
+	public Integer getId() {
+		return id;
+	}
+
+	/**
+	 * @param id
+	 */
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	/**
+	 * 获取转包项目Id
+	 *
+	 * @return subcontractId - 转包项目Id
+	 */
+	public Integer getSubcontractId() {
+		return subcontractId;
+	}
+
+	/**
+	 * 设置转包项目Id
+	 *
+	 * @param subcontractId
+	 *            转包项目Id
+	 */
+	public void setSubcontractId(Integer subcontractId) {
+		this.subcontractId = subcontractId;
+	}
+
+	/**
+	 * 获取比例
+	 *
+	 * @return ratio - 比例
+	 */
+	public String getRatio() {
+		return ratio;
+	}
+
+	/**
+	 * 设置比例
+	 *
+	 * @param ratio
+	 *            比例
+	 */
+	public void setRatio(String ratio) {
+		this.ratio = ratio;
+	}
+	
+	/**
+	 * 获取付款金额
+	 *
+	 * @return amount - 付款金额
+	 */
+	public String getAmount() {
+		return amount;
+	}
+
+	/**
+	 * 设置付款金额
+	 *
+	 * @param amount
+	 *            付款金额
+	 */
+	public void setAmount(String amount) {
+		this.amount = amount;
+	}
+
+	/**
+	 * 获取提交时间
+	 *
+	 * @return confirmTime - 提交时间
+	 */
+	public Date getConfirmTime() {
+		return confirmTime;
+	}
+
+	/**
+	 * 设置提交时间
+	 *
+	 * @param confirmTime
+	 *            提交时间
+	 */
+	public void setConfirmTime(Date confirmTime) {
+		this.confirmTime = confirmTime;
+	}
+
+	/**
+	 * 获取付款时间
+	 *
+	 * @return paymentTime - 付款时间
+	 */
+	public Date getPaymentTime() {
+		return paymentTime;
+	}
+
+	/**
+	 * 设置付款时间
+	 *
+	 * @param paymentTime
+	 *            付款时间
+	 */
+	public void setPaymentTime(Date paymentTime) {
+		this.paymentTime = paymentTime;
+	}
+
+	/**
+	 * 获取备注
+	 *
+	 * @return remark - 备注
+	 */
+	public String getRemark() {
+		return remark;
+	}
+
+	/**
+	 * 设置备注
+	 *
+	 * @param remark
+	 *            备注
+	 */
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+    /**
+     * 获取sse报销单审批行ID
+     *
+     * @return sseId - sse报销单审批行ID
+     */
+	public Integer getSseId() {
+        return sseId;
+    }
+
+    /**
+     * 设置sse报销单审批行ID
+     *
+     * @param sseId
+     *            sse报销单审批行ID
+     */
+    public void setSseId(Integer sseId) {
+        this.sseId = sseId;
+    }
+
+    /**
+	 * @return createTime
+	 */
+	public Date getCreateTime() {
+		return createTime;
+	}
+
+	/**
+	 * @param createTime
+	 */
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+
+	/**
+	 * @return createBy
+	 */
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	/**
+	 * @param createBy
+	 */
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
+	/**
+	 * @return updateTime
+	 */
+	public Date getUpdateTime() {
+		return updateTime;
+	}
+
+	/**
+	 * @param updateTime
+	 */
+	public void setUpdateTime(Date updateTime) {
+		this.updateTime = updateTime;
+	}
+
+	/**
+	 * @return updateBy
+	 */
+	public String getUpdateBy() {
+		return updateBy;
+	}
+
+	/**
+	 * @param updateBy
+	 */
+	public void setUpdateBy(String updateBy) {
+		this.updateBy = updateBy;
+	}
+}

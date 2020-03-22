@@ -1,0 +1,32 @@
+﻿package com.dp.plat.util.parser;
+
+/**
+ * @author Administrator
+ * 
+ */
+public class StringCellParser implements ICellValueParser {
+	private String cellValue;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.dp.plat.util.parser.CellValueParser#setCellValue(java.lang.Object)
+	 */
+	@Override
+	public void setCellValue(Object cellValue) {
+		if (cellValue != null)
+			this.cellValue = cellValue.toString();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.dp.plat.util.parser.ICellValueParser#getCellValue()
+	 */
+	@Override
+	public String getCellValue() {
+		return this.cellValue;
+	}
+
+}

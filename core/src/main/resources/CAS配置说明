@@ -1,0 +1,26 @@
+1.修改启用spring-cas.properties
+在spring.xml中修改如下
+<import resource="spring-shiro-cas.xml"/>
+
+在spring-cas.properties中修改如下
+shiro.loginUrl=https://castest.dptech.com:8443/login?service=http://10.102.0.103:8081/web/sys/login.html
+shiro.logoutUrl=https://castest.dptech.com:8443/logout?service=http://10.102.0.103:8081/web/sys/login.html
+shiro.cas.serverUrlPrefix=https://castest.dptech.com:8443/
+shiro.cas.service=http://10.102.0.103:8081/web/sys/login.html
+shiro.failureUrl=https://castest.dptech.com:8443/login?service=http://10.102.0.103:8081/web/sys/login.html
+shiro.successUrl=http://10.102.0.103:8081/web/sys/success.html
+
+2.注意com.dp.plat.core.factory.FilterChainDefinitionMapBuilder
+
+buildFilterChainDefinitionMap方法
+
+if ("1".equals(isCas) && casFilter != null) {
+	String loginAuth = map.get("/*/login.*");//设置的登录路径一致
+	map.put("/*/login.*", loginAuth + ",casLogoutFilter,casFilter");
+}
+
+3.修改数据库t_sys_variable  sys.cas参数值为1
+
+关闭的话修改为0即可,其他配置也适用非单点登录
+
+

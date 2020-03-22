@@ -1,0 +1,37 @@
+package com.dp.plat.util;
+
+public class ByteArrayUtil
+{
+	/**
+	 * 
+	 * @param dst
+	 * @param off
+	 * @param src
+	 * @param len
+	 * @return new off
+	 */
+	public static int copyByteArray(byte[] dst, int off, byte[] src, int start, int len)
+	{
+		int i;
+		for(i=off;i<off+len;i++)
+		{
+			dst[i] = src[i-off+start];
+		}
+		return i;
+	}
+	public static int copyByteArray(byte[] dst, int off, byte[] src)
+	{
+		return copyByteArray(dst, off, src, 0, src.length);
+	}
+	
+	public static int copyUInt(byte[] dst, int off, long val)
+	{
+		int end = 4;
+		for(int i=0;i<end;i++)
+		{
+			dst[off+4-1-i] = (byte)((val >> (i*8)) & 0xFF);
+		}
+		
+		return off+4;
+	}
+}

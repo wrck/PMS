@@ -1,0 +1,7 @@
+$map<img src="$graphURL" width=$width height=$height 
+	style="#if($style_dispaly)display:$style_dispaly;#end"
+	border=0
+	#foreach($att in $atts)
+	$att.name="$att.value"
+	#end
+	usemap='#$filename' charttype='$charttype'/>

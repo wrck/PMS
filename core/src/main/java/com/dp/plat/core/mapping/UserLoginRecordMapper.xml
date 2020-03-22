@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.UserLoginRecordMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.UserLoginRecord">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="loginName" jdbcType="VARCHAR" property="loginName" />
+    <result column="loginTime" jdbcType="TIMESTAMP" property="loginTime" />
+    <result column="loginIP" jdbcType="VARCHAR" property="loginIP" />
+    <result column="logoutTime" jdbcType="TIMESTAMP" property="logoutTime" />
+    <result column="logoutIP" jdbcType="VARCHAR" property="logoutIP" />
+    <result column="loginSuccess" jdbcType="BIT" property="loginSuccess" />
+    <result column="logoutSuccess" jdbcType="BIT" property="logoutSuccess" />
+    <result column="userId" jdbcType="INTEGER" property="userId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, loginName, loginTime, loginIP, logoutTime, logoutIP, loginSuccess, logoutSuccess, 
+    userId
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_user_login_record
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_user_login_record
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.UserLoginRecord" useGeneratedKeys="true" keyProperty="id">
+    insert into t_user_login_record (id, loginName, loginTime, 
+      loginIP, logoutTime, logoutIP, 
+      loginSuccess, logoutSuccess, userId
+      )
+    values (#{id,jdbcType=INTEGER}, #{loginName,jdbcType=VARCHAR}, #{loginTime,jdbcType=TIMESTAMP}, 
+      #{loginIP,jdbcType=VARCHAR}, #{logoutTime,jdbcType=TIMESTAMP}, #{logoutIP,jdbcType=VARCHAR}, 
+      #{loginSuccess,jdbcType=BIT}, #{logoutSuccess,jdbcType=BIT}, #{userId,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.UserLoginRecord" useGeneratedKeys="true" keyProperty="id">
+    insert into t_user_login_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="loginName != null">
+        loginName,
+      </if>
+      <if test="loginTime != null">
+        loginTime,
+      </if>
+      <if test="loginIP != null">
+        loginIP,
+      </if>
+      <if test="logoutTime != null">
+        logoutTime,
+      </if>
+      <if test="logoutIP != null">
+        logoutIP,
+      </if>
+      <if test="loginSuccess != null">
+        loginSuccess,
+      </if>
+      <if test="logoutSuccess != null">
+        logoutSuccess,
+      </if>
+      <if test="userId != null">
+        userId,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="loginName != null">
+        #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="loginTime != null">
+        #{loginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="loginIP != null">
+        #{loginIP,jdbcType=VARCHAR},
+      </if>
+      <if test="logoutTime != null">
+        #{logoutTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="logoutIP != null">
+        #{logoutIP,jdbcType=VARCHAR},
+      </if>
+      <if test="loginSuccess != null">
+        #{loginSuccess,jdbcType=BIT},
+      </if>
+      <if test="logoutSuccess != null">
+        #{logoutSuccess,jdbcType=BIT},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.UserLoginRecord">
+    update t_user_login_record
+    <set>
+      <if test="loginName != null">
+        loginName = #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="loginTime != null">
+        loginTime = #{loginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="loginIP != null">
+        loginIP = #{loginIP,jdbcType=VARCHAR},
+      </if>
+      <if test="logoutTime != null">
+        logoutTime = #{logoutTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="logoutIP != null">
+        logoutIP = #{logoutIP,jdbcType=VARCHAR},
+      </if>
+      <if test="loginSuccess != null">
+        loginSuccess = #{loginSuccess,jdbcType=BIT},
+      </if>
+      <if test="logoutSuccess != null">
+        logoutSuccess = #{logoutSuccess,jdbcType=BIT},
+      </if>
+      <if test="userId != null">
+        userId = #{userId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.UserLoginRecord">
+    update t_user_login_record
+    set loginName = #{loginName,jdbcType=VARCHAR},
+      loginTime = #{loginTime,jdbcType=TIMESTAMP},
+      loginIP = #{loginIP,jdbcType=VARCHAR},
+      logoutTime = #{logoutTime,jdbcType=TIMESTAMP},
+      logoutIP = #{logoutIP,jdbcType=VARCHAR},
+      loginSuccess = #{loginSuccess,jdbcType=BIT},
+      logoutSuccess = #{logoutSuccess,jdbcType=BIT},
+      userId = #{userId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

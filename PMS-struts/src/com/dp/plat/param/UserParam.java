@@ -1,0 +1,23 @@
+package com.dp.plat.param;
+
+import com.dp.plat.data.bean.User;
+
+public class UserParam {
+	
+	private User user;
+	private DisplayParam displayParam;
+	
+	public User getUser() {
+		return user;
+	}
+	public void setUser(User user) {
+		this.user = user;
+	}
+	public DisplayParam getDisplayParam() {
+		return displayParam;
+	}
+	public void setDisplayParam(DisplayParam displayParam) {
+		this.displayParam = displayParam;
+	}
+	
+}

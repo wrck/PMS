@@ -1,0 +1,288 @@
+/**
+ * Created by HANZO on 2016/6/17.
+ */
+
+/**
+ * 待改
+ * 
+ * @param url
+ * @param params
+ * @param callback
+ * @returns {*}
+ */
+/*function loadPage(url){
+	$("#mainDiv").load(url,function(response,status,xhr){
+		if(status=="success"){
+			if(response){
+				try{
+					var result = jQuery.parseJSON(response);
+					if(result.code==100){ 
+						$("#mainDiv").html("");
+						alert(result.data);
+					}
+				}catch(e){
+					return response;
+				}
+			}
+		}
+	});
+}*/
+ 
+/**
+ * Load a url into a page
+ */
+/*var _old_load = jQuery.fn.load;
+jQuery.fn.load = function( url, params, callback ) {
+	//update for HANZO, 2016/12/22
+	if (typeof url !== "string" && _old_load) {
+		return _old_load.apply( this, arguments );
+	}
+
+	var selector, type, response,
+		self = this,
+		off = url.indexOf( " " );
+	if ( off > -1 ) {
+		selector = jQuery.trim( url.slice( off ) );
+		url = url.slice( 0, off );
+	}
+	if ( jQuery.isFunction( params ) ) {
+		callback = params;
+		params = undefined;
+	} else if ( params && typeof params === "object" ) {
+		type = "POST";
+	}
+	if ( self.length > 0 ) {
+		jQuery.ajax( {
+			url: url,
+			beforeSend: function( xhr ) {  
+				    xhr.setRequestHeader('X-Requested-With', {toString: function(){ return ''; }});  
+			},  
+			type: type || "GET", 
+			dataType: "html",
+			data: params
+		} ).done( function( responseText ) {
+			response = arguments;
+			self.html( selector ?
+				jQuery( "<div>" ).append( jQuery.parseHTML( responseText ) ).find( selector ) :
+				responseText );
+		} ).always( callback && function( jqXHR, status ) {
+			self.each( function() {
+				callback.apply( this, response || [ jqXHR.responseText, status, jqXHR ] );
+			} );
+		} );
+	}
+
+	return this;
+};*/
+
+
+
+function ajaxPost(url, params, callbacks , async, contentType, complete) {
+	var result = null;
+    var headers={};
+    headers['CSRFToken']=$("#csrftoken").val();
+    if (contentType) {
+    	headers['Content-Type'] = contentType;
+    }
+    var async = async == false ? async : true;
+	$.ajax({
+		type : 'post',
+		async : async,
+		url : url,
+		data : params,
+		dataType : 'json',
+		headers: headers,
+		success : function(data, status) {
+			result = data;
+			if(data&&data.code&&data.code=='101'){
+				modals.error("操作失败，请刷新重试，具体错误："+data.message);
+				return false;
+			}
+			if (callbacks) { 
+				if (typeof callbacks == "function") {
+					callbacks.call(this, data, status);
+				} else if (typeof callbacks == "object") {
+					for (var i in callbacks) {
+						var callback = callbacks[i];
+						callback.call(this, data, status);
+					}
+				}
+/*				try {
+					callbacks.call(this, data, status);
+				} catch (e) {
+					for (var i in callbacks) {
+						var callback = callbacks[i];
+						callback.call(this, data, status);
+					}
+				}
+*/			}
+		},
+		error : function(err, err1, err2) {
+		    err.responseText = err.responseText || err.statusText;
+			if(err.responseText.indexOf(" | Log in</title>") > -1){
+				window.location.href= basePath + "/login.html";
+				return false;
+			}
+			if(err.responseText.indexOf(" | Unauthorized</title>") > -1){
+				window.location.href= basePath + "/unauthorized.html";
+				return false;
+			}
+			var text = JSON.stringify(err, null, 4).replace(/(\\n)/g,"&#10").replace(/(\\t)/g,"&#09") + '<br/><b>textStatus:</b>' + JSON.stringify(err1, null, 4).replace(/(\\n)/g,"&#10").replace(/(\\t)/g,"&#09") + '<br/><b>errorThrown:</b>' + JSON.stringify(err2, null, 4).replace(/(\\n)/g,"&#10").replace(/(\\t)/g,"&#09");
+			if(err.responseText.indexOf("errorLogId") > -1) {
+				try {
+					var errorObj = JSON.parse(err.responseText);
+					text = "<h4 class='text-danger'><i class='fa fa-warning'></i>出错啦！</h4><p>很抱歉，服务器偷了会懒，发生了错误。<br>错误信息："+errorObj.error+"<br>如有疑问请携带ID：<span class='text-red'>"+errorObj.errorLogId+"</span>联系管理员。</p>";
+					modals.error({
+						text : text,
+					});
+					return false;
+				} catch(e) {
+				}
+			}
+			modals.error({
+				text : "<pre>" + text + "</pre>",
+				large : true
+			});
+		}, 
+		complete : function (data, status) {
+			if (complete) { 
+				complete.call(this, data, status);
+			}
+		}
+	});
+
+	return result;
+}
+
+function getServerTime(base_path, format) {
+	var result = null;
+	var sdate = new Date(ajaxPost(base_path+'/base/getServerTime', null, null, false));
+	if (sdate != 'Invalid Date') {
+		result = formatDate(sdate, format||'yyyy-MM-dd');
+	}
+
+	return result;
+}
+
+/**
+ * 格式化日期
+ */
+function formatDate(date, format) {
+	if(!date)return date;
+	date = (typeof date == "number") ? new Date(date) : date;
+	try {
+		return date.Format(format);
+	} catch (e) {
+		return date;
+	}
+}
+
+Date.prototype.Format = function(fmt) {
+	var o = {
+		"M+" : this.getMonth() + 1, // 月份
+		"d+" : this.getDate(), // 日
+		"H+" : this.getHours(), // 小时
+		"m+" : this.getMinutes(), // 分
+		"s+" : this.getSeconds(), // 秒
+		"q+" : Math.floor((this.getMonth() + 3) / 3), // 季度
+		"S" : this.getMilliseconds()
+	// 毫秒
+	};
+	if (/(y+)/.test(fmt))
+		fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+	for ( var k in o)
+		if (new RegExp("(" + k + ")").test(fmt))
+			fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	return fmt;
+}
+
+/**
+ * 将map类型[name,value]的数据转化为对象类型
+ */
+function getObjectFromMap(aData) {
+	var map = {};
+	for (var i = 0; i < aData.length; i++) {
+		var item = aData[i];
+		if (!map[item.name]) {
+			map[item.name] = item.value;
+		}
+	}
+	return map;
+}
+
+/**
+ * 获取render,并转化为对象数组
+ */
+function getRenderObject(render) {
+	var arr = render.split(",");
+	var obj = new Object();
+	for (var i = 0; i < arr.length; i++) {
+		var strA = arr[i].split("=");
+		obj[strA[0]] = strA[1];
+	}
+	if (!obj.type)
+		obj.type = "eq";
+	return obj;
+}
+
+/**
+ * 获取下一个编码 000001，000001000006，6
+ * 得到结果 000001000007
+ */
+function getNextCode(prefix,maxCode,length){
+	if(maxCode==null){
+		var str="";
+		for(var i=0;i<length-1;i++){
+			str+="0";
+		}
+		return prefix+str+1;
+	}else{
+		var str="";
+		var sno = parseInt(maxCode.substring(prefix.length))+1;
+		for(var i=0;i<length-sno.toString().length;i++){
+			str+="0";
+		}
+		return prefix+str+sno;
+	}
+	
+}
+
+//获取布尔值
+/*String.prototype.BoolValue=function(){
+	if(this==undefined)
+		return false;
+	if(this=="false"||this=="0")
+		return false;
+	return true;
+}*/
+
+/**
+ * 数据 生效 失效状态统一处理函数
+ */
+function initStateName (data, type, row){
+	if(data == 1){
+		return "生效";
+	}else{
+		return "失效";
+	}
+}
+/**
+ * 表格信息过长处理
+ */
+function handleLongText(data,length){
+	if(data.length > length){
+		var span = "<span title='"+data+"'>"+data.substr(0, length)+"...</span>";
+		return span;
+	}else{
+		return data;
+	}
+}
+
+if (typeof String.prototype.startsWith != 'function') {
+	String.prototype.startsWith = function(prefix) {
+		if (typeof prefix === "undefined" || prefix === null) {
+			return false;
+		}
+		return this.slice(0, prefix.length) === prefix;
+	};
+}

@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.CompanyMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.Company">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="compCode" jdbcType="VARCHAR" property="compCode" />
+    <result column="compName" jdbcType="VARCHAR" property="compName" />
+    <result column="compAbbr" jdbcType="VARCHAR" property="compAbbr" />
+    <result column="adminID" jdbcType="INTEGER" property="adminID" />
+    <result column="compGrade" jdbcType="INTEGER" property="compGrade" />
+    <result column="lawyer" jdbcType="VARCHAR" property="lawyer" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="regAddress" jdbcType="VARCHAR" property="regAddress" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="fax" jdbcType="VARCHAR" property="fax" />
+    <result column="postCode" jdbcType="VARCHAR" property="postCode" />
+    <result column="webSite" jdbcType="VARCHAR" property="webSite" />
+    <result column="state" jdbcType="BIT" property="state" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="disabledTime" jdbcType="TIMESTAMP" property="disabledTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, compCode, compName, compAbbr, adminID, compGrade, lawyer, address, regAddress, 
+    tel, fax, postCode, webSite, state, effectiveFrom, effectiveTo, disabledTime, remark, 
+    createBy, createTime, updateBy, updateTime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_company
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_company
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.Company">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_company (compCode, compName, compAbbr, 
+      adminID, compGrade, lawyer, 
+      address, regAddress, tel, 
+      fax, postCode, webSite, 
+      state, effectiveFrom, effectiveTo, 
+      disabledTime, remark, createBy, 
+      createTime, updateBy, updateTime
+      )
+    values (#{compCode,jdbcType=VARCHAR}, #{compName,jdbcType=VARCHAR}, #{compAbbr,jdbcType=VARCHAR}, 
+      #{adminID,jdbcType=INTEGER}, #{compGrade,jdbcType=INTEGER}, #{lawyer,jdbcType=VARCHAR}, 
+      #{address,jdbcType=VARCHAR}, #{regAddress,jdbcType=VARCHAR}, #{tel,jdbcType=VARCHAR}, 
+      #{fax,jdbcType=VARCHAR}, #{postCode,jdbcType=VARCHAR}, #{webSite,jdbcType=VARCHAR}, 
+      #{state,jdbcType=BIT}, #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, 
+      #{disabledTime,jdbcType=TIMESTAMP}, #{remark,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.Company">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_company
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="compCode != null">
+        compCode,
+      </if>
+      <if test="compName != null">
+        compName,
+      </if>
+      <if test="compAbbr != null">
+        compAbbr,
+      </if>
+      <if test="adminID != null">
+        adminID,
+      </if>
+      <if test="compGrade != null">
+        compGrade,
+      </if>
+      <if test="lawyer != null">
+        lawyer,
+      </if>
+      <if test="address != null">
+        address,
+      </if>
+      <if test="regAddress != null">
+        regAddress,
+      </if>
+      <if test="tel != null">
+        tel,
+      </if>
+      <if test="fax != null">
+        fax,
+      </if>
+      <if test="postCode != null">
+        postCode,
+      </if>
+      <if test="webSite != null">
+        webSite,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="disabledTime != null">
+        disabledTime,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="compCode != null">
+        #{compCode,jdbcType=VARCHAR},
+      </if>
+      <if test="compName != null">
+        #{compName,jdbcType=VARCHAR},
+      </if>
+      <if test="compAbbr != null">
+        #{compAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="adminID != null">
+        #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="compGrade != null">
+        #{compGrade,jdbcType=INTEGER},
+      </if>
+      <if test="lawyer != null">
+        #{lawyer,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="regAddress != null">
+        #{regAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="fax != null">
+        #{fax,jdbcType=VARCHAR},
+      </if>
+      <if test="postCode != null">
+        #{postCode,jdbcType=VARCHAR},
+      </if>
+      <if test="webSite != null">
+        #{webSite,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabledTime != null">
+        #{disabledTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.Company">
+    update t_company
+    <set>
+      <if test="compCode != null">
+        compCode = #{compCode,jdbcType=VARCHAR},
+      </if>
+      <if test="compName != null">
+        compName = #{compName,jdbcType=VARCHAR},
+      </if>
+      <if test="compAbbr != null">
+        compAbbr = #{compAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="adminID != null">
+        adminID = #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="compGrade != null">
+        compGrade = #{compGrade,jdbcType=INTEGER},
+      </if>
+      <if test="lawyer != null">
+        lawyer = #{lawyer,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="regAddress != null">
+        regAddress = #{regAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        tel = #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="fax != null">
+        fax = #{fax,jdbcType=VARCHAR},
+      </if>
+      <if test="postCode != null">
+        postCode = #{postCode,jdbcType=VARCHAR},
+      </if>
+      <if test="webSite != null">
+        webSite = #{webSite,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabledTime != null">
+        disabledTime = #{disabledTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.Company">
+    update t_company
+    set compCode = #{compCode,jdbcType=VARCHAR},
+      compName = #{compName,jdbcType=VARCHAR},
+      compAbbr = #{compAbbr,jdbcType=VARCHAR},
+      adminID = #{adminID,jdbcType=INTEGER},
+      compGrade = #{compGrade,jdbcType=INTEGER},
+      lawyer = #{lawyer,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      regAddress = #{regAddress,jdbcType=VARCHAR},
+      tel = #{tel,jdbcType=VARCHAR},
+      fax = #{fax,jdbcType=VARCHAR},
+      postCode = #{postCode,jdbcType=VARCHAR},
+      webSite = #{webSite,jdbcType=VARCHAR},
+      state = #{state,jdbcType=BIT},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      disabledTime = #{disabledTime,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=VARCHAR},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.Company" resultMap="BaseResultMap">
+    select * from t_company
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="compCode != null and '' != compCode">
+				compCode = #{compCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compName != null and '' != compName">
+				compName = #{compName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compAbbr != null and '' != compAbbr">
+				compAbbr = #{compAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="compGrade != null and '' != compGrade">
+				compGrade = #{compGrade, jdbcType=INTEGER} AND
+			</if>
+			<if test="lawyer != null and '' != lawyer">
+				lawyer = #{lawyer, jdbcType=VARCHAR} AND
+			</if>
+			<if test="address != null and '' != address">
+				address = #{address, jdbcType=VARCHAR} AND
+			</if>
+			<if test="regAddress != null and '' != regAddress">
+				regAddress = #{regAddress, jdbcType=VARCHAR} AND
+			</if>
+			<if test="tel != null and '' != tel">
+				tel = #{tel, jdbcType=VARCHAR} AND
+			</if>
+			<if test="fax != null and '' != fax">
+				fax = #{fax, jdbcType=VARCHAR} AND
+			</if>
+			<if test="postCode != null and '' != postCode">
+				postCode = #{postCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="webSite != null and '' != webSite">
+				webSite = #{webSite, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null and '' != effectiveFrom">
+				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabledTime != null and '' != disabledTime">
+				disabledTime = #{disabledTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.Company" resultType="long">
+    select count(1) from t_company
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="compCode != null and '' != compCode">
+				compCode = #{compCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compName != null and '' != compName">
+				compName = #{compName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="compAbbr != null and '' != compAbbr">
+				compAbbr = #{compAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="compGrade != null and '' != compGrade">
+				compGrade = #{compGrade, jdbcType=INTEGER} AND
+			</if>
+			<if test="lawyer != null and '' != lawyer">
+				lawyer = #{lawyer, jdbcType=VARCHAR} AND
+			</if>
+			<if test="address != null and '' != address">
+				address = #{address, jdbcType=VARCHAR} AND
+			</if>
+			<if test="regAddress != null and '' != regAddress">
+				regAddress = #{regAddress, jdbcType=VARCHAR} AND
+			</if>
+			<if test="tel != null and '' != tel">
+				tel = #{tel, jdbcType=VARCHAR} AND
+			</if>
+			<if test="fax != null and '' != fax">
+				fax = #{fax, jdbcType=VARCHAR} AND
+			</if>
+			<if test="postCode != null and '' != postCode">
+				postCode = #{postCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="webSite != null and '' != webSite">
+				webSite = #{webSite, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null and '' != effectiveFrom">
+				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabledTime != null and '' != disabledTime">
+				disabledTime = #{disabledTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_company
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compCode != null and '' != model.compCode">
+					compCode = #{model.compCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compName != null and '' != model.compName">
+					compName = #{model.compName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compAbbr != null and '' != model.compAbbr">
+					compAbbr = #{model.compAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compGrade != null and '' != model.compGrade">
+					compGrade = #{model.compGrade, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.lawyer != null and '' != model.lawyer">
+					lawyer = #{model.lawyer, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.address != null and '' != model.address">
+					address = #{model.address, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.regAddress != null and '' != model.regAddress">
+					regAddress = #{model.regAddress, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.tel != null and '' != model.tel">
+					tel = #{model.tel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.fax != null and '' != model.fax">
+					fax = #{model.fax, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.postCode != null and '' != model.postCode">
+					postCode = #{model.postCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.webSite != null and '' != model.webSite">
+					webSite = #{model.webSite, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabledTime != null and '' != model.disabledTime">
+					disabledTime = #{model.disabledTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					compCode like CONCAT("%", #{fuzzy}, "%") or
+					compName like CONCAT("%", #{fuzzy}, "%") or
+					compAbbr like CONCAT("%", #{fuzzy}, "%") or
+					lawyer like CONCAT("%", #{fuzzy}, "%") or
+					address like CONCAT("%", #{fuzzy}, "%") or
+					regAddress like CONCAT("%", #{fuzzy}, "%") or
+					tel like CONCAT("%", #{fuzzy}, "%") or
+					fax like CONCAT("%", #{fuzzy}, "%") or
+					postCode like CONCAT("%", #{fuzzy}, "%") or
+					webSite like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_company
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compCode != null and '' != model.compCode">
+					compCode = #{model.compCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compName != null and '' != model.compName">
+					compName = #{model.compName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compAbbr != null and '' != model.compAbbr">
+					compAbbr = #{model.compAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compGrade != null and '' != model.compGrade">
+					compGrade = #{model.compGrade, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.lawyer != null and '' != model.lawyer">
+					lawyer = #{model.lawyer, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.address != null and '' != model.address">
+					address = #{model.address, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.regAddress != null and '' != model.regAddress">
+					regAddress = #{model.regAddress, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.tel != null and '' != model.tel">
+					tel = #{model.tel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.fax != null and '' != model.fax">
+					fax = #{model.fax, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.postCode != null and '' != model.postCode">
+					postCode = #{model.postCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.webSite != null and '' != model.webSite">
+					webSite = #{model.webSite, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabledTime != null and '' != model.disabledTime">
+					disabledTime = #{model.disabledTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					compCode like CONCAT("%", #{fuzzy}, "%") or
+					compName like CONCAT("%", #{fuzzy}, "%") or
+					compAbbr like CONCAT("%", #{fuzzy}, "%") or
+					lawyer like CONCAT("%", #{fuzzy}, "%") or
+					address like CONCAT("%", #{fuzzy}, "%") or
+					regAddress like CONCAT("%", #{fuzzy}, "%") or
+					tel like CONCAT("%", #{fuzzy}, "%") or
+					fax like CONCAT("%", #{fuzzy}, "%") or
+					postCode like CONCAT("%", #{fuzzy}, "%") or
+					webSite like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="isParent" resultType="boolean">
+  	SELECT CASE WHEN adminID = 0 THEN 1 ELSE 0 END AS parent FROM t_company WHERE id = #{compId}
+  </select>
+  
+</mapper>

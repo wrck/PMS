@@ -1,0 +1,19 @@
+﻿package com.dp.plat.data.bean;
+
+public class RunTask {
+	private String taskId;
+	private String procInstid;
+	public String getTaskId() {
+		return taskId;
+	}
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+	public String getProcInstid() {
+		return procInstid;
+	}
+	public void setProcInstid(String procInstid) {
+		this.procInstid = procInstid;
+	}
+	
+}

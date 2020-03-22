@@ -1,0 +1,170 @@
+.listView .displayTable {
+	border: 1px solid #e0e0e0;
+	width: 100%;
+	background: #FFFFFF;
+}
+
+.listView .displayTable th {
+	border: 0px solid #95c4d9;
+	text-align: left;
+	FONT-FAMILY: Arial;
+	HEIGHT: 20px;
+	PADDING-LEFT: 4px;
+	PADDING-RIGHT: 4px;
+	FONT-SIZE: 12px;	
+	BACKGROUND: url(../images/middleblue_bar.jpg) repeat-x left top;	
+	COLOR: #000000;	
+	WHITE-SPACE: nowrap;	
+	FONT-WEIGHT: normal;
+}
+
+.listView .displayTable td {
+	text-align: left;
+	HEIGHT: 20px;
+	FONT-SIZE: 12px;
+	padding-left:4px;
+	PADDING-right: 4px;
+	WHITE-SPACE: nowrap;
+}
+
+.listView .displayTable thead tr {
+}
+
+.listView .displayTable td a,td a:visited {
+	color: blue;
+}
+
+.listView .displayTable td .underline {
+	text-decoration: underline;
+}
+
+.listView .displayTable th.sorted {
+	background-color: #facc68;
+}
+
+.listView .displayTable th a,th a:visited {
+	color: black;
+}
+
+.listView .displayTable th a:hover {
+	text-decoration: underline;
+	color: black;
+}
+
+.listView .displayTable th.sorted a,th.sortable a {
+	background-position: right;
+	display: block;
+}
+
+.listView .displayTable th.sortable a {
+	background-image: url(../images/arrow_off.png);
+}
+
+.listView .displayTable th.order1 a {
+	background-image: url(../images/arrow_down.png);
+}
+
+.listView .displayTable th.order2 a {
+	background-image: url(../images/arrow_up.png);
+}
+
+.listView .displayTable tr.odd {
+	HEIGHT: 20px;
+}
+
+/* .listView .displayTable tr.tableRowEven,tr.even {
+	background: #f1f9fe;
+	HEIGHT: 20px;
+} */
+
+.listView div.exportlinks {
+	padding: 2px 4px 2px 4px;
+	margin: 2px 0 10px 0;
+	width: 79%;
+	font-size:12px;
+}
+
+.listView span.export {
+	padding: 0 4px 1px 20px;
+	display: inline;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.listView span.excel {
+	background-image: url(../images/ico_file_excel.png);
+}
+
+.listView span.csv {
+	background-image: url(../images/ico_file_csv.png);
+}
+
+.listView span.xml {
+	background-image: url(../images/ico_file_xml.png);
+}
+
+.listView span.pdf {
+	background-image: url(../images/ico_file_pdf.png);
+}
+
+.listView span.rtf {
+	background-image: url(../images/ico_file_rtf.png);
+}
+
+.listView span.pagebanner {
+	margin-top: 2px;
+	font-size: 12px;
+	border-bottom: none;
+	height: 16px
+}
+
+.listView span.pagelinks {
+	margin-top: 2px;
+	font-size: 12px;
+	border-bottom: none;
+	height: 16px;
+	padding-right:6px
+}
+.listView span.onepagelinks {
+	font-size: 12px;
+	border-bottom: none;
+	height: 0px;
+	padding-right:6px
+}
+
+
+.listView .group-1 {
+    font-weight:bold;
+    padding-bottom:10px;
+    border-top:1px solid black;
+}
+.listView .group-2 {
+    font-style:italic;
+    border-top: 1px solid black;
+
+}
+.listView .subtotal-sum, .grandtotal-sum {
+    font-weight:bold;
+    text-align:right;
+}
+.listView .subtotal-header {
+    padding-bottom: 0px;
+    border-top: 1px solid white;
+}
+.listView .subtotal-label, .grandtotal-label {
+    border-top: 1px solid white;
+    font-weight: bold;
+}
+.listView .grouped-table tr.even {
+    background-color: #fff;
+}
+.listView .grouped-table tr.odd {
+    background-color: #fff;
+}
+.listView .grandtotal-row {
+    border-top: 2px solid black;
+}
+
+.displatTable tr.odd {
+    background-color: #f9f9f9;
+}

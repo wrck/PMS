@@ -1,0 +1,27 @@
+#if(!$accesskey)
+    #set($allerrors = $fieldErrors.values())
+    #foreach($errors in $allerrors)
+		#if($velocityCount != 1)<br/>#end
+		#foreach($error in $errors)
+			#if($velocityCount != 1)<br/>#end
+				#if($warn)
+					<span class="warnMessage">$error</span>
+				#else
+					<span class="errorMessage">$error</span>
+				#end
+			#if($onlyone)#stop#end
+		#end
+		#if($onlyone)#stop#end
+    #end
+#else
+    #set($errors = $fieldErrors.get($accesskey))
+    #foreach($error in $errors)
+		#if($velocityCount != 1)<br/>#end
+			#if($warn)
+				<span class="warnMessage">$error</span>
+			#else
+				<span class="errorMessage">$error</span>
+			#end
+		#if($onlyone)#stop#end
+	#end
+#end

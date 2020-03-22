@@ -1,0 +1,20 @@
+﻿package com.dp.plat.support;
+
+import javax.servlet.jsp.PageContext;
+
+public interface LeftMenuLiInterface {
+	/**
+	 * 画二级菜单
+	 * 
+	 * @param pageContext
+	 */
+	public void drow(PageContext pageContext);
+
+	/**
+	 * 画三级菜单
+	 * 
+	 * @param pageContext
+	 */
+	public void childdrow(PageContext pageContext);
+
+}

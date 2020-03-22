@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMapConfig  
+PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-config-2.dtd">  
+<sqlMapConfig>  
+    <properties resource="jdbc.properties"/>  
+    <settings   
+        cacheModelsEnabled="true"  
+        enhancementEnabled="true"  
+        lazyLoadingEnabled="true"  
+        maxRequests="32"  
+        maxSessions="10"  
+        maxTransactions="5"  
+        useStatementNamespaces="true"/>   
+    <transactionManager type="JDBC">  
+        <dataSource type="SIMPLE" >  
+             <property name="JDBC.Driver" value="${sms.database.driverClassName}"/>  
+             <property name="JDBC.ConnectionURL" value="${sms.database.url}"/>  
+             <property name="JDBC.Username" value="${sms.database.username}"/>  
+             <property name="JDBC.Password" value="${sms.database.password}"/>  
+        </dataSource>  
+    </transactionManager> 
+    <sqlMap resource="sql-map-refresh-data-config.xml"/>  
+</sqlMapConfig>  

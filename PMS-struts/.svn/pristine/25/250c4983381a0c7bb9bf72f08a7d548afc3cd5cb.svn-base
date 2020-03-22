@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <!-- ============================= Spring Quartz ================================ -->
+    <!-- 配置任务实例 -->
+    <bean id="Mailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.Mailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="MailTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="Mailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 0/5 * * * ?</value>
+        </property>
+    </bean>
+
+    <!-- SMS项目属性数据 -->
+    <bean id="TaskBySMS" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.quartz.TaskBySMS" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="TaskBySmsTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="TaskBySMS" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>59 59 23 * * ?</value> -->
+            <value>0 30 23 * * ?</value>
+        </property>
+    </bean>
+
+    <!-- 合同订单数据 -->
+    <bean id="GainOrderBySAP" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.GainOrderBySAP" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="GainOrderBySAPTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="GainOrderBySAP" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 50 23 * * ?</value>
+        </property>
+    </bean>
+    
+    <!-- 自动不予跟踪代理商用户自服项目 -->
+    <bean id="CloseNotTrackProject" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.CloseNotTrackProject" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="CloseNotTrackProjectTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="CloseNotTrackProject" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 25 3,13 * * ?</value>
+        </property>
+    </bean>
+
+    <!-- 刷新OA人员信息 -->
+    <bean id="GainPersonByOA" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <!-- <property name="jobClass" value="com.dp.plat.job.GainPersonByOA" /> -->
+        <property name="jobClass" value="com.dp.plat.job.GainPersonByEHR" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="GainPersonByOATrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="GainPersonByOA" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>0 40 23 * * ?</value> -->
+            <value>0 30 22 * * ?</value>
+        </property>
+    </bean>
+
+    <!-- 报表定时任务 -->
+    <bean id="ReportTask" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.quartz.ReportTask" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="ReportTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="ReportTask" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 59 10 23 L * ? 每月最后一日 -->
+            <value>59 10 23 L * ? </value>
+        </property>
+    </bean>
+
+    <!-- 项目初验终验邮件提醒 -->
+    <bean id="PrjPreAndFinalInspectionMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.PrjPreAndFinalInspectionMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="PrjPreAndFinalInspectionMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="PrjPreAndFinalInspectionMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 59 10 23 L * ? 每月最后一日 -->
+            <value>00 20 08 ? * MON </value>
+        </property>
+    </bean>
+    
+    <!-- 项目到货验收邮件提醒 -->
+    <bean id="PrjArrivalReceiptMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.PrjArrivalReceiptMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="PrjArrivalReceiptMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="PrjArrivalReceiptMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 59 10 23 L * ? 每月最后一日 -->
+            <value>00 23 08 * * ?</value>
+        </property>
+    </bean>
+    
+    <!-- 运营商直签项目验收情况邮件提醒 -->
+    <bean id="ProjectInspectionMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.ProjectInspectionMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="ProjectInspectionMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="ProjectInspectionMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 0 14 ? * SUN</value><!-- 每周日下午14点 -->
+        </property>
+    </bean>
+    
+    <!-- 运营商直签项目到货验收超期邮件提醒 -->
+    <bean id="ProjectArrivalDelayMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.ProjectArrivalDelayMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="ProjectArrivalDelayMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="ProjectArrivalDelayMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 0 8 ? * MON-SAT</value><!-- 每周一至周六上午8点 -->
+        </property>
+    </bean>
+    
+    <!-- 项目转包余款邮件提醒 -->
+    <bean id="SubcontractNextPaymentMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.subcontract.quartz.SubcontractNextPaymentMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="SubcontractNextPaymentMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="SubcontractNextPaymentMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 59 10 23 L * ? 每月最后一日 -->
+            <value>00 25 08 * * ?</value>
+        </property>
+    </bean>
+
+    <!-- 项目转包SSE付款信息同步并自动完成服务经理提交付款申请流程节点，先于项目转包余款提醒 -->
+    <bean id="SubcontractPaymentAutoComplete" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.subcontract.quartz.SubcontractPaymentAutoComplete" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="SubcontractPaymentAutoCompleteTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="SubcontractPaymentAutoComplete" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>00 25 07 * * ?</value> -->
+            <value>00 00 08,13 * * ?</value>
+        </property>
+    </bean> 
+    <!-- 项目维护日报 -->
+    <bean id="MaintenanceDailyReportMailer" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.dp.plat.job.MaintenanceDailyReportMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="MaintenanceDailyReportMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="MaintenanceDailyReportMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>00 25 07 * * ?</value> -->
+            <value>00 00 02 * * ?</value>
+        </property>
+    </bean> 
+    <!-- 总调配中心 -->
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref local="ReportTaskTrigger" />
+                <ref local="TaskBySmsTrigger" />
+                <ref local="MailTrigger" />
+                <ref local="GainOrderBySAPTrigger" />
+                <ref local="GainPersonByOATrigger" />
+                <ref local="SubcontractNextPaymentMailerTrigger" />
+                <ref local="ProjectInspectionMailerTrigger" />
+                <ref local="ProjectArrivalDelayMailerTrigger" />
+                <ref local="SubcontractPaymentAutoCompleteTrigger" />
+                <ref local="MaintenanceDailyReportMailerTrigger" />
+                <ref local="CloseNotTrackProjectTrigger" /> 
+
+                <!-- <ref local="PrjArrivalReceiptMailerTrigger" /> -->
+                <!-- <ref local="PrjPreAndFinalInspectionMailerTrigger" />  -->
+                
+                <!-- <ref local="MailTrigger" /> -->
+                
+                <!-- <ref local="ReportTaskTrigger"/> 从SMS系统获取信息 <ref local="TaskBySmsTrigger"/> 
+                    检测邮件 <ref local="MailTrigger"/> 合同订单数据 <ref local="GainOrderBySAPTrigger"/> 
+                    OA人员信息 <ref local="GainPersonByOATrigger"/> -->
+            </list>
+        </property>
+    </bean>
+</beans>

@@ -1,0 +1,5 @@
+<TABLE class="barBorder" style="DISPLAY: inline" cellSpacing="0" cellPadding="0" width="75" align="absMiddle" bgColor="#ffffff" border="0">
+	<TR>
+		<TD class="barBg" style="BACKGROUND-POSITION: ${perwidth}px 50%; BACKGROUND-COLOR: #if($floor==true)#FF0000#else#00FF00#end;color:#0000FF">${percent}%</TD>
+	</TR>
+</TABLE>

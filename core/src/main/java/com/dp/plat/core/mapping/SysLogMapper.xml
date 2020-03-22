@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.SysLogMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.SysLog">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="method" jdbcType="VARCHAR" property="method" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="request_ip" jdbcType="VARCHAR" property="requestIp" />
+    <result column="exception_code" jdbcType="VARCHAR" property="exceptionCode" />
+    <result column="exception_detail" jdbcType="VARCHAR" property="exceptionDetail" />
+    <result column="params" jdbcType="VARCHAR" property="params" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_date" jdbcType="VARCHAR" property="createDate" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, description, method, type, request_ip, exception_code, exception_detail, params, 
+    create_by, create_date
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_sys_log
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_sys_log
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyProperty="id" parameterType="com.dp.plat.core.pojo.SysLog" useGeneratedKeys="true">
+    insert into t_sys_log (id, description, method, 
+      type, request_ip, exception_code, 
+      exception_detail, params, create_by, 
+      create_date)
+    values (#{id,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR}, #{method,jdbcType=VARCHAR}, 
+      #{type,jdbcType=VARCHAR}, #{requestIp,jdbcType=VARCHAR}, #{exceptionCode,jdbcType=VARCHAR}, 
+      #{exceptionDetail,jdbcType=VARCHAR}, #{params,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
+      #{createDate,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" keyProperty="id" parameterType="com.dp.plat.core.pojo.SysLog" useGeneratedKeys="true">
+    insert into t_sys_log
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="method != null">
+        method,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="requestIp != null">
+        request_ip,
+      </if>
+      <if test="exceptionCode != null">
+        exception_code,
+      </if>
+      <if test="exceptionDetail != null">
+        exception_detail,
+      </if>
+      <if test="params != null">
+        params,
+      </if>
+      <if test="createBy != null">
+        create_by,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="method != null">
+        #{method,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="requestIp != null">
+        #{requestIp,jdbcType=VARCHAR},
+      </if>
+      <if test="exceptionCode != null">
+        #{exceptionCode,jdbcType=VARCHAR},
+      </if>
+      <if test="exceptionDetail != null">
+        #{exceptionDetail,jdbcType=VARCHAR},
+      </if>
+      <if test="params != null">
+        #{params,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        #{createDate,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.SysLog">
+    update t_sys_log
+    <set>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="method != null">
+        method = #{method,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="requestIp != null">
+        request_ip = #{requestIp,jdbcType=VARCHAR},
+      </if>
+      <if test="exceptionCode != null">
+        exception_code = #{exceptionCode,jdbcType=VARCHAR},
+      </if>
+      <if test="exceptionDetail != null">
+        exception_detail = #{exceptionDetail,jdbcType=VARCHAR},
+      </if>
+      <if test="params != null">
+        params = #{params,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        create_date = #{createDate,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.SysLog">
+    update t_sys_log
+    set description = #{description,jdbcType=VARCHAR},
+      method = #{method,jdbcType=VARCHAR},
+      type = #{type,jdbcType=VARCHAR},
+      request_ip = #{requestIp,jdbcType=VARCHAR},
+      exception_code = #{exceptionCode,jdbcType=VARCHAR},
+      exception_detail = #{exceptionDetail,jdbcType=VARCHAR},
+      params = #{params,jdbcType=VARCHAR},
+      create_by = #{createBy,jdbcType=VARCHAR},
+      create_date = #{createDate,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectBySelective" resultMap="BaseResultMap">
+	select <include refid="Base_Column_List" />
+	from t_sys_log
+  	<where>
+  		<if test="model !=null">
+        	<if test="model.description != null">
+        		description like CONCAT("%", #{model.description}, "%")
+       		</if>
+       		<if test="model.createBy != null">
+        		and create_by like CONCAT("%", #{model.createBy}, "%")
+       		</if>
+       		<if test="model.requestIp != null">
+        		and request_ip like CONCAT("%", #{model.requestIp}, "%")
+       		</if>
+       		<if test="model.type != null">
+        		and type = #{model.type}
+       		</if>
+       		<if test="fuzzy != null">
+                and (
+                    description like CONCAT("%", #{fuzzy}, "%") or
+                    create_by like CONCAT("%", #{fuzzy}, "%") or
+                    request_ip like CONCAT("%", #{fuzzy}, "%")
+                )
+            </if>
+      	</if>
+      	<if test="fuzzySearch == true">
+      		and (
+      			description like CONCAT("%", #{fuzzy}, "%") or
+    			create_by like CONCAT("%", #{fuzzy}, "%") or
+      			request_ip like CONCAT("%", #{fuzzy}, "%")
+      		)
+      	</if>
+  	</where>
+  	<if test="orderBy != null">
+   		order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+   		order by id desc
+    </if>
+  	<if test="start != null">
+   		limit #{start} ,#{pageSize}
+   	</if>
+  </select>
+  
+  
+  <select id="countBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	select count(*) from t_sys_log
+  	<where>
+  		<if test="model !=null">
+        	<if test="model.description != null">
+        		description like CONCAT("%", #{model.description}, "%")
+       		</if>
+       		<if test="model.createBy != null">
+        		and create_by like CONCAT("%", #{model.createBy}, "%")
+       		</if>
+       		<if test="model.requestIp != null">
+        		and request_ip like CONCAT("%", #{model.requestIp}, "%")
+       		</if>
+       		<if test="model.type != null">
+        		and type = #{model.type}
+       		</if>
+       		<if test="fuzzy != null">
+                and (
+	                description like CONCAT("%", #{fuzzy}, "%") or
+	                create_by like CONCAT("%", #{fuzzy}, "%") or
+	                request_ip like CONCAT("%", #{fuzzy}, "%")
+	            )
+            </if>
+      	</if>
+      	<if test="fuzzySearch == true">
+      		and (
+      			description like CONCAT("%", #{fuzzy}, "%") or
+    			create_by like CONCAT("%", #{fuzzy}, "%") or
+      			request_ip like CONCAT("%", #{fuzzy}, "%")
+      		)
+      	</if>
+  	</where>
+  </select>
+</mapper>

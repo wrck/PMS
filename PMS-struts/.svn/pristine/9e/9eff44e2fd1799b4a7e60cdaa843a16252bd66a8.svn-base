@@ -1,0 +1,12 @@
+﻿package com.dp.plat.dao;
+
+import com.dp.plat.param.PasswordEditParam;
+
+public class PasswordDaoImpl extends BaseDao implements PasswordDao{
+
+	@Override
+	public void usChangelogin(PasswordEditParam param) {
+		getSqlMapClientTemplate().update("update-user-chageloginpass",param);
+	}
+
+}
