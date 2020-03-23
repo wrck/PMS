@@ -49,7 +49,7 @@
 								</template>
 								<template v-else-if="field.type == 'textarea'">
 									<div class="form-group display-flex col-sm-12 col-md-6">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" rows="2" style="resize:none;" draggable="false"
 												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
@@ -58,7 +58,7 @@
 								</template>
 								<template v-else-if="field.type == 'date'">
 									<div class="form-group display-flex col-sm-6 col-md-3">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 												data-flag="datepicker" :data-format="field.render" autocomplete="off"
@@ -68,7 +68,7 @@
 								</template>
 								<template v-else-if="field.type == 'datetime'">
 									<div class="form-group display-flex col-sm-6 col-md-3">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 												data-flag="datetimepicker" data-format="field.render" autocomplete="off"
@@ -78,7 +78,7 @@
 								</template>
 								<template v-else-if="field.type == 'select'">
 									<div class="form-group display-flex col-sm-6 col-md-3">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
@@ -88,7 +88,7 @@
 								</template>
 								<template v-else>
 									<div class="form-group display-flex col-sm-6 col-md-3">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<input :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" 
 												:readonly="field.readonly" :required="field.required" autocomplete="off">
@@ -182,15 +182,42 @@
                 } ] */
                 initCallback: function() {
                 	vm = new Vue({
-						el: this.serachDiv,
-						data: $.extend({}, data, {
-							isCreate: id != 0,
-							isShow: true,
-							formAction: pm.project.api.detail(id),
-   							fieldList: data.fieldList || [],
-   							targetName: data.targetName,
-    						targetValue: data.targetValue
-    				 	}),
+						el: "#" + this.searchDiv,
+						data: {
+							//targetValue: this.
+   							fieldList: this.data.columns || []
+    				 	},
+    				 	methods: {
+    				 		getFieldValue: function(field) {
+    				 			var value;
+    				 			try {
+    				 				value = eval("this.targetValue." + field.field);
+    				 			} catch(e) {}
+   				 				try {
+    				 				value = value || eval("this.targetValue." + field.alias);
+   				 				} catch(e) {}
+    				 			return value;
+    				 		},
+    				 		getDataValue: function(key) {
+    				 			var value;
+    				 			try {
+    				 				value = eval("this." + key);
+    				 			} catch(e) {
+    				 			}
+   				 				try {
+    				 				value = value || JSON.parse(key);
+   				 				} catch(e) {
+   				 				}
+    				 			try {
+    				 				value = value || eval(key);
+   				 				} catch(e) {
+   				 					value = key;
+   				 				}
+    				 			return value;
+    				 		}
+    				 		
+    				 	}
+                	});
                 }
             });
 

@@ -777,7 +777,7 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
     
     // datatable初始化之后的回调函数
     if (_this.config.initCallback) {
-    	_this.config.initCallback.call();
+    	_this.config.initCallback.call(_this);
     }
 }
 var initColumnSelect = function(ele, columns,localColums){
@@ -906,7 +906,7 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
     
     // datatable初始化之后的回调函数
     if (_this.config.initCallback) {
-    	_this.config.initCallback.call();
+    	_this.config.initCallback.call(_this);
     }
 }
 
