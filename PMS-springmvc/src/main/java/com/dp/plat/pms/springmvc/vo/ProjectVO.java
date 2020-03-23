@@ -3,9 +3,9 @@ package com.dp.plat.pms.springmvc.vo;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.dp.plat.pms.springmvc.entity.Project;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 
-public class ProjectVO extends Project {
+public class ProjectVO extends ProjectHeader {
 	
 	private String contractNo;
 	

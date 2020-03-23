@@ -21,7 +21,7 @@ public class Project extends ProjectQueryParam{
 	private String projectName;
 	private String projectGroupCode;
 	private String projectGroupName;
-	private int projectType;
+	private String projectType;
 	private String isback;//30表示创建项目，32表示指定项目经理，34表示填写渠道信息
 	private String projectState;//项目状态
 
@@ -203,7 +203,7 @@ public class Project extends ProjectQueryParam{
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
 	}
-	public int getProjectId() {
+	public Integer getProjectId() {
 		return projectId;
 	}
 	public void setProjectId(int projectId) {
@@ -482,10 +482,10 @@ public class Project extends ProjectQueryParam{
 	public void setProjectGroupName(String projectGroupName) {
 		this.projectGroupName = projectGroupName;
 	}
-	public int getProjectType() {
+	public String getProjectType() {
 		return projectType;
 	}
-	public void setProjectType(int projectType) {
+	public void setProjectType(String projectType) {
 		this.projectType = projectType;
 	}
 	public String getOrderCreateTime() {

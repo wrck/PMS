@@ -18,14 +18,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.data.bean.Company;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
-import com.dp.plat.pms.springmvc.entity.Project;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDataFieldRelationService;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.service.DepartmentManageService;
@@ -39,6 +41,9 @@ public class ProjectController {
 
 	@Autowired
 	private IProjectService projectService;
+	
+	@Autowired
+	private IProjectHeaderService projectHeaderService;
 	
 	@Autowired
 	@Qualifier("projectService")
@@ -62,12 +67,12 @@ public class ProjectController {
 		tempParam.setModel(temp);
 
 		pageParam.setModel(project);
-		pageParam.setTotal(projectService.countBySelectivePageable(tempParam));
-		pageParam.setFiltered(projectService.countBySelectivePageable(pageParam));
+		pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
+		pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
 		if (pageParam.getPageSize() == -1L) {
 			pageParam.setPageSize(pageParam.getTotal());
 		}
-		List<Object> list = projectService.selectBySelectivePageable(pageParam);
+		List<Object> list = projectHeaderService.selectBySelectivePageable(pageParam);
 		model.addAttribute("data", list);
 		DataFieldRelation dataFieldRelation = new DataFieldRelation("projectList", "table");
 		List<DataFieldRelation> fieldList = dataFieldRelationService.selectBySelective(dataFieldRelation);
@@ -80,7 +85,7 @@ public class ProjectController {
 	@RequestMapping("{id}")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
-			Project project = projectService.selectByPrimaryKey(id);
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
 //			com.dp.plat.data.bean.Project project = oldProjectService.queryProjectById(32222);
 			if (project != null) {
 				model.addAttribute("targetName", "project");
@@ -91,6 +96,7 @@ public class ProjectController {
 		        DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
 				List<Company> companyList = departmentManageService .queryCompanyList(company);
 				model.addAttribute("companyList", companyList);
+				model.addAttribute("departmentList", departmentManageService.queryDepartments());
 				
 				PageParam<Object> tPage = new PageParam<>();
 				DataFieldRelation dataFieldRelation = new DataFieldRelation(project.getProjectType() + "_projectForm", "form");
@@ -109,7 +115,7 @@ public class ProjectController {
 		if (HttpContext.isJSON()) {
 			HttpServletRequest request = HttpContext.getCurrentRequest();
 			String contratNo = request.getParameter("contractNo");
-			String projectCode = request.getParameter("contractNo");
+			String projectCode = request.getParameter("projectCode");
 			com.dp.plat.data.bean.Project project = oldProjectService.queryProjectByContractNo(contratNo);
 			project.setProjectCode(oldProjectService.queryProjectCode(project));
 			model.addAttribute("targetName", "project");
@@ -120,6 +126,8 @@ public class ProjectController {
 	        DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
 			List<Company> companyList = departmentManageService .queryCompanyList(company);
 			model.addAttribute("companyList", companyList);
+			
+			model.addAttribute("departmentList", departmentManageService.queryDepartments());
 			
 			PageParam<Object> tPage = new PageParam<>();
 			DataFieldRelation dataFieldRelation = new DataFieldRelation(projectType + "_projectForm", "form");
@@ -141,8 +149,14 @@ public class ProjectController {
 		if(count != null && count != 0){
 			status = false;
 		} else {
-			projectService.insertProject(project);//保存
-			
+			try {
+				((ProjectService) projectHeaderService).insertProject(project);
+			} catch (Exception e) {
+				status = false;
+				Integer errorId = ExceptionHandler.insertException(e);
+				model.addAttribute("errorId", errorId);
+				model.addAttribute("message", e.getMessage());
+			}
 			status = true;
 		}
 		model.addAttribute("status", status);
@@ -151,7 +165,7 @@ public class ProjectController {
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, ProjectVO project, Model model) {
-		projectService.updateByPrimaryKeySelective(project);
+		projectHeaderService.updateByPrimaryKeySelective(project);
 		return VIEW_NAMESPACE + "detail";
 	}
 
