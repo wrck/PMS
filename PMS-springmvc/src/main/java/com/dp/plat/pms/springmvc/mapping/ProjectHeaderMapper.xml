@@ -962,4 +962,223 @@
 		</trim>
 	</where>
   </select>
+  
+  <select id="selectUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
+  	<![CDATA[
+  	select distinct null as 
+	    `projectId`, null as `projectCode`, null as `rank`, ifnull(
+	        if(
+	            p.salesType = '01', p.projectName, pp.projectName
+	        ), p.projectName
+	    ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
+	        `p`.`contractNo`, pp.orderExecNumber
+	    ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
+	from
+	    dpspms.`pm_project_property_from_sms` `pp` 
+	    left join dpspms.`pm_order_data_from_sap` `p` 
+	        on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
+	    left join dpspms.`view_distinct_contract` `v` 
+	        on `v`.`id` = `p`.`id` 
+	    left join dpspms.`fnd_department` `d` 
+	        on `pp`.`officeCode` = `d`.`departmentNum` 
+	    left join dpspms.`fnd_basic_data` `fd` 
+	        on `fd`.`basicDataId` = '10' 
+	        and `fd`.`dataTypeCode` = '02' 
+	        and `fd`.`effectiveFrom` < now() 
+	        and (
+	            `fd`.`effectiveTo` > now() 
+	            or isnull(`fd`.`effectiveTo`)
+	        ) 
+	    left join dpspms.fnd_company c1 
+	        on c1.code = p.compCode 
+	    left join dpspms.fnd_company c2 
+	        on c2.`code` = pp.corporationCode 
+	where pp.`projectType` = 'afss' 
+	    and not exists 
+	    (select 
+	        1 
+	    from
+	        `pm_project_contract` `t1` 
+	        join `pm_project_group_relationship` `t2` 
+	            on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+	        join `pm_project_header` `t3` 
+	            on (
+	                `t2`.`projectCode` = `t3`.`projectCode` 
+	                or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
+	            ) 
+	            and `t3`.`effectiveFrom` <= now() 
+	            and (
+	                `t3`.`effectiveTo` > now() 
+	                or isnull(`t3`.`effectiveTo`)
+	            ) 
+	    where t3.`projectType` = pp.`projectType` 
+	        and (
+	            (
+	                `v`.`contractNo` = `t1`.`contractNo` 
+	                and v.contractNo is not null
+	            )
+	        )) 
+	    and v.`contractNo` is not null 
+	union
+	select distinct null as 
+	    `projectId`, null as `projectCode`, null as `rank`, ifnull(
+	        if(
+	            p.salesType = '01', p.projectName, pp.projectName
+	        ), p.projectName
+	    ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
+	        `p`.`contractNo`, pp.orderExecNumber
+	    ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
+	from
+	    dpspms.`pm_project_property_af_from_sms` `pp` 
+	    left join dpspms.`pm_order_data_from_sap` `p` 
+	        on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
+	    left join dpspms.`view_distinct_contract` `v` 
+	        on `v`.`id` = `p`.`id` 
+	    left join dpspms.`fnd_department` `d` 
+	        on `pp`.`officeCode` = `d`.`departmentNum` 
+	    left join dpspms.`fnd_basic_data` `fd` 
+	        on `fd`.`basicDataId` = '10' 
+	        and `fd`.`dataTypeCode` = '02' 
+	        and `fd`.`effectiveFrom` < now() 
+	        and (
+	            `fd`.`effectiveTo` > now() 
+	            or isnull(`fd`.`effectiveTo`)
+	        ) 
+	    left join dpspms.fnd_company c1 
+	        on c1.code = p.compCode 
+	    left join dpspms.fnd_company c2 
+	        on c2.`code` = pp.corporationCode 
+	where pp.`projectType` = 'afxx' 
+	    and not exists 
+	    (select 
+	        1 
+	    from
+	        `pm_project_contract` `t1` 
+	        join `pm_project_group_relationship` `t2` 
+	            on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+	        join `pm_project_header` `t3` 
+	            on (
+	                `t2`.`projectCode` = `t3`.`projectCode` 
+	                or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
+	            ) 
+	            and `t3`.`effectiveFrom` <= now() 
+	            and (
+	                `t3`.`effectiveTo` > now() 
+	                or isnull(`t3`.`effectiveTo`)
+	            ) 
+	    where t3.`projectType` = pp.`projectType` 
+	        and pp.`orderExecNumber` = t1.`contractNo`) 
+    ]]>
+  </select>
+  
+  <select id="countUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	<![CDATA[
+  	select 
+	    count(*) 
+	from
+	    (select distinct null as 
+	        `projectId`, null as `projectCode`, null as `rank`, ifnull(
+	            if(
+	                p.salesType = '01', p.projectName, pp.projectName
+	            ), p.projectName
+	        ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
+	            `p`.`contractNo`, pp.orderExecNumber
+	        ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
+	    from
+	        dpspms.`pm_project_property_from_sms` `pp` 
+	        left join dpspms.`pm_order_data_from_sap` `p` 
+	            on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
+	        left join dpspms.`view_distinct_contract` `v` 
+	            on `v`.`id` = `p`.`id` 
+	        left join dpspms.`fnd_department` `d` 
+	            on `pp`.`officeCode` = `d`.`departmentNum` 
+	        left join dpspms.`fnd_basic_data` `fd` 
+	            on `fd`.`basicDataId` = '10' 
+	            and `fd`.`dataTypeCode` = '02' 
+	            and `fd`.`effectiveFrom` < now() 
+	            and (
+	                `fd`.`effectiveTo` > now() 
+	                or isnull(`fd`.`effectiveTo`)
+	            ) 
+	        left join dpspms.fnd_company c1 
+	            on c1.code = p.compCode 
+	        left join dpspms.fnd_company c2 
+	            on c2.`code` = pp.corporationCode 
+	    where pp.`projectType` = 'afss' 
+	        and not exists 
+	        (select 
+	            1 
+	        from
+	            `pm_project_contract` `t1` 
+	            join `pm_project_group_relationship` `t2` 
+	                on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+	            join `pm_project_header` `t3` 
+	                on (
+	                    `t2`.`projectCode` = `t3`.`projectCode` 
+	                    or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
+	                ) 
+	                and `t3`.`effectiveFrom` <= now() 
+	                and (
+	                    `t3`.`effectiveTo` > now() 
+	                    or isnull(`t3`.`effectiveTo`)
+	                ) 
+	        where t3.`projectType` = pp.`projectType` 
+	            and (
+	                (
+	                    `v`.`contractNo` = `t1`.`contractNo` 
+	                    and v.contractNo is not null
+	                )
+	            )) 
+	        and v.`contractNo` is not null 
+	    union
+	    select distinct null as 
+	        `projectId`, null as `projectCode`, null as `rank`, ifnull(
+	            if(
+	                p.salesType = '01', p.projectName, pp.projectName
+	            ), p.projectName
+	        ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
+	            `p`.`contractNo`, pp.orderExecNumber
+	        ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
+	    from
+	        dpspms.`pm_project_property_af_from_sms` `pp` 
+	        left join dpspms.`pm_order_data_from_sap` `p` 
+	            on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
+	        left join dpspms.`view_distinct_contract` `v` 
+	            on `v`.`id` = `p`.`id` 
+	        left join dpspms.`fnd_department` `d` 
+	            on `pp`.`officeCode` = `d`.`departmentNum` 
+	        left join dpspms.`fnd_basic_data` `fd` 
+	            on `fd`.`basicDataId` = '10' 
+	            and `fd`.`dataTypeCode` = '02' 
+	            and `fd`.`effectiveFrom` < now() 
+	            and (
+	                `fd`.`effectiveTo` > now() 
+	                or isnull(`fd`.`effectiveTo`)
+	            ) 
+	        left join dpspms.fnd_company c1 
+	            on c1.code = p.compCode 
+	        left join dpspms.fnd_company c2 
+	            on c2.`code` = pp.corporationCode 
+	    where pp.`projectType` = 'afxx' 
+	        and not exists 
+	        (select 
+	            1 
+	        from
+	            `pm_project_contract` `t1` 
+	            join `pm_project_group_relationship` `t2` 
+	                on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+	            join `pm_project_header` `t3` 
+	                on (
+	                    `t2`.`projectCode` = `t3`.`projectCode` 
+	                    or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
+	                ) 
+	                and `t3`.`effectiveFrom` <= now() 
+	                and (
+	                    `t3`.`effectiveTo` > now() 
+	                    or isnull(`t3`.`effectiveTo`)
+	                ) 
+	        where t3.`projectType` = pp.`projectType` 
+	            and pp.`orderExecNumber` = t1.`contractNo`)) t 
+    ]]>
+  </select>
 </mapper>
