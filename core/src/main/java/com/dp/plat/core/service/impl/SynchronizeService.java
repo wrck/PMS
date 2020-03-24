@@ -35,6 +35,9 @@ public class SynchronizeService implements ISynchronizeService {
 	 */
 	@Override
 	public int insertSyncState(SyncState syncState) {
+		if (syncState == null) {
+			return 0;
+		}
 		return synchronizeMapper.insertSyncState(syncState);
 	}
 

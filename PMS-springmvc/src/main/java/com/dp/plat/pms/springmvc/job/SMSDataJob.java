@@ -10,9 +10,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Resource;
-import javax.persistence.Id;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.dp.plat.core.config.DataSourceHolder;
@@ -21,8 +22,8 @@ import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.pojo.SyncState;
 import com.dp.plat.core.util.DateUtil;
-import com.dp.plat.param.PrjProperty;
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
+import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 //github.com/wrck/PMS
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
@@ -53,7 +54,7 @@ public class SMSDataJob {
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
-		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, PrjProperty.class };
+		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class };
 		String[] dataSourceFromKeys = new String[] { "SMS", "SMS" };
 		String[] dataSourceToKeys = new String[] { "PMS", "PMS" };
 		try {
@@ -98,9 +99,13 @@ public class SMSDataJob {
 				HashSet<String> hashSet = new HashSet<>();
 				hashSet.addAll(Arrays.asList(dataSourceFromKeys));
 				for (String key : hashSet) {
-					DruidDataSource dataSource = SpringContext.getBean("dataSource" + key, DruidDataSource.class);
+					Object dataSource = SpringContext.getBean("dataSource" + key);
 					if (dataSource != null) {
-						dataSource.restart();
+						if (dataSource instanceof DruidDataSource) {
+							((DruidDataSource) dataSource).restart();
+						} else if(dataSource instanceof DriverManagerDataSource) {
+							((DriverManagerDataSource) dataSource).getConnection().close();
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -111,12 +116,18 @@ public class SMSDataJob {
 
 		// 拆分工程实施项目以及安服项目
 		String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
-		pmSynchronizeService.splitAfProjectByProductCode(productCode);
+		try {
+			DataSourceHolder.setDataSourceType("PMS");
+			pmSynchronizeService.splitAfProjectByProductCode(productCode);
+		} finally {
+			DataSourceHolder.clearDataSourceType();
+		}
 	}
 
 	public void insert(Class<?> objectClass, String... dataSource) {
 		long a = System.currentTimeMillis();
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".insert", objectClass.getName(), SYNC_TYPE);
+		SyncState syncState = null;
 		try {
 			String methodName = objectClass.getSimpleName();
 			List<?> objects = null;
@@ -141,7 +152,7 @@ public class SMSDataJob {
 				Field[] fields = objClazz.getDeclaredFields();
 				for (Field field : fields) {
 					// 获取字段的@Id注解,即表的主键
-					Boolean hasId = field.isAnnotationPresent(Id.class);
+					Boolean hasId = field.isAnnotationPresent(Primary.class);
 					if (hasId) {
 						String pkName = field.getName();
 						method = objClazz.getMethod("get" + pkName.substring(0, 1).toUpperCase() + pkName.substring(1));
@@ -153,7 +164,7 @@ public class SMSDataJob {
 					}
 				}
 			}
-			SyncState syncState = new SyncState(methodName, lastId, offset);
+			syncState = new SyncState(methodName, lastId, offset);
 
 			if (dataSource.length > 1) {
 				DataSourceHolder.setDataSourceType(dataSource[1]);
@@ -183,13 +194,14 @@ public class SMSDataJob {
 				method = clazz.getMethod("insert" + methodName, List.class);
 				method.invoke(pmSynchronizeService, list);
 			}
-			pmSynchronizeService.insertSyncState(syncState);
+			
 			syncLog.setIsSuccess(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 			syncLog.setException(ExceptionUtils.getStackTrace(e));
 		} finally {
 			DataSourceHolder.clearDataSourceType();
+			pmSynchronizeService.insertSyncState(syncState);
 			pmSynchronizeService.insertSyncLog(syncLog);
 		}
 		long b = System.currentTimeMillis();

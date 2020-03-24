@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class AfPrjProperty {
+public class AfPrjProperty extends BaseEntity {
     private Integer id;
 
-    private String orderCodeReal;
+    private String orderExecNumber;
 
     private String projectName;
 
@@ -27,9 +27,9 @@ public class AfPrjProperty {
 
     private String salesManCode;
 
-    private Integer systemid;
+    private Integer systemId;
 
-    private Integer industryid;
+    private Integer industryId;
 
     private String salesManName;
 
@@ -95,17 +95,17 @@ public class AfPrjProperty {
     }
 
     /**
-     * @return orderCodeReal
+     * @return orderExecNumber
      */
-    public String getOrderCodeReal() {
-        return orderCodeReal;
+    public String getOrderExecNumber() {
+        return orderExecNumber;
     }
 
     /**
-     * @param orderCodeReal
+     * @param orderExecNumber
      */
-    public void setOrderCodeReal(String orderCodeReal) {
-        this.orderCodeReal = orderCodeReal;
+    public void setOrderExecNumber(String orderExecNumber) {
+        this.orderExecNumber = orderExecNumber;
     }
 
     /**
@@ -221,31 +221,31 @@ public class AfPrjProperty {
     }
 
     /**
-     * @return systemid
+     * @return systemId
      */
-    public Integer getSystemid() {
-        return systemid;
+    public Integer getSystemId() {
+        return systemId;
     }
 
     /**
-     * @param systemid
+     * @param systemId
      */
-    public void setSystemid(Integer systemid) {
-        this.systemid = systemid;
+    public void setSystemId(Integer systemId) {
+        this.systemId = systemId;
     }
 
     /**
-     * @return industryid
+     * @return industryId
      */
-    public Integer getIndustryid() {
-        return industryid;
+    public Integer getIndustryId() {
+        return industryId;
     }
 
     /**
-     * @param industryid
+     * @param industryId
      */
-    public void setIndustryid(Integer industryid) {
-        this.industryid = industryid;
+    public void setIndustryId(Integer industryId) {
+        this.industryId = industryId;
     }
 
     /**

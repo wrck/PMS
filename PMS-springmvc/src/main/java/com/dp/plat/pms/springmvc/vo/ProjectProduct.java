@@ -2,12 +2,12 @@ package com.dp.plat.pms.springmvc.vo;
 
 import com.dp.plat.core.entity.BaseEntity;
 
-public class ProjectProduct {
+public class ProjectProduct extends BaseEntity {
     private Integer id;
 
     private String projectCode;
 
-    private String orderCodereal;
+    private String orderExecNumber;
 
     // 公司编码
     private String corporationCode;
@@ -62,17 +62,17 @@ public class ProjectProduct {
     }
 
     /**
-     * @return orderCodereal
+     * @return orderExecNumber
      */
-    public String getOrderCodereal() {
-        return orderCodereal;
+    public String getOrderExecNumber() {
+        return orderExecNumber;
     }
 
     /**
-     * @param orderCodereal
+     * @param orderExecNumber
      */
-    public void setOrderCodereal(String orderCodereal) {
-        this.orderCodereal = orderCodereal;
+    public void setOrderExecNumber(String orderExecNumber) {
+        this.orderExecNumber = orderExecNumber;
     }
 
     /**
