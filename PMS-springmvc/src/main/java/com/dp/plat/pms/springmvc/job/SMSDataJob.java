@@ -22,7 +22,10 @@ import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.pojo.SyncState;
 import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.param.PrjProperty;
+<<<<<<< HEAD
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
+=======
+>>>>>>> branch 'master' of https://github.com/wrck/PMS
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
 /**
