@@ -20,15 +20,15 @@ import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.pojo.SyncState;
-import com.dp.plat.core.service.ISynchronizeService;
 import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.param.PrjProperty;
-import com.dp.plat.pms.springmvc.vo.PrjProdect;
+import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
+import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
 /**
  * 全量更新Job
  * 
- * @author sunmengyuan
+ * @author w02611
  *
  */
 public class SMSDataJob {
@@ -42,17 +42,17 @@ public class SMSDataJob {
 	private final static short SYNC_TYPE = 1;
 
 	@Resource
-	private ISynchronizeService pmSynchronizeService;
+	private IPmSynchronizeService pmSynchronizeService;
 
 	public void execute() {
 		if (pmSynchronizeService == null) {
-			pmSynchronizeService = SpringContext.getBean("pmSynchronizeService", ISynchronizeService.class);
+			pmSynchronizeService = SpringContext.getBean("pmSynchronizeService", IPmSynchronizeService.class);
 		}
 		System.out.println("执行全量更新定时程序开始：" + DateUtil.getTodayDateTime());
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("Local");
-		Class<?>[] clazzArrs = new Class[] { PrjProdect.class, PrjProperty.class };
+		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, PrjProperty.class };
 		String[] dataSourceKeys = new String[] { "SMS", "SMS" };
 		try {
 			pmSynchronizeService.clearSyncState();
@@ -105,6 +105,10 @@ public class SMSDataJob {
 			}
 			pmSynchronizeService.insertSyncLog(syncLog);
 		}
+
+		// 拆分工程实施项目以及安服项目
+		String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+		pmSynchronizeService.splitAfProjectByProductCode(productCode);
 	}
 
 	public void insert(Class<?> objectClass, String... dataSource) {

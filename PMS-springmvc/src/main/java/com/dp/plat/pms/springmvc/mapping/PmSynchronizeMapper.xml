@@ -80,4 +80,18 @@
 			productsubCode = VALUES(productsubCode), productSubModel = VALUES(productSubModel), productSubName = VALUES(productSubName), 
 			num = VALUES(num), borrowNum = VALUES(borrowNum) 
     </insert>
+    
+    <insert id="splitAfProjectByProjectCode" parameterType="String">
+    	insert into pm_project_property_af_from_sms (
+		    `orderExecNumber`, `projectCode`, `projectName`, `salesManCode`, `salesManName`, `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, `objId`, `applyType`, `corporationCode`, `customerProjectName`, `finalCustomerName`, `agentName`, projectType
+		) 
+		select 
+		    ppfs.`orderExecNumber`, ppfs.`projectCode`, `projectName`, `salesManCode`, `salesManName`, `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, `objId`, `applyType`, ppfs.`corporationCode`, `customerProjectName`, `finalCustomerName`, `agentName`, "afss" as projectType 
+		from
+		    `pm_project_property_from_sms` ppfs 
+		    left join `pm_project_product_af_from_sms` ppfd 
+		        on ppfs.`orderExecNumber` = ppfd.`orderExecNumber` 
+		        and ppfs.`projectCode` = ppfd.`projectCode` 
+		where FIND_IN_SET(ppfd.`productfirstCode`, #{_parameter})
+    </insert>
 </mapper>
