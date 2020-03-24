@@ -1793,6 +1793,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	 */
 	@Override
 	public String getMails(String username) {
+		if (StringUtils.isBlank(username)) {
+			return "";
+		}
 		String email = projectDao.queryMailByUsername(username);
 		if (StringUtils.isBlank(email)) {
 			email = projectDao.queryMailByUserNameFromOA(username);

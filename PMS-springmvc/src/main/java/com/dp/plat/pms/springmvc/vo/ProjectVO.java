@@ -10,7 +10,7 @@ public class ProjectVO extends ProjectHeader {
 	private String contractNo;
 	
 	public String getContractNo() {
-		return (String) getCustomInfoByKey(contractNo);
+		return (String) getCustomInfoByKey("contractNo");
 	}
 
 	public void setContractNo(String contractNo) {

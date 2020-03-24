@@ -22,7 +22,9 @@ import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.data.bean.Company;
+import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
@@ -86,8 +88,9 @@ public class ProjectController {
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
-//			com.dp.plat.data.bean.Project project = oldProjectService.queryProjectById(32222);
+//			Project project = oldProjectService.queryProjectById(id);
 			if (project != null) {
+//				project.setProjectType("10");
 				model.addAttribute("targetName", "project");
 				model.addAttribute("targetValue", project);
 				
@@ -114,9 +117,15 @@ public class ProjectController {
 	public String create(String projectType, Map<String, Object> params, Model model) {
 		if (HttpContext.isJSON()) {
 			HttpServletRequest request = HttpContext.getCurrentRequest();
-			String contratNo = request.getParameter("contractNo");
+			String contractNo = request.getParameter("contractNo");
 			String projectCode = request.getParameter("projectCode");
-			com.dp.plat.data.bean.Project project = oldProjectService.queryProjectByContractNo(contratNo);
+			Project project = oldProjectService.queryProjectByContractNo(contractNo);
+			if (project == null) {
+				model.addAttribute("status", false);
+				model.addAttribute("message", "该项目合同已存在");
+				return VIEW_NAMESPACE + "detail";
+			}
+			project.setProjectType(projectType);
 			project.setProjectCode(oldProjectService.queryProjectCode(project));
 			model.addAttribute("targetName", "project");
 			model.addAttribute("targetValue", project);
@@ -144,28 +153,42 @@ public class ProjectController {
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(ProjectVO project, Model model) {
 		Boolean status = false;
+		String message = null;
 		//如果当前合同号已经创建项目，则直接返回不再创建
 		Integer count = oldProjectService.queryProjectContractCountByContractNo(Util.appendChar((String) project.getCustomInfoByKey("contractNo"), "'"));
 		if(count != null && count != 0){
 			status = false;
+			message = "该项目合同已存在！";
 		} else {
 			try {
-				((ProjectService) projectHeaderService).insertProject(project);
+				oldProjectService.insertProject(project);
+				status = true;
 			} catch (Exception e) {
 				status = false;
 				Integer errorId = ExceptionHandler.insertException(e);
 				model.addAttribute("errorId", errorId);
-				model.addAttribute("message", e.getMessage());
+				message = e.getMessage();
 			}
-			status = true;
 		}
 		model.addAttribute("status", status);
+		model.addAttribute("message", message);
 		return VIEW_NAMESPACE + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, ProjectVO project, Model model) {
-		projectHeaderService.updateByPrimaryKeySelective(project);
+		Boolean status = true;
+		String message = null;
+		try {
+			projectHeaderService.updateByPrimaryKeySelective(project);
+		} catch(Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
 		return VIEW_NAMESPACE + "detail";
 	}
 

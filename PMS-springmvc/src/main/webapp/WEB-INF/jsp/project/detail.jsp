@@ -248,30 +248,34 @@
     				});
 					
 					form = $("#projectForm").form();
-					//form.initFormData(data.targetValue);
+					form.initFormData(data.targetValue);
 		    		$("#projectForm").bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
 		                submitHandler: function(validator, form2, submitButton){
-		                	modals.confirm('确认执行分摊？', function () {
-		                		var headers = {};
-		                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
-		                		var index3 = layer.load(1);
-		                		var formData = form.getFormSimpleData();
-		                		var url = id == 0 ? pm.project.api.create(location.search) : pm.project.api.update(id);
-		                		ajaxPost(url, formData,function(data,status){
-		                			if(status == 'success'){
-		        						modals.correct("保存成功");
-		        						handleResult(data);
-		        					} else{
-		        						modals.info('操作失败');
-		        					}
-		                		},null,null,function(){
-		    						layer.close(index3);
-		    						$(submitButton).removeAttr("disabled");
-		    					})
-		                	}, function() {
-		                		$(submitButton).removeAttr("disabled");
+		                	modals.confirm({text:'确认执行分摊？', 
+		                		callback: function () {
+			                	
+			                		var headers = {};
+			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
+			                		var index3 = layer.load(1);
+			                		var formData = form.getFormSimpleData();
+			                		var url = id == 0 ? pm.project.api.create() : pm.project.api.update(id);
+			                		ajaxPost(url, formData,function(data,status){
+			                			if(data.status){
+			        						modals.correct("保存成功");
+			        						handleResult(data);
+			        					} else{
+			        						modals.error('操作失败！<br>' + (data.message || ""));
+			        					}
+			                		},null,null,function(){
+			    						layer.close(index3);
+			    						$(submitButton).removeAttr("disabled");
+			    					})
+		                		}, 
+		                		cancel_call: function() {
+		                			$(submitButton).removeAttr("disabled");
+		                		}
 		                	});
 		                }, 
 		    			fields : varFields
@@ -284,12 +288,17 @@
     		}
     		
     		function handleResult(results){
-    			id = (results.projectVO || {}).id || (results.projectVO || {}).projectId;
-        		ajaxGet(pm.project.api.detail(id), null, function(data, status){
-    				if (status == 'success') {
-   						vm._data.targetValue = data.targetValue;
-    				}
-        		});
+    			var isCreate = id == 0;
+    			id = (results.projectVO || {}).id || (results.projectVO || {}).projectId || 0;
+        		if (isCreate) {
+	        		window.location.replace(pm.project.html.detail(id));
+        		} else {
+        			ajaxGet(pm.project.api.detail(id), null, function(data, status){
+	    				if (status == 'success') {
+	   						vm._data.targetValue = data.targetValue;
+	    				}
+	        		});
+        		}
     		}
     		
 		});

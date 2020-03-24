@@ -40,7 +40,7 @@
                 <div class="box box-primary mb-2">
                     <!-- /.box-header -->
                     <div class="box-body">
-                        <div id="searchDiv" class="text-right">
+                        <div id="searchDiv" class="text-left">
                             <template v-for="field in fieldList">
 								<template v-if="field.type == 'hidden' || !field.visible">
 									<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
@@ -57,7 +57,7 @@
 									</div>
 								</template>
 								<template v-else-if="field.type == 'date'">
-									<div class="form-group display-flex col-sm-6 col-md-3">
+									<div class="form-group display-flex ">
 										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
@@ -67,7 +67,7 @@
 									</div>
 								</template>
 								<template v-else-if="field.type == 'datetime'">
-									<div class="form-group display-flex col-sm-6 col-md-3">
+									<div class="form-group display-flex ">
 										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
@@ -77,7 +77,7 @@
 									</div>
 								</template>
 								<template v-else-if="field.type == 'select'">
-									<div class="form-group display-flex col-sm-6 col-md-3">
+									<div class="form-group display-flex ">
 										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
 										<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
@@ -87,9 +87,9 @@
 									</div>
 								</template>
 								<template v-else>
-									<div class="form-group display-flex col-sm-6 col-md-3">
+									<div class="form-group display-flex ">
 										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<input :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+										<input :id="field.cssId || field.field" :type="field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" 
 												:readonly="field.readonly" :required="field.required" autocomplete="off">
 									</div>
@@ -180,7 +180,7 @@
                         return html;
                     }
                 } ] */
-                initCallback: function() {
+                beforeInitConfig: function() {
                 	vm = new Vue({
 						el: "#" + this.searchDiv,
 						data: {
@@ -218,6 +218,9 @@
     				 		
     				 	}
                 	});
+                	
+                	this.searchButton = $("#" + this.searchDiv + " button[data-btn-type='search']");
+                	this.restButton = $("#" + this.searchDiv + " button[data-btn-type='reset']");
                 }
             });
 
