@@ -3,10 +3,11 @@ package com.dp.plat.pms.springmvc.entity;
 import java.util.Date;
 import java.util.Map;
 
+import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class Project extends com.dp.plat.data.bean.Project {
+public class Project extends BaseEntity {
 
     // 项目头信息主键,跟项目其他具体信息关联
     private Integer id;
@@ -46,7 +47,7 @@ public class Project extends com.dp.plat.data.bean.Project {
 
     // 订单创建时间
     @JsonSerialize(using = JsonSerializer.class)
-    private String orderCreateTime;
+    private Date orderCreateTime;
 
     // 项目类型
     private String projectType;
@@ -73,7 +74,7 @@ public class Project extends com.dp.plat.data.bean.Project {
     private String salesType;
 
     // 公司ID
-    private String compId;
+    private Integer compId;
 
     // 记录数据创建时间
     @JsonSerialize(using = JsonSerializer.class)
@@ -336,7 +337,7 @@ public class Project extends com.dp.plat.data.bean.Project {
      *
      * @return orderCreateTime - 订单创建时间
      */
-    public String getOrderCreateTime() {
+    public Date getOrderCreateTime() {
         return orderCreateTime;
     }
 
@@ -345,7 +346,7 @@ public class Project extends com.dp.plat.data.bean.Project {
      *
      * @param orderCreateTime 订单创建时间
      */
-    public void setOrderCreateTime(String orderCreateTime) {
+    public void setOrderCreateTime(Date orderCreateTime) {
         this.orderCreateTime = orderCreateTime;
     }
 
@@ -498,7 +499,7 @@ public class Project extends com.dp.plat.data.bean.Project {
      *
      * @return compId - 公司ID
      */
-    public String getCompId() {
+    public Integer getCompId() {
         return compId;
     }
 
@@ -507,7 +508,7 @@ public class Project extends com.dp.plat.data.bean.Project {
      *
      * @param compId 公司ID
      */
-    public void setCompId(String compId) {
+    public void setCompId(Integer compId) {
         this.compId = compId;
     }
 

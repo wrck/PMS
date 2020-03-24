@@ -21,14 +21,9 @@
 			display: flex;
 	        align-items: baseline;
 		}
-		.flex-shrink-0 {
-			flex-shrink: 0;
-		}
-		.flex-shrink-1 {
-			flex-shrink: 1;
-		}
+		
 		.flex-grow-1 {
-			flex-shrink: 1;
+			flex-grow: 1;
 		}
 		.flex-grow-2 {
 			flex-grow: 2;
@@ -38,7 +33,6 @@
 		}
 		.form-inline .form-group {
 		    margin-bottom: 7px;
-		    padding-left: 0!important;
 		}
 		
 		.form-inline .display-flex {
@@ -48,10 +42,6 @@
 		
 		.form-inline .control-label {
 		    margin-right: 7px;
-		}
-		
-		.form-inline .display-flex .form-control {
-		    width: 100%;
 		}
 		
 	</style>
@@ -81,12 +71,12 @@
 				<div class="col-xs-12">
 					<div class="box box-info">
 						<form id="projectForm" method="post" :action="formAction" name="projectForm" class="form-inline">
-							<div class="box-body row" v-if="isShow">
+							<div class="box-body" v-if="isShow">
 								<!-- <div class="field-inputs">
 									<template v-for="field in fieldList" v-if="field.type != 'textarea'">
 										<div class="form-group">
 											<label :for="field.field" style="text-align: right;" :style="{width: maxLabelWidth}" class="control-label">{{field.name}}</label>
-											<input :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<input :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field"
 													:value="targetValue[field.field]" :placeholder="field.name || field.title" :style="field.cssStyle">
 										</div>
 									</template>
@@ -95,21 +85,21 @@
 							    	<template v-for="field in fieldList" v-if="field.type == 'textarea'">
 							    		<div class="form-group col-sm-6">
 											<label :for="field.field" style="text-align: right;" :style="{width: maxLabelWidth}" class="control-label">{{field.name}}</label>
-											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field"
 													:value="targetValue[field.field]" :placeholder="field.name || field.title" :style="field.cssStyle"></textarea>
 										</div>
 									</template>
 							    </div> -->
 								<template v-for="field in fieldList">
 									<template v-if="field.type == 'hidden' || !field.visible">
-										<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+										<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 										>
 									</template>
 									<template v-else-if="field.type == 'textarea'">
 										<div class="form-group display-flex col-sm-12 col-md-6">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<label :for="field.field" style="text-align: right;" class="control-label" :style="{width: maxLabelWidth}">{{field.name}}</label>
+											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" rows="2" style="resize:none;" draggable="false"
 													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
 													></textarea>
@@ -117,28 +107,28 @@
 									</template>
 									<template v-else-if="field.type == 'date'">
 										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<label :for="field.field" style="text-align: right;" class="control-label" :style="{width: maxLabelWidth}">{{field.name}}</label>
+											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-													data-flag="datepicker" :data-format="field.render" autocomplete="off"
+													data-flag="datepicker" :data-format="field.render"
 													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
 											>
 										</div>
 									</template>
 									<template v-else-if="field.type == 'datetime'">
 										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<label :for="field.field" style="text-align: right;" class="control-label" :style="{width: maxLabelWidth}">{{field.name}}</label>
+											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-													data-flag="datetimepicker" data-format="field.render" autocomplete="off"
+													data-flag="datetimepicker" data-format="field.render"
 													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
 											>
 										</div>
 									</template>
 									<template v-else-if="field.type == 'select'">
 										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<label :for="field.field" style="text-align: right;" class="control-label" :style="{width: maxLabelWidth}">{{field.name}}</label>
+											<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
 												<option :value="item[field.extKey]" v-for="item in getDataValue(field.extData)" :selected="item[field.extKey] == getFieldValue(field)" >{{item[field.extValue]}}</option>
@@ -147,10 +137,10 @@
 									</template>
 									<template v-else>
 										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+											<label :for="field.field" style="text-align: right;" class="control-label" :style="{width: maxLabelWidth}">{{field.name}}</label>
+											<input :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field"
 													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" 
-													:readonly="field.readonly" :required="field.required" autocomplete="off">
+													:readonly="field.readonly" :required="field.required">
 										</div>
 									</template>
 								</template>
@@ -253,29 +243,25 @@
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
 		                submitHandler: function(validator, form2, submitButton){
-		                	modals.confirm({text:'确认执行分摊？', 
-		                		callback: function () {
-			                	
-			                		var headers = {};
-			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
-			                		var index3 = layer.load(1);
-			                		var formData = form.getFormSimpleData();
-			                		var url = id == 0 ? pm.project.api.create() : pm.project.api.update(id);
-			                		ajaxPost(url, formData,function(data,status){
-			                			if(data.status){
-			        						modals.correct("保存成功");
-			        						handleResult(data);
-			        					} else{
-			        						modals.error('操作失败！<br>' + (data.message || ""));
-			        					}
-			                		},null,null,function(){
-			    						layer.close(index3);
-			    						$(submitButton).removeAttr("disabled");
-			    					})
-		                		}, 
-		                		cancel_call: function() {
-		                			$(submitButton).removeAttr("disabled");
-		                		}
+		                	modals.confirm('确认执行分摊？', function () {
+		                		var headers = {};
+		                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
+		                		var index3 = layer.load(1);
+		                		var formData = form.getFormSimpleData();
+		                		var url = id == 0 ? pm.project.api.create(location.search) : pm.project.api.update(id);
+		                		ajaxPost(url, formData,function(data,status){
+		                			if(status == 'success'){
+		        						modals.correct("保存成功");
+		        						handleResult(data);
+		        					} else{
+		        						modals.info('操作失败');
+		        					}
+		                		},null,null,function(){
+		    						layer.close(index3);
+		    						$(submitButton).removeAttr("disabled");
+		    					})
+		                	}, function() {
+		                		$(submitButton).removeAttr("disabled");
 		                	});
 		                }, 
 		    			fields : varFields
@@ -283,22 +269,13 @@
     			 }
     		})
     		
-    		function handleData() {
-    			
-    		}
-    		
     		function handleResult(results){
-    			var isCreate = id == 0;
-    			id = (results.projectVO || {}).id || (results.projectVO || {}).projectId || 0;
-        		if (isCreate) {
-	        		window.location.replace(pm.project.html.detail(id));
-        		} else {
-        			ajaxGet(pm.project.api.detail(id), null, function(data, status){
-	    				if (status == 'success') {
-	   						vm._data.targetValue = data.targetValue;
-	    				}
-	        		});
-        		}
+    			id = (results.projectVO || {}).id || 23;
+        		ajaxGet(pm.project.api.detail(id), null, function(data, status){
+    				if (status == 'success') {
+   						vm._data.targetValue = data.targetValue;
+    				}
+        		});
     		}
     		
 		});

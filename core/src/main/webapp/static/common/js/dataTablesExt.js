@@ -273,12 +273,6 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 		that.checkboxColumn
 		columns.unshift(checkboxColumn);
 	}
-	
-	// datatable 初始化之前触发
-	if (that.config.beforeInitConfig) {
-		that.config.beforeInitConfig.call(that);
-	}
-	
     this.table = $('#' + tableId).dataTable($.extend(true,{},CONSTANT.DATA_TABLES.DEFAULT_OPTION,{
     	rowId : rowId,
     	columns : columns,
@@ -531,12 +525,6 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
 	} catch (e) {
 		$tableContainer = $("#" + this.tableId + "_wrapper")[0];
 	}
-	
-	// datatable初始化之前的回调函数
-    if (_this.config.beforeInitCallback) {
-    	_this.config.beforeInitCallback.call(_this);
-    }
-	
 	$("#" +this.tableId +"_wrapper").prepend("<div class='row'><div class='col-sm-12'></div></div>");
 	$("#" +this.searchDiv).appendTo($(".row:eq(0) .col-sm-12:eq(0)", $tableContainer ) );
 	if ($("#" +this.searchDiv).children().legnth > 0) {
@@ -789,7 +777,7 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
     
     // datatable初始化之后的回调函数
     if (_this.config.initCallback) {
-    	_this.config.initCallback.call(_this);
+    	_this.config.initCallback.call();
     }
 }
 var initColumnSelect = function(ele, columns,localColums){
@@ -918,7 +906,7 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
     
     // datatable初始化之后的回调函数
     if (_this.config.initCallback) {
-    	_this.config.initCallback.call(_this);
+    	_this.config.initCallback.call();
     }
 }
 
@@ -1439,7 +1427,6 @@ CommonTable.prototype.fnDrawCallback = function(oSettings) {
 }
 
 CommonTable.prototype.fnStateLoaded = function (settings, data) {
-	console.log("fnStateLoaded");
 	this.stateData = data;
 	if(data.fuzzySearch != null) {
 		this.fuzzySearch = data.fuzzySearch;
