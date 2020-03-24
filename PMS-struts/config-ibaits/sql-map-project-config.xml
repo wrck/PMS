@@ -1178,6 +1178,29 @@
         ]]>
     </select>
     
+    <select id="query-project-bycontractnoAndType" parameterClass="map" resultMap="pmOrderDataFromSap">
+        <![CDATA[
+            SELECT t1.basicDataName AS serviceType, pppfs.channelName ,
+            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
+            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
+            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
+            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
+            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
+            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
+            pph.column012 column012, pph.column013 column013, podfs.compCode, c.id AS compId, podfs.salesType
+            FROM pm_order_data_from_sap podfs
+            LEFT JOIN pm_project_property_from_sms pppfs ON podfs.orderExecNumber = pppfs.orderExecNumber 
+            LEFT JOIN pm_project_header pph ON podfs.contractNo = pph.projectCode
+            LEFT JOIN fnd_department fd ON fd.departmentNum = pppfs.officeCode
+            LEFT JOIN pm_project_member ppm ON pph.projectId = ppm.projectId
+                 AND ppm.effectiveFrom <= NOW() AND (ppm.effectiveTo > NOW() OR ppm.effectiveTo IS NULL)
+            LEFT JOIN fnd_basic_data t1 ON pppfs.serviceTypeName = t1.basicDataId AND t1.dataTypeCode = 21
+                 AND t1.effectiveFrom <= NOW() AND ( t1.effectiveTo > NOW() OR t1.effectiveTo IS NULL )
+            LEFT JOIN fnd_company c ON c.code = podfs.compCode
+            where podfs.contractNo = #contractNo#   AND  podfs.`orderType` = 0 order by podfs.id desc limit 1
+        ]]>
+    </select>
+    
     <select id="query-projectname-byprojectid" parameterClass="int" resultClass="string">
         select projectName from pm_project_header where projectId = #projectId# limit 1
     </select>

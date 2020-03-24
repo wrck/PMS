@@ -57,10 +57,12 @@
             <map key-type="java.lang.String">
                 <entry key="${jdbc.key1}" value-ref="dataSourceLocal"/>
                 <entry key="${jdbc.key2}" value-ref="dataSourcePMS"/>
-                <!-- <entry key="${jdbc.key3}" value-ref="dataSourceOFS"/>
+                <entry key="${jdbc.key3}" value-ref="dataSourceSMS"/>
+                <!-- 
                 <entry key="${jdbc.key4}" value-ref="dataSourcePMS"/>
                 <entry key="${jdbc.key5}" value-ref="dataSourceTMS"/>
-                <entry key="${jdbc.key6}" value-ref="dataSourceSAP"/> -->
+                <entry key="${jdbc.key6}" value-ref="dataSourceSAP"/> 
+                -->
             </map>
         </property>
         <property name="defaultTargetDataSource" ref="dataSourceLocal"/>

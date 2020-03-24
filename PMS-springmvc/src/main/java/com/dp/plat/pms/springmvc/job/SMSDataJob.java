@@ -52,9 +52,10 @@ public class SMSDataJob {
 		System.out.println("执行全量更新定时程序开始：" + DateUtil.getTodayDateTime());
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
-		syncLog.setDataTo("Local");
+		syncLog.setDataTo("PMS");
 		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, PrjProperty.class };
-		String[] dataSourceKeys = new String[] { "SMS", "SMS" };
+		String[] dataSourceFromKeys = new String[] { "SMS", "SMS" };
+		String[] dataSourceToKeys = new String[] { "PMS", "PMS" };
 		try {
 			pmSynchronizeService.clearSyncState();
 			Integer threadPoolSize = 3;
@@ -70,7 +71,8 @@ public class SMSDataJob {
 			ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize);
 			for (int i = 0; i < clazzArrs.length; i++) {
 				final Class<?> clazz = clazzArrs[i];
-				final String[] dataSource = new String[] { dataSourceKeys[i], "Local" };
+				final String dataSourceTo = dataSourceToKeys != null ? dataSourceToKeys[i] : "Local";
+				final String[] dataSource = new String[] { dataSourceFromKeys[i], dataSourceTo };
 				threadPool.execute(new Runnable() {
 					@Override
 					public void run() {
@@ -94,7 +96,7 @@ public class SMSDataJob {
 		} finally {
 			try {
 				HashSet<String> hashSet = new HashSet<>();
-				hashSet.addAll(Arrays.asList(dataSourceKeys));
+				hashSet.addAll(Arrays.asList(dataSourceFromKeys));
 				for (String key : hashSet) {
 					DruidDataSource dataSource = SpringContext.getBean("dataSource" + key, DruidDataSource.class);
 					if (dataSource != null) {

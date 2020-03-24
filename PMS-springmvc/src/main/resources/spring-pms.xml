@@ -100,6 +100,15 @@
 		</property>
 	</bean>
 	
+	<!-- SMS数据源 -->
+	<bean id="dataSourceSMS"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${sms.database.driverClassName}" />
+		<property name="url" value="${sms.database.url}" />
+		<property name="username" value="${sms.database.username}" />
+		<property name="password" value="${sms.database.password}"/>
+	</bean>
+	
 	<!-- <tx:annotation-driven transaction-manager="transactionManager" /> -->
 	<!-- 事务管理 -->
 	<!-- <bean id="transactionManager"
