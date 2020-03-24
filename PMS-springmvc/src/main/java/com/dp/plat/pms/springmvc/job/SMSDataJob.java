@@ -23,12 +23,12 @@ import com.dp.plat.core.pojo.SyncState;
 import com.dp.plat.core.service.ISynchronizeService;
 import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.param.PrjProperty;
-import com.dp.plat.pms.springmvc.vo.PrjProdect;
+import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
 /**
  * 全量更新Job
  * 
- * @author sunmengyuan
+ * @author w02611
  *
  */
 public class SMSDataJob {
@@ -52,7 +52,7 @@ public class SMSDataJob {
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("Local");
-		Class<?>[] clazzArrs = new Class[] { PrjProdect.class, PrjProperty.class };
+		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, PrjProperty.class };
 		String[] dataSourceKeys = new String[] { "SMS", "SMS" };
 		try {
 			pmSynchronizeService.clearSyncState();
