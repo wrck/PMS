@@ -77,12 +77,12 @@ import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.Util;
 
 public class ProjectServiceImpl extends BaseServiceImpl implements ProjectService {
-	private ProjectDao projectDao;
-	private BasicDataService basicDataService;
-	private CallBackService callBackService;
-	private PmClosedLoopService pmClosedLoopService;
-	private TaskService taskService;
-	private SendMailService sendMailService;
+	protected ProjectDao projectDao;
+	protected BasicDataService basicDataService;
+	protected CallBackService callBackService;
+	protected PmClosedLoopService pmClosedLoopService;
+	protected TaskService taskService;
+	protected SendMailService sendMailService;
 
 	public void setBasicDataService(BasicDataService basicDataService) {
 		this.basicDataService = basicDataService;
@@ -364,7 +364,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		return projectDao.queryOrderLineFromSapByContractNo(project);
 	}
 
-	private void insertProjectMember(Project project) {
+	protected void insertProjectMember(Project project) {
 		String membercode = project.getMemberCode();
 		if (project.getEmail() != null && "".equals(project.getEmail())) {// 邮件不为空则，查询OA数据表
 			if (membercode != null && !"".equals(membercode)) {// 如果编码不为空，则查找pm_person_from_oa中的信息
@@ -380,7 +380,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		projectDao.insertProjectMember(project);
 	}
 
-	private Project putProperties(Project project, Project p) {
+	protected Project putProperties(Project project, Project p) {
 		if (p == null) {
 			return project;
 		}
@@ -1793,6 +1793,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	 */
 	@Override
 	public String getMails(String username) {
+		if (StringUtils.isBlank(username)) {
+			return "";
+		}
 		String email = projectDao.queryMailByUsername(username);
 		if (StringUtils.isBlank(email)) {
 			email = projectDao.queryMailByUserNameFromOA(username);

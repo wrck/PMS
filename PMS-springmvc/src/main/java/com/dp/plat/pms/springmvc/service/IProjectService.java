@@ -10,5 +10,4 @@ import com.dp.plat.core.service.IAbstractBaseService;
  */
 public interface IProjectService extends IAbstractBaseService<Project> {
 
-	Integer insertProject(ProjectVO project);
 }

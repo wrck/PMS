@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.ProjectProductMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.ProjectProduct">
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
+    <result column="orderCodereal" jdbcType="VARCHAR" property="orderCodereal" />
+    <result column="corporationCode" jdbcType="VARCHAR" property="corporationCode" />
+    <result column="ssfrId" jdbcType="INTEGER" property="ssfrId" />
+    <result column="productCode" jdbcType="VARCHAR" property="productCode" />
+    <result column="productfirstCode" jdbcType="VARCHAR" property="productfirstCode" />
+    <result column="productName" jdbcType="VARCHAR" property="productName" />
+    <result column="productfirstName" jdbcType="VARCHAR" property="productfirstName" />
+    <result column="productsubCode" jdbcType="VARCHAR" property="productsubCode" />
+    <result column="productSubModel" jdbcType="VARCHAR" property="productSubModel" />
+    <result column="productSubName" jdbcType="VARCHAR" property="productSubName" />
+    <result column="num" jdbcType="INTEGER" property="num" />
+    <result column="borrowNum" jdbcType="INTEGER" property="borrowNum" />
+  </resultMap>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.ProjectProduct">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_project_product_af_from_sms (projectCode, orderCodereal, corporationCode, 
+      ssfrId, productCode, productfirstCode, 
+      productName, productfirstName, productsubCode, 
+      productSubModel, productSubName, num, 
+      borrowNum)
+    values (#{projectCode,jdbcType=VARCHAR}, #{orderCodereal,jdbcType=VARCHAR}, #{corporationCode,jdbcType=VARCHAR}, 
+      #{ssfrId,jdbcType=INTEGER}, #{productCode,jdbcType=VARCHAR}, #{productfirstCode,jdbcType=VARCHAR}, 
+      #{productName,jdbcType=VARCHAR}, #{productfirstName,jdbcType=VARCHAR}, #{productsubCode,jdbcType=VARCHAR}, 
+      #{productSubModel,jdbcType=VARCHAR}, #{productSubName,jdbcType=VARCHAR}, #{num,jdbcType=INTEGER}, 
+      #{borrowNum,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectProduct">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_project_product_af_from_sms
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="projectCode != null">
+        projectCode,
+      </if>
+      <if test="orderCodereal != null">
+        orderCodereal,
+      </if>
+      <if test="corporationCode != null">
+        corporationCode,
+      </if>
+      <if test="ssfrId != null">
+        ssfrId,
+      </if>
+      <if test="productCode != null">
+        productCode,
+      </if>
+      <if test="productfirstCode != null">
+        productfirstCode,
+      </if>
+      <if test="productName != null">
+        productName,
+      </if>
+      <if test="productfirstName != null">
+        productfirstName,
+      </if>
+      <if test="productsubCode != null">
+        productsubCode,
+      </if>
+      <if test="productSubModel != null">
+        productSubModel,
+      </if>
+      <if test="productSubName != null">
+        productSubName,
+      </if>
+      <if test="num != null">
+        num,
+      </if>
+      <if test="borrowNum != null">
+        borrowNum,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="projectCode != null">
+        #{projectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="orderCodereal != null">
+        #{orderCodereal,jdbcType=VARCHAR},
+      </if>
+      <if test="corporationCode != null">
+        #{corporationCode,jdbcType=VARCHAR},
+      </if>
+      <if test="ssfrId != null">
+        #{ssfrId,jdbcType=INTEGER},
+      </if>
+      <if test="productCode != null">
+        #{productCode,jdbcType=VARCHAR},
+      </if>
+      <if test="productfirstCode != null">
+        #{productfirstCode,jdbcType=VARCHAR},
+      </if>
+      <if test="productName != null">
+        #{productName,jdbcType=VARCHAR},
+      </if>
+      <if test="productfirstName != null">
+        #{productfirstName,jdbcType=VARCHAR},
+      </if>
+      <if test="productsubCode != null">
+        #{productsubCode,jdbcType=VARCHAR},
+      </if>
+      <if test="productSubModel != null">
+        #{productSubModel,jdbcType=VARCHAR},
+      </if>
+      <if test="productSubName != null">
+        #{productSubName,jdbcType=VARCHAR},
+      </if>
+      <if test="num != null">
+        #{num,jdbcType=INTEGER},
+      </if>
+      <if test="borrowNum != null">
+        #{borrowNum,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectProduct" resultMap="BaseResultMap">
+    select * from pm_project_product_af_from_sms
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectCode != null and '' != projectCode">
+				projectCode = #{projectCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="orderCodereal != null and '' != orderCodereal">
+				orderCodereal = #{orderCodereal, jdbcType=VARCHAR} AND
+			</if>
+			<if test="corporationCode != null and '' != corporationCode">
+				corporationCode = #{corporationCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ssfrId != null and '' != ssfrId">
+				ssfrId = #{ssfrId, jdbcType=INTEGER} AND
+			</if>
+			<if test="productCode != null and '' != productCode">
+				productCode = #{productCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productfirstCode != null and '' != productfirstCode">
+				productfirstCode = #{productfirstCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productName != null and '' != productName">
+				productName = #{productName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productfirstName != null and '' != productfirstName">
+				productfirstName = #{productfirstName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productsubCode != null and '' != productsubCode">
+				productsubCode = #{productsubCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productSubModel != null and '' != productSubModel">
+				productSubModel = #{productSubModel, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productSubName != null and '' != productSubName">
+				productSubName = #{productSubName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="num != null and '' != num">
+				num = #{num, jdbcType=INTEGER} AND
+			</if>
+			<if test="borrowNum != null and '' != borrowNum">
+				borrowNum = #{borrowNum, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectProduct" resultType="long">
+    select count(1) from pm_project_product_af_from_sms
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectCode != null and '' != projectCode">
+				projectCode = #{projectCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="orderCodereal != null and '' != orderCodereal">
+				orderCodereal = #{orderCodereal, jdbcType=VARCHAR} AND
+			</if>
+			<if test="corporationCode != null and '' != corporationCode">
+				corporationCode = #{corporationCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ssfrId != null and '' != ssfrId">
+				ssfrId = #{ssfrId, jdbcType=INTEGER} AND
+			</if>
+			<if test="productCode != null and '' != productCode">
+				productCode = #{productCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productfirstCode != null and '' != productfirstCode">
+				productfirstCode = #{productfirstCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productName != null and '' != productName">
+				productName = #{productName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productfirstName != null and '' != productfirstName">
+				productfirstName = #{productfirstName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productsubCode != null and '' != productsubCode">
+				productsubCode = #{productsubCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productSubModel != null and '' != productSubModel">
+				productSubModel = #{productSubModel, jdbcType=VARCHAR} AND
+			</if>
+			<if test="productSubName != null and '' != productSubName">
+				productSubName = #{productSubName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="num != null and '' != num">
+				num = #{num, jdbcType=INTEGER} AND
+			</if>
+			<if test="borrowNum != null and '' != borrowNum">
+				borrowNum = #{borrowNum, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from pm_project_product_af_from_sms
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectCode != null and '' != model.projectCode">
+					projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.orderCodereal != null and '' != model.orderCodereal">
+					orderCodereal = #{model.orderCodereal, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.corporationCode != null and '' != model.corporationCode">
+					corporationCode = #{model.corporationCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.ssfrId != null and '' != model.ssfrId">
+					ssfrId = #{model.ssfrId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.productCode != null and '' != model.productCode">
+					productCode = #{model.productCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productfirstCode != null and '' != model.productfirstCode">
+					productfirstCode = #{model.productfirstCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productName != null and '' != model.productName">
+					productName = #{model.productName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productfirstName != null and '' != model.productfirstName">
+					productfirstName = #{model.productfirstName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productsubCode != null and '' != model.productsubCode">
+					productsubCode = #{model.productsubCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productSubModel != null and '' != model.productSubModel">
+					productSubModel = #{model.productSubModel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productSubName != null and '' != model.productSubName">
+					productSubName = #{model.productSubName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.num != null and '' != model.num">
+					num = #{model.num, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.borrowNum != null and '' != model.borrowNum">
+					borrowNum = #{model.borrowNum, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					projectCode like CONCAT("%", #{fuzzy}, "%") or
+					orderCodereal like CONCAT("%", #{fuzzy}, "%") or
+					corporationCode like CONCAT("%", #{fuzzy}, "%") or
+					productCode like CONCAT("%", #{fuzzy}, "%") or
+					productfirstCode like CONCAT("%", #{fuzzy}, "%") or
+					productName like CONCAT("%", #{fuzzy}, "%") or
+					productfirstName like CONCAT("%", #{fuzzy}, "%") or
+					productsubCode like CONCAT("%", #{fuzzy}, "%") or
+					productSubModel like CONCAT("%", #{fuzzy}, "%") or
+					productSubName like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_project_product_af_from_sms
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectCode != null and '' != model.projectCode">
+					projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.orderCodereal != null and '' != model.orderCodereal">
+					orderCodereal = #{model.orderCodereal, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.corporationCode != null and '' != model.corporationCode">
+					corporationCode = #{model.corporationCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.ssfrId != null and '' != model.ssfrId">
+					ssfrId = #{model.ssfrId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.productCode != null and '' != model.productCode">
+					productCode = #{model.productCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productfirstCode != null and '' != model.productfirstCode">
+					productfirstCode = #{model.productfirstCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productName != null and '' != model.productName">
+					productName = #{model.productName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productfirstName != null and '' != model.productfirstName">
+					productfirstName = #{model.productfirstName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productsubCode != null and '' != model.productsubCode">
+					productsubCode = #{model.productsubCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productSubModel != null and '' != model.productSubModel">
+					productSubModel = #{model.productSubModel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.productSubName != null and '' != model.productSubName">
+					productSubName = #{model.productSubName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.num != null and '' != model.num">
+					num = #{model.num, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.borrowNum != null and '' != model.borrowNum">
+					borrowNum = #{model.borrowNum, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					projectCode like CONCAT("%", #{fuzzy}, "%") or
+					orderCodereal like CONCAT("%", #{fuzzy}, "%") or
+					corporationCode like CONCAT("%", #{fuzzy}, "%") or
+					productCode like CONCAT("%", #{fuzzy}, "%") or
+					productfirstCode like CONCAT("%", #{fuzzy}, "%") or
+					productName like CONCAT("%", #{fuzzy}, "%") or
+					productfirstName like CONCAT("%", #{fuzzy}, "%") or
+					productsubCode like CONCAT("%", #{fuzzy}, "%") or
+					productSubModel like CONCAT("%", #{fuzzy}, "%") or
+					productSubName like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>
