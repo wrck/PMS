@@ -67,14 +67,23 @@ public class ProjectController {
 		ProjectVO temp = new ProjectVO();
 		// temp.setCompID(user.getCompId());
 		tempParam.setModel(temp);
-
 		pageParam.setModel(project);
-		pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
-		pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
+		
+		List<Object> list = null;
+		// 待创建列表
+		if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
+			pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
+			pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
+			list = projectHeaderService.selectUncreateProjectList(pageParam);
+		} else {
+			pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
+			pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
+			list = projectHeaderService.selectBySelectivePageable(pageParam);
+		}
+
 		if (pageParam.getPageSize() == -1L) {
 			pageParam.setPageSize(pageParam.getTotal());
 		}
-		List<Object> list = projectHeaderService.selectBySelectivePageable(pageParam);
 		model.addAttribute("data", list);
 		DataFieldRelation dataFieldRelation = new DataFieldRelation("projectList", "table");
 		List<DataFieldRelation> fieldList = dataFieldRelationService.selectBySelective(dataFieldRelation);
@@ -118,8 +127,7 @@ public class ProjectController {
 		if (HttpContext.isJSON()) {
 			HttpServletRequest request = HttpContext.getCurrentRequest();
 			String contractNo = request.getParameter("contractNo");
-			String projectCode = request.getParameter("projectCode");
-			Project project = oldProjectService.queryProjectByContractNo(contractNo);
+			Project project = projectHeaderService.queryProjectByContractNoAndType(contractNo, projectType);
 			if (project == null) {
 				model.addAttribute("status", false);
 				model.addAttribute("message", "该项目合同已存在");
@@ -143,8 +151,8 @@ public class ProjectController {
 			tPage.setPageSize(-1);
 			tPage.setOrderBy("sort, id asc");
 			tPage.setModel(dataFieldRelation);
-			List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
-			model.addAttribute("fieldList", fieldList );
+//			List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
+//			model.addAttribute("fieldList", fieldList );
 		}
 		model.addAttribute("projectType", projectType);
 		return VIEW_NAMESPACE + "detail";

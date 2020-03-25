@@ -79,7 +79,7 @@
 								<template v-else-if="field.type == 'select'">
 									<div class="form-group display-flex ">
 										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+										<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
 												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
 											<option :value="item[field.extKey]" v-for="item in getDataValue(field.extData)" :selected="item[field.extKey] == getFieldValue(field)" >{{item[field.extValue]}}</option>

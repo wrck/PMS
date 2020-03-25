@@ -17,6 +17,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.dao.ProjectMapper;
 import com.dp.plat.pms.springmvc.service.IProjectService;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.service.ProjectServiceImpl;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
@@ -248,4 +249,12 @@ public class ProjectService extends ProjectServiceImpl /*extends AbstractBaseSer
 		Integer pid = null;
 		return pid;
 	}
+
+	@Override
+	public ProjectVO queryProjectByContractNoAndType(String contractNo, String projectType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 }

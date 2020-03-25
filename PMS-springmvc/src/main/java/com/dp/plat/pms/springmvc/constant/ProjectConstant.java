@@ -33,4 +33,12 @@ public class ProjectConstant {
 		public final static String JF_TEST_PROJECT	 = "20";
 		
 	}
+
+	public static class ProjectState {
+		/**
+		 * 待创建
+		 */
+		public final static String UNCREATED	 = "10";
+		
+	}
 }

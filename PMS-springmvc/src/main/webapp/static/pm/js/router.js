@@ -18,7 +18,8 @@ pm.common = function(namespace) {
 		html: ((namespace) => {
 			return {
 				list: () => namespace + ".html",
-				detail: (id) => namespace + "/" + id + ".html"
+				detail: (id) => namespace + "/" + id + ".html",
+				create: (contractNo, projectType) => namespace + "/detail.html?" + $.param({contractNo, projectType})
 			}
 		})(namespace)
 	}

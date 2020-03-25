@@ -10,4 +10,6 @@ import com.dp.plat.core.service.IAbstractBaseService;
  */
 public interface IProjectService extends IAbstractBaseService<Project> {
 
+	ProjectVO queryProjectByContractNoAndType(String contractNo, String projectType);
+
 }
