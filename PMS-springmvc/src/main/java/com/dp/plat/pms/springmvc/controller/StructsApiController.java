@@ -28,7 +28,7 @@ public class StructsApiController {
 	@RequestMapping("/departmentList")
 	public void queryDepartment(Department department, Model model) {
 		List<Department> departments = departmentManageService.queryDepartments();
-		model.addAttribute("departmentList", departments);
+		model.addAttribute("data", departments);
 	}
 	
 	/**
@@ -39,6 +39,8 @@ public class StructsApiController {
         company.setStatus(1);
         DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
 		List<Company> companyList = departmentManageService .queryCompanyList(company);
-		model.addAttribute("companyList", companyList);
+		model.addAttribute("data", companyList);
 	}
+	
+	
 }

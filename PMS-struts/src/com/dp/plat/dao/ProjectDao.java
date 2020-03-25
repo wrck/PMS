@@ -109,6 +109,14 @@ public interface ProjectDao {
 	Project queryProjectByContractNo(String contractNo);
 
 	/**
+	 * 根据合同号、项目类型查询项目信息
+	 * @param contractNo
+	 * @param projectType
+	 * @return
+	 */
+	Project queryProjectByContractNoAndType(String contractNo, String projectType);
+	
+	/**
 	 * 插入项目成员表
 	 * 
 	 * @param project
@@ -659,6 +667,15 @@ public interface ProjectDao {
 	 */
 	Integer queryProjectContractCountByContractNo(String contractNo);
 
+	/**
+	 * 根据合同号和项目类型查询合同表是否存在
+	 * 
+	 * @param contractNo
+	 * @param projectType
+	 * @return
+	 */
+	Integer queryProjectContractCountByContractNoAndType(String contractNo, String projectType);
+	
 	/**
 	 * 失效项目主表数据
 	 * 

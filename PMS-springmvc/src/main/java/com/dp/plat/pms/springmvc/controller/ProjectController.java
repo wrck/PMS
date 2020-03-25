@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -97,9 +98,7 @@ public class ProjectController {
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
-//			Project project = oldProjectService.queryProjectById(id);
 			if (project != null) {
-//				project.setProjectType("10");
 				model.addAttribute("targetName", "project");
 				model.addAttribute("targetValue", project);
 				
@@ -151,8 +150,8 @@ public class ProjectController {
 			tPage.setPageSize(-1);
 			tPage.setOrderBy("sort, id asc");
 			tPage.setModel(dataFieldRelation);
-//			List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
-//			model.addAttribute("fieldList", fieldList );
+			List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
+			model.addAttribute("fieldList", fieldList );
 		}
 		model.addAttribute("projectType", projectType);
 		return VIEW_NAMESPACE + "detail";
@@ -163,13 +162,13 @@ public class ProjectController {
 		Boolean status = false;
 		String message = null;
 		//如果当前合同号已经创建项目，则直接返回不再创建
-		Integer count = oldProjectService.queryProjectContractCountByContractNo(Util.appendChar((String) project.getCustomInfoByKey("contractNo"), "'"));
+		Integer count = projectHeaderService.queryProjectContractCountByContractNoAndType(Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
 		if(count != null && count != 0){
 			status = false;
 			message = "该项目合同已存在！";
 		} else {
 			try {
-				oldProjectService.insertProject(project);
+				projectHeaderService.insertProject(project);
 				status = true;
 			} catch (Exception e) {
 				status = false;

@@ -73,6 +73,14 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	Project queryProjectByContractNo(String contractNo);
+	
+	/**
+	 * 根据合同号、项目类型查询项目信息
+	 * @param contractNo
+	 * @return
+	 */
+	Project queryProjectByContractNoAndType(String contractNo, String projectType);
+	
 	/**
 	 * 插入项目批示信息
 	 * @param instruction
@@ -434,6 +442,14 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	Integer queryProjectContractCountByContractNo(String contractNo);
+	
+	/**
+	 * 根据合同号查询合同表是否存在
+	 * @param contractNo
+	 * @return
+	 */
+	Integer queryProjectContractCountByContractNoAndType(String contractNo, String projectType);
+	
 	/**
 	 * 批量处理项目信息
 	 * @param p

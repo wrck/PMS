@@ -131,9 +131,18 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public Project queryProjectByContractNo(String contractNo) {
         return (Project) getSqlMapClientTemplate().queryForObject("query-project-bycontractno", contractNo);
+//    	return this.queryProjectByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
     }
-
+    
     @Override
+	public Project queryProjectByContractNoAndType(String contractNo, String projectType) {
+    	Map<String, Object> params = new HashMap<String, Object>(2);
+   	 	params.put("contractNo", contractNo);
+   	 	params.put("projectType", projectType);
+    	return (Project) getSqlMapClientTemplate().queryForObject("queryProjectByContractNoAndType", params);
+	}
+
+	@Override
     public void insertProjectMember(Project project) {
         project.setCreateBy(getCurrUsername());
         getSqlMapClientTemplate().insert("insert-projectmember", project);
@@ -716,10 +725,19 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
 
     @Override
     public Integer queryProjectContractCountByContractNo(String contractNo) {
-        return (Integer) getSqlMapClientTemplate().queryForObject("query-projectcontractcount-bycontractno", contractNo);
+//        return (Integer) getSqlMapClientTemplate().queryForObject("query-projectcontractcount-bycontractno", contractNo);
+    	return this.queryProjectContractCountByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
+    }
+    
+    @Override
+	public Integer queryProjectContractCountByContractNoAndType(String contractNo, String projectType) {
+    	 Map<String, Object> params = new HashMap<String, Object>(2);
+    	 params.put("contractNo", contractNo);
+    	 params.put("projectType", projectType);
+    	 return (Integer) getSqlMapClientTemplate().queryForObject("queryProjectContractCountByContractNoAndType", params);
     }
 
-    @Override
+	@Override
     public void invalidProjectHeader(int projectId) {
         getSqlMapClientTemplate().update("invalid_project_header", projectId);
     }

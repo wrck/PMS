@@ -1197,8 +1197,10 @@
             LEFT JOIN fnd_basic_data t1 ON pppfs.serviceTypeName = t1.basicDataId AND t1.dataTypeCode = 21
                  AND t1.effectiveFrom <= NOW() AND ( t1.effectiveTo > NOW() OR t1.effectiveTo IS NULL )
             LEFT JOIN fnd_company c ON c.code = podfs.compCode
-            where podfs.contractNo = #contractNo#   AND  podfs.`orderType` = 0 order by podfs.id desc limit 1
+            where podfs.contractNo = #contractNo# AND  podfs.`orderType` = 0 
         ]]>
+        <isNotEmpty prepend="and" property="projectType"> pppfs.projectType = #projectType# </isNotEmpty>
+        order by podfs.id desc limit 1
     </select>
     
     <select id="query-projectname-byprojectid" parameterClass="int" resultClass="string">
@@ -3166,6 +3168,19 @@
           JOIN pm_project_header t3 ON t2.`projectCode` = t3.`projectCode` AND t3.`effectiveFrom` <= NOW() 
         AND (t3.`effectiveTo` > NOW() OR t3.`effectiveTo` IS NULL)  where contractNo in ($contractNo$)
         ]]>
+    </select>
+    
+    <select id="queryProjectContractCountByContractNoAndType" parameterClass="map" resultClass="int">
+        <![CDATA[
+        select count(1) from pm_project_contract t1
+          JOIN pm_project_group_relationship t2 ON t1.`projectGroupCode` = t2.`projectGroupCode`
+          JOIN pm_project_header t3 ON t2.`projectCode` = t3.`projectCode` AND t3.`effectiveFrom` <= NOW() 
+        AND (t3.`effectiveTo` > NOW() OR t3.`effectiveTo` IS NULL)  
+        where contractNo in ($contractNo$)
+        ]]>
+        <isNotEmpty prepend="and" property="projectType">
+            t3.projectType = #projectType# 
+        </isNotEmpty>
     </select>
     
     <update id="update-quesnaire_template_header" parameterClass="com.dp.plat.data.bean.PmClosedLoopQuesnaire">

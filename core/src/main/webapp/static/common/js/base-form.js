@@ -85,9 +85,29 @@
 
     BaseForm.prototype.initSelect2 = function () {
     	if ($.fn.select2) {
-    		$(this.select2Element, this.$element).select2({
+    		var defaultConfig = {
                 minimumResultsForSearch: Infinity
-            });
+            };
+    		$(this.select2Element, this.$element).each(function() {
+    			var config = $(this).data("select2Config") || "";
+    			if (config) {
+    				try {
+    					config = JSON.parse(config);
+    				} catch(e){
+    					try {
+    						config = eval(config);
+    					} catch(e){
+    						config = defaultConfig;
+    					}
+    				}
+    			} else {
+    				config = defaultConfig;
+    			}
+    			$(this).select2(config);
+    		});
+//    		$(this.select2Element, this.$element).select2({
+//                minimumResultsForSearch: Infinity
+//            });
     	}
     }
 
@@ -415,11 +435,11 @@
         var is_blank = sel.data("blank") ? true : false;
         var builder = function (data) {
             if (is_blank) {
-                if (!blank_value && !blank_text)
+                if (blank_value === undefined && !blank_text)
                     sel.append($('<option></option>'));
                 else if (!blank_text)
                     sel.append($("<option value='" + blank_value + "'></option>"));
-                else if (!blank_value)
+                else if (blank_value === undefined)
                     sel.append($("<option>" + blank_text + "</option>"));
                 else
                     sel.append($("<option value='" + blank_value + "'>" + blank_text + "</option>"));

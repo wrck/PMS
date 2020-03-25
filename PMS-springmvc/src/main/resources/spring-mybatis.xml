@@ -27,7 +27,7 @@
 				<!-- 查询返回结果含null没有对应字段值问题-->
 		    	<property name="callSettersOnNulls" value="true"/>
 		    	<!--配置默认的执行器。SIMPLE 执行器没有什么特别之处。REUSE执行器重用预处理语句。BATCH 执行器重用语句和批量更新系统默认值是SIMPLE -->
-		    	<property name="defaultExecutorType" value="BATCH"/>
+		    	<property name="defaultExecutorType" value="SIMPLE"/>
 		    </bean>
 		</property>
 		<property name="typeHandlers">

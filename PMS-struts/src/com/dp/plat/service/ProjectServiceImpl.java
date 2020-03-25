@@ -567,6 +567,12 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	@Override
 	public Project queryProjectByContractNo(String contractNo) {
 		return projectDao.queryProjectByContractNo(contractNo);
+//		return this.queryProjectByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
+	}
+	
+	@Override
+	public Project queryProjectByContractNoAndType(String contractNo, String projectType) {
+		return projectDao.queryProjectByContractNoAndType(contractNo, projectType);
 	}
 
 	@Override
@@ -1916,7 +1922,12 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
 	@Override
 	public Integer queryProjectContractCountByContractNo(String contractNo) {
-		return projectDao.queryProjectContractCountByContractNo(contractNo);
+		return this.queryProjectContractCountByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
+	}
+	
+	@Override
+	public Integer queryProjectContractCountByContractNoAndType(String contractNo, String projectType) {
+		return projectDao.queryProjectContractCountByContractNoAndType(contractNo, projectType);
 	}
 
 	@Override

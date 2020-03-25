@@ -54,7 +54,7 @@
     delete from pm_project
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.Project">
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.Project" keyProperty="id" useGeneratedKeys="true">
   	<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
@@ -83,7 +83,7 @@
       #{projectRefreshTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=OTHER}, #{customConfig,jdbcType=OTHER}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.Project">
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.Project" keyProperty="id" useGeneratedKeys="true">
   	<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>

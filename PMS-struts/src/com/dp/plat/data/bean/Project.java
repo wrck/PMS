@@ -14,7 +14,7 @@ import com.dp.plat.util.Util;
  */
 
 public class Project extends ProjectQueryParam{
-	private int projectId;
+	private Integer projectId;
 	private String paramId;
 	private String projectCode;
 	private String smsProjectCode;
@@ -192,7 +192,7 @@ public class Project extends ProjectQueryParam{
 	    super();
     }
 
-    public Project(int projectId) {
+    public Project(Integer projectId) {
         this.projectId = projectId;
     }
 
@@ -206,7 +206,7 @@ public class Project extends ProjectQueryParam{
 	public Integer getProjectId() {
 		return projectId;
 	}
-	public void setProjectId(int projectId) {
+	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
 	}
 	public String getProjectCode() {
@@ -947,7 +947,7 @@ public class Project extends ProjectQueryParam{
 	}
 
 	public String getParamId() {
-		if(projectId != 0){
+		if(projectId != null && projectId != 0){
 			return Base64Util.EncodeBase64(projectId);
 		}
 		return paramId;

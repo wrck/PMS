@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,12 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
@@ -27,10 +30,17 @@ import com.dp.plat.util.NotificationTemplateUtil;
  * Created by CodeGenerator
  */
 @Service("projectHeaderService")
-public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractBaseService<ProjectMapper, Project> */implements IProjectHeaderService, IAbstractBaseService<ProjectHeader> {
+public class ProjectHeaderService extends ProjectServiceImpl
+		/* extends AbstractBaseService<ProjectMapper, Project> */ implements IProjectHeaderService,
+		IAbstractBaseService<ProjectHeader> {
 
 	@Autowired
 	protected ProjectHeaderMapper dao;
+
+	@Autowired
+	public void setProjectDao(ProjectDao projectDao) {
+		this.projectDao = projectDao;
+	}
 
 	@Override
 	public int deleteByPrimaryKey(Object pk) {
@@ -39,10 +49,27 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 
 	@Override
 	public int insert(ProjectHeader project) {
+		if (project == null) {
+			return 0;
+		}
+		Class<?> objClass = project.getClass();
 		try {
-			Class<?> objClass = project.getClass();
 			Method method = objClass.getMethod("setCreateBy", String.class);
 			method.invoke(project, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setCreateTime", Date.class);
+			method.invoke(project, new Date());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("getEffectiveFrom");
+			Object effectiveFrom = method.invoke(project);
+			if (effectiveFrom == null) {
+				method = objClass.getMethod("setEffectiveFrom", Date.class);
+				method.invoke(project, new Date());
+			}
 		} catch (Exception e) {
 		}
 		return dao.insert(project);
@@ -50,10 +77,27 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 
 	@Override
 	public int insertSelective(ProjectHeader project) {
+		if (project == null) {
+			return 0;
+		}
+		Class<?> objClass = project.getClass();
 		try {
-			Class<?> objClass = project.getClass();
 			Method method = objClass.getMethod("setCreateBy", String.class);
 			method.invoke(project, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setCreateTime", Date.class);
+			method.invoke(project, new Date());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("getEffectiveFrom");
+			Object effectiveFrom = method.invoke(project);
+			if (effectiveFrom == null) {
+				method = objClass.getMethod("setEffectiveFrom", Date.class);
+				method.invoke(project, new Date());
+			}
 		} catch (Exception e) {
 		}
 		return dao.insertSelective(project);
@@ -66,10 +110,18 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 
 	@Override
 	public int updateByPrimaryKey(ProjectHeader project) {
+		if (project == null) {
+			return 0;
+		}
+		Class<?> objClass = project.getClass();
 		try {
-			Class<?> objClass = project.getClass();
 			Method method = objClass.getMethod("setUpdateBy", String.class);
 			method.invoke(project, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setUpdateTime", Date.class);
+			method.invoke(project, new Date());
 		} catch (Exception e) {
 		}
 		return dao.updateByPrimaryKey(project);
@@ -77,10 +129,18 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 
 	@Override
 	public int updateByPrimaryKeySelective(ProjectHeader project) {
+		if (project == null) {
+			return 0;
+		}
+		Class<?> objClass = project.getClass();
 		try {
-			Class<?> objClass = project.getClass();
 			Method method = objClass.getMethod("setUpdateBy", String.class);
 			method.invoke(project, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setUpdateTime", Date.class);
+			method.invoke(project, new Date());
 		} catch (Exception e) {
 		}
 		return dao.updateByPrimaryKeySelective(project);
@@ -119,7 +179,7 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 	public List<ProjectHeader> selectBySelective(ProjectHeader project) {
 		return dao.selectBySelective(project);
 	}
-	
+
 	@Override
 	public long countUncreateProjectList(PageParam<Object> pageParam) {
 		return dao.countUncreateProjectList(pageParam);
@@ -137,36 +197,27 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 		params.put("projectType", projectType);
 		return dao.queryProjectByContractNoAndType(params);
 	}
+	
+	@Override
+	public Integer queryProjectContractCountByContractNoAndType(String contractNo, String projectType) {
+		return super.queryProjectContractCountByContractNoAndType(contractNo, projectType);
+	}
 
 	@Override
+	@Transactional
 	public int insertProject(Project project) throws Exception {
 		log("创建项目");
 		String projectType = project.getProjectType();
+		Integer pid = 0;
 		if (ProjectConstant.ProjectType.JF_SALES_PROJECT.equals(projectType)) {
 			super.insertProject(project);
-		} else if (ProjectConstant.ProjectType.AF_SALES_PROJECT.equals(projectType)) {
-			Project p = this.queryProjectByContractNo(project.getContractNo());
+		} else if (ProjectConstant.ProjectType.AF_SALES_PROJECT.equals(projectType)
+				|| ProjectConstant.ProjectType.AF_XX_PROJECT.equals(projectType)) {
+			Project p = this.queryProjectByContractNoAndType(project.getContractNo(), project.getProjectType());
 			project = putProperties(project, p);// p中的部分属性放置到project中
-			if (project.getColumn008() != null && !"".equals(project.getColumn008())) {
-				project.setProjectState(MessageUtil.PROJECT_STATE_DENY);
-				project.setIsback(MessageUtil.PROJECT_CREATE_STATE40);
-			} else {
-				// 如服务经理为空，则项目状态变更为“待指定服务经理”
-				if ("".equals(project.getServiceManagerCode()) && "".equals(project.getProgramManagerCode())) {
-					project.setProjectState(MessageUtil.PROJECT_STATE_30);// 已创建
-				}
-				// 若项目经理为空，则项目状态变更为 “待指派项目经理”
-				if (!"".equals(project.getServiceManagerCode()) && "".equals(project.getProgramManagerCode())) {
-					project.setProjectState(MessageUtil.PROJECT_STATE_31);// 已创建
-				}
-				// 如均不为空，则项目状态变更为“已指派项目经理”
-				if (!"".equals(project.getServiceManagerCode()) && !"".equals(project.getProgramManagerCode())) {
-					project.setProjectState(MessageUtil.PROJECT_STATE_32);// 已创建
-				}
-				project.setIsback(MessageUtil.PROJECT_CREATE_STATE30);
-			}
-			Integer pid = projectDao.insertProject(project);// 插入到表pm_project_header
+			this.insertSelective((ProjectHeader) project);// 插入到表pm_project_header
 															// - 项目表
+			pid = project.getProjectId();
 
 			String projectGroupCode = project.getProjectGroupCode();
 			if (projectGroupCode == null) {
@@ -206,7 +257,6 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 			project.setMemberCode(project.getSalesManCode());
 			project.setMemberName(project.getSalesManName());
 			try {
-				// project.setEmail(this.getMails(project.getSalesManCode()));
 				project.setEmail(this.queryMailByUserNameFromOA(project.getSalesManCode()));
 			} catch (Exception e) {
 				project.setEmail(null);
@@ -264,9 +314,7 @@ public class ProjectHeaderService extends ProjectServiceImpl /*extends AbstractB
 			}
 			this.updateChannel(project);// 更新渠道信息
 		}
-		Integer pid = null;
 		return pid;
 	}
-	
-	
+
 }
