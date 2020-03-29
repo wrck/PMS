@@ -1377,6 +1377,12 @@ CommonTable.prototype.getServerData = function(aoData, fnCallback, oSettings) {/
         retData.rowId = result.pageParam.rowId;
         retData.tableData = tableData;
         that.data = retData;
+        
+        // 删除以保存的属性，保存返回的其他拓展属性
+        delete result.pageParam;
+        delete result.data;
+        retData.extData = result;
+        
         if(!that.load && that.data) {
         	fnCallback.call(that, that.tableId, that.url, that.searchDiv);
         } else {
@@ -1450,9 +1456,13 @@ CommonTable.prototype.fnStateLoaded = function (settings, data) {
 		for(var name in customSearch) {
 			var value = customSearch[name];
 			$("input[name='"+name+"']", $("#" + this.searchDiv)).val(value);
+			$("select[name='"+name+"']", $("#" + this.searchDiv)).val("");
 			$("select[name='"+name+"']", $("#" + this.searchDiv)).val(value);
 			$("input[data-type='search'][name='"+name+"']", $("#" + this.searchDiv)).val(value);
 		}
+//		if($.fn.select2) {
+//			$("select.select2", $("#" + this.searchDiv)).trigger("change");
+//		}
 		$(".daterange-btn", $("#" + this.searchDiv)).each(function(i,item){
 			var startTime = $(this).find(".daterange-input-start").val();
 			var endTime = $(this).find(".daterange-input-end").val();

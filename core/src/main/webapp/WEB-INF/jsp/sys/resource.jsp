@@ -207,7 +207,7 @@
                	winId:winId,
                	title:'编辑资源',
                	width:'600px',
-               	url:basePath+"/sys/modals/resource_detail?id="+rowId
+               	url:basePath+"/sys/modals/resource_detail.html?id="+rowId
             });
 		}
 		function deleteResource(rowId) {

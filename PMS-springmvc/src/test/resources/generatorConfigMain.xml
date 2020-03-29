@@ -42,13 +42,13 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
 		<!--生成对应表及类名 -->
-		<table tableName="pm_project_property_af_from_sms" domainObjectName="AfPrjProperty"
+		<table tableName="t_dictionary" domainObjectName="Dictionary"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
-			<property name="useActualColumnNames" value="true" />
+			<property name="useActualColumnNames" value="false" />
 			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>
 		

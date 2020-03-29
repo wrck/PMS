@@ -85,8 +85,8 @@ public class DataFieldRelation extends DataTableColumn {
     // 类名
     private String clazzName;
 
-    // 父类Id
-    private Integer superId;
+    // 父类DataName
+    private String superData;
 
     // 状态
     private Integer status;
@@ -596,21 +596,21 @@ public class DataFieldRelation extends DataTableColumn {
     }
 
     /**
-     * 获取父类Id
+     * 获取父类DataName
      *
-     * @return superId - 父类Id
+     * @return superData - 父类DataName
      */
-    public Integer getSuperId() {
-        return superId;
+    public String getSuperData() {
+        return superData;
     }
 
     /**
-     * 设置父类Id
+     * 设置父类DataName
      *
-     * @param superId 父类Id
+     * @param superData 父类DataName
      */
-    public void setSuperId(Integer superId) {
-        this.superId = superId;
+    public void setSuperData(String superData) {
+        this.superData = superData;
     }
 
     /**

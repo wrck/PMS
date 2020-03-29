@@ -28,7 +28,7 @@
     <result column="extValue" jdbcType="VARCHAR" property="extValue" />
     <result column="media" jdbcType="VARCHAR" property="media" />
     <result column="clazzName" jdbcType="VARCHAR" property="clazzName" />
-    <result column="superId" jdbcType="INTEGER" property="superId" />
+    <result column="superData" jdbcType="INTEGER" property="superData" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="compId" jdbcType="INTEGER" property="compId" />
     <result column="isSystemField" jdbcType="BIT" property="isSystemField" />
@@ -40,7 +40,7 @@
   <sql id="Base_Column_List">
     id, dataName, dataType, dataId, field, alias, name, title, titleKey, cssId, cssClass, 
     cssStyle, type, render, sort, orderable, searchable, visible, required, readonly, 
-    disabled, extData, extKey, extValue, media, clazzName, superId, status, compId, isSystemField, 
+    disabled, extData, extKey, extValue, media, clazzName, superData, status, compId, isSystemField, 
     createBy, createTime, updateBy, updateTime
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
@@ -65,7 +65,7 @@
       searchable, visible, required, 
       readonly, disabled, extData, 
       extKey, extValue, media, 
-      clazzName, superId, status, 
+      clazzName, superData, status, 
       compId, isSystemField, createBy, 
       createTime, updateBy, updateTime
       )
@@ -77,7 +77,7 @@
       #{searchable,jdbcType=BIT}, #{visible,jdbcType=BIT}, #{required,jdbcType=BIT}, 
       #{readonly,jdbcType=BIT}, #{disabled,jdbcType=BIT}, #{extData,jdbcType=VARCHAR}, 
       #{extKey,jdbcType=VARCHAR}, #{extValue,jdbcType=VARCHAR}, #{media,jdbcType=VARCHAR}, 
-      #{clazzName,jdbcType=VARCHAR}, #{superId,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, 
+      #{clazzName,jdbcType=VARCHAR}, #{superData,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
       #{compId,jdbcType=INTEGER}, #{isSystemField,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
       )
@@ -163,8 +163,8 @@
       <if test="clazzName != null">
         clazzName,
       </if>
-      <if test="superId != null">
-        superId,
+      <if test="superData != null">
+        superData,
       </if>
       <if test="status != null">
         status,
@@ -264,8 +264,8 @@
       <if test="clazzName != null">
         #{clazzName,jdbcType=VARCHAR},
       </if>
-      <if test="superId != null">
-        #{superId,jdbcType=INTEGER},
+      <if test="superData != null">
+        #{superData,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         #{status,jdbcType=INTEGER},
@@ -368,8 +368,8 @@
       <if test="clazzName != null">
         clazzName = #{clazzName,jdbcType=VARCHAR},
       </if>
-      <if test="superId != null">
-        superId = #{superId,jdbcType=INTEGER},
+      <if test="superData != null">
+        superData = #{superData,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
@@ -422,7 +422,7 @@
       extValue = #{extValue,jdbcType=VARCHAR},
       media = #{media,jdbcType=VARCHAR},
       clazzName = #{clazzName,jdbcType=VARCHAR},
-      superId = #{superId,jdbcType=INTEGER},
+      superData = #{superData,jdbcType=VARCHAR},
       status = #{status,jdbcType=INTEGER},
       compId = #{compId,jdbcType=INTEGER},
       isSystemField = #{isSystemField,jdbcType=BIT},
@@ -514,8 +514,8 @@
 			<if test="clazzName != null and '' != clazzName">
 				clazzName = #{clazzName, jdbcType=VARCHAR} AND
 			</if>
-			<if test="superId != null and '' != superId">
-				superId = #{superId, jdbcType=INTEGER} AND
+			<if test="superData != null and '' != superData">
+				superData = #{superData, jdbcType=VARCHAR} AND
 			</if>
 			<if test="status != null and '' != status">
 				status = #{status, jdbcType=INTEGER} AND
@@ -623,8 +623,8 @@
 			<if test="clazzName != null and '' != clazzName">
 				clazzName = #{clazzName, jdbcType=VARCHAR} AND
 			</if>
-			<if test="superId != null and '' != superId">
-				superId = #{superId, jdbcType=INTEGER} AND
+			<if test="superData != null and '' != superData">
+				superData = #{superData, jdbcType=VARCHAR} AND
 			</if>
 			<if test="status != null and '' != status">
 				status = #{status, jdbcType=INTEGER} AND
@@ -733,8 +733,8 @@
 				<if test="model.clazzName != null and '' != model.clazzName">
 					clazzName = #{model.clazzName, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.superId != null and '' != model.superId">
-					superId = #{model.superId, jdbcType=INTEGER} AND
+				<if test="model.superData != null and '' != model.superData">
+					superData = #{model.superData, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.status != null and '' != model.status">
 					status = #{model.status, jdbcType=INTEGER} AND
@@ -756,6 +756,16 @@
 				</if>
 				<if test="model.updateTime != null and '' != model.updateTime">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">
+					find_in_set(
+				        dataName, 
+				        (select 
+				            group_concat(distinct dataName, ",", ifnull(superData, "")) 
+				        from
+				            `data_field_relation` 
+				        where dataName = #{model.dataNameWithSuper})
+				    )
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -876,8 +886,8 @@
 				<if test="model.clazzName != null and '' != model.clazzName">
 					clazzName = #{model.clazzName, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.superId != null and '' != model.superId">
-					superId = #{model.superId, jdbcType=INTEGER} AND
+				<if test="model.superData != null and '' != model.superData">
+					superData = #{model.superData, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.status != null and '' != model.status">
 					status = #{model.status, jdbcType=INTEGER} AND
@@ -899,6 +909,16 @@
 				</if>
 				<if test="model.updateTime != null and '' != model.updateTime">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">
+					find_in_set(
+				        dataName, 
+				        (select 
+				            group_concat(distinct dataName, ",", ifnull(superData, "")) 
+				        from
+				            `data_field_relation` 
+				        where dataName = #{model.dataNameWithSuper})
+				    )
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">

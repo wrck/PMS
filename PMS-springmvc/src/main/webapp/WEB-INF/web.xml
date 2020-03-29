@@ -199,15 +199,15 @@
 	</welcome-file-list>
 	<jsp-config>
 		<taglib>
-			<taglib-uri>http://www.dptech.com/tags/myTag</taglib-uri>
+			<taglib-uri>/myTag</taglib-uri>
 			<taglib-location>/WEB-INF/dp-common.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://www.dptech.com/dp</taglib-uri>
+			<taglib-uri>/dp</taglib-uri>
 			<taglib-location>/WEB-INF/dp.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://www.dptech.com/tags/shiro</taglib-uri>
+			<taglib-uri>/shiro</taglib-uri>
 			<taglib-location>/WEB-INF/shiro.tld</taglib-location>
 		</taglib>
 	</jsp-config>

@@ -9,8 +9,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dp.plat.context.SpringContext;
+import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
+import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
 
 @Controller
@@ -34,13 +36,11 @@ public class StructsApiController {
 	/**
 	 * 查询生效的公司列表
 	 */
-	@RequestMapping("/companyList")
-	public void queryCompany(Company company, Model model) {
-        company.setStatus(1);
-        DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
-		List<Company> companyList = departmentManageService .queryCompanyList(company);
+	@RequestMapping("/basciDataByType")
+	public void queryCompany(BasicDataBean basicData, Model model) {
+		BasicDataService basicDataService = SpringContext.getApplicationContext().getBean("basicDataService", BasicDataService.class);
+		List<BasicDataBean> companyList = basicDataService.queryBasicDataBeans(basicData.getBasicDataTypeCode());
 		model.addAttribute("data", companyList);
 	}
-	
 	
 }

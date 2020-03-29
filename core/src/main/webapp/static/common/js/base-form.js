@@ -104,6 +104,15 @@
     				config = defaultConfig;
     			}
     			$(this).select2(config);
+    			if (config.events) {
+    				try {
+    					var events = config.events;
+    					for ( var key in events) {
+							var event = events[key];
+							$(this).on(key, eval("("+ event + ")"));
+						}
+    				} catch(e) {}
+    			}
     		});
 //    		$(this.select2Element, this.$element).select2({
 //                minimumResultsForSearch: Infinity
@@ -340,7 +349,8 @@
         var elements = this.$element.find(element);
         $(elements).each(function (index, item) {
             var code = $(item).data("code");
-            var autoload = $(item).data("autoload") == "false" ? false : true;
+            var autoload = $(item).data("autoload");
+            autoload = autoload == "false" || autoload == false ? false : true;
             if (code) {
                 if (autoload) {
                     if ($(item).is("input"))
@@ -366,7 +376,8 @@
         var elements = this.$element.find(element);
         $(elements).each(function (index, item) {
             var url = $(item).data("src");
-            var autoload = $(item).data("autoload") == "false" ? false : true;
+            var autoload = $(item).data("autoload");
+            autoload = autoload == "false" || autoload == false ? false : true;
             if (url) {
                 if (autoload) {
                     if ($(item).is("input"))
@@ -430,9 +441,12 @@
         if (sel.children().length > 0) {
             return false;
         }
+        var _this = this;
         var blank_value = sel.data("blank-value");
         var blank_text = sel.data("blank-text");
         var is_blank = sel.data("blank") ? true : false;
+        var src_data = sel.data("src-data") || "data";
+        var values = sel.data("selected");
         var builder = function (data) {
             if (is_blank) {
                 if (blank_value === undefined && !blank_text)
@@ -444,10 +458,20 @@
                 else
                     sel.append($("<option value='" + blank_value + "'>" + blank_text + "</option>"));
             }
+            data = data[src_data];
+            if (typeof data == "string") {
+            	try {
+            		data = JSON.parse(data);
+            	} catch(e) {
+            		data = [];
+            	}
+            }
             if (data && data.length > 0) {
                 var value = sel.data("value") ? sel.data("value") : "id";
                 var text = sel.data("text") ? sel.data("text") : "name";
                 var separator = sel.data("separator") || "-";
+                var storeSource = sel.data("store-source") || false;
+                storeSource = storeSource == "false" || storeSource == false ? false : true;
                 for (var i = 0; i < data.length; i++) {
                 	//var option = $("<option value='" + data[i][value] + "'>" + data[i][text] + "</option>");
                 	var textName = [];
@@ -459,9 +483,13 @@
 						}
 					}
                     var option = $("<option value='" + data[i][value] + "'>" + textName.join(separator)+ "</option>");
+                    if (storeSource) {
+                    	option.data("source", data[i]);
+                    }
                     sel.append(option);
                 }
             }
+            _this.fillElemValue(sel[0], values);
         }
         return builder;
     }
@@ -471,8 +499,9 @@
     		url = basePath + url;
     	}
     	ajaxPost(url, {}, function(data) {
-    		if (data.data && data.data.length > 0 && callback) {
-                callback(data.data);
+    		//if (data.data && data.data.length > 0 && callback) {
+    		if (data && callback) {
+                callback(data);
             } 
     	});
     }
@@ -658,12 +687,12 @@
 	/**
 	 * 获取表单数据
 	 */
-	BaseForm.prototype.getFormSimpleData=function () {
+	BaseForm.prototype.getFormSimpleData=function (filter) {
 		var datas = {};
 		var form = this.$element;
 		if (form.length == 0)
 			return datas;
-		var elems = form.find('input[name], select[name], textarea[name]');
+		var elems = form.find('input[name], select[name], textarea[name]').not(filter);
 
 		// 设置datas属性
 		elems.each(function (ind, elem) {
@@ -801,6 +830,68 @@
 				$(':checkbox[data-flag]').iCheck('update');
 			}
 			$('label[name]').text('');
+		}
+	}
+	
+	BaseForm.prototype.fillElemValue = function(elem, value) {
+		if (value != undefined && value != null && $.trim(value) != '') {
+			var is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
+			var is_date=$(elem).data("flag")=="datepicker"||$(elem).data("flag")=="datetimepicker"||$(elem).data("flag")=="date";
+			var date_format=$(elem).data("format")||"yyyy-MM-dd";
+			var is_summernote = $(elem).data("flag") == "summernote";
+			var is_tagsinput = $(elem).data("flag") == "tagsinput";
+			var is_autosize = $(elem).data("flag") == "autosize";
+			var is_selector = elem.type.indexOf("select") > -1;
+			if(is_date) {
+				value=formatDate(value,date_format);
+			}
+			//新增bootstrap-tagsinput byx02561
+			if(is_tagsinput){
+				var valueArr = value.split(',');
+				if(valueArr.length>0){
+					for(var i=0;i<valueArr.length;i++){
+						obj.tagsinput('add',valueArr[i]);
+						//tagsinput的placeholder都清空 by x02561
+						obj.parent().find('.bootstrap-tagsinput').children('input').attr('placeholder', '');
+					}
+				}
+			}else if (is_radio) {
+				//icheck
+				if($(elem).data("flag")=="icheck"){
+					$(elem).iCheck( elem.value == value?'check':'uncheck');
+					form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+				}else{
+					//原生radio
+					elem.checked = elem.value == value;
+				}
+			} else if (is_ckbox) {
+				//icheck
+				if($(elem).data("flag")=="icheck"){
+					$(elem).iCheck($.inArray(elem.value, value.split(',')) > -1?'check':'uncheck');
+					form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+				}else{
+					//原生checkbox
+					elem.checked = $.inArray(elem.value, value.split(',')) > -1 ? true : false;
+				}
+			} else if (elem.tagName.toUpperCase() == 'LABEL') {
+				elem.innerText = value;
+			} else if (is_summernote) {
+				elem.value = value;
+				$(elem).summernote('code',value);
+			}else if(is_autosize){ //textarea 高度自适应
+				elem.value = value;
+				autosize.update(obj);
+			} else if (is_selector) {
+				var multiple = elem.type.indexOf("multiple") > -1;
+				if (multiple) {
+					$(elem).val(value.split(","));
+				} else {
+					elem.value = value;
+				}
+				$(elem).trigger('change');
+			} else {
+				elem.value = value;
+			}
 		}
 	}
 })(jQuery, window, document);

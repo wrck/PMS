@@ -9,6 +9,7 @@
 <cssTag>
     <!-- DataTables -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
@@ -42,77 +43,11 @@
                     <div class="box-body">
                         <div id="searchDiv" class="text-left">
                         	<form id="searchForm">
-                            <template v-for="field in fieldList">
-								<template v-if="field.type == 'hidden' || !field.visible">
-									<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-											:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-									>
-								</template>
-								<template v-else-if="field.type == 'textarea'">
-									<div class="form-group display-flex col-sm-12 col-md-6">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" rows="2" style="resize:none;" draggable="false"
-												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-												></textarea>
-									</div>
-								</template>
-								<template v-else-if="field.type == 'date'">
-									<div class="form-group display-flex ">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-												data-flag="datepicker" :data-format="field.render" autocomplete="off"
-												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-										>
-									</div>
-								</template>
-								<template v-else-if="field.type == 'datetime'">
-									<div class="form-group display-flex ">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-												data-flag="datetimepicker" data-format="field.render" autocomplete="off"
-												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-										>
-									</div>
-								</template>
-								<template v-else-if="field.type == 'select'">
-									<div class="form-group display-flex ">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
-											<option :value="item[field.extValue]" v-for="item in getDataValue(field.extData)" :selected="item[field.extKey] == getFieldValue(field)" >{{item[field.extKey]}}</option>
-										</select>
-									</div>
-								</template>
-								<template v-else-if="field.type == 'urlSelector'">
-									<div class="form-group display-flex ">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-												:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-												:data-flag="field.type" :data-src="parseValue(field, 'extData').src || field.extData" :data-text="field.extKey" :data-value="field.extValue"
-												:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
-												:data-select2-config="JSON.stringify(field.extData['select2-config'])"
-												>
-										</select>
-									</div>
-								</template>
-								<template v-else>
-									<div class="form-group display-flex ">
-										<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" >{{field.name}}</label>
-										<input :id="field.cssId || field.field" :type="field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" 
-												:readonly="field.readonly" :required="field.required" autocomplete="off">
-									</div>
-								</template>
-							</template>
-	                        <div class="btn-group">
-								<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
-								<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
-							</div>
+	                            <%@include file="../template/vue-form-component.jsp" %>
+		                        <div class="btn-group">
+									<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
+									<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
+								</div>
 							</form>
                             <div class="btn-group operate-btn-group">
                                 <button type="button" class="btn btn-default" data-btn-type="add">新增</button>
@@ -198,52 +133,18 @@
                     }
                 } ] */
                 beforeInitConfig: function() {
-                	vm = new Vue({
-						el: "#" + this.searchDiv,
-						data: {
-							//targetValue: this.
-   							fieldList: this.data.columns || []
-    				 	},
-    				 	methods: {
-    				 		getFieldValue: function(field) {
-    				 			var value;
-    				 			try {
-    				 				value = eval("this.targetValue." + field.field);
-    				 			} catch(e) {}
-   				 				try {
-    				 				value = value || eval("this.targetValue." + field.alias);
-   				 				} catch(e) {}
-    				 			return value;
-    				 		},
-    				 		getDataValue: function(key) {
-    				 			var value;
-    				 			try {
-    				 				value = eval("this." + key);
-    				 			} catch(e) {
-    				 			}
-   				 				try {
-    				 				value = value || JSON.parse(key);
-   				 				} catch(e) {
-   				 				}
-    				 			try {
-    				 				value = value || eval(key);
-   				 				} catch(e) {
-   				 					value = key;
-   				 				}
-    				 			return value;
-    				 		},
-    				 		parseValue: function(field, key) {
-    				 			try {
-    				 				field[key] = this.getDataValue(field[key]);
-    				 			} catch(e){}
-    				 			return field[key];
-    				 		}
-    				 	}
-                	});
+                	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
+							el: "#" + this.searchDiv,
+							data: {
+								targetValue: this.data.extData.projectVO,
+	   							fieldList: this.data.columns || []
+	    				 	},
+	                	})
+                	);
                 	
                 	this.searchButton = $("#" + this.searchDiv + " button[data-btn-type='search']");
                 	this.restButton = $("#" + this.searchDiv + " button[data-btn-type='reset']");
-                	$("#searchForm").form();
+                	form = $("#searchForm").form();
                 },
             });
 

@@ -1,12 +1,10 @@
 package com.dp.plat.pms.springmvc.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -16,44 +14,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.dp.plat.context.SpringContext;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.Result;
-import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDataFieldRelationService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
-import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.service.ProjectService;
 import com.dp.plat.util.Util;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "project")
-public class ProjectController {
+public class ProjectController extends BaseController {
 	private final static String VIEW_NAMESPACE = "project/";
+	private final static String DATANAME_FORM = "projectForm";
+	private final static String DATANAME_TABLE = "projectList";
 
 	@Autowired
 	private IProjectService projectService;
-	
+
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
-	
+
 	@Autowired
 	@Qualifier("projectService")
 	private ProjectService oldProjectService;
-	
-	@Autowired
-	private IDataFieldRelationService dataFieldRelationService;
 
 	@RequestMapping
 	public String home() {
@@ -69,7 +61,7 @@ public class ProjectController {
 		// temp.setCompID(user.getCompId());
 		tempParam.setModel(temp);
 		pageParam.setModel(project);
-		
+
 		List<Object> list = null;
 		// 待创建列表
 		if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
@@ -86,10 +78,8 @@ public class ProjectController {
 			pageParam.setPageSize(pageParam.getTotal());
 		}
 		model.addAttribute("data", list);
-		DataFieldRelation dataFieldRelation = new DataFieldRelation("projectList", "table");
-		List<DataFieldRelation> fieldList = dataFieldRelationService.selectBySelective(dataFieldRelation);
-		List<DataTableColumn> columns = new ArrayList<>();
-		columns.addAll(fieldList);
+
+		List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
 		pageParam.setColumns(columns);
 		return VIEW_NAMESPACE + "list";
 	}
@@ -101,21 +91,9 @@ public class ProjectController {
 			if (project != null) {
 				model.addAttribute("targetName", "project");
 				model.addAttribute("targetValue", project);
-				
-				Company company = new Company();
-		        company.setStatus(1);
-		        DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
-				List<Company> companyList = departmentManageService .queryCompanyList(company);
-				model.addAttribute("companyList", companyList);
-				model.addAttribute("departmentList", departmentManageService.queryDepartments());
-				
-				PageParam<Object> tPage = new PageParam<>();
-				DataFieldRelation dataFieldRelation = new DataFieldRelation(project.getProjectType() + "_projectForm", "form");
-				tPage.setPageSize(-1);
-				tPage.setOrderBy("sort, id asc");
-				tPage.setModel(dataFieldRelation);
-				List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
-				model.addAttribute("fieldList", fieldList );
+
+				List<Object> fieldList = this.findFieldList(project.getProjectType() + "_" + DATANAME_FORM, DATATYPE_FORM);
+				model.addAttribute("fieldList", fieldList);
 			}
 		}
 		return VIEW_NAMESPACE + "detail";
@@ -133,25 +111,12 @@ public class ProjectController {
 				return VIEW_NAMESPACE + "detail";
 			}
 			project.setProjectType(projectType);
-			project.setProjectCode(oldProjectService.queryProjectCode(project));
+			project.setProjectCode(projectHeaderService.queryProjectCode(project));
 			model.addAttribute("targetName", "project");
 			model.addAttribute("targetValue", project);
-			
-			Company company = new Company();
-	        company.setStatus(1);
-	        DepartmentManageService departmentManageService = SpringContext.getApplicationContext().getBean("departmentManageService", DepartmentManageService.class);
-			List<Company> companyList = departmentManageService .queryCompanyList(company);
-			model.addAttribute("companyList", companyList);
-			
-			model.addAttribute("departmentList", departmentManageService.queryDepartments());
-			
-			PageParam<Object> tPage = new PageParam<>();
-			DataFieldRelation dataFieldRelation = new DataFieldRelation(projectType + "_projectForm", "form");
-			tPage.setPageSize(-1);
-			tPage.setOrderBy("sort, id asc");
-			tPage.setModel(dataFieldRelation);
-			List<Object> fieldList = dataFieldRelationService.selectBySelectivePageable(tPage);
-			model.addAttribute("fieldList", fieldList );
+
+			List<Object> fieldList = this.findFieldList(projectType + "_" + DATANAME_FORM, DATATYPE_FORM);
+			model.addAttribute("fieldList", fieldList);
 		}
 		model.addAttribute("projectType", projectType);
 		return VIEW_NAMESPACE + "detail";
@@ -161,9 +126,10 @@ public class ProjectController {
 	public String create(ProjectVO project, Model model) {
 		Boolean status = false;
 		String message = null;
-		//如果当前合同号已经创建项目，则直接返回不再创建
-		Integer count = projectHeaderService.queryProjectContractCountByContractNoAndType(Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
-		if(count != null && count != 0){
+		// 如果当前合同号已经创建项目，则直接返回不再创建
+		Integer count = projectHeaderService.queryProjectContractCountByContractNoAndType(
+				Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
+		if (count != null && count != 0) {
 			status = false;
 			message = "该项目合同已存在！";
 		} else {
@@ -188,7 +154,7 @@ public class ProjectController {
 		String message = null;
 		try {
 			projectHeaderService.updateByPrimaryKeySelective(project);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
 			model.addAttribute("errorId", errorId);
@@ -202,14 +168,5 @@ public class ProjectController {
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
 	}
-
-	@RequestMapping(value = "checkUnique", method = RequestMethod.POST)
-	public void checkUnique(@RequestParam("userName") String userName, Model model) {
-		boolean isUnique = false;
-		model.addAttribute("valid", isUnique);
-	}
-
-	@RequestMapping("/param")
-	public void findUserInfoWithParam(HttpServletRequest request, Model model) {
-	}
+	
 }

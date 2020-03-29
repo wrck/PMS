@@ -204,7 +204,7 @@ public class Project extends ProjectQueryParam{
 		this.taskId = taskId;
 	}
 	public Integer getProjectId() {
-		return projectId;
+		return projectId == null ? 0 : projectId;
 	}
 	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;

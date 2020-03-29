@@ -81,79 +81,8 @@
 				<div class="col-xs-12">
 					<div class="box box-info">
 						<form id="projectForm" method="post" :action="formAction" name="projectForm" class="form-inline">
-							<div class="box-body row" v-if="isShow">
-								<!-- <div class="field-inputs">
-									<template v-for="field in fieldList" v-if="field.type != 'textarea'">
-										<div class="form-group">
-											<label :for="field.field" style="text-align: right;" :style="{width: maxLabelWidth}" class="control-label">{{field.name}}</label>
-											<input :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="targetValue[field.field]" :placeholder="field.name || field.title" :style="field.cssStyle">
-										</div>
-									</template>
-								</div>
-							    <div class="field-textarea row">
-							    	<template v-for="field in fieldList" v-if="field.type == 'textarea'">
-							    		<div class="form-group col-sm-6">
-											<label :for="field.field" style="text-align: right;" :style="{width: maxLabelWidth}" class="control-label">{{field.name}}</label>
-											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="targetValue[field.field]" :placeholder="field.name || field.title" :style="field.cssStyle"></textarea>
-										</div>
-									</template>
-							    </div> -->
-								<template v-for="field in fieldList">
-									<template v-if="field.type == 'hidden' || !field.visible">
-										<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-												:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-										>
-									</template>
-									<template v-else-if="field.type == 'textarea'">
-										<div class="form-group display-flex col-sm-12 col-md-6">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" rows="2" style="resize:none;" draggable="false"
-													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-													></textarea>
-										</div>
-									</template>
-									<template v-else-if="field.type == 'date'">
-										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-													data-flag="datepicker" :data-format="field.render" autocomplete="off"
-													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-											>
-										</div>
-									</template>
-									<template v-else-if="field.type == 'datetime'">
-										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-													data-flag="datetimepicker" data-format="field.render" autocomplete="off"
-													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-											>
-										</div>
-									</template>
-									<template v-else-if="field.type == 'select'">
-										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<select :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle"
-													:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
-												<option :value="item[field.extKey]" v-for="item in getDataValue(field.extData)" :selected="item[field.extKey] == getFieldValue(field)" >{{item[field.extValue]}}</option>
-											</select>
-										</div>
-									</template>
-									<template v-else>
-										<div class="form-group display-flex col-sm-6 col-md-3">
-											<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-											<input :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-													:value="getFieldValue(field)" :placeholder="field.name || field.title" :style="field.cssStyle" 
-													:readonly="field.readonly" :required="field.required" autocomplete="off">
-										</div>
-									</template>
-								</template>
+							<div class="box-body row ml-0" v-if="isShow">
+								<%@include file="../template/vue-form-component.jsp" %>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
@@ -190,62 +119,21 @@
 	    	var url = id == 0 ? pm.project.api.create(location.search) : pm.project.api.detail(id);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
-					vm = new Vue({
-						el: "#app",
-						data: $.extend({}, data, {
-							isCreate: id != 0,
-							isShow: true,
-							formAction: pm.project.api.detail(id),
-   							fieldList: data.fieldList || [],
-   							targetName: data.targetName,
-    						targetValue: data.targetValue
-    				 	}),
-    				 	computed: {
-    				 		maxLabelWidth: function() {
-    				 			var fieldList = this.fieldList || [];
-    				 			var width = "";
-    				 			var maxLen = 0;
-    				 			for (var i = 0; i < fieldList.length; i++) {
-									var field = fieldList[i];
-									var name = field.name || "";
-									if (maxLen < name.length) {
-										maxLen = name.length;
-									}
-								}
-    				 			return maxLen + "rem";
-    				 		}
-    				 	},
-    				 	methods: {
-    				 		getFieldValue: function(field) {
-    				 			var value;
-    				 			try {
-    				 				value = eval("this.targetValue." + field.field);
-    				 			} catch(e) {}
-   				 				try {
-    				 				value = value || eval("this.targetValue." + field.alias);
-   				 				} catch(e) {}
-    				 			return value;
-    				 		},
-    				 		getDataValue: function(key) {
-    				 			var value;
-    				 			try {
-    				 				value = eval("this." + key);
-    				 			} catch(e) {
-    				 			}
-   				 				try {
-    				 				value = value || JSON.parse(key);
-   				 				} catch(e) {
-   				 				}
-    				 			try {
-    				 				value = value || eval(key);
-   				 				} catch(e) {
-   				 					value = key;
-   				 				}
-    				 			return value;
-    				 		}
-    				 		
+					vm = new Vue($.extend(true, {}, formVueConfig || {}, {
+							el: "#app",
+							data: $.extend({}, data, {
+								isCreate: id != 0,
+								isShow: true,
+								dataType: "form",
+								formGroupClass: "col-sm-6 col-md-3",
+								formGroupTextareaClass: "col-sm-12 col-md-6",
+								formAction: pm.project.api.detail(id),
+	   							fieldList: data.fieldList || [],
+	   							targetName: data.targetName,
+	    						targetValue: data.targetValue
+	    				 	}),
     				 	}
-    				});
+					));
 					
 					form = $("#projectForm").form();
 					form.initFormData(data.targetValue);

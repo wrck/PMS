@@ -1,3 +1,11 @@
+$.namespace("pm.router");
+pm.router = function(model) {
+	return {
+		api: (model) => eval("pm." + model + ".api"),
+		html: (model) => eval("pm." + model + ".html"),
+	}
+}();
+
 $.namespace("pm.common");
 pm.common = function(namespace) {
 	return {
@@ -72,7 +80,24 @@ pm.project = function() {
 	}
 }();
 
-
+/**
+ * 项目管理
+ */
+$.namespace("pm.dispatch");
+pm.dispatch = function() {
+	var namespace =  ctx + "/pm/dispatch";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+	});
+}();
 
 /*会计期管理*/
 $.namespace('cm.accountPeriod');
