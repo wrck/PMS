@@ -41,4 +41,16 @@ public class ProjectConstant {
 		public final static String UNCREATED	 = "10";
 		
 	}
+
+	public static class DispatchNOPrefix {
+		/**
+		 * 安服项目外派合同
+		 */
+		public final static String AF = "SS";
+	}
+	
+	public static class DispatchType {
+		public final static String FRAMEWORK_AGREEMENT = "frameworkAgreement";
+		public final static String THIRD_PARTY_SERVICES = "thirdPartyServices";
+	}
 }

@@ -222,6 +222,27 @@ CommonLocalTable.prototype.initLocalTable = function(tableId, data) {
 		data : that.data,
 		fnInitComplete : $.proxy(that.fnInitComplete,that)
 	}, that.config)).api();
+//	$("#"+this.tableId +"_filter input[type='search']").addClass("fuzzySearch").attr("placeholder","模糊查找").addClass("form-control").removeClass("input-sm");
+//	$("#" + that.tableId + '_wrapper .dataTables_filter input[type="search"]').bind('input', function(e) {
+//        that.table.search(this.value).draw(false);
+//    });
+//	
+//	if(("scrollY" in that.config || "scrollX" in that.config) ) {
+//		if($.fn.slimScroll){
+//	//		var height = $("#" + that.tableId + "_wrapper .dataTables_scrollBody").height();
+//	//		if(height > 0) {
+//				$("#" + that.tableId + "_wrapper .dataTables_scrollBody").slimScroll({
+//					height: "auto",
+//					size: 8,
+//					disableFadeOut: true,
+//					allowPageScroll: true,
+//					//railVisible: true
+//				});
+//				$("#" + that.tableId + "_wrapper .dataTables_scrollBody").css("height","");
+//				$("#" + that.tableId + "_wrapper .slimScrollDiv").css("height","");
+////				$("#" + that.tableId + "_wrapper .dataTables_scrollHeadInner").css({"paddingRight":"","width":""});
+////				$("#" + that.tableId + "_wrapper .dataTables_scrollHeadInner > .dataTable").css({"marginLeft":"","width":""});
+//	//		}
 }
 
 /**

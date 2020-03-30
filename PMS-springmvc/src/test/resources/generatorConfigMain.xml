@@ -42,13 +42,13 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
 		<!--生成对应表及类名 -->
-		<table tableName="t_dictionary" domainObjectName="Dictionary"
+		<table tableName="pm_dispatch_project_header" domainObjectName="DispatchProject"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
-			<property name="useActualColumnNames" value="false" />
+			<property name="useActualColumnNames" value="true" />
 			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>
 		

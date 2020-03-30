@@ -90,6 +90,7 @@ pm.dispatch = function() {
 	return $.extend(true, {}, router, {
 		api:((namespace) => {
 			return {
+				submit:() => namespace + "/submit.json",
 			};
 		})(namespace),
 		html: ((namespace) => {
