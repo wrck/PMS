@@ -1,0 +1,1472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.DispatchProjectMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.DispatchProject">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="dispatchName" jdbcType="VARCHAR" property="dispatchName" />
+    <result column="dispatchNo" jdbcType="VARCHAR" property="dispatchNo" />
+    <result column="dispatchSeq" jdbcType="VARCHAR" property="dispatchSeq" />
+    <result column="contractNos" jdbcType="VARCHAR" property="contractNos" />
+    <result column="projectIds" jdbcType="VARCHAR" property="projectIds" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="state" jdbcType="INTEGER" property="state" />
+    <result column="peopleNum" jdbcType="INTEGER" property="peopleNum" />
+    <result column="callbackState" jdbcType="INTEGER" property="callbackState" />
+    <result column="facilitatorId" jdbcType="INTEGER" property="facilitatorId" />
+    <result column="facilitatorCode" jdbcType="VARCHAR" property="facilitatorCode" />
+    <result column="facilitatorName" jdbcType="VARCHAR" property="facilitatorName" />
+    <result column="bankInfo" jdbcType="VARCHAR" property="bankInfo" />
+    <result column="bankAccount" jdbcType="VARCHAR" property="bankAccount" />
+    <result column="officeCode" jdbcType="VARCHAR" property="officeCode" />
+    <result column="profitDepCode" jdbcType="VARCHAR" property="profitDepCode" />
+    <result column="dutyPerson" jdbcType="VARCHAR" property="dutyPerson" />
+    <result column="officeDutyPerson" jdbcType="VARCHAR" property="officeDutyPerson" />
+    <result column="isAccrued" jdbcType="BIT" property="isAccrued" />
+    <result column="isInvoiced" jdbcType="BIT" property="isInvoiced" />
+    <result column="dispatchAmount" jdbcType="VARCHAR" property="dispatchAmount" />
+    <result column="prepaidInfo" jdbcType="VARCHAR" property="prepaidInfo" />
+    <result column="prepaidRule" jdbcType="VARCHAR" property="prepaidRule" />
+    <result column="acceptanceInfo" jdbcType="VARCHAR" property="acceptanceInfo" />
+    <result column="reason" jdbcType="VARCHAR" property="reason" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="dispatchTime" jdbcType="TIMESTAMP" property="dispatchTime" />
+    <result column="smsProjectCode" jdbcType="VARCHAR" property="smsProjectCode" />
+    <result column="smsSubmitTime" jdbcType="TIMESTAMP" property="smsSubmitTime" />
+    <result column="smsProjectAmount" jdbcType="VARCHAR" property="smsProjectAmount" />
+    <result column="effectiveForm" jdbcType="TIMESTAMP" property="effectiveForm" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="dispatched" jdbcType="BIT" property="dispatched" />
+    <result column="settled" jdbcType="BIT" property="settled" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="customInfo" jdbcType="OTHER" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, dispatchName, dispatchNo, dispatchSeq, contractNos, projectIds, type, state, 
+    peopleNum, callbackState, facilitatorId, facilitatorCode, facilitatorName, bankInfo, 
+    bankAccount, officeCode, profitDepCode, dutyPerson, officeDutyPerson, isAccrued, 
+    isInvoiced, dispatchAmount, prepaidInfo, prepaidRule, acceptanceInfo, reason, remark, 
+    dispatchTime, smsProjectCode, smsSubmitTime, smsProjectAmount, effectiveForm, effectiveTo, 
+    disabled, dispatched, settled, createBy, createTime, updateBy, updateTime, customInfo
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_dispatch_project_header
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_dispatch_project_header
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_dispatch_project_header (dispatchName, dispatchNo, dispatchSeq, 
+      contractNos, projectIds, type, 
+      state, peopleNum, callbackState, 
+      facilitatorId, facilitatorCode, facilitatorName, 
+      bankInfo, bankAccount, officeCode, 
+      profitDepCode, dutyPerson, officeDutyPerson, 
+      isAccrued, isInvoiced, dispatchAmount, 
+      prepaidInfo, prepaidRule, acceptanceInfo, 
+      reason, remark, dispatchTime, 
+      smsProjectCode, smsSubmitTime, smsProjectAmount, 
+      effectiveForm, effectiveTo, disabled, 
+      dispatched, settled, createBy, 
+      createTime, updateBy, updateTime, 
+      customInfo)
+    values (#{dispatchName,jdbcType=VARCHAR}, #{dispatchNo,jdbcType=VARCHAR}, #{dispatchSeq,jdbcType=VARCHAR}, 
+      #{contractNos,jdbcType=VARCHAR}, #{projectIds,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, 
+      #{state,jdbcType=INTEGER}, #{peopleNum,jdbcType=INTEGER}, #{callbackState,jdbcType=INTEGER}, 
+      #{facilitatorId,jdbcType=INTEGER}, #{facilitatorCode,jdbcType=VARCHAR}, #{facilitatorName,jdbcType=VARCHAR}, 
+      #{bankInfo,jdbcType=VARCHAR}, #{bankAccount,jdbcType=VARCHAR}, #{officeCode,jdbcType=VARCHAR}, 
+      #{profitDepCode,jdbcType=VARCHAR}, #{dutyPerson,jdbcType=VARCHAR}, #{officeDutyPerson,jdbcType=VARCHAR}, 
+      #{isAccrued,jdbcType=BIT}, #{isInvoiced,jdbcType=BIT}, #{dispatchAmount,jdbcType=VARCHAR}, 
+      #{prepaidInfo,jdbcType=VARCHAR}, #{prepaidRule,jdbcType=VARCHAR}, #{acceptanceInfo,jdbcType=VARCHAR}, 
+      #{reason,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{dispatchTime,jdbcType=TIMESTAMP}, 
+      #{smsProjectCode,jdbcType=VARCHAR}, #{smsSubmitTime,jdbcType=TIMESTAMP}, #{smsProjectAmount,jdbcType=VARCHAR}, 
+      #{effectiveForm,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, 
+      #{dispatched,jdbcType=BIT}, #{settled,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{customInfo,jdbcType=OTHER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_dispatch_project_header
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="dispatchName != null">
+        dispatchName,
+      </if>
+      <if test="dispatchNo != null">
+        dispatchNo,
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq,
+      </if>
+      <if test="contractNos != null">
+        contractNos,
+      </if>
+      <if test="projectIds != null">
+        projectIds,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="peopleNum != null">
+        peopleNum,
+      </if>
+      <if test="callbackState != null">
+        callbackState,
+      </if>
+      <if test="facilitatorId != null">
+        facilitatorId,
+      </if>
+      <if test="facilitatorCode != null">
+        facilitatorCode,
+      </if>
+      <if test="facilitatorName != null">
+        facilitatorName,
+      </if>
+      <if test="bankInfo != null">
+        bankInfo,
+      </if>
+      <if test="bankAccount != null">
+        bankAccount,
+      </if>
+      <if test="officeCode != null">
+        officeCode,
+      </if>
+      <if test="profitDepCode != null">
+        profitDepCode,
+      </if>
+      <if test="dutyPerson != null">
+        dutyPerson,
+      </if>
+      <if test="officeDutyPerson != null">
+        officeDutyPerson,
+      </if>
+      <if test="isAccrued != null">
+        isAccrued,
+      </if>
+      <if test="isInvoiced != null">
+        isInvoiced,
+      </if>
+      <if test="dispatchAmount != null">
+        dispatchAmount,
+      </if>
+      <if test="prepaidInfo != null">
+        prepaidInfo,
+      </if>
+      <if test="prepaidRule != null">
+        prepaidRule,
+      </if>
+      <if test="acceptanceInfo != null">
+        acceptanceInfo,
+      </if>
+      <if test="reason != null">
+        reason,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="dispatchTime != null">
+        dispatchTime,
+      </if>
+      <if test="smsProjectCode != null">
+        smsProjectCode,
+      </if>
+      <if test="smsSubmitTime != null">
+        smsSubmitTime,
+      </if>
+      <if test="smsProjectAmount != null">
+        smsProjectAmount,
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="dispatched != null">
+        dispatched,
+      </if>
+      <if test="settled != null">
+        settled,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="dispatchName != null">
+        #{dispatchName,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchNo != null">
+        #{dispatchNo,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchSeq != null">
+        #{dispatchSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="contractNos != null">
+        #{contractNos,jdbcType=VARCHAR},
+      </if>
+      <if test="projectIds != null">
+        #{projectIds,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="peopleNum != null">
+        #{peopleNum,jdbcType=INTEGER},
+      </if>
+      <if test="callbackState != null">
+        #{callbackState,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorId != null">
+        #{facilitatorId,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorCode != null">
+        #{facilitatorCode,jdbcType=VARCHAR},
+      </if>
+      <if test="facilitatorName != null">
+        #{facilitatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="bankInfo != null">
+        #{bankInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null">
+        #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="profitDepCode != null">
+        #{profitDepCode,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyPerson != null">
+        #{dutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="officeDutyPerson != null">
+        #{officeDutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="isAccrued != null">
+        #{isAccrued,jdbcType=BIT},
+      </if>
+      <if test="isInvoiced != null">
+        #{isInvoiced,jdbcType=BIT},
+      </if>
+      <if test="dispatchAmount != null">
+        #{dispatchAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidInfo != null">
+        #{prepaidInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidRule != null">
+        #{prepaidRule,jdbcType=VARCHAR},
+      </if>
+      <if test="acceptanceInfo != null">
+        #{acceptanceInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="reason != null">
+        #{reason,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchTime != null">
+        #{dispatchTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectCode != null">
+        #{smsProjectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="smsSubmitTime != null">
+        #{smsSubmitTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectAmount != null">
+        #{smsProjectAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="effectiveForm != null">
+        #{effectiveForm,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="dispatched != null">
+        #{dispatched,jdbcType=BIT},
+      </if>
+      <if test="settled != null">
+        #{settled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=OTHER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject">
+    update pm_dispatch_project_header
+    <set>
+      <if test="dispatchName != null">
+        dispatchName = #{dispatchName,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchNo != null">
+        dispatchNo = #{dispatchNo,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq = #{dispatchSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="contractNos != null">
+        contractNos = #{contractNos,jdbcType=VARCHAR},
+      </if>
+      <if test="projectIds != null">
+        projectIds = #{projectIds,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="peopleNum != null">
+        peopleNum = #{peopleNum,jdbcType=INTEGER},
+      </if>
+      <if test="callbackState != null">
+        callbackState = #{callbackState,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorId != null">
+        facilitatorId = #{facilitatorId,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorCode != null">
+        facilitatorCode = #{facilitatorCode,jdbcType=VARCHAR},
+      </if>
+      <if test="facilitatorName != null">
+        facilitatorName = #{facilitatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="bankInfo != null">
+        bankInfo = #{bankInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null">
+        bankAccount = #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        officeCode = #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="profitDepCode != null">
+        profitDepCode = #{profitDepCode,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyPerson != null">
+        dutyPerson = #{dutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="officeDutyPerson != null">
+        officeDutyPerson = #{officeDutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="isAccrued != null">
+        isAccrued = #{isAccrued,jdbcType=BIT},
+      </if>
+      <if test="isInvoiced != null">
+        isInvoiced = #{isInvoiced,jdbcType=BIT},
+      </if>
+      <if test="dispatchAmount != null">
+        dispatchAmount = #{dispatchAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidInfo != null">
+        prepaidInfo = #{prepaidInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidRule != null">
+        prepaidRule = #{prepaidRule,jdbcType=VARCHAR},
+      </if>
+      <if test="acceptanceInfo != null">
+        acceptanceInfo = #{acceptanceInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="reason != null">
+        reason = #{reason,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchTime != null">
+        dispatchTime = #{dispatchTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectCode != null">
+        smsProjectCode = #{smsProjectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="smsSubmitTime != null">
+        smsSubmitTime = #{smsSubmitTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectAmount != null">
+        smsProjectAmount = #{smsProjectAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm = #{effectiveForm,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="dispatched != null">
+        dispatched = #{dispatched,jdbcType=BIT},
+      </if>
+      <if test="settled != null">
+        settled = #{settled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        customInfo = #{customInfo,jdbcType=OTHER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject">
+    update pm_dispatch_project_header
+    set dispatchName = #{dispatchName,jdbcType=VARCHAR},
+      dispatchNo = #{dispatchNo,jdbcType=VARCHAR},
+      dispatchSeq = #{dispatchSeq,jdbcType=VARCHAR},
+      contractNos = #{contractNos,jdbcType=VARCHAR},
+      projectIds = #{projectIds,jdbcType=VARCHAR},
+      type = #{type,jdbcType=VARCHAR},
+      state = #{state,jdbcType=INTEGER},
+      peopleNum = #{peopleNum,jdbcType=INTEGER},
+      callbackState = #{callbackState,jdbcType=INTEGER},
+      facilitatorId = #{facilitatorId,jdbcType=INTEGER},
+      facilitatorCode = #{facilitatorCode,jdbcType=VARCHAR},
+      facilitatorName = #{facilitatorName,jdbcType=VARCHAR},
+      bankInfo = #{bankInfo,jdbcType=VARCHAR},
+      bankAccount = #{bankAccount,jdbcType=VARCHAR},
+      officeCode = #{officeCode,jdbcType=VARCHAR},
+      profitDepCode = #{profitDepCode,jdbcType=VARCHAR},
+      dutyPerson = #{dutyPerson,jdbcType=VARCHAR},
+      officeDutyPerson = #{officeDutyPerson,jdbcType=VARCHAR},
+      isAccrued = #{isAccrued,jdbcType=BIT},
+      isInvoiced = #{isInvoiced,jdbcType=BIT},
+      dispatchAmount = #{dispatchAmount,jdbcType=VARCHAR},
+      prepaidInfo = #{prepaidInfo,jdbcType=VARCHAR},
+      prepaidRule = #{prepaidRule,jdbcType=VARCHAR},
+      acceptanceInfo = #{acceptanceInfo,jdbcType=VARCHAR},
+      reason = #{reason,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      dispatchTime = #{dispatchTime,jdbcType=TIMESTAMP},
+      smsProjectCode = #{smsProjectCode,jdbcType=VARCHAR},
+      smsSubmitTime = #{smsSubmitTime,jdbcType=TIMESTAMP},
+      smsProjectAmount = #{smsProjectAmount,jdbcType=VARCHAR},
+      effectiveForm = #{effectiveForm,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      disabled = #{disabled,jdbcType=BIT},
+      dispatched = #{dispatched,jdbcType=BIT},
+      settled = #{settled,jdbcType=BIT},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      customInfo = #{customInfo,jdbcType=OTHER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" resultMap="BaseResultMap">
+    select * from pm_dispatch_project_header
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="dispatchName != null and '' != dispatchName">
+				dispatchName = #{dispatchName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchNo != null and '' != dispatchNo">
+				dispatchNo = #{dispatchNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchSeq != null and '' != dispatchSeq">
+				dispatchSeq = #{dispatchSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="contractNos != null and '' != contractNos">
+				contractNos = #{contractNos, jdbcType=VARCHAR} AND
+			</if>
+			<if test="projectIds != null and '' != projectIds">
+				projectIds = #{projectIds, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="peopleNum != null and '' != peopleNum">
+				peopleNum = #{peopleNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="callbackState != null and '' != callbackState">
+				callbackState = #{callbackState, jdbcType=INTEGER} AND
+			</if>
+			<if test="facilitatorId != null and '' != facilitatorId">
+				facilitatorId = #{facilitatorId, jdbcType=INTEGER} AND
+			</if>
+			<if test="facilitatorCode != null and '' != facilitatorCode">
+				facilitatorCode = #{facilitatorCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="facilitatorName != null and '' != facilitatorName">
+				facilitatorName = #{facilitatorName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="bankInfo != null and '' != bankInfo">
+				bankInfo = #{bankInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="bankAccount != null and '' != bankAccount">
+				bankAccount = #{bankAccount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="officeCode != null and '' != officeCode">
+				officeCode = #{officeCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="profitDepCode != null and '' != profitDepCode">
+				profitDepCode = #{profitDepCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dutyPerson != null and '' != dutyPerson">
+				dutyPerson = #{dutyPerson, jdbcType=VARCHAR} AND
+			</if>
+			<if test="officeDutyPerson != null and '' != officeDutyPerson">
+				officeDutyPerson = #{officeDutyPerson, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isAccrued != null and '' != isAccrued">
+				isAccrued = #{isAccrued, jdbcType=BIT} AND
+			</if>
+			<if test="isInvoiced != null and '' != isInvoiced">
+				isInvoiced = #{isInvoiced, jdbcType=BIT} AND
+			</if>
+			<if test="dispatchAmount != null and '' != dispatchAmount">
+				dispatchAmount = #{dispatchAmount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="prepaidInfo != null and '' != prepaidInfo">
+				prepaidInfo = #{prepaidInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="prepaidRule != null and '' != prepaidRule">
+				prepaidRule = #{prepaidRule, jdbcType=VARCHAR} AND
+			</if>
+			<if test="acceptanceInfo != null and '' != acceptanceInfo">
+				acceptanceInfo = #{acceptanceInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="reason != null and '' != reason">
+				reason = #{reason, jdbcType=VARCHAR} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchTime != null and '' != dispatchTime">
+				dispatchTime = #{dispatchTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="smsProjectCode != null and '' != smsProjectCode">
+				smsProjectCode = #{smsProjectCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="smsSubmitTime != null and '' != smsSubmitTime">
+				smsSubmitTime = #{smsSubmitTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="smsProjectAmount != null and '' != smsProjectAmount">
+				smsProjectAmount = #{smsProjectAmount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="effectiveForm != null and '' != effectiveForm">
+				effectiveForm = #{effectiveForm, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="dispatched != null and '' != dispatched">
+				dispatched = #{dispatched, jdbcType=BIT} AND
+			</if>
+			<if test="settled != null and '' != settled">
+				settled = #{settled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="customInfo != null and '' != customInfo">
+				customInfo = #{customInfo, jdbcType=OTHER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" resultType="long">
+    select count(1) from pm_dispatch_project_header
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="dispatchName != null and '' != dispatchName">
+				dispatchName = #{dispatchName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchNo != null and '' != dispatchNo">
+				dispatchNo = #{dispatchNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchSeq != null and '' != dispatchSeq">
+				dispatchSeq = #{dispatchSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="contractNos != null and '' != contractNos">
+				contractNos = #{contractNos, jdbcType=VARCHAR} AND
+			</if>
+			<if test="projectIds != null and '' != projectIds">
+				projectIds = #{projectIds, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="peopleNum != null and '' != peopleNum">
+				peopleNum = #{peopleNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="callbackState != null and '' != callbackState">
+				callbackState = #{callbackState, jdbcType=INTEGER} AND
+			</if>
+			<if test="facilitatorId != null and '' != facilitatorId">
+				facilitatorId = #{facilitatorId, jdbcType=INTEGER} AND
+			</if>
+			<if test="facilitatorCode != null and '' != facilitatorCode">
+				facilitatorCode = #{facilitatorCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="facilitatorName != null and '' != facilitatorName">
+				facilitatorName = #{facilitatorName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="bankInfo != null and '' != bankInfo">
+				bankInfo = #{bankInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="bankAccount != null and '' != bankAccount">
+				bankAccount = #{bankAccount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="officeCode != null and '' != officeCode">
+				officeCode = #{officeCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="profitDepCode != null and '' != profitDepCode">
+				profitDepCode = #{profitDepCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dutyPerson != null and '' != dutyPerson">
+				dutyPerson = #{dutyPerson, jdbcType=VARCHAR} AND
+			</if>
+			<if test="officeDutyPerson != null and '' != officeDutyPerson">
+				officeDutyPerson = #{officeDutyPerson, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isAccrued != null and '' != isAccrued">
+				isAccrued = #{isAccrued, jdbcType=BIT} AND
+			</if>
+			<if test="isInvoiced != null and '' != isInvoiced">
+				isInvoiced = #{isInvoiced, jdbcType=BIT} AND
+			</if>
+			<if test="dispatchAmount != null and '' != dispatchAmount">
+				dispatchAmount = #{dispatchAmount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="prepaidInfo != null and '' != prepaidInfo">
+				prepaidInfo = #{prepaidInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="prepaidRule != null and '' != prepaidRule">
+				prepaidRule = #{prepaidRule, jdbcType=VARCHAR} AND
+			</if>
+			<if test="acceptanceInfo != null and '' != acceptanceInfo">
+				acceptanceInfo = #{acceptanceInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="reason != null and '' != reason">
+				reason = #{reason, jdbcType=VARCHAR} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchTime != null and '' != dispatchTime">
+				dispatchTime = #{dispatchTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="smsProjectCode != null and '' != smsProjectCode">
+				smsProjectCode = #{smsProjectCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="smsSubmitTime != null and '' != smsSubmitTime">
+				smsSubmitTime = #{smsSubmitTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="smsProjectAmount != null and '' != smsProjectAmount">
+				smsProjectAmount = #{smsProjectAmount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="effectiveForm != null and '' != effectiveForm">
+				effectiveForm = #{effectiveForm, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null and '' != effectiveTo">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="dispatched != null and '' != dispatched">
+				dispatched = #{dispatched, jdbcType=BIT} AND
+			</if>
+			<if test="settled != null and '' != settled">
+				settled = #{settled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="customInfo != null and '' != customInfo">
+				customInfo = #{customInfo, jdbcType=OTHER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from pm_dispatch_project_header
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dispatchName != null and '' != model.dispatchName">
+					dispatchName = #{model.dispatchName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchNo != null and '' != model.dispatchNo">
+					dispatchNo = #{model.dispatchNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
+					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.contractNos != null and '' != model.contractNos">
+					contractNos = #{model.contractNos, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.projectIds != null and '' != model.projectIds">
+					projectIds = #{model.projectIds, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.peopleNum != null and '' != model.peopleNum">
+					peopleNum = #{model.peopleNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.callbackState != null and '' != model.callbackState">
+					callbackState = #{model.callbackState, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.facilitatorId != null and '' != model.facilitatorId">
+					facilitatorId = #{model.facilitatorId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.facilitatorCode != null and '' != model.facilitatorCode">
+					facilitatorCode = #{model.facilitatorCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.facilitatorName != null and '' != model.facilitatorName">
+					facilitatorName = #{model.facilitatorName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.bankInfo != null and '' != model.bankInfo">
+					bankInfo = #{model.bankInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.bankAccount != null and '' != model.bankAccount">
+					bankAccount = #{model.bankAccount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.officeCode != null and '' != model.officeCode">
+					officeCode = #{model.officeCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.profitDepCode != null and '' != model.profitDepCode">
+					profitDepCode = #{model.profitDepCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dutyPerson != null and '' != model.dutyPerson">
+					dutyPerson = #{model.dutyPerson, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.officeDutyPerson != null and '' != model.officeDutyPerson">
+					officeDutyPerson = #{model.officeDutyPerson, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isAccrued != null and '' != model.isAccrued">
+					isAccrued = #{model.isAccrued, jdbcType=BIT} AND
+				</if>
+				<if test="model.isInvoiced != null and '' != model.isInvoiced">
+					isInvoiced = #{model.isInvoiced, jdbcType=BIT} AND
+				</if>
+				<if test="model.dispatchAmount != null and '' != model.dispatchAmount">
+					dispatchAmount = #{model.dispatchAmount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.prepaidInfo != null and '' != model.prepaidInfo">
+					prepaidInfo = #{model.prepaidInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.prepaidRule != null and '' != model.prepaidRule">
+					prepaidRule = #{model.prepaidRule, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.acceptanceInfo != null and '' != model.acceptanceInfo">
+					acceptanceInfo = #{model.acceptanceInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.reason != null and '' != model.reason">
+					reason = #{model.reason, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchTime != null and '' != model.dispatchTime">
+					dispatchTime = #{model.dispatchTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.smsProjectCode != null and '' != model.smsProjectCode">
+					smsProjectCode = #{model.smsProjectCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.smsSubmitTime != null and '' != model.smsSubmitTime">
+					smsSubmitTime = #{model.smsSubmitTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.smsProjectAmount != null and '' != model.smsProjectAmount">
+					smsProjectAmount = #{model.smsProjectAmount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.effectiveForm != null and '' != model.effectiveForm">
+					effectiveForm = #{model.effectiveForm, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.dispatched != null and '' != model.dispatched">
+					dispatched = #{model.dispatched, jdbcType=BIT} AND
+				</if>
+				<if test="model.settled != null and '' != model.settled">
+					settled = #{model.settled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null and '' != model.customInfo">
+					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dispatchName like CONCAT("%", #{fuzzy}, "%") or
+					dispatchNo like CONCAT("%", #{fuzzy}, "%") or
+					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					contractNos like CONCAT("%", #{fuzzy}, "%") or
+					facilitatorName like CONCAT("%", #{fuzzy}, "%") or
+					bankInfo like CONCAT("%", #{fuzzy}, "%") or
+					bankAccount like CONCAT("%", #{fuzzy}, "%") or
+					officeCode like CONCAT("%", #{fuzzy}, "%") or
+					profitDepCode like CONCAT("%", #{fuzzy}, "%") or
+					dutyPerson like CONCAT("%", #{fuzzy}, "%") or
+					officeDutyPerson like CONCAT("%", #{fuzzy}, "%") or
+					dispatchAmount like CONCAT("%", #{fuzzy}, "%") or
+					prepaidInfo like CONCAT("%", #{fuzzy}, "%") or
+					prepaidRule like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceInfo like CONCAT("%", #{fuzzy}, "%") or
+					reason like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					smsProjectCode like CONCAT("%", #{fuzzy}, "%") or
+					smsProjectAmount like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_dispatch_project_header
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dispatchName != null and '' != model.dispatchName">
+					dispatchName = #{model.dispatchName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchNo != null and '' != model.dispatchNo">
+					dispatchNo = #{model.dispatchNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
+					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.contractNos != null and '' != model.contractNos">
+					contractNos = #{model.contractNos, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.projectIds != null and '' != model.projectIds">
+					projectIds = #{model.projectIds, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.peopleNum != null and '' != model.peopleNum">
+					peopleNum = #{model.peopleNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.callbackState != null and '' != model.callbackState">
+					callbackState = #{model.callbackState, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.facilitatorId != null and '' != model.facilitatorId">
+					facilitatorId = #{model.facilitatorId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.facilitatorCode != null and '' != model.facilitatorCode">
+					facilitatorCode = #{model.facilitatorCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.facilitatorName != null and '' != model.facilitatorName">
+					facilitatorName = #{model.facilitatorName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.bankInfo != null and '' != model.bankInfo">
+					bankInfo = #{model.bankInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.bankAccount != null and '' != model.bankAccount">
+					bankAccount = #{model.bankAccount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.officeCode != null and '' != model.officeCode">
+					officeCode = #{model.officeCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.profitDepCode != null and '' != model.profitDepCode">
+					profitDepCode = #{model.profitDepCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dutyPerson != null and '' != model.dutyPerson">
+					dutyPerson = #{model.dutyPerson, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.officeDutyPerson != null and '' != model.officeDutyPerson">
+					officeDutyPerson = #{model.officeDutyPerson, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isAccrued != null and '' != model.isAccrued">
+					isAccrued = #{model.isAccrued, jdbcType=BIT} AND
+				</if>
+				<if test="model.isInvoiced != null and '' != model.isInvoiced">
+					isInvoiced = #{model.isInvoiced, jdbcType=BIT} AND
+				</if>
+				<if test="model.dispatchAmount != null and '' != model.dispatchAmount">
+					dispatchAmount = #{model.dispatchAmount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.prepaidInfo != null and '' != model.prepaidInfo">
+					prepaidInfo = #{model.prepaidInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.prepaidRule != null and '' != model.prepaidRule">
+					prepaidRule = #{model.prepaidRule, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.acceptanceInfo != null and '' != model.acceptanceInfo">
+					acceptanceInfo = #{model.acceptanceInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.reason != null and '' != model.reason">
+					reason = #{model.reason, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchTime != null and '' != model.dispatchTime">
+					dispatchTime = #{model.dispatchTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.smsProjectCode != null and '' != model.smsProjectCode">
+					smsProjectCode = #{model.smsProjectCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.smsSubmitTime != null and '' != model.smsSubmitTime">
+					smsSubmitTime = #{model.smsSubmitTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.smsProjectAmount != null and '' != model.smsProjectAmount">
+					smsProjectAmount = #{model.smsProjectAmount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.effectiveForm != null and '' != model.effectiveForm">
+					effectiveForm = #{model.effectiveForm, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.dispatched != null and '' != model.dispatched">
+					dispatched = #{model.dispatched, jdbcType=BIT} AND
+				</if>
+				<if test="model.settled != null and '' != model.settled">
+					settled = #{model.settled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null and '' != model.customInfo">
+					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dispatchName like CONCAT("%", #{fuzzy}, "%") or
+					dispatchNo like CONCAT("%", #{fuzzy}, "%") or
+					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					contractNos like CONCAT("%", #{fuzzy}, "%") or
+					facilitatorName like CONCAT("%", #{fuzzy}, "%") or
+					bankInfo like CONCAT("%", #{fuzzy}, "%") or
+					bankAccount like CONCAT("%", #{fuzzy}, "%") or
+					officeCode like CONCAT("%", #{fuzzy}, "%") or
+					profitDepCode like CONCAT("%", #{fuzzy}, "%") or
+					dutyPerson like CONCAT("%", #{fuzzy}, "%") or
+					officeDutyPerson like CONCAT("%", #{fuzzy}, "%") or
+					dispatchAmount like CONCAT("%", #{fuzzy}, "%") or
+					prepaidInfo like CONCAT("%", #{fuzzy}, "%") or
+					prepaidRule like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceInfo like CONCAT("%", #{fuzzy}, "%") or
+					reason like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					smsProjectCode like CONCAT("%", #{fuzzy}, "%") or
+					smsProjectAmount like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <insert id="insertOrUpdateSelective" keyProperty="id" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" useGeneratedKeys="true">
+    insert into pm_dispatch_project_header
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="dispatchName != null">
+        dispatchName,
+      </if>
+      <if test="dispatchNo != null">
+        dispatchNo,
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq,
+      </if>
+      <if test="contractNos != null">
+        contractNos,
+      </if>
+      <if test="projectIds != null">
+        projectIds,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="peopleNum != null">
+        peopleNum,
+      </if>
+      <if test="callbackState != null">
+        callbackState,
+      </if>
+      <if test="facilitatorId != null">
+        facilitatorId,
+      </if>
+      <if test="facilitatorCode != null">
+        facilitatorCode,
+      </if>
+      <if test="facilitatorName != null">
+        facilitatorName,
+      </if>
+      <if test="bankInfo != null">
+        bankInfo,
+      </if>
+      <if test="bankAccount != null">
+        bankAccount,
+      </if>
+      <if test="officeCode != null">
+        officeCode,
+      </if>
+      <if test="profitDepCode != null">
+        profitDepCode,
+      </if>
+      <if test="dutyPerson != null">
+        dutyPerson,
+      </if>
+      <if test="officeDutyPerson != null">
+        officeDutyPerson,
+      </if>
+      <if test="isAccrued != null">
+        isAccrued,
+      </if>
+      <if test="isInvoiced != null">
+        isInvoiced,
+      </if>
+      <if test="dispatchAmount != null">
+        dispatchAmount,
+      </if>
+      <if test="prepaidInfo != null">
+        prepaidInfo,
+      </if>
+      <if test="prepaidRule != null">
+        prepaidRule,
+      </if>
+      <if test="acceptanceInfo != null">
+        acceptanceInfo,
+      </if>
+      <if test="reason != null">
+        reason,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="dispatchTime != null">
+        dispatchTime,
+      </if>
+      <if test="smsProjectCode != null">
+        smsProjectCode,
+      </if>
+      <if test="smsSubmitTime != null">
+        smsSubmitTime,
+      </if>
+      <if test="smsProjectAmount != null">
+        smsProjectAmount,
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="dispatched != null">
+        dispatched,
+      </if>
+      <if test="settled != null">
+        settled,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchName != null">
+        #{dispatchName,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchNo != null">
+        #{dispatchNo,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchSeq != null">
+        #{dispatchSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="contractNos != null">
+        #{contractNos,jdbcType=VARCHAR},
+      </if>
+      <if test="projectIds != null">
+        #{projectIds,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="peopleNum != null">
+        #{peopleNum,jdbcType=INTEGER},
+      </if>
+      <if test="callbackState != null">
+        #{callbackState,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorId != null">
+        #{facilitatorId,jdbcType=INTEGER},
+      </if>
+      <if test="facilitatorCode != null">
+        #{facilitatorCode,jdbcType=VARCHAR},
+      </if>
+      <if test="facilitatorName != null">
+        #{facilitatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="bankInfo != null">
+        #{bankInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null">
+        #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="profitDepCode != null">
+        #{profitDepCode,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyPerson != null">
+        #{dutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="officeDutyPerson != null">
+        #{officeDutyPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="isAccrued != null">
+        #{isAccrued,jdbcType=BIT},
+      </if>
+      <if test="isInvoiced != null">
+        #{isInvoiced,jdbcType=BIT},
+      </if>
+      <if test="dispatchAmount != null">
+        #{dispatchAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidInfo != null">
+        #{prepaidInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidRule != null">
+        #{prepaidRule,jdbcType=VARCHAR},
+      </if>
+      <if test="acceptanceInfo != null">
+        #{acceptanceInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="reason != null">
+        #{reason,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchTime != null">
+        #{dispatchTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectCode != null">
+        #{smsProjectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="smsSubmitTime != null">
+        #{smsSubmitTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="smsProjectAmount != null">
+        #{smsProjectAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="effectiveForm != null">
+        #{effectiveForm,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="dispatched != null">
+        #{dispatched,jdbcType=BIT},
+      </if>
+      <if test="settled != null">
+        #{settled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=OTHER},
+      </if>
+    </trim>
+    ON DUPLICATE KEY UPDATE
+    <trim suffixOverrides=",">
+      <if test="dispatchName != null">
+        dispatchName = values(dispatchName),
+      </if>
+      <if test="dispatchNo != null">
+        dispatchNo = values(dispatchNo),
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq = values(dispatchSeq),
+      </if>
+      <if test="contractNos != null">
+        contractNos = values(contractNos),
+      </if>
+      <if test="projectIds != null">
+        projectIds = values(projectIds),
+      </if>
+      <if test="type != null">
+        type = values(type),
+      </if>
+      <if test="state != null">
+        state = values(state),
+      </if>
+      <if test="peopleNum != null">
+        peopleNum = values(peopleNum),
+      </if>
+      <if test="callbackState != null">
+        callbackState = values(callbackState),
+      </if>
+      <if test="facilitatorId != null">
+        facilitatorId = values(facilitatorId),
+      </if>
+      <if test="facilitatorCode != null">
+        facilitatorCode = values(facilitatorCode),
+      </if>
+      <if test="facilitatorName != null">
+        facilitatorName = values(facilitatorName),
+      </if>
+      <if test="bankInfo != null">
+        bankInfo = values(bankInfo),
+      </if>
+      <if test="bankAccount != null">
+        bankAccount = values(bankAccount),
+      </if>
+      <if test="officeCode != null">
+        officeCode = values(officeCode),
+      </if>
+      <if test="profitDepCode != null">
+        profitDepCode = values(profitDepCode),
+      </if>
+      <if test="dutyPerson != null">
+        dutyPerson = values(dutyPerson),
+      </if>
+      <if test="officeDutyPerson != null">
+        officeDutyPerson = values(officeDutyPerson),
+      </if>
+      <if test="isAccrued != null">
+        isAccrued = values(isAccrued),
+      </if>
+      <if test="isInvoiced != null">
+        isInvoiced = values(isInvoiced),
+      </if>
+      <if test="dispatchAmount != null">
+        dispatchAmount = values(dispatchAmount),
+      </if>
+      <if test="prepaidInfo != null">
+        prepaidInfo = values(prepaidInfo),
+      </if>
+      <if test="prepaidRule != null">
+        prepaidRule = values(prepaidRule),
+      </if>
+      <if test="acceptanceInfo != null">
+        acceptanceInfo = values(acceptanceInfo),
+      </if>
+      <if test="reason != null">
+        reason = values(reason),
+      </if>
+      <if test="remark != null">
+        remark = values(remark),
+      </if>
+      <if test="dispatchTime != null">
+        dispatchTime = values(dispatchTime),
+      </if>
+      <if test="smsProjectCode != null">
+        smsProjectCode = values(smsProjectCode),
+      </if>
+      <if test="smsSubmitTime != null">
+        smsSubmitTime = values(smsSubmitTime),
+      </if>
+      <if test="smsProjectAmount != null">
+        smsProjectAmount = values(smsProjectAmount),
+      </if>
+      <if test="effectiveForm != null">
+        effectiveForm = values(effectiveForm),
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = values(effectiveTo),
+      </if>
+      <if test="disabled != null">
+        disabled = values(disabled),
+      </if>
+      <if test="dispatched != null">
+        dispatched = values(dispatched),
+      </if>
+      <if test="settled != null">
+        settled = values(settled),
+      </if>
+      <if test="updateBy != null">
+        updateBy = values(updateBy),
+      </if>
+      <if test="updateTime != null">
+        updateTime = values(updateTime),
+      </if>
+      <if test="customInfo != null">
+        customInfo = values(customInfo),
+      </if>
+    </trim>
+  </insert>
+</mapper>
