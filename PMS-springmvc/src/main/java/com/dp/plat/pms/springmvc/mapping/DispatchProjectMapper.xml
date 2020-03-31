@@ -926,7 +926,7 @@
 					smsProjectCode like CONCAT("%", #{fuzzy}, "%") or
 					smsProjectAmount like CONCAT("%", #{fuzzy}, "%") or
 					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
@@ -1092,7 +1092,7 @@
 					smsProjectCode like CONCAT("%", #{fuzzy}, "%") or
 					smsProjectAmount like CONCAT("%", #{fuzzy}, "%") or
 					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>

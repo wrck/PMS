@@ -99,10 +99,10 @@
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
-							<div id="tabDiv" class="box-body" v-if="isShow">
-								<%@include file="../template/vue-tab-component.jsp" %>
-							</div>
 						</form>
+					</div>
+					<div id="tabDiv" class="" v-if="isShow">
+						<%@include file="../template/vue-tab-component.jsp" %>
 					</div>
 				</div>
 			</div>
@@ -194,7 +194,7 @@
 		    		});
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		var projectIdsPlaceholder = data.targetValue.dispatchName;
+		    		var projectIdsPlaceholder = (data.targetValue || {}).dispatchName;
 		    		$("#projectIds").select2({
 		    			allowClear: true,
 		    			ajax: {
@@ -218,7 +218,7 @@
 								  	return obj;
 								});
 		    			      	return {
-		    			        	results: data.data,
+		    			        	results: results,
 		    			        	pagination: {
 		    			          		more: (params.page * 30) < data.pageParam.filtered
 		    			       		}
@@ -231,6 +231,10 @@
 		    			  templateResult: formatRepo,
 		    			  templateSelection: formatRepoSelection
 		    		});
+		    		if (projectIdsPlaceholder) {
+		    			$(".select2-selection__placeholder").css("color", 'inherit');
+		    		}
+		    		
 		    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
 		    		$("#projectIds + .select2-container").one("click", function(e) {
 		    			$("#projectIds").on("change", function(e){

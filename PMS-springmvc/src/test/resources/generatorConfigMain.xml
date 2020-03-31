@@ -42,7 +42,7 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
 		<!--生成对应表及类名 -->
-		<table tableName="pm_dispatch_project_header" domainObjectName="DispatchProject"
+		<table tableName="pm_dispatch_project_settlement" domainObjectName="DispatchSettlement"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"

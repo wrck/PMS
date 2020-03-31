@@ -7,14 +7,12 @@ import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 
 public class ProjectVO extends ProjectHeader {
 	
-	private String contractNo;
-	
 	public String getContractNo() {
 		return (String) getCustomInfoByKey("contractNo");
 	}
 
 	public void setContractNo(String contractNo) {
-		this.contractNo = contractNo;
+		super.setContractNo(contractNo);
 		setCustomInfoByKey("contractNo", contractNo);
 	}
 

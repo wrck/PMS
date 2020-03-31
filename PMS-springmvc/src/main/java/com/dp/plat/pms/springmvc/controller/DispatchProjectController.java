@@ -172,4 +172,7 @@ public class DispatchProjectController extends BaseController {
 		model.addAttribute("message", message);
 	}
 
+	@RequestMapping("/modals/payment")
+	public void dispatchPayment(Integer id, Model model) {
+	}
 }

@@ -27,7 +27,7 @@ pm.common = function(namespace) {
 			return {
 				list: () => namespace + ".html",
 				detail: (id) => namespace + "/" + id + ".html",
-				create: (contractNo, projectType) => namespace + "/detail.html?" + $.param({contractNo, projectType})
+				create: (search) => namespace + "/detail.html?"+ (search || "")
 			}
 		})(namespace)
 	}
@@ -44,7 +44,7 @@ pm.project = function() {
 			var api = pm.common(namespace).api;
 			return $.extend({}, api, {
 				// 查询报告类型
-				reportType: (dicTypeName) => ctx + "/sys/dictionary/list.json?dicTypeName=" + (dicTypeName || "报告类型"),
+				orderDetail: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/orderDetail.json?" + $.param({projectType, contractNo}),
 				// 初始化报告数据
 				initData: (projectId) => namespace + "/" + projectId + "/initData.json",
 				// 报告数据查询、调整
@@ -81,7 +81,7 @@ pm.project = function() {
 }();
 
 /**
- * 项目管理
+ * 派单管理
  */
 $.namespace("pm.dispatch");
 pm.dispatch = function() {
@@ -100,9 +100,29 @@ pm.dispatch = function() {
 	});
 }();
 
-/*会计期管理*/
-$.namespace('cm.accountPeriod');
+/**
+ * 结算管理
+ */
+$.namespace("pm.settlement");
+pm.settlement = function() {
+	var namespace =  ctx + "/pm/settlement";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+	});
+}();
 
+/**
+ * 结算管理
+ */
+$.namespace('cm.accountPeriod');
 cm.accountPeriod=function(){
 	return {listUrl:ctx + '/cm/accountPeriod/jlist.json',
 		changeStateUrl:ctx + '/cm/accountPeriod/changeState.json',
