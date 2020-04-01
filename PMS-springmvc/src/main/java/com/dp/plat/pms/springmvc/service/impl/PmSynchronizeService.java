@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.dp.plat.core.service.impl.SynchronizeService;
 import com.dp.plat.pms.springmvc.dao.PmSynchronizeMapper;
+import com.dp.plat.pms.springmvc.entity.OfstContractHead;
+import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
@@ -51,5 +53,20 @@ public class PmSynchronizeService extends SynchronizeService implements IPmSynch
 	@Override
 	public void splitAfProjectByProductCode(String productCode) {
 		perfSynchronizeMapper.splitAfProjectByProductCode(productCode);
+	}
+	
+	@Override
+	public int insertOfstContractHeadSAP(List<OfstContractHeadSAP> record) {
+		return perfSynchronizeMapper.insertOfstContractHeadSAP(record);
+	}
+
+	@Override
+	public List<OfstContractHead> selectAllOfstContractHeadSAP() {
+		return perfSynchronizeMapper.selectAllOfstContractHeadSAP();
+	}
+
+	@Override
+	public void clearAllOfstContractHeadSAP() {
+		perfSynchronizeMapper.clearAllOfstContractHeadSAP();
 	}
 }

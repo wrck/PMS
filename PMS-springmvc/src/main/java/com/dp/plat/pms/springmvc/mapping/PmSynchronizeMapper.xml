@@ -31,7 +31,7 @@
 	      serviceTypeName, customerProjectName, agentName, 
 	      lendCause)
 	    values
-	    <foreach collection="list" item="item" index="index" separator="," >  
+	    <foreach collection="list" item="item" index="index" separator=",">  
 	     (#{item.id,jdbcType=INTEGER}, #{item.orderExecNumber,jdbcType=VARCHAR}, #{item.projectName,jdbcType=VARCHAR}, #{item.marketCode,jdbcType=VARCHAR}, 
 	      #{item.officeCode,jdbcType=VARCHAR}, #{item.expendId,jdbcType=VARCHAR}, #{item.marketName,jdbcType=VARCHAR}, 
 	      #{item.officeName,jdbcType=VARCHAR}, #{item.systemName,jdbcType=VARCHAR}, #{item.salesManCode,jdbcType=VARCHAR}, 
@@ -94,4 +94,102 @@
 		        and ppfs.`projectCode` = ppfd.`projectCode` 
 		where FIND_IN_SET(ppfd.`productfirstCode`, #{_parameter})
     </insert>
+    
+    <resultMap id="OfstContractHead" type="com.dp.plat.pms.springmvc.entity.OfstContractHead">
+	    <id column="id" jdbcType="INTEGER" property="id" />
+	    <result column="contract_num" jdbcType="VARCHAR" property="contractNum" />
+	    <result column="batch_code" jdbcType="VARCHAR" property="batchCode" />
+	    <result column="project_name" jdbcType="VARCHAR" property="projectName" />
+	    <result column="order_num" jdbcType="VARCHAR" property="orderNum" />
+	    <result column="client_supplier_code" jdbcType="VARCHAR" property="clientSupplierCode" />
+	    <result column="client_supplier_name" jdbcType="VARCHAR" property="clientSupplierName" />
+	    <result column="contract_money_amount" jdbcType="DECIMAL" property="contractMoneyAmount" />
+	    <result column="delivered_money_amount" jdbcType="DECIMAL" property="deliveredMoneyAmount" />
+	    <result column="collected_money_amount" jdbcType="DECIMAL" property="collectedMoneyAmount" />
+	    <result column="collected_money_ratio" jdbcType="DOUBLE" property="collectedMoneyRatio" />
+	    <result column="receivables_money_amount" jdbcType="DECIMAL" property="receivablesMoneyAmount" />
+	    <result column="over_due_money_amount" jdbcType="DECIMAL" property="overDueMoneyAmount" />
+	    <result column="maketing_department_name" jdbcType="VARCHAR" property="maketingDepartmentName" />
+	    <result column="office_name" jdbcType="VARCHAR" property="officeName" />
+	    <result column="industry_name" jdbcType="VARCHAR" property="industryName" />
+	    <result column="marketing_representative_name" jdbcType="VARCHAR" property="marketingRepresentativeName" />
+	    <result column="currency_name" jdbcType="VARCHAR" property="currencyName" />
+	    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+	    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+	    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+	    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+	    <result column="effective_from" jdbcType="TIMESTAMP" property="effectiveFrom" />
+	    <result column="effective_to" jdbcType="TIMESTAMP" property="effectiveTo" />
+	    <result column="import_batch_num" jdbcType="VARCHAR" property="importBatchNum" />
+	    <result column="contract_create_date" jdbcType="TIMESTAMP" property="contractCreateDate" />
+	    <result column="projectCode" jdbcType="VARCHAR" property="projectcode" />
+	    <result column="marketCode" jdbcType="VARCHAR" property="marketcode" />
+	    <result column="systemId" jdbcType="INTEGER" property="systemid" />
+	    <result column="industryId" jdbcType="INTEGER" property="industryid" />
+	    <result column="officeCode" jdbcType="VARCHAR" property="officecode" />
+	    <result column="expendId" jdbcType="INTEGER" property="expendid" />
+	    <result column="usernamec" jdbcType="VARCHAR" property="usernamec" />
+	    <result column="latest_ship_date" jdbcType="TIMESTAMP" property="latestShipDate" />
+	    <result column="usernamec2" jdbcType="VARCHAR" property="usernamec2" />
+	    <result column="systemid_o" jdbcType="INTEGER" property="systemidO" />
+	    <result column="expendid_o" jdbcType="INTEGER" property="expendidO" />
+	    <result column="industry_name_o" jdbcType="VARCHAR" property="industryNameO" />
+	</resultMap>
+  
+  	<insert id="insertOfstContractHeadSAP" parameterType="java.util.List">
+	    insert into sms_ofst_contract_head_sap (id, contract_num, batch_code, 
+	      project_name, order_num, client_supplier_code, 
+	      client_supplier_name, contract_money_amount, 
+	      delivered_money_amount, collected_money_amount, 
+	      collected_money_ratio, receivables_money_amount, 
+	      over_due_money_amount, maketing_department_name, 
+	      office_name, industry_name, marketing_representative_name, 
+	      currency_name, create_by, create_time, 
+	      update_by, update_time, effective_from, 
+	      effective_to, import_batch_num, contract_create_date, 
+	      projectCode, marketCode, systemId, 
+	      industryId, officeCode, expendId, 
+	      usernamec, latest_ship_date, usernamec2, 
+	      systemid_o, expendid_o, industry_name_o
+	      )
+	    values 
+	    <foreach collection="list" item="item" index="index" separator="," >
+	    (#{item.id,jdbcType=INTEGER}, #{item.contractNum,jdbcType=VARCHAR}, #{item.batchCode,jdbcType=VARCHAR}, 
+	      #{item.projectName,jdbcType=VARCHAR}, #{item.orderNum,jdbcType=VARCHAR}, #{item.clientSupplierCode,jdbcType=VARCHAR}, 
+	      #{item.clientSupplierName,jdbcType=VARCHAR}, #{item.contractMoneyAmount,jdbcType=DECIMAL}, 
+	      #{item.deliveredMoneyAmount,jdbcType=DECIMAL}, #{item.collectedMoneyAmount,jdbcType=DECIMAL}, 
+	      #{item.collectedMoneyRatio,jdbcType=DOUBLE}, #{item.receivablesMoneyAmount,jdbcType=DECIMAL}, 
+	      #{item.overDueMoneyAmount,jdbcType=DECIMAL}, #{item.maketingDepartmentName,jdbcType=VARCHAR}, 
+	      #{item.officeName,jdbcType=VARCHAR}, #{item.industryName,jdbcType=VARCHAR}, #{item.marketingRepresentativeName,jdbcType=VARCHAR}, 
+	      #{item.currencyName,jdbcType=VARCHAR}, #{item.createBy,jdbcType=VARCHAR}, #{item.createTime,jdbcType=TIMESTAMP}, 
+	      #{item.updateBy,jdbcType=VARCHAR}, #{item.updateTime,jdbcType=TIMESTAMP}, #{item.effectiveFrom,jdbcType=TIMESTAMP}, 
+	      #{item.effectiveTo,jdbcType=TIMESTAMP}, #{item.importBatchNum,jdbcType=VARCHAR}, #{item.contractCreateDate,jdbcType=TIMESTAMP}, 
+	      #{item.projectcode,jdbcType=VARCHAR}, #{item.marketcode,jdbcType=VARCHAR}, #{item.systemid,jdbcType=INTEGER}, 
+	      #{item.industryid,jdbcType=INTEGER}, #{item.officecode,jdbcType=VARCHAR}, #{item.expendid,jdbcType=INTEGER}, 
+	      #{item.usernamec,jdbcType=VARCHAR}, #{item.latestShipDate,jdbcType=TIMESTAMP}, #{item.usernamec2,jdbcType=VARCHAR}, 
+	      #{item.systemidO,jdbcType=INTEGER}, #{item.expendidO,jdbcType=INTEGER}, #{item.industryNameO,jdbcType=VARCHAR}
+	      )
+	     </foreach>
+	     ON DUPLICATE KEY UPDATE contract_num = VALUES(contract_num), batch_code = VALUES(batch_code), project_name = VALUES(project_name), 
+	        order_num = VALUES(order_num), client_supplier_code = VALUES(client_supplier_code), client_supplier_name = VALUES(client_supplier_name), 
+	        contract_money_amount = VALUES(contract_money_amount), delivered_money_amount = VALUES(delivered_money_amount), collected_money_amount = VALUES(collected_money_amount), 
+	        collected_money_ratio = VALUES(collected_money_ratio), receivables_money_amount = VALUES(receivables_money_amount), over_due_money_amount = VALUES(over_due_money_amount), 
+	        maketing_department_name = VALUES(maketing_department_name), office_name = VALUES(office_name), industry_name = VALUES(industry_name), 
+	        marketing_representative_name = VALUES(marketing_representative_name), currency_name = VALUES(currency_name), create_by = VALUES(create_by), 
+	        create_time = VALUES(create_time), update_by = VALUES(update_by), update_time = VALUES(update_time), 
+	        effective_from = VALUES(effective_from), effective_to = VALUES(effective_to), import_batch_num = VALUES(import_batch_num), 
+	        contract_create_date = VALUES(contract_create_date), projectCode = VALUES(projectCode), marketCode = VALUES(marketCode), 
+	        systemId = VALUES(systemId), industryId = VALUES(industryId), officeCode = VALUES(officeCode), 
+	        expendId = VALUES(expendId), usernamec = VALUES(usernamec), latest_ship_date = VALUES(latest_ship_date), 
+	        usernamec2 = VALUES(usernamec2), systemid_o = VALUES(systemid_o), expendid_o = VALUES(expendid_o), 
+	        industry_name_o = VALUES(industry_name_o)
+	</insert>
+  
+  	<select id="selectAllOfstContractHeadSAP" resultMap="OfstContractHead">
+    	select * from ofst_contract_head_sap
+  	</select>
+  
+ 	<select id="clearAllOfstContractHeadSAP">
+    	truncate table sms_ofst_contract_head_sap
+ 	</select>
 </mapper>

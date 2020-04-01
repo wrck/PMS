@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.DispatchSettlementMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.DispatchSettlement">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="settleSeq" jdbcType="VARCHAR" property="settleSeq" />
+    <result column="dispatchId" jdbcType="INTEGER" property="dispatchId" />
+    <result column="dispatchSeq" jdbcType="VARCHAR" property="dispatchSeq" />
+    <result column="progressDesc" jdbcType="VARCHAR" property="progressDesc" />
+    <result column="progressRatio" jdbcType="REAL" property="progressRatio" />
+    <result column="acceptanceDesc" jdbcType="VARCHAR" property="acceptanceDesc" />
+    <result column="acceptanceRatio" jdbcType="VARCHAR" property="acceptanceRatio" />
+    <result column="ratio" jdbcType="VARCHAR" property="ratio" />
+    <result column="amount" jdbcType="VARCHAR" property="amount" />
+    <result column="memo" jdbcType="VARCHAR" property="memo" />
+    <result column="confirmTime" jdbcType="TIMESTAMP" property="confirmTime" />
+    <result column="paymentTime" jdbcType="TIMESTAMP" property="paymentTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="state" jdbcType="INTEGER" property="state" />
+    <result column="sseId" jdbcType="INTEGER" property="sseId" />
+    <result column="year" jdbcType="INTEGER" property="year" />
+    <result column="quarter" jdbcType="INTEGER" property="quarter" />
+    <result column="month" jdbcType="INTEGER" property="month" />
+    <result column="customInfo" jdbcType="OTHER" property="customInfo" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, settleSeq, dispatchId, dispatchSeq, progressDesc, progressRatio, acceptanceDesc, 
+    acceptanceRatio, ratio, amount, memo, confirmTime, paymentTime, remark, state, sseId, 
+    year, quarter, month, customInfo, createTime, createBy, updateTime, updateBy, disabled
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_dispatch_project_settlement
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_dispatch_project_settlement
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_dispatch_project_settlement (settleSeq, dispatchId, dispatchSeq, 
+      progressDesc, progressRatio, acceptanceDesc, 
+      acceptanceRatio, ratio, amount, 
+      memo, confirmTime, paymentTime, 
+      remark, state, sseId, 
+      year, quarter, month, 
+      customInfo, createTime, createBy, 
+      updateTime, updateBy, disabled
+      )
+    values (#{settleSeq,jdbcType=VARCHAR}, #{dispatchId,jdbcType=INTEGER}, #{dispatchSeq,jdbcType=VARCHAR}, 
+      #{progressDesc,jdbcType=VARCHAR}, #{progressRatio,jdbcType=REAL}, #{acceptanceDesc,jdbcType=VARCHAR}, 
+      #{acceptanceRatio,jdbcType=VARCHAR}, #{ratio,jdbcType=VARCHAR}, #{amount,jdbcType=VARCHAR}, 
+      #{memo,jdbcType=VARCHAR}, #{confirmTime,jdbcType=TIMESTAMP}, #{paymentTime,jdbcType=TIMESTAMP}, 
+      #{remark,jdbcType=VARCHAR}, #{state,jdbcType=INTEGER}, #{sseId,jdbcType=INTEGER}, 
+      #{year,jdbcType=INTEGER}, #{quarter,jdbcType=INTEGER}, #{month,jdbcType=INTEGER}, 
+      #{customInfo,jdbcType=OTHER}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{disabled,jdbcType=BIT}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_dispatch_project_settlement
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="settleSeq != null">
+        settleSeq,
+      </if>
+      <if test="dispatchId != null">
+        dispatchId,
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq,
+      </if>
+      <if test="progressDesc != null">
+        progressDesc,
+      </if>
+      <if test="progressRatio != null">
+        progressRatio,
+      </if>
+      <if test="acceptanceDesc != null">
+        acceptanceDesc,
+      </if>
+      <if test="acceptanceRatio != null">
+        acceptanceRatio,
+      </if>
+      <if test="ratio != null">
+        ratio,
+      </if>
+      <if test="amount != null">
+        amount,
+      </if>
+      <if test="memo != null">
+        memo,
+      </if>
+      <if test="confirmTime != null">
+        confirmTime,
+      </if>
+      <if test="paymentTime != null">
+        paymentTime,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="sseId != null">
+        sseId,
+      </if>
+      <if test="year != null">
+        year,
+      </if>
+      <if test="quarter != null">
+        quarter,
+      </if>
+      <if test="month != null">
+        month,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="settleSeq != null">
+        #{settleSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchId != null">
+        #{dispatchId,jdbcType=INTEGER},
+      </if>
+      <if test="dispatchSeq != null">
+        #{dispatchSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="progressDesc != null">
+        #{progressDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="progressRatio != null">
+        #{progressRatio,jdbcType=REAL},
+      </if>
+      <if test="acceptanceDesc != null">
+        #{acceptanceDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="acceptanceRatio != null">
+        #{acceptanceRatio,jdbcType=VARCHAR},
+      </if>
+      <if test="ratio != null">
+        #{ratio,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null">
+        #{amount,jdbcType=VARCHAR},
+      </if>
+      <if test="memo != null">
+        #{memo,jdbcType=VARCHAR},
+      </if>
+      <if test="confirmTime != null">
+        #{confirmTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="paymentTime != null">
+        #{paymentTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="sseId != null">
+        #{sseId,jdbcType=INTEGER},
+      </if>
+      <if test="year != null">
+        #{year,jdbcType=INTEGER},
+      </if>
+      <if test="quarter != null">
+        #{quarter,jdbcType=INTEGER},
+      </if>
+      <if test="month != null">
+        #{month,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=OTHER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement">
+    update pm_dispatch_project_settlement
+    <set>
+      <if test="settleSeq != null">
+        settleSeq = #{settleSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="dispatchId != null">
+        dispatchId = #{dispatchId,jdbcType=INTEGER},
+      </if>
+      <if test="dispatchSeq != null">
+        dispatchSeq = #{dispatchSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="progressDesc != null">
+        progressDesc = #{progressDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="progressRatio != null">
+        progressRatio = #{progressRatio,jdbcType=REAL},
+      </if>
+      <if test="acceptanceDesc != null">
+        acceptanceDesc = #{acceptanceDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="acceptanceRatio != null">
+        acceptanceRatio = #{acceptanceRatio,jdbcType=VARCHAR},
+      </if>
+      <if test="ratio != null">
+        ratio = #{ratio,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null">
+        amount = #{amount,jdbcType=VARCHAR},
+      </if>
+      <if test="memo != null">
+        memo = #{memo,jdbcType=VARCHAR},
+      </if>
+      <if test="confirmTime != null">
+        confirmTime = #{confirmTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="paymentTime != null">
+        paymentTime = #{paymentTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="sseId != null">
+        sseId = #{sseId,jdbcType=INTEGER},
+      </if>
+      <if test="year != null">
+        year = #{year,jdbcType=INTEGER},
+      </if>
+      <if test="quarter != null">
+        quarter = #{quarter,jdbcType=INTEGER},
+      </if>
+      <if test="month != null">
+        month = #{month,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        customInfo = #{customInfo,jdbcType=OTHER},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement">
+    update pm_dispatch_project_settlement
+    set settleSeq = #{settleSeq,jdbcType=VARCHAR},
+      dispatchId = #{dispatchId,jdbcType=INTEGER},
+      dispatchSeq = #{dispatchSeq,jdbcType=VARCHAR},
+      progressDesc = #{progressDesc,jdbcType=VARCHAR},
+      progressRatio = #{progressRatio,jdbcType=REAL},
+      acceptanceDesc = #{acceptanceDesc,jdbcType=VARCHAR},
+      acceptanceRatio = #{acceptanceRatio,jdbcType=VARCHAR},
+      ratio = #{ratio,jdbcType=VARCHAR},
+      amount = #{amount,jdbcType=VARCHAR},
+      memo = #{memo,jdbcType=VARCHAR},
+      confirmTime = #{confirmTime,jdbcType=TIMESTAMP},
+      paymentTime = #{paymentTime,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=VARCHAR},
+      state = #{state,jdbcType=INTEGER},
+      sseId = #{sseId,jdbcType=INTEGER},
+      year = #{year,jdbcType=INTEGER},
+      quarter = #{quarter,jdbcType=INTEGER},
+      month = #{month,jdbcType=INTEGER},
+      customInfo = #{customInfo,jdbcType=OTHER},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      disabled = #{disabled,jdbcType=BIT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement" resultMap="BaseResultMap">
+    select * from pm_dispatch_project_settlement
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="settleSeq != null and '' != settleSeq">
+				settleSeq = #{settleSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchId != null and '' != dispatchId">
+				dispatchId = #{dispatchId, jdbcType=INTEGER} AND
+			</if>
+			<if test="dispatchSeq != null and '' != dispatchSeq">
+				dispatchSeq = #{dispatchSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="progressDesc != null and '' != progressDesc">
+				progressDesc = #{progressDesc, jdbcType=VARCHAR} AND
+			</if>
+			<if test="progressRatio != null and '' != progressRatio">
+				progressRatio = #{progressRatio, jdbcType=REAL} AND
+			</if>
+			<if test="acceptanceDesc != null and '' != acceptanceDesc">
+				acceptanceDesc = #{acceptanceDesc, jdbcType=VARCHAR} AND
+			</if>
+			<if test="acceptanceRatio != null and '' != acceptanceRatio">
+				acceptanceRatio = #{acceptanceRatio, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ratio != null and '' != ratio">
+				ratio = #{ratio, jdbcType=VARCHAR} AND
+			</if>
+			<if test="amount != null and '' != amount">
+				amount = #{amount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memo != null and '' != memo">
+				memo = #{memo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="confirmTime != null and '' != confirmTime">
+				confirmTime = #{confirmTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="paymentTime != null and '' != paymentTime">
+				paymentTime = #{paymentTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="sseId != null and '' != sseId">
+				sseId = #{sseId, jdbcType=INTEGER} AND
+			</if>
+			<if test="year != null and '' != year">
+				year = #{year, jdbcType=INTEGER} AND
+			</if>
+			<if test="quarter != null and '' != quarter">
+				quarter = #{quarter, jdbcType=INTEGER} AND
+			</if>
+			<if test="month != null and '' != month">
+				month = #{month, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null and '' != customInfo">
+				customInfo = #{customInfo, jdbcType=OTHER} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchSettlement" resultType="long">
+    select count(1) from pm_dispatch_project_settlement
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="settleSeq != null and '' != settleSeq">
+				settleSeq = #{settleSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dispatchId != null and '' != dispatchId">
+				dispatchId = #{dispatchId, jdbcType=INTEGER} AND
+			</if>
+			<if test="dispatchSeq != null and '' != dispatchSeq">
+				dispatchSeq = #{dispatchSeq, jdbcType=VARCHAR} AND
+			</if>
+			<if test="progressDesc != null and '' != progressDesc">
+				progressDesc = #{progressDesc, jdbcType=VARCHAR} AND
+			</if>
+			<if test="progressRatio != null and '' != progressRatio">
+				progressRatio = #{progressRatio, jdbcType=REAL} AND
+			</if>
+			<if test="acceptanceDesc != null and '' != acceptanceDesc">
+				acceptanceDesc = #{acceptanceDesc, jdbcType=VARCHAR} AND
+			</if>
+			<if test="acceptanceRatio != null and '' != acceptanceRatio">
+				acceptanceRatio = #{acceptanceRatio, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ratio != null and '' != ratio">
+				ratio = #{ratio, jdbcType=VARCHAR} AND
+			</if>
+			<if test="amount != null and '' != amount">
+				amount = #{amount, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memo != null and '' != memo">
+				memo = #{memo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="confirmTime != null and '' != confirmTime">
+				confirmTime = #{confirmTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="paymentTime != null and '' != paymentTime">
+				paymentTime = #{paymentTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=INTEGER} AND
+			</if>
+			<if test="sseId != null and '' != sseId">
+				sseId = #{sseId, jdbcType=INTEGER} AND
+			</if>
+			<if test="year != null and '' != year">
+				year = #{year, jdbcType=INTEGER} AND
+			</if>
+			<if test="quarter != null and '' != quarter">
+				quarter = #{quarter, jdbcType=INTEGER} AND
+			</if>
+			<if test="month != null and '' != month">
+				month = #{month, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null and '' != customInfo">
+				customInfo = #{customInfo, jdbcType=OTHER} AND
+			</if>
+			<if test="createTime != null and '' != createTime">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null and '' != updateTime">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from pm_dispatch_project_settlement
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.settleSeq != null and '' != model.settleSeq">
+					settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchId != null and '' != model.dispatchId">
+					dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
+					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.progressDesc != null and '' != model.progressDesc">
+					progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.progressRatio != null and '' != model.progressRatio">
+					progressRatio = #{model.progressRatio, jdbcType=REAL} AND
+				</if>
+				<if test="model.acceptanceDesc != null and '' != model.acceptanceDesc">
+					acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.acceptanceRatio != null and '' != model.acceptanceRatio">
+					acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.ratio != null and '' != model.ratio">
+					ratio = #{model.ratio, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.amount != null and '' != model.amount">
+					amount = #{model.amount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.memo != null and '' != model.memo">
+					memo = #{model.memo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.confirmTime != null and '' != model.confirmTime">
+					confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.paymentTime != null and '' != model.paymentTime">
+					paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.sseId != null and '' != model.sseId">
+					sseId = #{model.sseId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.year != null and '' != model.year">
+					year = #{model.year, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.quarter != null and '' != model.quarter">
+					quarter = #{model.quarter, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.month != null and '' != model.month">
+					month = #{model.month, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null and '' != model.customInfo">
+					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					settleSeq like CONCAT("%", #{fuzzy}, "%") or
+					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+					ratio like CONCAT("%", #{fuzzy}, "%") or
+					amount like CONCAT("%", #{fuzzy}, "%") or
+					memo like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					customInfo like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_dispatch_project_settlement
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.settleSeq != null and '' != model.settleSeq">
+					settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dispatchId != null and '' != model.dispatchId">
+					dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
+					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.progressDesc != null and '' != model.progressDesc">
+					progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.progressRatio != null and '' != model.progressRatio">
+					progressRatio = #{model.progressRatio, jdbcType=REAL} AND
+				</if>
+				<if test="model.acceptanceDesc != null and '' != model.acceptanceDesc">
+					acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.acceptanceRatio != null and '' != model.acceptanceRatio">
+					acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.ratio != null and '' != model.ratio">
+					ratio = #{model.ratio, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.amount != null and '' != model.amount">
+					amount = #{model.amount, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.memo != null and '' != model.memo">
+					memo = #{model.memo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.confirmTime != null and '' != model.confirmTime">
+					confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.paymentTime != null and '' != model.paymentTime">
+					paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.sseId != null and '' != model.sseId">
+					sseId = #{model.sseId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.year != null and '' != model.year">
+					year = #{model.year, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.quarter != null and '' != model.quarter">
+					quarter = #{model.quarter, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.month != null and '' != model.month">
+					month = #{model.month, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null and '' != model.customInfo">
+					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+				<if test="model.createTime != null and '' != model.createTime">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null and '' != model.updateTime">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					settleSeq like CONCAT("%", #{fuzzy}, "%") or
+					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+					acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+					ratio like CONCAT("%", #{fuzzy}, "%") or
+					amount like CONCAT("%", #{fuzzy}, "%") or
+					memo like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%") or
+					customInfo like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

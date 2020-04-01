@@ -3,6 +3,8 @@ package com.dp.plat.pms.springmvc.service;
 import java.util.List;
 
 import com.dp.plat.core.service.ISynchronizeService;
+import com.dp.plat.pms.springmvc.entity.OfstContractHead;
+import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
@@ -27,4 +29,7 @@ public interface IPmSynchronizeService extends ISynchronizeService {
 	 */
 	void splitAfProjectByProductCode(String orDefault);
 
+	int insertOfstContractHeadSAP(List<OfstContractHeadSAP> record);
+	List<OfstContractHead> selectAllOfstContractHeadSAP();
+	void clearAllOfstContractHeadSAP();
 }

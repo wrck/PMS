@@ -2,6 +2,8 @@ package com.dp.plat.pms.springmvc.dao;
 
 import java.util.List;
 
+import com.dp.plat.pms.springmvc.entity.OfstContractHead;
+import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
@@ -26,4 +28,7 @@ public interface PmSynchronizeMapper {
 	 */
 	void splitAfProjectByProductCode(String orDefault);
 
+	int insertOfstContractHeadSAP(List<OfstContractHeadSAP> record);
+	List<OfstContractHead> selectAllOfstContractHeadSAP();
+	void clearAllOfstContractHeadSAP();
 }
