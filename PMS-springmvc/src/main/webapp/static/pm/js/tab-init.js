@@ -23,12 +23,12 @@ $(function(){
 			} catch(e) {}
 		}
 	});
-	tabInterval = setInterval(() => {
+	/*tabInterval = setInterval(() => {
 		if($('a[data-toggle="tab"]').length > 0) {
 			$('a[data-toggle="tab"]:first').click();
 			clearInterval(tabInterval);
 		}
-	}, 500);
+	}, 500);*/
 });
 
 /**
@@ -61,48 +61,53 @@ function initTabData(config, refresh) {
 			searchDiv: searchDiv,
             stateSave: false,
             searching: true,
-            paging: false,
+            paging: true,
             rowId: 'id',
-            info: false
+            info: true
         }
 	$(".box-body .overlay", $navTab).show();
-	$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
 	if (drawType == 'json') {
 		ajaxPost(url, params, function(resultMap) {
     		var columns = resultMap.columns || (resultMap.pageParam || {}).columns || [];
     		var data = resultMap.data;
     		if (refresh) {
-    			$("#" + tableId, $navTab).empty();
-    			$(".box-body #" + calloutId, $navTab).remove();
-    		}
-    		tableConfig.columns = columns;
-    		$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped table-hover' id='" + tableId + "'></table>");
-    		if (data) {
-    			$(".box-body #" + calloutId, $navTab).append("<h4>" + config.title + "</h4>")
-    			new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
-    			$(".box-body  #" + calloutId + " h4", $navTab).appendTo($("#" + tableId +  "_wrapper .row:first > :first"));
-    			/*try {
-            	if (operations) {
-            		for (var i = 0; i < operations.length; i++) {
-						var operation = operations[i];
-						$operate = $("<button class='pull-right btn btn-primary ml-1' data-id='"+ operation.Id +"'>" + operation.text + "</button>");
-						
-						var events = operation.events || {};
-						for ( var key in events) {
-							$operate.on(key, events[key]);
-						}
-						$("#" + tableId + "_wrapper .row:first > :last").append($operate);
-					}
-            	}
-            } catch(e) {
-            }*/
+//    			$("#" + tableId, $navTab).empty();
+//    			$(".box-body #" + calloutId, $navTab).empty();
+    			var localTable = $("#" + tableId).data("localTable");
+    			localTable.reloadData(data);
     		} else {
-    			$(".box-body #" + tableId, $navTab).append("<tr><td>没有可显示的数据</td></tr>")
+    			tableConfig.columns = columns;
+    			$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
+    			$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped table-hover' id='" + tableId + "'></table>");
+    			if (data) {
+    				//$(".box-body #" + calloutId, $navTab).append("<h4>" + config.title + "</h4>")
+    				var localTable = new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
+    				//$(".box-body  #" + calloutId + " h4", $navTab).appendTo($("#" + tableId +  "_wrapper .row:first > :first"));
+    				$("#" + tableId).data("localTable", localTable);
+    				/*try {
+		            	if (operations) {
+		            		for (var i = 0; i < operations.length; i++) {
+								var operation = operations[i];
+								$operate = $("<button class='pull-right btn btn-primary ml-1' data-id='"+ operation.Id +"'>" + operation.text + "</button>");
+								
+								var events = operation.events || {};
+								for ( var key in events) {
+									$operate.on(key, events[key]);
+								}
+								$("#" + tableId + "_wrapper .row:first > :last").append($operate);
+							}
+		            	}
+		            } catch(e) {
+		            }*/
+    			} else {
+    				$(".box-body #" + tableId, $navTab).append("<tr><td>没有可显示的数据</td></tr>")
+    			}
     		}
     		$(".box-body .overlay", $navTab).hide();
     		$navTab.addClass("loaded");
 		});
 	} else {
+		$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
 		var $warpper = $(".box-body #" + calloutId, $navTab);
 		$.ajax({
             url: url,

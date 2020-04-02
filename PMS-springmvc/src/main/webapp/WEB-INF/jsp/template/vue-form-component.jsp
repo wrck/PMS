@@ -60,11 +60,19 @@
 			</select>
 		</div>
 	</template>
+	<template v-else-if="field.type == 'inputs'">
+		<div class="form-group display-flex" :class="getGroupClass(field) || formGroupClass">
+			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
+					:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
+					:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
+		</div>
+	</template>
 	<template v-else>
 		<div class="form-group display-flex" :class="getGroupClass(field) || formGroupClass">
 			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
-			<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="getSelfClass(field) || field.cssStyle" 
+			<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" 
 					:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off">
 		</div>
 	</template>
@@ -73,11 +81,52 @@
 	var formVueConfig = {
 		el: "#app",
 		data: {
-			formGroupClass: "",
+			formGroupClass: "col-xs-12 col-sm-6 col-md-3",
+			formGroupTextareaClass: "col-xs-12 col-sm-12 col-md-6",
 			fieldList: [],
 			dataType: "table",
 			targetName: "",
 			targetValue: {}
+		},
+		created: function(e) {
+			var fieldList = this.fieldList;
+			for (var i in fieldList) {
+				var field = fieldList[i];
+				if (field['extData']) {
+					this.parseValue(field, "extData");
+				}
+				if (field.type == 'inputs') {
+					// inputs 拥有相同的标签，在一个组内进行显示，以下参数需要拆分，用空格相隔
+					var keys = ['alias', 'name', 'title', 'titleKey', 'cssId', 'cssClass', 'cssStyle'];
+					var mutliField = this.parseValue(field, 'field', false) || [];
+					typeof mutliField == 'string' && (mutliField = mutliField.split(" "));
+					//var mutliField = (field.field || "").split(" ");
+					var inputs = [];
+					for(var i in mutliField) {
+						var input = $.extend({}, field);
+						input['field'] = mutliField[i];
+						for(var k in keys) {
+							var key = keys[k];
+							//var values = (field[key] || "").split(" ");
+							var values = this.parseValue(field, key, false) || [];
+							if(key == 'cssClass') {
+								values = values['selfClass'];
+							}
+							typeof values == 'string' && (values = values.split(" "));
+							var value = null;
+							if (i < values.length) {
+								value = values[i];
+							}
+							input[key] = value;
+						}
+						inputs.push(input);
+					}
+					field.inputs = inputs;
+				}
+			}
+		},
+		updated: function() {
+			console.log("updated");
 		},
 		computed: {
 	 		maxLabelWidth: function() {
@@ -139,11 +188,19 @@
  				}
 	 			return value;
 	 		},
-	 		parseValue: function(field, key) {
+	 		parseValue: function(field, key, update) {
+	 			var value = field[key];
 	 			try {
-	 				field[key] = this.getDataValue(field[key]);
+	 				var value = this.getDataValue(field[key]);
+	 				update = update == false ? false : true; 
+	 				if (update) {
+	 					field[key] = value;
+	 				}
 	 			} catch(e){}
-	 			return field[key];
+	 			return value;
+	 		},
+	 		formatDate: function(e, add, moved) {
+	 			console.log(e,add,moved);
 	 		}
 	 	}
 	}

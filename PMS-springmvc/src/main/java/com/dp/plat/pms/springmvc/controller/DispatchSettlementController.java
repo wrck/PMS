@@ -84,12 +84,13 @@ public class DispatchSettlementController extends BaseController {
 		return VIEW_NAMESPACE + "detail";
 	}
 
-	@RequestMapping("/detail")
+	@RequestMapping(value= {"/detail", "/modals/detail"})
 	public String create(Integer dispatchId, Model model) {
 		if (HttpContext.isJSON()) {
 			if (dispatchId != null) {
 				DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(dispatchId);
 				SettlementVO settlement = new SettlementVO();
+				settlement.setDispatchId(dispatch.getId());
 				settlement.setDispatchSeq(dispatch.getDispatchSeq());
 				settlement.setSmsProjectCode(dispatch.getSmsProjectCode());
 				settlement.setSmsProjectName(dispatch.getDispatchName());
@@ -99,6 +100,9 @@ public class DispatchSettlementController extends BaseController {
 			}
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
+		} else {
+			String servletPath = HttpContext.getCurrentRequest().getServletPath();
+			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
 		return VIEW_NAMESPACE + "detail";
 	}

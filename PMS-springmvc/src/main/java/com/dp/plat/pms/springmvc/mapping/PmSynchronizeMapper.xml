@@ -61,20 +61,20 @@
     </insert>
     
     <insert id="insertProjectProduct" parameterType="java.util.List">
-        insert into pm_project_product_af_from_sms (id, projectCode, orderCodereal, corporationCode, 
+        insert into pm_project_product_af_from_sms (id, projectCode, orderExecNumber, corporationCode, 
 	      ssfrId, productCode, productfirstCode, 
 	      productName, productfirstName, productsubCode, 
 	      productSubModel, productSubName, num, 
 	      borrowNum)
 	    values 
         <foreach collection="list" item="item" index="index" separator="," >  
-         (#{item.id,jdbcType=INTEGER}, #{item.projectCode,jdbcType=VARCHAR}, #{item.orderCodereal,jdbcType=VARCHAR}, #{item.corporationCode,jdbcType=VARCHAR}, 
+         (#{item.id,jdbcType=INTEGER}, #{item.projectCode,jdbcType=VARCHAR}, #{item.orderExecNumber,jdbcType=VARCHAR}, #{item.corporationCode,jdbcType=VARCHAR}, 
 	      #{item.ssfrId,jdbcType=INTEGER}, #{item.productCode,jdbcType=VARCHAR}, #{item.productfirstCode,jdbcType=VARCHAR}, 
 	      #{item.productName,jdbcType=VARCHAR}, #{item.productfirstName,jdbcType=VARCHAR}, #{item.productsubCode,jdbcType=VARCHAR}, 
 	      #{item.productSubModel,jdbcType=VARCHAR}, #{item.productSubName,jdbcType=VARCHAR}, #{item.num,jdbcType=INTEGER}, 
 	      #{item.borrowNum,jdbcType=INTEGER})
         </foreach>
-        ON DUPLICATE KEY UPDATE id = VALUES(id), projectCode = VALUES(projectCode), orderCodereal = VALUES(orderCodereal), 
+        ON DUPLICATE KEY UPDATE id = VALUES(id), projectCode = VALUES(projectCode), orderExecNumber = VALUES(orderExecNumber), 
 			corporationCode = VALUES(corporationCode), ssfrId = VALUES(ssfrId), productCode = VALUES(productCode), 
 			productfirstCode = VALUES(productfirstCode), productName = VALUES(productName), productfirstName = VALUES(productfirstName), 
 			productsubCode = VALUES(productsubCode), productSubModel = VALUES(productSubModel), productSubName = VALUES(productSubName), 

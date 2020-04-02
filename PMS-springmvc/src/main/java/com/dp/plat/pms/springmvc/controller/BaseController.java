@@ -1,10 +1,18 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.util.JavaScriptUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
@@ -14,6 +22,7 @@ import com.dp.plat.pms.springmvc.vo.DataFieldRelationVO;
 public class BaseController {
 	public final static String DATATYPE_FORM = "form";
 	public final static String DATATYPE_TABLE = "table";
+	public final static String DATATYPE_NAVTAB = "tab";
 
 	protected IDataFieldRelationService dataFieldRelationService;
 
@@ -76,5 +85,27 @@ public class BaseController {
 			columns.add((DataFieldRelation) dataTableColumn);
 		}
 		return columns;
+	}
+	
+	/**
+	 * 查询Tab标签页，带父级页
+	 * 
+	 * @param dataName
+	 * @return
+	 */
+	protected List<?> findNavTabList(String dataName) {
+		return this.findNavTabList(dataName, true);
+	}
+
+	/**
+	 * 查询Tab标签页
+	 * 
+	 * @param dataName
+	 * @param withSuper
+	 * @return
+	 */
+	protected List<?> findNavTabList(String dataName, Boolean withSuper) {
+		List<Object> tabList = this.findFieldList(dataName, DATATYPE_NAVTAB, withSuper);
+		return tabList;
 	}
 }

@@ -483,7 +483,7 @@ a span {
                                     </td>
                                     <td class="tag tag-must"><s:text name="pm.project.executionState"/>:</td>
                                     <td>
-                                        <s:select list="projectExecutionStateList" id="projectExecutionState" name="projectMaintenance.projectExecutionState" listKey="basicDataId" listValue="basicDataName" cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 180px;display: inline-block;" />
+                                        <s:select list="projectExecutionStateList" id="projectExecutionState" name="projectMaintenance.projectExecutionState" value="%{projectMaintenance.id != null ? projectMaintenance.projectExecutionState : ''}" listKey="basicDataId" listValue="basicDataName" cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 180px;display: inline-block;" />
                                     </td>
                                 </tr>
                             </s:if>

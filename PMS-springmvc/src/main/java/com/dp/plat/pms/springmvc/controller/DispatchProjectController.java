@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +24,7 @@ import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "dispatch")
@@ -30,6 +32,7 @@ public class DispatchProjectController extends BaseController {
 	private final static String VIEW_NAMESPACE = "dispatch/";
 	private final static String DATANAME_FORM = "dispatchForm";
 	private final static String DATANAME_TABLE = "dispatchList";
+	private static final String DATANAME_NAVTAB = null;
 
 	@Autowired
 	private IDispatchProjectService dispatchPojectService;
@@ -77,6 +80,9 @@ public class DispatchProjectController extends BaseController {
 
 				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
+
+				List<?> navTavList = this.findNavTabList(DATANAME_NAVTAB);
+				model.addAttribute("tabList", navTavList);
 			}
 		}
 		return VIEW_NAMESPACE + "detail";
@@ -89,7 +95,17 @@ public class DispatchProjectController extends BaseController {
 			for (String projectId : projectIdArr) {
 				projectId = StringUtils.trimToNull(projectId);
 				if (projectId != null) {
-					ProjectHeader project = projectHeaderService.selectByPrimaryKey(Integer.valueOf(projectId));
+					ProjectHeader temp = projectHeaderService.selectByPrimaryKey(Integer.valueOf(projectId));
+					ProjectVO project = new ProjectVO();
+					BeanUtils.copyProperties(temp, project);
+					DispatchProject dispatch = new DispatchProject();
+					dispatch.setProjectIds(project.getProjectId().toString());
+					dispatch.setDispatchName(project.getProjectName());
+					dispatch.setSmsProjectAmount(project.getSmsProjectAmount());
+					dispatch.setSmsProjectCode(project.getSmsProjectCode());
+					dispatch.setSmsSubmitTime(project.getSmsSubmitTime());
+					dispatch.setContractNos(project.getContractNo());
+					model.addAttribute("targetValue", dispatch);
 				}
 			}
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
@@ -133,7 +149,7 @@ public class DispatchProjectController extends BaseController {
 		model.addAttribute("message", message);
 		return VIEW_NAMESPACE + "detail";
 	}
-	
+
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		Boolean status = true;
@@ -153,7 +169,7 @@ public class DispatchProjectController extends BaseController {
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
-	
+
 	@RequestMapping(value = "submit", method = RequestMethod.POST)
 	public void dispatchSubmit(DispatchVO dispatch, Model model) {
 		Boolean status = true;

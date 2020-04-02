@@ -402,7 +402,7 @@
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="disabled != null and '' != disabled">
+			<if test="disabled != null">
 				disabled = #{disabled, jdbcType=BIT} AND
 			</if>
 		</trim>
@@ -676,7 +676,7 @@
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.disabled != null and '' != model.disabled">
+				<if test="model.disabled != null">
 					disabled = #{model.disabled, jdbcType=BIT} AND
 				</if>
 			</if>
