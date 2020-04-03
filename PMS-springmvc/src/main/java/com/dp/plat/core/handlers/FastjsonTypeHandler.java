@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
@@ -37,12 +38,12 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 
     @Override
     protected Object parse(String json) {
-        return JSON.parseObject(json, type);
+        return JSON.parseObject(json, type, Feature.AllowISO8601DateFormat );
     }
 
     @Override
     protected String toJson(Object obj) {
         return JSON.toJSONString(obj, SerializerFeature.WriteMapNullValue,
-            SerializerFeature.WriteNullListAsEmpty, SerializerFeature.WriteNullStringAsEmpty);
+            SerializerFeature.WriteNullListAsEmpty, SerializerFeature.WriteNullStringAsEmpty, SerializerFeature.WriteDateUseDateFormat);
     }
 }

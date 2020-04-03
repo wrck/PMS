@@ -14,7 +14,7 @@ pm.common = function(namespace) {
 				// 列表数据
 				list: () => namespace + "/list.json",
 				// 新增报告
-				create: (search)=> namespace + "/detail.json" + (search || ""),
+				create: (search)=> namespace + "/detail.json" + (search ? "?" + search : "").replace("??", "?"),
 				// 更新报告
 				update: (id) => namespace + "/" + id + ".json?_method=PUT",
 				// 删除报告
@@ -27,7 +27,7 @@ pm.common = function(namespace) {
 			return {
 				list: () => namespace + ".html",
 				detail: (id) => namespace + "/" + id + ".html",
-				create: (search) => namespace + "/detail.html?"+ (search || "")
+				create: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/detail.html"+ (search ? "?" + search : "").replace("??", "?")
 			}
 		})(namespace)
 	}

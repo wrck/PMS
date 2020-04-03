@@ -115,7 +115,7 @@
             </s:if>
 	        </div>
         </s:form>
-        <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.maskMoney.min.js"></script>
+        <script type="text/javascript" src="js/jquery.maskMoney.min.js"></script>
         <script type="text/javascript">
 	        $(function(){
 	        	var ratioRegx = /^-?(100(\.0{1,2})?|(([1-9]\d|\d)(\.\d{1,2})?))$/;

@@ -25,7 +25,6 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
-import com.dp.plat.pms.springmvc.job.SMSDataJob;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
@@ -53,7 +52,6 @@ public class ProjectController extends BaseController {
 
 	@RequestMapping
 	public String home() {
-		new SMSDataJob().execute();
 		return VIEW_NAMESPACE + "list";
 	}
 

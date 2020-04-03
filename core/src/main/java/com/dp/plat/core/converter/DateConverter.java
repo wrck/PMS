@@ -39,4 +39,21 @@ public class DateConverter implements Converter<String, Date> {
 		return null;
 	}
 
+	public static Date covert(String stringDate) {
+		if(StringUtils.isEmpty(stringDate))
+			return null;
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+		ParseException parseException = null;
+		for (String pattern : dateFormatPattern) {
+			try {
+				simpleDateFormat.applyPattern(pattern);
+				return simpleDateFormat.parse(stringDate);
+			} catch (ParseException e) {
+				parseException = e;
+			}
+		}
+		if (parseException != null) {
+		}
+		return null;
+	}
 }

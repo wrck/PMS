@@ -957,16 +957,13 @@
 	</where>
   </select>
   
-  <select id="selectUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
-  	<![CDATA[
+  <sql id="uncreateProjectListSql">
   	select distinct null as 
-	    `projectId`, pp.projectCode as `projectCode`, null as `rank`, ifnull(
-	        if(
-	            p.salesType = '01', p.projectName, pp.projectName
-	        ), p.projectName
-	    ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
-	        `p`.`contractNo`, pp.orderExecNumber
+	    `projectId`, pp.projectCode as `projectCode`, null as `rank`, 
+	    ifnull(pp.projectName, p.projectName) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
+	        `p`.`contractNo`, pp.projectCode
 	    ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
+  	<![CDATA[
 	from
 	    `pm_project_property_af_from_sms` `pp` 
 	    left join `pm_order_data_from_sap` `p` 
@@ -987,7 +984,47 @@
 	        on c1.code = p.compCode 
 	    left join fnd_company c2 
 	        on c2.`code` = pp.corporationCode 
-	where pp.`projectType` = 'afss' 
+    ]]>
+	where
+	<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		pp.`projectType` = 'afss' 
+		<if test="model != null ">
+			<if test="model.projectType != null and model.projectType !=''"> 
+				and pp.projectType = #{model.projectType} 
+			</if>
+			<if test="model.projectCode != null and '' != model.projectCode">
+				AND pp.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.projectName != null and '' != model.projectName">
+				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
+			</if>
+			<if test="model.column001 != null and '' != model.column001">
+				AND pp.officeCode = #{model.column001, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column004 != null and '' != model.column004">
+				AND pp.marketName = #{model.column004, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column005 != null and '' != model.column005">
+				AND pp.systemName = #{model.column005, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column006 != null and '' != model.column006">
+				AND pp.expendName = #{model.column006, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column007 != null and '' != model.column007">
+				AND pp.industryName = #{model.column007, jdbcType=VARCHAR}
+			</if>
+			<if test="model.compId != null and '' != model.compId">
+				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
+			</if>
+		</if>
+		<if test="fuzzySearch == true and fuzzy != ''">
+			AND (
+				projectCode like CONCAT("%", #{fuzzy}, "%") or
+				projectName like CONCAT("%", #{fuzzy}, "%") or
+			)
+		</if>
+	</trim>
+	<![CDATA[
 	    and not exists 
 	    (select 
 	        1 
@@ -1042,7 +1079,47 @@
 	        on c1.code = p.compCode 
 	    left join fnd_company c2 
 	        on c2.`code` = pp.corporationCode 
-	where pp.`projectType` = 'afxx' 
+	]]>
+	where 
+	<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		pp.`projectType` = 'afxx' 
+		<if test="model != null ">
+			<if test="model.projectType != null and model.projectType !=''"> 
+				and pp.projectType = #{model.projectType} 
+			</if>
+			<if test="model.projectCode != null and '' != model.projectCode">
+				AND pp.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.projectName != null and '' != model.projectName">
+				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
+			</if>
+			<if test="model.column001 != null and '' != model.column001">
+				AND pp.officeCode = #{model.column001, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column004 != null and '' != model.column004">
+				AND pp.marketName = #{model.column004, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column005 != null and '' != model.column005">
+				AND pp.systemName = #{model.column005, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column006 != null and '' != model.column006">
+				AND pp.expendName = #{model.column006, jdbcType=VARCHAR}
+			</if>
+			<if test="model.column007 != null and '' != model.column007">
+				AND pp.industryName = #{model.column007, jdbcType=VARCHAR}
+			</if>
+			<if test="model.compId != null and '' != model.compId">
+				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
+			</if>
+		</if>
+		<if test="fuzzySearch == true and fuzzy != ''">
+			AND (
+				projectCode like CONCAT("%", #{fuzzy}, "%") or
+				projectName like CONCAT("%", #{fuzzy}, "%") or
+			)
+		</if>
+	</trim>
+	<![CDATA[
 	    and not exists 
 	    (select 
 	        1 
@@ -1063,130 +1140,39 @@
 	    where t3.`projectType` = pp.`projectType` 
 	        and pp.`orderExecNumber` = t1.`contractNo`) 
     ]]>
+  </sql>
+  
+  <select id="selectUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
+  	<include refid="uncreateProjectListSql" />
+  	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
   </select>
   
   <select id="countUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-  	<![CDATA[
   	select 
 	    count(*) 
 	from
-	    (select distinct null as 
-	        `projectId`, pp.projectCode as `projectCode`, null as `rank`, ifnull(
-	            if(
-	                p.salesType = '01', p.projectName, pp.projectName
-	            ), p.projectName
-	        ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
-	            `p`.`contractNo`, pp.orderExecNumber
-	        ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
-	    from
-	        `pm_project_property_af_from_sms` `pp` 
-	        left join `pm_order_data_from_sap` `p` 
-	            on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
-	        left join `view_distinct_contract` `v` 
-	            on `v`.`id` = `p`.`id` 
-	        left join `fnd_department` `d` 
-	            on `pp`.`officeCode` = `d`.`departmentNum` 
-	        left join `fnd_basic_data` `fd` 
-	            on `fd`.`basicDataId` = '10' 
-	            and `fd`.`dataTypeCode` = '02' 
-	            and `fd`.`effectiveFrom` < now() 
-	            and (
-	                `fd`.`effectiveTo` > now() 
-	                or isnull(`fd`.`effectiveTo`)
-	            ) 
-	        left join fnd_company c1 
-	            on c1.code = p.compCode 
-	        left join fnd_company c2 
-	            on c2.`code` = pp.corporationCode 
-	    where pp.`projectType` = 'afss' 
-	        and not exists 
-	        (select 
-	            1 
-	        from
-	            `pm_project_contract` `t1` 
-	            join `pm_project_group_relationship` `t2` 
-	                on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-	            join `pm_project_header` `t3` 
-	                on (
-	                    `t2`.`projectCode` = `t3`.`projectCode` 
-	                    or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
-	                ) 
-	                and `t3`.`effectiveFrom` <= now() 
-	                and (
-	                    `t3`.`effectiveTo` > now() 
-	                    or isnull(`t3`.`effectiveTo`)
-	                ) 
-	        where t3.`projectType` = pp.`projectType` 
-	            and (
-	                (
-	                    `v`.`contractNo` = `t1`.`contractNo` 
-	                    and v.contractNo is not null
-	                )
-	            )) 
-	        and v.`contractNo` is not null 
-	    union
-	    select distinct null as 
-	        `projectId`, null as `projectCode`, null as `rank`, ifnull(
-	            if(
-	                p.salesType = '01', p.projectName, pp.projectName
-	            ), p.projectName
-	        ) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
-	            `p`.`contractNo`, pp.orderExecNumber
-	        ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
-	    from
-	        `pm_project_property_af_from_sms` `pp` 
-	        left join `pm_order_data_from_sap` `p` 
-	            on `p`.`orderExecNumber` = `pp`.`orderExecNumber` 
-	        left join `view_distinct_contract` `v` 
-	            on `v`.`id` = `p`.`id` 
-	        left join `fnd_department` `d` 
-	            on `pp`.`officeCode` = `d`.`departmentNum` 
-	        left join `fnd_basic_data` `fd` 
-	            on `fd`.`basicDataId` = '10' 
-	            and `fd`.`dataTypeCode` = '02' 
-	            and `fd`.`effectiveFrom` < now() 
-	            and (
-	                `fd`.`effectiveTo` > now() 
-	                or isnull(`fd`.`effectiveTo`)
-	            ) 
-	        left join fnd_company c1 
-	            on c1.code = p.compCode 
-	        left join fnd_company c2 
-	            on c2.`code` = pp.corporationCode 
-	    where pp.`projectType` = 'afxx' 
-	        and not exists 
-	        (select 
-	            1 
-	        from
-	            `pm_project_contract` `t1` 
-	            join `pm_project_group_relationship` `t2` 
-	                on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-	            join `pm_project_header` `t3` 
-	                on (
-	                    `t2`.`projectCode` = `t3`.`projectCode` 
-	                    or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
-	                ) 
-	                and `t3`.`effectiveFrom` <= now() 
-	                and (
-	                    `t3`.`effectiveTo` > now() 
-	                    or isnull(`t3`.`effectiveTo`)
-	                ) 
-	        where t3.`projectType` = pp.`projectType` 
-	            and pp.`orderExecNumber` = t1.`contractNo`)) t 
-    ]]>
+	    (<include refid="uncreateProjectListSql" />) t 
   </select>
   
   <select id="queryProjectByContractNoAndType" parameterType="map" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
-  	<![CDATA[
   		select t1.basicDataName as column012, pppfs.projectType, pppfs.objId as relateId, pppfs.channelName as agentChannel,
-            ifnull(podfs.contractNo, pppfs.orderExecNumber) as  contractNo, case when pppfs.projectCode is null then podfs.contractNo else pppfs.projectCode end as projectCode, 
+            <!-- ifnull(podfs.contractNo, pppfs.orderExecNumber) as contractNo,  -->
+            ifnull(podfs.contractNo, pppfs.projectCode) as contractNo, 
+            case when pppfs.projectCode is null then podfs.contractNo else pppfs.projectCode end as projectCode, 
             ifnull(if(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) as projectName,
             podfs.orderCreateTime column009, podfs.customerCode column002, podfs.customerName column003, pppfs.salesManCode salesManCode, 
             pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName column004, pppfs.systemId systemId, pppfs.systemName column005, 
             pppfs.expendId expendId, pppfs.expendName column006, pppfs.industryId, pppfs.industryName column007, pppfs.officeCode column001, 
             fd.departmentName officeName, ppm.memberCode serviceManagerCode, ppm.memberName serviceManagerCodeforjson, pph.column008 column008, pph.column010 column010, pph.column011 column011,
-            pph.column012 column012, IFNULL(t1.basicDataName, -1) as column012Readonly, pph.column013 column013, ifnull(podfs.compCode, pppfs.corporationCode) as compCode, ifnull(c.id, c1.id) as compId, ifnull(podfs.salesType, pppfs.projectType) as salesType
-            from pm_project_property_af_from_sms pppfs 
+            pph.column012 column012, IFNULL(t1.basicDataName, -1) as column012Readonly, pph.column013 column013, ifnull(podfs.compCode, pppfs.corporationCode) as compCode, ifnull(c.id, c1.id) as compId, 
+            ifnull(podfs.salesType, pppfs.projectType) as salesType, pppfs.projectMoney as smsProjectAmont, pppfs.projectCode as smsProjectCode, pppfs.submitTime as smsSubmitTime, pppfs.orderExecNumber as smsOrderExecNumber
+  	<![CDATA[
+        from pm_project_property_af_from_sms pppfs 
             left join pm_order_data_from_sap podfs on podfs.orderExecNumber = pppfs.orderExecNumber 
             left join pm_project_header pph on podfs.contractNo = pph.projectCode and pppfs.projectType = pph.projectType
             left join fnd_department fd on fd.departmentNum = pppfs.officeCode
@@ -1200,7 +1186,8 @@
     where pppfs.projectType = #{projectType}
     <choose>
     	<when test="projectType == 'afxx'">
-			and pppfs.orderExecNumber = #{contractNo}
+			and pppfs.projectCode = #{contractNo}
+			<!-- and pppfs.orderExecNumber = #{contractNo} -->
     	</when>
     	<otherwise> and podfs.contractNo = #{contractNo} </otherwise>
     </choose>

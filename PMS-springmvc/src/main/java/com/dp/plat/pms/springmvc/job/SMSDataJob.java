@@ -22,6 +22,7 @@ import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.pojo.SyncState;
 import com.dp.plat.core.util.DateUtil;
+import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 //github.com/wrck/PMS
@@ -37,7 +38,7 @@ public class SMSDataJob {
 	/**
 	 * 批量插入数量
 	 */
-	private final static int BATCH_INSERT_NUMBER = 500;
+	private final static int BATCH_INSERT_NUMBER = 1000;
 	/**
 	 * 全量同步，同步类型：1
 	 */
@@ -54,9 +55,9 @@ public class SMSDataJob {
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
-		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class };
-		String[] dataSourceFromKeys = new String[] { "SMS", "SMS" };
-		String[] dataSourceToKeys = new String[] { "PMS", "PMS" };
+		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class, OfstContractHeadSAP.class };
+		String[] dataSourceFromKeys = new String[] { "SMS", "SMS", "SMS" };
+		String[] dataSourceToKeys = new String[] { "PMS", "PMS", "PMS" };
 		try {
 			pmSynchronizeService.clearSyncState();
 			Integer threadPoolSize = 3;
@@ -89,6 +90,24 @@ public class SMSDataJob {
 			while (!threadPool.isTerminated()) {
 			}
 
+			// 拆分工程实施项目以及安服项目
+			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+			SyncLog log = new SyncLog(pmSynchronizeService.getClass() + ".splitAfProjectByProductCode", "SplitAfProject", SYNC_TYPE);
+			try {
+				String dataForm = "PMS";
+				String dataTo = "PMS";
+				DataSourceHolder.setDataSourceType(dataForm);
+				log.setDataFrom(dataForm);
+				log.setDataTo(dataTo);
+				pmSynchronizeService.splitAfProjectByProductCode(productCode);
+				log.setIsSuccess(true);
+			} catch (Exception e) {
+				log.setException(ExceptionUtils.getStackTrace(e));
+			} finally {
+				DataSourceHolder.clearDataSourceType();
+				pmSynchronizeService.insertSyncLog(log);
+			}
+			
 			syncLog.setIsSuccess(true);
 			long b = System.currentTimeMillis();
 			System.out.println("执行全量更新定时程序结束，共耗时" + (b - a) / 1000 + " s");
@@ -112,15 +131,6 @@ public class SMSDataJob {
 				syncLog.setException(syncLog.getException() + "\r\n" + ExceptionUtils.getStackTrace(e));
 			}
 			pmSynchronizeService.insertSyncLog(syncLog);
-		}
-
-		// 拆分工程实施项目以及安服项目
-		String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
-		try {
-			DataSourceHolder.setDataSourceType("PMS");
-			pmSynchronizeService.splitAfProjectByProductCode(productCode);
-		} finally {
-			DataSourceHolder.clearDataSourceType();
 		}
 	}
 

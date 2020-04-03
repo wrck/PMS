@@ -20,7 +20,7 @@
 		<!-- 数据库配置 -->
 		<jdbcConnection driverClass="com.mysql.jdbc.Driver"
 			connectionURL="jdbc:mysql:///dpspms?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
-			userId="root" password="" />
+			userId="root" password="!Q@W3e4r" />
 		<!-- 生成Model类存放位置 -->
 		<javaModelGenerator targetPackage="com.dp.plat.pms.springmvc.entity"
 			targetProject="src/main/java">
@@ -42,14 +42,14 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
 		<!--生成对应表及类名 -->
-		<table tableName="pm_dispatch_project_settlement" domainObjectName="DispatchSettlement"
+		<table tableName="pm_project_property_af_from_sms" domainObjectName="AfPrjProperty"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
 			<property name="useActualColumnNames" value="true" />
-			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+			<!-- <generatedKey column="id" sqlStatement="Mysql" identity="true" /> -->
 		</table>
 		
 	</context>

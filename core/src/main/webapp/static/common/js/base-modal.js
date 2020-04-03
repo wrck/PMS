@@ -332,6 +332,7 @@
 	  winId=winId||_win_config.winId;
 	  var win = document.getElementById(winId);
       if (win) { 
+    	  this.hideWin(winId);
     	  $(win).remove(); 
     	  $("div.modal-backdrop").remove();
       }

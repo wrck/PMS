@@ -10,6 +10,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title><spring:message code="system.title" /></title>
 <cssTag>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
+
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css" />
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datepicker/datepicker3.css">
@@ -71,16 +74,13 @@
 			</h1>
 			<span class="display-none"></span>
 			<ol class="breadcrumb">
-				<li><a href="#"><i class="fa fa-dashboard"></i> 首页</a></li>
-				<li><a href="#">系统管理</a></li>
-				<li class="active">用户管理</li>
 			</ol>
 		</section>
 		<section class="content">
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="box box-info">
-						<form id="projectForm" method="post" :action="formAction" name="projectForm" class="form-inline">
+						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline">
 							<div class="box-body row ml-0" v-if="isShow">
 								<%@include file="../template/vue-form-component.jsp" %>
 							</div>
@@ -92,12 +92,20 @@
 							<!-- /.box-footer -->
 						</form>
 					</div>
+					<div id="tabDiv" class="" v-if="isShow">
+						<%@include file="../template/vue-tab-component.jsp" %>
+					</div>
 				</div>
 			</div>
 		</section>
 	</div>
 </body>
 <jsTag>
+	<!-- DataTables -->
+    <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
+    <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
+    <script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></script>
+	
     <script src="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/js/bootstrap-validator.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
@@ -107,48 +115,59 @@
 	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 	<script>
 	    //tableId,queryId,conditionContainer
-	    var form = null;
-	    var id = "${id}" || 0;
-	    var userId = "<shiro:principal property='userId'></shiro:principal>";
-   		var sysData =[],inputData=[],varFields={};
-   		var vm;
 	    $(function () {
-	    	var url = id == 0 ? pm.project.api.create(location.search) : pm.project.api.detail(id);
+		    var form = null;
+	        var keyword = "id";
+		    var id = "${id}" || 0;
+		    var model = "project";
+	   		var appId = model + "App";
+	        var winId= model + "Win";
+	        var formId = model + "Form";
+		    var userId = "<shiro:principal property='userId'></shiro:principal>";
+	   		var sysData =[],inputData=[],varFields={};
+	   		var vm;
+	   		var isModals = '${isModals}';
+	   		var search = '${pageContext.request.queryString}' || location.search;
+	    	$("#commonForm").attr({id:formId, name: formId});
+	    	$("#app").attr({id: appId});
+	    	$("#tabDiv").attr({id: model + "TabDiv"});
+	    	var $container = $("#" + formId);
+	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {}, formVueConfig || {}, {
-							el: "#app",
+					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
+							el: "#" + appId,
 							data: $.extend({}, data, {
 								isCreate: id != 0,
 								isShow: true,
 								dataType: "form",
-								formGroupClass: "col-sm-6 col-md-3",
-								formGroupTextareaClass: "col-sm-12 col-md-6",
-								formAction: pm.project.api.detail(id),
+								// formGroupClass: "col-sm-6 col-md-3",
+								// formGroupTextareaClass: "col-sm-12 col-md-6",
+								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
+	   							tabList: data.tabList || [],
 	   							targetName: data.targetName,
 	    						targetValue: data.targetValue
 	    				 	}),
     				 	}
 					));
 					
-					form = $("#projectForm").form();
+					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);
-		    		$("#projectForm").bootstrapValidator({
+					var $container = $("#" + formId);
+		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
 		                submitHandler: function(validator, form2, submitButton){
 		                	modals.confirm({text:'确认执行分摊？', 
 		                		callback: function () {
-			                	
-			                		var headers = {};
-			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
 			                		var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
-			                		var url = id == 0 ? pm.project.api.create() : pm.project.api.update(id);
+			                		var url = id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id);
 			                		ajaxPost(url, formData,function(data,status){
 			                			if(data.status){
 			        						modals.correct("保存成功");
@@ -177,67 +196,21 @@
     		
     		function handleResult(results){
     			var isCreate = id == 0;
-    			id = (results.projectVO || {}).id || (results.projectVO || {}).projectId || 0;
+    			var targetName = results.targetName || "projectVO";
+    			var targetValue = results[targetName] || {};
+    			keyword = window.keyword || "id";
+    			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-	        		window.location.replace(pm.project.html.detail(id));
+	        		window.location.replace(pm.router.html(model).detail(id));
         		} else {
-        			ajaxGet(pm.project.api.detail(id), null, function(data, status){
+        			ajaxGet(pm.router.api(model).detail(id), null, function(data, status){
 	    				if (status == 'success') {
 	   						vm._data.targetValue = data.targetValue;
 	    				}
 	        		});
         		}
     		}
-    		
 		});
-
-		function gotolist(id) {
-			window.loadPage(basePath + "/sys/user/page/list?id=" + id);
-		}
-
-		var avatarWin = "avatarWin";
-		function uploadAvatar() {
-			modals.openWin({
-				winId : avatarWin,
-				title : '上传头像',
-				width : '700px',
-				url : basePath + "/sys/modals/avatar?userId=" + id
-			});
-		}
-
-		function resetForm() {
-			form.clearForm();
-			$("#user-form").data('bootstrapValidator').resetForm();
-		}
-
-		function setAvatar(avatar_id, avatar_url, isAdd) {
-			$("#avatarImg").attr("src", basePath + avatar_url);
-			//如果是新增 绑定用户
-			if (isAdd) {
-				$("#avatarId").val(avatar_id);
-			} else {
-				$("#avatarId").val(null);
-			}
-			$("input[name='avatar']").val(avatar_url);
-		}
-		
-		function modifyPassword() {
-			modals.openWin({
-				winId : modifyPasswordWin,
-				title : '修改密码',
-				width : '700px',
-				url : basePath + "/sys/modals/password.html"
-			});
-		}
-		
-		function resetPassword() {
-			modals.openWin({
-				winId : modifyPasswordWin,
-				title : '修改密码',
-				width : '700px',
-				url : basePath + "/sys/modals/password.html"
-			});
-		}
 	</script>
 </jsTag>
 </html>

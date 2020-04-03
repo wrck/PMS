@@ -1,4 +1,8 @@
 package com.dp.plat.param;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
 /**
  * 从SMS刷新的项目属性信息
  * @author admin
@@ -29,6 +33,10 @@ public class PrjProperty {
 	private String customerProjectName;
 	private String finalCustomerName;
 	private String agentName;
+	// 出货价
+    private BigDecimal projectMoney;
+    // 提交时间
+    private Date submitDate;
 	
 	public String getOrderExecNumber() {
 		return orderExecNumber;
@@ -174,5 +182,17 @@ public class PrjProperty {
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
+	public BigDecimal getProjectMoney() {
+		return projectMoney;
+	}
+	public void setProjectMoney(BigDecimal projectMoney) {
+		this.projectMoney = projectMoney;
+	}
+	public Date getSubmitDate() {
+		return submitDate;
+	}
+	public void setSubmitDate(Date submitDate) {
+		this.submitDate = submitDate;
+	}
     
 }

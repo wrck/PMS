@@ -79,9 +79,6 @@
 			<span class="display-none"></span> -->
 			<span></span>
 			<ol class="breadcrumb">
-				<li><a href="#"><i class="fa fa-dashboard"></i> 首页</a></li>
-				<li><a href="#">系统管理</a></li>
-				<li class="active">用户管理</li>
 			</ol>
 		</section>
 		<section class="content">
@@ -95,7 +92,8 @@
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
-								<button type="submit" v-if="!targetValue.dispatched" class="btn btn-success" data-btn-type="submit">派单</button>
+								<button type="submit" v-if="targetValue.id > 0 && !targetValue.dispatched" class="btn btn-success" data-btn-type="submit">派单</button>
+								<button type="button" v-if="targetValue.dispatched && !targetValue.settled" class="btn btn-primary" data-btn-type="settle">结算</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
@@ -126,32 +124,38 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 	<script>
-	    //tableId,queryId,conditionContainer
-	    var form = null;
-        var commonTable;
-        var model = "dispatch";
-        var winId= model + "Win";
-        var formId = model + "Form";
-        var keyword = "id";
-	    var id = "${id}" || 0;
-	    var userId = "<shiro:principal property='userId'></shiro:principal>";
-   		var sysData =[],inputData=[],varFields={};
-   		var vm;
 	    $(function () {
+		    //tableId,queryId,conditionContainer
+		    var form = null;
+	        var commonTable;
+	        var model = "dispatch";
+	        var appId = model + "App";
+	        var winId= model + "Win";
+	        var formId = model + "Form";
+	        var keyword = "id";
+		    var id = "${id}" || 0;
+		    var userId = "<shiro:principal property='userId'></shiro:principal>";
+	   		var sysData =[],inputData=[],varFields={};
+	   		var isModals = '${isModals}';
+	   		var search = '${pageContext.request.queryString}' || location.search;
+	   		var vm;
 	    	$("#commonForm").attr({id:formId, name: formId});
-	    	var url = id == 0 ? pm.router.api(model).create(location.search) : pm.router.api(model).detail(id);
+	    	$("#app").attr({id: appId});
+	    	$("#tabDiv").attr({id: model + "TabDiv"});
+	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
 					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
-							el: "#app",
+							el: "#" + appId,
 							data: $.extend({}, data, {
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
-								formGroupClass: "col-sm-12 col-md-6",
-								formGroupTextareaClass: "col-sm-12 col-md-6",
+								formGroupClass: "col-xs-12 col-sm-12 col-md-6",
+								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
+	   							tabList: data.tabList || [],
 	   							targetName: data.targetName,
 	    						targetValue: data.targetValue
 	    				 	}),
@@ -160,6 +164,7 @@
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);
+					var $container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
@@ -169,8 +174,6 @@
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
 			                		var index3 = layer.load(1);
-			                		var headers = {};
-			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
 			                		var formData = form.getFormSimpleData();
 			                		var url = btnType == 'submit' ? pm.router.api(model).submit() : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
 			                		ajaxPost(url, formData,function(data,status){
@@ -194,9 +197,11 @@
 		    		});
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		var projectIdsPlaceholder = (data.targetValue || {}).dispatchName;
-		    		$("#projectIds").select2({
+		    		var selectedId = (data.targetValue || {}).projectIds;
+		    		var selectedText = (data.targetValue || {}).dispatchName;
+		    		$("#projectIds", $container).select2({
 		    			allowClear: true,
+		    			data: selectedId ? [{id: selectedId, text: selectedText}] : [],// 设置初始值
 		    			ajax: {
 		    			    url: basePath + "/pm/project/list.json",
 		    			    dataType: 'json',
@@ -226,18 +231,18 @@
 		    			    },
 		    			    cache: true
 		    			  },
-		    			  placeholder: projectIdsPlaceholder || '搜索项目名称',
+		    			  placeholder: '搜索项目名称',
 		    			  minimumInputLength: 4,
 		    			  templateResult: formatRepo,
 		    			  templateSelection: formatRepoSelection
 		    		});
-		    		if (projectIdsPlaceholder) {
+		    		/* if (projectIdsPlaceholder) {
 		    			$(".select2-selection__placeholder").css("color", 'inherit');
-		    		}
+		    		} */
 		    		
 		    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-		    		$("#projectIds + .select2-container").one("click", function(e) {
-		    			$("#projectIds").on("change", function(e){
+		    		$("#projectIds + .select2-container", $container).one("click", function(e) {
+		    			$("#projectIds", $container).on("change", function(e){
 		    				try{
 		    					var source = $(this).select2("data");
 		    					console.log(source);
@@ -246,31 +251,52 @@
 		    					} else {
 		    						source = {};
 		    					}
-		    					$("#projectName").val(source.projectName);
-		    					$("#dispatchName").val(source.projectName);
-			    				$("#smsProjectCode").val(source.smsProjectCode);
-				    			$("#smsSubmitTime").val(source.smsSubmitTime);
-				    			$("#smsProjectAmount").val(source.smsProjectAmount);
+		    					$("#projectName", $container).val(source.projectName);
+		    					$("#dispatchName", $container).val(source.projectName);
+			    				$("#smsProjectCode", $container).val(source.smsProjectCode);
+				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime);
+				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount);
 			    			} catch(e){}
 		    			});
 		    		});
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		$("#facilitatorId + .select2-container").one("click", function(e) {
-		    			$("#facilitatorId").on("change", function(e){
+		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
+		    			$("#facilitatorId", $container).on("change", function(e){
 		    				var element;
 			    			try{
 			    				var element =  $($(this).select2("data")[0].element);
 			    			} catch(e){}
 		    				var source = $(element).data("source") || {};
-		    				$("#facilitatorCode").val(source.code);
-			    			$("#facilitatorName").val(source.name);
-			    			$("#bankInfo").val(source.bankInfo);
-			    			$("#bankAccount").val(source.bankAccount);
+		    				$("#facilitatorCode", $container).val(source.code);
+			    			$("#facilitatorName", $container).val(source.name);
+			    			$("#bankInfo", $container).val(source.bankInfo);
+			    			$("#bankAccount", $container).val(source.bankAccount);
 		    			});
 		    		});
     			 }
     		})
+    		
+    		$(document).on("click", '[data-btn-type]', function(e) {
+    			var action = $(this).attr('data-btn-type');
+                switch (action) {
+               	case 'settle':
+               		var url = pm.router.html('settlement').create("dispatchId=" + id, true);
+               		console.log(1);
+                	if(id && url) {
+                		modals.openWin({
+	                         winId: "settlementWin",
+	                         title:'新增记录',
+	                         width: '75vw',
+	                         url: url,
+	                         hideFunc: function() {
+	                        	 var config = $("#settlementTab").data();
+	                        	 initTabData(config, true);
+	                         }
+                        });
+                	}
+               	}
+    		});
     		
     		function handleData() {
     			

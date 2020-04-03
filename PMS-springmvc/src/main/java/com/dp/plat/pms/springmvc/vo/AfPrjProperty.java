@@ -1,15 +1,18 @@
 package com.dp.plat.pms.springmvc.vo;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
 import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.math.BigDecimal;
-import java.util.Date;
 
 public class AfPrjProperty extends BaseEntity {
     private Integer id;
 
     private String orderExecNumber;
+
+    private String projectCode;
 
     private String projectName;
 
@@ -70,13 +73,18 @@ public class AfPrjProperty extends BaseEntity {
 
     private String projectType;
 
-    private String projectCode;
+    // 出货价
+    private BigDecimal projectMoney;
 
-    private byte[] serviceTypeName;
+    // 提交时间
+    @JsonSerialize(using = JsonSerializer.class)
+    private Date submitTime;
 
-    private byte[] customerProjectName;
+    private String serviceTypeName;
 
-    private byte[] agentName;
+    private String customerProjectName;
+
+    private String agentName;
 
     private String lendCause;
 
@@ -106,6 +114,20 @@ public class AfPrjProperty extends BaseEntity {
      */
     public void setOrderExecNumber(String orderExecNumber) {
         this.orderExecNumber = orderExecNumber;
+    }
+
+    /**
+     * @return projectCode
+     */
+    public String getProjectCode() {
+        return projectCode;
+    }
+
+    /**
+     * @param projectCode
+     */
+    public void setProjectCode(String projectCode) {
+        this.projectCode = projectCode;
     }
 
     /**
@@ -509,58 +531,80 @@ public class AfPrjProperty extends BaseEntity {
     }
 
     /**
-     * @return projectCode
+     * 获取出货价
+     *
+     * @return projectMoney - 出货价
      */
-    public String getProjectCode() {
-        return projectCode;
+    public BigDecimal getProjectMoney() {
+        return projectMoney;
     }
 
     /**
-     * @param projectCode
+     * 设置出货价
+     *
+     * @param projectMoney 出货价
      */
-    public void setProjectCode(String projectCode) {
-        this.projectCode = projectCode;
+    public void setProjectMoney(BigDecimal projectMoney) {
+        this.projectMoney = projectMoney;
+    }
+
+    /**
+     * 获取提交时间
+     *
+     * @return submitTime - 提交时间
+     */
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
+    /**
+     * 设置提交时间
+     *
+     * @param submitTime 提交时间
+     */
+    public void setSubmitTime(Date submitTime) {
+        this.submitTime = submitTime;
     }
 
     /**
      * @return serviceTypeName
      */
-    public byte[] getServiceTypeName() {
+    public String getServiceTypeName() {
         return serviceTypeName;
     }
 
     /**
      * @param serviceTypeName
      */
-    public void setServiceTypeName(byte[] serviceTypeName) {
+    public void setServiceTypeName(String serviceTypeName) {
         this.serviceTypeName = serviceTypeName;
     }
 
     /**
      * @return customerProjectName
      */
-    public byte[] getCustomerProjectName() {
+    public String getCustomerProjectName() {
         return customerProjectName;
     }
 
     /**
      * @param customerProjectName
      */
-    public void setCustomerProjectName(byte[] customerProjectName) {
+    public void setCustomerProjectName(String customerProjectName) {
         this.customerProjectName = customerProjectName;
     }
 
     /**
      * @return agentName
      */
-    public byte[] getAgentName() {
+    public String getAgentName() {
         return agentName;
     }
 
     /**
      * @param agentName
      */
-    public void setAgentName(byte[] agentName) {
+    public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
 
