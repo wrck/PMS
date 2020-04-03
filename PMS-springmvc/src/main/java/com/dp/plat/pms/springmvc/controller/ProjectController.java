@@ -25,6 +25,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.job.SMSDataJob;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
@@ -38,6 +39,7 @@ public class ProjectController extends BaseController {
 	private final static String VIEW_NAMESPACE = "project/";
 	private final static String DATANAME_FORM = "projectForm";
 	private final static String DATANAME_TABLE = "projectList";
+	private final static String DATANAME_NAVTAB = "projectTab";
 
 	@Autowired
 	private IProjectService projectService;
@@ -51,6 +53,7 @@ public class ProjectController extends BaseController {
 
 	@RequestMapping
 	public String home() {
+		new SMSDataJob().execute();
 		return VIEW_NAMESPACE + "list";
 	}
 
@@ -97,6 +100,9 @@ public class ProjectController extends BaseController {
 				List<Object> fieldList = this.findFieldList(project.getProjectType() + "_" + DATANAME_FORM,
 						DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
+				
+				List<?> navTavList = this.findNavTabList(project.getProjectType() + "_" + DATANAME_NAVTAB);
+				model.addAttribute("tabList", navTavList);
 			}
 		}
 		return VIEW_NAMESPACE + "detail";
@@ -118,6 +124,9 @@ public class ProjectController extends BaseController {
 
 			List<Object> fieldList = this.findFieldList(projectType + "_" + DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
+			
+			List<?> navTavList = this.findNavTabList("create_" + DATANAME_NAVTAB);
+			model.addAttribute("tabList", navTavList);
 		}
 		model.addAttribute("projectType", projectType);
 		return VIEW_NAMESPACE + "detail";
