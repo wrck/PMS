@@ -1,8 +1,24 @@
 $.namespace("pm.router");
 pm.router = function(model) {
 	return {
-		api: (model) => eval("pm." + model + ".api"),
-		html: (model) => eval("pm." + model + ".html"),
+		api: (model) => {
+			var api;
+			try {
+				api = eval("pm." + model + ".api");
+			} catch(e) {
+				api = pm.common(ctx + "/pm/" + model).api;
+			}
+			return api;
+		},
+		html: (model) => {
+			var html;
+			try {
+				html = eval("pm." + model + ".html");
+			} catch(e) {
+				html = pm.common(ctx + "/pm/" + model).html;
+			}
+			return html;
+		}
 	}
 }();
 

@@ -1,26 +1,28 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<div :id="tabContentId" v-if="navTabList.length > 0" class="tab-content box box-primary mt-1">
-	<ul :id="navTabWrapper" class="nav nav-tabs">
-		<li v-for="navTab in navTabList"><a :href="'#' + navTab.type + 'Tab'" data-toggle="tab" class="tab-bg-primary" aria-expanded="true">{{navTab.title}}</a></li>
-	</ul>
-	<div class="tab-pane fade" v-for="navTab in navTabList" :id="navTab.type + 'Tab'" 
-		:data-url="parseUrl(navTab)" :data-type="navTab.type" :data-title="navTab.title"
-		:data-draw-type="navTab.drawType"
-		>
-		<!--:data-url="navTab.url" :data-config="JSON.stringify(navTab)" -->
-		
-		<!-- <div class="box box-primary mb-0"> -->
-			<div class="box-body">
-				<div class="overlay"><i class="fa fa-refresh fa-spin"></i></div>
-				<div :id="navTab.type + 'SearchDiv'" v-if="(navTab.operations || []).length > 0" class="searchDiv">
-					<div class="btn-group operate-btn-group">
-                         <button type="button" class="btn btn-default" v-for="btn in navTab.operations" :data-btn-type="btn.id" @click="btn.events['click']">{{btn.text}}</button>
-                     </div>
+<template v-if="navTabList.length > 0">
+	<div :id="tabContentId" class="tab-content box box-primary mt-1">
+		<ul :id="navTabWrapper" class="nav nav-tabs">
+			<li v-for="navTab in navTabList"><a :href="'#' + navTab.type + 'Tab'" data-toggle="tab" class="tab-bg-primary" aria-expanded="true">{{navTab.title}}</a></li>
+		</ul>
+		<div class="tab-pane fade" v-for="navTab in navTabList" :id="navTab.type + 'Tab'" 
+			:data-url="parseUrl(navTab)" :data-type="navTab.type" :data-title="navTab.title"
+			:data-draw-type="navTab.drawType"
+			>
+			<!--:data-url="navTab.url" :data-config="JSON.stringify(navTab)" -->
+			
+			<!-- <div class="box box-primary mb-0"> -->
+				<div class="box-body">
+					<div class="overlay"><i class="fa fa-refresh fa-spin"></i></div>
+					<div :id="navTab.type + 'SearchDiv'" v-if="(navTab.operations || []).length > 0" class="searchDiv">
+						<div class="btn-group operate-btn-group">
+	                         <button type="button" class="btn btn-default" v-for="btn in navTab.operations" :data-btn-type="btn.id" @click="btn.events['click']">{{btn.text}}</button>
+	                     </div>
+					</div>
 				</div>
-			</div>
-		<!-- </div> -->
+			<!-- </div> -->
+		</div>
 	</div>
-</div>
+</template>
 <script type="text/javascript">
 	var tabVueConfig = {
 		el: "#app",

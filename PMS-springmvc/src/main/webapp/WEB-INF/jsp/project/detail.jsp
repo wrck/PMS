@@ -68,9 +68,9 @@
 				<template v-if="isShow">
 					<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
 				</template>
-				<template v-else>
-					<span></span><small></small>
-				</template>
+				<div v-else>
+					<span>　</span><small>　</small>
+				</div>
 			</h1>
 			<span class="display-none"></span>
 			<ol class="breadcrumb">
