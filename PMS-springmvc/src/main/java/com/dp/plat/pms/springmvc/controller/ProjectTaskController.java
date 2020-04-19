@@ -1,0 +1,208 @@
+package com.dp.plat.pms.springmvc.controller;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.pojo.FileInfo;
+import com.dp.plat.core.service.IUploaderService;
+import com.dp.plat.core.util.DownloadUtils;
+import com.dp.plat.core.util.FileUtil;
+import com.dp.plat.core.vo.DataTableColumn;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
+import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.service.IProjectTaskService;
+import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
+import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
+import com.dp.plat.pms.springmvc.vo.TaskVO;
+
+@Controller
+@RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "/project/task")
+public class ProjectTaskController extends AbstractController<IProjectTaskService, ProjectTask, TaskVO> {
+
+	@Autowired
+	private IProjectHeaderService projectHeaderService;
+	
+	@Autowired
+	private IUploaderService uploaderService;
+
+	@PostConstruct
+	public void init() {
+		this.setUrlNameSpace(URLPath.PROJECT_MANAGER);
+		this.setViewModel("projectTask");
+		this.setUseTemplate(true);
+		this.setKeyword("taskId");
+		this.setViewNameSpace("project/task/");
+	}
+	
+	@Override
+	@PutMapping(value = "{id}")
+	public String update(Integer id, TaskVO v, Model model) {
+		Integer progress = v.getProgress() == null ? 0 : v.getProgress();
+		if (progress < 100) {
+			v.setStatus("50");// 进行中
+		} else if (progress == 100) {
+			v.setStatus("100");// 已完成，待审核
+		}
+		String view = super.update(id, v, model);
+		
+		// 添加进度记录
+		ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
+		CommonRelatedDataVO relatedData = new CommonRelatedDataVO(getViewModel(), v.getTaskId(), getViewModel() + "Log");
+		
+		relatedData.setCustomInfoByKey("projectName", project.getProjectName());
+		relatedData.setCustomInfoByKey("customerName", project.getColumn003());
+//		relatedData.setCustomInfoByKey("taskName", v.getTaskName());
+//		relatedData.setCustomInfoByKey("progress", v.getProgress());
+//		relatedData.setCustomInfoByKey("progressDesc", v.getProgressDesc());
+//		relatedData.setCustomInfoByKey("remark", v.getRemark());
+		relatedData.setCustomInfoByKey("task", v);
+		commonRelatedDataService.insertSelective(relatedData);
+		return view;
+	}
+
+
+
+	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	public void delete(@PathVariable("id") Integer id, Model model) {
+		this.setKeyword("taskId");
+		Boolean status = true;
+		String message = null;
+		try {
+			ProjectTask member = new ProjectTask();
+			member.setTaskId(id);
+			member.setEffectiveTo(new Date());
+			service.updateByPrimaryKeySelective(member);
+		} catch (Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
+	}
+
+	@GetMapping("/modals/upload")
+	public String toUpload(ProjectDeliver projectDeliver, Model model) {
+		String ek = StringUtils.trimToEmpty(projectDeliver.getEventKey());// 获取事件节点
+		String[] eksplit = ek.split("-");
+		projectDeliver.setDataTypeCode(eksplit[0]);
+		if (eksplit.length > 1) {
+			projectDeliver.setBasicDataId(eksplit[1]);
+		}
+		String projectType = projectDeliver.getProjectType();
+		if (StringUtils.isNotBlank(projectType) && StringUtils.isBlank(projectDeliver.getColumn010())) {
+			projectDeliver.setColumn010(projectType);
+		}
+		if (StringUtils.isBlank(projectDeliver.getColumn011())) {
+			projectDeliver.setColumn011("");
+		}
+		List<com.dp.plat.data.bean.ProjectDeliver> projectDeliverList = projectHeaderService
+				.queryProjectDeliverList(projectDeliver);
+		model.addAttribute("projectDeliverList", projectDeliverList);
+		return getViewNameSpace() + "upload";
+	}
+
+	@PostMapping("upload")
+	public void uploadDeliverFile(ProjectDeliver projectDeliver, @RequestPart MultipartFile[] deliverFiles,
+			@RequestParam String[] deliverTypes, HttpServletRequest httpRequest, Model model) {
+		String[] deliverIds = StringUtils.trimToEmpty(projectDeliver.getDeliverId()).split(",");
+		if (deliverFiles != null && deliverFiles.length > 0) {
+			for (int i = 0; i < deliverFiles.length; i++) {
+				MultipartFile multipartFile = deliverFiles[i];
+				if (multipartFile.getSize() == 0) {
+					continue;
+				}
+
+				ProjectDeliver deliver = new ProjectDeliver();
+				BeanUtils.copyProperties(projectDeliver, deliver);
+				String deliverableType = deliverTypes[i];
+				if (StringUtils.isNotBlank(deliverableType)) {
+					String[] splits = StringUtils.split(deliverableType, ",");
+					deliverableType = splits[0];
+				}
+				deliver.setDeliverableType(deliverableType);
+				deliver.setDeliverId(deliverIds[i]);
+				service.uploadFile(deliver, multipartFile);
+			}
+			projectHeaderService.updateProjectLastRefreshTime(projectDeliver.getProjectId());
+		}
+	}
+
+	@GetMapping("upload/list")
+	public String uploadList(ProjectDeliver projectDeliver, Model model) {
+		List<ProjectDeliver> delivers = service.selectProjectDeliverBySelective(projectDeliver);
+		List<DataTableColumn> columnList = findColumnList("projectTaskUploadList");
+		model.addAttribute("columns", columnList);
+		model.addAttribute("data", delivers);
+		return getViewNameSpace() + "upload";
+	}
+	
+	@RequestMapping("download")
+	public void download(ProjectDeliver projectDeliver, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Object ids = projectDeliver.getIds();
+		if (!(ids instanceof Collection || ids instanceof String[] || ids instanceof Integer[])) {
+			if (ids instanceof String) {
+				String[] split = StringUtils.split(StringUtils.trimToEmpty((String) ids), ",");
+				ids = Arrays.asList(split);
+			} else {
+				ids = Arrays.asList(ids);
+			}
+			projectDeliver.setIds(ids);
+		}
+		List<ProjectDeliver> list = service.selectProjectDeliverBySelective(projectDeliver);
+		if (list.isEmpty()) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "找不到指定文件！");
+			return;
+		}
+		if (list.size() == 1) {
+			ProjectDeliver deliver = list.get(0);
+			
+			FileInfo fileInfo =  new FileInfo();
+			fileInfo.setName(deliver.getDeliverableName());
+			fileInfo.setPath(deliver.getDeliverablePath());
+			uploaderService.fileDownload(fileInfo, request, response);
+		} else {
+			List<FileInfo> fileInfos = new ArrayList<FileInfo>(list.size());
+			for (ProjectDeliver deliver : list) {
+				FileInfo fileInfo =  new FileInfo();
+				fileInfo.setName(deliver.getDeliverableName());
+				fileInfo.setPath(deliver.getDeliverablePath());
+				fileInfos.add(fileInfo);
+			}
+			DownloadUtils.downTempZip("upload/temp", FileUtil.generZipFileName(), fileInfos, request, response);
+//			uploaderService.zipFileDownload(null, fileInfos, request, response);
+		}
+	}
+}

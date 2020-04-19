@@ -8,8 +8,8 @@ import java.util.Date;
  *
  */
 public class ProjectMember {
-	private int id;
-	private int projectId;
+	private Integer id;
+	private Integer projectId;
 	private String projectType;
 	private String memberRole;
 	private String memberRoleName;
@@ -25,16 +25,19 @@ public class ProjectMember {
 	private Date effectiveFrom;
 	private Date effectiveTo;
 	private int dataState;
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
-	public int getProjectId() {
+	public Integer getProjectId() {
+		if (projectId == null) {
+			return 0;
+		}
 		return projectId;
 	}
-	public void setProjectId(int projectId) {
+	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
 	}
 	public String getProjectType() {

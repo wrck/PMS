@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -38,24 +41,24 @@ public class DownloadUtils {
 	 */
 	public static void downZip(String zipPath, String zipName, List<FileInfo> filesPath, HttpServletRequest request,
 			HttpServletResponse response) {
-		//项目路径
+		// 项目路径
 		String webPath = request.getSession().getServletContext().getRealPath("/");
 		byte[] buffer = new byte[1024];
 		String strZipPath = webPath + zipPath + "/" + zipName;
+		File tmpZipFile = null;
 		try {
-			File tmpZip = new File(webPath+zipPath);
+			File tmpZip = new File(webPath + zipPath);
 			if (!tmpZip.exists())
 				tmpZip.mkdirs();
-			File tmpZipFile = new File(strZipPath);
+			tmpZipFile = new File(strZipPath);
 			if (!tmpZipFile.exists())
 				tmpZipFile.createNewFile();
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tmpZipFile));
 
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(strZipPath));
-			
 			File[] file1 = new File[filesPath.size()];
 
 			for (int i = 0; i < filesPath.size(); i++) {
-				file1[i] = new File(webPath +filesPath.get(i).getPath());
+				file1[i] = new File(webPath + filesPath.get(i).getPath());
 			}
 			for (int i = 0; i < file1.length; i++) {
 				FileInputStream fis = new FileInputStream(file1[i]);
@@ -69,12 +72,73 @@ public class DownloadUtils {
 				fis.close();
 			}
 			out.close();
-			downFile(response ,request,strZipPath,zipName);
+
+			downFile(response, request, tmpZipFile.getPath(), zipName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
+	
+	/**
+	 * zip打包文件并提供下载
+	 * 
+	 * @param zipPath         压缩文件临时路径 路径最后不要有 /
+	 * @param zipName         压缩为文件名 **.zip
+	 * @param createFilesPath 需要压缩的文件列表
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	public static void downTempZip(String zipPath, String zipName, List<FileInfo> filesPath, HttpServletRequest request,
+			HttpServletResponse response) {
+		// 项目路径
+		String webPath = request.getSession().getServletContext().getRealPath("/");
+		byte[] buffer = new byte[1024];
+		File tmpZipFile = null;
+		String zipDir = webPath + zipPath;
+		try {
+			File tmpZip = new File(zipDir);
+			if (!tmpZip.exists()) {
+				tmpZip.mkdirs();
+			}
+			
+			File[] innerFiles = new File[filesPath.size()];
+
+			for (int i = 0; i < filesPath.size(); i++) {
+				innerFiles[i] = new File(webPath + filesPath.get(i).getPath());
+			}
+			String md5 = getFileByMD5(innerFiles) + ".zip";
+			String strZipPath = zipDir + "/" + md5;
+			tmpZipFile = new File(strZipPath);
+			if (!tmpZipFile.exists()) {
+					tmpZipFile.createNewFile();
+	//				tmpZipFile = File.createTempFile("ZIP", ".zip", tmpZip);
+				ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tmpZipFile));
+	
+				for (int i = 0; i < innerFiles.length; i++) {
+					FileInputStream fis = new FileInputStream(innerFiles[i]);
+					out.putNextEntry(new ZipEntry(filesPath.get(i).getName()));
+					int len;
+					// 读入需要下载的文件的内容，打包到zip文件
+					while ((len = fis.read(buffer)) > 0) {
+						out.write(buffer, 0, len);
+					}
+					out.closeEntry();
+					fis.close();
+				}
+				out.close();
+			}
+
+			downFile(response, request, tmpZipFile.getPath(), zipName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			tmpZipFile.deleteOnExit();
+		}
+
+	}
+
 	/**
 	 * 文件下载，支持断点续传
 	 * 
@@ -189,7 +253,6 @@ public class DownloadUtils {
 			// 忽略 ClientAbortException 之类的异常
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			;
 		}
 	}
 
@@ -228,4 +291,38 @@ public class DownloadUtils {
 		}
 		return false;
 	}
+
+	private static String getFileByMD5(File[] files) {
+		MessageDigest digest = null;
+		InputStream in = null;
+		byte buffer[] = new byte[8192];
+		int len;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+			Arrays.parallelSort(files);
+			for (File mFile : files) {
+				in = new FileInputStream(mFile);
+				while ((len = in.read(buffer)) != -1) {
+					digest.update(buffer, 0, len);
+				}
+				try {
+					in.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			BigInteger bigInt = new BigInteger(1, digest.digest());
+			return bigInt.toString(128);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				in.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 }

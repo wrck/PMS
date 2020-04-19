@@ -575,8 +575,18 @@ section {
 	background-color: #3c8dbc !important;
 }
 
-.nav-tabs>li.active .tab-bg-primary:hover {
-	background-color: #357ca5 !important;
+.nav-tabs>li .tab-operation {
+	display: none;
+}
+
+.nav-tabs>li.active .tab-operation {
+	display: inline;
+}
+
+.nav-tabs>li.active>a, .nav-tabs>li.active {
+	-webkit-transition: opacity .15s linear;
+	-o-transition: opacity .15s linear;
+	transition: opacity .15s linear;
 }
 
 #exprotColumnsSelected, #exprotColumnsUnSelect {
@@ -772,32 +782,32 @@ i.glyphicon.glyphicon-ok-sign.icon-unvisited-focused:before {
 	margin-bottom: 0 !important;
 }
 
-.m-0.5 {
+.m-05 {
 	margin: 0.5rem 0.5rem !important;
 }
 
-.mt-0.5 {
+.mt-05 {
 	margin-top: 0.5rem !important;
 }
 
-.mr-0.5 {
+.mr-05 {
 	margin-right: 0.5rem !important;
 }
 
-.mb-0.5 {
+.mb-05 {
 	margin-bottom: 0.5rem !important;
 }
 
-.ml-0.5 {
+.ml-05 {
 	margin-left: 0.5rem !important;
 }
 
-.mx-0.5 {
+.mx-05 {
 	margin-right: 0.5rem !important;
 	margin-left: 0.5rem !important;
 }
 
-.my-0.5 {
+.my-05 {
 	margin-top: 0.5rem !important;
 	margin-bottom: 0.5rem !important;
 }
@@ -1130,6 +1140,8 @@ i.glyphicon.glyphicon-ok-sign.icon-unvisited-focused:before {
 
 .modal-content {
 	border-radius: 6px !important;
+	max-height: 95vh;
+    overflow: auto;
 }
 
 .modal-content>.box-footer {
@@ -1164,15 +1176,23 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.15);
     border: 1px solid transparent;
     border-radius: 10px;
+}
+
+:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .table-responsive {
 	overflow-x: auto!important;
 }
 
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
 
 td .btn{
 	margin-right: 10px;
@@ -1267,4 +1287,177 @@ td .btn{
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
 	height: 26px;
+}
+
+.display-flex.has-feedback .help-block {
+	position: absolute;
+    bottom: -1rem;
+    right: 0;
+    z-index: 999;
+}
+
+.autocomplete-suggestions {
+    box-sizing: border-box;
+    display: inline-block;
+    margin: 0;
+    position: relative;
+    vertical-align: middle;
+    border: 1px solid #d2d6de;
+    border-radius: 0;
+    background-color: white;
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    overflow: auto;
+}
+
+.autocomplete-suggestion, .autocomplete-no-suggestion {
+    padding: 6px 12px;
+    user-select: none;
+    -webkit-user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+}
+.autocomplete-selected {
+    background-color: #3c8dbc;
+    color: white;
+}
+.autocomplete-group { padding: 6px 12px; }
+.autocomplete-group strong { display: block; border-bottom: 1px solid #d2d6de; }
+
+/* 滑动条 */
+input[type=range] {
+	background-color: -webkit-linear-gradient(#059CFA, #059CFA) no-repeat;
+	background-size: 0% 100%;
+    -webkit-appearance: none;
+    border-radius: 10px; /*这个属性设置使填充进度条时的图形为圆角*/
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    height: 15px;
+    border-radius: 10px; /*将轨道设为圆角的*/
+    box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112; /*轨道内置阴影效果*/
+}
+input[type=range]::-moz-range-track {
+    height: 15px;
+    border-radius: 10px; /*将轨道设为圆角的*/
+    box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112; /*轨道内置阴影效果*/
+}
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 2rem;
+    width: 2rem;
+    margin-top: -5px; /*使滑块超出轨道部分的偏移量相等*/
+    background-color: #ffffff; 
+    border-radius: 50%; /*外观设置为圆形*/
+    border: solid 0.125em rgba(205, 224, 230, 0.5); /*设置边框*/
+    box-shadow: 0 .125em .125em #3b4547; /*添加底部阴影*/
+}
+input[type=range]::-moz-range-thumb {
+    -webkit-appearance: none;
+    height: 2rem;
+    width: 2rem;
+    margin-top: -5px; /*使滑块超出轨道部分的偏移量相等*/
+    background-color: #ffffff; 
+    border-radius: 50%; /*外观设置为圆形*/
+    border: solid 0.125em rgba(205, 224, 230, 0.5); /*设置边框*/
+    box-shadow: 0 .125em .125em #3b4547; /*添加底部阴影*/
+}
+input[type=range]::-moz-range-progress {
+    background-color: linear-gradient(to right, #059CFA, white 100%, white);
+    height: 13px;    
+    border-radius: 10px;
+}
+input[type=range]::-ms-track {
+    height: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112;
+    border-color: transparent; /*去除原有边框*/
+    color: transparent; /*去除轨道内的竖线*/
+}
+
+input[type=range]::-ms-thumb {
+    border: solid 0.125em rgba(205, 224, 230, 0.5);
+    height: 2rem;
+    width: 2rem;
+    border-radius: 50%;
+    background-color: #ffffff;
+    margin-top: -5px;
+    box-shadow: 0 .125em .125em #3b4547;
+}
+
+input[type=range]::-ms-fill-lower {
+    /*进度条已填充的部分*/
+    height: 22px;
+    border-radius: 10px;
+    background-color: linear-gradient(to right, #059CFA, white 100%, white);
+}
+
+input[type=range]::-ms-fill-upper {
+    /*进度条未填充的部分*/
+    height: 22px;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+input[type=range]:focus::-ms-fill-lower {
+    background-color: linear-gradient(to right, #059CFA, white 100%, white);
+}
+
+input[type=range]:focus::-ms-fill-upper {
+    background: #ffffff;
+}
+
+.range-slider {
+	position: relative;
+}
+.range-slider .range-slider-tip{
+	position: absolute;
+    left: calc(0% + 1rem - 0.3rem);
+    top: calc(50% - 0.7rem);
+    pointer-events: none;
+}
+
+.display-flex {
+	display: flex;
+       align-items: baseline;
+}
+.flex-shrink-0 {
+	flex-shrink: 0;
+}
+.flex-shrink-1 {
+	flex-shrink: 1;
+}
+.flex-grow-1 {
+	flex-shrink: 1;
+}
+.flex-grow-2 {
+	flex-grow: 2;
+}
+.flex-grow-3 {
+	flex-grow: 3;
+}
+.form-inline .form-group {
+    margin-bottom: 7px;
+    padding-left: 0!important;
+}
+
+.form-inline .display-flex {
+    display: inline-flex;
+       align-items: baseline;
+}
+
+.form-inline .control-label {
+    margin-right: 7px;
+}
+
+.form-inline .display-flex .form-control {
+    width: 100%;
 }

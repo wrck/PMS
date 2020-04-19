@@ -1,13 +1,17 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,13 +26,19 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Project;
+import com.dp.plat.data.bean.ProjectPlan;
+import com.dp.plat.data.bean.ProjectPlanEvent;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
+import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.pms.springmvc.vo.TaskVO;
 import com.dp.plat.service.PresalesService;
+import com.dp.plat.service.ProjectPlanService;
 import com.dp.plat.service.ProjectService;
 import com.dp.plat.util.Util;
 
@@ -45,10 +55,17 @@ public class ProjectController extends BaseController {
 
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
+	
 
 	@Autowired
 	@Qualifier("projectService")
 	private ProjectService oldProjectService;
+	
+	@Autowired
+	private ProjectPlanService projectPlanService;
+	
+	@Autowired
+	private IProjectTaskService projectTaskService;
 
 	@RequestMapping
 	public String home() {
@@ -64,7 +81,6 @@ public class ProjectController extends BaseController {
 		// temp.setCompID(user.getCompId());
 		tempParam.setModel(temp);
 		pageParam.setModel(project);
-
 		List<Object> list = null;
 		// 待创建列表
 		if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
@@ -92,7 +108,7 @@ public class ProjectController extends BaseController {
 		if (HttpContext.isJSON()) {
 			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
 			if (project != null) {
-				model.addAttribute("targetName", "project");
+				model.addAttribute("targetName", "projectVO");
 				model.addAttribute("targetValue", project);
 
 				List<Object> fieldList = this.findFieldList(project.getProjectType() + "_" + DATANAME_FORM,
@@ -143,6 +159,7 @@ public class ProjectController extends BaseController {
 		} else {
 			try {
 				projectHeaderService.insertProject(project);
+				model.addAttribute("targetName", "projectVO");
 				status = true;
 			} catch (Exception e) {
 				status = false;
@@ -162,6 +179,8 @@ public class ProjectController extends BaseController {
 		String message = null;
 		try {
 			projectHeaderService.updateByPrimaryKeySelective(project);
+			oldProjectService.updateProjectByProjectId(project);//工程管理部权限
+			//projectHeaderService.updateProjectProgramManagerByProjectId(project,null);
 		} catch (Exception e) {
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
@@ -179,10 +198,13 @@ public class ProjectController extends BaseController {
 
 	@RequestMapping(value = "/{id}/orderDetail")
 	public void orderDetailByProjectId(@PathVariable("id") Integer id, Model model) {
-		ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
-		if (project == null) {
+		ProjectHeader temp = projectHeaderService.selectByPrimaryKey(id);
+		if (temp == null) {
 			return;
 		}
+		ProjectVO project = new ProjectVO();
+		BeanUtils.copyProperties(temp, project);
+		
 		List<DataTableColumn> columns = null;
 		List<Object> data = null;
 		String projectType = project.getProjectType();
@@ -221,8 +243,71 @@ public class ProjectController extends BaseController {
 			List<OrderDataFromSap> orderDataList = projectHeaderService.queryOrderLineFromSapByContractNo(project);
 			data = new ArrayList<Object>(orderDataList.size());
 			data.addAll(orderDataList);
+			columns = findColumnList("orderDetailList");
 		}
 		model.addAttribute("columns", columns);
 		model.addAttribute("data", data);
+	}
+	
+	@GetMapping(value = "/{projectId}/task")
+	public void projectTask(@PathVariable(name = "projectId") Integer projectId, ProjectVO project, Model model) {
+		project.setProjectId(projectId);
+		String projectType = project.getProjectType();
+		if (StringUtils.isBlank(projectType)) {
+			ProjectHeader projectHeader = projectHeaderService.selectByPrimaryKey(projectId);
+			projectType = projectHeader.getProjectType();
+			project.setProjectType(projectType);
+		}
+//		// 合同财务回款计划
+//		List<ProjectPlan> projectPlanList = projectPlanService.queryProjectPlanListByContractNo(Util.appendChar(project.getContractNo(), "'"));
+//		// 根据projectid查询项目计划列表
+//		List<ProjectTask> projectTaskList = oldProjectService.queryProjectTaskByProjectId(project.getProjectId());
+//		//根据项目类型生成事件节点列表
+//		project.setColumn012(project.getProjectType());
+//		List<ProjectPlanEvent> projectPlanEventList = oldProjectService.queryProjectPlanEventByProject(project);
+//		if(projectTaskList == null || projectTaskList.size() == 0){
+//			addPlanList2EventList(projectPlanList, projectPlanEventList);
+//		}
+		TaskVO t = new TaskVO(projectId);
+		t.setVisibleFlag("1");
+		t.setEffective(new Date());
+		PageParam<Object> pageParam = new PageParam<Object>();
+		pageParam.setPageSize(-1);
+		pageParam.setModel(t);
+		List<Object> projectTaskList = projectTaskService.selectBySelectivePageable(pageParam);
+//		if (projectTaskList.isEmpty()) {
+//			project.setColumn011(project.getProjectType());
+//			List<ProjectPlanEvent> projectPlanEventList = oldProjectService.queryProjectPlanEventByProject(project);
+//			projectTaskList = new ArrayList<Object>(projectPlanEventList.size());
+//			for (ProjectPlanEvent projectPlanEvent : projectPlanEventList) {
+//				ProjectTask task = new ProjectTask(projectId, projectType);
+//				task.setTaskTypeCode(projectPlanEvent.getDataTypeCode());
+//				task.setTaskTypeId(projectPlanEvent.getBasicDataId());
+//				task.setEventPlanHappenDate(projectPlanEvent.getEventPlanHappenDate());
+//				task.setEventActualFinishDate(projectPlanEvent.getEventActualFinishDate());
+//				task.setEventKey(projectPlanEvent.getEventKey());
+//				task.setEventValue(projectPlanEvent.getEventValue());
+//				projectTaskList.add(task);
+//			}
+//		}
+		List<DataTableColumn> columns = findColumnList("projectTaskList");
+		model.addAttribute("columns", columns);
+		model.addAttribute("data", projectTaskList);
+	}
+
+	/**
+	 * planList的部分字段放到planeventList中
+	 * @param planlist
+	 * @param planeventlist
+	 */
+	private void addPlanList2EventList(List<ProjectPlan> planlist, List<ProjectPlanEvent> planeventlist) {
+		for(ProjectPlan plan : planlist){
+			for(ProjectPlanEvent event : planeventlist){
+				if(plan.getReferenceEventName().equals(event.getEventValue())){
+					event.setEventPlanHappenDate(plan.getEventPlanHappenDate());
+					event.setEventActualFinishDate(plan.getEventActualFinishDate());
+				}
+			}
+		}
 	}
 }

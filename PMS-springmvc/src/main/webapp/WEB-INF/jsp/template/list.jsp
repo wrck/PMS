@@ -83,12 +83,13 @@
     <script>
         //tableId,queryId,conditionContainer
         var commonTable;
+        var urlNamespace = "${urlNamespace}";
         var model = "${model}";
         var winId= model + "Win";
         var tableId = model + "table";
         $(function() {
         	$("#commonTable").attr("id", tableId);
-            commonTable = new CommonTable(tableId, pm.router.api(model).list(), "searchDiv",{
+            commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(), "searchDiv",{
                 searching :true,
                 rowId: 'id',
                 beforeInitConfig: function() {
@@ -120,7 +121,7 @@
                         width:'800px',
                         url:basePath+"/perf/modals/project_detail"
                        });  */
-                    window.location.href = pm.router.html(model).create();
+                    window.location.href = router(urlNamespace).html(model).create();
                     break;
                 case 'edit':
                     if(!rowId){
@@ -135,7 +136,7 @@
                         url:basePath+"/perf/modals/project_detail?id="+rowId
                    });
                     */
-                   window.location.href = pm.router.html(model).detail(rowId);
+                   window.location.href = router(urlNamespace).html(model).detail(rowId);
                    break;
                 case 'delete':
                     if(!rowId){
@@ -143,7 +144,7 @@
                         return false;
                     }
                     modals.confirm("是否要删除该行数据？",function(){
-                        ajaxPost(pm.router.api(model).delete(rowId),null,function(data,status){
+                        ajaxPost(router(urlNamespace).api(model).delete(rowId),null,function(data,status){
                             if(status == "success"){
                                 modals.info("更新成功！");
                                 commonTable.reloadData();

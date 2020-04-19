@@ -529,13 +529,13 @@
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 		</trim>
@@ -638,13 +638,13 @@
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 		</trim>
@@ -748,13 +748,13 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">
@@ -901,13 +901,13 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">

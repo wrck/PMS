@@ -29,6 +29,8 @@ public class UserDetail extends User {
 	private String roles;
 
 	private Integer roleId;
+	
+	private String roleCodes;
 
 	public Integer getUserInfoId() {
 		return userInfoId;
@@ -116,6 +118,14 @@ public class UserDetail extends User {
 
 	public void setRoles(String roles) {
 		this.roles = roles;
+	}
+
+	public String getRoleCodes() {
+		return roleCodes;
+	}
+
+	public void setRoleCodes(String roleCodes) {
+		this.roleCodes = roleCodes;
 	}
 
 	@Override

@@ -128,14 +128,9 @@
 	<filter-mapping>
 		<filter-name>shiroFilter</filter-name>
 		<url-pattern>*.html</url-pattern>
-		<dispatcher>REQUEST</dispatcher>
-		<dispatcher>FORWARD</dispatcher>
-		<dispatcher>INCLUDE</dispatcher>
-		<dispatcher>ERROR</dispatcher>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>shiroFilter</filter-name>
 		<url-pattern>*.json</url-pattern>
+		<url-pattern>*.xlsx</url-pattern>
+		<url-pattern>/modals/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 		<dispatcher>INCLUDE</dispatcher>

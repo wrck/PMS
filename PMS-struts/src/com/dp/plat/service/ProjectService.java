@@ -234,7 +234,7 @@ public interface ProjectService extends BaseService{
 	 * @param member
 	 * @return
 	 */
-	int insertPorjectMember(ProjectMember member);
+	int insertProjectMember(ProjectMember member);
 	/**
 	 * 更新项目成员
 	 * @param member

@@ -234,7 +234,7 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.content != null and '' != model.content">
@@ -309,7 +309,7 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.content != null and '' != model.content">

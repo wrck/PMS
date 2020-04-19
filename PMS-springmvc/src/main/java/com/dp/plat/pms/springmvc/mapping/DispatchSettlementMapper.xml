@@ -390,13 +390,13 @@
 			<if test="customInfo != null and '' != customInfo">
 				customInfo = #{customInfo, jdbcType=OTHER} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
@@ -472,119 +472,126 @@
 			<if test="customInfo != null and '' != customInfo">
 				customInfo = #{customInfo, jdbcType=OTHER} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="disabled != null and '' != disabled">
+			<if test="disabled != null">
 				disabled = #{disabled, jdbcType=BIT} AND
 			</if>
 		</trim>
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from pm_dispatch_project_settlement
+    select s.* from pm_dispatch_project_settlement s
+    <if test="model != null and model.projectId != null">
+    	left join `pm_dispatch_project_header` d 
+        	on s.`dispatchId` = d.`id`
+    </if>
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="model != null ">
 				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+					s.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.settleSeq != null and '' != model.settleSeq">
-					settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+					s.settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.dispatchId != null and '' != model.dispatchId">
-					dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
+					s.dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
-					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+					s.dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.progressDesc != null and '' != model.progressDesc">
-					progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
+					s.progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.progressRatio != null and '' != model.progressRatio">
-					progressRatio = #{model.progressRatio, jdbcType=REAL} AND
+					s.progressRatio = #{model.progressRatio, jdbcType=REAL} AND
 				</if>
 				<if test="model.acceptanceDesc != null and '' != model.acceptanceDesc">
-					acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
+					s.acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.acceptanceRatio != null and '' != model.acceptanceRatio">
-					acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
+					s.acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.ratio != null and '' != model.ratio">
-					ratio = #{model.ratio, jdbcType=VARCHAR} AND
+					s.ratio = #{model.ratio, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.amount != null and '' != model.amount">
-					amount = #{model.amount, jdbcType=VARCHAR} AND
+					s.amount = #{model.amount, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memo != null and '' != model.memo">
-					memo = #{model.memo, jdbcType=VARCHAR} AND
+					s.memo = #{model.memo, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.confirmTime != null and '' != model.confirmTime">
-					confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
+					s.confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.paymentTime != null and '' != model.paymentTime">
-					paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
+					s.paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
-					remark = #{model.remark, jdbcType=VARCHAR} AND
+					s.remark = #{model.remark, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.state != null and '' != model.state">
-					state = #{model.state, jdbcType=INTEGER} AND
+					s.state = #{model.state, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.sseId != null and '' != model.sseId">
-					sseId = #{model.sseId, jdbcType=INTEGER} AND
+					s.sseId = #{model.sseId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.year != null and '' != model.year">
-					year = #{model.year, jdbcType=INTEGER} AND
+					s.year = #{model.year, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.quarter != null and '' != model.quarter">
-					quarter = #{model.quarter, jdbcType=INTEGER} AND
+					s.quarter = #{model.quarter, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.month != null and '' != model.month">
-					month = #{model.month, jdbcType=INTEGER} AND
+					s.month = #{model.month, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					s.customInfo = #{model.customInfo, jdbcType=OTHER} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					s.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					s.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					s.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					s.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.disabled != null and '' != model.disabled">
-					disabled = #{model.disabled, jdbcType=BIT} AND
+				<if test="model.disabled != null">
+					s.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.projectId != null">
+					find_in_set(#{model.projectId}, d.projectIds)
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					settleSeq like CONCAT("%", #{fuzzy}, "%") or
-					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
-					progressDesc like CONCAT("%", #{fuzzy}, "%") or
-					acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
-					acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
-					ratio like CONCAT("%", #{fuzzy}, "%") or
-					amount like CONCAT("%", #{fuzzy}, "%") or
-					memo like CONCAT("%", #{fuzzy}, "%") or
-					remark like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+					s.ratio like CONCAT("%", #{fuzzy}, "%") or
+					s.amount like CONCAT("%", #{fuzzy}, "%") or
+					s.memo like CONCAT("%", #{fuzzy}, "%") or
+					s.remark like CONCAT("%", #{fuzzy}, "%") or
+					s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+					s.createBy like CONCAT("%", #{fuzzy}, "%") or
+					s.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
@@ -593,107 +600,114 @@
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
-        order by id desc
+        order by s.id desc
     </if>
     <if test="start != null and pageSize != -1">
         limit #{start}, #{pageSize}
     </if>
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_dispatch_project_settlement
+    select count(1) from pm_dispatch_project_settlement s
+    <if test="model != null and model.projectId != null">
+    	left join `pm_dispatch_project_header` d 
+        	on s.`dispatchId` = d.`id`
+    </if>
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="model != null ">
 				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+					s.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.settleSeq != null and '' != model.settleSeq">
-					settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+					s.settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.dispatchId != null and '' != model.dispatchId">
-					dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
+					s.dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
-					dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+					s.dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.progressDesc != null and '' != model.progressDesc">
-					progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
+					s.progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.progressRatio != null and '' != model.progressRatio">
-					progressRatio = #{model.progressRatio, jdbcType=REAL} AND
+					s.progressRatio = #{model.progressRatio, jdbcType=REAL} AND
 				</if>
 				<if test="model.acceptanceDesc != null and '' != model.acceptanceDesc">
-					acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
+					s.acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.acceptanceRatio != null and '' != model.acceptanceRatio">
-					acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
+					s.acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.ratio != null and '' != model.ratio">
-					ratio = #{model.ratio, jdbcType=VARCHAR} AND
+					s.ratio = #{model.ratio, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.amount != null and '' != model.amount">
-					amount = #{model.amount, jdbcType=VARCHAR} AND
+					s.amount = #{model.amount, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memo != null and '' != model.memo">
-					memo = #{model.memo, jdbcType=VARCHAR} AND
+					s.memo = #{model.memo, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.confirmTime != null and '' != model.confirmTime">
-					confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
+					s.confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.paymentTime != null and '' != model.paymentTime">
-					paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
+					s.paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
-					remark = #{model.remark, jdbcType=VARCHAR} AND
+					s.remark = #{model.remark, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.state != null and '' != model.state">
-					state = #{model.state, jdbcType=INTEGER} AND
+					s.state = #{model.state, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.sseId != null and '' != model.sseId">
-					sseId = #{model.sseId, jdbcType=INTEGER} AND
+					s.sseId = #{model.sseId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.year != null and '' != model.year">
-					year = #{model.year, jdbcType=INTEGER} AND
+					s.year = #{model.year, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.quarter != null and '' != model.quarter">
-					quarter = #{model.quarter, jdbcType=INTEGER} AND
+					s.quarter = #{model.quarter, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.month != null and '' != model.month">
-					month = #{model.month, jdbcType=INTEGER} AND
+					s.month = #{model.month, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					s.customInfo = #{model.customInfo, jdbcType=OTHER} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					s.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					s.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					s.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					s.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.disabled != null">
-					disabled = #{model.disabled, jdbcType=BIT} AND
+					s.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.projectId != null">
+					find_in_set(#{model.projectId}, d.projectIds)
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					settleSeq like CONCAT("%", #{fuzzy}, "%") or
-					dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
-					progressDesc like CONCAT("%", #{fuzzy}, "%") or
-					acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
-					acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
-					ratio like CONCAT("%", #{fuzzy}, "%") or
-					amount like CONCAT("%", #{fuzzy}, "%") or
-					memo like CONCAT("%", #{fuzzy}, "%") or
-					remark like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+					s.ratio like CONCAT("%", #{fuzzy}, "%") or
+					s.amount like CONCAT("%", #{fuzzy}, "%") or
+					s.memo like CONCAT("%", #{fuzzy}, "%") or
+					s.remark like CONCAT("%", #{fuzzy}, "%") or
+					s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+					s.createBy like CONCAT("%", #{fuzzy}, "%") or
+					s.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>

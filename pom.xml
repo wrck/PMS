@@ -94,7 +94,8 @@
 		<joda-time.version>2.10.3</joda-time.version>
 
 		<!-- POI版本 -->
-		<poi-ooxml.version>4.1.0</poi-ooxml.version>
+		<poi.version>4.1.0</poi.version>
+		<poi-ooxml.version>${poi.version}</poi-ooxml.version>
 
 		<!-- commons工具包版本 -->
 		<commons-fileupload.version>1.4</commons-fileupload.version>
@@ -319,8 +320,13 @@
 			<!-- POI Excel导出相关 -->
 			<dependency>
 				<groupId>org.apache.poi</groupId>
+				<artifactId>poi</artifactId>
+				<version>${poi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.poi</groupId>
 				<artifactId>poi-ooxml</artifactId>
-				<version>${poi-ooxml.version}</version>
+				<version>${poi.version}</version>
 			</dependency>
 
 			<!-- 上传组件包 -->

@@ -90,11 +90,11 @@
 		    `objId`, `applyType`, `corporationCode`, `customerProjectName`, `finalCustomerName`, 
 		    `agentName`, projectType, projectMoney, submitTime
 		) 
-		select 
+		select distinct
 		    ppfs.id, ppfs.`orderExecNumber`, ppfs.`projectCode`, `projectName`, `salesManCode`, `salesManName`, 
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 
 		    `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, 
-		    `objId`, `applyType`, ppfs.`corporationCode`, `customerProjectName`, `finalCustomerName`, 
+		    ifnull(`objId`, 0) as objId, `applyType`, ppfs.`corporationCode`, `customerProjectName`, `finalCustomerName`, 
 		    `agentName`, "afss" as projectType, projectMoney, submitTime
 		from
 		    `pm_project_property_from_sms` ppfs 

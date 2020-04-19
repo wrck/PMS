@@ -293,22 +293,22 @@
 			<if test="state != null and '' != state">
 				state = #{state, jdbcType=BIT} AND
 			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
+			<if test="effectiveFrom != null">
 				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
+			<if test="effectiveTo != null">
 				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="formHtml != null and '' != formHtml">
@@ -357,22 +357,22 @@
 			<if test="state != null and '' != state">
 				state = #{state, jdbcType=BIT} AND
 			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
+			<if test="effectiveFrom != null">
 				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
+			<if test="effectiveTo != null">
 				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
 				createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="formHtml != null and '' != formHtml">
@@ -422,22 +422,22 @@
 				<if test="model.state != null and '' != model.state">
 					state = #{model.state, jdbcType=BIT} AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+				<if test="model.effectiveFrom != null">
 					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+				<if test="model.effectiveTo != null">
 					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.formHtml != null and '' != model.formHtml">
@@ -513,22 +513,22 @@
 				<if test="model.state != null and '' != model.state">
 					state = #{model.state, jdbcType=BIT} AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+				<if test="model.effectiveFrom != null">
 					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+				<if test="model.effectiveTo != null">
 					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.formHtml != null and '' != model.formHtml">
@@ -592,22 +592,22 @@
 				<if test="model.state != null and '' != model.state">
 					state = #{model.state, jdbcType=BIT} AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+				<if test="model.effectiveFrom != null">
 					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+				<if test="model.effectiveTo != null">
 					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.formHtml != null and '' != model.formHtml">
@@ -675,22 +675,22 @@
 				<if test="model.state != null and '' != model.state">
 					state = #{model.state, jdbcType=BIT} AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
+				<if test="model.effectiveFrom != null">
 					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
+				<if test="model.effectiveTo != null">
 					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
 					createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.formHtml != null and '' != model.formHtml">

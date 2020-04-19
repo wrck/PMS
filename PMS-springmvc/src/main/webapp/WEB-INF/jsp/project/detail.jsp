@@ -18,46 +18,6 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datepicker/datepicker3.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
-	
-	<style>
-		.display-flex {
-			display: flex;
-	        align-items: baseline;
-		}
-		.flex-shrink-0 {
-			flex-shrink: 0;
-		}
-		.flex-shrink-1 {
-			flex-shrink: 1;
-		}
-		.flex-grow-1 {
-			flex-shrink: 1;
-		}
-		.flex-grow-2 {
-			flex-grow: 2;
-		}
-		.flex-grow-3 {
-			flex-grow: 3;
-		}
-		.form-inline .form-group {
-		    margin-bottom: 7px;
-		    padding-left: 0!important;
-		}
-		
-		.form-inline .display-flex {
-		    display: inline-flex;
-	        align-items: baseline;
-		}
-		
-		.form-inline .control-label {
-		    margin-right: 7px;
-		}
-		
-		.form-inline .display-flex .form-control {
-		    width: 100%;
-		}
-		
-	</style>
 </cssTag>
 </head>
 <body>
@@ -121,8 +81,9 @@
 	    //tableId,queryId,conditionContainer
 	    $(function () {
 		    var form = null;
-	        var keyword = "id";
+	        var keyword = "projectId";
 		    var id = "${id}" || 0;
+		    var urlNamespace = "/pm/";
 		    var model = "project";
 	   		var appId = model + "App";
 	        var winId= model + "Win";
@@ -145,6 +106,7 @@
 								isCreate: id != 0,
 								isShow: true,
 								dataType: "form",
+								formCols: 4,
 								// formGroupClass: "col-sm-6 col-md-3",
 								// formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),
@@ -198,19 +160,46 @@
     			var isCreate = id == 0;
     			var targetName = results.targetName || "projectVO";
     			var targetValue = results[targetName] || {};
-    			keyword = window.keyword || "id";
+    			keyword = typeof keyword == 'undefined' ? "id" : keyword ||  "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
 	        		window.location.replace(pm.router.html(model).detail(id));
         		} else {
         			ajaxGet(pm.router.api(model).detail(id), null, function(data, status){
 	    				if (status == 'success') {
+	    					vm._data.fieldList = data.fieldList || [];
+	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						// form.initFormData(data.targetValue);
 	    				}
 	        		});
         		}
     		}
 		});
+	    
+	    function uploadDeliverFile(target) {
+			var row = null, $target = $(target);
+	    	try {
+	    		row = JSON.parse($target.data("row"));
+	    	} catch(e) {
+		    	try {
+		    		row = row || eval("(" + $target.data("row") + ")");
+	    		} catch(e2) {
+	    			console.error(e, e2);
+	    		}
+    		}
+    		row = row || {};
+	    	uploadDeliverFileWin = window.uploadDeliverFileWin || "uploadDeliverFileWin";
+	    	modals.openWin({
+	    		title: "上传交付件",
+	    		winId: uploadDeliverFileWin,
+	    		url: basePath + '/pm/project/task/modals/upload.html?' + $.param(row),
+	    		hideFunc: function(e) {
+	    			var config = $target.parents(".tab-pane:first").data();
+	    			initTabData(config, true);
+	    		}
+	    	})
+	    }
 	</script>
 </jsTag>
 </html>

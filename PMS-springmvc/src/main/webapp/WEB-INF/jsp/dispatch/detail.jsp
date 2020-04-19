@@ -128,6 +128,7 @@
 		    //tableId,queryId,conditionContainer
 		    var form = null;
 	        var commonTable;
+	        var urlNamespace = "/pm/";
 	        var model = "dispatch";
 	        var appId = model + "App";
 	        var winId= model + "Win";
@@ -139,6 +140,7 @@
 	   		var isModals = '${isModals}';
 	   		var search = '${pageContext.request.queryString}' || location.search;
 	   		var vm;
+	   		var $container = $("#" + formId);
 	    	$("#commonForm").attr({id:formId, name: formId});
 	    	$("#app").attr({id: appId});
 	    	$("#tabDiv").attr({id: model + "TabDiv"});
@@ -164,7 +166,7 @@
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);
-					var $container = $("#" + formId);
+					$container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
@@ -201,6 +203,7 @@
 		    		var selectedText = (data.targetValue || {}).dispatchName;
 		    		$("#projectIds", $container).select2({
 		    			allowClear: true,
+		    			dropdownAutoWidth: true,
 		    			data: selectedId ? [{id: selectedId, text: selectedText}] : [],// 设置初始值
 		    			ajax: {
 		    			    url: basePath + "/pm/project/list.json",
@@ -261,19 +264,13 @@
 		    		});
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
+		    		if ((data.targetValue || {}).facilitatorId) {
+			    		$("#facilitatorId", $container).one("change", changeFacilitator);
+		    		}
 		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
-		    			$("#facilitatorId", $container).on("change", function(e){
-		    				var element;
-			    			try{
-			    				var element =  $($(this).select2("data")[0].element);
-			    			} catch(e){}
-		    				var source = $(element).data("source") || {};
-		    				$("#facilitatorCode", $container).val(source.code);
-			    			$("#facilitatorName", $container).val(source.name);
-			    			$("#bankInfo", $container).val(source.bankInfo);
-			    			$("#bankAccount", $container).val(source.bankAccount);
-		    			});
+		    			$("#facilitatorId", $container).on("change", changeFacilitator)
 		    		});
+		    		
     			 }
     		})
     		
@@ -309,10 +306,22 @@
     			keyword = window.keyword || "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-	        		window.location.replace(pm.router.html(model).detail(id));
+	        		if (isModals == "true") {
+	        			console.log(1);
+	        			modals.removeData(winId);
+        				$("#" + winId).modal({ 
+							remote: pm.router.html(model).detail(id, true)
+						});
+        				//modals.hideWin(winId);
+        				//modals.closeWin(winId);
+        			} else {
+		        		window.location.replace(pm.router.html(model).detail(id));
+        			}
         		} else {
         			ajaxGet(pm.router.api(model).detail(id), null, function(data, status){
 	    				if (status == 'success') {
+	    					vm._data.fieldList = data.fieldList || [];
+	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
 	    				}
 	        		});
@@ -348,6 +357,27 @@
 
     		function formatRepoSelection (repo) {
     			return repo.projectName || repo.text;
+    		}
+    		
+    		function changeFacilitator(e) {
+				var element;
+    			try{
+    				var element =  $($(this).select2("data")[0].element);
+    			} catch(e){}
+				var source = $(element).data("source") || {};
+				$("#facilitatorCode", $container).val(source.code);
+    			$("#facilitatorName", $container).val(source.name);
+    			$("#bankInfo", $container).val(source.bankInfo);
+    			$("#bankAccount", $container).val(source.bankAccount);
+    			
+    			if (source.code) {
+    				ajaxGet(pm.router.api(model).generateDispatchSeq(), {facilitatorCode: source.code}, function(data) {
+	    				var placeholder = $("#dispatchSeq").data("placeholder") || $("#dispatchSeq").attr("placeholder");
+	    				$("#dispatchSeq").data("placeholder", placeholder);
+	    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
+	    				$("#dispatchSeq").val("");
+	    			});
+    			}
     		}
 		});
 	</script>

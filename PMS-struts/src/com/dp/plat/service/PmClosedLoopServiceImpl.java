@@ -550,6 +550,9 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 	
 	@Override
 	public String queryTaskByBussinessKeyAndUser(Project project, String assignee){
+		if (StringUtils.isBlank(assignee)) {
+			return null;
+		}
 		String classType=PmClosedLoopConstant.CL_PROCESS_KEY;
 		PmClEvaluationHeader pmClEvaluationHeader=new PmClEvaluationHeader();
 		pmClEvaluationHeader.setEvaluationType(PmClosedLoopConstant.CL_EVALU_TYPE_PM);

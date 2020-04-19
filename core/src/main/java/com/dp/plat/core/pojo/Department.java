@@ -52,7 +52,7 @@ public class Department {
 
     // 生效时间
     @JsonSerialize(using = JsonSerializer.class)
-    private Date effectiveForm;
+    private Date effectiveFrom;
 
     // 有效结束时间
     @JsonSerialize(using = JsonSerializer.class)
@@ -363,19 +363,19 @@ public class Department {
     /**
      * 获取生效时间
      *
-     * @return effectiveForm - 生效时间
+     * @return effectiveFrom - 生效时间
      */
-    public Date getEffectiveForm() {
-        return effectiveForm;
+    public Date getEffectiveFrom() {
+        return effectiveFrom;
     }
 
     /**
      * 设置生效时间
      *
-     * @param effectiveForm 生效时间
+     * @param effectiveFrom 生效时间
      */
-    public void setEffectiveForm(Date effectiveForm) {
-        this.effectiveForm = effectiveForm;
+    public void setEffectiveFrom(Date effectiveFrom) {
+        this.effectiveFrom = effectiveFrom;
     }
 
     /**

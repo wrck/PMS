@@ -74,7 +74,7 @@ public class UploadUtils {
 	 * @param dir
 	 * @return
 	 */
-	private static String getSaveDir(String dir) {
+	public static String getSaveDir(String dir) {
 		if(StringUtils.isNotEmpty(dir)) {
 			return dir;
 		}
@@ -125,7 +125,7 @@ public class UploadUtils {
 	 * @param dirPath
 	 * @param dir
 	 */
-	private static void mkdir(String dirPath ,String dir) {
+	public static void mkdir(String dirPath ,String dir) {
 		File filePath = new File(dirPath + dir);
 		if (!filePath.exists()) {
 			filePath.mkdirs();

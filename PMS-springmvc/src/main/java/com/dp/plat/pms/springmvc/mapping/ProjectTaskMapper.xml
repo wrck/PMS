@@ -4,17 +4,20 @@
   <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.ProjectTask">
     <id column="taskId" jdbcType="INTEGER" property="taskId" />
     <result column="projectId" jdbcType="INTEGER" property="projectId" />
-    <result column="projectType" jdbcType="INTEGER" property="projectType" />
+    <result column="projectType" jdbcType="VARCHAR" property="projectType" />
     <result column="contractNo" jdbcType="VARCHAR" property="contractNo" />
     <result column="taskTypeCode" jdbcType="VARCHAR" property="taskTypeCode" />
     <result column="taskTypeId" jdbcType="VARCHAR" property="taskTypeId" />
+    <result column="taskName" jdbcType="VARCHAR" property="taskName" />
     <result column="eventPlanHappenDate" jdbcType="TIMESTAMP" property="eventPlanHappenDate" />
     <result column="eventPlanHappenDateENG" jdbcType="TIMESTAMP" property="eventPlanHappenDateENG" />
     <result column="planStartTime" jdbcType="TIMESTAMP" property="planStartTime" />
     <result column="planEndTime" jdbcType="TIMESTAMP" property="planEndTime" />
     <result column="actualStartTime" jdbcType="TIMESTAMP" property="actualStartTime" />
     <result column="eventActualFinishDate" jdbcType="TIMESTAMP" property="eventActualFinishDate" />
+    <result column="priority" jdbcType="VARCHAR" property="priority" />
     <result column="progress" jdbcType="INTEGER" property="progress" />
+    <result column="progressDesc" jdbcType="VARCHAR" property="progressDesc" />
     <result column="status" jdbcType="VARCHAR" property="status" />
     <result column="parentId" jdbcType="INTEGER" property="parentId" />
     <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
@@ -25,25 +28,19 @@
     <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
     <result column="visibleFlag" jdbcType="VARCHAR" property="visibleFlag" />
     <result column="deliverFileIds" jdbcType="VARCHAR" property="deliverFileIds" />
-    <result column="customeInfo" jdbcType="CHAR" property="customeInfo" />
-  </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.dp.plat.pms.springmvc.entity.ProjectTask">
+    <result column="customeInfo" jdbcType="JSON" property="customeInfo" />
     <result column="remark" jdbcType="LONGVARCHAR" property="remark" />
   </resultMap>
   <sql id="Base_Column_List">
-    taskId, projectId, projectType, contractNo, taskTypeCode, taskTypeId, eventPlanHappenDate, 
+    taskId, projectId, projectType, contractNo, taskTypeCode, taskTypeId, taskName, eventPlanHappenDate, 
     eventPlanHappenDateENG, planStartTime, planEndTime, actualStartTime, eventActualFinishDate, 
-    progress, status, parentId, createTime, createBy, updateTime, updateBy, effectiveFrom, 
-    effectiveTo, visibleFlag, deliverFileIds, customeInfo
-  </sql>
-  <sql id="Blob_Column_List">
+    priority, progress, progressDesc, status, parentId, createTime, createBy, updateTime, 
+    updateBy, effectiveFrom, effectiveTo, visibleFlag, deliverFileIds, customeInfo,
     remark
   </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
     from pm_project_task
     where taskId = #{taskId,jdbcType=INTEGER}
   </select>
@@ -52,26 +49,34 @@
     where taskId = #{taskId,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask">
-    insert into pm_project_task (taskId, projectId, projectType, 
-      contractNo, taskTypeCode, taskTypeId, 
+    <selectKey keyProperty="taskId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_project_task (taskId, projectId, projectType, contractNo, 
+      taskTypeCode, taskTypeId, taskName, 
       eventPlanHappenDate, eventPlanHappenDateENG, 
       planStartTime, planEndTime, actualStartTime, 
-      eventActualFinishDate, progress, status, 
-      parentId, createTime, createBy, 
-      updateTime, updateBy, effectiveFrom, 
-      effectiveTo, visibleFlag, deliverFileIds, 
-      customeInfo, remark)
-    values (#{taskId,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=INTEGER}, 
-      #{contractNo,jdbcType=VARCHAR}, #{taskTypeCode,jdbcType=VARCHAR}, #{taskTypeId,jdbcType=VARCHAR}, 
+      eventActualFinishDate, priority, progress, 
+      progressDesc, status, parentId, 
+      createTime, createBy, updateTime, 
+      updateBy, effectiveFrom, effectiveTo, 
+      visibleFlag, deliverFileIds, customeInfo, 
+      remark)
+    values (#{taskId,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=VARCHAR}, #{contractNo,jdbcType=VARCHAR}, 
+      #{taskTypeCode,jdbcType=VARCHAR}, #{taskTypeId,jdbcType=VARCHAR}, #{taskName,jdbcType=VARCHAR}, 
       #{eventPlanHappenDate,jdbcType=TIMESTAMP}, #{eventPlanHappenDateENG,jdbcType=TIMESTAMP}, 
       #{planStartTime,jdbcType=TIMESTAMP}, #{planEndTime,jdbcType=TIMESTAMP}, #{actualStartTime,jdbcType=TIMESTAMP}, 
-      #{eventActualFinishDate,jdbcType=TIMESTAMP}, #{progress,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR}, 
-      #{parentId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, 
-      #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{effectiveFrom,jdbcType=TIMESTAMP}, 
-      #{effectiveTo,jdbcType=TIMESTAMP}, #{visibleFlag,jdbcType=VARCHAR}, #{deliverFileIds,jdbcType=VARCHAR}, 
-      #{customeInfo,jdbcType=CHAR}, #{remark,jdbcType=LONGVARCHAR})
+      #{eventActualFinishDate,jdbcType=TIMESTAMP}, #{priority,jdbcType=VARCHAR}, #{progress,jdbcType=INTEGER}, 
+      #{progressDesc,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{parentId,jdbcType=INTEGER}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{updateBy,jdbcType=VARCHAR}, #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, 
+      #{visibleFlag,jdbcType=VARCHAR}, #{deliverFileIds,jdbcType=VARCHAR}, #{customeInfo,jdbcType=JSON}, 
+      #{remark,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask">
+    <selectKey keyProperty="taskId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
     insert into pm_project_task
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="taskId != null">
@@ -92,6 +97,9 @@
       <if test="taskTypeId != null">
         taskTypeId,
       </if>
+      <if test="taskName != null">
+        taskName,
+      </if>
       <if test="eventPlanHappenDate != null">
         eventPlanHappenDate,
       </if>
@@ -110,8 +118,14 @@
       <if test="eventActualFinishDate != null">
         eventActualFinishDate,
       </if>
+      <if test="priority != null">
+        priority,
+      </if>
       <if test="progress != null">
         progress,
+      </if>
+      <if test="progressDesc != null">
+        progressDesc,
       </if>
       <if test="status != null">
         status,
@@ -158,7 +172,7 @@
         #{projectId,jdbcType=INTEGER},
       </if>
       <if test="projectType != null">
-        #{projectType,jdbcType=INTEGER},
+        #{projectType,jdbcType=VARCHAR},
       </if>
       <if test="contractNo != null">
         #{contractNo,jdbcType=VARCHAR},
@@ -168,6 +182,9 @@
       </if>
       <if test="taskTypeId != null">
         #{taskTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskName != null">
+        #{taskName,jdbcType=VARCHAR},
       </if>
       <if test="eventPlanHappenDate != null">
         #{eventPlanHappenDate,jdbcType=TIMESTAMP},
@@ -187,8 +204,14 @@
       <if test="eventActualFinishDate != null">
         #{eventActualFinishDate,jdbcType=TIMESTAMP},
       </if>
+      <if test="priority != null">
+        #{priority,jdbcType=VARCHAR},
+      </if>
       <if test="progress != null">
         #{progress,jdbcType=INTEGER},
+      </if>
+      <if test="progressDesc != null">
+        #{progressDesc,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         #{status,jdbcType=VARCHAR},
@@ -221,7 +244,7 @@
         #{deliverFileIds,jdbcType=VARCHAR},
       </if>
       <if test="customeInfo != null">
-        #{customeInfo,jdbcType=CHAR},
+        #{customeInfo,jdbcType=JSON},
       </if>
       <if test="remark != null">
         #{remark,jdbcType=LONGVARCHAR},
@@ -235,7 +258,7 @@
         projectId = #{projectId,jdbcType=INTEGER},
       </if>
       <if test="projectType != null">
-        projectType = #{projectType,jdbcType=INTEGER},
+        projectType = #{projectType,jdbcType=VARCHAR},
       </if>
       <if test="contractNo != null">
         contractNo = #{contractNo,jdbcType=VARCHAR},
@@ -245,6 +268,9 @@
       </if>
       <if test="taskTypeId != null">
         taskTypeId = #{taskTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskName != null">
+        taskName = #{taskName,jdbcType=VARCHAR},
       </if>
       <if test="eventPlanHappenDate != null">
         eventPlanHappenDate = #{eventPlanHappenDate,jdbcType=TIMESTAMP},
@@ -264,8 +290,14 @@
       <if test="eventActualFinishDate != null">
         eventActualFinishDate = #{eventActualFinishDate,jdbcType=TIMESTAMP},
       </if>
+      <if test="priority != null">
+        priority = #{priority,jdbcType=VARCHAR},
+      </if>
       <if test="progress != null">
         progress = #{progress,jdbcType=INTEGER},
+      </if>
+      <if test="progressDesc != null">
+        progressDesc = #{progressDesc,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=VARCHAR},
@@ -298,7 +330,7 @@
         deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
       </if>
       <if test="customeInfo != null">
-        customeInfo = #{customeInfo,jdbcType=CHAR},
+        customeInfo = #{customeInfo,jdbcType=JSON},
       </if>
       <if test="remark != null">
         remark = #{remark,jdbcType=LONGVARCHAR},
@@ -306,48 +338,23 @@
     </set>
     where taskId = #{taskId,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask">
-    update pm_project_task
-    set projectId = #{projectId,jdbcType=INTEGER},
-      projectType = #{projectType,jdbcType=INTEGER},
-      contractNo = #{contractNo,jdbcType=VARCHAR},
-      taskTypeCode = #{taskTypeCode,jdbcType=VARCHAR},
-      taskTypeId = #{taskTypeId,jdbcType=VARCHAR},
-      eventPlanHappenDate = #{eventPlanHappenDate,jdbcType=TIMESTAMP},
-      eventPlanHappenDateENG = #{eventPlanHappenDateENG,jdbcType=TIMESTAMP},
-      planStartTime = #{planStartTime,jdbcType=TIMESTAMP},
-      planEndTime = #{planEndTime,jdbcType=TIMESTAMP},
-      actualStartTime = #{actualStartTime,jdbcType=TIMESTAMP},
-      eventActualFinishDate = #{eventActualFinishDate,jdbcType=TIMESTAMP},
-      progress = #{progress,jdbcType=INTEGER},
-      status = #{status,jdbcType=VARCHAR},
-      parentId = #{parentId,jdbcType=INTEGER},
-      createTime = #{createTime,jdbcType=TIMESTAMP},
-      createBy = #{createBy,jdbcType=VARCHAR},
-      updateTime = #{updateTime,jdbcType=TIMESTAMP},
-      updateBy = #{updateBy,jdbcType=VARCHAR},
-      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
-      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
-      visibleFlag = #{visibleFlag,jdbcType=VARCHAR},
-      deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
-      customeInfo = #{customeInfo,jdbcType=CHAR},
-      remark = #{remark,jdbcType=LONGVARCHAR}
-    where taskId = #{taskId,jdbcType=INTEGER}
-  </update>
   <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask">
     update pm_project_task
     set projectId = #{projectId,jdbcType=INTEGER},
-      projectType = #{projectType,jdbcType=INTEGER},
+      projectType = #{projectType,jdbcType=VARCHAR},
       contractNo = #{contractNo,jdbcType=VARCHAR},
       taskTypeCode = #{taskTypeCode,jdbcType=VARCHAR},
       taskTypeId = #{taskTypeId,jdbcType=VARCHAR},
+      taskName = #{taskName,jdbcType=VARCHAR},
       eventPlanHappenDate = #{eventPlanHappenDate,jdbcType=TIMESTAMP},
       eventPlanHappenDateENG = #{eventPlanHappenDateENG,jdbcType=TIMESTAMP},
       planStartTime = #{planStartTime,jdbcType=TIMESTAMP},
       planEndTime = #{planEndTime,jdbcType=TIMESTAMP},
       actualStartTime = #{actualStartTime,jdbcType=TIMESTAMP},
       eventActualFinishDate = #{eventActualFinishDate,jdbcType=TIMESTAMP},
+      priority = #{priority,jdbcType=VARCHAR},
       progress = #{progress,jdbcType=INTEGER},
+      progressDesc = #{progressDesc,jdbcType=VARCHAR},
       status = #{status,jdbcType=VARCHAR},
       parentId = #{parentId,jdbcType=INTEGER},
       createTime = #{createTime,jdbcType=TIMESTAMP},
@@ -358,271 +365,211 @@
       effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
       visibleFlag = #{visibleFlag,jdbcType=VARCHAR},
       deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
-      customeInfo = #{customeInfo,jdbcType=CHAR}
+      customeInfo = #{customeInfo,jdbcType=JSON},
+      remark = #{remark,jdbcType=LONGVARCHAR}
     where taskId = #{taskId,jdbcType=INTEGER}
   </update>
-  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask" resultMap="BaseResultMap">
-    select * from pm_project_task
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="taskId != null and '' != taskId">
-				taskId = #{taskId, jdbcType=INTEGER} AND
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="taskId != null">
+				t.taskId = #{taskId, jdbcType=INTEGER} AND
 			</if>
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
+			<if test="projectId != null">
+				t.projectId = #{projectId, jdbcType=INTEGER} AND
 			</if>
 			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=INTEGER} AND
+				t.projectType = #{projectType, jdbcType=VARCHAR} AND
 			</if>
 			<if test="contractNo != null and '' != contractNo">
-				contractNo = #{contractNo, jdbcType=VARCHAR} AND
+				t.contractNo = #{contractNo, jdbcType=VARCHAR} AND
 			</if>
 			<if test="taskTypeCode != null and '' != taskTypeCode">
-				taskTypeCode = #{taskTypeCode, jdbcType=VARCHAR} AND
+				t.taskTypeCode = #{taskTypeCode, jdbcType=VARCHAR} AND
 			</if>
 			<if test="taskTypeId != null and '' != taskTypeId">
-				taskTypeId = #{taskTypeId, jdbcType=VARCHAR} AND
+				t.taskTypeId = #{taskTypeId, jdbcType=VARCHAR} AND
 			</if>
-			<if test="eventPlanHappenDate != null and '' != eventPlanHappenDate">
-				eventPlanHappenDate = #{eventPlanHappenDate, jdbcType=TIMESTAMP} AND
+			<if test="taskName != null and '' != taskName">
+				t.taskName = #{taskName, jdbcType=VARCHAR} AND
 			</if>
-			<if test="eventPlanHappenDateENG != null and '' != eventPlanHappenDateENG">
-				eventPlanHappenDateENG = #{eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
+			<if test="eventPlanHappenDate != null">
+				t.eventPlanHappenDate = #{eventPlanHappenDate, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="planStartTime != null and '' != planStartTime">
-				planStartTime = #{planStartTime, jdbcType=TIMESTAMP} AND
+			<if test="eventPlanHappenDateENG != null">
+				t.eventPlanHappenDateENG = #{eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="planEndTime != null and '' != planEndTime">
-				planEndTime = #{planEndTime, jdbcType=TIMESTAMP} AND
+			<if test="planStartTime != null">
+				t.planStartTime = #{planStartTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="actualStartTime != null and '' != actualStartTime">
-				actualStartTime = #{actualStartTime, jdbcType=TIMESTAMP} AND
+			<if test="planEndTime != null">
+				t.planEndTime = #{planEndTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="eventActualFinishDate != null and '' != eventActualFinishDate">
-				eventActualFinishDate = #{eventActualFinishDate, jdbcType=TIMESTAMP} AND
+			<if test="actualStartTime != null">
+				t.actualStartTime = #{actualStartTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="progress != null and '' != progress">
-				progress = #{progress, jdbcType=INTEGER} AND
+			<if test="eventActualFinishDate != null">
+				t.eventActualFinishDate = #{eventActualFinishDate, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="priority != null and '' != priority">
+				t.priority = #{priority, jdbcType=VARCHAR} AND
+			</if>
+			<if test="progress != null">
+				t.progress = #{progress, jdbcType=INTEGER} AND
+			</if>
+			<if test="progressDesc != null and '' != progressDesc">
+				t.progressDesc = #{progressDesc, jdbcType=VARCHAR} AND
 			</if>
 			<if test="status != null and '' != status">
-				status = #{status, jdbcType=VARCHAR} AND
+				t.status = #{status, jdbcType=VARCHAR} AND
 			</if>
-			<if test="parentId != null and '' != parentId">
-				parentId = #{parentId, jdbcType=INTEGER} AND
+			<if test="parentId != null">
+				t.parentId = #{parentId, jdbcType=INTEGER} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			<if test="createTime != null">
+				t.createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
+				t.createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			<if test="updateTime != null">
+				t.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+				t.updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			<if test="effectiveFrom != null">
+				<![CDATA[ t.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			<if test="effectiveTo != null">
+				<![CDATA[ (t.effectiveTo is null or t.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 			</if>
 			<if test="visibleFlag != null and '' != visibleFlag">
-				visibleFlag = #{visibleFlag, jdbcType=VARCHAR} AND
+				t.visibleFlag = #{visibleFlag, jdbcType=VARCHAR} AND
 			</if>
 			<if test="deliverFileIds != null and '' != deliverFileIds">
-				deliverFileIds = #{deliverFileIds, jdbcType=VARCHAR} AND
+				t.deliverFileIds = #{deliverFileIds, jdbcType=VARCHAR} AND
 			</if>
-			<if test="customeInfo != null and '' != customeInfo">
-				customeInfo = #{customeInfo, jdbcType=CHAR} AND
+			<if test="customeInfo != null">
+				t.customeInfo = #{customeInfo, jdbcType=JSON} AND
 			</if>
 			<if test="remark != null and '' != remark">
-				remark = #{remark, jdbcType=LONGVARCHAR} AND
+				t.remark = #{remark, jdbcType=LONGVARCHAR} AND
 			</if>
 		</trim>
 	</where>
-  </select>
-  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask" resultType="long">
-    select count(1) from pm_project_task
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="taskId != null and '' != taskId">
-				taskId = #{taskId, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=INTEGER} AND
-			</if>
-			<if test="contractNo != null and '' != contractNo">
-				contractNo = #{contractNo, jdbcType=VARCHAR} AND
-			</if>
-			<if test="taskTypeCode != null and '' != taskTypeCode">
-				taskTypeCode = #{taskTypeCode, jdbcType=VARCHAR} AND
-			</if>
-			<if test="taskTypeId != null and '' != taskTypeId">
-				taskTypeId = #{taskTypeId, jdbcType=VARCHAR} AND
-			</if>
-			<if test="eventPlanHappenDate != null and '' != eventPlanHappenDate">
-				eventPlanHappenDate = #{eventPlanHappenDate, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="eventPlanHappenDateENG != null and '' != eventPlanHappenDateENG">
-				eventPlanHappenDateENG = #{eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="planStartTime != null and '' != planStartTime">
-				planStartTime = #{planStartTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="planEndTime != null and '' != planEndTime">
-				planEndTime = #{planEndTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="actualStartTime != null and '' != actualStartTime">
-				actualStartTime = #{actualStartTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="eventActualFinishDate != null and '' != eventActualFinishDate">
-				eventActualFinishDate = #{eventActualFinishDate, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="progress != null and '' != progress">
-				progress = #{progress, jdbcType=INTEGER} AND
-			</if>
-			<if test="status != null and '' != status">
-				status = #{status, jdbcType=VARCHAR} AND
-			</if>
-			<if test="parentId != null and '' != parentId">
-				parentId = #{parentId, jdbcType=INTEGER} AND
-			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="visibleFlag != null and '' != visibleFlag">
-				visibleFlag = #{visibleFlag, jdbcType=VARCHAR} AND
-			</if>
-			<if test="deliverFileIds != null and '' != deliverFileIds">
-				deliverFileIds = #{deliverFileIds, jdbcType=VARCHAR} AND
-			</if>
-			<if test="customeInfo != null and '' != customeInfo">
-				customeInfo = #{customeInfo, jdbcType=CHAR} AND
-			</if>
-			<if test="remark != null and '' != remark">
-				remark = #{remark, jdbcType=LONGVARCHAR} AND
-			</if>
-		</trim>
-	</where>
-  </select>
-  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from pm_project_task
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.taskId != null and '' != model.taskId">
-					taskId = #{model.taskId, jdbcType=INTEGER} AND
+				<if test="model.taskId != null">
+					t.taskId = #{model.taskId, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
+				<if test="model.projectId != null">
+					t.projectId = #{model.projectId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=INTEGER} AND
+					t.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.contractNo != null and '' != model.contractNo">
-					contractNo = #{model.contractNo, jdbcType=VARCHAR} AND
+					t.contractNo = #{model.contractNo, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.taskTypeCode != null and '' != model.taskTypeCode">
-					taskTypeCode = #{model.taskTypeCode, jdbcType=VARCHAR} AND
+					t.taskTypeCode = #{model.taskTypeCode, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.taskTypeId != null and '' != model.taskTypeId">
-					taskTypeId = #{model.taskTypeId, jdbcType=VARCHAR} AND
+					t.taskTypeId = #{model.taskTypeId, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.eventPlanHappenDate != null and '' != model.eventPlanHappenDate">
-					eventPlanHappenDate = #{model.eventPlanHappenDate, jdbcType=TIMESTAMP} AND
+				<if test="model.taskName != null and '' != model.taskName">
+					t.taskName = #{model.taskName, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.eventPlanHappenDateENG != null and '' != model.eventPlanHappenDateENG">
-					eventPlanHappenDateENG = #{model.eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
+				<if test="model.eventPlanHappenDate != null">
+					t.eventPlanHappenDate = #{model.eventPlanHappenDate, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.planStartTime != null and '' != model.planStartTime">
-					planStartTime = #{model.planStartTime, jdbcType=TIMESTAMP} AND
+				<if test="model.eventPlanHappenDateENG != null">
+					t.eventPlanHappenDateENG = #{model.eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.planEndTime != null and '' != model.planEndTime">
-					planEndTime = #{model.planEndTime, jdbcType=TIMESTAMP} AND
+				<if test="model.planStartTime != null">
+					t.planStartTime = #{model.planStartTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.actualStartTime != null and '' != model.actualStartTime">
-					actualStartTime = #{model.actualStartTime, jdbcType=TIMESTAMP} AND
+				<if test="model.planEndTime != null">
+					t.planEndTime = #{model.planEndTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.eventActualFinishDate != null and '' != model.eventActualFinishDate">
-					eventActualFinishDate = #{model.eventActualFinishDate, jdbcType=TIMESTAMP} AND
+				<if test="model.actualStartTime != null">
+					t.actualStartTime = #{model.actualStartTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.progress != null and '' != model.progress">
-					progress = #{model.progress, jdbcType=INTEGER} AND
+				<if test="model.eventActualFinishDate != null">
+					t.eventActualFinishDate = #{model.eventActualFinishDate, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.priority != null and '' != model.priority">
+					t.priority = #{model.priority, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.progress != null">
+					t.progress = #{model.progress, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.progressDesc != null and '' != model.progressDesc">
+					t.progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.status != null and '' != model.status">
-					status = #{model.status, jdbcType=VARCHAR} AND
+					t.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.parentId != null and '' != model.parentId">
-					parentId = #{model.parentId, jdbcType=INTEGER} AND
+				<if test="model.parentId != null">
+					t.parentId = #{model.parentId, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					t.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					t.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					t.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					t.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ t.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (t.effectiveTo is null or t.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 				</if>
 				<if test="model.visibleFlag != null and '' != model.visibleFlag">
-					visibleFlag = #{model.visibleFlag, jdbcType=VARCHAR} AND
+					t.visibleFlag = #{model.visibleFlag, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.deliverFileIds != null and '' != model.deliverFileIds">
-					deliverFileIds = #{model.deliverFileIds, jdbcType=VARCHAR} AND
+					t.deliverFileIds = #{model.deliverFileIds, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.customeInfo != null and '' != model.customeInfo">
-					customeInfo = #{model.customeInfo, jdbcType=CHAR} AND
+				<if test="model.customeInfo != null">
+					t.customeInfo = #{model.customeInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
-					remark = #{model.remark, jdbcType=LONGVARCHAR} AND
+					t.remark = #{model.remark, jdbcType=LONGVARCHAR} AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					contractNo like CONCAT("%", #{fuzzy}, "%") or
-					taskTypeCode like CONCAT("%", #{fuzzy}, "%") or
-					taskTypeId like CONCAT("%", #{fuzzy}, "%") or
-					status like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
-					visibleFlag like CONCAT("%", #{fuzzy}, "%") or
-					deliverFileIds like CONCAT("%", #{fuzzy}, "%") or
-					customeInfo like CONCAT("%", #{fuzzy}, "%") or
-					remark like CONCAT("%", #{fuzzy}, "%")
+					t.projectType like CONCAT("%", #{fuzzy}, "%") or
+					t.contractNo like CONCAT("%", #{fuzzy}, "%") or
+					t.taskTypeCode like CONCAT("%", #{fuzzy}, "%") or
+					t.taskTypeId like CONCAT("%", #{fuzzy}, "%") or
+					t.taskName like CONCAT("%", #{fuzzy}, "%") or
+					t.priority like CONCAT("%", #{fuzzy}, "%") or
+					t.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					t.status like CONCAT("%", #{fuzzy}, "%") or
+					t.createBy like CONCAT("%", #{fuzzy}, "%") or
+					t.updateBy like CONCAT("%", #{fuzzy}, "%") or
+					t.visibleFlag like CONCAT("%", #{fuzzy}, "%") or
+					t.deliverFileIds like CONCAT("%", #{fuzzy}, "%") or
+					t.remark like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
 	</where>
-	<if test="orderBy != null">
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
@@ -631,103 +578,50 @@
     <if test="start != null and pageSize != -1">
         limit #{start}, #{pageSize}
     </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask" resultMap="BaseResultMap">
+    select * from pm_project_task as t
+	<include refid="sql_where"/>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask" resultType="long">
+    select count(1) from pm_project_task as t
+	<include refid="sql_where"/>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.TaskVO">
+    select 
+	    t.*, concat(t.taskTypeCode, '-', t.taskTypeId) eventKeyStr, fbd.basicDataName eventValue 
+	from
+	    pm_project_task as t 
+	    left join fnd_basic_data fbd 
+	        on fbd.dataTypeCode = t.taskTypeCode 
+	        and fbd.basicDataId = t.taskTypeId 
+    <include refid="sql_model_where" />
+	<include refid="sql_pageable_limit" />
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_project_task
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="model != null ">
-				<if test="model.taskId != null and '' != model.taskId">
-					taskId = #{model.taskId, jdbcType=INTEGER} AND
+    select count(1) from pm_project_task as t
+    <include refid="sql_model_where" />
+  </select>
+  
+  <!-- 查询任务的交付件 -->
+  <select id="selectProjectDeliverBySelective" parameterType="com.dp.plat.pms.springmvc.vo.ProjectDeliver" resultType="com.dp.plat.pms.springmvc.vo.ProjectDeliver">
+       SELECT pbdd.id, pbdd.taskId, pbdd.`projectId`, pbdd.`deliverableName`, pbdd.`deliverablePath`, 
+        	fbd.`basicDataName` as deliverableType
+       FROM `pm_basic_deliver_detail` pbdd
+	       INNER JOIN `pm_basic_prj_deliver` pbpd ON pbpd.id = pbdd.`deliverId`
+	       LEFT JOIN fnd_basic_data fbd ON fbd.`dataTypeCode` = pbpd.`dataTypeCodeSon` AND fbd.`basicDataId` = pbpd.`basicDataIdSon`
+       <where>
+			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+       			<if test="projectId != null"> AND pbdd.projectId = #{projectId} </if>
+		        <if test="taskId != null"> AND pbdd.taskId = #{taskId} </if>
+				<if test="ids != null ">
+					<foreach collection="ids" item="item" open="and pbdd.id in (" close=")" separator=",">#{item}</foreach>
 				</if>
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.contractNo != null and '' != model.contractNo">
-					contractNo = #{model.contractNo, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.taskTypeCode != null and '' != model.taskTypeCode">
-					taskTypeCode = #{model.taskTypeCode, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.taskTypeId != null and '' != model.taskTypeId">
-					taskTypeId = #{model.taskTypeId, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.eventPlanHappenDate != null and '' != model.eventPlanHappenDate">
-					eventPlanHappenDate = #{model.eventPlanHappenDate, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.eventPlanHappenDateENG != null and '' != model.eventPlanHappenDateENG">
-					eventPlanHappenDateENG = #{model.eventPlanHappenDateENG, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.planStartTime != null and '' != model.planStartTime">
-					planStartTime = #{model.planStartTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.planEndTime != null and '' != model.planEndTime">
-					planEndTime = #{model.planEndTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.actualStartTime != null and '' != model.actualStartTime">
-					actualStartTime = #{model.actualStartTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.eventActualFinishDate != null and '' != model.eventActualFinishDate">
-					eventActualFinishDate = #{model.eventActualFinishDate, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.progress != null and '' != model.progress">
-					progress = #{model.progress, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.status != null and '' != model.status">
-					status = #{model.status, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.parentId != null and '' != model.parentId">
-					parentId = #{model.parentId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.visibleFlag != null and '' != model.visibleFlag">
-					visibleFlag = #{model.visibleFlag, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.deliverFileIds != null and '' != model.deliverFileIds">
-					deliverFileIds = #{model.deliverFileIds, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.customeInfo != null and '' != model.customeInfo">
-					customeInfo = #{model.customeInfo, jdbcType=CHAR} AND
-				</if>
-				<if test="model.remark != null and '' != model.remark">
-					remark = #{model.remark, jdbcType=LONGVARCHAR} AND
-				</if>
-			</if>
-			<if test="fuzzySearch == true and fuzzy != ''">
-				(
-					contractNo like CONCAT("%", #{fuzzy}, "%") or
-					taskTypeCode like CONCAT("%", #{fuzzy}, "%") or
-					taskTypeId like CONCAT("%", #{fuzzy}, "%") or
-					status like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
-					visibleFlag like CONCAT("%", #{fuzzy}, "%") or
-					deliverFileIds like CONCAT("%", #{fuzzy}, "%") or
-					customeInfo like CONCAT("%", #{fuzzy}, "%") or
-					remark like CONCAT("%", #{fuzzy}, "%")
-				)
-			</if>
-		</trim>
-	</where>
+			</trim>
+       </where>
+      <![CDATA[
+          AND pbdd.`effectiveFrom` <= NOW() AND (pbdd.`effectiveTo` > NOW() OR pbdd.`effectiveTo` IS NULL)
+          order by pbdd.uploadTime desc
+      ]]>
   </select>
 </mapper>

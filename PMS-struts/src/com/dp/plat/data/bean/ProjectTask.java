@@ -5,7 +5,7 @@ import java.util.Date;
 public class ProjectTask {
 
 	private Integer taskId;
-	private int projectId;
+	private Integer projectId;
 	private String contractNo;
 	private String contractNoStr;
 	private String taskTypeId;
@@ -35,10 +35,13 @@ public class ProjectTask {
 	public void setTaskId(Integer taskId) {
 		this.taskId = taskId;
 	}
-	public int getProjectId() {
+	public Integer getProjectId() {
+		if (projectId == null) {
+			return 0;
+		}
 		return projectId;
 	}
-	public void setProjectId(int projectId) {
+	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
 	}
 	public String getTaskTypeId() {

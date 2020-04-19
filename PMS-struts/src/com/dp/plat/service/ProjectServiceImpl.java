@@ -33,6 +33,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.struts2.ServletActionContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.orm.ibatis.SqlMapClientTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -377,7 +378,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 				}
 			}
 		}
-		projectDao.insertProjectMember(project);
+		ProjectMember member = new ProjectMember();
+		BeanUtils.copyProperties(project, member, new String[] {"id", "effectiveFrom", "effectiveTo"});
+		member.setEffectiveFrom(new Date());
+		projectDao.insertProjectMember(member);
+		//projectDao.insertProjectMember(project);
 	}
 
 	protected Project putProperties(Project project, Project p) {
@@ -1139,10 +1144,10 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 
 	@Override
-	public int insertPorjectMember(ProjectMember member) {
+	public int insertProjectMember(ProjectMember member) {
 		log("创建项目组成员");
 		member.setFromFlag(MessageUtil.FLAG_FROM_MEMBER);
-		return projectDao.insertPorjectMember(member);
+		return projectDao.insertProjectMember(member);
 	}
 
 	@Override

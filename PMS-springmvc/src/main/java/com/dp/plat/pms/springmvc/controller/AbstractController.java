@@ -1,48 +1,59 @@
 package com.dp.plat.pms.springmvc.controller;
 
-import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
+import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
+import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
 
 public class AbstractController<Service extends IAbstractBaseService<T>, T, V> extends BaseController {
 
+	private final ThreadLocal<Map<String, Object>> localVariables = new ThreadLocal<Map<String, Object>>(); 
+	
 	private static final String TEMPLATE_NAMESPACE = "template/";
-	private static String MODEL;
-	private static String VIEW_NAMESPACE;
-	private static String DATANAME_FORM;
-	private static String DATANAME_TABLE;
-	private static String DATANAME_NAVTAB;
+	private String MODEL;
+	protected String URL_NAMESPACE;
+	protected String VIEW_NAMESPACE;
+	protected String DATANAME_FORM;
+	protected String DATANAME_TABLE;
+	protected String DATANAME_NAVTAB;
 
 	private Boolean useTemplate = true;
 	private String viewModel;
+	private String keyword;
+	
+	@Autowired
+	protected ICommonRelatedDataService commonRelatedDataService;
 
 	@PostConstruct
 	private void init() {
 		String namespace = getTargetName(getTClass());
 		MODEL = namespace;
 		this.setViewModel(MODEL);
-		VIEW_NAMESPACE = namespace + "/";
-		DATANAME_FORM = namespace + "Form";
-		DATANAME_TABLE = namespace + "List";
-		DATANAME_NAVTAB = namespace + "Tab";
 	}
 
 	@Autowired
@@ -50,21 +61,23 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping
 	public String home(Model model) {
+		model.addAttribute("urlNamespace", URL_NAMESPACE);
 		model.addAttribute("model", getViewModel());
-		return getViewNameSpace() + "list";
+		model.addAttribute("keyword", getKeyword());
+		return getRealViewNameSpace() + "list";
 	}
 
 	@RequestMapping("/list")
-	public String list(PageParam<Object> pageParam, V facilitator, Model model) {
+	public String list(PageParam<Object> pageParam, V v, Model model) {
 		List<Object> list = Collections.emptyList();
 		try {
 			// Principal user = UserContext.getCurrentPrincipal();
-			// facilitator.setCompId(user.getCompId());
+			// v.setCompId(user.getCompId());
 			PageParam<Object> tempParam = new PageParam<>();
 			V temp = getVClass().newInstance();
 			// temp.setCompID(user.getCompId());
 			tempParam.setModel(temp);
-			pageParam.setModel(facilitator);
+			pageParam.setModel(v);
 	
 			pageParam.setTotal(service.countBySelectivePageable(tempParam));
 			pageParam.setFiltered(service.countBySelectivePageable(pageParam));
@@ -78,40 +91,51 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 		}
 		model.addAttribute("data", list);
 
-		List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
+		List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
 		pageParam.setColumns(columns);
-		return getViewNameSpace() + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
-	@RequestMapping("{id}")
+	@RequestMapping(value = { "/{id}", "/modals/{id}" })
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
-			T facilitator = service.selectByPrimaryKey(id);
-			if (facilitator != null) {
-				model.addAttribute("targetValue", facilitator);
+			T v = service.selectByPrimaryKey(id);
+			if (v != null) {
+				model.addAttribute("targetValue", v);
 
-				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
+				List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 
-				List<?> navTavList = this.findNavTabList(DATANAME_NAVTAB);
+				List<?> navTavList = this.findNavTabList(getDataNameNavTab());
 				model.addAttribute("tabList", navTavList);
 			}
-		}
-		return getViewNameSpace() + "detail";
-	}
-
-	@RequestMapping(value = { "/detail", "/modals/detail" })
-	public String detail(T t, Model model) {
-		if (HttpContext.isJSON()) {
-			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
-			model.addAttribute("fieldList", fieldList);
 		} else {
+			model.addAttribute("urlNamespace", URL_NAMESPACE);
 			model.addAttribute("model", getViewModel());
+			model.addAttribute("keyword", getKeyword());
 
 			String servletPath = HttpContext.getCurrentRequest().getServletPath();
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
+	}
+
+	@RequestMapping(value = { "/detail", "/modals/detail" })
+	public String detail(V v, Model model) {
+		if (HttpContext.isJSON()) {
+			model.addAttribute("targetValue", v);
+			
+			List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
+			model.addAttribute("fieldList", fieldList);
+		} else {
+			model.addAttribute("urlNamespace", URL_NAMESPACE);
+			model.addAttribute("model", getViewModel());
+			model.addAttribute("keyword", getKeyword());
+
+			String servletPath = HttpContext.getCurrentRequest().getServletPath();
+			model.addAttribute("isModals", servletPath.contains("/modals/"));
+		}
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
@@ -129,7 +153,7 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
@@ -147,7 +171,7 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -165,6 +189,115 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
+	
+	/**
+     * 导入入口页面
+     * @return
+     */
+    @GetMapping("/modals/import")
+    public String toImport(V v, Model model) {
+		model.addAttribute("urlNamespace", URL_NAMESPACE);
+		model.addAttribute("model", getViewModel());
+		model.addAttribute("keyword", getKeyword());
+        return TEMPLATE_NAMESPACE + "/import";
+    }
+    
+    /**
+     *  报告数据调整
+     *  @return
+     */
+    @PostMapping("/import/preview")
+    public String importPreview(V v, String excelPath, Model model) {
+        Result result = null;
+        Map<String, Object> params = new HashMap<String, Object>();
+        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+        params.put("columns", columnList);
+        params.put("targetValue", v);
+        try {
+        	Method method = service.getClass().getMethod("importPreview", Map.class, String.class);
+        	result = (Result) method.invoke(service, params, excelPath);
+        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        	result = new Result(false, "不支持导入功能");
+        }
+        model.mergeAttributes(result.getMap());
+        return getRealViewNameSpace() + "import";
+    }
+    
+    /**
+     *  预览临时表数据
+     *  @return
+     */
+    @RequestMapping("/previewTempTable")
+    public String previewTempTable(String tempTableName, PageParam<Object> pageParam, V v, Model model) {
+    	Map<String, Object> params = new HashMap<String, Object>();
+        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+        pageParam.setColumns(columnList);
+		pageParam.setModel(v);
+		List<?> data;
+		Result result;
+		try {
+        	Method method = service.getClass().getMethod("selectTempImportData", String.class, PageParam.class);
+        	data = (List<?>) method.invoke(service, tempTableName, pageParam);
+        	result = new Result(true, data);
+        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        	result = new Result(false, "不支持导入功能");
+        }
+		model.mergeAttributes(result.getMap());
+        return getRealViewNameSpace() + "import";
+    }
+    
+    /**
+     *  删除临时表
+     *  @return
+     */
+    @RequestMapping("/dropTempTable")
+    public String dropTempTable(String tempTableName, Model model) {
+    	try {
+        	Method method = service.getClass().getMethod("dropTempTable", String.class);
+        	method.invoke(service, tempTableName);
+        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        }
+        return getRealViewNameSpace() + "import";
+    }
+    
+    /**
+     *  报告数据调整
+     *  @return
+     */
+    @PostMapping("/import/submit")
+    public String importSubmit(V v, String excelPath, Model model) {
+        Result result = null;
+    	Map<String, Object> params = new HashMap<String, Object>();
+        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+        params.put("columns", columnList);
+        params.put("targetValue", v);
+        try {
+        	Method method = service.getClass().getMethod("importSubmit", Map.class, String.class);
+        	result = (Result) method.invoke(service, params, excelPath);
+        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        	result = new Result(false, "不支持导入功能");
+        }
+        model.mergeAttributes(result.getMap());
+        return getRealViewNameSpace() + "import";
+    }
+    
+    /**
+     *  报告数据调整
+     *  @return
+     */
+    @PostMapping("/import/submitTempTable")
+    public String submitTempTable(V v, String tempTableName, String columns, Model model) {
+        Result result;
+		try {
+        	Map<String, Object> params = new HashMap<String, Object>();
+        	Method method = service.getClass().getMethod("submitTempTable", Map.class, String.class, Collection.class);
+			result = (Result) method.invoke(service, params, tempTableName, JSON.parseArray(columns, String.class));
+        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        	result = new Result(false, "不支持导入功能");
+        }
+        model.mergeAttributes(result.getMap());
+        return getRealViewNameSpace() + "import";
+    }
 
 	protected String getTargetName(Class<?> cls) {
 		String targetName = cls.getSimpleName();
@@ -184,9 +317,33 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 				.getActualTypeArguments()[2];
 		return tClass;
 	}
+	
+	protected void setUrlNameSpace(String urlNameSpace) {
+		if (StringUtils.isNotBlank(urlNameSpace)) {
+			this.URL_NAMESPACE = urlNameSpace;
+		}
+	}
 
-	private String getViewNameSpace() {
-		if (Boolean.TRUE.equals(useTemplate)) {
+	protected void setViewNameSpace(String viewNameSpace) {
+		if (StringUtils.isNotBlank(viewNameSpace)) {
+			this.VIEW_NAMESPACE = viewNameSpace;
+		}
+	}
+	
+	protected String getViewNameSpace() {
+		return VIEW_NAMESPACE;
+	}
+	
+	protected static String getTemplateNamespace() {
+		return TEMPLATE_NAMESPACE;
+	}
+
+	/**
+	 * useTemplate:false 并且设置了VIEW_NAMESPACE则返回VIEW_NAMESPACE，否则返回TEMPLATE_NAMESPACE
+	 * @return
+	 */
+	protected String getRealViewNameSpace() {
+		if (Boolean.TRUE.equals(useTemplate) || StringUtils.isBlank(VIEW_NAMESPACE)) {
 			return TEMPLATE_NAMESPACE;
 		} else {
 			return VIEW_NAMESPACE;
@@ -203,6 +360,102 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	public void setViewModel(String viewModel) {
 		this.viewModel = viewModel;
+		VIEW_NAMESPACE = viewModel + "/";
+		DATANAME_FORM = viewModel + "Form";
+		DATANAME_TABLE = viewModel + "List";
+		DATANAME_NAVTAB = viewModel + "Tab";
+	}
+
+	public String getKeyword() {
+		return keyword;
+	}
+
+	public void setKeyword(String keyword) {
+		this.keyword = keyword;
 	}
 	
+	public String getDataNameForm() {
+		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
+		if (StringUtils.isNotBlank(dataPrefix)) {
+			return dataPrefix + DATANAME_FORM;
+		}
+		return DATANAME_FORM;
+	}
+
+	public String getDataNameTable() {
+		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
+		if (StringUtils.isNotBlank(dataPrefix)) {
+			return dataPrefix + DATANAME_TABLE;
+		}
+		return DATANAME_TABLE;
+	}
+
+	public String getDataNameNavTab() {
+		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
+		if (StringUtils.isNotBlank(dataPrefix)) {
+			return dataPrefix + DATANAME_NAVTAB;
+		}
+		return DATANAME_NAVTAB;
+	}
+
+	/**
+     * @Description: 设置线程参数
+	 * @param key
+	 * @param value
+     * @return void
+     * @throws
+     */ 
+    public void setLocalVariables(String key, Object value) {
+    	Map<String, Object> map = localVariables.get();
+    	if (map == null) {
+    		map = new ConcurrentHashMap<>();
+    	}
+    	map.put(key, value);
+    	localVariables.set(map); 
+    } 
+    
+    /**
+     * @Description: 设置线程参数
+	 * @param map
+     * @return void
+     * @throws
+     */ 
+    public void setLocalVariables(Map<String, Object> map) {
+    	localVariables.set(map); 
+    } 
+     
+    /**
+     * @Description: 获取线程参数
+     * @param 
+     * @return String
+     * @throws
+     */ 
+    public Object getLocalVariables() { 
+        return localVariables.get(); 
+    } 
+    
+    /**
+     * @Description: 获取线程参数
+     * @param 
+     * @return String
+     * @throws
+     */ 
+    public Object getLocalVariables(String key) { 
+    	Map<String, Object> map = localVariables.get(); 
+    	Object var = null; 
+    	if (map != null) {
+    		var = map.get(key);
+    	}
+		return var;
+    } 
+     
+    /**
+     * @Description: 清空线程参数
+     * @param 
+     * @return void
+     * @throws
+     */ 
+    public void clearLocalVariables() { 
+    	localVariables.remove(); 
+    }
 }

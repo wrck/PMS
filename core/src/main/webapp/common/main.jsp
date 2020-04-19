@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@taglib  prefix="myTag" uri="http://www.dptech.com/tags/myTag" %>
+<%@taglib  prefix="myTag" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
