@@ -146,7 +146,7 @@
 	    	$("#commonForm").attr({id:formId, name: formId});
 	    	$("#app").attr({id: appId});
 	    	$("#tabDiv").attr({id: model + "TabDiv"});
-	    	var url = id == 0 ? router(urlNamespace).api(model).create(search) : router(urlNamespace).api(model).detail(id);
+	    	var url = id == 0 ? router(urlNamespace).api(model).create(search) : router(urlNamespace).api(model).detail(id, search);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
 					vm = new Vue($.extend(true, {
@@ -157,12 +157,18 @@
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
+								formCols: 2,
 								//formGroupClass: "col-sm-6 col-md-3",
 								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: router(urlNamespace).api(model).detail(id),
 	   							fieldList: data.fieldList || [],
 	   							targetName: data.targetName,
-	    						targetValue: data.targetValue || {}
+	    						targetValue: data.targetValue || {},
+	    						
+	    						// 权限控制参数
+	    						model: data.model || model,
+	    						permissions: data.permissions || [],
+	    						roles: data.roles || []
 	    				 	}),
     				 	}
 					));

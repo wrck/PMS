@@ -57,4 +57,6 @@ public interface UserInfoMapper extends AbstractBaseMapper<UserInfo> {
 	UserInfoVO selectOneByUserIdAndCompId(UserInfo userInfo);
 	
 	List<UserDetail> findUserInfoWithParam(Map<String, String[]> parameterMap);
+
+	UserInfoVO selectOneByUserNameAndCompId(UserInfoVO userInfo);
 }

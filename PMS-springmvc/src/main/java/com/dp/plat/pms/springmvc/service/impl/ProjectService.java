@@ -92,7 +92,7 @@ public class ProjectService extends ProjectServiceImpl /*extends AbstractBaseSer
 	 * @param pageParam
 	 * @return
 	 */
-	public long countBySelectivePageable(PageParam<Object> pageParam) {
+	public long countBySelectivePageable(PageParam<?> pageParam) {
 		return dao.countBySelectivePageable(pageParam);
 	}
 
@@ -106,7 +106,7 @@ public class ProjectService extends ProjectServiceImpl /*extends AbstractBaseSer
 	 * @param pageParam
 	 * @return
 	 */
-	public List<Object> selectBySelectivePageable(PageParam<Object> pageParam) {
+	public List<Object> selectBySelectivePageable(PageParam<?> pageParam) {
 		return dao.selectBySelectivePageable(pageParam);
 	}
 

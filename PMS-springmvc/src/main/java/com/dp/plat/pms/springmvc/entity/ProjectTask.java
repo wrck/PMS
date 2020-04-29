@@ -1,14 +1,17 @@
 package com.dp.plat.pms.springmvc.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class ProjectTask extends com.dp.plat.data.bean.ProjectTask {
+public class ProjectTask extends com.dp.plat.data.bean.ProjectTask implements Serializable{
 
-    // 任务ID
+	private static final long serialVersionUID = 871491221546927014L;
+
+	// 任务ID
     private Integer taskId;
 
     private Integer projectId;

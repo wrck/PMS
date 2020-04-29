@@ -19,8 +19,8 @@ import com.dp.plat.service.DepartmentManageService;
 @RequestMapping("api")
 public class StructsApiController {
 	
-	@Autowired
-	@Qualifier("departmentManageService")
+//	@Autowired
+//	@Qualifier("departmentManageService")
 	private DepartmentManageService departmentManageService;
 	
 	/**

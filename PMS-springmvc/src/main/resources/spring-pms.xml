@@ -7,6 +7,9 @@
     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
     
+    <aop:config proxy-target-class="true"></aop:config>
+    <aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+    
 	<import resource="applicationContext-service.xml" />
 	<!-- <bean id="dataSourcePMS" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="${main.database.driverClassName}"></property>
@@ -148,6 +151,8 @@
 	
 	<bean id="performanceThresholdProxyCreator"
 		class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+		<property name="optimize" value="true" />
+		<!-- <property name="proxyTargetClass" value="true"/> -->
 		<property name="beanNames">
 			<list>
 				<value>*Service</value>

@@ -7,7 +7,7 @@ var lazyLoadEvent = true;
 	
 // tab切换
 $(function(){
-	$(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+	/*$(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
 		// 获取已激活的标签页的名称
 		var activeTab = $(e.target).text(); 
 		// 获取前一个激活的标签页的名称
@@ -24,7 +24,7 @@ $(function(){
 				$(tabId, $container).find(".dataTables_scrollBody table").dataTable().api().columns.adjust();
 			} catch(e) {}
 		}
-	});
+	});*/
 	/*tabInterval = setInterval(() => {
 		if($('a[data-toggle="tab"]').length > 0) {
 			$('a[data-toggle="tab"]:first').click();
@@ -44,10 +44,11 @@ $(function(){
  * },
  * refresh: 刷新
  */
-function initTabData(config, refresh) {
+function initTabData(config, refresh, navTab) {
 	if (!config) {
 		return;
 	}
+	var vm = this;
 	var type = config.type;
 	var drawType =  config.drawType || "json";
 	var url = config.url;
@@ -74,15 +75,28 @@ function initTabData(config, refresh) {
 		ajaxGet(url, params, function(resultMap) {
     		var columns = resultMap.columns || (resultMap.pageParam || {}).columns || [];
     		var data = resultMap.data;
-    		if (refresh) {
+    		var localTable = $("#" + tableId, $container).data("localTable");
+    		vm.permissionType = resultMap.permissionType || "";
+//    		console.log(vm);
+//    		var tabList = vm.tabList || [];
+//    		for (var i = 0; i < tabList.length; i++) {
+//				var tempTab = tabList[i];
+//				if (tempTab.id == navTab.id) {
+//					tempTab.permissionType = resultMap.permissionType || "";
+//					break;
+//				}
+//			}
+//    		vm.tabList = tabList;
+    		if (refresh && localTable) {
 //    			$("#" + tableId, $navTab).empty();
 //    			$(".box-body #" + calloutId, $navTab).empty();
-    			var localTable = $("#" + tableId, $container).data("localTable");
     			localTable.reloadRowData(data, localTable.getSelectedRowId());
     		} else {
     			tableConfig.columns = columns;
-    			$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
-    			$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped-vertical table-hover' id='" + tableId + "'></table>");
+    			if (!refresh) {
+    				$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
+    				$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped-vertical table-hover' id='" + tableId + "'></table>");
+    			}
     			if (data) {
     				//$(".box-body #" + calloutId, $navTab).append("<h4>" + config.title + "</h4>")
     				var localTable = new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
@@ -104,7 +118,7 @@ function initTabData(config, refresh) {
 		            } catch(e) {
 		            }*/
     			} else {
-    				$(".box-body #" + tableId, $navTab).append("<tr><td>没有可显示的数据</td></tr>")
+    				$(".box-body #" + tableId, $navTab).html("<tr><td>没有可显示的数据</td></tr>")
     			}
     		}
     		$(".box-body .overlay", $navTab).hide();

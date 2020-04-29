@@ -157,7 +157,8 @@ public class SystemCoreFunctionAspect {
 			HttpServletRequest request = HttpContext.getCurrentRequest();
 			if (request != null) {
 				Principal principal = (Principal) principalCollection.getPrimaryPrincipal();
-				List<Menu> nodes = shiroService.queryUserMenuByUsername(principal.getUserName());
+				//List<Menu> nodes = shiroService.queryUserMenuByUsername(principal.getUserName());
+				List<Menu> nodes = shiroService.queryUserMenuByUserIdAndCompId(principal.getUserInfo());
 				principal.setMenus(MenuUtil.drow(nodes, request.getContextPath()));
 			}
 		}

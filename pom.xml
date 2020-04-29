@@ -10,6 +10,7 @@
 	<modules>
 		<module>PMS-struts</module>
 		<module>core</module>
+		<module>PMS-activiti</module>
 		<module>PMS-springmvc</module>
 	</modules>
 
@@ -108,7 +109,7 @@
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 
 		<!-- Activiti -->
-		<activiti.version>5.16</activiti.version>
+		<activiti.version>5.22.0</activiti.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
@@ -216,6 +217,11 @@
 				<groupId>org.apache.ibatis</groupId>
 				<artifactId>ibatis-sqlmap</artifactId>
 				<version>${ibatis-sqlmap.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mybatis</groupId>
+				<artifactId>mybatis</artifactId>
+				<version>${mybatis.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mybatis</groupId>
@@ -387,8 +393,12 @@
 				<version>${activiti.version}</version>
 				<exclusions>
 					<exclusion>
-						<artifactId>spring-beans</artifactId>
 						<groupId>org.springframework</groupId>
+						<artifactId>spring-beans</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.mybatis</groupId>
+						<artifactId>mybatis</artifactId>
 					</exclusion>
 				</exclusions>
 			</dependency>

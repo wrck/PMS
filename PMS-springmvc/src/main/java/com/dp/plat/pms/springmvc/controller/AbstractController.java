@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,17 +25,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.context.HttpContext;
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
 
-public class AbstractController<Service extends IAbstractBaseService<T>, T, V> extends BaseController {
+public abstract class AbstractController<Service extends IAbstractBaseService<T>, T, V> extends BaseController {
 
-	private final ThreadLocal<Map<String, Object>> localVariables = new ThreadLocal<Map<String, Object>>(); 
-	
+	private final ThreadLocal<Map<String, Object>> localVariables = new ThreadLocal<Map<String, Object>>();
+
 	private static final String TEMPLATE_NAMESPACE = "template/";
 	private String MODEL;
 	protected String URL_NAMESPACE;
@@ -45,7 +49,7 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 	private Boolean useTemplate = true;
 	private String viewModel;
 	private String keyword;
-	
+
 	@Autowired
 	protected ICommonRelatedDataService commonRelatedDataService;
 
@@ -53,14 +57,32 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 	private void init() {
 		String namespace = getTargetName(getTClass());
 		MODEL = namespace;
+		keyword = StringUtils.defaultIfBlank(this.keyword, "id");
 		this.setViewModel(MODEL);
 	}
 
 	@Autowired
 	protected Service service;
 
+	@ModelAttribute
+	public void initModelAttr(Integer id, V v, HttpServletRequest httpRequest, Model model) {
+		model.addAttribute("urlNamespace", URL_NAMESPACE);
+		model.addAttribute("model", getViewModel());
+		model.addAttribute("keyword", getKeyword());
+
+		String servletPath = httpRequest.getServletPath();
+		model.addAttribute("isModals", servletPath.contains("/modals/"));
+		
+		model.addAttribute("permissions", UserContext.getCurrentPrincipal().getPermissions());
+	}
+
 	@RequestMapping
 	public String home(Model model) {
+		if (!checkPermission(null, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		model.addAttribute("urlNamespace", URL_NAMESPACE);
 		model.addAttribute("model", getViewModel());
 		model.addAttribute("keyword", getKeyword());
@@ -69,6 +91,10 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":list")) {
+			model.addAttribute("data", Collections.emptyList());
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		List<Object> list = Collections.emptyList();
 		try {
 			// Principal user = UserContext.getCurrentPrincipal();
@@ -78,11 +104,11 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 			// temp.setCompID(user.getCompId());
 			tempParam.setModel(temp);
 			pageParam.setModel(v);
-	
+
 			pageParam.setTotal(service.countBySelectivePageable(tempParam));
 			pageParam.setFiltered(service.countBySelectivePageable(pageParam));
 			list = service.selectBySelectivePageable(pageParam);
-	
+
 			if (pageParam.getPageSize() == -1L) {
 				pageParam.setPageSize(pageParam.getTotal());
 			}
@@ -98,6 +124,12 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
 	public String findOne(@PathVariable("id") Integer id, Model model) {
+		if (!checkPermission(newInstance(getVClass(), keyword, id), model,
+				getDataName() + ":detail")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (HttpContext.isJSON()) {
 			T v = service.selectByPrimaryKey(id);
 			if (v != null) {
@@ -122,9 +154,14 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
 	public String detail(V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":detail")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (HttpContext.isJSON()) {
 			model.addAttribute("targetValue", v);
-			
+
 			List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 		} else {
@@ -140,6 +177,11 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":add")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -158,6 +200,11 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":update")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -176,6 +223,10 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
+		if (!checkPermission(newInstance(getVClass(), keyword, id), model, getDataName() + ":update")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -189,115 +240,138 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
-	
+
 	/**
-     * 导入入口页面
-     * @return
-     */
-    @GetMapping("/modals/import")
-    public String toImport(V v, Model model) {
-		model.addAttribute("urlNamespace", URL_NAMESPACE);
-		model.addAttribute("model", getViewModel());
-		model.addAttribute("keyword", getKeyword());
-        return TEMPLATE_NAMESPACE + "/import";
-    }
-    
-    /**
-     *  报告数据调整
-     *  @return
-     */
-    @PostMapping("/import/preview")
-    public String importPreview(V v, String excelPath, Model model) {
-        Result result = null;
-        Map<String, Object> params = new HashMap<String, Object>();
-        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
-        params.put("columns", columnList);
-        params.put("targetValue", v);
-        try {
-        	Method method = service.getClass().getMethod("importPreview", Map.class, String.class);
-        	result = (Result) method.invoke(service, params, excelPath);
-        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        	result = new Result(false, "不支持导入功能");
-        }
-        model.mergeAttributes(result.getMap());
-        return getRealViewNameSpace() + "import";
-    }
-    
-    /**
-     *  预览临时表数据
-     *  @return
-     */
-    @RequestMapping("/previewTempTable")
-    public String previewTempTable(String tempTableName, PageParam<Object> pageParam, V v, Model model) {
-    	Map<String, Object> params = new HashMap<String, Object>();
-        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
-        pageParam.setColumns(columnList);
+	 * 导入入口页面
+	 * 
+	 * @return
+	 */
+	@GetMapping("/modals/import")
+	public String toImport(V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":import")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		return TEMPLATE_NAMESPACE + "/import";
+	}
+
+	/**
+	 * 报告数据调整
+	 * 
+	 * @return
+	 */
+	@PostMapping("/import/preview")
+	public String importPreview(V v, String excelPath, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":import")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		Result result = null;
+		Map<String, Object> params = new HashMap<String, Object>();
+		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+		params.put("columns", columnList);
+		params.put("targetValue", v);
+		try {
+			Method method = service.getClass().getMethod("importPreview", Map.class, String.class);
+			result = (Result) method.invoke(service, params, excelPath);
+		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			result = new Result(false, "不支持导入功能");
+		}
+		model.mergeAttributes(result.getMap());
+		return getRealViewNameSpace() + "import";
+	}
+
+	/**
+	 * 预览临时表数据
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/previewTempTable")
+	public String previewTempTable(String tempTableName, PageParam<Object> pageParam, V v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":import")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		Map<String, Object> params = new HashMap<String, Object>();
+		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+		pageParam.setColumns(columnList);
 		pageParam.setModel(v);
 		List<?> data;
 		Result result;
 		try {
-        	Method method = service.getClass().getMethod("selectTempImportData", String.class, PageParam.class);
-        	data = (List<?>) method.invoke(service, tempTableName, pageParam);
-        	result = new Result(true, data);
-        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        	result = new Result(false, "不支持导入功能");
-        }
+			Method method = service.getClass().getMethod("selectTempImportData", String.class, PageParam.class);
+			data = (List<?>) method.invoke(service, tempTableName, pageParam);
+			result = new Result(true, data);
+		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			result = new Result(false, "不支持导入功能");
+		}
 		model.mergeAttributes(result.getMap());
-        return getRealViewNameSpace() + "import";
-    }
-    
-    /**
-     *  删除临时表
-     *  @return
-     */
-    @RequestMapping("/dropTempTable")
-    public String dropTempTable(String tempTableName, Model model) {
-    	try {
-        	Method method = service.getClass().getMethod("dropTempTable", String.class);
-        	method.invoke(service, tempTableName);
-        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        }
-        return getRealViewNameSpace() + "import";
-    }
-    
-    /**
-     *  报告数据调整
-     *  @return
-     */
-    @PostMapping("/import/submit")
-    public String importSubmit(V v, String excelPath, Model model) {
-        Result result = null;
-    	Map<String, Object> params = new HashMap<String, Object>();
-        List<DataTableColumn> columnList = findColumnList(getDataNameTable());
-        params.put("columns", columnList);
-        params.put("targetValue", v);
-        try {
-        	Method method = service.getClass().getMethod("importSubmit", Map.class, String.class);
-        	result = (Result) method.invoke(service, params, excelPath);
-        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        	result = new Result(false, "不支持导入功能");
-        }
-        model.mergeAttributes(result.getMap());
-        return getRealViewNameSpace() + "import";
-    }
-    
-    /**
-     *  报告数据调整
-     *  @return
-     */
-    @PostMapping("/import/submitTempTable")
-    public String submitTempTable(V v, String tempTableName, String columns, Model model) {
-        Result result;
+		return getRealViewNameSpace() + "import";
+	}
+
+	/**
+	 * 删除临时表
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/dropTempTable")
+	public String dropTempTable(String tempTableName, Model model) {
 		try {
-        	Map<String, Object> params = new HashMap<String, Object>();
-        	Method method = service.getClass().getMethod("submitTempTable", Map.class, String.class, Collection.class);
+			Method method = service.getClass().getMethod("dropTempTable", String.class);
+			method.invoke(service, tempTableName);
+		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+		}
+		return getRealViewNameSpace() + "import";
+	}
+
+	/**
+	 * 报告数据调整
+	 * 
+	 * @return
+	 */
+	@PostMapping("/import/submit")
+	public String importSubmit(V v, String excelPath, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":import")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		Result result = null;
+		Map<String, Object> params = new HashMap<String, Object>();
+		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
+		params.put("columns", columnList);
+		params.put("targetValue", v);
+		try {
+			Method method = service.getClass().getMethod("importSubmit", Map.class, String.class);
+			result = (Result) method.invoke(service, params, excelPath);
+		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			result = new Result(false, "不支持导入功能");
+		}
+		model.mergeAttributes(result.getMap());
+		return getRealViewNameSpace() + "import";
+	}
+
+	/**
+	 * 报告数据调整
+	 * 
+	 * @return
+	 */
+	@PostMapping("/import/submitTempTable")
+	public String submitTempTable(V v, String tempTableName, String columns, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":import")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		Result result;
+		try {
+			Map<String, Object> params = new HashMap<String, Object>();
+			Method method = service.getClass().getMethod("submitTempTable", Map.class, String.class, Collection.class);
 			result = (Result) method.invoke(service, params, tempTableName, JSON.parseArray(columns, String.class));
-        } catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        	result = new Result(false, "不支持导入功能");
-        }
-        model.mergeAttributes(result.getMap());
-        return getRealViewNameSpace() + "import";
-    }
+		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			result = new Result(false, "不支持导入功能");
+		}
+		model.mergeAttributes(result.getMap());
+		return getRealViewNameSpace() + "import";
+	}
 
 	protected String getTargetName(Class<?> cls) {
 		String targetName = cls.getSimpleName();
@@ -317,7 +391,7 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 				.getActualTypeArguments()[2];
 		return tClass;
 	}
-	
+
 	protected void setUrlNameSpace(String urlNameSpace) {
 		if (StringUtils.isNotBlank(urlNameSpace)) {
 			this.URL_NAMESPACE = urlNameSpace;
@@ -329,17 +403,18 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 			this.VIEW_NAMESPACE = viewNameSpace;
 		}
 	}
-	
+
 	protected String getViewNameSpace() {
 		return VIEW_NAMESPACE;
 	}
-	
+
 	protected static String getTemplateNamespace() {
 		return TEMPLATE_NAMESPACE;
 	}
 
 	/**
 	 * useTemplate:false 并且设置了VIEW_NAMESPACE则返回VIEW_NAMESPACE，否则返回TEMPLATE_NAMESPACE
+	 * 
 	 * @return
 	 */
 	protected String getRealViewNameSpace() {
@@ -373,11 +448,19 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 	public void setKeyword(String keyword) {
 		this.keyword = keyword;
 	}
+
+	public String getDataName() {
+		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
+		if (StringUtils.isNotBlank(dataPrefix)) {
+			return dataPrefix;
+		}
+		return viewModel;
+	}
 	
 	public String getDataNameForm() {
 		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
 		if (StringUtils.isNotBlank(dataPrefix)) {
-			return dataPrefix + DATANAME_FORM;
+			return dataPrefix + "_" + DATANAME_FORM;
 		}
 		return DATANAME_FORM;
 	}
@@ -385,7 +468,7 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 	public String getDataNameTable() {
 		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
 		if (StringUtils.isNotBlank(dataPrefix)) {
-			return dataPrefix + DATANAME_TABLE;
+			return dataPrefix + "_"  + DATANAME_TABLE;
 		}
 		return DATANAME_TABLE;
 	}
@@ -393,69 +476,90 @@ public class AbstractController<Service extends IAbstractBaseService<T>, T, V> e
 	public String getDataNameNavTab() {
 		String dataPrefix = (String) this.getLocalVariables("dataPrefix");
 		if (StringUtils.isNotBlank(dataPrefix)) {
-			return dataPrefix + DATANAME_NAVTAB;
+			return dataPrefix + "_" + DATANAME_NAVTAB;
 		}
 		return DATANAME_NAVTAB;
 	}
 
 	/**
-     * @Description: 设置线程参数
-	 * @param key
-	 * @param value
-     * @return void
-     * @throws
-     */ 
-    public void setLocalVariables(String key, Object value) {
-    	Map<String, Object> map = localVariables.get();
-    	if (map == null) {
-    		map = new ConcurrentHashMap<>();
-    	}
-    	map.put(key, value);
-    	localVariables.set(map); 
-    } 
-    
-    /**
-     * @Description: 设置线程参数
-	 * @param map
-     * @return void
-     * @throws
-     */ 
-    public void setLocalVariables(Map<String, Object> map) {
-    	localVariables.set(map); 
-    } 
-     
-    /**
-     * @Description: 获取线程参数
-     * @param 
-     * @return String
-     * @throws
-     */ 
-    public Object getLocalVariables() { 
-        return localVariables.get(); 
-    } 
-    
-    /**
-     * @Description: 获取线程参数
-     * @param 
-     * @return String
-     * @throws
-     */ 
-    public Object getLocalVariables(String key) { 
-    	Map<String, Object> map = localVariables.get(); 
-    	Object var = null; 
-    	if (map != null) {
-    		var = map.get(key);
-    	}
+	 * @Description: 设置线程参数 @param key @param value @return void @throws
+	 */
+	public void setLocalVariables(String key, Object value) {
+		Map<String, Object> map = localVariables.get();
+		if (map == null) {
+			map = new ConcurrentHashMap<>();
+		}
+		map.put(key, value);
+		localVariables.set(map);
+	}
+
+	/**
+	 * @Description: 设置线程参数 @param map @return void @throws
+	 */
+	public void setLocalVariables(Map<String, Object> map) {
+		localVariables.set(map);
+	}
+
+	/**
+	 * @Description: 获取线程参数 @param @return String @throws
+	 */
+	public Object getLocalVariables() {
+		return localVariables.get();
+	}
+
+	/**
+	 * @Description: 获取线程参数 @param @return String @throws
+	 */
+	public Object getLocalVariables(String key) {
+		Map<String, Object> map = localVariables.get();
+		Object var = null;
+		if (map != null) {
+			var = map.get(key);
+		}
 		return var;
-    } 
-     
-    /**
-     * @Description: 清空线程参数
-     * @param 
-     * @return void
-     * @throws
-     */ 
-    public void clearLocalVariables() { 
-    	localVariables.remove(); 
-    }
+	}
+
+	/**
+	 * @Description: 清空线程参数 @param @return void @throws
+	 */
+	public void clearLocalVariables() {
+		localVariables.remove();
+	}
+
+	public boolean checkPermission(V v, Model model, String... permissions) {
+		if (!UserContext.checkPermission(permissions)) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return false;
+		}
+		model.addAttribute("permissionType", "all");
+		return true;
+	}
+
+	protected V newInstance(Class<?> clazz, Object... kvs) {
+		if (clazz == null) {
+			return null;
+		}
+		Object obj = null;
+		try {
+			obj = clazz.newInstance();
+			if (kvs != null) {
+				for (int i = 0; i < kvs.length; i += 2) {
+					try {
+						String key = (String) kvs[i];
+						Object value = kvs[i + 1];
+						if (StringUtils.isBlank(key) || value == null) {
+							continue;
+						}
+						key = key.substring(0, 1).toUpperCase() + key.substring(1);
+						Method method = clazz.getMethod("set" + key, value.getClass());
+						method.invoke(obj, value);
+					} catch (NoSuchMethodException e) {
+					}
+				}
+			}
+		} catch (Exception e) {
+		}
+		return (V) obj;
+	}
 }

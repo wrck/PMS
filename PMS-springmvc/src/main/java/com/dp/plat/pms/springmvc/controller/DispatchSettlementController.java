@@ -1,10 +1,12 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,8 +26,10 @@ import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
+import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 @Controller
@@ -222,6 +226,41 @@ public class DispatchSettlementController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
+	}
+	
+	@Override
+	public boolean checkPermission(SettlementVO v, Model model, String... permissions) {
+		if (!super.checkPermission(v, model, permissions)) {
+			return false;
+		}
+		boolean isPermit = false;
+		String permissionType = "";
+		if (v != null) {
+			Integer projectId = v.getProjectId();
+			ProjectVO project = new ProjectVO();
+			project.setProjectId(projectId);
+			Map<String, Boolean> permission = new HashMap<String, Boolean>();
+//			Map<String, Boolean> permission = dispatchProjectService.checkPermission(project);
+			Boolean allPerm = permission.get("all");
+			if (Boolean.TRUE.equals(allPerm)) {
+				isPermit = true;
+				permissionType = "all";
+			} else {
+				String perms = StringUtils.join(permissions, ",");
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "edit";
+				}
+				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "view";
+				}
+			}
+		} else {
+			isPermit = true;
+		}
+		model.addAttribute("permissionType", permissionType);
+		return isPermit;
 	}
 
 //	@RequestMapping(value = "submit", method = RequestMethod.POST)

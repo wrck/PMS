@@ -123,6 +123,7 @@
 //    		$(this.select2Element, this.$element).select2({
 //                minimumResultsForSearch: Infinity
 //            });
+    		// 定义数据缓存适配器，在需要的地方$.fn.select2.require(select2/data/dataCacheAdapter),放到参数中
     		$.fn.select2.amd.define('select2/data/dataCacheAdapter', [
     			'select2/data/array',
     			'select2/utils'

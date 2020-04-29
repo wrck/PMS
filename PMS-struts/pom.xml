@@ -138,7 +138,11 @@
 		    <artifactId>mybatis-2-spring</artifactId>
 		    <version>1.1.0</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+		</dependency>
+
 		<!-- 导入java ee jar 包 -->
 		<dependency>
 			<groupId>javax</groupId>

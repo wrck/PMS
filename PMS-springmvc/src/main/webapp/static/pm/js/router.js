@@ -56,7 +56,7 @@ router.common = function(namespace) {
 				// 删除报告
 				delete:(id) => namespace + "/" + id + ".json?_method=DELETE",
 				// 查询指定报告
-				detail:(id) => namespace + "/" + id + ".json",
+				detail:(id, search) => namespace + "/" + id + ".json" + (search ? "?" + search : "").replace("??", "?"),
 				// 导入数据预览
 				importPreview: (importType) => namespace + "/import/preview.json",
 				// 导入数据预览
@@ -213,6 +213,25 @@ pm.dispatch = function() {
 $.namespace("pm.settlement");
 pm.settlement = function() {
 	var namespace =  ctx + "/pm/settlement";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+	});
+}();
+
+/**
+ * 人员管理
+ */
+$.namespace("pm.projectMember");
+pm.projectMember = function() {
+	var namespace =  ctx + "/pm/member";
 	var router = pm.common(namespace);
 	return $.extend(true, {}, router, {
 		api:((namespace) => {

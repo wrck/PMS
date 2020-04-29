@@ -337,54 +337,15 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 		that.config.beforeInitConfig.call(that);
 	}
 	
-    this.table = $('#' + tableId).dataTable($.extend(true,{},CONSTANT.DATA_TABLES.DEFAULT_OPTION,{
+    this.table = $('#' + tableId).dataTable($.extend(true,{},CONSTANT.DATA_TABLES.DEFAULT_OPTION, that.config, {
     	rowId : rowId,
     	columns : columns,
-    	ajax : $.proxy(that.fnServerData,that)
-    	/*ajax : function(data, callback, settings) {//ajax配置为function,手动调用异步查询
-    	    //封装请求参数
-    	    var param = that.getQueryCondition(data);
-    	    $.ajax({
-    	        type: "POST",
-    	        url: url,
-    	        cache : false,  //禁用缓存
-    	        data: param,    //传入已封装的参数
-    	        dataType: "json",
-    	        success: function(result) {
-    	            //异常判断与处理
-//    	            if (result.errorCode) {
-//    	                $.dialog.alert("查询失败。错误码："+result.errorCode);
-//    	                return;
-//    	            }
-    	            //封装返回数据，这里仅演示了修改属性名
-    	            var returnData = {};
-    	            returnData.draw = result.pageParam.draw;//这里直接自行返回了draw计数器,应该由后台返回
-    	            returnData.recordsTotal = result.pageParam.total;
-    	            returnData.recordsFiltered = result.pageParam.filtered;//后台不实现过滤功能，每次查询均视作全部结果
-    	            returnData.data = result.data;
-    	            //调用DataTables提供的callback方法，代表数据已封装完成并传回DataTables进行渲染
-    	            //此时的数据需确保正确无误，异常判断应在执行此回调前自行处理完毕
-    	            callback(returnData);
-    	        },
-    	        error: function(XMLHttpRequest, textStatus, errorThrown) {
-    	        	if(textStatus == "parsererror" && XMLHttpRequest.status == 200){
-    	        		var start = XMLHttpRequest.responseText.indexOf("<body ");
-    	        		var end = XMLHttpRequest.responseText.indexOf("</body>");
-    	        		$("body").html(XMLHttpRequest.responseText.substring(start,end));
-    	        	} else{
-    	        		modals.error({
-    	        			text:"查询失败!\r\n"+XMLHttpRequest.responseText,
-    	        			large:'lg'
-    	        		});
-    	        	}
-    	        }
-    	    });
-       }*/,
-       fnInitComplete : $.proxy(that.fnInitComplete,that),
-       fnStateLoaded : $.proxy(that.fnStateLoaded,that),
-       fnStateSaveParams : $.proxy(that.fnStateSaveParams,that),
-       fnDrawCallback : $.proxy(that.fnDrawCallback,that),
-    },that.config)).api();//此处需调用api()方法,否则返回的是JQuery对象而不是DataTables的API对象
+    	ajax : $.proxy(that.fnServerData,that),
+    	fnInitComplete : $.proxy(that.fnInitComplete,that),
+    	fnStateLoaded : $.proxy(that.fnStateLoaded,that),
+    	fnStateSaveParams : $.proxy(that.fnStateSaveParams,that),
+    	fnDrawCallback : $.proxy(that.fnDrawCallback,that),
+    })).api();//此处需调用api()方法,否则返回的是JQuery对象而不是DataTables的API对象
     
     if(this.advancedSearch){
     	$(this.table.table().container()).on("click","#" + this.tableId +"_filter "+ this.advancedSearch,function(){

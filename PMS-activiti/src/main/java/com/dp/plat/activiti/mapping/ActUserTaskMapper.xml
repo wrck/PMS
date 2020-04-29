@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.activiti.dao.ActUserTaskMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.activiti.entity.ActUserTask">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="PROC_DEF_KEY" jdbcType="VARCHAR" property="procDefKey" />
+    <result column="PROC_DEF_NAME" jdbcType="VARCHAR" property="procDefName" />
+    <result column="TASK_DEF_KEY" jdbcType="VARCHAR" property="taskDefKey" />
+    <result column="TASK_NAME" jdbcType="VARCHAR" property="taskName" />
+    <result column="TASK_TYPE" jdbcType="VARCHAR" property="taskType" />
+    <result column="CANDIDATE_NAME" jdbcType="VARCHAR" property="candidateName" />
+    <result column="CANDIDATE_IDS" jdbcType="VARCHAR" property="candidateIds" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, PROC_DEF_KEY, PROC_DEF_NAME, TASK_DEF_KEY, TASK_NAME, TASK_TYPE, CANDIDATE_NAME, 
+    CANDIDATE_IDS
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_act_user_task
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_act_user_task
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.activiti.entity.ActUserTask">
+    insert into t_act_user_task (ID, PROC_DEF_KEY, PROC_DEF_NAME, 
+      TASK_DEF_KEY, TASK_NAME, TASK_TYPE, 
+      CANDIDATE_NAME, CANDIDATE_IDS)
+    values (#{id,jdbcType=INTEGER}, #{procDefKey,jdbcType=VARCHAR}, #{procDefName,jdbcType=VARCHAR}, 
+      #{taskDefKey,jdbcType=VARCHAR}, #{taskName,jdbcType=VARCHAR}, #{taskType,jdbcType=VARCHAR}, 
+      #{candidateName,jdbcType=VARCHAR}, #{candidateIds,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.activiti.entity.ActUserTask">
+    insert into t_act_user_task
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="procDefKey != null">
+        PROC_DEF_KEY,
+      </if>
+      <if test="procDefName != null">
+        PROC_DEF_NAME,
+      </if>
+      <if test="taskDefKey != null">
+        TASK_DEF_KEY,
+      </if>
+      <if test="taskName != null">
+        TASK_NAME,
+      </if>
+      <if test="taskType != null">
+        TASK_TYPE,
+      </if>
+      <if test="candidateName != null">
+        CANDIDATE_NAME,
+      </if>
+      <if test="candidateIds != null">
+        CANDIDATE_IDS,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="procDefKey != null">
+        #{procDefKey,jdbcType=VARCHAR},
+      </if>
+      <if test="procDefName != null">
+        #{procDefName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskDefKey != null">
+        #{taskDefKey,jdbcType=VARCHAR},
+      </if>
+      <if test="taskName != null">
+        #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null">
+        #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="candidateName != null">
+        #{candidateName,jdbcType=VARCHAR},
+      </if>
+      <if test="candidateIds != null">
+        #{candidateIds,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.activiti.entity.ActUserTask">
+    update t_act_user_task
+    <set>
+      <if test="procDefKey != null">
+        PROC_DEF_KEY = #{procDefKey,jdbcType=VARCHAR},
+      </if>
+      <if test="procDefName != null">
+        PROC_DEF_NAME = #{procDefName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskDefKey != null">
+        TASK_DEF_KEY = #{taskDefKey,jdbcType=VARCHAR},
+      </if>
+      <if test="taskName != null">
+        TASK_NAME = #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null">
+        TASK_TYPE = #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="candidateName != null">
+        CANDIDATE_NAME = #{candidateName,jdbcType=VARCHAR},
+      </if>
+      <if test="candidateIds != null">
+        CANDIDATE_IDS = #{candidateIds,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.activiti.entity.ActUserTask">
+    update t_act_user_task
+    set PROC_DEF_KEY = #{procDefKey,jdbcType=VARCHAR},
+      PROC_DEF_NAME = #{procDefName,jdbcType=VARCHAR},
+      TASK_DEF_KEY = #{taskDefKey,jdbcType=VARCHAR},
+      TASK_NAME = #{taskName,jdbcType=VARCHAR},
+      TASK_TYPE = #{taskType,jdbcType=VARCHAR},
+      CANDIDATE_NAME = #{candidateName,jdbcType=VARCHAR},
+      CANDIDATE_IDS = #{candidateIds,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectByProcessDefinitionKey" parameterType="string" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_act_user_task
+    where PROC_DEF_KEY = #{procDefKey,jdbcType=VARCHAR}
+  </select>
+  
+</mapper>

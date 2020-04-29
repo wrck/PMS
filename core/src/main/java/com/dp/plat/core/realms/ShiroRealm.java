@@ -120,10 +120,15 @@ public class ShiroRealm extends AuthorizingRealm {
 		// Set<String> permissions = shiroService.queryPermissionByUsername(principal.getUserName());
 		Set<String> permissions = shiroService.queryPermissionByUsernameAndCompId(principal.getUserName(), compId);
 
-		// 3. 创建 SimpleAuthorizationInfo, 并设置其 reles 属性.
+		// 3. 创建 SimpleAuthorizationInfo, 并设置其 roles 属性.
 		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
 		info.addRoles(roles);
 		info.addStringPermissions(permissions);
+		
+		// 3.1 将权限更新到当前用户中
+		principal.setRoles(roles);
+		principal.setPermissions(permissions);
+		
 		// 4. 返回 SimpleAuthorizationInfo 对象.
 		return info;
 	}

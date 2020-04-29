@@ -2,6 +2,7 @@ package com.dp.plat.pms.springmvc.controller;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -256,5 +257,38 @@ public class DispatchProjectController
 		pageParam.setTotal(dispatchProjectService.countBySelectivePageable(pageParam));
 		List<DispatchVO> list = dispatchProjectService.selectDispatchVOWithAmountBySelectivePageable(pageParam);
 		model.addAttribute("data", list);
+	}
+	
+	public boolean checkPermission(DispatchVO dispatch, Model model, String... permissions) {
+		if (!super.checkPermission(dispatch, model, permissions)) {
+			return false;
+		}
+		boolean isPermit = false;
+		String permissionType = "";
+		if (dispatch != null) {
+			Integer projectId = dispatch.getProjectId();
+			ProjectVO project = new ProjectVO();
+			project.setProjectId(projectId);
+			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);
+			Boolean allPerm = permission.get("all");
+			if (Boolean.TRUE.equals(allPerm)) {
+				isPermit = true;
+				permissionType = "all";
+			} else {
+				String perms = StringUtils.join(permissions, ",");
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "edit";
+				}
+				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "view";
+				}
+			}
+		} else {
+			isPermit = true;
+		}
+		model.addAttribute("permissionType", permissionType);
+		return isPermit;
 	}
 }

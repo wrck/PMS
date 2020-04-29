@@ -744,7 +744,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		this.updateProjectRelatedParty(p);
 	}
 
-	private void updateProjectStateByProjectId(Project p, String prjstate) {
+	protected void updateProjectStateByProjectId(Project p, String prjstate) {
 		p.setProjectState(prjstate);// 项目状态更改
 		projectDao.updateProjectStateByProjectId(p);
 	}

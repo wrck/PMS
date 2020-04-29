@@ -114,6 +114,11 @@ public class CasRealm extends org.apache.shiro.cas.CasRealm {
 		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
 		info.addRoles(roles);
 		info.addStringPermissions(permissions);
+		
+		// 3.1 将权限更新到当前用户中
+		principal.setRoles(roles);
+		principal.setPermissions(permissions);
+		
 		// 4. 返回 SimpleAuthorizationInfo 对象.
 		return info;
 	}

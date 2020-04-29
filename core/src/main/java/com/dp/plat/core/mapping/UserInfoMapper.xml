@@ -755,6 +755,19 @@
     where user_id = #{userId} and compID = #{compID}
   </select>
   
+  <select id="selectOneByUserNameAndCompId" parameterType="com.dp.plat.core.vo.UserInfoVO" resultType="com.dp.plat.core.vo.UserInfoVO">
+    select 
+        ui.user_id as userId, ui.*, c.compName 
+    from
+    	t_user_info ui 
+    	left join t_user u
+    		on ui.user_id = u.user_id
+        left join t_company c 
+            on ui.`compID` = c.`id` 
+    where u.user_name = #{userName} and ui.compID = #{compID}
+    limit 1
+  </select>
+  
   <update id="updateByUserId" parameterType="com.dp.plat.core.pojo.UserInfo">
     update t_user_info
     <set>

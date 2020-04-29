@@ -54,6 +54,15 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
         } catch (Exception e) {
         }
 		try {
+            Method method = objClass.getMethod("getOrgId");
+            Object compId = method.invoke(record);
+            if (compId == null) {
+                method = objClass.getMethod("setOrgId", Integer.class);
+                method.invoke(record, UserContext.getOrgId());
+            }
+        } catch (Exception e) {
+        }
+		try {
 			Method method = objClass.getMethod("getEffectiveFrom");
 			Object effectiveFrom = method.invoke(record);
 			if (effectiveFrom == null) {
@@ -86,6 +95,15 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
             Object compId = method.invoke(record);
             if (compId == null) {
                 method = objClass.getMethod("setCompId", Integer.class);
+                method.invoke(record, UserContext.getOrgId());
+            }
+        } catch (Exception e) {
+        }
+		try {
+            Method method = objClass.getMethod("getOrgId");
+            Object compId = method.invoke(record);
+            if (compId == null) {
+                method = objClass.getMethod("setOrgId", Integer.class);
                 method.invoke(record, UserContext.getOrgId());
             }
         } catch (Exception e) {
@@ -132,6 +150,15 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
             }
         } catch (Exception e) {
         }
+		try {
+            Method method = objClass.getMethod("getOrgId");
+            Object compId = method.invoke(record);
+            if (compId == null) {
+                method = objClass.getMethod("setOrgId", Integer.class);
+                method.invoke(record, UserContext.getOrgId());
+            }
+        } catch (Exception e) {
+        }
 		return dao.updateByPrimaryKey(record);
 	}
 
@@ -160,6 +187,15 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
             }
         } catch (Exception e) {
         }
+		try {
+            Method method = objClass.getMethod("getOrgId");
+            Object compId = method.invoke(record);
+            if (compId == null) {
+                method = objClass.getMethod("setOrgId", Integer.class);
+                method.invoke(record, UserContext.getOrgId());
+            }
+        } catch (Exception e) {
+        }
 		return dao.updateByPrimaryKeySelective(record);
 	}
 
@@ -169,7 +205,7 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 	 * @param pageParam
 	 * @return
 	 */
-	public long countBySelectivePageable(PageParam<Object> pageParam) {
+	public long countBySelectivePageable(PageParam<?> pageParam) {
 		return dao.countBySelectivePageable(pageParam);
 	}
 
@@ -183,7 +219,7 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 	 * @param pageParam
 	 * @return
 	 */
-	public List<Object> selectBySelectivePageable(PageParam<Object> pageParam) {
+	public List<Object> selectBySelectivePageable(PageParam<?> pageParam) {
 		return dao.selectBySelectivePageable(pageParam);
 	}
 
