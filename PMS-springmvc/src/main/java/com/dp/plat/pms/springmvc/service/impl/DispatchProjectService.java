@@ -2,13 +2,20 @@ package com.dp.plat.pms.springmvc.service.impl;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.DispatchType;
 import com.dp.plat.pms.springmvc.dao.DispatchProjectMapper;
@@ -37,18 +44,10 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		String dispatchNo = dispatch.getDispatchNo();
 		Date dispatchTime = new Date();
 		if (StringUtils.isBlank(dispatchSeq)) {
-			// 查询服务商的项目派单顺序
-			DispatchProject temp = new DispatchProject();
-			temp.setDispatched(true);
-			temp.setFacilitatorCode(facilitatorCode);
-			long count = this.countBySelective(temp);
-			int year = Calendar.getInstance().get(Calendar.YEAR);
-			Object[] seqs = new Object[] { year, facilitatorCode, count + 1 };
-			dispatchSeq = StringUtils.join(seqs, "-");
+			dispatchSeq = generateDispatchSeq(facilitatorCode);
 		}
 		if (DispatchType.FRAMEWORK_AGREEMENT.equals(dispatch.getType()) && StringUtils.isBlank(dispatchNo)) {
-			String dispatchTimeStr = DateFormatUtils.format(dispatchTime, "yyyyMMdd");
-			dispatchNo = ProjectConstant.DispatchNOPrefix.AF + dispatchTimeStr + dispatchSeq.replaceAll("-", "");
+			dispatchNo = generateDispatchNo(dispatchTime, dispatchSeq);
 		}
 		DispatchProject temp = new DispatchProject();
 		temp.setId(id);
@@ -60,4 +59,60 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		temp.setDispatched(true);
 		this.updateByPrimaryKeySelective(temp);
 	}
+	
+	/**
+	 * 生成派单编号
+	 * @param facilitatorCode 
+	 * @return dispatchSeq
+	 */
+	@Override
+	public String generateDispatchSeq(String facilitatorCode) {
+		if (StringUtils.isBlank(facilitatorCode)) {
+			return null;
+		}
+		// 查询服务商的项目派单顺序
+		DispatchProject temp = new DispatchProject();
+		temp.setDispatched(true);
+		temp.setFacilitatorCode(facilitatorCode);
+		long count = this.countBySelective(temp) + 1;
+		int year = Calendar.getInstance().get(Calendar.YEAR);
+		String seqFormat = SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format", "%02d");
+//		String seqFormat = SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format", "{100:'%02d', 256:'%02x'}");
+//		Map<Integer, String> seqFormats = (Map<Integer, String>) JSON.parse(seqFormat);
+//		Integer minInt = Integer.MAX_VALUE;
+//		for (Entry<Integer, String> format : seqFormats.entrySet()) {
+//			Integer key = format.getKey();
+//			if (Long.valueOf(count).intValue() < key && key < minInt) {
+//				minInt = key;
+//				seqFormat = format.getValue();
+//			}
+//		}
+		Object[] seqs = new Object[] { year, facilitatorCode, String.format(seqFormat, count) };
+		String dispatchSeq = StringUtils.join(seqs, "-");
+		return dispatchSeq;
+	}
+	
+	/**
+	 * 生成框架协议派单合同
+	 * @param dispatchTime 
+	 * @param dispatchSeq 
+	 * @return dispatchNo
+	 */
+	@Override
+	public String generateDispatchNo(Date dispatchTime, String dispatchSeq) {
+		String dispatchTimeStr = DateFormatUtils.format(dispatchTime, "yyyyMMdd");
+		String dispatchNo = ProjectConstant.DispatchNOPrefix.AF + dispatchTimeStr + dispatchSeq.replaceAll("-", "");
+		return dispatchNo;
+	}
+
+	@Override
+	public List<DispatchVO> selectDispatchVOWithAmountBySelective(DispatchVO dispatchProject) {
+		return dao.selectDispatchVOWithAmountBySelective(dispatchProject);
+	}
+
+	@Override
+	public List<DispatchVO> selectDispatchVOWithAmountBySelectivePageable(PageParam<Object> pageParam) {
+		return dao.selectDispatchVOWithAmountBySelectivePageable(pageParam);
+	}
+	
 }

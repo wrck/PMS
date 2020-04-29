@@ -113,7 +113,7 @@
     <script src="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/js/bootstrap-validator.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
-	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.js"></script>
 	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
@@ -127,6 +127,7 @@
 	    	console.log(1);
 		    var form = null;
 	        var commonTable;
+	        var urlNamespace = "/pm/";
 	        var model = "settlement";
 	        var appId = model + "App";
 	        var winId= model + "Win";
@@ -138,6 +139,7 @@
 	   		var isModals = '${isModals}';
 	   		var search = '${pageContext.request.queryString}' || location.search;
 	   		var vm;
+	   		var $container = $("#" + formId);
 	    	$("#commonForm").attr({id:formId, name: formId});
 	    	$("#app").attr({id: appId});
 	    	$("#tabDiv").attr({id: model + "TabDiv"});
@@ -155,14 +157,14 @@
 								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
 	   							targetName: data.targetName,
-	    						targetValue: data.targetValue
+	    						targetValue: data.targetValue || {dispatch:{}}
 	    				 	}),
     				 	}
 					));
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);
-					var $container = $("#" + formId);
+					$container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
@@ -199,20 +201,24 @@
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
 		    		var selectedId = (data.targetValue || {}).dispatchId;
 		    		var selectedText = (data.targetValue || {}).dispatchSeq;
+		    		var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
 		    		$("#dispatchId", $container).select2({
+	    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
 		    			allowClear: true,
-		    			data: selectedId ? [{id: selectedId, text: selectedText}] : [],// 设置初始值
+		    			dropdownAutoWidth:true,
+		    			data: selectedId ? [$.extend({id: selectedId, text: selectedText}, data.targetValue.dispatch)] : [],// 设置初始值
 		    			ajax: {
-		    			    url: basePath + "/pm/dispatch/list.json",
+		    			    url: basePath + "/pm/dispatch/listWithSettleInfo.json?" + search,
 		    			    dataType: 'json',
 		    			    delay: 250,
 		    			    data: function (params) {
-		    			      return {
-		    			        fuzzy: params.term, // search term
-		    			        fuzzySearch: true,
-		    			        pageSize: 30,
-		    			        start: (params.page - 1) * 30 || 0
-		    			      };
+		    			    	params.pageSize = 10;
+			    			    return {
+			    			        dispatchSeq: params.term, // search term
+			    			        fuzzySearch: true,
+			    			        pageSize: params.pageSize || 10,
+			    			        start: (params.page - 1) * params.pageSize || 0
+			    			    };
 		    			    },
 		    			    processResults: function (data, params) {
 		    			      	params.page = params.page || 1;
@@ -225,7 +231,7 @@
 		    			      	return {
 		    			        	results: results,
 		    			        	pagination: {
-		    			          		more: (params.page * 30) < data.pageParam.filtered
+		    			          		more: (params.page * (params.pageSize || 10)) < data.pageParam.filtered
 		    			       		}
 		    			      	};
 		    			    },
@@ -245,17 +251,24 @@
 		    			$("#dispatchId", $container).on("change", function(e){
 		    				try{
 		    					var source = $(this).select2("data");
-		    					console.log(source);
 		    					if (source.length > 0) {
 		    						source = source[0];
 		    					} else {
 		    						source = {};
 		    					}
-		    					$("#projectName", $container).val(source.projectName);
+		    					console.log(source, this.value);
+		    					/* $("#smsProjectName", $container).val(source.smsProjectName || source.dispatchName);
+		    					$("#contractNos", $container).val(source.contractNos);
 		    					$("#dispatchSeq", $container).val(source.dispatchSeq);
 			    				$("#smsProjectCode", $container).val(source.smsProjectCode);
+			    				$("#smsOrderExecNumber", $container).val(source.smsOrderExecNumber || (source.customInfo || {}).smsOrderExecNumber);
 				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime);
-				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount);
+				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount); */
+				    			var targetValue = vm._data.targetValue || {};
+				    			targetValue.dispatch = source;
+				    			targetValue.dispatchId = source.id;
+				    			targetValue.dispatchSeq = source.dispatchSeq;
+				    			vm._data.targetValue = targetValue;
 				    			
 				    			// 生成结算编号
 				    			generateSettleSeq();
@@ -265,21 +278,6 @@
 		    		
 		    		// 绑定当次付款比例、当次付款金额的change事件，生成结算编号
 		    		$("#ratio,#amount", $container).change(generateSettleSeq);
-		    		
-		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
-		    			$("#facilitatorId", $container).on("change", function(e){
-		    				var element;
-			    			try{
-			    				var element =  $($(this).select2("data")[0].element);
-			    			} catch(e){}
-		    				var source = $(element).data("source") || {};
-		    				$("#facilitatorCode", $container).val(source.code);
-			    			$("#facilitatorName", $container).val(source.name);
-			    			$("#bankInfo", $container).val(source.bankInfo);
-			    			$("#bankAccount", $container).val(source.bankAccount);
-		    			});
-		    		});
     			 }
     		})
     		
@@ -295,14 +293,16 @@
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
         			if (isModals == "true") {
-        				//modals.hideWin(winId);
-        				modals.closeWin(winId);
+        				modals.hideWin(winId);
+        				//modals.closeWin(winId);
         			} else {
 		        		window.location.replace(pm.router.html(model).detail(id));
         			}
         		} else {
         			ajaxGet(pm.router.api(model).detail(id), null, function(data, status){
 	    				if (status == 'success') {
+	    					vm._data.fieldList = data.fieldList || [];
+	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
 	    				}
 	        		});
@@ -336,12 +336,11 @@
     			    "</div>"
     			);
 
-    			$container.find(".select2-result-repository__title").append("<div>" + repo.dispatchSeq + "</div>");
+    			$container.find(".select2-result-repository__title").append("<div style='margin-right:1rem'>" + repo.dispatchSeq + "</div>");
     			$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNos || "") + "</div>");
-    			$container.find(".select2-result-repository__description").text(repo.smsProjectName);
-    			$container.find(".select2-result-repository__forks").append(repo.orderExecNumber);
-    			$container.find(".select2-result-repository__smsSubmitTime").append((repo.customInfo || {}).smsSubmitTime);
-    			$container.find(".select2-result-repository__smsProjectAmount").append((repo.customInfo || {}).smsProjectAmount);
+    			$container.find(".select2-result-repository__description").text(repo.smsProjectName || repo.dispatchName);
+    			$container.find(".select2-result-repository__smsSubmitTime").append(repo.smsSubmitTime || (repo.customInfo || {}).smsSubmitTime);
+    			$container.find(".select2-result-repository__smsProjectAmount").append(repo.smsProjectAmount || (repo.customInfo || {}).smsProjectAmount);
 
     			return $container;
     		}

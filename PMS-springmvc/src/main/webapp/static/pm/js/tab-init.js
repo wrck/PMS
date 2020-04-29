@@ -13,13 +13,15 @@ $(function(){
 		// 获取前一个激活的标签页的名称
 		var previousTab = $(e.relatedTarget).text(); 
 		var tabId = $(e.target).attr("href");
-		if($(tabId).hasClass("loaded") == '' && !$(tabId + " .overlay:first").hasClass("loading")){
-            $(tabId + " .overlay").addClass("loading");
-            var config = $(tabId).data("config") || $(tabId).data();
+		var $container = $(e.target).parents(".tab-content:first");
+		if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
+            $(tabId + " .overlay", $container).addClass("loading");
+            var config = $(tabId, $container).data("config") || $(tabId, $container).data();
+            config.container = $container;
 			initTabData(config);
 		} else {
 			try {
-				$(tabId).find(".dataTables_scrollBody table").dataTable().api().columns.adjust();
+				$(tabId, $container).find(".dataTables_scrollBody table").dataTable().api().columns.adjust();
 			} catch(e) {}
 		}
 	});
@@ -50,11 +52,13 @@ function initTabData(config, refresh) {
 	var drawType =  config.drawType || "json";
 	var url = config.url;
 	var params = config.params;
-	var navTabId = type + "Tab";
-	var $navTab = $("#" + navTabId);
-	var searchDiv = type + "SearchDiv";
-	var tableId = type + "Table";
-	var calloutId = type + "Callout";
+	var timestamp = config.timestamp || "";
+	var navTabId = type + "Tab" + timestamp;
+	var $container = config.container || $(navTabId).parents(".tab-content:first");
+	var $navTab = $("#" + navTabId, $container);
+	var searchDiv = type + "SearchDiv" + timestamp;
+	var tableId = type + "Table" + timestamp;
+	var calloutId = type + "Callout" + timestamp;
 	var tableConfig = config.tableConfig || {};
 	var operations  = config.operations || [];
 	var defaultConfig = {
@@ -67,23 +71,23 @@ function initTabData(config, refresh) {
         }
 	$(".box-body .overlay", $navTab).show();
 	if (drawType == 'json') {
-		ajaxPost(url, params, function(resultMap) {
+		ajaxGet(url, params, function(resultMap) {
     		var columns = resultMap.columns || (resultMap.pageParam || {}).columns || [];
     		var data = resultMap.data;
     		if (refresh) {
 //    			$("#" + tableId, $navTab).empty();
 //    			$(".box-body #" + calloutId, $navTab).empty();
-    			var localTable = $("#" + tableId).data("localTable");
-    			localTable.reloadData(data);
+    			var localTable = $("#" + tableId, $container).data("localTable");
+    			localTable.reloadRowData(data, localTable.getSelectedRowId());
     		} else {
     			tableConfig.columns = columns;
     			$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
-    			$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped table-hover' id='" + tableId + "'></table>");
+    			$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped-vertical table-hover' id='" + tableId + "'></table>");
     			if (data) {
     				//$(".box-body #" + calloutId, $navTab).append("<h4>" + config.title + "</h4>")
     				var localTable = new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
     				//$(".box-body  #" + calloutId + " h4", $navTab).appendTo($("#" + tableId +  "_wrapper .row:first > :first"));
-    				$("#" + tableId).data("localTable", localTable);
+    				$("#" + tableId, $container).data("localTable", localTable);
     				/*try {
 		            	if (operations) {
 		            		for (var i = 0; i < operations.length; i++) {
@@ -126,5 +130,170 @@ function initTabData(config, refresh) {
         		$navTab.addClass("loaded");
             }
 	    })
+	}
+}
+
+function commonNavTableEdit(e, navTab) {
+	var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+	var type = navTab.model || navTab.type;
+	var title = navTab.title || "记录";
+	var width = navTab.modalWidth;
+	var $target = $(e.target);
+	var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+	var rowId = navTab.rowId || localTable.getSelectedRowId();
+	if (!rowId) {
+		modals.info('选择需要编辑的行');
+		return;
+	}
+	var url = null;
+	try {
+		url = router(urlNamespace).html(type).detail(rowId,true);
+	} catch(e) {
+		console.error(e);
+		try {
+			url = pm.router.html(type).detail(rowId, true);
+		} catch(e){
+			console.error(e);
+		}
+	}
+	if (!url) {
+		modals.error('不支持该操作！');
+		return;
+	}
+	console.log(1);
+	if (rowId && url) {
+		modals.openWin({
+			winId : type + "Win",
+			title : '编辑' + title,
+			width : width || '75vw',
+			url : url,
+			contentClass : '.modal-content',
+			hideFunc : function(e) {
+				var config = $target.parents(".tab-pane:first").data();
+				initTabData(config, true);
+			}
+		});
+	}
+}
+
+function commonNavTableDelete(e, navTab) {
+	var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+	var type = navTab.model || navTab.type;
+	var $target = $(e.target);
+	var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+	var rowId = navTab.rowId || localTable.getSelectedRowId();
+	if (!rowId) {
+		modals.info('请选择要删除的行');
+		return;
+	}
+	var url = null;
+	try {
+		url = router(urlNamespace).api(type).delete(rowId);
+	} catch(e) {
+		console.error(e);
+		try {
+			url = pm.router.api(type).delete(rowId);
+		} catch(e){
+			console.error(e);
+		}
+	}
+	if (!url) {
+		modals.error('不支持该操作！');
+		return;
+	}
+    modals.confirm("是否要删除该行数据？",function(){
+        ajaxPost(url, null, function(data, status){
+            if(data.status){
+                modals.info(data.message || "删除成功！");
+                var config = $target.parents(".tab-pane:first").data();
+				initTabData(config, true);
+            }else{
+                modals.info(data.message || "删除失败！");
+            }
+        });
+    })
+}
+
+function commonNavTableDownload(e, navTab) {
+	var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+	var type = navTab.model || navTab.type;
+	var $target = $(e.target);
+	var uploadPath = navTab.uploadPath;
+	var paramsValue = navTab.paramsValue || {};
+	var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+	var rowId = navTab.rowId || localTable.getSelectedRowId();
+	if (!rowId) {
+		modals.info('选择需要下载的文件');
+		return;
+	}
+	var url = uploadPath;
+	paramsValue.ids = rowId;
+	try {
+		url = url || router(urlNamespace).html(type).download($.param(paramsValue));
+	} catch(e) {
+		console.error(e);
+		try {
+			url = url || pm.router.html(type).download($.param(paramsValue));
+		} catch(e){
+			console.error(e);
+		}
+	}
+	if (!url) {
+		modals.error('不支持该操作！');
+		return;
+	}
+	console.log(1);
+	if (rowId && url) {
+		var a = document.createElement('a');
+		a.download = '';
+		if (!url.startsWith(basePath)) {
+			url = basePath + url;
+		}
+		a.href = url;
+		$("body").append(a); //修复firefox中无法触发click
+		a.click();
+		$(a).remove();
+	}
+}
+
+function commonNavTableZipDownload(e, navTab) {
+	var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+	var type = navTab.model || navTab.type;
+	var $target = $(e.target);
+	var uploadPath = navTab.uploadPath;
+	var paramsValue = navTab.paramsValue || {};
+	var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+	var rowId = navTab.rowIds || localTable.getCheckedRowsId() || localTable.getSelectedRowsId() || [];
+	if (!rowId) {
+		modals.info('选择需要下载的文件');
+		return;
+	}
+	var url = uploadPath;
+	paramsValue.ids = rowId.join(",");
+	try {
+		url = url || router(urlNamespace).html(type).download($.param(paramsValue));
+	} catch(e) {
+		console.error(e);
+		try {
+			url = url || pm.router.html(type).download($.param(paramsValue));
+		} catch(e){
+			console.error(e);
+		}
+	}
+	if (!url) {
+		modals.error('不支持该操作！');
+		return;
+	}
+	console.log(1);
+	if (rowId && url) {
+		var a = document.createElement('a');
+		a.download = '';
+		if (!url.startsWith(basePath)) {
+			url = basePath + url;
+		}
+		a.href = url;
+		$("body").append(a); //修复firefox中无法触发click
+		a.click();
+		$(a).remove();
 	}
 }

@@ -237,13 +237,13 @@
 			<if test="createBy != null and '' != createBy">
 				create_by = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				create_time = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				update_by = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				update_time = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="status != null and '' != status">
@@ -290,13 +290,13 @@
 			<if test="createBy != null and '' != createBy">
 				u.create_by = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
+			<if test="createTime != null">
 				u.create_time = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
 				u.update_by = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
+			<if test="updateTime != null">
 				u.update_time = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="status != null and '' != status">
@@ -343,13 +343,13 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					create_by = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					update_by = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.status != null and '' != model.status">
@@ -420,13 +420,13 @@
 				<if test="model.createBy != null and '' != model.createBy">
 					create_by = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
+				<if test="model.createTime != null">
 					create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
 					update_by = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
+				<if test="model.updateTime != null">
 					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.status != null and '' != model.status">
@@ -603,13 +603,13 @@
                 <if test="model.createBy != null and '' != model.createBy">
                     u.create_by = #{model.createBy, jdbcType=VARCHAR} AND
                 </if>
-                <if test="model.createTime != null and '' != model.createTime">
+                <if test="model.createTime != null">
                     u.create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.updateBy != null and '' != model.updateBy">
                     u.update_by = #{model.updateBy, jdbcType=VARCHAR} AND
                 </if>
-                <if test="model.updateTime != null and '' != model.updateTime">
+                <if test="model.updateTime != null">
                     u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.status != null and '' != model.status">
@@ -653,6 +653,9 @@
                 </if>
 	            <if test="model.roleId != null">
 	                ur.role_id = #{model.roleId} AND
+	            </if>
+	            <if test="model.roles != null">
+	                FIND_IN_SET(r.role_name, #{model.roles}) AND
 	            </if>
             </if>
             <if test="fuzzySearch == true and fuzzy != ''">
@@ -711,13 +714,13 @@
                 <if test="model.createBy != null and '' != model.createBy">
                     u.create_by = #{model.createBy, jdbcType=VARCHAR} AND
                 </if>
-                <if test="model.createTime != null and '' != model.createTime">
+                <if test="model.createTime != null">
                     u.create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.updateBy != null and '' != model.updateBy">
                     u.update_by = #{model.updateBy, jdbcType=VARCHAR} AND
                 </if>
-                <if test="model.updateTime != null and '' != model.updateTime">
+                <if test="model.updateTime != null">
                     u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.status != null and '' != model.status">
@@ -762,6 +765,9 @@
                 <if test="model.roleId != null">
                     ur.role_id = #{model.roleId} AND
                 </if>
+                <if test="model.roles != null">
+	                FIND_IN_SET(r.role_name, #{model.roles}) AND
+	            </if>
             </if>
             <if test="fuzzySearch == true and fuzzy != ''">
                 (

@@ -14,17 +14,18 @@ import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.entity.ProjectMember;
 import com.dp.plat.pms.springmvc.service.IProjectMemberService;
+import com.dp.plat.pms.springmvc.vo.MemberVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "member")
 public class ProjectMemberController extends AbstractController<IProjectMemberService, ProjectMember, MemberVO> {
-	
+
 	@PostConstruct
 	public void init() {
 		this.setViewModel("member");
 		this.setUseTemplate(true);
 	}
-	
+
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		Boolean status = true;
@@ -43,5 +44,5 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
-	
+
 }

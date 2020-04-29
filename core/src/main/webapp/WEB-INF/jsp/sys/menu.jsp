@@ -333,7 +333,7 @@
                        	winId:winId,
                        	title:'图标选择器（双击选择）',
                        	width:'1000px',
-                       	url:basePath+"/sys/modals/icon_selector?iconName="+iconName
+                       	url:basePath+"/sys/modals/icon_selector.html?iconName="+iconName
                        });
 					break;
 				}

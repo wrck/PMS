@@ -4,7 +4,7 @@
   <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.ProjectMember">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="projectId" jdbcType="INTEGER" property="projectId" />
-    <result column="projectType" jdbcType="INTEGER" property="projectType" />
+    <result column="projectType" jdbcType="VARCHAR" property="projectType" />
     <result column="memberRole" jdbcType="VARCHAR" property="memberRole" />
     <result column="memberCode" jdbcType="VARCHAR" property="memberCode" />
     <result column="memberName" jdbcType="VARCHAR" property="memberName" />
@@ -33,20 +33,24 @@
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember">
-    insert into pm_project_member (id, projectId, projectType, 
-      memberRole, memberCode, memberName, 
-      phoneNum, email, fromFlag, 
-      createTime, createBy, updateTime, 
-      updateBy, effectiveTo, effectiveFrom
-      )
-    values (#{id,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=INTEGER}, 
-      #{memberRole,jdbcType=VARCHAR}, #{memberCode,jdbcType=VARCHAR}, #{memberName,jdbcType=VARCHAR}, 
-      #{phoneNum,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{fromFlag,jdbcType=VARCHAR}, 
-      #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
-      #{updateBy,jdbcType=VARCHAR}, #{effectiveTo,jdbcType=TIMESTAMP}, #{effectiveFrom,jdbcType=TIMESTAMP}
-      )
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_project_member (id, projectId, projectType, memberRole, 
+      memberCode, memberName, phoneNum, 
+      email, fromFlag, createTime, 
+      createBy, updateTime, updateBy, 
+      effectiveTo, effectiveFrom)
+    values (#{id,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=VARCHAR}, #{memberRole,jdbcType=VARCHAR}, 
+      #{memberCode,jdbcType=VARCHAR}, #{memberName,jdbcType=VARCHAR}, #{phoneNum,jdbcType=VARCHAR}, 
+      #{email,jdbcType=VARCHAR}, #{fromFlag,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{createBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{effectiveTo,jdbcType=TIMESTAMP}, #{effectiveFrom,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
     insert into pm_project_member
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -103,7 +107,7 @@
         #{projectId,jdbcType=INTEGER},
       </if>
       <if test="projectType != null">
-        #{projectType,jdbcType=INTEGER},
+        #{projectType,jdbcType=VARCHAR},
       </if>
       <if test="memberRole != null">
         #{memberRole,jdbcType=VARCHAR},
@@ -150,7 +154,7 @@
         projectId = #{projectId,jdbcType=INTEGER},
       </if>
       <if test="projectType != null">
-        projectType = #{projectType,jdbcType=INTEGER},
+        projectType = #{projectType,jdbcType=VARCHAR},
       </if>
       <if test="memberRole != null">
         memberRole = #{memberRole,jdbcType=VARCHAR},
@@ -194,7 +198,7 @@
   <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember">
     update pm_project_member
     set projectId = #{projectId,jdbcType=INTEGER},
-      projectType = #{projectType,jdbcType=INTEGER},
+      projectType = #{projectType,jdbcType=VARCHAR},
       memberRole = #{memberRole,jdbcType=VARCHAR},
       memberCode = #{memberCode,jdbcType=VARCHAR},
       memberName = #{memberName,jdbcType=VARCHAR},
@@ -209,176 +213,125 @@
       effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember" resultMap="BaseResultMap">
-    select * from pm_project_member
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="id != null and '' != id">
-				id = #{id, jdbcType=INTEGER} AND
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				m.id = #{id, jdbcType=INTEGER} AND
 			</if>
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
+			<if test="projectId != null">
+				m.projectId = #{projectId, jdbcType=INTEGER} AND
 			</if>
 			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=INTEGER} AND
+				m.projectType = #{projectType, jdbcType=VARCHAR} AND
 			</if>
 			<if test="memberRole != null and '' != memberRole">
-				memberRole = #{memberRole, jdbcType=VARCHAR} AND
+				m.memberRole = #{memberRole, jdbcType=VARCHAR} AND
 			</if>
 			<if test="memberCode != null and '' != memberCode">
-				memberCode = #{memberCode, jdbcType=VARCHAR} AND
+				m.memberCode = #{memberCode, jdbcType=VARCHAR} AND
 			</if>
 			<if test="memberName != null and '' != memberName">
-				memberName = #{memberName, jdbcType=VARCHAR} AND
+				m.memberName = #{memberName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="phoneNum != null and '' != phoneNum">
-				phoneNum = #{phoneNum, jdbcType=VARCHAR} AND
+				m.phoneNum = #{phoneNum, jdbcType=VARCHAR} AND
 			</if>
 			<if test="email != null and '' != email">
-				email = #{email, jdbcType=VARCHAR} AND
+				m.email = #{email, jdbcType=VARCHAR} AND
 			</if>
 			<if test="fromFlag != null and '' != fromFlag">
-				fromFlag = #{fromFlag, jdbcType=VARCHAR} AND
+				m.fromFlag = #{fromFlag, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			<if test="createTime != null">
+				m.createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
+				m.createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			<if test="updateTime != null">
+				m.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+				m.updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			<if test="effectiveTo != null">
+				<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			<if test="effectiveFrom != null">
+				<![CDATA[ m.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 			</if>
 		</trim>
 	</where>
-  </select>
-  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember" resultType="long">
-    select count(1) from pm_project_member
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="id != null and '' != id">
-				id = #{id, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=INTEGER} AND
-			</if>
-			<if test="memberRole != null and '' != memberRole">
-				memberRole = #{memberRole, jdbcType=VARCHAR} AND
-			</if>
-			<if test="memberCode != null and '' != memberCode">
-				memberCode = #{memberCode, jdbcType=VARCHAR} AND
-			</if>
-			<if test="memberName != null and '' != memberName">
-				memberName = #{memberName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="phoneNum != null and '' != phoneNum">
-				phoneNum = #{phoneNum, jdbcType=VARCHAR} AND
-			</if>
-			<if test="email != null and '' != email">
-				email = #{email, jdbcType=VARCHAR} AND
-			</if>
-			<if test="fromFlag != null and '' != fromFlag">
-				fromFlag = #{fromFlag, jdbcType=VARCHAR} AND
-			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="effectiveTo != null and '' != effectiveTo">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="effectiveFrom != null and '' != effectiveFrom">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
-			</if>
-		</trim>
-	</where>
-  </select>
-  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from pm_project_member
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+				<if test="model.id != null">
+					m.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
+				<if test="model.projectId != null">
+					m.projectId = #{model.projectId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=INTEGER} AND
+					m.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberRole != null and '' != model.memberRole">
-					memberRole = #{model.memberRole, jdbcType=VARCHAR} AND
+					m.memberRole = #{model.memberRole, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberCode != null and '' != model.memberCode">
-					memberCode = #{model.memberCode, jdbcType=VARCHAR} AND
+					m.memberCode = #{model.memberCode, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberName != null and '' != model.memberName">
-					memberName = #{model.memberName, jdbcType=VARCHAR} AND
+					m.memberName = #{model.memberName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.phoneNum != null and '' != model.phoneNum">
-					phoneNum = #{model.phoneNum, jdbcType=VARCHAR} AND
+					m.phoneNum = #{model.phoneNum, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.email != null and '' != model.email">
-					email = #{model.email, jdbcType=VARCHAR} AND
+					m.email = #{model.email, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.fromFlag != null and '' != model.fromFlag">
-					fromFlag = #{model.fromFlag, jdbcType=VARCHAR} AND
+					m.fromFlag = #{model.fromFlag, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					m.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					m.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					m.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					m.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ m.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					memberRole like CONCAT("%", #{fuzzy}, "%") or
-					memberCode like CONCAT("%", #{fuzzy}, "%") or
-					memberName like CONCAT("%", #{fuzzy}, "%") or
-					phoneNum like CONCAT("%", #{fuzzy}, "%") or
-					email like CONCAT("%", #{fuzzy}, "%") or
-					fromFlag like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					m.projectType like CONCAT("%", #{fuzzy}, "%") or
+					m.memberRole like CONCAT("%", #{fuzzy}, "%") or
+					m.memberCode like CONCAT("%", #{fuzzy}, "%") or
+					m.memberName like CONCAT("%", #{fuzzy}, "%") or
+					m.phoneNum like CONCAT("%", #{fuzzy}, "%") or
+					m.email like CONCAT("%", #{fuzzy}, "%") or
+					m.fromFlag like CONCAT("%", #{fuzzy}, "%") or
+					m.createBy like CONCAT("%", #{fuzzy}, "%") or
+					m.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
 	</where>
-	<if test="orderBy != null">
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
@@ -387,68 +340,250 @@
     <if test="start != null and pageSize != -1">
         limit #{start}, #{pageSize}
     </if>
-  </select>
-  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_project_member
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember" resultMap="BaseResultMap">
+    select * from pm_project_member as m
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				m.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectId != null">
+				m.projectId = #{projectId, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectType != null and '' != projectType">
+				m.projectType = #{projectType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberRole != null and '' != memberRole">
+				m.memberRole = #{memberRole, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberCode != null and '' != memberCode">
+				m.memberCode = #{memberCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberName != null and '' != memberName">
+				m.memberName = #{memberName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="phoneNum != null and '' != phoneNum">
+				m.phoneNum = #{phoneNum, jdbcType=VARCHAR} AND
+			</if>
+			<if test="email != null and '' != email">
+				m.email = #{email, jdbcType=VARCHAR} AND
+			</if>
+			<if test="fromFlag != null and '' != fromFlag">
+				m.fromFlag = #{fromFlag, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				m.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				m.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				m.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				m.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ m.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectMember" resultType="long">
+    select count(1) from pm_project_member as m
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				m.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectId != null">
+				m.projectId = #{projectId, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectType != null and '' != projectType">
+				m.projectType = #{projectType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberRole != null and '' != memberRole">
+				m.memberRole = #{memberRole, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberCode != null and '' != memberCode">
+				m.memberCode = #{memberCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="memberName != null and '' != memberName">
+				m.memberName = #{memberName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="phoneNum != null and '' != phoneNum">
+				m.phoneNum = #{phoneNum, jdbcType=VARCHAR} AND
+			</if>
+			<if test="email != null and '' != email">
+				m.email = #{email, jdbcType=VARCHAR} AND
+			</if>
+			<if test="fromFlag != null and '' != fromFlag">
+				m.fromFlag = #{fromFlag, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				m.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				m.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				m.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				m.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ m.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.MemberVO">
+    select m.*, bd.`basicDataName` as memberRoleName  from pm_project_member as m
+    	left join `fnd_basic_data` bd 
+	        on bd.`dataTypeCode` = 'afProjectMember' 
+	        and m.`memberRole` = bd.`basicDataId`
+    	<!-- left join t_user u 
+	        on u.`user_name` = m.`createBy` 
+	    left join t_user_info ui 
+	        on ui.`user_id` = u.`user_id` 
+        <if test="model != null and model.orgId != null">
+			and ui.compID = #{model.orgId, jdbcType=INTEGER}
+		</if> -->
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+				<if test="model.id != null">
+					m.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
+				<if test="model.projectId != null">
+					m.projectId = #{model.projectId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=INTEGER} AND
+					m.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberRole != null and '' != model.memberRole">
-					memberRole = #{model.memberRole, jdbcType=VARCHAR} AND
+					m.memberRole = #{model.memberRole, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberCode != null and '' != model.memberCode">
-					memberCode = #{model.memberCode, jdbcType=VARCHAR} AND
+					m.memberCode = #{model.memberCode, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.memberName != null and '' != model.memberName">
-					memberName = #{model.memberName, jdbcType=VARCHAR} AND
+					m.memberName = #{model.memberName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.phoneNum != null and '' != model.phoneNum">
-					phoneNum = #{model.phoneNum, jdbcType=VARCHAR} AND
+					m.phoneNum = #{model.phoneNum, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.email != null and '' != model.email">
-					email = #{model.email, jdbcType=VARCHAR} AND
+					m.email = #{model.email, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.fromFlag != null and '' != model.fromFlag">
-					fromFlag = #{model.fromFlag, jdbcType=VARCHAR} AND
+					m.fromFlag = #{model.fromFlag, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					m.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					m.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					m.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					m.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.effectiveTo != null and '' != model.effectiveTo">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 				</if>
-				<if test="model.effectiveFrom != null and '' != model.effectiveFrom">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ m.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					memberRole like CONCAT("%", #{fuzzy}, "%") or
-					memberCode like CONCAT("%", #{fuzzy}, "%") or
-					memberName like CONCAT("%", #{fuzzy}, "%") or
-					phoneNum like CONCAT("%", #{fuzzy}, "%") or
-					email like CONCAT("%", #{fuzzy}, "%") or
-					fromFlag like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					m.projectType like CONCAT("%", #{fuzzy}, "%") or
+					m.memberRole like CONCAT("%", #{fuzzy}, "%") or
+					m.memberCode like CONCAT("%", #{fuzzy}, "%") or
+					m.memberName like CONCAT("%", #{fuzzy}, "%") or
+					m.phoneNum like CONCAT("%", #{fuzzy}, "%") or
+					m.email like CONCAT("%", #{fuzzy}, "%") or
+					m.fromFlag like CONCAT("%", #{fuzzy}, "%") or
+					m.createBy like CONCAT("%", #{fuzzy}, "%") or
+					m.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_project_member as m
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					m.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectId != null">
+					m.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectType != null and '' != model.projectType">
+					m.projectType = #{model.projectType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.memberRole != null and '' != model.memberRole">
+					m.memberRole = #{model.memberRole, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.memberCode != null and '' != model.memberCode">
+					m.memberCode = #{model.memberCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.memberName != null and '' != model.memberName">
+					m.memberName = #{model.memberName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.phoneNum != null and '' != model.phoneNum">
+					m.phoneNum = #{model.phoneNum, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.email != null and '' != model.email">
+					m.email = #{model.email, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.fromFlag != null and '' != model.fromFlag">
+					m.fromFlag = #{model.fromFlag, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					m.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					m.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					m.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					m.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (m.effectiveTo is null or m.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ m.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					m.projectType like CONCAT("%", #{fuzzy}, "%") or
+					m.memberRole like CONCAT("%", #{fuzzy}, "%") or
+					m.memberCode like CONCAT("%", #{fuzzy}, "%") or
+					m.memberName like CONCAT("%", #{fuzzy}, "%") or
+					m.phoneNum like CONCAT("%", #{fuzzy}, "%") or
+					m.email like CONCAT("%", #{fuzzy}, "%") or
+					m.fromFlag like CONCAT("%", #{fuzzy}, "%") or
+					m.createBy like CONCAT("%", #{fuzzy}, "%") or
+					m.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>

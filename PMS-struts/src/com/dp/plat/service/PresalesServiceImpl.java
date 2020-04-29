@@ -245,7 +245,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
             member.setCreateTime(new Date());
             member.setProjectId(objId);
             member.setFromFlag("1");
-            projectDao.insertPorjectMember(member);
+            projectDao.insertProjectMember(member);
             return true;
         }
         return false;

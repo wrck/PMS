@@ -2754,12 +2754,14 @@
             insert into 
             `pm_basic_deliver_detail`(`projectId`
             <isNotEmpty prepend="," property="projectType"> projectType </isNotEmpty>
+            <isNotEmpty prepend="," property="taskId"> taskId </isNotEmpty>
             , contractNo ,`deliverId`,`deliverableName`,`deliverablePath`,`deliverableType`,`uploadUser`,`uploadTime`,`effectiveFrom`,`effectiveTo`)
             values
         <iterate conjunction="," property="list">
             (
             #list[].projectId# 
             <isNotEmpty prepend="," property="projectType"> #projectType# </isNotEmpty>
+            <isNotEmpty prepend="," property="taskId"> #taskId# </isNotEmpty>
             , #list[].contractNo# ,#list[].deliverId# ,#list[].deliverableName# ,#list[].deliverablePath# ,#list[].deliverableType# ,#uploadUser# ,now() ,now() ,#effectiveTo#
             )
         </iterate>

@@ -66,7 +66,7 @@ public class SubcontractProject {
 
 	// 有效开始时间
 	@JsonFormat(pattern = "yyyy-MM-dd mm:HH:ss", locale = "zh", timezone = "GMT+8")
-	private Date effectiveForm;
+	private Date effectiveFrom;
 
 	// 有效结束时间
 	@JsonFormat(pattern = "yyyy-MM-dd mm:HH:ss", locale = "zh", timezone = "GMT+8")
@@ -463,20 +463,20 @@ public class SubcontractProject {
 	/**
 	 * 获取有效开始时间
 	 *
-	 * @return effectiveForm - 有效开始时间
+	 * @return effectiveFrom - 有效开始时间
 	 */
-	public Date getEffectiveForm() {
-		return effectiveForm;
+	public Date getEffectiveFrom() {
+		return effectiveFrom;
 	}
 
 	/**
 	 * 设置有效开始时间
 	 *
-	 * @param effectiveForm
+	 * @param effectiveFrom
 	 *            有效开始时间
 	 */
-	public void setEffectiveForm(Date effectiveForm) {
-		this.effectiveForm = effectiveForm;
+	public void setEffectiveFrom(Date effectiveFrom) {
+		this.effectiveFrom = effectiveFrom;
 	}
 
 	/**

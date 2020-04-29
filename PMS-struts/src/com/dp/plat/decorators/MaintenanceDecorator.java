@@ -123,7 +123,7 @@ public class MaintenanceDecorator extends TableDecorator {
             projectName = ((ProjectMaintenanceVO) obj).getProjectName();
             projectType = ((ProjectMaintenanceVO) obj).getProjectType();
         } else if (obj instanceof Map) {
-            projectId = (int) ((Map<?, ?>) obj).get("projectId");
+            projectId = (Integer) ((Map<?, ?>) obj).get("projectId");
             projectCode = (String) ((Map<?, ?>) obj).get("projectCode");
             projectName = (String) ((Map<?, ?>) obj).get("projectName");
             projectType = (Integer) ((Map<?, ?>) obj).get("projectType");

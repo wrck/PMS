@@ -1,3 +1,12 @@
+// 去除jquery.dataTable的警告弹窗
+if ($.fn.dataTable) {
+	$.fn.dataTable.ext.errMode = function(settings, tn, msg) {
+		// 4为字段属性不存在时的错误提示
+		if (tn != 4) {
+			console.error(msg);
+		}
+	};
+}
 /**
  * 对datatables组件进行参数封装
  */
@@ -5,6 +14,8 @@
 var CONSTANT = {
         DATA_TABLES : {
             DEFAULT_OPTION : { //DataTables服务器初始化选项
+            	"sErrMode": "throw",
+            	"errMode": "throw",
                 language: {
                     "sProcessing":   "<div class='overlay'><i class='fa fa-refresh fa-spin'></i></div>",
                     "sLengthMenu":   "每页 _MENU_ 项",
@@ -49,6 +60,8 @@ var CONSTANT = {
                 singleSelect: true
             },
             LOCAL_DEFAULT_OPTION : { //DataTables本地初始化选项
+            	"sErrMode": "throw",
+            	"errMode": "throw",
                 language: {
                     "sProcessing":   "处理中...",
                     "sLengthMenu":   "每页 _MENU_ 项",
@@ -130,7 +143,23 @@ function CommonLocalTable(tableId, data, config) {
 	
 	// 是否启用行选择，即添加.selected类：默认启用
 	this.disableSelect = config.disableSelect || false;
-	
+	// 表格增加复选框
+	if (typeof config.checkbox != "undefined") {
+		this.initCheckbox = true;
+		this.checkboxFlag = "iCheck";
+		if (typeof config.checkbox.flag != "undefined") {
+			this.checkboxFlag = config.checkbox.flag;
+		}
+		/*
+		 * {
+		 *   rowId:
+		 *   actionClass:
+		 *   styleClass:
+		 *   titleClass:
+		 * }
+		 */
+		this.checkbox = config.checkbox;
+	}
 	// 表格横向自适应 
 	$("#" + this.tableId).css("width", "100%");
 	// 初始化表格
@@ -218,6 +247,14 @@ CommonLocalTable.prototype.initLocalTable = function(tableId, data) {
 			column.render = render;
 		}
 	}
+	
+	var rowId = this.data.rowId || that.config.rowId;
+	if (that.initCheckbox) {
+		var checkboxColumn = this.initCheckboxColumn(that.checkbox);
+		that.checkboxColumn
+		columns.unshift(checkboxColumn);
+	}
+	
 	this.table = $('#' + tableId).dataTable($.extend(true,{},CONSTANT.DATA_TABLES.LOCAL_DEFAULT_OPTION,{
 		data : that.data,
 		fnInitComplete : $.proxy(that.fnInitComplete,that)
@@ -784,7 +821,8 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
     	}
     }
     
-    $("#" + _this.tableId).parent().addClass("table-responsive");
+    //$("#" + _this.tableId).parent().addClass("table-responsive");
+    $("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
     
     //动态隐藏或显示列 by 01441  结合bootstrap-multiselect
     var columnSelect = $("#"+_this.tableId+"_wrapper").find('.columnSelect')
@@ -915,6 +953,83 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
 		$("#"+this.tableId +"_filter input[type='search']").addClass("fuzzySearch").attr("placeholder","模糊查找").addClass("form-control").removeClass("input-sm");
 		$("#" +this.searchDiv +" .operate-btn-group").appendTo($('#'+this.tableId+'_filter', $tableContainer ));
 	}
+    
+ // 初始化复选框事件
+    if (_this.initCheckbox) {
+    	var toggleClass = "checked";
+    	if (_this.sameTrigger) {
+    		toggleClass = "checked selected";
+    	}
+		if ($.fn.iCheck && _this.checkboxFlag == "iCheck") {
+			$($tableContainer).on("ifClicked", "table input[type='checkbox']", function() {
+				$(this).parents("tr").toggleClass(toggleClass);
+				$(this).parents("tr").click();
+			});
+			
+/*			$('input[type="checkbox"]', $tableContainer).iCheck({
+	            checkboxClass: _this.checkbox.styleClass,
+	        });
+*/			
+			$($tableContainer).on("click", "." + _this.checkbox.actionClass, function() {
+				var clicks = $(this).data('clicks');
+				if (clicks) {
+					// 取消全选
+					$("table input[type='checkbox']", $tableContainer).iCheck("uncheck").parents("tr").removeClass(toggleClass);
+//					$("input[type='checkbox']", $tableContainer).parents("tr").removeClass("checked");
+					$(this).removeClass(toggleClass);
+				} else {
+					// 全选
+					$("table input[type='checkbox']", $tableContainer).iCheck("check").parents("tr").addClass(toggleClass);
+//					$("input[type='checkbox']", $tableContainer).parents("tr").addClass("checked");
+					$(this).addClass(toggleClass);
+				}
+				$(this).data("clicks", !clicks);
+			});
+		} else if (_this.checkboxFlag == "iCheckCustom") {
+			$($tableContainer).on("click", "." + _this.checkbox.actionClass, function() {
+				var clicks = $(this).data('clicks');
+				if (clicks) {
+					// 取消全选
+					$("table i.checked." + _this.checkbox.singleCheckboxClass, $tableContainer).removeClass("checked").parents("tr").removeClass(toggleClass);
+					$(this).removeClass(toggleClass);
+				} else {
+					// 全选
+					$("table i." + _this.checkbox.singleCheckboxClass, $tableContainer).not(".checked").addClass("checked").parents("tr").addClass(toggleClass);
+					$(this).addClass(toggleClass);
+				}
+				$(this).data("clicks", !clicks);
+			});
+			
+			$($tableContainer).on("click", "table i." + _this.checkbox.singleCheckboxClass, function(e) {
+				$(this).toggleClass("checked").parents("tr").toggleClass(toggleClass);
+			});
+		} else {
+			$($tableContainer).on("click", "." + _this.checkbox.actionClass, function() {
+				var clicks = $(this).data('clicks');
+				if (clicks) {
+					// 取消全选
+					$("table input[type='checkbox']:checked", $tableContainer).removeAttr("checked").parents("tr").removeClass(toggleClass);
+//					$("input[type='checkbox']:checked", $tableContainer).parents("tr").removeClass("checked");
+					$(this).removeClass(toggleClass);
+				} else {
+					// 全选
+					$("table input[type='checkbox']", $tableContainer).not(":checked").prop("checked","checked").parents("tr").addClass(toggleClass);
+//					$("input[type='checkbox']", $tableContainer).not(":checked").parents("tr").addClass("checked");
+					$(this).addClass(toggleClass);
+				}
+				$(this).data("clicks", !clicks);
+			});
+			
+			$($tableContainer).on("click", "table input[type='checkbox']", function() {
+				$(this).parents("tr").toggleClass(toggleClass);
+			});
+		}
+		
+    }
+    
+    //$("#" + _this.tableId).parent().addClass("table-responsive");
+    $("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
+    
     //动态隐藏或显示列 by 01441  结合bootstrap-multiselect
     var columnSelect = $("#"+_this.tableId+"_wrapper").find('.columnSelect')
     if(columnSelect.length > 0){
@@ -1143,6 +1258,10 @@ CommonLocalTable.prototype.getSelectedRowId = getSelectedRowId;
 CommonLocalTable.prototype.getSelectedRowsId = getSelectedRowsId;
 CommonLocalTable.prototype.getSelectedRowData = getSelectedRowData;
 CommonLocalTable.prototype.getSelectedRowsData = getSelectedRowsData;
+CommonLocalTable.prototype.getCheckedRowId = getCheckedRowId;
+CommonLocalTable.prototype.getCheckedRowsId = getCheckedRowsId;
+CommonLocalTable.prototype.getCheckedRowData = getCheckedRowData;
+CommonLocalTable.prototype.getCheckedRowsData = getCheckedRowsData;
 
 /**
  * 获取当前选中行的id 单选
@@ -1249,6 +1368,16 @@ CommonTable.prototype.selectFirstRow=function(triggerEvent){
 
 //通用选择
 CommonTable.prototype.selectRowWithSelector=function(selector,triggerEvent){
+	if(selector){
+		if(triggerEvent){
+			this.table.$(selector).click();
+		}else{ 
+		    this.table.$('tr.selected').removeClass('selected');
+	        this.table.$(selector).addClass('selected');
+		}
+	}
+}
+CommonLocalTable.prototype.selectRowWithSelector=function(selector,triggerEvent){
 	if(selector){
 		if(triggerEvent){
 			this.table.$(selector).click();
@@ -1561,10 +1690,7 @@ CommonTable.prototype.showProcessing = function() {
 	$("#" + this.tableId + "_processing").show();
 }
 
-/*
- * 初始化复选框列配置
- */
-CommonTable.prototype.initCheckboxColumn = function(checkbox_config) {
+function initCheckboxColumn(checkbox_config) {
 	if (typeof checkbox_config !== "object") {
 		checkbox_config = {};
 	} 
@@ -1598,3 +1724,9 @@ CommonTable.prototype.initCheckboxColumn = function(checkbox_config) {
 	}
 	return checkboxColumn;
 }
+
+/*
+ * 初始化复选框列配置
+ */
+CommonTable.prototype.initCheckboxColumn = initCheckboxColumn;
+CommonLocalTable.prototype.initCheckboxColumn = initCheckboxColumn;

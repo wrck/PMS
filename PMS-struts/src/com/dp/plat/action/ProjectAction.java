@@ -1692,7 +1692,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 				memberEffectiveFrom = new Date();
 			}
 			member.setEffectiveFrom(memberEffectiveFrom);
-			memberId = projectService.insertPorjectMember(member);
+			memberId = projectService.insertProjectMember(member);
 			projectService.updateProjectLastRefreshTime(projectId);
 			projectService.addDynamicNotification(MessageUtil.NOTIFICATION_CODE_113, projectId, memberRoleName);
 			result = memberId;

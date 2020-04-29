@@ -45,7 +45,9 @@
 	<bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">  
         <property name="converters">  
             <set>  
-                <ref bean="dateConvert"/>  
+                <ref bean="dateConvert"/>
+                <!-- 货币格式转换规则 -->
+                <bean class="com.dp.plat.core.converter.DecimalConverter"></bean>
             </set>  
         </property>  
     </bean>  

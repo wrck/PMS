@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -42,6 +44,7 @@ public class UploaderService implements IUploaderService {
 
 	@Resource
 	private FileInfoMapper fileInfoMapper;
+
 	/**
 	 * 创建文件
 	 *
@@ -109,16 +112,16 @@ public class UploaderService implements IUploaderService {
 		userService.updateByPrimaryKeySelective(user);
 		return avatar_id.toString();
 	}
-	
+
 	@Override
 	@Transactional
 	public List<FileInfo> baseUploadFile(String typeCode, HttpServletRequest httpRequest) throws Exception {
 		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
-		//执行文件上传
+		// 执行文件上传
 		List<FileInfo> list = UploadUtils.uploadMultipartFile(httpRequest, fileType);
-		//文件上传信息插入数据库
-		for(FileInfo fileInfo :list) {
-			fileInfoMapper.insertFileInfo(fileInfo , UserContext.getCurrentUser().getUserName());
+		// 文件上传信息插入数据库
+		for (FileInfo fileInfo : list) {
+			fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
 		}
 		return list;
 	}
@@ -126,23 +129,56 @@ public class UploaderService implements IUploaderService {
 	@Override
 	public void fileDownload(Integer fileId, HttpServletRequest request, HttpServletResponse response) {
 		FileInfo fileInfo = fileInfoMapper.selectFileInfoById(fileId);
-		//项目路径
+		// 项目路径
 		String webPath = request.getSession().getServletContext().getRealPath("/");
-		DownloadUtils.downFile(response, request, webPath+fileInfo.getPath(), fileInfo.getName());
-		//记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(String.valueOf(fileId) ,request.getRemoteAddr());
+		DownloadUtils.downFile(response, request, webPath + fileInfo.getPath(), fileInfo.getName());
+		// 记录下载日志，方便统计文件下载次数
+		fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr());
 	}
 
 	@Override
-	public void zipFileDownload(String fileIds,String zipName, HttpServletRequest request, HttpServletResponse response) {
+	public void zipFileDownload(String fileIds, String zipName, HttpServletRequest request,
+			HttpServletResponse response) {
 		List<String> ids = Arrays.asList(fileIds.split(","));
 		List<FileInfo> fileInfos = fileInfoMapper.selectFileInfoByIds(ids);
-		if(StringUtils.isEmpty(zipName)) {
-			zipName =  FileUtil.generZipFileName();
+		if (StringUtils.isEmpty(zipName)) {
+			zipName = FileUtil.generZipFileName();
 		}
 		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
-		//记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(fileIds ,request.getRemoteAddr());
+		// 记录下载日志，方便统计文件下载次数
+		fileInfoMapper.insertdownlog(fileIds, request.getRemoteAddr());
 	}
 
+	@Override
+	public void fileDownload(FileInfo fileInfo, HttpServletRequest request, HttpServletResponse response) {
+		// 项目路径
+		String webPath = request.getSession().getServletContext().getRealPath("/");
+		DownloadUtils.downFile(response, request, webPath + fileInfo.getPath(), fileInfo.getName());
+		// 记录下载日志，方便统计文件下载次数
+		Integer fileId = fileInfo.getId();
+		if (fileId != null && fileId != 0) {
+			fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr());
+		}
+	}
+
+	@Override
+	public void zipFileDownload(String zipName, List<FileInfo> fileInfos, HttpServletRequest request,
+			HttpServletResponse response) {
+		if (StringUtils.isEmpty(zipName)) {
+			zipName = FileUtil.generZipFileName();
+		}
+		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
+		// 记录下载日志，方便统计文件下载次数
+		List<Integer> fileIds = new ArrayList<Integer>(fileInfos.size());
+		for (FileInfo fileInfo : fileInfos) {
+			Integer id = fileInfo.getId();
+			if (id != null && id > 0) {
+				fileIds.add(id);
+			}
+		}
+		if (!fileIds.isEmpty()) {
+			fileInfoMapper.insertdownlog(StringUtils.collectionToDelimitedString(fileIds, ","),
+					request.getRemoteAddr());
+		}
+	}
 }

@@ -258,16 +258,29 @@
 	    		var height=$(window).height()>$(this).find(".modal-dialog").eq(0).height()?($(window).height()-$(this).find(".modal-dialog").eq(0).height())/2:0;
 				$(this).find(".modal-dialog").eq(0).css("margin-top",height); 
     		}*/
-			$(this).find(".modal-title").html(config.title); 
+			$(this).find(".modal-title").html(config.title);
+			if ($(this).find(".modal-title").length == 0) {
+				$(this).find(".content-header span").html(config.title);
+				if ($(this).find(".content-header").find("button[data-dismiss]").length == 0) {
+					var close_icon = document.createElement('BUTTON');
+			        close_icon.className = 'close';
+			        close_icon.type = 'button';
+			        close_icon.setAttribute('data-dismiss', 'modal');
+			        close_icon.setAttribute('aria-label', 'Close');
+			        close_icon.innerHTML = '<span aria-hidden="true">&times;</span>';
+			        $(this).find(".content-header").append(close_icon);
+				}
+			}
 			if(config.showFunc) {
 				config.showFunc.call(this); 
 			}
 			if($.fn.slimScroll){
 				var windowHeight = $(window).height();
-				var contentClass = ".modal-body";
+				var contentClass = config.contentClass || ".modal-body";
 //				if ($(this).find(contentClass).length == 0) {
 //					contentClass = ".modal-content";
 //				}
+				$(this).find(contentClass).css("height", "auto").slimScroll({destroy:true});
 				var contentHeight = $(this).find(contentClass).height();
 				var contentMarginTop = $(this).find(".modal-dialog").css("marginTop").replace("px",'');
 				var contentMarginBottom = $(this).find(".modal-dialog").css("marginBottom").replace("px",'');
@@ -404,14 +417,16 @@
     	}
     	
     	if($.fn.slimScroll){
+    		var contentClass = ".modal-body";
+    		$(this).find(contentClass).css("height", "auto").slimScroll({destroy:true});
 			var windowHeight = $(window).height();
-			var contentHeight = $(_this).find(".modal-body").height();
+			var contentHeight = $(_this).find(contentClass).height();
 			var contentMarginTop = $(_this).find(".modal-dialog").css("marginTop").replace("px",'');
 			var contentMarginBottom = $(_this).find(".modal-dialog").css("marginBottom").replace("px",'');
 			var scrollHeight = windowHeight - contentMarginTop - contentMarginBottom;
 			if(contentHeight > scrollHeight){
-				$(_this).find(".modal-body").slimScroll({destroy:true});
-				$(_this).find(".modal-body").slimScroll({
+				$(_this).find(contentClass).slimScroll({destroy:true});
+				$(_this).find(contentClass).slimScroll({
 					height: windowHeight - 111,
 					size: 8,
 					disableFadeOut: true,

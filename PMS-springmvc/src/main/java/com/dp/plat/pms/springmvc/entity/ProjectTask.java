@@ -1,18 +1,20 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import com.dp.plat.core.entity.BaseEntity;
+import java.util.Date;
+import java.util.Map;
+
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.util.Date;
 
-public class ProjectTask extends BaseEntity {
+public class ProjectTask extends com.dp.plat.data.bean.ProjectTask {
+
     // 任务ID
     private Integer taskId;
 
     private Integer projectId;
 
     // 项目类型 默认售后项目10 售前测试20 详见fnd_basic_data
-    private Integer projectType;
+    private String projectType;
 
     // 合同号
     private String contractNo;
@@ -22,6 +24,9 @@ public class ProjectTask extends BaseEntity {
 
     // 任务类型id，关联基础数据表
     private String taskTypeId;
+
+    // 任务名
+    private String taskName;
 
     // 款项计划发生日期
     @JsonSerialize(using = JsonSerializer.class)
@@ -47,8 +52,14 @@ public class ProjectTask extends BaseEntity {
     @JsonSerialize(using = JsonSerializer.class)
     private Date eventActualFinishDate;
 
+    // 优先级
+    private String priority;
+
     // 进度百分比
     private Integer progress;
+
+    // 进度描述
+    private String progressDesc;
 
     // 状态
     private String status;
@@ -85,10 +96,25 @@ public class ProjectTask extends BaseEntity {
     private String deliverFileIds;
 
     // 自定义信息
-    private String customeInfo;
+    private Map customeInfo;
 
     // 备注
     private String remark;
+
+    public ProjectTask() {
+		super();
+	}
+    
+	public ProjectTask(Integer projectId) {
+		super();
+		this.projectId = projectId;
+	}
+
+	public ProjectTask(Integer projectId, String projectType) {
+		super();
+		this.projectId = projectId;
+		this.projectType = projectType;
+	}
 
     /**
      * 获取任务ID
@@ -127,7 +153,7 @@ public class ProjectTask extends BaseEntity {
      *
      * @return projectType - 项目类型 默认售后项目10 售前测试20 详见fnd_basic_data
      */
-    public Integer getProjectType() {
+    public String getProjectType() {
         return projectType;
     }
 
@@ -136,7 +162,7 @@ public class ProjectTask extends BaseEntity {
      *
      * @param projectType 项目类型 默认售后项目10 售前测试20 详见fnd_basic_data
      */
-    public void setProjectType(Integer projectType) {
+    public void setProjectType(String projectType) {
         this.projectType = projectType;
     }
 
@@ -192,6 +218,24 @@ public class ProjectTask extends BaseEntity {
      */
     public void setTaskTypeId(String taskTypeId) {
         this.taskTypeId = taskTypeId;
+    }
+
+    /**
+     * 获取任务名
+     *
+     * @return taskName - 任务名
+     */
+    public String getTaskName() {
+        return taskName;
+    }
+
+    /**
+     * 设置任务名
+     *
+     * @param taskName 任务名
+     */
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 
     /**
@@ -303,6 +347,24 @@ public class ProjectTask extends BaseEntity {
     }
 
     /**
+     * 获取优先级
+     *
+     * @return priority - 优先级
+     */
+    public String getPriority() {
+        return priority;
+    }
+
+    /**
+     * 设置优先级
+     *
+     * @param priority 优先级
+     */
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    /**
      * 获取进度百分比
      *
      * @return progress - 进度百分比
@@ -318,6 +380,24 @@ public class ProjectTask extends BaseEntity {
      */
     public void setProgress(Integer progress) {
         this.progress = progress;
+    }
+
+    /**
+     * 获取进度描述
+     *
+     * @return progressDesc - 进度描述
+     */
+    public String getProgressDesc() {
+        return progressDesc;
+    }
+
+    /**
+     * 设置进度描述
+     *
+     * @param progressDesc 进度描述
+     */
+    public void setProgressDesc(String progressDesc) {
+        this.progressDesc = progressDesc;
     }
 
     /**
@@ -505,7 +585,7 @@ public class ProjectTask extends BaseEntity {
      *
      * @return customeInfo - 自定义信息
      */
-    public String getCustomeInfo() {
+    public Map getCustomeInfo() {
         return customeInfo;
     }
 
@@ -514,7 +594,7 @@ public class ProjectTask extends BaseEntity {
      *
      * @param customeInfo 自定义信息
      */
-    public void setCustomeInfo(String customeInfo) {
+    public void setCustomeInfo(Map customeInfo) {
         this.customeInfo = customeInfo;
     }
 

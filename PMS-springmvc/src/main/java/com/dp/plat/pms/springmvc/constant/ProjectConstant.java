@@ -9,6 +9,11 @@ public class ProjectConstant {
 		 * 项目管理模块
 		 */
 		public final static String PROJECT_MANAGER = "/pm/";
+		
+		/**
+		 * 安服管理
+		 */
+		public final static String AF_MANAGER = "/af/";
 	}
 
 	public static class ProjectType {

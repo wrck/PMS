@@ -1,0 +1,1098 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.IndustryAssetMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.IndustryAsset">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="assetNum" jdbcType="VARCHAR" property="assetNum" />
+    <result column="assetName" jdbcType="VARCHAR" property="assetName" />
+    <result column="assetCategory" jdbcType="VARCHAR" property="assetCategory" />
+    <result column="assetType" jdbcType="VARCHAR" property="assetType" />
+    <result column="assetHost" jdbcType="VARCHAR" property="assetHost" />
+    <result column="assetOpenPorts" jdbcType="VARCHAR" property="assetOpenPorts" />
+    <result column="assetDeployInfo" jdbcType="VARCHAR" property="assetDeployInfo" />
+    <result column="assetUsage" jdbcType="VARCHAR" property="assetUsage" />
+    <result column="customerName" jdbcType="VARCHAR" property="customerName" />
+    <result column="industryCode" jdbcType="VARCHAR" property="industryCode" />
+    <result column="assetAS" jdbcType="VARCHAR" property="assetAS" />
+    <result column="assetASVersion" jdbcType="VARCHAR" property="assetASVersion" />
+    <result column="assetASIdentify" jdbcType="VARCHAR" property="assetASIdentify" />
+    <result column="assetASFramework" jdbcType="VARCHAR" property="assetASFramework" />
+    <result column="middlewareName" jdbcType="VARCHAR" property="middlewareName" />
+    <result column="middlewareVersion" jdbcType="VARCHAR" property="middlewareVersion" />
+    <result column="developerBrand" jdbcType="VARCHAR" property="developerBrand" />
+    <result column="assetOS" jdbcType="VARCHAR" property="assetOS" />
+    <result column="assetOSVersion" jdbcType="VARCHAR" property="assetOSVersion" />
+    <result column="assetDB" jdbcType="VARCHAR" property="assetDB" />
+    <result column="assetDBVersion" jdbcType="VARCHAR" property="assetDBVersion" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="trackStatus" jdbcType="INTEGER" property="trackStatus" />
+    <result column="trackedTime" jdbcType="TIMESTAMP" property="trackedTime" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, assetNum, assetName, assetCategory, assetType, assetHost, assetOpenPorts, assetDeployInfo, 
+    assetUsage, customerName, industryCode, assetAS, assetASVersion, assetASIdentify, 
+    assetASFramework, middlewareName, middlewareVersion, developerBrand, assetOS, assetOSVersion, 
+    assetDB, assetDBVersion, customInfo, status, trackStatus, trackedTime, disabled, 
+    createBy, createTime, updateBy, updateTime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from af_industry_asset
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from af_industry_asset
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_asset (assetNum, assetName, assetCategory, 
+      assetType, assetHost, assetOpenPorts, 
+      assetDeployInfo, assetUsage, customerName, 
+      industryCode, assetAS, assetASVersion, 
+      assetASIdentify, assetASFramework, middlewareName, 
+      middlewareVersion, developerBrand, assetOS, 
+      assetOSVersion, assetDB, assetDBVersion, 
+      customInfo, status, trackStatus, 
+      trackedTime, disabled, createBy, 
+      createTime, updateBy, updateTime
+      )
+    values (#{assetNum,jdbcType=VARCHAR}, #{assetName,jdbcType=VARCHAR}, #{assetCategory,jdbcType=VARCHAR}, 
+      #{assetType,jdbcType=VARCHAR}, #{assetHost,jdbcType=VARCHAR}, #{assetOpenPorts,jdbcType=VARCHAR}, 
+      #{assetDeployInfo,jdbcType=VARCHAR}, #{assetUsage,jdbcType=VARCHAR}, #{customerName,jdbcType=VARCHAR}, 
+      #{industryCode,jdbcType=VARCHAR}, #{assetAS,jdbcType=VARCHAR}, #{assetASVersion,jdbcType=VARCHAR}, 
+      #{assetASIdentify,jdbcType=VARCHAR}, #{assetASFramework,jdbcType=VARCHAR}, #{middlewareName,jdbcType=VARCHAR}, 
+      #{middlewareVersion,jdbcType=VARCHAR}, #{developerBrand,jdbcType=VARCHAR}, #{assetOS,jdbcType=VARCHAR}, 
+      #{assetOSVersion,jdbcType=VARCHAR}, #{assetDB,jdbcType=VARCHAR}, #{assetDBVersion,jdbcType=VARCHAR}, 
+      #{customInfo,jdbcType=JSON}, #{status,jdbcType=INTEGER}, #{trackStatus,jdbcType=INTEGER}, 
+      #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_asset
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="assetNum != null">
+        assetNum,
+      </if>
+      <if test="assetName != null">
+        assetName,
+      </if>
+      <if test="assetCategory != null">
+        assetCategory,
+      </if>
+      <if test="assetType != null">
+        assetType,
+      </if>
+      <if test="assetHost != null">
+        assetHost,
+      </if>
+      <if test="assetOpenPorts != null">
+        assetOpenPorts,
+      </if>
+      <if test="assetDeployInfo != null">
+        assetDeployInfo,
+      </if>
+      <if test="assetUsage != null">
+        assetUsage,
+      </if>
+      <if test="customerName != null">
+        customerName,
+      </if>
+      <if test="industryCode != null">
+        industryCode,
+      </if>
+      <if test="assetAS != null">
+        assetAS,
+      </if>
+      <if test="assetASVersion != null">
+        assetASVersion,
+      </if>
+      <if test="assetASIdentify != null">
+        assetASIdentify,
+      </if>
+      <if test="assetASFramework != null">
+        assetASFramework,
+      </if>
+      <if test="middlewareName != null">
+        middlewareName,
+      </if>
+      <if test="middlewareVersion != null">
+        middlewareVersion,
+      </if>
+      <if test="developerBrand != null">
+        developerBrand,
+      </if>
+      <if test="assetOS != null">
+        assetOS,
+      </if>
+      <if test="assetOSVersion != null">
+        assetOSVersion,
+      </if>
+      <if test="assetDB != null">
+        assetDB,
+      </if>
+      <if test="assetDBVersion != null">
+        assetDBVersion,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="trackStatus != null">
+        trackStatus,
+      </if>
+      <if test="trackedTime != null">
+        trackedTime,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="assetNum != null">
+        #{assetNum,jdbcType=VARCHAR},
+      </if>
+      <if test="assetName != null">
+        #{assetName,jdbcType=VARCHAR},
+      </if>
+      <if test="assetCategory != null">
+        #{assetCategory,jdbcType=VARCHAR},
+      </if>
+      <if test="assetType != null">
+        #{assetType,jdbcType=VARCHAR},
+      </if>
+      <if test="assetHost != null">
+        #{assetHost,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOpenPorts != null">
+        #{assetOpenPorts,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDeployInfo != null">
+        #{assetDeployInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="assetUsage != null">
+        #{assetUsage,jdbcType=VARCHAR},
+      </if>
+      <if test="customerName != null">
+        #{customerName,jdbcType=VARCHAR},
+      </if>
+      <if test="industryCode != null">
+        #{industryCode,jdbcType=VARCHAR},
+      </if>
+      <if test="assetAS != null">
+        #{assetAS,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASVersion != null">
+        #{assetASVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASIdentify != null">
+        #{assetASIdentify,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASFramework != null">
+        #{assetASFramework,jdbcType=VARCHAR},
+      </if>
+      <if test="middlewareName != null">
+        #{middlewareName,jdbcType=VARCHAR},
+      </if>
+      <if test="middlewareVersion != null">
+        #{middlewareVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="developerBrand != null">
+        #{developerBrand,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOS != null">
+        #{assetOS,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOSVersion != null">
+        #{assetOSVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDB != null">
+        #{assetDB,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDBVersion != null">
+        #{assetDBVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="trackStatus != null">
+        #{trackStatus,jdbcType=INTEGER},
+      </if>
+      <if test="trackedTime != null">
+        #{trackedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset">
+    update af_industry_asset
+    <set>
+      <if test="assetNum != null">
+        assetNum = #{assetNum,jdbcType=VARCHAR},
+      </if>
+      <if test="assetName != null">
+        assetName = #{assetName,jdbcType=VARCHAR},
+      </if>
+      <if test="assetCategory != null">
+        assetCategory = #{assetCategory,jdbcType=VARCHAR},
+      </if>
+      <if test="assetType != null">
+        assetType = #{assetType,jdbcType=VARCHAR},
+      </if>
+      <if test="assetHost != null">
+        assetHost = #{assetHost,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOpenPorts != null">
+        assetOpenPorts = #{assetOpenPorts,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDeployInfo != null">
+        assetDeployInfo = #{assetDeployInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="assetUsage != null">
+        assetUsage = #{assetUsage,jdbcType=VARCHAR},
+      </if>
+      <if test="customerName != null">
+        customerName = #{customerName,jdbcType=VARCHAR},
+      </if>
+      <if test="industryCode != null">
+        industryCode = #{industryCode,jdbcType=VARCHAR},
+      </if>
+      <if test="assetAS != null">
+        assetAS = #{assetAS,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASVersion != null">
+        assetASVersion = #{assetASVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASIdentify != null">
+        assetASIdentify = #{assetASIdentify,jdbcType=VARCHAR},
+      </if>
+      <if test="assetASFramework != null">
+        assetASFramework = #{assetASFramework,jdbcType=VARCHAR},
+      </if>
+      <if test="middlewareName != null">
+        middlewareName = #{middlewareName,jdbcType=VARCHAR},
+      </if>
+      <if test="middlewareVersion != null">
+        middlewareVersion = #{middlewareVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="developerBrand != null">
+        developerBrand = #{developerBrand,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOS != null">
+        assetOS = #{assetOS,jdbcType=VARCHAR},
+      </if>
+      <if test="assetOSVersion != null">
+        assetOSVersion = #{assetOSVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDB != null">
+        assetDB = #{assetDB,jdbcType=VARCHAR},
+      </if>
+      <if test="assetDBVersion != null">
+        assetDBVersion = #{assetDBVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        customInfo = #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="trackStatus != null">
+        trackStatus = #{trackStatus,jdbcType=INTEGER},
+      </if>
+      <if test="trackedTime != null">
+        trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset">
+    update af_industry_asset
+    set assetNum = #{assetNum,jdbcType=VARCHAR},
+      assetName = #{assetName,jdbcType=VARCHAR},
+      assetCategory = #{assetCategory,jdbcType=VARCHAR},
+      assetType = #{assetType,jdbcType=VARCHAR},
+      assetHost = #{assetHost,jdbcType=VARCHAR},
+      assetOpenPorts = #{assetOpenPorts,jdbcType=VARCHAR},
+      assetDeployInfo = #{assetDeployInfo,jdbcType=VARCHAR},
+      assetUsage = #{assetUsage,jdbcType=VARCHAR},
+      customerName = #{customerName,jdbcType=VARCHAR},
+      industryCode = #{industryCode,jdbcType=VARCHAR},
+      assetAS = #{assetAS,jdbcType=VARCHAR},
+      assetASVersion = #{assetASVersion,jdbcType=VARCHAR},
+      assetASIdentify = #{assetASIdentify,jdbcType=VARCHAR},
+      assetASFramework = #{assetASFramework,jdbcType=VARCHAR},
+      middlewareName = #{middlewareName,jdbcType=VARCHAR},
+      middlewareVersion = #{middlewareVersion,jdbcType=VARCHAR},
+      developerBrand = #{developerBrand,jdbcType=VARCHAR},
+      assetOS = #{assetOS,jdbcType=VARCHAR},
+      assetOSVersion = #{assetOSVersion,jdbcType=VARCHAR},
+      assetDB = #{assetDB,jdbcType=VARCHAR},
+      assetDBVersion = #{assetDBVersion,jdbcType=VARCHAR},
+      customInfo = #{customInfo,jdbcType=JSON},
+      status = #{status,jdbcType=INTEGER},
+      trackStatus = #{trackStatus,jdbcType=INTEGER},
+      trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
+      disabled = #{disabled,jdbcType=BIT},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				l.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetNum != null and '' != assetNum">
+				l.assetNum = #{assetNum, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetName != null and '' != assetName">
+				l.assetName = #{assetName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetCategory != null and '' != assetCategory">
+				l.assetCategory = #{assetCategory, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetType != null and '' != assetType">
+				l.assetType = #{assetType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetHost != null and '' != assetHost">
+				l.assetHost = #{assetHost, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOpenPorts != null and '' != assetOpenPorts">
+				l.assetOpenPorts = #{assetOpenPorts, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDeployInfo != null and '' != assetDeployInfo">
+				l.assetDeployInfo = #{assetDeployInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetUsage != null and '' != assetUsage">
+				l.assetUsage = #{assetUsage, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customerName != null and '' != customerName">
+				l.customerName = #{customerName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="industryCode != null and '' != industryCode">
+				l.industryCode = #{industryCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetAS != null and '' != assetAS">
+				l.assetAS = #{assetAS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASVersion != null and '' != assetASVersion">
+				l.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASIdentify != null and '' != assetASIdentify">
+				l.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASFramework != null and '' != assetASFramework">
+				l.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareName != null and '' != middlewareName">
+				l.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareVersion != null and '' != middlewareVersion">
+				l.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="developerBrand != null and '' != developerBrand">
+				l.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOS != null and '' != assetOS">
+				l.assetOS = #{assetOS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOSVersion != null and '' != assetOSVersion">
+				l.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDB != null and '' != assetDB">
+				l.assetDB = #{assetDB, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDBVersion != null and '' != assetDBVersion">
+				l.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customInfo != null">
+				l.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="status != null">
+				l.status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackStatus != null">
+				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackedTime != null">
+				l.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null">
+				l.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				l.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				l.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				l.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				l.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					l.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetNum != null and '' != model.assetNum">
+					l.assetNum = #{model.assetNum, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetName != null and '' != model.assetName">
+					l.assetName = #{model.assetName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetCategory != null and '' != model.assetCategory">
+					l.assetCategory = #{model.assetCategory, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetType != null and '' != model.assetType">
+					l.assetType = #{model.assetType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetHost != null and '' != model.assetHost">
+					l.assetHost = #{model.assetHost, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOpenPorts != null and '' != model.assetOpenPorts">
+					l.assetOpenPorts = #{model.assetOpenPorts, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDeployInfo != null and '' != model.assetDeployInfo">
+					l.assetDeployInfo = #{model.assetDeployInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetUsage != null and '' != model.assetUsage">
+					l.assetUsage = #{model.assetUsage, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customerName != null and '' != model.customerName">
+					l.customerName = #{model.customerName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.industryCode != null and '' != model.industryCode">
+					l.industryCode = #{model.industryCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetAS != null and '' != model.assetAS">
+					l.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASVersion != null and '' != model.assetASVersion">
+					l.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
+					l.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASFramework != null and '' != model.assetASFramework">
+					l.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareName != null and '' != model.middlewareName">
+					l.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
+					l.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.developerBrand != null and '' != model.developerBrand">
+					l.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOS != null and '' != model.assetOS">
+					l.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
+					l.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDB != null and '' != model.assetDB">
+					l.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
+					l.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					l.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+				<if test="model.status != null">
+					l.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					l.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					l.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					l.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					l.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					l.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					l.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					l.assetNum like CONCAT("%", #{fuzzy}, "%") or
+					l.assetName like CONCAT("%", #{fuzzy}, "%") or
+					l.assetCategory like CONCAT("%", #{fuzzy}, "%") or
+					l.assetType like CONCAT("%", #{fuzzy}, "%") or
+					l.assetHost like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOpenPorts like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDeployInfo like CONCAT("%", #{fuzzy}, "%") or
+					l.assetUsage like CONCAT("%", #{fuzzy}, "%") or
+					l.customerName like CONCAT("%", #{fuzzy}, "%") or
+					l.industryCode like CONCAT("%", #{fuzzy}, "%") or
+					l.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.createBy like CONCAT("%", #{fuzzy}, "%") or
+					l.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset" resultMap="BaseResultMap">
+    select * from af_industry_asset as l
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				l.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetNum != null and '' != assetNum">
+				l.assetNum = #{assetNum, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetName != null and '' != assetName">
+				l.assetName = #{assetName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetCategory != null and '' != assetCategory">
+				l.assetCategory = #{assetCategory, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetType != null and '' != assetType">
+				l.assetType = #{assetType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetHost != null and '' != assetHost">
+				l.assetHost = #{assetHost, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOpenPorts != null and '' != assetOpenPorts">
+				l.assetOpenPorts = #{assetOpenPorts, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDeployInfo != null and '' != assetDeployInfo">
+				l.assetDeployInfo = #{assetDeployInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetUsage != null and '' != assetUsage">
+				l.assetUsage = #{assetUsage, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customerName != null and '' != customerName">
+				l.customerName = #{customerName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="industryCode != null and '' != industryCode">
+				l.industryCode = #{industryCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetAS != null and '' != assetAS">
+				l.assetAS = #{assetAS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASVersion != null and '' != assetASVersion">
+				l.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASIdentify != null and '' != assetASIdentify">
+				l.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASFramework != null and '' != assetASFramework">
+				l.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareName != null and '' != middlewareName">
+				l.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareVersion != null and '' != middlewareVersion">
+				l.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="developerBrand != null and '' != developerBrand">
+				l.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOS != null and '' != assetOS">
+				l.assetOS = #{assetOS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOSVersion != null and '' != assetOSVersion">
+				l.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDB != null and '' != assetDB">
+				l.assetDB = #{assetDB, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDBVersion != null and '' != assetDBVersion">
+				l.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customInfo != null">
+				l.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="status != null">
+				l.status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackStatus != null">
+				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackedTime != null">
+				l.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null">
+				l.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				l.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				l.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				l.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				l.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset" resultType="long">
+    select count(1) from af_industry_asset as l
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				l.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetNum != null and '' != assetNum">
+				l.assetNum = #{assetNum, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetName != null and '' != assetName">
+				l.assetName = #{assetName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetCategory != null and '' != assetCategory">
+				l.assetCategory = #{assetCategory, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetType != null and '' != assetType">
+				l.assetType = #{assetType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetHost != null and '' != assetHost">
+				l.assetHost = #{assetHost, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOpenPorts != null and '' != assetOpenPorts">
+				l.assetOpenPorts = #{assetOpenPorts, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDeployInfo != null and '' != assetDeployInfo">
+				l.assetDeployInfo = #{assetDeployInfo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetUsage != null and '' != assetUsage">
+				l.assetUsage = #{assetUsage, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customerName != null and '' != customerName">
+				l.customerName = #{customerName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="industryCode != null and '' != industryCode">
+				l.industryCode = #{industryCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetAS != null and '' != assetAS">
+				l.assetAS = #{assetAS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASVersion != null and '' != assetASVersion">
+				l.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASIdentify != null and '' != assetASIdentify">
+				l.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASFramework != null and '' != assetASFramework">
+				l.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareName != null and '' != middlewareName">
+				l.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareVersion != null and '' != middlewareVersion">
+				l.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="developerBrand != null and '' != developerBrand">
+				l.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOS != null and '' != assetOS">
+				l.assetOS = #{assetOS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOSVersion != null and '' != assetOSVersion">
+				l.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDB != null and '' != assetDB">
+				l.assetDB = #{assetDB, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDBVersion != null and '' != assetDBVersion">
+				l.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customInfo != null">
+				l.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="status != null">
+				l.status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackStatus != null">
+				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackedTime != null">
+				l.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null">
+				l.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				l.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				l.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				l.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				l.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from af_industry_asset as l
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					l.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetNum != null and '' != model.assetNum">
+					l.assetNum = #{model.assetNum, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetName != null and '' != model.assetName">
+					l.assetName = #{model.assetName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetCategory != null and '' != model.assetCategory">
+					l.assetCategory = #{model.assetCategory, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetType != null and '' != model.assetType">
+					l.assetType = #{model.assetType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetHost != null and '' != model.assetHost">
+					l.assetHost = #{model.assetHost, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOpenPorts != null and '' != model.assetOpenPorts">
+					l.assetOpenPorts = #{model.assetOpenPorts, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDeployInfo != null and '' != model.assetDeployInfo">
+					l.assetDeployInfo = #{model.assetDeployInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetUsage != null and '' != model.assetUsage">
+					l.assetUsage = #{model.assetUsage, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customerName != null and '' != model.customerName">
+					l.customerName = #{model.customerName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.industryCode != null and '' != model.industryCode">
+					l.industryCode = #{model.industryCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetAS != null and '' != model.assetAS">
+					l.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASVersion != null and '' != model.assetASVersion">
+					l.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
+					l.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASFramework != null and '' != model.assetASFramework">
+					l.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareName != null and '' != model.middlewareName">
+					l.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
+					l.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.developerBrand != null and '' != model.developerBrand">
+					l.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOS != null and '' != model.assetOS">
+					l.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
+					l.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDB != null and '' != model.assetDB">
+					l.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
+					l.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					l.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+				<if test="model.status != null">
+					l.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					l.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					l.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					l.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					l.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					l.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					l.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					l.assetNum like CONCAT("%", #{fuzzy}, "%") or
+					l.assetName like CONCAT("%", #{fuzzy}, "%") or
+					l.assetCategory like CONCAT("%", #{fuzzy}, "%") or
+					l.assetType like CONCAT("%", #{fuzzy}, "%") or
+					l.assetHost like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOpenPorts like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDeployInfo like CONCAT("%", #{fuzzy}, "%") or
+					l.assetUsage like CONCAT("%", #{fuzzy}, "%") or
+					l.customerName like CONCAT("%", #{fuzzy}, "%") or
+					l.industryCode like CONCAT("%", #{fuzzy}, "%") or
+					l.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.createBy like CONCAT("%", #{fuzzy}, "%") or
+					l.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from af_industry_asset as l
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					l.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetNum != null and '' != model.assetNum">
+					l.assetNum = #{model.assetNum, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetName != null and '' != model.assetName">
+					l.assetName = #{model.assetName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetCategory != null and '' != model.assetCategory">
+					l.assetCategory = #{model.assetCategory, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetType != null and '' != model.assetType">
+					l.assetType = #{model.assetType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetHost != null and '' != model.assetHost">
+					l.assetHost = #{model.assetHost, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOpenPorts != null and '' != model.assetOpenPorts">
+					l.assetOpenPorts = #{model.assetOpenPorts, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDeployInfo != null and '' != model.assetDeployInfo">
+					l.assetDeployInfo = #{model.assetDeployInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetUsage != null and '' != model.assetUsage">
+					l.assetUsage = #{model.assetUsage, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customerName != null and '' != model.customerName">
+					l.customerName = #{model.customerName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.industryCode != null and '' != model.industryCode">
+					l.industryCode = #{model.industryCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetAS != null and '' != model.assetAS">
+					l.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASVersion != null and '' != model.assetASVersion">
+					l.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
+					l.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASFramework != null and '' != model.assetASFramework">
+					l.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareName != null and '' != model.middlewareName">
+					l.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
+					l.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.developerBrand != null and '' != model.developerBrand">
+					l.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOS != null and '' != model.assetOS">
+					l.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
+					l.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDB != null and '' != model.assetDB">
+					l.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
+					l.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					l.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+				<if test="model.status != null">
+					l.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					l.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					l.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					l.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					l.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					l.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					l.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					l.assetNum like CONCAT("%", #{fuzzy}, "%") or
+					l.assetName like CONCAT("%", #{fuzzy}, "%") or
+					l.assetCategory like CONCAT("%", #{fuzzy}, "%") or
+					l.assetType like CONCAT("%", #{fuzzy}, "%") or
+					l.assetHost like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOpenPorts like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDeployInfo like CONCAT("%", #{fuzzy}, "%") or
+					l.assetUsage like CONCAT("%", #{fuzzy}, "%") or
+					l.customerName like CONCAT("%", #{fuzzy}, "%") or
+					l.industryCode like CONCAT("%", #{fuzzy}, "%") or
+					l.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					l.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					l.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					l.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					l.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					l.createBy like CONCAT("%", #{fuzzy}, "%") or
+					l.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

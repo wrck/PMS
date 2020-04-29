@@ -6,6 +6,7 @@ package com.dp.plat.core.entity;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -28,6 +29,8 @@ public class BaseEntity implements Serializable{
 
 	@JsonSerialize(using=JsonSerializer.class)
 	private Date updateTime;
+	
+	private Integer orgId;
 
 	public Integer getId() {
 		return id;
@@ -67,6 +70,17 @@ public class BaseEntity implements Serializable{
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+	public Integer getOrgId() {
+		if (this.orgId == null) {
+			return UserContext.getOrgId();
+		}
+		return orgId;
+	}
+
+	public void setOrgId(Integer orgId) {
+		this.orgId = orgId;
 	}
 
 }

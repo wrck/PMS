@@ -42,7 +42,7 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
 		<!--生成对应表及类名 -->
-		<table tableName="pm_project_property_af_from_sms" domainObjectName="AfPrjProperty"
+		<table tableName="pm_project_member" domainObjectName="ProjectMember"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"

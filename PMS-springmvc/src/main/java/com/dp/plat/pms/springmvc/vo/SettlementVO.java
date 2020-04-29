@@ -1,22 +1,50 @@
 package com.dp.plat.pms.springmvc.vo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.dp.plat.core.serializer.JsonSerializer;
+import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class SettlementVO extends DispatchSettlement {
 
+	private Integer projectId;
+
 	private String smsProjectCode;
+	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsSubmitTime;
 	private String smsProjectAmount;
 	private String smsProjectName;
 	private String smsOrderExecNumber;
 	private String contractNos;
-	private String receiveAmount;
-	private String receiveRatio;
+
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal collectedAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal deliveredAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal contractAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal settledAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private Double collectedRatio;
+	@JsonSerialize(using = JsonSerializer.class)
+	private Double settleRatio;
 	
+	private DispatchProject dispatch;
+
+	public Integer getProjectId() {
+		return projectId;
+	}
+
+	public void setProjectId(Integer projectId) {
+		this.projectId = projectId;
+	}
+
 	public String getSmsProjectCode() {
 		return smsProjectCode;
 	}
@@ -71,24 +99,68 @@ public class SettlementVO extends DispatchSettlement {
 		this.setCustomInfoByKey("contractNos", contractNos);
 	}
 
-	public String getReceiveAmount() {
-		return receiveAmount;
+	public BigDecimal getCollectedAmount() {
+		return collectedAmount;
 	}
 
-	public void setReceiveAmount(String receiveAmount) {
-		this.receiveAmount = receiveAmount;
-		this.setCustomInfoByKey("receiveAmount", receiveAmount);
+	public void setCollectedAmount(BigDecimal collectedAmount) {
+		this.collectedAmount = collectedAmount;
+		this.setCustomInfoByKey("collectedAmount", collectedAmount);
 	}
 
-	public String getReceiveRatio() {
-		return receiveRatio;
+	public BigDecimal getDeliveredAmount() {
+		return deliveredAmount;
 	}
 
-	public void setReceiveRatio(String receiveRatio) {
-		this.receiveRatio = receiveRatio;
-		this.setCustomInfoByKey("receiveRatio", receiveRatio);
+	public void setDeliveredAmount(BigDecimal deliveredAmount) {
+		this.deliveredAmount = deliveredAmount;
+		this.setCustomInfoByKey("deliveredAmount", deliveredAmount);
 	}
 
+	public BigDecimal getContractAmount() {
+		return contractAmount;
+	}
+
+	public void setContractAmount(BigDecimal contractAmount) {
+		this.contractAmount = contractAmount;
+		this.setCustomInfoByKey("contractAmount", contractAmount);
+	}
+
+	public BigDecimal getSettledAmount() {
+		return settledAmount;
+	}
+
+	public void setSettledAmount(BigDecimal settledAmount) {
+		this.settledAmount = settledAmount;
+		this.setCustomInfoByKey("settledAmount", settledAmount);
+	}
+
+	public Double getCollectedRatio() {
+		return collectedRatio;
+	}
+
+	public void setCollectedRatio(Double collectedRatio) {
+		this.collectedRatio = collectedRatio;
+		this.setCustomInfoByKey("collectedRatio", collectedRatio);
+	}
+
+	public Double getSettleRatio() {
+		return settleRatio;
+	}
+
+	public void setSettleRatio(Double settleRatio) {
+		this.settleRatio = settleRatio;
+		this.setCustomInfoByKey("settleRatio", settleRatio);
+	}
+	
+	public DispatchProject getDispatch() {
+		return dispatch;
+	}
+
+	public void setDispatch(DispatchProject dispatch) {
+		this.dispatch = dispatch;
+	}
+	
 	public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();
 		if (customInfo != null && !customInfo.isEmpty()) {
@@ -105,4 +177,5 @@ public class SettlementVO extends DispatchSettlement {
 		}
 		customInfo.put(key, value);
 	}
+
 }

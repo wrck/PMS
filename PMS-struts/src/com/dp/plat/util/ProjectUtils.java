@@ -167,6 +167,9 @@ public class ProjectUtils {
 	 * @param taskIds
 	 */
 	public static void terminateActivities(List<String> taskIds) {
+		if (taskIds == null || taskIds.isEmpty()) {
+			return;
+		}
 		ServletContext sc = ServletActionContext.getServletContext();
 		WebApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(sc);
 		TaskService taskService = ctx.getBean("taskService", TaskService.class);

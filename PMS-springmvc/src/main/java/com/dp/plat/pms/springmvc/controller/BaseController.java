@@ -2,6 +2,7 @@ package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +82,12 @@ public class BaseController {
 	protected List<DataTableColumn> findColumnList(String dataName, Boolean withSuper) {
 		List<Object> fieldList = this.findFieldList(dataName, DATATYPE_TABLE, withSuper);
 		List<DataTableColumn> columns = new ArrayList<>();
-		for (Object dataTableColumn : fieldList) {
+		for (Iterator<Object> iterator = fieldList.iterator(); iterator.hasNext();) {
+			DataFieldRelation dataFieldRelation = (DataFieldRelation) iterator.next();
+			DataTableColumn dataTableColumn = dataFieldRelation;
+			String alias = dataFieldRelation.getAlias();
+			dataTableColumn.setTitle(dataFieldRelation.getTitle());
+			dataTableColumn.setName(alias);
 			columns.add((DataFieldRelation) dataTableColumn);
 		}
 		return columns;

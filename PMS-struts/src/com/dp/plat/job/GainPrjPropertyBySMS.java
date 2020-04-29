@@ -79,29 +79,29 @@ public class GainPrjPropertyBySMS {
 			sqlMap.commitTransaction();
 			sqlMap.endTransaction();
 			
-//			// 总代借货及利润中心
-//            List<Map<String, Object>> soleagentLends = sqlMapSap.queryForList("query_v_soleagent_lend_4_pms");
-//            sqlMap.startTransaction();
-//            sqlMap.delete("delete_pm_project_soleagent_lend_from_sms");
-//            List<Map<String, Object>> soleagentLendList = new ArrayList<Map<String, Object>>();
-//            int j = 0;
-//            for (Map<String, Object> pp : soleagentLends) {
-//                soleagentLendList.add(pp);
-//                j++;
-//                if (j >= 2000) {
-//                    paramMap.put("list", soleagentLendList);
-//                    sqlMap.insert("insert_pm_project_soleagent_lend_from_sms", paramMap);
-//                    j = 0;
-//                    soleagentLendList.clear();
-//                }
-//            }
-//            if (!soleagentLendList.isEmpty()) {
-//                paramMap.put("list", soleagentLendList);
-//                sqlMap.insert("insert_pm_project_soleagent_lend_from_sms", paramMap);
-//            }
-//
-//            sqlMap.commitTransaction();
-//            sqlMap.endTransaction();
+			// 总代借货及利润中心
+            List<Map<String, Object>> soleagentLends = sqlMapSap.queryForList("query_v_soleagent_lend_4_pms");
+            sqlMap.startTransaction();
+            sqlMap.delete("delete_pm_project_soleagent_lend_from_sms");
+            List<Map<String, Object>> soleagentLendList = new ArrayList<Map<String, Object>>();
+            int j = 0;
+            for (Map<String, Object> pp : soleagentLends) {
+                soleagentLendList.add(pp);
+                j++;
+                if (j >= 2000) {
+                    paramMap.put("list", soleagentLendList);
+                    sqlMap.insert("insert_pm_project_soleagent_lend_from_sms", paramMap);
+                    j = 0;
+                    soleagentLendList.clear();
+                }
+            }
+            if (!soleagentLendList.isEmpty()) {
+                paramMap.put("list", soleagentLendList);
+                sqlMap.insert("insert_pm_project_soleagent_lend_from_sms", paramMap);
+            }
+
+            sqlMap.commitTransaction();
+            sqlMap.endTransaction();
 
 			// //SMS项目责任人转移后更新新的销售
 			// // 存在问题，进行调整
@@ -114,32 +114,32 @@ public class GainPrjPropertyBySMS {
 //			sqlMap.commitTransaction();
 //			sqlMap.endTransaction();
 
-//			// SMS改单后实施方式、渠道信息发生变化进行更新
-//			sqlMap.insert("create_temp_max_ppfsId");
-//			sqlMap.insert("create_temp_max_prpId");
-//			sqlMap.insert("create_temp_max_ppfs");
-//			sqlMap.insert("create_temp_not_ppfs");
-//			sqlMap.insert("create_temporary_serviceType_and_channelName_table");
-//
-//			sqlMap.startTransaction();
-//			sqlMap.update("update_project_serviceType");
-//			sqlMap.update("update_project_channelName");
-//			sqlMap.update("update_project_compId");
-//			sqlMap.update("update_project_customProjectName");
-//			sqlMap.commitTransaction();
-//			sqlMap.endTransaction();
-//
-//			// SMS项目责任人转移后更新新的销售
-//			sqlMap.insert("create_temp_project_sales_change");
-//			sqlMap.update("invalid_project_invalid_sales");
-//			sqlMap.update("insert_changed_project_sales");
-//			sqlMap.insert("drop_temp_project_sales_change");
-//
-//			sqlMap.delete("drop_temp_max_ppfsId");
-//			sqlMap.delete("drop_temp_max_prpId");
-//			sqlMap.delete("drop_temp_max_ppfs");
-//			sqlMap.delete("drop_temp_not_ppfs");
-//			sqlMap.delete("drop_temporary_serviceType_and_channelName_table");
+			// SMS改单后实施方式、渠道信息发生变化进行更新
+			sqlMap.insert("create_temp_max_ppfsId");
+			sqlMap.insert("create_temp_max_prpId");
+			sqlMap.insert("create_temp_max_ppfs");
+			sqlMap.insert("create_temp_not_ppfs");
+			sqlMap.insert("create_temporary_serviceType_and_channelName_table");
+
+			sqlMap.startTransaction();
+			sqlMap.update("update_project_serviceType");
+			sqlMap.update("update_project_channelName");
+			sqlMap.update("update_project_compId");
+			sqlMap.update("update_project_customProjectName");
+			sqlMap.commitTransaction();
+			sqlMap.endTransaction();
+
+			// SMS项目责任人转移后更新新的销售
+			sqlMap.insert("create_temp_project_sales_change");
+			sqlMap.update("invalid_project_invalid_sales");
+			sqlMap.update("insert_changed_project_sales");
+			sqlMap.insert("drop_temp_project_sales_change");
+
+			sqlMap.delete("drop_temp_max_ppfsId");
+			sqlMap.delete("drop_temp_max_prpId");
+			sqlMap.delete("drop_temp_max_ppfs");
+			sqlMap.delete("drop_temp_not_ppfs");
+			sqlMap.delete("drop_temporary_serviceType_and_channelName_table");
 			
 			// 更新成功日志
 			paramMap.put("id", Integer.parseInt(obj.toString()));

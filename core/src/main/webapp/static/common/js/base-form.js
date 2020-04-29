@@ -26,9 +26,13 @@
         this.dictSelectorElement = "[data-flag='dictSelector']";
         this.urlSelectorElement = "[data-flag='urlSelector']";
         this.select2Element = ".select2";
+        // autocomplete
+        this.autocompleteElement = "[data-flag='autocomplete']";
         // summernote 富文本
         this.summernoteElement = "[data-flag='summernote']";
+        
         this.tagsinputElement = "[data-flag='tagsinput']";
+        
         this.autosizeElement = "[data-flag='autosize']";
         this.init();
     }
@@ -41,14 +45,16 @@
         this.initDatePicker();
         //datetiempicker
         this.initDateTimePicker();
+        // icheck 、select2
+        this.initComponent();
         //dictSelector
         this.initDictSelector();
         //urlSelector
         this.initUrlSelector();
         // summernote 富文本编辑器
         this.initSummernote();
-        // icheck 、select2
-        this.initComponent();
+        // autocomplete
+        this.initAutoComplete();
         //tagsinput
         this.initTagsinput();
         //autosize
@@ -117,6 +123,63 @@
 //    		$(this.select2Element, this.$element).select2({
 //                minimumResultsForSearch: Infinity
 //            });
+    		$.fn.select2.amd.define('select2/data/dataCacheAdapter', [
+    			'select2/data/array',
+    			'select2/utils'
+    			], function (ArrayData, Utils) {
+    				function DataCacheAdapter ($element, options) {
+    					DataCacheAdapter.__super__.constructor.call(this, $element, options);
+    			    }
+    			    Utils.Extend(DataCacheAdapter, ArrayData);
+    			    DataCacheAdapter.prototype.query = function (params, callback) {
+    			    	var _this = this;
+    			    	var key = params.term;
+    			    	var page = params.page || 0;
+    			    	var options = _this.options.options;
+		    			if (!key || key.length < options.minimumInputLength) {
+		    				this.trigger('results:message', {
+		    			        message: 'inputTooShort',
+		    			        args: {
+		    			          minimum: options.minimumInputLength,
+		    			          input: params.term || "",
+		    			          params: params
+		    			        }
+		    			    });
+		                    return;
+		                }
+		    			this.dataCaches = _this.dataCaches || {};
+		    			_this.dataCaches[key] = _this.dataCaches[key] || {};
+		                var dataCache = _this.dataCaches[key][page];
+		                if (dataCache) {
+		                    callback(dataCache);
+		                } else {
+	                		var ajaxOption = options.ajax;
+		                	var request = function() {
+	                			ajaxGet(ajaxOption.url, ajaxOption.data(params), function(data) {
+	                				var results = data;
+	                				if (ajaxOption.processResults) {
+	                					results = ajaxOption.processResults.call(_this, data, params);
+	                				}
+	                				/* var oldReuslts = _this.dataCaches[key];
+	                				if((oldReuslts.pagination || {}).more) {
+	                					oldReuslts.results.concat(results.results);
+	                				} */
+	                				_this.dataCaches[key][page] = results;
+	                                callback(results);
+		    			    	})
+		                	};
+		                	if (ajaxOption.delay) {
+		                		_this._queryTimeout && window.clearTimeout(_this._queryTimeout);
+		                		_this._queryTimeout = window.setTimeout(request, ajaxOption.delay);
+		                	} else {
+		                		request();
+		                	}
+	                		/* ajaxOption.delay ? (_this._queryTimeout && window.clearTimeout(_this._queryTimeout),
+            				_this._queryTimeout = window.setTimeout(request, ajaxOption.delay)) : request(); */
+		                }
+    			    };
+    			    return DataCacheAdapter;
+    		});
     	}
     }
 
@@ -340,6 +403,156 @@
 			});
 		}
     }
+    BaseForm.prototype.initAutoComplete = function () {
+    	var _this = this;
+    	if ($.fn.autocomplete) {
+    		var defaultConfig = {
+				//lookup:[],
+				transformResult: function(response, originalQuery) {
+					var sel = $(this);
+					var src_data = sel.data("src-data") || "data";
+					var data = response[src_data];
+		            if (typeof data == "string") {
+		            	try {
+		            		data = JSON.parse(data);
+		            	} catch(e) {
+		            		data = [];
+		            	}
+		            }
+		            var results = [];
+		            if (data && data.length > 0) {
+		                var value = sel.data("value") ? sel.data("value") : "id";
+		                var text = sel.data("text") ? sel.data("text") : "name";
+		                var separator = sel.data("separator") || "-";
+		                var storeSource = sel.data("store-source") || false;
+		                storeSource = storeSource == "false" || storeSource == false ? false : true;
+		                for (var i = 0; i < data.length; i++) {
+		                	var textName = [];
+		                	var texts = text.split(" ");
+		                	for (var t = 0; t < texts.length; t++) {
+								var tempText = $.trim(texts[t]);
+								if (tempText) {
+									textName.push(data[i][tempText]);
+								}
+							}
+		                    var suggestion = {value: textName.join(separator), data:data[i][value]};
+		                    if (storeSource) {
+		                    	suggestion["source"] = data[i];
+		                    }
+		                    results.push(suggestion);
+		                }
+		            }
+		            return {suggestions:results};
+		            //_this.fillElemValue(sel[0], values);
+				}
+            };
+    		$(this.autocompleteElement, this.$element).each(function(index, item) {
+    			var url = $(item).data("src");
+                var autoload = $(item).data("autoload");
+                autoload = autoload == "false" || autoload == false ? false : true;
+    			var config = $(this).data("autocompleteConfig") || "";
+    			if (config) {
+    				try {
+    					config = JSON.parse(config);
+    				} catch(e){
+    					try {
+    						config = eval(config);
+    					} catch(e){
+    						config = defaultConfig;
+    					}
+    				}
+    				if (config.events) {
+        				try {
+        					var events = config.events;
+        					for ( var key in events) {
+    							var event = events[key];
+    							config[key] = eval("("+ event + ")");
+    						}
+        				} catch(e) {}
+        			}
+    			} else {
+    				config = defaultConfig;
+    			}
+    			config = $.extend(true, {}, defaultConfig, config);
+//    			var builder = function(response, originalQuery) {
+//					var sel = $(item);
+//					var src_data = sel.data("src-data") || "data";
+//					var data = response[src_data];
+//		            if (typeof data == "string") {
+//		            	try {
+//		            		data = JSON.parse(data);
+//		            	} catch(e) {
+//		            		data = [];
+//		            	}
+//		            }
+//		            var results = [];
+//		            if (data && data.length > 0) {
+//		                var value = sel.data("value") ? sel.data("value") : "id";
+//		                var text = sel.data("text") ? sel.data("text") : "name";
+//		                var separator = sel.data("separator") || "-";
+//		                var storeSource = sel.data("store-source") || false;
+//		                storeSource = storeSource == "false" || storeSource == false ? false : true;
+//		                for (var i = 0; i < data.length; i++) {
+//		                	var textName = [];
+//		                	var texts = text.split(" ");
+//		                	for (var t = 0; t < texts.length; t++) {
+//								var tempText = $.trim(texts[t]);
+//								if (tempText) {
+//									textName.push(data[i][tempText]);
+//								}
+//							}
+//		                    var suggestion = {value: textName.join(separator), data:data[i][value]};
+//		                    if (storeSource) {
+//		                    	suggestion["source"] = data[i];
+//		                    }
+//		                    results.append(suggestion);
+//		                }
+//		            }
+//		            //_this.fillElemValue(sel[0], values);
+//				}
+    			if (url) {
+                    if (autoload) {
+                    	_this.getDataByUrl(url, function(data) {
+                    		var results = config.transformResult.call(item, data);
+                    		config.lookup = results.suggestions;
+                    		$(item).autocomplete('setOptions', config);
+                    	})
+                    } else {
+                    	if (config.lazy) {
+                    		$(item).one("click", function() {
+                    			_this.getDataByUrl(url, function(data) {
+                            		var results = config.transformResult.call(item, data);
+                            		config.lookup = results.suggestions;
+                            		$(item).autocomplete('setOptions', config);
+                            	})
+                    		})
+                    	} else {
+                    		config.serviceUrl = config.serviceUrl || url;
+                        	if (!config.serviceUrl.startsWith(basePath)) {
+                        		config.serviceUrl = basePath + config.serviceUrl;
+                        	}
+                        	config.dataType = config.dataType || "json";
+                        	config.deferRequestBy = config.deferRequestBy || 250;
+                    	}
+                    	
+//                    	config.lookup = function(query, done) {
+//                    		_this.getDataByUrl(config.serviceUrl, function(data) {
+//                    			done(data);
+//                    		});
+//                    	}
+            			
+//                        var that = this;
+//                        $(this).click(function () {
+//                            _this.buildAjaxUrlSelect(that, url);
+//                        })
+                    }
+                }
+    			$(item).autocomplete(config);
+    		});
+    	}
+    }
+    
+    
     /**
      * 字典类型的控件
      */
@@ -377,6 +590,7 @@
         $(elements).each(function (index, item) {
             var url = $(item).data("src");
             var autoload = $(item).data("autoload");
+            var lazy = $(item).data("lazy");
             autoload = autoload == "false" || autoload == false ? false : true;
             if (url) {
                 if (autoload) {
@@ -386,9 +600,17 @@
                         _this.buildAjaxUrlSelect(this, url);
                 } else {
                     var that = this;
-                    $(this).click(function () {
-                        _this.buildAjaxUrlSelect(that, url);
-                    })
+                    var isSelect2 = $(item).hasClass("select2");
+                    var $target = isSelect2 ? $(item).siblings(".select2.select2-container") : $(item);
+                    if (lazy) {
+                    	$target.one("click", function() {
+                    		_this.buildAjaxUrlSelect(that, url);
+                		})
+                	} else {
+                		$target.click(function () {
+	                        _this.buildAjaxUrlSelect(that, url);
+	                    })
+                	}
                 }
             }
         });

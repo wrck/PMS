@@ -3,8 +3,8 @@
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
-<%@ taglib prefix="shiro" uri="http://www.dptech.com/tags/shiro" %>
-<%@ taglib prefix="dp" uri="http://www.dptech.com/tags/myTag" %>
+<%@ taglib prefix="shiro" uri="/shiro" %>
+<%@ taglib prefix="dp" uri="/myTag" %>
 <!-- Logo -->
 <a href="${pageContext.request.contextPath}/success.html" class="logo"> <!-- mini logo for sidebar mini 50x50 pixels -->
 	<span class="logo-mini"><b><spring:message code="system.title.en"/></b></span> <!-- logo for regular state and mobile devices -->

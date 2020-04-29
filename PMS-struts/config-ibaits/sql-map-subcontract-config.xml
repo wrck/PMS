@@ -24,7 +24,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <result column="subcontractAmount" jdbcType="VARCHAR" property="subcontractAmount" />
       <result column="reason" jdbcType="VARCHAR" property="reason" />
       <result column="remark" jdbcType="VARCHAR" property="remark" />
-      <result column="effectiveForm" jdbcType="TIMESTAMP" property="effectiveForm" />
+      <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
       <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
       <result column="zrApproveTime" jdbcType="TIMESTAMP" property="zrApproveTime" />
       <result column="createBy" jdbcType="VARCHAR" property="createBy" />
@@ -34,7 +34,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </resultMap>
   <sql id="SubcontractProject_List">
     id, subcontractName, contractNos, projectIds, type, state, callbackState, facilitatorId, facilitatorName, bankInfo, bankAccount, officeCode, profitDepCode, 
-    subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason, remark, effectiveForm, effectiveTo, zrApproveTime, createBy, createTime, 
+    subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason, remark, effectiveFrom, effectiveTo, zrApproveTime, createBy, createTime, 
     updateBy, updateTime
   </sql>
   <select id="selectSubcontractProjectById" parameterClass="java.lang.Integer" resultMap="SubcontractProject">
@@ -54,13 +54,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     insert into pm_subcontract_project_header (subcontractName, contractNos, projectIds, type, 
       state, callbackState, facilitatorId, officeCode, 
       profitDepCode, facilitatorName, bankInfo, bankAccount, subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason,
-      remark, effectiveForm, effectiveTo, zrApproveTime,
+      remark, effectiveFrom, effectiveTo, zrApproveTime,
       createBy, createTime, updateBy, 
       updateTime)
     values (#subcontractName#, #contractNos#, #projectIds#, #type#, 
       #state#, #callbackState#, #facilitatorId#, #officeCode#, 
       #profitDepCode#, #facilitatorName#, #bankInfo#, #bankAccount#, #subcontractNo#, #isAccrued#, #isInvoiced#, #subcontractAmount#, #reason#,
-      #remark#, #effectiveForm#, #effectiveTo#, #zrApproveTime#,
+      #remark#, #effectiveFrom#, #effectiveTo#, #zrApproveTime#,
       #createBy#, #createTime#, #updateBy#, 
       #updateTime#)
   </insert>
@@ -88,7 +88,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="subcontractAmount"> subcontractAmount  </isNotNull>
       <isNotNull prepend="," property="reason"> reason  </isNotNull>
       <isNotNull prepend="," property="remark"> remark  </isNotNull>
-      <isNotNull prepend="," property="effectiveForm"> effectiveForm  </isNotNull>
+      <isNotNull prepend="," property="effectiveFrom"> effectiveFrom  </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo  </isNotNull>
       <isNotNull prepend="," property="zrApproveTime"> zrApproveTime </isNotNull>
       <isNotNull prepend="," property="createBy"> createBy  </isNotNull>
@@ -115,7 +115,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="subcontractAmount"> #subcontractAmount#  </isNotNull>
       <isNotNull prepend="," property="reason"> #reason# </isNotNull>
       <isNotNull prepend="," property="remark"> #remark# </isNotNull>
-      <isNotNull prepend="," property="effectiveForm"> #effectiveForm# </isNotNull>
+      <isNotNull prepend="," property="effectiveFrom"> #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> #effectiveTo# </isNotNull>
       <isNotNull prepend="," property="zrApproveTime"> #zrApproveTime# </isNotNull>
       <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
@@ -145,7 +145,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotNull>
       <isNotNull prepend="," property="reason"> reason = #reason# </isNotNull>
       <isNotNull prepend="," property="remark"> remark = #remark# </isNotNull>
-      <isNotNull prepend="," property="effectiveForm"> effectiveForm = #effectiveForm# </isNotNull>
+      <isNotNull prepend="," property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo = #effectiveTo# </isNotNull>
       <isNotNull prepend="," property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotNull>
       <isNotNull prepend="," property="createBy"> createBy = #createBy# </isNotNull>
@@ -175,7 +175,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       subcontractAmount = #subcontractAmount#,
       reason = #reason#,
       remark = #remark#,
-      effectiveForm = #effectiveForm#,
+      effectiveFrom = #effectiveFrom#,
       effectiveTo = #effectiveTo#,
       zrApproveTime = #zrApproveTime#,
       createBy = #createBy#,
@@ -206,7 +206,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
@@ -237,7 +237,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
@@ -309,7 +309,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> h.effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
@@ -358,7 +358,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
@@ -433,7 +433,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> h.effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
@@ -524,7 +524,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> h.effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
@@ -1403,7 +1403,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   </resultMap>
   <sql id="SubcontractPrice_List">
     id, subcontractName, contractNos, projectIds, type, state, callbackState, facilitatorId, facilitatorName, bankInfo, bankAccount, officeCode, profitDepCode,
-    subcontractNo, isAccrued, subcontractAmount, reason, remark, effectiveForm, effectiveTo, createBy, createTime,
+    subcontractNo, isAccrued, subcontractAmount, reason, remark, effectiveFrom, effectiveTo, createBy, createTime,
     updateBy, updateTime
   </sql>
   <select id="selectSubcontractPriceById" parameterClass="java.lang.Integer" resultMap="SubcontractPriceResultMap">
@@ -2230,7 +2230,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveForm"> h.effectiveForm = #effectiveForm# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>

@@ -18,6 +18,17 @@ public class ProjectVO extends ProjectHeader {
 	private String smsProjectName;
 	private String smsOrderExecNumber;
 	
+	// 安服先行借货项目属性
+	private String customerPerson;
+	private String customerTel;
+	private String customerAddress;
+	private String afxxReason;
+	private String requireInDate;
+	private String pspm;
+	private String pspmName;
+	private String salesMenTel;
+	private String decPath;
+	
 	public String getSmsProjectCode() {
 		return (String) getCustomInfoByKey("smsProjectCode");
 	}
@@ -79,6 +90,43 @@ public class ProjectVO extends ProjectHeader {
 		setCustomInfoByKey("contractNo", contractNo);
 	}
 
+	
+	@Override
+	public String getServiceManagerCode() {
+		return (String) getCustomInfoByKey("serviceManagerCode");
+//		return super.getServiceManagerCode();
+	}
+
+	@Override
+	public void setServiceManagerCode(String serviceManagerCode) {
+		super.setServiceManagerCode(serviceManagerCode);
+		setCustomInfoByKey("serviceManagerCode", serviceManagerCode);
+	}
+
+	@Override
+	public String getProgramManagerCode() {
+		return (String) getCustomInfoByKey("programManagerCode");
+//		return super.getProgramManagerCode();
+	}
+
+	@Override
+	public void setProgramManagerCode(String programManagerCode) {
+		super.setProgramManagerCode(programManagerCode);
+		setCustomInfoByKey("programManagerCode", programManagerCode);
+	}
+
+	@Override
+	public String getProgramManagerCodeB() {
+		return (String) getCustomInfoByKey("programManagerCodeB");
+//		return super.getProgramManagerCodeB();
+	}
+
+	@Override
+	public void setProgramManagerCodeB(String programManagerCodeB) {
+		super.setProgramManagerCodeB(programManagerCodeB);
+		setCustomInfoByKey("programManagerCodeB", programManagerCodeB);
+	}
+
 	public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();
 		if (customInfo != null && !customInfo.isEmpty()) {
@@ -94,5 +142,30 @@ public class ProjectVO extends ProjectHeader {
 			this.setCustomInfo(customInfo);
 		}
 		customInfo.put(key, value);
+	}
+
+	@Override
+	public void setCustomInfo(Map<?, ?> customInfo) {
+		Map info = this.getCustomInfo();
+		if (info != null && customInfo != null) {
+			info.putAll(customInfo);
+		} else if (customInfo != null) {
+			super.setCustomInfo(customInfo);
+		}
+	}
+
+	@Override
+	public void setCustomConfig(Map<?, ?> customConfig) {
+		Map config = this.getCustomConfig();
+		if (config != null && customConfig != null) {
+			config.putAll(customConfig);
+		} else if (customConfig != null) {
+			super.setCustomConfig(customConfig);
+		}
+	}
+	
+	public void setEffective(Date date) {
+		this.setEffectiveFrom(date);
+		this.setEffectiveTo(date);
 	}
 }

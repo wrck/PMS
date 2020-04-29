@@ -63,6 +63,14 @@ public interface IUploaderService {
 	public void fileDownload(Integer fileId, HttpServletRequest request, HttpServletResponse response);
 
 	/**
+	 * 文件下载
+	 * @param fileInfo
+	 * @param request
+	 * @param response
+	 */
+	public void fileDownload(FileInfo fileInfo, HttpServletRequest request, HttpServletResponse response);
+
+	/**
 	 * 多文件zip打包下载
 	 * @param fileIds
 	 * @param zipName 
@@ -70,5 +78,17 @@ public interface IUploaderService {
 	 * @param response
 	 */
 	public void zipFileDownload(String fileIds, String zipName, HttpServletRequest request, HttpServletResponse response);
+
+	/**
+	 * 多文件zip打包下载
+	 * @param zipName
+	 * @param fileInfos
+	 * @param request
+	 * @param response
+	 */
+	public void zipFileDownload(String zipName, List<FileInfo> fileInfos, HttpServletRequest request,
+			HttpServletResponse response);
+
+
 
 }

@@ -225,10 +225,10 @@
 				<if test="model.status != null and '' != model.status">
 					status = #{model.status, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.createtime != null and '' != model.createtime">
+				<if test="model.createtime != null">
 					createTime = #{model.createtime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.updatetime != null and '' != model.updatetime">
+				<if test="model.updatetime != null">
 					updateTime = #{model.updatetime, jdbcType=TIMESTAMP} AND
 				</if>
 			</if>

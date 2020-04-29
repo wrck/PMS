@@ -70,6 +70,8 @@ public class JsonSerializer extends com.fasterxml.jackson.databind.JsonSerialize
 			percentFormat.get().setMinimumFractionDigits(2);
 			percentFormat.get().setMaximumFractionDigits(2);
 			jsonGenerator.writeString(percentFormat.get().format(value));
+		} else {
+			jsonGenerator.writeString(String.valueOf(value));
 		}
 	}
 

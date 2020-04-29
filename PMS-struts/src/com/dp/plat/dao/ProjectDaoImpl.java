@@ -432,7 +432,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
 
     @Override
-    public int insertPorjectMember(ProjectMember member) {
+    public int insertProjectMember(ProjectMember member) {
         return (Integer) getSqlMapClientTemplate().insert("insert_project_member", member);
     }
 

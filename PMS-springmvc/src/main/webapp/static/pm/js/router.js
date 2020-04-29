@@ -1,3 +1,91 @@
+$.namespace("router");
+router = function(namespace) {
+	return {
+		api: (model) => {
+			var api;
+			try {
+				namespace = (namespace || window.location.pathname.replace(ctx, "").match(/(\/[^\/]+\/)/g)[0]);
+			} catch(e) {}
+			try {
+				var path = (namespace || "").replace(/\//g, ".");
+				if (path.startsWith(".")) {
+					path = path.replace(".", "");
+				}
+				api = eval(path + model + ".api");
+			} catch(e) {
+				var tm = model.replace(/([^A-Z]+)([A-Z]+)/g, function(word,a,b,c){
+					return a + "/" + b.toLowerCase() ;
+				});
+				api = router.common(ctx + namespace + tm).api;
+			}
+			return api;
+		},
+		html: (model) => {
+			var html;
+			try {
+				namespace = (namespace || window.location.pathname.replace(ctx, "").match(/(\/[^\/]+\/)/g)[0]);
+			} catch(e) {}
+			try {
+				var path = (namespace || "").replace(/\//g, ".");
+				if (path.startsWith(".")) {
+					path = path.replace(".", "");
+				}
+				html = eval(path + model + ".html");
+			} catch(e) {
+				var tm = model.replace(/([^A-Z]+)([A-Z]+)/g, function(word,a,b,c){
+					return a + "/" + b.toLowerCase() ;
+				});
+				html = router.common(ctx + namespace + tm).html;
+			}
+			return html;
+		}
+	}
+};
+
+$.namespace("router.common");
+router.common = function(namespace) {
+	return {
+		api:((namespace) => {
+			return {
+				// 列表数据
+				list: (search) => namespace + "/list.json" + (search ? "?" + search : "").replace("??", "?"),
+				// 新增报告
+				create: (search)=> namespace + "/detail.json" + (search ? "?" + search : "").replace("??", "?"),
+				// 更新报告
+				update: (id) => namespace + "/" + id + ".json?_method=PUT",
+				// 删除报告
+				delete:(id) => namespace + "/" + id + ".json?_method=DELETE",
+				// 查询指定报告
+				detail:(id) => namespace + "/" + id + ".json",
+				// 导入数据预览
+				importPreview: (importType) => namespace + "/import/preview.json",
+				// 导入数据预览
+				previewTempTable: (tempTableName) => namespace + "/previewTempTable.json?tempTableName="+tempTableName,
+				// 删除临时表
+				dropTempTable: (tempTableName) => namespace + "/dropTempTable.json?tempTableName="+tempTableName,
+				// 导入数据提交
+				importSubmit: (importType, tempTableName) => namespace + "/import/submit" + (tempTableName ? "TempTable" : "") + ".json",
+				// 附件上传
+				upload: (search) => namespace + "/upload.json" + (search ? "?" + search : "").replace("??", "?"),
+				uploadList: (search) => namespace + "/upload/list.json" + (search ? "?" + search : "").replace("??", "?"),
+			}
+		})(namespace),
+		html: ((namespace) => {
+			return {
+				list: (search) => namespace + ".html" + (search ? "?" + search : "").replace("??", "?"),
+				detail: (id, isModals) => namespace + (isModals ? "/modals" : "") + "/" + id + ".html",
+				create: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/detail.html"+ (search ? "?" + search : "").replace("??", "?"),
+				// 导入模态页
+				importModals: (isModals) => namespace + (isModals ? "/modals" : "") + "/import.html",
+				// 附件上传
+				upload: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/upload.html"+ (search ? "?" + search : "").replace("??", "?"),
+				// 下载
+				download: (search) => namespace + "/download.html"+ (search ? "?" + search : "").replace("??", "?"),
+			}
+		})(namespace)
+	}
+};
+
 $.namespace("pm.router");
 pm.router = function(model) {
 	return {
@@ -28,7 +116,7 @@ pm.common = function(namespace) {
 		api:((namespace) => {
 			return {
 				// 列表数据
-				list: () => namespace + "/list.json",
+				list: (search) => namespace + "/list.json" + (search ? "?" + search : "").replace("??", "?"),
 				// 新增报告
 				create: (search)=> namespace + "/detail.json" + (search ? "?" + search : "").replace("??", "?"),
 				// 更新报告
@@ -41,8 +129,8 @@ pm.common = function(namespace) {
 		})(namespace),
 		html: ((namespace) => {
 			return {
-				list: () => namespace + ".html",
-				detail: (id) => namespace + "/" + id + ".html",
+				list: (search) => namespace + ".html" + (search ? "?" + search : "").replace("??", "?"),
+				detail: (id, isModals) => namespace + (isModals ? "/modals" : "") + "/" + id + ".html",
 				create: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/detail.html"+ (search ? "?" + search : "").replace("??", "?")
 			}
 		})(namespace)
@@ -59,8 +147,10 @@ pm.project = function() {
 		api:((namespace) => {
 			var api = pm.common(namespace).api;
 			return $.extend({}, api, {
-				// 查询报告类型
+				// 查询设备清单
 				orderDetail: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/orderDetail.json?" + $.param({projectType, contractNo}),
+				// 查询任务类别
+				projectTask: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/task.json?" + $.param({projectType, contractNo}),
 				// 初始化报告数据
 				initData: (projectId) => namespace + "/" + projectId + "/initData.json",
 				// 报告数据查询、调整
@@ -107,6 +197,7 @@ pm.dispatch = function() {
 		api:((namespace) => {
 			return {
 				submit:() => namespace + "/submit.json",
+				generateDispatchSeq:()=> namespace + "/generateDispatchSeq.json"
 			};
 		})(namespace),
 		html: ((namespace) => {

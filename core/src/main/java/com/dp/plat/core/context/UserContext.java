@@ -41,7 +41,11 @@ public class UserContext {
 	 * @return
 	 */
 	public static Integer getOrgId() {
-		return getCurrentPrincipal().getCompId();
+		try {
+			return getCurrentPrincipal().getCompId();
+		}catch (Exception e) {
+			return null;
+		}
 	}
 	
 	

@@ -1,17 +1,18 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import com.dp.plat.core.entity.BaseEntity;
-import com.dp.plat.core.serializer.JsonSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Date;
 
-public class ProjectMember extends BaseEntity {
+import com.dp.plat.core.serializer.JsonSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+public class ProjectMember extends com.dp.plat.data.bean.ProjectMember {
+
     private Integer id;
 
     private Integer projectId;
 
     // 项目类型 售后10 或售前 20 详见fnd_basic_data
-    private Integer projectType;
+    private String projectType;
 
     // 人员在项目中所处的角色
     private String memberRole;
@@ -82,7 +83,7 @@ public class ProjectMember extends BaseEntity {
      *
      * @return projectType - 项目类型 售后10 或售前 20 详见fnd_basic_data
      */
-    public Integer getProjectType() {
+    public String getProjectType() {
         return projectType;
     }
 
@@ -91,7 +92,7 @@ public class ProjectMember extends BaseEntity {
      *
      * @param projectType 项目类型 售后10 或售前 20 详见fnd_basic_data
      */
-    public void setProjectType(Integer projectType) {
+    public void setProjectType(String projectType) {
         this.projectType = projectType;
     }
 
