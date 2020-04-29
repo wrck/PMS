@@ -8,20 +8,25 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.service.impl.AbstractBaseService;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.DispatchType;
 import com.dp.plat.pms.springmvc.dao.DispatchProjectMapper;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
 /**
  *
@@ -30,6 +35,9 @@ import com.dp.plat.pms.springmvc.vo.DispatchVO;
 @Service("dispatchProjectService")
 public class DispatchProjectService extends AbstractBaseService<DispatchProjectMapper, DispatchProject>
 		implements IDispatchProjectService {
+	
+	@Autowired
+	private IProjectHeaderService projectHeaderService;
 
 	@Override
 	public void insertOrUpdateSelective(DispatchProject dispatch) {
@@ -114,5 +122,40 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 	public List<DispatchVO> selectDispatchVOWithAmountBySelectivePageable(PageParam<Object> pageParam) {
 		return dao.selectDispatchVOWithAmountBySelectivePageable(pageParam);
 	}
+
+	@Override
+	public PermissionResult checkPermission(DispatchVO v, String... permissions) {
+		if (!UserContext.checkPermission(permissions)) {
+			return new PermissionResult(Boolean.FALSE, "没有权限进行该操作！");
+		}
+		Boolean isPermit = false;
+		String permissionType = "";
+		if (!UserContext.checkPermission("project:*") && v != null) {
+			ProjectVO project = new ProjectVO();
+			project.setProjectId(v.getProjectId());
+			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);;
+			Boolean allPerm = permission.get("all");
+			if (Boolean.TRUE.equals(allPerm)) {
+				isPermit = true;
+				permissionType = "all";
+			} else {
+				String perms = StringUtils.join(permissions, ",");
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "edit";
+				}
+				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "view";
+				}
+			}
+		} else {
+			isPermit = true;
+			permissionType= "all";
+		}
+		return new PermissionResult(isPermit, null, permissionType);
+	}
+	
+	
 	
 }

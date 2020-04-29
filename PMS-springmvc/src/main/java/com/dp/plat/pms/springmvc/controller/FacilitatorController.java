@@ -46,5 +46,11 @@ public class FacilitatorController extends AbstractController<IAbstractBaseServi
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
+
+	@Override
+	public boolean checkPermission(FacilitatorVO v, Model model, String... permissions) {
+		return true;
+//		return super.checkPermission(v, model, permissions);
+	}
 	
 }

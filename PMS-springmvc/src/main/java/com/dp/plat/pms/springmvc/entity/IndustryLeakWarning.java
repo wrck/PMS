@@ -1,7 +1,9 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import com.dp.plat.core.entity.BaseEntity;
 import java.util.Date;
+import java.util.Map;
+
+import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -49,7 +51,7 @@ public class IndustryLeakWarning extends BaseEntity {
     private String ports;
 
     // 自定义信息
-    private String customInfo;
+    private Map customInfo;
 
     // 状态
     private Integer status;
@@ -327,7 +329,7 @@ public class IndustryLeakWarning extends BaseEntity {
      *
      * @return customInfo - 自定义信息
      */
-    public String getCustomInfo() {
+    public Map getCustomInfo() {
         return customInfo;
     }
 
@@ -336,7 +338,7 @@ public class IndustryLeakWarning extends BaseEntity {
      *
      * @param customInfo 自定义信息
      */
-    public void setCustomInfo(String customInfo) {
+    public void setCustomInfo(Map customInfo) {
         this.customInfo = customInfo;
     }
 
@@ -467,4 +469,5 @@ public class IndustryLeakWarning extends BaseEntity {
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
+
 }

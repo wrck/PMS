@@ -16,7 +16,7 @@
     <result column="assetDB" jdbcType="VARCHAR" property="assetDB" />
     <result column="assetDBVersion" jdbcType="VARCHAR" property="assetDBVersion" />
     <result column="ports" jdbcType="VARCHAR" property="ports" />
-    <result column="customInfo" jdbcType="CHAR" property="customInfo" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="trackStatus" jdbcType="INTEGER" property="trackStatus" />
     <result column="trackedTime" jdbcType="TIMESTAMP" property="trackedTime" />
@@ -58,7 +58,7 @@
       #{assetASIdentify,jdbcType=VARCHAR}, #{assetASFramework,jdbcType=VARCHAR}, #{middlewareName,jdbcType=VARCHAR}, 
       #{middlewareVersion,jdbcType=VARCHAR}, #{developerBrand,jdbcType=VARCHAR}, #{assetOS,jdbcType=VARCHAR}, 
       #{assetOSVersion,jdbcType=VARCHAR}, #{assetDB,jdbcType=VARCHAR}, #{assetDBVersion,jdbcType=VARCHAR}, 
-      #{ports,jdbcType=VARCHAR}, #{customInfo,jdbcType=CHAR}, #{status,jdbcType=INTEGER}, 
+      #{ports,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, #{status,jdbcType=INTEGER}, 
       #{trackStatus,jdbcType=INTEGER}, #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, 
       #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
       #{updateTime,jdbcType=TIMESTAMP})
@@ -177,7 +177,7 @@
         #{ports,jdbcType=VARCHAR},
       </if>
       <if test="customInfo != null">
-        #{customInfo,jdbcType=CHAR},
+        #{customInfo,jdbcType=JSON},
       </if>
       <if test="status != null">
         #{status,jdbcType=INTEGER},
@@ -248,7 +248,7 @@
         ports = #{ports,jdbcType=VARCHAR},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=CHAR},
+        customInfo = #{customInfo,jdbcType=JSON},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
@@ -292,7 +292,7 @@
       assetDB = #{assetDB,jdbcType=VARCHAR},
       assetDBVersion = #{assetDBVersion,jdbcType=VARCHAR},
       ports = #{ports,jdbcType=VARCHAR},
-      customInfo = #{customInfo,jdbcType=CHAR},
+      customInfo = #{customInfo,jdbcType=JSON},
       status = #{status,jdbcType=INTEGER},
       trackStatus = #{trackStatus,jdbcType=INTEGER},
       trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
@@ -303,256 +303,179 @@
       updateTime = #{updateTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeakWarning" resultMap="BaseResultMap">
-    select * from af_industry_leak_warning
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="id != null and '' != id">
-				id = #{id, jdbcType=INTEGER} AND
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				lw.id = #{id, jdbcType=INTEGER} AND
 			</if>
 			<if test="leakName != null and '' != leakName">
-				leakName = #{leakName, jdbcType=VARCHAR} AND
+				lw.leakName = #{leakName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetAS != null and '' != assetAS">
-				assetAS = #{assetAS, jdbcType=VARCHAR} AND
+				lw.assetAS = #{assetAS, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetASVersion != null and '' != assetASVersion">
-				assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+				lw.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetASIdentify != null and '' != assetASIdentify">
-				assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+				lw.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetASFramework != null and '' != assetASFramework">
-				assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+				lw.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
 			</if>
 			<if test="middlewareName != null and '' != middlewareName">
-				middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+				lw.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="middlewareVersion != null and '' != middlewareVersion">
-				middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+				lw.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
 			</if>
 			<if test="developerBrand != null and '' != developerBrand">
-				developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+				lw.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetOS != null and '' != assetOS">
-				assetOS = #{assetOS, jdbcType=VARCHAR} AND
+				lw.assetOS = #{assetOS, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetOSVersion != null and '' != assetOSVersion">
-				assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+				lw.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetDB != null and '' != assetDB">
-				assetDB = #{assetDB, jdbcType=VARCHAR} AND
+				lw.assetDB = #{assetDB, jdbcType=VARCHAR} AND
 			</if>
 			<if test="assetDBVersion != null and '' != assetDBVersion">
-				assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+				lw.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
 			</if>
 			<if test="ports != null and '' != ports">
-				ports = #{ports, jdbcType=VARCHAR} AND
+				lw.ports = #{ports, jdbcType=VARCHAR} AND
 			</if>
-			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=CHAR} AND
+			<if test="customInfo != null">
+				lw.customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
-			<if test="status != null and '' != status">
-				status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null">
+				lw.status = #{status, jdbcType=INTEGER} AND
 			</if>
-			<if test="trackStatus != null and '' != trackStatus">
-				trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			<if test="trackStatus != null">
+				lw.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
 			</if>
-			<if test="trackedTime != null and '' != trackedTime">
-				trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			<if test="trackedTime != null">
+				lw.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="disabled != null and '' != disabled">
-				disabled = #{disabled, jdbcType=BIT} AND
+			<if test="disabled != null">
+				lw.disabled = #{disabled, jdbcType=BIT} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
+				lw.createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			<if test="createTime != null">
+				lw.createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+				lw.updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			<if test="updateTime != null">
+				lw.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 		</trim>
 	</where>
-  </select>
-  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeakWarning" resultType="long">
-    select count(1) from af_industry_leak_warning
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="id != null and '' != id">
-				id = #{id, jdbcType=INTEGER} AND
-			</if>
-			<if test="leakName != null and '' != leakName">
-				leakName = #{leakName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetAS != null and '' != assetAS">
-				assetAS = #{assetAS, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetASVersion != null and '' != assetASVersion">
-				assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetASIdentify != null and '' != assetASIdentify">
-				assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetASFramework != null and '' != assetASFramework">
-				assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
-			</if>
-			<if test="middlewareName != null and '' != middlewareName">
-				middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="middlewareVersion != null and '' != middlewareVersion">
-				middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
-			</if>
-			<if test="developerBrand != null and '' != developerBrand">
-				developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetOS != null and '' != assetOS">
-				assetOS = #{assetOS, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetOSVersion != null and '' != assetOSVersion">
-				assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetDB != null and '' != assetDB">
-				assetDB = #{assetDB, jdbcType=VARCHAR} AND
-			</if>
-			<if test="assetDBVersion != null and '' != assetDBVersion">
-				assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
-			</if>
-			<if test="ports != null and '' != ports">
-				ports = #{ports, jdbcType=VARCHAR} AND
-			</if>
-			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=CHAR} AND
-			</if>
-			<if test="status != null and '' != status">
-				status = #{status, jdbcType=INTEGER} AND
-			</if>
-			<if test="trackStatus != null and '' != trackStatus">
-				trackStatus = #{trackStatus, jdbcType=INTEGER} AND
-			</if>
-			<if test="trackedTime != null and '' != trackedTime">
-				trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="disabled != null and '' != disabled">
-				disabled = #{disabled, jdbcType=BIT} AND
-			</if>
-			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="createTime != null and '' != createTime">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="updateTime != null and '' != updateTime">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
-			</if>
-		</trim>
-	</where>
-  </select>
-  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from af_industry_leak_warning
-	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+				<if test="model.id != null">
+					lw.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.leakName != null and '' != model.leakName">
-					leakName = #{model.leakName, jdbcType=VARCHAR} AND
+					lw.leakName = #{model.leakName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetAS != null and '' != model.assetAS">
-					assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+					lw.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASVersion != null and '' != model.assetASVersion">
-					assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+					lw.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
-					assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+					lw.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASFramework != null and '' != model.assetASFramework">
-					assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+					lw.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareName != null and '' != model.middlewareName">
-					middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+					lw.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
-					middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+					lw.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.developerBrand != null and '' != model.developerBrand">
-					developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+					lw.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOS != null and '' != model.assetOS">
-					assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+					lw.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
-					assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+					lw.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDB != null and '' != model.assetDB">
-					assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+					lw.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
-					assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+					lw.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.ports != null and '' != model.ports">
-					ports = #{model.ports, jdbcType=VARCHAR} AND
+					lw.ports = #{model.ports, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=CHAR} AND
+				<if test="model.customInfo != null">
+					lw.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
-				<if test="model.status != null and '' != model.status">
-					status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null">
+					lw.status = #{model.status, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.trackStatus != null and '' != model.trackStatus">
-					trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				<if test="model.trackStatus != null">
+					lw.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.trackedTime != null and '' != model.trackedTime">
-					trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				<if test="model.trackedTime != null">
+					lw.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.disabled != null and '' != model.disabled">
-					disabled = #{model.disabled, jdbcType=BIT} AND
+				<if test="model.disabled != null">
+					lw.disabled = #{model.disabled, jdbcType=BIT} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					lw.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					lw.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					lw.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					lw.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					leakName like CONCAT("%", #{fuzzy}, "%") or
-					assetAS like CONCAT("%", #{fuzzy}, "%") or
-					assetASVersion like CONCAT("%", #{fuzzy}, "%") or
-					assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
-					assetASFramework like CONCAT("%", #{fuzzy}, "%") or
-					middlewareName like CONCAT("%", #{fuzzy}, "%") or
-					middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
-					developerBrand like CONCAT("%", #{fuzzy}, "%") or
-					assetOS like CONCAT("%", #{fuzzy}, "%") or
-					assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
-					assetDB like CONCAT("%", #{fuzzy}, "%") or
-					assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
-					ports like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					lw.leakName like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.ports like CONCAT("%", #{fuzzy}, "%") or
+					lw.createBy like CONCAT("%", #{fuzzy}, "%") or
+					lw.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
 	</where>
-	<if test="orderBy != null">
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
@@ -561,100 +484,348 @@
     <if test="start != null and pageSize != -1">
         limit #{start}, #{pageSize}
     </if>
-  </select>
-  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from af_industry_leak_warning
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeakWarning" resultMap="BaseResultMap">
+    select * from af_industry_leak_warning as lw
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				lw.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="leakName != null and '' != leakName">
+				lw.leakName = #{leakName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetAS != null and '' != assetAS">
+				lw.assetAS = #{assetAS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASVersion != null and '' != assetASVersion">
+				lw.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASIdentify != null and '' != assetASIdentify">
+				lw.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASFramework != null and '' != assetASFramework">
+				lw.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareName != null and '' != middlewareName">
+				lw.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareVersion != null and '' != middlewareVersion">
+				lw.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="developerBrand != null and '' != developerBrand">
+				lw.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOS != null and '' != assetOS">
+				lw.assetOS = #{assetOS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOSVersion != null and '' != assetOSVersion">
+				lw.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDB != null and '' != assetDB">
+				lw.assetDB = #{assetDB, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDBVersion != null and '' != assetDBVersion">
+				lw.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ports != null and '' != ports">
+				lw.ports = #{ports, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customInfo != null">
+				lw.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="status != null">
+				lw.status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackStatus != null">
+				lw.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackedTime != null">
+				lw.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null">
+				lw.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				lw.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				lw.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				lw.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				lw.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeakWarning" resultType="long">
+    select count(1) from af_industry_leak_warning as lw
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				lw.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="leakName != null and '' != leakName">
+				lw.leakName = #{leakName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetAS != null and '' != assetAS">
+				lw.assetAS = #{assetAS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASVersion != null and '' != assetASVersion">
+				lw.assetASVersion = #{assetASVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASIdentify != null and '' != assetASIdentify">
+				lw.assetASIdentify = #{assetASIdentify, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetASFramework != null and '' != assetASFramework">
+				lw.assetASFramework = #{assetASFramework, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareName != null and '' != middlewareName">
+				lw.middlewareName = #{middlewareName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="middlewareVersion != null and '' != middlewareVersion">
+				lw.middlewareVersion = #{middlewareVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="developerBrand != null and '' != developerBrand">
+				lw.developerBrand = #{developerBrand, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOS != null and '' != assetOS">
+				lw.assetOS = #{assetOS, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetOSVersion != null and '' != assetOSVersion">
+				lw.assetOSVersion = #{assetOSVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDB != null and '' != assetDB">
+				lw.assetDB = #{assetDB, jdbcType=VARCHAR} AND
+			</if>
+			<if test="assetDBVersion != null and '' != assetDBVersion">
+				lw.assetDBVersion = #{assetDBVersion, jdbcType=VARCHAR} AND
+			</if>
+			<if test="ports != null and '' != ports">
+				lw.ports = #{ports, jdbcType=VARCHAR} AND
+			</if>
+			<if test="customInfo != null">
+				lw.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="status != null">
+				lw.status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackStatus != null">
+				lw.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
+			</if>
+			<if test="trackedTime != null">
+				lw.trackedTime = #{trackedTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="disabled != null">
+				lw.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				lw.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				lw.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				lw.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				lw.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from af_industry_leak_warning as lw
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.id != null and '' != model.id">
-					id = #{model.id, jdbcType=INTEGER} AND
+				<if test="model.id != null">
+					lw.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.leakName != null and '' != model.leakName">
-					leakName = #{model.leakName, jdbcType=VARCHAR} AND
+					lw.leakName = #{model.leakName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetAS != null and '' != model.assetAS">
-					assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+					lw.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASVersion != null and '' != model.assetASVersion">
-					assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+					lw.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
-					assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+					lw.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASFramework != null and '' != model.assetASFramework">
-					assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+					lw.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareName != null and '' != model.middlewareName">
-					middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+					lw.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
-					middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+					lw.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.developerBrand != null and '' != model.developerBrand">
-					developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+					lw.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOS != null and '' != model.assetOS">
-					assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+					lw.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
-					assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+					lw.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDB != null and '' != model.assetDB">
-					assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+					lw.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
-					assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+					lw.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.ports != null and '' != model.ports">
-					ports = #{model.ports, jdbcType=VARCHAR} AND
+					lw.ports = #{model.ports, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=CHAR} AND
+				<if test="model.customInfo != null">
+					lw.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
-				<if test="model.status != null and '' != model.status">
-					status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null">
+					lw.status = #{model.status, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.trackStatus != null and '' != model.trackStatus">
-					trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				<if test="model.trackStatus != null">
+					lw.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
 				</if>
-				<if test="model.trackedTime != null and '' != model.trackedTime">
-					trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				<if test="model.trackedTime != null">
+					lw.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.disabled != null and '' != model.disabled">
-					disabled = #{model.disabled, jdbcType=BIT} AND
+				<if test="model.disabled != null">
+					lw.disabled = #{model.disabled, jdbcType=BIT} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					lw.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.createTime != null and '' != model.createTime">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				<if test="model.createTime != null">
+					lw.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					lw.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.updateTime != null and '' != model.updateTime">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				<if test="model.updateTime != null">
+					lw.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					leakName like CONCAT("%", #{fuzzy}, "%") or
-					assetAS like CONCAT("%", #{fuzzy}, "%") or
-					assetASVersion like CONCAT("%", #{fuzzy}, "%") or
-					assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
-					assetASFramework like CONCAT("%", #{fuzzy}, "%") or
-					middlewareName like CONCAT("%", #{fuzzy}, "%") or
-					middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
-					developerBrand like CONCAT("%", #{fuzzy}, "%") or
-					assetOS like CONCAT("%", #{fuzzy}, "%") or
-					assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
-					assetDB like CONCAT("%", #{fuzzy}, "%") or
-					assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
-					ports like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%")
+					lw.leakName like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.ports like CONCAT("%", #{fuzzy}, "%") or
+					lw.createBy like CONCAT("%", #{fuzzy}, "%") or
+					lw.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from af_industry_leak_warning as lw
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					lw.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakName != null and '' != model.leakName">
+					lw.leakName = #{model.leakName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetAS != null and '' != model.assetAS">
+					lw.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASVersion != null and '' != model.assetASVersion">
+					lw.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
+					lw.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetASFramework != null and '' != model.assetASFramework">
+					lw.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareName != null and '' != model.middlewareName">
+					lw.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
+					lw.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.developerBrand != null and '' != model.developerBrand">
+					lw.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOS != null and '' != model.assetOS">
+					lw.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
+					lw.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDB != null and '' != model.assetDB">
+					lw.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
+					lw.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.ports != null and '' != model.ports">
+					lw.ports = #{model.ports, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					lw.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+				<if test="model.status != null">
+					lw.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					lw.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					lw.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					lw.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					lw.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					lw.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					lw.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					lw.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					lw.leakName like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					lw.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					lw.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					lw.ports like CONCAT("%", #{fuzzy}, "%") or
+					lw.createBy like CONCAT("%", #{fuzzy}, "%") or
+					lw.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>

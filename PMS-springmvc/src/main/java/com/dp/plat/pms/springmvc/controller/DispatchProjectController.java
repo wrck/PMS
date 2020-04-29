@@ -1,5 +1,6 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
@@ -53,6 +55,11 @@ public class DispatchProjectController
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, DispatchVO dispatch, Model model) {
+		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+			model.addAttribute("data", Collections.emptyList());
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		
 		Principal user = UserContext.getCurrentPrincipal();
 		dispatch.setDisabled(false);
 		dispatch.setEffectiveFrom(new Date());
@@ -85,6 +92,13 @@ public class DispatchProjectController
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(id);
+			DispatchVO vo = new DispatchVO();
+			BeanUtils.copyProperties(dispatch, vo);
+			if (!checkPermission(vo, model, getDataName() + ":list")) {
+				model.addAttribute("status", false);
+				model.addAttribute("message", "没有权限进行该操作！");
+				return Consts.VIEW_UNAUTHORIZED;
+			}
 			if (dispatch != null) {
 				model.addAttribute("targetValue", dispatch);
 				
@@ -109,6 +123,11 @@ public class DispatchProjectController
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
 	public String detail(DispatchVO dispatch, Model model) {
+		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (HttpContext.isJSON()) {
 			String projectIds = dispatch.getProjectIds();
 			String[] projectIdArr = StringUtils.split(StringUtils.trimToEmpty(projectIds), ",");
@@ -142,6 +161,11 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(DispatchVO dispatch, Model model) {
+		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -163,6 +187,11 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, DispatchVO dispatch, Model model) {
+		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -181,6 +210,14 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
+		DispatchProject dispatchProject = service.selectByPrimaryKey(id);
+		DispatchVO vo = new DispatchVO();
+		BeanUtils.copyProperties(dispatchProject, vo);
+		if (!checkPermission(vo, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -265,10 +302,12 @@ public class DispatchProjectController
 		}
 		boolean isPermit = false;
 		String permissionType = "";
-		if (dispatch != null) {
+		if (!UserContext.checkPermission("project:*") && dispatch != null) {
 			Integer projectId = dispatch.getProjectId();
+			String projectIds = dispatch.getProjectIds();
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(projectId);
+			project.setProjectIds(projectIds);
 			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);
 			Boolean allPerm = permission.get("all");
 			if (Boolean.TRUE.equals(allPerm)) {
@@ -276,17 +315,18 @@ public class DispatchProjectController
 				permissionType = "all";
 			} else {
 				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete|list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
 				}
-				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*:(list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "view";
 				}
 			}
 		} else {
 			isPermit = true;
+			permissionType = "all";
 		}
 		model.addAttribute("permissionType", permissionType);
 		return isPermit;

@@ -59,35 +59,35 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	@Autowired
 	protected ProjectHeaderMapper dao;
 
-//	@Autowired
-//	public void setProjectDao(ProjectDao projectDao) {
-//		this.projectDao = projectDao;
-//	}
-//	
-//	@Autowired
-//	public void setBasicDataService(BasicDataService basicDataService) {
-//		this.basicDataService = basicDataService;
-//	}
-//
-//	@Autowired
-//	public void setCallBackService(CallBackService callBackService) {
-//		this.callBackService = callBackService;
-//	}
-//
-//	@Autowired
-//	public void setPmClosedLoopService(PmClosedLoopService pmClosedLoopService) {
-//		this.pmClosedLoopService = pmClosedLoopService;
-//	}
-//
-//	@Autowired
-//	public void setTaskService(TaskService taskService) {
-//		this.taskService = taskService;
-//	}
-//
-//	@Autowired
-//	public void setSendMailService(SendMailService sendMailService) {
-//		this.sendMailService = sendMailService;
-//	}
+	@Autowired
+	public void setProjectDao(ProjectDao projectDao) {
+		this.projectDao = projectDao;
+	}
+	
+	@Autowired
+	public void setBasicDataService(BasicDataService basicDataService) {
+		this.basicDataService = basicDataService;
+	}
+
+	@Autowired
+	public void setCallBackService(CallBackService callBackService) {
+		this.callBackService = callBackService;
+	}
+
+	@Autowired
+	public void setPmClosedLoopService(PmClosedLoopService pmClosedLoopService) {
+		this.pmClosedLoopService = pmClosedLoopService;
+	}
+
+	@Autowired
+	public void setTaskService(TaskService taskService) {
+		this.taskService = taskService;
+	}
+
+	@Autowired
+	public void setSendMailService(SendMailService sendMailService) {
+		this.sendMailService = sendMailService;
+	}
 
 	@Override
 	public int deleteByPrimaryKey(Object pk) {
@@ -293,13 +293,14 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			this.insertOrUpdateProjectState(project);// 插入或更新项目状态表
 
 			project.setProjectId(pid);// 保存的项目表id
-			project.setMemberRole(MessageUtil.DATATYPE_CODE03_20);// 03-20
-			project.setMemberCode(project.getServiceManagerCode());
-			project.setMemberName(project.getServiceManagerCodeforjson());
-			project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
-			project.setEmail(this.getMails(project.getServiceManagerCode()));// 查询邮件
-			this.insertProjectMember(project);// 插入到表pm_project_member - 项目成员表
-
+			if (StringUtils.isNotBlank(project.getServiceManagerCode())) {
+				project.setMemberRole(MessageUtil.DATATYPE_CODE03_20);// 03-20
+				project.setMemberCode(project.getServiceManagerCode());
+				project.setMemberName(project.getServiceManagerCodeforjson());
+				project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
+				project.setEmail(this.getMails(project.getServiceManagerCode()));// 查询邮件
+				this.insertProjectMember(project);// 插入到表pm_project_member - 项目成员表
+			}
 			project.setMemberRole(MessageUtil.DATATYPE_CODE03_10);// 03-10
 			project.setMemberCode(project.getSalesManCode());
 			project.setMemberName(project.getSalesManName());
@@ -376,7 +377,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 		if (procode != null && !"".equals(procode)) {
 			project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_30);
 			project.setOldMemberCode(project.getOldProgramManagerCode());
-			a = this.updateProjectMember(project, project.getProgramManagerCode(), (String) ((ProjectVO)project).getCustomInfoByKey("programManagerCodejson"));// 更新项目成员表
+			a = this.updateProjectMember(project, project.getProgramManagerCode(), project.getProgramManagerCodeforjson());// 更新项目成员表
 			// 服务经理发生变更会更新项目状态，这是需要判断项目经理是否已存在，若存在则更新项目状态；若项目经理发生变更也需要更新项目状态
 			if (a) {// 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
 				this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);// 更新项目状态
@@ -389,8 +390,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_30);
 			project.setOldMemberCode(project.getOldProgramManagerCodeB());
 			project.setFromFlag(MessageUtil.FLAG_FROM_MEMBER);
-			c = this.updateProjectMember(project, project.getProgramManagerCodeB(),
-					(String) ((ProjectVO)project).getCustomInfoByKey("programManagerCodejsonB"));// 更新项目成员表
+			c = this.updateProjectMember(project, project.getProgramManagerCodeB(), project.getProgramManagerCodeforjsonB());// 更新项目成员表
 			// 服务经理发生变更会更新项目状态，这是需要判断项目经理是否已存在，若存在则更新项目状态；若项目经理发生变更也需要更新项目状态
 			if (c) {// 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
 				this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);// 更新项目状态
@@ -430,7 +430,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 				permissionType = "all";
 			} else {
 				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
 				}

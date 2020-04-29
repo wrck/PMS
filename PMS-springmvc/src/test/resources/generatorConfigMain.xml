@@ -45,19 +45,14 @@
         <javaServiceGenerator targetPackage="com.dp.plat.pms.springmvc.service"
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
-<<<<<<< HEAD
         <!--生成对应表及类名 -->
-		<table tableName="pm_workflow" domainObjectName="PmWorkFlow"
-=======
-		<!--生成对应表及类名 -->
-		<table tableName="pm_project_member" domainObjectName="ProjectMember"
->>>>>>> branch 'master' of https://github.com/wrck/PMS
+		<table tableName="af_industry_leak_warning" domainObjectName="IndustryLeakWarning"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
-			<property name="tableAlias" value="wf" />
+			<property name="tableAlias" value="lw" />
 			<property name="useActualColumnNames" value="true" />
 			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>

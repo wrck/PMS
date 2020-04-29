@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -102,16 +103,33 @@ public class CommonRelatedDataController
 
 	@PostMapping(value = "/detail")
 	public String create(CommonRelatedDataVO v, Model model) {
-		String objType = v.getObjType();
-		Integer objId = v.getObjId();
-		if ("project".equalsIgnoreCase(objType) && objId != null) {
-			IProjectHeaderService projectHeaderService = SpringContext.getBean(IProjectHeaderService.class);
-			ProjectHeader project = projectHeaderService.selectByPrimaryKey(objId);
-			v.setField1(project.getProjectName());
-			v.setField2(project.getColumn003());
-			v.setCustomInfoByKey("project", project);
+		try {
+			setLocalVariables("dataPrefix", v.getType());
+			String objType = v.getObjType();
+			Integer objId = v.getObjId();
+			if ("project".equalsIgnoreCase(objType) && objId != null) {
+				IProjectHeaderService projectHeaderService = SpringContext.getBean(IProjectHeaderService.class);
+				ProjectHeader project = projectHeaderService.selectByPrimaryKey(objId);
+				v.setField1(project.getProjectName());
+				v.setField2(project.getColumn003());
+				v.setCustomInfoByKey("project", project);
+			}
+			return super.create(v, model);
+		} finally {
+			clearLocalVariables();
 		}
-		return super.create(v, model);
+	}
+	
+
+	@Override
+	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	public String update(@PathVariable("id") Integer id, CommonRelatedDataVO v, Model model) {
+		try {
+			setLocalVariables("dataPrefix", v.getType());
+			return super.update(id, v, model);
+		} finally {
+			clearLocalVariables();
+		}
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)

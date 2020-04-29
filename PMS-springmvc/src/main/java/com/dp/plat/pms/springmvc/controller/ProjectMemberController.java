@@ -46,7 +46,7 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 				ProjectVO project = new ProjectVO();
 				project.setProjectId(v.getProjectId());
 				project.setCustomInfoByKey("programManagerCode", v.getMemberCode());
-				project.setCustomInfoByKey("programManagerCodejson", v.getMemberName());
+				project.setCustomInfoByKey("programManagerCodeforjson", v.getMemberName());
 				projectHeaderService.updateByPrimaryKeySelective(project);
 			}
 		}

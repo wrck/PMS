@@ -1245,11 +1245,18 @@
 		    left join t_user_info ui 
 		        on ui.`id` = #{user.userInfoId}
 		        and find_in_set(ph.`column001`, ui.`custom5`) 
-		where ph.projectId = #{model.projectId}
-		    and (
+		where (
 		        pm.memberCode = #{user.userName}
 		        or ui.id = #{user.userInfoId}
 		    )
-	]]>  		
+	]]>  	
+	<if test="model != null">
+		<if test="model.projectId != null">
+			AND ph.projectId = #{model.projectId}
+		</if>
+		<if test="model.projectIds != null">
+			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
+		</if>
+	</if>	
   </select>
 </mapper>

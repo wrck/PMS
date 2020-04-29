@@ -57,12 +57,12 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
 
-//	@Autowired
-//	@Qualifier("projectService")
-//	private ProjectService oldProjectService;
-//
-//	@Autowired
-//	private ProjectPlanService projectPlanService;
+	@Autowired
+	@Qualifier("projectService")
+	private ProjectService oldProjectService;
+
+	@Autowired
+	private ProjectPlanService projectPlanService;
 
 	@Autowired
 	private IProjectTaskService projectTaskService;
