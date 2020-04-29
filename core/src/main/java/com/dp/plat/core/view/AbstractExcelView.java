@@ -100,15 +100,17 @@ import org.springframework.web.servlet.view.AbstractView;
 public abstract class AbstractExcelView extends AbstractView {
 
 	/** The content type for an Excel response */
-	private static final String CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	private static final String DEFAULT_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 	/** The extension to look for existing templates */
-	private static final String EXTENSION = ".xlsx";
+	private static final String DEFAULT_EXTENSION = ".xlsx";
 
 	/** The rowAccessWindowSize to saved in memory */
 	private static final int rowAccessWindowSize = 10000;
 
 	private String url;
+	
+	private String extension = DEFAULT_EXTENSION;
 
 
 	/**
@@ -116,7 +118,7 @@ public abstract class AbstractExcelView extends AbstractView {
 	 * Sets the content type of the view to "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".
 	 */
 	public AbstractExcelView() {
-		setContentType(CONTENT_TYPE);
+		setContentType(DEFAULT_CONTENT_TYPE);
 	}
 
 	/**
@@ -174,7 +176,7 @@ public abstract class AbstractExcelView extends AbstractView {
 	protected SXSSFWorkbook getTemplateSource(String url, HttpServletRequest request) throws Exception {
 		LocalizedResourceHelper helper = new LocalizedResourceHelper(getApplicationContext());
 		Locale userLocale = RequestContextUtils.getLocale(request);
-		Resource inputFile = helper.findLocalizedResource(url, EXTENSION, userLocale);
+		Resource inputFile = helper.findLocalizedResource(url, extension, userLocale);
 
 		// Create the Excel document from the source.
 		if (logger.isDebugEnabled()) {
@@ -230,4 +232,20 @@ public abstract class AbstractExcelView extends AbstractView {
 		cell.setCellValue(text);
 	}
 
+	public String getExtension() {
+		return extension;
+	}
+
+	public void setExtension(String extension) {
+		this.extension = extension;
+	}
+
+	public static int getRowaccesswindowsize() {
+		return rowAccessWindowSize;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+	
 }

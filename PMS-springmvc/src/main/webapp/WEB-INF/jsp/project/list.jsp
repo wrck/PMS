@@ -49,11 +49,11 @@
 									<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
 								</div>
 							</form>
-                            <div class="btn-group operate-btn-group">
+                            <!-- <div class="btn-group operate-btn-group">
                                 <button type="button" class="btn btn-default" data-btn-type="add">新增</button>
                                 <button type="button" class="btn btn-default" data-btn-type="edit">编辑</button>
                                 <button type="button" class="btn btn-default" data-btn-type="delete">删除</button>
-                            </div>
+                            </div> -->
                         </div>
                         <table id="project_table" class="table table-bordered table-striped table-hover">
                         </table>

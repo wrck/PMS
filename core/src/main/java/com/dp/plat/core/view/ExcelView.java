@@ -30,6 +30,11 @@ import com.dp.plat.core.util.MessageUtils;
  *
  */
 public class ExcelView extends AbstractExcelView {
+	
+	public ExcelView() {
+		setContentType("application/vnd.ms-excel");
+		setExtension(".xls");
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -160,7 +165,7 @@ public class ExcelView extends AbstractExcelView {
 			if (value != null) {
 				String valueClasss = value.getClass().getSimpleName();
 				if (valueClasss.equals("Date")) {
-					value = new SimpleDateFormat("yyyy-MM-dd mm:HH:ss").format(value);
+					value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
 				}
 				if (colValue == null) {
 					aRow.createCell(colCount++).setCellValue(String.valueOf(value));

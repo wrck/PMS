@@ -2,6 +2,7 @@ package com.dp.plat.core.view;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import com.dp.plat.core.util.MessageUtils;
+import com.dp.plat.core.vo.DataTableColumn;
+import com.dp.plat.core.vo.PageParam;
 
 /**
  * Excel导出视图,根据Controller中返回的Model获取属性名为list的数据导出到Excel,待完善
@@ -34,6 +37,11 @@ public class ExcelView4XLSX extends AbstractExcelView {
 	private boolean oneSheetOnly = false;
 	private boolean hasCreatedSheet = false;
 	private int startRow = 1;
+	
+	public ExcelView4XLSX() {
+		setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		setExtension(".xlsx");
+	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -65,7 +73,16 @@ public class ExcelView4XLSX extends AbstractExcelView {
 					colValue.put(column, null);
 				}
 			}
-		}
+		}/* else if (model.containsKey("pageParam")) {
+			PageParam pageParam = (PageParam) model.get("pageParam");
+			List<DataTableColumn> columns = pageParam.getColumns();
+			colValue = new LinkedHashMap<>(columns.size());
+			for (DataTableColumn column : columns) {
+				String k = column.getData();
+				String v = column.getTitle();
+				colValue.put(k, v);
+			}
+		}*/
 //		List<List<Object>> lists = new ArrayList<>();
 //		int total = list.size();
 //		int count = (int) Math.ceil((double) total / 65530);
@@ -98,6 +115,20 @@ public class ExcelView4XLSX extends AbstractExcelView {
 
 			//动态列名
 			Map<String, String> dynamicColumns = (Map<String, String>) model.get("dynamicColumns");
+			if ((dynamicColumns == null || dynamicColumns.isEmpty()) && model.containsKey("pageParam")) {
+					PageParam pageParam = (PageParam) model.get("pageParam");
+					List<DataTableColumn> columns = pageParam.getColumns();
+					if (columns != null) {
+						dynamicColumns = new LinkedHashMap<String, String>(columns.size());
+						colValue = new LinkedHashMap<>(columns.size());
+						for (DataTableColumn column : columns) {
+							String k = column.getData();
+							String v = column.getTitle();
+							dynamicColumns.put(k, v);
+							colValue.put(k, null);
+						}
+					}
+			}
 			// create header row
 			if (!hasHeaderTitle) {
 				Row header = sheet.createRow(0);
@@ -149,9 +180,10 @@ public class ExcelView4XLSX extends AbstractExcelView {
 					.getLocaleMessage("export." + clazz.getSimpleName() + "." + fieldName);
 			if(StringUtils.isBlank(fieldDescription)) {
 				//国际化资源文件里没有的时候从动态列里面取数
-				if(dynamicColumns!= null) {
+				if(dynamicColumns != null && !dynamicColumns.containsKey(fieldName)) {
 					fieldDescription = dynamicColumns.get(fieldName);
 				}
+				fieldDescription = dynamicColumns.get(fieldName);
 			}
 			
 			if (StringUtils.isNotBlank(fieldDescription)) {
@@ -239,7 +271,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 		if (value != null) {
 			String valueClasss = value.getClass().getSimpleName();
 			if (valueClasss.equals("Date")) {
-				value = new SimpleDateFormat("yyyy-MM-dd mm:HH:ss").format(value);
+				value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
 			}
 			if (colValue == null) {
 				aRow.createCell(colCount++).setCellValue(String.valueOf(value));
