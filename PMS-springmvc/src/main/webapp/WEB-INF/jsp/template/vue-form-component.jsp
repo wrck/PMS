@@ -295,6 +295,9 @@
  				try {
 	 				value = value || eval("this.targetValue." + field.alias);
  				} catch(e) {}
+ 				try {
+	 				value = value || field.extData["defaultValue"];
+ 				} catch(e) {}
  				if (value && field.type == 'date') {
  					value = new Date(value).Format('yyyy-MM-dd');
  				}

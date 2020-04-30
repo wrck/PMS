@@ -1,35 +1,22 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.TaskService;
-import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import com.dp.plat.core.config.SystemConfig;
-import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
-import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IAbstractBaseService;
-import com.dp.plat.core.util.FileUtil;
-import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
-import com.dp.plat.core.vo.Result;
 import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Project;
@@ -37,7 +24,6 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
-import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.CallBackService;
@@ -251,7 +237,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	}
 
 	@Override
-	@Transactional
+	@Transactional(propagation = Propagation.SUPPORTS)
 	public int insertProject(Project project) throws Exception {
 		log("创建项目");
 		String projectType = project.getProjectType();

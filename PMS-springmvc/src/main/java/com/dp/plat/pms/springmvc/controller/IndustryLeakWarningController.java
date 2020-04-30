@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.IndustryLeakWarning;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
@@ -68,32 +68,37 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 		model.addAttribute("message", message);
 	}
 
-	@RequestMapping("/asset")
+	@RequestMapping(value = {"/asset", "/asset/list"})
 	public String warningAsset(PageParam<Object> pageParam, IndustryLeakWarning v, Model model) {
-		List<Object> list = Collections.emptyList();
-		try {
-			// Principal user = UserContext.getCurrentPrincipal();
-			// v.setCompId(user.getCompId());
-			PageParam<Object> tempParam = new PageParam<>();
-			IndustryLeakWarning temp = new IndustryLeakWarning();
-			// temp.setCompID(user.getCompId());
-			tempParam.setModel(temp);
-			pageParam.setModel(v);
-	
-			pageParam.setTotal(service.countBySelectivePageable(tempParam));
-			pageParam.setFiltered(service.countBySelectivePageable(pageParam));
-			list = service.selectBySelectivePageable(pageParam);
-	
-			if (pageParam.getPageSize() == -1L) {
-				pageParam.setPageSize(pageParam.getTotal());
+		if (HttpContext.isJSON()) {
+			List<Object> list = Collections.emptyList();
+			try {
+				// Principal user = UserContext.getCurrentPrincipal();
+				// v.setCompId(user.getCompId());
+				PageParam<Object> tempParam = new PageParam<>();
+				IndustryLeakWarning temp = new IndustryLeakWarning();
+				// temp.setCompID(user.getCompId());
+				tempParam.setModel(temp);
+				pageParam.setModel(v);
+				
+				pageParam.setTotal(service.countWarningAssetBySelectivePageable(tempParam));
+				pageParam.setFiltered(service.countWarningAssetBySelectivePageable(pageParam));
+				list = service.selectWarningAssetBySelectivePageable(pageParam);
+				
+				if (pageParam.getPageSize() == -1L) {
+					pageParam.setPageSize(pageParam.getTotal());
+				}
+			} catch (Exception e) {
+				ExceptionHandler.insertException(e);
 			}
-		} catch (Exception e) {
-			ExceptionHandler.insertException(e);
+			model.addAttribute("data", list);
+			List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
+			pageParam.setColumns(columns);
+		} else {
+			model.addAttribute("urlNamespace", URL_NAMESPACE);
+			model.addAttribute("model", "industryWarningAsset");
+			model.addAttribute("keyword", getKeyword());
 		}
-		model.addAttribute("data", list);
-
-		List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
-		pageParam.setColumns(columns);
 		return getRealViewNameSpace() + "list";
 	}
 	

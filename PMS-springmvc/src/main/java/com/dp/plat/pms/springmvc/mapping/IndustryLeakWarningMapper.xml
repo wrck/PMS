@@ -831,4 +831,34 @@
 		</trim>
 	</where>
   </select>
+  
+  <select id="selectWarningAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.LeakWarningVO">
+  	select 
+	   lw.*, ia.id as assetId, ia.`assetName`, ia.`assetHost`, ia.`customInfo` as assetCustomInfo
+	from
+	    `af_industry_leak_warning` lw 
+	    left join `af_industry_asset` ia 
+	        on (
+	            lw.`developerBrand` = ia.`developerBrand`
+	        ) 
+	        or (
+	            ia.`middlewareName` regexp lw.`middlewareName` 
+	            and ia.`middlewareVersion` regexp lw.`middlewareVersion`
+	        ) 
+	        or (
+	            ia.`assetOS` regexp lw.`assetOS` 
+	            and ia.`assetOSVersion` regexp lw.`assetOSVersion`
+	        ) 
+	        or (
+	            ia.`assetDB` regexp lw.`assetDB` 
+	            and ia.`assetDBVersion` regexp lw.`assetDBVersion`
+	        ) 
+	        or (
+	            ia.`assetASVersion` regexp lw.`assetASVersion`
+	        ) 
+	        or (
+	            ia.`assetOpenPorts` regexp lw.`ports`
+	        ) 
+	<where></where>
+  </select>
 </mapper>

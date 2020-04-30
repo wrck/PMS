@@ -156,6 +156,15 @@
                 }
             });
 
+            $(document).on("dblclick", "#" + tableId  + " tbody tr", function () {
+                var rowId = commonTable.getSelectedRowId();
+                if(rowId == null){
+                    modals.info('请点击需要查看的行');
+                    return false;
+                }
+                var url = pm.router.html(model).detail(rowId);
+                window.open(url);
+            });
         })
     </script>
 </jsTag>

@@ -50,7 +50,8 @@ input[type=file]{
         	var files = $(this)[0].files;
         	if (files.length) {
         		var fileType = $.trim($(this).prev().val());
-        		for(var file of files) {
+        		for (var i = 0; i < files.length; i++) {
+					var file = files[i];
             		formData.append("upload", file);
             		formData.append("uploadFileType", fileType);
             	}

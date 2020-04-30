@@ -262,9 +262,20 @@
 			    			} catch(e){}
 		    			});
 		    		});
+		    		// 如果已经派单则不允许修改项目和服务商
+		    		var isDispatched = (data.targetValue || {}).dispatched;
+		    		var dispatchType = (data.targetValue || {}).type;
+		    		if (isDispatched == true) {
+		    			$("#projectIds", $container).attr("disabled", true);
+		    			$("#facilitatorId", $container).attr("disabled", true);
+		    			$("#dispatchSeq", $container).attr("disabled", true);
+		    			if (dispatchType == 'frameworkAgreement') {
+			    			$("#dispatchNo", $container).attr("disabled", true);
+		    			}
+		    		}
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		if ((data.targetValue || {}).facilitatorId) {
+		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
 			    		$("#facilitatorId", $container).one("change", changeFacilitator);
 		    		}
 		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {

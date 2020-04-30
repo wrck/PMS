@@ -125,7 +125,8 @@
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
 		                submitHandler: function(validator, form2, submitButton){
-		                	modals.confirm({text:'确认执行分摊？', 
+		                	var title = id != 0 ? '保存' : '创建';
+		                	modals.confirm({text:'确认' + title + '项目？', 
 		                		callback: function () {
 			                		var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();

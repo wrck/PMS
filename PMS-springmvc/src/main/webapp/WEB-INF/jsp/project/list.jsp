@@ -197,6 +197,18 @@
                 }
             });
 
+            $(document).on("dblclick", "#project_table tbody tr", function () {
+                var row = projectTable.getSelectedRowData();
+                if(row == null){
+                    modals.info('请点击需要查看的项目行');
+                    return false;
+                }
+                var id = row.id ||row.projectId;
+                var search = $.param({contractNo: row.contractNo, projectType:row.projectType});
+                var url = id ? pm.project.html.detail(id) : pm.project.html.create(search);
+                window.open(url);
+            });
+
         })
     </script>
 </jsTag>
