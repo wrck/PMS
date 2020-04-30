@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Id;
 
@@ -31,7 +33,16 @@ import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 public class Test {
 
 	public static void main(String[] args) {
-		generatorUpdateDuplicateStr(ProjectProduct.class);
+		String str = "project:detail,project:add";
+		System.out.println(str.matches(".*:(list|detail),?.*"));
+		
+		String pattern = ":(list|detail),?";
+
+		Pattern r = Pattern.compile(pattern);
+		Matcher m = r.matcher(str);
+		System.out.println(m.find());
+
+		//generatorUpdateDuplicateStr(ProjectProduct.class);
 	}
 	
 //	@org.junit.Test

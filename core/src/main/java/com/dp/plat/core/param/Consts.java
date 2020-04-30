@@ -1,6 +1,8 @@
 package com.dp.plat.core.param;
 
 public class Consts {
+	public final static String VIEW_UNAUTHORIZED = "unauthorized";
+	
 	public final static class NodeType {
 		/**
 		 * 1 已完成

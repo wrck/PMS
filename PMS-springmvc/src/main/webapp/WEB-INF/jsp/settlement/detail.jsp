@@ -152,6 +152,7 @@
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
+								formCols: 2,
 								//formGroupClass: "col-sm-6 col-md-3",
 								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),

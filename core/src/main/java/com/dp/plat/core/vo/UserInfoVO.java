@@ -10,8 +10,18 @@ import com.dp.plat.core.pojo.UserInfo;
  *
  */
 public class UserInfoVO extends UserInfo {
+	
+	private String userName;
 
 	private String compName;
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
 
 	public String getCompName() {
 		return compName;

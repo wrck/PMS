@@ -12,7 +12,7 @@ import com.dp.plat.core.vo.UserInfoVO;
  * @author w02611
  *
  */
-public interface IUserInfoService {
+public interface IUserInfoService extends IAbstractBaseService<UserInfo> {
 	int deleteByPrimaryKey(Integer id);
 
     int insert(UserInfo record);
@@ -25,8 +25,9 @@ public interface IUserInfoService {
     
 	/**
 	 * @param userInfo
+	 * @return 
 	 */
-	void updateByPrimaryKeySelective(UserInfo userInfo);
+	int updateByPrimaryKeySelective(UserInfo userInfo);
 
 	/**
 	 * @param id
@@ -68,4 +69,7 @@ public interface IUserInfoService {
 	 */
 	UserInfoVO selectOneByUserIdAndCompId(UserInfo userInfo);
 
+	UserInfoVO selectOneByUserNameAndCompId(String userName);
+
+	UserInfoVO selectOneByUserNameAndCompId(String userName, Integer orgId);
 }

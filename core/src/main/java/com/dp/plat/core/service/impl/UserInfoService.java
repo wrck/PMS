@@ -6,20 +6,21 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.dao.UserInfoMapper;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.vo.UserInfoVO;
 
 @Service("userInfoService")
-public class UserInfoService implements IUserInfoService {
+public class UserInfoService extends AbstractBaseService<UserInfoMapper, UserInfo> implements IUserInfoService {
 
 	@Resource
 	private UserInfoMapper userInfoDao;
 
 	@Override
-	public void updateByPrimaryKeySelective(UserInfo userInfo) {
-		userInfoDao.updateByPrimaryKeySelective(userInfo);
+	public int updateByPrimaryKeySelective(UserInfo userInfo) {
+		return userInfoDao.updateByPrimaryKeySelective(userInfo);
 	}
 
 	@Override
@@ -81,4 +82,18 @@ public class UserInfoService implements IUserInfoService {
 	public UserInfoVO selectOneByUserIdAndCompId(UserInfo userInfo) {
 		return userInfoDao.selectOneByUserIdAndCompId(userInfo);
 	}
+
+	@Override
+	public UserInfoVO selectOneByUserNameAndCompId(String userName) {
+		return this.selectOneByUserNameAndCompId(userName, UserContext.getOrgId());
+	}
+
+	@Override
+	public UserInfoVO selectOneByUserNameAndCompId(String userName, Integer compID) {
+		UserInfoVO userInfo = new UserInfoVO();
+		userInfo.setUserName(userName);
+		userInfo.setCompID(compID);
+		return userInfoDao.selectOneByUserNameAndCompId(userInfo);
+	}
+	
 }

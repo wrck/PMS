@@ -23,18 +23,30 @@
 	<dependencies>
 	
 		<dependency>
-		    <groupId>org.xhtmlrenderer</groupId>
-		    <artifactId>flying-saucer-pdf-itext5</artifactId>
-		    <version>${flying.saucer.version}</version>
-		</dependency>
-			
-		<dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>MyBatisGenerator</artifactId>
 			<version>0.0.1-RELEASE</version>
 			<scope>test</scope>
 		</dependency>
-		
+		<dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>PMS-activiti</artifactId>
+            <version>${project.version}</version>
+            <classifier>api</classifier>
+            <type>jar</type>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.mybatis</groupId>
+            		<artifactId>mybatis</artifactId>
+            	</exclusion>
+            </exclusions>
+		</dependency>
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>PMS-activiti</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
 		
 		<!-- <dependency>
 			<groupId>mysql</groupId>
@@ -93,6 +105,12 @@
 			<artifactId>pms-mvc-core</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mybatis</groupId>
+					<artifactId>mybatis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.dp.plat</groupId>
@@ -100,6 +118,12 @@
 			<version>${project.version}</version>
 			<classifier>core</classifier>
 			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mybatis</groupId>
+					<artifactId>mybatis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -109,6 +133,10 @@
 		</dependency>
 		
 		<!-- mybatis核心包 -->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+		</dependency>
 		<!-- mybatis/spring包 -->
 		
 		<dependency>

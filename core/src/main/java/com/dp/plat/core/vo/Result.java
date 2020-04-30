@@ -10,6 +10,10 @@ import java.util.Map;
 public class Result {
 
 	/**
+	 * 执行状态
+	 */
+	private Object status;
+	/**
 	 * 执行结果
 	 */
 	private boolean success;
@@ -31,19 +35,19 @@ public class Result {
 
 	public Result() {
 		this.success = true;
+		this.status = true;
 	}
 
 	public Result(boolean success) {
 		this.success = success;
 	}
-
+	
 	public Result(boolean success, Object data) {
 		this.success = success;
 		this.data = data;
 	}
 
 	public Result(boolean success, Object data, String message) {
-
 		this.success = success;
 		this.data = data;
 		this.message = message;
@@ -58,6 +62,33 @@ public class Result {
 
 	public Result(boolean success, String message) {
 		this.success = success;
+		this.message = message;
+	}
+	
+	public Result(Object status) {
+		this.status = status;
+	}
+	
+	public Result(Object status, Object data) {
+		this.status = status;
+		this.data = data;
+	}
+
+	public Result(Object status, Object data, String message) {
+		this.status = status;
+		this.data = data;
+		this.message = message;
+	}
+
+	public Result(Object status, Object data, String message, String code) {
+		this.status = status;
+		this.data = data;
+		this.message = message;
+		this.code = code;
+	}
+
+	public Result(Object status, String message) {
+		this.status = status;
 		this.message = message;
 	}
 
@@ -77,6 +108,14 @@ public class Result {
 
 	public void setCode(String code) {
 		this.code = code;
+	}
+
+	public Object getStatus() {
+		return status;
+	}
+
+	public void setStatus(Object status) {
+		this.status = status;
 	}
 
 	public boolean isSuccess() {
@@ -106,9 +145,18 @@ public class Result {
 	public Map<String, Object> getMap() {
 	    Map<String, Object> map = new HashMap<>();
 	    map.put("success", this.success);
-	    map.put("data", this.data);
-	    map.put("message", this.message);
-	    map.put("code", this.code);
+	    if (this.status != null) {
+	    	map.put("status", this.status);
+	    }
+    	if (this.data != null) {
+    		map.put("data", this.data);
+    	}
+    	if (this.message != null) {
+    		map.put("message", this.message);
+    	}
+	    if (this.code != null) {
+    		map.put("code", this.code);
+    	}
 	    return map;
 	}
 }

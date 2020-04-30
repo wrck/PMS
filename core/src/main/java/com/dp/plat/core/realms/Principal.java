@@ -4,6 +4,7 @@
 package com.dp.plat.core.realms;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -61,6 +62,9 @@ public class Principal implements Serializable {
 	private UserInfoVO userInfo;
 	
 	private List<UserInfoVO> userInfoList;
+	
+	private Collection<String> roles;
+	private Collection<String> permissions;
 	
 	/**
 	 * user自定义字段
@@ -308,6 +312,22 @@ public class Principal implements Serializable {
 
 	public void setUserInfoList(List<UserInfoVO> userInfoList) {
 		this.userInfoList = userInfoList;
+	}
+	
+	public Collection<String> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Collection<String> roles) {
+		this.roles = roles;
+	}
+
+	public Collection<String> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(Collection<String> permissions) {
+		this.permissions = permissions;
 	}
 	
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 
@@ -41,4 +42,6 @@ public interface IDispatchProjectService extends IAbstractBaseService<DispatchPr
 	List<DispatchVO> selectDispatchVOWithAmountBySelective(DispatchVO dispatchProject);
 	
 	List<DispatchVO> selectDispatchVOWithAmountBySelectivePageable(PageParam<Object> pageParam);
+
+	PermissionResult checkPermission(DispatchVO dispatchVO, String... permissions);
 }

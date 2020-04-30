@@ -92,6 +92,18 @@
 			</div>
 		</div>
 	</template>
+	<template v-else-if="field.type == 'radio'">
+		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+			<template v-for="item in getDataValue(field.extData)">
+				<label :for="field.field + '_' + item[field.extValue]" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{item[field.extKey]}}</label>
+				<input :id="field.field + '_' + item[field.extValue]" type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+						:value="getFieldValue(field)" :checked="item[field.extValue] == getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+						:data-flag="field.type" 
+				/>
+			</template>
+		</div>
+	</template>
 	<template v-else>
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
@@ -105,7 +117,7 @@
 	var formVueConfig = {
 		el: "#app",
 		data: {
-			formCols: 2,
+			formCols: 4,
 			formColsGroupClass: {
 		    		1: {
 		    			formGroupClass: "col-xs-12 col-sm-12 col-md-12",
@@ -129,7 +141,10 @@
 			fieldList: [],
 			dataType: "table",
 			targetName: "",
-			targetValue: {}
+			targetValue: {},
+			model: "",
+			permissions: [],
+			roles: []
 		},
 		created: function(e) {
 			/* var fieldList = this.fieldList;
@@ -324,6 +339,24 @@
 	 			$tip.text(value);
 	 			var tipWidth =$tip.width() / 2 + "px";
 	 			$tip.css("left", "calc(" + process + "% + 1rem - " + tipWidth + " - " + process / 100 * 2 + "rem)");
+	 		},
+	 		isPermit: function(type, data, ext) {
+	 			var permissionType = data.permissionType || this.permissionType || "";
+	 			var permissions = this.permissions || [];
+ 				var model = data.type || data.model || this.model || "";
+ 				var permission = "";
+	 			if (type == 'btn') {
+					permission = model + ":" + ext.id;
+		 		} else if (type == 'field') {
+	 				permission = model + "." + data.field + "." + this.isCreated ? "add" : "update";
+	 			}
+	 			console.log(permission);
+	 			if ((permissionType == "all" 
+	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload)\b,?/).match(permission) 
+	 					|| permissionType == "view" && RegExp(/:(list|detail|download|batchDownload)\b,?/).match(permission))
+	 					&& $.inArray(permission, permissions) > -1) {
+					return true;
+				}
 	 		}
 	 	}
 	}

@@ -34,8 +34,8 @@
     <result column="projectStartTime" jdbcType="TIMESTAMP" property="projectStartTime" />
     <result column="projectRefreshTime" jdbcType="TIMESTAMP" property="projectRefreshTime" />
     <result column="projectCloseTime" jdbcType="TIMESTAMP" property="projectCloseTime" />
-    <result column="customInfo" jdbcType="OTHER" property="customInfo" />
-    <result column="customConfig" jdbcType="OTHER" property="customConfig" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="customConfig" jdbcType="JSON" property="customConfig" />
     <result column="column014" jdbcType="LONGVARCHAR" property="column014" />
   </resultMap>
   <sql id="Base_Column_List">
@@ -79,7 +79,7 @@
       #{compId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, 
       #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{effectiveFrom,jdbcType=TIMESTAMP}, 
       #{effectiveTo,jdbcType=TIMESTAMP}, #{projectStartTime,jdbcType=TIMESTAMP}, #{projectRefreshTime,jdbcType=TIMESTAMP}, 
-      #{projectCloseTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=CHAR}, #{customConfig,jdbcType=CHAR}, 
+      #{projectCloseTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=JSON}, #{customConfig,jdbcType=JSON}, 
       #{column014,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" keyProperty="projectId" useGeneratedKeys="true">
@@ -283,10 +283,10 @@
         #{projectCloseTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        #{customInfo,jdbcType=CHAR},
+        #{customInfo,jdbcType=JSON},
       </if>
       <if test="customConfig != null">
-        #{customConfig,jdbcType=CHAR},
+        #{customConfig,jdbcType=JSON},
       </if>
       <if test="column014 != null">
         #{column014,jdbcType=LONGVARCHAR},
@@ -390,10 +390,22 @@
         projectCloseTime = #{projectCloseTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=CHAR},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value}
+		    </foreach>
+		),
       </if>
       <if test="customConfig != null">
-        customConfig = #{customConfig,jdbcType=CHAR},
+        <!-- customConfig = #{customConfig,jdbcType=JSON}, -->
+        customConfig = JSON_SET (IFNULL(
+		    customConfig, "{}"), 
+		    <foreach collection="customConfig" item="value" index="key" separator=",">
+			    '$.${key}', #{value}
+		    </foreach>
+		),
       </if>
       <if test="column014 != null">
         column014 = #{column014,jdbcType=LONGVARCHAR},
@@ -434,8 +446,8 @@
       projectStartTime = #{projectStartTime,jdbcType=TIMESTAMP},
       projectRefreshTime = #{projectRefreshTime,jdbcType=TIMESTAMP},
       projectCloseTime = #{projectCloseTime,jdbcType=TIMESTAMP},
-      customInfo = #{customInfo,jdbcType=CHAR},
-      customConfig = #{customConfig,jdbcType=CHAR},
+      customInfo = #{customInfo,jdbcType=JSON},
+      customConfig = #{customConfig,jdbcType=JSON},
       column014 = #{column014,jdbcType=LONGVARCHAR}
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
@@ -540,10 +552,10 @@
 				projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=CHAR} AND
+				customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
 			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=CHAR} AND
+				customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 			<if test="column014 != null and '' != column014">
 				column014 = #{column014, jdbcType=LONGVARCHAR} AND
@@ -652,10 +664,10 @@
 				projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=CHAR} AND
+				customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
 			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=CHAR} AND
+				customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 			<if test="column014 != null and '' != column014">
 				column014 = #{column014, jdbcType=LONGVARCHAR} AND
@@ -765,10 +777,10 @@
 					projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=CHAR} AND
+					customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=CHAR} AND
+					customConfig = #{model.customConfig, jdbcType=JSON} AND
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
 					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
@@ -916,10 +928,10 @@
 					projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=CHAR} AND
+					customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=CHAR} AND
+					customConfig = #{model.customConfig, jdbcType=JSON} AND
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
 					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
@@ -1209,5 +1221,42 @@
     	<otherwise> and podfs.contractNo = #{contractNo} </otherwise>
     </choose>
     order by podfs.id desc limit 1
+  </select>
+  
+  <resultMap type="java.util.HashMap" id="permissionMap">
+		<result column="all" property="all" javaType="java.lang.Boolean"/>
+		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
+		<result column="view" property="view" javaType="java.lang.Boolean"/>
+  </resultMap>
+  <select id="checkPermission" resultMap="permissionMap">
+  	<![CDATA[
+	  	select 
+		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view
+		from
+		    pm_project_header ph 
+		    left join pm_project_member pm 
+		        on ph.projectId = pm.projectId 
+		        and pm.effectiveFrom <= now() 
+		        and (
+		            pm.effectiveTo > now() 
+		            or pm.effectiveTo is null
+		        ) 
+		        and pm.memberCode = #{user.userName}
+		    left join t_user_info ui 
+		        on ui.`id` = #{user.userInfoId}
+		        and find_in_set(ph.`column001`, ui.`custom5`) 
+		where (
+		        pm.memberCode = #{user.userName}
+		        or ui.id = #{user.userInfoId}
+		    )
+	]]>  	
+	<if test="model != null">
+		<if test="model.projectId != null">
+			AND ph.projectId = #{model.projectId}
+		</if>
+		<if test="model.projectIds != null">
+			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
+		</if>
+	</if>	
   </select>
 </mapper>

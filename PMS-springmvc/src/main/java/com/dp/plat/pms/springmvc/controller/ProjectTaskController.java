@@ -3,8 +3,6 @@ package com.dp.plat.pms.springmvc.controller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -26,9 +24,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.util.DownloadUtils;
@@ -36,7 +34,6 @@ import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
-import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
@@ -51,7 +48,7 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
-	
+
 	@Autowired
 	private IUploaderService uploaderService;
 
@@ -63,10 +60,14 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		this.setKeyword("taskId");
 		this.setViewNameSpace("project/task/");
 	}
-	
+
 	@Override
 	@PutMapping(value = "{id}")
 	public String update(Integer id, TaskVO v, Model model) {
+		if (!checkPermission(v, model, "projectTask:edit")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+
 		Integer progress = v.getProgress() == null ? 0 : v.getProgress();
 		if (progress < 100) {
 			v.setStatus("50");// 进行中
@@ -74,11 +75,12 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 			v.setStatus("100");// 已完成，待审核
 		}
 		String view = super.update(id, v, model);
-		
+
 		// 添加进度记录
 		ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
-		CommonRelatedDataVO relatedData = new CommonRelatedDataVO(getViewModel(), v.getTaskId(), getViewModel() + "Log");
-		
+		CommonRelatedDataVO relatedData = new CommonRelatedDataVO(getViewModel(), v.getTaskId(),
+				getViewModel() + "Log");
+
 		relatedData.setCustomInfoByKey("projectName", project.getProjectName());
 		relatedData.setCustomInfoByKey("customerName", project.getColumn003());
 //		relatedData.setCustomInfoByKey("taskName", v.getTaskName());
@@ -90,10 +92,12 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		return view;
 	}
 
-
-
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
+		if (!checkPermission(null, model, "projectTask:delete")) {
+			return;
+		}
+
 		this.setKeyword("taskId");
 		Boolean status = true;
 		String message = null;
@@ -114,6 +118,10 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 
 	@GetMapping("/modals/upload")
 	public String toUpload(ProjectDeliver projectDeliver, Model model) {
+		if (!checkPermission(null, model, "uploadDeliverFile:upload")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+
 		String ek = StringUtils.trimToEmpty(projectDeliver.getEventKey());// 获取事件节点
 		String[] eksplit = ek.split("-");
 		projectDeliver.setDataTypeCode(eksplit[0]);
@@ -136,6 +144,12 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 	@PostMapping("upload")
 	public void uploadDeliverFile(ProjectDeliver projectDeliver, @RequestPart MultipartFile[] deliverFiles,
 			@RequestParam String[] deliverTypes, HttpServletRequest httpRequest, Model model) {
+		TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
+		taskVO.setTaskId(projectDeliver.getTaskId());
+		if (!checkPermission(taskVO, model, "uploadDeliverFile:upload")) {
+			return;
+		}
+
 		String[] deliverIds = StringUtils.trimToEmpty(projectDeliver.getDeliverId()).split(",");
 		if (deliverFiles != null && deliverFiles.length > 0) {
 			for (int i = 0; i < deliverFiles.length; i++) {
@@ -161,15 +175,28 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 
 	@GetMapping("upload/list")
 	public String uploadList(ProjectDeliver projectDeliver, Model model) {
+		TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
+		taskVO.setTaskId(projectDeliver.getTaskId());
+		if (!checkPermission(taskVO, model, "uploadDeliverFile:list")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+
 		List<ProjectDeliver> delivers = service.selectProjectDeliverBySelective(projectDeliver);
 		List<DataTableColumn> columnList = findColumnList("projectTaskUploadList");
 		model.addAttribute("columns", columnList);
 		model.addAttribute("data", delivers);
 		return getViewNameSpace() + "upload";
 	}
-	
+
 	@RequestMapping("download")
-	public void download(ProjectDeliver projectDeliver, HttpServletRequest request, HttpServletResponse response, Model model) {
+	public void download(ProjectDeliver projectDeliver, HttpServletRequest request, HttpServletResponse response,
+			Model model) {
+		TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
+		taskVO.setTaskId(projectDeliver.getTaskId());
+		if (!checkPermission(taskVO, model, "uploadDeliverFile:download")) {
+			return;
+		}
+
 		Object ids = projectDeliver.getIds();
 		if (!(ids instanceof Collection || ids instanceof String[] || ids instanceof Integer[])) {
 			if (ids instanceof String) {
@@ -188,15 +215,15 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		}
 		if (list.size() == 1) {
 			ProjectDeliver deliver = list.get(0);
-			
-			FileInfo fileInfo =  new FileInfo();
+
+			FileInfo fileInfo = new FileInfo();
 			fileInfo.setName(deliver.getDeliverableName());
 			fileInfo.setPath(deliver.getDeliverablePath());
 			uploaderService.fileDownload(fileInfo, request, response);
 		} else {
 			List<FileInfo> fileInfos = new ArrayList<FileInfo>(list.size());
 			for (ProjectDeliver deliver : list) {
-				FileInfo fileInfo =  new FileInfo();
+				FileInfo fileInfo = new FileInfo();
 				fileInfo.setName(deliver.getDeliverableName());
 				fileInfo.setPath(deliver.getDeliverablePath());
 				fileInfos.add(fileInfo);
@@ -205,4 +232,10 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 //			uploaderService.zipFileDownload(null, fileInfos, request, response);
 		}
 	}
+
+	@Override
+	public boolean checkPermission(TaskVO v, Model model, String... permissions) {
+		return super.checkPermission(v, model, permissions);
+	}
+
 }

@@ -56,5 +56,15 @@ sys.common = function(){
 		formDisabled:formDisabled,
 		markRed:markRed};
 }();
-
-
+$(function() {
+	$(document).off("click", '[data-btn-type="cancel"]').on("click", '[data-btn-type="cancel"]', cancelBtnClick);
+	function cancelBtnClick() {
+		if($(this).parents(".modal").length == 0) {
+			if (window.history.length > 1) {
+				history.back();
+			} else {
+				window.close();
+			}
+		}
+	}
+})

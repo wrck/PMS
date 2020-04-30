@@ -30,7 +30,7 @@ public abstract interface IAbstractBaseService<T> {
 	 * @param pageParam
 	 * @return
 	 */
-	long countBySelectivePageable(PageParam<Object> pageParam);
+	long countBySelectivePageable(PageParam<?> pageParam);
 	
 	/**
 	 * 查询满足条件的记录条数记录
@@ -46,7 +46,7 @@ public abstract interface IAbstractBaseService<T> {
 	 * @param pageParam
 	 * @return
 	 */
-	List<Object> selectBySelectivePageable(PageParam<Object> pageParam);
+	List<Object> selectBySelectivePageable(PageParam<?> pageParam);
 	
 	/**
 	 * 查询满足条件的所有记录

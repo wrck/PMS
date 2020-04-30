@@ -44,7 +44,7 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 	@Override
 	public String home(Model model) {
 		String view = super.home(model);
-		return getRealViewNameSpace() + "list";
+		return view;
 	}
 
 
@@ -75,7 +75,7 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 			// Principal user = UserContext.getCurrentPrincipal();
 			// v.setCompId(user.getCompId());
 			PageParam<Object> tempParam = new PageParam<>();
-			V temp = getVClass().newInstance();
+			IndustryLeakWarning temp = new IndustryLeakWarning();
 			// temp.setCompID(user.getCompId());
 			tempParam.setModel(temp);
 			pageParam.setModel(v);

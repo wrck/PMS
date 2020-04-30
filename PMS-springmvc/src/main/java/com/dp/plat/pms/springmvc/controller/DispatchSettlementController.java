@@ -1,10 +1,12 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,16 +18,20 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
+import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 @Controller
@@ -47,6 +53,12 @@ public class DispatchSettlementController
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, SettlementVO settlement, Model model) {
+		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		
 		Principal user = UserContext.getCurrentPrincipal();
 		settlement.setDisabled(false);
 		// settlement.setCompId(user.getCompId());
@@ -78,6 +90,11 @@ public class DispatchSettlementController
 			if (settlement != null) {
 				SettlementVO temp = new SettlementVO();
 				BeanUtils.copyProperties(settlement, temp);
+				if (!checkPermission(temp, model, getDataName() + ":list")) {
+					model.addAttribute("status", false);
+					model.addAttribute("message", "没有权限进行该操作！");
+					return Consts.VIEW_UNAUTHORIZED;
+				}
 				DispatchProject dispatch = new DispatchVO();
 				dispatch.setId(settlement.getDispatchId());
 				dispatch.setDisabled(false);
@@ -106,6 +123,11 @@ public class DispatchSettlementController
 
 	@RequestMapping(value= {"/detail", "/modals/detail"})
 	public String detail(SettlementVO settlement, Model model) {
+		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (HttpContext.isJSON()) {
 			Boolean status = true;
 			String message = null;
@@ -157,6 +179,11 @@ public class DispatchSettlementController
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(SettlementVO settlement, Model model) {
+		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = false;
 		String message = null;
 		try {
@@ -189,6 +216,11 @@ public class DispatchSettlementController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, SettlementVO settlement, Model model) {
+		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -207,6 +239,14 @@ public class DispatchSettlementController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
+		DispatchSettlement dispatchSettlement = service.selectByPrimaryKey(id);
+		SettlementVO vo = new SettlementVO();
+		BeanUtils.copyProperties(dispatchSettlement, vo);
+		if (!checkPermission(vo, model, getDataName() + ":list")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -222,6 +262,45 @@ public class DispatchSettlementController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
+	}
+	
+	@Override
+	public boolean checkPermission(SettlementVO v, Model model, String... permissions) {
+		if (!super.checkPermission(v, model, permissions)) {
+			return false;
+		}
+		boolean isPermit = false;
+		String permissionType = "";
+		if (!UserContext.checkPermission("project:*") && v != null) {
+			Integer projectId = v.getProjectId();
+			DispatchVO dispatchVO = new DispatchVO();
+			dispatchVO.setProjectId(projectId);
+			dispatchVO.setId(v.getDispatchId());
+//			Map<String, Boolean> permission = new HashMap<String, Boolean>();
+			PermissionResult permissionResult = dispatchProjectService.checkPermission(dispatchVO, "dispatch:list", "dispatch:detail");
+			model.addAllAttributes(permissionResult.getMap());
+			return permissionResult.isPermit();
+//			Boolean allPerm = permission.get("all");
+//			if (Boolean.TRUE.equals(allPerm)) {
+//				isPermit = true;
+//				permissionType = "all";
+//			} else {
+//				String perms = StringUtils.join(permissions, ",");
+//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*settlement:(add|edit|delete)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = "edit";
+//				}
+//				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*settlement:(list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = "view";
+//				}
+//			}
+		} else {
+			isPermit = true;
+			permissionType = "all";
+		}
+		model.addAttribute("permissionType", permissionType);
+		return isPermit;
 	}
 
 //	@RequestMapping(value = "submit", method = RequestMethod.POST)

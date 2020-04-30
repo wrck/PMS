@@ -2,21 +2,24 @@ package com.dp.plat.pms.springmvc.controller;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
@@ -25,6 +28,7 @@ import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "common/related")
@@ -41,17 +45,16 @@ public class CommonRelatedDataController
 	public String list(PageParam<Object> pageParam, CommonRelatedDataVO relatedData, Model model) {
 		try {
 			if (relatedData.getObjId() == null || StringUtils.isBlank(relatedData.getType())) {
-
 				model.addAttribute("data", Collections.emptyList());
 				return "unauthorized";
 			}
-			setLocalVariables("dataPrefix", relatedData.getType() + "_");
+			setLocalVariables("dataPrefix", relatedData.getType());
 			return super.list(pageParam, relatedData, model);
 		} finally {
 			clearLocalVariables();
 		}
 	}
-	
+
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
@@ -59,7 +62,7 @@ public class CommonRelatedDataController
 			if (v != null) {
 				model.addAttribute("targetValue", v);
 
-				setLocalVariables("dataPrefix", v.getType() + "_");
+				setLocalVariables("dataPrefix", v.getType());
 				List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 
@@ -77,14 +80,13 @@ public class CommonRelatedDataController
 		}
 		return getRealViewNameSpace() + "detail";
 	}
-	
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
 	public String detail(CommonRelatedDataVO v, Model model) {
 		if (HttpContext.isJSON()) {
 			model.addAttribute("targetValue", v);
-			
-			setLocalVariables("dataPrefix", v.getType() + "_");
+
+			setLocalVariables("dataPrefix", v.getType());
 			List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 			clearLocalVariables();
@@ -101,16 +103,33 @@ public class CommonRelatedDataController
 
 	@PostMapping(value = "/detail")
 	public String create(CommonRelatedDataVO v, Model model) {
-		String objType = v.getObjType();
-		Integer objId = v.getObjId();
-		if ("project".equalsIgnoreCase(objType) && objId != null) {
-			IProjectHeaderService projectHeaderService = SpringContext.getBean(IProjectHeaderService.class);
-			ProjectHeader project = projectHeaderService.selectByPrimaryKey(objId);
-			v.setField1(project.getProjectName());
-			v.setField2(project.getColumn003());
-			v.setCustomInfoByKey("project", project);
+		try {
+			setLocalVariables("dataPrefix", v.getType());
+			String objType = v.getObjType();
+			Integer objId = v.getObjId();
+			if ("project".equalsIgnoreCase(objType) && objId != null) {
+				IProjectHeaderService projectHeaderService = SpringContext.getBean(IProjectHeaderService.class);
+				ProjectHeader project = projectHeaderService.selectByPrimaryKey(objId);
+				v.setField1(project.getProjectName());
+				v.setField2(project.getColumn003());
+				v.setCustomInfoByKey("project", project);
+			}
+			return super.create(v, model);
+		} finally {
+			clearLocalVariables();
 		}
-		return super.create(v, model);
+	}
+	
+
+	@Override
+	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	public String update(@PathVariable("id") Integer id, CommonRelatedDataVO v, Model model) {
+		try {
+			setLocalVariables("dataPrefix", v.getType());
+			return super.update(id, v, model);
+		} finally {
+			clearLocalVariables();
+		}
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -131,6 +150,45 @@ public class CommonRelatedDataController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
+	}
+
+	@Override
+	public boolean checkPermission(CommonRelatedDataVO v, Model model, String... permissions) {
+		if (!super.checkPermission(v, model, permissions)) {
+			return false;
+		}
+		boolean isPermit = false;
+		String permissionType = "";
+		if (v != null) {
+			if (("project".equals(v.getObjType()) || "projectTask".equals(v.getObjType())) && !UserContext.checkPermission("project:*")) {
+				ProjectVO project = new ProjectVO();
+				project.setProjectId(v.getObjId());
+				Map<String, Boolean> permission = SpringContext.getBean(IProjectHeaderService.class).checkPermission(project );
+				Boolean allPerm = permission.get("all");
+				if (Boolean.TRUE.equals(allPerm)) {
+					isPermit = true;
+					permissionType = "all";
+				} else {
+					String perms = StringUtils.join(permissions, ",");
+					if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete)\\b,?.*")) {
+						isPermit = true;
+						permissionType = "edit";
+					}
+					if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*:(list|detail)\\b,?.*")) {
+						isPermit = true;
+						permissionType = "view";
+					}
+				}
+			} else {
+				isPermit = true;
+				permissionType = "all";
+			}
+		} else {
+			isPermit = true;
+			permissionType = "all";
+		}
+		model.addAttribute("permissionType", permissionType);
+		return isPermit;
 	}
 
 }

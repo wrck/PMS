@@ -256,9 +256,9 @@
 		    					}
 		    					$("#projectName", $container).val(source.projectName);
 		    					$("#dispatchName", $container).val(source.projectName);
-			    				$("#smsProjectCode", $container).val(source.smsProjectCode);
-				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime);
-				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount);
+			    				$("#smsProjectCode", $container).val(source.smsProjectCode || (source.customInfo || {}).smsProjectCode);
+				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime);
+				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount);
 			    			} catch(e){}
 		    			});
 		    		});

@@ -52,4 +52,10 @@ public class IndustryAssetController extends AbstractController<IIndustryAssetSe
 		model.addAttribute("message", message);
 	}
 
+	@Override
+	public boolean checkPermission(IndustryAsset v, Model model, String... permissions) {
+		// TODO Auto-generated method stub
+		return super.checkPermission(v, model, permissions);
+	}
+
 }

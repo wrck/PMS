@@ -43,7 +43,8 @@
                     <div class="box-body">
                         <div id="searchDiv" class="text-left">
                         	<form id="searchForm">
-	                            <%@include file="../template/vue-form-component.jsp" %>
+	                            <%-- <%@include file="../template/vue-form-component.jsp" %> --%>
+	                            <%@include file="../template/vue-table-search-component.jsp" %>
 		                        <div class="btn-group">
 									<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
 									<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
@@ -97,7 +98,12 @@
 							el: "#" + this.searchDiv,
 							data: {
 								targetValue: this.data.extData.projectVO,
-	   							fieldList: this.data.columns || []
+	   							fieldList: this.data.columns || [],
+	   						
+	   							// 权限控制参数
+	    						model: this.data.extData.model || model,
+	    						permissions: this.data.extData.permissions || [],
+	    						roles: this.data.extData.roles || []
 	    				 	},
 	                	})
                 	);

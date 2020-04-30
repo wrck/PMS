@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.TaskService;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Project;
@@ -35,7 +39,11 @@ import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.service.BasicDataService;
+import com.dp.plat.service.CallBackService;
+import com.dp.plat.service.PmClosedLoopService;
 import com.dp.plat.service.ProjectServiceImpl;
+import com.dp.plat.service.SendMailService;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
 
@@ -54,6 +62,31 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	@Autowired
 	public void setProjectDao(ProjectDao projectDao) {
 		this.projectDao = projectDao;
+	}
+	
+	@Autowired
+	public void setBasicDataService(BasicDataService basicDataService) {
+		this.basicDataService = basicDataService;
+	}
+
+	@Autowired
+	public void setCallBackService(CallBackService callBackService) {
+		this.callBackService = callBackService;
+	}
+
+	@Autowired
+	public void setPmClosedLoopService(PmClosedLoopService pmClosedLoopService) {
+		this.pmClosedLoopService = pmClosedLoopService;
+	}
+
+	@Autowired
+	public void setTaskService(TaskService taskService) {
+		this.taskService = taskService;
+	}
+
+	@Autowired
+	public void setSendMailService(SendMailService sendMailService) {
+		this.sendMailService = sendMailService;
 	}
 
 	@Override
@@ -166,7 +199,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	 * @param pageParam
 	 * @return
 	 */
-	public long countBySelectivePageable(PageParam<Object> pageParam) {
+	public long countBySelectivePageable(PageParam<?> pageParam) {
 		return dao.countBySelectivePageable(pageParam);
 	}
 
@@ -180,7 +213,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	 * @param pageParam
 	 * @return
 	 */
-	public List<Object> selectBySelectivePageable(PageParam<Object> pageParam) {
+	public List<Object> selectBySelectivePageable(PageParam<?> pageParam) {
 		return dao.selectBySelectivePageable(pageParam);
 	}
 
@@ -260,13 +293,14 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			this.insertOrUpdateProjectState(project);// 插入或更新项目状态表
 
 			project.setProjectId(pid);// 保存的项目表id
-			project.setMemberRole(MessageUtil.DATATYPE_CODE03_20);// 03-20
-			project.setMemberCode(project.getServiceManagerCode());
-			project.setMemberName(project.getServiceManagerCodeforjson());
-			project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
-			project.setEmail(this.getMails(project.getServiceManagerCode()));// 查询邮件
-			this.insertProjectMember(project);// 插入到表pm_project_member - 项目成员表
-
+			if (StringUtils.isNotBlank(project.getServiceManagerCode())) {
+				project.setMemberRole(MessageUtil.DATATYPE_CODE03_20);// 03-20
+				project.setMemberCode(project.getServiceManagerCode());
+				project.setMemberName(project.getServiceManagerCodeforjson());
+				project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
+				project.setEmail(this.getMails(project.getServiceManagerCode()));// 查询邮件
+				this.insertProjectMember(project);// 插入到表pm_project_member - 项目成员表
+			}
 			project.setMemberRole(MessageUtil.DATATYPE_CODE03_10);// 03-10
 			project.setMemberCode(project.getSalesManCode());
 			project.setMemberName(project.getSalesManName());
@@ -329,6 +363,87 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			this.updateChannel(project);// 更新渠道信息
 		}
 		return pid;
+	}
+	
+	@Override
+	public void updateProjectByProjectId(Project project) {
+		// project.setProjectState(MessageUtil.PROJECT_CREATE_STATE30);
+		project.setUpdateBy(UserContext.getUsername());
+		projectDao.updateProjectByProjectId(project);// 更新项目表信息
+		project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_20);
+		project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
+		String procode = project.getProgramManagerCode();
+		boolean a = false;
+		if (procode != null && !"".equals(procode)) {
+			project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_30);
+			project.setOldMemberCode(project.getOldProgramManagerCode());
+			a = this.updateProjectMember(project, project.getProgramManagerCode(), project.getProgramManagerCodeforjson());// 更新项目成员表
+			// 服务经理发生变更会更新项目状态，这是需要判断项目经理是否已存在，若存在则更新项目状态；若项目经理发生变更也需要更新项目状态
+			if (a) {// 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
+				this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);// 更新项目状态
+				this.updateProjectStatus(project.getProjectId(), MessageUtil.PROJECT_STATE_32);// 更新想目状态（projectState）
+			}
+		}
+		String procodeB = project.getProgramManagerCodeB();
+		boolean c = false;
+		if (procodeB != null && !"".equals(procodeB)) {
+			project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_30);
+			project.setOldMemberCode(project.getOldProgramManagerCodeB());
+			project.setFromFlag(MessageUtil.FLAG_FROM_MEMBER);
+			c = this.updateProjectMember(project, project.getProgramManagerCodeB(), project.getProgramManagerCodeforjsonB());// 更新项目成员表
+			// 服务经理发生变更会更新项目状态，这是需要判断项目经理是否已存在，若存在则更新项目状态；若项目经理发生变更也需要更新项目状态
+			if (c) {// 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
+				this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);// 更新项目状态
+				this.updateProjectStatus(project.getProjectId(), MessageUtil.PROJECT_STATE_32);// 更新想目状态（projectState）
+			}
+		}
+//		// 成功变更项目经理，终止在项目经理手中的闭环申请,回访申请
+//		if (a || c) {
+//			terminateProgramManagerActivities(project);
+//			// 项目流程状态为“闭环结束”的项目更新项目经理，将流程状态改为“项目跟踪”
+//			if (MessageUtil.PROJECT_CLOSE_PROCESS_STATE_50.equals(project.getCloseProcessState())) {
+//			    this.updateProjectCloseProcessState(project.getProjectId(), MessageUtil.PROJECT_CLOSE_PROCESS_STATE_10);
+//			}
+//		}
+//		this.updateChannel(project);// 更新渠道信息
+//		this.updateProjectImplByProjectId(project);// 更新实施方式
+	}
+	
+	@Override
+	public Map<String, Boolean> checkPermission(ProjectVO project) {
+		return dao.checkPermission(project, UserContext.getCurrentPrincipal());
+	}
+	
+
+	@Override
+	public PermissionResult checkPermission(ProjectVO project, String... permissions) {
+		if (!UserContext.checkPermission(permissions)) {
+			return new PermissionResult(Boolean.FALSE, "没有权限进行该操作！");
+		}
+		Boolean isPermit = false;
+		String permissionType = "";
+		if (!UserContext.checkPermission("project:*") && project != null) {
+			Map<String, Boolean> permission = this.checkPermission(project);
+			Boolean allPerm = permission.get("all");
+			if (Boolean.TRUE.equals(allPerm)) {
+				isPermit = true;
+				permissionType = "all";
+			} else {
+				String perms = StringUtils.join(permissions, ",");
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "edit";
+				}
+				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+					isPermit = true;
+					permissionType = "view";
+				}
+			}
+		} else {
+			isPermit = true;
+			permissionType= "all";
+		}
+		return new PermissionResult(isPermit, null, permissionType);
 	}
 
 	@Override

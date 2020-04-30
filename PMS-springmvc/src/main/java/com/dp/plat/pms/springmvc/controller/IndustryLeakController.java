@@ -78,4 +78,11 @@ public class IndustryLeakController extends AbstractController<IIndustryLeakServ
 		model.addAttribute("message", message);
 	}
 
+
+	@Override
+	public boolean checkPermission(IndustryLeak v, Model model, String... permissions) {
+		return super.checkPermission(v, model, permissions);
+	}
+
+	
 }

@@ -276,8 +276,10 @@ public class PageParam<T> {
 		this.fuzzy = pageParam.getFuzzy();
 		this.fuzzySearch = pageParam.isFuzzySearch();
 		this.orderBy = pageParam.getOrderBy();
+		this.groupBy = pageParam.getGroupBy();
 		this.multipleFuzzy = pageParam.getMultipleFuzzy();
 		this.lazyLoad = pageParam.isLazyLoad();
+		this.customField = pageParam.getCustomField();
 	}
 
 }

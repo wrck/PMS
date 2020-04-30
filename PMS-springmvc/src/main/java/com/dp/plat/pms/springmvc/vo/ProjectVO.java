@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class ProjectVO extends ProjectHeader {
 	
+	private String projectIds;
+	
 	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsSubmitTime;
 	private String smsProjectAmount;
@@ -29,6 +31,14 @@ public class ProjectVO extends ProjectHeader {
 	private String salesMenTel;
 	private String decPath;
 	
+	public String getProjectIds() {
+		return projectIds;
+	}
+
+	public void setProjectIds(String projectIds) {
+		this.projectIds = projectIds;
+	}
+
 	public String getSmsProjectCode() {
 		return (String) getCustomInfoByKey("smsProjectCode");
 	}
@@ -113,6 +123,45 @@ public class ProjectVO extends ProjectHeader {
 	public void setProgramManagerCode(String programManagerCode) {
 		super.setProgramManagerCode(programManagerCode);
 		setCustomInfoByKey("programManagerCode", programManagerCode);
+	}
+	
+	
+
+	@Override
+	public String getServiceManagerCodeforjson() {
+		return (String) getCustomInfoByKey("serviceManagerCodeforjson");
+//		return super.getServiceManagerCodeforjson();
+	}
+
+	@Override
+	public String getProgramManagerCodeforjson() {
+		return (String) getCustomInfoByKey("programManagerCodeforjson");
+//		return super.getProgramManagerCodeforjson();
+	}
+
+	@Override
+	public String getProgramManagerCodeforjsonB() {
+		return (String) getCustomInfoByKey("programManagerCodeforjsonB");
+//		return super.getProgramManagerCodeforjsonB();
+	}
+	
+
+	@Override
+	public void setServiceManagerCodeforjson(String serviceManagerCodeforjson) {
+		super.setServiceManagerCodeforjson(serviceManagerCodeforjson);
+		setCustomInfoByKey("serviceManagerCodeforjson", serviceManagerCodeforjson);
+	}
+
+	@Override
+	public void setProgramManagerCodeforjson(String programManagerCodeforjson) {
+		super.setProgramManagerCodeforjson(programManagerCodeforjson);
+		setCustomInfoByKey("programManagerCodeforjson", programManagerCodeforjson);
+	}
+
+	@Override
+	public void setProgramManagerCodeforjsonB(String programManagerCodeforjsonB) {
+		super.setProgramManagerCodeforjsonB(programManagerCodeforjsonB);
+		setCustomInfoByKey("programManagerCodeforjsonB", programManagerCodeforjsonB);
 	}
 
 	@Override
