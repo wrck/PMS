@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration>
+	<classPathEntry
+		location="D:\Repositories\Maven\mysql\mysql-connector-java\5.1.30\mysql-connector-java-5.1.30.jar" />
+	<context id="MysqlTable" defaultModelType="flat" targetRuntime="Mybatis3">
+		<commentGenerator>
+            <property name="suppressDate" value="true"/>
+            <property name="suppressAllComments" value="true"/>
+            <!-- 生成的Java文件的编码-->
+            <property name="javaFileEncoding" value="UTF-8"/>
+            <!-- 格式化XML代码-->
+            <property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter"/>
+        </commentGenerator>
+    	
+		<!-- 数据库配置 -->
+		<jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://localhost:3306/activiti"
+			userId="root" password="!Q@W3e4r" />
+		<!-- 生成Model类存放位置 -->
+		<javaModelGenerator targetPackage="com.dp.plat.activiti.entity"
+			targetProject="frame-activiti/src/main/java" />
+		<!-- 生成映射文件存放位置 -->
+		<sqlMapGenerator targetPackage="com.dp.plat.activiti.mapping" targetProject="frame-activiti/src/main/java" />
+		<!-- java DAO 类存放位置 -->
+		<javaClientGenerator targetPackage="com.dp.plat.activiti.dao"
+			targetProject="frame-activiti/src/main/java" type="XMLMAPPER" />
+		<!--生成对应表及类名-->
+		<table tableName="t_preformance" domainObjectName="Performance" 
+			enableCountByExample="false" enableUpdateByExample="false" 
+			enableDeleteByExample="false" enableSelectByExample="false" 
+			selectByExampleQueryId="false">
+			<!-- <property name="useActualColumnNames" value="true"/> -->
+		</table>
+	</context>
+</generatorConfiguration>

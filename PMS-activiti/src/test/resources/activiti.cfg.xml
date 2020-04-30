@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/util 
+	http://www.springframework.org/schema/util/spring-util.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <context:property-placeholder location="classpath:config.properties" />
+    
+	<bean id="processEngineConfiguration"
+		class="org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration">
+
+		<property name="jdbcUrl" value="jdbc:mysql:///activiti?useUnicode=TRUE&amp;characterEncoding=UTF-8&amp;useSSL=TRUE&amp;serverTimezone=GMT%2B8" />
+		<property name="jdbcDriver" value="com.mysql.cj.jdbc.Driver" />
+		<property name="jdbcUsername" value="root" />
+		<property name="jdbcPassword" value="!Q@W3e4r" />
+
+		<!-- job executor configurations -->
+		<property name="databaseSchema" value="ACT" />
+        <property name="databaseSchemaUpdate" value="true" />
+        <property name="jobExecutorActivate" value="true" />
+        <property name="enableDatabaseEventLogging" value="true" />
+        <property name="customFormTypes">
+            <list>
+                <bean class="org.activiti.explorer.form.UserFormType" />
+                <bean class="org.activiti.explorer.form.ProcessDefinitionFormType" />
+                <bean class="org.activiti.explorer.form.MonthFormType" />
+            </list>
+        </property>
+        <!-- 生成流程图的字体 -->
+        <property name="activityFontName" value="宋体" />
+        <property name="labelFontName" value="宋体" />
+        <property name="annotationFontName" value="宋体" />
+        <property name="processDiagramGenerator" ref="customerProcessDiagramGenerator" />
+	</bean>
+
+	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
+
+	<bean id="customerProcessDiagramGenerator"
+		class="com.dp.plat.activiti.service.activiti.CustomProcessDiagramGenerator" />
+
+
+</beans>
