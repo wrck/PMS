@@ -134,7 +134,7 @@
   </insert>
   
   <!-- 插入导入数据 -->
-  <insert id="doImportData">
+  <insert id="doImportData" useGeneratedKeys="true" keyProperty="id">
     insert into ${sourceTableName} 
     <choose>
 	    <when test="columns != null and columns.size() > 0">

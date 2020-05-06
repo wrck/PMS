@@ -29,10 +29,11 @@ import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.impl.IndustryLeakService;
+import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.AF_MANAGER + "/industry/leak")
-public class IndustryLeakController extends AbstractController<IIndustryLeakService, IndustryLeak, IndustryLeak> {
+public class IndustryLeakController extends AbstractController<IIndustryLeakService, IndustryLeak, IndustryLeakVO> {
 
 	@Autowired
 	private IIndustryLeakService industryLeakService;
@@ -64,7 +65,7 @@ public class IndustryLeakController extends AbstractController<IIndustryLeakServ
 		Boolean status = true;
 		String message = null;
 		try {
-			IndustryLeak vo = new IndustryLeak();
+			IndustryLeakVO vo = new IndustryLeakVO();
 			vo.setId(id);
 			vo.setDisabled(true);
 			service.updateByPrimaryKeySelective(vo);
@@ -80,7 +81,7 @@ public class IndustryLeakController extends AbstractController<IIndustryLeakServ
 
 
 	@Override
-	public boolean checkPermission(IndustryLeak v, Model model, String... permissions) {
+	public boolean checkPermission(IndustryLeakVO v, Model model, String... permissions) {
 		return super.checkPermission(v, model, permissions);
 	}
 

@@ -37,7 +37,9 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		if (columns != null) {
 			headRelationMapping = new HashMap<String, String>();
 			for (DataTableColumn m : columns) {
-				headRelationMapping.put(m.getTitle(), m.getData());
+				if (!headRelationMapping.containsKey(m.getTitle())) {
+					headRelationMapping.put(m.getTitle(), m.getData());
+				}
 			}
 		}
 		HttpServletRequest httpRequest = HttpContext.getCurrentRequest();
@@ -45,18 +47,21 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		// 这里 需要指定读用哪个class去读，然后读取第一个sheet 文件流会自动关闭
 		// List<Object> list =
 		// EasyExcel.read(fileName).head(ItemData.class).sheet().doReadSync();
-		ExcelAnalysisEventListener<T> listener = new ExcelAnalysisEventListener<T>((T) params.get("targetValue"));
+		ExcelAnalysisEventListener<T> listener = new ExcelAnalysisEventListener<T>((T) params.get("targetValue"), params);
 		listener.setHeadRelationMapping(headRelationMapping);
 		listener.setSync(false);
 		//ExcelAnalysisEventListener<T> listener = new ExcelAnalysisEventListener<T>(false, headRelationMapping);
 		listener.setExcelAnalysisService(this);
-		listener.setUseTempTable(true);
+		
+		Boolean useTempTable = !Boolean.FALSE.equals(params.get("useTempTable"));
+		listener.setUseTempTable(useTempTable);
 		EasyExcel.read(fileName, listener).autoTrim(true).sheet().doRead();
 		List<?> list = null;
 		if (listener.isUseTempTable()) {
 			list = listener.getList();
 		} else {
-			list = listener.getMapList();
+			list = listener.getList();
+			list = list == null || list.isEmpty() ? listener.getMapList() : list;
 		}
 		if (columns == null || columns.isEmpty()) {
 			Map<Integer, String> headMap = listener.getHeadMap();
@@ -114,7 +119,9 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		Map<String, String> headRelationMapping = new HashMap<String, String>();
 		if (columns != null) {
 			for (DataTableColumn m : columns) {
-				headRelationMapping.put(m.getTitle(), m.getData());
+				if (!headRelationMapping.containsKey(m.getTitle())) {
+					headRelationMapping.put(m.getTitle(), m.getData());
+				}
 			}
 		}
 		HttpServletRequest httpRequest = HttpContext.getCurrentRequest();
@@ -122,7 +129,10 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		// 这里 需要指定读用哪个class去读，然后读取第一个sheet 文件流会自动关闭
 		// List<Object> list =
 		// EasyExcel.read(fileName).head(ItemData.class).sheet().doReadSync();
-		ExcelAnalysisEventListener listener = new ExcelAnalysisEventListener(true, headRelationMapping);
+		ExcelAnalysisEventListener<T> listener = new ExcelAnalysisEventListener<T>((T) params.get("targetValue"), params);
+		listener.setHeadRelationMapping(headRelationMapping);
+		listener.setSync(true);
+		listener.setExcelAnalysisService(this);
 		EasyExcel.read(fileName, listener).autoCloseStream(true).sheet().doRead();
 		return new Result(true);
 	}
@@ -178,7 +188,7 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 //	}
 
 	public default Result submitImportData(Map<String, Object> params, String tempTableName, Collection<String> columns) {
-		getExcelAnalysisDao().submitImportData(tempTableName, getSourceTableName(), columns);
+		getExcelAnalysisDao().submitImportData(tempTableName, getSourceTableName(), columns, params);
 		return new Result(true);
 	}
 
@@ -209,8 +219,8 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		getExcelAnalysisDao().dropTempTable(tempTableName);
 	}
 
-	public default Result doImportData(List<?> list, Map<String, Object> params) {
-		getExcelAnalysisDao().doImportData(list, params);
+	public default Result doImportData(List<?> list, Collection<String> columns, Map<String, Object> params) {
+		getExcelAnalysisDao().doImportData(list, getSourceTableName(), columns, params);
 		return new Result(true);
 	}
 

@@ -50,6 +50,7 @@
 	    var tableId = "importTable";
 	    var importWinId = model + "Win";
 	    var tempTableName = "";
+	    var search = '${pageContext.request.queryString}' || location.search;
 	    var columnKeys = [];
 	    var config = {
 	    		searchDiv: "searchDiv",
@@ -79,7 +80,7 @@
 					$("#importSubmit").removeAttr('disabled')
 					excelPath = result.data[0].path;
 					loaderId = layer.load(2);
-					ajaxPost(router(urlNamespace).api(model).importPreview(importType), {excelPath:excelPath}, function(data){
+					ajaxPost(router(urlNamespace).api(model).importPreview(search), {excelPath:excelPath}, function(data){
 					//ajaxPost(basePath + "/af/industry/leak/modals/preview.json", {excelPath:excelPath}, function(data){
 						data = data.data || {};
 						adjustType = data.adjustType || importType;
@@ -111,9 +112,9 @@
 			            	//var url = basePath + "/af/industry/leak/previewTempTable.html?tempTableName=" + tempTableName;
                             importAdjustDataTable = new CommonTable(tableId, url, null, config);
 			            } else {
-			            	columnKeys = data.columnKeys || [];
+			            	/* columnKeys = data.columnKeys || [];
 			            	var columns = [];
-							for (var column of reportDataColumns) {
+							for (var column of (data.columns || reportDataColumns)) {
 				                if ($.inArray(column.data, columnKeys) != -1) {
 				                    column.render = $.proxy(function(data, type, row) {
 				                        console.log(this);
@@ -122,8 +123,8 @@
 				                    }, column);
 				                    columns.push(column);
 				                }
-				            }
-							config.columns = columns;
+				            } */
+							config.columns = data.columns || reportDataColumns;
                             importAdjustDataTable = new CommonLocalTable(tableId, data.data || [], config);
 			            }
 					}, true, null, function() {
@@ -145,10 +146,10 @@
 			modals.confirm("确认导入？", function() {
 				loaderId = layer.load(6);
 				//ajaxPost(router(urlNamespace).api(model).importSubmit(adjustType, tempTableName), {excelPath, tempTableName, columns:JSON.stringify(columnKeys)}, function(data,status){
-	            ajaxPost(router(urlNamespace).api(model).importSubmit(adjustType, tempTableName), {excelPath, tempTableName, columns:JSON.stringify(columnKeys)}, function(data,status){
+	            ajaxPost(router(urlNamespace).api(model).importSubmit(search, tempTableName), {excelPath, tempTableName, columns:JSON.stringify(columnKeys)}, function(data,status){
 					if(status == 'success'){
 	                    modals.info('导入成功');
-	                    commonTable.reloadData();
+	                    //commonTable.reloadData();
 	                    modals.hideWin(importWinId);
 	                }else{
 	                    modals.info('导入失败');
@@ -165,7 +166,7 @@
 		
 		function dropTempTable(tempTableName) {
 			if(tempTableName) {
-				ajaxPost(router(urlNamespace).api(model).dropTempTable(assetId, tempTableName), {}, function(data) {
+				ajaxPost(router(urlNamespace).api(model).dropTempTable(tempTableName), {}, function(data) {
 	                console.log("删除临时表", tempTableName);
 	            });
 			}

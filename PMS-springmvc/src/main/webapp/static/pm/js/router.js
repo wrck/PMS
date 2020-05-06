@@ -58,13 +58,13 @@ router.common = function(namespace) {
 				// 查询指定报告
 				detail:(id, search) => namespace + "/" + id + ".json" + (search ? "?" + search : "").replace("??", "?"),
 				// 导入数据预览
-				importPreview: (importType) => namespace + "/import/preview.json",
+				importPreview: (search) => namespace + "/import/preview.json" + (search ? "?" + search : "").replace("??", "?"),
 				// 导入数据预览
 				previewTempTable: (tempTableName) => namespace + "/previewTempTable.json?tempTableName="+tempTableName,
 				// 删除临时表
 				dropTempTable: (tempTableName) => namespace + "/dropTempTable.json?tempTableName="+tempTableName,
 				// 导入数据提交
-				importSubmit: (importType, tempTableName) => namespace + "/import/submit" + (tempTableName ? "TempTable" : "") + ".json",
+				importSubmit: (search, tempTableName) => namespace + "/import/submit" + (tempTableName ? "TempTable" : "") + ".json" + (search ? "?" + search : "").replace("??", "?"),
 				// 附件上传
 				upload: (search) => namespace + "/upload.json" + (search ? "?" + search : "").replace("??", "?"),
 				uploadList: (search) => namespace + "/upload/list.json" + (search ? "?" + search : "").replace("??", "?"),
@@ -76,7 +76,7 @@ router.common = function(namespace) {
 				detail: (id, isModals) => namespace + (isModals ? "/modals" : "") + "/" + id + ".html",
 				create: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/detail.html"+ (search ? "?" + search : "").replace("??", "?"),
 				// 导入模态页
-				importModals: (isModals) => namespace + (isModals ? "/modals" : "") + "/import.html",
+				import: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/import.html"+ (search ? "?" + search : "").replace("??", "?"),
 				// 附件上传
 				upload: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/upload.html"+ (search ? "?" + search : "").replace("??", "?"),
 				// 下载
@@ -112,29 +112,7 @@ pm.router = function(model) {
 
 $.namespace("pm.common");
 pm.common = function(namespace) {
-	return {
-		api:((namespace) => {
-			return {
-				// 列表数据
-				list: (search) => namespace + "/list.json" + (search ? "?" + search : "").replace("??", "?"),
-				// 新增报告
-				create: (search)=> namespace + "/detail.json" + (search ? "?" + search : "").replace("??", "?"),
-				// 更新报告
-				update: (id) => namespace + "/" + id + ".json?_method=PUT",
-				// 删除报告
-				delete:(id) => namespace + "/" + id + ".json?_method=DELETE",
-				// 查询指定报告
-				detail:(id) => namespace + "/" + id + ".json"
-			}
-		})(namespace),
-		html: ((namespace) => {
-			return {
-				list: (search) => namespace + ".html" + (search ? "?" + search : "").replace("??", "?"),
-				detail: (id, isModals) => namespace + (isModals ? "/modals" : "") + "/" + id + ".html",
-				create: (search, isModals) => namespace + (isModals ? "/modals" : "") + "/detail.html"+ (search ? "?" + search : "").replace("??", "?")
-			}
-		})(namespace)
-	}
+	return router.common(namespace);
 };
 
 /**
@@ -151,6 +129,8 @@ pm.project = function() {
 				orderDetail: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/orderDetail.json?" + $.param({projectType, contractNo}),
 				// 查询任务类别
 				projectTask: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/task.json?" + $.param({projectType, contractNo}),
+				// 查询任务类别
+				projectAsset: (projectId, projectType) => namespace + (projectId ? ("/" + projectId) : "") + "/asset.json?" + $.param({projectType}),
 				// 初始化报告数据
 				initData: (projectId) => namespace + "/" + projectId + "/initData.json",
 				// 报告数据查询、调整
@@ -232,6 +212,25 @@ pm.settlement = function() {
 $.namespace("pm.projectMember");
 pm.projectMember = function() {
 	var namespace =  ctx + "/pm/member";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+	});
+}();
+
+/**
+ * 人员管理
+ */
+$.namespace("pm.projectMember");
+pm.projectAsset = function() {
+	var namespace =  ctx + "/pm/project/asset";
 	var router = pm.common(namespace);
 	return $.extend(true, {}, router, {
 		api:((namespace) => {

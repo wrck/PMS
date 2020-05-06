@@ -20,7 +20,7 @@ public interface ExcelAnalysisMapper  {
 
 	void dropTempTable(@Param("tempTableName") String tempTableName);
 
-	void doImportData(@Param("list") List<?> list, Map<String, Object> params);
+	void doImportData(@Param("list") List<?> list, @Param("sourceTableName") String sourcetablename, @Param("columns") Collection<String> columns, @Param("params") Map<String, Object> params);
 
-	void submitImportData(@Param("tempTableName")String tempTableName, @Param("sourceTableName") String sourcetablename, @Param("columns") Collection<String> columns);
+	void submitImportData(@Param("tempTableName")String tempTableName, @Param("sourceTableName") String sourcetablename, @Param("columns") Collection<String> columns, @Param("params") Map<String, Object> params);
 }

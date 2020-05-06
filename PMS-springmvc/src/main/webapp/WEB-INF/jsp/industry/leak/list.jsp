@@ -120,7 +120,7 @@
                          winId: winId,
                          title:'导入漏洞信息',
                          width: '75vw',
-                         url: router(urlNamespace).html(model).importModals(model)
+                         url: router(urlNamespace).html(model).import(null, true)
                     });
                     break;
                 case 'add':

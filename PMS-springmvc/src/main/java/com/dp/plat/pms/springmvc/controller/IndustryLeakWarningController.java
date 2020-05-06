@@ -21,6 +21,7 @@ import com.dp.plat.pms.springmvc.entity.IndustryLeakWarning;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakWarningService;
+import com.dp.plat.pms.springmvc.vo.LeakWarningVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.AF_MANAGER + "/industry/warning")
@@ -69,14 +70,14 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 	}
 
 	@RequestMapping(value = {"/asset", "/asset/list"})
-	public String warningAsset(PageParam<Object> pageParam, IndustryLeakWarning v, Model model) {
+	public String warningAsset(PageParam<Object> pageParam, LeakWarningVO v, Model model) {
 		if (HttpContext.isJSON()) {
 			List<Object> list = Collections.emptyList();
 			try {
 				// Principal user = UserContext.getCurrentPrincipal();
 				// v.setCompId(user.getCompId());
 				PageParam<Object> tempParam = new PageParam<>();
-				IndustryLeakWarning temp = new IndustryLeakWarning();
+				LeakWarningVO temp = new LeakWarningVO();
 				// temp.setCompID(user.getCompId());
 				tempParam.setModel(temp);
 				pageParam.setModel(v);
@@ -92,8 +93,9 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 				ExceptionHandler.insertException(e);
 			}
 			model.addAttribute("data", list);
-			List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
+			List<DataTableColumn> columns = this.findColumnList("industryWarningAssetList");
 			pageParam.setColumns(columns);
+			pageParam.setRowId("assetId");
 		} else {
 			model.addAttribute("urlNamespace", URL_NAMESPACE);
 			model.addAttribute("model", "industryWarningAsset");

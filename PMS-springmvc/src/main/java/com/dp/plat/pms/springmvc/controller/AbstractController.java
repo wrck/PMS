@@ -269,6 +269,9 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
 		params.put("columns", columnList);
 		params.put("targetValue", v);
+		
+		boolean useTempTable = !Boolean.FALSE.equals(Boolean.parseBoolean(HttpContext.getCurrentRequest().getParameter("useTempTable")));
+		params.put("useTempTable", useTempTable);
 		try {
 			Method method = service.getClass().getMethod("importPreview", Map.class, String.class);
 			result = (Result) method.invoke(service, params, excelPath);
@@ -344,7 +347,8 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 			result = (Result) method.invoke(service, params, excelPath);
 		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			result = new Result(false, "不支持导入功能");
+			result = new Result(Boolean.FALSE, "不支持导入功能");
+			ExceptionHandler.insertException(e);
 		}
 		model.mergeAttributes(result.getMap());
 		return getRealViewNameSpace() + "import";

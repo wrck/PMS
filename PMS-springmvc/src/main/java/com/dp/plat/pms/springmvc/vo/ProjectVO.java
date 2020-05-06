@@ -31,6 +31,16 @@ public class ProjectVO extends ProjectHeader {
 	private String salesMenTel;
 	private String decPath;
 	
+	
+	public ProjectVO() {
+		super();
+	}
+	
+	public ProjectVO(Integer projectId) {
+		super();
+		this.setProjectId(projectId);
+	}
+
 	public String getProjectIds() {
 		return projectIds;
 	}

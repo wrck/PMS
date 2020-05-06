@@ -76,21 +76,22 @@ public class ExcelAnalysisEventListener<T> extends AnalysisEventListener {
 		tClass = (Class<T>) t.getClass();
 	}
 
-	public ExcelAnalysisEventListener(Map<String, Object> params, boolean isSync) {
-		this(params, null, isSync);
+	public ExcelAnalysisEventListener(T t, Map<String, Object> params, boolean isSync) {
+		this(t, params, null, isSync);
 	}
 
-	public ExcelAnalysisEventListener(boolean isSync, Map<String, String> headRelationMapping) {
-		this(null, headRelationMapping, isSync);
+	public ExcelAnalysisEventListener(T t, boolean isSync, Map<String, String> headRelationMapping) {
+		this(t, null, headRelationMapping, isSync);
 	}
 
-	public ExcelAnalysisEventListener(Map<String, Object> params) {
-		this(null, null, false);
+	public ExcelAnalysisEventListener(T t, Map<String, Object> params) {
+		this(t, params, null, false);
 	}
 
-	public ExcelAnalysisEventListener(Map<String, Object> params, Map<String, String> headRelationMapping,
+	public ExcelAnalysisEventListener(T t, Map<String, Object> params, Map<String, String> headRelationMapping,
 			boolean isSync) {
 		super();
+		this.tClass = (Class<T>) t.getClass();
 		this.params = params;
 		this.headRelationMapping = headRelationMapping;
 		this.sync = isSync;
@@ -135,13 +136,13 @@ public class ExcelAnalysisEventListener<T> extends AnalysisEventListener {
 			}
 			list.add(reportData);
 			// 如果使用临时表，则插入临时表
+			Collection<String> columns = new ArrayList<>(fieldMap.values());
 			if (isUseTempTable() && list.size() >= BATCH_COUNT) {
-				Collection<String> columns = new ArrayList<>(fieldMap.values());
 				getService().insertTempImportData(tempTableName, list, columns);
 				list.clear();
 				// 如果不使用临时表，判断是否为异步操作，异步操作直接进行数据调整
 			} else if (isSync() && list.size() >= BATCH_COUNT) {
-				getService().doImportData(list, beanMap);
+				getService().doImportData(list, columns, params);
 				list.clear();
 			}
 		} else if (data instanceof Map) {
@@ -151,16 +152,16 @@ public class ExcelAnalysisEventListener<T> extends AnalysisEventListener {
 
 	@Override
 	public void doAfterAllAnalysed(AnalysisContext context) {
+		Collection<String> columns = null;
+		if (headRelationMapping != null) {
+			columns = new ArrayList<>(fieldMap.values());
+		}
 		if (isUseTempTable() && !list.isEmpty()) {
-			Collection<String> columns = null;
-			if (headRelationMapping != null) {
-				columns = new ArrayList<>(fieldMap.values());
-			}
 			getService().insertTempImportData(tempTableName, list, columns);
 			list.clear();
 			mapList.clear();
 		} else if (isSync() && !list.isEmpty()) {
-			getService().doImportData(list, params);
+			getService().doImportData(list, columns, params);
 			list.clear();
 			mapList.clear();
 		}

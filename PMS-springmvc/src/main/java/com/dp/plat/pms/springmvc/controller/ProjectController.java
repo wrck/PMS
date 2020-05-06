@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,10 +33,17 @@ import com.dp.plat.data.bean.ProjectPlan;
 import com.dp.plat.data.bean.ProjectPlanEvent;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
+import com.dp.plat.pms.springmvc.entity.IndustryAsset;
+import com.dp.plat.pms.springmvc.entity.IndustryAssetProjectRelation;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
+import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
+import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
+import com.dp.plat.pms.springmvc.vo.ProjectAssetVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
 import com.dp.plat.service.PresalesService;
@@ -66,7 +74,16 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 
 	@Autowired
 	private IProjectTaskService projectTaskService;
-
+	
+	@Autowired
+	private IIndustryAssetService industryAssetService;
+	
+	@Autowired
+	private IIndustryAssetProjectRelationService industryAssetProjectRelationService;
+	
+	@Autowired
+	private IIndustryLeakService industryLeakService;
+	
 	@RequestMapping
 	public String home(Model model) {
 		return VIEW_NAMESPACE + "list";
@@ -318,7 +335,136 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 		model.addAttribute("columns", columns);
 		model.addAttribute("data", projectTaskList);
 	}
-
+	
+//	@GetMapping(value = "/{projectId}/asset")
+//	public void projectAssset(@PathVariable(name = "projectId") Integer projectId, ProjectVO project, Model model) {
+//		project.setProjectId(projectId);
+//		if (!checkPermission(project, model, "project:detail", "projectTask:list")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return;
+//		}
+////		String projectType = project.getProjectType();
+////		if (StringUtils.isBlank(projectType)) {
+////			ProjectHeader projectHeader = projectHeaderService.selectByPrimaryKey(projectId);
+////			projectType = projectHeader.getProjectType();
+////			project.setProjectType(projectType);
+////		}
+//		ProjectAssetVO t = new ProjectAssetVO(projectId);
+//		t.setDisabled(false);
+//		t.setEffective(new Date());
+//		PageParam<Object> pageParam = new PageParam<Object>();
+//		pageParam.setPageSize(-1);
+//		pageParam.setModel(t);
+//		List<Object> projectAssetList = industryAssetService.selectProjectAssetBySelectivePageable(pageParam);
+//		List<DataTableColumn> columns = findColumnList("industryAssetList");
+//		model.addAttribute("columns", columns);
+//		model.addAttribute("data", projectAssetList);
+//	}
+//	
+//	@GetMapping(value = {"/asset/detail", "/asset/modals/detail"})
+//	public String projectAssetDetail(ProjectAssetVO v, Model model) {
+//		if (!checkPermission(new ProjectVO(v.getProjectId()), model, "projectAsset:add")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		if (HttpContext.isJSON()) {
+//			model.addAttribute("targetValue", v);
+//
+//			List<Object> fieldList = this.findFieldList("projectAssetList", DATATYPE_FORM);
+//			model.addAttribute("fieldList", fieldList);
+//		} else {
+//			model.addAttribute("urlNamespace", "/pm/");
+//			model.addAttribute("model", "projectAsset");
+//			model.addAttribute("keyword", "id");
+//
+//			String servletPath = HttpContext.getCurrentRequest().getServletPath();
+//			model.addAttribute("isModals", servletPath.contains("/modals/"));
+//		}
+//		return getRealViewNameSpace() + "detail";
+//	}
+//	
+//	@PostMapping(value = {"/asset/detail", "/asset/modals/detail"})
+//	public String projectAssetCreate(ProjectAssetVO v, Model model) {
+//		if (!checkPermission(new ProjectVO(v.getProjectId()), model, "projectAsset:add")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		Boolean status = true;
+//		String message = null;
+//		try {
+//			industryAssetService.insertProjectAssetSelective(v);
+//			model.addAttribute("targetName", this.getTargetName(v.getClass()));
+//		} catch (Exception e) {
+//			status = false;
+//			Integer errorId = ExceptionHandler.insertException(e);
+//			model.addAttribute("errorId", errorId);
+//			message = e.getMessage();
+//		}
+//		model.addAttribute("status", status);
+//		model.addAttribute("message", message);
+//		return getRealViewNameSpace() + "detail";
+//	}
+//
+//	@PostMapping(value = {"/asset/{id}", "/asset/modals/{id}"})
+//	public String projectAssetOne(@PathVariable("id") Integer id, ProjectAssetVO v, Model model) {
+//		if (!checkPermission(new ProjectVO(v.getProjectId()), model, "projectAsset:add")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		if (HttpContext.isJSON()) {
+//			IndustryAssetProjectRelation projectRelation = industryAssetProjectRelationService.selectByPrimaryKey(id);
+//			if (projectRelation != null) {
+//				IndustryAsset asset = industryAssetService.selectByPrimaryKey(projectRelation.getAssetId());
+//				BeanUtils.copyProperties(asset, v);
+//				v.setId(projectRelation.getId());
+//				v.setAssetId(asset.getId());
+//				v.setProjectId(projectRelation.getProjectId());
+//				model.addAttribute("targetValue", v);
+//
+//				List<Object> fieldList = this.findFieldList("projectAssetList", DATATYPE_FORM);
+//				model.addAttribute("fieldList", fieldList);
+//
+//				List<?> navTavList = this.findNavTabList("projectAssetTab");
+//				model.addAttribute("tabList", navTavList);
+//			}
+//		} else {
+//			model.addAttribute("urlNamespace", "/pm/");
+//			model.addAttribute("model", "projectAsset");
+//			model.addAttribute("keyword", "id");
+//
+//			String servletPath = HttpContext.getCurrentRequest().getServletPath();
+//			model.addAttribute("isModals", servletPath.contains("/modals/"));
+//		}
+//		return getRealViewNameSpace() + "detail";
+//	}
+//	
+//	@RequestMapping(value = "/asset/{id}", method = RequestMethod.PUT)
+//	public String update(@PathVariable("id") Integer id, ProjectAssetVO v, Model model) {
+//		if (!checkPermission(new ProjectVO(v.getProjectId()), model, getDataName() + ":update")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		Boolean status = true;
+//		String message = null;
+//		try {
+//			industryAssetService.updateByPrimaryKeySelective(v);
+//			model.addAttribute("targetName", this.getTargetName(v.getClass()));
+//		} catch (Exception e) {
+//			status = false;
+//			Integer errorId = ExceptionHandler.insertException(e);
+//			model.addAttribute("errorId", errorId);
+//			message = e.getMessage();
+//		}
+//		model.addAttribute("status", status);
+//		model.addAttribute("message", message);
+//		return getRealViewNameSpace() + "detail";
+//	}
+	
 	/**
 	 * planList的部分字段放到planeventList中
 	 * 
