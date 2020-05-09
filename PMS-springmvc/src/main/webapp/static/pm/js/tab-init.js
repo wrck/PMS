@@ -48,7 +48,6 @@ function initTabData(config, refresh, navTab) {
 	if (!config) {
 		return;
 	}
-	var vm = this;
 	var type = config.type;
 	var drawType =  config.drawType || "json";
 	var url = config.url;
@@ -56,6 +55,7 @@ function initTabData(config, refresh, navTab) {
 	var timestamp = config.timestamp || "";
 	var navTabId = type + "Tab" + timestamp;
 	var $container = config.container || $(navTabId).parents(".tab-content:first");
+	var vm = $container.data("vm") || this;
 	var $navTab = $("#" + navTabId, $container);
 	var searchDiv = type + "SearchDiv" + timestamp;
 	var tableId = type + "Table" + timestamp;
@@ -77,6 +77,7 @@ function initTabData(config, refresh, navTab) {
     		var data = resultMap.data;
     		var localTable = $("#" + tableId, $container).data("localTable");
     		vm.permissionType = resultMap.permissionType || "";
+    		vm.permissions = resultMap.permissions || [];
 //    		console.log(vm);
 //    		var tabList = vm.tabList || [];
 //    		for (var i = 0; i < tabList.length; i++) {

@@ -134,7 +134,7 @@
   </insert>
   
   <!-- 插入导入数据 -->
-  <insert id="doImportData" useGeneratedKeys="true" keyProperty="id">
+  <insert id="doImportData">
     insert into ${sourceTableName} 
     <choose>
 	    <when test="columns != null and columns.size() > 0">
@@ -142,7 +142,28 @@
 		        ${column}
 		    </foreach>
 		    values 
-            <foreach collection="list" item="item" separator=",">
+            <foreach collection="list" item="item" index="index" separator=",">
+			    <foreach collection="columns" item="column" open="(" close=")" separator=",">
+	                #{item.${column}}
+	            </foreach>
+            </foreach>
+		    ON DUPLICATE KEY UPDATE
+            <foreach collection="columns" item="column" separator=",">
+		        ${column} = IFNULL(VALUES(${column}), ${column})
+		    </foreach>
+	    </when>
+    </choose>
+  </insert>
+  
+  <insert id="doImportData2" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="list.id">
+    insert into ${sourceTableName} 
+    <choose>
+	    <when test="columns != null and columns.size() > 0">
+            <foreach collection="columns" item="column" open="(" close=")" separator=",">
+		        ${column}
+		    </foreach>
+		    values 
+            <foreach collection="list" item="item" index="index" separator=",">
 			    <foreach collection="columns" item="column" open="(" close=")" separator=",">
 	                #{item.${column}}
 	            </foreach>

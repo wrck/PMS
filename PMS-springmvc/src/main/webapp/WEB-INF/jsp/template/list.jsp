@@ -111,6 +111,11 @@
                 	this.searchButton = $("#" + this.searchDiv + " button[data-btn-type='search']");
                 	this.restButton = $("#" + this.searchDiv + " button[data-btn-type='reset']");
                 	form = $("#searchForm").form();
+                	
+                	// 回调函数
+                	if (router(urlNamespace).callback(model).list) {
+                		router(urlNamespace).callback(model).list();
+                	}
                 },
             });
 

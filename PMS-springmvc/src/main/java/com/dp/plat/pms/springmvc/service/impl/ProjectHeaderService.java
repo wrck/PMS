@@ -1,10 +1,13 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.activiti.engine.TaskService;
 import org.apache.commons.lang3.StringUtils;
@@ -396,8 +399,24 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	}
 	
 	@Override
-	public Map<String, Boolean> checkPermission(ProjectVO project) {
-		return dao.checkPermission(project, UserContext.getCurrentPrincipal());
+	public Map<String, Object> checkPermission(ProjectVO project) {
+		return this.checkPermissionMap(project);
+	}
+	
+	@Override
+	public Map<String, Object> checkPermissionMap(ProjectVO project, String... permissions) {
+		if (permissions != null) {
+			Set<String> permissTypes = new HashSet<String>(permissions.length);
+			for (String permission : permissions) {
+				if (StringUtils.isNotBlank(permission)) {
+					String type = permission.split(":")[0];
+					permissTypes.add(type);
+				}
+			}
+			return dao.checkPermission(project, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
+		} else {
+			return dao.checkPermission(project, UserContext.getCurrentPrincipal());
+		}
 	}
 	
 
@@ -408,9 +427,11 @@ public class ProjectHeaderService extends ProjectServiceImpl
 		}
 		Boolean isPermit = false;
 		String permissionType = "";
+		Collection<String> permissionSet = null;
 		if (!UserContext.checkPermission("project:*") && project != null) {
-			Map<String, Boolean> permission = this.checkPermission(project);
-			Boolean allPerm = permission.get("all");
+			Map<String, Object> permission = this.checkPermissionMap(project, permissions);
+			permissionSet = (Collection<String>) permission.get("permissions");
+			Boolean allPerm = (Boolean) permission.get("all");
 			if (Boolean.TRUE.equals(allPerm)) {
 				isPermit = true;
 				permissionType = "all";
@@ -429,7 +450,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			isPermit = true;
 			permissionType= "all";
 		}
-		return new PermissionResult(isPermit, null, permissionType);
+		return new PermissionResult(isPermit, permissionType, permissionSet);
 	}
 
 	@Override

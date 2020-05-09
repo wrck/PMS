@@ -67,6 +67,7 @@ var TabPane = {
 				type: Number,
 				default: new Date().getTime()
 			},
+			
 		},
 		/* created: function(e) {
 			var fieldList = this.fieldList;
@@ -108,14 +109,21 @@ var TabPane = {
 	 			var permissions = this.permissions || [];
  				var model = this.navTab.type || this.model || "";
  				var permission = model + ":" + btn.id;
+ 				var checkPermitCallback = this.navTab.checkPermit;
 	 			console.log(permission);
+	 			var isPermit = false;
 	 			if ((permissionType == "all" 
-	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete)\b,?/).test(permission) 
+	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
 	 					|| permissionType == "view" && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
 	 					&& $.inArray(permission, permissions) > -1) {
-					return true;
+	 				isPermit = true;
 				}
-	 			return false;
+	 			if (typeof checkPermitCallback == 'function') {
+	 				try {
+	 					isPermit = checkPermitCallback.call(this, btn) || isPermit;
+	 				} catch(e) {}
+	 			}
+	 			return isPermit;
 			},
 			/* navTabTransfer: function() {
 				console.log("transfer");
@@ -181,6 +189,7 @@ var TabPane = {
 	 			var activeTab = $(tab).text(); 
 	 			var tabId = $(tab).attr("href");
 	 			var $container = $(tab).parents(".tab-content:first");
+	 			$container.data("vm", this);
 	 			if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
 	 	            $(tabId + " .overlay", $container).addClass("loading");
 	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;

@@ -3,6 +3,7 @@ package com.dp.plat.pms.springmvc.controller;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
@@ -73,7 +75,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		String servletPath = httpRequest.getServletPath();
 		model.addAttribute("isModals", servletPath.contains("/modals/"));
 		
-		model.addAttribute("permissions", UserContext.getCurrentPrincipal().getPermissions());
+		//model.addAttribute("permissions", UserContext.getCurrentPrincipal().getPermissions());
 	}
 
 	@RequestMapping
@@ -536,6 +538,17 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 			model.addAttribute("message", "没有权限进行该操作！");
 			return false;
 		}
+		Collection<String> permissionList = UserContext.getCurrentPrincipal().getPermissions();
+		Collection<String> currentPermistions = new ArrayList<String>(permissionList.size());
+		for (String requiredPerm : permissions) {
+			String type = requiredPerm.split(":")[0] + ":";
+			for (String permission : permissionList) {
+				if (permission.startsWith(type)) {
+					currentPermistions.add(permission);
+				}
+			}
+		}
+		model.addAttribute("permissions", currentPermistions);
 		model.addAttribute("permissionType", "all");
 		return true;
 	}

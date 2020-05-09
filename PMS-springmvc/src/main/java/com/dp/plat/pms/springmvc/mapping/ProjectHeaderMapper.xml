@@ -452,7 +452,7 @@
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultMap="BaseResultMap">
-    select * from pm_project_header
+    select * from pm_project_header ph
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="projectId != null and '' != projectId">
@@ -559,12 +559,18 @@
 			</if>
 			<if test="column014 != null and '' != column014">
 				column014 = #{column014, jdbcType=LONGVARCHAR} AND
+			</if>
+			<if test="projectTypes != null">
+				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
+			</if>
+			<if test="officeCodes != null">
+				FIND_IN_SET(ph.`column001`, #{officeCodes}) AND 
 			</if>
 		</trim>
 	</where>
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultType="long">
-    select count(1) from pm_project_header
+    select count(1) from pm_project_header ph
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="projectId != null and '' != projectId">
@@ -672,11 +678,17 @@
 			<if test="column014 != null and '' != column014">
 				column014 = #{column014, jdbcType=LONGVARCHAR} AND
 			</if>
+			<if test="projectTypes != null">
+				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
+			</if>
+			<if test="officeCodes != null">
+				FIND_IN_SET(ph.`column001`, #{officeCodes}) AND 
+			</if>
 		</trim>
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from pm_project_header
+    select * from pm_project_header ph
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="model != null ">
@@ -785,6 +797,12 @@
 				<if test="model.column014 != null and '' != model.column014">
 					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
 				</if>
+				<if test="model.projectTypes != null">
+					FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+				</if>
+				<if test="model.officeCodes != null">
+					FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND 
+				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -807,8 +825,6 @@
 					column013 like CONCAT("%", #{fuzzy}, "%") or
 					customerProjectName like CONCAT("%", #{fuzzy}, "%") or
 					salesType like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
 					customInfo like CONCAT("%", #{fuzzy}, "%") or
 					customConfig like CONCAT("%", #{fuzzy}, "%") or
 					column014 like CONCAT("%", #{fuzzy}, "%")
@@ -827,7 +843,7 @@
     </if>
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_project_header
+    select count(1) from pm_project_header ph
 	<where>
 		<trim prefixOverrides="and |or" suffixOverrides="and |or">
 			<if test="model != null ">
@@ -936,6 +952,12 @@
 				<if test="model.column014 != null and '' != model.column014">
 					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
 				</if>
+				<if test="model.projectTypes != null">
+					FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+				</if>
+				<if test="model.officeCodes != null">
+					FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND 
+				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -958,8 +980,6 @@
 					column013 like CONCAT("%", #{fuzzy}, "%") or
 					customerProjectName like CONCAT("%", #{fuzzy}, "%") or
 					salesType like CONCAT("%", #{fuzzy}, "%") or
-					createBy like CONCAT("%", #{fuzzy}, "%") or
-					updateBy like CONCAT("%", #{fuzzy}, "%") or
 					customInfo like CONCAT("%", #{fuzzy}, "%") or
 					customConfig like CONCAT("%", #{fuzzy}, "%") or
 					column014 like CONCAT("%", #{fuzzy}, "%")
@@ -1027,6 +1047,9 @@
 			</if>
 			<if test="model.compId != null and '' != model.compId">
 				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
+			</if>
+			<if test="model.projectTypes != null">
+				AND FIND_IN_SET(pp.`projectType`, #{model.projectTypes})
 			</if>
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
@@ -1119,6 +1142,9 @@
 			</if>
 			<if test="model.compId != null and '' != model.compId">
 				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
+			</if>
+			<if test="model.projectTypes != null">
+				AND FIND_IN_SET(pp.`projectType`, #{model.projectTypes})
 			</if>
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
@@ -1227,11 +1253,12 @@
 		<result column="all" property="all" javaType="java.lang.Boolean"/>
 		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
 		<result column="view" property="view" javaType="java.lang.Boolean"/>
+		<collection property="permissions" select="selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
 	  	select 
-		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view
+		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view, group_concat(distinct pm.memberRole) memberRoles, #{permissionTypes} as permissionTypes
 		from
 		    pm_project_header ph 
 		    left join pm_project_member pm 
@@ -1245,11 +1272,12 @@
 		    left join t_user_info ui 
 		        on ui.`id` = #{user.userInfoId}
 		        and find_in_set(ph.`column001`, ui.`custom5`) 
+		        and find_in_set(ph.projectType, ui.custom4)
 		where (
 		        pm.memberCode = #{user.userName}
 		        or ui.id = #{user.userInfoId}
 		    )
-	]]>  	
+	]]>
 	<if test="model != null">
 		<if test="model.projectId != null">
 			AND ph.projectId = #{model.projectId}
@@ -1258,5 +1286,24 @@
 			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
 		</if>
 	</if>	
+  </select>
+  
+  <select id="selectPermissionByMemberRole" resultType="String">
+  	select 
+	    p.`permission_name` 
+	from
+	    `t_permission` p 
+	    left join `t_role_permission` rp 
+	        on rp.permission_id = p.permission_id 
+	    left join `t_role` r
+	        on rp.role_id = r.role_id 
+	    left join `fnd_basic_data` db 
+	        on db.dataTypeCode = 'afProjectMember' 
+	        and find_in_set(db.basicDataId, #{memberRoles}) 
+	        and r.role_name = db.basicDataAttri1 
+	where r.role_name = db.basicDataAttri1
+	<if test="permissionTypes != null">
+	    and p.permission_name regexp #{permissionTypes}
+	</if>
   </select>
 </mapper>

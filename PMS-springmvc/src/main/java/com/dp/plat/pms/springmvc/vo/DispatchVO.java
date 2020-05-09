@@ -12,6 +12,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class DispatchVO extends DispatchProject {
 
 	private Integer projectId;
+	
+	private String officeCodes;
+	private String projectTypes;
 
 	private String typeName;
 	private String stateName;
@@ -38,6 +41,22 @@ public class DispatchVO extends DispatchProject {
 
 	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
+	}
+	
+	public String getOfficeCodes() {
+		return officeCodes;
+	}
+
+	public void setOfficeCodes(String officeCodes) {
+		this.officeCodes = officeCodes;
+	}
+
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
 	}
 
 	public String getTypeName() {

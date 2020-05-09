@@ -1,12 +1,11 @@
 package com.dp.plat.pms.springmvc.entity;
 
 import com.dp.plat.core.entity.BaseEntity;
-import java.util.Date;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.Date;
 
-public class IndustryAssetProjectRelation extends BaseEntity {
-
+public class IndustryAssetLeakRelation extends BaseEntity {
     private Integer id;
 
     // 项目ID
@@ -14,6 +13,9 @@ public class IndustryAssetProjectRelation extends BaseEntity {
 
     // 资产ID
     private Integer assetId;
+
+    // 漏洞ID
+    private Integer leakId;
 
     // 生效时间
     @JsonSerialize(using = JsonSerializer.class)
@@ -84,6 +86,24 @@ public class IndustryAssetProjectRelation extends BaseEntity {
      */
     public void setAssetId(Integer assetId) {
         this.assetId = assetId;
+    }
+
+    /**
+     * 获取漏洞ID
+     *
+     * @return leakId - 漏洞ID
+     */
+    public Integer getLeakId() {
+        return leakId;
+    }
+
+    /**
+     * 设置漏洞ID
+     *
+     * @param leakId 漏洞ID
+     */
+    public void setLeakId(Integer leakId) {
+        this.leakId = leakId;
     }
 
     /**

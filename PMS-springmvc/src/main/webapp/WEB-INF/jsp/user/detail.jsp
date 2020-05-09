@@ -169,6 +169,18 @@
 									</div>
 								</div>
 							</div>
+							<div class="col-sm-12">
+								<div class="form-group">
+									<label for="projectTypePower" class="col-sm-1 control-label">项目类型权限</label>
+									<div class="col-sm-10">
+										<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
+											data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
+											data-text="basicDataName" data-value="basicDataId"
+										>
+										</select>
+									</div>
+								</div>
+							</div>
 						</div>
 						<!-- /.box-body -->
 						<div class="box-footer text-right">

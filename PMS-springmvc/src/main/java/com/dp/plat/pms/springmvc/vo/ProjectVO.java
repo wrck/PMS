@@ -31,6 +31,7 @@ public class ProjectVO extends ProjectHeader {
 	private String salesMenTel;
 	private String decPath;
 	
+	private String projectTypes;
 	
 	public ProjectVO() {
 		super();
@@ -227,4 +228,13 @@ public class ProjectVO extends ProjectHeader {
 		this.setEffectiveFrom(date);
 		this.setEffectiveTo(date);
 	}
+
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
+	}
+	
 }

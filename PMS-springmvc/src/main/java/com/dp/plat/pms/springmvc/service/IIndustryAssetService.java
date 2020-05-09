@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
-import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
 
 /**
  *
@@ -16,5 +15,4 @@ public interface IIndustryAssetService extends IExcelAnalysisService<IndustryAss
 	
 	long countProjectAssetBySelectivePageable(PageParam<Object> pageParam);
 
-	void insertProjectAssetSelective(IndustryAssetVO v);
 }

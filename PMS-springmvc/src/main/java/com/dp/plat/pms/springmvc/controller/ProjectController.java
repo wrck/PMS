@@ -13,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,8 +32,7 @@ import com.dp.plat.data.bean.ProjectPlan;
 import com.dp.plat.data.bean.ProjectPlanEvent;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
-import com.dp.plat.pms.springmvc.entity.IndustryAsset;
-import com.dp.plat.pms.springmvc.entity.IndustryAssetProjectRelation;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
@@ -42,8 +40,6 @@ import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
-import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
-import com.dp.plat.pms.springmvc.vo.ProjectAssetVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
 import com.dp.plat.service.PresalesService;
@@ -96,6 +92,19 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 		PageParam<Object> tempParam = new PageParam<>();
 		ProjectVO temp = new ProjectVO();
 		// temp.setCompID(user.getCompId());
+		// 允许访问的项目类型
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+			String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+			temp.setProjectTypes(projectTypes);
+			project.setProjectTypes(projectTypes);
+			
+			// 非子项目管理员，添加允许访问的办事处权限
+			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+				temp.setOfficeCodes(officeCodes);
+				project.setOfficeCodes(officeCodes);
+			}
+		}
 		tempParam.setModel(temp);
 		pageParam.setModel(project);
 		List<Object> list = null;
@@ -484,6 +493,9 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 
 	@Override
 	public boolean checkPermission(ProjectVO project, Model model, String... permissions) {
+		if (!super.checkPermission(project, model, permissions)) {
+			return false;
+		}
 		PermissionResult result = projectHeaderService.checkPermission(project, permissions);
 		model.addAllAttributes(result.getMap());
 		return result.isPermit();

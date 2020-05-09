@@ -206,6 +206,11 @@
 		                }, 
 		    			fields : varFields
 		    		});
+		    		
+		    		// 回调函数
+                	if (router(urlNamespace).callback(model).list) {
+                		router(urlNamespace).callback(model).list();
+                	}
     			 }
     		})
     		
@@ -237,6 +242,11 @@
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
 	   						//form.initFormData(data.targetValue);
+	   						
+	   						// 回调函数
+		                	if (router(urlNamespace).callback(model).list) {
+		                		router(urlNamespace).callback(model).list();
+		                	}
 	    				}
 	        		});
         		}

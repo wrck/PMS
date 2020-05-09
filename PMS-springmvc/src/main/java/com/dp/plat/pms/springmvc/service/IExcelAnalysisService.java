@@ -20,6 +20,7 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.dao.ExcelAnalysisMapper;
+import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
 import com.dp.plat.pms.springmvc.excel.ExcelAnalysisEventListener;
 
 public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
@@ -37,7 +38,11 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		if (columns != null) {
 			headRelationMapping = new HashMap<String, String>();
 			for (DataTableColumn m : columns) {
-				if (!headRelationMapping.containsKey(m.getTitle())) {
+				boolean isPermit = m.getVisible();
+				if (isPermit && m instanceof DataFieldRelation) {
+					isPermit = isPermit && !((DataFieldRelation) m).getReadonly() && !((DataFieldRelation) m).getDisabled();
+				}
+				if (isPermit && !headRelationMapping.containsKey(m.getTitle())) {
 					headRelationMapping.put(m.getTitle(), m.getData());
 				}
 			}
@@ -119,7 +124,11 @@ public interface IExcelAnalysisService<T> extends IAbstractBaseService<T> {
 		Map<String, String> headRelationMapping = new HashMap<String, String>();
 		if (columns != null) {
 			for (DataTableColumn m : columns) {
-				if (!headRelationMapping.containsKey(m.getTitle())) {
+				boolean isPermit = m.getVisible();
+				if (isPermit && m instanceof DataFieldRelation) {
+					isPermit = isPermit && !((DataFieldRelation) m).getReadonly() && !((DataFieldRelation) m).getDisabled();
+				}
+				if (isPermit && !headRelationMapping.containsKey(m.getTitle())) {
 					headRelationMapping.put(m.getTitle(), m.getData());
 				}
 			}

@@ -1095,7 +1095,7 @@
 	</where>
   </select>
   
-  <select id="selectProjectAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectAssetVO">
+  <!-- <select id="selectProjectAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectAssetVO">
     select 
 	    apr.id, apr.projectId, ia.id as assetId, ia.*, ph.projectName
 	from
@@ -1403,5 +1403,5 @@
 			</if>
 		</trim>
 	</where>
-  </select>
+  </select> -->
 </mapper>

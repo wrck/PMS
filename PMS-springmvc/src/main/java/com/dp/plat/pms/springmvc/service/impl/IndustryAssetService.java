@@ -1,25 +1,25 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
-import com.dp.plat.core.service.impl.AbstractBaseService;
-import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.Result;
-import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
-import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
-import com.dp.plat.pms.springmvc.vo.ProjectAssetVO;
-import com.dp.plat.pms.springmvc.dao.ExcelAnalysisMapper;
-import com.dp.plat.pms.springmvc.dao.IndustryAssetMapper;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
+import com.dp.plat.pms.springmvc.dao.ExcelAnalysisMapper;
+import com.dp.plat.pms.springmvc.dao.IndustryAssetMapper;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryAssetProjectRelation;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
+import com.dp.plat.pms.springmvc.vo.ProjectAssetVO;
 
 /**
  *
@@ -33,8 +33,9 @@ public class IndustryAssetService extends AbstractBaseService<IndustryAssetMappe
 	@Autowired
 	private ExcelAnalysisMapper excelAnalysisMapper;
 	
+	@Lazy
 	@Autowired
-	private IndustryAssetProjectRelationService industryAssetProjectRelationService;
+	private IIndustryAssetProjectRelationService industryAssetProjectRelationService;
 	
 	@Override
 	public ExcelAnalysisMapper getExcelAnalysisDao() {
@@ -49,20 +50,37 @@ public class IndustryAssetService extends AbstractBaseService<IndustryAssetMappe
 	@Override
 	@Transactional
 	public Result doImportData(List<?> list, Collection<String> columns, Map<String, Object> params) {
-		excelAnalysisMapper.doImportData(list, sourceTableName, columns, params);
+//		excelAnalysisMapper.doImportData(list, sourceTableName, columns, params);
 		if (params != null) {
 			ProjectAssetVO projectAssetVO = (ProjectAssetVO) params.get("targetValue");
 			if (projectAssetVO != null && projectAssetVO.getProjectId() != null) {
 				for (Iterator<?> iterator = list.iterator(); iterator.hasNext();) {
 					IndustryAsset asset = (IndustryAsset) iterator.next();
+					if (asset.getId() == null || asset.getId() == 0) {
+						this.insertSelective(asset);
+					} else {
+						this.updateByPrimaryKeySelective(asset);
+					}
+					
 					IndustryAssetProjectRelation t = new IndustryAssetProjectRelation();
 					t.setProjectId(projectAssetVO.getProjectId());
 					t.setAssetId(asset.getId());
 					industryAssetProjectRelationService.invalidAssetProjectRelation(t);
 					industryAssetProjectRelationService.insertSelective(t);
 				}
+			} else {
+				excelAnalysisMapper.doImportData(list, sourceTableName, columns, params);
 			}
+		} else {
+			excelAnalysisMapper.doImportData(list, sourceTableName, columns, params);
 		}
+//		if (params == null) {
+//			params = new HashMap<String, Object>();
+//		}
+//		params.put("list", list);
+//		params.put("columns", columns);
+//		params.put("sourceTableName", sourceTableName);
+//		excelAnalysisMapper.doImportData2(params);
 		return new Result(true);
 	}
 	
@@ -82,20 +100,4 @@ public class IndustryAssetService extends AbstractBaseService<IndustryAssetMappe
 		return dao.countProjectAssetBySelectivePageable(pageParam);
 	}
 
-	@Override
-	@Transactional
-	public void insertProjectAssetSelective(IndustryAssetVO v) {
-		if (v == null) {
-			return;
-		}
-		this.insertSelective(v);
-		
-		if (((ProjectAssetVO)v).getProjectId() != null) {
-			IndustryAssetProjectRelation t = new IndustryAssetProjectRelation();
-			t.setAssetId(v.getId());
-			t.setProjectId(((ProjectAssetVO)v).getProjectId());
-			industryAssetProjectRelationService.insertSelective(t);
-		}
-	}
-	
 }

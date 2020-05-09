@@ -4,7 +4,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -12,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.service.impl.AbstractBaseService;
@@ -35,7 +32,7 @@ import com.dp.plat.pms.springmvc.vo.ProjectVO;
 @Service("dispatchProjectService")
 public class DispatchProjectService extends AbstractBaseService<DispatchProjectMapper, DispatchProject>
 		implements IDispatchProjectService {
-	
+
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
 
@@ -67,10 +64,11 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		temp.setDispatched(true);
 		this.updateByPrimaryKeySelective(temp);
 	}
-	
+
 	/**
 	 * 生成派单编号
-	 * @param facilitatorCode 
+	 * 
+	 * @param facilitatorCode
 	 * @return dispatchSeq
 	 */
 	@Override
@@ -85,25 +83,29 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		long count = this.countBySelective(temp) + 1;
 		int year = Calendar.getInstance().get(Calendar.YEAR);
 		String seqFormat = SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format", "%02d");
-//		String seqFormat = SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format", "{100:'%02d', 256:'%02x'}");
-//		Map<Integer, String> seqFormats = (Map<Integer, String>) JSON.parse(seqFormat);
-//		Integer minInt = Integer.MAX_VALUE;
-//		for (Entry<Integer, String> format : seqFormats.entrySet()) {
-//			Integer key = format.getKey();
-//			if (Long.valueOf(count).intValue() < key && key < minInt) {
-//				minInt = key;
-//				seqFormat = format.getValue();
-//			}
-//		}
+		// String seqFormat =
+		// SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format",
+		// "{100:'%02d', 256:'%02x'}");
+		// Map<Integer, String> seqFormats = (Map<Integer, String>)
+		// JSON.parse(seqFormat);
+		// Integer minInt = Integer.MAX_VALUE;
+		// for (Entry<Integer, String> format : seqFormats.entrySet()) {
+		// Integer key = format.getKey();
+		// if (Long.valueOf(count).intValue() < key && key < minInt) {
+		// minInt = key;
+		// seqFormat = format.getValue();
+		// }
+		// }
 		Object[] seqs = new Object[] { year, facilitatorCode, String.format(seqFormat, count) };
 		String dispatchSeq = StringUtils.join(seqs, "-");
 		return dispatchSeq;
 	}
-	
+
 	/**
 	 * 生成框架协议派单合同
-	 * @param dispatchTime 
-	 * @param dispatchSeq 
+	 * 
+	 * @param dispatchTime
+	 * @param dispatchSeq
 	 * @return dispatchNo
 	 */
 	@Override
@@ -133,29 +135,28 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		if (!UserContext.checkPermission("project:*") && v != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
-			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);;
-			Boolean allPerm = permission.get("all");
+			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+			Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
 			if (Boolean.TRUE.equals(allPerm)) {
 				isPermit = true;
 				permissionType = "all";
 			} else {
 				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
+				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
+				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
+				if (editPerm && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
-				}
-				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
+				} else if ((viewPerm || editPerm) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
 					isPermit = true;
-					permissionType = "view";
+					permissionType = editPerm ? "edit" : "view";
 				}
 			}
 		} else {
 			isPermit = true;
-			permissionType= "all";
+			permissionType = "all";
 		}
 		return new PermissionResult(isPermit, null, permissionType);
 	}
-	
-	
-	
+
 }

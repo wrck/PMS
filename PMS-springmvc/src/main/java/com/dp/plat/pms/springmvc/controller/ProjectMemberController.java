@@ -84,22 +84,22 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 		if (!UserContext.checkPermission("project:*") && v != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
-			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);
-			Boolean allPerm = permission.get("all");
+			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+			Boolean allPerm = (Boolean) permission.get("all");
 			if (Boolean.TRUE.equals(allPerm)) {
 				isPermit = true;
 				permissionType = "all";
 			} else {
 				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*projectMember:(list|detail)\\b,?.*")) {
+				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*projectMember:(add|edit|delete|import|upload)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
-				}
-				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*projectMember:(list|detail)\\b,?.*")) {
+				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*projectMember:(list|detail)\\b,?.*")) {
 					isPermit = true;
-					permissionType = "view";
+					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
 				}
 			}
+			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
 		} else {
 			isPermit = true;
 			permissionType = "all";

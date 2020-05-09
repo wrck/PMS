@@ -1804,6 +1804,9 @@
 				<if test="model.projectId != null and '' != model.projectId">
 					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
 				</if>
+				<if test="model.officeCodes != null">
+					FIND_IN_SET(h.officeCode, #{model.officeCodes}) AND
+				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -1958,6 +1961,9 @@
 			</if>
 			<if test="customInfo != null and '' != customInfo">
 				h.customInfo = #{customInfo, jdbcType=OTHER} AND
+			</if>
+			<if test="officeCodes != null">
+				FIND_IN_SET(h.officeCode, #{officeCodes}) AND
 			</if>
 		</trim>
 	</where>

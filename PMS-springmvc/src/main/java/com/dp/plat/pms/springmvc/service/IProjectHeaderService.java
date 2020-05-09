@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
-import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.service.ProjectService;
@@ -79,8 +78,11 @@ public interface IProjectHeaderService extends ProjectService/*IAbstractBaseServ
 	 * @param project
 	 * @return
 	 */
-	Map<String, Boolean> checkPermission(ProjectVO project);
+	Map<String, Object> checkPermission(ProjectVO project);
+	
+	Map<String, Object> checkPermissionMap(ProjectVO project, String... permissions);
 
 	PermissionResult checkPermission(ProjectVO project, String... permissions);
+
 
 }

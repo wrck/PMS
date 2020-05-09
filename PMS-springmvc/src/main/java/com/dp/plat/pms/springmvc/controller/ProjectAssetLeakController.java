@@ -24,30 +24,29 @@ import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.entity.IndustryAsset;
-import com.dp.plat.pms.springmvc.entity.IndustryAssetProjectRelation;
-import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
-import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
+import com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation;
+import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetLeakRelationService;
+import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
-import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
 import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
-import com.dp.plat.pms.springmvc.vo.ProjectAssetVO;
+import com.dp.plat.pms.springmvc.vo.ProjectAssetLeakVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
 @Controller
-@RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "/project/asset")
-public class ProjectAssetController extends AbstractController<IIndustryAssetService, IndustryAsset, ProjectAssetVO> {
+@RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "/asset/leak")
+public class ProjectAssetLeakController extends AbstractController<IIndustryLeakService, IndustryLeak, ProjectAssetLeakVO> {
 
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
 	
 	@Autowired
-	private IIndustryAssetProjectRelationService industryAssetProjectRelationService;
+	private IIndustryAssetLeakRelationService industryAssetLeakRelationService;
 	
 	@PostConstruct
 	public void init() {
 		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
-		this.setViewModel("projectAsset");
+		this.setViewModel("assetLeak");
 		this.setUseTemplate(true);
 	}
 	
@@ -58,8 +57,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 
 	@Override
 	@GetMapping("/list")
-	public String list(PageParam<Object> pageParam, ProjectAssetVO v, Model model) {
-		if (!checkPermission(v, model, "project:detail", "projectAsset:list")) {
+	public String list(PageParam<Object> pageParam, ProjectAssetLeakVO v, Model model) {
+		if (!checkPermission(v, model, "industryAsset:detail", "assetLeak:list")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -69,13 +68,13 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		pageParam.setModel(v);
 
 		PageParam<Object> tempParam = new PageParam<>();
-		ProjectAssetVO temp = new ProjectAssetVO(v.getProjectId());
+		ProjectAssetLeakVO temp = new ProjectAssetLeakVO(v.getProjectId());
 		temp.setDisabled(false);
 		temp.setEffective(new Date());
 		
 		
-		pageParam.setTotal(industryAssetProjectRelationService.countProjectAssetBySelectivePageable(tempParam));
-		List<Object> projectAssetList = industryAssetProjectRelationService.selectProjectAssetBySelectivePageable(pageParam);
+		pageParam.setTotal(industryAssetLeakRelationService.countProjectAssetLeakBySelectivePageable(tempParam));
+		List<Object> projectAssetList = industryAssetLeakRelationService.selectProjectAssetLeakBySelectivePageable(pageParam);
 		if (pageParam.getPageSize() == -1L) {
 			pageParam.setPageSize(pageParam.getTotal());
 		}
@@ -89,20 +88,20 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 	@Override
 	@GetMapping(value = {"{id}", "/modals/{id}"})
 	public String findOne(@PathVariable("id") Integer id, Model model) {
-		if (!checkPermission(null, model, "projectAsset:detail")) {
+		if (!checkPermission(null, model, "assetLeak:detail")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		if (HttpContext.isJSON()) {
-			IndustryAssetProjectRelation projectRelation = industryAssetProjectRelationService.selectByPrimaryKey(id);
+			IndustryAssetLeakRelation projectRelation = industryAssetLeakRelationService.selectByPrimaryKey(id);
 			if (projectRelation != null) {
-				PermissionResult checkPermission = projectHeaderService.checkPermission(new ProjectVO(projectRelation.getProjectId()), "project:detail", "projectAsset:detail");
+				PermissionResult checkPermission = projectHeaderService.checkPermission(new ProjectVO(projectRelation.getProjectId()), "project:detail", "assetLeak:detail");
 				if (!checkPermission.isPermit()) {
 					return "redirect:" + Consts.VIEW_UNAUTHORIZED;
 				}
-				IndustryAsset asset = service.selectByPrimaryKey(projectRelation.getAssetId());
-				ProjectAssetVO v = new ProjectAssetVO();
+				IndustryLeak asset = service.selectByPrimaryKey(projectRelation.getLeakId());
+				ProjectAssetLeakVO v = new ProjectAssetLeakVO();
 				BeanUtils.copyProperties(asset, v);
 				v.setId(projectRelation.getId());
 				v.setAssetId(asset.getId());
@@ -132,8 +131,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 
 	@Override
 	@GetMapping(value = {"detail", "modals/detail"})
-	public String detail(ProjectAssetVO v, Model model) {
-		if (!checkPermission(v, model, "projectAsset:add")) {
+	public String detail(ProjectAssetLeakVO v, Model model) {
+		if (!checkPermission(v, model, "assetLeak:add")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -145,7 +144,7 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 			model.addAttribute("fieldList", fieldList);
 		} else {
 //			model.addAttribute("urlNamespace", "/pm/");
-//			model.addAttribute("model", "projectAsset");
+//			model.addAttribute("model", "assetLeak");
 //			model.addAttribute("keyword", "id");
 			model.addAttribute("urlNamespace", URL_NAMESPACE);
 			model.addAttribute("model", getViewModel());
@@ -161,8 +160,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 
 	@Override
 	@PostMapping("detail")
-	public String create(ProjectAssetVO v, Model model) {
-		if (!checkPermission(v, model, "projectAsset:add")) {
+	public String create(ProjectAssetLeakVO v, Model model) {
+		if (!checkPermission(v, model, "assetLeak:add")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -170,7 +169,7 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		Boolean status = true;
 		String message = null;
 		try {
-			industryAssetProjectRelationService.insertProjectAssetSelective(v);
+			industryAssetLeakRelationService.insertProjectAssetLeakSelective(v);
 			model.addAttribute("targetName", this.getTargetName(v.getClass()));
 		} catch (Exception e) {
 			status = false;
@@ -187,11 +186,11 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 
 	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
-	public String update(@PathVariable("id") Integer id, ProjectAssetVO v, Model model) {
-		ProjectAssetVO asset = new ProjectAssetVO();
-		BeanUtils.copyProperties(v, asset);
-		asset.setId(v.getAssetId());
-		return super.update(v.getAssetId(), asset, model);
+	public String update(@PathVariable("id") Integer id, ProjectAssetLeakVO v, Model model) {
+		ProjectAssetLeakVO leak = new ProjectAssetLeakVO();
+		BeanUtils.copyProperties(v, leak);
+		leak.setId(v.getLeakId());
+		return super.update(v.getAssetId(), leak, model);
 //		if (!checkPermission(v, model, getDataName() + ":update")) {
 //			model.addAttribute("status", false);
 //			model.addAttribute("message", "没有权限进行该操作！");
@@ -220,18 +219,18 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		try {
 			String cascade = HttpContext.getCurrentRequest().getParameter("cascade");
 			if (Boolean.TRUE.equals(cascade)) {
-				IndustryAssetProjectRelation relation = industryAssetProjectRelationService.selectByPrimaryKey(id);
+				IndustryAssetLeakRelation relation = industryAssetLeakRelationService.selectByPrimaryKey(id);
 				
-				IndustryAssetVO asset = new IndustryAssetVO();
+				IndustryLeakVO asset = new IndustryLeakVO();
 				asset.setId(relation.getAssetId());
 				asset.setDisabled(true);
 				service.updateByPrimaryKeySelective(asset);
 			}
-			IndustryAssetProjectRelation t = new IndustryAssetProjectRelation();
+			IndustryAssetLeakRelation t = new IndustryAssetLeakRelation();
 			t.setId(id);
 			t.setDisabled(true);
 			t.setEffectiveTo(new Date());
-			industryAssetProjectRelationService.updateByPrimaryKeySelective(t);
+			industryAssetLeakRelationService.updateByPrimaryKeySelective(t);
 		} catch (Exception e) {
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
@@ -243,13 +242,13 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 	}
 	
 	@Override
-	public boolean checkPermission(ProjectAssetVO v, Model model, String... permissions) {
+	public boolean checkPermission(ProjectAssetLeakVO v, Model model, String... permissions) {
 		if (!super.checkPermission(v, model, permissions)) {
 			return false;
 		}
 		boolean isPermit = false;
 		String permissionType = "";
-		if (!UserContext.checkPermission("project:*") && v != null && v.getProjectId() != null) {
+		if (!UserContext.checkPermission("industryLeak:*") && v != null && v.getProjectId() != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
 			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
@@ -259,15 +258,18 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 				permissionType = "all";
 			} else {
 				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*projectAsset:(add|edit|delete|import|list|detail)\\b,?.*")) {
+				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
+				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
+				if (editPerm && perms.matches(".*assetLeak:(add|edit|delete|import|list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
-				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*projectAsset:(list|detail)\\b,?.*")) {
+				} else if ((viewPerm || editPerm) && perms.matches(".*assetLeak:(list|detail)\\b,?.*")) {
 					isPermit = true;
-					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
+					permissionType = editPerm ? "edit" : "view";
 				}
 			}
 			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
+			
 		} else {
 			isPermit = true;
 			permissionType = "all";

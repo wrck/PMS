@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class SettlementVO extends DispatchSettlement {
 
 	private Integer projectId;
+	private String officeCodes;
+	private String projectTypes;
 
 	private String smsProjectCode;
 	@JsonSerialize(using = JsonSerializer.class)
@@ -43,6 +45,22 @@ public class SettlementVO extends DispatchSettlement {
 
 	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
+	}
+
+	public String getOfficeCodes() {
+		return officeCodes;
+	}
+
+	public void setOfficeCodes(String officeCodes) {
+		this.officeCodes = officeCodes;
+	}
+
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
 	}
 
 	public String getSmsProjectCode() {

@@ -24,6 +24,7 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
@@ -66,6 +67,19 @@ public class DispatchSettlementController
 		SettlementVO temp = new SettlementVO();
 		temp.setDisabled(false);
 		// temp.setCompID(user.getCompId());
+		// 允许访问的项目类型
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+			String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+			temp.setProjectTypes(projectTypes);
+			settlement.setProjectTypes(projectTypes);
+			
+			// 非子项目管理员，添加允许访问的办事处权限
+			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+				temp.setOfficeCodes(officeCodes);
+				settlement.setOfficeCodes(officeCodes);
+			}
+		}
 		tempParam.setModel(temp);
 		pageParam.setModel(settlement);
 

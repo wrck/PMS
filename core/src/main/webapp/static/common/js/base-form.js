@@ -1018,6 +1018,22 @@
 					} else {
 						elem.value = value;
 					}
+					if ($(elem).hasClass("select2")) {
+						var tags = $(elem).data("select2").options.options.tags;
+						if (tags) {
+							var tagsValue = value.split(",");
+							// Set the value, creating a new option if necessary
+							for(var i in tagsValue) {
+								var tag = tagsValue[i];
+								if ($(elem).find("option[value='" + tag + "']").length == 0) {
+								    // Create a DOM Option and pre-select by default
+								    var newOption = new Option(tag, tag, true, true);
+								    // Append it to the select
+								    $(elem).append(newOption);
+								} 
+							}
+						}
+					}
 					$(elem).trigger('change');
 				} else {
 					elem.value = value;
@@ -1110,6 +1126,22 @@
 					$(elem).val(value.split(","));
 				} else {
 					elem.value = value;
+				}
+				if ($(elem).hasClass("select2")) {
+					var tags = $(elem).data("select2").options.options.tags;
+					if (tags) {
+						var tagsValue = value.split(",");
+						// Set the value, creating a new option if necessary
+						for(var i in tagsValue) {
+							var tag = tagsValue[i];
+							if ($(elem).find("option[value='" + tag + "']").length == 0) {
+							    // Create a DOM Option and pre-select by default
+							    var newOption = new Option(tag, tag, true, true);
+							    // Append it to the select
+							    $(elem).append(newOption);
+							} 
+						}
+					}
 				}
 				$(elem).trigger('change');
 			} else {

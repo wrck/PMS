@@ -23,4 +23,6 @@ public interface ExcelAnalysisMapper  {
 	void doImportData(@Param("list") List<?> list, @Param("sourceTableName") String sourcetablename, @Param("columns") Collection<String> columns, @Param("params") Map<String, Object> params);
 
 	void submitImportData(@Param("tempTableName")String tempTableName, @Param("sourceTableName") String sourcetablename, @Param("columns") Collection<String> columns, @Param("params") Map<String, Object> params);
+
+	void doImportData2(Map<String, Object> params);
 }

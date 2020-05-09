@@ -22,5 +22,7 @@ public interface ProjectHeaderMapper extends AbstractBaseMapper<ProjectHeader> {
 
 	Project queryProjectByContractNoAndType(Map<String, Object> params);
 
-	Map<String, Boolean> checkPermission(@Param("model") ProjectVO project, @Param("user") Principal currentPrincipal);
+	Map<String, Object> checkPermission(@Param("model") ProjectVO project, @Param("user") Principal currentPrincipal);
+
+	Map<String, Object> checkPermission(@Param("model") ProjectVO project, @Param("permissionTypes") String join, @Param("user") Principal currentPrincipal);
 }

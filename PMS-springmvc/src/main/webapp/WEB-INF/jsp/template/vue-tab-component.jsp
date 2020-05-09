@@ -3,10 +3,10 @@
 	<div :id="tabContainerId" class="tab-content box box-primary mt-1">
 		<ul :id="tabWrapperId" class="nav nav-tabs">
 			<li v-for="navTab in navTabList">
-				<a :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.stop="refreshNavTab($event, navTab)"></span></a>
+				<a :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
 			</li>
 		</ul>
-		<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-for="navTab in navTabList" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :permissions="permissions" :roles="roles" :model="model"></tab-pane>
+		<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-for="navTab in navTabList" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
 		<%--
 		<div class="tab-pane fade" v-for="navTab in navTabList" :id="navTab.type + 'Tab' + timestamp" 
 			:data-url="navTab.url" :data-type="navTab.type" :data-title="navTab.title"
@@ -114,6 +114,7 @@
 					navTab.type = navTab.type || tab.field;
 					navTab.title = tab.title || tab.name;
 					navTab.permissionType = tab.permissionType || "";
+					navTab.render = this.parseValue(tab, 'render');
 					navTabList.push(navTab);
 				}
 				return navTabList;

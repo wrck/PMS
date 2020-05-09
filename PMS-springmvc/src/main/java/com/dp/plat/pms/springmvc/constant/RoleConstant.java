@@ -8,6 +8,11 @@ public class RoleConstant extends com.dp.plat.core.param.RoleConstant {
 	public final static String ROLE_PM_ADMIN = "projectAdmin";
 	
 	/**
+	 * 子项目管理员，拥有部分项目类型的管理权限
+	 */
+	public final static String ROLE_PM_SUB_ADMIN = "projectSubAdmin";
+	
+	/**
 	 * 项目经理
 	 */
 	public final static String ROLE_PM_PROGRAM = "projectManager";

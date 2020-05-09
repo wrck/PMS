@@ -24,6 +24,7 @@ import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
@@ -71,6 +72,19 @@ public class DispatchProjectController
 		temp.setEffectiveFrom(new Date());
 		temp.setEffectiveTo(new Date());
 		// temp.setCompID(user.getCompId());
+		// 允许访问的项目类型
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+			String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+			temp.setProjectTypes(projectTypes);
+			dispatch.setProjectTypes(projectTypes);
+			
+			// 非子项目管理员，添加允许访问的办事处权限
+			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+				temp.setOfficeCodes(officeCodes);
+				dispatch.setOfficeCodes(officeCodes);
+			}
+		}
 		tempParam.setModel(temp);
 		pageParam.setModel(dispatch);
 
@@ -308,8 +322,8 @@ public class DispatchProjectController
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(projectId);
 			project.setProjectIds(projectIds);
-			Map<String, Boolean> permission = projectHeaderService.checkPermission(project);
-			Boolean allPerm = permission.get("all");
+			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+			Boolean allPerm = (Boolean) permission.get("all");
 			if (Boolean.TRUE.equals(allPerm)) {
 				isPermit = true;
 				permissionType = "all";
@@ -318,12 +332,12 @@ public class DispatchProjectController
 				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete|list|detail)\\b,?.*")) {
 					isPermit = true;
 					permissionType = "edit";
-				}
-				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*:(list|detail)\\b,?.*")) {
+				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*:(list|detail)\\b,?.*")) {
 					isPermit = true;
-					permissionType = "view";
+					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
 				}
 			}
+			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
 		} else {
 			isPermit = true;
 			permissionType = "all";

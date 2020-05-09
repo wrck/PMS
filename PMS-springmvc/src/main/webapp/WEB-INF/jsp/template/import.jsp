@@ -147,7 +147,7 @@
 				loaderId = layer.load(6);
 				//ajaxPost(router(urlNamespace).api(model).importSubmit(adjustType, tempTableName), {excelPath, tempTableName, columns:JSON.stringify(columnKeys)}, function(data,status){
 	            ajaxPost(router(urlNamespace).api(model).importSubmit(search, tempTableName), {excelPath, tempTableName, columns:JSON.stringify(columnKeys)}, function(data,status){
-					if(status == 'success'){
+					if(data.success){
 	                    modals.info('导入成功');
 	                    //commonTable.reloadData();
 	                    modals.hideWin(importWinId);

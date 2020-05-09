@@ -6,7 +6,6 @@ import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 
 public class IndustryLeakVO extends IndustryLeak {
 
-
 	private Integer projectId;
 	private String projectName;
 	private String projectType;
@@ -90,8 +89,7 @@ public class IndustryLeakVO extends IndustryLeak {
 	}
 
 	public void setEffective(Date date) {
-		Date now = new Date();
-		this.setEffectiveFrom(now);
-		this.setEffectiveTo(now);
+		this.setEffectiveFrom(date);
+		this.setEffectiveTo(date);
 	}
 }

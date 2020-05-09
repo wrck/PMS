@@ -38,6 +38,25 @@ router = function(namespace) {
 				html = router.common(ctx + namespace + tm).html;
 			}
 			return html;
+		},
+		callback: (model) => {
+			var callback;
+			try {
+				namespace = (namespace || window.location.pathname.replace(ctx, "").match(/(\/[^\/]+\/)/g)[0]);
+			} catch(e) {}
+			try {
+				var path = (namespace || "").replace(/\//g, ".");
+				if (path.startsWith(".")) {
+					path = path.replace(".", "");
+				}
+				callback = eval(path + model + ".callback");
+			} catch(e) {
+				var tm = model.replace(/([^A-Z]+)([A-Z]+)/g, function(word,a,b,c){
+					return a + "/" + b.toLowerCase() ;
+				});
+				callback = router.common(ctx + namespace + tm).callback;
+			}
+			return callback;
 		}
 	}
 };
@@ -82,7 +101,9 @@ router.common = function(namespace) {
 				// 下载
 				download: (search) => namespace + "/download.html"+ (search ? "?" + search : "").replace("??", "?"),
 			}
-		})(namespace)
+		})(namespace),
+		callback: {
+		}
 	}
 };
 
@@ -106,7 +127,16 @@ pm.router = function(model) {
 				html = pm.common(ctx + "/pm/" + model).html;
 			}
 			return html;
-		}
+		},
+		callback: (model) => {
+			var callback;
+			try {
+				callback = eval("pm." + model + ".callback");
+			} catch(e) {
+				callback = pm.common(ctx + "/pm/" + model).callback;
+			}
+			return callback;
+		},
 	}
 }();
 
@@ -129,7 +159,7 @@ pm.project = function() {
 				orderDetail: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/orderDetail.json?" + $.param({projectType, contractNo}),
 				// 查询任务类别
 				projectTask: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/task.json?" + $.param({projectType, contractNo}),
-				// 查询任务类别
+				// 查询项目资产
 				projectAsset: (projectId, projectType) => namespace + (projectId ? ("/" + projectId) : "") + "/asset.json?" + $.param({projectType}),
 				// 初始化报告数据
 				initData: (projectId) => namespace + "/" + projectId + "/initData.json",
@@ -162,6 +192,14 @@ pm.project = function() {
 				// 导入模态页
 				importModals: (projectId, importType) => namespace + "/" + projectId + "/modals/" + (importType || "adjustData") + ".html",
 			});
+		})(namespace),
+		callback:((namespace) => {
+			var callback = pm.common(namespace).callback;
+			return $.extend({}, callback, {
+				list: function() {
+					console.log("callback");
+				}
+			});
 		})(namespace)
 	}
 }();
@@ -184,6 +222,7 @@ pm.dispatch = function() {
 			return {
 			};
 		})(namespace),
+		
 	});
 }();
 

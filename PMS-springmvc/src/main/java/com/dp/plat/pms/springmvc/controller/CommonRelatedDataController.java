@@ -1,8 +1,8 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -163,22 +162,25 @@ public class CommonRelatedDataController
 			if (("project".equals(v.getObjType()) || "projectTask".equals(v.getObjType())) && !UserContext.checkPermission("project:*")) {
 				ProjectVO project = new ProjectVO();
 				project.setProjectId(v.getObjId());
-				Map<String, Boolean> permission = SpringContext.getBean(IProjectHeaderService.class).checkPermission(project );
-				Boolean allPerm = permission.get("all");
+				Map<String, Object> permission = SpringContext.getBean(IProjectHeaderService.class).checkPermissionMap(project, permissions);
+				Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
 				if (Boolean.TRUE.equals(allPerm)) {
 					isPermit = true;
 					permissionType = "all";
 				} else {
 					String perms = StringUtils.join(permissions, ",");
-					if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete)\\b,?.*")) {
+					Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
+					Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
+					if (editPerm && perms.matches(".*:(add|edit|delete)\\b,?.*")) {
 						isPermit = true;
 						permissionType = "edit";
-					}
-					if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*:(list|detail)\\b,?.*")) {
+					} else if ((viewPerm || editPerm) && perms.matches(".*:(list|detail)\\b,?.*")) {
 						isPermit = true;
-						permissionType = "view";
+						permissionType = editPerm ? "edit" : "view";
 					}
 				}
+				
+				model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
 			} else {
 				isPermit = true;
 				permissionType = "all";
