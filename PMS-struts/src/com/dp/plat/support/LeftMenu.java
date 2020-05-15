@@ -113,7 +113,7 @@ public class LeftMenu {
 		LeftMenuExternalLi leftMenuLi1 = new LeftMenuExternalLi();
 		leftMenuLi1.setText("技术支援部办公平台");
 		leftMenuLi1.setTitle("技术支援部办公平台");
-		leftMenuLi1.setUrl("http://10.26.2.50");
+		leftMenuLi1.setUrl("http://172.17.0.209");
 
 		LeftMenuExternalLi leftMenuLi2 = new LeftMenuExternalLi();
 		leftMenuLi2.setText("在线学习考试系统");

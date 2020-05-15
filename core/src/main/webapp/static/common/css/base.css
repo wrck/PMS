@@ -962,6 +962,36 @@ i.glyphicon.glyphicon-ok-sign.icon-unvisited-focused:before {
 	padding-bottom: 0 !important;
 }
 
+.p-05 {
+	padding: 0.5rem 0.5rem !important;
+}
+
+.pt-05 {
+	padding-top: 0.5rem !important;
+}
+
+.pr-05 {
+	padding-right: 0.5rem !important;
+}
+
+.pb-05 {
+	padding-bottom: 0.5rem !important;
+}
+
+.pl-05 {
+	padding-left: 0.5rem !important;
+}
+
+.px-05 {
+	padding-right: 0.5rem !important;
+	padding-left: 0.5rem !important;
+}
+
+.py-05 {
+	padding-top: 0.5rem !important;
+	padding-bottom: 0.5rem !important;
+}
+
 .p-1 {
 	padding: 1rem 1rem !important;
 }

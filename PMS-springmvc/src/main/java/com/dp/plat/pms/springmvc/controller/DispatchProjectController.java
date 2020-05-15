@@ -108,7 +108,7 @@ public class DispatchProjectController
 			DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(id);
 			DispatchVO vo = new DispatchVO();
 			BeanUtils.copyProperties(dispatch, vo);
-			if (!checkPermission(vo, model, getDataName() + ":list")) {
+			if (!checkPermission(vo, model, getDataName() + ":detail")) {
 				model.addAttribute("status", false);
 				model.addAttribute("message", "没有权限进行该操作！");
 				return Consts.VIEW_UNAUTHORIZED;
@@ -123,7 +123,7 @@ public class DispatchProjectController
 				if (Boolean.TRUE.equals(dispatch.getDispatched())) {
 					navDataName += "_dispatched";
 				}
-				List<?> navTavList = this.findNavTabList(navDataName);
+				List<?> navTavList = this.findNavTabList(navDataName, model);
 				model.addAttribute("tabList", navTavList);
 			}
 		}  else {
@@ -137,7 +137,7 @@ public class DispatchProjectController
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
 	public String detail(DispatchVO dispatch, Model model) {
-		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+		if (!checkPermission(dispatch, model, getDataName() + ":detail")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -175,7 +175,7 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(DispatchVO dispatch, Model model) {
-		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+		if (!checkPermission(dispatch, model, getDataName() + ":add")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -201,7 +201,7 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, DispatchVO dispatch, Model model) {
-		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
+		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -227,7 +227,7 @@ public class DispatchProjectController
 		DispatchProject dispatchProject = service.selectByPrimaryKey(id);
 		DispatchVO vo = new DispatchVO();
 		BeanUtils.copyProperties(dispatchProject, vo);
-		if (!checkPermission(vo, model, getDataName() + ":list")) {
+		if (!checkPermission(vo, model, getDataName() + ":delete")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return;
@@ -264,6 +264,11 @@ public class DispatchProjectController
 	public void dispatchSubmit(DispatchVO dispatch, Model model) {
 		Boolean status = true;
 		String message = null;
+		if (!checkPermission(dispatch, model, getDataName() + ":submit")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return;
+		}
 		try {
 			dispatchProjectService.insertOrUpdateSelective(dispatch);
 			dispatchProjectService.dispatchSubmit(dispatch.getId(), dispatch);

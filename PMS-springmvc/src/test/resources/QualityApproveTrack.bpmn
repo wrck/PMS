@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="QualityApproveTrack" name="质量审批跟踪流程" isExecutable="true">
+    <startEvent id="start" name="开始" activiti:initiator="applyUserId">
+      <extensionElements>
+        <activiti:executionListener event="start" expression="${qualityApproveTrackListener.processStartExecution(execution)}"></activiti:executionListener>
+      </extensionElements>
+    </startEvent>
+    <userTask id="afApproveTask" name="安服质量审核" activiti:formKey="/workflow/${entity.id}.html">
+      <documentation>${processName}安服质量审核</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" expression="${qualityApproveTrackListener.createTask(task)}"></activiti:taskListener>
+        <activiti:taskListener event="complete" expression="${qualityApproveTrackListener.completeTask(task)}"></activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA"></exclusiveGateway>
+    <exclusiveGateway id="sid-C306EEA5-C443-4271-BBE5-2A3546D9301B"></exclusiveGateway>
+    <userTask id="trackTask" name="任务跟踪" activiti:assignee="${assignee}" activiti:candidateUsers="${candidates}" activiti:candidateGroups="${candidateGroup}" activiti:formKey="/workflow/${entity.id}.html">
+      <documentation>${processName}任务跟踪</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" expression="${qualityApproveTrackListener.createTask(task)}"></activiti:taskListener>
+        <activiti:taskListener event="complete" expression="${qualityApproveTrackListener.completeTask(task)}"></activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="sid-6432DCB4-4FB3-478A-BF6E-33F49E598A9A" sourceRef="afApproveTask" targetRef="sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA"></sequenceFlow>
+    <exclusiveGateway id="workFlowType"></exclusiveGateway>
+    <endEvent id="end" name="结束"></endEvent>
+    <sequenceFlow id="sid-01EE584E-817C-43CB-B96F-0536A41A7E19" sourceRef="yfApproveTask" targetRef="sid-C306EEA5-C443-4271-BBE5-2A3546D9301B"></sequenceFlow>
+    <userTask id="yfApproveTask" name="研发质量审核" activiti:assignee="${assignee}" activiti:candidateUsers="${candidates}" activiti:candidateGroups="${candidateGroup}" activiti:formKey="/workflow/${entity.id}.html">
+      <documentation>${processName}研发质量审核</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" expression="${qualityApproveTrackListener.createTask(task)}"></activiti:taskListener>
+        <activiti:taskListener event="complete" expression="${qualityApproveTrackListener.completeTask(task)}"></activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="sid-5AA00034-2BA2-47DA-A9E6-C43CE1BD9A60" sourceRef="trackTask" targetRef="end"></sequenceFlow>
+    <sequenceFlow id="sid-F6558CD1-A9B1-49D2-A09E-DAB2FD527B15" name="通过" sourceRef="sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA" targetRef="yfApproveTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${flowState == 2}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="noApprove" name="不需要审核" sourceRef="workFlowType" targetRef="trackTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!needApprove}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-EA55932D-C0AA-495C-8BE6-75C9C8738A29" name="驳回/无需研发审核" sourceRef="sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA" targetRef="end">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${flowState != 2}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-C8EF611F-7013-4D1D-A6A6-FAEDC54320AB" name="驳回/审批通过不跟进" sourceRef="sid-C306EEA5-C443-4271-BBE5-2A3546D9301B" targetRef="end">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${flowState != 2}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-D2606CDC-FADC-4547-A950-046C98A220CE" name="审核通过，任务跟进" sourceRef="sid-C306EEA5-C443-4271-BBE5-2A3546D9301B" targetRef="trackTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${flowState == 2}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="workFlowType"></sequenceFlow>
+    <sequenceFlow id="needApprove" name="需要审核" sourceRef="workFlowType" targetRef="afApproveTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${needApprove}]]></conditionExpression>
+    </sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_QualityApproveTrack">
+    <bpmndi:BPMNPlane bpmnElement="QualityApproveTrack" id="BPMNPlane_QualityApproveTrack">
+      <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
+        <omgdc:Bounds height="30.0" width="30.0" x="23.5" y="126.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="afApproveTask" id="BPMNShape_afApproveTask">
+        <omgdc:Bounds height="55.0" width="105.0" x="195.0" y="113.5"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA" id="BPMNShape_sid-A2D91AFA-A4EB-4202-B884-32F09C5451BA">
+        <omgdc:Bounds height="40.0" width="40.0" x="345.0" y="121.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-C306EEA5-C443-4271-BBE5-2A3546D9301B" id="BPMNShape_sid-C306EEA5-C443-4271-BBE5-2A3546D9301B">
+        <omgdc:Bounds height="40.0" width="40.0" x="585.0" y="121.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="trackTask" id="BPMNShape_trackTask">
+        <omgdc:Bounds height="55.0" width="105.0" x="765.0" y="113.5"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="workFlowType" id="BPMNShape_workFlowType">
+        <omgdc:Bounds height="40.0" width="40.0" x="98.5" y="121.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
+        <omgdc:Bounds height="28.0" width="28.0" x="923.5" y="127.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="yfApproveTask" id="BPMNShape_yfApproveTask">
+        <omgdc:Bounds height="55.0" width="105.0" x="450.0" y="113.5"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="needApprove" id="BPMNEdge_needApprove">
+        <omgdi:waypoint x="138.5" y="141.0"></omgdi:waypoint>
+        <omgdi:waypoint x="195.0" y="141.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="0.0" width="56.447265625" x="139.2598876953125" y="126.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="noApprove" id="BPMNEdge_noApprove">
+        <omgdi:waypoint x="119.0" y="160.5"></omgdi:waypoint>
+        <omgdi:waypoint x="119.0" y="228.5"></omgdi:waypoint>
+        <omgdi:waypoint x="817.5" y="228.5"></omgdi:waypoint>
+        <omgdi:waypoint x="817.5" y="168.5"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="66.96875" width="698.5" x="119.0" y="214.5"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-D2606CDC-FADC-4547-A950-046C98A220CE" id="BPMNEdge_sid-D2606CDC-FADC-4547-A950-046C98A220CE">
+        <omgdi:waypoint x="624.5449172576832" y="141.4550827423168"></omgdi:waypoint>
+        <omgdi:waypoint x="765.0" y="141.12382075471697"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="0.3273142819869008" width="138.7812555624546" x="668.3281277812273" y="127.45271964099345"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="53.5" y="141.0"></omgdi:waypoint>
+        <omgdi:waypoint x="98.5" y="141.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-01EE584E-817C-43CB-B96F-0536A41A7E19" id="BPMNEdge_sid-01EE584E-817C-43CB-B96F-0536A41A7E19">
+        <omgdi:waypoint x="555.0" y="141.0"></omgdi:waypoint>
+        <omgdi:waypoint x="585.0" y="141.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-6432DCB4-4FB3-478A-BF6E-33F49E598A9A" id="BPMNEdge_sid-6432DCB4-4FB3-478A-BF6E-33F49E598A9A">
+        <omgdi:waypoint x="300.0" y="141.22245762711864"></omgdi:waypoint>
+        <omgdi:waypoint x="345.4148936170213" y="141.41489361702128"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-F6558CD1-A9B1-49D2-A09E-DAB2FD527B15" id="BPMNEdge_sid-F6558CD1-A9B1-49D2-A09E-DAB2FD527B15">
+        <omgdi:waypoint x="384.5695970695971" y="141.43040293040292"></omgdi:waypoint>
+        <omgdi:waypoint x="450.0" y="141.19160583941607"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="0.23098202853907424" width="63.289075819702816" x="409.0546941598514" y="127.42603788926954"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-5AA00034-2BA2-47DA-A9E6-C43CE1BD9A60" id="BPMNEdge_sid-5AA00034-2BA2-47DA-A9E6-C43CE1BD9A60">
+        <omgdi:waypoint x="870.0" y="141.0"></omgdi:waypoint>
+        <omgdi:waypoint x="923.5" y="141.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-EA55932D-C0AA-495C-8BE6-75C9C8738A29" id="BPMNEdge_sid-EA55932D-C0AA-495C-8BE6-75C9C8738A29">
+        <omgdi:waypoint x="365.5" y="121.5"></omgdi:waypoint>
+        <omgdi:waypoint x="365.5" y="61.0"></omgdi:waypoint>
+        <omgdi:waypoint x="937.5" y="61.0"></omgdi:waypoint>
+        <omgdi:waypoint x="937.5" y="127.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="65.25" width="572.0" x="365.5" y="47.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-C8EF611F-7013-4D1D-A6A6-FAEDC54320AB" id="BPMNEdge_sid-C8EF611F-7013-4D1D-A6A6-FAEDC54320AB">
+        <omgdi:waypoint x="605.5" y="121.5"></omgdi:waypoint>
+        <omgdi:waypoint x="605.5" y="101.0"></omgdi:waypoint>
+        <omgdi:waypoint x="937.5" y="101.0"></omgdi:waypoint>
+        <omgdi:waypoint x="937.5" y="127.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="25.25" width="332.0" x="605.5" y="87.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

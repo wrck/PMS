@@ -24,9 +24,9 @@
 </div>
 <script>
 $(function(){
-    var processInstanceId = "${processInstanceId != 0 && processInstanceId != null ? processInstanceId : 0}";
+    var processInstanceId = "${processInstanceId != null ? processInstanceId : 0}";
     var infoPath = basePath+"/workflow/instance/info/${processInstanceId}/list.json";
-    var diagramPath = basePath+"/workflow/instance/diagram/${processInstanceId}";
+    var diagramPath = basePath+"/workflow/instance/diagram/${processInstanceId}.html";
     var instanceInfoTable;
     if (processInstanceId != 0) {
         $("#imageContainer img").attr("src", diagramPath);

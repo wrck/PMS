@@ -70,15 +70,15 @@
 	<div id="app">
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
-			<!-- <h1 id="pageTitle">
+			<h1 id="pageTitle">
 				<template v-if="isShow">
-					<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
+					<span>{{workflow.title}}</span>
 				</template>
 				<template v-else>
 					<span></span><small></small>
 				</template>
 			</h1>
-			<span class="display-none"></span> -->
+			<span class="display-none"></span>
 			<span></span>
 			<ol class="breadcrumb">
 			</ol>
@@ -88,11 +88,14 @@
 				<div class="col-xs-12">
 					<div class="box box-info formContainer">
 						<div class="box-header">审核内容</div>
-						<div id="formDiv" class="box-body row ml-0 form-inline" v-if="isShow">
+						<div id="taskEntityFormDiv" class="box-body row ml-0 form-inline" v-if="isShow">
 							<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 						</div>
+						<div class="box-footer text-right" v-if="!workflow.hasTask">
+							<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
+						</div>
 					</div>
-					<div class="box box-info formContainer mt-1">
+					<div class="box box-info formContainer mt-1" v-if="workflow.hasTask">
 						<div class="box-header">任务办理</div>
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline">
 							<!-- /.box-body -->
@@ -101,13 +104,14 @@
 							</div>
 							<div class="box-footer text-right">
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
-								<button type="submit" class="btn btn-primary" data-btn-type="submit">提交</button>
+								<button type="submit" class="btn btn-primary" data-btn-type="submit" v-if="workflow.hasTask">提交</button>
 							</div>
 							<!-- /.box-footer -->
 						</form>
 					</div>
 					<div id="tabDiv" class="tabContainer" v-if="isShow">
-						<%@include file="../template/vue-tab-component.jsp" %>
+						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
+						<nav-tab ref="workflowTab" tab-content-id="workflow" :tab-list="tabList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -133,10 +137,13 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-inputs-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    $(function () {
 	    	console.log(1);
+	    	var taskEntityForm = null;
 		    var form = null;
 	        var commonTable;
 	        var urlNamespace = "${urlNamespace}";
@@ -148,7 +155,7 @@
 		    var id = "${id}" || 0;
 		    var userId = "<shiro:principal property='userId'></shiro:principal>";
 	   		var sysData =[],inputData=[],varFields={};
-	   		var isModals = '${isModals}';
+	   		var isModals = '${isModals}' == 'true';
 	   		var search = '${pageContext.request.queryString}' || location.search;
 	   		var taskId = '${taskId}' || 0;
 	   		var vm;
@@ -160,11 +167,14 @@
 				if (status == 'success') {
 					vm = new Vue($.extend(true, {
 							components: {
-							    'form-inputs': FormInputs
+							    'form-inputs': FormInputs,
+							    'nav-tab': NavTab,
+							    'tab-pane': TabPane,
 							},
-						}, tabVueConfig || {}, {
+						}, {
 							el: "#" + appId,
 							data: $.extend({}, data, {
+								isModals,
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
@@ -186,6 +196,8 @@
 	    				 	}),
     				 	}
 					));
+					taskEntityForm = $("#taskEntityFormDiv").form();
+					taskEntityForm.initFormData(data.targetValue);
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.workflow);
@@ -229,12 +241,12 @@
     		
     		function handleResult(results){
     			var isCreate = id == 0;
-    			var targetName = results.targetName || model;
+    			/* var targetName = results.targetName || model;
     			var targetValue = results[targetName] || {};
     			keyword = keyword || window.keyword || "id";
-    			id = targetValue[keyword] || targetValue.id || 0;
+    			id = targetValue[keyword] || targetValue.id || 0; */
         		if (isCreate) {
-        			if (isModals == "true") {
+        			if (isModals) {
         				var currentWinId = winId;
         				if (!$("#" + currentWinId).length) {
         					currentWinId = $(this).parents(".modal.in:first").attr("id");
@@ -250,6 +262,12 @@
 	    					vm._data.fieldList = data.fieldList || [];
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						
+	   						vm._data.workflowFieldList = data.workflowFieldList || [];
+	   						vm._data.workflow = data.workflow || {};
+	   						
+	   						var wfvm = vm.$refs['workflowTab'];
+	   						wfvm.refreshNavTab({target: $('li.active a[data-toggle="tab"]', wfvm.$el)});
 	   						//form.initFormData(data.targetValue);
 	    				}
 	        		});

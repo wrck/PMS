@@ -28,7 +28,7 @@
 	</template>
 	<template v-else-if="field.type == 'datetime'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 					data-flag="datetimepicker" data-format="field.render" autocomplete="off"
@@ -38,7 +38,7 @@
 	</template>
 	<template v-else-if="field.type == 'select'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 					:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
@@ -48,7 +48,7 @@
 	</template>
 	<template v-else-if="field.type == 'urlSelector'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 					:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
@@ -62,7 +62,7 @@
 	</template>
 	<template v-else-if="field.type == 'autocomplete'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 					:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
@@ -74,7 +74,7 @@
 	</template>
 	<template v-else-if="field.type == 'inputs'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
 					:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
 					:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
@@ -82,12 +82,12 @@
 	</template>
 	<template v-else-if="field.type == 'range'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<div class="flex-grow-2 range-slider form-control no-border pl-0 pr-0">
 				<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="progress-bar-striped" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 						:value="getFieldValue(field) || 0" :placeholder="field.title || field.name" :style="field.cssStyle" @input="rangeChange($event, field)" @change="rangeChange($event, field)"
 						:defaultValue="parseValue(field, 'extData').defaultValue" :max="field.extData['max']" :min="field.extData['min']" :step="field.extData['step']"
-						:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off">
+						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required" autocomplete="off">
 				<small class="range-slider-tip">{{getFieldValue(field) || field.extData['min'] || 0}}</small>
 			</div>
 		</div>
@@ -95,8 +95,8 @@
 	<template v-else-if="field.type == 'radio'">
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 			<template v-for="item in getDataValue(field.extData)">
-				<label :for="field.field + '_' + item[field.extValue]" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{item[field.extKey]}}</label>
-				<input :id="field.field + '_' + item[field.extValue]" type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+				<label :for="(field.cssId || field.field) + '_' + item[field.extValue]" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{item[field.extKey]}}</label>
+				<input :id="(field.cssId || field.field) + '_' + item[field.extValue]" type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 						:value="getFieldValue(field)" :checked="item[field.extValue] == getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
 						:data-flag="field.type" 
@@ -106,7 +106,7 @@
 	</template>
 	<template v-else>
 		<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-			<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" 
 					:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off">

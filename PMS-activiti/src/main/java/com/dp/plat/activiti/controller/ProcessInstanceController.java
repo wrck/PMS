@@ -2,6 +2,8 @@ package com.dp.plat.activiti.controller;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +15,7 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -77,12 +80,15 @@ public class ProcessInstanceController {
 	@RequestMapping(value = "/diagram/{processInstanceId}", method = RequestMethod.GET)
 	public void showDiagram(@PathVariable("processInstanceId") String processInstanceId, HttpServletResponse response)
 			throws Exception {
-		InputStream imageStream = this.processService.getDiagram(processInstanceId);
-		// 输出资源内容到相应对象
-		byte[] b = new byte[1024];
-		int len;
-		while ((len = imageStream.read(b, 0, 1024)) != -1) {
-			response.getOutputStream().write(b, 0, len);
+		String[] processInstanceIds = StringUtils.split(processInstanceId, ",");
+		for (String procInstId : processInstanceIds) {
+			InputStream imageStream = this.processService.getDiagram(procInstId);
+			// 输出资源内容到相应对象
+			byte[] b = new byte[1024];
+			int len;
+			while ((len = imageStream.read(b, 0, 1024)) != -1) {
+				response.getOutputStream().write(b, 0, len);
+			}
 		}
 	}
 
@@ -118,7 +124,13 @@ public class ProcessInstanceController {
 	 */
 	@RequestMapping(value = "/info/{processInstanceId}/list", method = RequestMethod.POST)
 	public void showInfo(@PathVariable("processInstanceId") String processInstanceId, Model model) {
-		List<ActivityVo> list = runtimePageService.getActivityList(processInstanceId);
+		String[] processInstanceIds = StringUtils.split(processInstanceId, ",");
+		List<ActivityVo> list = null;
+		if (processInstanceIds.length > 1) {
+			list = runtimePageService.getActivityList(new HashSet<>(Arrays.asList(processInstanceIds)));
+		} else {
+			list = runtimePageService.getActivityList(processInstanceId);
+		}
 		model.addAttribute("data", list);
 	}
 

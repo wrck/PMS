@@ -103,6 +103,9 @@ public class ProjectHeader extends Project {
     @JsonSerialize(using = JsonSerializer.class)
     private Date effectiveTo;
 
+    // 数据是否失效
+    private Boolean disabled;
+
     // 项目开始实施时间
     @JsonSerialize(using = JsonSerializer.class)
     private Date projectStartTime;
@@ -641,6 +644,24 @@ public class ProjectHeader extends Project {
      */
     public void setEffectiveTo(Date effectiveTo) {
         this.effectiveTo = effectiveTo;
+    }
+
+    /**
+     * 获取数据是否失效
+     *
+     * @return disabled - 数据是否失效
+     */
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    /**
+     * 设置数据是否失效
+     *
+     * @param disabled 数据是否失效
+     */
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
     }
 
     /**

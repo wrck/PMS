@@ -33,7 +33,6 @@
 	var tabVueConfig = {
 		el: "#app",
 		components: {
-		    // <runoob> 将只在父模板可用
 		    'tab-pane': TabPane
 		},
 		data: {

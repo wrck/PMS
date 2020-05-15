@@ -87,18 +87,22 @@
 					<div class="box box-info">
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0" v-if="isShow">
-								<%@include file="../template/vue-form-component.jsp" %>
+								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
+								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
+								<button type="submit" v-if="targetValue.id > 0 && !targetValue.dispatched" class="btn btn-success" data-btn-type="submit">派单</button>
+								<button type="button" v-if="targetValue.dispatched && !targetValue.settled" class="btn btn-primary" data-btn-type="settle">结算</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
 						</form>
 					</div>
-					<div id="tabDiv" class=" fade" :class="{in: isShow}">
-						<%@include file="../template/vue-tab-component.jsp" %>
+					<div id="tabDiv" class="fade" :class="{in: isShow}">
+						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
+						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -113,7 +117,7 @@
     <script src="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/js/bootstrap-validator.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
-	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.js"></script>
+	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.min.js"></script>
 	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
@@ -121,14 +125,17 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
-	    //tableId,queryId,conditionContainer
 	    $(function () {
-	    	console.log(1);
+		    //tableId,queryId,conditionContainer
 		    var form = null;
 	        var commonTable;
 	        var urlNamespace = "/pm/";
-	        var model = "settlement";
+	        var model = "dispatch";
 	        var appId = model + "App";
 	        var winId= model + "Win";
 	        var formId = model + "Form";
@@ -146,7 +153,13 @@
 	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
+					vm = new Vue($.extend(true, {
+							components: {
+							    'form-inputs': FormInputs,
+							    'nav-tab': NavTab,
+							    'tab-pane': TabPane,
+							},
+						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
 								isModals,
@@ -154,12 +167,19 @@
 								isShow: true,
 								dataType: "form",
 								formCols: 2,
-								//formGroupClass: "col-sm-6 col-md-3",
+								//formGroupClass: "col-xs-12 col-sm-12 col-md-6",
 								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
-	   							targetName: data.targetName,
-	    						targetValue: data.targetValue || {dispatch:{}}
+	   							tabList: data.tabList || [],
+	   							targetName: data.targetName || model,
+	    						targetValue: data.targetValue || {},
+	    						
+	    						// 权限控制参数
+	    						model: data.model || model,
+	    						permissionType: data.permissionType || "",
+	    						permissions: data.permissions || [],
+	    						roles: data.roles || []
 	    				 	}),
     				 	}
 					));
@@ -176,8 +196,6 @@
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
 			                		var index3 = layer.load(1);
-			                		var headers = {};
-			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
 			                		var formData = form.getFormSimpleData();
 			                		var url = btnType == 'submit' ? pm.router.api(model).submit() : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
 			                		ajaxPost(url, formData,function(data,status){
@@ -201,87 +219,122 @@
 		    		});
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		var selectedId = (data.targetValue || {}).dispatchId;
-		    		var selectedText = (data.targetValue || {}).dispatchSeq;
-		    		var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
-		    		$("#dispatchId", $container).select2({
-	    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
+		    		var selectedId = (data.targetValue || {}).projectIds;
+		    		var selectedText = (data.targetValue || {}).dispatchName;
+		    		$("#projectIds", $container).select2({
 		    			allowClear: true,
-		    			dropdownAutoWidth:true,
-		    			data: selectedId ? [$.extend({id: selectedId, text: selectedText}, data.targetValue.dispatch)] : [],// 设置初始值
+		    			dropdownAutoWidth: true,
+		    			data: selectedId ? [{id: selectedId, text: selectedText}] : [],// 设置初始值
 		    			ajax: {
-		    			    url: basePath + "/pm/dispatch/listWithSettleInfo.json?" + search,
+		    			    url: basePath + "/pm/project/list.json",
 		    			    dataType: 'json',
 		    			    delay: 250,
 		    			    data: function (params) {
-		    			    	params.pageSize = 10;
-			    			    return {
-			    			        dispatchSeq: params.term, // search term
-			    			        fuzzySearch: true,
-			    			        pageSize: params.pageSize || 10,
-			    			        start: (params.page - 1) * params.pageSize || 0
-			    			    };
+		    			      return {
+		    			        fuzzy: params.term, // search term
+		    			        fuzzySearch: true,
+		    			        pageSize: 30,
+		    			        start: (params.page - 1) * 30 || 0
+		    			      };
 		    			    },
 		    			    processResults: function (data, params) {
 		    			      	params.page = params.page || 1;
 							  	var list = data.data || [];
 							  	var results = $.map(list, function (obj) {
-							  		obj.id = obj.id;
-							  		obj.text = obj.dispatchSeq;
+							  		obj.id = obj.id || obj.projectId;
+							  		obj.text = obj.projectName;
 								  	return obj;
 								});
 		    			      	return {
 		    			        	results: results,
 		    			        	pagination: {
-		    			          		more: (params.page * (params.pageSize || 10)) < data.pageParam.filtered
+		    			          		more: (params.page * 30) < data.pageParam.filtered
 		    			       		}
 		    			      	};
 		    			    },
 		    			    cache: true
 		    			  },
-		    			  placeholder: '搜索派单编号',
+		    			  placeholder: '搜索项目名称',
 		    			  minimumInputLength: 4,
 		    			  templateResult: formatRepo,
 		    			  templateSelection: formatRepoSelection
 		    		});
-		    		/* if (dispatchIdPlaceholder) {
+		    		/* if (projectIdsPlaceholder) {
 		    			$(".select2-selection__placeholder").css("color", 'inherit');
 		    		} */
 		    		
 		    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-		    		$("#dispatchId + .select2-container", $container).one("click", function(e) {
-		    			$("#dispatchId", $container).on("change", function(e){
+		    		$("#projectIds + .select2-container", $container).one("click", function(e) {
+		    			$("#projectIds", $container).on("change", function(e){
 		    				try{
 		    					var source = $(this).select2("data");
+		    					console.log(source);
 		    					if (source.length > 0) {
 		    						source = source[0];
 		    					} else {
 		    						source = {};
 		    					}
-		    					console.log(source, this.value);
-		    					/* $("#smsProjectName", $container).val(source.smsProjectName || source.dispatchName);
-		    					$("#contractNos", $container).val(source.contractNos);
-		    					$("#dispatchSeq", $container).val(source.dispatchSeq);
-			    				$("#smsProjectCode", $container).val(source.smsProjectCode);
-			    				$("#smsOrderExecNumber", $container).val(source.smsOrderExecNumber || (source.customInfo || {}).smsOrderExecNumber);
-				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime);
-				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount); */
-				    			var targetValue = vm._data.targetValue || {};
-				    			targetValue.dispatch = source;
-				    			targetValue.dispatchId = source.id;
-				    			targetValue.dispatchSeq = source.dispatchSeq;
-				    			vm._data.targetValue = targetValue;
-				    			
-				    			// 生成结算编号
-				    			generateSettleSeq();
+		    					$("#projectName", $container).val(source.projectName);
+		    					$("#dispatchName", $container).val(source.projectName);
+			    				$("#smsProjectCode", $container).val(source.smsProjectCode || (source.customInfo || {}).smsProjectCode);
+				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime);
+				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount);
 			    			} catch(e){}
 		    			});
 		    		});
+		    		// 检查是否已派单
+		    		checkDispatched(data);
 		    		
-		    		// 绑定当次付款比例、当次付款金额的change事件，生成结算编号
-		    		$("#ratio,#amount", $container).change(generateSettleSeq);
+		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
+/* 		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
+			    		$("#facilitatorId", $container).one("change", changeFacilitator);
+		    		}
+ */		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
+		    			$("#facilitatorId", $container).on("change", changeFacilitator)
+		    		});
+		    		
     			 }
     		})
+    		
+    		$(document).on("click", '[data-btn-type]', function(e) {
+    			var action = $(this).attr('data-btn-type');
+                switch (action) {
+               	case 'settle':
+               		var url = pm.router.html('settlement').create("dispatchId=" + id, true);
+               		console.log(1);
+                	if(id && url) {
+                		modals.openWin({
+	                         winId: "settlementWin",
+	                         title:'新增记录',
+	                         width: '75vw',
+	                         url: url,
+	                         hideFunc: function() {
+	                        	 var config = $("#settlementTab").data();
+	                        	 initTabData(config, true);
+	                         }
+                        });
+                	}
+               	}
+    		});
+    		
+    		// 检查是否已派单
+    		function checkDispatched(data) {
+    			// 如果已经派单则不允许修改项目和服务商
+	    		var isDispatched = (data.targetValue || {}).dispatched;
+	    		var dispatchType = (data.targetValue || {}).type;
+	    		if (isDispatched == true) {
+	    			$("#projectIds", $container).attr("disabled", true);
+	    			$("#facilitatorId", $container).attr("disabled", true);
+	    			$("#dispatchSeq", $container).attr("disabled", true);
+	    			if (dispatchType == 'frameworkAgreement') {
+		    			$("#dispatchNo", $container).attr("disabled", true);
+	    			}
+	    		}
+	    		
+	    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
+		    		$("#facilitatorId", $container).one("change", changeFacilitator);
+	    		}
+    		}
     		
     		function handleData() {
     			
@@ -294,8 +347,13 @@
     			keyword = window.keyword || "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-        			if (isModals) {
-        				modals.hideWin(winId);
+	        		if (isModals) {
+	        			console.log(1);
+	        			modals.removeData(winId);
+        				$("#" + winId).modal({ 
+							remote: pm.router.html(model).detail(id, true)
+						});
+        				//modals.hideWin(winId);
         				//modals.closeWin(winId);
         			} else {
 		        		window.location.replace(pm.router.html(model).detail(id));
@@ -306,20 +364,12 @@
 	    					vm._data.fieldList = data.fieldList || [];
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						// 检查是否已派单
+	   			    		checkDispatched(data);
 	    				}
 	        		});
         		}
     		}
-    		
-    		function generateSettleSeq() {
-    			var dispatchSeq = $("#dispatchSeq", $container).val();
-    			var smsProjectName = $("#smsProjectName", $container).val();
-    			var ratio = $("#ratio", $container).val();
-    			var amount = $("#amount", $container).val();
-    			var settleSeq = [dispatchSeq, smsProjectName, ratio, amount];
-    			$("#settleSeq", $container).val(settleSeq.join("-"));
-    		}
-    		
     		function formatRepo (repo) {
     			if (repo.loading) {
     				return repo.text;
@@ -338,17 +388,39 @@
     			    "</div>"
     			);
 
-    			$container.find(".select2-result-repository__title").append("<div style='margin-right:1rem'>" + repo.dispatchSeq + "</div>");
-    			$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNos || "") + "</div>");
-    			$container.find(".select2-result-repository__description").text(repo.smsProjectName || repo.dispatchName);
-    			$container.find(".select2-result-repository__smsSubmitTime").append(repo.smsSubmitTime || (repo.customInfo || {}).smsSubmitTime);
-    			$container.find(".select2-result-repository__smsProjectAmount").append(repo.smsProjectAmount || (repo.customInfo || {}).smsProjectAmount);
+    			$container.find(".select2-result-repository__title").append("<div>" + repo.projectCode + "</div>");
+    			$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNo || "") + "</div>");
+    			$container.find(".select2-result-repository__description").text(repo.projectName);
+    			$container.find(".select2-result-repository__forks").append(repo.contractNo);
+    			$container.find(".select2-result-repository__smsSubmitTime").append((repo.customInfo || {}).smsSubmitTime);
+    			$container.find(".select2-result-repository__smsProjectAmount").append((repo.customInfo || {}).smsProjectAmount);
 
     			return $container;
     		}
 
     		function formatRepoSelection (repo) {
     			return repo.projectName || repo.text;
+    		}
+    		
+    		function changeFacilitator(e) {
+				var element;
+    			try{
+    				var element =  $($(this).select2("data")[0].element);
+    			} catch(e){}
+				var source = $(element).data("source") || {};
+				$("#facilitatorCode", $container).val(source.code);
+    			$("#facilitatorName", $container).val(source.name);
+    			$("#bankInfo", $container).val(source.bankInfo);
+    			$("#bankAccount", $container).val(source.bankAccount);
+    			
+    			if (source.code) {
+    				ajaxGet(pm.router.api(model).generateDispatchSeq(), {facilitatorCode: source.code}, function(data) {
+	    				var placeholder = $("#dispatchSeq").data("placeholder") || $("#dispatchSeq").attr("placeholder");
+	    				$("#dispatchSeq").data("placeholder", placeholder);
+	    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
+	    				$("#dispatchSeq").val("");
+	    			});
+    			}
     		}
 		});
 	</script>

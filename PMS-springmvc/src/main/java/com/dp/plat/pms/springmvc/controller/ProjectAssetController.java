@@ -112,7 +112,7 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 				List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 
-				List<?> navTavList = this.findNavTabList(getDataNameNavTab());
+				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
 				
 				model.addAllAttributes(checkPermission.getMap());

@@ -430,11 +430,34 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 		}
 		
 		$($tableContainer).on("click",".export-btn-group .btn", function() {
-			var sourceObject = $(this).attr("data-source-object");
-			var exportType = $(this).attr("data-export-type");
-			var fullServiceName = $(this).attr("data-source-fullServiceName");
+			var sourceObject = $(this).attr("data-source-object") || "";
+			var exportType = $(this).attr("data-export-type") || "";
+			var fullServiceName = $(this).attr("data-source-fullServiceName") || "";
+			var url = $(this).attr("data-export-url") || "";
+			var exportFileName =  $(this).attr("data-export-fileName") || "";
 //			var simpleServiceName = $(this).attr("data-source-simpleServiceName");
-			if( sourceObject && exportType) {
+			if (url && exportType) {
+				var data = {};
+				data.draw = 0;
+				data.start = 0;
+				data.length = -1;
+				data.order = that.table.table().order();
+				var params = that.getQueryCondition(data);
+				var a = document.createElement('a');
+				a.download = '';
+				if (!url.startsWith(basePath)) {
+					url = basePath + url;
+				}
+				var concat = "?";
+				if (url.indexOf("?") > -1) {
+					concat = "&"
+				}
+				url += concat + $.param(params) + "&exportFileName=" + exportFileName;
+				a.href = url ;
+				$("body").append(a); //修复firefox中无法触发click
+				a.click();
+				$(a).remove();
+			} else if( sourceObject && exportType) {
 				var data = {};
 				data.draw = 0;
 				data.start = 0;
@@ -663,12 +686,20 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
 		}
 	}
 	
-	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
-	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
+	$lengthChangeRow = $("#"+this.tableId+"_wrapper .dataTables_length").parents("div.row:first");
+	$lengthChangeRow.find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
+	$lengthChangeRow.find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
+	if ($lengthChangeRow.length == 0) {
+		$lengthChangeRow = $("#"+this.tableId+"_wrapper div.row").eq(1);
+	}
+//	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
+//	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
     //如果分页不可选 则空出位置 让条件区域更宽
     if(!oSettings.oInit.lengthChange){
-    	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-2").remove();
-		$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
+    	$lengthChangeRow.find("div.col-sm-2").remove();
+    	$lengthChangeRow.find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
+//    	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-2").remove();
+//		$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
     }
     
     //Y轴滚动时，设置列头自适应
@@ -881,12 +912,20 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
 		}
 	}
 	
-	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
-	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
+	$lengthChangeRow = $("#"+this.tableId+"_wrapper .dataTables_length").parents("div.row:first");
+	$lengthChangeRow.find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
+	$lengthChangeRow.find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
+	if ($lengthChangeRow.length == 0) {
+		$lengthChangeRow = $("#"+this.tableId+"_wrapper div.row").eq(1);
+	}
+//	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-2");
+//	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-6").eq(0).removeClass("col-sm-6").addClass("col-sm-10");
     //如果分页不可选 则空出位置 让条件区域更宽
     if(!oSettings.oInit.lengthChange){
-    	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-2").remove();
-		$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
+    	$lengthChangeRow.find("div.col-sm-2").remove();
+    	$lengthChangeRow.find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
+//    	$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-2").remove();
+//		$("#"+this.tableId+"_wrapper div.row").eq(1).find("div.col-sm-10").removeClass("col-sm-10").addClass("col-sm-12");
     }
     
     $("#"+this.tableId +"_filter input[type='search']").addClass("fuzzySearch").attr("placeholder","模糊查找").addClass("form-control").removeClass("input-sm");
@@ -1616,9 +1655,11 @@ CommonTable.prototype.fnStateSaveParams = function (settings, data) {
 
 CommonTable.prototype.createExportBtnGroup = function () {
 	if(this.exporting) {
-		var sourceObject = this.exportData.sourceObject;
-		var exportTypes = this.exportData.type;
-		var fullServiceName = this.exportData.fullServiceName;
+		var sourceObject = this.exportData.sourceObject || "";
+		var exportTypes = this.exportData.type || [];
+		var fullServiceName = this.exportData.fullServiceName || "";
+		var url = this.exportData.url || "";
+		var exportFileName =  this.exportData.fileName || "";
 //		var simpleServiceName = this.exportData.simpleServiceName;
 		if(exportTypes === undefined || exportTypes.length == 0) {
 			exportTypes = ["excel"];
@@ -1629,7 +1670,7 @@ CommonTable.prototype.createExportBtnGroup = function () {
 		for(var i in exportTypes ) {
 			var type = exportTypes[i];
 			var typeTemp = type.substr(0,1).toUpperCase() + type.substr(1);
-			html += '<a class="btn export'+typeTemp+'Btn" data-source-fullServiceName="'+fullServiceName+'"   data-source-object="' + sourceObject + '" data-export-type="'+type+'" title="导出'+typeTemp+'">'
+			html += '<a class="btn export'+typeTemp+'Btn" data-source-fullServiceName="'+fullServiceName+'"   data-source-object="' + sourceObject + '" data-export-type="'+type+ '" data-export-url="'+ url + '" data-export-fileName="'+ exportFileName + '" title="导出'+typeTemp+'">'
 					  +'<i class="fa fa-fw fa-file-' + type + '-o text-success"></i>'
 				  +'</a>';
 		}

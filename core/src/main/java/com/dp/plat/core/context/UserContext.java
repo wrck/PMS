@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.shiro.SecurityUtils;
@@ -154,7 +155,7 @@ public class UserContext {
 	 * 
 	 * @return
 	 */
-	public static boolean checkPermission(List<String> permissions) {
+	public static boolean checkPermission(Collection<String> permissions) {
 		if (permissions == null || permissions.isEmpty()) {
 			return true;
 		}
@@ -166,7 +167,7 @@ public class UserContext {
 	 * 
 	 * @return
 	 */
-	public static boolean checkAnyPermission(List<String> permissions) {
+	public static boolean checkAnyPermission(Collection<String> permissions) {
 		if (permissions == null || permissions.isEmpty()) {
 			return true;
 		}

@@ -140,7 +140,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 				List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 
-				List<?> navTavList = this.findNavTabList(getDataNameNavTab());
+				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
 			}
 		} else {

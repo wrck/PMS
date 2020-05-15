@@ -32,6 +32,7 @@ import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.vo.DataTableColumn;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
@@ -135,8 +136,11 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		if (StringUtils.isBlank(projectDeliver.getColumn011())) {
 			projectDeliver.setColumn011("");
 		}
-		List<com.dp.plat.data.bean.ProjectDeliver> projectDeliverList = projectHeaderService
-				.queryProjectDeliverList(projectDeliver);
+		List<com.dp.plat.data.bean.ProjectDeliver> projectDeliverList = projectHeaderService.queryProjectDeliverList(projectDeliver);
+		if (projectDeliverList.isEmpty()) {
+			projectDeliver.setBasicDataId("");
+			projectDeliverList = projectHeaderService.queryProjectDeliverList(projectDeliver);
+		}
 		model.addAttribute("projectDeliverList", projectDeliverList);
 		return getViewNameSpace() + "upload";
 	}
@@ -169,6 +173,9 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 				deliver.setDeliverId(deliverIds[i]);
 				service.uploadFile(deliver, multipartFile);
 			}
+			
+			boolean needRefresh = service.updateEventActualFinishDateByTask(projectDeliver);
+			model.addAttribute("refreshProjectState", needRefresh);
 			projectHeaderService.updateProjectLastRefreshTime(projectDeliver.getProjectId());
 		}
 	}
@@ -235,7 +242,13 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 
 	@Override
 	public boolean checkPermission(TaskVO v, Model model, String... permissions) {
-		return super.checkPermission(v, model, permissions);
+		if (!super.checkPermission(v, model, permissions)) {
+			return false;
+		}
+		PermissionResult result = service.checkPermission(v, permissions);
+		model.addAllAttributes(result.getMap());
+		return result.isPermit();
+		//return super.checkPermission(v, model, permissions);
 	}
 
 }

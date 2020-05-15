@@ -85,7 +85,8 @@
         var projectTable;
         var winId="projectWin";
         $(function() {
-            projectTable = new CommonTable("project_table", pm.project.api.list(), "searchDiv",{
+        	var search = '${pageContext.request.queryString}' || location.search;
+            projectTable = new CommonTable("project_table", pm.project.api.list(search), "searchDiv",{
                 searching :true,
                 rowId: 'projectId',
                 /* "columns" : [

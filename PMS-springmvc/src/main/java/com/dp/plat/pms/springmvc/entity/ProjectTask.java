@@ -99,7 +99,7 @@ public class ProjectTask extends com.dp.plat.data.bean.ProjectTask implements Se
     private String deliverFileIds;
 
     // 自定义信息
-    private Map customeInfo;
+    private Map customInfo;
 
     // 备注
     private String remark;
@@ -586,19 +586,19 @@ public class ProjectTask extends com.dp.plat.data.bean.ProjectTask implements Se
     /**
      * 获取自定义信息
      *
-     * @return customeInfo - 自定义信息
+     * @return customInfo - 自定义信息
      */
-    public Map getCustomeInfo() {
-        return customeInfo;
+    public Map getCustomInfo() {
+        return customInfo;
     }
 
     /**
      * 设置自定义信息
      *
-     * @param customeInfo 自定义信息
+     * @param customInfo 自定义信息
      */
-    public void setCustomeInfo(Map customeInfo) {
-        this.customeInfo = customeInfo;
+    public void setCustomInfo(Map customInfo) {
+        this.customInfo = customInfo;
     }
 
     /**

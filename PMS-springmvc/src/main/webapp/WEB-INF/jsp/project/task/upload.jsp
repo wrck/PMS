@@ -4,7 +4,7 @@
 <%@taglib prefix="myTag" uri="/myTag"%>
 <div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true"><li class="fa fa-remove"></li></button>
-		<h5 class="modal-title">新增评论</h5>
+		<h5 class="modal-title">上传交付件</h5>
 	</div>
 	<div class="modal-body">
 	  	<mvc:form modelAttribute="projectDeliver" action="task/uploadDeliverFile.html" name="uploadFrom" enctype="multipart/form-data" method="post">
@@ -74,6 +74,13 @@
             	    }
             	});
             	ajaxupload(myform, router("/pm/").api("projectTask").upload(), function(data) {
+            		console.log(data);
+            		try {
+            			data = JSON.parse(data);
+	            		if (data.refreshProjectState) {
+	            			window.refreshProjectState = data.refreshProjectState;
+	            		}
+            		} catch(e) {}
             		modals.hideWin("uploadDeliverFileWin");
             	})
            	}

@@ -15,74 +15,76 @@ import com.dp.plat.service.ProjectService;
  */
 public interface IProjectHeaderService extends ProjectService/*IAbstractBaseService<ProjectHeader>*/  {
 
-	int deleteByPrimaryKey(Object pk);
+    int deleteByPrimaryKey(Object pk);
 
-	int insert(ProjectHeader t);
+    int insert(ProjectHeader t);
 
-	int insertSelective(ProjectHeader t);
+    int insertSelective(ProjectHeader t);
 
-	ProjectHeader selectByPrimaryKey(Object pk);
+    ProjectHeader selectByPrimaryKey(Object pk);
 
-	int updateByPrimaryKeySelective(ProjectHeader t);
+    int updateByPrimaryKeySelective(ProjectHeader t);
 
-	int updateByPrimaryKey(ProjectHeader t);
+    int updateByPrimaryKey(ProjectHeader t);
 
-	/**
+    /**
 	 * 查询满足条件的记录条数记录
 	 * 
 	 * @param pageParam
 	 * @return
 	 */
-	long countBySelectivePageable(PageParam<?> pageParam);
-	
-	/**
+    long countBySelectivePageable(PageParam<?> pageParam);
+
+    /**
 	 * 查询满足条件的记录条数记录
 	 * 
 	 * @param t
 	 * @return
 	 */
-	long countBySelective(ProjectHeader t);
+    long countBySelective(ProjectHeader t);
 
-	/**
+    /**
 	 * 分页查询满足条件的记录
 	 * 
 	 * @param pageParam
 	 * @return
 	 */
-	List<Object> selectBySelectivePageable(PageParam<?> pageParam);
-	
-	/**
+    List<Object> selectBySelectivePageable(PageParam<?> pageParam);
+
+    /**
 	 * 查询满足条件的所有记录
 	 * 
 	 * @param t
 	 * @return
 	 */
-	List<ProjectHeader> selectBySelective(ProjectHeader t);
-	
-	/**
+    List<ProjectHeader> selectBySelective(ProjectHeader t);
+
+    /**
 	 * 未创建项目数
 	 * @param tempParam
 	 * @return
 	 */
-	long countUncreateProjectList(PageParam<Object> tempParam);
+    long countUncreateProjectList(PageParam<Object> tempParam);
 
-	/**
+    /**
 	 * 未创建项目列表
 	 * @param pageParam
 	 * @return
 	 */
-	List<Object> selectUncreateProjectList(PageParam<Object> pageParam);
+    List<Object> selectUncreateProjectList(PageParam<Object> pageParam);
 
-	/**
+    /**
 	 * 检查是否具有该项目的权限
 	 * @param project
 	 * @return
 	 */
-	Map<String, Object> checkPermission(ProjectVO project);
-	
-	Map<String, Object> checkPermissionMap(ProjectVO project, String... permissions);
+    Map<String, Object> checkPermission(ProjectVO project);
 
-	PermissionResult checkPermission(ProjectVO project, String... permissions);
+    Map<String, Object> checkPermissionMap(ProjectVO project, String... permissions);
 
+    PermissionResult checkPermission(ProjectVO project, String... permissions);
 
+	ProjectVO selectVOByProjectId(Integer projectId);
+
+	ProjectVO queryProjectStateByProjectId(Integer projecrId);
 }

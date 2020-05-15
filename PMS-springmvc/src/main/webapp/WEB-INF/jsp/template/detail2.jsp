@@ -211,7 +211,7 @@
     			keyword = window.keyword || "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-        			if (isModals == "true") {
+        			if (isModals) {
         				
         				modals.hideWin(winId);
         				//modals.closeWin(winId);

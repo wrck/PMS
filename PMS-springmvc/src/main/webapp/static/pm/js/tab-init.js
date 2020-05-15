@@ -55,8 +55,8 @@ function initTabData(config, refresh, navTab) {
 	var timestamp = config.timestamp || "";
 	var navTabId = type + "Tab" + timestamp;
 	var $container = config.container || $(navTabId).parents(".tab-content:first");
-	var vm = $container.data("vm") || this;
 	var $navTab = $("#" + navTabId, $container);
+	var vm = $navTab.data("vm") || $container.data("vm") || this;
 	var searchDiv = type + "SearchDiv" + timestamp;
 	var tableId = type + "Table" + timestamp;
 	var calloutId = type + "Callout" + timestamp;
@@ -134,8 +134,11 @@ function initTabData(config, refresh, navTab) {
             dataType: "html",
             data: params,
             success: function(data){
-                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+//                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
                 $warpper.html(data);
+                if (typeof navTab.processCallback == "function") {
+                	data = navTab.processCallback.call(vm, config, navTab, $warpper);
+                }
             },
             error:function(XMLHttpRequest,textStatus,errorThrown){
             	$warpper.html("获取数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);

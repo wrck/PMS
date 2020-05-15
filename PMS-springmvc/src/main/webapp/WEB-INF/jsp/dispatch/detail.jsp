@@ -85,13 +85,14 @@
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="box box-info">
-						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline">
+						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0" v-if="isShow">
-								<%@include file="../template/vue-form-component.jsp" %>
+								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
+								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" v-if="targetValue.id > 0 && !targetValue.dispatched" class="btn btn-success" data-btn-type="submit">派单</button>
 								<button type="button" v-if="targetValue.dispatched && !targetValue.settled" class="btn btn-primary" data-btn-type="settle">结算</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
@@ -99,8 +100,9 @@
 							<!-- /.box-footer -->
 						</form>
 					</div>
-					<div id="tabDiv" class="" v-if="isShow">
-						<%@include file="../template/vue-tab-component.jsp" %>
+					<div id="tabDiv" class="fade" :class="{in: isShow}">
+						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
+						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -123,6 +125,10 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
 	    $(function () {
 		    //tableId,queryId,conditionContainer
@@ -137,7 +143,7 @@
 		    var id = "${id}" || 0;
 		    var userId = "<shiro:principal property='userId'></shiro:principal>";
 	   		var sysData =[],inputData=[],varFields={};
-	   		var isModals = '${isModals}';
+	   		var isModals = '${isModals}' == 'true';
 	   		var search = '${pageContext.request.queryString}' || location.search;
 	   		var vm;
 	   		var $container = $("#" + formId);
@@ -146,20 +152,35 @@
 	    	$("#tabDiv").attr({id: model + "TabDiv"});
 	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
+    			console.log(isModals);
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
+					vm = new Vue($.extend(true, {
+							components: {
+							    'form-inputs': FormInputs,
+							    'nav-tab': NavTab,
+							    'tab-pane': TabPane,
+							},
+						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
+								isModals,
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
-								formGroupClass: "col-xs-12 col-sm-12 col-md-6",
+								formCols: 2,
+								//formGroupClass: "col-xs-12 col-sm-12 col-md-6",
 								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
 	   							tabList: data.tabList || [],
-	   							targetName: data.targetName,
-	    						targetValue: data.targetValue
+	   							targetName: data.targetName || model,
+	    						targetValue: data.targetValue || {},
+	    						
+	    						// 权限控制参数
+	    						model: data.model || model,
+	    						permissionType: data.permissionType || "",
+	    						permissions: data.permissions || [],
+	    						roles: data.roles || []
 	    				 	}),
     				 	}
 					));
@@ -262,23 +283,14 @@
 			    			} catch(e){}
 		    			});
 		    		});
-		    		// 如果已经派单则不允许修改项目和服务商
-		    		var isDispatched = (data.targetValue || {}).dispatched;
-		    		var dispatchType = (data.targetValue || {}).type;
-		    		if (isDispatched == true) {
-		    			$("#projectIds", $container).attr("disabled", true);
-		    			$("#facilitatorId", $container).attr("disabled", true);
-		    			$("#dispatchSeq", $container).attr("disabled", true);
-		    			if (dispatchType == 'frameworkAgreement') {
-			    			$("#dispatchNo", $container).attr("disabled", true);
-		    			}
-		    		}
+		    		// 检查是否已派单
+		    		checkDispatched(data);
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
+/* 		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
 			    		$("#facilitatorId", $container).one("change", changeFacilitator);
 		    		}
-		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
+ */		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
 		    			$("#facilitatorId", $container).on("change", changeFacilitator)
 		    		});
 		    		
@@ -306,6 +318,25 @@
                	}
     		});
     		
+    		// 检查是否已派单
+    		function checkDispatched(data) {
+    			// 如果已经派单则不允许修改项目和服务商
+	    		var isDispatched = (data.targetValue || {}).dispatched;
+	    		var dispatchType = (data.targetValue || {}).type;
+	    		if (isDispatched == true) {
+	    			$("#projectIds", $container).attr("disabled", true);
+	    			$("#facilitatorId", $container).attr("disabled", true);
+	    			$("#dispatchSeq", $container).attr("disabled", true);
+	    			if (dispatchType == 'frameworkAgreement') {
+		    			$("#dispatchNo", $container).attr("disabled", true);
+	    			}
+	    		}
+	    		
+	    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
+		    		$("#facilitatorId", $container).one("change", changeFacilitator);
+	    		}
+    		}
+    		
     		function handleData() {
     			
     		}
@@ -317,7 +348,7 @@
     			keyword = window.keyword || "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-	        		if (isModals == "true") {
+	        		if (isModals) {
 	        			console.log(1);
 	        			modals.removeData(winId);
         				$("#" + winId).modal({ 
@@ -334,6 +365,8 @@
 	    					vm._data.fieldList = data.fieldList || [];
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						// 检查是否已派单
+	   			    		checkDispatched(data);
 	    				}
 	        		});
         		}

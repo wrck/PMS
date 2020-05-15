@@ -89,10 +89,16 @@
         var winId= model + "Win";
         var tableId = model + "table";
         $(function() {
+        	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);
-            commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(), "searchDiv",{
+            commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(search), "searchDiv",{
                 searching :true,
                 rowId: 'id',
+                exportData: {
+                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+                	fileName: "行业漏洞",
+                	type: ["excel"]
+                },
                 beforeInitConfig: function() {
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,

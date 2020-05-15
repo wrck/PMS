@@ -87,8 +87,9 @@
         var winId= model + "Win";
         var tableId = model + "table";
         $(function() {
+        	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);
-            commonTable = new CommonTable(tableId, pm.router.api(model).list(), "searchDiv",{
+            commonTable = new CommonTable(tableId, pm.router.api(model).list(search), "searchDiv",{
                 searching :true,
                 rowId: 'id',
                 beforeInitConfig: function() {

@@ -8,7 +8,7 @@ public class TaskVO extends ProjectTask {
 	
 	private String eventKey;
 	private String eventValue;
-	
+	private String projectIds;
 	
 	public TaskVO() {
 		super();
@@ -33,6 +33,12 @@ public class TaskVO extends ProjectTask {
 		this.eventValue = eventValue;
 	}
 	
+	public String getProjectIds() {
+		return projectIds;
+	}
+	public void setProjectIds(String projectIds) {
+		this.projectIds = projectIds;
+	}
 	public void setEffective(Date date) {
 		this.setEffectiveFrom(date);
 		this.setEffectiveTo(date);

@@ -10,7 +10,9 @@
 	$.fn[pluginName] = function (options) {
         if (this == null)
             return null;
-        return new BaseForm(this, $.extend(true, {}, options));
+        var baseForm = new BaseForm(this, $.extend(true, {}, options));
+        $(this).data("baseForm", baseForm);
+        return baseForm;
     };
     
     var BaseForm = function (element, options) {
@@ -436,7 +438,15 @@
 									textName.push(data[i][tempText]);
 								}
 							}
-		                    var suggestion = {value: textName.join(separator), data:data[i][value]};
+		                	var valueName = [];
+		                	var valueKeys = value.split(" ");
+		                	for (var t = 0; t < valueKeys.length; t++) {
+								var tempValue = $.trim(valueKeys[t]);
+								if (tempValue) {
+									valueName.push(data[i][tempValue]);
+								}
+							}
+		                    var suggestion = {value: textName.join(separator), data:valueName.join(separator)};
 		                    if (storeSource) {
 		                    	suggestion["source"] = data[i];
 		                    }
@@ -705,7 +715,15 @@
 							textName.push(data[i][tempText]);
 						}
 					}
-                    var option = $("<option value='" + data[i][value] + "'>" + textName.join(separator)+ "</option>");
+                	var valueName = [];
+                	var valueKeys = value.split(" ");
+                	for (var t = 0; t < valueKeys.length; t++) {
+						var tempValue = $.trim(valueKeys[t]);
+						if (tempValue) {
+							valueName.push(data[i][tempValue]);
+						}
+					}
+                    var option = $("<option value='" + valueName.join(separator) + "'>" + textName.join(separator)+ "</option>");
                     if (storeSource) {
                     	option.data("source", data[i]);
                     }

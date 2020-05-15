@@ -28,14 +28,14 @@
     <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
     <result column="visibleFlag" jdbcType="VARCHAR" property="visibleFlag" />
     <result column="deliverFileIds" jdbcType="VARCHAR" property="deliverFileIds" />
-    <result column="customeInfo" jdbcType="JSON" property="customeInfo" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
     <result column="remark" jdbcType="LONGVARCHAR" property="remark" />
   </resultMap>
   <sql id="Base_Column_List">
     taskId, projectId, projectType, contractNo, taskTypeCode, taskTypeId, taskName, eventPlanHappenDate, 
     eventPlanHappenDateENG, planStartTime, planEndTime, actualStartTime, eventActualFinishDate, 
     priority, progress, progressDesc, status, parentId, createTime, createBy, updateTime, 
-    updateBy, effectiveFrom, effectiveTo, visibleFlag, deliverFileIds, customeInfo,
+    updateBy, effectiveFrom, effectiveTo, visibleFlag, deliverFileIds, customInfo,
     remark
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
@@ -60,7 +60,7 @@
       progressDesc, status, parentId, 
       createTime, createBy, updateTime, 
       updateBy, effectiveFrom, effectiveTo, 
-      visibleFlag, deliverFileIds, customeInfo, 
+      visibleFlag, deliverFileIds, customInfo, 
       remark)
     values (#{taskId,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=VARCHAR}, #{contractNo,jdbcType=VARCHAR}, 
       #{taskTypeCode,jdbcType=VARCHAR}, #{taskTypeId,jdbcType=VARCHAR}, #{taskName,jdbcType=VARCHAR}, 
@@ -70,7 +70,7 @@
       #{progressDesc,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{parentId,jdbcType=INTEGER}, 
       #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
       #{updateBy,jdbcType=VARCHAR}, #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, 
-      #{visibleFlag,jdbcType=VARCHAR}, #{deliverFileIds,jdbcType=VARCHAR}, #{customeInfo,jdbcType=JSON}, 
+      #{visibleFlag,jdbcType=VARCHAR}, #{deliverFileIds,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, 
       #{remark,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectTask">
@@ -157,8 +157,8 @@
       <if test="deliverFileIds != null">
         deliverFileIds,
       </if>
-      <if test="customeInfo != null">
-        customeInfo,
+      <if test="customInfo != null">
+        customInfo,
       </if>
       <if test="remark != null">
         remark,
@@ -243,8 +243,8 @@
       <if test="deliverFileIds != null">
         #{deliverFileIds,jdbcType=VARCHAR},
       </if>
-      <if test="customeInfo != null">
-        #{customeInfo,jdbcType=JSON},
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
       </if>
       <if test="remark != null">
         #{remark,jdbcType=LONGVARCHAR},
@@ -329,8 +329,8 @@
       <if test="deliverFileIds != null">
         deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
       </if>
-      <if test="customeInfo != null">
-        customeInfo = #{customeInfo,jdbcType=JSON},
+      <if test="customInfo != null">
+        customInfo = #{customInfo,jdbcType=JSON},
       </if>
       <if test="remark != null">
         remark = #{remark,jdbcType=LONGVARCHAR},
@@ -365,7 +365,7 @@
       effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
       visibleFlag = #{visibleFlag,jdbcType=VARCHAR},
       deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
-      customeInfo = #{customeInfo,jdbcType=JSON},
+      customInfo = #{customInfo,jdbcType=JSON},
       remark = #{remark,jdbcType=LONGVARCHAR}
     where taskId = #{taskId,jdbcType=INTEGER}
   </update>
@@ -450,8 +450,8 @@
 			<if test="deliverFileIds != null and '' != deliverFileIds">
 				t.deliverFileIds = #{deliverFileIds, jdbcType=VARCHAR} AND
 			</if>
-			<if test="customeInfo != null">
-				t.customeInfo = #{customeInfo, jdbcType=JSON} AND
+			<if test="customInfo != null">
+				t.customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
 			<if test="remark != null and '' != remark">
 				t.remark = #{remark, jdbcType=LONGVARCHAR} AND
@@ -541,8 +541,8 @@
 				<if test="model.deliverFileIds != null and '' != model.deliverFileIds">
 					t.deliverFileIds = #{model.deliverFileIds, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.customeInfo != null">
-					t.customeInfo = #{model.customeInfo, jdbcType=JSON} AND
+				<if test="model.customInfo != null">
+					t.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
 					t.remark = #{model.remark, jdbcType=LONGVARCHAR} AND
@@ -573,7 +573,7 @@
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
-        order by id desc
+        order by taskId desc
     </if>
     <if test="start != null and pageSize != -1">
         limit #{start}, #{pageSize}
@@ -605,11 +605,24 @@
   
   <!-- 查询任务的交付件 -->
   <select id="selectProjectDeliverBySelective" parameterType="com.dp.plat.pms.springmvc.vo.ProjectDeliver" resultType="com.dp.plat.pms.springmvc.vo.ProjectDeliver">
-       SELECT pbdd.id, pbdd.taskId, pbdd.`projectId`, pbdd.`deliverableName`, pbdd.`deliverablePath`, 
-        	fbd.`basicDataName` as deliverableType
-       FROM `pm_basic_deliver_detail` pbdd
-	       INNER JOIN `pm_basic_prj_deliver` pbpd ON pbpd.id = pbdd.`deliverId`
-	       LEFT JOIN fnd_basic_data fbd ON fbd.`dataTypeCode` = pbpd.`dataTypeCodeSon` AND fbd.`basicDataId` = pbpd.`basicDataIdSon`
+        SELECT 
+		    pbdd.id, pbdd.taskId, pbdd.`projectId`, pbdd.`projectType`, pbdd.`deliverableName`, pbdd.`deliverId`, pbdd.`deliverablePath`, fbd.`basicDataName` as deliverableType, IFNULL(
+		        concat(pbdd.uploadUser, "-", ui.realName), pbdd.uploadUser
+		    ) as uploadUser, pbdd.uploadTime, pt.taskName, pt.customInfo as taskCustomInfo
+		FROM
+		    `pm_basic_deliver_detail` pbdd 
+		    inner JOIN `pm_basic_prj_deliver` pbpd 
+		        ON pbpd.id = pbdd.`deliverId` 
+		    LEFT JOIN fnd_basic_data fbd 
+		        ON fbd.`dataTypeCode` = pbpd.`dataTypeCodeSon` 
+		        AND fbd.`basicDataId` = pbpd.`basicDataIdSon` 
+		    left join pm_project_task pt 
+		        on pt.`taskId` = pbdd.`taskId` 
+		    LEFT JOIN t_user u 
+		        ON u.`user_name` = pbdd.`uploadUser` 
+		    LEFT JOIN t_user_info ui 
+		        ON ui.`user_id` = u.`user_id` 
+		        and ui.`compID` = #{orgId}
        <where>
 			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
        			<if test="projectId != null"> AND pbdd.projectId = #{projectId} </if>
@@ -617,11 +630,60 @@
 				<if test="ids != null ">
 					<foreach collection="ids" item="item" open="and pbdd.id in (" close=")" separator=",">#{item}</foreach>
 				</if>
+		      	<![CDATA[
+		          	AND pbdd.`effectiveFrom` <= NOW() AND (pbdd.`effectiveTo` > NOW() OR pbdd.`effectiveTo` IS NULL)
+		      	]]>
 			</trim>
        </where>
-      <![CDATA[
-          AND pbdd.`effectiveFrom` <= NOW() AND (pbdd.`effectiveTo` > NOW() OR pbdd.`effectiveTo` IS NULL)
-          order by pbdd.uploadTime desc
-      ]]>
+      order by pbdd.uploadTime desc
+  </select>
+  
+  <resultMap type="java.util.HashMap" id="permissionMap">
+		<result column="all" property="all" javaType="java.lang.Boolean"/>
+		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
+		<result column="view" property="view" javaType="java.lang.Boolean"/>
+		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+  </resultMap>
+  <select id="checkPermission" resultMap="permissionMap">
+  	<![CDATA[
+	  	select 
+		    count(pm.id) > 0 
+		    and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view, group_concat(distinct pm.memberRole) memberRoles, #{permissionTypes} as permissionTypes 
+		from
+		    pm_project_task pt 
+		    left join pm_project_header ph 
+		        on pt.projectId = ph.projectId 
+		        and pt.projectType = ph.projectType 
+		    left join pm_project_member pm 
+		        on ph.projectId = pm.projectId 
+		        and pm.effectiveFrom <= now() 
+		        and (
+		            pm.effectiveTo > now() 
+		            or pm.effectiveTo is null
+		        ) 
+		        and pm.memberCode = #{user.userName}
+		    left join t_user_info ui 
+		        on ui.`id` = #{user.userInfoId}
+		        and find_in_set(ph.`column001`, ui.`custom5`) 
+		        and find_in_set(ph.projectType, ui.custom4) 
+		where (
+		        pm.memberCode = #{user.userName}
+		        or ui.id = #{user.userInfoId}
+		    ) 
+  	]]>
+	<if test="model != null">
+		<if test="model.taskId != null">
+			AND pt.taskId = #{model.taskId}
+		</if>
+		<if test="model.projectId != null">
+			AND pt.projectId = #{model.projectId}
+		</if>
+		<if test="model.projectIds != null">
+			AND FIND_IN_SET(pt.projectId, #{model.projectIds})
+		</if>
+		<if test="model.projectType != null">
+			AND FIND_IN_SET(pt.projectType, #{model.projectType})
+		</if>
+	</if>	
   </select>
 </mapper>

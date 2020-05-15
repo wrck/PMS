@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -39,6 +40,7 @@ import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.runtime.Execution;
+import org.activiti.engine.runtime.ExecutionQuery;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Comment;
 import org.activiti.engine.task.Task;
@@ -74,6 +76,16 @@ public class RuntimePageService implements IRuntimePageService {
 
 	@Resource
 	private TaskService taskService;
+	
+	@Override
+	public List<ActivityVo> getActivityList(Collection<String> processInstanceIdSet) {
+		List<ActivityVo> voList = new ArrayList<>();
+		for (String processInstanceId : processInstanceIdSet) {
+			List<ActivityVo> activityList = this.getActivityList(processInstanceId);
+			voList.addAll(activityList);
+		}
+		return voList;
+	}
 
 	@Override
 	public List<ActivityVo> getActivityList(String processInstanceId) {
@@ -344,9 +356,15 @@ public class RuntimePageService implements IRuntimePageService {
 				// ExecutionEntity execution = (ExecutionEntity)
 				// runtimeService.createExecutionQuery()
 				// .processInstanceId(processInstanceId).singleResult();
-				List<Execution> executionList = runtimeService.createExecutionQuery()
-						.processInstanceId(processInstanceId).executionId(executionId).orderByProcessInstanceId().desc()
-						.list();
+//				List<Execution> executionList = executionQuery
+//						.processInstanceId(processInstanceId).executionId(executionId).orderByProcessInstanceId().desc()
+//						.list();
+				ExecutionQuery executionQuery = runtimeService.createExecutionQuery();
+				executionQuery.processInstanceId(processInstanceId);
+				if (StringUtils.isNotBlank(executionId)) {
+					executionQuery.executionId(executionId);
+				}
+				List<Execution> executionList = executionQuery.orderByProcessInstanceId().desc().list();
 				if (!executionList.isEmpty()) {
 					execution = (ExecutionEntity) executionList.get(0);
 				}
@@ -363,7 +381,7 @@ public class RuntimePageService implements IRuntimePageService {
 						logger.error("获取受理人出错：" + ex.getMessage());
 						assignee = null;
 					}
-					retNames = assignee != null ? getUserNamesByUserIds(assignee) : "待定";
+					retNames = StringUtils.isNotBlank(assignee) ? getUserNamesByUserIds(assignee) : "待定";
 				}
 				// 委托人,同受理人同一人的情况下不显示
 				if (taskDefinition.getOwnerExpression() != null) {
@@ -375,7 +393,7 @@ public class RuntimePageService implements IRuntimePageService {
 						owner = null;
 					}
 					if (assignee != null && !assignee.equals(owner)) {
-						retNames = retNames + "(委托人:" + owner != null ? getUserNamesByUserIds(owner) : "待定)";
+						retNames = retNames + "(委托人:" + (StringUtils.isNotBlank(owner) ? getUserNamesByUserIds(owner) : "待定)");
 					}
 				}
 

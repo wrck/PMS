@@ -39,13 +39,15 @@ public class DataExportController {
 		model.addAttribute("objectKV", objectKV);
 		model.addAttribute("pageParamKV", pageParamKV);
 		model.addAttribute("fullServiceName", fullServiceName);
-		//增加查询导出有无动态列的问题，先从数据库查询一次动态列数据，根据有无增加进入不同的方法解析
-		Map<String,String> dynamicColumn = dataExportService.queryDynamicColumn(objectName);
-		Map<String, String> columns = ExportUtils.getExportColumns(objectName,dynamicColumn);
-		//查询字段排序
-		String columnSort = dataExportService.queryDynamicColumnSort(objectName);
-		
-		model.addAttribute("columns", LinkedHashMapSort.sort(columnSort, columns));
+		if (StringUtils.isNotBlank(objectName)) {
+			//增加查询导出有无动态列的问题，先从数据库查询一次动态列数据，根据有无增加进入不同的方法解析
+			Map<String,String> dynamicColumn = dataExportService.queryDynamicColumn(objectName);
+			Map<String, String> columns = ExportUtils.getExportColumns(objectName,dynamicColumn);
+			//查询字段排序
+			String columnSort = dataExportService.queryDynamicColumnSort(objectName);
+			
+			model.addAttribute("columns", LinkedHashMapSort.sort(columnSort, columns));
+		}
 		return "/base/showExportColumns";
 	}
 

@@ -46,15 +46,15 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
         <!--生成对应表及类名 -->
-		<table tableName="af_industry_asset_project_relation" domainObjectName="IndustryAssetProjectRelation"
+		<table tableName="pm_project_header" domainObjectName="ProjectHeader"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
-			<property name="tableAlias" value="apr" />
+			<property name="tableAlias" value="ph" />
 			<property name="useActualColumnNames" value="true" />
-			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+			<generatedKey column="projectId" sqlStatement="Mysql" identity="true" />
 		</table>
 	</context>
 </generatorConfiguration>

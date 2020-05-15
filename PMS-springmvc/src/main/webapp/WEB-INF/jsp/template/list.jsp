@@ -89,8 +89,9 @@
         var winId= model + "Win";
         var tableId = model + "table";
         $(function() {
+        	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);
-            commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(), "searchDiv",{
+            commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(search), "searchDiv",{
                 searching :true,
                 rowId: 'id',
                 beforeInitConfig: function() {
@@ -113,9 +114,12 @@
                 	form = $("#searchForm").form();
                 	
                 	// 回调函数
-                	if (router(urlNamespace).callback(model).list) {
-                		router(urlNamespace).callback(model).list();
-                	}
+		        	if (router(urlNamespace).callback(model).list) {
+		        		var vueCallback = (router(urlNamespace).callback(model).list || {}).vueCallback;
+		        		if (typeof vueCallback == 'function') {
+		        			vueCallback.call(this);
+		        		}
+		        	}
                 },
             });
 
@@ -177,6 +181,14 @@
                 var url = router(urlNamespace).html(model).detail(rowId);
                 window.open(url);
             });
+            
+         	// 页面加载完成回调函数函数
+        	if (router(urlNamespace).callback(model).list) {
+        		var complate = (router(urlNamespace).callback(model).list || {}).complete;
+        		if (typeof complate == 'function') {
+        			complate.call(this);
+        		}
+        	}
         })
     </script>
 </jsTag>

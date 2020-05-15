@@ -65,7 +65,9 @@ var TabPane = {
 			},
 			timestamp:  {
 				type: Number,
-				default: new Date().getTime()
+				default: function() {
+					return new Date().getTime();
+				}
 			},
 			
 		},
@@ -114,7 +116,7 @@ var TabPane = {
 	 			var isPermit = false;
 	 			if ((permissionType == "all" 
 	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
-	 					|| permissionType == "view" && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
+	 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
 	 					&& $.inArray(permission, permissions) > -1) {
 	 				isPermit = true;
 				}
@@ -189,7 +191,8 @@ var TabPane = {
 	 			var activeTab = $(tab).text(); 
 	 			var tabId = $(tab).attr("href");
 	 			var $container = $(tab).parents(".tab-content:first");
-	 			$container.data("vm", this);
+	 			var $tabPane = $(tabId).length ? $(tabId) : $container;
+	 			$tabPane.data("vm", this);
 	 			if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
 	 	            $(tabId + " .overlay", $container).addClass("loading");
 	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;

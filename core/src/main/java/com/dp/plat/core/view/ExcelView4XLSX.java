@@ -48,6 +48,19 @@ public class ExcelView4XLSX extends AbstractExcelView {
 	public void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		// get data model which is passed by the Spring container
+		String exportFileName = (String) model.get("exportFileName");
+		if (StringUtils.isBlank(exportFileName)) {
+			exportFileName = request.getParameter("exportFileName");
+		}
+		if (StringUtils.isNotBlank(exportFileName)) {
+			String disposition = response.getHeader("Content-Disposition");
+			String attachment = "attachment;filename=" + exportFileName + this.getExtension();
+			if (disposition == null) {
+				response.setHeader("Content-Disposition", attachment);
+			} else if (!disposition.contains("attachment;filename=")){
+				disposition += ";" + attachment;
+			}
+		}
 		if (this.getBeanName() != null) {
 			needParseTitle = true; 
 			hasHeaderTitle = false;
@@ -132,14 +145,21 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			// create header row
 			if (!hasHeaderTitle) {
 				Row header = sheet.createRow(0);
+				Integer colCount = 0;
+				Class objClass = null;
 				if (list2 != null && !list2.isEmpty()) {
 					Object obj = list2.get(0);
-					Integer colCount = 0;
-					setHeader(obj.getClass(), header, style, colCount, colValue ,dynamicColumns);
-					hasHeaderTitle = true;
+					objClass = obj.getClass();
+				} else if (model.containsKey("pageParam")) {
+					PageParam pageParam = (PageParam) model.get("pageParam");
+					if (pageParam.getModel() != null) {
+						objClass = pageParam.getModel().getClass();
+					}
 				} else {
 					return;
 				}
+				setHeader(objClass, header, style, colCount, colValue ,dynamicColumns);
+				hasHeaderTitle = true;
 			}
 			// create data rows
 			createRow(list2, sheet, colValue,dynamicColumns);

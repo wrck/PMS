@@ -1,29 +1,43 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
-import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
-import java.io.FileOutputStream;
-import com.dp.plat.core.service.impl.AbstractBaseService;
-import java.util.Map;
-import com.dp.plat.core.util.FileUtil;
-import java.io.File;
-import com.dp.plat.core.context.HttpContext;
-import org.springframework.stereotype.Service;
 import java.io.BufferedInputStream;
-import org.apache.commons.fileupload.util.Streams;
-import com.dp.plat.core.context.UserContext;
-import com.dp.plat.pms.springmvc.dao.ProjectTaskMapper;
-import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import java.io.BufferedOutputStream;
-import com.dp.plat.pms.springmvc.entity.ProjectTask;
-import java.util.ArrayList;
-import com.dp.plat.core.config.SystemConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.dp.plat.core.util.UploadUtils;
-import com.dp.plat.dao.ProjectDao;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.HttpContext;
+import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.util.FileUtil;
+import com.dp.plat.core.util.UploadUtils;
+import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.dao.ProjectDao;
+import com.dp.plat.pms.springmvc.dao.ProjectTaskMapper;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.service.IProjectTaskService;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
+import com.dp.plat.pms.springmvc.vo.TaskVO;
 
 /**
  *
@@ -34,6 +48,10 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 
     @Autowired
     protected ProjectDao projectDao;
+    
+    @Autowired
+    @Lazy
+    protected IProjectHeaderService projectHeaderService;
 
     @Override
     public void uploadFile(ProjectDeliver deliver, MultipartFile multipartFile) {
@@ -89,9 +107,79 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
             projectDao.batchInsertDeliverFiles(paramMap);
         }
     }
+    
+    @Override
+    @Transactional
+    public boolean updateEventActualFinishDateByTask(ProjectDeliver pd) {
+		// 非直签 、督导项目 获取的even节点任务column010为null
+		if (StringUtils.isEmpty(pd.getColumn010())) {
+			pd.setColumn010(null);
+		}
+		Integer count = projectDao.queryDeliverDetailCountByProjectDeliver(pd);
+		ProjectTask pt = new ProjectTask(pd.getProjectId(), pd.getProjectType());
+		pt.setTaskId(pd.getTaskId());
+		pt.setTaskTypeCode(pd.getDataTypeCode());
+		pt.setTaskTypeId(pd.getBasicDataId());
+		if (count == 0) {// 如果当前节点下必上传交付件完整，则置当前时间为完成时间
+			pt.setEventActualFinishDate(new Date());
+		} else {
+			pt.setEventActualFinishDate(null);
+		}
+		projectDao.updateEventActualFinishDateByTask(pt);
+		
+		// 安服项目的验收节点
+		String inspectEventKey = SystemConfig.systemVariables.getOrDefault("pm.project." + pd.getProjectType() + ".inspect.eventkey", "");
+		if (inspectEventKey.equals(pd.getEventKey())) {
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(pd.getProjectId());
+			String inspectState = SystemConfig.systemVariables.getOrDefault("pm.project." + pd.getProjectType() + ".inspect.state", "50");
+			String projectState = StringUtils.trimToEmpty(project.getProjectState());
+			if (project != null && inspectState.compareTo(projectState) > 0) {
+				ProjectHeader temp = new ProjectHeader();
+				temp.setProjectId(project.getProjectId());
+				temp.setProjectState(inspectState);
+				projectHeaderService.updateByPrimaryKeySelective(temp);
+			}
+		}
+		return count == 0;
+	}
 
     @Override
     public List<ProjectDeliver> selectProjectDeliverBySelective(ProjectDeliver projectDeliver) {
         return dao.selectProjectDeliverBySelective(projectDeliver);
     }
+    
+    @Override
+	public Map<String, Object> checkPermissionMap(TaskVO task, String... permissions) {
+		if (permissions != null) {
+			Set<String> permissTypes = new HashSet<String>(permissions.length);
+			for (String permission : permissions) {
+				if (StringUtils.isNotBlank(permission)) {
+					String type = permission.split(":")[0];
+					permissTypes.add(type);
+				}
+			}
+			return dao.checkPermission(task, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
+		} else {
+			return dao.checkPermission(task, UserContext.getCurrentPrincipal());
+		}
+	}
+    
+    @Override
+	public PermissionResult checkPermission(TaskVO task, String... permissions) {
+		if (!UserContext.checkPermission(permissions)) {
+			return new PermissionResult(Boolean.FALSE, "没有权限进行该操作！");
+		}
+		Boolean isPermit = false;
+		String permissionType = "";
+		Collection<String> permissionSet = null;
+		PermissionResult result = null;
+		if (!UserContext.checkPermission("project:*") && task != null) {
+			Map<String, Object> permission = this.checkPermissionMap(task, permissions);
+			result = new PermissionUtils().checkPermit(permission, permissions);
+		} else {
+			isPermit = true;
+			permissionType= "all";
+		}
+		return result != null ? result : new PermissionResult(isPermit, permissionType, permissionSet);
+	}
 }

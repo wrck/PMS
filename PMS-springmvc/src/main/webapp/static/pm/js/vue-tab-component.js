@@ -1,0 +1,295 @@
+var NavTab = {
+		name: "navTab",
+		components: {
+		    'tab-pane': TabPane
+		},
+		data: function() {
+			return {
+			};	
+		},
+		template: `<div v-if="navTabList.length > 0" :id="tabContainerId" class="tab-content box box-primary mt-1">
+				<ul :id="tabWrapperId" class="nav nav-tabs">
+				<li v-for="navTab in navTabList">
+					<a v-if="navTab.isPermit" :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
+				</li>
+			</ul>
+			<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-for="navTab in navTabList" v-if="navTab.isPermit" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
+		</div>`,
+		props: {
+			tabContentId: {
+			    type: String,
+				default: ""
+		    },
+		    navTabWrapper: {
+			    type: String,
+				default: function() {
+					return (this.tabContentId || "");
+				}
+		    },
+		    tabList: {
+		    	type: Array,
+				default: [],
+			    required: true
+		    },
+			targetValue: {
+				type: Object,
+				default: {},
+				required: true
+			},
+			model: {
+				type: String,
+				default: ""
+			},
+			permissionType: {
+				type: String,
+				default: ""
+			},
+			permissions: {
+				type: Array,
+				default: []
+			},
+			roles: {
+				type: Array,
+				default: []
+			},
+			timestamp:  {
+				type: Number,
+				default: function() {
+					return new Date().getTime();
+				}
+			},
+			
+		},
+		created: function(e) {
+			console.log("created");
+		},
+		updated: function() {
+			console.log("updated");
+		},
+		mounted: function() {
+			console.log("mounted");
+			if (this.navTabList.length > 0) {
+				var e = document.createEvent("MouseEvents");
+                e.initEvent("click", true, true);//这里的click可以换成你想触发的行为
+				$('a[data-toggle="tab"]:first', $("#" + this.tabContainerId))[0].dispatchEvent(e);
+				
+				/* $('a[data-toggle="tab"]:first', $("#" + this.tabContainerId)).click();
+				this.refreshNavTab({target: $('a[data-toggle="tab"]:first', $("#" + this.tabContainerId))[0]}); */
+			}
+		},
+		computed: {
+			tabContainerId: function() {
+				return (this.tabContentId || "") + "_tab" + this.timestamp
+			},
+			tabWrapperId: function() {
+				return (this.navTabWrapper || "") + "_wrapper" + this.timestamp
+			},
+			navTabList: function() {
+				return this.navTabTransfer();
+			}
+		},
+		methods: {
+			checkPermit: function(navTab) {
+ 				var model = navTab.type || "";
+ 				var permissions = this.permissions || [];
+ 				var permission = model + ":list";
+ 				var checkPermitCallback = navTab.checkPermit;
+	 			console.log(permission);
+	 			var isPermit = false;
+	 			if ($.inArray(permission, permissions) > -1) {
+	 				isPermit = true;
+				}
+	 			if (typeof checkPermitCallback == 'function') {
+	 				try {
+	 					isPermit = checkPermitCallback.call(this, navTab) || isPermit;
+	 				} catch(e) {}
+	 			}
+	 			return isPermit;
+			},
+			navTabTransfer: function() {
+				console.log("transfer");
+				var tabList = this.tabList || [];
+				var navTabList = [];
+				for (var i = 0; i < tabList.length; i++) {
+					var tab = tabList[i];
+					var navTab = this.parseValue(tab, 'extData') || {};
+					navTab.id = tab.id;
+					navTab.url = this.parseUrl(navTab);
+					navTab.type = navTab.type || tab.field;
+					navTab.title = tab.title || tab.name;
+					navTab.permissionType = tab.permissionType || "";
+					navTab.render = this.parseValue(tab, 'render');
+					navTab.isPermit = this.checkPermit(navTab);
+					if (navTab.isPermit) {
+						navTabList.push(navTab);
+					}
+				}
+				return navTabList;
+			},
+			parseUrl: function(navTab) {
+				var targetValue = this.targetValue || {};
+				var params = navTab.params || [];
+				for (var i = 0; i < params.length; i++) {
+					var param = params[i];
+					eval("var " + param + " = '" + (targetValue[param] || "") + "';");
+					navTab.paramsValue = navTab.paramsValue || {};
+					navTab.paramsValue[param] = targetValue[param] || "";
+				}
+				var url = navTab.url;
+				try {
+					url = eval(url);
+				} catch(e){}
+				return url;
+			},
+	 		getDataValue: function(key) {
+	 			var value;
+	 			try {
+	 				value = eval("this." + key);
+	 			} catch(e) {
+	 			}
+ 				try {
+	 				value = value || JSON.parse(key);
+ 				} catch(e) {
+ 				}
+	 			try {
+	 				value = value || eval(key);
+ 				} catch(e) {
+ 					value = key;
+ 				}
+	 			return value;
+	 		},
+	 		parseValue: function(field, key) {
+	 			try {
+	 				field[key] = this.getDataValue(field[key]);
+	 			} catch(e){}
+	 			return field[key];
+	 		},
+	 		refreshNavTab: function(e, navTab) {
+	 			var tab = $(e.target);
+	 			if ($(e.target).hasClass("tab-operation")) {
+	 				tab = $(e.target).parent();
+	 			}
+	 			// 获取已激活的标签页的名称
+	 			var activeTab = $(tab).text(); 
+	 			var tabId = $(tab).attr("href");
+	 			var $container = $(tab).parents(".tab-content:first");
+	 			//if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
+		 			this.$refs[tabId][0].refreshNavTab(e, navTab);
+	 			//} else {
+	 			//	try {
+	 			//		$(tabId, $container).find(".dataTables_scrollBody table").dataTable().api().columns.adjust();
+	 			//	} catch(e) {}
+	 			//}
+	 			
+	 			/* console.log("refreshNavTab");
+	 			var tab = $(e.target);
+	 			if ($(e.target).hasClass("tab-operation")) {
+	 				tab = $(e.target).parent();
+	 			}
+	 			// 获取已激活的标签页的名称
+	 			var activeTab = $(tab).text(); 
+	 			var tabId = $(tab).attr("href");
+	 			var $container = $(tab).parents(".tab-content:first");
+	 			if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
+	 	            $(tabId + " .overlay", $container).addClass("loading");
+	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+	 	            config.container = $container;
+	 				initTabData.call(this, config, false, navTab);
+	 			} else {
+	 				$(tabId + " .overlay", $container).addClass("loading");
+	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+	 	            config.container = $container;
+	 				initTabData.call(this, config, true, navTab);
+	 			} */
+	 		}
+		}
+//		computed: {
+//			isPermit:function(btn) {
+//				return this.permissionType != '' ? true : false;
+//			}
+//		},
+//		methods: {
+//			checkPermit: function(btn) {
+//	 			var permissionType = this.permissionType || "";
+//	 			var permissions = this.permissions || [];
+// 				var model = this.navTab.type || this.model || "";
+// 				var permission = model + ":" + btn.id;
+// 				var checkPermitCallback = this.navTab.checkPermit;
+//	 			console.log(permission);
+//	 			var isPermit = false;
+//	 			if ((permissionType == "all" 
+//	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
+//	 					|| permissionType == "view" && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
+//	 					&& $.inArray(permission, permissions) > -1) {
+//	 				isPermit = true;
+//				}
+//	 			if (typeof checkPermitCallback == 'function') {
+//	 				try {
+//	 					isPermit = checkPermitCallback.call(this, btn) || isPermit;
+//	 				} catch(e) {}
+//	 			}
+//	 			return isPermit;
+//			},
+//			parseUrl: function(navTab) {
+//				var targetValue = this.targetValue || {};
+//				var params = navTab.params || [];
+//				for (var i = 0; i < params.length; i++) {
+//					var param = params[i];
+//					eval("var " + param + " = '" + (targetValue[param] || "") + "';");
+//					navTab.paramsValue = navTab.paramsValue || {};
+//					navTab.paramsValue[param] = targetValue[param] || "";
+//				}
+//				var url = navTab.url;
+//				try {
+//					url = eval(url);
+//				} catch(e){}
+//				return url;
+//			},
+//	 		getDataValue: function(key) {
+//	 			var value;
+//	 			try {
+//	 				value = eval("this." + key);
+//	 			} catch(e) {
+//	 			}
+// 				try {
+//	 				value = value || JSON.parse(key);
+// 				} catch(e) {
+// 				}
+//	 			try {
+//	 				value = value || eval(key);
+// 				} catch(e) {
+// 					value = key;
+// 				}
+//	 			return value;
+//	 		},
+//	 		parseValue: function(field, key) {
+//	 			try {
+//	 				field[key] = this.getDataValue(field[key]);
+//	 			} catch(e){}
+//	 			return field[key];
+//	 		},
+//	 		refreshNavTab: function(e, navTab) {
+//	 			console.log("refreshNavTab");
+//	 			var tab = $(e.target);
+//	 			if ($(e.target).hasClass("tab-operation")) {
+//	 				tab = $(e.target).parent();
+//	 			}
+//	 			// 获取已激活的标签页的名称
+//	 			var activeTab = $(tab).text(); 
+//	 			var tabId = $(tab).attr("href");
+//	 			var $container = $(tab).parents(".tab-content:first");
+//	 			$container.data("vm", this);
+//	 			if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
+//	 	            $(tabId + " .overlay", $container).addClass("loading");
+//	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+//	 	            config.container = $container;
+//	 				initTabData.call(this, config, false, navTab);
+//	 			} else {
+//	 				$(tabId + " .overlay", $container).addClass("loading");
+//	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+//	 	            config.container = $container;
+//	 				initTabData.call(this, config, true, navTab);
+//	 			}
+//	 		}
+//		}
+	};

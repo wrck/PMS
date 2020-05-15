@@ -248,6 +248,45 @@ pm.settlement = function() {
 /**
  * 人员管理
  */
+$.namespace("pm.projectTask");
+pm.projectTask = function() {
+	var namespace =  ctx + "/pm/project/task";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		callback: ((namespace) => {
+			return {
+				detail: {
+					modalCreateCallback: function(options) {
+						console.log("modalCreateCallback");
+						var winId = options.winId;
+        				if (!$("#" + winId).length) {
+        					winId = $(this).parents(".modal.in:first").attr("id");
+        				}
+						modals.removeData(winId);
+        				$("#" + winId).modal({ 
+							remote: options.url
+						});
+					},
+					shouldHideWin: function() {
+						return false;
+					}
+				}
+			};
+		})(namespace),
+	});
+}();
+
+/**
+ * 人员管理
+ */
 $.namespace("pm.projectMember");
 pm.projectMember = function() {
 	var namespace =  ctx + "/pm/member";
@@ -265,9 +304,9 @@ pm.projectMember = function() {
 }();
 
 /**
- * 人员管理
+ * 项目资产
  */
-$.namespace("pm.projectMember");
+$.namespace("pm.projectAsset");
 pm.projectAsset = function() {
 	var namespace =  ctx + "/pm/project/asset";
 	var router = pm.common(namespace);
@@ -278,6 +317,35 @@ pm.projectAsset = function() {
 		})(namespace),
 		html: ((namespace) => {
 			return {
+			};
+		})(namespace),
+	});
+}();
+
+/**
+ * 项目资产
+ */
+$.namespace("af.industryWarningAsset");
+af.industryWarningAsset = function() {
+	var namespace =  ctx + "/af/industry/warning/asset";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		callback: ((namespace) => {
+			return {
+				list: {
+					complete: function() {
+						$(".operate-btn-group").remove();
+						$(document).off("dblclick", "#" + tableId  + " tbody tr");
+					}
+				}
 			};
 		})(namespace),
 	});

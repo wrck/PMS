@@ -3,7 +3,9 @@
  */
 package com.dp.plat.activiti.service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.activiti.engine.runtime.ProcessInstance;
 
@@ -28,5 +30,7 @@ public interface IRuntimePageService {
     String getStartUserId(String taskId);
 
 	public List<ActivityVo> getActivityList(String processInstanceId);
+
+	public List<ActivityVo> getActivityList(Collection<String> processInstanceIdSet);
 
 }

@@ -18,7 +18,10 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.pojo.NotifyTemplate;
+import com.dp.plat.core.service.INotifyTemplateService;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.vo.UserInfoVO;
@@ -169,7 +172,15 @@ public class QualityApproveTrackListener {
 	}
 	
 	private Map<String, Object> getTaskDefinedVariable(String dataType) {
-		String definedVars = SystemConfig.systemVariables.getOrDefault(definedVariablesKey, defaultDefinedVariables);
+		String definedVars = SystemConfig.systemVariables.get(definedVariablesKey);
+		if(StringUtils.isBlank(definedVars)) {
+			INotifyTemplateService notifyTemplateService = SpringContext.getBean(INotifyTemplateService.class);
+			NotifyTemplate template = notifyTemplateService.selectByTemplateCode(definedVariablesKey);
+			if (template != null) {
+				definedVars = template.getContent();
+			}
+		}
+		definedVars = StringUtils.defaultIfBlank(definedVars, defaultDefinedVariables);
 		Map<String, Object> definedVariables = JSON.parseObject(definedVars, Map.class);
 		Map<String, Object> taskDefinedVariables = (Map<String, Object>) definedVariables.getOrDefault(dataType, new HashMap<>());
 		return taskDefinedVariables;

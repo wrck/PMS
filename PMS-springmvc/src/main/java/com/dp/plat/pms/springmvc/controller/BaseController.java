@@ -1,11 +1,17 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
 
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
@@ -92,7 +98,18 @@ public class BaseController {
 	 * @return
 	 */
 	protected List<?> findNavTabList(String dataName) {
-		return this.findNavTabList(dataName, true);
+		return this.findNavTabList(dataName, true, null);
+	}
+	
+	/**
+	 * 查询Tab标签页，带父级页
+	 * 
+	 * @param dataName
+	 * @param model
+	 * @return
+	 */
+	protected List<?> findNavTabList(String dataName, Model model) {
+		return this.findNavTabList(dataName, true, model);
 	}
 
 	/**
@@ -100,10 +117,36 @@ public class BaseController {
 	 * 
 	 * @param dataName
 	 * @param withSuper
+	 * @param model
 	 * @return
 	 */
-	protected List<?> findNavTabList(String dataName, Boolean withSuper) {
+	protected List<?> findNavTabList(String dataName, Boolean withSuper, Model model) {
 		List<Object> tabList = this.findFieldList(dataName, DATATYPE_NAVTAB, withSuper);
+		if (model != null) {
+			Collection<String> permissions = (Collection<String>) model.getAttribute("permissions");
+			if (permissions != null) {
+				for (Iterator<Object> iterator = tabList.iterator(); iterator.hasNext();) {
+					DataFieldRelation dataFieldRelation = (DataFieldRelation) iterator.next();
+					String type = dataFieldRelation.getField();
+					String alias = dataFieldRelation.getAlias();
+					Set<String> perms = new HashSet<String>(2);
+					String permission = null;
+					if (StringUtils.isNotBlank(type)) {
+						permission = type + ":list";
+					} 
+					if (UserContext.checkPermission(permission)) {
+						perms.add(permission);
+					} else if (StringUtils.isNotBlank(alias)) {
+						String tPerm = alias + ":list";
+						if (UserContext.checkPermission(tPerm)) {
+							perms.add(permission);
+							perms.add(tPerm);
+						}
+					}
+					permissions.addAll(perms);
+				}
+			}
+		}
 		return tabList;
 	}
 }

@@ -42,6 +42,7 @@ import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
+import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.PresalesService;
 import com.dp.plat.service.ProjectPlanService;
 import com.dp.plat.service.ProjectService;
@@ -87,55 +88,58 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectVO project, Model model) {
-		Principal user = UserContext.getCurrentPrincipal();
-		// project.setCompId(user.getCompId());
-		PageParam<Object> tempParam = new PageParam<>();
-		ProjectVO temp = new ProjectVO();
-		// temp.setCompID(user.getCompId());
-		// 允许访问的项目类型
-		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
-			String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
-			temp.setProjectTypes(projectTypes);
-			project.setProjectTypes(projectTypes);
-			
-			// 非子项目管理员，添加允许访问的办事处权限
-			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
-				temp.setOfficeCodes(officeCodes);
-				project.setOfficeCodes(officeCodes);
+		if (HttpContext.isJSON()) {
+			Principal user = UserContext.getCurrentPrincipal();
+			// project.setCompId(user.getCompId());
+			PageParam<Object> tempParam = new PageParam<>();
+			ProjectVO temp = new ProjectVO();
+			// temp.setCompID(user.getCompId());
+			// 允许访问的项目类型
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+				temp.setProjectTypes(projectTypes);
+				project.setProjectTypes(projectTypes);
+				
+				// 非子项目管理员，添加允许访问的办事处权限
+				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+					temp.setOfficeCodes(officeCodes);
+					project.setOfficeCodes(officeCodes);
+				}
 			}
+			tempParam.setModel(temp);
+			pageParam.setModel(project);
+			List<Object> list = null;
+			// 待创建列表
+			if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
+				pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
+				pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
+				list = projectHeaderService.selectUncreateProjectList(pageParam);
+			} else {
+				pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
+				pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
+				list = projectHeaderService.selectBySelectivePageable(pageParam);
+			}
+	
+			if (pageParam.getPageSize() == -1L) {
+				pageParam.setPageSize(pageParam.getTotal());
+			}
+			model.addAttribute("data", list);
+	
+			List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
+			pageParam.setColumns(columns);
 		}
-		tempParam.setModel(temp);
-		pageParam.setModel(project);
-		List<Object> list = null;
-		// 待创建列表
-		if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
-			pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
-			pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
-			list = projectHeaderService.selectUncreateProjectList(pageParam);
-		} else {
-			pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
-			pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
-			list = projectHeaderService.selectBySelectivePageable(pageParam);
-		}
-
-		if (pageParam.getPageSize() == -1L) {
-			pageParam.setPageSize(pageParam.getTotal());
-		}
-		model.addAttribute("data", list);
-
-		List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
-		pageParam.setColumns(columns);
 		return VIEW_NAMESPACE + "list";
 	}
 
 	@RequestMapping("{id}")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
-			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
-			ProjectVO vo = new ProjectVO();
-			BeanUtils.copyProperties(project, vo);
-			if (!checkPermission(vo, model, "project:detail")) {
+//			ProjectHeader project = projectHeaderService.selectByPrimaryKey(id);
+//			ProjectVO vo = new ProjectVO();
+//			BeanUtils.copyProperties(project, vo);
+			ProjectVO project = projectHeaderService.selectVOByProjectId(id);
+			if (!checkPermission(project, model, "project:detail")) {
 				model.addAttribute("status", false);
 				model.addAttribute("message", "没有权限进行该操作！");
 				return Consts.VIEW_UNAUTHORIZED;
@@ -148,7 +152,7 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 						DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 
-				List<?> navTavList = this.findNavTabList(project.getProjectType() + "_" + DATANAME_NAVTAB);
+				List<?> navTavList = this.findNavTabList(project.getProjectType() + "_" + DATANAME_NAVTAB, model);
 				model.addAttribute("tabList", navTavList);
 			}
 		} else {
@@ -182,7 +186,7 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 			List<Object> fieldList = this.findFieldList(projectType + "_" + DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 
-			List<?> navTavList = this.findNavTabList("create_" + DATANAME_NAVTAB);
+			List<?> navTavList = this.findNavTabList("create_" + DATANAME_NAVTAB, model);
 			model.addAttribute("tabList", navTavList);
 		}
 		model.addAttribute("projectType", projectType);
@@ -218,6 +222,9 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, ProjectVO project, Model model) {
+		if(!checkPermission(project, model, "project:edit")) {
+			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
+		}
 		Boolean status = true;
 		String message = null;
 		try {
@@ -323,6 +330,7 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 		t.setEffective(new Date());
 		PageParam<Object> pageParam = new PageParam<Object>();
 		pageParam.setPageSize(-1);
+		pageParam.setOrderBy("sortId");
 		pageParam.setModel(t);
 		List<Object> projectTaskList = projectTaskService.selectBySelectivePageable(pageParam);
 //		if (projectTaskList.isEmpty()) {
@@ -343,6 +351,20 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 		List<DataTableColumn> columns = findColumnList("projectTaskList");
 		model.addAttribute("columns", columns);
 		model.addAttribute("data", projectTaskList);
+	}
+	
+	/**
+	 * 查询项目状态
+	 * @param projecrId
+	 * @param model
+	 */
+	@GetMapping("/{projectId}/state")
+	public void projectState(@PathVariable("projectId") Integer projecrId, Model model) {
+		ProjectVO vo = projectHeaderService.queryProjectStateByProjectId(projecrId);
+		if (vo != null) {
+			model.addAttribute("projectState", vo.getProjectState());
+			model.addAttribute("projectStateName", vo.getProjectStateName());
+		}
 	}
 	
 //	@GetMapping(value = "/{projectId}/asset")
@@ -496,8 +518,14 @@ public class ProjectController extends AbstractController<IProjectService, com.d
 		if (!super.checkPermission(project, model, permissions)) {
 			return false;
 		}
+//		if (!UserContext.checkPermission(permissions)) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return false;
+//		}
 		PermissionResult result = projectHeaderService.checkPermission(project, permissions);
 		model.addAllAttributes(result.getMap());
+//		model.addAttribute("permissions", UserContext.getCurrentPrincipal().getPermissions());
 		return result.isPermit();
 	}
 }

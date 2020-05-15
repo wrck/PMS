@@ -24,13 +24,16 @@
 	<div id="app">
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
-			<h1 id="pageTitle">
+			<!-- <h1 id="pageTitle">
 				<template v-if="isShow">
 					<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
 				</template>
 				<div v-else>
 					<span>　</span><small>　</small>
 				</div>
+			</h1> -->
+			<h1 id="pageTitle" class="fade" :class="{in: isShow}">
+				<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
 			</h1>
 			<span class="display-none"></span>
 			<ol class="breadcrumb">
@@ -40,20 +43,25 @@
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="box box-info">
-						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline">
-							<div class="box-body row ml-0" v-if="isShow">
-								<%@include file="../template/vue-form-component.jsp" %>
+						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
+							<div class="box-body row ml-0">
+								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
+								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
-								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
+								<span id="projectStatusDiv" class="pull-left py-05">
+									<label id="projectStatus" class="control-label label" :class="projectStateLabel">项目状态：{{projectState.name || "未知"}}</span>
+								</span>
+								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
+								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
 						</form>
 					</div>
-					<div id="tabDiv" class="" v-if="isShow">
-						<%@include file="../template/vue-tab-component.jsp" %>
+					<div id="tabDiv" class="fade" :class="{in: isShow}">
+						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
+						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -77,6 +85,10 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    $(function () {
@@ -91,7 +103,7 @@
 		    var userId = "<shiro:principal property='userId'></shiro:principal>";
 	   		var sysData =[],inputData=[],varFields={};
 	   		var vm;
-	   		var isModals = '${isModals}';
+	   		var isModals = '${isModals}' == 'true';
 	   		var search = '${pageContext.request.queryString}' || location.search;
 	    	$("#commonForm").attr({id:formId, name: formId});
 	    	$("#app").attr({id: appId});
@@ -99,10 +111,18 @@
 	    	var $container = $("#" + formId);
 	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
+    			console.log(isModals);
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
+					vm = new Vue($.extend(true, {
+							components: {
+							    'form-inputs': FormInputs,
+							    'nav-tab': NavTab,
+							    'tab-pane': TabPane,
+							},
+						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
+								isModals,
 								isCreate: id != 0,
 								isShow: true,
 								dataType: "form",
@@ -113,10 +133,49 @@
 	   							fieldList: data.fieldList || [],
 	   							tabList: data.tabList || [],
 	   							targetName: data.targetName,
-	    						targetValue: data.targetValue
+	    						targetValue: data.targetValue,
+	    						
+	    						// 项目状态
+	    						projectState: {
+	    							state: data.targetValue.projectState,
+	    							name: data.targetValue.projectStateName,
+	    						},
+	    						
+	    						// 权限控制参数
+	    						model: data.model || model,
+	    						permissionType: data.permissionType || "",
+	    						permissions: data.permissions || [],
+	    						roles: data.roles || []
 	    				 	}),
+	    				 	computed: {
+	    				 		projectStateLabel: function() {
+	    				 			var labelStyle = {
+    				 					"": "label-danger",
+	    				 				"<10": "label-danger",
+	    				 				"=10": "label-warning",
+	    				 				"<50": "label-primary",
+	    				 				"=50": "label-info",
+	    				 				"<=100": "label-success"
+	    				 			}
+	    				 			var projectState = this.projectState.state || "0";
+	    				 			var key = "";
+	    				 			if (projectState < "10") {
+	    				 				key = "<10";
+	    				 			} else if (projectState == "10") {
+	    				 				key = "=10";
+	    				 			} else if (projectState < "50") {
+	    				 				key = "<50";
+	    				 			} else if (projectState = "50") {
+	    				 				key = "=50";
+	    				 			} else if (projectState <= "100") {
+	    				 				key = "<=010";
+	    				 			}
+	    				 			return labelStyle[key];
+	    				 		}
+	    				 	}
     				 	}
 					));
+					window.projectVm = vm;
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);
@@ -176,6 +235,7 @@
 	        		});
         		}
     		}
+    		
 		});
 	    
 	    function uploadDeliverFile(target) {
@@ -198,6 +258,15 @@
 	    		hideFunc: function(e) {
 	    			var config = $target.parents(".tab-pane:first").data();
 	    			initTabData(config, true);
+	    			if (window.refreshProjectState && window.projectVm) {
+	    				ajaxGet(basePath + '/pm/project/' + row.projectId + "/state.json", {}, function(data) {
+	    					window.projectVm._data.projectState = {
+    							state: data.projectState,
+    							name: data.projectStateName
+	    					}
+	    					window.refreshProjectState = null;
+	    				});
+	    			}
 	    		}
 	    	})
 	    }

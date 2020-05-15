@@ -169,6 +169,9 @@
       <if test="effectiveTo != null">
         effectiveTo,
       </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
       <if test="projectStartTime != null">
         projectStartTime,
       </if>
@@ -272,6 +275,9 @@
       </if>
       <if test="effectiveTo != null">
         #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
       </if>
       <if test="projectStartTime != null">
         #{projectStartTime,jdbcType=TIMESTAMP},
@@ -380,6 +386,9 @@
       <if test="effectiveTo != null">
         effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
       </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
       <if test="projectStartTime != null">
         projectStartTime = #{projectStartTime,jdbcType=TIMESTAMP},
       </if>
@@ -443,6 +452,7 @@
       updateBy = #{updateBy,jdbcType=VARCHAR},
       effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
       effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      disabled = #{disabled,jdbcType=BIT},
       projectStartTime = #{projectStartTime,jdbcType=TIMESTAMP},
       projectRefreshTime = #{projectRefreshTime,jdbcType=TIMESTAMP},
       projectCloseTime = #{projectCloseTime,jdbcType=TIMESTAMP},
@@ -451,114 +461,271 @@
       column014 = #{column014,jdbcType=LONGVARCHAR}
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
+  
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.projectId != null">
+					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectType != null and '' != model.projectType">
+					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.projectCode != null and '' != model.projectCode">
+					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.projectName != null and '' != model.projectName">
+					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.projectState != null and '' != model.projectState">
+					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isback != null and '' != model.isback">
+					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column001 != null and '' != model.column001">
+					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column002 != null and '' != model.column002">
+					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column003 != null and '' != model.column003">
+					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column004 != null and '' != model.column004">
+					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column005 != null and '' != model.column005">
+					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column006 != null and '' != model.column006">
+					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column007 != null and '' != model.column007">
+					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column008 != null and '' != model.column008">
+					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column009 != null">
+					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.column010 != null and '' != model.column010">
+					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column011 != null and '' != model.column011">
+					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.column012 != null and '' != model.column012">
+					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.columno12_readonly != null">
+					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.column013 != null and '' != model.column013">
+					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customerProjectName != null and '' != model.customerProjectName">
+					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.salesType != null and '' != model.salesType">
+					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.compId != null">
+					ph.compId = #{model.compId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.createTime != null">
+					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.disabled != null">
+					ph.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.projectStartTime != null">
+					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.projectRefreshTime != null">
+					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.projectCloseTime != null">
+					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null">
+					ph.customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+				<if test="model.customConfig != null">
+					ph.customConfig = #{model.customConfig, jdbcType=OTHER} AND
+				</if>
+				<if test="model.column014 != null and '' != model.column014">
+					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
+					ph.isback like CONCAT("%", #{fuzzy}, "%") or
+					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
+					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
+					ph.createBy like CONCAT("%", #{fuzzy}, "%") or
+					ph.updateBy like CONCAT("%", #{fuzzy}, "%") or
+					ph.column014 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by ph.projectId desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultMap="BaseResultMap">
-    select * from pm_project_header ph
+    select * from pm_project_header as ph
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="projectId != null">
+				ph.projectId = #{projectId, jdbcType=INTEGER} AND
 			</if>
 			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=VARCHAR} AND
+				ph.projectType = #{projectType, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectCode != null and '' != projectCode">
-				projectCode = #{projectCode, jdbcType=VARCHAR} AND
+				ph.projectCode = #{projectCode, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectName != null and '' != projectName">
-				projectName = #{projectName, jdbcType=VARCHAR} AND
+				ph.projectName = #{projectName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectState != null and '' != projectState">
-				projectState = #{projectState, jdbcType=VARCHAR} AND
+				ph.projectState = #{projectState, jdbcType=VARCHAR} AND
 			</if>
 			<if test="isback != null and '' != isback">
-				isback = #{isback, jdbcType=VARCHAR} AND
+				ph.isback = #{isback, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column001 != null and '' != column001">
-				column001 = #{column001, jdbcType=VARCHAR} AND
+				ph.column001 = #{column001, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column002 != null and '' != column002">
-				column002 = #{column002, jdbcType=VARCHAR} AND
+				ph.column002 = #{column002, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column003 != null and '' != column003">
-				column003 = #{column003, jdbcType=VARCHAR} AND
+				ph.column003 = #{column003, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column004 != null and '' != column004">
-				column004 = #{column004, jdbcType=VARCHAR} AND
+				ph.column004 = #{column004, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column005 != null and '' != column005">
-				column005 = #{column005, jdbcType=VARCHAR} AND
+				ph.column005 = #{column005, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column006 != null and '' != column006">
-				column006 = #{column006, jdbcType=VARCHAR} AND
+				ph.column006 = #{column006, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column007 != null and '' != column007">
-				column007 = #{column007, jdbcType=VARCHAR} AND
+				ph.column007 = #{column007, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column008 != null and '' != column008">
-				column008 = #{column008, jdbcType=VARCHAR} AND
+				ph.column008 = #{column008, jdbcType=VARCHAR} AND
 			</if>
-			<if test="column009 != null and '' != column009">
-				column009 = #{column009, jdbcType=TIMESTAMP} AND
+			<if test="column009 != null">
+				ph.column009 = #{column009, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="column010 != null and '' != column010">
-				column010 = #{column010, jdbcType=VARCHAR} AND
+				ph.column010 = #{column010, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column011 != null and '' != column011">
-				column011 = #{column011, jdbcType=VARCHAR} AND
+				ph.column011 = #{column011, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column012 != null and '' != column012">
-				column012 = #{column012, jdbcType=VARCHAR} AND
+				ph.column012 = #{column012, jdbcType=VARCHAR} AND
 			</if>
-			<if test="columno12_readonly != null and '' != columno12_readonly">
-				columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
+			<if test="columno12_readonly != null">
+				ph.columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
 			</if>
 			<if test="column013 != null and '' != column013">
-				column013 = #{column013, jdbcType=VARCHAR} AND
+				ph.column013 = #{column013, jdbcType=VARCHAR} AND
 			</if>
 			<if test="customerProjectName != null and '' != customerProjectName">
-				customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
+				ph.customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="salesType != null and '' != salesType">
-				salesType = #{salesType, jdbcType=VARCHAR} AND
+				ph.salesType = #{salesType, jdbcType=VARCHAR} AND
 			</if>
-			<if test="compId != null and '' != compId">
-				compId = #{compId, jdbcType=INTEGER} AND
+			<if test="compId != null">
+				ph.compId = #{compId, jdbcType=INTEGER} AND
 			</if>
 			<if test="createTime != null">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+				ph.createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
+				ph.createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
 			<if test="updateTime != null">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+				ph.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+				ph.updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
 			<if test="effectiveFrom != null">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+				<![CDATA[ ph.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 			</if>
 			<if test="effectiveTo != null">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+				<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 			</if>
-			<if test="projectStartTime != null and '' != projectStartTime">
-				projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
+			<if test="disabled != null">
+				ph.disabled = #{disabled, jdbcType=BIT} AND
 			</if>
-			<if test="projectRefreshTime != null and '' != projectRefreshTime">
-				projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
+			<if test="projectStartTime != null">
+				ph.projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="projectCloseTime != null and '' != projectCloseTime">
-				projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
+			<if test="projectRefreshTime != null">
+				ph.projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=JSON} AND
+			<if test="projectCloseTime != null">
+				ph.projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=JSON} AND
+			<if test="customInfo != null">
+				ph.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="customConfig != null">
+				ph.customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 			<if test="column014 != null and '' != column014">
-				column014 = #{column014, jdbcType=LONGVARCHAR} AND
+				ph.column014 = #{column014, jdbcType=LONGVARCHAR} AND
 			</if>
 			<if test="projectTypes != null">
 				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
@@ -570,113 +737,116 @@
 	</where>
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultType="long">
-    select count(1) from pm_project_header ph
+    select count(1) from pm_project_header as ph
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
-			<if test="projectId != null and '' != projectId">
-				projectId = #{projectId, jdbcType=INTEGER} AND
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="projectId != null">
+				ph.projectId = #{projectId, jdbcType=INTEGER} AND
 			</if>
 			<if test="projectType != null and '' != projectType">
-				projectType = #{projectType, jdbcType=VARCHAR} AND
+				ph.projectType = #{projectType, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectCode != null and '' != projectCode">
-				projectCode = #{projectCode, jdbcType=VARCHAR} AND
+				ph.projectCode = #{projectCode, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectName != null and '' != projectName">
-				projectName = #{projectName, jdbcType=VARCHAR} AND
+				ph.projectName = #{projectName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="projectState != null and '' != projectState">
-				projectState = #{projectState, jdbcType=VARCHAR} AND
+				ph.projectState = #{projectState, jdbcType=VARCHAR} AND
 			</if>
 			<if test="isback != null and '' != isback">
-				isback = #{isback, jdbcType=VARCHAR} AND
+				ph.isback = #{isback, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column001 != null and '' != column001">
-				column001 = #{column001, jdbcType=VARCHAR} AND
+				ph.column001 = #{column001, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column002 != null and '' != column002">
-				column002 = #{column002, jdbcType=VARCHAR} AND
+				ph.column002 = #{column002, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column003 != null and '' != column003">
-				column003 = #{column003, jdbcType=VARCHAR} AND
+				ph.column003 = #{column003, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column004 != null and '' != column004">
-				column004 = #{column004, jdbcType=VARCHAR} AND
+				ph.column004 = #{column004, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column005 != null and '' != column005">
-				column005 = #{column005, jdbcType=VARCHAR} AND
+				ph.column005 = #{column005, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column006 != null and '' != column006">
-				column006 = #{column006, jdbcType=VARCHAR} AND
+				ph.column006 = #{column006, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column007 != null and '' != column007">
-				column007 = #{column007, jdbcType=VARCHAR} AND
+				ph.column007 = #{column007, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column008 != null and '' != column008">
-				column008 = #{column008, jdbcType=VARCHAR} AND
+				ph.column008 = #{column008, jdbcType=VARCHAR} AND
 			</if>
-			<if test="column009 != null and '' != column009">
-				column009 = #{column009, jdbcType=TIMESTAMP} AND
+			<if test="column009 != null">
+				ph.column009 = #{column009, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="column010 != null and '' != column010">
-				column010 = #{column010, jdbcType=VARCHAR} AND
+				ph.column010 = #{column010, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column011 != null and '' != column011">
-				column011 = #{column011, jdbcType=VARCHAR} AND
+				ph.column011 = #{column011, jdbcType=VARCHAR} AND
 			</if>
 			<if test="column012 != null and '' != column012">
-				column012 = #{column012, jdbcType=VARCHAR} AND
+				ph.column012 = #{column012, jdbcType=VARCHAR} AND
 			</if>
-			<if test="columno12_readonly != null and '' != columno12_readonly">
-				columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
+			<if test="columno12_readonly != null">
+				ph.columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
 			</if>
 			<if test="column013 != null and '' != column013">
-				column013 = #{column013, jdbcType=VARCHAR} AND
+				ph.column013 = #{column013, jdbcType=VARCHAR} AND
 			</if>
 			<if test="customerProjectName != null and '' != customerProjectName">
-				customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
+				ph.customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
 			</if>
 			<if test="salesType != null and '' != salesType">
-				salesType = #{salesType, jdbcType=VARCHAR} AND
+				ph.salesType = #{salesType, jdbcType=VARCHAR} AND
 			</if>
-			<if test="compId != null and '' != compId">
-				compId = #{compId, jdbcType=INTEGER} AND
+			<if test="compId != null">
+				ph.compId = #{compId, jdbcType=INTEGER} AND
 			</if>
 			<if test="createTime != null">
-				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+				ph.createTime = #{createTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="createBy != null and '' != createBy">
-				createBy = #{createBy, jdbcType=VARCHAR} AND
+				ph.createBy = #{createBy, jdbcType=VARCHAR} AND
 			</if>
 			<if test="updateTime != null">
-				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+				ph.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="updateBy != null and '' != updateBy">
-				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+				ph.updateBy = #{updateBy, jdbcType=VARCHAR} AND
 			</if>
 			<if test="effectiveFrom != null">
-				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+				<![CDATA[ ph.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 			</if>
 			<if test="effectiveTo != null">
-				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+				<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 			</if>
-			<if test="projectStartTime != null and '' != projectStartTime">
-				projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
+			<if test="disabled != null">
+				ph.disabled = #{disabled, jdbcType=BIT} AND
 			</if>
-			<if test="projectRefreshTime != null and '' != projectRefreshTime">
-				projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
+			<if test="projectStartTime != null">
+				ph.projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="projectCloseTime != null and '' != projectCloseTime">
-				projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
+			<if test="projectRefreshTime != null">
+				ph.projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=JSON} AND
+			<if test="projectCloseTime != null">
+				ph.projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=JSON} AND
+			<if test="customInfo != null">
+				ph.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+			<if test="customConfig != null">
+				ph.customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 			<if test="column014 != null and '' != column014">
-				column014 = #{column014, jdbcType=LONGVARCHAR} AND
+				ph.column014 = #{column014, jdbcType=LONGVARCHAR} AND
 			</if>
 			<if test="projectTypes != null">
 				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
@@ -687,115 +857,121 @@
 		</trim>
 	</where>
   </select>
-  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from pm_project_header ph
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
+    select ph.*, bd.`basicDataName` as projectStateName  from pm_project_header as ph
+    LEFT JOIN fnd_basic_data bd 
+        ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
+        AND bd.`basicDataId` = ph.`projectState` 
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
+				<if test="model.projectId != null">
+					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=VARCHAR} AND
+					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectCode != null and '' != model.projectCode">
-					projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectName != null and '' != model.projectName">
-					projectName = #{model.projectName, jdbcType=VARCHAR} AND
+					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectState != null and '' != model.projectState">
-					projectState = #{model.projectState, jdbcType=VARCHAR} AND
+					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.isback != null and '' != model.isback">
-					isback = #{model.isback, jdbcType=VARCHAR} AND
+					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column001 != null and '' != model.column001">
-					column001 = #{model.column001, jdbcType=VARCHAR} AND
+					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column002 != null and '' != model.column002">
-					column002 = #{model.column002, jdbcType=VARCHAR} AND
+					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column003 != null and '' != model.column003">
-					column003 = #{model.column003, jdbcType=VARCHAR} AND
+					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column004 != null and '' != model.column004">
-					column004 = #{model.column004, jdbcType=VARCHAR} AND
+					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column005 != null and '' != model.column005">
-					column005 = #{model.column005, jdbcType=VARCHAR} AND
+					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column006 != null and '' != model.column006">
-					column006 = #{model.column006, jdbcType=VARCHAR} AND
+					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column007 != null and '' != model.column007">
-					column007 = #{model.column007, jdbcType=VARCHAR} AND
+					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column008 != null and '' != model.column008">
-					column008 = #{model.column008, jdbcType=VARCHAR} AND
+					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.column009 != null and '' != model.column009">
-					column009 = #{model.column009, jdbcType=TIMESTAMP} AND
+				<if test="model.column009 != null">
+					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.column010 != null and '' != model.column010">
-					column010 = #{model.column010, jdbcType=VARCHAR} AND
+					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column011 != null and '' != model.column011">
-					column011 = #{model.column011, jdbcType=VARCHAR} AND
+					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column012 != null and '' != model.column012">
-					column012 = #{model.column012, jdbcType=VARCHAR} AND
+					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.columno12_readonly != null and '' != model.columno12_readonly">
-					columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
+				<if test="model.columno12_readonly != null">
+					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.column013 != null and '' != model.column013">
-					column013 = #{model.column013, jdbcType=VARCHAR} AND
+					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.customerProjectName != null and '' != model.customerProjectName">
-					customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
+					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.salesType != null and '' != model.salesType">
-					salesType = #{model.salesType, jdbcType=VARCHAR} AND
+					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.compId != null and '' != model.compId">
-					compId = #{model.compId, jdbcType=INTEGER} AND
+				<if test="model.compId != null">
+					ph.compId = #{model.compId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.createTime != null">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.updateTime != null">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.effectiveFrom != null">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 				</if>
 				<if test="model.effectiveTo != null">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 				</if>
-				<if test="model.projectStartTime != null and '' != model.projectStartTime">
-					projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
+				<if test="model.disabled != null">
+					ph.disabled = #{model.disabled, jdbcType=BIT} AND
 				</if>
-				<if test="model.projectRefreshTime != null and '' != model.projectRefreshTime">
-					projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
+				<if test="model.projectStartTime != null">
+					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.projectCloseTime != null and '' != model.projectCloseTime">
-					projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
+				<if test="model.projectRefreshTime != null">
+					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=JSON} AND
+				<if test="model.projectCloseTime != null">
+					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=JSON} AND
+				<if test="model.customInfo != null">
+					ph.customInfo = #{model.customInfo, jdbcType=OTHER} AND
+				</if>
+				<if test="model.customConfig != null">
+					ph.customConfig = #{model.customConfig, jdbcType=OTHER} AND
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
-					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
+					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
 				</if>
 				<if test="model.projectTypes != null">
 					FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
@@ -806,151 +982,146 @@
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					projectType like CONCAT("%", #{fuzzy}, "%") or
-					projectCode like CONCAT("%", #{fuzzy}, "%") or
-					projectName like CONCAT("%", #{fuzzy}, "%") or
-					projectState like CONCAT("%", #{fuzzy}, "%") or
-					isback like CONCAT("%", #{fuzzy}, "%") or
-					column001 like CONCAT("%", #{fuzzy}, "%") or
-					column002 like CONCAT("%", #{fuzzy}, "%") or
-					column003 like CONCAT("%", #{fuzzy}, "%") or
-					column004 like CONCAT("%", #{fuzzy}, "%") or
-					column005 like CONCAT("%", #{fuzzy}, "%") or
-					column006 like CONCAT("%", #{fuzzy}, "%") or
-					column007 like CONCAT("%", #{fuzzy}, "%") or
-					column008 like CONCAT("%", #{fuzzy}, "%") or
-					column010 like CONCAT("%", #{fuzzy}, "%") or
-					column011 like CONCAT("%", #{fuzzy}, "%") or
-					column012 like CONCAT("%", #{fuzzy}, "%") or
-					column013 like CONCAT("%", #{fuzzy}, "%") or
-					customerProjectName like CONCAT("%", #{fuzzy}, "%") or
-					salesType like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					customConfig like CONCAT("%", #{fuzzy}, "%") or
-					column014 like CONCAT("%", #{fuzzy}, "%")
+					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
+					ph.isback like CONCAT("%", #{fuzzy}, "%") or
+					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
+					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
+					ph.customInfo like CONCAT("%", #{fuzzy}, "%") or
+					ph.customConfig like CONCAT("%", #{fuzzy}, "%") or
+					ph.column014 like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
 	</where>
-	<if test="orderBy != null">
-        order by ${orderBy}
-    </if>
-    <if test="orderBy == null">
-        order by projectId desc
-    </if>
-    <if test="start != null and pageSize != -1">
-        limit #{start}, #{pageSize}
-    </if>
+	<include refid="sql_pageable_limit" />
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_project_header ph
+    select count(1) from pm_project_header as ph
 	<where>
-		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.projectId != null and '' != model.projectId">
-					projectId = #{model.projectId, jdbcType=INTEGER} AND
+				<if test="model.projectId != null">
+					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.projectType != null and '' != model.projectType">
-					projectType = #{model.projectType, jdbcType=VARCHAR} AND
+					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectCode != null and '' != model.projectCode">
-					projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectName != null and '' != model.projectName">
-					projectName = #{model.projectName, jdbcType=VARCHAR} AND
+					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectState != null and '' != model.projectState">
-					projectState = #{model.projectState, jdbcType=VARCHAR} AND
+					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.isback != null and '' != model.isback">
-					isback = #{model.isback, jdbcType=VARCHAR} AND
+					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column001 != null and '' != model.column001">
-					column001 = #{model.column001, jdbcType=VARCHAR} AND
+					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column002 != null and '' != model.column002">
-					column002 = #{model.column002, jdbcType=VARCHAR} AND
+					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column003 != null and '' != model.column003">
-					column003 = #{model.column003, jdbcType=VARCHAR} AND
+					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column004 != null and '' != model.column004">
-					column004 = #{model.column004, jdbcType=VARCHAR} AND
+					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column005 != null and '' != model.column005">
-					column005 = #{model.column005, jdbcType=VARCHAR} AND
+					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column006 != null and '' != model.column006">
-					column006 = #{model.column006, jdbcType=VARCHAR} AND
+					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column007 != null and '' != model.column007">
-					column007 = #{model.column007, jdbcType=VARCHAR} AND
+					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column008 != null and '' != model.column008">
-					column008 = #{model.column008, jdbcType=VARCHAR} AND
+					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.column009 != null and '' != model.column009">
-					column009 = #{model.column009, jdbcType=TIMESTAMP} AND
+				<if test="model.column009 != null">
+					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.column010 != null and '' != model.column010">
-					column010 = #{model.column010, jdbcType=VARCHAR} AND
+					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column011 != null and '' != model.column011">
-					column011 = #{model.column011, jdbcType=VARCHAR} AND
+					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column012 != null and '' != model.column012">
-					column012 = #{model.column012, jdbcType=VARCHAR} AND
+					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.columno12_readonly != null and '' != model.columno12_readonly">
-					columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
+				<if test="model.columno12_readonly != null">
+					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.column013 != null and '' != model.column013">
-					column013 = #{model.column013, jdbcType=VARCHAR} AND
+					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.customerProjectName != null and '' != model.customerProjectName">
-					customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
+					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.salesType != null and '' != model.salesType">
-					salesType = #{model.salesType, jdbcType=VARCHAR} AND
+					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.compId != null and '' != model.compId">
-					compId = #{model.compId, jdbcType=INTEGER} AND
+				<if test="model.compId != null">
+					ph.compId = #{model.compId, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.createTime != null">
-					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.createBy != null and '' != model.createBy">
-					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.updateTime != null">
-					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.updateBy != null and '' != model.updateBy">
-					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.effectiveFrom != null">
-					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
 				</if>
 				<if test="model.effectiveTo != null">
-					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
 				</if>
-				<if test="model.projectStartTime != null and '' != model.projectStartTime">
-					projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
+				<if test="model.disabled != null">
+					ph.disabled = #{model.disabled, jdbcType=BIT} AND
 				</if>
-				<if test="model.projectRefreshTime != null and '' != model.projectRefreshTime">
-					projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
+				<if test="model.projectStartTime != null">
+					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.projectCloseTime != null and '' != model.projectCloseTime">
-					projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
+				<if test="model.projectRefreshTime != null">
+					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=JSON} AND
+				<if test="model.projectCloseTime != null">
+					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=JSON} AND
+				<if test="model.customInfo != null">
+					ph.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+				<if test="model.customConfig != null">
+					ph.customConfig = #{model.customConfig, jdbcType=JSON} AND
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
-					column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
+					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
 				</if>
 				<if test="model.projectTypes != null">
 					FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
@@ -961,32 +1132,50 @@
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
-					projectType like CONCAT("%", #{fuzzy}, "%") or
-					projectCode like CONCAT("%", #{fuzzy}, "%") or
-					projectName like CONCAT("%", #{fuzzy}, "%") or
-					projectState like CONCAT("%", #{fuzzy}, "%") or
-					isback like CONCAT("%", #{fuzzy}, "%") or
-					column001 like CONCAT("%", #{fuzzy}, "%") or
-					column002 like CONCAT("%", #{fuzzy}, "%") or
-					column003 like CONCAT("%", #{fuzzy}, "%") or
-					column004 like CONCAT("%", #{fuzzy}, "%") or
-					column005 like CONCAT("%", #{fuzzy}, "%") or
-					column006 like CONCAT("%", #{fuzzy}, "%") or
-					column007 like CONCAT("%", #{fuzzy}, "%") or
-					column008 like CONCAT("%", #{fuzzy}, "%") or
-					column010 like CONCAT("%", #{fuzzy}, "%") or
-					column011 like CONCAT("%", #{fuzzy}, "%") or
-					column012 like CONCAT("%", #{fuzzy}, "%") or
-					column013 like CONCAT("%", #{fuzzy}, "%") or
-					customerProjectName like CONCAT("%", #{fuzzy}, "%") or
-					salesType like CONCAT("%", #{fuzzy}, "%") or
-					customInfo like CONCAT("%", #{fuzzy}, "%") or
-					customConfig like CONCAT("%", #{fuzzy}, "%") or
-					column014 like CONCAT("%", #{fuzzy}, "%")
+					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
+					ph.isback like CONCAT("%", #{fuzzy}, "%") or
+					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
+					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
+					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
+					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
+					ph.customInfo like CONCAT("%", #{fuzzy}, "%") or
+					ph.customConfig like CONCAT("%", #{fuzzy}, "%") or
+					ph.column014 like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
 	</where>
+  </select>
+  
+  <select id="selectVOByProjectId" parameterType="java.lang.Integer" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
+  	select ph.*, bd.`basicDataName` as projectStateName 
+  	from pm_project_header ph
+		LEFT JOIN fnd_basic_data bd 
+        ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
+        AND bd.`basicDataId` = ph.`projectState` 
+    where ph.projectId = #{projectId}
+  </select>
+  
+  <select id="queryProjectStateByProjectId" parameterType="java.lang.Integer" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
+  	select ph.projectState, bd.`basicDataName` as projectStateName 
+  	from pm_project_header ph
+		LEFT JOIN fnd_basic_data bd 
+        ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
+        AND bd.`basicDataId` = ph.`projectState` 
+    where ph.projectId = #{projectId}
   </select>
   
   <sql id="uncreateProjectListSql">
@@ -995,7 +1184,6 @@
 	    ifnull(pp.projectName, p.projectName) as `projectName`, `fd`.`basicDataName` as `projectStateName`, `fd`.`basicDataId` as `projectState`, ifnull(
 	        `p`.`contractNo`, pp.projectCode
 	    ) as `contractNo`, ifnull(c1.id, c2.id) as compId, `pp`.`officeCode` as `officeCode`, `d`.`departmentName` as `officeName`, `pp`.`salesManCode` as `salesManCode`, `pp`.`salesManName` as `salesManName`, null as `projectStartTime`, null as projectCreateTime, `pp`.`systemName` as `systemName`, null as `serviceManager`, null as `serviceManagerName`, null as `projectManager`, null as `projectManagerName`, null as shipmentStateName, null as shipmentState, null as planStateName, null as projectPlanState, null as executionStateName, null as executionState, null as closeProcessStateName, null as closeProcessState, null as projectRefreshTime, null as projectCloseTime, null ssfs, null ssfsName, null partnerChannel, pp.projectType 
-  	<![CDATA[
 	from
 	    `pm_project_property_af_from_sms` `pp` 
 	    left join `pm_order_data_from_sap` `p` 
@@ -1006,17 +1194,18 @@
 	        on `pp`.`officeCode` = `d`.`departmentNum` 
 	    left join `fnd_basic_data` `fd` 
 	        on `fd`.`basicDataId` = '10' 
-	        and `fd`.`dataTypeCode` = '02' 
+	        and `fd`.`dataTypeCode` = concat(pp.projectType, "_projectState") 
+  	<!-- <![CDATA[
 	        and `fd`.`effectiveFrom` < now() 
 	        and (
 	            `fd`.`effectiveTo` > now() 
 	            or isnull(`fd`.`effectiveTo`)
 	        ) 
+    ]]> -->
 	    left join fnd_company c1 
 	        on c1.code = p.compCode 
 	    left join fnd_company c2 
 	        on c2.`code` = pp.corporationCode 
-    ]]>
 	where
 	<trim prefixOverrides="and |or" suffixOverrides="and |or">
 		pp.`projectType` = 'afss' 
@@ -1085,6 +1274,7 @@
 	            )
 	        )) 
 	    and v.`contractNo` is not null 
+    ]]>
 	union
 	select distinct null as 
 	    `projectId`, pp.projectCode as `projectCode`, null as `rank`,
@@ -1101,17 +1291,18 @@
 	        on `pp`.`officeCode` = `d`.`departmentNum` 
 	    left join `fnd_basic_data` `fd` 
 	        on `fd`.`basicDataId` = '10' 
-	        and `fd`.`dataTypeCode` = '02' 
+	        and `fd`.`dataTypeCode` = concat(pp.projectType, "_projectState") 
+   <!-- <![CDATA[
 	        and `fd`.`effectiveFrom` < now() 
 	        and (
 	            `fd`.`effectiveTo` > now() 
 	            or isnull(`fd`.`effectiveTo`)
 	        ) 
+    ]]> -->
 	    left join fnd_company c1 
 	        on c1.code = p.compCode 
 	    left join fnd_company c2 
 	        on c2.`code` = pp.corporationCode 
-	]]>
 	where 
 	<trim prefixOverrides="and |or" suffixOverrides="and |or">
 		pp.`projectType` = 'afxx' 
@@ -1249,11 +1440,11 @@
     order by podfs.id desc limit 1
   </select>
   
-  <resultMap type="java.util.HashMap" id="permissionMap">
-		<result column="all" property="all" javaType="java.lang.Boolean"/>
-		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
-		<result column="view" property="view" javaType="java.lang.Boolean"/>
-		<collection property="permissions" select="selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+  <resultMap id="permissionMap" type="java.util.HashMap">
+		<result column="all" javaType="java.lang.Boolean" property="all" />
+		<result column="edit" javaType="java.lang.Boolean" property="edit" />
+		<result column="view" javaType="java.lang.Boolean" property="view" />
+		<collection column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="selectPermissionByMemberRole" />
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
@@ -1299,7 +1490,12 @@
 	        on rp.role_id = r.role_id 
 	    left join `fnd_basic_data` db 
 	        on db.dataTypeCode = 'afProjectMember' 
+        <if test="memberRoles != null and memberRoles != ''">
 	        and find_in_set(db.basicDataId, #{memberRoles}) 
+        </if>
+        <if test="memberRoles == null or memberRoles == ''">
+        	and p.permission_name regexp ":detail|:list"
+        </if>
 	        and r.role_name = db.basicDataAttri1 
 	where r.role_name = db.basicDataAttri1
 	<if test="permissionTypes != null">

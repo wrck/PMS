@@ -77,7 +77,7 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 			return null;
 		}
 		// 查询服务商的项目派单顺序
-		DispatchProject temp = new DispatchProject();
+		DispatchVO temp = new DispatchVO();
 		temp.setDispatched(true);
 		temp.setFacilitatorCode(facilitatorCode);
 		long count = this.countBySelective(temp) + 1;
