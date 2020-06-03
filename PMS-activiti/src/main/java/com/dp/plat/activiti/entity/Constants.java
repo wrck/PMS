@@ -17,6 +17,7 @@ public class Constants {
 	public static final String STATE_DONE = "0";// 已执行
 	public static final String STATE_DOING = "1";// 正在执行（下一步执行节点）
 	public static final String STATE_TODO = "2";// 尚未执行节点
+	public static final String STATE_TERMINATE = "terminate";
 
 	// 流程实例状态
 	public static final String STATE_INSTANCE_DOING = "0";// 办理中

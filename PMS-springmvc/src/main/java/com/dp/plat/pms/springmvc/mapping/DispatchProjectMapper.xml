@@ -466,7 +466,14 @@
         updateTime = #{updateTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=OTHER},
+        <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -512,7 +519,14 @@
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
       updateTime = #{updateTime,jdbcType=TIMESTAMP},
-      customInfo = #{customInfo,jdbcType=OTHER}
+      <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
     where id = #{id,jdbcType=INTEGER}
   </update>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" resultMap="BaseResultMap">
@@ -1629,9 +1643,9 @@
 	    sum(sc.`contract_money_amount`) as contractAmount,
 	    group_concat(sc.`contract_num`) as collectContractNos,
 	    settledAmount
-	    <!-- ,round(settledAmount / replace(h.dispatchAmount, ",","") * 100, 2) as settleRatio -->
+	    <!-- ,round(settledAmount / replace(h.dispatchAmount, ",","") * 100, 2) as settledRatio -->
 	from
-	    <![CDATA[
+	    <!-- <![CDATA[
 	    (select 
 	        h.*, substring_index(
 	            substring_index(h.contractNos, ',', b.id + 1), ',', - 1
@@ -1644,8 +1658,11 @@
 	            )) h 
         ]]>
 	    left join `sms_ofst_contract_head_sap` sc 
-	        <!-- on h.`smsProjectCode` = sc.`projectCode`  -->
-	        on sc.`contract_num` = h.`contractNo` 
+	        on h.`smsProjectCode` = sc.`projectCode` 
+	        on sc.`contract_num` = h.`contractNo`  -->
+	    pm_dispatch_project_header h
+    	left join `sms_ofst_contract_head_sap` sc 
+        	on FIND_IN_SET(sc.`contract_num`, h.`contractNos`)
 	    left join 
 	        (select 
 	            dispatchId, sum(replace(ds.`amount`, ",", "")) as settledAmount 

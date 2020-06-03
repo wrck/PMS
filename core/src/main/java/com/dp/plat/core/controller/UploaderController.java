@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.fileupload.util.Streams;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +35,7 @@ import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.FileUtil;
+import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.Result;
 
 @Controller
@@ -210,6 +213,37 @@ public class UploaderController {
 		return result;
 	}
 	
+	/**
+	 * 	文件上传
+	 * @param fileType
+	 * @param httpRequest
+	 * @return
+	 */
+	@GetMapping("/baseUpload/list")
+	public void baseUpList(FileInfo fileInfo, String fileIds, HttpServletRequest httpRequest, Model model) {
+		Result result = null;
+		List<FileInfo> fileInfos = null;
+		try {
+			if (StringUtils.hasText(fileIds)) {
+				List<String> ids = Arrays.asList(fileIds.split(","));
+				fileInfos = uploaderService.selectFileInfoByIdsAndType(ids, fileInfo.getTypeId());
+			}
+			result = new Result(true, fileInfos);
+			
+			List<DataTableColumn> columns = new ArrayList<>();
+			columns.add(new DataTableColumn("文件名", "name"));
+			columns.add(new DataTableColumn("上传人", "createBy"));
+			columns.add(new DataTableColumn("上传时间", "createTime"));
+			
+			model.addAttribute("columns", columns);
+			model.addAttribute("permissionType", "view");
+		} catch (Exception e) {
+			ExceptionHandler.insertException(e);
+			result = new Result(false);
+			result.setMessage(e.getMessage());
+		}
+		model.addAllAttributes(result.getMap());
+	}
 	
 	/**
 	 * 公开的下载方法，取消用户登录限制

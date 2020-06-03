@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.runtime.ProcessInstance;
 
@@ -218,5 +217,12 @@ public interface IProcessService {
 	 * @param deleteReason
 	 */
 	public void deleteProcess(String processInstanceId, String deleteReason);
+
+	/**
+	 * 终止流程
+	 * @param processInstanceId
+	 * @param terminateReason
+	 */
+	void terminateProcess(String processInstanceId, String terminateReason);
 
 }

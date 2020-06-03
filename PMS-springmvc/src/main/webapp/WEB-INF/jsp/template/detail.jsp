@@ -10,6 +10,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title><spring:message code="system.title" /></title>
 <cssTag>
+<c:if test="${!isModals}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
 
@@ -20,7 +21,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
-	
+</c:if>	
 	<style>
 		.display-flex {
 			display: flex;
@@ -90,10 +91,14 @@
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0">
 								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
-								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
+								<div class="pull-left">
+									<button type="button" class="btn btn-success" v-if="hasTask" data-btn-type="completeTask">任务办理</button>
+									<button type="button" class="btn btn-primary" v-if="canStartProcess" data-btn-type="startProcess">提交审批</button>
+								</div>
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
 							</div>
@@ -110,6 +115,7 @@
 	</div>
 </body>
 <jsTag>
+<c:if test="${!isModals}">
 <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
@@ -127,6 +133,7 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+</c:if>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
@@ -181,9 +188,56 @@
 	    						// 权限控制参数
 	    						model: data.model || model,
 	    						permissionType: data.permissionType || "",
+	    						//permissionType: data.permissionType == undefined ? "all" : (data.permissionType || ""),
 	    						permissions: data.permissions || [],
-	    						roles: data.roles || []
+	    						roles: data.roles || [],
+	    						
+	    						// 任务检查标记
+	    						currentTaskId: "",
 	    				 	}),
+	    				 	computed: {
+	    				 		hasTask: function() {
+	    				 			var _this = this;
+	    				 			var taskId = this.currentTaskId;
+	    				 			var hasTask = this.targetValue.hasTask;
+	    				 			if (typeof hasTask == "undefined" || hasTask == null) {
+	    				 				var currentTaskId = (this.targetValue.customInfo || {}).currentTaskId || taskId;
+	    				 				var currentProcInstId = (this.targetValue.customInfo || {}).currentProcInstId;
+	    				 				console.log(currentTaskId);
+	    				 				if (currentTaskId) {
+	        				 				ajaxGet(router("/").api("workflow").checkTask(currentTaskId, currentProcInstId), {}, function(data) {
+	        				 					_this.targetValue.hasTask = !!data.hasTask;
+	        				 					_this.currentTaskId = data.currentTaskId || currentTaskId;
+	        				                });
+	    				 				}
+	    				 				return false;
+	    				 			} else {
+	    				 				return hasTask;
+	    				 			}
+	    				 		},
+	    				 		canStartProcess: function() {
+	    				 			var _this = this;
+	    				 			var taskId = this.currentTaskId;
+	    				 			var modelMethods = router(urlNamespace).methods(model);
+	    				 			var canStart = false;
+	    				 			if (modelMethods && typeof modelMethods.canStartProcess == 'function') {
+	    				 				canStart = modelMethods.canStartProcess.call(_this, this.targetValue) || false;
+	    				 			}
+	    				 			return canStart;
+	    				 		}
+	    				 	}/* ,
+	    				 	mounted: function(e) {
+	    				 		var _this = this;
+	    				 		var currentTaskId = (this.targetValue.customInfo || {}).currentTaskId;
+				 				console.log(currentTaskId);
+				 				if (currentTaskId) {
+    				 				ajaxGet(router("/").api("workflow").checkTask(currentTaskId), {}, function(data) {
+    				 					_this.targetValue.hasTask = !!data.hasTask;
+    				 					_this._data.targetValue = _this.targetValue;
+    				                });
+				 				}
+				 				return false;
+	    				 	} */
     				 	}
 					));
 					
@@ -225,7 +279,7 @@
 		        	if (router(urlNamespace).callback(model).detail) {
 		        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
 		        		if (typeof vueCallback == 'function') {
-		        			vueCallback.call(vm);
+		        			vueCallback.call(vm, data, $container);
 		        		}
 		        	}
     			 }
@@ -276,19 +330,41 @@
 	    					vm._data.fieldList = data.fieldList || [];
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						vm._data.currentTaskId = "";
 	   						//form.initFormData(data.targetValue);
 	   						
 		                	// 回调函数
 				        	if (router(urlNamespace).callback(model).detail) {
 				        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
 				        		if (typeof vueCallback == 'function') {
-				        			vueCallback.call(vm);
+				        			vueCallback.call(vm, data, $("#" + appId));
 				        		}
 				        	}
 	    				}
 	        		});
         		}
     		}
+    		
+    		$(document).off('click', "#" + appId +' [data-btn-type]');
+    		$(document).on("click", "#" + appId +' [data-btn-type]', function(e) {
+    			var action = $(this).attr('data-btn-type');
+                switch (action) {
+               	case 'completeTask':
+               		sys.common.toDoWorkflowTask.call(vm, this, vm.currentTaskId, true);
+               		break;
+                case 'startProcess':
+                	var modelMethods = router(urlNamespace).methods(model);
+                	var callback = null;/* function() {
+                		handleResult({targetName: vm.targetName, targetValue: vm.targetValue});
+                	}; */
+                	if (modelMethods && typeof modelMethods.startProcess == "function") {
+                		modelMethods.startProcess.call(vm, this, vm.targetValue, callback);
+                	} else {
+	                	sys.common.startProcess.call(vm, this, vm.targetValue, callback);
+                	}
+                	break;
+                };
+    		});
 		});
 	</script>
 </jsTag>

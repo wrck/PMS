@@ -10,6 +10,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title><spring:message code="system.title" /></title>
 <cssTag>
+<c:if test="${!isModals}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
 
@@ -18,7 +19,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datepicker/datepicker3.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
-	
+</c:if>
 	<style>
 		.display-flex {
 			display: flex;
@@ -91,7 +92,8 @@
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-info pull-left" v-if="!isCreate" data-btn-type="exportProjectInfo">项目信息单</button>
+								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
@@ -106,6 +108,7 @@
 	</div>
 </body>
 <jsTag>
+<c:if test="${!isModals}">
 <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
@@ -121,6 +124,7 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+</c:if>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    $(function () {
@@ -314,8 +318,17 @@
     		function generateSettleSeq() {
     			var dispatchSeq = $("#dispatchSeq", $container).val();
     			var smsProjectName = $("#smsProjectName", $container).val();
-    			var ratio = $("#ratio", $container).val();
+    			var ratio = Number($.trim($("#ratio", $container).val()).replace("%", ""));
     			var amount = $("#amount", $container).val();
+    			
+    			$("#ratio", $container).val(ratio);
+    			
+    			if ($(this)[0] == $("#ratio", $container)[0]) {
+    				var dispatchAmount = Number($.trim($("#dispatchAmount").val()).replace(",", "")) || 0;
+       				amount = (dispatchAmount * ratio / 100).toFixed(2);
+       				$("#amount", $container).val(amount);
+    			}
+   				
     			var settleSeq = [dispatchSeq, smsProjectName, ratio, amount];
     			$("#settleSeq", $container).val(settleSeq.join("-"));
     		}
@@ -350,6 +363,17 @@
     		function formatRepoSelection (repo) {
     			return repo.projectName || repo.text;
     		}
+    		
+    		$(document).off('click', "#" + appId +' button[data-btn-type="exportProjectInfo"]');
+    		$(document).on('click', "#" + appId +' button[data-btn-type="exportProjectInfo"]', function(e) {
+                 var url = router(urlNamespace).html(model).exportProjectInfo(id);
+                 var $btn = $(this);
+                 $btn.button("loading");
+                 router.postDownload(url);
+                 setTimeout(function() {
+                	 $btn.button("reset");
+                 }, 2000);
+             });
 		});
 	</script>
 </jsTag>

@@ -1,14 +1,21 @@
 package com.dp.plat.pms.springmvc.vo;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
 
 public class TaskVO extends ProjectTask {
 	
+	// 流程当前任务ID
+	private String currentTaskId;
 	private String eventKey;
 	private String eventValue;
 	private String projectIds;
+	
+	private String projectTypes;
+	private String officeCodes;
 	
 	public TaskVO() {
 		super();
@@ -43,4 +50,43 @@ public class TaskVO extends ProjectTask {
 		this.setEffectiveFrom(date);
 		this.setEffectiveTo(date);
 	}
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
+	}
+	public String getOfficeCodes() {
+		return officeCodes;
+	}
+	public void setOfficeCodes(String officeCodes) {
+		this.officeCodes = officeCodes;
+	}
+	public Object getCustomInfoByKey(String key) {
+		Map<?, ?> customInfo = getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.get(key);
+		}
+		return null;
+	}
+
+	public void setCustomInfoByKey(String key, Object value) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo == null) {
+			customInfo = new HashMap<>();
+			this.setCustomInfo(customInfo);
+		}
+		customInfo.put(key, value);
+	}
+
+	@Override
+	public void setCustomInfo(Map customInfo) {
+		Map info = this.getCustomInfo();
+		if (info != null && customInfo != null) {
+			info.putAll(customInfo);
+		} else if (customInfo != null) {
+			super.setCustomInfo(customInfo);
+		}
+	}
+
 }

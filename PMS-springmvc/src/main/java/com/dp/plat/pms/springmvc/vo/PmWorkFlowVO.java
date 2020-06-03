@@ -8,20 +8,27 @@ import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
  */
 public class PmWorkFlowVO extends PmWorkFlow {
 
-	private String participantIds;
-
-	/**
-	 * @return the participantIds
-	 */
-	public String getParticipantIds() {
-		return participantIds;
+	private String taskName;
+	private String taskDesc;
+	private String areaPower;
+	
+	public String getTaskName() {
+		return taskName;
 	}
-
-	/**
-	 * @param participantIds the participantIds to set
-	 */
-	public void setParticipantIds(String participantIds) {
-		this.participantIds = participantIds;
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
+	public String getTaskDesc() {
+		return taskDesc;
+	}
+	public void setTaskDesc(String taskDesc) {
+		this.taskDesc = taskDesc;
+	}
+	public String getAreaPower() {
+		return areaPower;
+	}
+	public void setAreaPower(String areaPower) {
+		this.areaPower = areaPower;
 	}
 	
 }

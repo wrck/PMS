@@ -48,7 +48,7 @@
       updateBy, updateTime)
     values (#{leakCode,jdbcType=VARCHAR}, #{leakName,jdbcType=VARCHAR}, #{leakType,jdbcType=VARCHAR}, 
       #{leakLevel,jdbcType=VARCHAR}, #{leakDesc,jdbcType=VARCHAR}, #{leakSourceInfo,jdbcType=VARCHAR}, 
-      #{remark,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, #{trackStatus,jdbcType=INTEGER}, 
+      #{remark,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{trackStatus,jdbcType=INTEGER}, 
       #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, #{assetIds,jdbcType=VARCHAR}, 
       #{customInfo,jdbcType=JSON}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
       #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP})
@@ -134,7 +134,7 @@
         #{remark,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
-        #{status,jdbcType=INTEGER},
+        #{status,jdbcType=VARCHAR},
       </if>
       <if test="trackStatus != null">
         #{trackStatus,jdbcType=INTEGER},
@@ -190,7 +190,7 @@
         remark = #{remark,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
-        status = #{status,jdbcType=INTEGER},
+        status = #{status,jdbcType=VARCHAR},
       </if>
       <if test="trackStatus != null">
         trackStatus = #{trackStatus,jdbcType=INTEGER},
@@ -205,7 +205,14 @@
         assetIds = #{assetIds,jdbcType=VARCHAR},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=JSON},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
       <if test="createBy != null">
         createBy = #{createBy,jdbcType=VARCHAR},
@@ -231,12 +238,19 @@
       leakDesc = #{leakDesc,jdbcType=VARCHAR},
       leakSourceInfo = #{leakSourceInfo,jdbcType=VARCHAR},
       remark = #{remark,jdbcType=VARCHAR},
-      status = #{status,jdbcType=INTEGER},
+      status = #{status,jdbcType=VARCHAR},
       trackStatus = #{trackStatus,jdbcType=INTEGER},
       trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
       disabled = #{disabled,jdbcType=BIT},
       assetIds = #{assetIds,jdbcType=VARCHAR},
-      customInfo = #{customInfo,jdbcType=JSON},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       createBy = #{createBy,jdbcType=VARCHAR},
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
@@ -270,8 +284,8 @@
 			<if test="remark != null and '' != remark">
 				l.remark = #{remark, jdbcType=VARCHAR} AND
 			</if>
-			<if test="status != null">
-				l.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				l.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -331,8 +345,8 @@
 				<if test="model.remark != null and '' != model.remark">
 					l.remark = #{model.remark, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.status != null">
-					l.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					l.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
@@ -419,8 +433,8 @@
 			<if test="remark != null and '' != remark">
 				l.remark = #{remark, jdbcType=VARCHAR} AND
 			</if>
-			<if test="status != null">
-				l.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				l.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -480,8 +494,8 @@
 			<if test="remark != null and '' != remark">
 				l.remark = #{remark, jdbcType=VARCHAR} AND
 			</if>
-			<if test="status != null">
-				l.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				l.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				l.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -514,7 +528,17 @@
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from af_industry_leak as l
+    select 
+    	JSON_SET(IFNULL(l.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+	    l.*<!-- , 
+	    bd.basicDataName as `customInfo.statusName`, bd2.basicDataName as `customInfo.trackStatusName`  -->
+	from af_industry_leak as l
+    left join `fnd_basic_data` bd 
+        on l.`status` = bd.`basicDataId` 
+        and bd.`dataTypeCode` = 'processStatus'
+    left join `fnd_basic_data` bd2 
+        on l.`trackStatus` = bd2.`basicDataId` 
+        and bd2.`dataTypeCode` = 'trackStatus' 
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -542,8 +566,8 @@
 				<if test="model.remark != null and '' != model.remark">
 					l.remark = #{model.remark, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.status != null">
-					l.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					l.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
@@ -619,8 +643,8 @@
 				<if test="model.remark != null and '' != model.remark">
 					l.remark = #{model.remark, jdbcType=VARCHAR} AND
 				</if>
-				<if test="model.status != null">
-					l.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					l.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND

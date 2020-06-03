@@ -1,38 +1,46 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
-import java.util.Collection;
-import com.dp.plat.pms.springmvc.vo.ProjectVO;
-import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
-import java.util.Date;
-import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.data.bean.OrderDataFromSap;
-import org.springframework.stereotype.Service;
-import com.dp.plat.core.service.IAbstractBaseService;
-import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.service.SendMailService;
-import com.dp.plat.pms.springmvc.entity.ProjectHeader;
-import org.springframework.transaction.annotation.Propagation;
-import com.dp.plat.data.bean.Project;
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAGER;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
 import java.lang.reflect.Method;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.dp.plat.dao.ProjectDao;
-import com.dp.plat.service.CallBackService;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import com.dp.plat.core.service.impl.AbstractBaseService;
-import java.util.Map;
-import com.dp.plat.service.PmClosedLoopService;
-import com.dp.plat.service.ProjectServiceImpl;
-import com.dp.plat.service.BasicDataService;
-import com.dp.plat.core.context.UserContext;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper;
-import com.dp.plat.util.NotificationTemplateUtil;
+
 import org.activiti.engine.TaskService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.service.IAbstractBaseService;
+import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.dao.ProjectDao;
+import com.dp.plat.data.bean.OrderDataFromSap;
+import com.dp.plat.data.bean.Project;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
+import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.service.BasicDataService;
+import com.dp.plat.service.CallBackService;
+import com.dp.plat.service.PmClosedLoopService;
+import com.dp.plat.service.ProjectServiceImpl;
+import com.dp.plat.service.SendMailService;
 import com.dp.plat.util.MessageUtil;
 
 /**
@@ -144,7 +152,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
     }
     
     @Override
-    public ProjectVO selectVOByProjectId(Integer projectId) {
+    public ProjectVO selectVOByProjectId(Object projectId) {
         return dao.selectVOByProjectId(projectId);
     }
 
@@ -253,6 +261,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
             super.insertProject(project);
         } else if (ProjectConstant.ProjectType.AF_SALES_PROJECT.equals(projectType) || ProjectConstant.ProjectType.AF_XX_PROJECT.equals(projectType)) {
             Project p = this.queryProjectByContractNoAndType(project.getContractNo(), project.getProjectType());
+            String projectState = MessageUtil.PROJECT_STATE_CREATING;
             // p中的部分属性放置到project中
             project = putProperties(project, p);
             // 插入到表pm_project_header
@@ -299,12 +308,13 @@ public class ProjectHeaderService extends ProjectServiceImpl
                 project.setEmail(this.getMails(project.getServiceManagerCode()));
                 // 插入到表pm_project_member - 项目成员表
                 this.insertProjectMember(project);
+                projectState = MessageUtil.PROJECT_STATE_31;
             }
             // 03-10
             project.setMemberRole(MessageUtil.DATATYPE_CODE03_10);
             project.setMemberCode(project.getSalesManCode());
-            project.setMemberName(project.getSalesManName());
             try {
+            	project.setMemberName(project.getSalesManCode() + "-" + project.getSalesManName());
                 project.setEmail(this.queryMailByUserNameFromOA(project.getSalesManCode()));
             } catch (Exception e) {
                 project.setEmail(null);
@@ -323,6 +333,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
                 project.setEmail(this.getMails(project.getProgramManagerCode()));
                 // 插入到表pm_project_member - 项目成员表
                 this.insertProjectMember(project);
+                projectState = MessageUtil.PROJECT_STATE_32;
             }
             if (StringUtils.isNotBlank(project.getProgramManagerCodeB())) {
                 project.setMemberCode(project.getProgramManagerCodeB());
@@ -333,7 +344,15 @@ public class ProjectHeaderService extends ProjectServiceImpl
                 project.setEmail(this.getMails(project.getProgramManagerCodeB()));
                 // 插入到表pm_project_member - 项目成员表
                 this.insertProjectMember(project);
+                projectState = MessageUtil.PROJECT_STATE_32;
             }
+            
+            // 更新项目状态
+            ProjectHeader temp = new ProjectHeader();
+            temp.setProjectId(pid);
+            temp.setProjectState(projectState);
+            this.updateByPrimaryKeySelective(temp);
+            
             // 保存产品信息
             List<OrderDataFromSap> orderDataList = this.queryOrderLineFromSapByContractNo(project);
             for (OrderDataFromSap od : orderDataList) {
@@ -383,7 +402,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	        project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
 	        String procode = project.getProgramManagerCode();
 	        String oldProjectState = StringUtils.trimToEmpty(project.getProjectState());
-	        String newProjectState = MessageUtil.PROJECT_STATE_32.compareTo(oldProjectState) < 0 ? oldProjectState : MessageUtil.PROJECT_STATE_32;
+	        String newProjectState = MessageUtil.PROJECT_STATE_32.compareTo(oldProjectState) < 0 || MessageUtil.PROJECT_STATE_CLOSEDLOOP.equals(oldProjectState) ? oldProjectState : MessageUtil.PROJECT_STATE_32;
 	        boolean a = false;
 	        if (procode != null && !"".equals(procode)) {
 	            project.setDataTypeCode(MessageUtil.DATATYPE_CODE03_30);
@@ -394,7 +413,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	            if (a) {
 	                // 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
 	                // 更新项目状态
-	                this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);
+	                this.updateProjectStateByProjectId(project, newProjectState);
 	                // 更新想目状态（projectState）
 	                this.updateProjectStatus(project.getProjectId(), newProjectState);
 	            }
@@ -411,7 +430,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	            if (c) {
 	                // 指定项目经理后，更新指定项目状态，否则项目经理无法操作项目
 	                // 更新项目状态
-	                this.updateProjectStateByProjectId(project, MessageUtil.PROJECT_CREATE_STATE32);
+	                this.updateProjectStateByProjectId(project, newProjectState);
 	                // 更新想目状态（projectState）
 	                this.updateProjectStatus(project.getProjectId(), newProjectState);
 	            }
@@ -430,7 +449,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
     }
     
     @Override
-	public ProjectVO queryProjectStateByProjectId(Integer projectId) {
+	public ProjectVO queryProjectStateByProjectId(Object projectId) {
 		return dao.queryProjectStateByProjectId(projectId);
 	}
 
@@ -441,6 +460,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 
     @Override
     public Map<String, Object> checkPermissionMap(ProjectVO project, String... permissions) {
+    	Map<String, Object> permissionMap;
         if (permissions != null) {
             Set<String> permissTypes = new HashSet<String>(permissions.length);
             for (String permission : permissions) {
@@ -449,10 +469,17 @@ public class ProjectHeaderService extends ProjectServiceImpl
                     permissTypes.add(type);
                 }
             }
-            return dao.checkPermission(project, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
+            permissionMap = dao.checkPermission(project, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
         } else {
-            return dao.checkPermission(project, UserContext.getCurrentPrincipal());
+        	permissionMap = dao.checkPermission(project, UserContext.getCurrentPrincipal());
         }
+        // 已闭环的项目，不允许修改，只有项目管理员、区域负责人才可以重新打开
+        String closedState = SystemConfig.systemVariables.getOrDefault("pm.project.closed.state", "100");
+        if (closedState.equals(permissionMap.get("maxState"))) {
+        	permissionMap.put("all", Boolean.FALSE);
+        	permissionMap.put("edit", Boolean.FALSE);
+        }
+		return permissionMap;
     }
 
     @Override
@@ -464,23 +491,47 @@ public class ProjectHeaderService extends ProjectServiceImpl
         String permissionType = "";
         Collection<String> permissionSet = null;
         if (!UserContext.checkPermission("project:*") && project != null) {
+        	// 允许访问的项目类型
+			if (!UserContext.hasAnyRoles(ROLE_PM_ADMIN, ROLE_ADMIN)) {
+				Principal user = UserContext.getCurrentPrincipal();
+				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+				project.setProjectTypes(projectTypes);
+
+				// 非子项目管理员，添加允许访问的办事处权限
+				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
+					project.setOfficeCodes(officeCodes);
+				}
+			}
+        				
             Map<String, Object> permission = this.checkPermissionMap(project, permissions);
-            permissionSet = (Collection<String>) permission.get("permissions");
-            Boolean allPerm = (Boolean) permission.get("all");
-            if (Boolean.TRUE.equals(allPerm)) {
-                isPermit = true;
-                permissionType = "all";
-            } else {
-                String perms = StringUtils.join(permissions, ",");
-                if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
-                    isPermit = true;
-                    permissionType = "edit";
-                }
-                if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
-                    isPermit = true;
-                    permissionType = "view";
-                }
-            }
+//            permissionSet = (Collection<String>) permission.get("permissions");
+//            Boolean allPerm = (Boolean) permission.get("all");
+//            if (Boolean.TRUE.equals(allPerm)) {
+//                isPermit = true;
+//                permissionType = "all";
+//            } else {
+//                String perms = StringUtils.join(permissions, ",");
+//                if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*project:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
+//                    isPermit = true;
+//                    permissionType = "edit";
+//                }
+//                if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*project:(list|detail)\\b,?.*")) {
+//                    isPermit = true;
+//                    permissionType = "view";
+//                }
+//            }
+//        	// 允许访问的项目类型
+// 			if (UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
+// 				permissionType = "all";
+// 				permissionSet = null;
+// 			}
+			PermissionResult checkPermit = new PermissionUtils("project:", new String[] { ROLE_PM_ADMIN,
+					ROLE_ADMIN, ROLE_PM_SUB_ADMIN, ROLE_PM_AREA_MANAGER })
+							.checkPermit(permission, permissions);
+			isPermit = checkPermit.isPermit();
+			permissionType = checkPermit.getPermissionType();
+			permissionSet = checkPermit.getPermissions();
         } else {
             isPermit = true;
             permissionType = "all";

@@ -1,10 +1,13 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -12,14 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.alibaba.fastjson.JSON;
+import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
@@ -27,8 +34,11 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
+import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.util.DocUtil;
 import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
@@ -40,6 +50,9 @@ import com.dp.plat.pms.springmvc.vo.SettlementVO;
 public class DispatchSettlementController
 		extends AbstractController<IDispatchSettlementService, DispatchSettlement, SettlementVO> {
 
+	@Autowired
+	private IProjectHeaderService projectHeaderService;
+	
 	@Autowired
 	private IDispatchProjectService dispatchProjectService;
 
@@ -61,11 +74,13 @@ public class DispatchSettlementController
 		}
 		
 		Principal user = UserContext.getCurrentPrincipal();
-		settlement.setDisabled(false);
+		settlement.setDispatched(true);
+//		settlement.setDisabled(false);
 		// settlement.setCompId(user.getCompId());
 		PageParam<Object> tempParam = new PageParam<>();
 		SettlementVO temp = new SettlementVO();
-		temp.setDisabled(false);
+		temp.setDispatched(true);
+//		temp.setDisabled(false);
 		// temp.setCompID(user.getCompId());
 		// 允许访问的项目类型
 		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
@@ -83,9 +98,9 @@ public class DispatchSettlementController
 		tempParam.setModel(temp);
 		pageParam.setModel(settlement);
 
-		pageParam.setTotal(dispatchSettlementService.countBySelectivePageable(tempParam));
-		pageParam.setFiltered(dispatchSettlementService.countBySelectivePageable(pageParam));
-		List<Object> list = dispatchSettlementService.selectBySelectivePageable(pageParam);
+		pageParam.setTotal(dispatchSettlementService.countSettlementWidthDispatchPageable(tempParam));
+		pageParam.setFiltered(dispatchSettlementService.countSettlementWidthDispatchPageable(pageParam));
+		List<Object> list = dispatchSettlementService.selectSettlementWidthDispatchPageable(pageParam);
 
 		if (pageParam.getPageSize() == -1L) {
 			pageParam.setPageSize(pageParam.getTotal());
@@ -104,7 +119,7 @@ public class DispatchSettlementController
 			if (settlement != null) {
 				SettlementVO temp = new SettlementVO();
 				BeanUtils.copyProperties(settlement, temp);
-				if (!checkPermission(temp, model, getDataName() + ":list")) {
+				if (!checkPermission(temp, model, getDataName() + ":detail")) {
 					model.addAttribute("status", false);
 					model.addAttribute("message", "没有权限进行该操作！");
 					return Consts.VIEW_UNAUTHORIZED;
@@ -137,7 +152,7 @@ public class DispatchSettlementController
 
 	@RequestMapping(value= {"/detail", "/modals/detail"})
 	public String detail(SettlementVO settlement, Model model) {
-		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+		if (!checkPermission(settlement, model, getDataName() + ":detail")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -147,6 +162,7 @@ public class DispatchSettlementController
 			String message = null;
 			Integer dispatchId = settlement.getDispatchId();
 			if (dispatchId != null) {
+				
 				DispatchVO temp = new DispatchVO();
 				temp.setId(dispatchId);
 				temp.setDisabled(false);
@@ -173,6 +189,15 @@ public class DispatchSettlementController
 ////					settlement.setCustomInfoByKey("deliveredAmount", dispatch.getDeliveredAmount());
 ////					settlement.setCustomInfoByKey("contractAmount", dispatch.getContractAmount());
 ////					settlement.setCustomInfoByKey("settledAmount", dispatch.getSettledAmount());
+					
+					// 补充实施进度和验收进展
+					ProjectVO project = projectHeaderService.selectVOByProjectId(Integer.valueOf(dispatch.getProjectIds()));
+					if (null != project) {
+//						ProjectVO pvo = new ProjectVO();
+//						BeanUtils.copyProperties(project, pvo);
+						settlement.setProgressDesc((String) project.getCustomInfoByKey("projectProgress"));
+						settlement.setAcceptanceDesc(project.getProjectStateName());
+					}
 					model.addAttribute("targetValue", settlement);
 				} else {
 					status = false;
@@ -193,7 +218,7 @@ public class DispatchSettlementController
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(SettlementVO settlement, Model model) {
-		if (!checkPermission(settlement, model, getDataName() + ":list")) {
+		if (!checkPermission(settlement, model, getDataName() + ":add")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -203,7 +228,7 @@ public class DispatchSettlementController
 		try {
 			Integer dispatchId = settlement.getDispatchId();
 			if (dispatchId != null) {
-				DispatchProject temp = new DispatchProject();
+				DispatchVO temp = new DispatchVO();
 				temp.setId(dispatchId);
 				temp.setDisabled(false);
 				temp.setDispatched(true);
@@ -230,25 +255,58 @@ public class DispatchSettlementController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, SettlementVO settlement, Model model) {
-		if (!checkPermission(settlement, model, getDataName() + ":list")) {
-			model.addAttribute("status", false);
-			model.addAttribute("message", "没有权限进行该操作！");
-			return Consts.VIEW_UNAUTHORIZED;
+		return super.update(id, settlement, model);
+//		if (!checkPermission(settlement, model, getDataName() + ":edit")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		Boolean status = true;
+//		String message = null;
+//		try {
+//			dispatchSettlementService.updateByPrimaryKeySelective(settlement);
+//			model.addAttribute("targetName", "settlementVO");
+//		} catch (Exception e) {
+//			status = false;
+//			Integer errorId = ExceptionHandler.insertException(e);
+//			model.addAttribute("errorId", errorId);
+//			message = e.getMessage();
+//		}
+//		model.addAttribute("status", status);
+//		model.addAttribute("message", message);
+//		return getViewNameSpace() + "detail";
+	}
+	
+	
+	@PostMapping("{id}/projectInfoDoc")
+	public void exportProjectInfoDoc(@PathVariable("id") Integer id, HttpServletRequest request, HttpServletResponse response, Model model) {
+		DispatchSettlement settlement = dispatchSettlementService.selectByPrimaryKey(id);
+		if (settlement != null) {
+			SettlementVO temp = new SettlementVO();
+			BeanUtils.copyProperties(settlement, temp);
+			if (!checkPermission(temp, model, getDataName() + ":detail")) {
+				model.addAttribute("status", false);
+				model.addAttribute("message", "没有权限进行该操作！");
+				return;
+			}
+			DispatchProject dispatch = new DispatchVO();
+			dispatch.setId(settlement.getDispatchId());
+			dispatch.setDisabled(false);
+			dispatch.setDispatched(true);
+			List<DispatchVO> list = dispatchProjectService.selectDispatchVOWithAmountBySelective((DispatchVO) dispatch);
+			if (!list.isEmpty()) {
+				dispatch = list.get(0);
+			} else {
+				dispatch = dispatchProjectService.selectByPrimaryKey(settlement.getDispatchId());
+			}
+				
+			temp.setDispatch(dispatch);
+			
+			String templateFileName = SystemConfig.systemVariables.getOrDefault("af.export.settlement.projectInfo", "02项目信息单-%s.doc");
+			String fileName = String.format(templateFileName, dispatch.getDispatchName());
+			File doc = new DocUtil().createDoc((Map<String, Object>) JSON.toJSON(temp), "/template/", "项目信息单.ftl", fileName, request);
+			DownloadUtils.downFile(response, request, doc.getAbsolutePath(), doc.getName());
 		}
-		Boolean status = true;
-		String message = null;
-		try {
-			dispatchSettlementService.updateByPrimaryKeySelective(settlement);
-			model.addAttribute("targetName", "settlementVO");
-		} catch (Exception e) {
-			status = false;
-			Integer errorId = ExceptionHandler.insertException(e);
-			model.addAttribute("errorId", errorId);
-			message = e.getMessage();
-		}
-		model.addAttribute("status", status);
-		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -256,7 +314,7 @@ public class DispatchSettlementController
 		DispatchSettlement dispatchSettlement = service.selectByPrimaryKey(id);
 		SettlementVO vo = new SettlementVO();
 		BeanUtils.copyProperties(dispatchSettlement, vo);
-		if (!checkPermission(vo, model, getDataName() + ":list")) {
+		if (!checkPermission(vo, model, getDataName() + ":delete")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return;

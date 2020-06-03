@@ -177,7 +177,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		UserEntity userEntity = new UserEntity();
 		userEntity.setId(userInfo.getId().toString());
 		userEntity.setFirstName(userInfo.getRealName());
-		userEntity.setLastName(user.getUserName().substring(1));
+		userEntity.setLastName(user.getUserName());
 		userEntity.setEmail(userInfo.getEmail());
 //					identityService.saveUser(userEntity);
 		projectManageUserService.insertOrUpdateActivitiUser(userEntity);
@@ -219,11 +219,17 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 			userInfoService.insertSelective(userInfo);
 		} else {
 			userInfo.setId(info.getId());
+			// 非管理员忽略自定义字段
+			String[] ignoreProperties = null;
+			if (!isAdmin) {
+				ignoreProperties = new String[]{"custom1", "custom2", "custom3", "custom4", "custom5"};
+			}
+			BeanUtils.copyProperties(userInfo, info, ignoreProperties);
 //			userInfo.setUserId(info.getUserId());
 			//userInfoService.updateByUserId(userInfo);
-			userInfoService.updateByPrimaryKeySelective(userInfo);
+			userInfoService.updateByPrimaryKeySelective(info);
 		}
-
+		
 		if (isAdmin) {
 			UserRole temp = new UserRole();
 			temp.setUserId(userId);
@@ -333,4 +339,8 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		model.addAttribute("data", userList);
 	}
 	
+	@RequestMapping("/initActitityUser")
+	public void initActitityUser(HttpServletRequest request, Model model) {
+		projectManageUserService.initActivitiUser();
+	}
 }

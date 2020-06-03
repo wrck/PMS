@@ -1,5 +1,9 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -17,11 +21,13 @@ import com.dp.plat.core.service.impl.AbstractBaseService;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.DispatchType;
 import com.dp.plat.pms.springmvc.dao.DispatchProjectMapper;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
@@ -44,6 +50,10 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 	@Override
 	@Transactional
 	public void dispatchSubmit(Integer id, DispatchVO dispatch) {
+		String dispatchType = dispatch.getType();
+		if (StringUtils.isBlank(dispatchType)) {
+			throw new RuntimeException("请先选择派单类型！");
+		}
 		String dispatchSeq = dispatch.getDispatchSeq();
 		String facilitatorCode = dispatch.getFacilitatorCode();
 		String dispatchNo = dispatch.getDispatchNo();
@@ -135,23 +145,27 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 		if (!UserContext.checkPermission("project:*") && v != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
+			project.setProjectIds(v.getProjectIds());
 			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-			Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
-			if (Boolean.TRUE.equals(allPerm)) {
-				isPermit = true;
-				permissionType = "all";
-			} else {
-				String perms = StringUtils.join(permissions, ",");
-				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
-				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
-				if (editPerm && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = "edit";
-				} else if ((viewPerm || editPerm) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = editPerm ? "edit" : "view";
-				}
-			}
+//			Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
+//			if (Boolean.TRUE.equals(allPerm)) {
+//				isPermit = true;
+//				permissionType = "all";
+//			} else {
+//				String perms = StringUtils.join(permissions, ",");
+//				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
+//				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
+//				if (editPerm && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = "edit";
+//				} else if ((viewPerm || editPerm) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = editPerm ? "edit" : "view";
+//				}
+//			}
+			PermissionResult checkPermit = new PermissionUtils("dispatch:", new String[]{ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN}).checkPermit(permission, permissions);
+			isPermit = checkPermit.isPermit();
+			permissionType = checkPermit.getPermissionType();
 		} else {
 			isPermit = true;
 			permissionType = "all";

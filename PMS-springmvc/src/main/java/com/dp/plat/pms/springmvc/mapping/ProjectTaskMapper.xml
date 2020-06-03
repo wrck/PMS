@@ -330,7 +330,14 @@
         deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=JSON},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
       <if test="remark != null">
         remark = #{remark,jdbcType=LONGVARCHAR},
@@ -365,7 +372,14 @@
       effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
       visibleFlag = #{visibleFlag,jdbcType=VARCHAR},
       deliverFileIds = #{deliverFileIds,jdbcType=VARCHAR},
-      customInfo = #{customInfo,jdbcType=JSON},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       remark = #{remark,jdbcType=LONGVARCHAR}
     where taskId = #{taskId,jdbcType=INTEGER}
   </update>
@@ -589,12 +603,17 @@
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.TaskVO">
     select 
-	    t.*, concat(t.taskTypeCode, '-', t.taskTypeId) eventKeyStr, fbd.basicDataName eventValue 
+	    JSON_SET(IFNULL(t.`customInfo`, "{}"), '$.statusName', bd.basicDataName) as customInfo,
+	    t.*, concat(t.taskTypeCode, '-', t.taskTypeId) eventKeyStr, fbd.basicDataName eventValue<!-- , 
+	    bd.basicDataName as `customInfo.statusName` -->
 	from
 	    pm_project_task as t 
 	    left join fnd_basic_data fbd 
 	        on fbd.dataTypeCode = t.taskTypeCode 
 	        and fbd.basicDataId = t.taskTypeId 
+	    left join `fnd_basic_data` bd 
+	        on t.`status` = bd.`basicDataId` 
+	        and bd.`dataTypeCode` = 'processStatus'
     <include refid="sql_model_where" />
 	<include refid="sql_pageable_limit" />
   </select>
@@ -642,16 +661,22 @@
 		<result column="all" property="all" javaType="java.lang.Boolean"/>
 		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
 		<result column="view" property="view" javaType="java.lang.Boolean"/>
+		<result column="maxState" property="maxState" javaType="java.lang.String"/>
+		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
 		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
 	  	select 
-		    count(pm.id) > 0 
-		    and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view, group_concat(distinct pm.memberRole) memberRoles, #{permissionTypes} as permissionTypes 
+		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, 
+		    count(pm.id) > 0 as edit, 
+		    count(ui.id) > 0 view, 
+		    max(ph.projectState) as maxState,
+		    group_concat(distinct pm.memberRole) memberRoles, 
+		    #{permissionTypes} as permissionTypes 
 		from
-		    pm_project_task pt 
-		    left join pm_project_header ph 
+		    pm_project ph 
+		    left join pm_project_task pt 
 		        on pt.projectId = ph.projectId 
 		        and pt.projectType = ph.projectType 
 		    left join pm_project_member pm 
@@ -662,27 +687,33 @@
 		            or pm.effectiveTo is null
 		        ) 
 		        and pm.memberCode = #{user.userName}
+  	]]>
 		    left join t_user_info ui 
 		        on ui.`id` = #{user.userInfoId}
-		        and find_in_set(ph.`column001`, ui.`custom5`) 
+		        <if test="model.officeCodes != null">
+					AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
+			        and find_in_set(ph.`column001`, ui.`custom5`) 
+				</if>
 		        and find_in_set(ph.projectType, ui.custom4) 
 		where (
 		        pm.memberCode = #{user.userName}
 		        or ui.id = #{user.userInfoId}
 		    ) 
-  	]]>
 	<if test="model != null">
 		<if test="model.taskId != null">
 			AND pt.taskId = #{model.taskId}
 		</if>
 		<if test="model.projectId != null">
-			AND pt.projectId = #{model.projectId}
+			AND ph.projectId = #{model.projectId}
 		</if>
 		<if test="model.projectIds != null">
-			AND FIND_IN_SET(pt.projectId, #{model.projectIds})
+			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
 		</if>
 		<if test="model.projectType != null">
-			AND FIND_IN_SET(pt.projectType, #{model.projectType})
+			AND FIND_IN_SET(ph.projectType, #{model.projectType})
+		</if>
+		<if test="model.officeCodes != null">
+			AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
 		</if>
 	</if>	
   </select>

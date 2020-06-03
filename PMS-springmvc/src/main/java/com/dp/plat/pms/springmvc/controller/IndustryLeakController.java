@@ -20,16 +20,19 @@ import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.impl.IndustryLeakService;
 import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
+import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.AF_MANAGER + "/industry/leak")
@@ -55,16 +58,42 @@ public class IndustryLeakController extends AbstractController<IIndustryLeakServ
 		String view = super.home(model);
 		return getViewNameSpace() + "list";
 	}
+	
+	@Override
+	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	public String update(@PathVariable("id") Integer id, IndustryLeakVO v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":delete")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		
+		// 终止正在进行中的任务
+		PmWorkFlowVO workflow = new PmWorkFlowVO();
+		workflow.setDataId(id);
+		workflow.setDataType(DataType.INDUSTRY_LEAK);
+		workflow.setStatus(PmWorkFlowVO.PENDING);
+		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 
+		v.setStatus("0");
+		v.setTrackStatus(0);
+		return super.update(id, v, model);
+	}
 
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
-		this.setUseTemplate(false);
-		this.setViewNameSpace("industry/leak/");
+		if (!checkPermission(null, model, getDataName() + ":delete")) {
+			return;
+		}
 		Boolean status = true;
 		String message = null;
 		try {
+			// 终止正在进行中的任务
+			PmWorkFlowVO workflow = new PmWorkFlowVO();
+			workflow.setDataId(id);
+			workflow.setDataType(DataType.INDUSTRY_LEAK);
+			workflow.setStatus(PmWorkFlowVO.PENDING);
+			pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
+						
 			IndustryLeakVO vo = new IndustryLeakVO();
 			vo.setId(id);
 			vo.setDisabled(true);

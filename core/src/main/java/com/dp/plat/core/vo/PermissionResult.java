@@ -97,6 +97,14 @@ public class PermissionResult {
 	public void setPermissionType(String permissionType) {
 		this.permissionType = permissionType;
 	}
+	
+	public Collection<String> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(Collection<String> permissions) {
+		this.permissions = permissions;
+	}
 
 	public Object getData() {
 		return data;

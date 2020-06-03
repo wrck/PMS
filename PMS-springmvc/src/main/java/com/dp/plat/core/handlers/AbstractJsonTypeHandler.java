@@ -16,7 +16,7 @@ public abstract class AbstractJsonTypeHandler<T> extends BaseTypeHandler<T> {
     
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, toJson(parameter));
+    	ps.setString(i, toJsonString(parameter));
     }
     
     @Override
@@ -39,5 +39,7 @@ public abstract class AbstractJsonTypeHandler<T> extends BaseTypeHandler<T> {
     
     protected abstract T parse(String json);
     
-    protected abstract String toJson(T obj);
+    protected abstract Object toJson(T obj);
+    
+    protected abstract String toJsonString(T obj);
 }

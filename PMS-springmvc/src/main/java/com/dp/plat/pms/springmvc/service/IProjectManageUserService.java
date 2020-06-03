@@ -9,4 +9,6 @@ public interface IProjectManageUserService extends IAbstractBaseService<UserInfo
 
 	void insertOrUpdateActivitiUser(UserEntity userEntity);
 
+	void initActivitiUser();
+
 }

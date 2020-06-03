@@ -114,6 +114,7 @@ var NavTab = {
 					var tab = tabList[i];
 					var navTab = this.parseValue(tab, 'extData') || {};
 					navTab.id = tab.id;
+					navTab.src = navTab.src || navTab.url;
 					navTab.url = this.parseUrl(navTab);
 					navTab.type = navTab.type || tab.field;
 					navTab.title = tab.title || tab.name;
@@ -174,7 +175,9 @@ var NavTab = {
 	 			var tabId = $(tab).attr("href");
 	 			var $container = $(tab).parents(".tab-content:first");
 	 			//if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
-		 			this.$refs[tabId][0].refreshNavTab(e, navTab);
+	 			try {
+	 				this.$refs[tabId][0].refreshNavTab(e, navTab);
+	 			} catch(e) {}
 	 			//} else {
 	 			//	try {
 	 			//		$(tabId, $container).find(".dataTables_scrollBody table").dataTable().api().columns.adjust();

@@ -90,5 +90,14 @@ public interface IUploaderService {
 			HttpServletResponse response);
 
 
+	/**
+	 * 查询文件
+	 * @param ids
+	 * @param typeId
+	 * @return
+	 */
+	public List<FileInfo> selectFileInfoByIdsAndType(List<String> ids, Integer typeId);
+
+
 
 }

@@ -48,13 +48,176 @@ sys.common = function(){
 		}
 	}
 	
+	var upload = function(fileType) {
+		return ctx + "/file/baseUpload/" + 2 + ".json";
+	}
+	
+	var baseUploadTabDownload = function(e, navTab) {
+		var downloadType = 'down';
+		var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+		var type = navTab.model || navTab.type;
+		var $target = $(e.target);
+		var downloadPath = navTab.downloadPath;
+		var paramsValue = navTab.paramsValue || {};
+		var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+		var rowId = navTab.rowId || localTable.getSelectedRowId();
+		if (!rowId) {
+			modals.info('选择需要下载的文件');
+			return;
+		}
+		var fileIds = rowId;
+		paramsValue.ids = fileIds;
+		var url = downloadPath;
+		try {
+			url = eval(downloadPath);
+		} catch(e) {}
+		var search = $.param(paramsValue)
+		try {
+			url = url || router(urlNamespace).html(type).download();
+		} catch(e) {
+			console.error(e);
+			try {
+				url = url || pm.router.html(type).download();
+			} catch(e){
+				console.error(e);
+			}
+		}
+		if (!url) {
+			modals.error('不支持该操作！');
+			return;
+		}
+		url = url + (search ? "?" + search : "").replace("??", "?");
+		if (rowId && url) {
+			var a = document.createElement('a');
+			a.download = '';
+			if (!url.startsWith(basePath)) {
+				url = basePath + url;
+			}
+			a.href = url;
+			$("body").append(a); //修复firefox中无法触发click
+			a.click();
+			$(a).remove();
+		}
+	}
+	
+	var baseUploadTabZipDownload = function(e, navTab) {
+		var downloadType = 'zipdown';
+		var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+		var type = navTab.model || navTab.type;
+		var $target = $(e.target);
+		var downloadPath = navTab.downloadPath;
+		var paramsValue = navTab.paramsValue || {};
+		var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+		var rowId = navTab.rowIds || localTable.getCheckedRowsId() || localTable.getSelectedRowsId() || [];
+		if (!rowId) {
+			modals.info('选择需要下载的文件');
+			return;
+		}
+		var fileIds = rowId.join(",");
+		paramsValue.ids = fileIds;
+		var url = downloadPath;
+		try {
+			url = eval(downloadPath);
+		} catch(e) {}
+		var search = $.param(paramsValue)
+		try {
+			url = url || router(urlNamespace).html(type).download();
+		} catch(e) {
+			console.error(e);
+			try {
+				url = url || pm.router.html(type).download();
+			} catch(e){
+				console.error(e);
+			}
+		}
+		if (!url) {
+			modals.error('不支持该操作！');
+			return;
+		}
+		url = url + (search ? "?" + search : "").replace("??", "?");
+		if (rowId && url) {
+			var a = document.createElement('a');
+			a.download = '';
+			if (!url.startsWith(basePath)) {
+				url = basePath + url;
+			}
+			a.href = url;
+			$("body").append(a); //修复firefox中无法触发click
+			a.click();
+			$(a).remove();
+		}
+	}
+	
+	toDoWorkflowTask = function(elm, taskId, hideEntity, callback) {
+		var _this = this;
+		modals.openWin({
+			url: workflow.html.taskDetail(taskId, true) + "?hideEntity=" + (hideEntity || ""),
+			winId: "workflowWin",
+			width: "75vw",
+			hideFunc: function() {
+				var $tabPane = $(elm).parents(".tab-pane:first");
+				if ($tabPane.length > 0) {
+					var config = $tabPane.data();
+					initTabData(config, true);
+				} else if (_this._isVue) {
+    				_this.currentTaskId = 0;
+    				_this.targetValue.hasTask = null;
+    			}
+    			if (callback && typeof callback == 'function') {
+    				callback.call(_this, data);
+    			}
+			}
+		});
+	}
+	
+	startProcess = function(el, entity, callback) {
+		var _this = this;
+		entity = entity || $(el).data("entity");
+    	if (!entity) {
+        	return false;
+    	}
+    	try {
+    		entity = JSON.parse(row.replace(/'/g, '"'));
+    	} catch(e) {}
+		
+    	$(el).button("loading");
+    	ajaxPost(router("/").api("workflow").startProcess(), entity, function(data) {
+    		if (data.status) {
+    			var $tabPane = $(el).parents(".tab-pane:first");
+    			if ($tabPane.length > 0) {
+    				var config = $tabPane.data();
+    				initTabData(config, true);
+    			} else if (_this._isVue) {
+    				_this.currentTaskId = 0;
+    				_this.targetValue.hasTask = null;
+    				((_this.targetValue || {}).customInfo || {}).currentTaskId = data.currentTaskId;
+    				((_this.targetValue || {}).customInfo || {}).currentProcInstId = data.currentProcInstId;
+    			}
+    			if (callback && typeof callback == 'function') {
+    				callback.call(_this, data);
+    			}
+    		}
+    		modals.info(data.message);
+    		$(el).button("reset");
+    	})
+    }
+	
+	startQualityApprove = startProcess;
+	
 	return {tEdit:tEdit,
 		tSave:tSave,
 		tCancel:tCancel,
 		tDetail:tDetail ,
 		feedbackIcons:feedbackIcons,
 		formDisabled:formDisabled,
-		markRed:markRed};
+		markRed:markRed,
+		upload: upload,
+		baseUploadTabDownload: baseUploadTabDownload,
+		baseUploadTabZipDownload: baseUploadTabZipDownload,
+		toDoWorkflowTask: toDoWorkflowTask,
+		startQualityApprove: startQualityApprove,
+		startProcess: startProcess,
+	};
 }();
 $(function() {
 	$(document).off("click", '[data-btn-type="cancel"]').on("click", '[data-btn-type="cancel"]', cancelBtnClick);

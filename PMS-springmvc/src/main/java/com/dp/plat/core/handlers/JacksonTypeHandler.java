@@ -1,5 +1,9 @@
 package com.dp.plat.core.handlers;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
@@ -17,8 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author hubin
  * @since 2019-08-25
  */
-@MappedTypes({Object.class})
-@MappedJdbcTypes(JdbcType.OTHER)
+@MappedTypes({Object.class, Map.class, LinkedHashMap.class, ArrayList.class})
+@MappedJdbcTypes(value = {JdbcType.OTHER, JdbcType.JSON})
 public class JacksonTypeHandler extends AbstractJsonTypeHandler<Object> {
 	private final static Logger log = LoggerFactory.getLogger(JacksonTypeHandler.class);
 	
@@ -39,22 +43,31 @@ public class JacksonTypeHandler extends AbstractJsonTypeHandler<Object> {
     @Override
     protected Object parse(String json) {
         try {
-            return objectMapper.readValue(json, type);
+        	if (type != null) {
+        		return objectMapper.readValue(json, type);
+        	} else {
+        		return objectMapper.readValue(json, HashMap.class);
+        	}
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    protected String toJson(Object obj) {
-        try {
+    protected Object toJson(Object obj) {
+        return objectMapper.valueToTree(obj);
+    }
+    
+    @Override
+	protected String toJsonString(Object obj) {
+    	try {
             return objectMapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-    }
+	}
 
-    public static void setObjectMapper(ObjectMapper objectMapper) {
+	public static void setObjectMapper(ObjectMapper objectMapper) {
         Assert.notNull(objectMapper, "ObjectMapper should not be null");
         JacksonTypeHandler.objectMapper = objectMapper;
     }

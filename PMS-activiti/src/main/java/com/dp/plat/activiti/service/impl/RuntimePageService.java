@@ -3,14 +3,13 @@
  */
 package com.dp.plat.activiti.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -50,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import com.dp.plat.activiti.entity.BaseVO;
 import com.dp.plat.activiti.entity.Constants;
 import com.dp.plat.activiti.service.IRuntimePageService;
 import com.dp.plat.activiti.vo.ActivityVo;
@@ -97,7 +97,7 @@ public class RuntimePageService implements IRuntimePageService {
 		// 使用AND RES.ID_ + 1 = TSK.ID_条件暂时解决该问题，待评估
 		List<HistoricActivityInstance> historicActivityInstanceList = historyService
 				.createNativeHistoricActivityInstanceQuery()
-				.sql("SELECT CASE WHEN TSK.ID_ IS NULL THEN RES.TASK_ID_ ELSE TSK.ID_ END AS TASK_ID_, CASE WHEN TSK.ID_ IS NULL THEN RES.ASSIGNEE_ ELSE TSK.ASSIGNEE_ END AS ASSIGNEE_, RES.* FROM ACT_HI_ACTINST RES LEFT JOIN `act_hi_taskinst` TSK ON RES.`ACT_ID_` = TSK.TASK_DEF_KEY_ AND RES.`PROC_INST_ID_` = TSK.PROC_INST_ID_ AND RES.`EXECUTION_ID_` = TSK.EXECUTION_ID_ AND RES.ID_ + 1 = TSK.ID_ WHERE RES.PROC_INST_ID_ = #{procInstId} ORDER BY START_TIME_ ASC ")
+				.sql("SELECT CASE WHEN TSK.ID_ IS NULL THEN RES.TASK_ID_ ELSE TSK.ID_ END AS TASK_ID_, CASE WHEN TSK.ID_ IS NULL THEN RES.ASSIGNEE_ ELSE TSK.ASSIGNEE_ END AS ASSIGNEE_, IFNULL(RES.END_TIME_, TSK.END_TIME_) AS END_TIME_, RES.* FROM ACT_HI_ACTINST RES LEFT JOIN `act_hi_taskinst` TSK ON RES.`ACT_ID_` = TSK.TASK_DEF_KEY_ AND RES.`PROC_INST_ID_` = TSK.PROC_INST_ID_ AND RES.`EXECUTION_ID_` = TSK.EXECUTION_ID_ AND RES.ID_ + 1 = TSK.ID_ WHERE RES.PROC_INST_ID_ = #{procInstId} ORDER BY START_TIME_ ASC ")
 				.parameter("procInstId", processInstanceId).list();
 		// 活动的节点ID
 		ProcessInstance processInstance = runtimeService.createProcessInstanceQuery()
@@ -146,16 +146,20 @@ public class RuntimePageService implements IRuntimePageService {
 				}
 			}
 			// 节点状态
-			if (vo.getEndTime() != null)
+			if (vo.getEndTime() != null) {
 				vo.setActivityState(Constants.STATE_DONE);
-			else
+			} else {
 				vo.setActivityState(Constants.STATE_DOING);
+			}
 
 			// 获取审批结果和审批意见
 			Map<String, String> approveMap = getApproveMap(historicActivityInstance);
 			if (!approveMap.isEmpty()) {
 				vo.setApproved(approveMap.get(Constants.APPROVE_RESULT));
 				vo.setSuggestion(approveMap.get(Constants.APPROVE_SUGGESTION));
+			}
+			if (Constants.STATE_TERMINATE.equals(vo.getApproved())) {
+				vo.setActivityState(Constants.STATE_TERMINATE);
 			}
 			voList.add(vo);
 		}
@@ -273,6 +277,8 @@ public class RuntimePageService implements IRuntimePageService {
 		for (HistoricVariableInstance variableInstance : variableInstances) {
 			if (variableInstance.getVariableName().equals("isPass")) {
 				map.put(Constants.APPROVE_RESULT, variableInstance.getValue().toString());
+			} else if (Constants.APPROVE_RESULT.equals(variableInstance.getVariableName())){
+				map.put(Constants.APPROVE_RESULT, variableInstance.getValue().toString());
 			} else {
 				// map.put(Constants.APPROVE_SUGGESTION,
 				// variableInstance.getValue().toString());
@@ -345,148 +351,156 @@ public class RuntimePageService implements IRuntimePageService {
 	 */
 	public String getCandidateUserNames(final ActivityImpl activity, final String processInstanceId,
 			final String executionId, final String taskId) {
+		String result = "待定";
 		if (activity == null) {
-			return "";
+			return result;
 		}
-		String result = ((RuntimeServiceImpl) runtimeService).getCommandExecutor().execute(new Command<String>() {
-			@Override
-			public String execute(CommandContext commandContext) {
-				String retNames = "";
-				ExecutionEntity execution = null;
-				// ExecutionEntity execution = (ExecutionEntity)
-				// runtimeService.createExecutionQuery()
-				// .processInstanceId(processInstanceId).singleResult();
-//				List<Execution> executionList = executionQuery
-//						.processInstanceId(processInstanceId).executionId(executionId).orderByProcessInstanceId().desc()
-//						.list();
-				ExecutionQuery executionQuery = runtimeService.createExecutionQuery();
-				executionQuery.processInstanceId(processInstanceId);
-				if (StringUtils.isNotBlank(executionId)) {
-					executionQuery.executionId(executionId);
-				}
-				List<Execution> executionList = executionQuery.orderByProcessInstanceId().desc().list();
-				if (!executionList.isEmpty()) {
-					execution = (ExecutionEntity) executionList.get(0);
-				}
-				TaskDefinition taskDefinition = (TaskDefinition) activity.getProperties().get("taskDefinition");
-				if (taskDefinition == null)
-					return retNames;
-
-				// 代理人/审批人
-				String assignee = null;
-				if (taskDefinition.getAssigneeExpression() != null) {
-					try {
-						assignee = (String) taskDefinition.getAssigneeExpression().getValue(execution);
-					} catch (Exception ex) {
-						logger.error("获取受理人出错：" + ex.getMessage());
-						assignee = null;
+		try {
+		    result = ((RuntimeServiceImpl) runtimeService).getCommandExecutor().execute(new Command<String>() {
+				@Override
+				public String execute(CommandContext commandContext) {
+					String retNames = "";
+					ExecutionEntity execution = null;
+					// ExecutionEntity execution = (ExecutionEntity)
+					// runtimeService.createExecutionQuery()
+					// .processInstanceId(processInstanceId).singleResult();
+	//				if (executionId == null) {
+	//					return retNames;
+	//				}
+	//				List<Execution> executionList = runtimeService.createExecutionQuery()
+	//						.processInstanceId(processInstanceId).executionId(executionId).orderByProcessInstanceId().desc()
+	//						.list();
+					ExecutionQuery executionQuery = runtimeService.createExecutionQuery();
+					executionQuery.processInstanceId(processInstanceId);
+					if (StringUtils.isNotBlank(executionId)) {
+						executionQuery.executionId(executionId);
 					}
-					retNames = StringUtils.isNotBlank(assignee) ? getUserNamesByUserIds(assignee) : "待定";
-				}
-				// 委托人,同受理人同一人的情况下不显示
-				if (taskDefinition.getOwnerExpression() != null) {
-					String owner;
-					try {
-						owner = ((String) taskDefinition.getOwnerExpression().getValue(execution));
-					} catch (Exception ex) {
-						logger.error("获取委托人出错：" + ex.getMessage());
-						owner = null;
+					List<Execution> executionList = executionQuery.orderByProcessInstanceId().desc().list();
+					if (!executionList.isEmpty()) {
+						execution = (ExecutionEntity) executionList.get(0);
 					}
-					if (assignee != null && !assignee.equals(owner)) {
-						retNames = retNames + "(委托人:" + (StringUtils.isNotBlank(owner) ? getUserNamesByUserIds(owner) : "待定)");
-					}
-				}
-
-				if (!StringUtils.isEmpty(retNames))
-					return retNames;
-				// 候选组
-				if (!taskDefinition.getCandidateGroupIdExpressions().isEmpty()) {
-					List<String> groupIdList = new ArrayList<String>();
-					for (Expression groupIdExpr : taskDefinition.getCandidateGroupIdExpressions()) {
-						Object value;
+					TaskDefinition taskDefinition = (TaskDefinition) activity.getProperties().get("taskDefinition");
+					if (taskDefinition == null)
+						return retNames;
+	
+					// 代理人/审批人
+					String assignee = null;
+					if (taskDefinition.getAssigneeExpression() != null) {
 						try {
-							value = groupIdExpr.getValue(execution);
+							assignee = (String) taskDefinition.getAssigneeExpression().getValue(execution);
 						} catch (Exception ex) {
-							logger.error("获取候选组出错：" + ex.getMessage());
-							value = null;
+							logger.error("获取受理人出错：" + ex.getMessage());
+							assignee = null;
 						}
-						if (value != null) {
-							if (value instanceof String) {
-								groupIdList.add(value.toString());
-							} else if (value instanceof Collection) {
-								groupIdList.addAll((Collection<String>) value);
+						retNames = StringUtils.isNotBlank(assignee) ? getUserNamesByUserIds(assignee) : "待定";
+					}
+					// 委托人,同受理人同一人的情况下不显示
+					if (taskDefinition.getOwnerExpression() != null) {
+						String owner;
+						try {
+							owner = ((String) taskDefinition.getOwnerExpression().getValue(execution));
+						} catch (Exception ex) {
+							logger.error("获取委托人出错：" + ex.getMessage());
+							owner = null;
+						}
+						if (assignee != null && !assignee.equals(owner)) {
+							retNames = retNames + "(委托人:" + (StringUtils.isNotBlank(owner) ? getUserNamesByUserIds(owner) : "待定)");
+						}
+					}
+	
+					if (!StringUtils.isEmpty(retNames))
+						return retNames;
+					// 候选组
+					if (!taskDefinition.getCandidateGroupIdExpressions().isEmpty()) {
+						List<String> groupIdList = new ArrayList<String>();
+						for (Expression groupIdExpr : taskDefinition.getCandidateGroupIdExpressions()) {
+							Object value;
+							try {
+								value = groupIdExpr.getValue(execution);
+							} catch (Exception ex) {
+								logger.error("获取候选组出错：" + ex.getMessage());
+								value = null;
+							}
+							if (value != null) {
+								if (value instanceof String) {
+									groupIdList.add(value.toString());
+								} else if (value instanceof Collection) {
+									groupIdList.addAll((Collection<String>) value);
+								}
 							}
 						}
-					}
-					if (!groupIdList.isEmpty()) {
-						String[] groupIdArr = getStringArr(groupIdList.toArray());
-						return getUserNamesByGroupIds(StringUtils.join(groupIdArr, ","));
-					} else {
-						return "待定";
-					}
-
-				} else if (!taskDefinition.getCandidateUserIdExpressions().isEmpty()) {
-					List<String> userIdList = new ArrayList<String>();
-					for (Expression userIdExpr : taskDefinition.getCandidateUserIdExpressions()) {
-						Object value;
-						try {
-							value = userIdExpr.getValue(execution);
-						} catch (Exception ex) {
-							logger.error("获取候选人出错：" + ex.getMessage());
-							value = null;
+						if (!groupIdList.isEmpty()) {
+							String[] groupIdArr = getStringArr(groupIdList.toArray());
+							return getUserNamesByGroupIds(StringUtils.join(groupIdArr, ","));
+						} else {
+							return "待定";
 						}
-						if (value != null) {
-							if (value instanceof String) {
-								userIdList.add((String) value);
-							} else if (value instanceof Collection) {
-								userIdList.addAll((Collection<String>) value);
+	
+					} else if (!taskDefinition.getCandidateUserIdExpressions().isEmpty()) {
+						List<String> userIdList = new ArrayList<String>();
+						for (Expression userIdExpr : taskDefinition.getCandidateUserIdExpressions()) {
+							Object value;
+							try {
+								value = userIdExpr.getValue(execution);
+							} catch (Exception ex) {
+								logger.error("获取候选人出错：" + ex.getMessage());
+								value = null;
+							}
+							if (value != null) {
+								if (value instanceof String) {
+									userIdList.add((String) value);
+								} else if (value instanceof Collection) {
+									userIdList.addAll((Collection<String>) value);
+								}
 							}
 						}
-					}
-					if (!userIdList.isEmpty()) {
-						String[] userIdArr = getStringArr(userIdList.toArray());
-						return getUserNamesByUserIds(StringUtils.join(userIdArr, ","));
+						if (!userIdList.isEmpty()) {
+							String[] userIdArr = getStringArr(userIdList.toArray());
+							return getUserNamesByUserIds(StringUtils.join(userIdArr, ","));
+						} else {
+							return "待定";
+						}
 					} else {
-						return "待定";
-					}
-				} else {
-					if (execution != null) {
-						List<TaskEntity> tasks = execution.getTasks();
-						for (TaskEntity taskEntity : tasks) {
-							if (taskEntity.getId().equals(taskId)) {
-								List<IdentityLinkEntity> identityLinks = taskEntity.getIdentityLinks();
-								if (identityLinks != null && !identityLinks.isEmpty()) {
-									IdentityLinkEntity linkEntity = identityLinks.get(0);
-									if (StringUtils.isNotBlank(linkEntity.getGroupId())) {
-										Group group = identityService.createGroupQuery().groupId(linkEntity.getGroupId())
-												.singleResult();
-										if (group != null) {
-											return group.getName();
+						if (execution != null) {
+							List<TaskEntity> tasks = execution.getTasks();
+							for (TaskEntity taskEntity : tasks) {
+								if (taskEntity.getId().equals(taskId)) {
+									List<IdentityLinkEntity> identityLinks = taskEntity.getIdentityLinks();
+									if (identityLinks != null && !identityLinks.isEmpty()) {
+										IdentityLinkEntity linkEntity = identityLinks.get(0);
+										if (StringUtils.isNotBlank(linkEntity.getGroupId())) {
+											Group group = identityService.createGroupQuery().groupId(linkEntity.getGroupId())
+													.singleResult();
+											if (group != null) {
+												return group.getName();
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-					
-					if (taskId != null) {
-						List<HistoricIdentityLink> historicIdentityLinks = historyService
-								.getHistoricIdentityLinksForTask(taskId);
-						if (historicIdentityLinks != null && !historicIdentityLinks.isEmpty()) {
-							HistoricIdentityLink linkEntity = historicIdentityLinks.get(0);
-							if (StringUtils.isNotBlank(linkEntity.getGroupId())) {
-								Group group = identityService.createGroupQuery().groupId(linkEntity.getGroupId())
-										.singleResult();
-								if (group != null) {
-									return group.getName();
+						
+						if (taskId != null) {
+							List<HistoricIdentityLink> historicIdentityLinks = historyService
+									.getHistoricIdentityLinksForTask(taskId);
+							if (historicIdentityLinks != null && !historicIdentityLinks.isEmpty()) {
+								HistoricIdentityLink linkEntity = historicIdentityLinks.get(0);
+								if (StringUtils.isNotBlank(linkEntity.getGroupId())) {
+									Group group = identityService.createGroupQuery().groupId(linkEntity.getGroupId())
+											.singleResult();
+									if (group != null) {
+										return group.getName();
+									}
 								}
 							}
 						}
 					}
+					return retNames;
 				}
-				return retNames;
-			}
-		});
+			});
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		return result;
 
 	}
@@ -530,7 +544,18 @@ public class RuntimePageService implements IRuntimePageService {
 
 	private String getUserNamesByUserIds(String userId) {
 		User user = identityService.createUserQuery().userId(userId).singleResult();
-		return user != null ? user.getFirstName() : userId;
+		String name = userId;
+		if (user != null) {
+			List<String> names = new ArrayList<>(2);
+			if (StringUtils.isNotBlank(user.getLastName())) {
+				names.add(user.getLastName());
+			}
+			if (StringUtils.isNotBlank(user.getFirstName())) {
+				names.add(user.getFirstName());
+			}
+			name = StringUtils.join(names, "-");
+		}
+		return user != null ? name : userId;
 	}
 
 	/**

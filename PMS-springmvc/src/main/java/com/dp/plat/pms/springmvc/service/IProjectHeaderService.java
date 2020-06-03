@@ -84,7 +84,7 @@ public interface IProjectHeaderService extends ProjectService/*IAbstractBaseServ
 
     PermissionResult checkPermission(ProjectVO project, String... permissions);
 
-	ProjectVO selectVOByProjectId(Integer projectId);
+	ProjectVO selectVOByProjectId(Object projectId);
 
-	ProjectVO queryProjectStateByProjectId(Integer projecrId);
+	ProjectVO queryProjectStateByProjectId(Object projecrId);
 }

@@ -408,7 +408,10 @@
   
   <select id="selectProjectAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectAssetVO">
     select 
-	    apr.id, apr.projectId, ia.id as assetId, ia.*, ph.projectName 
+	    apr.id, apr.projectId, ia.id as assetId, 
+	    JSON_SET(IFNULL(ia.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+	    ia.*, ph.projectName<!-- , 
+	    bd.basicDataName as `customInfo.statusName`, bd2.basicDataName as `customInfo.trackStatusName`  -->
 	from
 	    af_industry_asset_project_relation apr 
 	    left join af_industry_asset as ia 
@@ -416,8 +419,14 @@
 	        and apr.`disabled` = false 
 	        and ia.`disabled` = false 
 	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
-	    left join `pm_project_header` ph 
+	    left join `pm_project` ph 
 	        on ph.`projectId` = apr.`projectId` 
+	    left join `fnd_basic_data` bd 
+	        on ia.`status` = bd.`basicDataId` 
+	        and bd.`dataTypeCode` = 'processStatus'
+	    left join `fnd_basic_data` bd2 
+	        on ia.`trackStatus` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'trackStatus' 
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -579,7 +588,7 @@
 	        and apr.`disabled` = false 
 	        and ia.`disabled` = false 
 	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
-	    left join `pm_project_header` ph 
+	    left join `pm_project` ph 
 	        on ph.`projectId` = apr.`projectId` 
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">

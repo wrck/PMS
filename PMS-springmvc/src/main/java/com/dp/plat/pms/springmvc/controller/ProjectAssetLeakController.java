@@ -1,6 +1,8 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +26,19 @@ import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
+import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetLeakRelationService;
+import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
+import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 import com.dp.plat.pms.springmvc.vo.ProjectAssetLeakVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
@@ -42,6 +51,9 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 	
 	@Autowired
 	private IIndustryAssetLeakRelationService industryAssetLeakRelationService;
+	
+	@Autowired
+	private IIndustryAssetService industryAssetService;
 	
 	@PostConstruct
 	public void init() {
@@ -58,7 +70,7 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 	@Override
 	@GetMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectAssetLeakVO v, Model model) {
-		if (!checkPermission(v, model, "industryAsset:detail", "assetLeak:list")) {
+		if (!checkPermission(v, model, "projectAsset:detail", "assetLeak:list")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -100,11 +112,14 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 				if (!checkPermission.isPermit()) {
 					return "redirect:" + Consts.VIEW_UNAUTHORIZED;
 				}
-				IndustryLeak asset = service.selectByPrimaryKey(projectRelation.getLeakId());
+				IndustryLeak leak = service.selectByPrimaryKey(projectRelation.getLeakId());
+				IndustryAsset asset = industryAssetService.selectByPrimaryKey(projectRelation.getAssetId());
 				ProjectAssetLeakVO v = new ProjectAssetLeakVO();
-				BeanUtils.copyProperties(asset, v);
+				BeanUtils.copyProperties(leak, v);
 				v.setId(projectRelation.getId());
+				v.setLeakId(leak.getId());
 				v.setAssetId(asset.getId());
+				v.setAssetName(asset.getAssetName());
 				v.setProjectId(projectRelation.getProjectId());
 				model.addAttribute("targetValue", v);
 
@@ -169,7 +184,19 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		Boolean status = true;
 		String message = null;
 		try {
-			industryAssetLeakRelationService.insertProjectAssetLeakSelective(v);
+			String assetIds = StringUtils.trimToEmpty(v.getAssetIds());
+			HashSet<String> set = new HashSet<String>(Arrays.asList(assetIds.split(",")));
+			if (v.getAssetId() != null) {
+				set.add(v.getAssetId().toString());
+			}
+			for (String assetId : set) {
+				if (StringUtils.isNotBlank(assetId)) {
+					ProjectAssetLeakVO assetLeak = new ProjectAssetLeakVO();
+					BeanUtils.copyProperties(v, assetLeak);
+					assetLeak.setAssetId(Integer.valueOf(assetId));
+					industryAssetLeakRelationService.insertProjectAssetLeakSelective(assetLeak);
+				}
+			}
 			model.addAttribute("targetName", this.getTargetName(v.getClass()));
 		} catch (Exception e) {
 			status = false;
@@ -190,7 +217,19 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		ProjectAssetLeakVO leak = new ProjectAssetLeakVO();
 		BeanUtils.copyProperties(v, leak);
 		leak.setId(v.getLeakId());
-		return super.update(v.getAssetId(), leak, model);
+		
+		// 终止正在进行中的任务
+		PmWorkFlowVO workflow = new PmWorkFlowVO();
+		workflow.setDataId(v.getLeakId());
+		workflow.setDataType(DataType.INDUSTRY_LEAK);
+		workflow.setObjId(v.getProjectId());
+		workflow.setObjType(DataType.PROJECT);
+		workflow.setStatus(PmWorkFlowVO.PENDING);
+		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
+		
+		v.setStatus("0");
+		v.setTrackStatus(0);
+		return super.update(v.getLeakId(), leak, model);
 //		if (!checkPermission(v, model, getDataName() + ":update")) {
 //			model.addAttribute("status", false);
 //			model.addAttribute("message", "没有权限进行该操作！");
@@ -221,11 +260,22 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 			if (Boolean.TRUE.equals(cascade)) {
 				IndustryAssetLeakRelation relation = industryAssetLeakRelationService.selectByPrimaryKey(id);
 				
-				IndustryLeakVO asset = new IndustryLeakVO();
-				asset.setId(relation.getAssetId());
-				asset.setDisabled(true);
-				service.updateByPrimaryKeySelective(asset);
+				// 终止正在进行中的任务
+				PmWorkFlowVO workflow = new PmWorkFlowVO();
+				workflow.setDataId(relation.getLeakId());
+				workflow.setDataType(DataType.INDUSTRY_LEAK);
+				workflow.setObjId(relation.getProjectId());
+				workflow.setObjType(DataType.PROJECT);
+				workflow.setStatus(PmWorkFlowVO.PENDING);
+				pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
+				
+				IndustryLeakVO leak = new IndustryLeakVO();
+				leak.setId(relation.getLeakId());
+				leak.setDisabled(true);
+				service.updateByPrimaryKeySelective(leak);
 			}
+			
+			
 			IndustryAssetLeakRelation t = new IndustryAssetLeakRelation();
 			t.setId(id);
 			t.setDisabled(true);
@@ -252,24 +302,29 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
 			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-			Boolean allPerm = (Boolean) permission.get("all");
-			if (Boolean.TRUE.equals(allPerm)) {
-				isPermit = true;
-				permissionType = "all";
-			} else {
-				String perms = StringUtils.join(permissions, ",");
-				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
-				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
-				if (editPerm && perms.matches(".*assetLeak:(add|edit|delete|import|list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = "edit";
-				} else if ((viewPerm || editPerm) && perms.matches(".*assetLeak:(list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = editPerm ? "edit" : "view";
-				}
-			}
-			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
-			
+//			Boolean allPerm = (Boolean) permission.get("all");
+//			if (Boolean.TRUE.equals(allPerm)) {
+//				isPermit = true;
+//				permissionType = "all";
+//			} else {
+//				String perms = StringUtils.join(permissions, ",");
+//				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
+//				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
+//				if (editPerm && perms.matches(".*assetLeak:(add|edit|delete|import|list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = "edit";
+//				} else if ((viewPerm || editPerm) && perms.matches(".*assetLeak:(list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = editPerm ? "edit" : "view";
+//				}
+//			}
+//			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			isPermit = checkPermit.isPermit();
+			permissionType = checkPermit.getPermissionType();
+			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
 		} else {
 			isPermit = true;
 			permissionType = "all";

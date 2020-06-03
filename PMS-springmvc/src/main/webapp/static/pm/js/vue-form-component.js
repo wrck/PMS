@@ -12,7 +12,7 @@ var FormInputs = {
 		},
 		template: `<div>
 						<template v-for="field in formFieldList">
-							<form-input :field="field" :form-cols="formCols" :isCreated="isCreated" :formColsGroupClass="formColsGroupClass" :dataType="dataType" :maxLabelWidth="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permissionType="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
+							<form-input :field="field" :form-cols="formCols" :is-created="isCreated" :form-cols-group-class="formColsGroupClass" :data-type="dataType" :max-label-width="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
 						</template>
 					</div>`,
 		props: {
@@ -152,7 +152,7 @@ var FormInputs = {
 				for (var i in fieldList) {
 					var field = fieldList[i];
 					if (field['extData']) {
-						this.parseValue(field, "extData");
+						this.parseValue(field, "extData", true);
 					}
 					if (field.type == 'inputs') {
 						// inputs 拥有相同的标签，在一个组内进行显示，以下参数需要拆分，用空格相隔
@@ -223,7 +223,7 @@ var FormInputs = {
 	 				try {
 	 					console.log("render")
 	 					var render = eval(field.render);
-	 					value = render(this.targetValue, field);
+	 					value = render.call(this, this.targetValue, field);
 	 				}catch(e){
 	 					console.error(e);
 	 				}
@@ -233,6 +233,9 @@ var FormInputs = {
 	 			} catch(e) {}
  				try {
 	 				value = value || eval("this.targetValue." + field.alias);
+ 				} catch(e) {}
+ 				try {
+	 				value = value || field.extData["defaultValue"];
  				} catch(e) {}
  				if (value && field.type == 'date') {
  					value = new Date(value).Format('yyyy-MM-dd');

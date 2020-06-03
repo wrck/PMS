@@ -5,6 +5,8 @@ package com.dp.plat.core.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.serializer.JsonSerializer;
@@ -31,6 +33,8 @@ public class BaseEntity implements Serializable{
 	private Date updateTime;
 	
 	private Integer orgId;
+	
+	private Map customInfo;
 
 	public Integer getId() {
 		return id;
@@ -81,6 +85,31 @@ public class BaseEntity implements Serializable{
 
 	public void setOrgId(Integer orgId) {
 		this.orgId = orgId;
+	}
+
+	public Map getCustomInfo() {
+		return customInfo;
+	}
+
+	public void setCustomInfo(Map customInfo) {
+		this.customInfo = customInfo;
+	}
+
+	public Object getCustomInfoByKey(String key) {
+		Map<?, ?> customInfo = getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.get(key);
+		}
+		return null;
+	}
+
+	public void setCustomInfoByKey(String key, Object value) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo == null) {
+			customInfo = new HashMap<>();
+			this.setCustomInfo(customInfo);
+		}
+		customInfo.put(key, value);
 	}
 
 }

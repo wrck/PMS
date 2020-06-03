@@ -2,7 +2,7 @@
 	pageEncoding="UTF-8"%>
 <template v-for="field in formFieldList">
 	<template v-if="field.searchable">
-		<template v-if="field.type == 'hidden' || !field.visible">
+		<template v-if="field.type == 'hidden'">
 			<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 					:disabled="field.disabled" :readonly="field.readonly"
@@ -41,7 +41,7 @@
 			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
 				<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
 						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required">
 					<option :value="item[field.extValue]" v-for="item in getDataValue(field.extData)" :selected="item[field.extValue] == getFieldValue(field)" >{{item[field.extKey]}}</option>
 				</select>
@@ -51,7 +51,7 @@
 			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
 				<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+						:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
 						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
 						:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
 						:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"

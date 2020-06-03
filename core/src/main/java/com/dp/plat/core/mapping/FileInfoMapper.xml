@@ -33,6 +33,21 @@
 		</foreach>
 	</select>
 	
+	<select id="selectFileInfoByIdsAndType" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[ SELECT * FROM t_file]]>
+		<where>
+			<trim prefixOverrides="and | or" suffixOverrides="and | or">
+				<foreach collection="ids" index="index" item="id" open="id in(" separator="," close=")">
+					#{id} 
+				</foreach>
+				<if test="typeId != null and typeId != ''">
+					AND typeId = #{typeId}
+				</if>
+			</trim>
+		</where>
+		
+	</select>
+	
 	<insert id="insertdownlog" >
 		<![CDATA[
 			INSERT INTO t_down_log(fileIds ,ip,timeline) VALUES(#{fileIds} ,#{ip},UNIX_TIMESTAMP(NOW()))

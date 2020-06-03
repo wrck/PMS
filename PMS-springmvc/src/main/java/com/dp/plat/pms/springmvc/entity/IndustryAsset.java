@@ -1,13 +1,17 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import com.dp.plat.core.entity.BaseEntity;
-import com.dp.plat.core.serializer.JsonSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Date;
 import java.util.Map;
 
+import com.dp.plat.core.entity.BaseEntity;
+import com.dp.plat.core.serializer.JsonSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 public class IndustryAsset extends BaseEntity {
-    private Integer id;
+	
+	private static final long serialVersionUID = -8207505075644971447L;
+
+	private Integer id;
 
     // 资产编号
     private String assetNum;
@@ -76,7 +80,7 @@ public class IndustryAsset extends BaseEntity {
     private Map customInfo;
 
     // 状态
-    private Integer status;
+    private String status;
 
     // 入库状态
     private Integer trackStatus;
@@ -513,7 +517,7 @@ public class IndustryAsset extends BaseEntity {
      *
      * @return status - 状态
      */
-    public Integer getStatus() {
+    public String getStatus() {
         return status;
     }
 
@@ -522,7 +526,7 @@ public class IndustryAsset extends BaseEntity {
      *
      * @param status 状态
      */
-    public void setStatus(Integer status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

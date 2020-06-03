@@ -35,9 +35,10 @@ public class SettlementVO extends DispatchSettlement {
 	@JsonSerialize(using = JsonSerializer.class)
 	private Double collectedRatio;
 	@JsonSerialize(using = JsonSerializer.class)
-	private Double settleRatio;
+	private Double settledRatio;
 	
 	private DispatchProject dispatch;
+	private Boolean dispatched;
 
 	public Integer getProjectId() {
 		return projectId;
@@ -162,13 +163,13 @@ public class SettlementVO extends DispatchSettlement {
 		this.setCustomInfoByKey("collectedRatio", collectedRatio);
 	}
 
-	public Double getSettleRatio() {
-		return settleRatio;
+	public Double getSettledRatio() {
+		return settledRatio;
 	}
 
-	public void setSettleRatio(Double settleRatio) {
-		this.settleRatio = settleRatio;
-		this.setCustomInfoByKey("settleRatio", settleRatio);
+	public void setSettledRatio(Double settledRatio) {
+		this.settledRatio = settledRatio;
+		this.setCustomInfoByKey("settledRatio", settledRatio);
 	}
 	
 	public DispatchProject getDispatch() {
@@ -179,6 +180,14 @@ public class SettlementVO extends DispatchSettlement {
 		this.dispatch = dispatch;
 	}
 	
+	public Boolean getDispatched() {
+		return dispatched;
+	}
+
+	public void setDispatched(Boolean dispatched) {
+		this.dispatched = dispatched;
+	}
+
 	public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();
 		if (customInfo != null && !customInfo.isEmpty()) {
@@ -196,4 +205,5 @@ public class SettlementVO extends DispatchSettlement {
 		customInfo.put(key, value);
 	}
 
+	
 }

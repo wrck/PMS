@@ -125,6 +125,11 @@ public class UploaderService implements IUploaderService {
 		}
 		return list;
 	}
+	
+	@Override
+	public List<FileInfo> selectFileInfoByIdsAndType(List<String> ids, Integer typeId) {
+		return fileInfoMapper.selectFileInfoByIdsAndType(ids, typeId);
+	}
 
 	@Override
 	public void fileDownload(Integer fileId, HttpServletRequest request, HttpServletResponse response) {

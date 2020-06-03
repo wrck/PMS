@@ -53,6 +53,8 @@ public class ActivityVo {
     private String approved;
     //审批意见
     private String suggestion;
+    // 删除理由
+    private String deleteReason;
 
     public String getApproved() {
         return approved;
@@ -197,4 +199,13 @@ public class ActivityVo {
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
     }
+
+	public String getDeleteReason() {
+		return deleteReason;
+	}
+
+	public void setDeleteReason(String deleteReason) {
+		this.deleteReason = deleteReason;
+	}
+    
 }

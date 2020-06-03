@@ -10,6 +10,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title><spring:message code="system.title" /></title>
 <cssTag>
+<c:if test="${!isModals}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
 
@@ -20,7 +21,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
-	
+</c:if>
 	<style>
 		.display-flex {
 			display: flex;
@@ -70,26 +71,28 @@
 	<div id="app">
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
-			<h1 id="pageTitle">
+			<!-- <h1 id="pageTitle">
 				<template v-if="isShow">
 					<span>{{workflow.title}}</span>
 				</template>
 				<template v-else>
 					<span></span><small></small>
 				</template>
+			</h1> -->
+			<h1 id="pageTitle" class="fade" :class="{in: isShow}">
+				<span>{{workflow.title}}</span>
 			</h1>
 			<span class="display-none"></span>
-			<span></span>
 			<ol class="breadcrumb">
 			</ol>
 		</section>
 		<section class="content">
 			<div class="row">
 				<div class="col-xs-12">
-					<div class="box box-info formContainer">
+					<div class="box box-info formContainer" v-if="targetValue">
 						<div class="box-header">审核内容</div>
-						<div id="taskEntityFormDiv" class="box-body row ml-0 form-inline" v-if="isShow">
-							<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+						<div id="taskEntityFormDiv" class="box-body row ml-0 form-inline fade" :class="{in: isShow}">
+							<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permissions="permissions" :permission-type="permissionType" :roles="roles" :model="model"></form-inputs>
 						</div>
 						<div class="box-footer text-right" v-if="!workflow.hasTask">
 							<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
@@ -97,21 +100,21 @@
 					</div>
 					<div class="box box-info formContainer mt-1" v-if="workflow.hasTask">
 						<div class="box-header">任务办理</div>
-						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline">
+						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<!-- /.box-body -->
-							<div id="formDiv" class="box-body row ml-0" v-if="isShow">
-								<form-inputs :form-cols="1" :field-list="workflowFieldList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+							<div id="formDiv" class="box-body row ml-0">
+								<form-inputs :form-cols="1" :field-list="workflowFieldList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :permission-type="permissionType" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="submit" v-if="workflow.hasTask">提交</button>
 							</div>
 							<!-- /.box-footer -->
 						</form>
 					</div>
-					<div id="tabDiv" class="tabContainer" v-if="isShow">
+					<div id="tabDiv" class="tabContainer fade" :class="{in: isShow}">
 						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
-						<nav-tab ref="workflowTab" tab-content-id="workflow" :tab-list="tabList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
+						<nav-tab ref="workflowTab" tab-content-id="workflow" :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -119,6 +122,7 @@
 	</div>
 </body>
 <jsTag>
+<c:if test="${!isModals}">
 <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
@@ -136,7 +140,10 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+</c:if>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-inputs-component.js"></script>
+	<%-- <script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script> --%>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
@@ -184,13 +191,17 @@
 								formAction: router(urlNamespace).api(model).detail(id),
 	   							fieldList: data.fieldList || [],
 	   							targetName: data.targetName || "",
-	    						targetValue: data.targetValue || {},
+	    						targetValue: data.targetValue|| "",
+	    						tabList: data.tabList || [],
+	    						hideEntity: data.hideEntity || false,
 	    						
-	    						workflowFieldList: data.workflowFieldList || [],
 	    						workflow: data.workflow || {},
+	    						workflowFieldList: data.workflowFieldList || [],
+	    						workflowTabList: data.workflowTabList || [],
 	    						
 	    						// 权限控制参数
 	    						model: data.model || model,
+	    						permissionType: data.permissionType || "",
 	    						permissions: data.permissions || [],
 	    						roles: data.roles || []
 	    				 	}),
@@ -245,7 +256,7 @@
     			var targetValue = results[targetName] || {};
     			keyword = keyword || window.keyword || "id";
     			id = targetValue[keyword] || targetValue.id || 0; */
-        		if (isCreate) {
+        		if (isCreate || vm.hideEntity) {
         			if (isModals) {
         				var currentWinId = winId;
         				if (!$("#" + currentWinId).length) {
@@ -266,9 +277,11 @@
 	   						vm._data.workflowFieldList = data.workflowFieldList || [];
 	   						vm._data.workflow = data.workflow || {};
 	   						
+	   						form.clearForm();
+	   						form.initFormData(data.workflow);
+	   						
 	   						var wfvm = vm.$refs['workflowTab'];
 	   						wfvm.refreshNavTab({target: $('li.active a[data-toggle="tab"]', wfvm.$el)});
-	   						//form.initFormData(data.targetValue);
 	    				}
 	        		});
         		}

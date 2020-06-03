@@ -86,12 +86,14 @@
 				<div class="col-xs-12">
 					<div class="box box-info">
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
-							<div id="formDiv" class="box-body row ml-0" v-if="isShow">
+							<div id="formDiv" class="box-body row ml-0">
 								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
-								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
+								<button type="button" class="btn btn-info pull-left" v-if="targetValue.dispatched && targetValue.type == 'frameworkAgreement'" data-btn-type="exportDispatchInfo">外派单</button>
+								
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" v-if="targetValue.id > 0 && !targetValue.dispatched" class="btn btn-success" data-btn-type="submit">派单</button>
 								<button type="button" v-if="targetValue.dispatched && !targetValue.settled" class="btn btn-primary" data-btn-type="settle">结算</button>
@@ -110,6 +112,7 @@
 	</div>
 </body>
 <jsTag>
+<c:if test="${!isModals}">
 <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
@@ -125,6 +128,7 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+</c:if>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
@@ -297,7 +301,8 @@
     			 }
     		})
     		
-    		$(document).on("click", '[data-btn-type]', function(e) {
+    		$(document).off('click', "#" + appId +' [data-btn-type]');
+    		$(document).on("click", "#" + appId +' [data-btn-type]', function(e) {
     			var action = $(this).attr('data-btn-type');
                 switch (action) {
                	case 'settle':
@@ -315,6 +320,15 @@
 	                         }
                         });
                 	}
+                	break;
+               	case 'exportDispatchInfo': 
+               		var url = router(urlNamespace).html(model).exportDispatchInfo(id);
+               		var $btn = $(this);
+                    $btn.button("loading");
+                    router.postDownload(url);
+                    setTimeout(function() {
+                   	 	$btn.button("reset");
+                    }, 2000);
                	}
     		});
     		

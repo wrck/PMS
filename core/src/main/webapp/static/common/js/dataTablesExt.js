@@ -378,6 +378,7 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 			$("#" + that.searchDiv +" input[type='search']",that.table.table().container()).val("");
 			$("#" + that.searchDiv +" input[data-type='search']",that.table.table().container()).val("");
 			$("#" + that.searchDiv +" select[type='search']",that.table.table().container()).val("");
+			$("#" + that.searchDiv +" select[type='search']",that.table.table().container()).data("select", "");
 			if($.fn.select2) {
 				$("#" + that.searchDiv +" select.select2",that.table.table().container()).trigger("change");
 			}
@@ -1608,6 +1609,7 @@ CommonTable.prototype.fnStateLoaded = function (settings, data) {
 			$("input[name='"+name+"']", $("#" + this.searchDiv)).val(value);
 			$("select[name='"+name+"']", $("#" + this.searchDiv)).val("");
 			$("select[name='"+name+"']", $("#" + this.searchDiv)).val(value);
+			$("select[name='"+name+"']", $("#" + this.searchDiv)).data("selected", value);
 			$("input[data-type='search'][name='"+name+"']", $("#" + this.searchDiv)).val(value);
 		}
 //		if($.fn.select2) {

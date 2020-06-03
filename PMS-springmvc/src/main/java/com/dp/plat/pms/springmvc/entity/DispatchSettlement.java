@@ -426,7 +426,7 @@ public class DispatchSettlement extends BaseEntity {
      *
      * @return customInfo - 自定义信息
      */
-    public Map<?, ?> getCustomInfo() {
+    public Map getCustomInfo() {
         return customInfo;
     }
 
@@ -435,7 +435,7 @@ public class DispatchSettlement extends BaseEntity {
      *
      * @param customInfo 自定义信息
      */
-    public void setCustomInfo(Map<?, ?> customInfo) {
+    public void setCustomInfo(Map customInfo) {
         this.customInfo = customInfo;
     }
 

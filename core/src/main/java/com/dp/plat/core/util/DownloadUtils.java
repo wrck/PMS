@@ -75,7 +75,7 @@ public class DownloadUtils {
 
 			downFile(response, request, tmpZipFile.getPath(), zipName);
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 	

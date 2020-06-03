@@ -2,7 +2,6 @@ package com.dp.plat.pms.springmvc.service;
 
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import java.util.List;
-import com.dp.plat.pms.springmvc.vo.TaskVO;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 import com.dp.plat.core.service.IAbstractBaseService;
@@ -47,11 +46,11 @@ public interface IPmWorkFlowService extends IAbstractBaseService<PmWorkFlow> {
     /**
 	 * 根据被考核人，以及流程查询参数，获取当前用户正在对该被考核人进行考核的任务，以及历史任务
 	 * 
-	 * @param perfWorkFlow
+	 * @param pmWorkFlow
 	 * @param planParticipant
 	 * @return currentParticipantWorkFlow
 	 */
-    PmWorkFlow currentParticipantWorkFlow(PmWorkFlow perfWorkFlow, Object planParticipant);
+    PmWorkFlow currentParticipantWorkFlow(PmWorkFlow pmWorkFlow, Object planParticipant);
 
     /**
 	 * 查询流程实例IDs
@@ -79,9 +78,9 @@ public interface IPmWorkFlowService extends IAbstractBaseService<PmWorkFlow> {
     /**
 	 * 删除流程
 	 * 
-	 * @param perfWorkFlowVO
+	 * @param pmWorkFlowVO
 	 */
-    void deleteProcess(PmWorkFlowVO perfWorkFlowVO);
+    void deleteProcess(PmWorkFlowVO pmWorkFlowVO);
 
     /**
 	 * 查找某个考核人的某个任务的最终办理人
@@ -93,5 +92,12 @@ public interface IPmWorkFlowService extends IAbstractBaseService<PmWorkFlow> {
 
     void deleteProcess(List<String> procInstIds);
 
-	String startProcess(PmWorkFlow pmWorkFlow, Object entity);
+    String startProcess(PmWorkFlow pmWorkFlow, Object entity);
+
+    /**
+	 * 终止流程
+	 * @param workflow
+	 * @param terminateReason
+	 */
+    void terminateProcess(PmWorkFlowVO workflow, String terminateReason);
 }

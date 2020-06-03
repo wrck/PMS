@@ -25,11 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.impl.AbstractBaseService;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.dao.ProjectDao;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.dao.ProjectTaskMapper;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
@@ -150,6 +152,7 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
     
     @Override
 	public Map<String, Object> checkPermissionMap(TaskVO task, String... permissions) {
+		Map<String, Object> permissionMap;
 		if (permissions != null) {
 			Set<String> permissTypes = new HashSet<String>(permissions.length);
 			for (String permission : permissions) {
@@ -158,10 +161,17 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 					permissTypes.add(type);
 				}
 			}
-			return dao.checkPermission(task, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
+			permissionMap = dao.checkPermission(task, StringUtils.join(permissTypes, ":|") + ":", UserContext.getCurrentPrincipal());
 		} else {
-			return dao.checkPermission(task, UserContext.getCurrentPrincipal());
-		}
+			permissionMap = dao.checkPermission(task, UserContext.getCurrentPrincipal());
+	    }
+	    // 已闭环的项目，不允许修改，只有项目管理员、区域负责人才可以重新打开
+	    String closedState = SystemConfig.systemVariables.getOrDefault("pm.project.closed.state", "100");
+	    if (closedState.equals(permissionMap.get("maxState"))) {
+	    	permissionMap.put("all", Boolean.FALSE);
+	    	permissionMap.put("edit", Boolean.FALSE);
+	    }
+	    return permissionMap;
 	}
     
     @Override
@@ -174,8 +184,22 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 		Collection<String> permissionSet = null;
 		PermissionResult result = null;
 		if (!UserContext.checkPermission("project:*") && task != null) {
+			// 允许访问的项目类型
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+				Principal user = UserContext.getCurrentPrincipal();
+				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+				task.setProjectTypes(projectTypes);
+
+				// 非子项目管理员，添加允许访问的办事处权限
+				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+					task.setOfficeCodes(officeCodes);
+				}
+			}
+						
 			Map<String, Object> permission = this.checkPermissionMap(task, permissions);
-			result = new PermissionUtils().checkPermit(permission, permissions);
+			result = new PermissionUtils(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
 		} else {
 			isPermit = true;
 			permissionType= "all";

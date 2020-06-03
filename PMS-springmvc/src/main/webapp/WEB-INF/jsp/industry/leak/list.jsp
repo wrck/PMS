@@ -43,7 +43,7 @@
                     <div class="box-body">
                         <div id="searchDiv" class="text-left">
                         	<form id="searchForm">
-	                            <%@include file="../../template/vue-form-component.jsp" %>
+	                            <%@include file="../../template/vue-table-search-component.jsp" %>
 		                        <div class="btn-group">
 									<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
 									<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
@@ -87,7 +87,7 @@
         var urlNamespace = "${urlNamespace}";
         var model = "${model}";
         var winId= model + "Win";
-        var tableId = model + "table";
+        var tableId = model + "Table";
         $(function() {
         	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);

@@ -1,11 +1,14 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -13,24 +16,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.constant.RoleConstant;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.*;
+import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.util.DocUtil;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
@@ -73,14 +83,14 @@ public class DispatchProjectController
 		temp.setEffectiveTo(new Date());
 		// temp.setCompID(user.getCompId());
 		// 允许访问的项目类型
-		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
+		if (!UserContext.hasAnyRoles(ROLE_PM_ADMIN, ROLE_ADMIN)) {
 			String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
 			temp.setProjectTypes(projectTypes);
 			dispatch.setProjectTypes(projectTypes);
 			
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+			if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 				temp.setOfficeCodes(officeCodes);
 				dispatch.setOfficeCodes(officeCodes);
 			}
@@ -201,25 +211,26 @@ public class DispatchProjectController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, DispatchVO dispatch, Model model) {
-		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
-			model.addAttribute("status", false);
-			model.addAttribute("message", "没有权限进行该操作！");
-			return Consts.VIEW_UNAUTHORIZED;
-		}
-		Boolean status = true;
-		String message = null;
-		try {
-			dispatchProjectService.updateByPrimaryKeySelective(dispatch);
-			model.addAttribute("targetName", "dispatchVO");
-		} catch (Exception e) {
-			status = false;
-			Integer errorId = ExceptionHandler.insertException(e);
-			model.addAttribute("errorId", errorId);
-			message = e.getMessage();
-		}
-		model.addAttribute("status", status);
-		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return super.update(id, dispatch, model);
+//		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
+//			model.addAttribute("status", false);
+//			model.addAttribute("message", "没有权限进行该操作！");
+//			return Consts.VIEW_UNAUTHORIZED;
+//		}
+//		Boolean status = true;
+//		String message = null;
+//		try {
+//			dispatchProjectService.updateByPrimaryKeySelective(dispatch);
+//			model.addAttribute("targetName", "dispatchVO");
+//		} catch (Exception e) {
+//			status = false;
+//			Integer errorId = ExceptionHandler.insertException(e);
+//			model.addAttribute("errorId", errorId);
+//			message = e.getMessage();
+//		}
+//		model.addAttribute("status", status);
+//		model.addAttribute("message", message);
+//		return getViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -287,6 +298,35 @@ public class DispatchProjectController
 	public void dispatchPayment(Integer id, Model model) {
 	}
 	
+	@PostMapping("{id}/{exportType}/info")
+	public void exportProjectInfoDoc(@PathVariable("id") Integer id, HttpServletRequest request, HttpServletResponse response, Model model) {
+		DispatchProject dispatch = service.selectByPrimaryKey(id);
+		if (dispatch != null) {
+			DispatchVO vo = new DispatchVO();
+			BeanUtils.copyProperties(dispatch, vo);
+			// 只有框架协议有外派单
+			if (!ProjectConstant.DispatchType.FRAMEWORK_AGREEMENT.equals(vo.getType()) || !checkPermission(vo, model, getDataName() + ":detail")) {
+				model.addAttribute("status", false);
+				model.addAttribute("message", "没有权限进行该操作！");
+				return;
+			}
+			
+			String dispatchName = (StringUtils.trimToEmpty(dispatch.getDispatchName()) + "项目").replace("项目项目", "项目");
+			dispatch.setDispatchName(dispatchName);
+			
+			String fileName = String.format("%s[安全服务项目]%s外派.doc", dispatch.getDispatchSeq(), dispatchName);
+			Map dataMap = (Map<String, Object>) JSON.toJSON(vo);
+			CommonRelatedData t = new CommonRelatedData();
+			t.setObjType("dispatch");
+			t.setObjId(dispatch.getId());
+			t.setType("dispatchWorkContent");
+			List<CommonRelatedData> workContentList = commonRelatedDataService.selectBySelective(t);
+			dataMap.put("workContentList", workContentList);
+			File doc = new DocUtil().createDoc(dataMap, "/template/", "安服框架协议外派单.ftl", fileName, request);
+			DownloadUtils.downFile(response, request, doc.getAbsolutePath(), doc.getName());
+		}
+	}
+	
 	/**
 	 * 根据服务商编号生成派单编号
 	 * @param facilitatorCode
@@ -328,21 +368,25 @@ public class DispatchProjectController
 			project.setProjectId(projectId);
 			project.setProjectIds(projectIds);
 			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-			Boolean allPerm = (Boolean) permission.get("all");
-			if (Boolean.TRUE.equals(allPerm)) {
-				isPermit = true;
-				permissionType = "all";
-			} else {
-				String perms = StringUtils.join(permissions, ",");
-				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete|list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = "edit";
-				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*:(list|detail)\\b,?.*")) {
-					isPermit = true;
-					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
-				}
-			}
-			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
+//			Boolean allPerm = (Boolean) permission.get("all");
+//			if (Boolean.TRUE.equals(allPerm)) {
+//				isPermit = true;
+//				permissionType = "all";
+//			} else {
+//				String perms = StringUtils.join(permissions, ",");
+//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete|list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = "edit";
+//				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*:(list|detail)\\b,?.*")) {
+//					isPermit = true;
+//					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
+//				}
+//			}
+//			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", new String[]{ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN}).checkPermit(permission, permissions);
+			isPermit = checkPermit.isPermit();
+			permissionType = checkPermit.getPermissionType();
+			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
 		} else {
 			isPermit = true;
 			permissionType = "all";

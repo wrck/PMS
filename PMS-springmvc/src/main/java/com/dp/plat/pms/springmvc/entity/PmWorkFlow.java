@@ -1,15 +1,17 @@
 package com.dp.plat.pms.springmvc.entity;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.dp.plat.activiti.entity.BaseVO;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class PmWorkFlow extends BaseVO {
-	
-    private static final long serialVersionUID = -4242852386637363245L;
 
+	private static final long serialVersionUID = -4242852386637363245L;
+	   
     private Integer id;
 
     // 流程定义key
@@ -20,7 +22,7 @@ public class PmWorkFlow extends BaseVO {
 
     // 申请时间
     @JsonSerialize(using = JsonSerializer.class)
-    private Date applyTime;	
+    private Date applyTime;
 
     // 开始时间
     @JsonSerialize(using = JsonSerializer.class)
@@ -70,6 +72,9 @@ public class PmWorkFlow extends BaseVO {
 
     // 组织ID
     private Integer orgId;
+
+    // 自定义信息
+    private Map customInfo;
 
     // 任务id
     private String taskId;
@@ -433,12 +438,34 @@ public class PmWorkFlow extends BaseVO {
         this.orgId = orgId;
     }
 
+    /**
+     * 获取自定义信息
+     *
+     * @return customInfo - 自定义信息
+     */
+    public Map getCustomInfo() {
+        return customInfo;
+    }
+
+    /**
+     * 设置自定义信息
+     *
+     * @param customInfo 自定义信息
+     */
+    public void setCustomInfo(Map customInfo) {
+        this.customInfo = customInfo;
+    }
+
     public Object getEntity() {
+    	if (entity == null) {
+    		return this.getCustomInfoByKey("entity");
+    	}
         return entity;
     }
 
     public void setEntity(Object entity) {
         this.entity = entity;
+        this.setCustomInfoByKey("entity", entity);
     }
 
     public String getTaskId() {
@@ -496,4 +523,21 @@ public class PmWorkFlow extends BaseVO {
     public void setCanWithdraw(boolean canWithdraw) {
         this.canWithdraw = canWithdraw;
     }
+    
+    public Object getCustomInfoByKey(String key) {
+		Map<?, ?> customInfo = getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.get(key);
+		}
+		return null;
+	}
+
+	public void setCustomInfoByKey(String key, Object value) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo == null) {
+			customInfo = new HashMap<>();
+			this.setCustomInfo(customInfo);
+		}
+		customInfo.put(key, value);
+	}
 }

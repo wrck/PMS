@@ -261,7 +261,14 @@
         updateTime = #{updateTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=JSON},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -288,7 +295,14 @@
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
       updateTime = #{updateTime,jdbcType=TIMESTAMP},
-      customInfo = #{customInfo,jdbcType=JSON}
+      <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
     where id = #{id,jdbcType=INTEGER}
   </update>
   <sql id="sql_where">

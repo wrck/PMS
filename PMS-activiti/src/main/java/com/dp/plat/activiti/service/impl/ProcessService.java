@@ -3,6 +3,7 @@ package com.dp.plat.activiti.service.impl;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,7 @@ import org.activiti.engine.history.HistoricTaskInstanceQuery;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.impl.RepositoryServiceImpl;
 import org.activiti.engine.impl.RuntimeServiceImpl;
+import org.activiti.engine.impl.TaskServiceImpl;
 import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.activiti.engine.impl.context.Context;
 import org.activiti.engine.impl.interceptor.Command;
@@ -59,13 +61,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.dp.plat.activiti.entity.BaseVO;
 import com.dp.plat.activiti.entity.CommentVO;
+import com.dp.plat.activiti.entity.Constants;
 import com.dp.plat.activiti.entity.ProcessInstanceEntity;
 import com.dp.plat.activiti.entity.Vacation;
 import com.dp.plat.activiti.process.cmd.DeleteActiveTaskCmd;
+import com.dp.plat.activiti.process.cmd.JumpTaskCmdService;
 import com.dp.plat.activiti.process.cmd.RevokeTaskCmd;
 import com.dp.plat.activiti.process.cmd.StartActivityCmd;
 import com.dp.plat.activiti.process.cmd.WithdrawTaskCmd;
-import com.dp.plat.activiti.service.IPerformanceService;
 import com.dp.plat.activiti.service.IProcessService;
 import com.dp.plat.activiti.service.IVacationService;
 import com.dp.plat.activiti.service.IWorkflowService;
@@ -121,9 +124,6 @@ public class ProcessService implements IProcessService {
 
 	@Autowired
 	private ProcessEngine processEngine;
-
-	@Autowired
-	private IPerformanceService performanceService;
 
 	/**
 	 * 查询代办任务
@@ -561,8 +561,8 @@ public class ProcessService implements IProcessService {
 	 */
 	@Override
 	@Transactional
-	public void complete(String taskId, String content, String userid, Map<String, Object> variables) throws Exception {
-		Task task = this.taskService.createTaskQuery().taskCandidateOrAssigned(userid).taskId(taskId).singleResult();
+	public void complete(String taskId, String content, String userId, Map<String, Object> variables) throws Exception {
+		Task task = this.taskService.createTaskQuery().taskCandidateOrAssigned(userId).taskId(taskId).singleResult();
 		if (task == null) {
 			throw new ActivitiObjectNotFoundException("任务不存在！");
 		}
@@ -571,7 +571,7 @@ public class ProcessService implements IProcessService {
 		ProcessInstance pi = this.runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId)
 				.singleResult();
 		// 评论人的id 一定要写，不然查看的时候会报错，没有用户
-		this.identityService.setAuthenticatedUserId(userid);
+		this.identityService.setAuthenticatedUserId(userId);
 
 		if (content != null) {
 			this.taskService.addComment(taskId, pi.getId(), content);
@@ -583,6 +583,7 @@ public class ProcessService implements IProcessService {
 			// return;
 		}
 		// 正常完成任务
+		taskService.setAssignee(taskId, userId);
 		this.taskService.complete(taskId, variables);
 	}
 
@@ -621,6 +622,37 @@ public class ProcessService implements IProcessService {
 	@Override
 	public void deleteProcess(String processInstanceId, String deleteReason) {
 		runtimeService.deleteProcessInstance(processInstanceId, deleteReason);
+	}
+	
+	/**
+	 * 终止正在运行的流程实例
+	 * 
+	 * @param processInstanceId
+	 * @param terminateReason
+	 */
+	@Override
+	public void terminateProcess(String processInstanceId, String terminateReason) {
+		Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
+		if (null != task) {
+			TaskServiceImpl taskServiceImpl = (TaskServiceImpl) taskService;
+			// 直接跳转到结束
+			String processDefinitionId = task.getProcessDefinitionId();
+			List<ActivityImpl> activityImpls = getAllActivities(processDefinitionId);
+			String eventActivityId = null;
+			for (ActivityImpl activity : activityImpls) {
+				String type = activity.getProperty("type").toString();
+	            if(type.equals("endEvent")){
+	            	eventActivityId = activity.getId();
+	                break;
+	            }
+			}
+			JumpTaskCmdService jumpTaskCmd = new JumpTaskCmdService(task.getExecutionId(), eventActivityId,
+					Constants.STATE_TERMINATE, terminateReason);
+			Map<String, Object> variables = new HashMap<>();
+			variables.put(Constants.APPROVE_RESULT, Constants.STATE_TERMINATE);
+			jumpTaskCmd.setVariables(variables);
+			taskServiceImpl.getCommandExecutor().execute(jumpTaskCmd);
+		}
 	}
 
 	/**
@@ -949,6 +981,18 @@ public class ProcessService implements IProcessService {
 		moveBack(taskEntity);
 	}
 
+	public List<ActivityImpl> getAllActivities(String processDefinitionId) {
+		ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processDefinitionId);
+//        ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) definition;
+//        ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
+//                .getDeployedProcessDefinition(definition.getId());
+        
+        //获取所有的activity
+        List<ActivityImpl> activities = processDefinition.getActivities();
+
+        return activities;
+    }
+	
 	@Override
 	public void addProcessByDynamic() throws Exception {
 		// this.repositoryService.deleteDeployment("5003", true);

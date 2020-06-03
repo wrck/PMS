@@ -49,7 +49,7 @@ public class ProjectVO extends ProjectHeader {
 	public void setProjectIds(String projectIds) {
 		this.projectIds = projectIds;
 	}
-
+	
 	public String getSmsProjectCode() {
 		return (String) getCustomInfoByKey("smsProjectCode");
 	}

@@ -27,6 +27,17 @@
 			<artifactId>MyBatisGenerator</artifactId>
 			<version>0.0.1-RELEASE</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>freemarker</artifactId>
+					<groupId>org.freemarker</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
             <groupId>com.dp.plat</groupId>
@@ -79,6 +90,10 @@
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
 					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>freemarker</artifactId>
+					<groupId>org.freemarker</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>

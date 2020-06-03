@@ -33,7 +33,7 @@ public class DispatchVO extends DispatchProject {
 	@JsonSerialize(using = JsonSerializer.class)
 	private Double collectedRatio;
 	@JsonSerialize(using = JsonSerializer.class)
-	private Double settleRatio;
+	private Double settledRatio;
 
 	public Integer getProjectId() {
 		return projectId;
@@ -131,12 +131,12 @@ public class DispatchVO extends DispatchProject {
 		this.collectedRatio = collectedRatio;
 	}
 
-	public Double getSettleRatio() {
-		return settleRatio;
+	public Double getSettledRatio() {
+		return settledRatio;
 	}
 
-	public void setSettleRatio(Double settleRatio) {
-		this.settleRatio = settleRatio;
+	public void setSettledRatio(Double settledRatio) {
+		this.settledRatio = settledRatio;
 	}
 
 	public String getCollectContractNos() {
@@ -165,7 +165,7 @@ public class DispatchVO extends DispatchProject {
 	}
 
 	@Override
-	public void setCustomInfo(Map<?, ?> customInfo) {
+	public void setCustomInfo(Map customInfo) {
 		Map info = this.getCustomInfo();
 		if (info != null && customInfo != null) {
 			info.putAll(customInfo);

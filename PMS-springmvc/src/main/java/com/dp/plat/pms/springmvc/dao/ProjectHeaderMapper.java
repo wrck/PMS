@@ -22,7 +22,7 @@ public interface ProjectHeaderMapper extends AbstractBaseMapper<ProjectHeader> {
 
     Map<String, Object> checkPermission(@Param("model") ProjectVO project, @Param("permissionTypes") String permissionTypes, @Param("user") Principal currentPrincipal);
 
-	ProjectVO selectVOByProjectId(Integer projectId);
+	ProjectVO selectVOByProjectId(Object projectId);
 
-	ProjectVO queryProjectStateByProjectId(Integer projectId);
+	ProjectVO queryProjectStateByProjectId(Object projectId);
 }

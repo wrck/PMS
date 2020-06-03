@@ -50,7 +50,7 @@ function initTabData(config, refresh, navTab) {
 	}
 	var type = config.type;
 	var drawType =  config.drawType || "json";
-	var url = config.url;
+	var url = (navTab || {}).url || config.url;
 	var params = config.params;
 	var timestamp = config.timestamp || "";
 	var navTabId = type + "Tab" + timestamp;

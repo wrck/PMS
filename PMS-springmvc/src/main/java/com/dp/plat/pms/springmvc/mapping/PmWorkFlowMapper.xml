@@ -22,11 +22,12 @@
     <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
     <result column="orgId" jdbcType="INTEGER" property="orgId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
   </resultMap>
   <sql id="Base_Column_List">
     id, processKey, taskKey, applyTime, beginTime, endTime, dueTime, procInstId, message, 
     status, userId, objType, objId, dataType, dataId, createBy, createTime, updateBy, 
-    updateTime, orgId
+    updateTime, orgId, customInfo
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -48,14 +49,14 @@
       userId, objType, objId, 
       dataType, dataId, createBy, 
       createTime, updateBy, updateTime, 
-      orgId)
+      orgId, customInfo)
     values (#{processKey,jdbcType=VARCHAR}, #{taskKey,jdbcType=VARCHAR}, #{applyTime,jdbcType=TIMESTAMP}, 
       #{beginTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{dueTime,jdbcType=TIMESTAMP}, 
       #{procInstId,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, 
       #{userId,jdbcType=INTEGER}, #{objType,jdbcType=VARCHAR}, #{objId,jdbcType=INTEGER}, 
       #{dataType,jdbcType=VARCHAR}, #{dataId,jdbcType=INTEGER}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
-      #{orgId,jdbcType=INTEGER})
+      #{orgId,jdbcType=INTEGER}, #{customInfo,jdbcType=JSON})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
@@ -120,6 +121,9 @@
       <if test="orgId != null">
         orgId,
       </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="processKey != null">
@@ -178,6 +182,9 @@
       </if>
       <if test="orgId != null">
         #{orgId,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
       </if>
     </trim>
   </insert>
@@ -241,6 +248,16 @@
       <if test="orgId != null">
         orgId = #{orgId,jdbcType=INTEGER},
       </if>
+      <if test="customInfo != null">
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
@@ -264,7 +281,15 @@
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
       updateTime = #{updateTime,jdbcType=TIMESTAMP},
-      orgId = #{orgId,jdbcType=INTEGER}
+      orgId = #{orgId,jdbcType=INTEGER},
+      <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+      <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
     where id = #{id,jdbcType=INTEGER}
   </update>
   <sql id="sql_where">
@@ -329,6 +354,12 @@
 			</if>
 			<if test="orgId != null">
 				wf.orgId = #{orgId, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
 			</if>
 		</trim>
 	</where>
@@ -396,6 +427,12 @@
 				</if>
 				<if test="model.orgId != null">
 					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -489,6 +526,12 @@
 			<if test="orgId != null">
 				wf.orgId = #{orgId, jdbcType=INTEGER} AND
 			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
+			</if>
 		</trim>
 	</where>
   </select>
@@ -555,6 +598,12 @@
 			</if>
 			<if test="orgId != null">
 				wf.orgId = #{orgId, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
 			</if>
 		</trim>
 	</where>
@@ -623,6 +672,12 @@
 				</if>
 				<if test="model.orgId != null">
 					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -706,6 +761,12 @@
 				<if test="model.orgId != null">
 					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
 				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
+				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -726,7 +787,7 @@
   
   <select id="selectProcInstIdsBySelective" parameterType="com.dp.plat.pms.springmvc.vo.PmWorkFlowVO" resultType="String">
     select wf.procInstId from pm_workflow wf
-    <include refid="sql_where"></include>
+    <include refid="sql_where" />
   </select>
   
   <delete id="deleteByProcInstId" parameterType="string">

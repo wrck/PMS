@@ -35,6 +35,7 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
+import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
 
 public abstract class AbstractController<Service extends IAbstractBaseService<T>, T, V> extends BaseController {
 
@@ -54,6 +55,9 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 
 	@Autowired
 	protected ICommonRelatedDataService commonRelatedDataService;
+	
+	@Autowired
+	protected IPmWorkFlowService pmWorkFlowService;
 
 	@PostConstruct
 	private void init() {
@@ -76,6 +80,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		model.addAttribute("isModals", servletPath.contains("/modals/"));
 		
 		//model.addAttribute("permissions", UserContext.getCurrentPrincipal().getPermissions());
+		model.addAttribute("roles", UserContext.getCurrentPrincipal().getRoles());
 	}
 
 	@RequestMapping
@@ -202,7 +207,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, V v, Model model) {
-		if (!checkPermission(v, model, getDataName() + ":update")) {
+		if (!checkPermission(v, model, getDataName() + ":edit")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
@@ -225,9 +230,10 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
-		if (!checkPermission(newInstance(getVClass(), keyword, id), model, getDataName() + ":update")) {
+		if (!checkPermission(newInstance(getVClass(), keyword, id), model, getDataName() + ":delete")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
+			return;
 		}
 		Boolean status = true;
 		String message = null;

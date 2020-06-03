@@ -33,8 +33,8 @@
     <result column="projectStartTime" jdbcType="TIMESTAMP" property="projectStartTime" />
     <result column="projectEndTime" jdbcType="TIMESTAMP" property="projectEndTime" />
     <result column="projectRefreshTime" jdbcType="TIMESTAMP" property="projectRefreshTime" />
-    <result column="customInfo" jdbcType="OTHER" property="customInfo" />
-    <result column="customConfig" jdbcType="OTHER" property="customConfig" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="customConfig" jdbcType="JSON" property="customConfig" />
   </resultMap>
   <sql id="Base_Column_List">
     id, projectCode, projectName, projectState, officeCode, customerCode, customerName, 
@@ -80,7 +80,7 @@
       #{compId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, 
       #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{effectiveFrom,jdbcType=TIMESTAMP}, 
       #{effectiveTo,jdbcType=TIMESTAMP}, #{projectStartTime,jdbcType=TIMESTAMP}, #{projectEndTime,jdbcType=TIMESTAMP}, 
-      #{projectRefreshTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=OTHER}, #{customConfig,jdbcType=OTHER}
+      #{projectRefreshTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=JSON}, #{customConfig,jdbcType=JSON}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.Project" keyProperty="id" useGeneratedKeys="true">
@@ -284,10 +284,10 @@
         #{projectRefreshTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        #{customInfo,jdbcType=OTHER},
+        #{customInfo,jdbcType=JSON},
       </if>
       <if test="customConfig != null">
-        #{customConfig,jdbcType=OTHER},
+        #{customConfig,jdbcType=JSON},
       </if>
     </trim>
   </insert>
@@ -385,10 +385,10 @@
         projectRefreshTime = #{projectRefreshTime,jdbcType=TIMESTAMP},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=OTHER},
+        customInfo = #{customInfo,jdbcType=JSON},
       </if>
       <if test="customConfig != null">
-        customConfig = #{customConfig,jdbcType=OTHER},
+        customConfig = #{customConfig,jdbcType=JSON},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -425,8 +425,8 @@
       projectStartTime = #{projectStartTime,jdbcType=TIMESTAMP},
       projectEndTime = #{projectEndTime,jdbcType=TIMESTAMP},
       projectRefreshTime = #{projectRefreshTime,jdbcType=TIMESTAMP},
-      customInfo = #{customInfo,jdbcType=OTHER},
-      customConfig = #{customConfig,jdbcType=OTHER}
+      customInfo = #{customInfo,jdbcType=JSON},
+      customConfig = #{customConfig,jdbcType=JSON}
     where id = #{id,jdbcType=INTEGER}
   </update>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.Project" resultMap="BaseResultMap">
@@ -527,10 +527,10 @@
 				projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=OTHER} AND
+				customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
 			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=OTHER} AND
+				customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 		</trim>
 	</where>
@@ -633,10 +633,10 @@
 				projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
 			</if>
 			<if test="customInfo != null and '' != customInfo">
-				customInfo = #{customInfo, jdbcType=OTHER} AND
+				customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
 			<if test="customConfig != null and '' != customConfig">
-				customConfig = #{customConfig, jdbcType=OTHER} AND
+				customConfig = #{customConfig, jdbcType=JSON} AND
 			</if>
 		</trim>
 	</where>
@@ -740,10 +740,10 @@
 					projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=OTHER} AND
+					customConfig = #{model.customConfig, jdbcType=JSON} AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -883,10 +883,10 @@
 					projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null and '' != model.customInfo">
-					customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
 				<if test="model.customConfig != null and '' != model.customConfig">
-					customConfig = #{model.customConfig, jdbcType=OTHER} AND
+					customConfig = #{model.customConfig, jdbcType=JSON} AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">

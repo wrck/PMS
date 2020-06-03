@@ -6,6 +6,7 @@ package com.dp.plat.core.service.impl;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,6 +38,11 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 		try {
 			Method method = objClass.getMethod("setCreateBy", String.class);
 			method.invoke(record, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setCustomInfoByKey", String.class, Object.class);
+			method.invoke(record, "createName", UserContext.getCurrentPrincipal().getRealName());
 		} catch (Exception e) {
 		}
 		try {
@@ -83,6 +89,11 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 		try {
 			Method method = objClass.getMethod("setCreateBy", String.class);
 			method.invoke(record, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setCustomInfoByKey", String.class, Object.class);
+			method.invoke(record, "createName", UserContext.getCurrentPrincipal().getRealName());
 		} catch (Exception e) {
 		}
 		try {

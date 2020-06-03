@@ -437,7 +437,10 @@
   
   <select id="selectProjectAssetLeakBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectAssetLeakVO">
     select 
-	    alr.id, l.id as leakId, l.*, ph.projectId, ia.id as assetId, ia.assetName, ph.projectName 
+	    alr.id, l.id as leakId,
+	    JSON_SET(IFNULL(l.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+	    l.*, ph.projectId, ia.id as assetId, ia.assetName, ph.projectName<!-- , 
+	    bd.basicDataName as `customInfo.statusName`, bd1.basicDataName as `customInfo.trackStatusName`  -->
 	from
 	    `af_industry_asset_leak_relation` alr 
 	    left join `af_industry_leak` l 
@@ -451,10 +454,16 @@
 	    left join af_industry_asset_project_relation apr 
 	        on apr.assetId = ia.id 
 	        and ia.disabled = false 
-	    left join `pm_project_header` ph 
+	    left join `pm_project` ph 
 	        on ph.`projectId` = apr.`projectId` 
 	        and apr.`disabled` = false 
 	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+	    left join `fnd_basic_data` bd 
+	        on l.`status` = bd.`basicDataId` 
+	        and bd.`dataTypeCode` = 'processStatus'
+	    left join `fnd_basic_data` bd2 
+	        on l.`trackStatus` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'trackStatus' 
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -600,7 +609,7 @@
 	    left join af_industry_asset_project_relation apr 
 	        on apr.assetId = ia.id 
 	        and ia.disabled = false 
-	    left join `pm_project_header` ph 
+	    left join `pm_project` ph 
 	        on ph.`projectId` = apr.`projectId` 
 	        and apr.`disabled` = false 
 	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 

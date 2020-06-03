@@ -32,7 +32,10 @@
 		</property>
 		<property name="typeHandlers">
 			<array>
-				<bean class="com.dp.plat.core.handlers.FastjsonTypeHandler" ></bean>
+				<bean id="jsonTypeHandler" class="com.dp.plat.core.handlers.FastjsonTypeHandler" ></bean>
+				<!-- <bean class="com.dp.plat.core.handlers.Object2StringTypeHandler" ></bean> -->
+				
+				<!-- <bean class="com.dp.plat.core.handlers.JacksonTypeHandler" ></bean> -->
 			</array>
 		</property>
 	</bean>

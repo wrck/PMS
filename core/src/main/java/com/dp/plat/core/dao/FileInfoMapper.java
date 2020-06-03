@@ -16,7 +16,9 @@ public interface FileInfoMapper {
 	FileInfo selectFileInfoById(@Param("fileId")Integer fileId);
 
 	List<FileInfo> selectFileInfoByIds(@Param("ids")List<String> ids);
-
+	
+	List<FileInfo> selectFileInfoByIdsAndType(@Param("ids")List<String> ids, @Param("typeId") Integer typeId);
+	
 	void insertdownlog(@Param("fileIds")String fileIds,@Param("ip") String remoteAddr);
 
 }

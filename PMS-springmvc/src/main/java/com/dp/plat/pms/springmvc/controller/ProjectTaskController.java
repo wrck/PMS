@@ -35,11 +35,13 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
+import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
+import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
 
@@ -61,13 +63,47 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		this.setKeyword("taskId");
 		this.setViewNameSpace("project/task/");
 	}
-
+	
 	@Override
-	@PutMapping(value = "{id}")
-	public String update(Integer id, TaskVO v, Model model) {
+	@PostMapping(value = "{detail}")
+	public String create(TaskVO v, Model model) {
 		if (!checkPermission(v, model, "projectTask:edit")) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
+		Boolean status = true;
+		String message = null;
+		try {
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
+			v.setCustomInfoByKey("project", project);
+			service.insertSelective(v);
+			model.addAttribute("targetName", this.getTargetName(v.getClass()));
+		} catch (Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
+		return getRealViewNameSpace() + "detail";
+//		return super.create(v, model);
+	}
+
+	@Override
+	@PutMapping(value = "{id}")
+	public String update(@PathVariable("id") Integer id, TaskVO v, Model model) {
+		if (!checkPermission(v, model, "projectTask:edit")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		
+		// 终止正在进行中的任务
+		PmWorkFlowVO workflow = new PmWorkFlowVO();
+		workflow.setDataId(v.getTaskId());
+		workflow.setDataType("projectTask");
+		workflow.setObjId(v.getProjectId());
+		workflow.setObjType("project");
+		workflow.setStatus(PmWorkFlowVO.PENDING);
+		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 
 		Integer progress = v.getProgress() == null ? 0 : v.getProgress();
 		if (progress < 100) {
@@ -75,22 +111,36 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 		} else if (progress == 100) {
 			v.setStatus("100");// 已完成，待审核
 		}
-		String view = super.update(id, v, model);
-
-		// 添加进度记录
-		ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
-		CommonRelatedDataVO relatedData = new CommonRelatedDataVO(getViewModel(), v.getTaskId(),
-				getViewModel() + "Log");
-
-		relatedData.setCustomInfoByKey("projectName", project.getProjectName());
-		relatedData.setCustomInfoByKey("customerName", project.getColumn003());
-//		relatedData.setCustomInfoByKey("taskName", v.getTaskName());
-//		relatedData.setCustomInfoByKey("progress", v.getProgress());
-//		relatedData.setCustomInfoByKey("progressDesc", v.getProgressDesc());
-//		relatedData.setCustomInfoByKey("remark", v.getRemark());
-		relatedData.setCustomInfoByKey("task", v);
-		commonRelatedDataService.insertSelective(relatedData);
-		return view;
+//		String view = super.update(id, v, model);
+		
+		Boolean status = true;
+		String message = null;
+		try {
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
+			v.setCustomInfoByKey("project", project);
+			service.updateByPrimaryKeySelective(v);
+			model.addAttribute("targetName", this.getTargetName(v.getClass()));
+		
+			// 添加进度记录
+			CommonRelatedDataVO relatedData = new CommonRelatedDataVO(getViewModel(), v.getTaskId(), getViewModel() + "Log");
+	
+			relatedData.setCustomInfoByKey("projectName", project.getProjectName());
+			relatedData.setCustomInfoByKey("customerName", project.getColumn003());
+	//		relatedData.setCustomInfoByKey("taskName", v.getTaskName());
+	//		relatedData.setCustomInfoByKey("progress", v.getProgress());
+	//		relatedData.setCustomInfoByKey("progressDesc", v.getProgressDesc());
+	//		relatedData.setCustomInfoByKey("remark", v.getRemark());
+			relatedData.setCustomInfoByKey("task", v);
+			commonRelatedDataService.insertSelective(relatedData);
+		} catch (Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -99,10 +149,19 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 			return;
 		}
 
-		this.setKeyword("taskId");
 		Boolean status = true;
 		String message = null;
 		try {
+			// 终止正在进行中的任务
+			ProjectTask v = service.selectByPrimaryKey(id);
+			PmWorkFlowVO workflow = new PmWorkFlowVO();
+			workflow.setDataId(v.getTaskId());
+			workflow.setDataType("projectTask");
+			workflow.setObjId(v.getProjectId());
+			workflow.setObjType("project");
+			workflow.setStatus(PmWorkFlowVO.PENDING);
+			pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
+			
 			ProjectTask member = new ProjectTask();
 			member.setTaskId(id);
 			member.setEffectiveTo(new Date());

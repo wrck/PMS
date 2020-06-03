@@ -381,6 +381,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		ProjectMember member = new ProjectMember();
 		BeanUtils.copyProperties(project, member, new String[] {"id", "effectiveFrom", "effectiveTo"});
 		member.setEffectiveFrom(new Date());
+		String createBy = StringUtils.defaultIfBlank(project.getUpdateBy(), getLoginName());
+		member.setCreateBy(createBy);
+		member.setCreateTime(new Date());
 		projectDao.insertProjectMember(member);
 		//projectDao.insertProjectMember(project);
 	}

@@ -278,7 +278,14 @@
         month = #{month,jdbcType=INTEGER},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=OTHER},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
       <if test="createTime != null">
         createTime = #{createTime,jdbcType=TIMESTAMP},
@@ -318,7 +325,14 @@
       year = #{year,jdbcType=INTEGER},
       quarter = #{quarter,jdbcType=INTEGER},
       month = #{month,jdbcType=INTEGER},
-      customInfo = #{customInfo,jdbcType=OTHER},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+       <!--  customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       createTime = #{createTime,jdbcType=TIMESTAMP},
       createBy = #{createBy,jdbcType=VARCHAR},
       updateTime = #{updateTime,jdbcType=TIMESTAMP},
@@ -712,5 +726,219 @@
 			</if>
 		</trim>
 	</where>
+  </select>
+  
+  <sql id="sql_model_where">
+  	<if test="model != null ">
+		<if test="model.id != null and '' != model.id">
+			s.id = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.settleSeq != null and '' != model.settleSeq">
+			s.settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dispatchId != null and '' != model.dispatchId">
+			s.dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
+			s.dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.progressDesc != null and '' != model.progressDesc">
+			s.progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.progressRatio != null and '' != model.progressRatio">
+			s.progressRatio = #{model.progressRatio, jdbcType=REAL} AND
+		</if>
+		<if test="model.acceptanceDesc != null and '' != model.acceptanceDesc">
+			s.acceptanceDesc = #{model.acceptanceDesc, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.acceptanceRatio != null and '' != model.acceptanceRatio">
+			s.acceptanceRatio = #{model.acceptanceRatio, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.ratio != null and '' != model.ratio">
+			s.ratio = #{model.ratio, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.amount != null and '' != model.amount">
+			s.amount = #{model.amount, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.memo != null and '' != model.memo">
+			s.memo = #{model.memo, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.confirmTime != null and '' != model.confirmTime">
+			s.confirmTime = #{model.confirmTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.paymentTime != null and '' != model.paymentTime">
+			s.paymentTime = #{model.paymentTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.remark != null and '' != model.remark">
+			s.remark = #{model.remark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.state != null and '' != model.state">
+			s.state = #{model.state, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.sseId != null and '' != model.sseId">
+			s.sseId = #{model.sseId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.year != null and '' != model.year">
+			s.year = #{model.year, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.quarter != null and '' != model.quarter">
+			s.quarter = #{model.quarter, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.month != null and '' != model.month">
+			s.month = #{model.month, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.customInfo != null and '' != model.customInfo">
+			s.customInfo = #{model.customInfo, jdbcType=OTHER} AND
+		</if>
+		<if test="model.createTime != null">
+			s.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			s.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			s.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			s.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.disabled != null">
+			s.disabled = #{model.disabled, jdbcType=BIT} AND
+		</if>
+		<if test="model.projectId != null">
+			find_in_set(#{model.projectId}, h.projectIds)
+		</if>
+	</if>
+  </sql>
+  <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
+  	select 
+	    h.id as `dispatch.id`, h.`dispatchName` as `dispatch.dispatchName`, h.`dispatchNo` as `dispatch.dispatchNo`, 
+	    h.`dispatchSeq` as `dispatch.dispatchSeq`, h.`contractNos` as `dispatch.contractNos`, 
+	    h.`projectIds` as `dispatch.projectIds`, h.`type` as `dispatch.type`, h.`state` as `dispatch.state`, 
+	    h.`customInfo` as `dispatch.customInfo`, h.id as `dispatchId`, h.dispatchSeq as `dispatchSeq`, 
+	    ds.settledAmount, h.dispatchAmount as `dispatch.dispatchAmount`,
+	    sum(sc.`collected_money_amount`) as collectedAmount, 
+        sum(sc.`delivered_money_amount`) as deliveredAmount, 
+        sum(sc.`contract_money_amount`) as contractAmount,
+	    <!-- ROUND(ds.settledAmount / h.dispatchAmount, 4) as settledRatio, 
+	    ROUND(h.collectedAmount / h.deliveredAmount, 4) as collectedRatio,  -->
+	    ROUND(ds.settledAmount / h.dispatchAmount, 4) as settledRatio, 
+    	ROUND(sum(sc.`collected_money_amount`) / sum(sc.`delivered_money_amount`), 4) as collectedRatio, 
+	    s.* 
+	from
+	    <!-- (select 
+	        h.*, 
+	        sum(sc.`collected_money_amount`) as collectedAmount, 
+	        sum(sc.`delivered_money_amount`) as deliveredAmount, 
+	        sum(sc.`contract_money_amount`) as contractAmount 
+	    from
+	        pm_dispatch_project_header h 
+	        left join `sms_ofst_contract_head_sap` sc 
+	            on FIND_IN_SET(
+	                sc.`contract_num`, h.`contractNos`
+	            ) 
+	    <where>
+			<if test="model != null and model.dispatched != null"> h.`dispatched` = #{model.dispatched} </if>
+	    </where>
+	    group by h.id) h  -->
+	    pm_dispatch_project_header h 
+	    left join `pm_dispatch_project_settlement` s 
+	        on h.`id` = s.`dispatchId` 
+	        and s.`disabled` = false 
+        left join `sms_ofst_contract_head_sap` sc 
+            on FIND_IN_SET(sc.`contract_num`, h.`contractNos`) 
+	    left join 
+	        (select 
+	            dispatchId, sum(replace(ds.`amount`, ",", "")) as settledAmount 
+	        from
+	            `pm_dispatch_project_settlement` ds 
+	        where ds.`disabled` = false 
+	        group by ds.`dispatchId`) ds 
+	        on ds.`dispatchId` = h.`id` 
+	    left join fnd_department d 
+	        on h.`officeCode` = d.`departmentNum` 
+	    left join `fnd_basic_data` bd 
+	        on s.`state` = bd.`basicDataId` 
+	        and bd.`dataTypeCode` = 'settlementState' 
+	    left join `fnd_basic_data` bd1 
+	        on h.`state` = bd1.`basicDataId` 
+	        and bd1.`dataTypeCode` = 'dispatchState' 
+	    left join `fnd_basic_data` bd2 
+	        on h.`type` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'dispatchType' 
+	<where>
+		<trim prefixOverrides="and | or" suffixOverrides="and | or">
+			h.disabled = false AND
+			<if test="model != null">
+				<if test="model.dispatched != null"> h.`dispatched` = #{model.dispatched} AND </if>
+			</if>
+			<include refid="sql_model_where"></include>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+					s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+					s.ratio like CONCAT("%", #{fuzzy}, "%") or
+					s.amount like CONCAT("%", #{fuzzy}, "%") or
+					s.memo like CONCAT("%", #{fuzzy}, "%") or
+					s.remark like CONCAT("%", #{fuzzy}, "%") or
+					s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+					s.createBy like CONCAT("%", #{fuzzy}, "%") or
+					s.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	group by h.id, s.`id`
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+		order by settledRatio, s.`id` desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  
+  <select id="countSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	select 
+	    count(*) 
+	from
+	    (
+	  	select 1 
+	  	from
+	  		pm_dispatch_project_header h 
+		    left join `pm_dispatch_project_settlement` s 
+		        on h.`id` = s.`dispatchId` 
+		        and s.disabled = false
+		<where>
+			<trim prefixOverrides="and | or" suffixOverrides="and | or">
+				h.disabled = false AND
+				<if test="model != null">
+					<if test="model.dispatched != null"> h.`dispatched` = #{model.dispatched} AND </if>
+				</if>
+				<include refid="sql_model_where"></include>
+				<if test="fuzzySearch == true and fuzzy != ''">
+					(
+						s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+						s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+						s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+						s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+						s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+						s.ratio like CONCAT("%", #{fuzzy}, "%") or
+						s.amount like CONCAT("%", #{fuzzy}, "%") or
+						s.memo like CONCAT("%", #{fuzzy}, "%") or
+						s.remark like CONCAT("%", #{fuzzy}, "%") or
+						s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+						s.createBy like CONCAT("%", #{fuzzy}, "%") or
+						s.updateBy like CONCAT("%", #{fuzzy}, "%")
+					)
+				</if>
+			</trim>
+		</where>
+		group by h.id, s.`id`) t
   </select>
 </mapper>

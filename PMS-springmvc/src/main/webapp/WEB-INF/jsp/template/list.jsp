@@ -87,7 +87,7 @@
         var urlNamespace = "${urlNamespace}";
         var model = "${model}";
         var winId= model + "Win";
-        var tableId = model + "table";
+        var tableId = model + "Table";
         $(function() {
         	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);

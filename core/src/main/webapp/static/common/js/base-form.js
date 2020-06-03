@@ -370,12 +370,15 @@
 					// Validate the date when user change it
 					var field = $(this).attr('name');
 					// Get the bootstrapValidator instance
-					form.data('bootstrapValidator')
-					// Mark the field as not validated, so it'll be re-validated when the
-					// user change date
-						.updateStatus(field, 'NOT_VALIDATED', null)
-						// Validate the field
-						.validateField(field);
+					var validator = form.data('bootstrapValidator');
+                    if (validator && validator.options.fields[field]) {
+						form.data('bootstrapValidator')
+						// Mark the field as not validated, so it'll be re-validated when the
+						// user change date
+							.updateStatus(field, 'NOT_VALIDATED', null)
+							// Validate the field
+							.validateField(field);
+                    }
 				}).parent().css("padding-left", "15px").css("padding-right", "15px")
 			});
 		}
@@ -681,6 +684,7 @@
         var src_data = sel.data("src-data") || "data";
         var values = sel.data("selected");
         var builder = function (data) {
+        	values = values || sel.data("selected");
             if (is_blank) {
                 if (blank_value === undefined && !blank_text)
                     sel.append($('<option></option>'));
@@ -767,11 +771,14 @@
 			}).on('ifChanged', function (e) {
 				// Get the field name
 				var field = $(this).attr('name');
-				form
-				// Mark the field as not validated
-					.bootstrapValidator('updateStatus', field, 'NOT_VALIDATED')
-					// Validate field
-					.bootstrapValidator('validateField', field);
+				var validator = form.data('bootstrapValidator');
+                if (validator && validator.options.fields[field]) {
+					form
+					// Mark the field as not validated
+						.bootstrapValidator('updateStatus', field, 'NOT_VALIDATED')
+						// Validate field
+						.bootstrapValidator('validateField', field);
+                }
 			});
 		}
 		// datepicker
@@ -783,13 +790,16 @@
 			}).on('change', function (e) {
 				// Validate the date when user change it
 				var field = $(this).attr('name');
-				// Get the bootstrapValidator instance
-				form.data('bootstrapValidator')
-				// Mark the field as not validated, so it'll be re-validated when the
-				// user change date
-					.updateStatus(field, 'NOT_VALIDATED', null)
-					// Validate the field
-					.validateField(field);
+				var validator = form.data('bootstrapValidator');
+                if (validator && validator.options.fields[field]) {
+					// Get the bootstrapValidator instance
+					form.data('bootstrapValidator')
+					// Mark the field as not validated, so it'll be re-validated when the
+					// user change date
+						.updateStatus(field, 'NOT_VALIDATED', null)
+						// Validate the field
+						.validateField(field);
+                }
 			}).parent().css("padding-left", "15px").css("padding-right", "15px");
 		}
 		// datetimepicker
@@ -891,13 +901,16 @@
 				}).on('change', function (e) {
 					// Validate the date when user change it
 					var field = $(this).attr('name');
-					// Get the bootstrapValidator instance
-					form.data('bootstrapValidator')
-					// Mark the field as not validated, so it'll be re-validated when the
-					// user change date
-						.updateStatus(field, 'NOT_VALIDATED', null)
-						// Validate the field
-						.validateField(field);
+					var validator = form.data('bootstrapValidator');
+                    if (validator && validator.options.fields[field]) {
+						// Get the bootstrapValidator instance
+						form.data('bootstrapValidator')
+						// Mark the field as not validated, so it'll be re-validated when the
+						// user change date
+							.updateStatus(field, 'NOT_VALIDATED', null)
+							// Validate the field
+							.validateField(field);
+                    }
 				}).parent().css("padding-left", "15px").css("padding-right", "15px")
 			});
 		}
@@ -1007,7 +1020,10 @@
 					//icheck
 					if($(elem).data("flag")=="icheck"){
 						$(elem).iCheck( elem.value == value?'check':'uncheck');
-						form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+						var validator = form.data('bootstrapValidator');
+	                    if (validator && validator.options.fields[field]) {
+	                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+	                    }
 					}else{
 						//原生radio
 						elem.checked = elem.value == value;
@@ -1016,7 +1032,10 @@
 					//icheck
 					if($(elem).data("flag")=="icheck"){
 						$(elem).iCheck($.inArray(elem.value, value.split(',')) > -1?'check':'uncheck');
-						form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+						var validator = form.data('bootstrapValidator');
+	                    if (validator && validator.options.fields[field]) {
+	                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+	                    }
 					}else{
 						//原生checkbox
 						elem.checked = $.inArray(elem.value, value.split(',')) > -1 ? true : false;
@@ -1116,7 +1135,10 @@
 				//icheck
 				if($(elem).data("flag")=="icheck"){
 					$(elem).iCheck( elem.value == value?'check':'uncheck');
-					form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+					var validator = form.data('bootstrapValidator');
+                    if (validator && validator.options.fields[field]) {
+                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+                    }
 				}else{
 					//原生radio
 					elem.checked = elem.value == value;
@@ -1125,7 +1147,10 @@
 				//icheck
 				if($(elem).data("flag")=="icheck"){
 					$(elem).iCheck($.inArray(elem.value, value.split(',')) > -1?'check':'uncheck');
-					form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+					var validator = form.data('bootstrapValidator');
+                    if (validator && validator.options.fields[field]) {
+                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
+                    }
 				}else{
 					//原生checkbox
 					elem.checked = $.inArray(elem.value, value.split(',')) > -1 ? true : false;

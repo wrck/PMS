@@ -128,17 +128,21 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 	@Override
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
 	public String findOne(@PathVariable("id") Integer id, Model model) {
+		if (!checkPermission(null, model, getDataName() + ":detail")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (HttpContext.isJSON()) {
 			PmWorkFlow v = pmWorkFlowService.selectByPrimaryKey(id);
 			if (v != null) {
-				String currentUser = UserContext.getCurrentPrincipal().getUserInfoId().toString();
+				Principal currentUser = UserContext.getCurrentPrincipal();
+				String assignee = currentUser.getUserInfoId().toString();
 				String taskId = (String) HttpContext.getCurrentRequest().getParameter("taskId");
 				String processInstanceId = v.getProcInstId();
 				TaskQuery taskQuery = taskService.createTaskQuery().processInstanceId(processInstanceId);
-				if (StringUtils.isNotBlank(taskId)) {
-					taskQuery.taskId(taskId);
-				}
-				TaskInfo task = taskQuery.taskCandidateOrAssigned(currentUser).active().singleResult();
+//				if (StringUtils.isNotBlank(taskId)) {
+//					taskQuery.taskId(taskId);
+//				}
+				TaskInfo task = taskQuery.taskCandidateOrAssigned(assignee).active().singleResult();
 				Boolean hasTask = task != null;
 				if (task == null) {
 					HistoricTaskInstanceQuery historicTaskInstanceQuery = historyService
@@ -146,40 +150,48 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 					if (StringUtils.isNotBlank(taskId)) {
 						historicTaskInstanceQuery.taskId(taskId);
 					}
-					List<HistoricTaskInstance> list = historicTaskInstanceQuery.taskAssignee(currentUser).list();
+					List<HistoricTaskInstance> list = historicTaskInstanceQuery.or().taskAssignee(assignee).taskCandidateUser(assignee)/*.taskCandidateGroupIn(new ArrayList<String>(currentUser.getRoles()))*/.endOr().list();
 					if (!list.isEmpty()) {
-						task = list.get(0);
+						task = list.get(Math.max(0, list.size() - 1));
 					}
+				} else {
+					taskId = task.getId();
 				}
 				if (task == null) {
 					return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
 				}
 
-				PmWorkFlow pmWorkFlow = null;
 				v.setTaskId(task.getId());
 				v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
 				v.setTaskKey(task.getTaskDefinitionKey());
 				v.setProcInstId(task.getProcessInstanceId());
 				v.setProcessKey(task.getProcessDefinitionId());
 				v.setHasTask(hasTask);
-				if (hasTask) {
-					pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
-				} else {
-					pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
-							.processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
-				}
-				Object entity = pmWorkFlow.getEntity();
+				
 				String dataType = v.getDataType();
-				List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
-				for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
-					DataFieldRelation field = (DataFieldRelation) iterator.next();
-					field.setReadonly(true);
-					field.setDisabled(true);
+				Boolean hideEntity = Boolean.valueOf(HttpContext.getCurrentRequest().getParameter("hideEntity"));
+				if (!hideEntity) {
+					PmWorkFlow pmWorkFlow = null;
+					if (hasTask) {
+						pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
+					} else {
+						pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
+								.processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
+					}
+					Object entity = pmWorkFlow.getEntity();
+					List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
+					for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
+						DataFieldRelation field = (DataFieldRelation) iterator.next();
+						field.setReadonly(true);
+						field.setDisabled(true);
+					}
+					model.addAttribute("fieldList", fieldList);
+					model.addAttribute("targetValue", entity);
+					model.addAttribute("tabList", this.findNavTabList(dataType + "Tab", model));
 				}
-				model.addAttribute("fieldList", fieldList);
-				model.addAttribute("targetValue", entity);
+				model.addAttribute("hideEntity", hideEntity);
 
-				fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+				List<Object> fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
 				if (!hasTask) {
 					for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
 						DataFieldRelation field = (DataFieldRelation) iterator.next();
@@ -191,11 +203,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				model.addAttribute("workflow", v);
 				model.addAttribute("targetName", "workflow");
 
-				model.addAttribute("tabList", this.findNavTabList(getDataNameNavTab(), model));
-
-				// List<?> navTavList =
-				// this.findNavTabList(getDataNameNavTab());
-				// model.addAttribute("tabList", navTavList);
+//				model.addAttribute("workflowTabList", this.findNavTabList(getDataNameNavTab(), model));
 			}
 		} else {
 			// model.addAttribute("urlNamespace", URLPath.WORKFLOW_MANAGER);
@@ -206,6 +214,108 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
 		return "workflow/detail";
+	}
+	
+	@RequestMapping(value = { "/task/{taskId}", "/task/modals/{taskId}" })
+	public String findOneByTaskId(@PathVariable("taskId") String taskId, Model model) {
+		if (!checkPermission(null, model, getDataName() + ":detail")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		if (HttpContext.isJSON()) {
+			Principal currentUser = UserContext.getCurrentPrincipal();
+			String assignee = currentUser.getUserInfoId().toString();
+			TaskQuery taskQuery = taskService.createTaskQuery();
+			taskQuery.taskId(taskId);
+			TaskInfo task = taskQuery.taskCandidateOrAssigned(assignee).active().singleResult();
+			Boolean hasTask = task != null;
+			if (task == null) {
+				HistoricTaskInstanceQuery historicTaskInstanceQuery = historyService
+						.createHistoricTaskInstanceQuery();
+				historicTaskInstanceQuery.taskId(taskId);
+				List<HistoricTaskInstance> list = historicTaskInstanceQuery.or().taskAssignee(assignee).taskCandidateUser(assignee)/*.taskCandidateGroupIn(new ArrayList<String>(currentUser.getRoles()))*/.endOr().list();
+				if (!list.isEmpty()) {
+					task = list.get(Math.max(0, list.size() - 1));
+				}
+			} else {
+				taskId = task.getId();
+			}
+			if (task == null) {
+				return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
+			}
+
+			PmWorkFlow pmWorkFlow = null;
+			if (hasTask) {
+				pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
+			} else {
+				pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
+						.processInstanceId(task.getProcessInstanceId()).variableName("entity").singleResult().getValue();
+			}
+			Object entity = pmWorkFlow.getEntity();
+			String dataType = pmWorkFlow.getDataType();
+			Boolean hideEntity = Boolean.valueOf(HttpContext.getCurrentRequest().getParameter("hideEntity"));
+			if (!hideEntity) {
+				List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
+				for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
+					DataFieldRelation field = (DataFieldRelation) iterator.next();
+					field.setReadonly(true);
+					field.setDisabled(true);
+				}
+				model.addAttribute("fieldList", fieldList);
+				model.addAttribute("targetValue", entity);
+				model.addAttribute("tabList", this.findNavTabList(dataType + "Tab", model));
+			}
+			model.addAttribute("hideEntity", hideEntity);
+
+			List<Object> fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+			if (!hasTask) {
+				for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
+					DataFieldRelation field = (DataFieldRelation) iterator.next();
+					field.setReadonly(true);
+					field.setDisabled(true);
+				}
+			}
+			model.addAttribute("workflowFieldList", fieldList);
+			PmWorkFlow v = new PmWorkFlow();
+			v.setTaskId(task.getId());
+			v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
+			v.setTaskKey(task.getTaskDefinitionKey());
+			v.setProcInstId(task.getProcessInstanceId());
+			v.setProcessKey(task.getProcessDefinitionId());
+			v.setHasTask(hasTask);
+			model.addAttribute("workflow", v);
+			model.addAttribute("targetName", "workflow");
+			model.addAttribute("workflowTabList", this.findNavTabList(getDataNameNavTab(), model));
+		} else {
+			// model.addAttribute("urlNamespace", URLPath.WORKFLOW_MANAGER);
+			 model.addAttribute("model", "workflowTask");
+			model.addAttribute("keyword", "id");
+			model.addAttribute("id", taskId);
+
+			String servletPath = HttpContext.getCurrentRequest().getServletPath();
+			model.addAttribute("isModals", servletPath.contains("/modals/"));
+		}
+		return "workflow/detail";
+	}
+	
+	@RequestMapping(value = { "/task/{taskId}/check" })
+	public void checkTask(@PathVariable("taskId") String taskId, Model model) {
+		if (HttpContext.isJSON()) {
+			Principal currentUser = UserContext.getCurrentPrincipal();
+			String assignee = currentUser.getUserInfoId().toString();
+			String procInstId = HttpContext.getCurrentRequest().getParameter("procInstId");
+			TaskQuery taskQuery = taskService.createTaskQuery();
+			if (StringUtils.isNotBlank(procInstId)) {
+				taskQuery.processInstanceId(procInstId);
+			} else {
+				taskQuery.taskId(taskId);
+			}
+			TaskInfo task = taskQuery.taskCandidateOrAssigned(assignee).active().singleResult();
+			Boolean hasTask = task != null;
+			if (hasTask) {
+				model.addAttribute("currentTaskId", task.getId());
+			}
+			model.addAttribute("hasTask", hasTask);
+		}
 	}
 
 	/**
@@ -379,13 +489,14 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 	@RequestMapping(value = "withdraw/{instanceId}/{userId}", method = RequestMethod.POST)
 	public void withdrawTask(@PathVariable("instanceId") String instanceId, @PathVariable("userId") String userId,
 			Model model) {
-		Result result = (Result) processService.withdrawTask(instanceId, userId);
-		// PerfWorkFlow perfWorkFlow = new PerfWorkFlow();
-		// perfWorkFlow.setProcInstId(instanceId);
-		// List<PerfWorkFlow> perfWorkFlows =
-		// perfWorkFlowService.selectBySelective(perfWorkFlow);
+		Integer userInfoId = UserContext.getCurrentPrincipal().getUserInfoId();
+		Result result = (Result) processService.withdrawTask(instanceId, userInfoId.toString());
+		// PmWorkFlow pmWorkFlow = new PmWorkFlow();
+		// pmWorkFlow.setProcInstId(instanceId);
+		// List<PmWorkFlow> pmWorkFlows =
+		// pmWorkFlowService.selectBySelective(pmWorkFlow);
 		// Set<Integer> planIds = new HashSet<>();
-		// for (PerfWorkFlow temp : perfWorkFlows) {
+		// for (PmWorkFlow temp : pmWorkFlows) {
 		// if (!planIds.contains(temp.getPlanId())) {
 		// planParticipantService.updatePlanStatusAndPlanStepStatus(temp.getPlanId());
 		// planIds.add(temp.getPlanId());
@@ -407,7 +518,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			// model.addAttribute("message", "没有权限进行该操作！");
 			// return;
 			// }
-			// PerfWorkFlow planWorkFlow = planService.initPerfWorkFlow(planId,
+			// PmWorkFlow planWorkFlow = planService.initPmWorkFlow(planId,
 			// planStepId);
 			// List<PlanParticipant> planParticipants =
 			// planParticipantService.selectBySelective(new
@@ -452,6 +563,8 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				}
 				if (entity != null) {
 					pmWorkFlowService.startProcess(pmWorkFlow, entity);
+					model.addAttribute("currentTaskId", pmWorkFlow.getTaskId());
+					model.addAttribute("currentProcInstId", pmWorkFlow.getProcInstId());
 				}
 			} else {
 				model.addAttribute("status", false);
@@ -499,36 +612,36 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			throws Exception {
 		User user = UserContext.getCurrentUser();
 		try {
-			// PerfWorkFlow perfWorkFlow =
-			// perfWorkFlowService.selectByPrimaryKey(businessKey);
+			// PmWorkFlow pmWorkFlow =
+			// pmWorkFlowService.selectByPrimaryKey(businessKey);
 			// Map<String, Object> variables = new HashMap<String, Object>();
 			// if (PlanProcessKey.APPROVE_OBJECTIVE_KEY.equals(processKey)) {
 			// Employee employee =
-			// employeeService.selectByPrimaryKey(perfWorkFlow.getEmpID());
+			// employeeService.selectByPrimaryKey(pmWorkFlow.getEmpID());
 			// Employee director =
 			// employeeService.selectByPrimaryKey(employee.getReportTo());
 			// List<Employee> approverList = new ArrayList<>();
 			// approverList.add(director);
 			// variables.put("approverList", approverList);
 			// // TODO 审批人List，待完善，现只取员工的直接领导
-			// // planService.approveObjective(perfWorkFlow);
+			// // planService.approveObjective(pmWorkFlow);
 			// } else if
 			// (PlanProcessKey.EVALUATE_OBJECTIVE_KEY.equals(processKey)) {
-			// perfWorkFlow.setProcessKey(PlanProcessKey.EVALUATE_OBJECTIVE_KEY);
+			// pmWorkFlow.setProcessKey(PlanProcessKey.EVALUATE_OBJECTIVE_KEY);
 			// } else {
 			// model.addAttribute("status", false);
 			// model.addAttribute("message", processKey + "流程不存在！");
 			// }
 			//
-			// PerfWorkFlow basePerformance = (PerfWorkFlow)
-			// runtimeService.getVariable(perfWorkFlow.getProcInstId(),
+			// PmWorkFlow basePerformance = (PmWorkFlow)
+			// runtimeService.getVariable(pmWorkFlow.getProcInstId(),
 			// "entity");
 			//
 			// variables.put("isPass", isPass);
 			// if (!isPass) {
 			// basePerformance.setTitle(basePerformance.getUserName() + "
 			// 的请假申请失败,需修改后重新提交！");
-			// perfWorkFlow.setStatus(BaseVO.APPROVAL_FAILED);
+			// pmWorkFlow.setStatus(BaseVO.APPROVAL_FAILED);
 			// variables.put("entity", basePerformance);
 			// }
 			//
@@ -541,14 +654,14 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			// // 判断指定ID的实例是否存在，如果结果为空，则代表流程结束，实例已被删除(移到历史库中)
 			// ProcessInstance pi =
 			// this.runtimeService.createProcessInstanceQuery()
-			// .processInstanceId(perfWorkFlow.getProcInstId()).singleResult();
+			// .processInstanceId(pmWorkFlow.getProcInstId()).singleResult();
 			// if (BeanUtils.isBlank(pi)) {
-			// perfWorkFlow.setStatus(BaseVO.APPROVAL_SUCCESS);
-			// perfWorkFlow.setEndTime(new Date());
+			// pmWorkFlow.setStatus(BaseVO.APPROVAL_SUCCESS);
+			// pmWorkFlow.setEndTime(new Date());
 			// }
 			// }
 			//
-			// perfWorkFlowService.updateByPrimaryKeySelective(perfWorkFlow);
+			// pmWorkFlowService.updateByPrimaryKeySelective(pmWorkFlow);
 			// model.addAttribute("status", Boolean.TRUE);
 			// model.addAttribute("message", "任务办理完成！");
 		} catch (ActivitiObjectNotFoundException e) {

@@ -12,11 +12,15 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.impl.persistence.entity.CommentEntity;
+import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
+import org.activiti.engine.task.Comment;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
+import com.dp.plat.activiti.entity.BaseVO;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
@@ -27,9 +31,13 @@ import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.vo.UserInfoVO;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.TaskType;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
+import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectMember;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
@@ -37,7 +45,10 @@ import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectMemberService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
+import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
+import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
 import com.dp.plat.pms.springmvc.vo.MemberVO;
+import com.dp.plat.pms.springmvc.vo.TaskVO;
 
 /**
  * 质量审核跟踪流程任务监听器
@@ -94,26 +105,155 @@ public class QualityApproveTrackListener {
 			processName += " -- ";
 		}
 		runtimeService.setVariable(executionId, "processName", processName);
+		
+		if (DataType.PROJECT_TASK.equals(dataType)) {
+			TaskVO projectTask = new TaskVO();
+			projectTask.setTaskId(pmWorkFlow.getDataId());
+			projectTask.setCustomInfoByKey("currentProcInstId", delegateExecution.getProcessInstanceId());
+			projectTaskService.updateByPrimaryKeySelective(projectTask);
+		}
 	}
 	
+	/**
+		 * 绩效计划目标审批流程完成后执行结束监听器
+		 */
+		public void processEndExecution(DelegateExecution delegateExecution) throws Exception {
+			String taskId = delegateExecution.getId();
+			ExecutionEntity executionEntity = (ExecutionEntity) delegateExecution;
+			String processKey = executionEntity.getProcessDefinitionKey();
+			PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
+			Boolean isPass = Boolean.TRUE.equals(delegateExecution.getVariable("isPass"));
+			String dataType = pmWorkFlow.getDataType();
+			String workflowStatus = isPass ? BaseVO.APPROVAL_SUCCESS : BaseVO.APPROVAL_FAILED;
+			String dataStatus = isPass ? TaskType.END : TaskType.REJECT;
+			if (DataType.PROJECT_TASK.equals(dataType)) {
+				TaskVO projectTask = new TaskVO();
+				projectTask.setTaskId(pmWorkFlow.getDataId());
+				projectTask.setStatus(dataStatus);
+				projectTask.setCustomInfoByKey("currentTaskId", null);
+				projectTaskService.updateByPrimaryKeySelective(projectTask);
+			}  else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
+				// 项目资产，更新入库状态和入库时间
+				IndustryAssetVO industryAsset = new IndustryAssetVO();
+				industryAsset.setId(pmWorkFlow.getDataId());
+				industryAsset.setStatus(dataStatus);
+				industryAsset.setCustomInfoByKey("currentTaskId", null);
+//					industryAsset.setCustomInfoByKey("trackedComments", taskComments);
+				industryAssetService.updateByPrimaryKeySelective(industryAsset);
+			} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
+				// 行业漏洞，更新入库状态和入库时间
+				IndustryLeakVO industryLeak = new IndustryLeakVO();
+				industryLeak.setId(pmWorkFlow.getDataId());
+				industryLeak.setStatus(dataStatus);
+				industryLeak.setCustomInfoByKey("currentTaskId", null);
+//					industryAsset.setCustomInfoByKey("trackedComments", taskComments);
+				industryLeakService.updateByPrimaryKeySelective(industryLeak);
+			}
+			
+			//			String businessKey = delegateExecution.getProcessBusinessKey();
+//			pmWorkFlow = pmFlowService.selectByPrimaryKey(Integer.valueOf(businessKey));
+			PmWorkFlow temp = new PmWorkFlow();
+			temp.setId(pmWorkFlow.getId());
+			temp.setStatus(workflowStatus);
+			temp.setEndTime(new Date());
+			pmFlowService.updateByPrimaryKeySelective(temp);
+			
+			pmWorkFlow.setStatus(workflowStatus);
+			pmWorkFlow.setTaskKey(dataStatus);
+			pmWorkFlow.setEndTime(new Date());
+			runtimeService.setVariable(delegateExecution.getProcessInstanceId(), "entity", pmWorkFlow);
+	//		
+	//		PlanParticipant oldParticipant = (PlanParticipant) delegateExecution.getVariable("participant");
+	//		// XXX 直接创建对象进行更新
+	//		PlanParticipant planParticipant = new PlanParticipant();
+	//		planParticipant.setId(oldParticipant.getId());
+	//		// 更新考核阶段状态值
+	//		ExecutionEntity executionEntity = (ExecutionEntity) delegateExecution;
+	//		if (PerfConstant.PlanProcessKey.EVALUATE_OBJECTIVE_KEY.equals(executionEntity.getProcessDefinitionKey())) {
+	//			planParticipant.setStatus(PlanParticipantStatus.END);
+	//		} else {
+	//			planParticipant.setStatus(PlanParticipantStatus.APPROVAL_FINISHED);
+	//			//更新目标审批通过时间
+	//			planParticipant.setApproveGoalTime(new Date());
+	//			
+	//			// 绩效考核中途补发的被挂起流程，进行激活
+	//			List<Task> suspendedTaskList = taskService.createTaskQuery().taskAssignee(oldParticipant.getEmpID().toString()).suspended().list();
+	//			for (Task task : suspendedTaskList) {
+	//				runtimeService.activateProcessInstanceById(task.getProcessInstanceId());
+	//			}
+	//		}
+	//		planParticipantService.updateByPrimaryKeySelective(planParticipant);
+	//		
+	//		// 查询是否所有流程都办理完成，如果办理完成将绩效步骤置为已完成
+	//		PmWorkFlow temp = new PmWorkFlow();
+	//		temp.setPlanId(pmWorkFlow.getPlanId());
+	//		temp.setProcessKey(executionEntity.getProcessDefinitionKey());
+	//		temp.setStatus(BaseVO.PENDING);
+	//		long count = pmWorkFlowService.countBySelective(temp);
+	//		if (count == 0) {
+	//			List<PlanStep> planSteps = planStepService.selectByPlanIdLikeStepCode(pmWorkFlow.getPlanId(), executionEntity.getProcessDefinitionKey());
+	//			for (PlanStep planStep : planSteps) {
+	//				planStep.setStatus((short) 2);
+	//				planStep.setUpdateBy(UserContext.getCurrentUser().getUserName());
+	//				planStepService.updateByPrimaryKeySelective(planStep);
+	//			}
+	//			Plan plan = planService.selectByPrimaryKey(pmWorkFlow.getPlanId());
+	//			plan.setStatus((short) (plan.getStatus() + 1));
+	//			planService.updateByPrimaryKeySelective(plan);
+	//		}
+			return;
+		}
+
 	/**
 	 * 任务创建监听器
 	 */
 	public void createTask(DelegateTask delegateTask) throws Exception {
 		String taskId = delegateTask.getId();
-		String taksKey = delegateTask.getTaskDefinitionKey();
+		String taskKey = delegateTask.getTaskDefinitionKey();
 		String processKey = delegateTask.getProcessDefinitionId();
-		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
 		
+		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
 		String dataType = pmWorkFlow.getDataType();
-		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType);
+		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
 		String assignee = null;
 		Set<String> candidates = null;
 		String candidateGroup = null;
-		if (ProcessType.TaskType.AF_APPROVE_TASK.equals(taksKey)) {
+		String memberRole = null;
+		String candidateRole = null;
+//		if (TaskType.AF_APPROVE_TASK.equals(taskKey)) {
+//			memberRole = ProjectConstant.MemberRole.MEMBER_QC;
+//			candidateRole = RoleConstant.ROLE_PM_AFQC;
+//		} else if (TaskType.YF_APPROVE_TASK.equals(taskKey)) {
+//			memberRole = ProjectConstant.MemberRole.MEMBER_QC;
+//			candidateRole = RoleConstant.ROLE_PM_YFQC;
+//		} else if (TaskType.TRACK_TASK.equals(taskKey)) {
+//			candidateRole = (String) taskDefinedVariables.getOrDefault("trackRole", "");
+//		}
+		String areaPower = "all";
+		boolean checkArea = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("checkArea", false));
+		memberRole = (String) taskDefinedVariables.getOrDefault("memberRole", "");
+		candidateRole = (String) taskDefinedVariables.getOrDefault("candidateRole", "");
+		if (TaskType.AF_APPROVE_TASK.equals(taskKey) || TaskType.YF_APPROVE_TASK.equals(taskKey)) {
+			if (checkArea) {
+				if (DataType.PROJECT_TASK.equals(dataType)) {
+					ProjectTask entity = (ProjectTask) pmWorkFlow.getEntity();
+					Map customInfo = (Map) entity.getCustomInfo();
+					if (customInfo != null && customInfo.containsKey(pmWorkFlow.getObjType())) {
+						Map project = (Map) customInfo.getOrDefault(pmWorkFlow.getObjType(), new HashMap<>(0));
+						areaPower = (String) project.getOrDefault("column001", areaPower);
+					}
+				}  else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
+					IndustryLeak entity = (IndustryLeak) pmWorkFlow.getEntity();
+					Map customInfo = (Map) entity.getCustomInfo();
+					if (customInfo != null && customInfo.containsKey(pmWorkFlow.getObjType())) {
+						Map project = (Map) customInfo.getOrDefault(pmWorkFlow.getObjType(), new HashMap<>(0));
+						areaPower = (String) project.getOrDefault("column001", areaPower);
+					}
+				}
+			}
 			MemberVO t = new MemberVO();
 			t.setProjectId(pmWorkFlow.getObjId());
-			t.setMemberRole(ProjectConstant.MemberRole.MEMBER_QC);
+			t.setMemberRole(memberRole);
 			t.setEffective(new Date());
 			List<ProjectMember> members = projectMemberService.selectBySelective(t);
 			if (!members.isEmpty() && members.size() == 1) {
@@ -123,13 +263,40 @@ public class QualityApproveTrackListener {
 			} else if (!members.isEmpty()) {
 				candidates = new HashSet<String>(members.size());
 				for (ProjectMember member : members) {
-//					candidates.add(member.getMemberCode());
+	//				candidates.add(member.getMemberCode());
 					UserInfoVO user = userInfoService.selectOneByUserNameAndCompId(member.getMemberCode());
 					candidates.add(user.getId().toString());
 				}
 			} else {
-				candidateGroup = RoleConstant.ROLE_PM_AFQC;
+				candidateGroup = candidateRole;
 			}
+		} else {
+			candidateGroup = candidateRole;
+		}
+		// 更新任务状态,补充流程信息
+		if (DataType.PROJECT_TASK.equals(dataType)) {
+			TaskVO projectTask = new TaskVO();
+			projectTask.setTaskId(pmWorkFlow.getDataId());
+			projectTask.setStatus(taskKey);
+			projectTask.setCustomInfoByKey("currentTaskId", taskId);
+			projectTask.setCustomInfoByKey("currentTaskKey", taskKey);
+			projectTaskService.updateByPrimaryKeySelective(projectTask);
+		} else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
+			// 项目资产，更新入库状态和入库时间
+			IndustryAssetVO industryAsset = new IndustryAssetVO();
+			industryAsset.setId(pmWorkFlow.getDataId());
+			industryAsset.setStatus(taskKey);
+			industryAsset.setCustomInfoByKey("currentTaskId", taskId);
+			industryAsset.setCustomInfoByKey("currentTaskKey", taskKey);
+			industryAssetService.updateByPrimaryKeySelective(industryAsset);
+		} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
+			// 行业漏洞，更新入库状态和入库时间
+			IndustryLeakVO industryLeak = new IndustryLeakVO();
+			industryLeak.setId(pmWorkFlow.getDataId());
+			industryLeak.setStatus(taskKey);
+			industryLeak.setCustomInfoByKey("currentTaskId", taskId);
+			industryLeak.setCustomInfoByKey("currentTaskKey", taskKey);
+			industryLeakService.updateByPrimaryKeySelective(industryLeak);
 		}
 		if (assignee != null) {
 			delegateTask.setAssignee(assignee);
@@ -138,9 +305,20 @@ public class QualityApproveTrackListener {
 		} else {
 			delegateTask.addCandidateGroup(candidateGroup);
 		}
+		delegateTask.setVariableLocal("startTime", new Date());
+		delegateTask.setVariableLocal("areaPower", areaPower);
 //		delegateTask.setVariable("assignee", assignee);
 //		delegateTask.setVariable("candidates", candidates);
 //		delegateTask.setVariable("candidateGroup", candidateGroup);
+		
+		PmWorkFlow temp = new PmWorkFlow();
+		temp.setId(pmWorkFlow.getId());
+		temp.setTaskKey(taskKey);
+		pmFlowService.updateByPrimaryKeySelective(temp);
+		
+		pmWorkFlow.setTaskId(delegateTask.getId());
+		pmWorkFlow.setTaskKey(taskKey);
+		runtimeService.setVariable(delegateTask.getProcessInstanceId(), "entity", pmWorkFlow);
 	}
 	
 	/**
@@ -148,24 +326,48 @@ public class QualityApproveTrackListener {
 	 */
 	public void completeTask(DelegateTask delegateTask) throws Exception {
 		String taskId = delegateTask.getId();
-		String taksKey = delegateTask.getTaskDefinitionKey();
+		String taskKey = delegateTask.getTaskDefinitionKey();
 		String processKey = delegateTask.getProcessDefinitionId();
 		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
 		
 		String dataType = pmWorkFlow.getDataType();
-		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType);
+		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
 		Boolean isPass = (Boolean) delegateTask.getVariableLocal("isPass");
 		Integer flowState = Boolean.TRUE.equals(isPass) ? 1 : -1;
 		String status = null;
 		if (Boolean.TRUE.equals(isPass)) {
 			boolean hasNext = false;
-			if (ProcessType.TaskType.AF_APPROVE_TASK.equals(taksKey)) {
-				hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("needYFApprove", false));
-			} else if (ProcessType.TaskType.YF_APPROVE_TASK.equals(taksKey)) {
-				hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("needTrack", false));
-			}
+//			if (ProcessType.TaskType.AF_APPROVE_TASK.equals(taskKey)) {
+//				hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("needYFApprove", false));
+//			} else if (ProcessType.TaskType.YF_APPROVE_TASK.equals(taskKey)) {
+//				hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("needTrack", false));
+//			}
+			hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("hasNext", false));
 			if (hasNext) {
 				flowState++;
+			}
+		}
+		if (TaskType.TRACK_TASK.equals(taskKey)) {
+			List<Comment> taskComments = taskService.getTaskComments(taskId, CommentEntity.TYPE_COMMENT);
+			// 项目资产，更新入库状态和入库时间
+			if ("industryAsset".equals(dataType)) {
+				IndustryAssetVO industryAsset = new IndustryAssetVO();
+				industryAsset.setId(pmWorkFlow.getDataId());
+				industryAsset.setTrackStatus(flowState);
+				industryAsset.setTrackedTime(new Date());
+				industryAsset.setCustomInfoByKey("trackedUser", UserContext.getUsername());
+				industryAsset.setCustomInfoByKey("trackedUserName", UserContext.getCurrentPrincipal().getRealName());
+//				industryAsset.setCustomInfoByKey("trackedComments", taskComments);
+				industryAssetService.updateByPrimaryKeySelective(industryAsset);
+			} else if ("industryLeak".equals(dataType)) {
+				IndustryLeakVO industryLeak = new IndustryLeakVO();
+				industryLeak.setId(pmWorkFlow.getDataId());
+				industryLeak.setTrackStatus(flowState);
+				industryLeak.setTrackedTime(new Date());
+				industryLeak.setCustomInfoByKey("trackedUser", UserContext.getUsername());
+				industryLeak.setCustomInfoByKey("trackedUserName", UserContext.getCurrentPrincipal().getRealName());
+//				industryLeak.setCustomInfoByKey("trackedComments", taskComments);
+				industryLeakService.updateByPrimaryKeySelective(industryLeak);
 			}
 		}
 		delegateTask.setVariable("flowState", flowState);
@@ -183,6 +385,13 @@ public class QualityApproveTrackListener {
 		definedVars = StringUtils.defaultIfBlank(definedVars, defaultDefinedVariables);
 		Map<String, Object> definedVariables = JSON.parseObject(definedVars, Map.class);
 		Map<String, Object> taskDefinedVariables = (Map<String, Object>) definedVariables.getOrDefault(dataType, new HashMap<>());
+		return taskDefinedVariables;
+	}
+	
+	private Map<String, Object> getTaskDefinedVariable(String dataType, String taskType) {
+		Map<String, Object> definedVariable = this.getTaskDefinedVariable(dataType);
+		
+		Map<String, Object> taskDefinedVariables = (Map<String, Object>) definedVariable.getOrDefault(taskType, new HashMap<>());
 		return taskDefinedVariables;
 	}
 	
@@ -568,57 +777,6 @@ public class QualityApproveTrackListener {
 		return;
 	}
 
-	/**
-	 * 绩效计划目标审批流程完成后执行结束监听器
-	 */
-	public void processEndExecution(DelegateExecution delegateExecution) throws Exception {
-//		String businessKey = delegateExecution.getProcessBusinessKey();
-//		PmWorkFlow pmWorkFlow = pmWorkFlowService.selectByPrimaryKey(Integer.valueOf(businessKey));
-//		pmWorkFlow.setStatus(BaseVO.APPROVAL_SUCCESS);
-//		pmWorkFlow.setEndTime(new Date());
-//		pmWorkFlowService.updateByPrimaryKeySelective(pmWorkFlow);
-//		runtimeService.setVariable(delegateExecution.getProcessInstanceId(), "entity", pmWorkFlow);
-//		
-//		PlanParticipant oldParticipant = (PlanParticipant) delegateExecution.getVariable("participant");
-//		// XXX 直接创建对象进行更新
-//		PlanParticipant planParticipant = new PlanParticipant();
-//		planParticipant.setId(oldParticipant.getId());
-//		// 更新考核阶段状态值
-//		ExecutionEntity executionEntity = (ExecutionEntity) delegateExecution;
-//		if (PerfConstant.PlanProcessKey.EVALUATE_OBJECTIVE_KEY.equals(executionEntity.getProcessDefinitionKey())) {
-//			planParticipant.setStatus(PlanParticipantStatus.END);
-//		} else {
-//			planParticipant.setStatus(PlanParticipantStatus.APPROVAL_FINISHED);
-//			//更新目标审批通过时间
-//			planParticipant.setApproveGoalTime(new Date());
-//			
-//			// 绩效考核中途补发的被挂起流程，进行激活
-//			List<Task> suspendedTaskList = taskService.createTaskQuery().taskAssignee(oldParticipant.getEmpID().toString()).suspended().list();
-//			for (Task task : suspendedTaskList) {
-//				runtimeService.activateProcessInstanceById(task.getProcessInstanceId());
-//			}
-//		}
-//		planParticipantService.updateByPrimaryKeySelective(planParticipant);
-//		
-//		// 查询是否所有流程都办理完成，如果办理完成将绩效步骤置为已完成
-//		PmWorkFlow temp = new PmWorkFlow();
-//		temp.setPlanId(pmWorkFlow.getPlanId());
-//		temp.setProcessKey(executionEntity.getProcessDefinitionKey());
-//		temp.setStatus(BaseVO.PENDING);
-//		long count = pmWorkFlowService.countBySelective(temp);
-//		if (count == 0) {
-//			List<PlanStep> planSteps = planStepService.selectByPlanIdLikeStepCode(pmWorkFlow.getPlanId(), executionEntity.getProcessDefinitionKey());
-//			for (PlanStep planStep : planSteps) {
-//				planStep.setStatus((short) 2);
-//				planStep.setUpdateBy(UserContext.getCurrentUser().getUserName());
-//				planStepService.updateByPrimaryKeySelective(planStep);
-//			}
-//			Plan plan = planService.selectByPrimaryKey(pmWorkFlow.getPlanId());
-//			plan.setStatus((short) (plan.getStatus() + 1));
-//			planService.updateByPrimaryKeySelective(plan);
-//		}
-		return;
-	}
 	/**
 	 * 设置申诉处理人监听器
 	 */

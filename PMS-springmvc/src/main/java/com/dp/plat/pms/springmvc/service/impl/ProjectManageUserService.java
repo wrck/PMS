@@ -25,4 +25,12 @@ public class ProjectManageUserService extends AbstractBaseService<UserInfoMapper
 				.parameter("user", userEntity).singleResult();
 	}
 
+	@Override
+	public void initActivitiUser() {
+		identityService.createNativeUserQuery().sql("INSERT INTO ACT_ID_USER (ID_, REV_, FIRST_, LAST_, EMAIL_, PWD_) "
+				+ "select id, 1, realName, u.`user_name`, email, null "
+				+ "from t_user_info ui left join `t_user` u on ui.`user_id` = u.`user_id` "
+				+ "ON DUPLICATE KEY UPDATE FIRST_ = VALUES(FIRST_), LAST_ = VALUES(LAST_), EMAIL_ = VALUES(EMAIL_), PWD_ = VALUES(PWD_)")
+				.singleResult();
+	}
 }

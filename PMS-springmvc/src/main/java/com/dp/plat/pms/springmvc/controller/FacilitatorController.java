@@ -1,5 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.annotation.PostConstruct;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
@@ -49,6 +52,18 @@ public class FacilitatorController extends AbstractController<IAbstractBaseServi
 
 	@Override
 	public boolean checkPermission(FacilitatorVO v, Model model, String... permissions) {
+		Collection<String> permissionList = UserContext.getCurrentPrincipal().getPermissions();
+		Collection<String> currentPermistions = new ArrayList<String>(permissionList.size());
+		for (String requiredPerm : permissions) {
+			String type = requiredPerm.split(":")[0] + ":";
+			for (String permission : permissionList) {
+				if (permission.startsWith(type)) {
+					currentPermistions.add(permission);
+				}
+			}
+		}
+		model.addAttribute("permissions", currentPermistions);
+		model.addAttribute("permissionType", "all");
 		return true;
 //		return super.checkPermission(v, model, permissions);
 	}

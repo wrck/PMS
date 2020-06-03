@@ -1,9 +1,12 @@
 var TabPane = {
 		name: "tabPane",
 		data: function() {
-			return {};	
+			return {
+				isUpdated: false,
+				tabId: this.cssId || (this.navTab.type + 'Tab' + this.timestamp) 
+			};
 		},
-		template: `<div class="tab-pane fade" :id="navTab.type + 'Tab' + timestamp" 
+		template: `<div class="tab-pane fade" :id="tabId" 
 			:data-url="navTab.url" :data-type="navTab.type" :data-title="navTab.title"
 			:data-draw-type="navTab.drawType" :data-timestamp="timestamp" :data-table-config="JSON.stringify(navTab.tableConfig)"
 			>
@@ -80,6 +83,12 @@ var TabPane = {
 				}
 			}
 		}, */
+		beforeUpdate: function() {
+			if (this.isUrlUpdated && !this.isUpdated) {
+				this.refreshNavTab(null, this.navTab);
+				this.isUpdated = true;
+			}
+		},
 		updated: function() {
 			console.log("updated");
 		},
@@ -87,6 +96,15 @@ var TabPane = {
 			console.log("mounted");
 		},
 		computed: {
+			isUrlUpdated: function() {
+				var url = $("#" + this.tabId).data("url");
+				var isUrlUpdated = this.navTab.url != url;
+				if (isUrlUpdated) {
+					this.isUpdated = false;
+					$("#" + this.tabId).data("url", this.navTab.url);
+				}
+				return isUrlUpdated;
+			},
 			isPermit:function(btn) {
 				return this.permissionType != '' ? true : false;
 			}
@@ -109,7 +127,7 @@ var TabPane = {
 			checkPermit: function(btn) {
 	 			var permissionType = this.permissionType || "";
 	 			var permissions = this.permissions || [];
- 				var model = this.navTab.type || this.model || "";
+ 				var model = this.navTab.type || this.navTab.model || this.model || "";
  				var permission = model + ":" + btn.id;
  				var checkPermitCallback = this.navTab.checkPermit;
 	 			console.log(permission);
@@ -117,7 +135,7 @@ var TabPane = {
 	 			if ((permissionType == "all" 
 	 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
 	 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
-	 					&& $.inArray(permission, permissions) > -1) {
+	 					&& ($.inArray(permission, permissions) > -1 || $.inArray(model + ":*", permissions) > -1)) {
 	 				isPermit = true;
 				}
 	 			if (typeof checkPermitCallback == 'function') {
@@ -152,7 +170,7 @@ var TabPane = {
 					navTab.paramsValue = navTab.paramsValue || {};
 					navTab.paramsValue[param] = targetValue[param] || "";
 				}
-				var url = navTab.url;
+				var url = navTab.src || navTab.url;
 				try {
 					url = eval(url);
 				} catch(e){}
@@ -183,13 +201,22 @@ var TabPane = {
 	 		},
 	 		refreshNavTab: function(e, navTab) {
 	 			console.log("refreshNavTab");
-	 			var tab = $(e.target);
-	 			if ($(e.target).hasClass("tab-operation")) {
-	 				tab = $(e.target).parent();
+	 			var tab;
+	 			if (e) {
+		 			tab = $(e.target);
+		 			if ($(e.target).hasClass("tab-operation")) {
+		 				tab = $(e.target).parent();
+		 			}
+	 			} else {
+	 				tab = $("[href='#" + this.tabId + "']");
 	 			}
+//	 			var tab = $(e.target);
+//	 			if ($(e.target).hasClass("tab-operation")) {
+//	 				tab = $(e.target).parent();
+//	 			}
 	 			// 获取已激活的标签页的名称
 	 			var activeTab = $(tab).text(); 
-	 			var tabId = $(tab).attr("href");
+	 			var tabId = $(tab).attr("href") || this.tabId;
 	 			var $container = $(tab).parents(".tab-content:first");
 	 			var $tabPane = $(tabId).length ? $(tabId) : $container;
 	 			$tabPane.data("vm", this);

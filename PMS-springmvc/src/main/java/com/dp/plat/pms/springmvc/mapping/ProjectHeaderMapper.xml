@@ -49,15 +49,15 @@
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
-    from pm_project_header
+    from pm_project
     where projectId = #{projectId,jdbcType=INTEGER}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from pm_project_header
+    delete from pm_project
     where projectId = #{projectId,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" keyProperty="projectId" useGeneratedKeys="true">
-    insert into pm_project_header (projectType, projectCode, projectName, 
+    insert into pm_project (projectType, projectCode, projectName, 
       projectState, isback, column001, 
       column002, column003, column004, 
       column005, column006, column007, 
@@ -83,7 +83,7 @@
       #{column014,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" keyProperty="projectId" useGeneratedKeys="true">
-    insert into pm_project_header
+    insert into pm_project
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="projectType != null">
         projectType,
@@ -300,7 +300,7 @@
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader">
-    update pm_project_header
+    update pm_project
     <set>
       <if test="projectType != null">
         projectType = #{projectType,jdbcType=VARCHAR},
@@ -400,21 +400,23 @@
       </if>
       <if test="customInfo != null">
         <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
-        customInfo = JSON_SET (IFNULL(
+        <!-- customInfo = JSON_SET (IFNULL(
 		    customInfo, "{}"), 
 		    <foreach collection="customInfo" item="value" index="key" separator=",">
-			    '$.${key}', #{value}
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
-		),
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
       <if test="customConfig != null">
         <!-- customConfig = #{customConfig,jdbcType=JSON}, -->
-        customConfig = JSON_SET (IFNULL(
+        <!-- customConfig = JSON_SET (IFNULL(
 		    customConfig, "{}"), 
 		    <foreach collection="customConfig" item="value" index="key" separator=",">
-			    '$.${key}', #{value}
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
-		),
+		), -->
+		customConfig = JSON_MERGE_PATCH(customConfig, #{customConfig,jdbcType=JSON}),
       </if>
       <if test="column014 != null">
         column014 = #{column014,jdbcType=LONGVARCHAR},
@@ -423,7 +425,7 @@
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader">
-    update pm_project_header
+    update pm_project
     set projectType = #{projectType,jdbcType=VARCHAR},
       projectCode = #{projectCode,jdbcType=VARCHAR},
       projectName = #{projectName,jdbcType=VARCHAR},
@@ -456,8 +458,22 @@
       projectStartTime = #{projectStartTime,jdbcType=TIMESTAMP},
       projectRefreshTime = #{projectRefreshTime,jdbcType=TIMESTAMP},
       projectCloseTime = #{projectCloseTime,jdbcType=TIMESTAMP},
-      customInfo = #{customInfo,jdbcType=JSON},
-      customConfig = #{customConfig,jdbcType=JSON},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+      <!-- customConfig = #{customConfig,jdbcType=JSON}, -->
+        <!-- customConfig = JSON_SET (IFNULL(
+		    customConfig, "{}"), 
+		    <foreach collection="customConfig" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customConfig = JSON_MERGE_PATCH(customConfig, #{customConfig,jdbcType=JSON}),
       column014 = #{column014,jdbcType=LONGVARCHAR}
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
@@ -566,10 +582,16 @@
 					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null">
-					ph.customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.customConfig != null">
-					ph.customConfig = #{model.customConfig, jdbcType=OTHER} AND
+					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
+					<foreach collection="model.customConfig" item="value" index="key">
+					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
 					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
@@ -616,7 +638,7 @@
     </if>
   </sql>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultMap="BaseResultMap">
-    select * from pm_project_header as ph
+    select * from pm_project as ph
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="projectId != null">
@@ -737,7 +759,7 @@
 	</where>
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultType="long">
-    select count(1) from pm_project_header as ph
+    select count(1) from pm_project as ph
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="projectId != null">
@@ -858,7 +880,7 @@
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
-    select ph.*, bd.`basicDataName` as projectStateName  from pm_project_header as ph
+    select ph.*, bd.`basicDataName` as projectStateName  from pm_project as ph
     LEFT JOIN fnd_basic_data bd 
         ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
         AND bd.`basicDataId` = ph.`projectState` 
@@ -965,10 +987,16 @@
 					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null">
-					ph.customInfo = #{model.customInfo, jdbcType=OTHER} AND
+					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.customConfig != null">
-					ph.customConfig = #{model.customConfig, jdbcType=OTHER} AND
+					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
+					<foreach collection="model.customConfig" item="value" index="key">
+					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
 					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
@@ -1011,7 +1039,7 @@
 	<include refid="sql_pageable_limit" />
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from pm_project_header as ph
+    select count(1) from pm_project as ph
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -1115,10 +1143,16 @@
 					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
 				</if>
 				<if test="model.customInfo != null">
-					ph.customInfo = #{model.customInfo, jdbcType=JSON} AND
+					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.customConfig != null">
-					ph.customConfig = #{model.customConfig, jdbcType=JSON} AND
+					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
+					<foreach collection="model.customConfig" item="value" index="key">
+					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
 				</if>
 				<if test="model.column014 != null and '' != model.column014">
 					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
@@ -1162,7 +1196,7 @@
   
   <select id="selectVOByProjectId" parameterType="java.lang.Integer" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
   	select ph.*, bd.`basicDataName` as projectStateName 
-  	from pm_project_header ph
+  	from pm_project ph
 		LEFT JOIN fnd_basic_data bd 
         ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
         AND bd.`basicDataId` = ph.`projectState` 
@@ -1171,7 +1205,7 @@
   
   <select id="queryProjectStateByProjectId" parameterType="java.lang.Integer" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
   	select ph.projectState, bd.`basicDataName` as projectStateName 
-  	from pm_project_header ph
+  	from pm_project ph
 		LEFT JOIN fnd_basic_data bd 
         ON bd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
         AND bd.`basicDataId` = ph.`projectState` 
@@ -1240,6 +1274,9 @@
 			<if test="model.projectTypes != null">
 				AND FIND_IN_SET(pp.`projectType`, #{model.projectTypes})
 			</if>
+			<if test="model.officeCodes != null">
+				AND FIND_IN_SET(pp.`officeCode`, #{model.officeCodes})
+			</if>
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
 			AND (
@@ -1256,7 +1293,7 @@
 	        `pm_project_contract` `t1` 
 	        join `pm_project_group_relationship` `t2` 
 	            on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-	        join `pm_project_header` `t3` 
+	        join `pm_project` `t3` 
 	            on (
 	                `t2`.`projectCode` = `t3`.`projectCode` 
 	                or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
@@ -1337,6 +1374,9 @@
 			<if test="model.projectTypes != null">
 				AND FIND_IN_SET(pp.`projectType`, #{model.projectTypes})
 			</if>
+			<if test="model.officeCodes != null">
+				AND FIND_IN_SET(pp.`officeCode`, #{model.officeCodes})
+			</if>
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
 			AND (
@@ -1353,7 +1393,7 @@
 	        `pm_project_contract` `t1` 
 	        join `pm_project_group_relationship` `t2` 
 	            on `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-	        join `pm_project_header` `t3` 
+	        join `pm_project` `t3` 
 	            on (
 	                `t2`.`projectCode` = `t3`.`projectCode` 
 	                or `t3`.`projectCode` = replace(`t2`.`projectCode`, "-his", "")
@@ -1420,7 +1460,7 @@
   	<![CDATA[
         from pm_project_property_af_from_sms pppfs 
             left join pm_order_data_from_sap podfs on podfs.orderExecNumber = pppfs.orderExecNumber 
-            left join pm_project_header pph on podfs.contractNo = pph.projectCode and pppfs.projectType = pph.projectType
+            left join pm_project pph on podfs.contractNo = pph.projectCode and pppfs.projectType = pph.projectType
             left join fnd_department fd on fd.departmentNum = pppfs.officeCode
             left join pm_project_member ppm on pph.projectId = ppm.projectId
                  and ppm.effectiveFrom <= now() and (ppm.effectiveTo > now() or ppm.effectiveTo is null)
@@ -1444,14 +1484,21 @@
 		<result column="all" javaType="java.lang.Boolean" property="all" />
 		<result column="edit" javaType="java.lang.Boolean" property="edit" />
 		<result column="view" javaType="java.lang.Boolean" property="view" />
+		<result column="maxState" property="maxState" javaType="java.lang.String"/>
+		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
 		<collection column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="selectPermissionByMemberRole" />
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
 	  	select 
-		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, count(pm.id) > 0 as edit, count(ui.id) > 0 view, group_concat(distinct pm.memberRole) memberRoles, #{permissionTypes} as permissionTypes
+		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, 
+		    count(pm.id) > 0 as edit, 
+		    count(ui.id) > 0 view, 
+		    max(ph.projectState) as maxState,
+		    group_concat(distinct pm.memberRole) memberRoles, 
+		    #{permissionTypes} as permissionTypes
 		from
-		    pm_project_header ph 
+		    pm_project ph 
 		    left join pm_project_member pm 
 		        on ph.projectId = pm.projectId 
 		        and pm.effectiveFrom <= now() 
@@ -1460,21 +1507,30 @@
 		            or pm.effectiveTo is null
 		        ) 
 		        and pm.memberCode = #{user.userName}
+	]]>
 		    left join t_user_info ui 
 		        on ui.`id` = #{user.userInfoId}
-		        and find_in_set(ph.`column001`, ui.`custom5`) 
+		        <if test="model.officeCodes != null">
+					AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
+			        and find_in_set(ph.`column001`, ui.`custom5`) 
+				</if>
 		        and find_in_set(ph.projectType, ui.custom4)
 		where (
 		        pm.memberCode = #{user.userName}
 		        or ui.id = #{user.userInfoId}
 		    )
-	]]>
 	<if test="model != null">
 		<if test="model.projectId != null">
 			AND ph.projectId = #{model.projectId}
 		</if>
 		<if test="model.projectIds != null">
 			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
+		</if>
+		<if test="model.projectTypes != null">
+			AND FIND_IN_SET(ph.`projectType`, #{model.projectTypes})
+		</if>
+		<if test="model.officeCodes != null">
+			AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
 		</if>
 	</if>	
   </select>

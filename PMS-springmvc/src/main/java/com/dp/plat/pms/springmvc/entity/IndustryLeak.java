@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class IndustryLeak extends BaseEntity {
 
-    private Integer id;
+	private static final long serialVersionUID = 2341516391504130781L;
+
+	private Integer id;
 
     // 漏洞编号
     private String leakCode;
@@ -32,7 +34,7 @@ public class IndustryLeak extends BaseEntity {
     private String remark;
 
     // 状态
-    private Integer status;
+    private String status;
 
     // 入库状态
     private Integer trackStatus;
@@ -205,7 +207,7 @@ public class IndustryLeak extends BaseEntity {
      *
      * @return status - 状态
      */
-    public Integer getStatus() {
+    public String getStatus() {
         return status;
     }
 
@@ -214,7 +216,7 @@ public class IndustryLeak extends BaseEntity {
      *
      * @param status 状态
      */
-    public void setStatus(Integer status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

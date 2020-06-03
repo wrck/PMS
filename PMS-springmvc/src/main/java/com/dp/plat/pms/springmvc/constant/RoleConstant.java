@@ -13,6 +13,11 @@ public class RoleConstant extends com.dp.plat.core.param.RoleConstant {
 	public final static String ROLE_PM_SUB_ADMIN = "projectSubAdmin";
 	
 	/**
+	 * 区域负责人
+	 */
+	public static final String ROLE_PM_AREA_MANAGER = "projectAreaManager";
+	
+	/**
 	 * 项目经理
 	 */
 	public final static String ROLE_PM_PROGRAM = "projectManager";
@@ -28,12 +33,13 @@ public class RoleConstant extends com.dp.plat.core.param.RoleConstant {
 	public static final String ROLE_PM_AFQC = "projectAFQC";
 	
 	/**
-	 * 安服质量监督员
+	 * 研发质量监督员
 	 */
-	public static final String ROLE_PM_YFQC = "projectAFQC";
+	public static final String ROLE_PM_YFQC = "projectYFQC";
 	
 	/**
 	 * 销售人员
 	 */
 	public static final String ROLE_PM_SALES = "projectSales";
+
 }

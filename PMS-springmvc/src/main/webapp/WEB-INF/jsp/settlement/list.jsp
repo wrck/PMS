@@ -43,7 +43,7 @@
                     <div class="box-body">
                         <div id="searchDiv" class="text-left">
                         	<form id="searchForm">
-	                            <%@include file="../template/vue-form-component.jsp" %>
+	                            <%@include file="../template/vue-table-search-component.jsp" %>
 		                        <div class="btn-group">
 									<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
 									<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
@@ -85,7 +85,7 @@
         var commonTable;
         var model = "settlement";
         var winId= model + "Win";
-        var tableId = model + "table";
+        var tableId = model + "Table";
         $(function() {
         	var search = '${pageContext.request.queryString}' || location.search;
         	$("#commonTable").attr("id", tableId);
@@ -136,7 +136,8 @@
                         url:basePath+"/perf/modals/project_detail?id="+rowId
                    });
                     */
-                   window.location.href = pm.router.html(model).detail(rowId);
+                   //window.location.href = pm.router.html(model).detail(rowId);
+                   window.location.href = settleEidtUrl();
                    break;
                 case 'delete':
                     if(!rowId){
@@ -158,14 +159,28 @@
             });
 
             $(document).on("dblclick", "#" + tableId  + " tbody tr", function () {
-                var rowId = commonTable.getSelectedRowId();
-                if(rowId == null){
+                var row = commonTable.getSelectedRowData();
+                if(row == null){
                     modals.info('请点击需要查看的行');
                     return false;
                 }
-                var url = pm.router.html(model).detail(rowId);
+                var url = settleEidtUrl(row);
                 window.open(url);
             });
+            
+            function settleEidtUrl(data) {
+            	 var row = data || commonTable.getSelectedRowData();
+                 var rowId = row.id;
+                 var url = null;
+                 if (!rowId) {
+                 	var dispatch = row.dispatch || {};
+                 	var dispatchId = dispatch.id || row.dispatchId || "";
+                 	url = pm.router.html(model).create($.param({dispatchId}));
+                 } else {
+                 	url = pm.router.html(model).detail(rowId);
+                 }
+                 return url;
+            }
         })
     </script>
 </jsTag>

@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class CommonRelatedData extends BaseEntity {
 
-    private Integer id;
+	private static final long serialVersionUID = 4805751125050212344L;
+
+	private Integer id;
 
     // 数据类型
     private String type;

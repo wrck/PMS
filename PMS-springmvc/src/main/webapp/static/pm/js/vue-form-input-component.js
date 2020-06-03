@@ -18,7 +18,7 @@ var FormInput = {
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupTextareaClass">
 								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 								<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" rows="3" style="resize:none;" draggable="false"
+										:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" :rows="(field.extData || {}).rows || 3" style="resize:none;" draggable="false"
 										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
 										></textarea>
 							</div>
@@ -49,7 +49,7 @@ var FormInput = {
 								<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 										:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
 										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required">
-									<option :value="item[field.extValue]" v-for="item in getDataValue(field.extData)" :selected="item[field.extValue] == getFieldValue(field)" >{{item[field.extKey]}}</option>
+									<option :value="item[field.extValue]" v-if="getDataValue(field.extData).length"  v-for="item in getDataValue(field.extData)" :selected="item[field.extValue] == getFieldValue(field)" >{{item[field.extKey]}}</option>
 								</select>
 							</div>
 						</template>
@@ -115,11 +115,25 @@ var FormInput = {
 								</div>
 							</div>
 						</template>
+						<template v-else-if="field.type == 'file'">
+							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
+								<input :id="(field.cssId || field.field) + '_hidden'" type="hidden" :name="field.field" :data-alias="field.alias"
+									:value="getFieldValue(field) || (field.extData || {}).defaultValue" :placeholder="field.title || field.name"
+									:disabled="field.disabled" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
+								<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" 
+									:disabled="field.disabled" :readonly="fieldReadonly" :required="field.required" autocomplete="off"
+									:allowType="(field.extData || {}).allowType" :uploadUrl="(field.extData || {}).uploadUrl"
+									:multiple="(field.extData || {}).multiple"
+								>
+								<button type="button" class="btn btn-success flex-grow-1" @click="commonUploadFile($event, field)" :disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly">上传</button>
+							</div>
+						</template>
 						<template v-else>
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 								<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" 
+										:value="getFieldValue(field) || (field.extData || {}).defaultValue" :placeholder="field.title || field.name" :style="field.cssStyle" 
 										:disabled="field.disabled" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
 							</div>
 						</template>
@@ -231,9 +245,10 @@ var FormInput = {
 				}*/
 				var permissionType = this.permissionType || "";
 				var isPermit = permissionType != "";// == "all" || permissionType == "edit";
+				var checkPermitCallback = (field.extData || {}).checkPermitCallback;
 				if (typeof checkPermitCallback == 'function') {
 	 				try {
-	 					isPermit = checkPermitCallback.call(this, field) || isPermit;
+	 					isPermit = isPermit && checkPermitCallback.call(this, field, isPermit);
 	 				} catch(e) {}
 	 			}
 	 			return isPermit;
@@ -241,7 +256,14 @@ var FormInput = {
 			fieldReadonly: function(_this, field) {
 				field = field || this.field || {};
 				var permissionType = this.permissionType || "";
-				return field.readonly || permissionType == "view";
+				var readonly = field.readonly || permissionType == "view";
+				var readonlyCallback = (field.extData || {}).readonlyCallback;
+				if (typeof readonlyCallback == 'function') {
+	 				try {
+	 					readonly = readonly && readonlyCallback.call(this, field, readonly);
+	 				} catch(e) {}
+	 			}
+				return readonly;
 			},
 			groupClass: function() {
 				var groupClass = this.formGroupClass;
@@ -279,20 +301,49 @@ var FormInput = {
 	 				try {
 	 					console.log("render")
 	 					var render = eval(field.render);
-	 					value = render(this.targetValue, field);
+	 					value = render.call(this, this.targetValue, field);
 	 				}catch(e){
 	 					console.error(e);
 	 				}
+	 			} else {
+	 				if (!value) {
+	 					try {
+			 				var keys = field.field.split(" ");
+			 				var values = [];
+			 				for(var i in keys) {
+			 					var key = keys[i];
+			 					try {
+			 						values.push(eval("this.targetValue." + key));
+			 					} catch(e) {}
+			 				}
+			 				if (values.length == 1) {
+			 					value = values[0];
+			 				} else {
+			 					value = values.join("-");
+			 				}
+			 			} catch(e) {}
+		 			}
+	 				if (!value) {
+	 					try {
+			 				var keys = field.alias.split(" ");
+			 				var values = [];
+			 				for(var i in keys) {
+			 					var key = keys[i];
+			 					try {
+			 						values.push(eval("this.targetValue." + key));
+			 					} catch(e) {}
+			 				}
+			 				if (values.length == 1) {
+			 					value = values[0];
+			 				} else {
+			 					value = values.join("-");
+			 				}
+			 			} catch(e) {}
+		 			}
+	 				if (value && field.type == 'date') {
+	 					value = new Date(value).Format('yyyy-MM-dd');
+	 				}
 	 			}
-	 			try {
-	 				value = value || eval("this.targetValue." + field.field);
-	 			} catch(e) {}
- 				try {
-	 				value = value || eval("this.targetValue." + field.alias);
- 				} catch(e) {}
- 				if (value && field.type == 'date') {
- 					value = new Date(value).Format('yyyy-MM-dd');
- 				}
 	 			return value;
 	 		},
 	 		getDataValue: function(key) {
@@ -352,6 +403,42 @@ var FormInput = {
 	 					&& $.inArray(permission, permissions) > -1) {
 					return true;
 				}
+	 		},
+	 		commonUploadFile: function(event, field) {
+	 			var $target = $(event.currentTarget);
+	 			var $file = $target.prev();
+	 			var _this = this;
+	 			simpleAjaxUploadFile($file,function(result){
+					var result = eval('(' + result + ')');
+					//上传成功
+					var files = result.data || [];
+					var $fileHidden = $file.prev();
+					var fileIds = $.trim($fileHidden.val() || "");
+					fileIds = fileIds ? fileIds.split(",") : [];
+					if(result.success){
+						for ( var i in files) {
+							var file = files[i];
+							var fileId = file.id;
+							if ($.inArray(fileId, fileIds) == -1) {
+								fileIds.push(fileId);
+							}
+						}
+						$fileHidden.val(fileIds.join(","));
+						$file.val('');
+						
+						var $form = $target.parents("form:first");
+						$submit = $form.find("button[data-btn-type='save']");
+						$submit.click();
+						
+						var callback = (field.extData || {}).uploadFileCallback;
+						if (typeof callback == 'function') {
+							callback.call(_this, event, field);
+						}
+					} else {
+						modals.error(result.message);
+					}
+					$target.removeAttr('disabled');
+				})
 	 		}
 	 	}
 	};

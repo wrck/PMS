@@ -25,6 +25,7 @@ import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
@@ -54,6 +55,7 @@ public class CommonRelatedDataController
 				return "unauthorized";
 			}
 			setLocalVariables("dataPrefix", relatedData.getType());
+			relatedData.setDisabled(false);
 			return super.list(pageParam, relatedData, model);
 		} finally {
 			clearLocalVariables();
@@ -146,6 +148,15 @@ public class CommonRelatedDataController
 	public String update(@PathVariable("id") Integer id, CommonRelatedDataVO v, Model model) {
 		try {
 			setLocalVariables("dataPrefix", v.getType());
+			String objType = v.getObjType();
+			Integer objId = v.getObjId();
+			if ("project".equalsIgnoreCase(objType) && objId != null) {
+				IProjectHeaderService projectHeaderService = SpringContext.getBean(IProjectHeaderService.class);
+				ProjectHeader project = projectHeaderService.selectByPrimaryKey(objId);
+				v.setField1(project.getProjectName());
+				v.setField2(project.getColumn003());
+				v.setCustomInfoByKey("project", project);
+			}
 			return super.update(id, v, model);
 		} finally {
 			clearLocalVariables();
@@ -225,11 +236,12 @@ public class CommonRelatedDataController
 				// permissionType = editPerm ? "edit" : "view";
 				// }
 				// }
-				PermissionResult checkPermit = new PermissionUtils().checkPermit(permission, permissions);
+				PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+						new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+								RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
 				isPermit = checkPermit.isPermit();
 				permissionType = checkPermit.getPermissionType();
-				model.addAttribute("permissions",
-						permission.getOrDefault("permissions", model.getAttribute("permissions")));
+				model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
 			} else {
 				isPermit = true;
 				permissionType = "all";

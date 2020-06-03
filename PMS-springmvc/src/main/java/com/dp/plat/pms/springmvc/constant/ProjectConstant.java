@@ -72,6 +72,10 @@ public class ProjectConstant {
 			public static final String YF_APPROVE_TASK = "yfApproveTask";
 			
 			public static final String TRACK_TASK = "trackTask";
+
+			public static final String END = "end";
+			
+			public static final String REJECT = "reject";
 		}
 		
 		public static final class DataType {

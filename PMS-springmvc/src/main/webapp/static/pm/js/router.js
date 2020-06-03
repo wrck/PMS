@@ -57,6 +57,25 @@ router = function(namespace) {
 				callback = router.common(ctx + namespace + tm).callback;
 			}
 			return callback;
+		},
+		methods: (model) => {
+			var methods;
+			try {
+				namespace = (namespace || window.location.pathname.replace(ctx, "").match(/(\/[^\/]+\/)/g)[0]);
+			} catch(e) {}
+			try {
+				var path = (namespace || "").replace(/\//g, ".");
+				if (path.startsWith(".")) {
+					path = path.replace(".", "");
+				}
+				methods = eval(path + model + ".methods");
+			} catch(e) {
+				var tm = model.replace(/([^A-Z]+)([A-Z]+)/g, function(word,a,b,c){
+					return a + "/" + b.toLowerCase() ;
+				});
+				methods = router.common(ctx + namespace + tm).methods;
+			}
+			return methods;
 		}
 	}
 };
@@ -103,6 +122,18 @@ router.common = function(namespace) {
 			}
 		})(namespace),
 		callback: {
+			detail: {
+				vueCallback: function(data, $container) {},
+				modalCreateCallback:null,
+				shouldHideWin:null
+			},
+		},
+		methods: {
+//			canStartProcess: function(entity) {
+//				return false;
+//			},
+//			startProcess: function(el, entity) {
+//			}
 		}
 	}
 };
@@ -220,6 +251,10 @@ pm.dispatch = function() {
 		})(namespace),
 		html: ((namespace) => {
 			return {
+				exportDispatchInfo: (dispatchId, exportType) => {
+					var exportType = exportType || "doc";
+					return namespace + "/" + dispatchId + "/" + exportType + "/info.html";
+				},
 			};
 		})(namespace),
 		
@@ -240,6 +275,10 @@ pm.settlement = function() {
 		})(namespace),
 		html: ((namespace) => {
 			return {
+				exportProjectInfo: (settleId, exportType) => {
+					var exportType = exportType || "doc";
+					return namespace + "/" + settleId + "/projectInfoDoc.html";
+				},
 			};
 		})(namespace),
 	});
@@ -281,6 +320,32 @@ pm.projectTask = function() {
 				}
 			};
 		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status) && data.progress == 100;
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.projectId,
+					objType: 'project',
+					dataId: data.taskId,
+					dataType: "projectTask"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
 	});
 }();
 
@@ -304,6 +369,96 @@ pm.projectMember = function() {
 }();
 
 /**
+ * 行业资产
+ */
+$.namespace("af.industryAsset");
+af.industryAsset = function() {
+	var namespace =  ctx + "/af/industry/asset";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status);
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.id,
+					objType: 'industryAsset',
+					dataId: data.id,
+					dataType: "industryAsset"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
+	});
+}();
+
+/**
+ * 行业漏洞
+ */
+$.namespace("af.industryLeak");
+af.industryLeak = function() {
+	var namespace =  ctx + "/af/industry/leak";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status);
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.id,
+					objType: 'industryLeak',
+					dataId: data.id,
+					dataType: "industryLeak"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
+	});
+}();
+
+/**
  * 项目资产
  */
 $.namespace("pm.projectAsset");
@@ -319,6 +474,32 @@ pm.projectAsset = function() {
 			return {
 			};
 		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status);
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.projectId,
+					objType: 'project',
+					dataId: data.assetId,
+					dataType: "industryAsset"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
 	});
 }();
 
@@ -352,183 +533,207 @@ af.industryWarningAsset = function() {
 }();
 
 /**
- * 结算管理
+ * 项目资产漏洞
  */
-$.namespace('cm.accountPeriod');
-cm.accountPeriod=function(){
-	return {listUrl:ctx + '/cm/accountPeriod/jlist.json',
-		changeStateUrl:ctx + '/cm/accountPeriod/changeState.json',
-		tranferUrl:ctx + '/cm/accountPeriod/transfer.json'}
-	
+$.namespace("pm.assetLeak");
+pm.assetLeak = function() {
+	var namespace =  ctx + "/pm/asset/leak";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		callback: ((namespace) => {
+			return {
+				detail: {
+					vueCallback: function(data, $container) {
+						console.log("vueCallback");
+						// 资产信息Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的资产信息
+			    		var selectedId = (data.targetValue || {}).assetIds;
+			    		var projectId = (data.targetValue || {}).projectId;
+			    		ajaxGet(pm.router.api("projectAsset").list(), {projectId}, function(data) {
+			    			var list = data.data || [];
+			    			var results = $.map(list, function (obj) {
+			    				obj.id = obj.assetId;
+			    				obj.text = obj.assetName;
+			    				return obj;
+			    			});
+			    			$("#assetIds", $container).select2({
+			    				multiple: true,
+			    				allowClear: true,
+			    				dropdownAutoWidth:true,
+			    				data: results,// 设置初始值
+			    				placeholder: '搜索项目资产名'
+			    			})
+			    		});
+//			    		var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
+//			    		$("#assetIds", $container).select2({
+//		    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
+//		    			    multiple: true,
+//			    			allowClear: true,
+//			    			dropdownAutoWidth:true,
+//			    			data: selectedId ? [{id: selectedId, text: ""}] : [],// 设置初始值
+//			    			ajax: {
+//			    			    url: pm.router.api("projectAsset").list("projectId=" + projectId),
+//			    			    dataType: 'json',
+//			    			    delay: 250,
+//			    			    data: function (params) {
+//			    			    	params.pageSize = 10;
+//				    			    return {
+//				    			        assetName: params.term, // search term
+//				    			        fuzzySearch: true,
+//				    			        pageSize: params.pageSize || 10,
+//				    			        start: (params.page - 1) * params.pageSize || 0
+//				    			    };
+//			    			    },
+//			    			    processResults: function (data, params) {
+//			    			      	params.page = params.page || 1;
+//								  	var list = data.data || [];
+//								  	var results = $.map(list, function (obj) {
+//								  		obj.id = obj.assetId;
+//								  		obj.text = obj.assetName;
+//									  	return obj;
+//									});
+//			    			      	return {
+//			    			        	results: results,
+//			    			        	pagination: {
+//			    			          		more: (params.page * (params.pageSize || 10)) < data.pageParam.filtered
+//			    			       		}
+//			    			      	};
+//			    			    },
+//			    			    cache: true
+//			    			  },
+//			    			  placeholder: '搜索项目资产名',
+//			    			  minimumInputLength: 2,
+//			    			  templateResult: function (repo) {
+//		    				  	  if (repo.loading) {
+//	    	    					  return repo.text;
+//			    	    		  }
+//		    				  	  return repo.text;
+//			    			  },
+//			    			  templateSelection: function formatRepoSelection (repo) {
+//			    				  return repo.text;
+//		    	    		  }
+//			    		});
+			    		/* if (dispatchIdPlaceholder) {
+			    			$(".select2-selection__placeholder").css("color", 'inherit');
+			    		} */
+			    		
+			    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
+			    		$("#assetIds + .select2-container", $container).one("click", function(e) {
+			    			$("#assetIds", $container).on("change", function(e){
+			    				try{
+			    					var source = $(this).select2("data");
+			    					if (source.length > 0) {
+			    						source = source[0];
+			    					} else {
+			    						source = {};
+			    					}
+			    					console.log(source, this.value);
+					    			var targetValue = vm._data.targetValue || {};
+					    			targetValue.assetIds = $("#assetIds").val();
+					    			vm._data.targetValue = targetValue;
+				    			} catch(e){}
+			    			});
+			    		});
+					}
+				}
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status);
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.projectId,
+					objType: 'project',
+					dataId: data.leakId,
+					dataType: "industryLeak"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
+	});
 }();
-
-/* item管理**/
-$.namespace('cm.item.list');
-
-cm.item.list=function(){
-	return {
-		listUrl : ctx + '/cm/item/jlist.json',
-		importUrl:ctx + '/cm/item/modals/import.html',
-		readUrl:ctx + '/cm/item/readAndWriteItemInfo.json',
-		importSubmitUrl:ctx + '/cm/item/importSubmit.json',
-	}
-}();
-
-
-
-/* item收入类型管理*/
-$.namespace('cm.item.incometype.list');
-
-cm.item.incometype.list = function(){
-	return {
-		listUrl: ctx+ '/cm/item/incomeType/jlist.json',
-		submitUrl:ctx + '/cm/item/incomeType/submit.json',
-	}
-}();
-
-/*分摊管理*/
-$.namespace('ar.allocation.list');
-ar.allocation.list = function(){
-	//分摊列表
-	var listUrl = ctx + '/ar/allocation/jlist.json';
-	//新建分摊
-	var submitUrl = ctx + '/ar/allocation/submit.json';
-	
-	var deleteUrl = ctx + '/ar/allocation/delete.json';
-	
-	var totalDataInput = ctx + '/ar/allocation/modals/totalDataInput.html';
-	
-	var submitDataInput = ctx + '/ar/allocation/submitTotalDataInput.json'
-	
-	var inVarListUrl = ctx + "/ar/allocation/rule/var/inVarListByAllocation.json";
-	
-	var sysVarListUrl =  ctx + "/ar/allocation/rule/var/sysVarListByAllocation.json";
-	
-	var executeAllocationUrl = ctx + '/ar/allocation/executeAllocation.json';
-	//分摊数据调整入口
-	var adjustlistUrl = ctx + '/ar/allocation/list/adjust.html';
-	
-//	var detaillistUrl = ctx + '/ar/allocation/list/adjust.html';
-	
-	return {listUrl:listUrl,
-		submitUrl:submitUrl,
-		deleteUrl:deleteUrl,
-		totalDataInputUrl:totalDataInput,
-		submitDataInput:submitDataInput,
-		inVarListUrl:inVarListUrl,
-		sysVarListUrl:sysVarListUrl,
-		executeAllocationUrl:executeAllocationUrl,
-		adjustlistUrl:adjustlistUrl
-	};
-}();
-
-/* 分摊数据调整 */
-$.namespace('ar.allocation.adjust.list');
-
-ar.allocation.adjust.list = function(){
-	return {
-		listUrl : ctx + '/ar/allocation/jadjustList.json',
-		incomeTypeAdjustUrl : ctx + '/ar/allocation/incomeTypeAdjust.json',
-		cancelAllocationUrl:ctx + '/ar/allocation/cancelAllocation.json',
-		agentAdjustUrl:ctx + '/ar/allocation/agentAdjust.json',
-		agentListUrl:ctx + '/ar/allocation/agentList.json'
-	}
-}();  
-
-/*分摊规则管理*/
-$.namespace('ar.allocation.rule.list');
-
-ar.allocation.rule.list = function(){
-	//分摊规则列表
-	var listUrl = ctx + '/ar/allocation/rule/jlist.json';
-	//新建分摊规则 提交
-	var submitUrl = ctx + '/ar/allocation/rule/submit.json';
-	
-	var varListUrl = ctx + '/ar/allocation/rule/var/jlist.json';
-	
-	var varSubmitUrl = ctx + '/ar/allocation/rule/var/submit.json';;
-	
-	return {listUrl :listUrl ,submitUrl:submitUrl ,varListUrl:varListUrl,varSubmitUrl:varSubmitUrl}
-}();
-
-
-/*收入口径salesIn*/
-$.namespace('ar.revenue.salesin');
-ar.revenue.salesin=function(){
-	return {
-		jlistUrl : ctx + '/ar/revenue/salesIn/jlist.json'
-	}
-}();
-
-/* 合并收入口径salesIn*/
-$.namespace('ar.merge.revenue.salesin');
-ar.merge.revenue.salesin=function(){
-	return {
-		jlistUrl:ctx + '/ar/merge_revenue/salesIn/jlist.json'
-	}
-}();
-
-/*递延查询*/
-$.namespace('ar.deferred.query');
-ar.deferred.query=function(){
-	return {
-		jlistUrl:ctx + '/ar/deferred/query/jlist.json'
-	}
-}();
-
 
 /**
- * 报告管理
+ * 流程
  */
-$.namespace("ar.report");
-ar.report = function() {
-	var reportNamespace =  ctx + "/ar/report";
-	return {
-		api:(() => {
+$.namespace("workflow");
+workflow = function() {
+	var namespace =  ctx + "/workflow";
+	var router = pm.common(namespace);
+	return $.extend(true, {}, router, {
+		api:((namespace) => {
 			return {
-				// 列表数据
-				list: () => reportNamespace + "/list.json",
-				// 新增报告
-				create: ()=> reportNamespace + "/submit.json",
-				// 更新报告
-				update: (reportId) => reportNamespace + "/" + reportId + ".json?_method=PUT",
-				// 删除报告
-				delete:(reportId) =>  reportNamespace + "/" + reportId + ".json?_method=DELETE",
-				// 查询指定报告
-				findOne:(reportId) => reportNamespace + "/" + reportId + ".json",
-				// 查询报告类型
-				reportType: (dicTypeName) => ctx + "/sys/dictionary/list.json?dicTypeName=" + (dicTypeName || "报告类型"),
-				// 初始化报告数据
-				initData: (reportId) => reportNamespace + "/" + reportId + "/initData.json",
-				// 报告数据查询、调整
-				lineList: (reportId) => reportNamespace + "/" + reportId + "/list.json",
-				// 报告数据列对应关系
-				columnMapping: (reportType) => reportNamespace + "/columnMapping.json?reportType=" + reportType,
-				// 产品分级数据
-				productLevelData: (reportType) => reportNamespace + "/productLevel.json?reportType=" + reportType,
-				// 产品分级调整
-				reportDataAdjust: (reportId) => reportNamespace + "/" + reportId + "/adjust.json",
-				// 导入数据预览
-				importPreview: (reportId, importType) => reportNamespace + "/" + reportId + "/" + importType + "/preview.json",
-				// 导入数据预览
-				previewTempTable: (reportId, tempTableName) => reportNamespace + "/" + reportId + "/previewTempTable.json?tempTableName="+tempTableName,
-				// 删除临时表
-				dropTempTable: (reportId, tempTableName) => reportNamespace + "/" + reportId + "/dropTempTable.json?tempTableName="+tempTableName,
-				// 导入数据提交
-				importSubmit: (reportId, importType, tempTableName) => reportNamespace + "/" + reportId + "/" + importType + "/submit" + (tempTableName ? "TempTable" : "") + ".json",
-				// 日志查询
-				logView: (reportId) => reportNamespace + "/" + reportId + "/log.json",
-			}
-		})(),
-		html: (() => {
+				startProcess: () => namespace + "/startProcess.json",
+				infoList: (search) => namespace + "/info/list.json" + (search ? "?" + search : "").replace("??", "?"),
+				checkTask: (taskId, procInstId) => namespace + "/task/" + taskId + "/check.json" + (procInstId ? "?procInstId=" + procInstId : ""),
+				taskDetail: (taskId) => namespace + "/task/" + taskId + ".json",
+			};
+		})(namespace),
+		html: ((namespace) => {
 			return {
-				list: () => reportNamespace + ".html",
-				lineList: (reportId) => reportNamespace + "/" + reportId + "/list.html",
-				// 日志查询
-				logView: (reportId, isModals) => reportNamespace + "/" + reportId + (isModals ? "/modals" : "") + "/log.html",
-				// 导入模态页
-				importModals: (reportId, importType) => reportNamespace + "/" + reportId + "/modals/" + (importType || "adjustData") + ".html",
-			}
-		})()
-	}
+				taskDetail: (taskId, isModals) => namespace + "/task" + (isModals ? "/modals" : "") + "/" + taskId + ".html",
+			};
+		})(namespace),
+		callback: ((namespace) => {
+		})(namespace),
+	});
 }();
+
+router.getDownload = function(url, isInner) {
+	if(!url) {
+		modals.error('下载地址不存在！');
+		return;
+	}
+	isInner = isInner == false ? false : true;
+	var a = document.createElement('a');
+	a.download = '';
+	if (isInner && !url.startsWith(basePath)) {
+		url = basePath + url;
+	}
+	a.href = url;
+	$("body").append(a); // 修复firefox中无法触发click
+	a.click();
+	$(a).remove();
+}
+
+router.postDownload = function(url, isInner) {
+	if(!url) {
+		modals.error('下载地址不存在！');
+		return;
+	}
+	isInner = isInner == false ? false : true;
+	if (isInner && !url.startsWith(basePath)) {
+		url = basePath + url;
+	}
+	var form = document.createElement('form');
+	form.download = '';
+	form.method = "post";
+	if (typeof __RequestVerificationToken == "string") {
+		url = url + "?__RequestVerificationToken=" + __RequestVerificationToken;
+	}
+	form.action = url;
+	$("body").append(form);
+	form.submit();
+	$(form).remove();
+}

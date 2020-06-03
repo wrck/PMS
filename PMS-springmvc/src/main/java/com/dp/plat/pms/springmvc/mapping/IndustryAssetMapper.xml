@@ -25,7 +25,7 @@
     <result column="assetDB" jdbcType="VARCHAR" property="assetDB" />
     <result column="assetDBVersion" jdbcType="VARCHAR" property="assetDBVersion" />
     <result column="customInfo" jdbcType="JSON" property="customInfo" />
-    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
     <result column="trackStatus" jdbcType="INTEGER" property="trackStatus" />
     <result column="trackedTime" jdbcType="TIMESTAMP" property="trackedTime" />
     <result column="disabled" jdbcType="BIT" property="disabled" />
@@ -55,28 +55,28 @@
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into af_industry_asset (assetNum, assetName, assetCategory, 
-      assetType, assetHost, assetOpenPorts, 
-      assetDeployInfo, assetUsage, customerName, 
-      industryCode, assetAS, assetASVersion, 
-      assetASIdentify, assetASFramework, middlewareName, 
-      middlewareVersion, developerBrand, assetOS, 
-      assetOSVersion, assetDB, assetDBVersion, 
-      customInfo, status, trackStatus, 
-      trackedTime, disabled, createBy, 
-      createTime, updateBy, updateTime
-      )
-    values (#{assetNum,jdbcType=VARCHAR}, #{assetName,jdbcType=VARCHAR}, #{assetCategory,jdbcType=VARCHAR}, 
-      #{assetType,jdbcType=VARCHAR}, #{assetHost,jdbcType=VARCHAR}, #{assetOpenPorts,jdbcType=VARCHAR}, 
-      #{assetDeployInfo,jdbcType=VARCHAR}, #{assetUsage,jdbcType=VARCHAR}, #{customerName,jdbcType=VARCHAR}, 
-      #{industryCode,jdbcType=VARCHAR}, #{assetAS,jdbcType=VARCHAR}, #{assetASVersion,jdbcType=VARCHAR}, 
-      #{assetASIdentify,jdbcType=VARCHAR}, #{assetASFramework,jdbcType=VARCHAR}, #{middlewareName,jdbcType=VARCHAR}, 
-      #{middlewareVersion,jdbcType=VARCHAR}, #{developerBrand,jdbcType=VARCHAR}, #{assetOS,jdbcType=VARCHAR}, 
-      #{assetOSVersion,jdbcType=VARCHAR}, #{assetDB,jdbcType=VARCHAR}, #{assetDBVersion,jdbcType=VARCHAR}, 
-      #{customInfo,jdbcType=JSON}, #{status,jdbcType=INTEGER}, #{trackStatus,jdbcType=INTEGER}, 
-      #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
-      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
-      )
+    insert into af_industry_asset (id, assetNum, assetName, 
+      assetCategory, assetType, assetHost, 
+      assetOpenPorts, assetDeployInfo, assetUsage, 
+      customerName, industryCode, assetAS, 
+      assetASVersion, assetASIdentify, assetASFramework, 
+      middlewareName, middlewareVersion, developerBrand, 
+      assetOS, assetOSVersion, assetDB, 
+      assetDBVersion, customInfo, status, 
+      trackStatus, trackedTime, disabled, 
+      createBy, createTime, updateBy, 
+      updateTime)
+    values (#{id,jdbcType=INTEGER}, #{assetNum,jdbcType=VARCHAR}, #{assetName,jdbcType=VARCHAR}, 
+      #{assetCategory,jdbcType=VARCHAR}, #{assetType,jdbcType=VARCHAR}, #{assetHost,jdbcType=VARCHAR}, 
+      #{assetOpenPorts,jdbcType=VARCHAR}, #{assetDeployInfo,jdbcType=VARCHAR}, #{assetUsage,jdbcType=VARCHAR}, 
+      #{customerName,jdbcType=VARCHAR}, #{industryCode,jdbcType=VARCHAR}, #{assetAS,jdbcType=VARCHAR}, 
+      #{assetASVersion,jdbcType=VARCHAR}, #{assetASIdentify,jdbcType=VARCHAR}, #{assetASFramework,jdbcType=VARCHAR}, 
+      #{middlewareName,jdbcType=VARCHAR}, #{middlewareVersion,jdbcType=VARCHAR}, #{developerBrand,jdbcType=VARCHAR}, 
+      #{assetOS,jdbcType=VARCHAR}, #{assetOSVersion,jdbcType=VARCHAR}, #{assetDB,jdbcType=VARCHAR}, 
+      #{assetDBVersion,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, #{status,jdbcType=VARCHAR}, 
+      #{trackStatus,jdbcType=INTEGER}, #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAsset">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
@@ -84,6 +84,9 @@
     </selectKey>
     insert into af_industry_asset
     <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
       <if test="assetNum != null">
         assetNum,
       </if>
@@ -176,6 +179,9 @@
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
       <if test="assetNum != null">
         #{assetNum,jdbcType=VARCHAR},
       </if>
@@ -243,7 +249,7 @@
         #{customInfo,jdbcType=JSON},
       </if>
       <if test="status != null">
-        #{status,jdbcType=INTEGER},
+        #{status,jdbcType=VARCHAR},
       </if>
       <if test="trackStatus != null">
         #{trackStatus,jdbcType=INTEGER},
@@ -335,10 +341,17 @@
         assetDBVersion = #{assetDBVersion,jdbcType=VARCHAR},
       </if>
       <if test="customInfo != null">
-        customInfo = #{customInfo,jdbcType=JSON},
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value, jdbcType=JSON}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
       </if>
       <if test="status != null">
-        status = #{status,jdbcType=INTEGER},
+        status = #{status,jdbcType=VARCHAR},
       </if>
       <if test="trackStatus != null">
         trackStatus = #{trackStatus,jdbcType=INTEGER},
@@ -387,8 +400,15 @@
       assetOSVersion = #{assetOSVersion,jdbcType=VARCHAR},
       assetDB = #{assetDB,jdbcType=VARCHAR},
       assetDBVersion = #{assetDBVersion,jdbcType=VARCHAR},
-      customInfo = #{customInfo,jdbcType=JSON},
-      status = #{status,jdbcType=INTEGER},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+      status = #{status,jdbcType=VARCHAR},
       trackStatus = #{trackStatus,jdbcType=INTEGER},
       trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
       disabled = #{disabled,jdbcType=BIT},
@@ -470,8 +490,8 @@
 			<if test="customInfo != null">
 				ia.customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
-			<if test="status != null">
-				ia.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				ia.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				ia.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -570,8 +590,8 @@
 				<if test="model.customInfo != null">
 					ia.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
-				<if test="model.status != null">
-					ia.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					ia.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					ia.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
@@ -618,6 +638,7 @@
 					ia.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDB like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.status like CONCAT("%", #{fuzzy}, "%") or
 					ia.createBy like CONCAT("%", #{fuzzy}, "%") or
 					ia.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
@@ -626,7 +647,7 @@
 	</where>
   </sql>
   <sql id="sql_pageable_limit">
-	<if test="orderBy != null">
+    <if test="orderBy != null">
         order by ${orderBy}
     </if>
     <if test="orderBy == null">
@@ -709,8 +730,8 @@
 			<if test="customInfo != null">
 				ia.customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
-			<if test="status != null">
-				ia.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				ia.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				ia.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -809,8 +830,8 @@
 			<if test="customInfo != null">
 				ia.customInfo = #{customInfo, jdbcType=JSON} AND
 			</if>
-			<if test="status != null">
-				ia.status = #{status, jdbcType=INTEGER} AND
+			<if test="status != null and '' != status">
+				ia.status = #{status, jdbcType=VARCHAR} AND
 			</if>
 			<if test="trackStatus != null">
 				ia.trackStatus = #{trackStatus, jdbcType=INTEGER} AND
@@ -837,7 +858,17 @@
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
-    select * from af_industry_asset as ia
+    select 
+    	JSON_SET(IFNULL(ia.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+    	ia.*<!--  , 
+	    bd.basicDataName as `customInfo.statusName`, bd2.basicDataName as `customInfo.trackStatusName`  -->
+    from af_industry_asset as ia
+    left join `fnd_basic_data` bd 
+        on ia.`status` = bd.`basicDataId` 
+        and bd.`dataTypeCode` = 'processStatus'
+    left join `fnd_basic_data` bd2 
+        on ia.`trackStatus` = bd2.`basicDataId` 
+        and bd2.`dataTypeCode` = 'trackStatus' 
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -910,8 +941,8 @@
 				<if test="model.customInfo != null">
 					ia.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
-				<if test="model.status != null">
-					ia.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					ia.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					ia.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
@@ -958,6 +989,7 @@
 					ia.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDB like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.status like CONCAT("%", #{fuzzy}, "%") or
 					ia.createBy like CONCAT("%", #{fuzzy}, "%") or
 					ia.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
@@ -1039,8 +1071,8 @@
 				<if test="model.customInfo != null">
 					ia.customInfo = #{model.customInfo, jdbcType=JSON} AND
 				</if>
-				<if test="model.status != null">
-					ia.status = #{model.status, jdbcType=INTEGER} AND
+				<if test="model.status != null and '' != model.status">
+					ia.status = #{model.status, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.trackStatus != null">
 					ia.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
@@ -1087,6 +1119,7 @@
 					ia.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDB like CONCAT("%", #{fuzzy}, "%") or
 					ia.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.status like CONCAT("%", #{fuzzy}, "%") or
 					ia.createBy like CONCAT("%", #{fuzzy}, "%") or
 					ia.updateBy like CONCAT("%", #{fuzzy}, "%")
 				)
@@ -1099,7 +1132,7 @@
     select 
 	    apr.id, apr.projectId, ia.id as assetId, ia.*, ph.projectName
 	from
-	    `pm_project_header` ph 
+	    `pm_project` ph 
 	    left join af_industry_asset_project_relation apr 
 	        on ph.`projectId` = apr.`projectId` 
 	        and apr.`disabled` = false 
