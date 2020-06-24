@@ -2925,9 +2925,10 @@
         <result property="projectId" column="projectId"/>
     </resultMap>
     
-    <select id="query-projectdeliver-byid" parameterClass="int" resultMap="pdeliver">
+    <select id="query-projectdeliver-byid" parameterClass="int" resultClass="com.dp.plat.data.bean.ProjectDeliver">
         <![CDATA[
-            SELECT pbpd.column010 column010, pbpd.column011 column011, pbpd.dataTypeCode dataTypeCode, pbpd.basicDataId basicDataId, pbdd.projectId projectId 
+            SELECT pbpd.column010 column010, pbpd.column011 column011, pbpd.dataTypeCode dataTypeCode, pbpd.basicDataId basicDataId, pbdd.projectId projectId,
+            	pbdd.projectType, pbdd.taskId, pbdd.deliverId 
             FROM pm_basic_prj_deliver pbpd LEFT JOIN pm_basic_deliver_detail pbdd ON pbdd.deliverId = pbpd.id WHERE pbdd.id = #id# limit 1
         ]]>
     </select>

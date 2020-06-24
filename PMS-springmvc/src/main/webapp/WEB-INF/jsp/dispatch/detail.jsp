@@ -88,7 +88,7 @@
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0">
 								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
-								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+								<form-inputs ref="formInputs" :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-create="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
@@ -104,7 +104,7 @@
 					</div>
 					<div id="tabDiv" class="fade" :class="{in: isShow}">
 						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
-						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
+						<nav-tab ref="formTab" :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -188,9 +188,11 @@
 	    				 	}),
     				 	}
 					));
+					// 获取表单验证要求
+					varFields = vm.$refs["formInputs"].fieldValidators;
 					
 					form = $("#" + formId).form();
-					form.initFormData(data.targetValue);
+					//form.initFormData(data.targetValue);
 					$container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
@@ -269,7 +271,7 @@
 		    		} */
 		    		
 		    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-		    		$("#projectIds + .select2-container", $container).one("click", function(e) {
+		    		$("#projectIds", $container).siblings(".select2-container").one("click", function(e) {
 		    			$("#projectIds", $container).on("change", function(e){
 		    				try{
 		    					var source = $(this).select2("data");
@@ -294,7 +296,7 @@
 /* 		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
 			    		$("#facilitatorId", $container).one("change", changeFacilitator);
 		    		}
- */		    		$("#facilitatorId + .select2-container", $container).one("click", function(e) {
+ */		    		$("#facilitatorId", $container).siblings(".select2-container").one("click", function(e) {
 		    			$("#facilitatorId", $container).on("change", changeFacilitator)
 		    		});
 		    		

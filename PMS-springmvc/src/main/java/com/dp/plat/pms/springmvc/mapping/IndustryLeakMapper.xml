@@ -212,7 +212,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
       <if test="createBy != null">
         createBy = #{createBy,jdbcType=VARCHAR},
@@ -250,7 +250,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       createBy = #{createBy,jdbcType=VARCHAR},
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
@@ -546,10 +546,10 @@
 					l.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.leakCode != null and '' != model.leakCode">
-					l.leakCode = #{model.leakCode, jdbcType=VARCHAR} AND
+					l.leakCodelike concat("%",= #{model.leakCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakName != null and '' != model.leakName">
-					l.leakName = #{model.leakName, jdbcType=VARCHAR} AND
+					l.leakName like concat("%", #{model.leakName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakType != null and '' != model.leakType">
 					l.leakType = #{model.leakType, jdbcType=VARCHAR} AND
@@ -558,13 +558,13 @@
 					l.leakLevel = #{model.leakLevel, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.leakDesc != null and '' != model.leakDesc">
-					l.leakDesc = #{model.leakDesc, jdbcType=VARCHAR} AND
+					l.leakDesc like concat("%", #{model.leakDesc, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakSourceInfo != null and '' != model.leakSourceInfo">
 					l.leakSourceInfo = #{model.leakSourceInfo, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
-					l.remark = #{model.remark, jdbcType=VARCHAR} AND
+					l.remark like concat("%", #{model.remark, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.status != null and '' != model.status">
 					l.status = #{model.status, jdbcType=VARCHAR} AND
@@ -623,10 +623,10 @@
 					l.id = #{model.id, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.leakCode != null and '' != model.leakCode">
-					l.leakCode = #{model.leakCode, jdbcType=VARCHAR} AND
+					l.leakCodelike concat("%",= #{model.leakCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakName != null and '' != model.leakName">
-					l.leakName = #{model.leakName, jdbcType=VARCHAR} AND
+					l.leakName like concat("%", #{model.leakName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakType != null and '' != model.leakType">
 					l.leakType = #{model.leakType, jdbcType=VARCHAR} AND
@@ -635,13 +635,13 @@
 					l.leakLevel = #{model.leakLevel, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.leakDesc != null and '' != model.leakDesc">
-					l.leakDesc = #{model.leakDesc, jdbcType=VARCHAR} AND
+					l.leakDesc like concat("%", #{model.leakDesc, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.leakSourceInfo != null and '' != model.leakSourceInfo">
 					l.leakSourceInfo = #{model.leakSourceInfo, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.remark != null and '' != model.remark">
-					l.remark = #{model.remark, jdbcType=VARCHAR} AND
+					l.remark like concat("%", #{model.remark, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.status != null and '' != model.status">
 					l.status = #{model.status, jdbcType=VARCHAR} AND

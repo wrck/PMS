@@ -549,4 +549,9 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
         // 最后要设置null,清空上下文
         identityService.setAuthenticatedUserId(null);
     }
+    
+    @Override
+    public List<String> selectActivitiUserMails(Map<String, Object> params) {
+		return dao.selectActivitiUserMails(params);
+    }
 }

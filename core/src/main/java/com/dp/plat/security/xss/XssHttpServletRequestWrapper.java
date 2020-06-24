@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
  * 防止SQL注入和XSS攻击
  * @author j01441
  *
+ * @deprecated @RequestBody application/json请求时无法处理，只能处理表单提交和get请求
  */
 public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
 

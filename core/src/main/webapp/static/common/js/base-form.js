@@ -1,4 +1,48 @@
 /**
+ * @desc 属性改变监听，属性被set时出发watch的方法，类似vue的watch
+ * @author Jason
+ * @study https://www.jianshu.com/p/00502d10ea95
+ * @data 2018-04-27
+ * @constructor
+ * @param {object} opts - 构造参数. @default {data:{},watch:{}};
+ * @argument {object} data - 要绑定的属性
+ * @argument {object} watch - 要监听的属性的回调
+ * watch @callback (newVal,oldVal) - 新值与旧值
+ */
+class watcher{
+    constructor(opts){
+        this.$data = this.getBaseType(opts.data) === 'Object' ? opts.data : {};
+        this.$watch = this.getBaseType(opts.watch) === 'Object' ? opts.watch : {};
+        for(let key in opts.data){
+            this.setData(key)
+        }
+    }
+ 
+    getBaseType(target) {
+        const typeStr = Object.prototype.toString.apply(target);
+     
+        return typeStr.slice(8, -1);
+    }
+ 
+    setData(_key){
+        Object.defineProperty(this,_key,{
+            get: function () {
+                return this.$data[_key];
+            },
+            set : function (val) {
+                const oldVal = this.$data[_key];
+                if(oldVal === val)return val;
+                this.$data[_key] = val;
+                this.$watch[_key] && typeof this.$watch[_key] === 'function' && (
+                    this.$watch[_key].call(this,val,oldVal)
+                );
+                return val;
+            },
+        });
+    }
+}
+
+/**
  *  add by billJiang 2016/10/9
  *  form 表单数据回填/获取/重置
  */
@@ -103,14 +147,23 @@
     					config = JSON.parse(config);
     				} catch(e){
     					try {
-    						config = eval(config);
+    						if ($.isPlainObject(config)) {
+    							config = eval(config);
+    						} else {
+    							config = eval("(" + config + ")");
+    						}
     					} catch(e){
-    						config = defaultConfig;
+    						try {
+    							config = eval(config);
+    						} catch(e) {
+    							config = defaultConfig;
+    						}
     					}
     				}
     			} else {
     				config = defaultConfig;
     			}
+    			//$(this).select2($.extend(true, {}, defaultConfig, config));
     			$(this).select2(config);
     			if (config.events) {
     				try {
@@ -131,7 +184,25 @@
     			'select2/utils'
     			], function (ArrayData, Utils) {
     				function DataCacheAdapter ($element, options) {
-    					DataCacheAdapter.__super__.constructor.call(this, $element, options);
+//    					var opt = options.options;
+//    					var DataAdapter = DataCacheAdapter;
+//    					if (opt.tags) {
+//    						var Tags = $.fn.select2.amd.require('select2/data/tags');
+//    						DataAdapter = Utils.Decorate(DataAdapter, Tags);
+//    					}
+//
+//				        if (opt.tokenSeparators != null || opt.tokenizer != null) {
+//				        	var Tokenizer = $.fn.select2.amd.require('select2/data/tokenizer');
+//				        	DataAdapter = Utils.Decorate(
+//			        			DataAdapter,
+//    				        	Tokenizer
+//    				        );
+//				        }
+//				        if (DataAdapter.__super__) {
+				        	DataCacheAdapter.__super__.constructor.call(this, $element, options);
+//				        } else {
+//				        	new DataAdapter().constructor.call(this, $element, options);
+//				        }
     			    }
     			    Utils.Extend(DataCacheAdapter, ArrayData);
     			    DataCacheAdapter.prototype.query = function (params, callback) {
@@ -150,15 +221,19 @@
 		    			    });
 		                    return;
 		                }
+		    			var ajaxOption = options.ajax;
+		    			var url = options.ajax.url;
+		    			var queryData = ajaxOption.data(params);
+		    			var cacheKey = url + "_" + JSON.stringify(queryData);
+		    			
 		    			this.dataCaches = _this.dataCaches || {};
-		    			_this.dataCaches[key] = _this.dataCaches[key] || {};
-		                var dataCache = _this.dataCaches[key][page];
+		    			_this.dataCaches[cacheKey] = _this.dataCaches[cacheKey] || {};
+		                var dataCache = _this.dataCaches[cacheKey][page];
 		                if (dataCache) {
 		                    callback(dataCache);
 		                } else {
-	                		var ajaxOption = options.ajax;
 		                	var request = function() {
-	                			ajaxGet(ajaxOption.url, ajaxOption.data(params), function(data) {
+	                			ajaxGet(url, ajaxOption.data(params), function(data) {
 	                				var results = data;
 	                				if (ajaxOption.processResults) {
 	                					results = ajaxOption.processResults.call(_this, data, params);
@@ -167,7 +242,7 @@
 	                				if((oldReuslts.pagination || {}).more) {
 	                					oldReuslts.results.concat(results.results);
 	                				} */
-	                				_this.dataCaches[key][page] = results;
+	                				_this.dataCaches[cacheKey][page] = results;
 	                                callback(results);
 		    			    	})
 		                	};
@@ -272,7 +347,7 @@
      // datetimepicker
 		if (form.find(this.datetimepickerElement).length > 0) {
 			form.find(this.datetimepickerElement).each(function(){
-				var formatPattern = $(this).data("format").trim();
+				var formatPattern = $.trim($(this).data("format"));
 				if (formatPattern === "yyyy-MM-dd HH:mm:ss") {
 					formatPattern = "yyyy-mm-dd hh:ii:ss";
 				} else if (formatPattern === "yyyy-MM-dd HH:mm") {
@@ -389,9 +464,9 @@
     	// summernote 富文本编辑器
 		if (form.find(this.summernoteElement).length > 0) {
 			form.find(this.summernoteElement).each(function(){
-				var placeholder = $(this).attr("placeholder").trim();
+				var placeholder = $.trim($(this).attr("placeholder"));
 				if (!placeholder) {
-					placeholder = $(this).data("placeholder").trim();
+					placeholder = $.trim($(this).data("placeholder"));
 				}
 				placeholder = placeholder ? placeholder : "请输入内容";
 				$(this).summernote({     
@@ -414,6 +489,7 @@
     	if ($.fn.autocomplete) {
     		var defaultConfig = {
 				//lookup:[],
+    			noSuggestionNotice: "未找到结果",
 				transformResult: function(response, originalQuery) {
 					var sel = $(this);
 					var src_data = sel.data("src-data") || "data";
@@ -470,9 +546,21 @@
     					config = JSON.parse(config);
     				} catch(e){
     					try {
-    						config = eval(config);
+    						config = eval("(" + config + ")");
     					} catch(e){
-    						config = defaultConfig;
+    						try {
+        						if ($.isPlainObject(config)) {
+        							config = eval(config);
+        						} else {
+        							config = eval("(" + config + ")");
+        						}
+        					} catch(e){
+        						try {
+        							config = eval(config);
+        						} catch(e) {
+        							config = defaultConfig;
+        						}
+        					}
     					}
     				}
     				if (config.events) {
@@ -534,6 +622,7 @@
                     } else {
                     	if (config.lazy) {
                     		$(item).one("click", function() {
+                    			url = $(item).data("src") || url;
                     			_this.getDataByUrl(url, function(data) {
                             		var results = config.transformResult.call(item, data);
                             		config.lookup = results.suggestions;
@@ -618,11 +707,13 @@
                     var $target = isSelect2 ? $(item).siblings(".select2.select2-container") : $(item);
                     if (lazy) {
                     	$target.one("click", function() {
+                    		url = $(item).data("src") || url;
                     		_this.buildAjaxUrlSelect(that, url);
                 		})
                 	} else {
                 		$target.click(function () {
-	                        _this.buildAjaxUrlSelect(that, url);
+                			url = $(item).data("src") || url;
+            				_this.buildAjaxUrlSelect(that, url);
 	                    })
                 	}
                 }
@@ -643,12 +734,22 @@
     //数据来源为字典的下拉框
     BaseForm.prototype.buildAjaxDictSelect = function (selector, dictCode) {
         var builder = this.buildAjaxSelector(selector);
-        $dataSource.getDict(dictCode, builder);
+        if (builder) {
+        	$dataSource.getDict(dictCode, builder);
+        }
     }
     //数据来源为url的下拉框
     BaseForm.prototype.buildAjaxUrlSelect = function (selector, url) {
-        var builder = this.buildAjaxSelector(selector);
-        this.getDataByUrl(url, builder);
+    	var oldUrl = $(selector).data("oldUrl");
+    	var isSame = url == oldUrl;
+    	$(selector).data("oldUrl", url);
+    	
+    	if (!isSame) {
+    		var builder = this.buildAjaxSelector(selector);
+    		if (builder) {
+    			this.getDataByUrl(url, builder);
+    		}
+    	}
     }
     //radio checkbox 渲染并生成
     BaseForm.prototype.buildAjaxBox = function (selector) {
@@ -674,8 +775,13 @@
     //下拉框组件生成
     BaseForm.prototype.buildAjaxSelector = function (selector) {
         var sel = $(selector);
+        var allowClear = $(selector).data("allowClear") ? true: false;
         if (sel.children().length > 0) {
-            return false;
+        	if (allowClear) {
+        		$(selector).html("");
+        	} else {
+        		return false;
+        	}
         }
         var _this = this;
         var blank_value = sel.data("blank-value");
@@ -732,6 +838,9 @@
                     	option.data("source", data[i]);
                     }
                     sel.append(option);
+                    if (!is_blank && i == 0) {
+                    	values = values || valueName.join(separator);
+                    }
                 }
             }
             _this.fillElemValue(sel[0], values);
@@ -805,7 +914,7 @@
 		// datetimepicker
 		if (form.find('[data-flag="datetimepicker"]').length > 0) {
 			form.find('[data-flag="datetimepicker"]').each(function(){
-				var formatPattern = $(this).data("format").trim();
+				var formatPattern = $.trim($(this).data("format"));
 				if (formatPattern === "yyyy-MM-dd HH:mm:ss") {
 					formatPattern = "yyyy-mm-dd hh:ii:ss";
 				} else if (formatPattern === "yyyy-MM-dd HH:mm") {
@@ -917,9 +1026,9 @@
 		// summernote 富文本编辑器
 		if (form.find('[data-flag="summernote"]').length > 0) {
 			form.find('[data-flag="summernote"]').each(function(){
-				var placeholder = $(this).attr("placeholder").trim();
+				var placeholder = $.trim($(this).attr("placeholder"));
 				if (!placeholder) {
-					placeholder = $(this).data("placeholder").trim();
+					placeholder = $.trim($(this).data("placeholder"));
 				}
 				placeholder = placeholder ? placeholder : "请输入内容";
 				$(this).summernote({     
@@ -948,35 +1057,65 @@
 			return datas;
 		var elems = form.find('input[name], select[name], textarea[name]').not(filter);
 
-		// 设置datas属性
-		elems.each(function (ind, elem) {
-			var el_name = elem.name, is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
-			if (!el_name || ((is_radio || is_ckbox) && !elem.checked) || !elem.value)
-				return;
-			var assembly = function (name) {
-				var res = {}, sind = name.indexOf('.');
-				res[sind > -1 ? name.substring(0, sind) : name] = sind > -1 ? assembly(name.substring(sind + 1)) : '';
-				return res;
-			};
-			var ind = el_name.indexOf('.');
-			datas[ind > -1 ? el_name.substring(0, ind) : el_name] = ind > -1 ? assembly(el_name.substring(ind + 1)) : '';
-		});
+//		// 设置datas属性
+//		elems.each(function (ind, elem) {
+//			var el_name = elem.name, is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
+//			if (!el_name || ((is_radio || is_ckbox) && !elem.checked) || !elem.value)
+//				return;
+//			var assembly = function (name) {
+//				var res = {}, sind = name.indexOf('.');
+//				res[sind > -1 ? name.substring(0, sind) : name] = sind > -1 ? assembly(name.substring(sind + 1)) : '';
+//				return res;
+//			};
+//			var ind = el_name.indexOf('.');
+//			datas[ind > -1 ? el_name.substring(0, ind) : el_name] = ind > -1 ? assembly(el_name.substring(ind + 1)) : '';
+//		});
 
 		// 设置datas属性值
 		elems.each(function (ind, elem) {
 			var el_name = elem.name, is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
 			if (!el_name || ((is_radio || is_ckbox) && !elem.checked) || !elem.value)
 				return;
-			var old_val = eval('datas.' + el_name); // checkbox值用逗号分割
+			var old_val = "";
 			try {
-				eval('datas.' + el_name + '="' + (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val() + '"');
-			} catch (e) {
-				datas[el_name] = (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val();
-			}
+				old_val = eval('datas.' + el_name); // checkbox值用逗号分割
+			} catch(e) {}
+			var new_val = (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val();
+			var assembly = function (res, name, val) {
+				res = res || {};
+				var sind = name.indexOf('.');
+				var sp_name = sind > -1 ? name.substring(0, sind) : name;
+				var sc_name = sind > -1 ? name.substring(sind + 1) : "";
+				res[sp_name] = sind > -1 ? assembly(res[sp_name], sc_name, val) : val;
+				return res;
+			};
+			datas = assembly(datas, el_name, new_val);
+//			var ind = el_name.indexOf('.');
+//			var tp_name = ind > -1 ? el_name.substring(0, ind) : el_name;
+//			var tc_name = ind > -1 ? el_name.substring(ind + 1) : "";
+//			datas[tp_name] = ind > -1 ? assembly(datas[tp_name], tc_name, new_val) : new_val;
+			
+//			try {
+//				eval('datas.' + el_name + '="' + (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val() + '"');
+//			} catch (e) {
+//				datas[el_name] = (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val();
+//			}
 		});
 		return datas;
 	}
 
+	/**
+	 * 组装对象
+	 */
+	BaseForm.prototype.assemblyData=function(res, name, val) {
+		res = res || {};
+		var sind = name.indexOf('.');
+		var sp_name = sind > -1 ? name.substring(0, sind) : name;
+		var sc_name = sind > -1 ? name.substring(sind + 1) : "";
+		res[sp_name] = sind > -1 ? this.assemblyData(res[sp_name], sc_name, val) : val;
+		return res;
+	}
+	
 	/**
 	 * 	表单数据回填
 	 * @param json_data 回填的数据
@@ -1021,7 +1160,7 @@
 					if($(elem).data("flag")=="icheck"){
 						$(elem).iCheck( elem.value == value?'check':'uncheck');
 						var validator = form.data('bootstrapValidator');
-	                    if (validator && validator.options.fields[field]) {
+	                    if (validator && validator.options.fields[el_name]) {
 	                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
 	                    }
 					}else{
@@ -1033,7 +1172,7 @@
 					if($(elem).data("flag")=="icheck"){
 						$(elem).iCheck($.inArray(elem.value, value.split(',')) > -1?'check':'uncheck');
 						var validator = form.data('bootstrapValidator');
-	                    if (validator && validator.options.fields[field]) {
+	                    if (validator && validator.options.fields[el_name]) {
 	                    	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
 	                    }
 					}else{
@@ -1055,6 +1194,8 @@
 					} else {
 						elem.value = value;
 					}
+					// 用于ajax请求select传值
+					$(elem).data("selected", value);
 					if ($(elem).hasClass("select2")) {
 						var tags = $(elem).data("select2").options.options.tags;
 						if (tags) {
@@ -1088,6 +1229,7 @@
 			form.find(':input[name]:not(:radio)').val('').trigger('change');
 			form.find(':radio').attr('checked', false);
 			form.find(':checkbox').attr('checked', false);
+			form.find('select:input[name]').data('selected', null);
 			try{
 				if ($.fn.iCheck) {
 					form.find(':radio[data-flag]').iCheck('update');
@@ -1101,6 +1243,7 @@
 			$(':input[name]:not(:radio)').val('').trigger('change');
 			$(':radio').removeAttr('checked');
 			$(':checkbox').removeAttr('checked');
+			$('select:input[name]').data('selected', null);
 			if ($.fn.iCheck) {
 				$(':radio[data-flag]').iCheck('update');
 				$(':checkbox[data-flag]').iCheck('update');
@@ -1136,7 +1279,7 @@
 				if($(elem).data("flag")=="icheck"){
 					$(elem).iCheck( elem.value == value?'check':'uncheck');
 					var validator = form.data('bootstrapValidator');
-                    if (validator && validator.options.fields[field]) {
+                    if (validator && validator.options.fields[el_name]) {
                     	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
                     }
 				}else{
@@ -1148,7 +1291,7 @@
 				if($(elem).data("flag")=="icheck"){
 					$(elem).iCheck($.inArray(elem.value, value.split(',')) > -1?'check':'uncheck');
 					var validator = form.data('bootstrapValidator');
-                    if (validator && validator.options.fields[field]) {
+                    if (validator && validator.options.fields[el_name]) {
                     	form.data('bootstrapValidator').updateStatus(el_name, 'NOT_VALIDATED', null);
                     }
 				}else{
@@ -1170,6 +1313,8 @@
 				} else {
 					elem.value = value;
 				}
+				// 用于ajax请求select传值
+				$(elem).data("selected", value);
 				if ($(elem).hasClass("select2")) {
 					var tags = $(elem).data("select2").options.options.tags;
 					if (tags) {
@@ -1194,4 +1339,105 @@
 	}
 })(jQuery, window, document);
 
-
+(function() {
+	/*! Select2 4.0.3 | https://github.com/select2/select2/blob/master/LICENSE.md */
+	if (jQuery && jQuery.fn && jQuery.fn.select2) {
+		jQuery.fn.select2.defaults.defaults.language = {
+			errorLoading : function() {
+				return "无法载入结果。"
+			},
+			inputTooLong : function(e) {
+				var t = e.input.length - e.maximum, n = "请删除" + t + "个字符";
+				return n
+			},
+			inputTooShort : function(e) {
+				var t = e.minimum - e.input.length, n = "请再输入至少" + t + "个字符";
+				return n
+			},
+			loadingMore : function() {
+				return "载入更多结果…"
+			},
+			maximumSelected : function(e) {
+				var t = "最多只能选择" + e.maximum + "个项目";
+				return t
+			},
+			noResults : function() {
+				return "未找到结果"
+			},
+			searching : function() {
+				return "搜索中…"
+			}
+		}
+	}
+	
+	if (jQuery && jQuery.fn) {
+	    function initDatesCN(type, dates) {
+	    	var picker = jQuery.fn[type];
+	    	if (!picker) {
+	    		return;
+	    	};
+	    	var dateEN = {
+    			days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+                months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                meridiem: ["am", "pm"],  
+                suffix: ["st", "nd", "rd", "th"],  
+                today: "Today",
+                clear: "Clear",
+    		};
+    		var dateCN = {
+                days: ["周日", "周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+                daysShort: ["日", "一", "二", "三", "四", "五", "六", "日"],
+                daysMin: ["日", "一", "二", "三", "四", "五", "六", "日"],
+                months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+                monthsShort: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+                meridiem: ["上午", "下午"],  
+                today: "今天",
+                clear: "清除",
+            };
+	    	dates = dates || picker.dates || {
+	    		en: dateEN
+	    	};
+	    	dates["zh-CN"] = dateCN;
+	    	picker.dates = dates;
+	    	picker.defaults = jQuery.extend(picker.defaults || {}, {language: "zh-CN"});
+	    	jQuery.fn[type] = picker;
+		}
+	    
+	    initDatesCN("datepicker");
+//	    var wm = new watcher({
+//	    	data:{
+//                'datepicker.dates': (jQuery.fn.datepicker || {}).dates,
+//                'datetimepicker.dates': (jQuery.fn.datetimepicker || {}).dates,
+//            },
+//            watch:{
+//            	"datepicker.dates":(newVal, oldVal) => {
+//            		jQuery.extend(newVal || {}, oldVal || {});
+//                },
+//                "datetimepicker.dates": (newVal, oldVal) => {
+//                	jQuery.extend(newVal || {}, oldVal || {});
+//                	jQuery.fn.datetimepicker.noConflict = function() {
+//                		jQuery.fn.datetimepicker = newVal;
+//                        return this
+//                    }
+////                	if (typeof oldVal == "function" && typeof newVal == "object") {
+////                		var val = newVal;
+////                		newVal = oldVal;
+////                		oldVal = val;
+////                	}
+////                	if (typeof newVal == "function" && typeof oldVal == "object") {
+////                		for ( var i in oldVal) {
+////                			newVal[i] = oldVal[i];
+////						}
+////                	} else {
+////                		jQuery.extend(newVal || {}, oldVal || {});
+////                	}
+//                }
+//            }
+//	    });
+//	    
+//	    jQuery.fn = jQuery.extend(true, wm, jQuery.fn);
+	}
+})();

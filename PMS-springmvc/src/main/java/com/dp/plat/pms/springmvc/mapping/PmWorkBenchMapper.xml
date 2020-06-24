@@ -30,7 +30,7 @@
 	        AND A1.NAME_ = 'areaPower' 
 		    AND A1.TYPE_ = 'string' 
         </if>
-<!-- 	    LEFT JOIN `perf_plan_participant` pp 
+<!-- 	    LEFT JOIN `ehr_participant` pp 
 	        ON pp.`id` = pw.`participantId` 
 	    LEFT JOIN `perf_plan` p 
 	        ON pp.`planId` = p.`id` 
@@ -118,7 +118,7 @@
 	        AND A1.NAME_ = 'areaPower' 
 		    AND A1.TYPE_ = 'string' 
         </if>
-	   <!--  LEFT JOIN `perf_plan_participant` pp 
+	   <!--  LEFT JOIN `ehr_participant` pp 
 	        ON pp.`id` = pw.`participantId` 
 	    LEFT JOIN `perf_plan` p 
 	        ON pp.`planId` = p.`id` 
@@ -232,7 +232,7 @@
 	        AND A1.NAME_ = 'areaPower' 
 		    AND A1.VAR_TYPE_ = 'string' 
         </if>
-	    <!-- LEFT JOIN `perf_plan_participant` pp 
+	    <!-- LEFT JOIN `ehr_participant` pp 
 	        ON pp.`id` = pw.`participantId` 
 	    LEFT JOIN `perf_plan` p 
 	        ON p.`id` = pw.`planId` 
@@ -326,7 +326,7 @@
 	        AND A1.NAME_ = 'areaPower' 
 		    AND A1.VAR_TYPE_ = 'string' 
         </if>
-	    <!--LEFT JOIN `perf_plan_participant` pp 
+	    <!--LEFT JOIN `ehr_participant` pp 
 	        ON pp.`id` = pw.`participantId` 
 	    LEFT JOIN `perf_plan` p 
 	        ON p.`id` = pw.`planId` 

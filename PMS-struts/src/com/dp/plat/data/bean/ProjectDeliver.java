@@ -20,6 +20,7 @@ public class ProjectDeliver {
 	
 	private int projectId;
 	private String projectType;
+	private Integer taskId;
 	private String contractNo;
 	private String deliverId;
 	private String deliverableName;
@@ -170,5 +171,11 @@ public class ProjectDeliver {
     public void setProjectType(String projectType) {
         this.projectType = projectType;
     }
+	public Integer getTaskId() {
+		return taskId;
+	}
+	public void setTaskId(Integer taskId) {
+		this.taskId = taskId;
+	}
 	
 }

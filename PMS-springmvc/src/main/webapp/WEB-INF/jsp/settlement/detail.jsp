@@ -88,7 +88,8 @@
 					<div class="box box-info">
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0" v-if="isShow">
-								<%@include file="../template/vue-form-component.jsp" %>
+								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
+								<form-inputs ref="formInputs" :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-create="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
@@ -100,7 +101,8 @@
 						</form>
 					</div>
 					<div id="tabDiv" class=" fade" :class="{in: isShow}">
-						<%@include file="../template/vue-tab-component.jsp" %>
+						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
+						<nav-tab ref="formTab" :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -125,6 +127,10 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 </c:if>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    $(function () {
@@ -150,7 +156,13 @@
 	    	var url = id == 0 ? pm.router.api(model).create(search) : pm.router.api(model).detail(id);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {}, formVueConfig || {}, tabVueConfig || {}, {
+					vm = new Vue($.extend(true, {
+							components: {
+							    'form-inputs': FormInputs,
+							    'nav-tab': NavTab,
+							    'tab-pane': TabPane,
+							},
+						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
 								isModals,
@@ -162,14 +174,23 @@
 								//formGroupTextareaClass: "col-sm-12 col-md-6",
 								formAction: pm.router.api(model).detail(id),
 	   							fieldList: data.fieldList || [],
-	   							targetName: data.targetName,
-	    						targetValue: data.targetValue || {dispatch:{}}
+	   							tabList: data.tabList || [],
+	   							targetName: data.targetName || "",
+	    						targetValue: data.targetValue || {dispatch:{}},
+	    						
+								// 权限控制参数
+	    						model: data.model || model,
+	    						permissionType: data.permissionType || "",
+	    						permissions: data.permissions || [],
+	    						roles: data.roles || []
 	    				 	}),
     				 	}
 					));
+					// 获取表单验证要求
+					varFields = vm.$refs["formInputs"].fieldValidators;
 					
 					form = $("#" + formId).form();
-					form.initFormData(data.targetValue);
+					//form.initFormData(data.targetValue);
 					$container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
@@ -253,7 +274,7 @@
 		    		} */
 		    		
 		    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-		    		$("#dispatchId + .select2-container", $container).one("click", function(e) {
+		    		$("#dispatchId", $container).siblings(".select2-container").one("click", function(e) {
 		    			$("#dispatchId", $container).on("change", function(e){
 		    				try{
 		    					var source = $(this).select2("data");

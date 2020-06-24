@@ -348,7 +348,7 @@
 			    '$.${key}', #{value, jdbcType=JSON}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
       <if test="status != null">
         status = #{status,jdbcType=VARCHAR},
@@ -407,7 +407,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       status = #{status,jdbcType=VARCHAR},
       trackStatus = #{trackStatus,jdbcType=INTEGER},
       trackedTime = #{trackedTime,jdbcType=TIMESTAMP},
@@ -879,7 +879,7 @@
 					ia.assetNum = #{model.assetNum, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetName != null and '' != model.assetName">
-					ia.assetName = #{model.assetName, jdbcType=VARCHAR} AND
+					ia.assetName like concat("%", #{model.assetName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetCategory != null and '' != model.assetCategory">
 					ia.assetCategory = #{model.assetCategory, jdbcType=VARCHAR} AND
@@ -888,55 +888,55 @@
 					ia.assetType = #{model.assetType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetHost != null and '' != model.assetHost">
-					ia.assetHost = #{model.assetHost, jdbcType=VARCHAR} AND
+					ia.assetHost like concat("%", #{model.assetHost, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetOpenPorts != null and '' != model.assetOpenPorts">
-					ia.assetOpenPorts = #{model.assetOpenPorts, jdbcType=VARCHAR} AND
+					ia.assetOpenPorts like concat("%", #{model.assetOpenPorts, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetDeployInfo != null and '' != model.assetDeployInfo">
-					ia.assetDeployInfo = #{model.assetDeployInfo, jdbcType=VARCHAR} AND
+					ia.assetDeployInfo like concat("%", #{model.assetDeployInfo, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetUsage != null and '' != model.assetUsage">
-					ia.assetUsage = #{model.assetUsage, jdbcType=VARCHAR} AND
+					ia.assetUsage like concat("%", #{model.assetUsage, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customerName != null and '' != model.customerName">
-					ia.customerName = #{model.customerName, jdbcType=VARCHAR} AND
+					ia.customerName like concat("%", #{model.customerName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.industryCode != null and '' != model.industryCode">
-					ia.industryCode = #{model.industryCode, jdbcType=VARCHAR} AND
+					ia.industryCode like concat("%", #{model.industryCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetAS != null and '' != model.assetAS">
 					ia.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASVersion != null and '' != model.assetASVersion">
-					ia.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+					ia.assetASVersion like concat("%", #{model.assetASVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
-					ia.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+					ia.assetASIdentify like concat("%", #{model.assetASIdentify, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetASFramework != null and '' != model.assetASFramework">
 					ia.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareName != null and '' != model.middlewareName">
-					ia.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+					ia.middlewareName like concat("%", #{model.middlewareName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
-					ia.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+					ia.middlewareVersion like concat("%", #{model.middlewareVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.developerBrand != null and '' != model.developerBrand">
-					ia.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+					ia.developerBrand like concat("%", #{model.developerBrand, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetOS != null and '' != model.assetOS">
 					ia.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
-					ia.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+					ia.assetOSVersion like concat("%", #{model.assetOSVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetDB != null and '' != model.assetDB">
 					ia.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
-					ia.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+					ia.assetDBVersion like concat("%", #{model.assetDBVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customInfo != null">
 					ia.customInfo = #{model.customInfo, jdbcType=JSON} AND
@@ -1009,7 +1009,7 @@
 					ia.assetNum = #{model.assetNum, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetName != null and '' != model.assetName">
-					ia.assetName = #{model.assetName, jdbcType=VARCHAR} AND
+					ia.assetName like concat("%", #{model.assetName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetCategory != null and '' != model.assetCategory">
 					ia.assetCategory = #{model.assetCategory, jdbcType=VARCHAR} AND
@@ -1018,55 +1018,55 @@
 					ia.assetType = #{model.assetType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetHost != null and '' != model.assetHost">
-					ia.assetHost = #{model.assetHost, jdbcType=VARCHAR} AND
+					ia.assetHost like concat("%", #{model.assetHost, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetOpenPorts != null and '' != model.assetOpenPorts">
-					ia.assetOpenPorts = #{model.assetOpenPorts, jdbcType=VARCHAR} AND
+					ia.assetOpenPorts like concat("%", #{model.assetOpenPorts, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetDeployInfo != null and '' != model.assetDeployInfo">
-					ia.assetDeployInfo = #{model.assetDeployInfo, jdbcType=VARCHAR} AND
+					ia.assetDeployInfo like concat("%", #{model.assetDeployInfo, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetUsage != null and '' != model.assetUsage">
-					ia.assetUsage = #{model.assetUsage, jdbcType=VARCHAR} AND
+					ia.assetUsage like concat("%", #{model.assetUsage, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customerName != null and '' != model.customerName">
-					ia.customerName = #{model.customerName, jdbcType=VARCHAR} AND
+					ia.customerName like concat("%", #{model.customerName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.industryCode != null and '' != model.industryCode">
-					ia.industryCode = #{model.industryCode, jdbcType=VARCHAR} AND
+					ia.industryCode like concat("%", #{model.industryCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetAS != null and '' != model.assetAS">
 					ia.assetAS = #{model.assetAS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetASVersion != null and '' != model.assetASVersion">
-					ia.assetASVersion = #{model.assetASVersion, jdbcType=VARCHAR} AND
+					ia.assetASVersion like concat("%", #{model.assetASVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetASIdentify != null and '' != model.assetASIdentify">
-					ia.assetASIdentify = #{model.assetASIdentify, jdbcType=VARCHAR} AND
+					ia.assetASIdentify like concat("%", #{model.assetASIdentify, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetASFramework != null and '' != model.assetASFramework">
 					ia.assetASFramework = #{model.assetASFramework, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.middlewareName != null and '' != model.middlewareName">
-					ia.middlewareName = #{model.middlewareName, jdbcType=VARCHAR} AND
+					ia.middlewareName like concat("%", #{model.middlewareName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.middlewareVersion != null and '' != model.middlewareVersion">
-					ia.middlewareVersion = #{model.middlewareVersion, jdbcType=VARCHAR} AND
+					ia.middlewareVersion like concat("%", #{model.middlewareVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.developerBrand != null and '' != model.developerBrand">
-					ia.developerBrand = #{model.developerBrand, jdbcType=VARCHAR} AND
+					ia.developerBrand like concat("%", #{model.developerBrand, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetOS != null and '' != model.assetOS">
 					ia.assetOS = #{model.assetOS, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetOSVersion != null and '' != model.assetOSVersion">
-					ia.assetOSVersion = #{model.assetOSVersion, jdbcType=VARCHAR} AND
+					ia.assetOSVersion like concat("%", #{model.assetOSVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.assetDB != null and '' != model.assetDB">
 					ia.assetDB = #{model.assetDB, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.assetDBVersion != null and '' != model.assetDBVersion">
-					ia.assetDBVersion = #{model.assetDBVersion, jdbcType=VARCHAR} AND
+					ia.assetDBVersion like concat("%", #{model.assetDBVersion, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customInfo != null">
 					ia.customInfo = #{model.customInfo, jdbcType=JSON} AND

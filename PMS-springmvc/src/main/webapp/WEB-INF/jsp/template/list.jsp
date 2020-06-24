@@ -51,9 +51,9 @@
 								</div>
 							</form>
                             <div class="btn-group operate-btn-group">
-                                <button type="button" class="btn btn-default" data-btn-type="add">新增</button>
-                                <button type="button" class="btn btn-default" data-btn-type="edit">编辑</button>
-                                <button type="button" class="btn btn-default" data-btn-type="delete">删除</button>
+                                <button type="button" class="btn btn-default" data-btn-type="add" v-if="checkPermit('add')">新增</button>
+                                <button type="button" class="btn btn-default" data-btn-type="edit" v-if="checkPermit('edit')">编辑</button>
+                                <button type="button" class="btn btn-default" data-btn-type="delete" v-if="checkPermit('delete')">删除</button>
                             </div>
                         </div>
                         <table id="commonTable" class="table table-bordered table-striped table-hover">
@@ -103,9 +103,35 @@
 	   						
 	   							// 权限控制参数
 	    						model: this.data.extData.model || model,
+	    						permissionType: this.data.extData.permissionType || "",
 	    						permissions: this.data.extData.permissions || [],
 	    						roles: this.data.extData.roles || []
 	    				 	},
+	    				 	methods: {
+	    				 		checkPermit: function(btn) {
+	    				 			/* var target = event.currentTarget;
+	    				 			btn = btn || $(target).data("btnType"); */
+	    				 			var permissionType = this.permissionType || "";
+	    				 			var permissions = this.permissions || [];
+	    			 				var model = this.model || "";
+	    			 				var permission = model + ":" + btn;
+	    			 				var checkPermitCallback = (router(urlNamespace).callback(model).list || {}).operationCallback;
+	    				 			console.log(permission);
+	    				 			var isPermit = false;
+	    				 			if ((permissionType == "all" 
+	    				 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
+	    				 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
+	    				 					&& ($.inArray(permission, permissions) > -1 || $.inArray(model + ":*", permissions) > -1)) {
+	    				 				isPermit = true;
+	    							}
+	    				 			if (typeof checkPermitCallback == 'function') {
+	    				 				try {
+	    				 					isPermit = checkPermitCallback.call(this, btn) || isPermit;
+	    				 				} catch(e) {}
+	    				 			}
+	    				 			return isPermit;
+	    						},
+	    				 	}
 	                	})
                 	);
                 	
@@ -160,11 +186,11 @@
                     }
                     modals.confirm("是否要删除该行数据？",function(){
                         ajaxPost(router(urlNamespace).api(model).delete(rowId),null,function(data,status){
-                            if(status == "success"){
-                                modals.info("更新成功！");
+                            if(data.status){
+                                modals.info("删除成功！");
                                 commonTable.reloadData();
-                            }else{
-                                modals.info(data);
+                            }else {
+                                modals.info(data.message);
                             }
                         });
                     })

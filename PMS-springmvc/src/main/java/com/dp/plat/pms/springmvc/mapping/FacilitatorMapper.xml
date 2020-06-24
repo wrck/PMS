@@ -430,7 +430,7 @@
 					code = #{model.code, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.name != null and '' != model.name">
-					name = #{model.name, jdbcType=VARCHAR} AND
+					name like concat("%", #{model.name, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.type != null and '' != model.type">
 					type = #{model.type, jdbcType=VARCHAR} AND

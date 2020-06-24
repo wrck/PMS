@@ -28,6 +28,7 @@ import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryAssetProjectRelation;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
@@ -84,7 +85,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 			pageParam.setPageSize(pageParam.getTotal());
 		}
 		pageParam.setFiltered(projectAssetList.size());
-		model.addAttribute("columns", this.findColumnList(getDataNameTable()));
+		pageParam.setColumns(this.findColumnList(getDataNameTable()));
+//		model.addAttribute("columns", this.findColumnList(getDataNameTable()));
 		model.addAttribute("data", projectAssetList);
 		return getRealViewNameSpace() + "list";
 	}
@@ -95,8 +97,6 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 	@GetMapping(value = {"{id}", "/modals/{id}"})
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (!checkPermission(null, model, "projectAsset:detail")) {
-			model.addAttribute("status", false);
-			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		if (HttpContext.isJSON()) {
@@ -144,6 +144,13 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		if (HttpContext.isJSON()) {
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
+			if (StringUtils.isBlank(v.getCustomerName())) {
+				v.setCustomerName(project.getColumn003());
+			}
+			if (StringUtils.isBlank(v.getIndustryCode())) {
+				v.setIndustryCode(project.getColumn007());
+			}
 			model.addAttribute("targetValue", v);
 
 			List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
@@ -175,6 +182,13 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		Boolean status = true;
 		String message = null;
 		try {
+			ProjectHeader project = projectHeaderService.selectByPrimaryKey(v.getProjectId());
+			if (StringUtils.isBlank(v.getCustomerName())) {
+				v.setCustomerName(project.getColumn003());
+			}
+			if (StringUtils.isBlank(v.getIndustryCode())) {
+				v.setIndustryCode(project.getColumn007());
+			}
 			industryAssetProjectRelationService.insertProjectAssetSelective(v);
 			model.addAttribute("targetName", this.getTargetName(v.getClass()));
 		} catch (Exception e) {

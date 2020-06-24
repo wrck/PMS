@@ -87,6 +87,7 @@
 								<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
 							</div>
 							<div id="operate-btn-group" class="btn-group operate-btn-group">
+								<button type="button" class="btn btn-default" data-btn-type="syncData">同步用户</button>
 								<button type="button" class="btn btn-default" data-btn-type="add">新增</button>
 								<button type="button" class="btn btn-default" data-btn-type="edit">编辑</button>
 								<button type="button" class="btn btn-default" data-btn-type="delete">删除</button>

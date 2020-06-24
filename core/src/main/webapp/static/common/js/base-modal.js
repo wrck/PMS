@@ -260,7 +260,7 @@
     		}*/
 			$(this).find(".modal-title").html(config.title);
 			if ($(this).find(".modal-title").length == 0) {
-				$(this).find(".content-header span").html(config.title);
+				$(this).find(".content-header > span").html(config.title);
 				if ($(this).find(".content-header").find("button[data-dismiss]").length == 0) {
 					var close_icon = document.createElement('BUTTON');
 			        close_icon.className = 'close';

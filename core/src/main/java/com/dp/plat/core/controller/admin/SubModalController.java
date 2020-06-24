@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.User;
 

@@ -83,6 +83,7 @@
     <script>
         //tableId,queryId,conditionContainer
         var commonTable;
+        var urlNamespace = "${urlNamespace}";
         var model = "settlement";
         var winId= model + "Win";
         var tableId = model + "Table";
@@ -92,6 +93,11 @@
             commonTable = new CommonTable(tableId, pm.router.api(model).list(search), "searchDiv",{
                 searching :true,
                 rowId: 'id',
+                exportData: {
+                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+                	fileName: "外派结算",
+                	type: ["excel"]
+                },
                 beforeInitConfig: function() {
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,
@@ -137,7 +143,7 @@
                    });
                     */
                    //window.location.href = pm.router.html(model).detail(rowId);
-                   window.location.href = settleEidtUrl();
+                   window.location.href = settleEditUrl();
                    break;
                 case 'delete':
                     if(!rowId){
@@ -147,7 +153,7 @@
                     modals.confirm("是否要删除该行数据？",function(){
                         ajaxPost(pm.router.api(model).delete(rowId),null,function(data,status){
                             if(status == "success"){
-                                modals.info("更新成功！");
+                                modals.info("删除成功！");
                                 commonTable.reloadData();
                             }else{
                                 modals.info(data);
@@ -164,11 +170,11 @@
                     modals.info('请点击需要查看的行');
                     return false;
                 }
-                var url = settleEidtUrl(row);
+                var url = settleEditUrl(row);
                 window.open(url);
             });
             
-            function settleEidtUrl(data) {
+            function settleEditUrl(data) {
             	 var row = data || commonTable.getSelectedRowData();
                  var rowId = row.id;
                  var url = null;

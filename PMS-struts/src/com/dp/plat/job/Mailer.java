@@ -11,7 +11,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.dp.plat.data.bean.MailSenderInfo;
-import com.dp.plat.util.MailUtil;
 import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.test.SimpleMailSender;
 import com.ibatis.common.resources.Resources;

@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,7 +21,6 @@ import com.dp.plat.support.mail.constant.Consts;
 import com.dp.plat.support.mail.entity.MailInfo;
 import com.dp.plat.support.mail.service.IMailInfoService;
 import com.dp.plat.support.mail.vo.PageParam;
-import com.fasterxml.jackson.databind.util.BeanUtil;
 
 /**
  * 日志管理Controller

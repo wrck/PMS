@@ -49,7 +49,7 @@ sys.common = function(){
 	}
 	
 	var upload = function(fileType) {
-		return ctx + "/file/baseUpload/" + 2 + ".json";
+		return ctx + "/file/baseUpload/" + fileType + ".json";
 	}
 	
 	var baseUploadTabDownload = function(e, navTab) {
@@ -170,14 +170,37 @@ sys.common = function(){
 		});
 	}
 	
-	startProcess = function(el, entity, callback) {
+	startProcess = function(el, entity, callback, ignoreForm) {
 		var _this = this;
+		
+		// 提交流程之前先保存表单，然后通过回调继续执行
+		ignoreForm = ignoreForm == true ? true : false;
+		if (!ignoreForm) {
+			var $form = $(el).parents("form:first");
+			if ($form.length != 0) {
+				$form.data("submitCallback", function() {
+					startProcess.call(_this, el, entity, callback, true);
+				})
+				var $submit = $form.find("button[data-btn-type='save']");
+				if ($submit.length == 0) {
+					$submit = $form.find("[type='submit']:first");
+				}
+				if ($submit.length > 0) {
+					$submit.click();
+				} else {
+					$form.submit();
+				}
+				return;
+			}
+		}
+		
+		
 		entity = entity || $(el).data("entity");
     	if (!entity) {
         	return false;
     	}
     	try {
-    		entity = JSON.parse(row.replace(/'/g, '"'));
+    		entity = JSON.parse(entity.replace(/'/g, '"'));
     	} catch(e) {}
 		
     	$(el).button("loading");
@@ -190,8 +213,13 @@ sys.common = function(){
     			} else if (_this._isVue) {
     				_this.currentTaskId = 0;
     				_this.targetValue.hasTask = null;
-    				((_this.targetValue || {}).customInfo || {}).currentTaskId = data.currentTaskId;
-    				((_this.targetValue || {}).customInfo || {}).currentProcInstId = data.currentProcInstId;
+    				var targetValue = _this.targetValue || {};
+    				var customInfo = targetValue.customInfo || {};
+    				customInfo.currentTaskId = data.currentTaskId;
+    				customInfo.currentProcInstId = data.currentProcInstId;
+    				
+    				targetValue.customInfo = customInfo;
+    				_this.targetValue = targetValue;
     			}
     			if (callback && typeof callback == 'function') {
     				callback.call(_this, data);

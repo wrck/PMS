@@ -4,6 +4,14 @@
 	<!-- <classPathEntry
 		location="D:\Maven\Repository\mysql\mysql-connector-java\5.1.44\mysql-connector-java-5.1.44.jar" /> -->
 	<context id="MysqlTable" defaultModelType="flat" targetRuntime="Mybatis3">
+		<!-- 生成的Java文件的编码 -->
+		<property name="javaFileEncoding" value="UTF-8" />
+		<!-- 格式化XML代码 -->
+		<property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter" />
+		<!-- beginningDelimiter和endingDelimiter：指明数据库的用于标记数据库对象名的符号，比如ORACLE就是双引号，MYSQL默认是`反引号； -->
+	    <property name="beginningDelimiter" value="`"/>
+	    <property name="endingDelimiter" value="`"/>
+	    
 		<!-- 通过自定义插件类生成自定义注解和接口 -->
 		<plugin type="com.dp.plat.MyBatisGenerator.GenPlugin">
 			<property name="mappers" value="com.dp.plat.core.dao.AbstractBaseMapper" />
@@ -14,17 +22,16 @@
 			<!-- 生成的Java文件的编码 -->
 			<property name="javaFileEncoding" value="UTF-8" />
 			<!-- 格式化XML代码 -->
-			<property name="xmlFormatter"
-				value="org.mybatis.generator.api.dom.DefaultXmlFormatter" />
+			<property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter" />
 		</commentGenerator>
 		<!-- 数据库配置 -->
-		<jdbcConnection driverClass="com.mysql.jdbc.Driver"
+		<jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
 			connectionURL="jdbc:mysql:///dppms?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
 			userId="root" password="!Q@W3e4r" >
 			<!-- mysql 6以上，该参数默认为false,会导致不指定catalog时出现无法生成主键查询的问题 -->
 			<property name="nullCatalogMeansCurrent" value="true" />
 		</jdbcConnection>
-		<!-- <javaTypeResolver type="com.dp.plat.MyBatisGenerator.config.JavaTypeResolverImpl"></javaTypeResolver> -->
+		<javaTypeResolver type="com.dp.plat.MyBatisGenerator.config.JavaTypeResolverImpl"></javaTypeResolver>
 		<!-- 生成Model类存放位置 -->
 		<javaModelGenerator targetPackage="com.dp.plat.pms.springmvc.entity"
 			targetProject="src/main/java">
@@ -46,15 +53,15 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
         <!--生成对应表及类名 -->
-		<table tableName="pm_project_header" domainObjectName="ProjectHeader"
+		<table tableName="pm_daily_report" domainObjectName="DailyReport"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
-			selectByExampleQueryId="false">
-			<property name="tableAlias" value="ph" />
+			selectByExampleQueryId="false" delimitAllColumns="true">
+			<property name="tableAlias" value="dr" />
 			<property name="useActualColumnNames" value="true" />
-			<generatedKey column="projectId" sqlStatement="Mysql" identity="true" />
+			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>
 	</context>
 </generatorConfiguration>

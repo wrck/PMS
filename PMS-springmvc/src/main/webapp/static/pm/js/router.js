@@ -106,6 +106,7 @@ router.common = function(namespace) {
 				// 附件上传
 				upload: (search) => namespace + "/upload.json" + (search ? "?" + search : "").replace("??", "?"),
 				uploadList: (search) => namespace + "/upload/list.json" + (search ? "?" + search : "").replace("??", "?"),
+				uploadDelete: (id, search) => namespace + "/upload/" + id + ".json?_method=DELETE" + (search ? "&" + search : "").replace("&?", "?"),
 			}
 		})(namespace),
 		html: ((namespace) => {
@@ -625,7 +626,7 @@ pm.assetLeak = function() {
 			    		} */
 			    		
 			    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-			    		$("#assetIds + .select2-container", $container).one("click", function(e) {
+			    		$("#assetIds", $container).siblings(".select2-container").one("click", function(e) {
 			    			$("#assetIds", $container).on("change", function(e){
 			    				try{
 			    					var source = $(this).select2("data");
@@ -648,7 +649,7 @@ pm.assetLeak = function() {
 		methods: {
 			canStartProcess: function(data) {
 				var hasTask = !!(data.customInfo || {}).currentTaskId;
-				var canStart = !hasTask && !isNaN(data.status);
+				var canStart = !this.isCreate && !hasTask && !isNaN(data.status);
 				return canStart;
 			},
 			startProcess: function(el, data, callback) {
@@ -669,6 +670,313 @@ pm.assetLeak = function() {
 					dataType: "industryLeak"
 	            };
 				sys.common.startProcess.call(this, el, entity, callback);
+			}
+		}
+	});
+}();
+
+/**
+ * 工作日报
+ */
+$.namespace("pm.dailyReport");
+pm.dailyReport = function() {
+	var namespace =  ctx + "/pm/daily/report";
+	var rt = pm.common(namespace);
+	return $.extend(true, {}, rt, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+				exportWeekReport: (params) => {
+					return namespace + "/export/daily/report.html" + (params ? "?" + $.param(params) : "");
+				},
+			}
+		})(namespace),
+		callback: ((namespace) => {
+			return {
+				detail: {
+					vueCallback: function(data, $container) {
+						console.log("vueCallback");
+						
+						var targetValue = data.targetValue || {};
+						var createName = (targetValue.customInfo || {}).createName;
+						if (createName) {
+							var type = targetValue.type == "plan" ? "计划" : "日报";
+							var processTime = targetValue.processTime || "";
+							var date = new Date(processTime.replace("-", "/"));
+							var weekDays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+							var day = date.getDay();
+							var args = [createName, processTime, weekDays[day], type];
+							var title = "<span>{0}</span><small>[{1}]{2}工作{3}</small>".replace(/\{(\d+)\}/g, function(m, i){  
+						        return args[i];  
+						    });
+							$("#pageTitle", $(this.$el)).html(title);
+							$("#pageTitle", $(this.$el)).next().hide();
+						}
+						// 添加项目类型change事件
+						$("#projectType", $container).on("change", function(e) {
+							var projectType = this.value;
+							if (projectType == '30') {
+								$container.bootstrapValidator('enableFieldValidators', 'projectId', false);
+								$container.find("label[for='projectId'] .redMark").addClass("disabled");
+						    } else {
+						    	$container.find("label[for='projectId'] .redMark").removeClass("disabled");
+						    	$container.bootstrapValidator('enableFieldValidators', 'projectId', true);
+						    	$container.bootstrapValidator('validateField', 'projectId');
+						    }
+						});
+						
+						var currentDate = new Date();
+						var day = currentDate.getDay();
+						var nextWeekEndDate = new Date(currentDate.getTime() + (7 + (day ? 7:0) - day)*24*3600*1000);
+						$("#type", $container).on("change", function(e) {
+							var type = this.value;
+							var typeShow = ".type_show_" + type;
+								typeHide = ".type_hide_" + type;
+							$("[class*='type_show_']", $container).parents(".form-group").hide();
+							$("[class*='type_hide_']", $container).parents(".form-group").show();
+							$(typeShow, $container).parents(".form-group").show();
+							$(typeHide, $container).parents(".form-group").hide();
+							
+							if (type == 'report') {
+								$("[data-flag='datepicker']").each(function() {
+									var endDate = $(this).data("dateEndDate");
+									$(this).datepicker('setEndDate', endDate);
+									$("[data-flag='datepicker']").datepicker('update', $(this).val());
+								})
+							} else {
+								$("[data-flag='datepicker']").datepicker('setEndDate', nextWeekEndDate);
+							}
+							 
+						});
+//			    		ajaxGet(pm.router.api("projectAsset").list(), {projectId}, function(data) {
+//			    			var list = data.data || [];
+//			    			var results = $.map(list, function (obj) {
+//			    				obj.id = obj.assetId;
+//			    				obj.text = obj.assetName;
+//			    				return obj;
+//			    			});
+//			    			$("#assetIds", $container).select2({
+//			    				multiple: true,
+//			    				allowClear: true,
+//			    				dropdownAutoWidth:true,
+//			    				data: results,// 设置初始值
+//			    				placeholder: '搜索项目资产名'
+//			    			})
+//			    		});
+						var projectName = (data.targetValue || {}).projectName;
+						var selectedId = (data.targetValue || {}).projectId;
+			    		//var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
+			    		$.fn.select2.amd.require(["select2/utils", "select2/data/dataCacheAdapter", "select2/data/tags"],
+	    				function (Utils, DataCacheAdapter, Tags) {
+		    				var dataCacheAdapter = Utils.Decorate(DataCacheAdapter, Tags);
+				    		$("#projectId", $container).select2({
+			    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
+				    			allowClear: true,
+				    			tags: true,
+				    			dropdownAutoWidth:true,
+				    			data: selectedId && projectName ? [{id: selectedId, text: projectName}] : [],// 设置初始值
+				    			ajax: {
+				    			    url: pm.router.api("project").list(),
+				    			    dataType: 'json',
+				    			    delay: 250,
+				    			    data: function (params) {
+				    			    	var projectType = $("#projectType", $container).val();
+				    			    	if (!projectType) {
+				    			    		return false;
+				    			    	}
+				    			    	var projectTypes = null;
+				    			    	if (projectType == "40") {
+				    			    		projectTypes = [];
+				    			    		$("#projectType option").not("[value='30']").not("[value='40']").each(function(item, index) {
+				    			    			$(this).val() && projectTypes.push($(this).val());
+			    			    			});
+				    			    		projectType = null;
+				    			    		projectTypes = projectTypes.join(",");
+				    			    	}
+				    			    	params.pageSize = 10;
+					    			    return {
+					    			    	projectTypes: projectTypes,
+					    			    	projectType: projectType,
+					    			        fuzzy: params.term, // search term
+					    			        fuzzySearch: true,
+					    			        pageSize: params.pageSize || 10,
+					    			        start: (params.page - 1) * params.pageSize || 0
+					    			    };
+				    			    },
+				    			    processResults: function (data, params) {
+				    			      	params.page = params.page || 1;
+				    			      	var list = data.data || [];
+									  	var results = $.map(list, function (obj) {
+									  		obj.id = obj.id || obj.projectId || -1;
+									  		obj.text = obj.projectName;
+										  	return obj;
+										});
+				    			      	return {
+				    			        	results: results,
+				    			        	pagination: {
+				    			          		more: (params.page * (params.pageSize || 10)) < data.pageParam.filtered
+				    			       		}
+				    			      	};
+				    			    },
+				    			    cache: true
+				    			  },
+				    			  placeholder: '搜索项目名称、项目编码',
+				    			  minimumInputLength: 2,
+				    			  templateResult: function(repo) {
+				    	    			if (repo.loading) {
+				    	    				return repo.text;
+				    	    			}
+	
+				    	    			var $container = $(
+				    	    				"<div class='select2-result-repository clearfix'>" +
+				    	    			      "<div class='select2-result-repository__meta'>" +
+				    	    			        "<div class='select2-result-repository__title'></div>" +
+				    	    			        "<div class='select2-result-repository__description'></div>" +
+	//			    	    			        "<div class='select2-result-repository__statistics'>" +
+	//			    	    			          "<div class='select2-result-repository__smsSubmitTime'></div>" +
+	//			    	    			          "<div class='select2-result-repository__smsProjectAmount'></div>" +
+	//			    	    			        "</div>" +
+				    	    			      "</div>" +
+				    	    			    "</div>"
+				    	    			);
+	
+				    	    			$container.find(".select2-result-repository__title").append("<div>" + (repo.projectCode || "") + "</div>");
+				    	    			$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNo || "") + "</div>");
+				    	    			$container.find(".select2-result-repository__description").text(repo.projectName || repo.text);
+				    	    			$container.find(".select2-result-repository__forks").append(repo.contractNo);
+	//			    	    			$container.find(".select2-result-repository__smsSubmitTime").append((repo.customInfo || {}).smsSubmitTime);
+	//			    	    			$container.find(".select2-result-repository__smsProjectAmount").append((repo.customInfo || {}).smsProjectAmount);
+	
+				    	    			return $container;
+				    	    	  },
+				    			  templateSelection: function formatRepoSelection (repo) {
+				    				  return repo.projectName || repo.text;
+			    	    		  }
+				    		});
+			    		
+				    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
+				    		$("#projectId", $container).on('select2:open', function(event) {
+				    			var $select = $(this).parent();
+				    			var $searchfield = $select.find('.select2-search__field');
+				    			$searchfield.length || ($searchfield = $('.select2-search__field'));
+				    			setTimeout(function() {
+				    				$searchfield.val($select.find('option:selected[value!=""]').text()).trigger("input");
+				    			}, 2);
+				    		});
+				    		$("#projectId", $container).siblings(".select2-container").one("click", function(e) {
+				    			$("#projectId", $container).on("select2:select", function(e){
+				    				try{
+				    					var source = $(this).select2("data");
+				    					if (source.length > 0) {
+				    						source = source[0];
+				    					} else {
+				    						source = {};
+				    					}
+				    					console.log(source, this.value);
+				    					var isTag = $(source.element).data("select2Tag");
+				    					if (isTag || source.id == source.text) {
+				    						$("[value='-1']").attr("value", "0");
+				    						$(source.element).attr("value", -1);
+				    						this.value = -1;
+				    					}
+	//					    			var targetValue = vm._data.targetValue || {};
+	//					    			targetValue.projectId = $("#projectId").val();
+	//					    			vm._data.targetValue = targetValue;
+						    			$("#projectName", $container).val(source.projectName || source.text);
+						    			$("#projectCode", $container).val(source.projectCode || "");
+						    			$("#contractNo", $container).val(source.contractNo || "");
+						    			$("#projectType", $container).val(source.projectType || $("#projectType", $container).val()).trigger("change");
+						    			$("#officeCode", $container).val(source.column001 || $("#officeCode", $container).val()).trigger("change");
+						    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || "").trigger("change");
+						    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || "").trigger("change");
+					    			} catch(e){}
+				    			});
+				    		});
+			    		}, null, true);
+			    		
+			    		// 如果是创建页面，在保存按钮之后添加继续添加按钮
+			    		if (this.isCreate) {
+			    			if ($("[data-btn-type='continue']", $container).length == 0) {
+			    				var $continueBtn = $('<button type="button" data-btn-type="continue" class="btn btn-success" style="margin-left: 0.29rem;">保存并继续</button>');
+			    				$("[data-btn-type='save']", $container).parent().append($continueBtn);
+			    				var vm = this;
+			    				$("[data-btn-type='continue']", $container).click(function() {
+			    					var $bootstrapValidator = $container.data('bootstrapValidator');
+			    					var isValid = $bootstrapValidator.validate().isValid();
+			    					if (isValid) {
+				    					var index3 = layer.load(1);
+				    					var form = $container.data("baseForm");
+			                			var formData = form.getFormSimpleData();
+			                			var url = router(vm.urlNamespace).api(vm.model).create();
+			                			$("[type='submit'], [data-btn-type]", $container).attr("disabled", true);
+			                			ajaxPost(url, formData, function(data,status){
+			                				if(data.status){
+			                					modals.correct("保存成功，请继续添加下一条");
+			                					var targetValue = {};
+			                					var $inheritFields = $container.find(".save2continue_inherit_field");
+			                					$inheritFields.each(function() {
+			                						var name = $(this).attr("name");
+			                						var value = $(this).val();
+			                						targetValue = form.assemblyData(targetValue, name, value);
+			                					});
+			                					vm._data.targetValue = targetValue;
+			                					$bootstrapValidator.resetForm()
+			                					form.initFormData(data.targetValue);
+			                				} else{
+			                					modals.error('操作失败！<br>' + (data.message || ""));
+			                				}
+			                			},null,null,function(){
+			                				layer.close(index3);
+			                				$("[type='submit'], [data-btn-type]", $container).removeAttr("disabled");
+			                			})
+			                		}
+			    				});
+			    			}
+			    		} else if (data.status){
+			    			if ($("[data-btn-type='exportWeekDailyReport']", $container).length == 0) {
+			    				var $btn = $('<button type="button" data-btn-type="exportWeekDailyReport" class="btn btn-info" style="margin-left: 0.29rem;">导出本周日报记录</button>');
+			    				$(".box-footer>.pull-left", $container).append($btn);
+			    				var vm = this;
+			    				$("[data-btn-type='exportWeekDailyReport']", $container).click(function() {
+			    					var processTime = $("#processTime", $container).val();
+			    					var createBy = targetValue.createBy;
+			    					router.postDownload(pm.dailyReport.html.exportWeekReport({createBy, processTime}));
+			    				});
+			    			}
+			    		}
+					}
+				}
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var isReported = data.isReported || false;
+				var canStart = !hasTask && isReported && !isNaN(data.status);
+				return canStart;
+			},
+			startProcess: function(el, data, callback) {
+				modals.info("暂无日报审核流程");
+//				var _this = this;
+//				data = data || $(el).data("entity");
+//		    	if (!data) {
+//		        	return false;
+//		    	}
+//		    	try {
+//		    		data = JSON.parse(data.replace(/'/g, '"'));
+//		    	} catch(e) {}
+//		    	
+//				var entity = {
+//					processKey: "QualityApproveTrack",
+//					objId: data.projectId,
+//					objType: 'project',
+//					dataId: data.leakId,
+//					dataType: "industryLeak"
+//	            };
+//				sys.common.startProcess.call(this, el, entity, callback);
 			}
 		}
 	});
@@ -730,7 +1038,7 @@ router.postDownload = function(url, isInner) {
 	form.download = '';
 	form.method = "post";
 	if (typeof __RequestVerificationToken == "string") {
-		url = url + "?__RequestVerificationToken=" + __RequestVerificationToken;
+		url = url + (url.indexOf("?") != -1 ? "&" : "?") + "__RequestVerificationToken=" + __RequestVerificationToken;
 	}
 	form.action = url;
 	$("body").append(form);

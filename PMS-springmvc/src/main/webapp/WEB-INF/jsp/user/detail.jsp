@@ -59,7 +59,7 @@
 									<label for="userName" class="col-sm-2 control-label">登录名</label>
 									<div class="col-sm-8">
 										<input type="text" class="form-control" id="userName"
-											name="user.userName" placeholder="登录名"
+											name="user.userName" placeholder="登录名" ${id!=null && id!=0?"disabled":""}
 											${id!=null && id!=0?"readonly":""}>
 									</div>
 								</div>
@@ -90,6 +90,27 @@
 											name="email" placeholder="Email">
 									</div>
 								</div>
+								<div class="form-group">
+									<label for="remark" class="col-sm-2 control-label">部门</label>
+									<div class="col-sm-8">
+										<shiro:lacksRole name="admin">
+											<select id="officeCode" name="custom3" class="form-control select2"
+												data-flag="urlSelector" data-src="/api/departmentList.json?isparam=-1" disabled="true"
+												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="" data-blank-text="--请选择--"
+												data-select2-config='{placeholder:"--请选择--", tags:false, allowClear:true,dropdownAutoWidth:true}'
+											>
+											</select>
+										</shiro:lacksRole>
+										<shiro:hasRole name="admin">
+											<select id="officeCode" name="custom3" class="form-control select2"
+												data-flag="urlSelector" data-src="/api/departmentList.json?isparam=-1"
+												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="" data-blank-text="--请选择--"
+												data-select2-config='{placeholder:"--请选择--", tags:false, allowClear:true,dropdownAutoWidth:true}'
+											>
+											</select>
+										</shiro:hasRole>
+									</div>
+								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="form-group">
@@ -116,6 +137,13 @@
 									<div class="col-sm-8">
 										<input type="text" class="form-control" id="mobile"
 											name="mobile" placeholder="手机">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="remark" class="col-sm-2 control-label">常驻地地址</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control" id="remark"
+											name="remark" placeholder="常驻地地址">
 									</div>
 								</div>
 								<div class="form-group">
@@ -161,11 +189,20 @@
 								<div class="form-group">
 									<label for="areaPower" class="col-sm-1 control-label">区域</label>
 									<div class="col-sm-10">
-										<select id="areaPower" name="custom5" multiple="multiple" class="col-sm-8 form-control select2"
-											data-flag="urlSelector" data-src="/api/departmentList.json"
-											data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="all" data-blank-text="全选"
-										>
-										</select>
+										<shiro:lacksRole name="admin">
+											<select id="areaPower" name="custom5" multiple="multiple" class="col-sm-8 form-control select2"
+												data-flag="urlSelector" data-src="/api/departmentList.json" disabled="true"
+												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="all" data-blank-text="全选"
+											>
+											</select>
+										</shiro:lacksRole>
+										<shiro:hasRole name="admin">
+											<select id="areaPower" name="custom5" multiple="multiple" class="col-sm-8 form-control select2"
+												data-flag="urlSelector" data-src="/api/departmentList.json"
+												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="all" data-blank-text="全选"
+											>
+											</select>
+										</shiro:hasRole>
 									</div>
 								</div>
 							</div>
@@ -173,11 +210,20 @@
 								<div class="form-group">
 									<label for="projectTypePower" class="col-sm-1 control-label">项目类型权限</label>
 									<div class="col-sm-10">
-										<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
-											data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
-											data-text="basicDataName" data-value="basicDataId"
-										>
-										</select>
+										<shiro:lacksRole name="admin">
+											<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
+												data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
+												data-text="basicDataName" data-value="basicDataId" disabled="true"
+											>
+											</select>
+										</shiro:lacksRole>
+										<shiro:hasRole name="admin">
+											<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
+												data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
+												data-text="basicDataName" data-value="basicDataId"
+											>
+											</select>
+										</shiro:hasRole>
 									</div>
 								</div>
 							</div>
@@ -331,13 +377,19 @@
 						validators : {
 							notEmpty : {
 								message : '请输入登录名'
-							}/* ,
+							},
 							remote:{
 								message: "该用户名已存在，请重新输入",
 								url: "checkUnique.json",
 								type: "POST",
-								delay: "1000"
-							} */
+								delay: "1000",
+								data: function(validator) {
+	                               return {
+	                            	   __RequestVerificationToken: __RequestVerificationToken,
+	                                   userName: $('[name="user.userName"]').val(),
+	                               };
+	                            }
+							}
 						}
 					},
 					"email" : {
@@ -365,7 +417,7 @@
 			/* var roleData = [];
             ajaxPost(basePath+"/pm/role/list.json",null,function(data){
                 $.each(data.data,function(index,item){
-                	var role = {};
+ 		          	var role = {};
                 	role.id = item.roleId;
                 	role.text = item.roleNameZn;
                     roleData.push(role);
@@ -422,7 +474,11 @@
 
 			//cancel
 			$("[data-btn-type='cancel']").click(function() {
-				window.history.back();
+				if (window.history.length > 1) {
+					window.history.back();
+				} else {
+					window.close();
+				}
 			})
 
 			$("[data-btn-type='upload']").click(function() {

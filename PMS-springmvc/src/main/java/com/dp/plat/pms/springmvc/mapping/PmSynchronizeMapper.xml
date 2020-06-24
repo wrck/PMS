@@ -201,4 +201,12 @@
  	<select id="clearAllOfstContractHeadSAP">
     	truncate table sms_ofst_contract_head_sap
  	</select>
+ 	
+ 	<select id="selectAllMarketSystemExpendIndustryRelation" resultType="java.util.HashMap">
+    	select * from view_market_system_expend_industry
+  	</select>
+  
+ 	<select id="clearAllMarketSystemExpendIndustryRelation">
+    	truncate table sms_market_system_expend_industry
+ 	</select>
 </mapper>

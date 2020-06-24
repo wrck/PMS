@@ -726,32 +726,32 @@
   	select * from (${_parameter}) t limit 1
   </select>
   
-  <select id="queryExportDataByMap" parameterType="map" resultType="java.util.Map">
+  <select id="queryExportDataByMap" parameterType="map" resultType="java.util.HashMap">
   	select * from (${sql}) t 
   	<where>
   		<trim suffixOverrides="and | or">
 	  		<foreach collection="search" index="key" item="value">
 	  			<if test="value != null and value != ''">
-	  				#{key} = #{value} AND
+	  				`${key}` = #{value} AND
 	  			</if>
 	  		</foreach>
   		</trim>
   	</where>
   </select>
   
-  <select id="queryExportData" parameterType="com.dp.plat.core.vo.PageParam" resultType="java.util.Map">
+  <select id="queryExportData" parameterType="com.dp.plat.core.vo.PageParam" resultType="java.util.HashMap">
   	select * from (${customField}) t 
   	<where>
   		<trim suffixOverrides="and | or">
 	  		<foreach collection="model" index="key" item="value">
 	  			<if test="value != null and value != ''">
-	  				${key} = #{value} AND
+	  				`${key}` = #{value} AND
 	  			</if>
 	  		</foreach>
 	  		<if test="fuzzySearch == true and fuzzy != ''">
 	  			<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
 		  			<if test="item.data != null and item.data != ''">
-		  				${item.data} like BINARY CONCAT("%", #{fuzzy}, "%")
+		  				`${item.data}` like BINARY CONCAT("%", #{fuzzy}, "%")
 		  			</if>
 		  		</foreach>
 	  		</if>
@@ -771,13 +771,13 @@
   		<trim suffixOverrides="and | or">
 	  		<foreach collection="model" index="key" item="value">
 	  			<if test="value != null and value != ''">
-	  				${key} = #{value} AND
+	  				`${key}` = #{value} AND
 	  			</if>
 	  		</foreach>
 	  		<if test="fuzzySearch == true and fuzzy != ''">
 	  			<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
 		  			<if test="item.data != null and item.data != ''">
-		  				${item.data} like BINARY CONCAT("%", #{fuzzy}, "%")
+		  				`${item.data}` like BINARY CONCAT("%", #{fuzzy}, "%")
 		  			</if>
 		  		</foreach>
 	  		</if>

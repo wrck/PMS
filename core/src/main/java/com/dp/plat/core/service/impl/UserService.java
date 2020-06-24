@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.dao.UserMapper;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
@@ -121,6 +122,9 @@ public class UserService implements IUserService {
 			if (value != null) {
 				param.put(key, value[0]);
 			}
+		}
+		if (!param.containsKey("compID")) {
+			param.put("compID", String.valueOf(UserContext.getOrgId()));
 		}
 		return userDao.findUserByParam(param);
 	}

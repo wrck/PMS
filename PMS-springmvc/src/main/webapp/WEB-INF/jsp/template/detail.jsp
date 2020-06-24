@@ -20,8 +20,8 @@
 	
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
 </c:if>	
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
 	<style>
 		.display-flex {
 			display: flex;
@@ -71,15 +71,7 @@
 	<div id="app">
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
-			<!-- <h1 id="pageTitle">
-				<template v-if="isShow">
-					<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
-				</template>
-				<template v-else>
-					<span></span><small></small>
-				</template>
-			</h1>
-			<span class="display-none"></span> -->
+			<h1 id="pageTitle" class="fade" :class="{in: isShow}"></h1>
 			<span></span>
 			<ol class="breadcrumb">
 			</ol>
@@ -91,7 +83,7 @@
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div id="formDiv" class="box-body row ml-0">
 								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
-								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+								<form-inputs ref="formInputs" :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-create="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
@@ -107,7 +99,7 @@
 					</div>
 					<div id="tabDiv" class="tabContainer fade" :class="{in: isShow}">
 						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
-						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
+						<nav-tab ref="formTab" :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -123,9 +115,7 @@
     <script src="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/js/bootstrap-validator.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
-	<script src="${pageContext.request.contextPath}/static/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
-	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.min.js"></script>
-	<script src="${pageContext.request.contextPath}/static/plugins/autocomplete/jquery.autocomplete.js"></script>
+	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.js"></script>
 	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
 	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
@@ -134,6 +124,8 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 </c:if>
+	<script src="${pageContext.request.contextPath}/static/plugins/autocomplete/jquery.autocomplete.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
@@ -174,7 +166,7 @@
 							data: $.extend({}, data, {
 								isModals,
 								isCreate: id == 0,
-								isShow: true,
+								isShow: false,
 								dataType: "form",
 								formCols: 2,
 								//formGroupClass: "col-sm-6 col-md-3",
@@ -186,7 +178,9 @@
 	    						targetValue: data.targetValue || {},
 	    						
 	    						// 权限控制参数
+	    						urlNamespace: data.urlNamespace || urlNamespace,
 	    						model: data.model || model,
+	    						keyword: data.keyword || keyword,
 	    						permissionType: data.permissionType || "",
 	    						//permissionType: data.permissionType == undefined ? "all" : (data.permissionType || ""),
 	    						permissions: data.permissions || [],
@@ -240,22 +234,24 @@
 	    				 	} */
     				 	}
 					));
+					// 获取表单验证要求
+					varFields = vm.$refs["formInputs"].fieldValidators;
 					
 					form = $("#" + formId).form();
-					form.initFormData(data.targetValue);
+					//form.initFormData(data.targetValue);
 					var $container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
 		                submitHandler: function(validator, form2, submitButton){
 		                	var btnType = $(submitButton).data("btn-type");
-		                	var confirmText = btnType == "save" ? "保存" : "派单";
+		                	var confirmText = btnType == "save" ? "保存" : $(submitButton).text();
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
 			                		var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
 			                		var url = btnType == 'submit' ? router(urlNamespace).api(model).submit() : (id == 0 ? router(urlNamespace).api(model).create() : router(urlNamespace).api(model).update(id));
-			                		ajaxPost(url, formData,function(data,status){
+			                		ajaxPost(url, formData, function(data,status){
 			                			if(data.status){
 			        						modals.correct(confirmText + "成功");
 			        						handleResult.call(form2, data);
@@ -275,13 +271,15 @@
 		    			fields : varFields
 		    		});
 		    		
-                	// 回调函数
+                	// 初始化完成回调函数
 		        	if (router(urlNamespace).callback(model).detail) {
 		        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
 		        		if (typeof vueCallback == 'function') {
 		        			vueCallback.call(vm, data, $container);
 		        		}
 		        	}
+                	
+		        	vm.isShow = true;
     			 }
     		})
     		
@@ -290,6 +288,7 @@
     		}
     		
     		function handleResult(results){
+    			var _this = this;
     			var isCreate = id == 0;
     			var targetName = results.targetName || model;
     			var targetValue = results[targetName] || {};
@@ -340,6 +339,13 @@
 				        			vueCallback.call(vm, data, $("#" + appId));
 				        		}
 				        	}
+		                	
+				        	// 是否有临时的表单提交回调函数
+			        		if ($(_this).data("submitCallback")) {
+			        			var submitCallback = $(_this).data("submitCallback");
+			        			$(_this).data("submitCallback", null);
+			        			submitCallback.call();
+			        		}
 	    				}
 	        		});
         		}

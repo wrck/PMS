@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
@@ -88,7 +90,7 @@ public class ProjectController
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectVO project, Model model) {
-		if (HttpContext.isJSON()) {
+//		if (HttpContext.isJSON()) {
 			if (!checkPermission(null, model, "project:list")) {
 				return Consts.VIEW_UNAUTHORIZED;
 			}
@@ -115,9 +117,16 @@ public class ProjectController
 			List<Object> list = null;
 			// 待创建列表
 			if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
-				pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
-				pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
-				list = projectHeaderService.selectUncreateProjectList(pageParam);
+				temp.setProjectState(ProjectConstant.ProjectState.UNCREATED);
+				if (UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
+					pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
+					pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
+					list = projectHeaderService.selectUncreateProjectList(pageParam);
+				} else {
+					pageParam.setTotal(0);
+					pageParam.setFiltered(0);
+					list = Collections.emptyList();
+				}
 			} else {
 				pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
 				pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
@@ -131,11 +140,11 @@ public class ProjectController
 
 			List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
 			pageParam.setColumns(columns);
-		} else {
-			if (!checkPermission(null, model, "project:list")) {
-				return Consts.VIEW_UNAUTHORIZED;
-			}
-		}
+//		} else {
+//			if (!checkPermission(null, model, "project:list")) {
+//				return Consts.VIEW_UNAUTHORIZED;
+//			}
+//		}
 		return VIEW_NAMESPACE + "list";
 	}
 
@@ -187,25 +196,34 @@ public class ProjectController
 				return Consts.VIEW_UNAUTHORIZED;
 			}
 			String contractNo = vo.getContractNo();
-			Project project = projectHeaderService.queryProjectByContractNoAndType(contractNo, projectType);
-			if (project == null) {
-				model.addAttribute("status", false);
-				model.addAttribute("message", "该项目合同已存在");
-				return VIEW_NAMESPACE + "detail";
+			if (StringUtils.isNotBlank(contractNo)) {
+				Project project = projectHeaderService.queryProjectByContractNoAndType(contractNo, projectType);
+				if (project == null) {
+					model.addAttribute("status", false);
+					model.addAttribute("message", "该项目合同已存在");
+					return VIEW_NAMESPACE + "detail";
+				}
+				if (!checkProjectTypeAndAreaPower(project, model)) {
+					model.addAttribute("status", false);
+					model.addAttribute("message", "没有权限访问该项目");
+					return Consts.VIEW_UNAUTHORIZED;
+				}
+				
+				project.setProjectType(projectType);
+				project.setProjectCode(projectHeaderService.queryProjectCode(project));
+				model.addAttribute("targetValue", project);
+			} else {
+				ProjectVO project = new ProjectVO();
+				String projectCode = DateUtil.getDateTime("yyMMddHHmmss", new Date());
+				project.setProjectCode(projectCode);
+				project.setContractNo(projectCode);
+				project.setCustomInfoByKey("isCustom", true);
+				model.addAttribute("targetValue", project);
 			}
-			
-			if (!checkProjectTypeAndAreaPower(project, model)) {
-				model.addAttribute("status", false);
-				model.addAttribute("message", "没有权限访问该项目");
-				return Consts.VIEW_UNAUTHORIZED;
-			}
-
-			project.setProjectType(projectType);
-			project.setProjectCode(projectHeaderService.queryProjectCode(project));
 			model.addAttribute("targetName", "project");
-			model.addAttribute("targetValue", project);
+			
 
-			List<Object> fieldList = this.findFieldList(projectType + "_" + DATANAME_FORM, DATATYPE_FORM);
+			List<Object> fieldList = this.findFieldList(StringUtils.defaultString(projectType, "create") + "_" + DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 
 			List<?> navTavList = this.findNavTabList("create_" + DATANAME_NAVTAB, model);
@@ -231,6 +249,16 @@ public class ProjectController
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		// 如果当前合同号已经创建项目，则直接返回不再创建
+		Boolean isCustom = Boolean.valueOf(String.valueOf(project.getCustomInfoByKey("isCustom")));
+		if (Boolean.TRUE.equals(isCustom)) {
+			String officeCode = project.getColumn001();
+			if (StringUtils.isNotBlank(officeCode)) {
+				String projectCode = StringUtils.defaultString(project.getProjectCode(), DateUtil.getDateTime("yyMMddHHmmss", new Date()));
+				projectCode = officeCode + projectCode;
+				project.setProjectCode(projectCode);
+				project.setContractNo(projectCode);
+			}
+		}
 		Integer count = projectHeaderService.queryProjectContractCountByContractNoAndType(
 				Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
 		if (count != null && count != 0) {

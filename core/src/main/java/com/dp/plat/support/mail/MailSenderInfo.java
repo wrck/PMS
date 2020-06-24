@@ -25,20 +25,21 @@ public class MailSenderInfo extends MailInfo {
 	 */
 	public Properties getProperties() {
 		Properties p = new Properties();
+		p.put("mail.smtp.localhost", "127.0.0.1");
 		p.put("mail.smtp.host", this.mailServerHost);
 		p.put("mail.smtp.port", this.mailServerPort);
-		p.put("mail.smtp.localhost", "127.0.0.1");
 		p.put("mail.smtp.auth", validate ? "true" : "false");
+		p.put("mail.smtp.starttls.enable", validate ? "true" : "false");
 		return p;
 	}
 
 	public Properties getProperties(MailSenderInfo mailSenderInfo) {
 		Properties p = new Properties();
+		p.put("mail.smtp.localhost", "127.0.0.1");
 		p.put("mail.smtp.host", mailSenderInfo.getMailServerHost());
 		p.put("mail.smtp.port", mailSenderInfo.getMailServerPort());
-		p.put("mail.smtp.auth", "true");
-		p.put("mail.smtp.localhost", "127.0.0.1");
-		p.put("mail.smtp.starttls.enable", "true");
+		p.put("mail.smtp.auth", mailSenderInfo.validate ? "true" : "false");
+		p.put("mail.smtp.starttls.enable",  mailSenderInfo.validate ? "true" : "false");
 		return p;
 	}
 

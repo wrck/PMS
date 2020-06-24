@@ -83,6 +83,7 @@
     <script>
         //tableId,queryId,conditionContainer
         var commonTable;
+        var urlNamespace = "${urlNamespace}";
         var model = "dispatch";
         var winId= model + "Win";
         var tableId = model + "table";
@@ -92,6 +93,11 @@
             commonTable = new CommonTable(tableId, pm.router.api(model).list(search), "searchDiv",{
                 searching :true,
                 rowId: 'id',
+                exportData: {
+                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+                	fileName: "项目派单",
+                	type: ["excel"]
+                },
                 beforeInitConfig: function() {
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,
@@ -146,7 +152,7 @@
                     modals.confirm("是否要删除该行数据？",function(){
                         ajaxPost(pm.router.api(model).delete(rowId),null,function(data,status){
                             if(status == "success"){
-                                modals.info("更新成功！");
+                                modals.info("删除成功！");
                                 commonTable.reloadData();
                             }else{
                                 modals.info(data);

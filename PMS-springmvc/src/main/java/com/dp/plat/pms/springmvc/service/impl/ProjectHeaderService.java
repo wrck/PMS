@@ -282,7 +282,12 @@ public class ProjectHeaderService extends ProjectServiceImpl
             }
             if (StringUtils.isBlank(project.getSmsProjectCode())) {
                 String projectCode = project.getProjectCode();
-                project.setSmsProjectCode(projectCode.substring(0, projectCode.indexOf("-")));
+                int indexOf = projectCode.indexOf("-");
+                if (indexOf != -1) {
+                	project.setSmsProjectCode(projectCode.substring(0, projectCode.indexOf("-")));
+                } else {
+                	project.setSmsProjectCode(projectCode);
+                }
             }
             // 插入到表pm_project_group - 项目组信息表
             projectDao.insertProjectGroup(project);
@@ -490,6 +495,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
         Boolean isPermit = false;
         String permissionType = "";
         Collection<String> permissionSet = null;
+        String permissionProjectTypes = null;
         if (!UserContext.checkPermission("project:*") && project != null) {
         	// 允许访问的项目类型
 			if (!UserContext.hasAnyRoles(ROLE_PM_ADMIN, ROLE_ADMIN)) {
@@ -529,6 +535,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			PermissionResult checkPermit = new PermissionUtils("project:", new String[] { ROLE_PM_ADMIN,
 					ROLE_ADMIN, ROLE_PM_SUB_ADMIN, ROLE_PM_AREA_MANAGER })
 							.checkPermit(permission, permissions);
+			permissionProjectTypes = (String) permission.get("projectTypes");
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
 			permissionSet = checkPermit.getPermissions();
@@ -536,14 +543,16 @@ public class ProjectHeaderService extends ProjectServiceImpl
             isPermit = true;
             permissionType = "all";
         }
-        return new PermissionResult(isPermit, permissionType, permissionSet);
+        PermissionResult result = new PermissionResult(isPermit, permissionType, permissionSet);
+        result.setData(permissionProjectTypes);
+        return result;
     }
 
     @Override
     protected Project putProperties(Project project, Project p) {
         super.putProperties(project, p);
         try {
-            if (project instanceof ProjectVO) {
+            if (project instanceof ProjectVO && p != null) {
                 ((ProjectVO) project).setCustomInfo(((ProjectVO) p).getCustomInfo());
             }
         } catch (Exception e) {

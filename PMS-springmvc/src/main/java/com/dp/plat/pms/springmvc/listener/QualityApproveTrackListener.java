@@ -29,11 +29,8 @@ import com.dp.plat.core.service.INotifyTemplateService;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.vo.UserInfoVO;
-import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.TaskType;
-import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectMember;
@@ -49,6 +46,7 @@ import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
 import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
 import com.dp.plat.pms.springmvc.vo.MemberVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
+import com.dp.plat.support.mail.MailUtil;
 
 /**
  * 质量审核跟踪流程任务监听器
@@ -57,10 +55,12 @@ import com.dp.plat.pms.springmvc.vo.TaskVO;
  *
  */
 @Component("qualityApproveTrackListener")
+@SuppressWarnings({"rawtypes", "unused", "unchecked"})
 public class QualityApproveTrackListener {
 	
 	private final static String definedVariablesKey = "pm.workflow.qualityApproveTrack.defineVariable";
 	private final static String defaultDefinedVariables = "{}";
+	private final static String defaultTaskMailTemplateKey = "pm.workflow.qualityApproveTrack.mail";
 	
 	@Autowired
 	private TaskService taskService;
@@ -86,6 +86,8 @@ public class QualityApproveTrackListener {
 	private IUserService userService;
 	@Autowired
 	private IUserInfoService userInfoService;
+	@Autowired
+	private INotifyTemplateService notifyTemplateService;
 	
 	/**
 	 * 流程开始执行监听器
@@ -213,6 +215,7 @@ public class QualityApproveTrackListener {
 		String processKey = delegateTask.getProcessDefinitionId();
 		
 		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+		String objType = pmWorkFlow.getObjType();
 		String dataType = pmWorkFlow.getDataType();
 		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
 		String assignee = null;
@@ -229,10 +232,14 @@ public class QualityApproveTrackListener {
 //		} else if (TaskType.TRACK_TASK.equals(taskKey)) {
 //			candidateRole = (String) taskDefinedVariables.getOrDefault("trackRole", "");
 //		}
+		String permissionProjectTypes = "all";
 		String areaPower = "all";
 		boolean checkArea = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("checkArea", false));
 		memberRole = (String) taskDefinedVariables.getOrDefault("memberRole", "");
 		candidateRole = (String) taskDefinedVariables.getOrDefault("candidateRole", "");
+		if (DataType.PROJECT.equals(objType)) {
+			permissionProjectTypes = StringUtils.defaultIfBlank((String) pmWorkFlow.getCustomInfoByKey("projectTypes"), permissionProjectTypes);
+		}
 		if (TaskType.AF_APPROVE_TASK.equals(taskKey) || TaskType.YF_APPROVE_TASK.equals(taskKey)) {
 			if (checkArea) {
 				if (DataType.PROJECT_TASK.equals(dataType)) {
@@ -307,6 +314,7 @@ public class QualityApproveTrackListener {
 		}
 		delegateTask.setVariableLocal("startTime", new Date());
 		delegateTask.setVariableLocal("areaPower", areaPower);
+		delegateTask.setVariableLocal("projectTypes", permissionProjectTypes);
 //		delegateTask.setVariable("assignee", assignee);
 //		delegateTask.setVariable("candidates", candidates);
 //		delegateTask.setVariable("candidateGroup", candidateGroup);
@@ -319,6 +327,18 @@ public class QualityApproveTrackListener {
 		pmWorkFlow.setTaskId(delegateTask.getId());
 		pmWorkFlow.setTaskKey(taskKey);
 		runtimeService.setVariable(delegateTask.getProcessInstanceId(), "entity", pmWorkFlow);
+		
+		// 任务创建时的邮件提醒
+		String templateCode = (String) taskDefinedVariables.getOrDefault("mailCode", defaultTaskMailTemplateKey);
+		if (StringUtils.isNotBlank(templateCode)) {
+			Map<String, Object> context = new HashMap<String, Object>();
+			context.put("templateCode", templateCode);
+			List<String> tos = selectActivitiUserMails(assignee, candidates, candidateGroup, areaPower, permissionProjectTypes);
+			context.put("tos", StringUtils.join(tos, ";"));
+			context.put("ccs", taskDefinedVariables.get("ccs"));
+			context.put("dataSource", new Object[] {pmWorkFlow, delegateTask});
+			MailUtil.keepMailWithTemplate(context);
+		}
 	}
 	
 	/**
@@ -343,6 +363,18 @@ public class QualityApproveTrackListener {
 //				hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("needTrack", false));
 //			}
 			hasNext = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("hasNext", false));
+			
+			// 项目任务特殊处理，根据任务保存的变量来觉得是否走研发质量审核
+			if (DataType.PROJECT_TASK.equals(dataType) && TaskType.AF_APPROVE_TASK.equals(taskKey)) {
+				ProjectTask entity = (ProjectTask) pmWorkFlow.getEntity();
+				Map customInfo = (Map) entity.getCustomInfo();
+				if (customInfo != null) {
+					Object needYFApprove = customInfo.get("needYFApprove");
+					if (needYFApprove != null) {
+						hasNext = Boolean.parseBoolean(String.valueOf(needYFApprove));
+					}
+				}
+			}
 			if (hasNext) {
 				flowState++;
 			}
@@ -395,6 +427,27 @@ public class QualityApproveTrackListener {
 		return taskDefinedVariables;
 	}
 	
+	private List<String> selectActivitiUserMails(String assignee, Set<String> candidates, String candidateGroup,
+			String areaPower, String projectTypes) {
+		Set<String> userIds = new HashSet<String>();
+		if (assignee != null) {
+			userIds.add(assignee);
+		} else if (candidates != null) {
+			userIds.addAll(candidates);
+		}
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("userIds", userIds);
+		params.put("groupIds", StringUtils.split(candidateGroup, ","));
+		if (!"all".equals(areaPower)) {
+			params.put("areaPower", areaPower);
+		}
+		if (!"all".equals(projectTypes)) {
+			params.put("projectType", projectTypes);
+		}
+		List<String> mails = pmFlowService.selectActivitiUserMails(params);
+		return mails;
+	}
+	
 	/**
 	 * 员工制定目标任务监听器
 	 */
@@ -417,7 +470,7 @@ public class QualityApproveTrackListener {
 //		}
 //		taskService.setVariable(taskId, "approverList", objectiveAppraiserList);
 //		
-//		//更新目标制定时间到perf_plan_participant表
+//		//更新目标制定时间到ehr_participant表
 //		PlanParticipant planParticipant = (PlanParticipant) delegateTask.getVariable("participant");
 //		// XXX 直接创建对象进行更新，无需查询
 //		PlanParticipant newTemp = new PlanParticipant();

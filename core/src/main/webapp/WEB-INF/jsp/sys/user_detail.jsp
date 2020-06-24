@@ -302,13 +302,18 @@
 						validators : {
 							notEmpty : {
 								message : '请输入登录名'
-							}/* ,
+							},
 							remote:{
 								message: "该用户名已存在，请重新输入",
 								url: "checkUnique.json",
 								type: "POST",
-								delay: "1000"
-							} */
+								delay: "1000",
+								data: function(validator) {
+	                               return {
+	                            	   __RequestVerificationToken: __RequestVerificationToken,
+	                               };
+	                            }
+							}
 						}
 					},
 					email : {

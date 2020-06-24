@@ -285,7 +285,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
       <if test="createTime != null">
         createTime = #{createTime,jdbcType=TIMESTAMP},
@@ -332,7 +332,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       createTime = #{createTime,jdbcType=TIMESTAMP},
       createBy = #{createBy,jdbcType=VARCHAR},
       updateTime = #{updateTime,jdbcType=TIMESTAMP},
@@ -734,13 +734,13 @@
 			s.id = #{model.id, jdbcType=INTEGER} AND
 		</if>
 		<if test="model.settleSeq != null and '' != model.settleSeq">
-			s.settleSeq = #{model.settleSeq, jdbcType=VARCHAR} AND
+			s.settleSeq like concat("%", #{model.settleSeq, jdbcType=VARCHAR}, "%") AND
 		</if>
 		<if test="model.dispatchId != null and '' != model.dispatchId">
 			s.dispatchId = #{model.dispatchId, jdbcType=INTEGER} AND
 		</if>
 		<if test="model.dispatchSeq != null and '' != model.dispatchSeq">
-			s.dispatchSeq = #{model.dispatchSeq, jdbcType=VARCHAR} AND
+			s.dispatchSeq like concat("%", #{model.dispatchSeq, jdbcType=VARCHAR}, "%") AND
 		</if>
 		<if test="model.progressDesc != null and '' != model.progressDesc">
 			s.progressDesc = #{model.progressDesc, jdbcType=VARCHAR} AND
@@ -940,5 +940,36 @@
 			</trim>
 		</where>
 		group by h.id, s.`id`) t
+  </select>
+  
+  <!-- 查询SSE新增的付款信息 -->
+  <select id="querySSEDispatchSettlementPaymentList" parameterType="com.dp.plat.pms.springmvc.vo.SettlementVO" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
+    SELECT DISTINCT
+	    spp.id, sph.`id` AS dispatchId, sph.dispatchSeq, ROUND(
+	        spps.`approveAmount` / REPLACE(sph.`dispatchAmount`, ",", "") * 100, 2
+	    ) AS ratio, spps.approveAmount AS amount, spps.`confirmTime`, spps.`paymentTime`, spps.`remark`, spps.`id` AS sseId, spps.`confirmTime` AS createTime, 
+	    IFNULL(spp.`createBy`, u.`user_name`) AS createBy, JSON_merge_patch(IFNULL(spp.customInfo, "{}"), 
+	    CONCAT(
+		'{',
+		    CONCAT('"createName":"', IFNULL(spp.customInfo ->> "$.createName", ui.realName), '"'), 
+		    CONCAT(',"useage":"', IFNULL(spps.useage,""), '"'), 
+		    CONCAT(',"paystate":"', IFNULL(spps.paystate,""), '"'),
+		    CONCAT(',"approveAmount":"', IFNULL(spps.approveAmount, ""), '"'), 
+		    CONCAT(',"offerNum":"', IFNULL(spps.offerNum, ""), '"'), 
+		'}')) AS customInfo
+	FROM
+	    `pm_subcontract_project_payment_sse` spps 
+	    LEFT JOIN `pm_dispatch_project_header` sph 
+	        ON sph.`dispatchNo` = REPLACE(spps.`subcontractNo`, " ", "") 
+	    LEFT JOIN `pm_dispatch_project_settlement` spp 
+	        ON sph.`id` = spp.`dispatchId`
+	        AND spp.`disabled` = FALSE
+	    LEFT JOIN t_user u
+	        ON spps.`workNo` = SUBSTR(u.`user_name`, 2) 
+	    LEFT JOIN t_user_info ui
+	        ON u.`user_id` = ui.`user_id`
+	WHERE sph.id IS NOT NULL 
+	    AND 0 = IFNULL(spp.`sseId`, 0)
+	ORDER BY spps.`confirmTime`, sph.id
   </select>
 </mapper>

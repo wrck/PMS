@@ -12,7 +12,7 @@ var FormInputs = {
 		},
 		template: `<div>
 						<template v-for="field in formFieldList">
-							<form-input :field="field" :form-cols="formCols" :is-created="isCreated" :form-cols-group-class="formColsGroupClass" :data-type="dataType" :max-label-width="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
+							<form-input :field="field" :form-cols="formCols" :is-create="isCreate" :form-cols-group-class="formColsGroupClass" :data-type="dataType" :max-label-width="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
 						</template>
 				   </div>`,
 //		template: `<div>
@@ -177,7 +177,7 @@ var FormInputs = {
 			targetValue: {
 				type: Object
 			},
-			isCreated: {
+			isCreate: {
 				type: Boolean,
 				default: false,
 			},
@@ -409,7 +409,7 @@ var FormInputs = {
 	 			if (type == 'btn') {
 					permission = model + ":" + ext.id;
 		 		} else if (type == 'field') {
-	 				permission = model + "." + data.field + "." + this.isCreated ? "add" : "update";
+	 				permission = model + "." + data.field + "." + this.isCreate ? "add" : "update";
 	 			}
 	 			console.log(permission);
 	 			if ((permissionType == "all" 

@@ -9,7 +9,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
-import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.FileParam;
 import com.dp.plat.util.Base64Util;

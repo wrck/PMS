@@ -80,12 +80,12 @@
     var config = {
     		searching: true,
     		stateSave: false,
-    		scrollY: '60vh',
+    		/* scrollY: '60vh',
     		scrollX: '100%',
-    		scrollCollapse : true,
+    		scrollCollapse : true, */
     		disableSlimScroll : true,
     		initCallback: function () {
-    			$("#exportPreviewTable").parent().addClass("table-responsive");
+    			/* $("#exportPreviewTable").parent().addClass("table-responsive"); */
     		}
     	}
     	

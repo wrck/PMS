@@ -2,7 +2,8 @@ package com.dp.plat.core.view;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,13 +54,16 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			exportFileName = request.getParameter("exportFileName");
 		}
 		if (StringUtils.isNotBlank(exportFileName)) {
+			exportFileName = this.encodeFileName(request, exportFileName);
 			String disposition = response.getHeader("Content-Disposition");
 			String attachment = "attachment;filename=" + exportFileName + this.getExtension();
 			if (disposition == null) {
-				response.setHeader("Content-Disposition", attachment);
-			} else if (!disposition.contains("attachment;filename=")){
+				disposition = attachment;
+			} else if (!disposition.contains("attachment;filename=")) {
 				disposition += ";" + attachment;
 			}
+			response.setCharacterEncoding("utf-8");
+			response.setHeader("Content-Disposition", disposition);
 		}
 		if (this.getBeanName() != null) {
 			needParseTitle = true; 
@@ -71,8 +75,9 @@ public class ExcelView4XLSX extends AbstractExcelView {
 		
 		List<Object> list = (List<Object>) model.get("data");
 		Map<String, String> colValue = null;
-		if (model.containsKey("columns")) {
+		if (model.containsKey("columns") && model.get("columns") instanceof String[]) {
 			String[] columns = (String[]) model.get("columns");
+			Map<String, String> allColValue = new LinkedHashMap<>(columns.length);
 			colValue = new LinkedHashMap<>(columns.length);
 			for (String column : columns) {
 				String[] kv = StringUtils.split(column, "=");
@@ -82,9 +87,13 @@ public class ExcelView4XLSX extends AbstractExcelView {
 					if (!kv[0].equals(kv[1])) {
 						colValue.put(kv[0], kv[1]);
 					}
+					allColValue.put(kv[0], kv[1]);
 				} else {
 					colValue.put(column, null);
 				}
+			}
+			if (colValue.isEmpty()) {
+				colValue = allColValue;
 			}
 		}/* else if (model.containsKey("pageParam")) {
 			PageParam pageParam = (PageParam) model.get("pageParam");
@@ -128,19 +137,28 @@ public class ExcelView4XLSX extends AbstractExcelView {
 
 			//动态列名
 			Map<String, String> dynamicColumns = (Map<String, String>) model.get("dynamicColumns");
-			if ((dynamicColumns == null || dynamicColumns.isEmpty()) && model.containsKey("pageParam")) {
+			if ((dynamicColumns == null || dynamicColumns.isEmpty()) && (model.containsKey("pageParam") || model.containsKey("columns") && model.get("columns") instanceof List)) {
+				List<DataTableColumn> columns = null;
+				if (model.containsKey("pageParam")) {
 					PageParam pageParam = (PageParam) model.get("pageParam");
-					List<DataTableColumn> columns = pageParam.getColumns();
-					if (columns != null) {
-						dynamicColumns = new LinkedHashMap<String, String>(columns.size());
-						colValue = new LinkedHashMap<>(columns.size());
-						for (DataTableColumn column : columns) {
-							String k = column.getData();
-							String v = column.getTitle();
-							dynamicColumns.put(k, v);
-							colValue.put(k, null);
+					columns = pageParam.getColumns();
+				} 
+				if (columns == null && model.containsKey("columns") && model.get("columns") instanceof List) {
+					columns = (List<DataTableColumn>) model.get("columns");
+				}
+				if (columns != null) {
+					dynamicColumns = new LinkedHashMap<String, String>(columns.size());
+					colValue = new LinkedHashMap<>(columns.size());
+					for (DataTableColumn column : columns) {
+						if (!column.getVisible()) {
+							continue;
 						}
+						String k = column.getData();
+						String v = column.getTitle();
+						dynamicColumns.put(k, v);
+						colValue.put(k, v);
 					}
+				}
 			}
 			// create header row
 			if (!hasHeaderTitle) {
@@ -232,58 +250,111 @@ public class ExcelView4XLSX extends AbstractExcelView {
 		}
 	}
 
-	protected Integer setCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
-			Map<String, String> colValue, Map<String, String> dynamicColumns) throws Exception {
+	protected Object getCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
+			String col, Map<String, String> dynamicColumns) throws Exception {
+		if (StringUtils.isBlank(col)) {
+			return null;
+		}
+		Object cellValue = null;
 		if (obj instanceof Map) {
-			for (Entry<String, Object> entry : ((Map<String, Object>) obj).entrySet()) {
-				String fieldName = entry.getKey();
-				Object value = entry.getValue();
-				if (colValue != null && !colValue.containsKey(fieldName)) {
-					continue;
+			String column = col;
+			List<String> ks = Arrays.asList(StringUtils.split(column, "."));
+			Map<String, Object> map = (Map<String, Object>) obj;
+			if (map.containsKey(column)) {
+				cellValue = map.get(column);
+			} else if (ks.size() > 1) {
+				Object value = null;
+				for (Iterator<String> iterator = ks.iterator(); iterator.hasNext();) {
+					String fieldName = iterator.next();
+					value = map.get(fieldName);
+					if (value != null && iterator.hasNext()) {
+						value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns);
+					} else {
+						break;
+					}
 				}
-				setCellValue(fieldName, value, colValue, aRow, colCount);
+				cellValue = value;
 			}
 		} else {
-			if (clazz.getGenericSuperclass() != null) {
-				Class<?> supperClazz = clazz.getSuperclass();
-				colCount = setCellValue(obj, supperClazz, aRow, colCount, colValue ,dynamicColumns);
-			}
-			Field[] fields = clazz.getDeclaredFields();
-			for (int colIndex = 0; colIndex < fields.length; colIndex++) {
-				Field field = fields[colIndex];
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if (colValue != null && !colValue.containsKey(fieldName)) {
-					continue;
+			Field field = null;
+			Object value = null;
+			String column = col;
+			List<String> ks = Arrays.asList(StringUtils.split(column, "."));
+			for (Iterator<String> iterator = ks.iterator(); iterator.hasNext();) {
+				String fieldName = iterator.next();
+				try {
+					if (clazz.getGenericSuperclass() != null) {
+						Class<?> supperClazz = clazz.getSuperclass();
+						value = getCellValue(obj, supperClazz, aRow, colCount, fieldName, dynamicColumns);
+					}
+					if (value == null) {
+						field = clazz.getDeclaredField(fieldName);
+						field.setAccessible(true);
+						value = field.get(obj);
+					}
+					if (value != null && iterator.hasNext()) {
+						value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns);
+					} else {
+						break;
+					}
+				} catch (NoSuchFieldException e) {
+					break;
 				}
+			}
+			cellValue = value;
+		}
+		return cellValue;
+	}
+	
+	protected Integer setCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
+			Map<String, String> colValue, Map<String, String> dynamicColumns) throws Exception {
+		for (String fieldName : colValue.keySet()) {
+			Object value = getCellValue(obj, clazz, aRow, colCount, fieldName, dynamicColumns);
+			if (!(obj instanceof Map)) {
 				String fieldDescription = MessageUtils
 						.getLocaleMessage("export." + clazz.getSimpleName() + "." + fieldName);
 				if (StringUtils.isBlank(fieldDescription)) {
-					if(dynamicColumns == null || !dynamicColumns.containsKey(fieldName)) {
+					if (dynamicColumns == null || !dynamicColumns.containsKey(fieldName)) {
 						continue;
 					}
 				}
-				Object value = field.get(obj);
-				colCount = setCellValue(fieldName, value, colValue, aRow, colCount);
-	//			if (value != null) {
-	//				String valueClasss = value.getClass().getSimpleName();
-	//				if (valueClasss.equals("Date")) {
-	//					value = new SimpleDateFormat("yyyy-MM-dd mm:HH:ss").format(value);
-	//				}
-	//				if (colValue == null) {
-	//					aRow.createCell(colCount++).setCellValue(String.valueOf(value));
-	//				} else {
-	//					colValue.put(fieldName, String.valueOf(value));
-	//				}
-	//			} else {
-	//				if (colValue == null) {
-	//					aRow.createCell(colCount++).setCellValue("");
-	//				} else {
-	//					colValue.put(fieldName, "");
-	//				}
-	//			}
 			}
+			colCount = setCellValue(fieldName, value, colValue, aRow, colCount);
 		}
+		
+//		if (obj instanceof Map) {
+//			for (Entry<String, Object> entry : ((Map<String, Object>) obj).entrySet()) {
+//				String fieldName = entry.getKey();
+//				Object value = entry.getValue();
+//				if (colValue != null && !colValue.containsKey(fieldName)) {
+//					continue;
+//				}
+//				setCellValue(fieldName, value, colValue, aRow, colCount);
+//			}
+//		} else {
+//			if (clazz.getGenericSuperclass() != null) {
+//				Class<?> supperClazz = clazz.getSuperclass();
+//				colCount = setCellValue(obj, supperClazz, aRow, colCount, colValue ,dynamicColumns);
+//			}
+//			Field[] fields = clazz.getDeclaredFields();
+//			for (int colIndex = 0; colIndex < fields.length; colIndex++) {
+//				Field field = fields[colIndex];
+//				field.setAccessible(true);
+//				String fieldName = field.getName();
+//				if (colValue != null && !colValue.containsKey(fieldName)) {
+//					continue;
+//				}
+//				String fieldDescription = MessageUtils
+//						.getLocaleMessage("export." + clazz.getSimpleName() + "." + fieldName);
+//				if (StringUtils.isBlank(fieldDescription)) {
+//					if(dynamicColumns == null || !dynamicColumns.containsKey(fieldName)) {
+//						continue;
+//					}
+//				}
+//				Object value = field.get(obj);
+//				colCount = setCellValue(fieldName, value, colValue, aRow, colCount);
+//			}
+//		}
 		return colCount;
 	}
 

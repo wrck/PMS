@@ -1,5 +1,6 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.impl.IndustryLeakService;
+import com.dp.plat.pms.springmvc.vo.IndustryAssetVO;
 import com.dp.plat.pms.springmvc.vo.IndustryLeakVO;
 import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 
@@ -59,6 +61,44 @@ public class IndustryLeakController extends AbstractController<IIndustryLeakServ
 		return getViewNameSpace() + "list";
 	}
 	
+	
+	@Override
+	@RequestMapping("/list")
+	public String list(PageParam<Object> pageParam, IndustryLeakVO v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":list")) {
+			model.addAttribute("data", Collections.emptyList());
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		List<Object> list = Collections.emptyList();
+		try {
+			// Principal user = UserContext.getCurrentPrincipal();
+			// v.setCompId(user.getCompId());
+			v.setDisabled(false);
+			PageParam<Object> tempParam = new PageParam<>();
+			IndustryLeakVO temp = new IndustryLeakVO();
+			// temp.setCompID(user.getCompId());
+			temp.setDisabled(false);
+			tempParam.setModel(temp);
+			pageParam.setModel(v);
+
+			pageParam.setTotal(service.countBySelectivePageable(tempParam));
+			pageParam.setFiltered(service.countBySelectivePageable(pageParam));
+			list = service.selectBySelectivePageable(pageParam);
+
+			if (pageParam.getPageSize() == -1L) {
+				pageParam.setPageSize(pageParam.getTotal());
+			}
+		} catch (Exception e) {
+			ExceptionHandler.insertException(e);
+		}
+		model.addAttribute("data", list);
+
+		List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
+		pageParam.setColumns(columns);
+		return getRealViewNameSpace() + "list";
+	}
+
+
 	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, IndustryLeakVO v, Model model) {

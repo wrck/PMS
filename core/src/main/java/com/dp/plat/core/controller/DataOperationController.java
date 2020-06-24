@@ -1,6 +1,5 @@
 package com.dp.plat.core.controller;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -39,11 +38,11 @@ import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.entity.DataOperation;
 import com.dp.plat.core.exception.ExcelImportException;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.param.RoleConstant;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IDataOperationService;
 import com.dp.plat.core.util.ExportUtils;
-import com.dp.plat.core.view.ExcelView4XLSX;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 
@@ -136,7 +135,9 @@ public class DataOperationController {
     public String importForm(String operationName, Model model) {
         model.addAttribute("operationName", operationName);
         DataOperation dataOperation = dataOperationService.selectByOperationName(operationName);
-        if (dataOperation != null) {
+        if(!checkPermission(dataOperation)) {
+        	model.addAttribute("error", "没有权限进行该操作！");
+        } else if (dataOperation != null) {
             String formHtml = StringUtils.trimToEmpty(dataOperation.getFormHtml());
             String script = StringUtils.trimToEmpty(dataOperation.getScript());
             formHtml = formHtml.replaceAll("<[^>]+>", "").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
@@ -167,6 +168,9 @@ public class DataOperationController {
             if (fileType.equals(".xlsx")) {
                 try {
                     DataOperation dataOperation = dataOperationService.selectByOperationName(operationName);
+                    if(!checkPermission(dataOperation)) {
+                    	throw new RuntimeException("没有权限进行该操作！");
+                    } 
                     String clazzStr = dataOperation.getClazz();
                     String methodStr = dataOperation.getMethod();
                     
@@ -235,7 +239,9 @@ public class DataOperationController {
     public String exportForm(String operationName, Model model) {
         model.addAttribute("operationName", operationName);
         DataOperation dataOperation = dataOperationService.selectByOperationName(operationName);
-        if (dataOperation != null) {
+        if(!checkPermission(dataOperation)) {
+        	model.addAttribute("error","没有权限进行该操作！");
+        } else if (dataOperation != null) {
             String formHtml = StringUtils.trimToEmpty(dataOperation.getFormHtml());
             String script = StringUtils.trimToEmpty(dataOperation.getScript());
             String columns = StringUtils.trimToEmpty(dataOperation.getColumns());
@@ -243,16 +249,18 @@ public class DataOperationController {
             formHtml = formHtml.replaceAll("<[^>]+>", "").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
             script = script.replaceAll("<[^>]+>", "").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
             HashMap<String, String> columnsMap = new LinkedHashMap<>();
+            HashMap<String, String> allColumnsMap = new LinkedHashMap<>();
             for (String columnKV : StringUtils.split(columns, ";")) {
                 String[] kv = StringUtils.split(columnKV, "=");
-                if (kv.length == 2 && !kv[0].equals(kv[1])) {
+				if (kv.length == 2 && !kv[0].equals(kv[1])) {
                     columnsMap.put(kv[0], kv[1]);
                 }
+				allColumnsMap.put(kv[0], kv[1]);
             }
             
             model.addAttribute("formHtml", formHtml);
             model.addAttribute("script", script);
-            model.addAttribute("columns", columnsMap);
+            model.addAttribute("columns", columnsMap.isEmpty() ? allColumnsMap : columnsMap);
             model.addAttribute("objectName", HashMap.class.getName());
             model.addAttribute("id", dataOperation.getId());
         } else {
@@ -272,6 +280,7 @@ public class DataOperationController {
     public String queryExportColumns(String sql, Model model) {
         List<Object>  columns = new ArrayList<Object>();
         if (StringUtils.isNotBlank(sql)) {
+        	sql = sql.replaceAll("-&gt;&gt;", "->>").replaceAll("-&gt;", "->");// 放开Mysql JSON的语法
             Map<String, Object> exportColumns = dataOperationService.queryExportColumns(sql);
             columns = Arrays.asList(exportColumns.keySet().toArray());
         }
@@ -294,6 +303,8 @@ public class DataOperationController {
         response.setContentType("text/plain; charset=UTF-8");
         if (dataOperation == null) {
             errorMessage = "请求的数据操作不存在，请重试！";
+        } else if(!checkPermission(dataOperation)) {
+        	errorMessage = "没有权限进行该操作！";
         } else {
             Integer type = dataOperation.getType();
             if (type == null) {
@@ -338,6 +349,7 @@ public class DataOperationController {
             
             Map<String, Object> model = new HashMap<>();
             pageParam.setPageSize(rowAccessWindowSize);
+            model.put("exportFileName", operationName);
             model.put("columns", StringUtils.split(columns, ";"));
             
             for (int statrRow = 0; statrRow < total; statrRow += rowAccessWindowSize) {
@@ -437,7 +449,10 @@ public class DataOperationController {
     @RequestMapping(EXPORT_URL + "/preview/{id}")
     public String exportPreview(@PathVariable("id") Integer id, PageParam<Map<String, String>> pageParam, String objectKV, Model model) {
         DataOperation dataOperation = dataOperationService.selectByPrimaryKey(id);
-        if (HttpContext.isAjax()) {
+        if(!checkPermission(dataOperation)) {
+        	return Consts.VIEW_UNAUTHORIZED;
+        } 
+        if (HttpContext.isJSON()) {
             pageParam.setModel(ExportUtils.str2KVMap(objectKV, false));
             
             String script = StringUtils.trimToEmpty(dataOperation.getScript());
@@ -460,6 +475,7 @@ public class DataOperationController {
     
     private List<DataTableColumn> parseColumns(String columns) {
         List<DataTableColumn> tableColumns = new ArrayList<>();
+        List<DataTableColumn> allTableColumns = new ArrayList<>();
         if (StringUtils.isNotBlank(columns)) {
             String[] columnArr = StringUtils.split(columns, ";");
             for (String column : columnArr) {
@@ -469,12 +485,36 @@ public class DataOperationController {
                 if (kv.length == 2) {
                     title = kv[1];
                 }
+                
                 if (!data.equals(title)) {
                     DataTableColumn tableColumn = new DataTableColumn(title, data);
                     tableColumns.add(tableColumn);
                 }
+                DataTableColumn tableColumn = new DataTableColumn(title, data);
+                allTableColumns.add(tableColumn);
             }
         }
-        return tableColumns;
+        return tableColumns.isEmpty() ? allTableColumns : tableColumns;
     }
+    
+    private boolean checkPermission(DataOperation dataOperation) {
+    	Boolean isPermit = false;
+    	String empId = null;
+    	Principal user = UserContext.getCurrentPrincipal();
+        if (!UserContext.hasRole(RoleConstant.ROLE_ADMIN)) {
+        	empId = user.getUserInfoId().toString();
+        } else {
+        	isPermit = true;
+        }
+        if (dataOperation != null) {
+        	String empPower = StringUtils.trimToEmpty(dataOperation.getEmpPower());
+//        	String depPower = StringUtils.trimToEmpty(dataOperation.getDepPower());
+        	
+        	if (empPower.matches("(.*)\\b" + empId + "\\b(.*)")) {
+        		isPermit = true;
+        	}
+        }
+        return isPermit;
+    }
+    
 }
