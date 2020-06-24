@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +223,7 @@ public class UploaderController {
 	@GetMapping("/baseUpload/list")
 	public void baseUpList(FileInfo fileInfo, String fileIds, HttpServletRequest httpRequest, Model model) {
 		Result result = null;
-		List<FileInfo> fileInfos = null;
+		List<FileInfo> fileInfos = Collections.emptyList();
 		try {
 			if (StringUtils.hasText(fileIds)) {
 				List<String> ids = Arrays.asList(fileIds.split(","));

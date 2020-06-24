@@ -151,7 +151,7 @@
                     winId:winId,
                     title:'新建操作',
                     width:'800px',
-                    url:basePath+"/sys/modals/dataOperation_detail"
+                    url:basePath+"/sys/modals/dataOperation_detail.html"
                    });                        
                 break;
             case 'edit':
@@ -163,7 +163,7 @@
                     winId:winId,
                     title:'编辑操作【'+dataOperationTable.getSelectedRowData().name+'】',
                     width:'800px',
-                    url:basePath+"/sys/modals/dataOperation_detail?id="+rowId
+                    url:basePath+"/sys/modals/dataOperation_detail.html?id="+rowId
                }); 
                break;
             case 'copy':
@@ -175,7 +175,7 @@
                     winId:winId,
                     title:'通过复制新建操作',
                     width:'800px',
-                    url:basePath+"/sys/modals/dataOperation_detail?id="+rowId+"&copyFlag=1"
+                    url:basePath+"/sys/modals/dataOperation_detail.html?id="+rowId+"&copyFlag=1"
                });
                break;
             case 'delete':
@@ -192,7 +192,7 @@
                             //setTimeout(function(){modals.info(data.message)},2000);
                             modals.info(data); 
                         }  
-                    });  
+                    });
                 })
                 break;  
             }

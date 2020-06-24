@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +36,6 @@ import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
-import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
@@ -65,9 +65,9 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 	}
 	
 	@Override
-	@PostMapping(value = "{detail}")
+	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	public String create(TaskVO v, Model model) {
-		if (!checkPermission(v, model, "projectTask:edit")) {
+		if (!checkPermission(v, model, "projectTask:add")) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		Boolean status = true;
@@ -162,10 +162,10 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 			workflow.setStatus(PmWorkFlowVO.PENDING);
 			pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 			
-			ProjectTask member = new ProjectTask();
-			member.setTaskId(id);
-			member.setEffectiveTo(new Date());
-			service.updateByPrimaryKeySelective(member);
+			ProjectTask task = new ProjectTask();
+			task.setTaskId(id);
+			task.setEffectiveTo(new Date());
+			service.updateByPrimaryKeySelective(task);
 		} catch (Exception e) {
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
@@ -237,6 +237,18 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 			model.addAttribute("refreshProjectState", needRefresh);
 			projectHeaderService.updateProjectLastRefreshTime(projectDeliver.getProjectId());
 		}
+	}
+	
+	@DeleteMapping("upload/{deliverId}")
+	public void uploadDeliverFile(@PathVariable("deliverId") String deliverId, ProjectDeliver projectDeliver, Model model) {
+		TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
+		taskVO.setTaskId(projectDeliver.getTaskId());
+		if (!checkPermission(taskVO, model, "uploadDeliverFile:delete")) {
+			return;
+		}
+
+		projectDeliver.setDeliverId(deliverId);
+		service.deleteDeliverFile(projectDeliver);
 	}
 
 	@GetMapping("upload/list")

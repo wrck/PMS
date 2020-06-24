@@ -358,7 +358,7 @@ public class QualityApproveTrackListener2 {
 //		}
 //		taskService.setVariable(taskId, "approverList", objectiveAppraiserList);
 //		
-//		//更新目标制定时间到perf_plan_participant表
+//		//更新目标制定时间到ehr_participant表
 //		PlanParticipant planParticipant = (PlanParticipant) delegateTask.getVariable("participant");
 //		// XXX 直接创建对象进行更新，无需查询
 //		PlanParticipant newTemp = new PlanParticipant();

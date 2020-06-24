@@ -44,11 +44,11 @@
 		<section class="content">
 			<div class="row">
 				<div class="col-xs-12">
-					<div class="box box-info">
+					<div class="box box-info formContainer">
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<div class="box-body row ml-0">
 								<%-- <%@include file="../template/vue-form-component.jsp" %> --%>
-								<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
+								<form-inputs ref="formInputs" :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :is-created="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
@@ -82,9 +82,9 @@
 							<!-- /.box-footer -->
 						</form>
 					</div>
-					<div id="tabDiv" class="fade" :class="{in: isShow}">
+					<div id="tabDiv" class="tabContainer fade" :class="{in: isShow}">
 						<%-- <%@include file="../template/vue-tab-component.jsp" %> --%>
-						<nav-tab :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
+						<nav-tab ref="formTab" :tab-list="tabList" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></nav-tab>
 					</div>
 				</div>
 			</div>
@@ -274,6 +274,8 @@
     				 	}
 					));
 					window.projectVm = vm;
+					// 获取表单验证要求
+					varFields = vm.$refs["formInputs"].fieldValidators;
 					
 					form = $("#" + formId).form();
 					form.initFormData(data.targetValue);

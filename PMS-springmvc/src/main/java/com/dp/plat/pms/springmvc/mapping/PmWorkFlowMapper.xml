@@ -256,7 +256,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -289,7 +289,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		) -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
     where id = #{id,jdbcType=INTEGER}
   </update>
   <sql id="sql_where">
@@ -797,4 +797,41 @@
   <delete id="deleteByProcInstIds" parameterType="string">
   	delete from pm_workflow where FIND_IN_SET(procInstId, #{_parameter})
   </delete>
+  
+  <select id="selectActivitiUserMails" parameterType="map" resultType="String">
+  	SELECT 
+	  u.EMAIL_ 
+	FROM
+	  `act_id_group` g 
+	  LEFT JOIN `act_id_membership` m 
+	    ON g.`ID_` = m.`GROUP_ID_` 
+	  LEFT JOIN `act_id_user` u 
+	    ON u.`ID_` = m.`USER_ID_` 
+	  LEFT JOIN `t_user_info` ui 
+	    ON ui.`id` = u.`ID_` 
+	WHERE u.`EMAIL_` > '' 
+	  <if test="groupIds != null">
+	  	<foreach collection="groupIds" open="AND g.`ID_` IN(" close=")" separator="," item="groupId">
+	  		#{groupId}
+	  	</foreach>
+	  </if>
+	  <if test="areaPower != null"> AND FIND_IN_SET(#{areaPower}, ui.`custom5`) </if>
+	  <if test="projectTypes != null"> AND FIND_IN_SET(#{projectTypes}, ui.`custom4`) </if>
+	UNION
+	SELECT 
+	  u.EMAIL_ 
+	FROM
+	  `act_id_user` u 
+	  INNER JOIN `t_user_info` ui 
+	    ON ui.`id` = u.`ID_` 
+	WHERE
+	  u.`EMAIL_` > '' 
+	  <if test="userIds != null">
+	  	<foreach collection="userIds" open="AND u.`ID_` IN(" close=")" separator="," item="userId">
+	  		#{userId}
+	  	</foreach>
+	  </if>
+	  <if test="areaPower != null"> AND FIND_IN_SET(#{areaPower}, ui.`custom5`) </if>
+	  <if test="projectTypes != null"> AND FIND_IN_SET(#{projectTypes}, ui.`custom4`) </if>
+  </select>
 </mapper>

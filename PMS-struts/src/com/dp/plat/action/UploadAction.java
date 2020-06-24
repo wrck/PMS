@@ -7,8 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.json.annotations.JSON;

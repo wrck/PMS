@@ -84,6 +84,10 @@ var FormInputs = {
 					return new Date().getTime();
 				}
 			},
+			fieldValidators: {
+				type: Object,
+				default: {}
+			}
 		},
 		created: function(e) {
 			/* var fieldList = this.fieldList;
@@ -127,10 +131,13 @@ var FormInputs = {
 		},
 		mounted: function() {
 			console.log("mounted");
-			var _this = this;
-			$("input[type='range']").each(function(index, item) {
-				_this.rangeChange({currentTarget: item});
-			})
+//			var _this = this;
+//			$("input[type='range']").not(".range-inited").each(function(index, item) {
+//				_this.rangeChange({currentTarget: item});
+//			});
+//			$(".daterange-btn").not(".daterange-inited").each(function(index, item) {
+//				_this.dateRangePicker({currentTarget: item});
+//			});
 		},
 		computed: {
 			groupClass: function() {
@@ -149,17 +156,26 @@ var FormInputs = {
 			},
 			formFieldList: function() {
 				var fieldList = this.fieldList;
+				var fieldValidators = {};
 				for (var i in fieldList) {
 					var field = fieldList[i];
 					if (field['extData']) {
 						this.parseValue(field, "extData", true);
+					} else {
+						field["extData"] = '';
 					}
-					if (field.type == 'inputs') {
+					if (field.type == 'inputs' || field.type == 'daterange' || field.type == "distpicker") {
 						// inputs 拥有相同的标签，在一个组内进行显示，以下参数需要拆分，用空格相隔
 						var keys = ['alias', 'name', 'title', 'titleKey', 'cssId', 'cssClass', 'cssStyle'];
 						var mutliField = this.parseValue(field, 'field', false) || [];
 						typeof mutliField == 'string' && (mutliField = mutliField.split(" "));
 						//var mutliField = (field.field || "").split(" ");
+						// 如果是时间范围选择，并且单字段，则拆分为后缀Start，End的两个字段
+						if (field.type == 'daterange' && mutliField.length == 1) {
+							var prefix = mutliField[0];
+							mutliField = [prefix + "Start", prefix + "End"];
+							field.field = mutliField.join(" ");
+						}
 						var inputs = [];
 						for(var i in mutliField) {
 							var input = $.extend({}, field);
@@ -169,7 +185,7 @@ var FormInputs = {
 								//var values = (field[key] || "").split(" ");
 								var values = this.parseValue(field, key, false) || [];
 								if(key == 'cssClass') {
-									values = values['selfClass'];
+									values = values['selfClass'] || values;
 								}
 								typeof values == 'string' && (values = values.split(" "));
 								var value = null;
@@ -182,7 +198,30 @@ var FormInputs = {
 						}
 						field.inputs = inputs;
 					}
+					if (field.required && field.visible && field.type != 'hidden') {
+						var fieldValidator = (field.extData || {}).fieldValidator;
+						if (!fieldValidator) {
+							var type = field.type || "text"
+							var op = "输入";
+							if ($.inArray(type, ["select", "urlSelector", "date", "datetime", "radio", "checkbox"]) != -1) {
+								op = "选择";
+							} else if (type == "file") {
+								op = "上传";
+							} else {
+								op = "输入";
+							}
+							fieldValidator = {
+								validators : {
+									notEmpty : {
+										message : '请' + op + field.name
+									}
+								}
+							}
+						}
+						fieldValidators[field.field] = fieldValidator;
+					}
 				}
+				this.fieldValidators = fieldValidators;
 				return fieldList;
 			},
 	 		maxLabelWidth: function() {
@@ -281,6 +320,7 @@ var FormInputs = {
 	 			$tip.text(value);
 	 			var tipWidth =$tip.width() / 2 + "px";
 	 			$tip.css("left", "calc(" + process + "% + 1rem - " + tipWidth + " - " + process / 100 * 2 + "rem)");
+	 			$(target).addClass("range-inited");
 	 		},
 	 		isPermit: function(type, data, ext) {
 	 			var permissionType = data.permissionType || this.permissionType || "";

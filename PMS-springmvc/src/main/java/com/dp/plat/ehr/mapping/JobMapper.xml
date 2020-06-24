@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.ehr.dao.JobMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.ehr.entity.Job">
+    <id column="jobID" jdbcType="INTEGER" property="jobID" />
+    <result column="jobCode" jdbcType="VARCHAR" property="jobCode" />
+    <result column="jobName" jdbcType="VARCHAR" property="jobName" />
+    <result column="jobAbbr" jdbcType="VARCHAR" property="jobAbbr" />
+    <result column="depID" jdbcType="INTEGER" property="depID" />
+    <result column="adminID" jdbcType="INTEGER" property="adminID" />
+    <result column="jobGrage" jdbcType="INTEGER" property="jobGrage" />
+    <result column="jobType" jdbcType="INTEGER" property="jobType" />
+    <result column="jobProperty" jdbcType="INTEGER" property="jobProperty" />
+    <result column="jobNum" jdbcType="INTEGER" property="jobNum" />
+    <result column="isCore" jdbcType="BIT" property="isCore" />
+    <result column="effectDate" jdbcType="TIMESTAMP" property="effectDate" />
+    <result column="xorder" jdbcType="VARCHAR" property="xorder" />
+    <result column="isDisabled" jdbcType="BIT" property="isDisabled" />
+    <result column="disabledDate" jdbcType="TIMESTAMP" property="disabledDate" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="xType" jdbcType="INTEGER" property="xType" />
+    <result column="jobCustom1" jdbcType="INTEGER" property="jobCustom1" />
+    <result column="jobCustom2" jdbcType="INTEGER" property="jobCustom2" />
+    <result column="jobCustom3" jdbcType="INTEGER" property="jobCustom3" />
+    <result column="jobCustom4" jdbcType="INTEGER" property="jobCustom4" />
+    <result column="jobCustom5" jdbcType="INTEGER" property="jobCustom5" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    jobID, jobCode, jobName, jobAbbr, depID, adminID, jobGrage, jobType, jobProperty, 
+    jobNum, isCore, effectDate, xorder, isDisabled, disabledDate, remark, xType, jobCustom1, 
+    jobCustom2, jobCustom3, jobCustom4, jobCustom5
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from ehr_job
+    where jobID = #{jobID,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from ehr_job
+    where jobID = #{jobID,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.ehr.entity.Job">
+    <selectKey keyProperty="jobID" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into ehr_job (jobCode, jobName, jobAbbr, 
+      depID, adminID, jobGrage, 
+      jobType, jobProperty, jobNum, 
+      isCore, effectDate, xorder, 
+      isDisabled, disabledDate, remark, 
+      xType, jobCustom1, jobCustom2, 
+      jobCustom3, jobCustom4, jobCustom5
+      )
+    values (#{jobCode,jdbcType=VARCHAR}, #{jobName,jdbcType=VARCHAR}, #{jobAbbr,jdbcType=VARCHAR}, 
+      #{depID,jdbcType=INTEGER}, #{adminID,jdbcType=INTEGER}, #{jobGrage,jdbcType=INTEGER}, 
+      #{jobType,jdbcType=INTEGER}, #{jobProperty,jdbcType=INTEGER}, #{jobNum,jdbcType=INTEGER}, 
+      #{isCore,jdbcType=BIT}, #{effectDate,jdbcType=TIMESTAMP}, #{xorder,jdbcType=VARCHAR}, 
+      #{isDisabled,jdbcType=BIT}, #{disabledDate,jdbcType=TIMESTAMP}, #{remark,jdbcType=VARCHAR}, 
+      #{xType,jdbcType=INTEGER}, #{jobCustom1,jdbcType=INTEGER}, #{jobCustom2,jdbcType=INTEGER}, 
+      #{jobCustom3,jdbcType=INTEGER}, #{jobCustom4,jdbcType=INTEGER}, #{jobCustom5,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.ehr.entity.Job">
+    <selectKey keyProperty="jobID" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into ehr_job
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="jobCode != null">
+        jobCode,
+      </if>
+      <if test="jobName != null">
+        jobName,
+      </if>
+      <if test="jobAbbr != null">
+        jobAbbr,
+      </if>
+      <if test="depID != null">
+        depID,
+      </if>
+      <if test="adminID != null">
+        adminID,
+      </if>
+      <if test="jobGrage != null">
+        jobGrage,
+      </if>
+      <if test="jobType != null">
+        jobType,
+      </if>
+      <if test="jobProperty != null">
+        jobProperty,
+      </if>
+      <if test="jobNum != null">
+        jobNum,
+      </if>
+      <if test="isCore != null">
+        isCore,
+      </if>
+      <if test="effectDate != null">
+        effectDate,
+      </if>
+      <if test="xorder != null">
+        xorder,
+      </if>
+      <if test="isDisabled != null">
+        isDisabled,
+      </if>
+      <if test="disabledDate != null">
+        disabledDate,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="xType != null">
+        xType,
+      </if>
+      <if test="jobCustom1 != null">
+        jobCustom1,
+      </if>
+      <if test="jobCustom2 != null">
+        jobCustom2,
+      </if>
+      <if test="jobCustom3 != null">
+        jobCustom3,
+      </if>
+      <if test="jobCustom4 != null">
+        jobCustom4,
+      </if>
+      <if test="jobCustom5 != null">
+        jobCustom5,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="jobCode != null">
+        #{jobCode,jdbcType=VARCHAR},
+      </if>
+      <if test="jobName != null">
+        #{jobName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobAbbr != null">
+        #{jobAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="depID != null">
+        #{depID,jdbcType=INTEGER},
+      </if>
+      <if test="adminID != null">
+        #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="jobGrage != null">
+        #{jobGrage,jdbcType=INTEGER},
+      </if>
+      <if test="jobType != null">
+        #{jobType,jdbcType=INTEGER},
+      </if>
+      <if test="jobProperty != null">
+        #{jobProperty,jdbcType=INTEGER},
+      </if>
+      <if test="jobNum != null">
+        #{jobNum,jdbcType=INTEGER},
+      </if>
+      <if test="isCore != null">
+        #{isCore,jdbcType=BIT},
+      </if>
+      <if test="effectDate != null">
+        #{effectDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="xorder != null">
+        #{xorder,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisabled != null">
+        #{isDisabled,jdbcType=BIT},
+      </if>
+      <if test="disabledDate != null">
+        #{disabledDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="xType != null">
+        #{xType,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom1 != null">
+        #{jobCustom1,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom2 != null">
+        #{jobCustom2,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom3 != null">
+        #{jobCustom3,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom4 != null">
+        #{jobCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom5 != null">
+        #{jobCustom5,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.ehr.entity.Job">
+    update ehr_job
+    <set>
+      <if test="jobCode != null">
+        jobCode = #{jobCode,jdbcType=VARCHAR},
+      </if>
+      <if test="jobName != null">
+        jobName = #{jobName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobAbbr != null">
+        jobAbbr = #{jobAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="depID != null">
+        depID = #{depID,jdbcType=INTEGER},
+      </if>
+      <if test="adminID != null">
+        adminID = #{adminID,jdbcType=INTEGER},
+      </if>
+      <if test="jobGrage != null">
+        jobGrage = #{jobGrage,jdbcType=INTEGER},
+      </if>
+      <if test="jobType != null">
+        jobType = #{jobType,jdbcType=INTEGER},
+      </if>
+      <if test="jobProperty != null">
+        jobProperty = #{jobProperty,jdbcType=INTEGER},
+      </if>
+      <if test="jobNum != null">
+        jobNum = #{jobNum,jdbcType=INTEGER},
+      </if>
+      <if test="isCore != null">
+        isCore = #{isCore,jdbcType=BIT},
+      </if>
+      <if test="effectDate != null">
+        effectDate = #{effectDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="xorder != null">
+        xorder = #{xorder,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisabled != null">
+        isDisabled = #{isDisabled,jdbcType=BIT},
+      </if>
+      <if test="disabledDate != null">
+        disabledDate = #{disabledDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="xType != null">
+        xType = #{xType,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom1 != null">
+        jobCustom1 = #{jobCustom1,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom2 != null">
+        jobCustom2 = #{jobCustom2,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom3 != null">
+        jobCustom3 = #{jobCustom3,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom4 != null">
+        jobCustom4 = #{jobCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="jobCustom5 != null">
+        jobCustom5 = #{jobCustom5,jdbcType=INTEGER},
+      </if>
+    </set>
+    where jobID = #{jobID,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.ehr.entity.Job">
+    update ehr_job
+    set jobCode = #{jobCode,jdbcType=VARCHAR},
+      jobName = #{jobName,jdbcType=VARCHAR},
+      jobAbbr = #{jobAbbr,jdbcType=VARCHAR},
+      depID = #{depID,jdbcType=INTEGER},
+      adminID = #{adminID,jdbcType=INTEGER},
+      jobGrage = #{jobGrage,jdbcType=INTEGER},
+      jobType = #{jobType,jdbcType=INTEGER},
+      jobProperty = #{jobProperty,jdbcType=INTEGER},
+      jobNum = #{jobNum,jdbcType=INTEGER},
+      isCore = #{isCore,jdbcType=BIT},
+      effectDate = #{effectDate,jdbcType=TIMESTAMP},
+      xorder = #{xorder,jdbcType=VARCHAR},
+      isDisabled = #{isDisabled,jdbcType=BIT},
+      disabledDate = #{disabledDate,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=VARCHAR},
+      xType = #{xType,jdbcType=INTEGER},
+      jobCustom1 = #{jobCustom1,jdbcType=INTEGER},
+      jobCustom2 = #{jobCustom2,jdbcType=INTEGER},
+      jobCustom3 = #{jobCustom3,jdbcType=INTEGER},
+      jobCustom4 = #{jobCustom4,jdbcType=INTEGER},
+      jobCustom5 = #{jobCustom5,jdbcType=INTEGER}
+    where jobID = #{jobID,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.ehr.entity.Job" resultMap="BaseResultMap">
+    select * from ehr_job
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="jobID != null and '' != jobID">
+				jobID = #{jobID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCode != null and '' != jobCode">
+				jobCode = #{jobCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="jobName != null and '' != jobName">
+				jobName = #{jobName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="jobAbbr != null and '' != jobAbbr">
+				jobAbbr = #{jobAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depID != null and '' != depID">
+				depID = #{depID, jdbcType=INTEGER} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobGrage != null and '' != jobGrage">
+				jobGrage = #{jobGrage, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobType != null and '' != jobType">
+				jobType = #{jobType, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobProperty != null and '' != jobProperty">
+				jobProperty = #{jobProperty, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobNum != null and '' != jobNum">
+				jobNum = #{jobNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="isCore != null and '' != isCore">
+				isCore = #{isCore, jdbcType=BIT} AND
+			</if>
+			<if test="effectDate != null and '' != effectDate">
+				effectDate = #{effectDate, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="xorder != null and '' != xorder">
+				xorder = #{xorder, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isDisabled != null and '' != isDisabled">
+				isDisabled = #{isDisabled, jdbcType=BIT} AND
+			</if>
+			<if test="disabledDate != null and '' != disabledDate">
+				disabledDate = #{disabledDate, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="xType != null and '' != xType">
+				xType = #{xType, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom1 != null and '' != jobCustom1">
+				jobCustom1 = #{jobCustom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom2 != null and '' != jobCustom2">
+				jobCustom2 = #{jobCustom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom3 != null and '' != jobCustom3">
+				jobCustom3 = #{jobCustom3, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom4 != null and '' != jobCustom4">
+				jobCustom4 = #{jobCustom4, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom5 != null and '' != jobCustom5">
+				jobCustom5 = #{jobCustom5, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.ehr.entity.Job" resultType="long">
+    select count(1) from ehr_job
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="jobID != null and '' != jobID">
+				jobID = #{jobID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCode != null and '' != jobCode">
+				jobCode = #{jobCode, jdbcType=VARCHAR} AND
+			</if>
+			<if test="jobName != null and '' != jobName">
+				jobName = #{jobName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="jobAbbr != null and '' != jobAbbr">
+				jobAbbr = #{jobAbbr, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depID != null and '' != depID">
+				depID = #{depID, jdbcType=INTEGER} AND
+			</if>
+			<if test="adminID != null and '' != adminID">
+				adminID = #{adminID, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobGrage != null and '' != jobGrage">
+				jobGrage = #{jobGrage, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobType != null and '' != jobType">
+				jobType = #{jobType, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobProperty != null and '' != jobProperty">
+				jobProperty = #{jobProperty, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobNum != null and '' != jobNum">
+				jobNum = #{jobNum, jdbcType=INTEGER} AND
+			</if>
+			<if test="isCore != null and '' != isCore">
+				isCore = #{isCore, jdbcType=BIT} AND
+			</if>
+			<if test="effectDate != null and '' != effectDate">
+				effectDate = #{effectDate, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="xorder != null and '' != xorder">
+				xorder = #{xorder, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isDisabled != null and '' != isDisabled">
+				isDisabled = #{isDisabled, jdbcType=BIT} AND
+			</if>
+			<if test="disabledDate != null and '' != disabledDate">
+				disabledDate = #{disabledDate, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="remark != null and '' != remark">
+				remark = #{remark, jdbcType=VARCHAR} AND
+			</if>
+			<if test="xType != null and '' != xType">
+				xType = #{xType, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom1 != null and '' != jobCustom1">
+				jobCustom1 = #{jobCustom1, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom2 != null and '' != jobCustom2">
+				jobCustom2 = #{jobCustom2, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom3 != null and '' != jobCustom3">
+				jobCustom3 = #{jobCustom3, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom4 != null and '' != jobCustom4">
+				jobCustom4 = #{jobCustom4, jdbcType=INTEGER} AND
+			</if>
+			<if test="jobCustom5 != null and '' != jobCustom5">
+				jobCustom5 = #{jobCustom5, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from ehr_job
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.jobID != null and '' != model.jobID">
+					jobID = #{model.jobID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCode != null and '' != model.jobCode">
+					jobCode = #{model.jobCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.jobName != null and '' != model.jobName">
+					jobName = #{model.jobName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.jobAbbr != null and '' != model.jobAbbr">
+					jobAbbr = #{model.jobAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depID != null and '' != model.depID">
+					depID = #{model.depID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobGrage != null and '' != model.jobGrage">
+					jobGrage = #{model.jobGrage, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobType != null and '' != model.jobType">
+					jobType = #{model.jobType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobProperty != null and '' != model.jobProperty">
+					jobProperty = #{model.jobProperty, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobNum != null and '' != model.jobNum">
+					jobNum = #{model.jobNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isCore != null and '' != model.isCore">
+					isCore = #{model.isCore, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectDate != null and '' != model.effectDate">
+					effectDate = #{model.effectDate, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.xorder != null and '' != model.xorder">
+					xorder = #{model.xorder, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isDisabled != null and '' != model.isDisabled">
+					isDisabled = #{model.isDisabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.disabledDate != null and '' != model.disabledDate">
+					disabledDate = #{model.disabledDate, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.xType != null and '' != model.xType">
+					xType = #{model.xType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom1 != null and '' != model.jobCustom1">
+					jobCustom1 = #{model.jobCustom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom2 != null and '' != model.jobCustom2">
+					jobCustom2 = #{model.jobCustom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom3 != null and '' != model.jobCustom3">
+					jobCustom3 = #{model.jobCustom3, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom4 != null and '' != model.jobCustom4">
+					jobCustom4 = #{model.jobCustom4, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom5 != null and '' != model.jobCustom5">
+					jobCustom5 = #{model.jobCustom5, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					jobCode like CONCAT("%", #{fuzzy}, "%") or
+					jobName like CONCAT("%", #{fuzzy}, "%") or
+					jobAbbr like CONCAT("%", #{fuzzy}, "%") or
+					xorder like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null and pageSize > 0">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from ehr_job
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.jobID != null and '' != model.jobID">
+					jobID = #{model.jobID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCode != null and '' != model.jobCode">
+					jobCode = #{model.jobCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.jobName != null and '' != model.jobName">
+					jobName = #{model.jobName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.jobAbbr != null and '' != model.jobAbbr">
+					jobAbbr = #{model.jobAbbr, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depID != null and '' != model.depID">
+					depID = #{model.depID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.adminID != null and '' != model.adminID">
+					adminID = #{model.adminID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobGrage != null and '' != model.jobGrage">
+					jobGrage = #{model.jobGrage, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobType != null and '' != model.jobType">
+					jobType = #{model.jobType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobProperty != null and '' != model.jobProperty">
+					jobProperty = #{model.jobProperty, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobNum != null and '' != model.jobNum">
+					jobNum = #{model.jobNum, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isCore != null and '' != model.isCore">
+					isCore = #{model.isCore, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectDate != null and '' != model.effectDate">
+					effectDate = #{model.effectDate, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.xorder != null and '' != model.xorder">
+					xorder = #{model.xorder, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isDisabled != null and '' != model.isDisabled">
+					isDisabled = #{model.isDisabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.disabledDate != null and '' != model.disabledDate">
+					disabledDate = #{model.disabledDate, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.xType != null and '' != model.xType">
+					xType = #{model.xType, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom1 != null and '' != model.jobCustom1">
+					jobCustom1 = #{model.jobCustom1, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom2 != null and '' != model.jobCustom2">
+					jobCustom2 = #{model.jobCustom2, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom3 != null and '' != model.jobCustom3">
+					jobCustom3 = #{model.jobCustom3, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom4 != null and '' != model.jobCustom4">
+					jobCustom4 = #{model.jobCustom4, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.jobCustom5 != null and '' != model.jobCustom5">
+					jobCustom5 = #{model.jobCustom5, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					jobCode like CONCAT("%", #{fuzzy}, "%") or
+					jobName like CONCAT("%", #{fuzzy}, "%") or
+					jobAbbr like CONCAT("%", #{fuzzy}, "%") or
+					xorder like CONCAT("%", #{fuzzy}, "%") or
+					remark like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

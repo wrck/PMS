@@ -1,5 +1,9 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
@@ -22,16 +26,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.context.HttpContext;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
+import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.*;
 import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
@@ -39,8 +44,10 @@ import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
 import com.dp.plat.pms.springmvc.util.DocUtil;
 import com.dp.plat.pms.springmvc.util.PermissionUtils;
+import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 
@@ -57,6 +64,10 @@ public class DispatchProjectController
 
 	@Autowired
 	private IProjectHeaderService projectHeaderService;
+	
+	@Autowired
+	private IProjectManageUserService projectManageUserService;
+	
 
 	@PostConstruct
 	public void init() {
@@ -314,9 +325,34 @@ public class DispatchProjectController
 			String dispatchName = (StringUtils.trimToEmpty(dispatch.getDispatchName()) + "项目").replace("项目项目", "项目");
 			dispatch.setDispatchName(dispatchName);
 			
-			String fileName = String.format("%s[安全服务项目]%s外派.doc", dispatch.getDispatchSeq(), dispatchName);
+			String fileName = String.format("%s[安全服务项目]%s外派.docx", dispatch.getDispatchSeq(), dispatchName);
+			
+			String dutyPerson = vo.getDutyPerson();
+			UserInfo ui = new UserInfo();
+			ui.setRealName(dutyPerson);
+			List<UserInfo> users = projectManageUserService.selectBySelective(ui);
+			if (!users.isEmpty()) {
+				UserInfo info = users.get(0);
+				String mobile = info.getMobile();
+				if(StringUtils.isNotBlank(mobile)) {
+					vo.setCustomInfoByKey("dutyPersonPhone", mobile);
+				}
+			}
+			String officeDutyPerson = vo.getOfficeDutyPerson();
+			ui.setRealName(officeDutyPerson);
+			users = projectManageUserService.selectBySelective(ui);
+			if (!users.isEmpty()) {
+				UserInfo info = users.get(0);
+				String mobile = info.getMobile();
+				if(StringUtils.isNotBlank(mobile)) {
+					vo.setCustomInfoByKey("officeDutyPersonPhone", mobile);
+				}
+			}
+			
 			Map dataMap = (Map<String, Object>) JSON.toJSON(vo);
-			CommonRelatedData t = new CommonRelatedData();
+			CommonRelatedDataVO t = new CommonRelatedDataVO();
+			t.setDisabled(false);
+			t.setEffectiveTo(new Date());
 			t.setObjType("dispatch");
 			t.setObjId(dispatch.getId());
 			t.setType("dispatchWorkContent");

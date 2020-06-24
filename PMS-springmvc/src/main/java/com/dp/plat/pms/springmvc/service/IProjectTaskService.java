@@ -35,4 +35,6 @@ public interface IProjectTaskService extends IAbstractBaseService<ProjectTask> {
 	Map<String, Object> checkPermissionMap(TaskVO task, String... permissions);
 
 	boolean updateEventActualFinishDateByTask(ProjectDeliver pd);
+
+	void deleteDeliverFile(ProjectDeliver projectDeliver);
 }

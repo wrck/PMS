@@ -42,16 +42,18 @@ $(function(){
  * 	tableConfig,// dataTableConfig配置
  * 	operations, // 操作
  * },
- * refresh: 刷新
+ * refresh: 刷新,
+ * navTab,
+ * callback
  */
-function initTabData(config, refresh, navTab) {
+function initTabData(config, refresh, navTab, callback) {
 	if (!config) {
 		return;
 	}
 	var type = config.type;
 	var drawType =  config.drawType || "json";
 	var url = (navTab || {}).url || config.url;
-	var params = config.params;
+	var params = config.params || {};
 	var timestamp = config.timestamp || "";
 	var navTabId = type + "Tab" + timestamp;
 	var $container = config.container || $(navTabId).parents(".tab-content:first");
@@ -71,6 +73,10 @@ function initTabData(config, refresh, navTab) {
             info: true
         }
 	$(".box-body .overlay", $navTab).show();
+	// 判断url中是否有分页标记，如果没有默认查询全部
+	if (!url.match(/.*\bpageSize\b.*/) || typeof params.pageSize == "undefined") {
+		params = $.extend(true, {pageSize: -1}, params);
+	}
 	if (drawType == 'json') {
 		ajaxGet(url, params, function(resultMap) {
     		var columns = resultMap.columns || (resultMap.pageParam || {}).columns || [];
@@ -94,13 +100,16 @@ function initTabData(config, refresh, navTab) {
     			localTable.reloadRowData(data, localTable.getSelectedRowId());
     		} else {
     			tableConfig.columns = columns;
+    			if (tableConfig.exportData != null) {
+    				tableConfig.exportData.url = url.replace(".json", ".xlsx");
+    			}
     			if (!refresh) {
     				$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
     				$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped-vertical table-hover' id='" + tableId + "'></table>");
     			}
     			if (data) {
     				//$(".box-body #" + calloutId, $navTab).append("<h4>" + config.title + "</h4>")
-    				var localTable = new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
+    				localTable = new CommonLocalTable(tableId, data, $.extend(true, {}, defaultConfig, tableConfig));
     				//$(".box-body  #" + calloutId + " h4", $navTab).appendTo($("#" + tableId +  "_wrapper .row:first > :first"));
     				$("#" + tableId, $container).data("localTable", localTable);
     				/*try {
@@ -124,6 +133,20 @@ function initTabData(config, refresh, navTab) {
     		}
     		$(".box-body .overlay", $navTab).hide();
     		$navTab.addClass("loaded");
+    		
+    		$($navTab).off("dblclick", "#" + tableId  + " tbody tr");
+    		$($navTab).on("dblclick", "#" + tableId  + " tbody tr", function () {
+                var rowId = localTable.getSelectedRowId();
+                if(rowId == null){
+                    modals.info('请点击需要查看的行');
+                    return false;
+                }
+                $('.operate-btn-group [data-btn-type="edit"]', $navTab).click();
+            });
+    		
+    		if (callback) {
+    			callback.call(vm, config, navTab);
+    		}
 		});
 	} else {
 		$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
@@ -139,6 +162,9 @@ function initTabData(config, refresh, navTab) {
                 if (typeof navTab.processCallback == "function") {
                 	data = navTab.processCallback.call(vm, config, navTab, $warpper);
                 }
+                if (callback) {
+        			callback.call(vm, config, navTab);
+        		}
             },
             error:function(XMLHttpRequest,textStatus,errorThrown){
             	$warpper.html("获取数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
@@ -188,7 +214,7 @@ function commonNavTableEdit(e, navTab) {
 			contentClass : '.modal-content',
 			hideFunc : function(e) {
 				var config = $target.parents(".tab-pane:first").data();
-				initTabData(config, true);
+				initTabData(config, true, navTab, (navTab.methods || {}).operationsCallback);
 			}
 		});
 	}
@@ -199,36 +225,59 @@ function commonNavTableDelete(e, navTab) {
 	var type = navTab.model || navTab.type;
 	var $target = $(e.target);
 	var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
-	var rowId = navTab.rowId || localTable.getSelectedRowId();
-	if (!rowId) {
+	var rowIds = navTab.rowId || localTable.getCheckedRowsId();
+	rowIds = rowIds || localTable.getSelectedRowsId() || localTable.getSelectedRowId();
+	if (!rowIds) {
 		modals.info('请选择要删除的行');
 		return;
 	}
-	var url = null;
-	try {
-		url = router(urlNamespace).api(type).delete(rowId);
-	} catch(e) {
-		console.error(e);
+	var urls = [];
+	if (typeof rowIds == 'object') {
+		
+	} else {
+		rowIds = [rowIds];
+	}
+	for (var i = 0; i < rowIds.length; i++) {
+		var rowId = rowIds[i];
+		var url = null;
 		try {
-			url = pm.router.api(type).delete(rowId);
-		} catch(e){
+			url = router(urlNamespace).api(type).delete(rowId);
+		} catch(e) {
 			console.error(e);
+			try {
+				url = pm.router.api(type).delete(rowId);
+			} catch(e){
+				console.error(e);
+			}
+		}
+		if (url) {
+			urls.push(url);
 		}
 	}
-	if (!url) {
+	if (urls.length == 0) {
 		modals.error('不支持该操作！');
 		return;
 	}
     modals.confirm("是否要删除该行数据？",function(){
-        ajaxPost(url, null, function(data, status){
-            if(data.status){
-                modals.info(data.message || "删除成功！");
-                var config = $target.parents(".tab-pane:first").data();
-				initTabData(config, true);
-            }else{
-                modals.info(data.message || "删除失败！");
-            }
-        });
+//    	$.when($.Deferred(function(deferred){
+//	    	$(deferred.resolve);
+//	    }))
+    	var resultCount = 0;
+    	for (var i = 0; i < urls.length; i++) {
+			var url = urls[i];
+			ajaxPost(url, null, function(data, status){
+				resultCount ++;
+				if (resultCount == urls.length) {
+					if(data.status){
+						modals.info(data.message || "删除成功！");
+						var config = $target.parents(".tab-pane:first").data();
+						initTabData(config, true, navTab, (navTab.methods || {}).operationsCallback);
+					} else {
+						modals.info(data.message || "删除失败！");
+					}
+				}
+			});
+		}
     })
 }
 

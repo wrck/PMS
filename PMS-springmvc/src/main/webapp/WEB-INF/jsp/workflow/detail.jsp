@@ -103,7 +103,7 @@
 						<form id="commonForm" method="post" :action="formAction" name="commonForm" class="form-inline fade" :class="{in: isShow}">
 							<!-- /.box-body -->
 							<div id="formDiv" class="box-body row ml-0">
-								<form-inputs :form-cols="1" :field-list="workflowFieldList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :permission-type="permissionType" :roles="roles" :model="model"></form-inputs>
+								<form-inputs ref="formInputs" :form-cols="1" :field-list="workflowFieldList" :target-name="'workflow'" :target-value="workflow" :permissions="permissions" :permission-type="permissionType" :roles="roles" :model="model"></form-inputs>
 							</div>
 							<div class="box-footer text-right">
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
@@ -210,6 +210,9 @@
 					taskEntityForm = $("#taskEntityFormDiv").form();
 					taskEntityForm.initFormData(data.targetValue);
 					
+					// 获取表单验证要求
+					varFields = vm.$refs["formInputs"].fieldValidators;
+					
 					form = $("#" + formId).form();
 					form.initFormData(data.workflow);
 					var $container = $("#" + formId);
@@ -226,7 +229,7 @@
 			                		var url = basePath + "/workflow/complete/" + formData.taskId + ".json";
 			                		ajaxPost(url, formData,function(data,status){
 			                			if(data.status){
-			        						modals.correct(confirmText + "成功");
+			                				modals.correct(confirmText + "成功");
 			        						handleResult.call(form2, data);
 			        					} else{
 			        						modals.error('操作失败！<br>' + (data.message || ""));

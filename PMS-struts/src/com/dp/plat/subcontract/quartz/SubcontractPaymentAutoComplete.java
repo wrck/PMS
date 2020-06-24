@@ -37,7 +37,7 @@ import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
 /**
- * 邮件提醒项目转包下次付款申请，距离上次10个月开始，每隔1个月提醒一次
+ * SSE付款信息自动更新同步
  * 
  * @author admin
  */

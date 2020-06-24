@@ -406,7 +406,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
       <if test="customConfig != null">
         <!-- customConfig = #{customConfig,jdbcType=JSON}, -->
@@ -416,7 +416,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customConfig = JSON_MERGE_PATCH(customConfig, #{customConfig,jdbcType=JSON}),
+		customConfig = JSON_MERGE_PATCH(IFNULL(customConfig, "{}"), #{customConfig,jdbcType=JSON}),
       </if>
       <if test="column014 != null">
         column014 = #{column014,jdbcType=LONGVARCHAR},
@@ -465,7 +465,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       <!-- customConfig = #{customConfig,jdbcType=JSON}, -->
         <!-- customConfig = JSON_SET (IFNULL(
 		    customConfig, "{}"), 
@@ -473,7 +473,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customConfig = JSON_MERGE_PATCH(customConfig, #{customConfig,jdbcType=JSON}),
+		customConfig = JSON_MERGE_PATCH(IFNULL(customConfig, "{}"), #{customConfig,jdbcType=JSON}),
       column014 = #{column014,jdbcType=LONGVARCHAR}
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
@@ -489,10 +489,10 @@
 					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectName != null and '' != model.projectName">
-					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
+					ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectState != null and '' != model.projectState">
 					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
@@ -507,19 +507,19 @@
 					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
+					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
+					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
+					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
+					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
+					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column008 != null and '' != model.column008">
 					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
@@ -540,7 +540,7 @@
 					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
+					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customerProjectName != null and '' != model.customerProjectName">
 					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
@@ -894,10 +894,10 @@
 					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectName != null and '' != model.projectName">
-					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
+					ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectState != null and '' != model.projectState">
 					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
@@ -912,19 +912,19 @@
 					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
+					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
+					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
+					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
+					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
+					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column008 != null and '' != model.column008">
 					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
@@ -945,7 +945,7 @@
 					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
+					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customerProjectName != null and '' != model.customerProjectName">
 					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
@@ -1050,10 +1050,10 @@
 					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode = #{model.projectCode, jdbcType=VARCHAR} AND
+					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectName != null and '' != model.projectName">
-					ph.projectName = #{model.projectName, jdbcType=VARCHAR} AND
+					ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.projectState != null and '' != model.projectState">
 					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
@@ -1068,19 +1068,19 @@
 					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
 				</if>
 				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 = #{model.column003, jdbcType=VARCHAR} AND
+					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 = #{model.column004, jdbcType=VARCHAR} AND
+					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 = #{model.column005, jdbcType=VARCHAR} AND
+					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 = #{model.column006, jdbcType=VARCHAR} AND
+					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 = #{model.column007, jdbcType=VARCHAR} AND
+					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.column008 != null and '' != model.column008">
 					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
@@ -1101,7 +1101,7 @@
 					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
 				</if>
 				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 = #{model.column013, jdbcType=VARCHAR} AND
+					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
 				</if>
 				<if test="model.customerProjectName != null and '' != model.customerProjectName">
 					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
@@ -1241,7 +1241,7 @@
 	    left join fnd_company c2 
 	        on c2.`code` = pp.corporationCode 
 	where
-	<trim prefixOverrides="and |or" suffixOverrides="and |or">
+	<trim prefixOverrides="and | or" suffixOverrides="and | or">
 		pp.`projectType` = 'afss' 
 		<if test="model != null ">
 			<if test="model.projectType != null and model.projectType !=''"> 
@@ -1253,20 +1253,29 @@
 			<if test="model.projectName != null and '' != model.projectName">
 				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
 			</if>
+			<if test="model.contractNo != null and '' != model.contractNo">
+				AND p.contractNo like concat("%", #{model.contractNo, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.salesManName != null and '' != model.salesManName">
+				AND pp.salesManName like concat("%", #{model.salesManName, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.customInfo != null and model.customInfo.salesManName != null and '' != model.customInfo.salesManName">
+				AND pp.salesManName like concat("%", #{model.customInfo.salesManName, jdbcType=VARCHAR}, "%")
+			</if>
 			<if test="model.column001 != null and '' != model.column001">
 				AND pp.officeCode = #{model.column001, jdbcType=VARCHAR}
 			</if>
 			<if test="model.column004 != null and '' != model.column004">
-				AND pp.marketName = #{model.column004, jdbcType=VARCHAR}
+				AND pp.marketName like concat("%", #{model.column004, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column005 != null and '' != model.column005">
-				AND pp.systemName = #{model.column005, jdbcType=VARCHAR}
+				AND pp.systemName like concat("%", #{model.column005, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column006 != null and '' != model.column006">
-				AND pp.expendName = #{model.column006, jdbcType=VARCHAR}
+				AND pp.expendName like concat("%", #{model.column006, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column007 != null and '' != model.column007">
-				AND pp.industryName = #{model.column007, jdbcType=VARCHAR}
+				AND pp.industryName like concat("%", #{model.column007, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.compId != null and '' != model.compId">
 				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
@@ -1280,8 +1289,9 @@
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
 			AND (
-				projectCode like CONCAT("%", #{fuzzy}, "%") or
-				projectName like CONCAT("%", #{fuzzy}, "%") or
+				pp.projectCode like CONCAT("%", #{fuzzy}, "%") or
+				pp.projectName like CONCAT("%", #{fuzzy}, "%") or
+				p.contractNo like CONCAT("%", #{fuzzy}, "%")
 			)
 		</if>
 	</trim>
@@ -1353,20 +1363,29 @@
 			<if test="model.projectName != null and '' != model.projectName">
 				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
 			</if>
+			<if test="model.contractNo != null and '' != model.contractNo">
+				AND p.contractNo like concat("%", #{model.contractNo, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.salesManName != null and '' != model.salesManName">
+				AND pp.salesManName like concat("%", #{model.salesManName, jdbcType=VARCHAR}, "%")
+			</if>
+			<if test="model.customInfo != null and model.customInfo.salesManName != null and '' != model.customInfo.salesManName">
+				AND pp.salesManName like concat("%", #{model.customInfo.salesManName, jdbcType=VARCHAR}, "%")
+			</if>
 			<if test="model.column001 != null and '' != model.column001">
 				AND pp.officeCode = #{model.column001, jdbcType=VARCHAR}
 			</if>
 			<if test="model.column004 != null and '' != model.column004">
-				AND pp.marketName = #{model.column004, jdbcType=VARCHAR}
+				AND pp.marketName like concat("%", #{model.column004, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column005 != null and '' != model.column005">
-				AND pp.systemName = #{model.column005, jdbcType=VARCHAR}
+				AND pp.systemName like concat("%", #{model.column005, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column006 != null and '' != model.column006">
-				AND pp.expendName = #{model.column006, jdbcType=VARCHAR}
+				AND pp.expendName like concat("%", #{model.column006, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.column007 != null and '' != model.column007">
-				AND pp.industryName = #{model.column007, jdbcType=VARCHAR}
+				AND pp.industryName like concat("%", #{model.column007, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.compId != null and '' != model.compId">
 				AND #{model.compId, jdbcType=INTEGER} = IFNULL(c1.id, c2.id)
@@ -1380,8 +1399,9 @@
 		</if>
 		<if test="fuzzySearch == true and fuzzy != ''">
 			AND (
-				projectCode like CONCAT("%", #{fuzzy}, "%") or
-				projectName like CONCAT("%", #{fuzzy}, "%") or
+				pp.projectCode like CONCAT("%", #{fuzzy}, "%") or
+				pp.projectName like CONCAT("%", #{fuzzy}, "%") or
+				p.contractNo like CONCAT("%", #{fuzzy}, "%")
 			)
 		</if>
 	</trim>
@@ -1408,6 +1428,25 @@
 	        <!-- and pp.`orderExecNumber` = t1.`contractNo` -->
 	         and pp.`projectCode` = t1.`contractNo`
 	        ) 
+	union all
+	SELECT  
+	    ph.`projectId`, `projectCode`, NULL AS `rank`, `projectName`, 
+	    ph.customInfo ->> "$.projectStateName" AS `projectStateName`, `fd`.`basicDataId` AS `projectState`, 
+	    ph.customInfo ->> "$.contractNo" AS `contractNo`, ph.compId, ph.`column001` AS `officeCode`, 
+	    ph.customInfo ->> "$.officeName" AS `officeName`, ph.customInfo ->> "$.salesManCode" AS `salesManCode`, 
+	    ph.customInfo ->> "$.salesManName" AS `salesManName`, ph.`projectStartTime`, ph.createTime AS projectCreateTime, 
+	    ph.`column005` AS `systemName`, 
+	    ph.customInfo ->> "$.serviceManagerCode" AS `serviceManager`, ph.customInfo ->> "$.serviceManagerforjson" AS `serviceManagerName`, 
+	    ph.customInfo ->> "$.programManagerCode" AS `projectManager`, ph.customInfo ->> "$.programManagerCodeforjson" AS `projectManagerName`, 
+	    NULL AS shipmentStateName, NULL AS shipmentState, NULL AS planStateName, NULL AS projectPlanState, 
+	    NULL AS executionStateName, NULL AS executionState, NULL AS closeProcessStateName, 
+	    NULL AS closeProcessState, NULL AS projectRefreshTime, NULL AS projectCloseTime, 
+	    NULL ssfs, NULL ssfsName, NULL partnerChannel, ph.projectType
+	FROM pm_project ph
+	    LEFT JOIN `fnd_basic_data` `fd` 
+		ON `fd`.`basicDataId` = '10' 
+		AND `fd`.`dataTypeCode` = CONCAT(ph.projectType, "_projectState")
+	<include refid="sql_model_where"></include>
   </sql>
   
   <select id="selectUncreateProjectList" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
@@ -1481,9 +1520,10 @@
   </select>
   
   <resultMap id="permissionMap" type="java.util.HashMap">
-		<result column="all" javaType="java.lang.Boolean" property="all" />
-		<result column="edit" javaType="java.lang.Boolean" property="edit" />
-		<result column="view" javaType="java.lang.Boolean" property="view" />
+		<result column="all" property="all" javaType="java.lang.Boolean" />
+		<result column="edit" property="edit" javaType="java.lang.Boolean" />
+		<result column="view" property="view" javaType="java.lang.Boolean" />
+		<result column="projectTypes" property="projectTypes" javaType="java.lang.String" />
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
 		<collection column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="selectPermissionByMemberRole" />
@@ -1493,7 +1533,8 @@
 	  	select 
 		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, 
 		    count(pm.id) > 0 as edit, 
-		    count(ui.id) > 0 view, 
+		    count(ui.id) > 0 view,
+		    group_concat(distinct ph.projectType) as projectTypes,
 		    max(ph.projectState) as maxState,
 		    group_concat(distinct pm.memberRole) memberRoles, 
 		    #{permissionTypes} as permissionTypes

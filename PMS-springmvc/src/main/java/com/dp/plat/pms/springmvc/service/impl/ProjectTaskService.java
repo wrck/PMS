@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -127,7 +128,7 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 		} else {
 			pt.setEventActualFinishDate(null);
 		}
-		projectDao.updateEventActualFinishDateByTask(pt);
+		dao.updateEventActualFinishDateByTask(pt);
 		
 		// 安服项目的验收节点
 		String inspectEventKey = SystemConfig.systemVariables.getOrDefault("pm.project." + pd.getProjectType() + ".inspect.eventkey", "");
@@ -144,8 +145,24 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 		}
 		return count == 0;
 	}
+    
 
     @Override
+    @Transactional
+	public void deleteDeliverFile(ProjectDeliver projectDeliver) {
+    	String[] deliverIds = StringUtils.trimToEmpty(projectDeliver.getDeliverId()).split(",");
+    	for (String deleteId : deliverIds) {
+    		Integer deliverId = Integer.valueOf(deleteId);
+    		projectDao.deleteDeliverById(deliverId);
+    		com.dp.plat.data.bean.ProjectDeliver pd = projectDao.queryProjectDeliverById(deliverId);
+    		ProjectDeliver deliver = new ProjectDeliver();
+    		BeanUtils.copyProperties(projectDeliver, deliver);
+    		BeanUtils.copyProperties(pd, deliver);
+    		this.updateEventActualFinishDateByTask(deliver);
+		}
+	}
+
+	@Override
     public List<ProjectDeliver> selectProjectDeliverBySelective(ProjectDeliver projectDeliver) {
         return dao.selectProjectDeliverBySelective(projectDeliver);
     }

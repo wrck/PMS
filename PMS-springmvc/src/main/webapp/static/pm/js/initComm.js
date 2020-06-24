@@ -49,7 +49,7 @@ sys.common = function(){
 	}
 	
 	var upload = function(fileType) {
-		return ctx + "/file/baseUpload/" + 2 + ".json";
+		return ctx + "/file/baseUpload/" + fileType + ".json";
 	}
 	
 	var baseUploadTabDownload = function(e, navTab) {
@@ -170,8 +170,23 @@ sys.common = function(){
 		});
 	}
 	
-	startProcess = function(el, entity, callback) {
+	startProcess = function(el, entity, callback, ignoreForm) {
 		var _this = this;
+		
+		// 提交流程之前先保存表单，然后通过回调继续执行
+		ignoreForm = ignoreForm == true ? true : false;
+		if (!ignoreForm) {
+			var $form = $(el).parents("form:first");
+			if ($form.length != 0) {
+				$form.data("submitCallback", function() {
+					startProcess.call(_this, el, entity, callback, true);
+				})
+				$form.submit();
+				return;
+			}
+		}
+		
+		
 		entity = entity || $(el).data("entity");
     	if (!entity) {
         	return false;

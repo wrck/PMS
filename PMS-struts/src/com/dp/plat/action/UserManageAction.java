@@ -8,7 +8,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.dp.plat.context.HttpContext;
-import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.MailSenderInfo;
 import com.dp.plat.data.bean.Role;
@@ -18,7 +17,6 @@ import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.ProjectBatchCgMbParam;
 import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.service.UserManageService;
-import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.test.SimpleMailSender;
 

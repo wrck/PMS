@@ -11,7 +11,6 @@ import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.support.mail.MailSenderInfo;
 import com.dp.plat.support.mail.MailUtil;
-import com.dp.plat.support.mail.config.MailConfig;
 import com.dp.plat.support.mail.entity.MailInfo;
 import com.dp.plat.support.mail.service.IMailInfoService;
 

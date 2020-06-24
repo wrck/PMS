@@ -23,7 +23,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
  * @since 2019-08-25
  */
 //@MappedTypes({ Object.class, Map.class, AbstractCollection.class })
-@MappedTypes({Object.class, Map.class, JSONObject.class, ArrayList.class})
+@MappedTypes({ /* Object.class, */Map.class, JSONObject.class, ArrayList.class})
 @MappedJdbcTypes(value = { JdbcType.OTHER, JdbcType.JSON })
 public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 	private final static Logger log = LoggerFactory.getLogger(FastjsonTypeHandler.class);
@@ -43,7 +43,11 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 
 	@Override
 	protected Object parse(String json) {
-		return JSON.parseObject(json, type, Feature.AllowISO8601DateFormat);
+		if (JSON.isValid(json)) {
+			return JSON.parseObject(json, type, Feature.AllowISO8601DateFormat);
+		} else {
+			return json;
+		}
 	}
 
 	@Override
@@ -59,7 +63,8 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 		if (ParserConfig.isPrimitive2(obj.getClass())) {
 			return String.valueOf(obj);
 		}
-		return JSON.toJSONString(obj, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteNullListAsEmpty/*,
+		return JSON.toJSONString(obj,
+				/* SerializerFeature.WriteMapNullValue, */ SerializerFeature.WriteNullListAsEmpty/*,
 				SerializerFeature.WriteNullStringAsEmpty*/, SerializerFeature.WriteDateUseDateFormat);
 	}
 }

@@ -32,6 +32,7 @@
 		</ul>
 	</div>
 	<form id="export-form" name="export-form" action="${pageContext.request.contextPath}/data/operation/${id}.xlsx" method="POST" class="form-inline">
+		<input type="hidden" name="__RequestVerificationToken" value="${__RequestVerificationToken}">
 		<input type="hidden" name="columns" value="">
 		<input type="hidden" name="objectName" value="${objectName}">
 		<input type="hidden" name="objectKV" value="${objectKV}">

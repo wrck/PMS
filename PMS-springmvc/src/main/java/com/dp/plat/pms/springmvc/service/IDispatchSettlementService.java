@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.service;
 
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
+import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 import java.util.List;
 
@@ -16,4 +17,14 @@ public interface IDispatchSettlementService extends IAbstractBaseService<Dispatc
 	long countSettlementWidthDispatchPageable(PageParam<Object> pageParam);
 
 	List<Object> selectSettlementWidthDispatchPageable(PageParam<Object> pageParam);
+
+	/**
+	 * 查询匹配到带SSE的结算信息
+	 * @return
+	 */
+	List<SettlementVO> querySSEDispatchSettlementPaymentList();
+
+	void saveSettlementPayment(List<SettlementVO> settlementPaymentList);
+
+	void saveSettlementPayment(List<SettlementVO> settlementPaymentList, Integer[] delIds);
 }

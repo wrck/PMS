@@ -625,7 +625,7 @@ pm.assetLeak = function() {
 			    		} */
 			    		
 			    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
-			    		$("#assetIds + .select2-container", $container).one("click", function(e) {
+			    		$("#assetIds", $container).siblings(".select2-container").one("click", function(e) {
 			    			$("#assetIds", $container).on("change", function(e){
 			    				try{
 			    					var source = $(this).select2("data");

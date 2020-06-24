@@ -1,5 +1,8 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.util.Collections;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
+import com.dp.plat.core.vo.DataTableColumn;
+import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
@@ -43,6 +48,42 @@ public class IndustryAssetController extends AbstractController<IIndustryAssetSe
 		return getViewNameSpace() + "list";
 	}
 	
+	@Override
+	@RequestMapping("/list")
+	public String list(PageParam<Object> pageParam, IndustryAssetVO v, Model model) {
+		if (!checkPermission(v, model, getDataName() + ":list")) {
+			model.addAttribute("data", Collections.emptyList());
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		List<Object> list = Collections.emptyList();
+		try {
+			// Principal user = UserContext.getCurrentPrincipal();
+			// v.setCompId(user.getCompId());
+			v.setDisabled(false);
+			PageParam<Object> tempParam = new PageParam<>();
+			IndustryAssetVO temp = new IndustryAssetVO();
+			// temp.setCompID(user.getCompId());
+			temp.setDisabled(false);
+			tempParam.setModel(temp);
+			pageParam.setModel(v);
+
+			pageParam.setTotal(service.countBySelectivePageable(tempParam));
+			pageParam.setFiltered(service.countBySelectivePageable(pageParam));
+			list = service.selectBySelectivePageable(pageParam);
+
+			if (pageParam.getPageSize() == -1L) {
+				pageParam.setPageSize(pageParam.getTotal());
+			}
+		} catch (Exception e) {
+			ExceptionHandler.insertException(e);
+		}
+		model.addAttribute("data", list);
+
+		List<DataTableColumn> columns = this.findColumnList(getDataNameTable());
+		pageParam.setColumns(columns);
+		return getRealViewNameSpace() + "list";
+	}
+
 	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	public String update(@PathVariable("id") Integer id, IndustryAssetVO v, Model model) {

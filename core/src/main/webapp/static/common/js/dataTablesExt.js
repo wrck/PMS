@@ -140,7 +140,11 @@ function CommonLocalTable(tableId, data, config) {
 		config = {};
 	}
 	this.config = config;
-	
+	this.exportData = config.exportData;
+	this.searchDivInline = config.searchInline;
+	if(this.exportData != undefined && JSON.stringify(this.exportData) != "{}" ) {
+		this.exporting = true;
+	}
 	// 是否启用行选择，即添加.selected类：默认启用
 	this.disableSelect = config.disableSelect || false;
 	// 表格增加复选框
@@ -280,6 +284,104 @@ CommonLocalTable.prototype.initLocalTable = function(tableId, data) {
 ////				$("#" + that.tableId + "_wrapper .dataTables_scrollHeadInner").css({"paddingRight":"","width":""});
 ////				$("#" + that.tableId + "_wrapper .dataTables_scrollHeadInner > .dataTable").css({"marginLeft":"","width":""});
 //	//		}
+	if(this.exporting) {
+    	var $tableContainer = that.table.table().container();
+		var exportBtnGroup = this.createExportBtnGroup();
+		if( $("#"+this.tableId +"_length", $tableContainer).length > 0 ) {
+			$("#"+this.tableId +"_length", $tableContainer).append(exportBtnGroup);
+		} else if( $("#"+this.tableId +"_filter", $tableContainer).length > 0) {
+			$("#"+this.tableId +"_filter", $tableContainer).parent().prev().append(exportBtnGroup);
+		} else if( $("#"+this.searchDiv, $tableContainer).length > 0 ) {
+			 $("#"+this.searchDiv, $tableContainer).append(exportBtnGroup);
+			 $("#"+this.searchDiv + " .export-btn-group", $tableContainer).addClass("pull-right");
+		} else {
+			
+		}
+		
+		$($tableContainer).on("click",".export-btn-group .btn", function() {
+			var sourceObject = $(this).attr("data-source-object") || "";
+			var exportType = $(this).attr("data-export-type") || "";
+			var fullServiceName = $(this).attr("data-source-fullServiceName") || "";
+			var url = $(this).attr("data-export-url") || "";
+			var exportFileName =  $(this).attr("data-export-fileName") || "";
+//			var simpleServiceName = $(this).attr("data-source-simpleServiceName");
+			if (url && exportType) {
+				var data = {};
+				data.draw = 0;
+				data.start = 0;
+				data.length = -1;
+				data.order = that.table.table().order();
+				//var params = that.getQueryCondition(data);
+				var a = document.createElement('a');
+				a.download = '';
+				if (!url.startsWith(basePath)) {
+					url = basePath + url;
+				}
+				var concat = "?";
+				if (url.indexOf("?") > -1) {
+					concat = "&"
+				}
+				url += concat + "exportFileName=" + exportFileName;
+				a.href = url ;
+				$("body").append(a); //修复firefox中无法触发click
+				a.click();
+				$(a).remove();
+			} else if( sourceObject && exportType) {
+				var data = {};
+				data.draw = 0;
+				data.start = 0;
+				data.length = -1;
+				data.order = that.table.table().order();
+				var params = that.getQueryCondition(data);
+				var paramsStr = {};
+				var sourceObjectKV = [];
+				var pageParamKV = [];
+				if(!params.fuzzySearch) {
+					var flag = false;
+					for(var field in params) {
+						if(flag) {
+							sourceObjectKV.push(field + "=" + params[field]);
+						} else {
+							pageParamKV.push(field + "=" + params[field]);
+						}
+						if(field === "fuzzySearch") {
+							flag = true;
+						}
+					}
+				} else {
+					var flag = true;
+					for(var field in params) {
+						if(flag) {
+							pageParamKV.push(field + "=" + params[field]);
+						} else {
+							sourceObjectKV.push(field + "=" + params[field]);
+						}
+						if(field === "fuzzySearch") {
+							flag = false;
+						}
+					}
+				}
+						
+				if(sourceObjectKV.length > 0) {
+					paramsStr.objectKV = sourceObjectKV.join(";");
+				}
+				if(pageParamKV.length > 0) {
+					paramsStr.pageParamKV = pageParamKV.join(";");
+				}
+				paramsStr.objectName = sourceObject;
+				paramsStr.exportType = exportType;
+				paramsStr.fullServiceName = fullServiceName;
+//				paramsStr.simpleServiceName = simpleServiceName;
+				paramsStr = $.param(paramsStr);
+				modals.openWin({
+					winId: "exportData",
+                	title: '导出字段选择',
+                	width: '600px',
+                	url: basePath+"/export/showExportColumns.html?" + paramsStr
+				});
+			}
+		});
+    }
 }
 
 /**
@@ -1125,12 +1227,13 @@ CommonTable.prototype.getQueryCondition = function(data) {
 			param.orderBy = orderByList.join(",");
 		}
 	}
+	param = this.getQueryFormData(param);
 //	var cachedSearchData = localStorage.getItem("DataTables_" + this.tableId + "_" + location.pathname);
 //	cachedSearchData = JSON.parse(cachedSearchData);
 //	if(!cachedSearchData) {
 //		cachedSearchData = {};
 //	}
-    //组装查询参数
+/*    //组装查询参数
 	param.fuzzy = "";
     param.fuzzySearch = $(".fuzzySearch", this.table.table().container()).length>0 && this.fuzzySearch?true:false;
     if (param.fuzzySearch) {
@@ -1201,13 +1304,112 @@ CommonTable.prototype.getQueryCondition = function(data) {
 			}
 			_this.customSearch[name] = value;
 		}
-	});
+	});*/
     
 	if (_this.searchDivInline) {
 		param.fuzzySearch = true;
 	}
     //localStorage.setItem("DataTables_" + this.tableId + "_" + location.pathname,JSON.stringify(cachedSearchData));
     return param;
+}
+
+CommonTable.prototype.getQueryFormData = function(param) {
+	var selectors = ["input[data-type='search']"];
+	param = param || {};
+	//组装查询参数
+	param.fuzzy = "";
+    param.fuzzySearch = $(".fuzzySearch", this.table.table().container()).length>0 && this.fuzzySearch?true:false;
+    if (param.fuzzySearch) {
+//    	cachedSearchData.fuzzySearch = true;
+        param.fuzzy = $(".fuzzySearch", this.table.table().container()).val();
+    } else{
+    	this.fuzzySearch = false;
+    	this.customSearch = {};
+    	selectors.push("input[type='search']");
+    	selectors.push("select[type='search']");
+//    	$("input[type='search']", this.table.table().container()).not(".fuzzySearch").each(function(){
+//    		var value = $(this).val();
+//    		var name = $(this).attr("name");
+//    		if(value && name){
+////    			param["model."+name] = value;
+//    			param[name] = value;
+////    			cachedSearchData.customSearch[name] = value;
+//    			_this.customSearch[name] = value;
+//    		}
+//    	});
+//    	$("select[type='search']", this.table.table().container()).each(function(){
+//    		var value = $(this).val();
+//    		var name = $(this).attr("name");
+//    		if(value && name){
+////    			param["model."+name] = value;
+//    			try{
+//    				if (value instanceof Array) {
+//						try{
+//    						parseInt(value);
+//    						param[name] = value.toString();
+//    					} catch (e) {
+//    						//param[name] = "'" + value.join("','") + "'";
+//    						// 使用FIND_IN_SET 字符串不需要加'';
+//    						param[name] = value.toString();
+//    					}
+//    				} else {
+//    					if(isNaN(Number(value))){
+//    						param[name] = value;
+//    					}else{
+//    						param[name] = Number(value);
+//    					}
+//    				}
+////    				cachedSearchData.customSearch[name] = value;
+//					_this.customSearch[name] = value;
+//    			}catch(e){
+//    				param[name] = value;
+////    				cachedSearchData.customSearch[name] = value;
+//    				_this.customSearch[name] = value;
+//    			}
+//    		}
+//    	});
+    }
+//    // 增加type=hidden 的隐藏域参数
+//	$("input[data-type='search']", this.table.table().container()).each(function(){
+//		var value = $(this).val();
+//		var name = $(this).attr("name");
+//		var type = $(this).attr("type");
+//		if ((type == "checkbox" || type == "radio") && !this.checked) {
+//			return 
+//		}
+//		if(value && name){
+////    			param["model."+name] = value;
+//			param[name] = value;
+////    			cachedSearchData.customSearch[name] = value;
+//			if (typeof _this.customSearch === "undefined") {
+//				_this.customSearch = {};
+//			}
+//			_this.customSearch[name] = value;
+//		}
+//	});
+    
+    var datas = {};
+    $(selectors.join(","), this.table.table().container()).not(".fuzzySearch").each(function (ind, elem) {
+		var el_name = elem.name, is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
+		if (!el_name || ((is_radio || is_ckbox) && !elem.checked) || !elem.value)
+			return;
+		var old_val = "";
+		try {
+			old_val = eval('datas.' + el_name); // checkbox值用逗号分割
+		} catch(e) {}
+		var new_val = (is_ckbox ? (old_val ? (old_val + ',') : '') : '') + $(elem).val();
+		var assembly = function (res, name, val) {
+			res = res || {};
+			var sind = name.indexOf('.');
+			var sp_name = sind > -1 ? name.substring(0, sind) : name;
+			var sc_name = sind > -1 ? name.substring(sind + 1) : "";
+			res[sp_name] = sind > -1 ? assembly(res[sp_name], sc_name, val) : val;
+			return res;
+		};
+		datas = assembly(datas, el_name, new_val);
+    });
+    this.customSearch = $.extend(this.customSearch, datas);
+    return $.extend(param, datas);
 }
 
 //新增，刷新界面
@@ -1655,7 +1857,10 @@ CommonTable.prototype.fnStateSaveParams = function (settings, data) {
 	}
 }
 
-CommonTable.prototype.createExportBtnGroup = function () {
+CommonTable.prototype.createExportBtnGroup = createExportBtnGroup;
+CommonLocalTable.prototype.createExportBtnGroup = createExportBtnGroup;
+
+function createExportBtnGroup() {
 	if(this.exporting) {
 		var sourceObject = this.exportData.sourceObject || "";
 		var exportTypes = this.exportData.type || [];

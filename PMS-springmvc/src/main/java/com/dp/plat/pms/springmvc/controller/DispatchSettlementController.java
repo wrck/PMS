@@ -35,6 +35,7 @@ import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.job.DispatchSettlementSEEPaymentJob;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
@@ -68,8 +69,6 @@ public class DispatchSettlementController
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, SettlementVO settlement, Model model) {
 		if (!checkPermission(settlement, model, getDataName() + ":list")) {
-			model.addAttribute("status", false);
-			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		
@@ -140,6 +139,9 @@ public class DispatchSettlementController
 
 				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
+				
+				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
+				model.addAttribute("tabList", navTavList);
 			}
 		} else {
 			model.addAttribute("model", getViewModel());
@@ -334,6 +336,12 @@ public class DispatchSettlementController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
+	}
+	
+	@RequestMapping("/syncPayment")
+	public void syncSettlementPayment(Model model) {
+		DispatchSettlementSEEPaymentJob settlementSEEPaymentJob = new DispatchSettlementSEEPaymentJob();
+		settlementSEEPaymentJob.execute();
 	}
 	
 	@Override

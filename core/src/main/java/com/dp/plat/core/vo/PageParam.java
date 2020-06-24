@@ -198,8 +198,9 @@ public class PageParam<T> {
 	 *            the orderBy to set
 	 */
 	public void setOrderBy(String orderBy) {
-		orderBy = orderBy.replaceAll("( \\s|\\S)*((%27)|(')|(%3D)|(=)|(/)|(%2F)|(\")|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
-		this.orderBy = orderBy;
+//		orderBy = orderBy.replaceAll("( \\s|\\S)*((%27)|(')|(%3D)|(=)|(/)|(%2F)|(\")|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
+		orderBy = orderBy.replaceAll("( \\s|\\S)*((%3D)|(=)|(/)|(%2F)|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
+		this.orderBy = "".equals(orderBy) ? null : orderBy;
 	}
 
 	public String getGroupBy() {
@@ -207,7 +208,8 @@ public class PageParam<T> {
 	}
 
 	public void setGroupBy(String groupBy) {
-		groupBy = groupBy.replaceAll("( \\s|\\S)*((%27)|(')|(%3D)|(=)|(/)|(%2F)|(\")|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
+//		groupBy = groupBy.replaceAll("( \\s|\\S)*((%27)|(')|(%3D)|(=)|(/)|(%2F)|(\")|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
+		orderBy = orderBy.replaceAll("( \\s|\\S)*((%3D)|(=)|(/)|(%2F)|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
 		this.groupBy = groupBy;
 	}
 

@@ -17,6 +17,8 @@
 package com.dp.plat.core.view;
 
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.Map;
 
@@ -32,8 +34,11 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.LocalizedResourceHelper;
+import org.springframework.http.HttpRequest;
 import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.servlet.view.AbstractView;
+
+import com.dp.plat.core.util.DownloadUtils;
 
 /**
  * 	
@@ -246,6 +251,14 @@ public abstract class AbstractExcelView extends AbstractView {
 
 	public String getUrl() {
 		return url;
+	}
+	
+	public String encodeFileName(HttpServletRequest request, String fileName) {
+		try {
+			fileName = DownloadUtils.processFileName(request, fileName);
+		} catch (UnsupportedEncodingException e) {
+		}
+		return fileName;
 	}
 	
 }

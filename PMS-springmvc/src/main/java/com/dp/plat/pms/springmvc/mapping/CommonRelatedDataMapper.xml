@@ -268,7 +268,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -302,7 +302,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		) -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON})
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
     where id = #{id,jdbcType=INTEGER}
   </update>
   <sql id="sql_where">

@@ -90,7 +90,8 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		if (pageParam.getPageSize() == -1L) {
 			pageParam.setPageSize(pageParam.getTotal());
 		}
-		model.addAttribute("columns", this.findColumnList(getDataNameTable()));
+		pageParam.setColumns(this.findColumnList(getDataNameTable()));
+//		model.addAttribute("columns", this.findColumnList(getDataNameTable()));
 		model.addAttribute("data", projectAssetList);
 		return getRealViewNameSpace() + "list";
 	}

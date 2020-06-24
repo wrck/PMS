@@ -2,6 +2,8 @@ package com.dp.plat.pms.springmvc.service;
 
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import java.util.List;
+import java.util.Map;
+
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 import com.dp.plat.core.service.IAbstractBaseService;
@@ -100,4 +102,11 @@ public interface IPmWorkFlowService extends IAbstractBaseService<PmWorkFlow> {
 	 * @param terminateReason
 	 */
     void terminateProcess(PmWorkFlowVO workflow, String terminateReason);
+
+    /**
+     * 查询activiti用户邮箱
+     * @param params {userIds:[], groupIds:[], areaPower:"", projectTypes:""}
+     * @return mailList
+     */
+	List<String> selectActivitiUserMails(Map<String, Object> params);
 }

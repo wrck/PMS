@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
@@ -36,8 +37,12 @@ import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.UserDetail;
+import com.dp.plat.ehr.job.EhrDataJob;
+import com.dp.plat.ehr.service.IEmployeeService;
+import com.dp.plat.ehr.vo.EmployeeVO;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
+import com.dp.plat.pms.springmvc.job.DispatchSettlementSEEPaymentJob;
 import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
 import com.dp.plat.pms.springmvc.vo.UserInfoVO;
 
@@ -55,6 +60,8 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	private IRoleService roleService;
 	@Autowired
 	private IProjectManageUserService projectManageUserService;
+	@Autowired
+	private IEmployeeService employeeService;
 	
 	@PostConstruct
 	public void init() {
@@ -145,7 +152,19 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		if (!isAdmin) {
 			return "redirect:/unauthorized.html";
 		}
+		
 		User user = userInfo.getUser();
+		
+		String userName = user.getUserName();
+		if (StringUtils.isNotBlank(userName)) {
+			EmployeeVO employee = new EmployeeVO();
+			employee.setAccount(user.getUserName());
+			List<EmployeeVO> employeeWithAccount = employeeService.selectEmployeeWithAccount(employee);
+			if (!employeeWithAccount.isEmpty()) {
+				employeeService.initUser(employeeWithAccount);
+			}
+		}
+		
 		user.setCreateTime(new Date());
 		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), "123456"));
 		try {
@@ -157,7 +176,16 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		Integer compID = UserContext.getCurrentPrincipal().getCompId();
 		userInfo.setUserId(user.getUserId());
 		userInfo.setCompID(compID);
-		userInfoService.insertSelective(userInfo);
+		try {
+			userInfoService.insertSelective(userInfo);
+		} catch (DuplicateKeyException e) {
+			UserInfo userInfoVO = userInfoService.selectOneByUserIdAndCompId(userInfo);
+			userInfo.setId(userInfoVO.getId());
+			userInfo.setRealName(userInfoVO.getRealName());
+			userInfo.setTelphone(userInfoVO.getTelphone());
+			userInfo.setMobile(userInfoVO.getMobile());
+			userInfo.setEmail(userInfoVO.getEmail());
+		}
 
 		String roleIds = userInfo.getRoleIds();
 		if (StringUtils.isNotBlank(roleIds)) {
@@ -275,31 +303,40 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 				userRoleService.batchDeleteUserRoleByUserRole(del);
 			}
 		}
+		
+		// 插入activiti用户表
+		UserEntity userEntity = new UserEntity();
+		userEntity.setId(userInfo.getId().toString());
+		userEntity.setFirstName(userInfo.getRealName());
+		userEntity.setLastName(user.getUserName());
+		userEntity.setEmail(userInfo.getEmail());
+//					identityService.saveUser(userEntity);
+		projectManageUserService.insertOrUpdateActivitiUser(userEntity);
 		// return "redirect:" + Consts.URLPath.SYSTEM_MANAGER + "user/" + userId
 		// + ".json";
 		return getViewNameSpace() + "detail";
 	}
 
-	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "{userId}", method = RequestMethod.DELETE)
 	@SystemControllerLog(description = "删除用户")
-	public void delete(@PathVariable("id") Integer id, Model model) {
+	public void delete(@PathVariable("userId") Integer userId, Model model) {
 		Integer compId = UserContext.getCurrentPrincipal().getCompId();
 		UserInfo userInfo = new UserInfo();
-		userInfo.setUserId(id);
+		userInfo.setUserId(userId);
 		userInfo.setCompID(compId);
 		UserInfo userInfoVO = userInfoService.selectOneByUserIdAndCompId(userInfo);
 		if (userInfoVO != null) {
 			userInfoService.deleteByPrimaryKey(userInfoVO.getId());
 			UserRole userRole = new UserRole();
 			userRole.setCompId(compId);
-			userRole.setUserId(id);
+			userRole.setUserId(userId);
 			String userRoleIds = userRoleService.selectUserRolesByUserIdAndCompId(userRole );
 			List<String> roleIdList = Arrays.asList(StringUtils.split(userRoleIds, ","));
 			List<UserRole> del = new ArrayList<>(roleIdList.size());
 			for (String oldRole : roleIdList) {
 				userRole = new UserRole();
 				userRole.setCompId(compId);
-				userRole.setUserId(id);
+				userRole.setUserId(userId);
 				userRole.setRoleId(Integer.parseInt(oldRole));
 				del.add(userRole);
 			}
@@ -307,9 +344,9 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 				userRoleService.batchDeleteUserRoleByUserRole(del);
 			}
 		}
-		List<?> userInfos = userInfoService.selectVOsByUserId(id);
+		List<?> userInfos = userInfoService.selectVOsByUserId(userId);
 		if (userInfos.isEmpty()) {
-			userService.deleteByPrimaryKey(id);
+			userService.deleteByPrimaryKey(userId);
 		}
 	}
 
@@ -341,6 +378,8 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	
 	@RequestMapping("/initActitityUser")
 	public void initActitityUser(HttpServletRequest request, Model model) {
+		EhrDataJob ehrDataJob = new EhrDataJob();
+		ehrDataJob.execute();
 		projectManageUserService.initActivitiUser();
 	}
 }

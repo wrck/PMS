@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@ taglib prefix="shiro" uri="/shiro" %>
 <cssTag>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
@@ -81,7 +82,7 @@
                         <label for="columns" class="col-sm-3 control-label">导出列名<br><a href='javascript:void(0)' id="queryExportColumns" class="" title="点击查询SQL包含的字段名">(关联列)</a></label>
                         <div class="col-sm-8">
                         	<ul id="columns-alias" class="list-inline">
-                        		<li>点击“关联列”查询SQL包含的字段名</li>
+                        		<li class="columns-tip">点击“关联列”查询SQL包含的字段名</li>
                         	</ul>
                         	<input type="hidden" name="columns">
                         </div>
@@ -89,7 +90,7 @@
                     <div class="form-group">
                         <label for="empPower" class="col-sm-3 control-label">员工权限</label>
                         <div class="col-sm-8">
-                            <select class="form-control select2" style="width:100%" id="empPower" multiple="multiple" name="empPower" data-flag="urlSelector" data-src="/sys/user/param.json?menuName=数据管理" data-text="userName realName" data-value="userInfoId" placeholder="请选择员工权限"></select>
+                            <select class="form-control select2" style="width:100%" id="empPower" multiple="multiple" name="empPower" data-flag="urlSelector" data-src="/sys/user/param.json?menuName=数据管理&compID=<shiro:principal property='compId' defaultValue='0'/>" data-text="userName realName" data-value="userInfoId" placeholder="请选择员工权限"></select>
                         </div>
                     </div>
                     <div class="form-group">
@@ -140,6 +141,7 @@
 		//tableId,queryId,conditionContainer
 		var form = null;
 	 	var id = "${id!=0 && id!=null?id:0}";
+	 	var copyFlag = "${pageContext.request.getParameter('copyFlag')}";
 		$(function() {
 			//数据校验
 			$("#dataOperation-form").bootstrapValidator({
@@ -225,11 +227,15 @@
 			form=$("#dataOperation-form").form();
 			//回填id		
 			if(id!="0"){
-				$("#dataOperation-form").prepend('<input type="hidden" name="_method" value="PUT">');
 				ajaxPost(basePath+"/data/"+id+".json", null, function(data){
 					form.initFormData(data.data);
 					columnParse(data.data.columns);
 				})
+				if (copyFlag != "1") {
+					$("#dataOperation-form").prepend('<input type="hidden" name="_method" value="PUT">');
+				} else {
+					id = 0;
+				}
 			}
 			
 			$("input[name='type']").on('ifChecked', function(event){  
@@ -290,11 +296,17 @@
 				} else {
 					column = kv[0];
 				}
-				if ($("#alias-title-" + column).length == 0) {
-					$("#columns-alias li:eq("+ i +")").before("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ column +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
+				// 防止特殊字符报错
+				var encodeColumn = encodeURIComponent(column).replace(/%/g, "");
+				if ($("#alias-title-" + encodeColumn).length == 0) {
+					if ($("#columns-alias li:eq("+ i +")").length == 1) {
+						$("#columns-alias li:eq("+ i +")").before("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ encodeColumn +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
+					} else {
+						$("#columns-alias li:eq("+ (i - 1) +")").after("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ encodeColumn +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
+					}
 					//$("#columns-alias").append("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ column +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
 				} else {
-					var $li = $("#alias-title-" + column).parent();
+					var $li = $("#alias-title-" + encodeColumn).parent();
 					$li.addClass(relatedClass);
 					if ($li.index() != i) {
 						$li.insertBefore($("#columns-alias li:eq("+ i +")"));

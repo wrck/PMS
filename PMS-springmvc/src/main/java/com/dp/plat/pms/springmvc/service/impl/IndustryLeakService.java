@@ -89,6 +89,13 @@ public class IndustryLeakService extends AbstractBaseService<IndustryLeakMapper,
 				}
 				for (Iterator<?> iterator = list.iterator(); iterator.hasNext();) {
 					IndustryLeak leak = (IndustryLeak) iterator.next();
+					if (leak instanceof ProjectAssetLeakVO) {
+						ProjectAssetLeakVO projectAssetLeak = (ProjectAssetLeakVO) leak;
+						if (projectAssetLeak.getLeakId() != null) {
+							projectAssetLeak.setId(projectAssetLeak.getLeakId());
+						}
+					}
+					
 					if (leak.getId() == null || leak.getId() == 0) {
 						this.insertSelective(leak);
 					} else {

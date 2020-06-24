@@ -269,11 +269,19 @@
 	</filter-mapping> -->
 	<error-page>
 		<error-code>404</error-code>
-		<location>/to404</location>
+		<location>/to404.html</location>
+	</error-page>
+	<error-page>
+		<error-code>400</error-code>
+		<location>/to404.html</location>
+	</error-page>
+	<error-page>
+		<error-code>402</error-code>
+		<location>/to404.html</location>
 	</error-page>
 	<error-page>
 		<error-code>500</error-code>
-		<location>/to500</location>
+		<location>/to500.html</location>
 	</error-page>
 	<login-config>
 		<auth-method>BASIC</auth-method>

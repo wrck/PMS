@@ -6,10 +6,7 @@ import javax.servlet.ServletContext;
 
 import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.DelegateExecution;
-import org.activiti.engine.delegate.DelegateTask;
-import org.activiti.engine.delegate.ExecutionListener;
 import org.activiti.engine.delegate.JavaDelegate;
-import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.task.Task;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.web.context.WebApplicationContext;

@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class ProjectController
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectVO project, Model model) {
-		if (HttpContext.isJSON()) {
+//		if (HttpContext.isJSON()) {
 			if (!checkPermission(null, model, "project:list")) {
 				return Consts.VIEW_UNAUTHORIZED;
 			}
@@ -115,9 +116,15 @@ public class ProjectController
 			List<Object> list = null;
 			// 待创建列表
 			if (ProjectConstant.ProjectState.UNCREATED.equals(project.getProjectState())) {
-				pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
-				pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
-				list = projectHeaderService.selectUncreateProjectList(pageParam);
+				if (UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
+					pageParam.setTotal(projectHeaderService.countUncreateProjectList(tempParam));
+					pageParam.setFiltered(projectHeaderService.countUncreateProjectList(pageParam));
+					list = projectHeaderService.selectUncreateProjectList(pageParam);
+				} else {
+					pageParam.setTotal(0);
+					pageParam.setFiltered(0);
+					list = Collections.emptyList();
+				}
 			} else {
 				pageParam.setTotal(projectHeaderService.countBySelectivePageable(tempParam));
 				pageParam.setFiltered(projectHeaderService.countBySelectivePageable(pageParam));
@@ -131,11 +138,11 @@ public class ProjectController
 
 			List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
 			pageParam.setColumns(columns);
-		} else {
-			if (!checkPermission(null, model, "project:list")) {
-				return Consts.VIEW_UNAUTHORIZED;
-			}
-		}
+//		} else {
+//			if (!checkPermission(null, model, "project:list")) {
+//				return Consts.VIEW_UNAUTHORIZED;
+//			}
+//		}
 		return VIEW_NAMESPACE + "list";
 	}
 

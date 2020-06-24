@@ -131,16 +131,58 @@ var NavTab = {
 				var targetValue = this.targetValue || {};
 				var params = navTab.params || [];
 				for (var i = 0; i < params.length; i++) {
-					var param = params[i];
-					eval("var " + param + " = '" + (targetValue[param] || "") + "';");
+					var param = params[i] || "";
+					var kv = this.parseParam(param, targetValue);
+					param = kv.key || param;
+					eval("var " + param + " = targetValue[param] || '';");
 					navTab.paramsValue = navTab.paramsValue || {};
 					navTab.paramsValue[param] = targetValue[param] || "";
 				}
-				var url = navTab.url;
+				var url = navTab.src || navTab.url;
 				try {
 					url = eval(url);
 				} catch(e){}
 				return url;
+			},
+			parseParam: function(param, paramsValue) {
+				if (!param) {
+			        return {};
+			    }
+				var relations = param.split(/(\.)|(\[)|(\]\[)|(\])/g).filter(function(item, index) {
+					return item
+				});
+			    var key = relations[0];
+			    var value = {};
+			    
+//			    // 将param解析为值对象
+//				var subValue = value;
+//				paramsValue = paramsValue || {};
+//			    var tempParams = $.extend(true, {}, paramsValue);
+//				var splitStr = "";
+//			    for (var i in relations) {
+//			        var tempKey = relations[i];
+//					if ($.inArray(tempKey, [".", "[", "]"]) != -1) {
+//						splitStr = tempKey;
+//						continue;
+//					}
+//					if (splitStr == "[") {
+//						tempKey = eval(tempKey);
+//					}
+//					var tempValue = tempParams[tempKey] || "";
+//			        if (typeof tempValue == "object") {
+//			        	// 更新值的子集
+//			        	tempParams = tempValue;
+//			        	
+//			        	// 获取子对象进行赋值更新
+//			        	subValue[tempKey] = subValue[tempKey] || {};
+//			        	// 更新子对象为下一集
+//						subValue = subValue[tempKey];
+//			            continue;
+//			        }
+//			        subValue[tempKey] = tempValue;
+//			        break;
+//			    }
+			    return {key, value};
 			},
 	 		getDataValue: function(key) {
 	 			var value;

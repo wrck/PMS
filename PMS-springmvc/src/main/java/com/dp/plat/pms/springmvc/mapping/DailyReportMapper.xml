@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.DailyReportMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.DailyReport">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="projectId" jdbcType="INTEGER" property="projectId" />
+    <result column="projectType" jdbcType="VARCHAR" property="projectType" />
+    <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
+    <result column="projectName" jdbcType="VARCHAR" property="projectName" />
+    <result column="contractNo" jdbcType="VARCHAR" property="contractNo" />
+    <result column="officeCode" jdbcType="VARCHAR" property="officeCode" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="category" jdbcType="VARCHAR" property="category" />
+    <result column="subCategory" jdbcType="VARCHAR" property="subCategory" />
+    <result column="processTime" jdbcType="TIMESTAMP" property="processTime" />
+    <result column="processDesc" jdbcType="VARCHAR" property="processDesc" />
+    <result column="processStep" jdbcType="VARCHAR" property="processStep" />
+    <result column="remainProblem" jdbcType="VARCHAR" property="remainProblem" />
+    <result column="customerInteraction" jdbcType="VARCHAR" property="customerInteraction" />
+    <result column="transitHour" jdbcType="REAL" property="transitHour" />
+    <result column="processHour" jdbcType="REAL" property="processHour" />
+    <result column="itemModel" jdbcType="VARCHAR" property="itemModel" />
+    <result column="softVersion" jdbcType="VARCHAR" property="softVersion" />
+    <result column="enabledFeatures" jdbcType="VARCHAR" property="enabledFeatures" />
+    <result column="customTos" jdbcType="VARCHAR" property="customTos" />
+    <result column="customCcs" jdbcType="VARCHAR" property="customCcs" />
+    <result column="projectExecutionState" jdbcType="VARCHAR" property="projectExecutionState" />
+    <result column="hasReport" jdbcType="BIT" property="hasReport" />
+    <result column="quesnaireId" jdbcType="INTEGER" property="quesnaireId" />
+    <result column="deliverFileIds" jdbcType="VARCHAR" property="deliverFileIds" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="qualityFactor" jdbcType="REAL" property="qualityFactor" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `projectId`, `projectType`, `projectCode`, `projectName`, `contractNo`, `officeCode`, 
+    `type`, `category`, `subCategory`, `processTime`, `processDesc`, `processStep`, `remainProblem`, 
+    `customerInteraction`, `transitHour`, `processHour`, `itemModel`, `softVersion`, 
+    `enabledFeatures`, `customTos`, `customCcs`, `projectExecutionState`, `hasReport`, 
+    `quesnaireId`, `deliverFileIds`, `remark`, `qualityFactor`, `status`, `disabled`, 
+    `createTime`, `createBy`, `updateTime`, `updateBy`,
+    `customInfo`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_daily_report
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_daily_report
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_daily_report (`projectId`, `projectType`, `projectCode`, 
+      `projectName`, `contractNo`, `officeCode`, 
+      `type`, `category`, `subCategory`, 
+      `processTime`, `processDesc`, `processStep`, 
+      `remainProblem`, `customerInteraction`, `transitHour`, 
+      `processHour`, `itemModel`, `softVersion`, 
+      `enabledFeatures`, `customTos`, `customCcs`, 
+      `projectExecutionState`, `hasReport`, `quesnaireId`, 
+      `deliverFileIds`, `remark`, `qualityFactor`, 
+      `status`, `disabled`, `createTime`, 
+      `createBy`, `updateTime`, `updateBy`, 
+      `customInfo`)
+    values (#{projectId,jdbcType=INTEGER}, #{projectType,jdbcType=VARCHAR}, #{projectCode,jdbcType=VARCHAR}, 
+      #{projectName,jdbcType=VARCHAR}, #{contractNo,jdbcType=VARCHAR}, #{officeCode,jdbcType=VARCHAR}, 
+      #{type,jdbcType=VARCHAR}, #{category,jdbcType=VARCHAR}, #{subCategory,jdbcType=VARCHAR}, 
+      #{processTime,jdbcType=TIMESTAMP}, #{processDesc,jdbcType=VARCHAR}, #{processStep,jdbcType=VARCHAR}, 
+      #{remainProblem,jdbcType=VARCHAR}, #{customerInteraction,jdbcType=VARCHAR}, #{transitHour,jdbcType=REAL}, 
+      #{processHour,jdbcType=REAL}, #{itemModel,jdbcType=VARCHAR}, #{softVersion,jdbcType=VARCHAR}, 
+      #{enabledFeatures,jdbcType=VARCHAR}, #{customTos,jdbcType=VARCHAR}, #{customCcs,jdbcType=VARCHAR}, 
+      #{projectExecutionState,jdbcType=VARCHAR}, #{hasReport,jdbcType=BIT}, #{quesnaireId,jdbcType=INTEGER}, 
+      #{deliverFileIds,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{qualityFactor,jdbcType=REAL}, 
+      #{status,jdbcType=VARCHAR}, #{disabled,jdbcType=BIT}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{createBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{customInfo,jdbcType=JSON})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_daily_report
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        `projectId`,
+      </if>
+      <if test="projectType != null">
+        `projectType`,
+      </if>
+      <if test="projectCode != null">
+        `projectCode`,
+      </if>
+      <if test="projectName != null">
+        `projectName`,
+      </if>
+      <if test="contractNo != null">
+        `contractNo`,
+      </if>
+      <if test="officeCode != null">
+        `officeCode`,
+      </if>
+      <if test="type != null">
+        `type`,
+      </if>
+      <if test="category != null">
+        `category`,
+      </if>
+      <if test="subCategory != null">
+        `subCategory`,
+      </if>
+      <if test="processTime != null">
+        `processTime`,
+      </if>
+      <if test="processDesc != null">
+        `processDesc`,
+      </if>
+      <if test="processStep != null">
+        `processStep`,
+      </if>
+      <if test="remainProblem != null">
+        `remainProblem`,
+      </if>
+      <if test="customerInteraction != null">
+        `customerInteraction`,
+      </if>
+      <if test="transitHour != null">
+        `transitHour`,
+      </if>
+      <if test="processHour != null">
+        `processHour`,
+      </if>
+      <if test="itemModel != null">
+        `itemModel`,
+      </if>
+      <if test="softVersion != null">
+        `softVersion`,
+      </if>
+      <if test="enabledFeatures != null">
+        `enabledFeatures`,
+      </if>
+      <if test="customTos != null">
+        `customTos`,
+      </if>
+      <if test="customCcs != null">
+        `customCcs`,
+      </if>
+      <if test="projectExecutionState != null">
+        `projectExecutionState`,
+      </if>
+      <if test="hasReport != null">
+        `hasReport`,
+      </if>
+      <if test="quesnaireId != null">
+        `quesnaireId`,
+      </if>
+      <if test="deliverFileIds != null">
+        `deliverFileIds`,
+      </if>
+      <if test="remark != null">
+        `remark`,
+      </if>
+      <if test="qualityFactor != null">
+        `qualityFactor`,
+      </if>
+      <if test="status != null">
+        `status`,
+      </if>
+      <if test="disabled != null">
+        `disabled`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="projectType != null">
+        #{projectType,jdbcType=VARCHAR},
+      </if>
+      <if test="projectCode != null">
+        #{projectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="projectName != null">
+        #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="contractNo != null">
+        #{contractNo,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="category != null">
+        #{category,jdbcType=VARCHAR},
+      </if>
+      <if test="subCategory != null">
+        #{subCategory,jdbcType=VARCHAR},
+      </if>
+      <if test="processTime != null">
+        #{processTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="processDesc != null">
+        #{processDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="processStep != null">
+        #{processStep,jdbcType=VARCHAR},
+      </if>
+      <if test="remainProblem != null">
+        #{remainProblem,jdbcType=VARCHAR},
+      </if>
+      <if test="customerInteraction != null">
+        #{customerInteraction,jdbcType=VARCHAR},
+      </if>
+      <if test="transitHour != null">
+        #{transitHour,jdbcType=REAL},
+      </if>
+      <if test="processHour != null">
+        #{processHour,jdbcType=REAL},
+      </if>
+      <if test="itemModel != null">
+        #{itemModel,jdbcType=VARCHAR},
+      </if>
+      <if test="softVersion != null">
+        #{softVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="enabledFeatures != null">
+        #{enabledFeatures,jdbcType=VARCHAR},
+      </if>
+      <if test="customTos != null">
+        #{customTos,jdbcType=VARCHAR},
+      </if>
+      <if test="customCcs != null">
+        #{customCcs,jdbcType=VARCHAR},
+      </if>
+      <if test="projectExecutionState != null">
+        #{projectExecutionState,jdbcType=VARCHAR},
+      </if>
+      <if test="hasReport != null">
+        #{hasReport,jdbcType=BIT},
+      </if>
+      <if test="quesnaireId != null">
+        #{quesnaireId,jdbcType=INTEGER},
+      </if>
+      <if test="deliverFileIds != null">
+        #{deliverFileIds,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="qualityFactor != null">
+        #{qualityFactor,jdbcType=REAL},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport">
+    update pm_daily_report
+    <set>
+      <if test="projectId != null">
+        `projectId` = #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="projectType != null">
+        `projectType` = #{projectType,jdbcType=VARCHAR},
+      </if>
+      <if test="projectCode != null">
+        `projectCode` = #{projectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="projectName != null">
+        `projectName` = #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="contractNo != null">
+        `contractNo` = #{contractNo,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        `officeCode` = #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        `type` = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="category != null">
+        `category` = #{category,jdbcType=VARCHAR},
+      </if>
+      <if test="subCategory != null">
+        `subCategory` = #{subCategory,jdbcType=VARCHAR},
+      </if>
+      <if test="processTime != null">
+        `processTime` = #{processTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="processDesc != null">
+        `processDesc` = #{processDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="processStep != null">
+        `processStep` = #{processStep,jdbcType=VARCHAR},
+      </if>
+      <if test="remainProblem != null">
+        `remainProblem` = #{remainProblem,jdbcType=VARCHAR},
+      </if>
+      <if test="customerInteraction != null">
+        `customerInteraction` = #{customerInteraction,jdbcType=VARCHAR},
+      </if>
+      <if test="transitHour != null">
+        `transitHour` = #{transitHour,jdbcType=REAL},
+      </if>
+      <if test="processHour != null">
+        `processHour` = #{processHour,jdbcType=REAL},
+      </if>
+      <if test="itemModel != null">
+        `itemModel` = #{itemModel,jdbcType=VARCHAR},
+      </if>
+      <if test="softVersion != null">
+        `softVersion` = #{softVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="enabledFeatures != null">
+        `enabledFeatures` = #{enabledFeatures,jdbcType=VARCHAR},
+      </if>
+      <if test="customTos != null">
+        `customTos` = #{customTos,jdbcType=VARCHAR},
+      </if>
+      <if test="customCcs != null">
+        `customCcs` = #{customCcs,jdbcType=VARCHAR},
+      </if>
+      <if test="projectExecutionState != null">
+        `projectExecutionState` = #{projectExecutionState,jdbcType=VARCHAR},
+      </if>
+      <if test="hasReport != null">
+        `hasReport` = #{hasReport,jdbcType=BIT},
+      </if>
+      <if test="quesnaireId != null">
+        `quesnaireId` = #{quesnaireId,jdbcType=INTEGER},
+      </if>
+      <if test="deliverFileIds != null">
+        `deliverFileIds` = #{deliverFileIds,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        `remark` = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="qualityFactor != null">
+        `qualityFactor` = #{qualityFactor,jdbcType=REAL},
+      </if>
+      <if test="status != null">
+        `status` = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        `disabled` = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        <!-- `customInfo` = #{customInfo,jdbcType=JSON}, -->
+        `customInfo` = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport">
+    update pm_daily_report
+    set `projectId` = #{projectId,jdbcType=INTEGER},
+      `projectType` = #{projectType,jdbcType=VARCHAR},
+      `projectCode` = #{projectCode,jdbcType=VARCHAR},
+      `projectName` = #{projectName,jdbcType=VARCHAR},
+      `contractNo` = #{contractNo,jdbcType=VARCHAR},
+      `officeCode` = #{officeCode,jdbcType=VARCHAR},
+      `type` = #{type,jdbcType=VARCHAR},
+      `category` = #{category,jdbcType=VARCHAR},
+      `subCategory` = #{subCategory,jdbcType=VARCHAR},
+      `processTime` = #{processTime,jdbcType=TIMESTAMP},
+      `processDesc` = #{processDesc,jdbcType=VARCHAR},
+      `processStep` = #{processStep,jdbcType=VARCHAR},
+      `remainProblem` = #{remainProblem,jdbcType=VARCHAR},
+      `customerInteraction` = #{customerInteraction,jdbcType=VARCHAR},
+      `transitHour` = #{transitHour,jdbcType=REAL},
+      `processHour` = #{processHour,jdbcType=REAL},
+      `itemModel` = #{itemModel,jdbcType=VARCHAR},
+      `softVersion` = #{softVersion,jdbcType=VARCHAR},
+      `enabledFeatures` = #{enabledFeatures,jdbcType=VARCHAR},
+      `customTos` = #{customTos,jdbcType=VARCHAR},
+      `customCcs` = #{customCcs,jdbcType=VARCHAR},
+      `projectExecutionState` = #{projectExecutionState,jdbcType=VARCHAR},
+      `hasReport` = #{hasReport,jdbcType=BIT},
+      `quesnaireId` = #{quesnaireId,jdbcType=INTEGER},
+      `deliverFileIds` = #{deliverFileIds,jdbcType=VARCHAR},
+      `remark` = #{remark,jdbcType=VARCHAR},
+      `qualityFactor` = #{qualityFactor,jdbcType=REAL},
+      `status` = #{status,jdbcType=VARCHAR},
+      `disabled` = #{disabled,jdbcType=BIT},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      <!-- `customInfo` = #{customInfo,jdbcType=JSON} -->
+      `customInfo` = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+		dr.`id` = #{id, jdbcType=INTEGER} AND
+	</if>
+	<if test="projectId != null">
+		dr.`projectId` = #{projectId, jdbcType=INTEGER} AND
+	</if>
+	<if test="projectType != null and '' != projectType">
+		dr.`projectType` = #{projectType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectCode != null and '' != projectCode">
+		dr.`projectCode` = #{projectCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectName != null and '' != projectName">
+		dr.`projectName` = #{projectName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="contractNo != null and '' != contractNo">
+		dr.`contractNo` = #{contractNo, jdbcType=VARCHAR} AND
+	</if>
+	<if test="officeCode != null and '' != officeCode">
+		dr.`officeCode` = #{officeCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="type != null and '' != type">
+		dr.`type` = #{type, jdbcType=VARCHAR} AND
+	</if>
+	<if test="category != null and '' != category">
+		dr.`category` = #{category, jdbcType=VARCHAR} AND
+	</if>
+	<if test="subCategory != null and '' != subCategory">
+		dr.`subCategory` = #{subCategory, jdbcType=VARCHAR} AND
+	</if>
+	<if test="processTime != null">
+		dr.`processTime` = #{processTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="processDesc != null and '' != processDesc">
+		dr.`processDesc` = #{processDesc, jdbcType=VARCHAR} AND
+	</if>
+	<if test="processStep != null and '' != processStep">
+		dr.`processStep` = #{processStep, jdbcType=VARCHAR} AND
+	</if>
+	<if test="remainProblem != null and '' != remainProblem">
+		dr.`remainProblem` = #{remainProblem, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customerInteraction != null and '' != customerInteraction">
+		dr.`customerInteraction` = #{customerInteraction, jdbcType=VARCHAR} AND
+	</if>
+	<if test="transitHour != null">
+		dr.`transitHour` = #{transitHour, jdbcType=REAL} AND
+	</if>
+	<if test="processHour != null">
+		dr.`processHour` = #{processHour, jdbcType=REAL} AND
+	</if>
+	<if test="itemModel != null and '' != itemModel">
+		dr.`itemModel` = #{itemModel, jdbcType=VARCHAR} AND
+	</if>
+	<if test="softVersion != null and '' != softVersion">
+		dr.`softVersion` = #{softVersion, jdbcType=VARCHAR} AND
+	</if>
+	<if test="enabledFeatures != null and '' != enabledFeatures">
+		dr.`enabledFeatures` = #{enabledFeatures, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customTos != null and '' != customTos">
+		dr.`customTos` = #{customTos, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customCcs != null and '' != customCcs">
+		dr.`customCcs` = #{customCcs, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectExecutionState != null and '' != projectExecutionState">
+		dr.`projectExecutionState` = #{projectExecutionState, jdbcType=VARCHAR} AND
+	</if>
+	<if test="hasReport != null">
+		dr.`hasReport` = #{hasReport, jdbcType=BIT} AND
+	</if>
+	<if test="quesnaireId != null">
+		dr.`quesnaireId` = #{quesnaireId, jdbcType=INTEGER} AND
+	</if>
+	<if test="deliverFileIds != null and '' != deliverFileIds">
+		dr.`deliverFileIds` = #{deliverFileIds, jdbcType=VARCHAR} AND
+	</if>
+	<if test="remark != null and '' != remark">
+		dr.`remark` = #{remark, jdbcType=VARCHAR} AND
+	</if>
+	<if test="qualityFactor != null">
+		dr.`qualityFactor` = #{qualityFactor, jdbcType=REAL} AND
+	</if>
+	<if test="status != null and '' != status">
+		dr.`status` = #{status, jdbcType=VARCHAR} AND
+	</if>
+	<if test="disabled != null">
+		dr.`disabled` = #{disabled, jdbcType=BIT} AND
+	</if>
+	<if test="createTime != null">
+		dr.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="createBy != null and '' != createBy">
+		dr.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		dr.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		dr.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customInfo != null and '' != customInfo">
+		<!-- dr.`customInfo` = #{customInfo, jdbcType=JSON} AND -->
+		<foreach collection="customInfo" item="value" index="key">
+		   dr.`customInfo` -> '$.${key}' like concat("%", #{value}, "%") AND
+	    </foreach>
+	</if>
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.id != null">
+			dr.`id` = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.projectId != null">
+			dr.`projectId` = #{model.projectId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.projectType != null and '' != model.projectType">
+			dr.`projectType` = #{model.projectType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectCode != null and '' != model.projectCode">
+			dr.`projectCode` like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.projectName != null and '' != model.projectName">
+			dr.`projectName` like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.contractNo != null and '' != model.contractNo">
+			dr.`contractNo` like concat("%", #{model.contractNo, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.officeCode != null and '' != model.officeCode">
+			dr.`officeCode` = #{model.officeCode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.type != null and '' != model.type">
+			dr.`type` = #{model.type, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.category != null and '' != model.category">
+			dr.`category` = #{model.category, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.subCategory != null and '' != model.subCategory">
+			dr.`subCategory` = #{model.subCategory, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.processTime != null">
+			dr.`processTime` = #{model.processTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.processDesc != null and '' != model.processDesc">
+			dr.`processDesc` = #{model.processDesc, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.processStep != null and '' != model.processStep">
+			dr.`processStep` = #{model.processStep, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.remainProblem != null and '' != model.remainProblem">
+			dr.`remainProblem` = #{model.remainProblem, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customerInteraction != null and '' != model.customerInteraction">
+			dr.`customerInteraction` = #{model.customerInteraction, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.transitHour != null">
+			dr.`transitHour` = #{model.transitHour, jdbcType=REAL} AND
+		</if>
+		<if test="model.processHour != null">
+			dr.`processHour` = #{model.processHour, jdbcType=REAL} AND
+		</if>
+		<if test="model.itemModel != null and '' != model.itemModel">
+			dr.`itemModel` like concat("%", #{model.itemModel, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.softVersion != null and '' != model.softVersion">
+			dr.`softVersion` = #{model.softVersion, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.enabledFeatures != null and '' != model.enabledFeatures">
+			dr.`enabledFeatures` = #{model.enabledFeatures, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customTos != null and '' != model.customTos">
+			dr.`customTos` = #{model.customTos, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customCcs != null and '' != model.customCcs">
+			dr.`customCcs` = #{model.customCcs, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectExecutionState != null and '' != model.projectExecutionState">
+			dr.`projectExecutionState` = #{model.projectExecutionState, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.hasReport != null">
+			dr.`hasReport` = #{model.hasReport, jdbcType=BIT} AND
+		</if>
+		<if test="model.quesnaireId != null">
+			dr.`quesnaireId` = #{model.quesnaireId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.deliverFileIds != null and '' != model.deliverFileIds">
+			dr.`deliverFileIds` = #{model.deliverFileIds, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.remark != null and '' != model.remark">
+			dr.`remark` = #{model.remark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.qualityFactor != null">
+			dr.`qualityFactor` = #{model.qualityFactor, jdbcType=REAL} AND
+		</if>
+		<if test="model.status != null and '' != model.status">
+			dr.`status` = #{model.status, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.disabled != null">
+			dr.`disabled` = #{model.disabled, jdbcType=BIT} AND
+		</if>
+		<if test="model.createTime != null">
+			dr.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			dr.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			dr.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			dr.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customInfo != null and '' != model.customInfo">
+			<!-- dr.`customInfo` = #{model.customInfo, jdbcType=JSON} AND -->
+			<foreach collection="model.customInfo" item="value" index="key">
+			   dr.`customInfo` -> '$.${key}' like concat("%", #{value}, "%") AND
+		    </foreach>
+		</if>
+		<if test="model.processStartTime != null">
+			dr.`processTime` >= #{model.processStartTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.processEndTime != null">
+			<![CDATA[ dr.`processTime` <= #{model.processEndTime, jdbcType=TIMESTAMP} AND ]]>
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			dr.`projectType` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`projectCode` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`projectName` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`contractNo` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`officeCode` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`type` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`category` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`subCategory` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`processDesc` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`processStep` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`remainProblem` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`customerInteraction` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`itemModel` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`softVersion` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`enabledFeatures` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`status` like CONCAT("%", #{fuzzy}, "%") or
+			dr.`createBy` like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport" resultMap="BaseResultMap">
+    select * from pm_daily_report AS `dr`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DailyReport" resultType="long">
+    select count(1) from pm_daily_report AS `dr`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.DailyReportVO">
+    select 
+	    dr.*, bpt.`basicDataName` as projectTypeName, bt.`basicDataName` as typeName, bc.`basicDataName` as categoryName, bsc.`basicDataName` as subCategoryName 
+	from
+	    pm_daily_report AS `dr` 
+	    left join `fnd_basic_data` bpt 
+	        on bpt.`dataTypeCode` = 'af_dailyReportProjectType' 
+	        and dr.`projectType` = bpt.`basicDataId` 
+	    left join `fnd_basic_data` bt 
+	        on bt.`dataTypeCode` = 'af_dailyReportType' 
+	        and dr.`type` = bt.`basicDataId` 
+	    left join `fnd_basic_data` bc 
+	        on bc.`dataTypeCode` = 'af_dailyReportCategory' 
+	        and dr.`category` = bc.`basicDataId` 
+	    left join `fnd_basic_data` bsc 
+	        on bsc.`dataTypeCode` = 'af_dailyReportSubCategory' 
+	        and dr.`subCategory` = bsc.`basicDataId`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_daily_report AS `dr`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </select>
+</mapper>

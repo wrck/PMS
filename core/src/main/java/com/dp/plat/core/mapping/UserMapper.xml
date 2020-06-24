@@ -246,7 +246,7 @@
 			<if test="updateTime != null">
 				update_time = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="status != null and '' != status">
+			<if test="status != null">
 				status = #{status, jdbcType=SMALLINT} AND
 			</if>
 			<if test="needChangePwd != null and '' != needChangePwd">
@@ -299,7 +299,7 @@
 			<if test="updateTime != null">
 				u.update_time = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="status != null and '' != status">
+			<if test="status != null">
 				u.status = #{status, jdbcType=SMALLINT} AND
 			</if>
 			<if test="needChangePwd != null and '' != needChangePwd">
@@ -352,7 +352,7 @@
 				<if test="model.updateTime != null">
 					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.status != null and '' != model.status">
+				<if test="model.status != null">
 					status = #{model.status, jdbcType=SMALLINT} AND
 				</if>
 				<if test="model.needChangePwd != null and '' != model.needChangePwd">
@@ -429,7 +429,7 @@
 				<if test="model.updateTime != null">
 					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.status != null and '' != model.status">
+				<if test="model.status != null">
 					status = #{model.status, jdbcType=SMALLINT} AND
 				</if>
 				<if test="model.needChangePwd != null and '' != model.needChangePwd">
@@ -612,7 +612,7 @@
                 <if test="model.updateTime != null">
                     u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
                 </if>
-                <if test="model.status != null and '' != model.status">
+                <if test="model.status != null">
                     u.status = #{model.status, jdbcType=SMALLINT} AND
                 </if>
                 <if test="model.needChangePwd != null and '' != model.needChangePwd">
@@ -723,7 +723,7 @@
                 <if test="model.updateTime != null">
                     u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
                 </if>
-                <if test="model.status != null and '' != model.status">
+                <if test="model.status != null">
                     u.status = #{model.status, jdbcType=SMALLINT} AND
                 </if>
                 <if test="model.needChangePwd != null and '' != model.needChangePwd">
@@ -1056,12 +1056,17 @@
 	    LEFT JOIN t_role r 
 	        ON rm.`role_id` = r.`role_id` 
 	<where>
-		<if test="roleName != null and roleName !=''">
-			r.role_name like concat(#{roleName}, '%') AND
-		</if>
-		<if test="menuName != null and menuName !=''">
-			m.name like concat(#{menuName}, '%') 
-		</if>
+		<trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+			<if test="roleName != null and roleName !=''">
+				r.role_name like concat(#{roleName}, '%') AND
+			</if>
+			<if test="menuName != null and menuName !=''">
+				m.name like concat(#{menuName}, '%') AND
+			</if>
+			<if test="compID != null">
+				ui.compID = #{compID} AND
+			</if>
+		</trim>
 	</where>
 	GROUP BY ui.`id`
   </select>

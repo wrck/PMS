@@ -263,7 +263,7 @@ public class DownloadUtils {
 	 * 
 	 * @Description: ie,chrom,firfox下处理文件名显示乱码
 	 */
-	private static String processFileName(HttpServletRequest request, String fileName)
+	public static String processFileName(HttpServletRequest request, String fileName)
 			throws UnsupportedEncodingException {
 
 		if (isMSBrowser(request)) {// 微软浏览器

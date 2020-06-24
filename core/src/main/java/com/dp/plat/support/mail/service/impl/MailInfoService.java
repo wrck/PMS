@@ -7,12 +7,10 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dp.plat.core.context.UserContext;
-import com.dp.plat.core.realms.Principal;
 import com.dp.plat.support.mail.MailSenderInfo;
 import com.dp.plat.support.mail.NotificationTemplate;
 import com.dp.plat.support.mail.dao.MailInfoMapper;

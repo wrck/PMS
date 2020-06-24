@@ -2,8 +2,6 @@ package com.dp.plat.subcontract.entity;
 
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.dp.plat.util.UserUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 

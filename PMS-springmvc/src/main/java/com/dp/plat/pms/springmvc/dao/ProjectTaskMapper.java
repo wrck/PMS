@@ -20,4 +20,6 @@ public interface ProjectTaskMapper extends AbstractBaseMapper<ProjectTask> {
     Map<String, Object> checkPermission(@Param("model") TaskVO task, @Param("user") Principal currentPrincipal);
 
 	Map<String, Object> checkPermission(@Param("model") TaskVO task, @Param("permissionTypes") String permissionTypes, @Param("user") Principal currentPrincipal);
+
+	void updateEventActualFinishDateByTask(ProjectTask pt);
 }

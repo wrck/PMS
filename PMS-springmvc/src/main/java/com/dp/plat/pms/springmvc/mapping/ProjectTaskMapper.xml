@@ -337,7 +337,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       </if>
       <if test="remark != null">
         remark = #{remark,jdbcType=LONGVARCHAR},
@@ -379,7 +379,7 @@
 			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
 		    </foreach>
 		), -->
-		customInfo = JSON_MERGE_PATCH(customInfo, #{customInfo,jdbcType=JSON}),
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
       remark = #{remark,jdbcType=LONGVARCHAR}
     where taskId = #{taskId,jdbcType=INTEGER}
   </update>
@@ -717,4 +717,39 @@
 		</if>
 	</if>	
   </select>
+  
+  <update id="updateEventActualFinishDateByTask" parameterType="com.dp.plat.pms.springmvc.vo.ProjectDeliver">
+	  	UPDATE 
+		    pm_project_task t 
+		SET
+		    eventActualFinishDate = NULL, customInfo = JSON_SET (
+		        IFNULL(customInfo, "{}"), '$.deliverCount', 
+		        (SELECT 
+		            COUNT(*) 
+		        FROM
+		            `pm_basic_deliver_detail` pd 
+		        WHERE t.`projectId` = pd.`projectId` 
+		            AND t.`projectType` = pd.`projectType` 
+		            AND t.`taskId` = pd.`taskId` 
+		            AND (
+		                <![CDATA[ pd.effectiveTo > NOW() OR pd.effectiveTo IS NULL ]]>
+		            ))
+		    ) 
+		<where>
+			<trim suffixOverrides="and | or" prefixOverrides="and | or">
+				<if test="projectId != null"> t.projectId = #{projectId} </if>
+				<if test="projectType != null"> t.projectType = #{projectType} </if>
+				<if test="taskId != null"> t.taskId = #{taskId} </if>
+				<if test="taskTypeCode != null"> t.taskTypeCode = #{taskTypeCode} </if>
+				<if test="taskTypeId != null"> t.taskTypeId = #{taskTypeId} </if>
+				<![CDATA[ 
+			    	AND effectiveFrom <= NOW() 
+				    AND (
+				        effectiveTo > NOW() 
+				        OR effectiveTo IS NULL
+				    ) 
+			    ]]>
+			</trim>
+		</where>
+  </update>
 </mapper>

@@ -551,6 +551,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 						model.addAllAttributes(permission.getMap());
 						return;
 					}
+					pmWorkFlow.setCustomInfoByKey("projectTypes", permission.getData());
 				}
 				// 项目任务流程发起
 				Object entity = null;

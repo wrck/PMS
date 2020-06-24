@@ -6,11 +6,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,23 +20,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
-import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.param.RoleConstant;
-import com.dp.plat.core.pojo.Menu;
 import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.pojo.UserRole;
 import com.dp.plat.core.realms.Principal;
-import com.dp.plat.core.realms.ShiroRealm;
 import com.dp.plat.core.service.IRoleService;
 import com.dp.plat.core.service.IShiroService;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.IUserRoleService;
 import com.dp.plat.core.service.IUserService;
-import com.dp.plat.core.util.MenuUtil;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.UserDetail;

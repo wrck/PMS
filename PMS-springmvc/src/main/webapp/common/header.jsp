@@ -21,13 +21,13 @@
 	<div class="navbar-custom-menu">
 		<ul class="nav navbar-nav">
 		    <li class="dropdown user user-menu">
-		      <dp:changeCompany isNav="true">111</dp:changeCompany>
+		      <dp:changeCompany isNav="true"></dp:changeCompany>
 		    </li>
 			<!-- User Account: style can be found in dropdown.less -->
 			<li class="dropdown user user-menu">
-				<a href="#" class="dropdown-toggle" data-toggle="dropdown"> <img
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown"><img
 					src="${pageContext.request.contextPath}<shiro:principal property='avatar' defaultValue='/static/common/images/avatar.png'/>" class="user-image"
-					alt="User Image" onerror="this.src='${pageContext.request.contextPath}/static/common/images/avatar.png'"><span class="hidden-xs"><shiro:principal property="userName"/></span>
+					alt="User Image" onerror="this.src='${pageContext.request.contextPath}/static/common/images/avatar.png'"><span class="hidden-xs"><shiro:principal property="userName"/>-<shiro:principal property="realName"/></span>
 				</a>
 				<ul class="dropdown-menu pt-0">
 					<!-- User image -->

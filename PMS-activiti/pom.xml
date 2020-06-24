@@ -23,10 +23,10 @@
 			<id>jboss</id>
 			<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
 		</repository>
-		<repository>
+		<!-- <repository>
 			<id>buzzmedia</id>
 			<url>http://maven.thebuzzmedia.com</url>
-		</repository>
+		</repository> -->
 		<repository>
 			<id>activiti</id>
 			<name>Activiti</name>
