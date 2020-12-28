@@ -19,7 +19,7 @@ var FormInput = {
 								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
 								<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 										:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle" :rows="(field.extData || {}).rows || 3" style="resize:none;" draggable="false"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" data-flag="autosize"
 										></textarea>
 							</div>
 						</template>
@@ -268,13 +268,10 @@ var FormInput = {
 		},
 		updated: function() {
 			console.log("updated");
-		},
-		mounted: function() {
-			console.log("mounted");
-			var _this = this;
 			var id = this.field.cssId || this.field.field;
+			var $container = this.$root.$el;
 			if (this.field.type == 'range') {
-				var $field = $("#" + id);
+				var $field = $("#" + id, $container);
 				if ($field.length) {
 					_this.rangeChange({currentTarget: $field[0]});
 				} else {
@@ -283,7 +280,7 @@ var FormInput = {
 					})
 				}
 			} else if (this.field.type == 'daterange') {
-				var $field = $("#" + id);
+				var $field = $("#" + id, $container);
 				if ($field.length) {
 					_this.dateRangePicker({currentTarget: $field[0]});
 				} else {
@@ -292,7 +289,44 @@ var FormInput = {
 					})
 				}
 			} else if (this.field.type == 'distpicker') {
-				var $field = $("#" + id);
+				var $field = $("#" + id, $container);
+				if ($field.length) {
+					_this.distpicker({currentTarget: $field[0]});
+				} else {
+					$(".distpicker").not(".distpicker-inited").each(function(index, item) {
+						_this.distpicker({currentTarget: item});
+					})
+				}
+			} else if (this.field.type == 'select' || this.field.type == 'urlSelector') {
+				var $field = $("#" + id, $container);
+				$field.trigger("change");
+			}
+		},
+		mounted: function() {
+			console.log("mounted");
+			var _this = this;
+			var id = this.field.cssId || this.field.field;
+			var $container = this.$root.$el;
+			if (this.field.type == 'range') {
+				var $field = $("#" + id, $container);
+				if ($field.length) {
+					_this.rangeChange({currentTarget: $field[0]});
+				} else {
+					$("input[type='range']").not(".range-inited").each(function(index, item) {
+						_this.rangeChange({currentTarget: item});
+					})
+				}
+			} else if (this.field.type == 'daterange') {
+				var $field = $("#" + id, $container);
+				if ($field.length) {
+					_this.dateRangePicker({currentTarget: $field[0]});
+				} else {
+					$(".daterange-btn").not(".daterange-inited").each(function(index, item) {
+						_this.dateRangePicker({currentTarget: item});
+					})
+				}
+			} else if (this.field.type == 'distpicker') {
+				var $field = $("#" + id, $container);
 				if ($field.length) {
 					_this.distpicker({currentTarget: $field[0]});
 				} else {
@@ -380,7 +414,7 @@ var FormInput = {
 	 			return field.selfClass
 	 		},
 	 		getFieldValue: function(field) {
-	 			var value;
+	 			var value = "";
 	 			if (field.type == 'computed' && field.render) {
 	 				try {
 	 					console.log("render")
@@ -393,13 +427,13 @@ var FormInput = {
 	 				var separator = (field.extData || {}).separator || "-";
 	 				if (!value) {
 	 					try {
-			 				var keys = field.field.split(" ");
+			 				var keys = field.alias.split(" ");
 			 				var values = [];
 			 				for(var i in keys) {
 			 					var key = keys[i];
 			 					try {
 			 						var tv = eval("this.targetValue." + key);
-			 						if (tv != undefined && tv != null && tv != '') {
+			 						if (tv !== undefined && tv !== null && tv !== '') {
 			 							values.push(tv);
 			 						}
 			 					} catch(e) {}
@@ -413,13 +447,13 @@ var FormInput = {
 		 			}
 	 				if (!value) {
 	 					try {
-			 				var keys = field.alias.split(" ");
+			 				var keys = field.field.split(" ");
 			 				var values = [];
 			 				for(var i in keys) {
 			 					var key = keys[i];
 			 					try {
 			 						var tv = eval("this.targetValue." + key);
-			 						if (tv != undefined && tv != null && tv != '') {
+			 						if (tv !== undefined && tv !== null && tv !== '') {
 			 							values.push(tv);
 			 						}
 			 					} catch(e) {}
@@ -432,7 +466,10 @@ var FormInput = {
 			 			} catch(e) {}
 		 			}
 	 				if (!value) {
-	 					value = (field.extData || {}).defaultValue;
+	 					var defaultValue = (field.extData || {}).defaultValue;
+	 					if (defaultValue != undefined) {
+	 						value = defaultValue;
+	 					}
 	 				}
 	 				if (value && field.type == 'date') {
 	 					value = new Date(value).Format('yyyy-MM-dd');
@@ -462,7 +499,7 @@ var FormInput = {
 	 			try {
 	 				var value = this.getDataValue(field[key]);
 	 				update = update == false ? false : true; 
-	 				if (update) {
+	 				if (update && value != undefined) {
 	 					field[key] = value;
 	 				}
 	 			} catch(e){}
