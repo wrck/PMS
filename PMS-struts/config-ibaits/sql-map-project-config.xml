@@ -1125,6 +1125,10 @@
         select projectGroupCode from pm_project_group order by id desc limit 1
     </select>
     
+    <select id="query-max-project-group-id" resultClass="string">
+        select max(id) from pm_project_group
+    </select>
+    
     <resultMap class="com.dp.plat.data.bean.Project" id="pmOrderDataFromSap">
         <result property="contractNo" column="contractNo"/>
         <result property="projectCode" column="projectCode"/>

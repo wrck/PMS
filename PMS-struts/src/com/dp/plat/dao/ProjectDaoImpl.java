@@ -125,7 +125,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
 
     @Override
     public String queryMaxProjectGroupCode() {
-        return (String) getSqlMapClientTemplate().queryForObject("query-maxproject-groupcode");
+//        return (String) getSqlMapClientTemplate().queryForObject("query-maxproject-groupcode");
+        return (String) getSqlMapClientTemplate().queryForObject("query-max-project-group-id");
     }
 
     @Override
