@@ -53,13 +53,13 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
         <!--生成对应表及类名 -->
-		<table tableName="pm_daily_report" domainObjectName="DailyReport"
+		<table tableName="pm_facilitator" domainObjectName="Facilitator"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false" delimitAllColumns="true">
-			<property name="tableAlias" value="dr" />
+			<property name="tableAlias" value="f" />
 			<property name="useActualColumnNames" value="true" />
 			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>
