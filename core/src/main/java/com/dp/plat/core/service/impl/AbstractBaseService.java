@@ -146,6 +146,11 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 		} catch (Exception e) {
 		}
 		try {
+			Method method = objClass.getMethod("setCustomInfoByKey", String.class, Object.class);
+			method.invoke(record, "updateName", UserContext.getCurrentPrincipal().getRealName());
+		} catch (Exception e) {
+		}
+		try {
 			Method method = objClass.getMethod("setUpdateTime", Date.class);
 			method.invoke(record, new Date());
 		} catch (Exception e) {
@@ -180,6 +185,11 @@ public abstract class AbstractBaseService<Mapper extends AbstractBaseMapper<T>, 
 		try {
 			Method method = objClass.getMethod("setUpdateBy", String.class);
 			method.invoke(record, UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+		}
+		try {
+			Method method = objClass.getMethod("setCustomInfoByKey", String.class, Object.class);
+			method.invoke(record, "updateName", UserContext.getCurrentPrincipal().getRealName());
 		} catch (Exception e) {
 		}
 		try {

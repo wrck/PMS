@@ -49,6 +49,11 @@ public interface IRoleService {
 	 * @param roleNames
 	 * @return roleList
 	 */
-	List<Role> selectRolesByRoleNames(String roleName);
+	List<Role> selectRolesByRoleNames(String roleNames);
 
+	/**
+	 * @param roleName
+	 * @return role
+	 */
+	Role selectRoleByRoleName(String roleName);
 }

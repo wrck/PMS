@@ -68,8 +68,12 @@ public class RoleService implements IRoleService {
 	}
 
 	@Override
-	public List<Role> selectRolesByRoleNames(String roleName) {
-		return roleMapper.selectRolesByRoleNames(roleName);
+	public List<Role> selectRolesByRoleNames(String roleNames) {
+		return roleMapper.selectRolesByRoleNames(roleNames);
 	}
 
+	@Override
+	public Role selectRoleByRoleName(String roleName) {
+		return roleMapper.selectRoleByRoleName(roleName);
+	}
 }

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.vo.UserInfoVO;
@@ -65,6 +66,7 @@ public class Principal implements Serializable {
 	
 	private Collection<String> roles;
 	private Collection<String> permissions;
+	private Role maxRole;
 	
 	/**
 	 * user自定义字段
@@ -328,6 +330,14 @@ public class Principal implements Serializable {
 
 	public void setPermissions(Collection<String> permissions) {
 		this.permissions = permissions;
+	}
+
+	public Role getMaxRole() {
+		return maxRole;
+	}
+
+	public void setMaxRole(Role maxRole) {
+		this.maxRole = maxRole;
 	}
 	
 }

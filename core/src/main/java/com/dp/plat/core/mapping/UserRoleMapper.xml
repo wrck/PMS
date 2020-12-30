@@ -178,6 +178,7 @@
 		 JOIN t_role t3 ON t1.`role_id` = t3.`role_id`
 		WHERE t2.`user_name` = #{username}
   	]]>
+  	ORDER by t3.priority desc
   </select>
   
   <select id="queryUserRoleByNameAndCompId" parameterType="map" resultType="java.lang.String">
@@ -190,6 +191,7 @@
     <if test="compId != null and compId != -1">
         and t1.comp_id = #{compId}
     </if>
+    ORDER by t3.priority desc
   </select>
   
   <select id="queryPermissionByUsername" parameterType="java.lang.String" resultType="java.lang.String">

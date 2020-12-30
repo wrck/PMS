@@ -26,8 +26,10 @@ import org.jasig.cas.client.validation.TicketValidator;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.pojo.Menu;
+import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
+import com.dp.plat.core.service.IRoleService;
 import com.dp.plat.core.service.IShiroService;
 import com.dp.plat.core.util.MenuUtil;
 
@@ -35,6 +37,9 @@ public class CasRealm extends org.apache.shiro.cas.CasRealm {
 
 	@Resource
 	private IShiroService shiroService;
+	
+	@Resource
+	private IRoleService roleService;
 
 	/**
 	 * 用户身份验证
@@ -91,6 +96,8 @@ public class CasRealm extends org.apache.shiro.cas.CasRealm {
 		// 2.1查询用户角色
 //		Set<String> roles = shiroService.queryUserRoleByName(principal.getUserName());
 		Set<String> roles = shiroService.queryUserRoleByNameAndCompId(principal.getUserName(), principal.getCompId());
+		Role maxRole = roleService.selectRoleByRoleName(roles.iterator().next());
+		
 		// 2.2查询用户权限字符串集合
 //		Set<String> permissions = shiroService.queryPermissionByUsername(principal.getUserName());
 		Set<String> permissions = shiroService.queryPermissionByUsernameAndCompId(principal.getUserName(), principal.getCompId());
@@ -118,6 +125,7 @@ public class CasRealm extends org.apache.shiro.cas.CasRealm {
 		// 3.1 将权限更新到当前用户中
 		principal.setRoles(roles);
 		principal.setPermissions(permissions);
+		principal.setMaxRole(maxRole);
 		
 		// 4. 返回 SimpleAuthorizationInfo 对象.
 		return info;

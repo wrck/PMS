@@ -33,7 +33,7 @@
     function _modal_structure(config, ok, cancel) {
         // <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
         var modal = document.createElement('DIV');
-        modal.id = 'modal-tips-div';
+        modal.id = config.winId || 'modal-tips-div';
         modal.className = 'modal fade';
         modal.tabindex = -1;
         modal.role = 'dialog';
@@ -43,8 +43,14 @@
         var dialog = document.createElement('DIV');
         dialog.className = 'modal-dialog modal-'+(config.large?'lg':'sm');
 
-        //update for HANZO, 2016/12/28
-        if (config.width) { dialog.style.width = config.width+'px'; }
+//        //update for HANZO, 2016/12/28
+//        if (config.width) { dialog.style.width = config.width+'px'; }
+        
+        if(!isNaN(config.width)) {
+       	 $(dialog).css('width',config.width+"px");
+        } else {
+       	 $(dialog).css('width',config.width); 
+        }
 
         dialog.role = 'document';
         modal.appendChild(dialog);

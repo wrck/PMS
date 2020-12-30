@@ -111,7 +111,7 @@ class watcher{
      */
     BaseForm.prototype.initAutosize = function(){
     	var form = this.$element;
-        if (form.find(this.autosizeElement).length > 0) {
+        if (form.find(this.autosizeElement).length > 0 && window.autosize) {
             autosize(form.find(this.autosizeElement));
         }
     }
@@ -136,6 +136,7 @@ class watcher{
     }
 
     BaseForm.prototype.initSelect2 = function () {
+    	var _form = this;
     	if ($.fn.select2) {
     		var defaultConfig = {
                 minimumResultsForSearch: Infinity
@@ -163,6 +164,7 @@ class watcher{
     			} else {
     				config = defaultConfig;
     			}
+    			config = _form.parseObject(config);
     			//$(this).select2($.extend(true, {}, defaultConfig, config));
     			$(this).select2(config);
     			if (config.events) {
@@ -1116,6 +1118,31 @@ class watcher{
 		return res;
 	}
 	
+	BaseForm.prototype.parseObject=function(res, key) {
+		try {
+			res = JSON.parse(res);
+	    } catch(e){
+	        try {
+	            if ($.isPlainObject(res)) {
+	                res = eval(res);
+	            } else {
+	                res = eval("(" + res + ")");
+	            }
+	        } catch(e){
+	            try {
+	                res = eval(res);
+	            } catch(e) {
+	            }
+	        }
+	    }
+		if ($.isPlainObject(res)) {
+	        for(var k in res) {
+	            res[k] = this.parseObject(res[k], k);
+	        }
+		}
+		return res;
+	}
+	
 	/**
 	 * 	表单数据回填
 	 * @param json_data 回填的数据
@@ -1186,7 +1213,7 @@ class watcher{
 					$(elem).summernote('code',value);
 				}else if(is_autosize){ //textarea 高度自适应
 					elem.value = value;
-					autosize.update(obj);
+					window.autosize && autosize.update(obj);
 				} else if (is_selector) {
 					var multiple = elem.type.indexOf("multiple") > -1;
 					if (multiple) {
@@ -1305,7 +1332,7 @@ class watcher{
 				$(elem).summernote('code',value);
 			}else if(is_autosize){ //textarea 高度自适应
 				elem.value = value;
-				autosize.update(obj);
+				window.autosize && autosize.update(obj);
 			} else if (is_selector) {
 				var multiple = elem.type.indexOf("multiple") > -1;
 				if (multiple) {

@@ -10,24 +10,34 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
+
 public class XssFilter implements Filter {
 
-	FilterConfig filterConfig = null;  
-	  
-    public void init(FilterConfig filterConfig) throws ServletException {  
-        this.filterConfig = filterConfig;  
-    }  
-  
-    public void destroy() {  
-        this.filterConfig = null;  
-    }  
-  
-    public void doFilter(ServletRequest request, ServletResponse response,  
-            FilterChain chain) throws IOException, ServletException {  
+	FilterConfig filterConfig = null;
+
+	public void init(FilterConfig filterConfig) throws ServletException {
+		this.filterConfig = filterConfig;
+	}
+
+	public void destroy() {
+		this.filterConfig = null;
+	}
+
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
+		String servletPath = ((HttpServletRequest) request).getServletPath();
+		if (filterConfig != null) {
+			String excludePattern = filterConfig.getInitParameter("excludePattern");
+			if (StringUtils.isNotBlank(excludePattern) && servletPath.matches(excludePattern)) {
+				chain.doFilter(request, response);
+				return;
+			}
+		}
 //       chain.doFilter(new XssHttpServletRequestWrapper((HttpServletRequest) request), response);
 //    	request = new XssPostHttpServletRequestWrapper((HttpServletRequest) request);
-    	request = new XssRequestBodyHttpServletRequestWrapper((HttpServletRequest) request);
-    	chain.doFilter(request, response);
-    }  
-	
+		request = new XssRequestBodyHttpServletRequestWrapper((HttpServletRequest) request);
+		chain.doFilter(request, response);
+	}
+
 }

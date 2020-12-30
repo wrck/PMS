@@ -220,6 +220,18 @@ function handleLongText(data,length){
 	}
 }
 
+String.prototype.charLength = function() {
+	var intLength = 0
+	for (var i = 0; i < this.length; i++) {
+		if ((this.charCodeAt(i) < 0) || (this.charCodeAt(i) > 255)) {
+			intLength = intLength + 2
+		} else {
+			intLength = intLength + 1
+		}
+	}
+	return intLength;
+}
+
 if (typeof String.prototype.startsWith != 'function') {
 	String.prototype.startsWith = function(prefix) {
 		if (typeof prefix === "undefined" || prefix === null) {

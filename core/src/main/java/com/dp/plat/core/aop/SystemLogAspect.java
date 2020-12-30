@@ -105,8 +105,9 @@ public class SystemLogAspect {
 			queue.add(systemLogUtil);
 			
 			ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-			LogThread thread = new LogThread();
+			LogThread thread = new LogThread("logThread");
 			singleThreadExecutor.submit(thread);
+			singleThreadExecutor.shutdown();
 		} catch (Exception ex) {
 			ExceptionHandler.insertException(ex);
 			// 记录本地异常日志
@@ -355,7 +356,7 @@ public class SystemLogAspect {
 					Object value = parseObjectValue(field, newParams);
 					description = description.replaceAll("\\Q" + field + "\\E", value.toString());
 				}
-				description = description.replaceAll("\\[( )*\\]", "");
+				description = description.replaceAll("[\\[【]( )*[\\]】]", "");
 			}
 		}
 		return description;
@@ -615,6 +616,10 @@ public class SystemLogAspect {
 	class LogThread extends Thread {
 		private SystemLogAspect logAspect;
 		
+		public LogThread(String name) {
+			super(name);
+		}
+
 		@Override
 		public void run() {
 			while(!logAspect.queue.isEmpty()) {
@@ -881,7 +886,7 @@ class SystemLogUtil {
 					Object value = parseObjectValue(field, newParams);
 					description = description.replaceAll("\\Q" + field + "\\E", value.toString());
 				}
-				description = description.replaceAll("\\[( )*\\]", "");
+				description = description.replaceAll("[\\[【]( )*[\\]】]", "");
 			}
 		}
 		return description;

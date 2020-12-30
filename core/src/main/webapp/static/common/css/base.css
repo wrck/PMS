@@ -516,6 +516,23 @@ section {
 	white-space: nowrap;
 }
 
+.text-ellipsis-lines {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.text-ellipsis-lines-4 {
+    -webkit-line-clamp: 4;
+}
+
+.text-ellipsis-lines-5 {
+    -webkit-line-clamp: 5;
+}
+
 .box {
 	margin-bottom: 0 !important;
 }
@@ -1219,7 +1236,7 @@ html {
 	overflow-x: auto!important;
 }
 
-.table-responsive::-webkit-scrollbar {
+.table-responsive::-webkit-scrollbar, .dataTables_scrollBody::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
@@ -1526,6 +1543,10 @@ input[type=range]:focus::-ms-fill-upper {
 
 .form-inline .control-label {
     margin-right: 7px;
+}
+
+.form-inline .form-control[disabled], .form-inline fieldset[disabled] .form-control {
+    cursor: default;
 }
 
 .form-inline .display-flex .form-control {

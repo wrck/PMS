@@ -203,4 +203,10 @@
     where FIND_IN_SET(role_name, #{_parameter})
         and status = 1
   </select>
+  
+  <select id="selectRoleByRoleName" parameterType="String" resultMap="BaseResultMap">
+    select * from t_role
+    where role_name = #{_parameter}
+        and status = 1
+  </select>
 </mapper>

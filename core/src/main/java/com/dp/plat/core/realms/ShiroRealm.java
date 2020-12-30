@@ -21,8 +21,10 @@ import org.apache.shiro.util.ByteSource;
 
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.exception.CaptchaException;
+import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UsernamePasswordCaptchaToken;
+import com.dp.plat.core.service.IRoleService;
 import com.dp.plat.core.service.IShiroService;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.support.CaptchaServlet;
@@ -31,6 +33,9 @@ public class ShiroRealm extends AuthorizingRealm {
 
 	@Resource
 	private IShiroService shiroService;
+
+	@Resource
+	private IRoleService roleService;
 
 	/**
 	 * 用户身份验证
@@ -116,6 +121,8 @@ public class ShiroRealm extends AuthorizingRealm {
 		// Set<String> roles = shiroService.queryUserRoleByName(principal.getUserName());
 		Integer compId = principal.getIsSysUser() != 0 ? -1 : principal.getCompId();
 		Set<String> roles = shiroService.queryUserRoleByNameAndCompId(principal.getUserName(), compId);
+		Role maxRole = roleService.selectRoleByRoleName(roles.iterator().next());
+		
 		// 2.2查询用户权限字符串集合
 		// Set<String> permissions = shiroService.queryPermissionByUsername(principal.getUserName());
 		Set<String> permissions = shiroService.queryPermissionByUsernameAndCompId(principal.getUserName(), compId);
@@ -128,6 +135,7 @@ public class ShiroRealm extends AuthorizingRealm {
 		// 3.1 将权限更新到当前用户中
 		principal.setRoles(roles);
 		principal.setPermissions(permissions);
+		principal.setMaxRole(maxRole);
 		
 		// 4. 返回 SimpleAuthorizationInfo 对象.
 		return info;

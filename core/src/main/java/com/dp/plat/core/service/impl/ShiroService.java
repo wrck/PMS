@@ -2,6 +2,7 @@ package com.dp.plat.core.service.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class ShiroService implements IShiroService{
 	@Override
 	public Set<String> queryUserRoleByName(String principal) {
 		List<String> roleList = userRoleDao.queryUserRoleByName(principal);
-		Set<String> roles = new HashSet<>();
+		Set<String> roles = new LinkedHashSet<>();
 		for(String role : roleList){
 			roles.add(role);
 		}
@@ -72,7 +73,7 @@ public class ShiroService implements IShiroService{
 		params.put("username", userName);
 		params.put("compId", compId);
 		List<String> roleList = userRoleDao.queryUserRoleByNameAndCompId(params);
-		Set<String> roles = new HashSet<>();
+		Set<String> roles = new LinkedHashSet<>();
 		for(String role : roleList){
 			roles.add(role);
 		}

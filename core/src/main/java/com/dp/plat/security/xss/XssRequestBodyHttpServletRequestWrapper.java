@@ -127,7 +127,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 		if (values == null) {
 			return null;
 		}
-		System.err.println(parameter + ":" + String.valueOf(values));
+//		System.err.println(parameter + ":" + String.valueOf(values));
 		if ("password".equals(parameter)) {
 			return values.toArray(new String[values.size()]);
 		}
@@ -169,7 +169,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 		if (values == null) {
 			return null;
 		}
-		System.err.println(parameter + ":" + String.valueOf(values));
+//		System.err.println(parameter + ":" + String.valueOf(values));
 		if (values.size() == 0) {
 			return "";
 		}

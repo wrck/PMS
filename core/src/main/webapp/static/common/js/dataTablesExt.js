@@ -922,7 +922,11 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
     }
     
     //$("#" + _this.tableId).parent().addClass("table-responsive");
-    $("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
+    if(oSettings.oInit.scrollY && (oSettings.oInit.disableSlimScroll || false)){
+    	$("#" + _this.tableId).parents(".dataTables_scroll").addClass("table-responsive");
+    } else {
+    	$("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
+    }
     
     //动态隐藏或显示列 by 01441  结合bootstrap-multiselect
     var columnSelect = $("#"+_this.tableId+"_wrapper").find('.columnSelect')
@@ -1136,7 +1140,11 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
     }
     
     //$("#" + _this.tableId).parent().addClass("table-responsive");
-    $("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
+    if(oSettings.oInit.scrollY && (oSettings.oInit.disableSlimScroll || false)){
+    	$("#" + _this.tableId).parents(".dataTables_scroll").addClass("table-responsive");
+    } else {
+    	$("#" + _this.tableId).wrap("<div class='table-responsive'></div>");
+    }
     
     //动态隐藏或显示列 by 01441  结合bootstrap-multiselect
     var columnSelect = $("#"+_this.tableId+"_wrapper").find('.columnSelect')
@@ -1811,6 +1819,20 @@ CommonTable.prototype.fnStateLoaded = function (settings, data) {
 	this.customSearch = data.customSearch;
 	var customSearch = data.customSearch;
 	if(customSearch) {
+		$("[name]:input", $("#" + this.searchDiv)).each(function(ind, elem) {
+			var obj = $(elem), el_name = obj.attr('name'), value;
+			try {
+				value = eval('customSearch.' + el_name);
+			} catch (e) {
+				value = null;
+			}
+			if (value != undefined && value != null && $.trim(value) != '') {
+				$(elem).val(value);
+				if(elem.type.indexOf("select") > -1) {
+					$(elem).data("selected", value);
+				}
+			}
+		});
 		for(var name in customSearch) {
 			var value = customSearch[name];
 			$("input[name='"+name+"']", $("#" + this.searchDiv)).val(value);
