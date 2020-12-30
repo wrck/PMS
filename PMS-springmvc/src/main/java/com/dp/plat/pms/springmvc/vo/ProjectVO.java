@@ -17,6 +17,7 @@ public class ProjectVO extends ProjectHeader {
 	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsSubmitTime;
 	private String smsProjectAmount;
+	private String smsAfProjectAmount;
 	private String smsProjectName;
 	private String smsOrderExecNumber;
 	
@@ -82,6 +83,15 @@ public class ProjectVO extends ProjectHeader {
 	public void setSmsProjectAmount(String smsProjectAmount) {
 		this.smsProjectAmount = smsProjectAmount;
 		this.setCustomInfoByKey("smsProjectAmount", smsProjectAmount);
+	}
+	
+	public String getSmsAfProjectAmount() {
+		return (String) getCustomInfoByKey("smsAfProjectAmount");
+	}
+
+	public void setSmsAfProjectAmount(String smsAfProjectAmount) {
+		this.smsAfProjectAmount = smsAfProjectAmount;
+		this.setCustomInfoByKey("smsAfProjectAmount", smsAfProjectAmount);
 	}
 
 	public String getSmsProjectName() {

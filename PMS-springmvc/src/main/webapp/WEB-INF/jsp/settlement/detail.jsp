@@ -93,7 +93,7 @@
 							</div>
 							<!-- /.box-body -->
 							<div class="box-footer text-right">
-								<button type="button" class="btn btn-info pull-left" v-if="!isCreate" data-btn-type="exportProjectInfo">项目信息单</button>
+								<button type="button" class="btn btn-info pull-left" v-if="!isCreate" data-btn-type="exportProjectInfo">生成项目信息单</button>
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" data-btn-type="save">保存</button>
 							</div>
@@ -165,7 +165,7 @@
 						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
-								isModals,
+								isModals: isModals,
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
@@ -200,22 +200,21 @@
 		                	var confirmText = btnType == "save" ? "保存" : "派单";
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
-			                		var index3 = layer.load(1);
-			                		var headers = {};
-			                		headers['__RequestVerificationToken'] = __RequestVerificationToken;
+		                			formSubmit.call(vm, validator, form2, submitButton);
+			                		/* var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
 			                		var url = btnType == 'submit' ? pm.router.api(model).submit() : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
 			                		ajaxPost(url, formData,function(data,status){
 			                			if(data.status){
 			        						modals.correct(confirmText + "成功");
-			        						handleResult(data);
+			        						handleResult.call(form2, data);
 			        					} else{
 			        						modals.error('操作失败！<br>' + (data.message || ""));
 			        					}
 			                		},null,null,function(){
 			    						layer.close(index3);
 			    						$("[type='submit']", form2).removeAttr("disabled");
-			    					})
+			    					}) */
 		                		}, 
 		                		cancel_call: function() {
 		                			$("[type='submit']", form2).removeAttr("disabled");
@@ -224,11 +223,13 @@
 		                }, 
 		    			fields : varFields
 		    		});
+		    		$container.data("formSubmit", formSubmit);
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
-		    		var selectedId = (data.targetValue || {}).dispatchId;
-		    		var selectedText = (data.targetValue || {}).dispatchSeq;
 		    		var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
+		    		var selectedId = (data.targetValue || {}).dispatchId;
+		    		//var selectedText = (data.targetValue || {}).dispatchSeq;
+		    		var selectedText = ((data.targetValue || {}).dispatch || {}).dispatchNo;
 		    		$("#dispatchId", $container).select2({
 	    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
 		    			allowClear: true,
@@ -241,7 +242,9 @@
 		    			    data: function (params) {
 		    			    	params.pageSize = 10;
 			    			    return {
-			    			        dispatchSeq: params.term, // search term
+			    			    	// search term
+			    			        //dispatchSeq: params.term,
+			    			        dispatchNo: params.term,
 			    			        fuzzySearch: true,
 			    			        pageSize: params.pageSize || 10,
 			    			        start: (params.page - 1) * params.pageSize || 0
@@ -252,7 +255,8 @@
 							  	var list = data.data || [];
 							  	var results = $.map(list, function (obj) {
 							  		obj.id = obj.id;
-							  		obj.text = obj.dispatchSeq;
+							  		//obj.text = obj.dispatchSeq;
+							  		obj.text = obj.dispatchNo;
 								  	return obj;
 								});
 		    			      	return {
@@ -264,7 +268,8 @@
 		    			    },
 		    			    cache: true
 		    			  },
-		    			  placeholder: '搜索派单编号',
+		    			  //placeholder: '搜索派单编号',
+		    			  placeholder: '搜索转包合同号',
 		    			  minimumInputLength: 4,
 		    			  templateResult: formatRepo,
 		    			  templateSelection: formatRepoSelection
@@ -295,6 +300,11 @@
 				    			targetValue.dispatch = source;
 				    			targetValue.dispatchId = source.id;
 				    			targetValue.dispatchSeq = source.dispatchSeq;
+				    			targetValue.dispatch.dispatchNo = source.dispatchNo;
+				    			
+				    			/* var customInfo = source.customInfo || {};
+				    			targetValue.dispatch.customInfo = customInfo;
+				    			targetValue.dispatch.customInfo.projectProgress = (source.customInfo || {}).projectProgress; */
 				    			vm._data.targetValue = targetValue;
 				    			
 				    			// 生成结算编号
@@ -306,13 +316,50 @@
 		    		// 绑定当次付款比例、当次付款金额的change事件，生成结算编号
 		    		$("#ratio,#amount", $container).change(generateSettleSeq);
     			 }
-    		})
+    		});
+    		
+    		function formSubmit(validator, form2, submitButton, hideInfo) {
+    			var isValid = validator.isValid() || validator.validate().isValid();
+    			/* needValid = needValid == true ? true : false;
+    			var isValid = !needValid; 
+    			if (needValid) {
+	    			var $bootstrapValidator = $(form2).data('bootstrapValidator');
+					isValid = $bootstrapValidator.validate().isValid();
+    			}*/
+				if (isValid) {
+	    			var index3 = layer.load(1);
+	    			var baseForm = $(form2).data("baseForm");
+	    			var formData = null;
+	    			if (baseForm) {
+	    				formData = baseForm.getFormSimpleData();
+	    			} else {
+	    				formData = $(form2).serializeArray();
+	    			}
+	    			var btnType = $(submitButton, form2).data("btn-type");
+                	var confirmText = btnType == "save" ? "保存" : $(submitButton, form2).text();
+            		var url = btnType == 'submit' ? pm.router.api(model).submit(id) : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
+            		ajaxPost(url, formData,function(data,status){
+            			if(data.status){
+            				if (!hideInfo) {
+	    						modals.correct(confirmText + "成功");
+	        				}
+            				handleResult.call(form2, data);
+    					} else{
+    						modals.error('操作失败！<br>' + (data.message || ""));
+    					}
+            		},null,null,function(){
+						layer.close(index3);
+						$("[type='submit']", form2).removeAttr("disabled");
+					})
+				}
+    		}
     		
     		function handleData() {
     			
     		}
     		
     		function handleResult(results){
+    			var _this = this;
     			var isCreate = id == 0;
     			var targetName = results.targetName || model;
     			var targetValue = results[targetName] || {};
@@ -332,6 +379,21 @@
 	    					vm._data.tabList = data.tabList || [];
 	   						vm._data.targetValue = data.targetValue;
 	    				}
+	    				
+	    				// 回调函数
+			        	if (router(urlNamespace).callback(model).detail) {
+			        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
+			        		if (typeof vueCallback == 'function') {
+			        			vueCallback.call(vm, data, $("#" + appId));
+			        		}
+			        	}
+	                	
+			        	// 是否有临时的表单提交回调函数
+		        		if ($(_this).data("submitCallback")) {
+		        			var submitCallback = $(_this).data("submitCallback");
+		        			$(_this).data("submitCallback", null);
+		        			submitCallback.call();
+		        		}
 	        		});
         		}
     		}
@@ -373,7 +435,7 @@
     			);
 
     			$container.find(".select2-result-repository__title").append("<div style='margin-right:1rem'>" + repo.dispatchSeq + "</div>");
-    			$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNos || "") + "</div>");
+    			$container.find(".select2-result-repository__title").append("<div>" + (repo.dispatchNo || "") + "</div>");
     			$container.find(".select2-result-repository__description").text(repo.smsProjectName || repo.dispatchName);
     			$container.find(".select2-result-repository__smsSubmitTime").append(repo.smsSubmitTime || (repo.customInfo || {}).smsSubmitTime);
     			$container.find(".select2-result-repository__smsProjectAmount").append(repo.smsProjectAmount || (repo.customInfo || {}).smsProjectAmount);
@@ -386,14 +448,26 @@
     		}
     		
     		$(document).off('click', "#" + appId +' button[data-btn-type="exportProjectInfo"]');
-    		$(document).on('click', "#" + appId +' button[data-btn-type="exportProjectInfo"]', function(e) {
-                 var url = router(urlNamespace).html(model).exportProjectInfo(id);
-                 var $btn = $(this);
-                 $btn.button("loading");
-                 router.postDownload(url);
-                 setTimeout(function() {
-                	 $btn.button("reset");
-                 }, 2000);
+			$(document).on('click', "#" + appId +' button[data-btn-type="exportProjectInfo"]', function(e) {
+                var $btn = $(this);
+          		$container.data("submitCallback", function() {
+	            	var url = router(urlNamespace).html(model).exportProjectInfo(id);
+                	$btn.button("loading");
+                    router.postDownload(url);
+                    setTimeout(function() {
+                    	$btn.button("reset");
+                    }, 2000);
+				});
+            	var $submitButton = $container.find("[data-btn-type='save']");
+				if (typeof formSubmit == "function") {
+					var $bootstrapValidator = $container.data('bootstrapValidator');
+	               	$submitButton = $bootstrapValidator.$submitButton || $submitButton;
+					$bootstrapValidator.$submitButton = null;
+					formSubmit.call(vm, $bootstrapValidator, $container, $submitButton, true);
+				} else {
+					$submitButton.click();
+//					$container.submit();
+				}
              });
 		});
 	</script>

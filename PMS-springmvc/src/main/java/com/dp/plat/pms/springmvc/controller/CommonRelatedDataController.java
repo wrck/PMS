@@ -43,9 +43,12 @@ public class CommonRelatedDataController
 
 	@PostConstruct
 	public void init() {
+		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
 		this.setViewModel("commonRelated");
 		this.setUseTemplate(true);
 	}
+	
+	
 
 	@Override
 	public String list(PageParam<Object> pageParam, CommonRelatedDataVO relatedData, Model model) {
@@ -56,6 +59,7 @@ public class CommonRelatedDataController
 			}
 			setLocalVariables("dataPrefix", relatedData.getType());
 			relatedData.setDisabled(false);
+			model.addAttribute("model", relatedData.getType());
 			return super.list(pageParam, relatedData, model);
 		} finally {
 			clearLocalVariables();

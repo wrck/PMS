@@ -641,7 +641,9 @@
 		        ON u.`user_name` = pbdd.`uploadUser` 
 		    LEFT JOIN t_user_info ui 
 		        ON ui.`user_id` = u.`user_id` 
-		        and ui.`compID` = #{orgId}
+		        <if test="orgId != null">
+			        and ui.`compID` = #{orgId}
+				</if>
        <where>
 			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
        			<if test="projectId != null"> AND pbdd.projectId = #{projectId} </if>

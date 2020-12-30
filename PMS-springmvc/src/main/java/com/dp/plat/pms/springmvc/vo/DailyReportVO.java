@@ -1,5 +1,6 @@
 package com.dp.plat.pms.springmvc.vo;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,9 @@ public class DailyReportVO extends DailyReport {
 	private Boolean hideQuesnaire;
 
 	private Integer maxId;
+	
+	private List<String> ids;
+	private String idsStr;
 
 	public boolean isHasPower() {
 		return hasPower;
@@ -241,6 +245,28 @@ public class DailyReportVO extends DailyReport {
 
 	public void setProjectTypes(String projectTypes) {
 		this.projectTypes = projectTypes;
+	}
+
+	public List<String> getIds() {
+		return ids;
+	}
+
+	public void setIds(List<String> ids) {
+		this.ids = ids;
+		if(ids != null) {
+			this.idsStr = String.join(",", ids);
+		}
+	}
+
+	public String getIdsStr() {
+		return idsStr;
+	}
+
+	public void setIdsStr(String idsStr) {
+		this.idsStr = idsStr;
+		if (idsStr != null) {
+			this.ids = Arrays.asList(idsStr.split(","));
+		}
 	}
 
 }

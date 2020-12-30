@@ -1,9 +1,10 @@
 package com.dp.plat.pms.springmvc.entity;
 
+import java.util.Date;
+
 import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.util.Date;
 
 public class Facilitator extends BaseEntity {
     private Integer id;

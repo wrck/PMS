@@ -160,11 +160,11 @@
                     }
                     modals.confirm("是否要删除该行数据？",function(){
                         ajaxPost(router(urlNamespace).api(model).delete(rowId),null,function(data,status){
-                            if(status == "success"){
+                        	if(data.status){
                                 modals.info("删除成功！");
                                 commonTable.reloadData();
-                            }else{
-                                modals.info(data);
+                            }else {
+                                modals.info(data.message);
                             }
                         });
                     })

@@ -275,7 +275,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
                 // 查询最大的组编码
                 projectGroupCode = projectDao.queryMaxProjectGroupCode();
                 // 组编码前缀
-                String pre = MessageUtil.PROJECT_GROUPCODE_PRE;
+                String pre = MessageUtil.PROJECT_GROUPCODE_PRE + "_" + projectType;
                 // 如果查询的组编码为空，则置为prj_gp1，否则置为最大值+1
                 projectGroupCode = ((projectGroupCode == null) ? (pre + "1") : pre + (Integer.valueOf(projectGroupCode.replace(pre, "")) + 1));
                 project.setProjectGroupCode(projectGroupCode);

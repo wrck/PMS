@@ -164,6 +164,10 @@
 	<filter>
 		<filter-name>XssFilter</filter-name>
 		<filter-class>com.dp.plat.security.xss.XssFilter</filter-class>
+		<init-param>
+			<param-name>excludePattern</param-name>
+			<param-value>/sys/notifyTemplate/.*\..*</param-value>
+		</init-param>
 	</filter>
 	<filter-mapping>
 		<filter-name>XssFilter</filter-name>

@@ -82,39 +82,11 @@
 					loaderId = layer.load(2);
 					ajaxPost(router(urlNamespace).api(model).importPreview(search), {excelPath:excelPath}, function(data){
 					//ajaxPost(basePath + "/af/industry/leak/modals/preview.json", {excelPath:excelPath}, function(data){
-						data = data.data || {};
-						adjustType = data.adjustType || importType;
-						columnKeys = data.columnKeys || [];
-						/* for (var column of reportDataColumns) {
-			                if ($.inArray(column.data, columnKeys) != -1) {
-			                    column.render = $.proxy(function(data, type, row) {
-			                        console.log(this);
-			                        var oldVal = row["old_" + this.data] || 'EMPTY';
-			                        return "<span class='newValue'>" + data + "</span>" + "（<span class='oldValue'>" + oldVal + "</span>）";
-			                    }, column);
-			                    columns.push(column);
-			                }
-			            } */
-			            
-			            //config.columns = data.columns || reportDataColumns;
-			            tempTableName = data.tempTableName;
-			            if (importAdjustDataTable) {
-			            	try {
-    			            	$("#" + tableId).DataTable().destroy();
-    			            	$("#" + tableId).empty();
-			            	} catch(e) {}
-			            	importAdjustDataTable = null;
-			            }
-			            console.log(tempTableName);
-			            if (tempTableName) {
-			            	config.columns = data.columns || reportDataColumns;
-			            	var url = router(urlNamespace).api(model).previewTempTable(tempTableName);
-			            	//var url = basePath + "/af/industry/leak/previewTempTable.html?tempTableName=" + tempTableName;
-                            importAdjustDataTable = new CommonTable(tableId, url, null, config);
-			            } else {
-			            	/* columnKeys = data.columnKeys || [];
-			            	var columns = [];
-							for (var column of (data.columns || reportDataColumns)) {
+						if (data.success) {
+							data = data.data || {};
+							adjustType = data.adjustType || importType;
+							columnKeys = data.columnKeys || [];
+							/* for (var column of reportDataColumns) {
 				                if ($.inArray(column.data, columnKeys) != -1) {
 				                    column.render = $.proxy(function(data, type, row) {
 				                        console.log(this);
@@ -124,9 +96,41 @@
 				                    columns.push(column);
 				                }
 				            } */
-							config.columns = data.columns || reportDataColumns;
-                            importAdjustDataTable = new CommonLocalTable(tableId, data.data || [], config);
-			            }
+				            
+				            //config.columns = data.columns || reportDataColumns;
+				            tempTableName = data.tempTableName;
+				            if (importAdjustDataTable) {
+				            	try {
+	    			            	$("#" + tableId).DataTable().destroy();
+	    			            	$("#" + tableId).empty();
+				            	} catch(e) {}
+				            	importAdjustDataTable = null;
+				            }
+				            console.log(tempTableName);
+				            if (tempTableName) {
+				            	config.columns = data.columns || reportDataColumns;
+				            	var url = router(urlNamespace).api(model).previewTempTable(tempTableName);
+				            	//var url = basePath + "/af/industry/leak/previewTempTable.html?tempTableName=" + tempTableName;
+	                            importAdjustDataTable = new CommonTable(tableId, url, null, config);
+				            } else {
+				            	/* columnKeys = data.columnKeys || [];
+				            	var columns = [];
+								for (var column of (data.columns || reportDataColumns)) {
+					                if ($.inArray(column.data, columnKeys) != -1) {
+					                    column.render = $.proxy(function(data, type, row) {
+					                        console.log(this);
+					                        var oldVal = row["old_" + this.data] || 'EMPTY';
+					                        return "<span class='newValue'>" + data + "</span>" + "（<span class='oldValue'>" + oldVal + "</span>）";
+					                    }, column);
+					                    columns.push(column);
+					                }
+					            } */
+								config.columns = data.columns || reportDataColumns;
+	                            importAdjustDataTable = new CommonLocalTable(tableId, data.data || [], config);
+				            }
+						} else {
+							modals.error(data.message);
+						}
 					}, true, null, function() {
 		                layer.close(loaderId);
 		            })

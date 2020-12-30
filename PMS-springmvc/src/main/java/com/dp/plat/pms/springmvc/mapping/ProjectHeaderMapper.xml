@@ -1483,7 +1483,7 @@
             pppfs.expendId expendId, pppfs.expendName column006, pppfs.industryId, pppfs.industryName column007, pppfs.officeCode column001, 
             fd.departmentName officeName, ppm.memberCode serviceManagerCode, ppm.memberName serviceManagerCodeforjson, pph.column008 column008, pph.column010 column010, pph.column011 column011,
             pph.column012 column012, IFNULL(t1.basicDataName, -1) as column012Readonly, pph.column013 column013, ifnull(podfs.compCode, pppfs.corporationCode) as compCode, ifnull(c.id, c1.id) as compId, 
-            ifnull(podfs.salesType, pppfs.projectType) as salesType, pppfs.projectMoney as smsProjectAmount, pppfs.projectCode as smsProjectCode, pppfs.submitTime as smsSubmitTime, pppfs.orderExecNumber as smsOrderExecNumber
+            ifnull(podfs.salesType, pppfs.projectType) as salesType, pppfs.projectMoney as smsProjectAmount, pppfs.afProjectMoney as smsAfProjectAmount, pppfs.projectCode as smsProjectCode, pppfs.submitTime as smsSubmitTime, pppfs.orderExecNumber as smsOrderExecNumber
   			<if test="projectType == 'afxx'">
 <!-- 			    ,pppfs.receiveMen as customerPerson, pppfs.reveiveContactWay as customerTel, pppfs.receiveAddress as customerAddress,
 			    pppfs.lendCause as afxxReason, pppfs.requireInDate,

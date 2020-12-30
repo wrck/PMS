@@ -1,14 +1,13 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import java.util.Map;
-import com.dp.plat.core.entity.BaseEntity;
 import java.util.Date;
+import java.util.Map;
+
+import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class DispatchProject extends BaseEntity {
-
-    private Integer id;
 
     // 外派名称
     private String dispatchName;
@@ -102,6 +101,9 @@ public class DispatchProject extends BaseEntity {
     // SMS项目金额
     private String smsProjectAmount;
 
+    // 安服项目金额
+    private String smsAfProjectAmount;
+
     // 有效开始时间
     @JsonSerialize(using = JsonSerializer.class)
     private Date effectiveFrom;
@@ -119,32 +121,8 @@ public class DispatchProject extends BaseEntity {
     // 结算状态
     private Boolean settled;
 
-    private String createBy;
-
-    @JsonSerialize(using = JsonSerializer.class)
-    private Date createTime;
-
-    private String updateBy;
-
-    @JsonSerialize(using = JsonSerializer.class)
-    private Date updateTime;
-
     // 自定义信息
     private Map<?, ?> customInfo;
-
-    /**
-     * @return id
-     */
-    public Integer getId() {
-        return id;
-    }
-
-    /**
-     * @param id
-     */
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     /**
      * 获取外派名称
@@ -687,6 +665,24 @@ public class DispatchProject extends BaseEntity {
     }
 
     /**
+     * 获取安服项目金额
+     *
+     * @return smsAfProjectAmount - 安服项目金额
+     */
+    public String getSmsAfProjectAmount() {
+        return smsAfProjectAmount;
+    }
+
+    /**
+     * 设置安服项目金额
+     *
+     * @param smsAfProjectAmount 安服项目金额
+     */
+    public void setSmsAfProjectAmount(String smsAfProjectAmount) {
+        this.smsAfProjectAmount = smsAfProjectAmount;
+    }
+
+    /**
      * 获取有效开始时间
      *
      * @return effectiveFrom - 有效开始时间
@@ -774,62 +770,6 @@ public class DispatchProject extends BaseEntity {
      */
     public void setSettled(Boolean settled) {
         this.settled = settled;
-    }
-
-    /**
-     * @return createBy
-     */
-    public String getCreateBy() {
-        return createBy;
-    }
-
-    /**
-     * @param createBy
-     */
-    public void setCreateBy(String createBy) {
-        this.createBy = createBy;
-    }
-
-    /**
-     * @return createTime
-     */
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    /**
-     * @param createTime
-     */
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    /**
-     * @return updateBy
-     */
-    public String getUpdateBy() {
-        return updateBy;
-    }
-
-    /**
-     * @param updateBy
-     */
-    public void setUpdateBy(String updateBy) {
-        this.updateBy = updateBy;
-    }
-
-    /**
-     * @return updateTime
-     */
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    /**
-     * @param updateTime
-     */
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
     }
 
     /**

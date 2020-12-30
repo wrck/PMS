@@ -9,12 +9,20 @@
         select * from v_prj_product_4_pm
     </select>
     
+    <select id="selectAllFacilitator" resultType="com.dp.plat.pms.springmvc.entity.Facilitator">
+        select * from dp_reports.DP_V_VI_4_PMS
+    </select>
+    
     <select id="clearAllAfPrjProperty">
         truncate pm_project_property_af_from_sms
     </select>
     
     <select id="clearAllProjectProduct">
         truncate pm_project_product_af_from_sms
+    </select>
+    
+    <select id="clearAllFacilitator">
+        truncate pm_facilitator
     </select>
     
     <insert id="insertAfPrjProperty" parameterType="java.util.List">
@@ -66,42 +74,48 @@
 	      ssfrId, productCode, productfirstCode, 
 	      productName, productfirstName, productsubCode, 
 	      productSubModel, productSubName, num, 
-	      borrowNum)
+	      borrowNum, price, purchaseDiscount, purchasePrice)
 	    values 
         <foreach collection="list" item="item" index="index" separator="," >  
          (#{item.id,jdbcType=INTEGER}, #{item.projectCode,jdbcType=VARCHAR}, #{item.orderExecNumber,jdbcType=VARCHAR}, #{item.corporationCode,jdbcType=VARCHAR}, 
 	      #{item.ssfrId,jdbcType=INTEGER}, #{item.productCode,jdbcType=VARCHAR}, #{item.productfirstCode,jdbcType=VARCHAR}, 
 	      #{item.productName,jdbcType=VARCHAR}, #{item.productfirstName,jdbcType=VARCHAR}, #{item.productsubCode,jdbcType=VARCHAR}, 
 	      #{item.productSubModel,jdbcType=VARCHAR}, #{item.productSubName,jdbcType=VARCHAR}, #{item.num,jdbcType=INTEGER}, 
-	      #{item.borrowNum,jdbcType=INTEGER})
+	      #{item.borrowNum,jdbcType=INTEGER}, #{item.price,jdbcType=DECIMAL}, #{item.purchaseDiscount,jdbcType=DECIMAL}, #{item.purchasePrice,jdbcType=DECIMAL})
         </foreach>
         ON DUPLICATE KEY UPDATE id = VALUES(id), projectCode = VALUES(projectCode), orderExecNumber = VALUES(orderExecNumber), 
 			corporationCode = VALUES(corporationCode), ssfrId = VALUES(ssfrId), productCode = VALUES(productCode), 
 			productfirstCode = VALUES(productfirstCode), productName = VALUES(productName), productfirstName = VALUES(productfirstName), 
 			productsubCode = VALUES(productsubCode), productSubModel = VALUES(productSubModel), productSubName = VALUES(productSubName), 
-			num = VALUES(num), borrowNum = VALUES(borrowNum) 
+			num = VALUES(num), borrowNum = VALUES(borrowNum), price = VALUES(price), purchaseDiscount = VALUES(purchaseDiscount), purchasePrice = VALUES(purchasePrice) 
     </insert>
     
     <insert id="splitAfProjectByProductCode" parameterType="String">
+   	    truncate pm_project_property_af_from_sms;
     	insert into pm_project_property_af_from_sms (
 		    id, `orderExecNumber`, `projectCode`, `projectName`, `salesManCode`, `salesManName`, 
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 
 		    `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, 
 		    `objId`, `applyType`, `corporationCode`, `customerProjectName`, `finalCustomerName`, 
-		    `agentName`, projectType, projectMoney, submitTime
+		    `agentName`, projectType, projectMoney, afProjectMoney, submitTime
 		) 
 		select distinct
 		    ppfs.id, ppfs.`orderExecNumber`, ppfs.`projectCode`, `projectName`, `salesManCode`, `salesManName`, 
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 
 		    `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, 
 		    ifnull(`objId`, 0) as objId, `applyType`, ppfs.`corporationCode`, `customerProjectName`, `finalCustomerName`, 
-		    `agentName`, "afss" as projectType, projectMoney, submitTime
+		    `agentName`, "afss" as projectType, projectMoney, ROUND(SUM(ppfd.purchasePrice * ppfd.num), 2) as afProjectMoney, submitTime
 		from
 		    `pm_project_property_from_sms` ppfs 
-		    left join `pm_project_product_af_from_sms` ppfd 
+		    inner join `pm_project_product_af_from_sms` ppfd 
 		        on ppfs.`orderExecNumber` = ppfd.`orderExecNumber` 
 		        and ppfs.`projectCode` = ppfd.`projectCode` 
-		where FIND_IN_SET(ppfd.`productfirstCode`, #{_parameter})
+		<where>
+			<if test="_parameter != null and _parameter != ''" >
+				FIND_IN_SET(ppfd.`productfirstCode`, #{_parameter})
+			</if>
+		</where>
+		group by ppfs.`id` ;
     </insert>
     
     <resultMap id="OfstContractHead" type="com.dp.plat.pms.springmvc.entity.OfstContractHead">

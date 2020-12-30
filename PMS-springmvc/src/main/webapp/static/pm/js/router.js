@@ -685,6 +685,8 @@ pm.dailyReport = function() {
 	return $.extend(true, {}, rt, {
 		api:((namespace) => {
 			return {
+				mailSelect: (mailType, search) => namespace + "/mail/" + mailType + "/select.json" + (search ? "?" + search : "").replace("??", "?"),
+				mailReport: (mailType, search) => namespace + "/mail/" + mailType + "/report.json" + (search ? "?" + search : "").replace("??", "?"),
 			};
 		})(namespace),
 		html: ((namespace) => {
@@ -692,10 +694,56 @@ pm.dailyReport = function() {
 				exportWeekReport: (params) => {
 					return namespace + "/export/daily/report.html" + (params ? "?" + $.param(params) : "");
 				},
+				mailSelect: (mailType, isModals) => namespace + (isModals ? "/modals" : "") + "/mail/" + mailType + "/select.html",
 			}
 		})(namespace),
 		callback: ((namespace) => {
 			return {
+				list: {
+					vueCallback: function(dataTable, $container) {
+						// 添加复制按钮
+						var data = this._data;
+						var $addBtn = $("[data-btn-type='add']");
+						if($addBtn.length) {
+							var $copyBtn = $addBtn.clone();
+							$copyBtn.data("data-btn-type", "copy").attr("data-btn-type", "copy").text("复制");
+							$addBtn.after($copyBtn);
+							
+							$copyBtn.on('click', function() {
+				                var action = $(this).attr('data-btn-type');
+				                var rowId= commonTable.getSelectedRowId();
+				                switch (action) {
+				                case 'copy':
+				                	if(!rowId){
+				                        modals.info('请选择要复制的行');
+				                        return false;
+				                    }
+				                	window.location.href = router(urlNamespace).html(model).create($.param({id: rowId}));
+				                }
+							});
+						}
+						
+						if($addBtn.length) {
+							var $mailBtnGroup = $('<div class="btn-group operate-btn-group">  <button type="button" data-btn-type="mailSelect" data-mail-type="daily" class="btn btn-primary">发送日报</button></div>');
+							$addBtn.parents(".operate-btn-group:first").before($mailBtnGroup);
+							
+							var $mailBtn = $mailBtnGroup.find("[data-btn-type='mailSelect']");
+							$mailBtn.on('click', function() {
+				                var action = $(this).attr('data-btn-type');
+				                var mailType = $(this).attr('data-mail-type');
+				                switch (action) {
+				                case 'mailSelect':
+				                	modals.openWin({ 
+				                		winId: model + "Win",
+				                		title: "请选择需要在邮件中体现的日报记录",
+				                		width: "80vw",
+										url: router(urlNamespace).html(model).mailSelect(mailType, true)
+									});
+				                }
+							});
+						}
+					}
+				},
 				detail: {
 					vueCallback: function(data, $container) {
 						console.log("vueCallback");
@@ -867,7 +915,7 @@ pm.dailyReport = function() {
 				    			}, 2);
 				    		});
 				    		$("#projectId", $container).siblings(".select2-container").one("click", function(e) {
-				    			$("#projectId", $container).on("select2:select", function(e){
+				    			var projectChangeFunc = function(e){
 				    				try{
 				    					var source = $(this).select2("data");
 				    					if (source.length > 0) {
@@ -893,7 +941,10 @@ pm.dailyReport = function() {
 						    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || "").trigger("change");
 						    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || "").trigger("change");
 					    			} catch(e){}
-				    			});
+				    			}
+				    			
+				    			//$("#projectId", $container).on("change", projectChangeFunc);
+				    			$("#projectId", $container).on("select2:select", projectChangeFunc);
 				    		});
 			    		}, null, true);
 			    		
@@ -941,9 +992,27 @@ pm.dailyReport = function() {
 			    				$(".box-footer>.pull-left", $container).append($btn);
 			    				var vm = this;
 			    				$("[data-btn-type='exportWeekDailyReport']", $container).click(function() {
-			    					var processTime = $("#processTime", $container).val();
-			    					var createBy = targetValue.createBy;
-			    					router.postDownload(pm.dailyReport.html.exportWeekReport({createBy, processTime}));
+			    					var $btn = $(this);
+			    					$container.data("submitCallback", function() {
+			    						var processTime = $("#processTime", $container).val();
+				    					var createBy = targetValue.createBy;
+				    					$btn.button("loading");
+				    					router.postDownload(pm.dailyReport.html.exportWeekReport({createBy, processTime}));
+				    					setTimeout(function() {
+				                       	 	$btn.button("reset");
+				                        }, 2000);
+			    					});
+			    					var formSubmit = $container.data("formSubmit");
+			    					var $submitButton = $container.find("[data-btn-type='save']");
+			    					if (typeof formSubmit == "function") {
+			    						var $bootstrapValidator = $container.data('bootstrapValidator');
+			    						$submitButton = $bootstrapValidator.$submitButton || $submitButton;
+			    						$bootstrapValidator.$submitButton = null;
+			    						formSubmit.call(vm, $bootstrapValidator, $container, $submitButton, true);
+			    					} else {
+			    						$submitButton.click();
+//			    						$container.submit();
+			    					}
 			    				});
 			    			}
 			    		}
@@ -980,6 +1049,63 @@ pm.dailyReport = function() {
 			}
 		}
 	});
+}();
+
+/**
+ * 服务商管理
+ */
+$.namespace("pm.facilitator");
+pm.facilitator = function() {
+	var namespace =  ctx + "/pm/facilitator";
+	var rt = pm.common(namespace);
+	return $.extend(true, {}, rt, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			}
+		})(namespace),
+		callback: ((namespace) => {
+			return {
+				list: {
+					vueCallback: function(dataTable, $container) {
+						// 添加导出按钮
+						dataTable.exporting = true;
+						dataTable.exportData = {
+		                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+		                	fileName: "服务商信息",
+		                	type: ["excel"]
+		                };
+						// 添加复制按钮
+						var data = this._data;
+						var $addBtn = $("[data-btn-type='add']");
+						if($addBtn.length) {
+							var $importBtn = $addBtn.clone();
+							$importBtn.data("data-btn-type", "import").attr("data-btn-type", "import").text("导入");
+							$addBtn.before($importBtn);
+							
+							$importBtn.on('click', function() {
+				                var action = $(this).attr('data-btn-type');
+				                var rowId= commonTable.getSelectedRowId();
+				                switch (action) {
+				                case 'import':
+				               	 	modals.openWin({
+				                         winId: winId,
+				                         title:'导入服务商信息',
+				                         width: '75vw',
+				                         url: router(urlNamespace).html(model).import(null, true)
+				                    });
+				                    break;
+				                }
+							});
+						}
+					}
+				},
+			}
+		})(namespace),
+	})
 }();
 
 /**

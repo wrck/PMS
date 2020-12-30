@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
+import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
@@ -76,6 +77,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping("/list")
+	@SystemControllerLog(description = "查看转包记录", ignoreParams = {"request", "response"})
 	public String list(PageParam<Object> pageParam, DispatchVO dispatch, Model model) {
 		if (!checkPermission(dispatch, model, getDataName() + ":list")) {
 			model.addAttribute("data", Collections.emptyList());
@@ -124,6 +126,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
+	@SystemControllerLog(description = "查看【$targetValue.dispatchName$】转包详情")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(id);
@@ -157,6 +160,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
+	@SystemControllerLog(description = "打开【$targetValue.dispatchName$】转包详情页面")
 	public String detail(DispatchVO dispatch, Model model) {
 		if (!checkPermission(dispatch, model, getDataName() + ":detail")) {
 			model.addAttribute("status", false);
@@ -165,26 +169,30 @@ public class DispatchProjectController
 		}
 		if (HttpContext.isJSON()) {
 			String projectIds = dispatch.getProjectIds();
-			String[] projectIdArr = StringUtils.split(StringUtils.trimToEmpty(projectIds), ",");
-			for (String projectId : projectIdArr) {
-				projectId = StringUtils.trimToNull(projectId);
+			ProjectVO project = new ProjectVO();
+//			String[] projectIdArr = StringUtils.split(StringUtils.trimToEmpty(projectIds), ",");
+//			for (String projectId : projectIdArr) {
+				String projectId = StringUtils.trimToNull(projectIds);
 				if (projectId != null) {
 					ProjectHeader temp = projectHeaderService.selectByPrimaryKey(Integer.valueOf(projectId));
-					ProjectVO project = new ProjectVO();
-					BeanUtils.copyProperties(temp, project);
-					project.setCustomInfo(temp.getCustomInfo());
-					dispatch = new DispatchVO();
-					dispatch.setProjectIds(project.getProjectId().toString());
-					dispatch.setOfficeCode(project.getColumn001());
-					dispatch.setDispatchName(project.getProjectName());
-					dispatch.setSmsProjectAmount(project.getSmsProjectAmount());
-					dispatch.setSmsProjectCode(project.getSmsProjectCode());
-					dispatch.setSmsSubmitTime(project.getSmsSubmitTime());
-					dispatch.setContractNos(project.getContractNo());
-					dispatch.setCustomInfoByKey("smsOrderExecNumber", project.getSmsOrderExecNumber());
-					model.addAttribute("targetValue", dispatch);
+					if (temp != null) {
+						BeanUtils.copyProperties(temp, project);
+						project.setCustomInfo(temp.getCustomInfo());
+					}
 				}
-			}
+				dispatch = new DispatchVO();
+				dispatch.setProjectIds(project.getProjectId() != null ? project.getProjectId().toString() : null);
+//					dispatch.setOfficeCode(project.getColumn001());
+				dispatch.setDispatchName(project.getProjectName());
+//					dispatch.setSmsProjectAmount(project.getSmsProjectAmount());
+//					dispatch.setSmsAfProjectAmount(project.getSmsAfProjectAmount());
+//					dispatch.setSmsProjectCode(project.getSmsProjectCode());
+//					dispatch.setSmsSubmitTime(project.getSmsSubmitTime());
+//					dispatch.setContractNos(project.getContractNo());
+				dispatch.setCustomInfoByKey("project", project);
+				dispatch.setCustomInfoByKey("smsOrderExecNumber", project.getSmsOrderExecNumber());
+				model.addAttribute("targetValue", dispatch);
+//			}
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 		} else {
@@ -195,6 +203,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
+	@SystemControllerLog(description = "新增【$dispatchVO.dispatchName$】转包记录")
 	public String create(DispatchVO dispatch, Model model) {
 		if (!checkPermission(dispatch, model, getDataName() + ":add")) {
 			model.addAttribute("status", false);
@@ -221,6 +230,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	@SystemControllerLog(description = "更新【$dispatchVO.dispatchName$】转包记录")
 	public String update(@PathVariable("id") Integer id, DispatchVO dispatch, Model model) {
 		return super.update(id, dispatch, model);
 //		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
@@ -245,6 +255,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	@SystemControllerLog(description = "删除【$targetValue.dispatchName$】转包记录")
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		DispatchProject dispatchProject = service.selectByPrimaryKey(id);
 		DispatchVO vo = new DispatchVO();
@@ -278,11 +289,13 @@ public class DispatchProjectController
 			model.addAttribute("errorId", errorId);
 			message = e.getMessage();
 		}
+		model.addAttribute("targetValue", vo);
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}
 
 	@RequestMapping(value = "submit", method = RequestMethod.POST)
+	@SystemControllerLog(description = "删除【$targetValue.dispatchName$】转包记录")
 	public void dispatchSubmit(DispatchVO dispatch, Model model) {
 		Boolean status = true;
 		String message = null;
@@ -371,7 +384,9 @@ public class DispatchProjectController
 	@RequestMapping("/generateDispatchSeq")
 	public void generateDispatchSeq(String facilitatorCode, Model model) {
 		String dispatchSeq = dispatchProjectService.generateDispatchSeq(facilitatorCode);
+		String dispatchNo = dispatchProjectService.generateDispatchNo(new Date(), dispatchSeq);
 		model.addAttribute("dispatchSeq", dispatchSeq);
+		model.addAttribute("dispatchNo", dispatchNo);
 	}
 	
 	/**
@@ -388,6 +403,13 @@ public class DispatchProjectController
 		pageParam.setModel(dispatch);
 		pageParam.setTotal(dispatchProjectService.countBySelectivePageable(pageParam));
 		List<DispatchVO> list = dispatchProjectService.selectDispatchVOWithAmountBySelectivePageable(pageParam);
+//		for (DispatchVO dispatchVO : list) {
+//			ProjectVO project = projectHeaderService.selectVOByProjectId(Integer.valueOf(dispatch.getProjectIds()));
+//			if (null != project) {
+//				dispatchVO.setCustomInfoByKey("projectProgress", (String) project.getCustomInfoByKey("projectProgress"));
+//				dispatchVO.setCustomInfoByKey("projectStateName", project.getProjectStateName());
+//			}
+//		}
 		model.addAttribute("data", list);
 	}
 	

@@ -12,7 +12,9 @@ import java.util.concurrent.Executors;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -48,14 +50,18 @@ public class SMSDataJob {
 	private IPmSynchronizeService pmSynchronizeService;
 
 	public void execute() {
+		ApplicationContext ctx = SpringContext.getApplicationContext();
+		if (ctx == null) {
+			ctx = new ClassPathXmlApplicationContext("spring.xml");
+		}
 		if (pmSynchronizeService == null) {
-			pmSynchronizeService = SpringContext.getBean("pmSynchronizeService", IPmSynchronizeService.class);
+			pmSynchronizeService = ctx.getBean("pmSynchronizeService", IPmSynchronizeService.class);
 		}
 		System.out.println("执行全量更新定时程序开始：" + DateUtil.getTodayDateTime());
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
-		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class, OfstContractHeadSAP.class };
+		Class<?>[] clazzArrs = new Class[] {ProjectProduct.class , AfPrjProperty.class, OfstContractHeadSAP.class };
 		String[] dataSourceFromKeys = new String[] { "SMS", "SMS", "SMS" };
 		String[] dataSourceToKeys = new String[] { "PMS", "PMS", "PMS" };
 		try {
@@ -64,7 +70,7 @@ public class SMSDataJob {
 			try {
 				threadPoolSize = Integer
 						.valueOf(SystemConfig.systemVariables.getOrDefault("sys.sync.threadPool.size", "3"));
-				threadPoolSize = threadPoolSize > clazzArrs.length ? clazzArrs.length : threadPoolSize;
+				threadPoolSize = Math.max(threadPoolSize > clazzArrs.length ? clazzArrs.length : threadPoolSize, 1);
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 			}
@@ -118,7 +124,7 @@ public class SMSDataJob {
 				HashSet<String> hashSet = new HashSet<>();
 				hashSet.addAll(Arrays.asList(dataSourceFromKeys));
 				for (String key : hashSet) {
-					Object dataSource = SpringContext.getBean("dataSource" + key);
+					Object dataSource = ctx.getBean("dataSource" + key);
 					if (dataSource != null) {
 						if (dataSource instanceof DruidDataSource) {
 							((DruidDataSource) dataSource).restart();
@@ -218,4 +224,8 @@ public class SMSDataJob {
 		System.out.println("耗时" + (b - a) / 1000 + " s");
 	}
 
+	
+	public static void main(String[] args) {
+		new SMSDataJob().execute();
+	}
 }

@@ -871,6 +871,26 @@
 			h.disabled = false AND
 			<if test="model != null">
 				<if test="model.dispatched != null"> h.`dispatched` = #{model.dispatched} AND </if>
+				<if test="model.dispatch != null">
+					<if test="model.dispatch.dispatchNo != null and '' != model.dispatch.dispatchNo">
+						h.dispatchNo like concat("%", #{model.dispatch.dispatchNo, jdbcType=VARCHAR}, "%") AND
+					</if>
+					<if test="model.dispatch.dispatchSeq != null and '' != model.dispatch.dispatchSeq">
+						h.dispatchSeq like concat("%", #{model.dispatch.dispatchSeq, jdbcType=VARCHAR}, "%") AND
+					</if>
+					<if test="model.dispatch.dispatchName != null and '' != model.dispatch.dispatchName">
+						h.dispatchName like concat("%", #{model.dispatch.dispatchName, jdbcType=VARCHAR}, "%") AND
+					</if>
+					<if test="model.dispatch.smsProjectCode != null and '' != model.dispatch.smsProjectCode">
+						h.smsProjectCode like concat("%", #{model.dispatch.smsProjectCode, jdbcType=VARCHAR}, "%") AND
+					</if>
+					<if test="model.dispatch.contractNos != null and '' != model.dispatch.contractNos">
+						h.contractNos like concat("%", #{model.dispatch.contractNos, jdbcType=VARCHAR}, "%") AND
+					</if>
+					<if test="model.dispatch.type != null and '' != model.dispatch.type">
+						h.type like concat("%", #{model.dispatch.type, jdbcType=VARCHAR}, "%") AND
+					</if>
+				</if>
 			</if>
 			<include refid="sql_model_where"></include>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -886,7 +906,11 @@
 					s.remark like CONCAT("%", #{fuzzy}, "%") or
 					s.customInfo like CONCAT("%", #{fuzzy}, "%") or
 					s.createBy like CONCAT("%", #{fuzzy}, "%") or
-					s.updateBy like CONCAT("%", #{fuzzy}, "%")
+					s.updateBy like CONCAT("%", #{fuzzy}, "%") or
+					h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
+					h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+					h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
+					h.contractNos like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
@@ -919,6 +943,26 @@
 				h.disabled = false AND
 				<if test="model != null">
 					<if test="model.dispatched != null"> h.`dispatched` = #{model.dispatched} AND </if>
+					<if test="model.dispatch != null">
+						<if test="model.dispatch.dispatchNo != null and '' != model.dispatch.dispatchNo">
+							h.dispatchNo like concat("%", #{model.dispatch.dispatchNo, jdbcType=VARCHAR}, "%") AND
+						</if>
+						<if test="model.dispatch.dispatchSeq != null and '' != model.dispatch.dispatchSeq">
+							h.dispatchSeq like concat("%", #{model.dispatch.dispatchSeq, jdbcType=VARCHAR}, "%") AND
+						</if>
+						<if test="model.dispatch.dispatchName != null and '' != model.dispatch.dispatchName">
+							h.dispatchName like concat("%", #{model.dispatch.dispatchName, jdbcType=VARCHAR}, "%") AND
+						</if>
+						<if test="model.dispatch.smsProjectCode != null and '' != model.dispatch.smsProjectCode">
+							h.smsProjectCode like concat("%", #{model.dispatch.smsProjectCode, jdbcType=VARCHAR}, "%") AND
+						</if>
+						<if test="model.dispatch.contractNos != null and '' != model.dispatch.contractNos">
+							h.contractNos like concat("%", #{model.dispatch.contractNos, jdbcType=VARCHAR}, "%") AND
+						</if>
+						<if test="model.dispatch.type != null and '' != model.dispatch.type">
+							h.type like concat("%", #{model.dispatch.type, jdbcType=VARCHAR}, "%") AND
+						</if>
+					</if>
 				</if>
 				<include refid="sql_model_where"></include>
 				<if test="fuzzySearch == true and fuzzy != ''">
@@ -968,6 +1012,9 @@
 	        ON spps.`workNo` = SUBSTR(u.`user_name`, 2) 
 	    LEFT JOIN t_user_info ui
 	        ON u.`user_id` = ui.`user_id`
+	        <if test="orgId != null">
+				and ui.compID = #{orgId, jdbcType=INTEGER}
+			</if>
 	WHERE sph.id IS NOT NULL 
 	    AND 0 = IFNULL(spp.`sseId`, 0)
 	ORDER BY spps.`confirmTime`, sph.id

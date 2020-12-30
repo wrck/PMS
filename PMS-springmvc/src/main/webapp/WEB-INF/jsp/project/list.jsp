@@ -47,7 +47,7 @@
             <div class="col-md-12">
           		<div class="tab-content" style="border:1px solid #ddd;background-color: white;">
                     <ul class="nav nav-tabs">
-                        <li><a href="#tab-project-all" data-toggle="tab" id="nav-tab-all" aria-expanded="false">所有项目</a></li>
+                        <li><a href="#tab-project-all" data-toggle="tab" id="nav-tab-all" aria-expanded="false">已创建项目</a></li>
                         <li><a href="#tab-project-create" data-toggle="tab" id="nav-tab-create" aria-expanded="true">待指派项目</a></li>
                     </ul>
                     <div class="tab-pane" id="tab-project-all">
@@ -221,11 +221,11 @@
                     }
                     modals.confirm("是否要删除该行数据？",function(){
                         ajaxPost(basePath+"/perf/project/"+rowId+".json?_method=DELETE",null,function(data,status){
-                            if(status == "success"){
+                        	if(data.status){
                                 modals.info("删除成功！");
-                                projectTable.reloadData();
-                            }else{
-                                modals.info(data);
+                                commonTable.reloadData();
+                            }else {
+                                modals.info(data.message);
                             }
                         });
                     })

@@ -98,7 +98,7 @@
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,
 							data: {
-								targetValue: this.data.extData.projectVO,
+								targetValue: this.data.extData.targetValue,
 	   							fieldList: this.data.columns || [],
 	   						
 	   							// 权限控制参数
@@ -143,7 +143,7 @@
 		        	if (router(urlNamespace).callback(model).list) {
 		        		var vueCallback = (router(urlNamespace).callback(model).list || {}).vueCallback;
 		        		if (typeof vueCallback == 'function') {
-		        			vueCallback.call(this);
+		        			vueCallback.call(vm, this, $("#" + tableId));
 		        		}
 		        	}
                 },
@@ -151,7 +151,8 @@
 
             //button event
             var preTargger = "";
-            $(document).on('click', 'button[data-btn-type]', function() {
+            $(document).off('click', "#" + tableId  + '_wrapper .operate-btn-group button[data-btn-type]');
+            $(document).on('click', "#" + tableId  + '_wrapper .operate-btn-group button[data-btn-type]', function() {
                 var action = $(this).attr('data-btn-type');
                 var rowId= commonTable.getSelectedRowId();
                 switch (action) {
@@ -198,7 +199,9 @@
                 }
             });
 
+            $(document).off("dblclick", "#" + tableId  + " tbody tr");
             $(document).on("dblclick", "#" + tableId  + " tbody tr", function () {
+            	console.log("#" + tableId  + " tbody tr:dblclick");
                 var rowId = commonTable.getSelectedRowId();
                 if(rowId == null){
                     modals.info('请点击需要查看的行');

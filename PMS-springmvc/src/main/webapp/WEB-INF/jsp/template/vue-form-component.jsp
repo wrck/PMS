@@ -12,7 +12,7 @@
 			<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.name}}</label>
 			<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" :rows="(field.extData || {}).rows || 3" style="resize:none;" draggable="false"
-					:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+					:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required" data-flag="autosize"
 					></textarea>
 		</div>
 	</template>

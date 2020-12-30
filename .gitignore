@@ -1,4 +1,5 @@
 /PMS-struts/${basePath}
+/PMS-springmvc/${basePath}
 /PMS-struts/target
 /PMS-springmvc/target
 /core/target

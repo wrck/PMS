@@ -697,6 +697,11 @@
 		<if test="model.officeCodes != null">
 			FIND_IN_SET(dr.`officeCode`, #{model.officeCodes, jdbcType=VARCHAR}) AND 
 		</if>
+		<if test="model.ids != null">
+			<foreach collection="model.ids" item="item" open="dr.`id` in (" close=") AND" separator=",">
+				 #{item}
+			</foreach>
+		</if>
 	</if>
   </sql>
   <sql id="sql_fuzzy_search">
@@ -788,6 +793,9 @@
 	        ) 
 	        and find_in_set(dr.projectType, concat(IFNULL(ui.custom4, ""), ",30,40")) 
     ]]>
+    	<if test="model != null and model.orgId != null">
+			and ui.compID = #{model.orgId, jdbcType=INTEGER}
+		</if>
         <if test="model.userIdPower != null and '' != model.userIdPower">
 			AND ui.id = #{model.userIdPower}
 		</if>
@@ -848,6 +856,9 @@
 	        ) 
 	        and find_in_set(dr.projectType, concat(IFNULL(ui.custom4, ""), ",30,40")) 
     ]]>
+    	<if test="model != null and model.orgId != null">
+			and ui.compID = #{model.orgId, jdbcType=INTEGER}
+		</if>
         <if test="model.userIdPower != null and '' != model.userIdPower">
 			AND ui.id = #{model.userIdPower}
 		</if>
@@ -915,6 +926,9 @@
 		        and find_in_set(
 		            dr.projectType, concat(IFNULL(ui.custom4, ""), ",30,40")
 		        ) 
+		        <if test="model != null and model.orgId != null">
+					and ui.compID = #{model.orgId, jdbcType=INTEGER}
+				</if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 		    (

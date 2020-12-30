@@ -164,7 +164,7 @@
 						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
-								isModals,
+								isModals: isModals,
 								isCreate: id == 0,
 								isShow: false,
 								dataType: "form",
@@ -248,7 +248,8 @@
 		                	var confirmText = btnType == "save" ? "保存" : $(submitButton).text();
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
-			                		var index3 = layer.load(1);
+		                			formSubmit.call(vm, validator, form2, submitButton);
+			                		/* var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
 			                		var url = btnType == 'submit' ? router(urlNamespace).api(model).submit() : (id == 0 ? router(urlNamespace).api(model).create() : router(urlNamespace).api(model).update(id));
 			                		ajaxPost(url, formData, function(data,status){
@@ -261,7 +262,7 @@
 			                		},null,null,function(){
 			    						layer.close(index3);
 			    						$("[type='submit']", form2).removeAttr("disabled");
-			    					})
+			    					}) */
 		                		}, 
 		                		cancel_call: function() {
 		                			$("[type='submit']", form2).removeAttr("disabled");
@@ -270,6 +271,7 @@
 		                }, 
 		    			fields : varFields
 		    		});
+		    		$container.data("formSubmit", formSubmit);
 		    		
                 	// 初始化完成回调函数
 		        	if (router(urlNamespace).callback(model).detail) {
@@ -281,7 +283,43 @@
                 	
 		        	vm.isShow = true;
     			 }
-    		})
+    		});
+    		
+    		function formSubmit(validator, form2, submitButton, hideInfo) {
+    			var isValid = validator.isValid() || validator.validate().isValid();
+    			/* needValid = needValid == true ? true : false;
+    			var isValid = !needValid; 
+    			if (needValid) {
+	    			var $bootstrapValidator = $(form2).data('bootstrapValidator');
+					isValid = $bootstrapValidator.validate().isValid();
+    			}*/
+				if (isValid) {
+	    			var index3 = layer.load(1);
+	    			var baseForm = $(form2).data("baseForm");
+	    			var formData = null;
+	    			if (baseForm) {
+	    				formData = baseForm.getFormSimpleData();
+	    			} else {
+	    				formData = $(form2).serializeArray();
+	    			}
+	    			var btnType = $(submitButton, form2).data("btn-type");
+                	var confirmText = btnType == "save" ? "保存" : $(submitButton, form2).text();
+	        		var url = btnType == 'submit' ? router(urlNamespace).api(model).submit() : (id == 0 ? router(urlNamespace).api(model).create() : router(urlNamespace).api(model).update(id));
+	        		ajaxPost(url, formData, function(data,status){
+	        			if(data.status){
+	        				if (!hideInfo) {
+								modals.correct(confirmText + "成功");
+	        				}
+							handleResult.call(form2, data);
+						} else{
+							modals.error('操作失败！<br>' + (data.message || ""));
+						}
+	        		},null,null,function(){
+						layer.close(index3);
+						$("[type='submit']", form2).removeAttr("disabled");
+					})
+				}
+    		}
     		
     		function handleData() {
     			
@@ -305,7 +343,7 @@
 			        		var cbFunc = (router(urlNamespace).callback(model).detail || {}).modalCreateCallback;
 			        		if (typeof cbFunc == 'function') {
 			        			var url = pm.router.html(model).detail(id, true);
-			        			cbFunc.call(this, {winId: currentWinId, url});
+			        			cbFunc.call(this, {winId: currentWinId, url: url});
 			        		}
 			        	}
         				
@@ -344,7 +382,7 @@
 			        		if ($(_this).data("submitCallback")) {
 			        			var submitCallback = $(_this).data("submitCallback");
 			        			$(_this).data("submitCallback", null);
-			        			submitCallback.call();
+			        			submitCallback.call(_this);
 			        		}
 	    				}
 	        		});

@@ -36,6 +36,8 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
+import com.dp.plat.pms.springmvc.job.DispatchSettlementSEEPaymentJob;
+import com.dp.plat.pms.springmvc.job.SMSDataJob;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
@@ -438,6 +440,12 @@ public class ProjectController
 			model.addAttribute("projectState", vo.getProjectState());
 			model.addAttribute("projectStateName", vo.getProjectStateName());
 		}
+	}
+	
+	@RequestMapping("/syncSMSData")
+	public void syncSMSData(Model model) {
+		SMSDataJob syncSMSData = new SMSDataJob();
+		syncSMSData.execute();
 	}
 
 	// @GetMapping(value = "/{projectId}/asset")

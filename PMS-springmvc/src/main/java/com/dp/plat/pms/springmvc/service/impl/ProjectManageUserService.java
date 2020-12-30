@@ -1,23 +1,74 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
+import java.util.List;
+
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.impl.persistence.entity.UserEntity;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dp.plat.core.dao.UserInfoMapper;
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.pojo.UserInfo;
-import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.service.IUserInfoService;
+import com.dp.plat.core.service.impl.UserService;
+import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.UserDetail;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
+import com.dp.plat.pms.springmvc.dao.ProjectManageUserMapper;
 import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
 
 @Service("projectManageUserService")
-public class ProjectManageUserService extends AbstractBaseService<UserInfoMapper, UserInfo>
-		implements IProjectManageUserService {
+public class ProjectManageUserService extends UserService implements IProjectManageUserService {
+	
+	@Autowired
+	private ProjectManageUserMapper projectManageUserMapper;
+	
+	@Autowired
+	private IUserInfoService userInfoService;
 
 	@Autowired
 	private IdentityService identityService;
+	
+	@Override
+	public long countBySelectivePageable(PageParam<UserDetail> pageParam) {
+		Principal currentPrincipal = UserContext.getCurrentPrincipal();
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
+			return 0;
+		}
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN) && UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+			if (pageParam != null && pageParam.getModel() != null) {
+				UserDetail model = pageParam.getModel();
+				model.setRoleCodes(StringUtils.join(currentPrincipal.getRoles(), ","));
+				model.setCustom4(currentPrincipal.getUserInfo().getCustom4());
+				model.setCustom5(currentPrincipal.getUserInfo().getCustom5());
+			}
+		}
+		return projectManageUserMapper.countBySelectivePageable(pageParam);
+	}
 
+	@Override
+	public long countBySelective(UserDetail userDetail) {
+		return projectManageUserMapper.countBySelective(userDetail);
+	}
+
+	@Override
+	public List<UserDetail> selectBySelectivePageable(PageParam<UserDetail> pageParam) {
+		return projectManageUserMapper.selectBySelectivePageable(pageParam);
+	}
+
+	@Override
+	public List<UserDetail> selectBySelective(UserDetail userDetail) {
+		return projectManageUserMapper.selectBySelective(userDetail);
+	}
+	
+	@Override
+	public List<UserInfo> selectBySelective(UserInfo userInfo) {
+		return userInfoService.selectBySelective(userInfo);
+	}
+	
 	@Override
 	@Transactional
 	public void insertOrUpdateActivitiUser(UserEntity userEntity) {
@@ -87,4 +138,5 @@ public class ProjectManageUserService extends AbstractBaseService<UserInfoMapper
 				.singleResult();
 		
 	}
+
 }

@@ -167,7 +167,7 @@
 						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
 							data: $.extend({}, data, {
-								isModals,
+								isModals: isModals,
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
@@ -178,7 +178,7 @@
 	   							fieldList: data.fieldList || [],
 	   							tabList: data.tabList || [],
 	   							targetName: data.targetName || model,
-	    						targetValue: data.targetValue || {},
+	    						targetValue: data.targetValue || {customInfo: {}},
 	    						
 	    						// 权限控制参数
 	    						model: data.model || model,
@@ -192,7 +192,7 @@
 					varFields = vm.$refs["formInputs"].fieldValidators;
 					
 					form = $("#" + formId).form();
-					//form.initFormData(data.targetValue);
+					form.initFormData(data.targetValue);
 					$container = $("#" + formId);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
@@ -202,20 +202,21 @@
 		                	var confirmText = btnType == "save" ? "保存" : "派单";
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
-			                		var index3 = layer.load(1);
+		                			formSubmit.call(vm, validator, form2, submitButton);
+			                		/* var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
-			                		var url = btnType == 'submit' ? pm.router.api(model).submit() : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
+			                		var url = btnType == 'submit' ? pm.router.api(model).submit(id) : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
 			                		ajaxPost(url, formData,function(data,status){
 			                			if(data.status){
 			        						modals.correct(confirmText + "成功");
-			        						handleResult(data);
+			        						handleResult.call(form2, data);
 			        					} else{
 			        						modals.error('操作失败！<br>' + (data.message || ""));
 			        					}
 			                		},null,null,function(){
 			    						layer.close(index3);
 			    						$("[type='submit']", form2).removeAttr("disabled");
-			    					})
+			    					}) */
 		                		}, 
 		                		cancel_call: function() {
 		                			$("[type='submit']", form2).removeAttr("disabled");
@@ -224,14 +225,16 @@
 		                }, 
 		    			fields : varFields
 		    		});
+		    		$container.data("formSubmit", formSubmit);
 		    		
 		    		// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
 		    		var selectedId = (data.targetValue || {}).projectIds;
 		    		var selectedText = (data.targetValue || {}).dispatchName;
+		    		var project = ((data.targetValue || {}).customInfo || {}).project || {};
 		    		$("#projectIds", $container).select2({
 		    			allowClear: true,
 		    			dropdownAutoWidth: true,
-		    			data: selectedId ? [{id: selectedId, text: selectedText}] : [],// 设置初始值
+		    			data: selectedId ? [$.extend(true, {}, project, {id: selectedId, text: selectedText})] : [],// 设置初始值
 		    			ajax: {
 		    			    url: basePath + "/pm/project/list.json",
 		    			    dataType: 'json',
@@ -281,11 +284,27 @@
 		    					} else {
 		    						source = {};
 		    					}
-		    					$("#projectName", $container).val(source.projectName);
+		    					var targetValue = vm._data.targetValue || {};
+		    					var customInfo = targetValue.customInfo || {};
+		    					targetValue.projectName = source.projectName;
+		    					targetValue.dispatchName = source.projectName;
+		    					targetValue.smsProjectCode = source.smsProjectCode || (source.customInfo || {}).smsProjectCode;
+		    					targetValue.smsSubmitTime = source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime;
+		    					targetValue.smsProjectAmount = source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount;
+		    					targetValue.smsAfProjectAmount = source.smsAfProjectAmount || (source.customInfo || {}).smsAfProjectAmount;
+		    					
+		    					targetValue.customInfo = customInfo;
+				    			targetValue.customInfo.project = source;
+				    			targetValue.customInfo.projectIds = source.projectId;
+				    			targetValue.customInfo.project.projectId = source.projectId;
+				    			vm._data.targetValue = targetValue;
+				    			
+		    					/* $("#projectName", $container).val(source.projectName);
 		    					$("#dispatchName", $container).val(source.projectName);
 			    				$("#smsProjectCode", $container).val(source.smsProjectCode || (source.customInfo || {}).smsProjectCode);
 				    			$("#smsSubmitTime", $container).val(source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime);
 				    			$("#smsProjectAmount", $container).val(source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount);
+				    			$("#smsAfProjectAmount", $container).val(source.smsAfProjectAmount || (source.customInfo || {}).smsAfProjectAmount); */
 			    			} catch(e){}
 		    			});
 		    		});
@@ -324,13 +343,25 @@
                 	}
                 	break;
                	case 'exportDispatchInfo': 
-               		var url = router(urlNamespace).html(model).exportDispatchInfo(id);
-               		var $btn = $(this);
-                    $btn.button("loading");
-                    router.postDownload(url);
-                    setTimeout(function() {
-                   	 	$btn.button("reset");
-                    }, 2000);
+                   	var $btn = $(this);
+               		$container.data("submitCallback", function() {
+               			var url = router(urlNamespace).html(model).exportDispatchInfo(id);
+                        $btn.button("loading");
+                        router.postDownload(url);
+                        setTimeout(function() {
+                       	 	$btn.button("reset");
+                        }, 2000);
+					});
+               		var $submitButton = $container.find("[data-btn-type='save']");
+					if (typeof formSubmit == "function") {
+						var $bootstrapValidator = $container.data('bootstrapValidator');
+	               		$submitButton = $bootstrapValidator.$submitButton || $submitButton;
+						$bootstrapValidator.$submitButton = null;
+						formSubmit.call(vm, $bootstrapValidator, $container, $submitButton, true);
+					} else {
+						$submitButton.click();
+//						$container.submit();
+					}
                	}
     		});
     		
@@ -345,6 +376,8 @@
 	    			$("#dispatchSeq", $container).attr("disabled", true);
 	    			if (dispatchType == 'frameworkAgreement') {
 		    			$("#dispatchNo", $container).attr("disabled", true);
+	    			} else {
+	    				$("#dispatchNo", $container).attr("disabled", false);
 	    			}
 	    		}
 	    		
@@ -353,11 +386,48 @@
 	    		}
     		}
     		
+    		function formSubmit(validator, form2, submitButton, hideInfo) {
+    			var isValid = validator.isValid() || validator.validate().isValid();
+    			/* needValid = needValid == true ? true : false;
+    			var isValid = !needValid; 
+    			if (needValid) {
+	    			var $bootstrapValidator = $(form2).data('bootstrapValidator');
+					isValid = $bootstrapValidator.validate().isValid();
+    			}*/
+				if (isValid) {
+	    			var index3 = layer.load(1);
+	    			var baseForm = $(form2).data("baseForm");
+	    			var formData = null;
+	    			if (baseForm) {
+	    				formData = baseForm.getFormSimpleData();
+	    			} else {
+	    				formData = $(form2).serializeArray();
+	    			}
+	    			var btnType = $(submitButton, form2).data("btn-type");
+                	var confirmText = btnType == "save" ? "保存" : $(submitButton, form2).text();
+            		var url = btnType == 'submit' ? pm.router.api(model).submit(id) : (id == 0 ? pm.router.api(model).create() : pm.router.api(model).update(id));
+            		ajaxPost(url, formData,function(data,status){
+            			if(data.status){
+            				if (!hideInfo) {
+	    						modals.correct(confirmText + "成功");
+	        				}
+            				handleResult.call(form2, data);
+    					} else{
+    						modals.error('操作失败！<br>' + (data.message || ""));
+    					}
+            		},null,null,function(){
+						layer.close(index3);
+						$("[type='submit']", form2).removeAttr("disabled");
+					})
+				}
+    		}
+    		
     		function handleData() {
     			
     		}
     		
     		function handleResult(results){
+    			var _this = this;
     			var isCreate = id == 0;
     			var targetName = results.targetName || model;
     			var targetValue = results[targetName] || {};
@@ -370,6 +440,26 @@
         				$("#" + winId).modal({ 
 							remote: pm.router.html(model).detail(id, true)
 						});
+        				
+        				// 回调函数
+        				if (router(urlNamespace).callback(model).detail) {
+			        		var cbFunc = (router(urlNamespace).callback(model).detail || {}).modalCreateCallback;
+			        		if (typeof cbFunc == 'function') {
+			        			var url = pm.router.html(model).detail(id, true);
+			        			cbFunc.call(this, {winId: currentWinId, url: url});
+			        		}
+			        	}
+        				
+        				var shouldHide = false;
+			        	if (router(urlNamespace).callback(model).detail) {
+			        		var cbFunc = (router(urlNamespace).callback(model).detail || {}).shouldHideWin;
+			        		if (typeof cbFunc == 'function') {
+			        			shouldHide = cbFunc.call(vm);
+			        		}
+			        	}
+			        	if (shouldHide) {
+	        				modals.hideWin(currentWinId);
+			        	}
         				//modals.hideWin(winId);
         				//modals.closeWin(winId);
         			} else {
@@ -383,6 +473,21 @@
 	   						vm._data.targetValue = data.targetValue;
 	   						// 检查是否已派单
 	   			    		checkDispatched(data);
+	   						
+	   			    		// 回调函数
+				        	if (router(urlNamespace).callback(model).detail) {
+				        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
+				        		if (typeof vueCallback == 'function') {
+				        			vueCallback.call(vm, data, $("#" + appId));
+				        		}
+				        	}
+		                	
+				        	// 是否有临时的表单提交回调函数
+			        		if ($(_this).data("submitCallback")) {
+			        			var submitCallback = $(_this).data("submitCallback");
+			        			$(_this).data("submitCallback", null);
+			        			submitCallback.call();
+			        		}
 	    				}
 	        		});
         		}
@@ -436,7 +541,12 @@
 	    				$("#dispatchSeq").data("placeholder", placeholder);
 	    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
 	    				$("#dispatchSeq").val("");
-	    			});
+	    				
+	    				var dispatchNoPlaceholder = $("#dispatchNo").data("placeholder") || $("#dispatchNo").attr("placeholder");
+	    				$("#dispatchNo").data("placeholder", dispatchNoPlaceholder);
+	    				$("#dispatchNo").attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
+	    				$("#dispatchNo").val("");
+    				});
     			}
     		}
 		});

@@ -50,6 +50,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 	protected String DATANAME_NAVTAB;
 
 	private Boolean useTemplate = true;
+	private Boolean modelUseDataName = false;
 	private String viewModel;
 	private String keyword;
 
@@ -73,7 +74,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 	@ModelAttribute
 	public void initModelAttr(Integer id, V v, HttpServletRequest httpRequest, Model model) {
 		model.addAttribute("urlNamespace", URL_NAMESPACE);
-		model.addAttribute("model", getViewModel());
+		model.addAttribute("model", getRealViewModel());
 		model.addAttribute("keyword", getKeyword());
 
 		String servletPath = httpRequest.getServletPath();
@@ -444,13 +445,30 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 	public String getViewModel() {
 		return viewModel;
 	}
-
+	
 	public void setViewModel(String viewModel) {
 		this.viewModel = viewModel;
 		VIEW_NAMESPACE = viewModel + "/";
 		DATANAME_FORM = viewModel + "Form";
 		DATANAME_TABLE = viewModel + "List";
 		DATANAME_NAVTAB = viewModel + "Tab";
+	}
+	
+	public void setModelUseDataName(Boolean modelUseDataName) {
+		this.modelUseDataName = modelUseDataName;
+	}
+
+	/**
+	 * modelUseDataName:true 则返回getDataName()，否则返回getViewModel(),主要为MODEL相同，但会有dataPrefix的场景，例如通用实体类
+	 * 
+	 * @return
+	 */
+	protected String getRealViewModel() {
+		if (Boolean.TRUE.equals(modelUseDataName)) {
+			return getDataName();
+		} else {
+			return getViewModel();
+		}
 	}
 
 	public String getKeyword() {

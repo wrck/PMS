@@ -181,7 +181,7 @@
 						}, {
 							el: "#" + appId,
 							data: $.extend({}, data, {
-								isModals,
+								isModals: isModals,
 								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",

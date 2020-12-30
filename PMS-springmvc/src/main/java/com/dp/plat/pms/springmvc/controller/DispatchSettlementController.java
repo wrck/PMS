@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
+import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
@@ -67,6 +68,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping("/list")
+	@SystemControllerLog(description = "查看转包结算列表")
 	public String list(PageParam<Object> pageParam, SettlementVO settlement, Model model) {
 		if (!checkPermission(settlement, model, getDataName() + ":list")) {
 			return Consts.VIEW_UNAUTHORIZED;
@@ -112,6 +114,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
+	@SystemControllerLog(description = "查看结算编号【$targetValue.settleSeq$】的详情页面")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			DispatchSettlement settlement = dispatchSettlementService.selectByPrimaryKey(id);
@@ -153,6 +156,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping(value= {"/detail", "/modals/detail"})
+	@SystemControllerLog(description = "打开转包合同【$targetValue.dispatch.dispatchNo$】的结算页面")
 	public String detail(SettlementVO settlement, Model model) {
 		if (!checkPermission(settlement, model, getDataName() + ":detail")) {
 			model.addAttribute("status", false);
@@ -175,7 +179,7 @@ public class DispatchSettlementController
 					DispatchVO dispatch = list.get(0);
 					settlement = new SettlementVO();
 					settlement.setDispatch(dispatch);
-					settlement.setDispatchId(dispatch .getId());
+					settlement.setDispatchId(dispatch.getId());
 					settlement.setDispatchSeq(dispatch.getDispatchSeq());
 //					settlement.setContractNos(dispatch.getContractNos());
 //					settlement.setSmsProjectCode(dispatch.getSmsProjectCode());
@@ -192,22 +196,22 @@ public class DispatchSettlementController
 ////					settlement.setCustomInfoByKey("contractAmount", dispatch.getContractAmount());
 ////					settlement.setCustomInfoByKey("settledAmount", dispatch.getSettledAmount());
 					
-					// 补充实施进度和验收进展
-					ProjectVO project = projectHeaderService.selectVOByProjectId(Integer.valueOf(dispatch.getProjectIds()));
-					if (null != project) {
-//						ProjectVO pvo = new ProjectVO();
-//						BeanUtils.copyProperties(project, pvo);
-//						String projectProgress = (String) project.getCustomInfoByKey("projectProgress");
-//						if (StringUtils.isNotBlank(projectProgress)) {
-//							projectProgress += "%"; 
-//						}
-						settlement.setProgressDesc((String) project.getCustomInfoByKey("projectProgress"));
-						settlement.setAcceptanceDesc(project.getProjectStateName());
-					}
+//					// 补充实施进度和验收进展
+//					ProjectVO project = projectHeaderService.selectVOByProjectId(Integer.valueOf(dispatch.getProjectIds()));
+//					if (null != project) {
+////						ProjectVO pvo = new ProjectVO();
+////						BeanUtils.copyProperties(project, pvo);
+////						String projectProgress = (String) project.getCustomInfoByKey("projectProgress");
+////						if (StringUtils.isNotBlank(projectProgress)) {
+////							projectProgress += "%"; 
+////						}
+//						settlement.setProgressDesc((String) project.getCustomInfoByKey("projectProgress"));
+//						settlement.setAcceptanceDesc(project.getProjectStateName());
+//					}
 					model.addAttribute("targetValue", settlement);
 				} else {
 					status = false;
-					message = "没有找到满足条件的派单记录";
+					message = "没有找到满足条件的转包记录";
 				}
 			}
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
@@ -223,6 +227,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
+	@SystemControllerLog(description = "新增转包合同【$settlementVO.dispatch.dispatchNo$】的结算记录")
 	public String create(SettlementVO settlement, Model model) {
 		if (!checkPermission(settlement, model, getDataName() + ":add")) {
 			model.addAttribute("status", false);
@@ -244,10 +249,11 @@ public class DispatchSettlementController
 					model.addAttribute("targetName", "settlementVO");
 					status = true;
 				} else {
-					message = String.format("没有找到派单编号[%s]的派单记录", settlement.getDispatchSeq());
+//					message = String.format("没有找到转包编号[%s]的转包记录", settlement.getDispatchSeq());
+					message = String.format("没有找到转包合同号[%s]的转包记录", settlement.getDispatch().getDispatchNo());
 				}
 			} else {
-				message = "请选择需要结算的派单编号！";
+				message = "请选择需要结算的转包编号！";
 			}
 		} catch (Exception e) {
 			Integer errorId = ExceptionHandler.insertException(e);
@@ -260,6 +266,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	@SystemControllerLog(description = "更新转包合同【$settlementVO.dispatch.dispatchNo$】的结算记录")
 	public String update(@PathVariable("id") Integer id, SettlementVO settlement, Model model) {
 		return super.update(id, settlement, model);
 //		if (!checkPermission(settlement, model, getDataName() + ":edit")) {
@@ -285,6 +292,7 @@ public class DispatchSettlementController
 	
 	
 	@PostMapping("{id}/projectInfoDoc")
+	@SystemControllerLog(description = "生成【$settlementVO.dispatch.dispatchName$】项目信息单", ignoreParams = {"request", "response"})
 	public void exportProjectInfoDoc(@PathVariable("id") Integer id, HttpServletRequest request, HttpServletResponse response, Model model) {
 		DispatchSettlement settlement = dispatchSettlementService.selectByPrimaryKey(id);
 		if (settlement != null) {
@@ -307,6 +315,7 @@ public class DispatchSettlementController
 			}
 				
 			temp.setDispatch(dispatch);
+			model.addAttribute("settlementVO", temp);
 			
 			String templateFileName = SystemConfig.systemVariables.getOrDefault("af.export.settlement.projectInfo", "02项目信息单-%s.doc");
 			String fileName = String.format(templateFileName, dispatch.getDispatchName());
@@ -316,6 +325,7 @@ public class DispatchSettlementController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	@SystemControllerLog(description = "删除【$settlementVO.settlementSeq$】结算记录")
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		DispatchSettlement dispatchSettlement = service.selectByPrimaryKey(id);
 		SettlementVO vo = new SettlementVO();
@@ -338,6 +348,7 @@ public class DispatchSettlementController
 			model.addAttribute("errorId", errorId);
 			message = e.getMessage();
 		}
+		model.addAttribute("settlementVO", vo);
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
 	}

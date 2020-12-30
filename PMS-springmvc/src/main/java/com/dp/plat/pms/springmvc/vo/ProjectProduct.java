@@ -1,5 +1,7 @@
 package com.dp.plat.pms.springmvc.vo;
 
+import java.math.BigDecimal;
+
 import com.dp.plat.core.entity.BaseEntity;
 
 public class ProjectProduct extends BaseEntity {
@@ -32,6 +34,12 @@ public class ProjectProduct extends BaseEntity {
     private Integer num;
 
     private Integer borrowNum;
+    
+    private BigDecimal price;
+    
+    private BigDecimal purchaseDiscount;
+    
+    private BigDecimal purchasePrice;
 
     /**
      * @return id
@@ -236,4 +244,47 @@ public class ProjectProduct extends BaseEntity {
     public void setBorrowNum(Integer borrowNum) {
         this.borrowNum = borrowNum;
     }
+
+	/**
+	 * @return the price
+	 */
+	public BigDecimal getPrice() {
+		return price;
+	}
+
+	/**
+	 * @param price the price to set
+	 */
+	public void setPrice(BigDecimal price) {
+		this.price = price;
+	}
+
+	/**
+	 * @return the purchaseDiscount
+	 */
+	public BigDecimal getPurchaseDiscount() {
+		return purchaseDiscount;
+	}
+
+	/**
+	 * @param purchaseDiscount the purchaseDiscount to set
+	 */
+	public void setPurchaseDiscount(BigDecimal purchaseDiscount) {
+		this.purchaseDiscount = purchaseDiscount;
+	}
+
+	/**
+	 * @return the purchasePrice
+	 */
+	public BigDecimal getPurchasePrice() {
+		return purchasePrice;
+	}
+
+	/**
+	 * @param purchasePrice the purchasePrice to set
+	 */
+	public void setPurchasePrice(BigDecimal purchasePrice) {
+		this.purchasePrice = purchasePrice;
+	}
+    
 }

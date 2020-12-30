@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.ProjectManageUserMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.vo.UserDetail">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="status" jdbcType="SMALLINT" property="status" />
+    <result column="isSysUser" jdbcType="SMALLINT" property="isSysUser" />
+    <result column="compID" jdbcType="INTEGER" property="compID" />
+    <result column="userInfoId" jdbcType="INTEGER" property="userInfoId" />
+    <result column="realName" jdbcType="VARCHAR" property="realName" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="telphone" jdbcType="VARCHAR" property="telphone" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="sex" jdbcType="SMALLINT" property="sex" />
+    <result column="roles" jdbcType="VARCHAR" property="roles" />
+  </resultMap>
+  <sql id="sql_where_selective">
+    <if test="userId != null and '' != userId">
+        u.user_id = #{userId, jdbcType=INTEGER} AND
+    </if>
+    <if test="userName != null and '' != userName">
+        u.user_name like CONCAT("%", #{userName}, "%") AND
+    </if>
+    <if test="password != null and '' != password">
+        u.password = #{password, jdbcType=VARCHAR} AND
+    </if>
+    <if test="createBy != null and '' != createBy">
+        u.create_by = #{createBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="createTime != null">
+        u.create_time = #{createTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="updateBy != null and '' != updateBy">
+        u.update_by = #{updateBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="updateTime != null">
+        u.update_time = #{updateTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="status != null">
+        u.status = #{status, jdbcType=SMALLINT} AND
+    </if>
+    <if test="needChangePwd != null and '' != needChangePwd">
+        u.needChangePwd = #{needChangePwd, jdbcType=BIT} AND
+    </if>
+    <if test="isSysUser != null and '' != isSysUser">
+        u.isSysUser = #{isSysUser, jdbcType=SMALLINT} AND
+    </if>
+    <if test="loginErrorCount != null and '' != loginErrorCount">
+        u.loginErrorCount = #{loginErrorCount, jdbcType=INTEGER} AND
+    </if>
+    <if test="userCustom1 != null and '' != userCustom1">
+        u.userCustom1 = #{userCustom1, jdbcType=VARCHAR} AND
+    </if>
+    <if test="userCustom2 != null and '' != userCustom2">
+        u.userCustom2 = #{userCustom2, jdbcType=VARCHAR} AND
+    </if>
+    <if test="userCustom3 != null and '' != userCustom3">
+        u.userCustom3 = #{userCustom3, jdbcType=VARCHAR} AND
+    </if>
+    <if test="userCustom4 != null and '' != userCustom4">
+        u.userCustom4 = #{userCustom4, jdbcType=INTEGER} AND
+    </if>
+    <if test="userCustom5 != null and '' != userCustom5">
+        u.userCustom5 = #{userCustom5, jdbcType=INTEGER} AND
+    </if>
+    <if test="email != null">
+     	ui.email like CONCAT("%", #{email}, "%") AND
+	</if>
+	<if test="realName != null">
+	    ui.realName like CONCAT("%", #{realName}, "%") AND
+	</if>
+	<if test="sex != null">
+	    ui.sex = #{sex} AND
+	</if>
+	<if test="compID != null and compID != -1">
+        ui.compID = #{compID} AND
+    </if>
+	<if test="roleId != null">
+	    ur.role_id = #{roleId} AND
+	</if>
+	<if test="roles != null">
+	    FIND_IN_SET(r.role_name, #{roles}) AND
+	</if>
+	<if test="custom4 != null and custom4 != ''">
+		exists 
+	    (select 
+	        * 
+	    from
+	        (select 
+	            substring_index(
+	                substring_index(#{custom4}, ',', b.id + 1), ',', - 1
+	            ) as projectType 
+	        from
+	            FIND_IN_SET_HELP b 
+	        where (
+	                length(#{custom4}) - length(replace(#{custom4}, ',', '')) + 1
+	            ) > b.id) t 
+	    where find_in_set(t.projectType, ui.custom4)) AND
+	</if>
+	<if test="custom5 != null and custom5 != ''">
+		exists 
+	    (select 
+	        * 
+	    from
+	        (select 
+	            substring_index(
+	                substring_index(#{custom5}, ',', b.id + 1), ',', - 1
+	            ) as officeCode 
+	        from
+	            FIND_IN_SET_HELP b 
+	        where (
+	                length(#{custom5}) - length(replace(#{custom5}, ',', '')) + 1
+	            ) > b.id) t 
+	    where find_in_set(t.officeCode, ui.custom5)) AND
+	</if>
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.userId != null and '' != model.userId">
+            u.user_id = #{model.userId, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.userName != null and '' != model.userName">
+            u.user_name like CONCAT("%", #{model.userName}, "%") AND
+        </if>
+        <if test="model.password != null and '' != model.password">
+            u.password = #{model.password, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.createBy != null and '' != model.createBy">
+            u.create_by = #{model.createBy, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.createTime != null">
+            u.create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
+        </if>
+        <if test="model.updateBy != null and '' != model.updateBy">
+            u.update_by = #{model.updateBy, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.updateTime != null">
+            u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
+        </if>
+        <if test="model.status != null">
+            u.status = #{model.status, jdbcType=SMALLINT} AND
+        </if>
+        <if test="model.needChangePwd != null and '' != model.needChangePwd">
+            u.needChangePwd = #{model.needChangePwd, jdbcType=BIT} AND
+        </if>
+        <if test="model.isSysUser != null and '' != model.isSysUser">
+            u.isSysUser = #{model.isSysUser, jdbcType=SMALLINT} AND
+        </if>
+        <if test="model.loginErrorCount != null and '' != model.loginErrorCount">
+            u.loginErrorCount = #{model.loginErrorCount, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.userCustom1 != null and '' != model.userCustom1">
+            u.userCustom1 = #{model.userCustom1, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.userCustom2 != null and '' != model.userCustom2">
+            u.userCustom2 = #{model.userCustom2, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.userCustom3 != null and '' != model.userCustom3">
+            u.userCustom3 = #{model.userCustom3, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.userCustom4 != null and '' != model.userCustom4">
+            u.userCustom4 = #{model.userCustom4, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.userCustom5 != null and '' != model.userCustom5">
+            u.userCustom5 = #{model.userCustom5, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.email != null">
+         	ui.email like CONCAT("%", #{model.email}, "%") AND
+		</if>
+		<if test="model.realName != null">
+		    ui.realName like CONCAT("%", #{model.realName}, "%") AND
+		</if>
+		<if test="model.sex != null">
+		    ui.sex = #{model.sex} AND
+		</if>
+		<if test="model.compID != null and model.compID != -1">
+		    ui.compID = #{model.compID} AND
+		</if>
+		<if test="model.roleId != null">
+		    ur.role_id = #{model.roleId} AND
+		</if>
+		<if test="model.roles != null">
+		    FIND_IN_SET(r.role_name, #{model.roles}) AND
+		</if>
+		<if test="model.custom4 != null and model.custom4 != ''">
+			exists 
+		    (select 
+		        * 
+		    from
+		        (select 
+		            substring_index(
+		                substring_index(#{model.custom4}, ',', b.id + 1), ',', - 1
+		            ) as projectType 
+		        from
+		            FIND_IN_SET_HELP b 
+		        where (
+		                length(#{model.custom4}) - length(replace(#{model.custom4}, ',', '')) + 1
+		            ) > b.id) t 
+		    where FIND_IN_SET(t.projectType, ui.custom4)) AND
+		</if>
+		<if test="model.custom5 != null and model.custom5 != ''">
+			exists 
+		    (select 
+		        * 
+		    from
+		        (select 
+		            substring_index(
+		                substring_index(#{model.custom5}, ',', b.id + 1), ',', - 1
+		            ) as officeCode 
+		        from
+		            FIND_IN_SET_HELP b 
+		        where (
+		                length(#{model.custom5}) - length(replace(#{model.custom5}, ',', '')) + 1
+		            ) > b.id) t 
+		    where FIND_IN_SET(t.officeCode, ui.custom5)) AND
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			u.user_name like CONCAT("%", #{fuzzy}, "%") or
+            u.password like CONCAT("%", #{fuzzy}, "%") or
+            u.create_by like CONCAT("%", #{fuzzy}, "%") or
+            u.update_by like CONCAT("%", #{fuzzy}, "%") or
+            u.user_name like CONCAT("%", #{fuzzy}, "%") or
+            u.userCustom1 like CONCAT("%", #{fuzzy}, "%") or
+            u.userCustom2 like CONCAT("%", #{fuzzy}, "%") or
+            u.userCustom3 like CONCAT("%", #{fuzzy}, "%") or
+		    ui.email like CONCAT("%", #{fuzzy}, "%") or
+		    ui.realName like CONCAT("%", #{fuzzy}, "%") or
+		    r.role_name like CONCAT("%", #{fuzzy}, "%") or
+		    r.role_name_zn like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+	GROUP BY u.user_id 
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	GROUP BY u.user_id 
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by u.user_id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.vo.UserDetail" resultType="com.dp.plat.core.vo.UserDetail">
+    SELECT 
+	    u.user_id AS userId, u.user_name AS userName, u.status, ui.id AS userInfoId, ui.compID, ui.realName, ui.mobile, ui.telphone, ui.avatar, ui.birthday, ui.email, ui.sex, 
+	    GROUP_CONCAT(r.`role_name_zn` order by r.`priority` desc) AS roles,
+    	GROUP_CONCAT(r.`role_name` order by r.`priority` desc) as roleCodes
+    	<if test="roleCodes != null and '' != roleCodes"> , mr.maxPriority </if>
+	FROM
+	    t_user u 
+	    LEFT JOIN t_user_info ui 
+	        ON u.user_id = ui.user_id 
+	    LEFT JOIN t_user_role ur 
+	        ON u.user_id = ur.`user_id` 
+	           AND ui.`compID` = ur.`comp_id` 
+	    LEFT JOIN t_role r 
+	        ON ur.`role_id` = r.`role_id` 
+	<if test="roleCodes != null and '' != roleCodes">
+   		LEFT JOIN 
+	        (select 
+	            max(priority) maxPriority 
+	        from
+	            t_role t 
+	        where find_in_set(role_name, #{model.roleCodes})
+	        ) mr 
+	        on 1 = 1 
+	</if>
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+	GROUP BY u.user_id 
+	<if test="roleCodes != null and '' != roleCodes">
+	HAVING mr.maxPriority > max(r.`priority`)
+	</if>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.vo.UserDetail" resultType="long">
+    select 
+        count(*)
+    FROM (
+	    Select 1
+	    	<if test="roleCodes != null and '' != roleCodes"> , mr.maxPriority </if>
+	    FROM
+	        t_user u 
+	        LEFT JOIN t_user_info ui 
+	            ON u.user_id = ui.user_id 
+	        LEFT JOIN t_user_role ur 
+	            ON u.user_id = ur.`user_id` 
+	               AND ui.`compID` = ur.`comp_id` 
+	        LEFT JOIN t_role r 
+	            ON ur.`role_id` = r.`role_id` 
+		<if test="roleCodes != null and '' != roleCodes">
+	    	LEFT JOIN 
+		        (select 
+		            max(priority) maxPriority 
+		        from
+		            t_role t 
+		        where find_in_set(role_name, #{roleCodes})
+		        ) mr 
+		        on 1 = 1 
+		</if>
+		<where>
+			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+				<include refid="sql_where_selective" />
+			</trim>
+		</where>
+		GROUP BY u.user_id 
+		<if test="roleCodes != null and '' != roleCodes">
+		having mr.maxPriority > max(r.`priority`)
+		</if>
+    ) t
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.core.vo.UserDetail">
+    SELECT 
+	    u.user_id AS userId, u.user_name AS userName, u.status, ui.id AS userInfoId, ui.compID, ui.realName, ui.mobile, ui.telphone, ui.avatar, ui.birthday, ui.email, ui.sex, 
+	    GROUP_CONCAT(r.`role_name_zn` order by r.`priority` desc) AS roles,
+    	GROUP_CONCAT(r.`role_name` order by r.`priority` desc) as roleCodes
+    	<if test="model != null and model.roleCodes != null and '' != model.roleCodes"> , mr.maxPriority </if>
+	FROM
+	    t_user u 
+	    LEFT JOIN t_user_info ui 
+	        ON u.user_id = ui.user_id 
+	    LEFT JOIN t_user_role ur 
+	        ON u.user_id = ur.`user_id` 
+	           AND ui.`compID` = ur.`comp_id` 
+	    LEFT JOIN t_role r 
+	        ON ur.`role_id` = r.`role_id` 
+	<if test="model != null and model.roleCodes != null and '' != model.roleCodes">
+    	LEFT JOIN 
+	        (select 
+	            max(priority) maxPriority 
+	        from
+	            t_role t 
+	        where find_in_set(role_name, #{model.roleCodes})
+	        ) mr 
+	        on 1 = 1 
+	</if>
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	GROUP BY u.user_id 
+	<if test="model != null and model.roleCodes != null and '' != model.roleCodes">
+   	having mr.maxPriority > max(r.`priority`)
+	</if>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select 
+        count(*)
+    FROM (
+	    Select 1
+	    	<if test="model != null and model.roleCodes != null and '' != model.roleCodes"> , mr.maxPriority </if>
+	    FROM
+	        t_user u 
+	        LEFT JOIN t_user_info ui 
+	            ON u.user_id = ui.user_id 
+	        LEFT JOIN t_user_role ur 
+	            ON u.user_id = ur.`user_id` 
+	               AND ui.`compID` = ur.`comp_id` 
+	        LEFT JOIN t_role r 
+	            ON ur.`role_id` = r.`role_id` 
+        <if test="model != null and model.roleCodes != null and '' != model.roleCodes">
+	    	LEFT JOIN 
+		        (select 
+		            max(priority) maxPriority 
+		        from
+		            t_role t 
+		        where find_in_set(role_name, #{model.roleCodes})
+		        ) mr 
+		        on 1 = 1 
+		</if>
+		<where>
+			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+				<include refid="sql_model_where_selective" />
+			</trim>
+		</where>
+		GROUP BY u.user_id 
+		<if test="model != null and model.roleCodes != null and '' != model.roleCodes">
+		having mr.maxPriority > max(r.`priority`)
+		</if>
+	) t
+  </select>
+</mapper>

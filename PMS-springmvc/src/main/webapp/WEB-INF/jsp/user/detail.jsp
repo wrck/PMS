@@ -93,22 +93,26 @@
 								<div class="form-group">
 									<label for="remark" class="col-sm-2 control-label">部门</label>
 									<div class="col-sm-8">
-										<shiro:lacksRole name="admin">
+										<%-- <shiro:lacksRole name="admin"> --%>
+										<c:if test="${isAdmin != true}">
 											<select id="officeCode" name="custom3" class="form-control select2"
 												data-flag="urlSelector" data-src="/api/departmentList.json?isparam=-1" disabled="true"
 												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="" data-blank-text="--请选择--"
 												data-select2-config='{placeholder:"--请选择--", tags:false, allowClear:true,dropdownAutoWidth:true}'
 											>
 											</select>
-										</shiro:lacksRole>
-										<shiro:hasRole name="admin">
+										</c:if>
+										<%-- </shiro:lacksRole>
+										<shiro:hasRole name="admin"> --%>
+										<c:if test="${isAdmin == true}">
 											<select id="officeCode" name="custom3" class="form-control select2"
 												data-flag="urlSelector" data-src="/api/departmentList.json?isparam=-1"
 												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="" data-blank-text="--请选择--"
 												data-select2-config='{placeholder:"--请选择--", tags:false, allowClear:true,dropdownAutoWidth:true}'
 											>
 											</select>
-										</shiro:hasRole>
+										</c:if>
+										<%-- </shiro:hasRole> --%>
 									</div>
 								</div>
 							</div>
@@ -165,20 +169,24 @@
 								<div class="form-group">
 									<label for="roleIds" class="col-sm-1 control-label">角色</label>
 									<div class="col-sm-10">
-										<shiro:lacksRole name="admin">
+										<%-- <shiro:lacksRole name="admin"> --%>
+										<c:if test="${isAdmin != true}">
 											<mvc:select id="roleSelect" path="roles" multiple="multiple"
 												cssClass="col-sm-8 form-control" disabled="true">
 												<mvc:options items="${roles}" itemValue="roleId"
 													itemLabel="roleNameZn" />
 											</mvc:select>
-										</shiro:lacksRole>
-										<shiro:hasRole name="admin">
+										</c:if>
+										<%-- </shiro:lacksRole>
+										<shiro:hasRole name="admin"> --%>
+										<c:if test="${isAdmin == true}">
 											<mvc:select id="roleSelect" path="roles" multiple="multiple"
 												cssClass="col-sm-8 form-control">
 												<mvc:options items="${roles}" itemValue="roleId"
 													itemLabel="roleNameZn" />
 											</mvc:select>
-										</shiro:hasRole>
+										</c:if>
+										<%-- </shiro:hasRole> --%>
 
 										<!-- <select id="roleSelect" multiple="multiple" class="col-sm-8 form-control">
                                         </select> -->
@@ -189,20 +197,24 @@
 								<div class="form-group">
 									<label for="areaPower" class="col-sm-1 control-label">区域</label>
 									<div class="col-sm-10">
-										<shiro:lacksRole name="admin">
+										<%-- <shiro:lacksRole name="admin"> --%>
+										<c:if test="${isAdmin != true}">
 											<select id="areaPower" name="custom5" multiple="multiple" class="col-sm-8 form-control select2"
 												data-flag="urlSelector" data-src="/api/departmentList.json" disabled="true"
 												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="all" data-blank-text="全选"
 											>
 											</select>
-										</shiro:lacksRole>
-										<shiro:hasRole name="admin">
+										</c:if>
+										<%-- </shiro:lacksRole>
+										<shiro:hasRole name="admin"> --%>
+										<c:if test="${isAdmin == true}">
 											<select id="areaPower" name="custom5" multiple="multiple" class="col-sm-8 form-control select2"
 												data-flag="urlSelector" data-src="/api/departmentList.json"
 												data-text="departmentName" data-value="departmentNum" data-blank="true" data-blank-value="all" data-blank-text="全选"
 											>
 											</select>
-										</shiro:hasRole>
+										</c:if>
+										<%-- </shiro:hasRole> --%>
 									</div>
 								</div>
 							</div>
@@ -210,20 +222,24 @@
 								<div class="form-group">
 									<label for="projectTypePower" class="col-sm-1 control-label">项目类型权限</label>
 									<div class="col-sm-10">
-										<shiro:lacksRole name="admin">
+										<%-- <shiro:lacksRole name="admin"> --%>
+										<c:if test="${isAdmin != true}">
 											<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
 												data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
 												data-text="basicDataName" data-value="basicDataId" disabled="true"
 											>
 											</select>
-										</shiro:lacksRole>
-										<shiro:hasRole name="admin">
+										</c:if>
+										<%-- </shiro:lacksRole>
+										<shiro:hasRole name="admin"> --%>
+										<c:if test="${isAdmin == true}">
 											<select id="projectTypePower" name="custom4" multiple="multiple" class="col-sm-8 form-control select2"
 												data-flag="urlSelector" data-src="/api/basicDataByType.json?basicDataTypeCode=projectTypes"
 												data-text="basicDataName" data-value="basicDataId"
 											>
 											</select>
-										</shiro:hasRole>
+										</c:if>
+										<%-- </shiro:hasRole> --%>
 									</div>
 								</div>
 							</div>
@@ -426,6 +442,8 @@
             }); */
             
             $("#roleSelect").select2({width:'100%',tags: true,placeholder:"角色"});
+            $('#areaPower').data("resultsCallback", function(results) {
+           	});
             $('#areaPower').on('select2:select', function(e) {
                 var data = e.params.data;
                 if (data.id == 'all') {
