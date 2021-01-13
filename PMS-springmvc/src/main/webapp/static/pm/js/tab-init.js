@@ -330,6 +330,10 @@ function commonNavTableDownload(e, navTab) {
 		$("body").append(a); //修复firefox中无法触发click
 		a.click();
 		$(a).remove();
+		$target.data("loadingText", "正在下载").button("loading");
+		setTimeout(() => {
+			$target.button("reset");
+		}, 3000);
 	}
 }
 
@@ -372,5 +376,9 @@ function commonNavTableZipDownload(e, navTab) {
 		$("body").append(a); //修复firefox中无法触发click
 		a.click();
 		$(a).remove();
+		$target.data("loadingText", "正在下载").button("loading");
+		setTimeout(() => {
+			$target.button("reset");
+		}, 3000);
 	}
 }

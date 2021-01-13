@@ -53,7 +53,7 @@
 		<!-- cron表达式 -->
 		<property name="cronExpression">
 			<!-- <value>0 0/50 * * * ?</value> -->
-			<value>0 0/5 8-20 * * ?</value>
+			<value>0 0 5 * * ?</value>
 		</property>
 	</bean>
 	
@@ -80,7 +80,7 @@
 		<!-- cron表达式 -->
 		<property name="cronExpression">
 			<!-- <value>0 0/50 * * * ?</value> -->
-			<value>0 0/5 8-20 * * ?</value>
+			<value>0 30 5 * * ?</value>
 		</property>
 	</bean>
 	
@@ -107,7 +107,7 @@
 		<!-- cron表达式 -->
 		<property name="cronExpression">
 			<!-- <value>0 0/50 * * * ?</value> -->
-			<value>0 0/5 8-20 * * ?</value>
+			<value>0 0 6 * * ?</value>
 		</property>
 	</bean>
 	
@@ -116,10 +116,10 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-			    <!-- <ref bean="smsDataTrigger" />
+			    <ref bean="smsDataTrigger" />
 				<ref bean="sseDispatchPaymentTrigger" />
 				<ref bean="ehrDataTrigger" />
-				<ref bean="mailTrigger" /> -->
+				<ref bean="mailTrigger" />
 			</list>
 		</property>
 	</bean>

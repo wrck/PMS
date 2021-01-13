@@ -59,7 +59,7 @@ public class CallBackServiceImpl extends BaseServiceImpl implements CallBackServ
 		Map<String, Object> vars = new HashMap<String, Object>();
 		vars.put("programManager" , getLoginName() );
 		vars.put("callbackManager", "callbackRole");
-		
+		vars.put("projectId", callBack.getProjectId());
 		//2.拼接businessKey
 		String key = callBack.getClass().getSimpleName();
 		

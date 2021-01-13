@@ -17,7 +17,7 @@
 	<repositories>
 		<repository>
 			<id>maven</id>
-			<url>http://repo1.maven.org/maven2/</url>
+			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 		<repository>
 			<id>jboss</id>
@@ -311,11 +311,11 @@
 			<artifactId>activiti-common-rest</artifactId>
 			<version>${activiti.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-crystalball</artifactId>
 			<version>${activiti.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-diagram-rest</artifactId>
@@ -326,11 +326,11 @@
 			<artifactId>activiti-explorer</artifactId>
 			<version>${activiti.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-image-generator</artifactId>
 			<version>${activiti.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-json-converter</artifactId>
@@ -352,11 +352,11 @@
 			<version>${activiti.version}</version>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-process-validation</artifactId>
 			<version>${activiti.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin</artifactId>
@@ -501,8 +501,10 @@
 		<plugins>
             <plugin>  
                 <artifactId>maven-war-plugin</artifactId>  
-                <configuration>  
-                    <archiveClasses>true</archiveClasses>  
+                <configuration>
+                    <archiveClasses>true</archiveClasses>
+                    <!-- <attachClasses>true</attachClasses>
+                    <classesClassifier>api</classesClassifier> -->
                 </configuration>  
             </plugin>
             <plugin>

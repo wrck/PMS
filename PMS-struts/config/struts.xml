@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE struts PUBLIC   
+<!-- <!DOCTYPE struts PUBLIC   
         "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"   
-        "http://struts.apache.org/dtds/struts-2.5.dtd">
+        "http://struts.apache.org/dtds/struts-2.5.dtd"> -->
+<!DOCTYPE struts PUBLIC   
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"   
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
 	<!-- 区间字符资源文件 -->
 	<!-- i18n配置 -->
@@ -58,12 +61,12 @@
 		</global-results>
 		
 		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
-		<global-allowed-methods>regex:.*</global-allowed-methods>
+		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
 	</package>
 	
 	<package name="defaultJson" extends="json-default" abstract="true">
 		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
-		<global-allowed-methods>regex:.*</global-allowed-methods>
+		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
 	</package>
 	
 	<!-- 各模块的配置文件 -->

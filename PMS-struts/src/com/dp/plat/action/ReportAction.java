@@ -199,7 +199,7 @@ public class ReportAction extends BaseAction implements Preparable{
 			Map<String, String> implMap = reportService.queryReportLineImplWayData(officeCode , dataTypeCode);
 			
 			String settingTimes = reportService.queryReportSettingTimes(officeCode , dataTypeCode);
-			String[] settingArr = settingTimes.split(","); 
+			String[] settingArr = StringUtils.isBlank(settingTimes) ? new String[] {} : settingTimes.split(",");
 			sortSettingTime(settingArr);
 			Double[] impl0 = new Double[settingArr.length];
 			Double[] impl1 = new Double[settingArr.length];

@@ -53,11 +53,13 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 		StringBuilder nextAssignPer=new StringBuilder();
 		
 		
+		CallBackQuesnaire cbQuesnaire = null;
 		if(project.getServiceManagerCode().equals(nowUser)){
 			String roleStr="";
 			
+			cbQuesnaire = isCallBack(project.getProjectId());
 			//是否已通过回访
-			if(isPassCb(project)){
+			if(isPassCb(project) || (cbQuesnaire != null)){
 				pmClEvaluationHeader.setNextAcceptPerson("工程人员");
 				pmClEvaluationHeader.setNextAcceptPersonName("工程人员");
 				
@@ -92,6 +94,29 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 		pmClEvaluationHeader.setApplyHeaderId(returnId);
 		pmClosedLoopDao.updateEvaluationHeaderObj(pmClEvaluationHeader);
 		
+		if(cbQuesnaire != null){
+			//添加回访问卷信息
+			PmClEvaluationHeader evaluationHeader = new PmClEvaluationHeader();
+			evaluationHeader.setProjectCode(pmClEvaluationHeader.getProjectCode());
+			evaluationHeader.setProjectName(pmClEvaluationHeader.getProjectName());
+			evaluationHeader.setProjectId(pmClEvaluationHeader.getProjectId());
+			evaluationHeader.setEvaluationTime(cbQuesnaire.getCreateTime());
+			evaluationHeader.setEvaluationPeopleName("回访人员");
+			evaluationHeader.setEvaluationPeopleId(cbQuesnaire.getCreateBy());
+			evaluationHeader.setEvaluationComment("运营商直签项目已完成回访");
+			evaluationHeader.setEvaluationType(PmClosedLoopConstant.CL_EVALU_TYPE_CB);
+			evaluationHeader.setStatus(PmClosedLoopConstant.CL_STATUS_SUBMIT);
+			evaluationHeader.setEvaluationResult(PmClosedLoopConstant.CL_EVALU_RESULT_AGREE);//测评通过
+			evaluationHeader.setCreatedTime(new Date());
+			evaluationHeader.setCreatedPerson(getLoginName());
+			evaluationHeader.setNextAcceptPersonName("工程人员");
+			evaluationHeader.setNextAcceptPerson("工程人员");
+			evaluationHeader.setApplyHeaderId(pmClEvaluationHeader.getApplyHeaderId());
+			
+			int headerObj = pmClosedLoopDao.addPmClEvaluationHeaderObj(evaluationHeader);
+			//将主键写到回访信息表中
+			pmClosedLoopDao.updateEvaluationHeaderId(cbQuesnaire.getQuesnaireId(), headerObj);
+		}
 		//增加流程变量
 		Map<String, Object>vars=new HashMap<String, Object>();
 		workflowCommonParam.setComment(pmClEvaluationHeader.getEvaluationComment()==null?"":pmClEvaluationHeader.getEvaluationComment());
@@ -112,6 +137,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 		vars.put(PmClosedLoopConstant.CL_TASK_USER_1,nowUser);
 		vars.put("classType", keyString);
 		vars.put("projectCode", projectCode);
+		vars.put("projectId", project.getProjectId());
 		vars.put("objId", returnId);
 		vars.put(PmClosedLoopConstant.CL_PROJECT_PROCESS_STATUS, PmClosedLoopConstant.CL_EVALU_TYPE_PM);	//记录项目闭环状态
 		

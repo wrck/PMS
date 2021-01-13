@@ -50,7 +50,17 @@
         <display:column property="projectCode" titleKey="pm.project.projectCode" media="excel"></display:column>
         <display:column property="projectName" titleKey="pm.project.projectName" media="excel"></display:column>
         <display:column property="contractNo" titleKey="pm.project.contractNo" media="excel"></display:column>
+        <display:column property="warrantyStatusName" title="维保状态" media="excel"></display:column>
+        <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="excel"></display:column>
+        <display:column property="wafServiceName" titleKey="pm.project.wafService" media="excel"></display:column>
         <display:column property="officeName" titleKey="pm.project.officeName" media="excel"></display:column>
+        <display:column property="marketName" titleKey="pm.project.marketName" media="excel"></display:column>
+        <display:column property="systemName" titleKey="pm.project.systemName" media="excel"></display:column>
+        <display:column property="expendName" titleKey="pm.project.expendName" media="excel"></display:column>
+        <display:column property="industryName" titleKey="pm.project.industryName" media="excel"></display:column>
+        <display:column property="salerName" titleKey="pm.project.usernamec" media="excel"></display:column>
+        <display:column property="finalCustomerName" titleKey="pm.project.finalCustomerName" media="excel"></display:column>
+        
         <display:column property="processDesc" titleKey="pm.project.maintenance.processDesc" maxLength="90" style="max-width:250px"></display:column>
         <display:column property="processStep" titleKey="pm.project.maintenance.processStep" maxLength="90" style="max-width:250px"></display:column>
         <display:column property="processTime" titleKey="pm.project.maintenance.processTime" format="{0,date,yyyy-MM-dd}"></display:column>
@@ -67,6 +77,11 @@
         <display:column property="createUser" titleKey="pm.project.maintenance.createUser"></display:column>
         <%-- <display:column property="createTime" titleKey="sys.create.time" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>--%>
         <display:column property="operateTime" titleKey="sys.create.time" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
+        <s:if test="projectMaintenance.hideWarranty == false">
+            <display:column property="warrantyStatusName" titleKey="pm.project.maintenance.warrantyStatus" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+            <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+            <display:column property="wafServiceName" titleKey="pm.project.wafService" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+        </s:if>
         <s:if test="%{projectMaintenance.hasPower == true}">
             <display:column title="操作" media="html">
                 <s:if test="projectMaintenance.projectType == 10">

@@ -77,11 +77,20 @@
             		console.log(data);
             		try {
             			data = JSON.parse(data);
+            		} catch(e) {
+            			try {
+            				eval(data);
+            			} catch (e) {
+						}
+            		}
+           			if (data.status) {
 	            		if (data.refreshProjectState) {
 	            			window.refreshProjectState = data.refreshProjectState;
 	            		}
-            		} catch(e) {}
-            		modals.hideWin("uploadDeliverFileWin");
+	            		modals.hideWin("uploadDeliverFileWin");
+           			} else {
+           				modals.error(data.message);
+           			}
             	})
            	}
   		})

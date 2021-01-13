@@ -348,6 +348,14 @@
 	                    	url = '/pm/user/'+id+'.json';
 	                    }
 	                    url += "?_method=" + method;
+	                    var custom3 = params.custom3 || "";
+	                    var custom5 = params.custom5 || "";
+	                    if (custom3) {
+	                        custom5 = custom5.split(",");
+	                        custom5.unshift(custom3);
+	                        custom5 = custom5.join(",");
+	                        params.custom5 = custom5;
+	                    }
 	                    ajaxPost(basePath + url, JSON.stringify(params), function (data, status) {
  	                        if (status == 'success') {
  	                            //if (id != "0") {//更新

@@ -1,6 +1,8 @@
 package com.dp.plat.util;
 
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -75,6 +77,137 @@ public class DateUtil {
         }
         return bool;
     }
+    
+    public static Date[] getNearlyYearDates(Date nowDate, Date rangeStart, Date rangeEnd) {
+    	return getNearlyYearDates(nowDate, rangeStart, rangeEnd, false);
+//    	Calendar date = Calendar.getInstance();
+//		date.setTime(nowDate);
+//		date.set(Calendar.HOUR_OF_DAY, 0);
+//		date.set(Calendar.MINUTE, 0);
+//		date.set(Calendar.SECOND, 0);
+//		date.set(Calendar.MILLISECOND, 0);
+//		Date now = new Date();
+//		Calendar begin = Calendar.getInstance();
+//		begin.setTime(rangeStart != null ? rangeStart : now);
+//		Calendar end = Calendar.getInstance();
+//		end.setTime(rangeEnd != null ? rangeEnd : now);
+//		
+//		// 不在区间内的，找匹配最近的一段时间
+//		if (date.before(begin)) {
+//			date.setTime(begin.getTime());;
+//		} else if (date.after(end)) {
+//			date.setTime(end.getTime());;
+//		}
+//		
+//		Calendar startDate = Calendar.getInstance();
+//		startDate.setTime(date.getTime());
+//		Calendar endDate = Calendar.getInstance();
+//		endDate.setTime(date.getTime());
+//		
+//    	while (isBetween(date, begin, end)) {
+//    		endDate.setTime(end.getTime());
+//    		end.add(Calendar.YEAR, -1);
+//    		startDate.setTime(end.getTime());
+//    	}
+//    	startDate.add(Calendar.DATE, 1);
+//    	if (startDate.before(begin)) {
+//    		startDate = begin;
+//    	}
+//		return new Date[] {startDate.getTime(), endDate.getTime()};
+    }
+    
+    public static Date[] getNearlyYearDates(Date nowDate, Date rangeStart, Date rangeEnd, boolean reverse) {
+    	Calendar date = Calendar.getInstance();
+		date.setTime(nowDate);
+		date.set(Calendar.HOUR_OF_DAY, 0);
+		date.set(Calendar.MINUTE, 0);
+		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 0);
+		Date now = new Date();
+		Calendar begin = Calendar.getInstance();
+		begin.setTime(rangeStart != null ? rangeStart : now);
+		Calendar end = Calendar.getInstance();
+		end.setTime(rangeEnd != null ? rangeEnd : now);
+		
+		// 不在区间内的，找匹配最近的一段时间
+		if (date.before(begin)) {
+			date.setTime(begin.getTime());;
+		} else if (date.after(end)) {
+			date.setTime(end.getTime());;
+		}
+		
+		Calendar startDate = Calendar.getInstance();
+		startDate.setTime(date.getTime());
+		Calendar endDate = Calendar.getInstance();
+		endDate.setTime(date.getTime());
+		
+		if (reverse) {
+			while (isBetween(date, begin, end)) {
+				endDate.setTime(end.getTime());
+				end.add(Calendar.YEAR, -1);
+				startDate.setTime(end.getTime());
+			}
+			startDate.add(Calendar.DATE, 1);
+			if (startDate.before(begin)) {
+				startDate = begin;
+			}
+		} else {
+			while (isBetween(date, begin, end)) {
+				startDate.setTime(begin.getTime());
+				begin.add(Calendar.YEAR, 1);
+				endDate.setTime(begin.getTime());
+			}
+			endDate.add(Calendar.DATE, -1);
+			if (endDate.after(end)) {
+				endDate = end;
+			}
+		}
+		return new Date[] {startDate.getTime(), endDate.getTime()};
+    }
+    
+	/***
+	 * 比较某一时间是否在两个日期之间
+	 * 
+	 * @param nowTime
+	 * @param startTime
+	 * @param endTime
+	 * @return
+	 */
+	public static boolean isBetween(Date nowTime, Date startTime, Date endTime) {
+		if (nowTime.getTime() == startTime.getTime() || nowTime.getTime() == endTime.getTime()) {
+			return true;
+		}
+		Calendar date = Calendar.getInstance();
+		date.setTime(nowTime);
+		Calendar begin = Calendar.getInstance();
+		begin.setTime(startTime);
+		Calendar end = Calendar.getInstance();
+		end.setTime(endTime);
+		if (date.after(begin) && date.before(end)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/***
+	 * 比较某一时间是否在两个日期之间
+	 * 
+	 * @param nowTime
+	 * @param startTime
+	 * @param endTime
+	 * @return
+	 */
+	public static boolean isBetween(Calendar nowTime, Calendar startTime, Calendar endTime) {
+		if (startTime.before(endTime) && (nowTime.getTimeInMillis() == startTime.getTimeInMillis() || nowTime.getTimeInMillis() == endTime.getTimeInMillis())) {
+			return true;
+		}
+		if (nowTime.after(startTime) && nowTime.before(endTime)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
     /**
      * 获取格式化后的时间间隔
@@ -280,4 +413,19 @@ public class DateUtil {
         int maxDate = a.get(Calendar.DATE);
         return maxDate;
     }
+    
+    public static void main(String[] args) throws ParseException {
+		Date nowDate = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date rangeStart = dateFormat.parse("2018-09-28");
+		Date rangeEnd = dateFormat.parse("2020-10-28");
+		Date[] nearlyYearDates = getNearlyYearDates(nowDate, rangeStart, rangeEnd, true);
+		System.out.println(dateFormat.format(nearlyYearDates[0]));
+		System.out.println(dateFormat.format(nearlyYearDates[1]));
+		
+		System.out.println();
+		nearlyYearDates = getNearlyYearDates(nowDate, rangeStart, rangeEnd, false);
+		System.out.println(dateFormat.format(nearlyYearDates[0]));
+		System.out.println(dateFormat.format(nearlyYearDates[1]));
+	}
 }

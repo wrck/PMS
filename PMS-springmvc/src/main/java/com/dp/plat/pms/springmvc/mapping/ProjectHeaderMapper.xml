@@ -1257,7 +1257,7 @@
 				AND pp.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.projectName != null and '' != model.projectName">
-				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
+				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.contractNo != null and '' != model.contractNo">
 				AND p.contractNo like concat("%", #{model.contractNo, jdbcType=VARCHAR}, "%")
@@ -1367,7 +1367,7 @@
 				AND pp.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.projectName != null and '' != model.projectName">
-				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") AND
+				AND IFNULL(pp.projectName, p.projectName) like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
 			</if>
 			<if test="model.contractNo != null and '' != model.contractNo">
 				AND p.contractNo like concat("%", #{model.contractNo, jdbcType=VARCHAR}, "%")
@@ -1410,7 +1410,6 @@
 				p.contractNo like CONCAT("%", #{fuzzy}, "%")
 			)
 		</if>
-	</trim>
 	<![CDATA[
 	    and not exists 
 	    (select 
@@ -1434,6 +1433,7 @@
 	        <!-- and pp.`orderExecNumber` = t1.`contractNo` -->
 	         and pp.`projectCode` = t1.`contractNo`
 	        ) 
+	</trim>
 	union all
 	SELECT  
 	    ph.`projectId`, `projectCode`, NULL AS `rank`, `projectName`, 

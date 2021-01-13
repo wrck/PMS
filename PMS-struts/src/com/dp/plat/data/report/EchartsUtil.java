@@ -219,7 +219,7 @@ public class EchartsUtil {
 		Feature feature = new Feature(magicType, restore, saveAsImage);
 		Toolbox toolbox = new Toolbox(true, feature );
 		List<Axis> xAxis = new ArrayList<Axis>();
-		TextStyle textStyle = new TextStyle(12, "center", null,null);
+		TextStyle textStyle = new TextStyle(12, "bottom", null,null);
 		AxisLabel axisLabel = new AxisLabel(textStyle , 0, -45, 5);
 		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(xAxi)), axisLabel );
 		xAxis.add(axis);
@@ -257,7 +257,7 @@ public class EchartsUtil {
 		Feature feature = new Feature(magicType, restore, saveAsImage);
 		Toolbox toolbox = new Toolbox(true, feature );
 		List<Axis> xAxis = new ArrayList<Axis>();
-		TextStyle textStyle = new TextStyle(12, "center", null,null);
+		TextStyle textStyle = new TextStyle(12, "bottom", null,null);
 		AxisLabel axisLabel = new AxisLabel(textStyle , 0, -45, 5);
 		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(officeNames)), axisLabel );
 		xAxis.add(axis);
@@ -295,8 +295,8 @@ public class EchartsUtil {
 		Feature feature = new Feature(magicType, restore, saveAsImage);
 		Toolbox toolbox = new Toolbox(true, feature );
 		List<Axis> xAxis = new ArrayList<Axis>();
-		TextStyle textStyle = new TextStyle(12, "center", null ,null);
-		AxisLabel axisLabel = new AxisLabel(textStyle , 0, 45, 15);
+		TextStyle textStyle = new TextStyle(12, "bottom", null ,null);
+		AxisLabel axisLabel = new AxisLabel(textStyle , 0, 45, 5);
 		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(officeNames)), axisLabel );
 		xAxis.add(axis);
 		List<Axis> yAxis = new ArrayList<Axis>();

@@ -47,9 +47,16 @@ public class UTF8BOMConverter extends Reader {
         BufferedReader br = new BufferedReader(new UTF8BOMConverter(file, encoding));
         String line = null;
         String fileContent = "";
-        while ((line = br.readLine()) != null) {
-            fileContent = fileContent + line;
-            fileContent += "\r\n";
+//		while ((line = br.readLine()) != null) {
+//			fileContent = fileContent + line;
+//			fileContent += "\r\n";
+//		}
+        line = br.readLine();
+        fileContent = fileContent + line;
+        fileContent += "\r\n";
+        int c = 0;
+        while ((c = br.read()) != -1) {
+        	fileContent = fileContent + new String(new char[] {(char)c});
         }
         return fileContent;
     }
@@ -91,7 +98,7 @@ public class UTF8BOMConverter extends Reader {
     public static void main(String[] args) throws Exception {
         String suffix = ".java";
         List<String> paths = new ArrayList<String>();
-        paths = getAllFilePaths(new File("F:\\Workspace\\PMS\\PMS-activiti\\src\\main\\java"), paths);
+        paths = getAllFilePaths(new File("D:\\EclipseWorkspace\\Parctice\\PMS\\PMS-struts\\src"), paths);
         List<String> pathList = new ArrayList<String>();
         for (String path : paths) {
             if (path.endsWith(suffix)) {

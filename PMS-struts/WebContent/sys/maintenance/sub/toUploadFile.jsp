@@ -20,7 +20,16 @@ input[type=file]{
             	ajaxSubmitCommomUnpload();
             } else if (message == "returnForm") {
             	if(window.parent.returnFormCallback) {
-            		window.parent.returnFormCallback($("#uploadForm"));
+            		window.parent.returnFormCallback($("#uploadForm"), function($container, $form) {
+            			var $uploadDiv = $("#uploaddiv", $form);
+            			$("tr", $uploadDiv).each(function() {
+            				var $tr = $(this);
+            				var deliverId = $tr.find("input[name='projectDeliver.deliverId']").val();
+            				var $files = $tr.find("input[type='file']");
+            				var $existsTr = $container.find("input[name='projectDeliver.deliverId'][value='" + deliverId+ "']").parents("tr:first");
+            				$existsTr.find("input[type='file']").parents("td:first").append($files);
+            			});
+            		});
             	}
             } else {
                 $("form").submit();

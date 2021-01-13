@@ -36,7 +36,7 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
 
 				// 	$("#gzlv").text(JSON.stringify(data));
 
@@ -61,7 +61,7 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
 
 				// 	$("#gzlv").text(JSON.stringify(data));
 
@@ -85,7 +85,7 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
 
 				// 	$("#gzlv").text(JSON.stringify(data));
 
@@ -116,7 +116,7 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
 				qualityScore.setOption(data);
 				var datajson = eval('(' + result.dataJson + ')');
 				qualitySize.setOption(datajson);
@@ -142,7 +142,7 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
 
 				// 	$("#gzlv").text(JSON.stringify(data));
 
@@ -168,6 +168,37 @@
 		
 	});
 
+	var defaultDataZoomOption = {
+		grid: {
+		    containLabel: true,
+		    x: 80,    //left
+		    y: 60,    //top
+		    x2: 80,   //right
+		    y2: 60,   //bottom
+		    bottom: 60,
+	    },
+		dataZoom: {
+            type: 'slider',
+            show: true,
+            top: "92%",
+            realtime: false, //拖动滚动条时是否动态的更新图表数据
+            //height: 30,//滚动条高度
+            start: 70,//滚动条开始位置（共100等份）
+            end:100//结束位置（共100等份）
+        }
+	};
+	function fitDataZoom(data) {
+		$.extend(true, data, defaultDataZoomOption);
+		try {
+    		var size = data.series[0].data.length;
+    		var start = Math.max(100 - 30 / size * 100, 0);
+    		data.dataZoom.start = start;
+    		data.dataZoom.show = !!start;
+    		// 预留出缩放框的高度
+    		data.grid.y2 += (!!start ? ((data.dataZoom.height - 10) || 20) : 0);
+		} catch(e) {}
+		return data;
+	}
 	function officechange(linedivid, linedatatype, _this) {
 		var charts = echarts.init(document.getElementById(linedivid));
 
@@ -185,7 +216,8 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
+				fitDataZoom(data);
 				charts.setOption(data);
 			},
 			complete : function() {
@@ -212,7 +244,8 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
+				fitDataZoom(data);
 				charts.setOption(data);
 			},
 			complete : function() {
@@ -236,7 +269,8 @@
 				});
 			},
 			success : function(result) {
-				var data = eval('(' + result.data + ')');
+				var data = eval('(' + result.data + ')') || {};
+				fitDataZoom(data);
 				charts.setOption(data);
 			},
 			complete : function() {

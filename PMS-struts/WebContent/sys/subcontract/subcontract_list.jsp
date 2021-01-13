@@ -165,7 +165,7 @@
             <display:column property="isInvoiced" titleKey="pm.subcontract.invoiced" media="excel"></display:column>
             <display:column property="confirmTime" titleKey="pm.subcontract.confirmTime" format="{0,date,yyyy-MM-dd HH:mm:ss}" media="excel"></display:column>
             <display:column property="paidRatio" titleKey="pm.subcontract.paidRatio" media="excel"></display:column>
-            <display:column property="paidAmountWrapper" titleKey="pm.subcontract.paidAmount" media="excel"></display:column>
+            <display:column property="paidAmountWrapper" titleKey="pm.subcontract.paidAmount" headerClass="nowrap" class="text-right"></display:column>
             <display:column property="paymentTime" titleKey="pm.subcontract.paymentTime" format="{0,date,yyyy-MM-dd HH:mm:ss}" media="excel"></display:column>
             <display:column property="remark" titleKey="pm.subcontract.remark" media="excel"></display:column>
         </display:table>

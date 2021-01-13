@@ -383,6 +383,16 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 			HashMap<String, Object> roleGroup = new HashMap<>();
 			roleGroup.put("roleGroup", "emRole");
 			roleGroups.add(roleGroup);
+			
+			if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+				roleGroup = new HashMap<>();
+				roleGroup.put("roleGroup", "emlRole");
+				roleGroups.add(roleGroup);
+				
+				roleGroup = new HashMap<>();
+				roleGroup.put("roleGroup", "role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+				roleGroups.add(roleGroup);
+			}
 		}
 
 		List<Map<String, Object>> cbTaskList = new ArrayList<>();
@@ -391,6 +401,22 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 			// cbTaskList = workspaceDao.querySubcontractTaskList(params);
 			HashMap<String, Object> roleGroup = new HashMap<>();
 			roleGroup.put("roleGroup", "cbRole");
+			roleGroups.add(roleGroup);
+		}
+		
+		List<Map<String, Object>> zrTaskList = new ArrayList<>();
+		if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
+			// params.put("roleGroup", "zrRole");
+			// params.put("checkOffice", true);
+			// zrTaskList = workspaceDao.querySubcontractTaskList(params);
+			HashMap<String, Object> roleGroup = new HashMap<>();
+			roleGroup.put("roleGroup", "zrRole");
+			roleGroup.put("checkProfitDep", true);
+			roleGroups.add(roleGroup);
+			
+			roleGroup = new HashMap<>();
+			roleGroup.put("roleGroup", "role_" + MessageUtil.ROLE_AREA_LEADER);
+			roleGroup.put("checkProfitDep", true);
 			roleGroups.add(roleGroup);
 		}
 
@@ -422,6 +448,7 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 		allTaskList = workspaceDao.querySubcontractTaskList(params);
 		allTaskList.addAll(emTaskList);
 		allTaskList.addAll(cbTaskList);
+		allTaskList.addAll(zrTaskList);
 		allTaskList.addAll(smTaskList);
 		return allTaskList;
 		// return workspaceDao.querySubcontractTaskList(params);

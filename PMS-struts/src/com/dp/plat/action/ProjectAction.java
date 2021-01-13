@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -77,6 +78,7 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
 import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.QuestionnarieUtil;
+import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.dp.plat.util.parser.ExcelParser;
 import com.opensymphony.xwork2.Preparable;
@@ -434,7 +436,12 @@ public class ProjectAction extends BaseAction implements Preparable{
 			}
 		}
 		if (result == 2) {
-			projectService.insertTransferShipment(selected, project, transferProject);
+		    Project temp = projectService.queryProjectById(project.getProjectId());
+		    if ("14".equals(temp.getSalesType())) {
+		        projectService.insertTransferShipment(selected, project, transferProject, temp.getColumn001());
+		    } else {
+		        projectService.insertTransferShipment(selected, project, transferProject);
+		    }
 			projectService.updateProjectLastRefreshTime(project.getProjectId());
 			projectService.updateProjectLastRefreshTime(transferProject.getProjectId());
 			result = 1;
@@ -450,7 +457,12 @@ public class ProjectAction extends BaseAction implements Preparable{
 				contractNoList = new ArrayList<>();
 			}
 			if (StringUtils.isNotBlank(project.getContractNo())) {
-				shipmentInfoList = projectService.queryTransferShipmentInfoByContractNo(project, transferProject.getProjectId());
+			    Project temp = projectService.queryProjectById(project.getProjectId());
+	            if ("14".equals(temp.getSalesType())) {
+	                shipmentInfoList = projectService.queryTransferShipmentInfoByContractNo(temp, transferProject.getProjectId(), temp.getColumn001());
+	            } else {
+	                shipmentInfoList = projectService.queryTransferShipmentInfoByContractNo(project, transferProject.getProjectId());
+	            }
 			} else {
 				shipmentInfoList = new ArrayList<>();
 			}
@@ -641,7 +653,12 @@ public class ProjectAction extends BaseAction implements Preparable{
                     isCallBacking = projectService.queryCallBackingSize(project.getProjectId());
                     if (isCallBacking == 0) {
                         // 安装数量和发货数量
-                        int shipmentInfoSize = projectService.queryShipmentInfoSizeByContractNo(Util.appendChar(project.getContractNo(), "'"));
+                        int shipmentInfoSize = 0;
+                        if ("14".equals(project.getSalesType())) {
+                            shipmentInfoSize = projectService.queryShipmentInfoSizeByContractNo(Util.appendChar(project.getContractNo(), "'"), project.getColumn001());
+                        } else {
+                            shipmentInfoSize = projectService.queryShipmentInfoSizeByContractNo(Util.appendChar(project.getContractNo(), "'"));
+                        }
                         int anzhuangdizhisize = projectService.queryProjectShipment(project.getProjectId());
                         if (anzhuangdizhisize == shipmentInfoSize) {
                             isToCloseProject = 1;// 可以进行闭环申请
@@ -759,7 +776,13 @@ public class ProjectAction extends BaseAction implements Preparable{
 		try {
 			user = UserContext.getUserContext().getUser();
 			result = projectService.queryProjectShipment(project.getProjectId());
-			shipmentInfoList = projectService.queryShipmentInfoByContractNo(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+			Project temp = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
+			// 如果是总代借货项目
+			if (temp != null && "14".equals(temp.getSalesType())) {
+			    shipmentInfoList = projectService.queryShipmentInfoByContractNo(Util.appendChar(temp.getContractNo(), "'"), temp.getProjectId(), temp.getColumn001());
+			} else {
+			    shipmentInfoList = projectService.queryShipmentInfoByContractNo(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -797,7 +820,12 @@ public class ProjectAction extends BaseAction implements Preparable{
 	 */
 	public String checkSoftVersion(){
 		try {
-			softversionList = projectService.querySoftversionList(Util.appendChar(project.getContractNo(), "'"),project.getProjectId());
+		    Project temp = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
+		    if (temp != null && "14".equals(temp.getSalesType())) {
+		        softversionList = projectService.querySoftversionList(Util.appendChar(temp.getContractNo(), "'"),temp.getProjectId(), temp.getColumn001());
+		    } else {
+		        softversionList = projectService.querySoftversionList(Util.appendChar(project.getContractNo(), "'"),project.getProjectId());
+		    }
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -1410,13 +1438,18 @@ public class ProjectAction extends BaseAction implements Preparable{
 				addActionMessage(HttpContext.getMessage("sys.adderror"));
 				return SUCCESS;
 			}
+			String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
 			String targetDirectory = ServletActionContext.getServletContext()
 					.getRealPath(path);
 			String[] uploadFileNames = uploadFileName.split(",");
-
+			
 			for (int i = 0; i < uploadFileNames.length; i++) {
 				String ufn = uploadFileNames[i];// 附件名称
 				String targetFileName = ufn.trim();
+				// 检查文件上传类型
+				if (!UploadFileUtil.checkFileExt(ufn, uploadExtWhiteList)) {
+					return ERROR;
+				}
 				String newName = projectService.getUploadFileRename(targetFileName);
 				if(newName == null){
 					newName = targetFileName;
@@ -1471,8 +1504,15 @@ public class ProjectAction extends BaseAction implements Preparable{
 	@JSON(serialize = false)
 	public InputStream getFileStream() throws FileNotFoundException,
 			UnsupportedEncodingException {
-		InputStream in = ServletActionContext.getServletContext()
-				.getResourceAsStream(downpath);
+		InputStream in = ServletActionContext.getServletContext().getResourceAsStream(downpath);
+		// 不存在时，对中文进行转换，再找一次，如果不一致，按原路径查询
+		if (null == in) {
+			// 对中文进行转换，防止乱码
+			String path = new String(downpath.getBytes(Charset.forName("ISO8859-1")), "UTF-8");
+			if (!downpath.equals(path)) {
+				in = ServletActionContext.getServletContext().getResourceAsStream(path);
+			}
+		}
 		if (null == in) {
 			java.lang.System.out
 					.println("Can not find a java.io.InputStream with the name [inputStream] in the invocation stack. Check the <param name=\"inputName\"> tag specified for this action.检查action中文件下载路径是否正确.");
@@ -1730,7 +1770,12 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public String saveInstallAdress(){
 		try {
 			project = projectService.queryProjectById(projectId);
-			projectService.insertInstallAddress(selected ,projectId , installAddress , project.getContractNo());
+			String contractNo = project.getContractNo();
+			if ("14".equals(project.getSalesType())) {
+			    projectService.insertInstallAddress(selected, projectId, installAddress, project.getContractNo(), project.getColumn001());
+			} else {
+			    projectService.insertInstallAddress(selected, projectId, installAddress, project.getContractNo());
+			}
 			projectService.updateProjectLastRefreshTime(projectId);
 			projectService.addFixedNotification(MessageUtil.NOTIFICATION_CODE_114, projectId);
 			result = 303;

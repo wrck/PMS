@@ -112,6 +112,8 @@
 		</filter-mapping> -->
 	<filter>
 		<filter-name>struts-prepare</filter-name>
+		<!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareFilter</filter-class> -->
 		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareFilter</filter-class>
 	</filter>
 	<filter>
@@ -120,6 +122,8 @@
 	</filter>
 	<filter>
 		<filter-name>struts-execute</filter-name>
+		<!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsExecuteFilter</filter-class> -->
 		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsExecuteFilter</filter-class>
 	</filter>
 	<filter-mapping>
@@ -141,6 +145,8 @@
 		</filter-mapping> -->
 	<filter>
 		<filter-name>struts2</filter-name>
+		<!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class> -->
 		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
 	</filter>
 	<filter-mapping>

@@ -66,7 +66,11 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 					requestBody = requestBodyStr.getBytes(getCharset());
 				}
 			} finally {
-				processParameters(requestBody, 0, getContentLength(), getCharset());
+				try {
+					processParameters(requestBody, 0, getContentLength(), getCharset());
+				} catch (Exception e) {
+					processParameters(requestBody, 0, requestBody.length, getCharset());
+				}
 			}
 		}
 		// 缓存请求查询参数
@@ -79,7 +83,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 
 	@Override
 	public Map<String, String[]> getParameterMap() {
-		if (null != requestBody) {
+		if (null != requestBody && requestBody.length > 0) {
 			if (null != parameterMap) {
 				return parameterMap;
 			}
@@ -101,7 +105,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 	public String[] getParameterValues(String parameter) {
 		List<String> values = null;
 		String[] temp = null;
-		if (requestBody == null) {
+		if (requestBody == null || requestBody.length == 0) {
 			temp = super.getParameterValues(parameter);
 			values = null;
 			if (null == temp) {
@@ -143,7 +147,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 	public String getParameter(String parameter) {
 		List<String> values = null;
 		String temp = null;
-		if (requestBody == null) {
+		if (requestBody == null|| requestBody.length == 0) {
 			temp = super.getParameter(parameter);
 			values = null;
 			if (null == temp) {
@@ -183,7 +187,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 
 	@Override
 	public Enumeration<String> getParameterNames() {
-		if (null != requestBody) {
+		if (null != requestBody && requestBody.length != 0) {
 			return Collections.enumeration(paramHashValues.keySet());
 		} else {
 			return super.getParameterNames();

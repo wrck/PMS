@@ -38,6 +38,5 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/PMS-activiti"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/pms-struts"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

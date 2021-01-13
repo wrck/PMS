@@ -38,6 +38,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.exception.UploadException;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.service.BaseServiceImpl;
 import com.dp.plat.service.BasicDataService;
@@ -241,6 +242,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			boolean excludeTransferOut) {
 		return dao.queryShipmentinfoByContractNosAndProjectIds(contractNos, projectIds, excludeTransferOut);
 	}
+	
+	@Override
+	public List<ShipmentInfo> queryShipmentinfoByContractNosAndProjectIds(Map<String, Object> params) {
+		return dao.queryShipmentinfoByContractNosAndProjectIds(params);
+	}
 
 	@Override
 	public List<Project> queryProjectList(Project project) {
@@ -439,6 +445,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	public boolean saveDeliverFiles(Integer subcontractId, List<SubcontractDeliverVO> uploadDeliverList) {
 		boolean callBackFlag = false;
 		if (uploadDeliverList != null) {
+			String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
 			for (SubcontractDeliverVO deliverVO : uploadDeliverList) {
 				try {
 					if (deliverVO == null) {
@@ -453,6 +460,10 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 					for (int i = 0; i < uploadFiles.length; i++) {
 						File file = uploadFiles[i];
 						String fileName = fileNames[i];
+						// 检查文件上传类型
+						if (!UploadFileUtil.checkFileExt(fileName, uploadExtWhiteList)) {
+							return false;
+						}
 						SubcontractDeliver deliver = new SubcontractDeliver(subcontractId);
 						deliver.setFileName(fileName);
 						fileName = UploadFileUtil.uploadNoRepeat(file, uploadDir, fileName);
@@ -464,6 +475,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 						// callBackFlag = true;
 						// }
 					}
+				} catch (UploadException e) {
+					throw e;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -619,6 +632,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		vars.clear();
 		vars.put(SubcontractConstant.TASK_PROFIT_SERVICEMANAGER, "profitSmRole");
 		vars.put("profitSmRole", tempSubcontract.getProfitDepCode2Office() + "smRole");
+		vars.put("dpNo", tempSubcontract.getProfitDepCode2Office());
 		workFlowService.doSelfTask(task, procInstId, "发起项目转包申请", vars);
 
 		// 6.增加自定义的审批意见
@@ -669,13 +683,53 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		// 更改项目转包状态
 		SubcontractProject tempSubcontract = new SubcontractProject();
 		tempSubcontract.setId(subcontract.getId());
-		subcontract = dao.selectSubcontractProjectVOById(subcontract.getId());
+		SubcontractProjectVO subcontractVO = dao.selectSubcontractProjectVOById(subcontract.getId());
 
-		String[] nextAssign = new String[] { "", "" };
+		String candidateRole = "";
+		String[] nextAssign = new String[] { "", "", "" };
+		// 流程变量
+		Map<String, Object> vars = new HashMap<String, Object>();
 		if (taskParam.getApproveStatus() == AGREE) {
 			tempSubcontract.setState(SubcontractStatus.PROFIT_SM_AGREE);// 收益部门服务经理审批通过
-
-			nextAssign = getNextAssignPer(MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+			
+			// 特殊部门由办事处主任审批
+			String officeCodes = StringUtils.trimToEmpty(basicDataService.querySysArg(SubcontractTemplate.AREA_LEADER_AUDIT_ENGINEE_FEE_OFFICES));
+			if (officeCodes.contains(subcontractVO.getProfitDepCode2Office())) {
+//				Map<String, String> params = new HashMap<>();
+//				params.put("roleid", MessageUtil.ROLE_AREA_LEADER + "");
+//				params.put("areaPower", subcontract.getProfitDepCode());
+//				List<User> userList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
+//				if (userList.isEmpty()) {
+//					params.put("areaPower", subcontract.getProfitDepCode2Office());
+//					List<User> tempList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
+//					userList.addAll(tempList);
+//				}
+//				if (userList.isEmpty()) {
+//					throw new SubcontractException("没有找到办事处主任！");
+//				}
+//				User nextPerson = userList.get(0);
+//				nextAssign[0] = nextPerson.getUsername();
+//				nextAssign[1] = nextAssign[0] + "-" + nextPerson.getRealName();
+//				nextAssign[2] = nextPerson.getEmail();
+				try {
+					nextAssign = getNextAssignPer(MessageUtil.ROLE_AREA_LEADER, subcontractVO.getProfitDepCode());
+					if ("1".compareTo(nextAssign[3]) < 0) {
+						nextAssign[0] = subcontractVO.getProfitDepName() + "主任";
+						nextAssign[1] = subcontractVO.getProfitDepName() + "主任";
+						candidateRole = String.valueOf(MessageUtil.ROLE_AREA_LEADER);
+					}
+					vars.put("isAreaLeaderAudit", true);
+				} catch(SubcontractException e) {
+					throw new SubcontractException("没有找到办事处主任！");
+				}
+			} else {
+				nextAssign = getNextAssignPer(MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+				if ("1".compareTo(nextAssign[3]) < 0) {
+					nextAssign[0] = "工程管理部主管";
+					nextAssign[1] = "工程管理部主管";
+					candidateRole = String.valueOf(MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+				}
+			}
 		} else if (taskParam.getApproveStatus() == REJECT) {
 			tempSubcontract.setState(SubcontractStatus.PROFIT_SM_REJECT);// 收益部门服务经理审批驳回
 
@@ -694,7 +748,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		HashMap<String, Object> params = new HashMap<>();
 		params.put("checkProfitDep", "true");
 		List<Task> taskList = querySubcontractTaskList(TaskKey.PROFIT_SERVICE_APPROVE, "profitSmRole",
-				subcontract.getId(), params);
+				subcontractVO.getId(), params);
 		Task task = null;
 		if (taskList != null && !taskList.isEmpty()) {
 			task = taskList.get(0);
@@ -704,32 +758,39 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 
 		// 增加流程变量
-		Map<String, Object> vars = new HashMap<String, Object>();
-		vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_LEADER, nextAssign[0]);
+//		Map<String, Object> vars = new HashMap<String, Object>();
+		if (StringUtils.isNotBlank(candidateRole)) {
+			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_LEADER, "role_" + candidateRole);
+		} else {
+			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_LEADER, nextAssign[0]);
+		}
+		vars.put("emlRole", candidateRole);
+		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 
 		// 3.增加自定义的审批意见
-		workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
+		workFlowService.addSelfActComment(subcontractVO.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
 				task.getProcessInstanceId(), taskParam.getApproveStatus(), taskParam.getComment(), nextAssign[0],
 				nextAssign[1]);
 
 		// 增加通知下一步审批人邮件
 		Map<String, Object> mailMap = new HashMap<String, Object>();
 		if (taskParam.getApproveStatus() == AGREE) {
-			String tos = userManageService.queryMailsByRoleAndOfficeCodes("", MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+//			String tos = userManageService.queryMailsByRoleAndOfficeCodes("", MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+			String tos = nextAssign[2];
 			if (StringUtils.isNotBlank(tos)) {
 				mailMap.put("tos", tos);
 				mailMap.put("templateCode", SubcontractTemplate.APPROVE_NOTIFY_CODE);
 				mailMap.put("username", nextAssign[1]);
-				mailMap.put("subcontractName", subcontract.getSubcontractName());
+				mailMap.put("subcontractName", subcontractVO.getSubcontractName());
 				mailMap.put("taskName", "审批");
 			}
 		} else {
 			// String tos =
 			// userManageService.queryMailsByRoleAndOfficeCodes(subcontract.getOfficeCode(),
 			// MessageUtil.ROLE_SERVICEMANAGER);
-			String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, subcontract.getOfficeCode());
+			String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, subcontractVO.getOfficeCode());
 			String tos = nextAssignPer[2];
 			if (StringUtils.isNotBlank(tos)) {
 				mailMap.put("tos", tos);
@@ -738,7 +799,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 				// mailMap.put("username", ((SubcontractProjectVO)
 				// subcontract).getOfficeName() + "服务经理");
 				mailMap.put("username", nextAssignPer[1]);
-				mailMap.put("subcontractName", subcontract.getSubcontractName());
+				mailMap.put("subcontractName", subcontractVO.getSubcontractName());
 				mailMap.put("taskAssignee", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
 				mailMap.put("comment", taskParam.getComment());
 			}
@@ -836,13 +897,14 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		tempSubcontract.setId(subcontract.getId());
 
 		String subcontractAmount = subcontract.getSubcontractAmount();
-		subcontract = dao.selectSubcontractProjectVOById(subcontract.getId());
+		SubcontractProjectVO subcontractVO = dao.selectSubcontractProjectVOById(subcontract.getId());
 
 		String[] nextAssign = new String[] { "", "", "" };
+		String candidateRole = "";
 		if (taskParam.getApproveStatus() == AGREE) {
 			if (subcontractPriceList != null) {
 				for (SubcontractPrice price : subcontractPriceList) {
-					price.setSubcontractId(subcontract.getId());
+					price.setSubcontractId(subcontractVO.getId());
 					if (price.getId() == null) {
 						this.insertSubcontractPrice(price);
 					} else {
@@ -853,24 +915,34 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			tempSubcontract.setSubcontractAmount(subcontractAmount);
 			tempSubcontract.setState(SubcontractStatus.ENG_AGREE);// 工程管理部审批通过
 
-			Map<String, String> params = new HashMap<>();
-			params.put("roleid", MessageUtil.ROLE_AREA_LEADER + "");
-			params.put("areaPower", subcontract.getProfitDepCode());
-			List<User> userList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
-			if (userList.isEmpty()) {
-				params.put("areaPower", subcontract.getProfitDepCode2Office());
-				List<User> tempList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
-				userList.addAll(tempList);
-			}
-//			params.put("areaPower", subcontract.getProfitDepCode2Office());
+//			Map<String, String> params = new HashMap<>();
+//			params.put("roleid", MessageUtil.ROLE_AREA_LEADER + "");
+//			params.put("areaPower", subcontract.getProfitDepCode());
 //			List<User> userList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
-			if (userList.isEmpty()) {
+//			if (userList.isEmpty()) {
+//				params.put("areaPower", subcontract.getProfitDepCode2Office());
+//				List<User> tempList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
+//				userList.addAll(tempList);
+//			}
+////			params.put("areaPower", subcontract.getProfitDepCode2Office());
+////			List<User> userList = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
+//			if (userList.isEmpty()) {
+//				throw new SubcontractException("没有找到办事处主任！");
+//			}
+//			User nextPerson = userList.get(0);
+//			nextAssign[0] = nextPerson.getUsername();
+//			nextAssign[1] = nextAssign[0] + "-" + nextPerson.getRealName();
+//			nextAssign[2] = nextPerson.getEmail();
+			try {
+				nextAssign = getNextAssignPer(MessageUtil.ROLE_AREA_LEADER, subcontractVO.getProfitDepCode());
+				if ("1".compareTo(nextAssign[3]) < 0) {
+					nextAssign[0] = subcontractVO.getProfitDepName() + "主任";
+					nextAssign[1] = subcontractVO.getProfitDepName() + "主任";
+					candidateRole = String.valueOf(MessageUtil.ROLE_AREA_LEADER);
+				}
+			} catch(SubcontractException e) {
 				throw new SubcontractException("没有找到办事处主任！");
 			}
-			User nextPerson = userList.get(0);
-			nextAssign[0] = nextPerson.getUsername();
-			nextAssign[1] = nextAssign[0] + "-" + nextPerson.getRealName();
-			nextAssign[2] = nextPerson.getEmail();
 		} else if (taskParam.getApproveStatus() == REJECT) {
 			tempSubcontract.setState(SubcontractStatus.ENG_REJECT);// 工程管理部审批驳回
 
@@ -895,33 +967,58 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			throw new SubcontractException("没有【" + nowUser + "】的待办任务！任务办理失败！");
 		}
 
+		Map<String, Object> taskVariables = taskService.getVariables(task.getId());
 		// 增加流程变量
 		Map<String, Object> vars = new HashMap<String, Object>();
-		vars.put(SubcontractConstant.TASK_USER_AREA_LEADER, nextAssign[0]);
+		if (StringUtils.isNotBlank(candidateRole)) {
+			vars.put(SubcontractConstant.TASK_USER_AREA_LEADER, "zrRole");
+			vars.put("zrRole", MessageUtil.ROLE_AREA_LEADER + "");
+		} else {
+			vars.put(SubcontractConstant.TASK_USER_AREA_LEADER, nextAssign[0]);
+			vars.put("zrRole", "");
+		}
+		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 
 		// 3.增加自定义的审批意见
-		workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
+		workFlowService.addSelfActComment(subcontractVO.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
 				task.getProcessInstanceId(), taskParam.getApproveStatus(), taskParam.getComment(), nextAssign[0],
 				nextAssign[1]);
 
 		// 增加通知下一步审批人邮件
 		Map<String, Object> mailMap = new HashMap<String, Object>();
 		if (taskParam.getApproveStatus() == AGREE) {
-			String tos = nextAssign[2];
-			if (StringUtils.isNotBlank(tos)) {
-				mailMap.put("tos", tos);
-				mailMap.put("templateCode", SubcontractTemplate.APPROVE_NOTIFY_CODE);
-				mailMap.put("username", nextAssign[1]);
-				mailMap.put("subcontractName", subcontract.getSubcontractName());
-				mailMap.put("taskName", "审批");
+			// 如果下级审批人与当前审批人一致
+			if (Boolean.TRUE.equals(taskVariables.get("isAreaLeaderAudit"))) {
+				HashMap<String, Object> params = new HashMap<>();
+				params.put("checkProfitDep", "true");
+				List<Task> nextTaskList = querySubcontractTaskList(TaskKey.ZR_APPROVE, "zrRole", subcontractVO.getId(), params);
+//				List<Task> nextTaskList = querySubcontractTaskList(TaskKey.ZR_APPROVE, subcontract.getId());
+				Task nextTask = null;
+				if (nextTaskList != null && !nextTaskList.isEmpty()) {
+					nextTask = nextTaskList.get(0);
+					WorkflowCommonParam nextTaskParam = new WorkflowCommonParam();
+					nextTaskParam.setTaskId(nextTask.getId());
+					nextTaskParam.setApproveStatus(AGREE);
+					nextTaskParam.setComment("办理人相同，自动审批通过");
+					this.approveSubcontractFlow(nextTaskParam, tempSubcontract);
+				}
+			} else {
+				String tos = nextAssign[2];
+				if (StringUtils.isNotBlank(tos)) {
+					mailMap.put("tos", tos);
+					mailMap.put("templateCode", SubcontractTemplate.APPROVE_NOTIFY_CODE);
+					mailMap.put("username", nextAssign[1]);
+					mailMap.put("subcontractName", subcontractVO.getSubcontractName());
+					mailMap.put("taskName", "审批");
+				}
 			}
 		} else {
 			// String tos =
 			// userManageService.queryMailsByRoleAndOfficeCodes(subcontract.getOfficeCode(),
 			// MessageUtil.ROLE_SERVICEMANAGER);
-			String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, subcontract.getOfficeCode());
+			String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, subcontractVO.getOfficeCode());
 			String tos = nextAssignPer[2];
 			if (StringUtils.isNotBlank(tos)) {
 				mailMap.put("tos", tos);
@@ -930,7 +1027,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 				// mailMap.put("username", ((SubcontractProjectVO)
 				// subcontract).getOfficeName() + "服务经理");
 				mailMap.put("username", nextAssignPer[1]);
-				mailMap.put("subcontractName", subcontract.getSubcontractName());
+				mailMap.put("subcontractName", subcontractVO.getSubcontractName());
 				mailMap.put("taskAssignee", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
 				mailMap.put("comment", taskParam.getComment());
 			}
@@ -941,6 +1038,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 
 	@Override
 	@Transactional
+	@Deprecated
 	public String auditSubcontractFlow(SubcontractComment taskParam, SubcontractProject subcontract) {
 		log("工程管理部主管审批项目转包申请");
 		// 更改项目转包状态
@@ -1073,6 +1171,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		// Task task =
 		// taskService.createTaskQuery().taskId(taskParam.getTaskId()).processInstanceId(taskParam.getInstId()).taskAssignee(nowUser).active().singleResult();
 		List<Task> taskList = querySubcontractTaskList(SubcontractConstant.TASK_KEY_ZR_APPROVE, taskParam.getTaskId());
+		if (null == taskList || taskList.isEmpty()) {
+			HashMap<String, Object> params = new HashMap<>();
+			params.put("checkProfitDep", "true");
+			taskList = querySubcontractTaskList(TaskKey.ZR_APPROVE, "zrRole", subcontract.getId(), params);
+		}
 		Task task = null;
 		if (taskList != null && !taskList.isEmpty()) {
 			task = taskList.get(0);
@@ -1085,6 +1188,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		Map<String, Object> vars = new HashMap<String, Object>();
 		vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
 		vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+		vars.put("dpNo", subcontract.getProfitDepCode2Office());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 
@@ -1230,6 +1334,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		Map<String, Object> vars = new HashMap<String, Object>();
 		vars.put("sm", "smRole");
 		vars.put("smRole", MessageUtil.ROLE_SERVICEMANAGER + "");
+		vars.put("dpNo", subcontract.getOfficeCode());
 		taskParam.setComment("生成转包合同号");
 		this.submitSelfTask(taskParam, vars);
 
@@ -1418,6 +1523,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
         // 增加流程变量
         String[] nextAssignee = new String[2];
         Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("approveStatus", 1); // 统一待办任务推OA状态
         if (subcontract.getType() != null && subcontract.getType().equals(SubcontractType.MAINTENANCE)) {
             vars.put("result", 1);
             vars.put("cb", "cbRole");
@@ -1432,6 +1538,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
             nextAssignee[1] = "工程人员";
         }
         taskParam.setComment("服务经理申请付款");
+        vars.put("dpNo", subcontract.getOfficeCode());
         vars.put("paymentApplicant", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
         this.submitSelfTask(taskParam, vars);
 
@@ -1687,7 +1794,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		// 增加流程变量
 		Map<String, Object> vars = new HashMap<String, Object>();
 		vars.put("result", taskParam.getApproveStatus());
-
+		vars.put("dpNo", tempSubcontract.getOfficeCode());
 		this.submitSelfTask(taskParam, vars);
 
 		// 3.增加自定义的审批意见
@@ -2091,10 +2198,16 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 					|| context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
 				roleGroup = "emRole";
+				if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+					roleGroup += ",role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER;
+				}
 				// params.put("roleGroup", "emRole");
 			} else if (context.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
 				// params.put("roleGroup", "cbRole");
 				roleGroup = "cbRole";
+			} else if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
+				roleGroup = "zrRole,role_" + MessageUtil.ROLE_AREA_LEADER;
+				params.put("checkProfitDep", "true");
 			}
 		}
 		params.put("roleGroup", roleGroup);
@@ -2107,6 +2220,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		Authentication.setAuthenticatedUserId(username);
 
 		taskService.addComment(taskId, null, param.getComment());
+		taskService.setVariablesLocal(taskId, vars);
 		taskService.complete(taskId, vars);
 	}
 
@@ -2116,6 +2230,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		Authentication.setAuthenticatedUserId(username);
 
 		taskService.addComment(taskId, null, param.getComment());
+		taskService.setVariablesLocal(taskId, vars);
 		taskService.complete(taskId, vars);
 	}
 
@@ -2294,21 +2409,22 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	 * @return
 	 */
 	private String[] getNextAssignPer(int roleId) {
-		// 获取有效的回访人员或工程人员
-		List<User> userList = userManageService.queryUserWithRoleId(roleId);
-		List<String> nextAssignPer = new ArrayList<>(userList.size());
-		List<String> nextAssignName = new ArrayList<>(userList.size());
-		for (User userObj : userList) {
-			nextAssignPer.add(userObj.getUsername());
-			nextAssignName.add(userObj.getUsername() + "-" + userObj.getRealName());
-		}
-
-		if (nextAssignPer.size() <= 0) {
-			throw new SubcontractException("获取下一级审核人员出错");
-		}
-		String[] nextAssigen = new String[] { StringUtils.join(nextAssignPer, ","),
-				StringUtils.join(nextAssignName, ",") };
-		return nextAssigen;
+//		// 获取有效的回访人员或工程人员
+//		List<User> userList = userManageService.queryUserWithRoleId(roleId);
+//		List<String> nextAssignPer = new ArrayList<>(userList.size());
+//		List<String> nextAssignName = new ArrayList<>(userList.size());
+//		for (User userObj : userList) {
+//			nextAssignPer.add(userObj.getUsername());
+//			nextAssignName.add(userObj.getUsername() + "-" + userObj.getRealName());
+//		}
+//
+//		if (nextAssignPer.size() <= 0) {
+//			throw new SubcontractException("获取下一级审核人员出错");
+//		}
+//		String[] nextAssigen = new String[] { StringUtils.join(nextAssignPer, ","),
+//				StringUtils.join(nextAssignName, ",") };
+//		return nextAssigen;
+		return getNextAssignPer(roleId, null);
 	}
 
 	/**
@@ -2368,8 +2484,12 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		if (nextAssignPer.size() <= 0) {
 			throw new SubcontractException("获取下一级审核人员出错");
 		}
-		String[] nextAssigen = new String[] { StringUtils.join(nextAssignPer, ","),
-				StringUtils.join(nextAssignName, ","), StringUtils.join(nextAssignEmail, ";") };
+		String[] nextAssigen = new String[] { 
+			StringUtils.join(nextAssignPer, ","),
+			StringUtils.join(nextAssignName, ","), 
+			StringUtils.join(nextAssignEmail, ";"),
+			String.valueOf(nextAssignPer.size())
+		};
 		return nextAssigen;
 	}
 

@@ -60,6 +60,7 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.PmClosedLoopMark;
 import com.dp.plat.util.PmClosedLoopMarkFactory;
+import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.Preparable;
@@ -477,8 +478,20 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public String chooseShipmentInfo() {
 		try {
 			if (StringUtils.isNotBlank(contractNos)) {
-				shipmentInfoList = subcontractService.queryShipmentinfoByContractNosAndProjectIds(
-						Util.appendChar(contractNos, "'"), Util.appendChar(projectIds, "'"));
+//				shipmentInfoList = subcontractService.queryShipmentinfoByContractNosAndProjectIds(
+//						Util.appendChar(contractNos, "'"), Util.appendChar(projectIds, "'"));
+				Map<String, Object> params = new HashMap<String, Object>();
+				params.put("contractNos", Util.appendChar(contractNos, "'"));
+				params.put("projectIds", Util.appendChar(projectIds, "'"));
+				if (selected != null && selected[0] != null) {
+					try {
+						List<Map> contractProfitCenter = com.alibaba.fastjson.JSON.parseArray(selected[0], Map.class);
+						params.put("contractProfitCenter", contractProfitCenter);
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+				}
+				shipmentInfoList = subcontractService.queryShipmentinfoByContractNosAndProjectIds(params);
 			} else {
 				shipmentInfoList = new ArrayList<>();
 			}

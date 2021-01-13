@@ -8,14 +8,19 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
+
+import com.dp.plat.exception.UploadException;
 
 /**
  * 文件上传方法
@@ -23,6 +28,12 @@ import org.apache.struts2.ServletActionContext;
  *
  */
 public class UploadFileUtil {
+	
+	/**
+	 * 上传类型白名单
+	 */
+	private final static String UPLOAD_EXT_WHITE_LIST = "doc|docx|xls|xlsx|ppt|pptx|xps|vsd|vsdx|csv|pdf|rar|zip|7z|txt|log|bmp|gif|jpg|jpeg|png";
+	
 	/**
 	 * 上传单个文件
 	 * @param file 前台页面file标签的name值
@@ -33,6 +44,10 @@ public class UploadFileUtil {
 	 */
 	public boolean uploadFile(File file , String filename , String contentType ,String realpath,ServletContext context){
 		try {
+			// 检查文件上传类型
+			if (!checkFileExt(filename)) {
+				return false;
+			}
 			String targetDirectory = context.getRealPath(realpath);
 			String targetFileName = Util.generateFileName(filename);
 			File target = new File(targetDirectory, targetFileName);
@@ -65,6 +80,10 @@ public class UploadFileUtil {
 			String  targetFileName = "";
 			for(int i = 0; i < uploadFileNames.length; i++){//循环上传附件
 				targetFileName = uploadFileNames[i].trim();
+				// 检查文件上传类型
+				if (!checkFileExt(targetFileName)) {
+					return;
+				}
 				File target = new File(targetDirectory, targetFileName);
 				FileUtils.copyFile(upload[i], target);
 			}
@@ -89,7 +108,11 @@ public class UploadFileUtil {
 			String[] uploadFileNames = uploadFileName.split(",");
 			for(int i = 0; i < uploadFileNames.length; i++){
 				File file = upload[i];
-				String fileName = uploadFileNames[0].trim();
+				String fileName = uploadFileNames[i].trim();
+				// 检查文件上传类型
+				if (!checkFileExt(fileName)) {
+					return stringBuffer.toString();
+				}
 				int index = fileName.lastIndexOf(".");
 				String suffex = fileName.substring(index);
 				fileName = getFileMD5(file) + suffex;
@@ -120,6 +143,10 @@ public class UploadFileUtil {
 			String targetDirectory = ServletActionContext.getServletContext().getRealPath(dir);
 			File file = upload;
 			String fileName = StringUtils.trimToEmpty(uploadFileName);
+			// 检查文件上传类型
+			if (!checkFileExt(fileName)) {
+				return stringBuffer.toString();
+			}
 			int index = fileName.lastIndexOf(".");
 			String suffex = fileName.substring(index);
 			fileName = getFileMD5(file) + suffex;
@@ -151,6 +178,10 @@ public class UploadFileUtil {
 			for(int i = 0; i < uploadFileNames.length; i++){
 				File file = upload[i];
 				String fileName = uploadFileNames[i].trim();
+				// 检查文件上传类型
+				if (!checkFileExt(fileName)) {
+					return stringBuffer.toString();
+				}
 				int index = fileName.lastIndexOf(".");
 				String suffex = fileName.substring(index);
 				fileName = getFileMD5(file) + suffex;
@@ -217,4 +248,124 @@ public class UploadFileUtil {
         }
         return name.toString();
     }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File file) throws Exception {
+    	return checkFileExt(file, null);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File file, String allowFileTypes) throws Exception {
+    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+    	return checkFileExt(file.getName(), allowFileTypes);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File[] files) {
+    	return checkFileExt(files, null);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File[] files, String allowFileTypes) {
+    	boolean result = true;
+    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+    	for (int i = 0; i < files.length; i++) {
+			File file = files[i];
+			result = result && checkFileExt(file.getName(), allowFileTypes);
+		}
+    	return result;
+    }
+    
+    public static boolean checkFileExt(String fileName) {
+		return checkFileExt(fileName, null);
+	}
+    
+    /**
+	 * 检查文件后缀名称是否符合要求
+	 * 
+	 * @param fileName
+	 * @param allowFileType
+     * @return 
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(String fileName, String allowFileType) {
+		allowFileType = StringUtils.defaultIfBlank(allowFileType, UPLOAD_EXT_WHITE_LIST);
+		if (StringUtils.isNotEmpty(allowFileType)) {
+			// 获取文件后缀
+			String suffix = extName(fileName);
+			// 允许的文件类型
+			String[] fileTypes = allowFileType.split("\\|");
+			List<String> list = Arrays.asList(fileTypes);
+			if (StringUtils.isBlank(suffix)) {
+				throw new UploadException("不允许上传类型为空的文件，请上传类型为|" + allowFileType + "|的文件！");
+			} else if (!list.contains(suffix.toLowerCase())) {
+				String prevExt = extName(fileName.replace("." + suffix, ""));
+				boolean showError = true;
+				// 判断是否为压缩包的分卷文件
+				if (StringUtils.isNotBlank(prevExt) && list.contains(prevExt.toLowerCase())) {
+					Pattern pattern = Pattern.compile("[A-Za-z]{1}[0-9]{2}|[0-9]{3}");
+					// 如果符合压缩包并且分卷后缀符合要求，则
+					showError = !pattern.matcher(suffix).matches();
+				}
+				if (showError) {
+					throw new UploadException("不允许上传类型为【." + suffix + "】的文件，请上传类型为|" + allowFileType + "|的文件！");
+				}
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * 获得文件的扩展名（后缀名），扩展名不带“.”
+	 *
+	 * @param fileName 文件名
+	 * @return 扩展名
+	 */
+	public static String extName(String fileName) {
+		if (fileName == null) {
+			return null;
+		}
+		int index = fileName.lastIndexOf(".");
+		if (index == -1) {
+			return "";
+		} else {
+			return fileName.substring(index + 1);
+		}
+	}
+	
+	public static void main(String[] args) {
+		Pattern pattern = Pattern.compile("[A-Za-z]{1}[0-9]{2}|[0-9]{3}");
+        String suffix = "c01";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+		suffix = "r01";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+		suffix = "s01";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+		suffix = "001";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+		suffix = "0011";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+		suffix = "s011";
+		System.out.println(suffix + pattern.matcher(suffix).matches());
+	}
 }

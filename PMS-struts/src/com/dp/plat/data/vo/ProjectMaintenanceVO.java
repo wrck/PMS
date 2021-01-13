@@ -3,7 +3,10 @@
  */
 package com.dp.plat.data.vo;
 
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +24,8 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
     private String createUser;
     private String areaPower;
     private String userPower;
+    private boolean checkServicePower;
+    private String userOfficeName;
     
     private String serviceManager;
     private String programManager;
@@ -32,13 +37,28 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
     private Date createStartTime;
     private Date createEndTime;
     
+    private String deliverFiles;
     private List<FileParam> deliverFileList;
     private List<Map<String, String>> quesnaireResultList;
     private Map<String, Object> questionColumns;
     
+    private Boolean hideWarranty;
     private Boolean hideQuesnaire;
+    private Boolean hideFiles;
     
     private Integer maxId;
+    
+    private Map<String, Object> warrantyState;
+    private String queryWarrantyStatus;
+    private String queryWarrantyGrade;
+    private String queryWafService;
+    
+    // 服务交付查询、导出参数
+    private Collection<String> serviceTypes;// 服务类型
+    private String serviceType;// 服务类型
+    private Date serviceDate;// 服务时间
+    private Boolean serviceQuarter;// 服务季度
+    private Boolean hasQuarterDeliveried; // 服务季度完成交付
 
     public boolean isHasPower() {
         return hasPower;
@@ -86,6 +106,22 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
 
     public void setUserPower(String userPower) {
         this.userPower = userPower;
+    }
+
+	public boolean isCheckServicePower() {
+		return checkServicePower;
+	}
+
+	public void setCheckServicePower(boolean checkServicePower) {
+		this.checkServicePower = checkServicePower;
+	}
+
+	public String getUserOfficeName() {
+        return userOfficeName;
+    }
+
+    public void setUserOfficeName(String userOfficeName) {
+        this.userOfficeName = userOfficeName;
     }
 
     public String getServiceManager() {
@@ -152,7 +188,15 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
         this.createEndTime = createEndTime;
     }
 
-    public List<FileParam> getDeliverFileList() {
+    public String getDeliverFiles() {
+		return deliverFiles;
+	}
+
+	public void setDeliverFiles(String deliverFiles) {
+		this.deliverFiles = deliverFiles;
+	}
+
+	public List<FileParam> getDeliverFileList() {
         return deliverFileList;
     }
 
@@ -175,21 +219,156 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
     public void setQuestionColumns(Map<String, Object> questionColumns) {
         this.questionColumns = questionColumns;
     }
+    
+    public Boolean getHideWarranty() {
+		return hideWarranty;
+	}
 
-    public Boolean getHideQuesnaire() {
+	public void setHideWarranty(Boolean hideWarranty) {
+		this.hideWarranty = hideWarranty;
+	}
+
+	public Boolean getHideQuesnaire() {
         return hideQuesnaire;
     }
 
     public void setHideQuesnaire(Boolean hideQuesnaire) {
         this.hideQuesnaire = hideQuesnaire;
     }
+    
+    public Boolean getHideFiles() {
+		return hideFiles;
+	}
 
-    public Integer getMaxId() {
+	public void setHideFiles(Boolean hideFiles) {
+		this.hideFiles = hideFiles;
+	}
+
+	public Integer getMaxId() {
         return maxId;
     }
 
     public void setMaxId(Integer maxId) {
         this.maxId = maxId;
     }
-    
+
+	public Map<String, Object> getWarrantyState() {
+		return warrantyState;
+	}
+
+	public void setWarrantyState(Map<String, Object> warrantyState) {
+		this.warrantyState = warrantyState;
+
+		initWarrantyExtParams(warrantyState);
+	}
+
+	public String getQueryWarrantyStatus() {
+		return queryWarrantyStatus;
+	}
+
+	public void setQueryWarrantyStatus(String queryWarrantyStatus) {
+		this.queryWarrantyStatus = queryWarrantyStatus;
+	}
+
+	public String getQueryWarrantyGrade() {
+		return queryWarrantyGrade;
+	}
+
+	public void setQueryWarrantyGrade(String queryWarrantyGrade) {
+		this.queryWarrantyGrade = queryWarrantyGrade;
+	}
+
+	public String getQueryWafService() {
+		return queryWafService;
+	}
+
+	public void setQueryWafService(String queryWafService) {
+		this.queryWafService = queryWafService;
+	}
+	
+	public Collection<String> getServiceTypes() {
+		return serviceTypes;
+	}
+
+	public void setServiceTypes(Collection<String> serviceTypes) {
+		this.serviceTypes = serviceTypes;
+	}
+
+	public String getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public Date getServiceDate() {
+		return serviceDate;
+	}
+
+	public void setServiceDate(Date serviceDate) {
+		this.serviceDate = serviceDate;
+	}
+	
+	public Boolean getServiceQuarter() {
+		return serviceQuarter;
+	}
+
+	public void setServiceQuarter(Boolean serviceQuarter) {
+		this.serviceQuarter = serviceQuarter;
+	}
+	
+	public Boolean getHasQuarterDeliveried() {
+		return hasQuarterDeliveried;
+	}
+
+	public void setHasQuarterDeliveried(Boolean hasQuarterDeliveried) {
+		this.hasQuarterDeliveried = hasQuarterDeliveried;
+	}
+
+	public String getServiceDateQuarter() {
+		if (this.serviceDate != null) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(this.serviceDate);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			int quarter = (int) Math.ceil(month / 3d);
+			return String.format("%dQ%d", calendar.get(Calendar.YEAR), quarter);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public void setProcessTime(Date processTime) {
+		super.setProcessTime(processTime);
+		
+		if (processTime != null) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(processTime);
+			this.setYear(calendar.get(Calendar.YEAR));
+			int month = calendar.get(Calendar.MONTH) + 1;
+			int quarter = (int) Math.ceil(month / 3d);
+			this.setQuarter(quarter);
+			this.setMonth(month);
+		}
+	}
+
+	public void initWarrantyExtParams(Map<String, Object> warrantyState) {
+		if (warrantyState == null) {
+			warrantyState = new HashMap<String, Object>();
+		}
+		Object warrantyGradeServiceEnable = Boolean.parseBoolean(String.valueOf(warrantyState.get("warrantyGradeEnable")));
+		Object wafServiceEnable = Boolean.parseBoolean(String.valueOf(warrantyState.get("wafServiceEnable")));
+		Integer wsYearCount = (Integer) (Boolean.TRUE.equals(warrantyGradeServiceEnable) ? warrantyState.get("wsYearCount") : 0);
+		Integer wafYearCount = (Integer) (Boolean.TRUE.equals(wafServiceEnable) ? warrantyState.get("wafYearCount") : 0);
+		Long wsCount = (Long) warrantyState.get("wsCount");
+		Long wafCount = (Long) warrantyState.get("wafCount");
+		this.setWsYearCount(wsYearCount != null ? Integer.valueOf(wsYearCount.intValue()) : this.getWsYearCount());
+		this.setWafYearCount(wafYearCount != null ? Integer.valueOf(wafYearCount.intValue()) : this.getWafYearCount());
+		this.setWsCount(wsCount != null ? Integer.valueOf(wsCount.intValue()) : this.getWsCount());
+		this.setWafCount(wafCount != null ? Integer.valueOf(wafCount.intValue()) : this.getWafCount());
+		
+		this.setWarrantyInfo((String) warrantyState.get("warrantyGradeDesc"));
+		this.setServiceInfo((String) warrantyState.get("warrantyServiceDesc"));
+	}
 }

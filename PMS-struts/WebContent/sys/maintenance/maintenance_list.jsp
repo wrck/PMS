@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
 <%@ taglib prefix="dp" uri="/dp"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
@@ -26,7 +26,7 @@
         var categoryWithSubMap = [];
         var subCategory = "${projectMaintenance.subCategory}";
         try {
-            categoryWithSubMap = "${cbForm.categoryWithSubMap}".replace(/=/g, "':'").replace(/\{/g, "{'").replace(/, /g, "', '").replace(/\}/g, "'}").replace(/\}', '\{/g, "}, {").replace(/':'\[\{/g, "':[{").replace(/\]'\}/g, "]}").replace(/'/g,'"');
+            categoryWithSubMap = "${cbForm.categoryWithSubMap}".replace(/=/g, "':'").replace(/\{/g, "{'").replace(/, /g, "', '").replace(/\}/g, "'}").replace(/\}', '\{/g, "}, {").replace(/':'\[\{/g, "':[{").replace(/\]'\}/g, "]}").replace(/\}\]'/g, "}]").replace(/'/g,'"');
             categoryWithSubMap = JSON.parse(categoryWithSubMap);
         } catch (e) {
             categoryWithSubMap = [];
@@ -64,7 +64,16 @@
             	$("#hasReport").attr("name", name.replace("_", ""));
             }
             return true;
-        })
+        });
+        $("#hasReport").change(function() {
+        	var hasReport = $(this).val();
+        	if (hasReport == "true") {
+        		$("#deliverFiles").parents(".form-group-query:first").show();
+        	} else {
+        		$("#deliverFiles").parents(".form-group-query:first").hide();
+        	}
+        });
+        $("#hasReport").change();
     });
     function updateProject(obj, type){
     	if (type == 10) {
@@ -151,6 +160,14 @@
         </div>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="officeCode"><s:text name="pm.project.maintenance.userOffice" /></label>
+            <s:select name="projectMaintenance.userOffice" id="userOffice"
+                listKey="departmentNum" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                listValue="departmentName" list="%{departmentList}" theme="simple" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="subcontractType"><s:text name="pm.project.maintenance.type" /></label>
             <s:select list="maintenanceTypeList" name="projectMaintenance.type" id="subcontractType"
                 cssClass="form-control" listKey="basicDataId" listValue="basicDataName"
@@ -177,6 +194,33 @@
                 name="projectMaintenance.hasReport"  
                 cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 163px;" /> 
         </div>
+        <div class="form-group form-group-query form-group-width-1" style="display:none;">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="deliverFiles">附件名称/类型</label>
+            <s:textfield name="projectMaintenance.deliverFiles" id="deliverFiles"
+                 cssStyle="width:163px" cssClass="form-control" placeholder="附件名称/类型" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="warrantyStatus"><s:text name="pm.project.maintenance.warrantyStatus" /></label>
+            <s:select id="warrantyStatus" list="#{-1:'维保内', 0:'部分保内', 1:'维保外'}"
+                name="projectMaintenance.queryWarrantyStatus"
+                cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 163px;" /> 
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="warrantyGrade"><s:text name="pm.project.warrantyGrade" /></label>
+            <s:select id="warrantyGrade" list="#{1:'基本维保', 2:'中级维保', 3: '高级维保'}"
+                name="projectMaintenance.queryWarrantyGrade"
+                cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 163px;" /> 
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="wafService"><s:text name="pm.project.wafService" /></label>
+            <s:select id="wafService" list="#{1:'策略调优服务'}"
+                name="projectMaintenance.queryWafService"
+                cssClass="form-control" headerValue="--请选择--" headerKey="" cssStyle="width: 163px;" /> 
+        </div>
         <div class="form-group form-group-query form-group-width-1">
             <label><s:text name="pm.project.maintenance.processTime"/></label>
             <s:textfield id="processStartTime" name="projectMaintenance.processStartTime" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="开始时间"></s:textfield>
@@ -187,7 +231,6 @@
                 <span class="glyphicon glyphicon-search"></span> 查询
             </button>
         </div>
-        
     </s:form>
     <!-- 蓝色箭头，项目列表 -->
     <div class="divHeader div-height">
@@ -204,6 +247,12 @@
         </button>
         <!-- <a href="module/BatchChangeProjectMember.action" target="_blank" style="margin-bottom:1rem;" class="btn btn-default btn-sm">非业务类录入</a> -->
     </s:if>
+    <s:if test="user.isHasRole(1) || user.isHasRole(9) || user.isHasRole(10) || user.isHasRole(11) 
+        || user.isHasRole(12) || user.isHasRole(13) || user.isHasRole(14)">
+        <button onclick="javascript:popWindow('module/sub/maintenance_serviceDelivery.action', '90vw', 650,'服务交付', 'BudgetUpload', true);" value="pmAddPrjMaintenanceButton" type="button" class="btn btn-default" style="margin-right:4px;">
+            <span class="glyphicon glyphicon-list" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;服务交付</span>
+        </button>
+    </s:if>
     </div>
     <div>
         <!-- 分页，项目列表 -->
@@ -212,14 +261,24 @@
             size="${displayParam.totalcount}" sort="external" export="true"  requestURI="module/maintenance.action" 
             decorator="com.dp.plat.decorators.MaintenanceDecorator"
             partialList="true">
-            <display:column property="categoryName" titleKey="pm.project.maintenance.category"></display:column>
-            <display:column property="subCategoryName" titleKey="pm.project.maintenance.subCategory"></display:column>
+            <display:column property="categoryName" titleKey="pm.project.maintenance.category" headerClass="nowrap"></display:column>
+            <display:column property="subCategoryName" titleKey="pm.project.maintenance.subCategory" headerClass="nowrap"></display:column>
             <display:column property="typeName" titleKey="pm.project.maintenance.type" media="excel"></display:column>
             <display:column property="projectCode" titleKey="pm.project.projectCode" media="excel"></display:column>
             <display:column property="projectNameWithURL" titleKey="pm.project.projectName" media="html"></display:column>
             <display:column property="projectName" titleKey="pm.project.projectName" media="excel"></display:column>
             <display:column property="contractNo" titleKey="pm.project.contractNo" media="excel"></display:column>
-            <display:column property="officeName" titleKey="pm.project.officeName"></display:column>
+            <display:column property="warrantyStatusName" titleKey="pm.project.maintenance.warrantyStatus" media="excel"></display:column>
+            <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="excel"></display:column>
+            <display:column property="wafServiceName" titleKey="pm.project.wafService" media="excel"></display:column>
+            <display:column property="officeName" titleKey="pm.project.officeName" headerClass="nowrap"></display:column>
+            <display:column property="marketName" titleKey="pm.project.marketName" media="excel"></display:column>
+            <display:column property="systemName" titleKey="pm.project.systemName" media="excel"></display:column>
+            <display:column property="expendName" titleKey="pm.project.expendName" media="excel"></display:column>
+            <display:column property="industryName" titleKey="pm.project.industryName" media="excel"></display:column>
+            <display:column property="salerName" titleKey="pm.project.usernamec" media="excel"></display:column>
+            <display:column property="finalCustomerName" titleKey="pm.project.finalCustomerName" media="excel"></display:column>
+            
             <%-- <display:column property="programManagerA" titleKey="pm.project.programManagerA"></display:column>
             <display:column property="programManagerB" titleKey="pm.project.programManagerB"></display:column>
              --%>
@@ -229,13 +288,20 @@
             <display:column property="transitHour" titleKey="pm.project.maintenance.transitHour" style="width: 52px"></display:column>
             <display:column property="processHour" titleKey="pm.project.maintenance.processHour" style="width: 52px"></display:column>
             <display:column property="createUser" titleKey="pm.project.maintenance.createUser"></display:column>
+            <display:column property="userOfficeName" titleKey="pm.project.maintenance.userOffice" media="excel"></display:column>
             <display:column property="itemModel" titleKey="pm.project.maintenance.itemModel" media="excel"></display:column>
             <display:column property="softVersion" titleKey="pm.project.maintenance.softVersion" media="excel"></display:column>
             <display:column property="enabledFeatures" titleKey="pm.project.maintenance.enabledFeatures" media="excel"></display:column>
             <display:column property="expendMaintenanceQuesResult" title="${projectMaintenance.questionColumns.tableQuestionHeader}" headerScope="splitCell=true" media="excel"></display:column>
             <display:column titleKey="pm.project.maintenance.hasReport" media="excel">${maintenanceList.hasReport == true ? '有' : '无'}</display:column>
-            <%-- <display:column property="expendDeliverFilesURL" title="附件" media="html"></display:column> --%>
-            
+            <s:if test="projectMaintenance.hideFiles == false">
+                <display:column property="expendDeliverFilesURL" title="附件" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+            </s:if>
+            <s:if test="projectMaintenance.hideWarranty == false">
+                <display:column property="warrantyStatusName" titleKey="pm.project.maintenance.warrantyStatus" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+                <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+                <display:column property="wafServiceName" titleKey="pm.project.wafService" media="html" style="max-width:360px;word-break: keep-all;"></display:column>
+            </s:if>
             <display:column property="expendDeliverFiles" title="附件" media="excel"></display:column>
             <display:column property="deliverTypes" title="附件类型" media="excel"></display:column>
             <display:column titleKey="pm.project.projectType" media="excel">

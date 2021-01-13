@@ -33,10 +33,11 @@ public class PrjProperty {
 	private String customerProjectName;
 	private String finalCustomerName;
 	private String agentName;
+	private String majorProjectLevel;
 	// 出货价
     private BigDecimal projectMoney;
     // 提交时间
-    private Date submitDate;
+    private Date submitTime;
 	
 	public String getOrderExecNumber() {
 		return orderExecNumber;
@@ -182,17 +183,22 @@ public class PrjProperty {
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
+	public String getMajorProjectLevel() {
+		return majorProjectLevel;
+	}
+	public void setMajorProjectLevel(String majorProjectLevel) {
+		this.majorProjectLevel = majorProjectLevel;
+	}
 	public BigDecimal getProjectMoney() {
 		return projectMoney;
 	}
 	public void setProjectMoney(BigDecimal projectMoney) {
 		this.projectMoney = projectMoney;
 	}
-	public Date getSubmitDate() {
-		return submitDate;
+	public Date getSubmitTime() {
+		return submitTime;
 	}
-	public void setSubmitDate(Date submitDate) {
-		this.submitDate = submitDate;
+	public void setSubmitTime(Date submitTime) {
+		this.submitTime = submitTime;
 	}
-    
 }

@@ -9,13 +9,23 @@
 		<!-- <version>${project.parent.version}</version> -->
 	</parent>
 	
+	<groupId>com.dp.plat</groupId>
 	<artifactId>pms-struts</artifactId>
+	<version>0.0.1</version>
 	<name>PMS-struts</name>
 	<packaging>war</packaging>
 	
+    <properties>
+        <struts2.version>2.3.35</struts2.version>
+    </properties>
 	
 	<dependencies>
-	
+		<dependency>
+			<groupId>com.dp.plat</groupId>
+			<artifactId>activiti-api-unifytask-patch</artifactId>
+			<!-- <version>5.14</version> -->
+			<version>5.22</version>
+		</dependency>
 		<!-- <dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>cache-redis-mybatis</artifactId>
@@ -141,6 +151,7 @@
 		<dependency>
 			<groupId>org.mybatis</groupId>
 			<artifactId>mybatis</artifactId>
+			<version>${mybatis.version}</version>
 		</dependency>
 
 		<!-- 导入java ee jar 包 -->
@@ -465,6 +476,14 @@
 		    <version>1.5.0</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/org.codehaus.woodstox/woodstox-core-asl -->
+		<dependency>
+		    <groupId>org.codehaus.woodstox</groupId>
+		    <artifactId>woodstox-core-asl</artifactId>
+		    <version>4.4.1</version>
+		</dependency>
+		
+		
 		<!-- mail -->
 		<dependency>
 		    <groupId>javax.mail</groupId>
@@ -521,7 +540,9 @@
 				<configuration>
 					<warSourceDirectory>WebContent</warSourceDirectory>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
-					<archiveClasses>false</archiveClasses>
+					<!-- <archiveClasses>true</archiveClasses> -->
+					<!-- <attachClasses>true</attachClasses>
+					<classesClassifier>core</classesClassifier> -->
 				</configuration>
 			</plugin>
 			<plugin>

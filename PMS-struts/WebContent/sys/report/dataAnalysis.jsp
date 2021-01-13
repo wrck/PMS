@@ -150,6 +150,7 @@ table thead th{
 						<display:column property="totalScore" titleKey="pm.cl.cbdata.totalScore"></display:column>
 						<display:column property="serviceTypeWrapper" titleKey="pm.project.implement"></display:column>
 						<display:column property="dataCbResult" titleKey="pm.cl.cbdata.cbResult"></display:column>
+                        <display:column property="approveRemark" style="width:200px" titleKey="pm.cl.cbdata.opinion"></display:column>
 						<display:column property="dataCbOpion" titleKey="pm.cl.cbdata.opinion"  media="html"></display:column>
 						<display:column property="dataCbEquain" titleKey="pm.cl.cbdata.equExplain" media="html"></display:column>
 						

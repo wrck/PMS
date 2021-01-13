@@ -374,11 +374,26 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     SELECT 
         h.*, d.`departmentName` AS officeName, d1.`departmentName` AS profitDepName, bd.`basicDataName` AS stateName,
         bd1.`basicDataName` as callbackStateName, bd2.basicDataName as typeName, 
-        CONCAT(h.createBy, "-", ui.`realName`) AS createName 
+        CONCAT(h.createBy, "-", ui.`realName`) AS createName,
+	    CONCAT(
+	        ROUND(
+	            IfNULL(spp.paidAmount, 0) / CONVERT(
+	                REPLACE(h.subcontractAmount, ',', ''), DECIMAL (25, 2)
+	            ) * 100, 2
+	        ), "%"
+	    ) AS paidRatio,IfNULL(spp.paidAmount, 0) AS paidAmount
         <isEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> zra.zrApproverTime </isEqual>
         <isNotEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> h.zrApproveTime as zrApproverTime</isNotEqual>
     FROM
         pm_subcontract_project_header h 
+        LEFT JOIN 
+		    (SELECT 
+		        subcontractId, convert(SUM(REPLACE(amount, ",", "")), DECIMAL (25, 2)) AS paidAmount 
+		    FROM
+		        `pm_subcontract_project_payment` 
+		    WHERE paymentTime IS NOT NULL 
+		    GROUP BY subcontractId) spp 
+		    ON spp.subcontractId = h.`id` 
         LEFT JOIN fnd_department d 
             ON h.`officeCode` = d.`departmentNum` 
         LEFT JOIN fnd_department d1 
@@ -1548,6 +1563,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <result property="contractNo" column="contractNo"/>
       <result property="column001" column="officeCode"/>
       <result property="column001Name" column="officeName"/>
+      <result property="salesType" column="salesType"/>
   </resultMap>
   <!-- 转移设备是查询项目列表 -->
   
@@ -1650,7 +1666,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                         END
                     ) AS `projectName`, `ph`.`projectState` AS `projectState`, GROUP_CONCAT(
                         DISTINCT `pc`.`contractNo` SEPARATOR ','
-                    ) AS `contractNo`, `ph`.`column001` AS `officeCode`, ph.`column010` 
+                    ) AS `contractNo`, `ph`.`column001` AS `officeCode`, ph.`column010`, ph.salesType
                 FROM
                     `pm_project_header` `ph` 
                     LEFT JOIN `pm_project_group_relationship` `pr` 
@@ -1741,6 +1757,15 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       WHERE vsip.contract_code in ($contractNos$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
           and contractNo in ($contractNos$) and projectId in ($projectIds$)
       )
+      <isNotEmpty property="contractProfitCenter">
+          <iterate prepend="AND" property="contractProfitCenter" open="(" close=")" conjunction="OR">
+	          <!-- vsip.contract_code = #contractProfitCenter[].contractNo# and vsip.`profitCenter` = #contractProfitCenter[].officeCode# -->
+	          vsip.contract_code = #contractProfitCenter[].sourceContractNo# 
+	          <isNotEmpty prepend="AND" property="contractProfitCenter[].officeCode">
+	              vsip.`profitCenter` = #contractProfitCenter[].officeCode#
+	          </isNotEmpty>
+	      </iterate>
+      </isNotEmpty>
       UNION ALL 
       SELECT pps.`contractNo`,pps.`barcode`,pps.`itemCode`,pps.`itemName`,
         pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
@@ -1758,7 +1783,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
               LEFT JOIN view_shipment_ems_4_pm vsep 
                   ON vsep.contract_code = vsip.contract_code 
                   AND vsep.packId = vsip.packId 
-          WHERE FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNos#, '-C', ''), "'",''))
+          WHERE vsip.contract_code IN ($sourceContractNos$)
+              <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNos#, '-C', ''), "'",'')) -->
               AND vsip.barcode = pps.barcode)
       ORDER BY transferFlag asc) t
       order by t.contractNo, t.itemCode
@@ -1867,14 +1893,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     SELECT DISTINCT 
         h.id AS subcontractId, h.contractNos, h.subcontractNo, h.subcontractName, h.officeCode, dep.departmentName AS officeName, h.profitDepCode, dep2.departmentName AS profitDepName, D.KEY_ AS processKey, D.NAME_ AS processName, RES.ID_ AS taskId, RES.NAME_ AS taskName, 
         CASE
-            WHEN RES.ASSIGNEE_ = 'emRole' 
-            THEN '工程管理部'
-            ELSE 
-            CASE
-                WHEN RES.ASSIGNEE_ = 'cbRole' 
-                THEN '回访人员' 
-                ELSE CONCAT(ui.username, '-', ui.realName) 
-            END 
+            WHEN RES.ASSIGNEE_ = 'emlRole' THEN '工程管理部主管'
+            WHEN RES.ASSIGNEE_ = 'role_10' THEN '工程管理部主管'
+            WHEN RES.ASSIGNEE_ = 'emRole' THEN '工程管理部'
+            WHEN RES.ASSIGNEE_ = 'cbRole' THEN '回访人员' 
+            WHEN RES.ASSIGNEE_ = 'zrRole' THEN '办事处主任' 
+	        WHEN RES.ASSIGNEE_ = 'role_9' THEN '办事处主任'
+		    ELSE CONCAT(ui.username, '-', ui.realName) 
         END AS assigneeName, RES.CREATE_TIME_ AS createTime 
     FROM
         ACT_RU_TASK RES 
@@ -2064,7 +2089,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 RES.ASSIGNEE_ = #assignee#
             </isNotEmpty>
             <isNotEmpty property="roleGroup" prepend="OR" open="(" close=")">
-                RES.ASSIGNEE_ = #roleGroup# 
+                <!-- RES.ASSIGNEE_ = #roleGroup#  -->
+                FIND_IN_SET(RES.ASSIGNEE_, #roleGroup# )
                 <isNotEmpty property="checkOffice" prepend="and">
                     FIND_IN_SET(h.`officeCode`, #areaPower#)
                 </isNotEmpty>
@@ -2178,7 +2204,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 `pm_subcontract_project_payment` t 
                 inner join 
                     (select 
-                        max(id) as maxPayId, sum(
+                        max(IF(confirmTime is not null, id, null)) as maxPayId, sum(
                             if(
                                 paymentTime is not null, convert(
                                     replace(amount, ",", ""), DECIMAL (25, 2)
@@ -2187,7 +2213,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                         ) as paidAmount 
                     from
                         `pm_subcontract_project_payment` 
-                    where confirmTime is not null 
+                    <!-- where confirmTime is not null  -->
                     group by subcontractId) maxPay 
                     on t.id = maxPay.maxPayId) pp 
             on pp.subcontractId = h.id

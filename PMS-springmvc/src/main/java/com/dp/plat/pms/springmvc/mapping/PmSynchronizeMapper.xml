@@ -36,7 +36,7 @@
 	      finalCustomerName, pspm, pspmName, 
 	      salesMenTel, decPath, requireInDate, 
 	      receiveMen, reveiveContactWay, receiveAddress, 
-	      projectType, projectMoney, submitTime, 
+	      projectType, projectMoney, afProjectMoney, submitTime, 
 	      serviceTypeName, customerProjectName, agentName, 
 	      lendCause)
 	    values
@@ -51,7 +51,7 @@
 	      #{item.finalCustomerName,jdbcType=VARCHAR}, #{item.pspm,jdbcType=VARCHAR}, #{item.pspmName,jdbcType=VARCHAR}, 
 	      #{item.salesMenTel,jdbcType=VARCHAR}, #{item.decPath,jdbcType=VARCHAR}, #{item.requireInDate,jdbcType=DATE}, 
 	      #{item.receiveMen,jdbcType=VARCHAR}, #{item.reveiveContactWay,jdbcType=VARCHAR}, #{item.receiveAddress,jdbcType=VARCHAR}, 
-	      #{item.projectType,jdbcType=VARCHAR}, #{item.projectMoney,jdbcType=DECIMAL}, #{item.submitTime,jdbcType=TIMESTAMP}, 
+	      #{item.projectType,jdbcType=VARCHAR}, #{item.projectMoney,jdbcType=DECIMAL}, #{item.afProjectMoney,jdbcType=DECIMAL}, #{item.submitTime,jdbcType=TIMESTAMP}, 
 	      #{item.serviceTypeName,jdbcType=VARCHAR}, #{item.customerProjectName,jdbcType=VARCHAR}, #{item.agentName,jdbcType=VARCHAR}, 
 	      #{item.lendCause,jdbcType=LONGVARCHAR})
         </foreach>
@@ -66,7 +66,7 @@
 			decPath = VALUES(decPath), requireInDate = VALUES(requireInDate), receiveMen = VALUES(receiveMen), 
 			reveiveContactWay = VALUES(reveiveContactWay), receiveAddress = VALUES(receiveAddress), projectType = VALUES(projectType), 
 			projectCode = VALUES(projectCode), serviceTypeName = VALUES(serviceTypeName), customerProjectName = VALUES(customerProjectName), 
-			agentName = VALUES(agentName), lendCause = VALUES(lendCause), projectMoney = VALUES(projectMoney), submitTime = VALUES(submitTime)
+			agentName = VALUES(agentName), lendCause = VALUES(lendCause), projectMoney = VALUES(projectMoney), afProjectMoney = VALUES(afProjectMoney), submitTime = VALUES(submitTime)
     </insert>
     
     <insert id="insertProjectProduct" parameterType="java.util.List">
@@ -91,7 +91,7 @@
     </insert>
     
     <insert id="splitAfProjectByProductCode" parameterType="String">
-   	    truncate pm_project_property_af_from_sms;
+   	    <!-- truncate pm_project_property_af_from_sms; -->
     	insert into pm_project_property_af_from_sms (
 		    id, `orderExecNumber`, `projectCode`, `projectName`, `salesManCode`, `salesManName`, 
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 

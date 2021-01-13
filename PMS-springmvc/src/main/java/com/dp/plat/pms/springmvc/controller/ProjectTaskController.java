@@ -34,6 +34,7 @@ import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.URLPath;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
@@ -207,36 +208,44 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 	@PostMapping("upload")
 	public void uploadDeliverFile(ProjectDeliver projectDeliver, @RequestPart MultipartFile[] deliverFiles,
 			@RequestParam String[] deliverTypes, HttpServletRequest httpRequest, Model model) {
-		TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
-		taskVO.setTaskId(projectDeliver.getTaskId());
-		if (!checkPermission(taskVO, model, "uploadDeliverFile:upload")) {
-			return;
-		}
-
-		String[] deliverIds = StringUtils.trimToEmpty(projectDeliver.getDeliverId()).split(",");
-		if (deliverFiles != null && deliverFiles.length > 0) {
-			for (int i = 0; i < deliverFiles.length; i++) {
-				MultipartFile multipartFile = deliverFiles[i];
-				if (multipartFile.getSize() == 0) {
-					continue;
-				}
-
-				ProjectDeliver deliver = new ProjectDeliver();
-				BeanUtils.copyProperties(projectDeliver, deliver);
-				String deliverableType = deliverTypes[i];
-				if (StringUtils.isNotBlank(deliverableType)) {
-					String[] splits = StringUtils.split(deliverableType, ",");
-					deliverableType = splits[0];
-				}
-				deliver.setDeliverableType(deliverableType);
-				deliver.setDeliverId(deliverIds[i]);
-				service.uploadFile(deliver, multipartFile);
+		Boolean status = true;
+		String message = null;
+		try {
+			TaskVO taskVO = new TaskVO(projectDeliver.getProjectId(), projectDeliver.getProjectType());
+			taskVO.setTaskId(projectDeliver.getTaskId());
+			if (!checkPermission(taskVO, model, "uploadDeliverFile:upload")) {
+				return;
 			}
-			
-			boolean needRefresh = service.updateEventActualFinishDateByTask(projectDeliver);
-			model.addAttribute("refreshProjectState", needRefresh);
-			projectHeaderService.updateProjectLastRefreshTime(projectDeliver.getProjectId());
+	
+			String[] deliverIds = StringUtils.trimToEmpty(projectDeliver.getDeliverId()).split(",");
+			if (deliverFiles != null && deliverFiles.length > 0) {
+				for (int i = 0; i < deliverFiles.length; i++) {
+					MultipartFile multipartFile = deliverFiles[i];
+					if (multipartFile.getSize() == 0) {
+						continue;
+					}
+	
+					ProjectDeliver deliver = new ProjectDeliver();
+					BeanUtils.copyProperties(projectDeliver, deliver);
+					String deliverableType = deliverTypes[i];
+					if (StringUtils.isNotBlank(deliverableType)) {
+						String[] splits = StringUtils.split(deliverableType, ",");
+						deliverableType = splits[0];
+					}
+					deliver.setDeliverableType(deliverableType);
+					deliver.setDeliverId(deliverIds[i]);
+					service.uploadFile(deliver, multipartFile);
+				}
+				
+				boolean needRefresh = service.updateEventActualFinishDateByTask(projectDeliver);
+				model.addAttribute("refreshProjectState", needRefresh);
+				projectHeaderService.updateProjectLastRefreshTime(projectDeliver.getProjectId());
+			}
+		} catch (Exception e) {
+			status = false;
+			message = e.getMessage();
 		}
+		model.addAllAttributes(new Result(status, message).getMap());
 	}
 	
 	@DeleteMapping("upload/{deliverId}")

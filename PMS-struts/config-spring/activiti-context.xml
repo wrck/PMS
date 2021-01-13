@@ -5,6 +5,26 @@
 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
 
+    <context:component-scan base-package="com.dp.plat.*.unifytask">
+        <!-- 不扫描controller包下的UserController类，既去除注解 -->
+        <!-- <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/> -->
+    </context:component-scan>
+    
+    <!-- 5.13版本全局事件监听器实现方式 -->
+    <bean id="unifyTaskListener" class="com.dp.plat.plus.unifytask.listener.UnifyTaskListener">
+        <!-- <constructor-arg type="java.util.List" name="unifyTaskSenders">
+            <list>
+                <value type="java.lang.Class">com.dp.plat.activiti.unifytask.sender.UnifyTask2SeeyonSender</value>
+            </list>
+        </constructor-arg> -->
+        <!-- 可以再这里指定，也可以通过系统参数获取进行指定 -->
+        <!-- <property name="unifyTaskSenders">
+            <list>
+                <value type="java.lang.Class">com.dp.plat.plus.unifytask.sender.UnifyTask2SeeyonSender</value>
+            </list>
+        </property> -->
+    </bean>
+    
 	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
 	    <!-- 数据源 -->
 		<property name="dataSource" ref="dataSource" />
@@ -16,18 +36,46 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 		<!-- 邮件服务器配置 -->
 		<property name="mailServerHost" value="mail.dptech.com"></property>
 		<property name="mailServerPort" value="25"></property>
+		
+		<!-- 5.13版本全局事件监听器实现方式 -->
+        <property name="customDefaultBpmnParseHandlers">
+            <list>
+                <bean class="com.dp.plat.activiti.unifytask.handler.UnifyTaskBPMNParserHandler" >
+                    <!-- 
+                        class: 完整类路径
+                        $,#会被xml解析，所以后台拼接为#{taskListener}
+                        delegateExpression: taskListener
+                        expression: taskListener.notify(delegateTask)
+                    -->
+                    <property name="implementationType" value="delegateExpression"></property>
+                    <property name="implementation" value="unifyTaskListener"></property>
+                    <!-- 需要触发的事件 -->
+                    <property name="events">
+                        <list>
+                            <value>create</value>
+                            <value>assignment</value>
+                            <value>complete</value>
+                            <value>delete</value>
+                            <!-- 自定义的挂起，激活事件 -->
+                            <value>ENTITY_ACTIVATED</value>
+                            <value>ENTITY_SUSPENDED</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
 	</bean>
 
 	<bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
 		<property name="processEngineConfiguration" ref="processEngineConfiguration"/>
 	</bean>
 	
-	
 	<bean id="repositoryService" factory-bean="processEngine" factory-method="getRepositoryService" />
 	<bean id="runtimeService" factory-bean="processEngine" factory-method="getRuntimeService"/>
 	<bean id="taskService" factory-bean="processEngine" factory-method="getTaskService" />
 	<bean id="historyService" factory-bean="processEngine" factory-method="getHistoryService"/>
 	<bean id="formService" factory-bean="processEngine" factory-method="getFormService" />
+	<bean id="identityService" factory-bean="processEngine" factory-method="getIdentityService" />
 		
 	<!-- 流程相关的Service -->
 	 <bean id="workFlowService" class="com.dp.plat.service.WorkFlowServiceImpl">
@@ -38,5 +86,5 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 		<property name="historyService" ref="historyService"></property>
 		<property name="userManageService" ref="userManageService"></property>
 		<property name="workflowDao" ref="workflowDao"></property>
-	</bean>
+	</bean> 
 </beans>

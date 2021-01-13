@@ -91,7 +91,42 @@ public class ProjectMaintenance {
 
     // 最新更新用户
     private String updateBy;
+    
+    // 维保状态
+    private String warrantyStatus;
+    
+    // 行业
+    private String industryName;
+    
+    // 用户办事处
+    private String userOffice;
+    
+    // 所属年度
+    private Integer year;
 
+    // 所属季度
+    private Integer quarter;
+
+    // 所属月份
+    private Integer month;
+
+    // 当前维保服务次数
+    private Integer wsCount;
+
+    // 当前其他服务次数
+    private Integer wafCount;
+
+    // 维保服务年次数
+    private Integer wsYearCount;
+
+    // 其他服务年次数
+    private Integer wafYearCount;
+
+    // 维保信息
+    private String warrantyInfo;
+
+    // 其他服务信息
+    private String serviceInfo;
     /**
      * @return id
      */
@@ -626,5 +661,221 @@ public class ProjectMaintenance {
      */
     public void setUpdateBy(String updateBy) {
         this.updateBy = updateBy;
+    }
+
+    /**
+     * 获取维保状态
+     * 
+     * @return warrantyStatus - 维保状态
+     */
+    public String getWarrantyStatus() {
+        return warrantyStatus;
+    }
+
+    /**
+     * 设置维保状态
+     * 
+     * @param warrantyStatus 维保状态
+     */
+    public void setWarrantyStatus(String warrantyStatus) {
+        this.warrantyStatus = warrantyStatus;
+    }
+
+    /**
+     * 获取行业
+     * 
+     * @return industryName - 行业
+     */
+    public String getIndustryName() {
+        return industryName;
+    }
+
+    /**
+     * 设置行业
+     * 
+     * @param industryName 行业
+     */
+    public void setIndustryName(String industryName) {
+        this.industryName = industryName;
+    }
+
+    /**
+     * 获取用户办事处
+     * 
+     * @return userOffice - 用户办事处
+     */
+    public String getUserOffice() {
+        return userOffice;
+    }
+
+    /**
+     * 设置用户办事处
+     * 
+     * @param userOffice 用户办事处
+     */
+    public void setUserOffice(String userOffice) {
+        this.userOffice = userOffice;
+    }
+
+    /**
+     * 获取所属年度
+     *
+     * @return year - 所属年度
+     */
+    public Integer getYear() {
+        return year;
+    }
+
+    /**
+     * 设置所属年度
+     *
+     * @param year 所属年度
+     */
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    /**
+     * 获取所属季度
+     *
+     * @return quarter - 所属季度
+     */
+    public Integer getQuarter() {
+        return quarter;
+    }
+
+    /**
+     * 设置所属季度
+     *
+     * @param quarter 所属季度
+     */
+    public void setQuarter(Integer quarter) {
+        this.quarter = quarter;
+    }
+
+    /**
+     * 获取所属月份
+     *
+     * @return month - 所属月份
+     */
+    public Integer getMonth() {
+        return month;
+    }
+
+    /**
+     * 设置所属月份
+     *
+     * @param month 所属月份
+     */
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    /**
+     * 获取当前维保服务次数
+     *
+     * @return wsCount - 当前维保服务次数
+     */
+    public Integer getWsCount() {
+        return wsCount;
+    }
+
+    /**
+     * 设置当前维保服务次数
+     *
+     * @param wsCount 当前维保服务次数
+     */
+    public void setWsCount(Integer wsCount) {
+        this.wsCount = wsCount;
+    }
+
+    /**
+     * 获取当前其他服务次数
+     *
+     * @return wafCount - 当前其他服务次数
+     */
+    public Integer getWafCount() {
+        return wafCount;
+    }
+
+    /**
+     * 设置当前其他服务次数
+     *
+     * @param wafCount 当前其他服务次数
+     */
+    public void setWafCount(Integer wafCount) {
+        this.wafCount = wafCount;
+    }
+
+    /**
+     * 获取维保服务年次数
+     *
+     * @return wsYearCount - 维保服务年次数
+     */
+    public Integer getWsYearCount() {
+        return wsYearCount;
+    }
+
+    /**
+     * 设置维保服务年次数
+     *
+     * @param wsYearCount 维保服务年次数
+     */
+    public void setWsYearCount(Integer wsYearCount) {
+        this.wsYearCount = wsYearCount;
+    }
+
+    /**
+     * 获取其他服务年次数
+     *
+     * @return wafYearCount - 其他服务年次数
+     */
+    public Integer getWafYearCount() {
+        return wafYearCount;
+    }
+
+    /**
+     * 设置其他服务年次数
+     *
+     * @param wafYearCount 其他服务年次数
+     */
+    public void setWafYearCount(Integer wafYearCount) {
+        this.wafYearCount = wafYearCount;
+    }
+
+    /**
+     * 获取维保信息
+     *
+     * @return warrantyInfo - 维保信息
+     */
+    public String getWarrantyInfo() {
+        return warrantyInfo;
+    }
+
+    /**
+     * 设置维保信息
+     *
+     * @param warrantyInfo 维保信息
+     */
+    public void setWarrantyInfo(String warrantyInfo) {
+        this.warrantyInfo = warrantyInfo;
+    }
+
+    /**
+     * 获取其他服务信息
+     *
+     * @return serviceInfo - 其他服务信息
+     */
+    public String getServiceInfo() {
+        return serviceInfo;
+    }
+
+    /**
+     * 设置其他服务信息
+     *
+     * @param serviceInfo 其他服务信息
+     */
+    public void setServiceInfo(String serviceInfo) {
+        this.serviceInfo = serviceInfo;
     }
 }

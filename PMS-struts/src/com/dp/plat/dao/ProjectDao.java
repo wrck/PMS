@@ -1,5 +1,6 @@
 package com.dp.plat.dao;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -263,6 +264,16 @@ public interface ProjectDao {
 	List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId);
 
 	/**
+     * 根据合同号查询序列号清单
+     * 
+     * @param contractNo
+     * @param projectId
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter);
+
+	/**
 	 * 根据合同号查询序列号清单,除去传出设备
 	 * 
 	 * @param contractNo
@@ -416,12 +427,28 @@ public interface ProjectDao {
 	void batchInsertDeliverFiles(Map<String, Object> paramMap);
 
 	/**
-	 * 根据projectid查询交付件列表
+	 * 根据projectid查询交付件列表，默认项目类型10-售后项目
 	 * 
 	 * @param projectId
 	 * @return
 	 */
 	List<ProjectDeliver> queryDeliverDetailByProjectId(int projectId);
+
+	/**
+	 * 根据projectid,项目类型查询交付件列表
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectDeliver> queryDeliverDetailByProjectIdAndProjectType(int projectId, String projectTypes);
+
+    /**
+     * 根据projectid,数据类型查询交付件列表
+     * @param projectId
+     * @param dataTypeCode
+     * @return
+     */
+    List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode);
 
 	/**
 	 * 根据交付件id删除交付件（软删除）
@@ -836,6 +863,16 @@ public interface ProjectDao {
 	List<ShipmentInfo> querySoftversionList(String contractNo, int projectId);
 
 	/**
+     * 查询软件版本
+     * 
+     * @param contractNo
+     * @param projectId
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+
+	/**
 	 * 失效现有软件版本
 	 * 
 	 * @param projectId
@@ -953,6 +990,14 @@ public interface ProjectDao {
 	int queryShipmentInfoSizeByContractNo(String contractNos);
 
 	/**
+     * @param contractNos
+     * @param profitCenter 
+     * @return
+     */
+    int queryShipmentInfoSizeByContractNo(String contractNos, String profitCenter);
+
+    
+	/**
 	 * 查询正在审批中的回访流程
 	 * 
 	 * @param param
@@ -1026,6 +1071,16 @@ public interface ProjectDao {
 	List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId);
 
 	/**
+     * 查询可以转移的设备序列号
+     * 
+     * @param project
+     * @param transferProjectId
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId, String profitCenter);
+
+	/**
 	 * 插入转移的设备序列号
 	 * 
 	 * @param paramMap
@@ -1054,6 +1109,15 @@ public interface ProjectDao {
 	 * @return
 	 */
 	List<Map<String, String>> querySpotCheckList(String contractNos, int projectId);
+    /**
+     * 查询收货确认单，除去已转出的设备
+     * 
+     * @param contractNos
+     * @param projectId
+     * @param profitCenter 
+     * @return
+     */
+    List<Map<String, String>> querySpotCheckList(String contractNos, int projectId, String profitCenter);
 
 	/**
 	 * 批量插入现场验货单导出不需要序列号明细的item
@@ -1101,20 +1165,6 @@ public interface ProjectDao {
 	 * 
 	 */
 	List<Map<String, Object>> queryProjectInspectionCounts();
-
-    /**
-     * @param projectId
-     * @param dataTypeCode
-     * @return
-     */
-    List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode);
-
-    /**
-     * @param projectId
-     * @param projectType
-     * @return
-     */
-    List<ProjectDeliver> queryDeliverDetailByProjectIdAndProjectType(int projectId, String projectType);
 
     /**
      * @param projectMaintenance
@@ -1290,5 +1340,68 @@ public interface ProjectDao {
      * @param projectId
      */
     void deleteShipmentInstallInfoByProjectId(int projectId);
+
+    /**
+     * 查询项目的维保状态，维保级别，增值服务
+     * @param projectId
+     * @return
+     */
+	Map<String, Object> queryProjectWarrantyState(Integer projectId);
+
+	/**
+	 * 查询项目维护，所在项目某类交付件的交付数量
+	 * 
+	 * @param params 
+	 * <pre>{
+	 *  projetId: '项目Id',
+	 *  deliverId: '交付件类型Id',
+	 *  mergeQuarterCount:'true，并计算季度的上传次数，单季度上传多次记一次',
+	 *  startDate: '服务开始日期',
+	 *  endDate: '服务结束日期',
+	 *  serviceDate: '当前服务日期',
+	 * }
+	 * </pre>
+	 * @return 
+	 * <pre>
+	 * {
+	 * 	count:'服务周期内次数（单季度记一次）',
+	 * 	totalCount: '服务周期内总次数',
+	 *  quarterCount: '服务周期内，当前服务日期指定季度次数',
+	 * }
+	 * </pre>
+	 */
+	Map<String, Long> queryProjectMaintenanceDeliverCount(Map<String, Object> params);
+
+	/**
+	 * 查询项目服务交付信息
+	 * @param projectMaintenance
+	 * @return
+	 */
+	List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(ProjectMaintenanceVO projectMaintenance,
+			DisplayParam displayParam);
+
+	/**
+	 * 查询指定类型的交付件是否还有未上传的交付件
+	 * @param projectDeliver
+	 * @return 0：已全部存在，1：还有待传交付件
+	 */
+	int queryProjectMaintenanceDeliverCountByProjectDeliver(ProjectDeliver projectDeliver);
+	
+	/**
+	 * 查询指定类型的交付件是否上传完毕
+	 * @param projectDeliver
+	 */
+	Boolean queryProjectMaintenanceServiceDeliveriedByProjectDeliver(ProjectDeliver projectDeliver);
+	
+	Boolean queryProjectMaintenanceServiceDeliveriedByMap(Map<String, Object> map);
+
+	/**
+	 * 增加服务交付完成情况
+	 * @param serviceDelivery
+	 * @return
+	 */
+	Integer insertProjectServiceDeliveryBySelective(Map<String, Object> serviceDelivery);
+
+
 
 }

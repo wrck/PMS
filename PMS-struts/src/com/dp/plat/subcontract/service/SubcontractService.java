@@ -66,6 +66,16 @@ public interface SubcontractService extends BaseService {
 			boolean excludeTransferOut);
 
 	/**
+	 * 查询转包项目序列号，必须包含字段
+ 	 * @param contractNos
+	 * @param projectIds
+	 * @param excludeTransferOut, 默认false
+	 * @param contractProfitCenter, 合同号和办事处的对应关系，主要在总代借货时用来拆分发货数据
+	 * @return
+	 */
+	List<ShipmentInfo> queryShipmentinfoByContractNosAndProjectIds(Map<String, Object> params);
+
+	/**
 	 * @param project
 	 * @return
 	 */

@@ -1,5 +1,9 @@
 package com.dp.plat.job;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -97,6 +101,33 @@ public class MaintenanceDailyReportMailer implements Job {
             projectDao.getSqlMapClientTemplate().delete("deleteTempWarrantyStateTable");
         }
         System.out.println("###############项目维护日报发送结束################");
+       
+        Connection connection = null;
+        CallableStatement statement = null;
+        try {
+        	System.out.println("###############项目维护每日数据固化开始################");
+			connection = projectDao.getSqlMapClientTemplate().getDataSource().getConnection();
+			statement = connection.prepareCall("Call `queryProjectMaintenanceInfo`(1);");
+			statement.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null) {
+					statement.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			try {
+				if (connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			System.out.println("###############项目维护每日数据固化结束################");
+		}
     }
 
     /**

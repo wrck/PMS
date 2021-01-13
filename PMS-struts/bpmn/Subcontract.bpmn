@@ -4,13 +4,13 @@
     <startEvent id="start" name="开始"></startEvent>
     <userTask id="serviceTask" name="服务经理发起转包申请" activiti:assignee="${serviceManager}"></userTask>
     <sequenceFlow id="flow1" sourceRef="start" targetRef="serviceTask"></sequenceFlow>
-    <userTask id="approveTask" name="工程管理部主管审批" activiti:assignee="${engManagerLeader}"></userTask>
+    <userTask id="approveTask" name="工程管理部主管审批" activiti:assignee="${engManagerLeader}" activiti:candidateGroups="${emlRole}"></userTask>
     <sequenceFlow id="flow3" sourceRef="approveTask" targetRef="exclusivegateway3"></sequenceFlow>
     <sequenceFlow id="flow2" sourceRef="serviceTask" targetRef="profitServiceTask"></sequenceFlow>
     <endEvent id="terminateEnd" name="结束">
       <terminateEventDefinition></terminateEventDefinition>
     </endEvent>
-    <userTask id="approveZRTask" name="办事处主任审批" activiti:assignee="${areaLeader}"></userTask>
+    <userTask id="approveZRTask" name="办事处主任审批" activiti:assignee="${areaLeader}" activiti:candidateGroups="${zrRole}"></userTask>
     <exclusiveGateway id="exclusivegateway3"></exclusiveGateway>
     <sequenceFlow id="approveReject" name="驳回" sourceRef="exclusivegateway3" targetRef="terminateEnd">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${result == -1}]]></conditionExpression>
@@ -263,7 +263,7 @@
         <omgdi:waypoint x="379.0" y="81.0"></omgdi:waypoint>
         <omgdi:waypoint x="411.0" y="80.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="14.0" width="100.0" x="378.0" y="83.0"></omgdc:Bounds>
+          <omgdc:Bounds height="14.0" width="24.0" x="378.0" y="83.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="profitApproveReject" id="BPMNEdge_profitApproveReject">
@@ -272,7 +272,7 @@
         <omgdi:waypoint x="847.0" y="5.0"></omgdi:waypoint>
         <omgdi:waypoint x="847.0" y="65.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="14.0" width="100.0" x="365.0" y="9.0"></omgdc:Bounds>
+          <omgdc:Bounds height="14.0" width="24.0" x="365.0" y="9.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

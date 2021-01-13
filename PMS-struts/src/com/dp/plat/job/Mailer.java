@@ -9,7 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.data.bean.MailSenderInfo;
 import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.test.SimpleMailSender;
@@ -21,6 +24,12 @@ public class Mailer implements Job {
 
     @SuppressWarnings("unchecked")
     public void work() throws IOException, SQLException {
+//		ApplicationContext applicationContext;
+//		if (SpringContext.getApplicationContext() != null) {
+//			applicationContext = SpringContext.getApplicationContext();
+//		} else {
+//			applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+//		}
         Reader reader = null;
         reader = Resources.getResourceAsReader("sqlMapConfig.xml");
         SqlMapClient sqlMap = SqlMapClientBuilder.buildSqlMapClient(reader);
@@ -37,7 +46,6 @@ public class Mailer implements Job {
                     mailInfo.setBcc(null);
                 }
                 if (SimpleMailSender.sendMail(mailInfo)) {
-//                if (MailUtil.sendMailWithAttachments(mailInfo)) {
                     sb.append(mailInfo.getId());
                     sb.append(",");
                     sqlMap.update("update_waiting_mail", String.valueOf(mailInfo.getId()));

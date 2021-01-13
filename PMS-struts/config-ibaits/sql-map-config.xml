@@ -20,4 +20,5 @@ PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
 	<sqlMap resource="sql-map-subcontract-config.xml"/>
 	<sqlMap resource="sql-map-certificate-config.xml"/>
 	<sqlMap resource="sql-map-maintenance-config.xml"/>
+	<sqlMap resource="sql-map-unifyTask-config.xml"/>
 </sqlMapConfig>

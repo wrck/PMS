@@ -330,6 +330,10 @@ public class SubcontractConstant {
 		 */
 		public static final String PAYMENT_USER = "subcontract.payment.user";
 		/**
+		 * 主任审批工程服务费的部门
+		 */
+		public static final String AREA_LEADER_AUDIT_ENGINEE_FEE_OFFICES = "subcontract.areaLeader.auditEngineeFee.offices";
+		/**
 		 * 转包服务商下单通知邮件
 		 */
 		public static final String FACILITATOR_NOTIFY_CODE = "notifyFacilitator";

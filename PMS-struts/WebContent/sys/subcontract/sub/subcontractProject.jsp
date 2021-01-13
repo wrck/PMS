@@ -17,6 +17,10 @@
             decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-condensed table-hover table-striped" 
             partialList="true" >
             <display:column property="projectCheckWrapper" titleKey="pm.shipment.check"></display:column>
+            <%-- <display:column property="column001" class="hidden transferOfficeCode" headerClass="hidden" media="html"></display:column> --%>
+            <display:column class="hidden " headerClass="hidden" media="html">
+                <input class="transferOfficeCode" value="${projectDisplayTable.column001}" data-type="${projectDisplayTable.salesType}" />
+            </display:column> 
             <%-- <display:column property="p hideDivrojectCode" titleKey="pm.project.projectCode" class="transferProjectCode"></display:column> --%>
             <display:column property="projectNameWithCodeWarrper" class="transferProjectName" titleKey="pm.project.projectName" media="html"></display:column> 
             <display:column property="contractNo" titleKey="pm.contract" class="transferContractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>

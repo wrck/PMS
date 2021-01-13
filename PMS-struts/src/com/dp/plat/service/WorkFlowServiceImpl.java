@@ -356,6 +356,7 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 			condition = false;
 //			projectService.insertintoallapprove(dc);
 			taskService.addComment(taskId, null, param.getComment());
+			taskService.setVariablesLocal(taskId, vars);
 			taskService.complete(taskId, vars);
 			if (param.getOutcome() != null && !"1".equals(param.getOutcome())&& !"10".equals(param.getOutcome())) {
 				//不同意
@@ -444,6 +445,7 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 		dc.setObjId(param.getObjId());
 		dc.setType(param.getType());*/
 		taskService.addComment(taskId, null, param.getComment());
+		taskService.setVariablesLocal(taskId, vars);
 		taskService.complete(taskId, vars);
 	}
 	@Override
@@ -587,6 +589,7 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 	public void doSelfTask(Task task, String instId,String comment,  Map<String, Object> vars) {
 		Authentication.setAuthenticatedUserId(task.getAssignee());
 		taskService.addComment(task.getId() , instId , comment);
+		taskService.setVariablesLocal(task.getId(), vars);
 		taskService.complete(task.getId(),vars);
 	}
 	
@@ -770,7 +773,16 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 	
 	@Override
 	public void assigneeTask(String taskId, String userId, String variableName) {
-		taskService.setAssignee(taskId, userId);
+		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+		if (task != null) {
+			String owner = task.getAssignee();
+			task.setOwner(owner);
+			task.setAssignee(userId);
+			taskService.saveTask(task);
+		} else {
+			taskService.setOwner(taskId, userId);
+			taskService.setAssignee(taskId, userId);
+		}
 		taskService.setVariable(taskId, variableName, userId);
 	}
 	

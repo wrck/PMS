@@ -48,7 +48,7 @@
           		<div class="tab-content" style="border:1px solid #ddd;background-color: white;">
                     <ul class="nav nav-tabs">
                         <li><a href="#tab-project-all" data-toggle="tab" id="nav-tab-all" aria-expanded="false">已创建项目</a></li>
-                        <li><a href="#tab-project-create" data-toggle="tab" id="nav-tab-create" aria-expanded="true">待指派项目</a></li>
+                        <li><a href="#tab-project-create" data-toggle="tab" id="nav-tab-create" aria-expanded="true">待创建项目</a></li>
                     </ul>
                     <div class="tab-pane" id="tab-project-all">
                         <div class="box box-primary">
@@ -159,7 +159,7 @@
                 rowId: 'projectId',
                 exportData: {
                 	url: pm.project.api.list("projectState=10").replace(".json", ".xlsx"),
-                	fileName: "待指派项目清单",
+                	fileName: "待创建项目清单",
                 	type: ["excel"]
                 },
                 beforeInitConfig: function() {

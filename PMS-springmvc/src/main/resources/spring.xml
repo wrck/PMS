@@ -119,7 +119,8 @@
 	
 	<!-- 引入其他配置文件 mybatis 、shiro  等 -->
 	<import resource="spring-mybatis.xml"/>
-	<import resource="spring-shiro.xml"/>
+	<!-- <import resource="spring-shiro.xml"/> -->
+	<import resource="spring-shiro-cas.xml"/>
 	<!-- <import resource="spring-cxf.xml"/> -->
 	
 	<import resource="spring-activiti.xml"/>

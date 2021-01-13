@@ -35,6 +35,7 @@ public class XssFilter implements Filter {
 			}
 		}
 //       chain.doFilter(new XssHttpServletRequestWrapper((HttpServletRequest) request), response);
+//       request = new XssHttpServletRequestWrapper((HttpServletRequest) request);
 //    	request = new XssPostHttpServletRequestWrapper((HttpServletRequest) request);
 		request = new XssRequestBodyHttpServletRequestWrapper((HttpServletRequest) request);
 		chain.doFilter(request, response);

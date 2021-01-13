@@ -1,17 +1,21 @@
 package com.dp.plat.decorators;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.properties.MediaTypeEnum;
@@ -48,6 +52,8 @@ import com.dp.plat.util.Base64Util;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.StringEscUtil;
+
+import cn.hutool.core.convert.impl.URLConverter;
 /**
  * 作为displayTag的装饰器，在JSP页面起作用
  * 通过getPageContext()能获取JSP页面的上下文，进而获取项目绝对路径等信息
@@ -750,9 +756,38 @@ public class Wrapper extends TableDecorator {
         
 	public String getDeliverableName(){
 		ProjectDeliver pd = (ProjectDeliver)getCurrentRowObject();
-		return "<a href='module/DownloadFile.action?downname=" + pd.getDeliverableName() + "&downpath=" + pd.getDeliverablePath() + "'>"
-					+ pd.getDeliverableName()
-				+ "</a>";
+		String downloadTag = "<a href='module/DownloadFile.action?downname=%s&downpath=%s'>下载</a>";
+        String viewTag = "<a href='%s%s' target='_blank'>预览</a>";
+        Pattern pattern = Pattern.compile(".*\\.(png|jpg|jpeg|gif)$", Pattern.CASE_INSENSITIVE);
+        String contextPath = getPageContext().getRequest().getServletContext().getContextPath();
+        String fileName = pd.getDeliverableName();
+        String filePath = pd.getDeliverablePath();
+        String encodeFileName = fileName;
+        String encodeFilePath = filePath;
+		try {
+			encodeFilePath = URLEncoder.encode(filePath, "UTF-8");
+			encodeFileName = URLEncoder.encode(fileName, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+		String atag2 = "<a href='module/DownloadFile.action?downname=%s&downpath=%s'>%s</a>";
+		String alink = String.format(atag2 , encodeFileName, encodeFilePath, fileName);
+		StringBuilder str = new StringBuilder();
+		if (pattern.matcher(fileName).matches()) {
+			str .append("<span class='hover-wrapper'>")
+				.append(alink)
+				.append("<label class='hover-label'>")
+				.append(String.format(viewTag, contextPath, filePath))
+				.append(String.format(downloadTag, encodeFileName, encodeFilePath))
+				.append("</label>")
+				.append("</span>");
+		} else {
+			str.append(alink);
+		}
+		return str.toString();
+//		return "<a href='module/DownloadFile.action?downname=" + pd.getDeliverableName() + "&downpath=" + pd.getDeliverablePath() + "'>"
+//					+ pd.getDeliverableName()
+//				+ "</a>";
 	}
 	
 

@@ -1,5 +1,6 @@
 package com.dp.plat.dao;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.CallBack;
 import com.dp.plat.data.bean.Contract;
@@ -44,33 +47,42 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<Project> queryProjectList(Project project, DisplayParam displayParam) {
-        // 判断是否有产品类型这个搜索条件
-        if (StringUtils.isNotBlank(project.getItemModel())) {
-            // getSqlMapClientTemplate().insert("create_temp_tb_contractNo_filter_itemModel",
-            // project);
-            getSqlMapClientTemplate().insert("create_temp_tb_projectId_filter_itemModel", project);
-        }
-        getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
-
-        int totalcount = (Integer) getSqlMapClientTemplate().queryForObject("find_project_count", project);
-
-        if (!displayParam.getExport()) {
-            displayParam.setPagesize(50);
-            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
-        } else {
-            displayParam.setPagesize(totalcount);
-            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
-        }
-
-        displayParam.setTotalcount(totalcount);
-        ProjectParam param = new ProjectParam();
-        param.setDisplayParam(displayParam);
-        param.setProject(project);
-        List<Project> projects = getSqlMapClientTemplate().queryForList("find_project_list", param);
-        getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
-        // getSqlMapClientTemplate().update("drop_temp_tb_contractNo_filter_itemModel");//删除临时表
-        getSqlMapClientTemplate().update("drop_temp_tb_projectId_filter_itemModel");// 删除临时表
-        return projects;
+        try {
+	    	// 判断是否有产品类型这个搜索条件
+	        if (StringUtils.isNotBlank(project.getItemModel())) {
+	            // getSqlMapClientTemplate().insert("create_temp_tb_contractNo_filter_itemModel",
+	            // project);
+	            getSqlMapClientTemplate().insert("create_temp_tb_projectId_filter_itemModel", project);
+	        }
+	        // 判断是否有维保状态、维保级别、WAF服务查询条件
+	        if (project.getCheckWarranty()) {
+	        	getSqlMapClientTemplate().insert("create_temp_table_project_contract_warrantyState", project);
+	        }
+	        
+	        getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
+	
+	        int totalcount = (Integer) getSqlMapClientTemplate().queryForObject("find_project_count", project);
+	
+	        if (!displayParam.getExport()) {
+	            displayParam.setPagesize(50);
+	            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+	        } else {
+	            displayParam.setPagesize(totalcount);
+	            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+	        }
+	
+	        displayParam.setTotalcount(totalcount);
+	        ProjectParam param = new ProjectParam();
+	        param.setDisplayParam(displayParam);
+	        param.setProject(project);
+	        List<Project> projects = getSqlMapClientTemplate().queryForList("find_project_list", param);
+	        return projects;
+        } finally {
+        	getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
+        	// getSqlMapClientTemplate().update("drop_temp_tb_contractNo_filter_itemModel");//删除临时表
+        	getSqlMapClientTemplate().update("drop_temp_tb_projectId_filter_itemModel");// 删除临时表
+        	getSqlMapClientTemplate().update("drop_temp_table_project_contract_warrantyState");// 删除临时表
+		}
     }
 
     @Override
@@ -143,7 +155,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     	return (Project) getSqlMapClientTemplate().queryForObject("queryProjectByContractNoAndType", params);
 	}
 
-	@Override
+    @Override
     public void insertProjectMember(Project project) {
         project.setCreateBy(getCurrUsername());
         getSqlMapClientTemplate().insert("insert-projectmember", project);
@@ -228,6 +240,11 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
             getSqlMapClientTemplate().insert("create_temp_tb_projectId_filter_itemModel", project);
         }
         
+        // 判断是否有维保状态、维保级别、WAF服务查询条件
+        if (project.getCheckWarranty()) {
+        	getSqlMapClientTemplate().insert("create_temp_table_project_contract_warrantyState", project);
+        }
+        
         getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
 
         Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("query_project_bypower_count", project);
@@ -246,7 +263,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
         // getSqlMapClientTemplate().update("drop_temp_tb_contractNo_filter_itemModel");//删除临时表
         getSqlMapClientTemplate().update("drop_temp_tb_projectId_filter_itemModel");// 删除临时表
-        
+        getSqlMapClientTemplate().update("drop_temp_table_project_contract_warrantyState");// 删除临时表
 //        // 序列号查询去除权限查询后，还原原来的查询条件
 //        if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))) {
 //            project = tempProject;
@@ -316,24 +333,56 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        if (StringUtils.isBlank(contractNo)) {
-            contractNo = "EMPTY";
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        if (StringUtils.isBlank(contractNo)) {
+//            contractNo = "EMPTY";
+//        }
+//        map.put("contractNo", contractNo);
+//        map.put("projectId", projectId);
+//        return getSqlMapClientTemplate().queryForList("query-shipmentinfo-bycontractno", map);
+        return queryShipmentInfoByContractNo(contractNo, projectId, null, null);
+    }
+    
+    @Override
+    public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter) {
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        if (StringUtils.isBlank(contractNo)) {
+//            contractNo = "EMPTY";
+//        }
+//        map.put("contractNo", contractNo);
+//        map.put("projectId", projectId);
+//        map.put("profitCenter", profitCenter);
+//        map.put("sourceContractNo", contractNo.replaceAll("(-C)|(-L)", ""));
+//        return getSqlMapClientTemplate().queryForList("query-shipmentinfo-bycontractno", map);
+        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
         }
-        map.put("contractNo", contractNo);
-        map.put("projectId", projectId);
-        return getSqlMapClientTemplate().queryForList("query-shipmentinfo-bycontractno", map);
+        return queryShipmentInfoByContractNo(contractNo, projectId, profitCenter, null);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, boolean excludeTransferOut) {
-        Map<String, Object> map = new HashMap<String, Object>();
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        if (StringUtils.isBlank(contractNo)) {
+//            contractNo = "EMPTY";
+//        }
+//        map.put("contractNo", contractNo);
+//        map.put("projectId", projectId);
+//        map.put("excludeTransferOut", excludeTransferOut);
+//        return getSqlMapClientTemplate().queryForList("query-shipmentinfo-bycontractno", map);
+        return queryShipmentInfoByContractNo(contractNo, projectId, null, excludeTransferOut);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter, Boolean excludeTransferOut) { Map<String, Object> map = new HashMap<String, Object>();
         if (StringUtils.isBlank(contractNo)) {
             contractNo = "EMPTY";
         }
         map.put("contractNo", contractNo);
+        map.put("sourceContractNo", contractNo.replaceAll("(-L)|(-C)", ""));
         map.put("projectId", projectId);
+        map.put("profitCenter", profitCenter);
         map.put("excludeTransferOut", excludeTransferOut);
         return getSqlMapClientTemplate().queryForList("query-shipmentinfo-bycontractno", map);
     }
@@ -345,13 +394,50 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         }
         return (int) getSqlMapClientTemplate().queryForObject("query_shipmentInfo_size_by_contractNo", contractNos);
     }
+    
+    @Override
+    public int queryShipmentInfoSizeByContractNo(String contractNos, String profitCenter) {
+        if (StringUtils.isBlank(contractNos)) {
+            return 0;
+        }
+        if (StringUtils.isNotBlank(profitCenter)) {
+            contractNos = contractNos.replaceAll("-L", "");
+        }
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("contractNo", contractNos);
+        params.put("profitCenter", profitCenter);
+        return (int) getSqlMapClientTemplate().queryForObject("query_shipmentInfo_size_by_contractNoAndProfitCenter", params);
+    }
 
     @Override
     public List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId) {
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        String contractNo = project.getContractNo();
+//        if (StringUtils.isBlank(contractNo)) {
+//            contractNo = "EMPTY";
+//        }
+//        map.put("contractNo", Util.appendChar(contractNo, "'"));
+//        map.put("projectId", project.getProjectId());
+//        String[] contractNos = contractNo.split(",");
+//        for (int i = 0; i < contractNos.length; i++) {
+//            contractNos[i] += "-C";
+//        }
+//        map.put("chContractNo", "'" + StringUtils.join(contractNos, "','") + "'");
+//        map.put("chProjectId", transferProjectId);
+//        return getSqlMapClientTemplate().queryForList("query-transferShipmentInfo-bycontractno", map);
+        return this.queryTransferShipmentInfoByContractNo(project, transferProjectId, null);
+    }
+    
+    @Override
+    public List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId, String profitCenter) {
         Map<String, Object> map = new HashMap<String, Object>();
         String contractNo = project.getContractNo();
         if (StringUtils.isBlank(contractNo)) {
             contractNo = "EMPTY";
+        }
+        if (StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
+            map.put("profitCenter", profitCenter);
         }
         map.put("contractNo", Util.appendChar(contractNo, "'"));
         map.put("projectId", project.getProjectId());
@@ -738,7 +824,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     	 return (Integer) getSqlMapClientTemplate().queryForObject("queryProjectContractCountByContractNoAndType", params);
     }
 
-	@Override
+    @Override
     public void invalidProjectHeader(int projectId) {
         getSqlMapClientTemplate().update("invalid_project_header", projectId);
     }
@@ -882,6 +968,19 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         map.put("projectId", projectId);
         return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
+        }
+        map.put("contractNo", contractNo);
+        map.put("profitCenter", profitCenter);
+        map.put("projectId", projectId);
+        return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
+    }
 
     @Override
     public void updateInvalidSoftversion(int projectId) {
@@ -1005,6 +1104,20 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
         return getSqlMapClientTemplate().queryForList("querySpotCheckList", map);
     }
+    
+    @Override
+    public List<Map<String, String>> querySpotCheckList(String contractNo, int projectId, String profitCenter) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
+        }
+        map.put("contractNo", contractNo);
+        map.put("projectId", projectId);
+        map.put("profitCenter", profitCenter);
+        // 设置group_contract的最大长度，默认1024
+        getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+        return getSqlMapClientTemplate().queryForList("querySpotCheckList", map);
+    }
 
     @Override
     public void batchInsertSpotCheckIgnoreItem(List<Item> itemList) {
@@ -1082,8 +1195,14 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public List<Map<String, Object>> selectProjectMaintenanceMapList(ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam) {
         String quesType = "projectMaintenance";
+        Boolean hideQuesnaire = true;
+        Boolean hideWarranty = true;
+        Boolean hideFiles = true;
+        Boolean checkServicePower = false;
+        String userPower = "";
+        Integer projectId = projectMaintenance != null ? projectMaintenance.getProjectId() : null;
         try {
-            Boolean hideQuesnaire = true;
+        	// 是否需要隐藏问卷
             if (projectMaintenance == null || !Boolean.TRUE.equals(projectMaintenance.getHideQuesnaire())) {
                 Map<String, Object> questionColumns = this.queryQuestionColumns(quesType, null);
                 projectMaintenance.setQuestionColumns(questionColumns);
@@ -1092,33 +1211,177 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
                 
                 hideQuesnaire = false;
             }
-
+            
+            // 设置group_contract的最大长度，默认1024
+            getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+            // 是否需要隐藏交付件
+            if (projectMaintenance == null || Boolean.FALSE.equals(projectMaintenance.getHideFiles())) {
+            	hideFiles = false;
+            }
+            // 是否需要清除维保
+            if (projectMaintenance == null || Boolean.FALSE.equals(projectMaintenance.getHideWarranty())) {
+            	hideWarranty = false;
+            }
+            
+            // 创建服务经理人员权限表，服务经理-办事处-服务经理/项目经理的关系
+            if (projectMaintenance != null && Boolean.TRUE.equals(projectMaintenance.isCheckServicePower())) {
+            	userPower = StringUtils.trimToEmpty(projectMaintenance.getUserPower());
+                getSqlMapClientTemplate().insert("createTempServicePowerTable", userPower);
+                
+                checkServicePower = projectMaintenance.isCheckServicePower();
+            }
+            
+            
             Map<String, Object> params = new HashMap<>();
+            params.put("checkServicePower", checkServicePower);
+            params.put("projectId", projectId);
             if(displayParam != null) {
+            	hideWarranty = hideWarranty && !displayParam.getExport();
+            	if (!hideWarranty) {
+            		getSqlMapClientTemplate().insert("createTempProjectWarrantyStateTable", params);
+//                    getSqlMapClientTemplate().insert("createTempMaintenanceContractNoTable");
+//                    getSqlMapClientTemplate().insert("createTempWarrantyStateTable");
+            	}
                 Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectMaintenanceList", projectMaintenance);
                 displayParam.setTotalcount(totalcount);
                 if (!displayParam.getExport()) {
-                    params.put("hideFiles", true);
+                    params.put("hideFiles", hideFiles);
                     params.put("hideQuesnaire", hideQuesnaire);
+                    params.put("hideWarranty", hideWarranty);
                     displayParam.setPagesize(50);
                     displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
                 } else {
                     displayParam.setPagesize(totalcount);
                     displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
                 }
+            } else {
+                DisplayParam tempDisplayParam = new DisplayParam();
+                try {
+                    tempDisplayParam.getParam();
+                    hideWarranty = hideWarranty && !tempDisplayParam.getExport();
+                    if (!hideWarranty) {
+                    	getSqlMapClientTemplate().insert("createTempProjectWarrantyStateTable", params);
+//                        getSqlMapClientTemplate().insert("createTempMaintenanceContractNoTable");
+//                        getSqlMapClientTemplate().insert("createTempWarrantyStateTable");
+                    }
+                } catch (UnsupportedEncodingException e) {
+                }
+                params.put("hideWarranty", hideWarranty);
             }
             params.put("projectMaintenance", projectMaintenance);
             params.put("displayParam", displayParam);
             List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectProjectMaintenanceMapList", params);
             return list;
         } finally {
-            getSqlMapClientTemplate().delete("deleteTempQuesnaireResultLineTable", quesType);
-            getSqlMapClientTemplate().delete("deleteTempQuesnaireResultTable", quesType);
+            if (!Boolean.TRUE.equals(hideQuesnaire)) {
+                getSqlMapClientTemplate().delete("deleteTempQuesnaireResultLineTable", quesType);
+                getSqlMapClientTemplate().delete("deleteTempQuesnaireResultTable", quesType);
+            }
+            if (!Boolean.TRUE.equals(hideWarranty)) {
+            	getSqlMapClientTemplate().delete("deleteTempProjectWarrantyStateTable");
+//                getSqlMapClientTemplate().delete("deleteTempMaintenanceContractNoTable");
+//                getSqlMapClientTemplate().delete("deleteTempWarrantyStateTable");
+            }
+            
+            if (Boolean.TRUE.equals(checkServicePower)) {
+                getSqlMapClientTemplate().delete("deleteTempServicePowerTable", userPower);
+            }
+            
         }
     }
     
-
     @Override
+	public Map<String, Object> queryProjectWarrantyState(Integer projectId) {
+		return (Map<String, Object>) getSqlMapClientTemplate().queryForObject("queryProjectWarrantyState", projectId);
+	}
+    
+	@Override
+	public Map<String, Long> queryProjectMaintenanceDeliverCount(Map<String, Object> params) {
+//		return (Map<String, Long>) getSqlMapClientTemplate().queryForObject("queryProjectMaintenanceDeliverCount", params);
+		return (Map<String, Long>) getSqlMapClientTemplate().queryForObject("queryProjectMaintenanceServiceDeliveriedCount", params);
+	}
+	
+	@Override
+	public int queryProjectMaintenanceDeliverCountByProjectDeliver(ProjectDeliver projectDeliver) {
+		return (int) getSqlMapClientTemplate().queryForObject("queryProjectMaintenanceDeliverCount", projectDeliver);
+	}
+	
+	@Override
+	public Boolean queryProjectMaintenanceServiceDeliveriedByProjectDeliver(ProjectDeliver projectDeliver) {
+		return Boolean.TRUE.equals(getSqlMapClientTemplate().queryForObject("queryProjectMaintenanceServiceDeliveriedByProjectDeliver", projectDeliver));
+	}
+	
+	@Override
+	public Boolean queryProjectMaintenanceServiceDeliveriedByMap(Map<String, Object> map) {
+		return Boolean.TRUE.equals(getSqlMapClientTemplate().queryForObject("queryProjectMaintenanceServiceDeliveriedByMap", map));
+	}
+
+	@Override
+	public Integer insertProjectServiceDeliveryBySelective(Map<String, Object> serviceDelivery) {
+		return (Integer) getSqlMapClientTemplate().insert("insertProjectServiceDeliveryBySelective", serviceDelivery);
+	}
+
+	public List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryMapList(Map<String, Object> params) {
+		try {
+			// 设置group_contract的最大长度，默认1024
+			getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+			getSqlMapClientTemplate().insert("createTempProjectWarrantyStateTable");
+
+			DisplayParam displayParam = (DisplayParam) params.get("displayParam");
+			if (displayParam != null) {
+				Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectMaintenanceServiceDeliveryMapList", params);
+	        	displayParam.setTotalcount(totalcount);
+	        	if (!displayParam.getExport()) {
+	        		displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+	        	} else {
+	        		displayParam.setPagesize(totalcount);
+	        		displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+	        	}
+			}
+			return getSqlMapClientTemplate().queryForList("selectProjectMaintenanceServiceDeliveryMapList", params);
+		} finally {
+			Object skipDropTempTable = params.get("skipDropTempTable");
+            if (skipDropTempTable == null || Boolean.FALSE.equals(skipDropTempTable)) {
+                getSqlMapClientTemplate().delete("deleteTempProjectWarrantyStateTable");
+            }
+		}
+	}
+	
+	@Override
+	public List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		if (projectMaintenance != null) {
+			JSONObject json = (JSONObject) JSON.toJSON(projectMaintenance);
+			params.putAll(json);
+		}
+//		params.put("serviceTypes", projectMaintenance.getServiceTypes());
+//		params.put("serviceType", projectMaintenance.getServiceType());
+//		params.put("serviceDate", projectMaintenance.getServiceDate());
+//		params.put("serviceQuarter", projectMaintenance.getServiceQuarter());
+        params.put("displayParam", displayParam);
+        params.put("joinProjectMembers", true);
+//        try {
+//        	// 设置group_contract的最大长度，默认1024
+//        	getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+//        	getSqlMapClientTemplate().insert("createTempProjectWarrantyStateTable");
+//        	Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectMaintenanceServiceDeliveryMapList", params);
+//        	displayParam.setTotalcount(totalcount);
+//        	if (!displayParam.getExport()) {
+//        		displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+//        	} else {
+//        		displayParam.setPagesize(totalcount);
+//        		displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+//        	}
+        	return this.selectProjectMaintenanceServiceDeliveryMapList(params);
+//        } finally {
+//        	Object skipDropTempTable = params.get("skipDropTempTable");
+//            if (skipDropTempTable == null || Boolean.FALSE.equals(skipDropTempTable)) {
+//                getSqlMapClientTemplate().delete("deleteTempProjectWarrantyStateTable");
+//            }
+//		}
+	}
+
+	@Override
     public List<String> selectDailyMaintenanceUsers(Map<String, Object> params) {
         return getSqlMapClientTemplate().queryForList("selectDailyMaintenanceUsers", params);
     }

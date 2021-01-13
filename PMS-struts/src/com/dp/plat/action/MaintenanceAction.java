@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.BeanUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Department;
@@ -24,6 +25,7 @@ import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.DisplayParam;
+import com.dp.plat.param.FileParam;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.service.PresalesService;
@@ -94,6 +96,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
      * 项目列表页面
      */
     public String execute() throws Exception {
+    	user = UserContext.getUserContext().getUser();
         if (projectMaintenance == null) {
             projectMaintenance = new ProjectMaintenanceVO();
         }
@@ -103,6 +106,23 @@ public class MaintenanceAction extends BaseAction implements Preparable {
         displayParam.getParam();
         if (!displayParam.getExport()) {
             projectMaintenance.setHideQuesnaire(true);
+            
+            Boolean hasReport = projectMaintenance.getHasReport();
+            Boolean hideFiles = true;
+            if (Boolean.TRUE.equals(hasReport) && user.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
+            	hideFiles = false;
+            } else if (Boolean.TRUE.equals(hasReport) && StringUtils.isNotBlank(projectMaintenance.getDeliverFiles())) {
+            	hideFiles = false;
+            }
+            projectMaintenance.setHideFiles(hideFiles);
+            
+			Boolean hideWarranty = true;
+			if (StringUtils.isNotBlank(projectMaintenance.getQueryWarrantyStatus())
+					|| StringUtils.isNotBlank(projectMaintenance.getQueryWarrantyGrade())
+					|| StringUtils.isNotBlank(projectMaintenance.getQueryWafService())) {
+				hideWarranty = false;
+			}
+            projectMaintenance.setHideWarranty(hideWarranty);
         }
         projectMaintenance();
         return SUCCESS;
@@ -131,6 +151,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                     officeCode = StringUtils.trimToEmpty(project.getColumn001());
                     projectMaintenance.setOfficeCode(officeCode);
                     projectMaintenance.setProjectName(project.getProjectName());
+//                    projectMaintenance.setHideWarranty(false);
                 }
                 if (user.getAreapower().contains(officeCode) && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
                         || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
@@ -159,6 +180,11 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                     || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
                 projectMaintenance.setAreaPower(user.getAreapower());
                 projectMaintenance.setUserPower(user.getUsername());
+                
+                // 用户为服务经理时判断服务经理的人员权限
+                if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
+                	projectMaintenance.setCheckServicePower(true);
+                }
             }
             maintenanceMapList = projectService.selectProjectMaintenanceMapList(projectMaintenance, displayParam);
             // 设置最新维护记录的id，用于修改时更新项目实施状态
@@ -192,18 +218,12 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             }
             if (project != null) {
                 project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
-				if (project == null || !(user.isHasRole(MessageUtil.ROLE_ADMIN)
-						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
-						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-						|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-						|| (user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
-								&& (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
-										|| user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)))
-						|| (project != null && (user.getUsername().equals(project.getServiceManagerCode())
-								|| user.getUsername().equals(project.getProgramManagerCode())
-								|| user.getUsername().equals(project.getProgramManagerCodeB()) || StringUtils.contains(
-										project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
-					setErrmsg("没有访问权限！");
+                if (project == null || !(user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
+                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
+                        || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
+                                || user.getUsername().equals(project.getProgramManagerCodeB())
+                                || StringUtils.contains(project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
+                    setErrmsg("没有访问权限！");
                     return ERROR;
                 }
                 projectType = 10;
@@ -229,7 +249,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                 presales = presalesService.queryPresalesById(presales.getPresalesId());
             }
             if ("nonBusiness".equals(category)) {
-            	projectType = 30; // 非业务类
+                projectType = 30; // 非业务类
             }
         }
        
@@ -264,6 +284,8 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             if (cbForm == null) {
                 cbForm = new HashMap<>();
             }
+            // 办事处集合
+            departmentList = departmentManageService.queryDepartments();
             maintenanceTypeList = basicDataService.queryBasicDataBeans("maintenanceType");
             projectExecutionStateList = basicDataService.queryBasicDataBeans("projectExecutionState");
             
@@ -283,6 +305,12 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                 projectMaintenance.setProjectExecutionState(project != null ? project.getExecutionState() : null);
             }
             projectMaintenance.setMaxId(maxId);
+            
+            if (project != null) {
+	            // 查询项目维保状态和维保级别、增值服务等
+	            Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
+	            projectMaintenance.setWarrantyState(warrantyState);
+            }
         } else {
             if (projectMaintenance.getId() != null) {
                 // 判断是否本人操作
@@ -330,27 +358,90 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                     projectService.updateProjectExecutionState(project, projectMaintenance.getProjectExecutionState());
                 }
             }
+            
+            if (project != null) {
+	            // 查询项目维保状态和维保级别、增值服务等
+	            Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
+	            projectMaintenance.setWarrantyState(warrantyState);
+            }
+            
             projectService.insertOrUpdateProjectMaintenance(projectMaintenance);
             
             
             if(projectDeliverList != null && projectDeliverList.size() > 0){
                 String[] deliverIds = projectDeliver.getDeliverId().split(",");
                 projectDeliver.setProjectId(projectMaintenance.getId());
+                projectDeliver.setContractNo(String.valueOf(projectMaintenance.getProjectId()));
+//                projectDeliver.setProjectId(projectMaintenance.getProjectId());
+//                projectDeliver.setContractNo(String.valueOf(projectMaintenance.getId()));
+//                projectDeliver.setDataTypeCode(projectMaintenance.getCategory());
+//                projectDeliver.setBasicDataId(projectMaintenance.getSubCategory());
+                
                 projectDeliver.setProjectType(String.valueOf(projectMaintenance.getProjectType() + 1));
                 for(int i = 0;i < projectDeliverList.size();i++){
-                    ProjectDeliver deliverFile = projectDeliverList.get(i);
-                    if(deliverFile == null){
-                        continue;
-                    }
-                    ProjectDeliver deliver = new ProjectDeliver();
+                	ProjectDeliver deliverFile = projectDeliverList.get(i);
+    				if(deliverFile == null || deliverFile.getUploaddelivery() == null || deliverFile.getUploaddelivery().length == 0){
+    					continue;
+    				}
+    				ProjectDeliver deliver = new ProjectDeliver();
                     BeanUtils.copyProperties(projectDeliver, deliver);
-                    deliver.setDeliverableType(projectDeliverList.get(i).getDeliverableType());
-                    projectService.uploadFile(deliver, deliverIds[i], deliverFile);
+                    String deliverableType = deliverFile.getDeliverableType();
+                    if (StringUtils.isNotBlank(deliverableType)) {
+                        String[] splits = StringUtils.split(deliverableType, ",");
+                        deliverableType = splits[0];
+                    }
+                    deliver.setDeliverableType(deliverableType);
+                    projectService.uploadMaintenanceFile(projectMaintenance, deliver, deliverIds[i], deliverFile);
                 }
+                projectService.insertOrUpdateProjectMaintenance(projectMaintenance);
             }
             return "redirect";
         }
         return SUCCESS;
+    }
+    
+    public String serviceDelivery() throws Exception {
+    	user = UserContext.getUserContext().getUser();
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+                || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+    	if (displayParam == null) {
+    		displayParam = new DisplayParam();
+    	}
+    	displayParam.getParam();
+    	// 办事处集合
+        departmentList = departmentManageService.queryDepartments();
+        
+        if (projectMaintenance == null) {
+        	projectMaintenance = new ProjectMaintenanceVO();
+        }
+        if (projectMaintenance.getServiceDate() == null) {
+        	projectMaintenance.setServiceDate(new Date());
+        }
+        // 默认查询当前服务季度
+        if (projectMaintenance.getServiceQuarter() == null) {
+        	projectMaintenance.setServiceQuarter(true);
+        }
+        
+	    // maintenanceList =
+	    // projectService.selectProjectMaintenanceVOList(projectMaintenance);
+	    if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+	            || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
+	        projectMaintenance.setAreaPower(user.getAreapower());
+//	        projectMaintenance.setUserPower(user.getUsername());
+//	        
+//	        // 用户为服务经理时判断服务经理的人员权限
+//	        if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
+//	        	projectMaintenance.setCheckServicePower(true);
+//	        }
+	    }
+	    
+    	maintenanceMapList = projectService.selectProjectMaintenanceServiceDeliveryList(projectMaintenance, displayParam);
+//		return "serviceDelivery";
+		return SUCCESS;
     }
     
     public String toUploadFile() {
@@ -401,6 +492,42 @@ public class MaintenanceAction extends BaseAction implements Preparable {
 //            e.printStackTrace();
 //        }
 //        return SUCCESS;
+    }
+    
+    public String uploadFileList() {
+    	try {
+    		HashMap<String, Object> jsonMap = new HashMap<>();
+    		String deliverFileIds = projectMaintenance.getDeliverFileIds();
+    		Integer id = projectMaintenance.getId();
+    		Integer projectType = projectMaintenance.getProjectType();
+    		if ("commonUpload".equals(message) && StringUtils.isNotBlank(deliverFileIds)) {
+    			List<FileParam> fileList = basicDataService.queryFileList(deliverFileIds);
+//    			projectDeliverList = new ArrayList<ProjectDeliver>();
+//    			for (FileParam fileParam : fileList) {
+//    				ProjectDeliver deliver = new ProjectDeliver();
+//    				deliver.setDeliverableName(fileParam.getFileName());
+//    				deliver.setDeliverablePath(fileParam.getFilePath());
+//    				deliver.setDeliverableType(fileParam.getFileType());
+//    				deliver.setUploadUser(fileParam.getUploadBy());
+//    				deliver.setUploadTime(fileParam.getUploadTime());
+//    				projectDeliverList.add(deliver);
+//				}
+    			jsonMap.put("fileList", fileList);
+    		} else if ("returnForm".equals(message) && id != null && projectType != null) {
+    			projectDeliverList = projectService.queryDeliverDetailByProjectIdAndProjectType(id, String.valueOf(projectType + 1));
+    			jsonMap.put("projectDeliverList", projectDeliverList);
+    		}
+    		jsonMap.put("id", id);
+    		jsonMap.put("type", message);
+    		jsonMap.put("deliverFileIds", deliverFileIds);
+    		jsonMap.put("projectType", projectType);
+    		result = JSON.toJSONString(jsonMap);
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
     }
 
     public ProjectService getProjectService() {

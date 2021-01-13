@@ -40,13 +40,13 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 			double rate = ((double) (zdMap.get(officeCode) == null ? 0 : zdMap.get(officeCode))
 					/ (double) (allMap.get(officeCode) == null ? 0 : allMap.get(officeCode))) * 100;
 			
-			if (Double.isInfinite(rate)) {
+			if (Double.isInfinite(rate) || Double.isNaN(rate)) {
 				rate = 0;
 			}
 			rateMap.put(officeCode, Double.parseDouble(df.format(rate)));
 		}
 		double total = (double)zd / (double)all*100;
-		if (Double.isInfinite(total)) {
+		if (Double.isInfinite(total) || Double.isNaN(total) || Double.isNaN(total)) {
 			total = 0;
 		}
 		rateMap.put("total",  Double.parseDouble(df.format(total)));
@@ -68,13 +68,13 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 			all += (allMap.get(officeCode) == null ? 0:allMap.get(officeCode));
 			zd += (zdMap.get(officeCode) == null ? 0 : zdMap.get(officeCode)) ;
 			double rate = ((double) (zdMap.get(officeCode) == null ? 0 : zdMap.get(officeCode) ) /(double)(allMap.get(officeCode) == null ? 0:allMap.get(officeCode) ))*100;
-			if (Double.isInfinite(rate)) {
+			if (Double.isInfinite(rate) || Double.isNaN(rate)) {
 				rate = 0;
 			}
 			rateMap.put(officeCode, Double.parseDouble(df.format(rate)));
 		}
 		double total = (double) zd / (double) all * 100;
-		if (Double.isInfinite(total)) {
+		if (Double.isInfinite(total) || Double.isNaN(total)) {
 			total = 0;
 		}
 		rateMap.put("total", Double.parseDouble(df.format(total)));
@@ -83,70 +83,79 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 
 	@Override
 	public List<QualityParam> queryQualityList(ReportQueryParam queryParam) {
-		//创建临时表
-		reportDao.createQualityTmpTable();
-		
-		// 统计除去非直签督导的项目各办事处闭环平均分和闭环数量
-		List<QualityParam> remainderOfficeParams = null;
-		List<QualityParam> remainderOtherOfficeParams = null;
-		//查询各办事处的闭环项目数量、平均得分
-		remainderOfficeParams = reportDao.queryOfficeQuality(queryParam);
-		//查询没有闭环项目的办事处
-		remainderOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
-		// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
-		QualityParam remainderTotalQuality = reportDao.queryTotalQuality(queryParam);
-		
-		remainderOfficeParams.add(0, remainderTotalQuality);
-		remainderOfficeParams.addAll(remainderOtherOfficeParams);
-		return remainderOfficeParams;
+		try {
+			//创建临时表
+			reportDao.createQualityTmpTable();
+			
+			// 统计除去非直签督导的项目各办事处闭环平均分和闭环数量
+			List<QualityParam> remainderOfficeParams = null;
+			List<QualityParam> remainderOtherOfficeParams = null;
+			//查询各办事处的闭环项目数量、平均得分
+			remainderOfficeParams = reportDao.queryOfficeQuality(queryParam);
+			//查询没有闭环项目的办事处
+			remainderOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
+			// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
+			QualityParam remainderTotalQuality = reportDao.queryTotalQuality(queryParam);
+			
+			remainderOfficeParams.add(0, remainderTotalQuality);
+			remainderOfficeParams.addAll(remainderOtherOfficeParams);
+			return remainderOfficeParams;
+		} finally {
+			reportDao.deleteQualityTmpTable();
+		}
 	}
 
 	@Override
 	public Map<String,List<QualityParam>> queryTotalAndRemainderList(ReportQueryParam queryParam) {
-		//创建临时表
-		reportDao.createQualityTmpTable();
-		
-		// 统计所有项目各办事处闭环平均分和闭环数量
-		List<QualityParam> totalOfficeParams = null;
-		List<QualityParam> totalOtherOfficeParams = null;
-		totalOfficeParams = reportDao.queryOfficeQuality(queryParam);
-		//查询没有闭环项目的办事处
-		totalOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
-		// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
-		QualityParam totalTotalQuality = reportDao.queryTotalQuality(queryParam);
-		totalOfficeParams.add(0, totalTotalQuality);
-		totalOfficeParams.addAll(totalOtherOfficeParams);
-		
-		// 统计除去非直签督导、代理商/用户自服的项目各办事处闭环平均分和闭环数量
-		queryParam.setImplWay(MessageUtil.IMPL_WAY_0);// 原厂直服
-		queryParam.setProjectCategory(MessageUtil.PROJECT_TYPE_ENGINEE);// 20：非直签，查询是去除非直签，考虑null影响。不考虑可直接传10：直签
-		queryParam.setIsALl(MessageUtil.IMPL_WAY_3);// 附加传值，用来传代理商/用户自服
-		List<QualityParam> remainderOfficeParams = null;
-		List<QualityParam> remainderOtherOfficeParams = null;
-		//查询各办事处的闭环项目数量、平均得分
-		remainderOfficeParams = reportDao.queryOfficeQuality(queryParam);
-		//查询没有闭环项目的办事处
-		remainderOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
-		// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
-		QualityParam remainderTotalQuality = reportDao.queryTotalQuality(queryParam);
-		remainderOfficeParams.add(0, remainderTotalQuality);
-		remainderOfficeParams.addAll(remainderOtherOfficeParams);
-		
-		reportDao.deleteQualityTmpTable();
-		
-		HashMap<String,List<QualityParam>> all =  new HashMap<>();
-		all.put("remainder",remainderOfficeParams);
-		all.put("total",totalOfficeParams);
-		return all;
+		try{
+			//创建临时表
+			reportDao.createQualityTmpTable();
+			
+			// 统计所有项目各办事处闭环平均分和闭环数量
+			List<QualityParam> totalOfficeParams = null;
+			List<QualityParam> totalOtherOfficeParams = null;
+			totalOfficeParams = reportDao.queryOfficeQuality(queryParam);
+			//查询没有闭环项目的办事处
+			totalOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
+			// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
+			QualityParam totalTotalQuality = reportDao.queryTotalQuality(queryParam);
+			totalOfficeParams.add(0, totalTotalQuality);
+			totalOfficeParams.addAll(totalOtherOfficeParams);
+			
+			// 统计除去非直签督导、代理商/用户自服的项目各办事处闭环平均分和闭环数量
+			queryParam.setImplWay(MessageUtil.IMPL_WAY_0);// 原厂直服
+			queryParam.setProjectCategory(MessageUtil.PROJECT_TYPE_ENGINEE);// 20：非直签，查询是去除非直签，考虑null影响。不考虑可直接传10：直签
+			queryParam.setIsALl(MessageUtil.IMPL_WAY_3);// 附加传值，用来传代理商/用户自服
+			List<QualityParam> remainderOfficeParams = null;
+			List<QualityParam> remainderOtherOfficeParams = null;
+			//查询各办事处的闭环项目数量、平均得分
+			remainderOfficeParams = reportDao.queryOfficeQuality(queryParam);
+			//查询没有闭环项目的办事处
+			remainderOtherOfficeParams = reportDao.queryOtherOfficeQuality(queryParam);
+			// 查询全国项目质量管理数据 ，闭环平均分、闭环项目数量
+			QualityParam remainderTotalQuality = reportDao.queryTotalQuality(queryParam);
+			remainderOfficeParams.add(0, remainderTotalQuality);
+			remainderOfficeParams.addAll(remainderOtherOfficeParams);
+			
+			HashMap<String,List<QualityParam>> all =  new HashMap<>();
+			all.put("remainder",remainderOfficeParams);
+			all.put("total",totalOfficeParams);
+			return all;
+		} finally {
+			reportDao.deleteQualityTmpTable();
+		}
 	}
 	
 	@Override
 	public QualityParam queryTotalQuality(ReportQueryParam queryParam) {
 		QualityParam quality = null;
-		//创建临时表
-		reportDao.createQualityTmpTable();
-		quality = reportDao.queryTotalQuality(queryParam);
-		reportDao.deleteQualityTmpTable();
+		try {
+			//创建临时表
+			reportDao.createQualityTmpTable();
+			quality = reportDao.queryTotalQuality(queryParam);
+		} finally {
+			reportDao.deleteQualityTmpTable();
+		}
 		return quality;
 	}
 
@@ -164,13 +173,13 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 			zd += (newMap.get(officeCode) == null ? 0 : newMap.get(officeCode)) ;
 			double rate = ((double) (closeMap.get(officeCode) == null ? 0 : closeMap.get(officeCode))
 					/ (double) (newMap.get(officeCode) == null ? 0 : newMap.get(officeCode))) * 100;
-			if (Double.isInfinite(rate)) {
+			if (Double.isInfinite(rate) || Double.isNaN(rate)) {
 				rate = 0;
 			}
 			rateMap.put(officeCode, Double.parseDouble(df.format(rate)));
 		}
 		double total = (double)all / (double)zd*100;
-		if (Double.isInfinite(total)) {
+		if (Double.isInfinite(total) || Double.isNaN(total)) {
 			total = 0;
 		}
 		rateMap.put("total",  Double.parseDouble(df.format(total)));
@@ -255,43 +264,49 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 	@Override
 	public List<ReportLineData> queryReportLineQualityData(
 			ReportQueryParam queryParam) {
-		//创建临时表
-		reportDao.createQualityTmpTable();
-		List<ReportLineData> qualityData = reportDao.queryReportLineQualityData(queryParam);
-		List<ReportLineData> noQualityData = reportDao.queryReportLineNoQualityData(queryParam);
-		qualityData.addAll(noQualityData);
-		reportDao.deleteQualityTmpTable();
-		return qualityData;
+		try{
+			//创建临时表
+			reportDao.createQualityTmpTable();
+			List<ReportLineData> qualityData = reportDao.queryReportLineQualityData(queryParam);
+			List<ReportLineData> noQualityData = reportDao.queryReportLineNoQualityData(queryParam);
+			qualityData.addAll(noQualityData);
+			return qualityData;
+		} finally {
+			reportDao.deleteQualityTmpTable();
+		}
 	}
 
 	@Override
 	public List<Object> queryReportLineRemainderQualityDataAndTotalsize(ReportQueryParam queryParam) {
-		//创建临时表
-		reportDao.createQualityTmpTable();
-		// 查询所有项目闭环数量和闭环分数
-		List<ReportLineData> totalQualityData = reportDao.queryReportLineQualityData(queryParam);
-		List<ReportLineData> totalNoQualityData = reportDao.queryReportLineNoQualityData(queryParam);
-		totalQualityData.addAll(totalNoQualityData);
-		HashMap<String, String> officeTotalSize = new HashMap<>();
-		int total = 0;
-		for (ReportLineData temp : totalQualityData) {
-			total += Integer.parseInt(temp.getTotalValue());
-			officeTotalSize.put(temp.getOfficeCode(), temp.getTotalValue());
+		try {
+			//创建临时表
+			reportDao.createQualityTmpTable();
+			// 查询所有项目闭环数量和闭环分数
+			List<ReportLineData> totalQualityData = reportDao.queryReportLineQualityData(queryParam);
+			List<ReportLineData> totalNoQualityData = reportDao.queryReportLineNoQualityData(queryParam);
+			totalQualityData.addAll(totalNoQualityData);
+			HashMap<String, String> officeTotalSize = new HashMap<>();
+			int total = 0;
+			for (ReportLineData temp : totalQualityData) {
+				total += Integer.parseInt(temp.getTotalValue());
+				officeTotalSize.put(temp.getOfficeCode(), temp.getTotalValue());
+			}
+			officeTotalSize.put("total", String.valueOf(total));
+			// 查询除去非直签督导、代理商/用户自服的项目闭环数量和闭环分数
+			queryParam.setImplWay(MessageUtil.IMPL_WAY_0);// 原厂直服
+			queryParam.setProjectCategory(MessageUtil.PROJECT_TYPE_ENGINEE);// 20：非直签，查询是去除非直签，考虑null影响。不考虑可直接传10：直签
+			queryParam.setIsALl(MessageUtil.IMPL_WAY_3);// 附加传值，用来传代理商/用户自服
+			List<ReportLineData> remainderQualityData = reportDao.queryReportLineQualityData(queryParam);
+			List<ReportLineData> remainderNoQualityData = reportDao.queryReportLineNoQualityData(queryParam);
+			remainderQualityData.addAll(remainderNoQualityData);
+			List<Object> list = new ArrayList<Object>();
+			list.add(remainderQualityData);
+			list.add(officeTotalSize);
+			
+			return list;
+		} finally {
+			reportDao.deleteQualityTmpTable();
 		}
-		officeTotalSize.put("total", String.valueOf(total));
-		// 查询除去非直签督导、代理商/用户自服的项目闭环数量和闭环分数
-		queryParam.setImplWay(MessageUtil.IMPL_WAY_0);// 原厂直服
-		queryParam.setProjectCategory(MessageUtil.PROJECT_TYPE_ENGINEE);// 20：非直签，查询是去除非直签，考虑null影响。不考虑可直接传10：直签
-		queryParam.setIsALl(MessageUtil.IMPL_WAY_3);// 附加传值，用来传代理商/用户自服
-		List<ReportLineData> remainderQualityData = reportDao.queryReportLineQualityData(queryParam);
-		List<ReportLineData> remainderNoQualityData = reportDao.queryReportLineNoQualityData(queryParam);
-		remainderQualityData.addAll(remainderNoQualityData);
-		reportDao.deleteQualityTmpTable();
-		List<Object> list = new ArrayList<Object>();
-		list.add(remainderQualityData);
-		list.add(officeTotalSize);
-		
-		return list;
 	}
 	
 	@Override
@@ -311,7 +326,9 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 	public void keepReportLineData() {
 		ReportQueryParam queryParam = new ReportQueryParam();
 		queryParam.setStartTime(DateUtil.getFirstDay());
-		queryParam.setQuarterStartTime(DateUtil.getQuarterFirstDay(new Date()));
+		// 趋势图都改为月度
+//		queryParam.setQuarterStartTime(DateUtil.getQuarterFirstDay(new Date()));
+		queryParam.setQuarterStartTime(queryParam.getStartTime());
 		DecimalFormat df  = new DecimalFormat("###.00");
 		
 		//统计项目经理指派率
@@ -326,8 +343,8 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 		traceDatas.add(totalTraceData);
 		this.insertReportLineDataByList(traceDatas, ReportDataTypeParam.REPORT_TRACE_RATE);
 		
-		
-		if(DateUtil.isQuarterLastMonth()){//如果是季度末就执行
+//		// 趋势图都改为月度
+//		if(DateUtil.isQuarterLastMonth()){//如果是季度末就执行
 			//闭环新增比
 			List<ReportLineData> closedDatas = this.queryReportLineClosedData( queryParam );
 			ReportLineData totalCloesdData = this.statisticsTotalData(closedDatas);
@@ -347,7 +364,7 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 			qualityDatas.add(totalQualityData);
 			this.updateQualityData(qualityDatas, (Map<String, String>) datas.get(1));
 			this.insertReportLineDataByList(qualityDatas, ReportDataTypeParam.REPORT_QUALITY_RATE);
-		}
+//		}
 		
 	}
 

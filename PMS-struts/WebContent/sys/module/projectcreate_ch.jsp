@@ -234,7 +234,8 @@
 		var sel = $(e).val();
 		if(sel == 0 || sel == 4){//原厂直服、原厂集成
 			$("#programManagerDiv2").show();
-			$("#programManagerDiv3").hide();
+			//$("#programManagerDiv3").hide();
+			$("#programManagerDiv3").show();
 		}else if(sel == 1 || sel == 3){
 			$("#programManagerDiv2").hide();
 			$("#programManagerDiv3").show();
@@ -345,13 +346,13 @@
 			<label for="deliverChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.deliverChannel" /></label>
 	    	<s:textfield name="project.deliverChannel" id="deliverChannel" placeholder="出货渠道..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
 		</div> --%>
-		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv2">
-			<label for="serviceChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.serviceChannel" /></label>
-	    	<s:textfield name="project.serviceChannel" id="serviceChannel" placeholder="服务提供商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
-		</div>
 		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv3">
 			<label for="agentChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.agentChannel" /></label>
 	    	<s:textfield name="project.agentChannel" id="agentChannel" placeholder="施工代理商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
+		</div>
+		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv2">
+			<label for="serviceChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.serviceChannel" /></label>
+	    	<s:textfield name="project.serviceChannel" id="serviceChannel" placeholder="服务提供商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
 		</div>
 		<div class="form-group form-group-query">
 			<label for="column013" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.finalCustomerName" /></label>

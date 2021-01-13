@@ -61,7 +61,7 @@ public class SMSDataJob {
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
-		Class<?>[] clazzArrs = new Class[] {ProjectProduct.class , AfPrjProperty.class, OfstContractHeadSAP.class };
+		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class, OfstContractHeadSAP.class };
 		String[] dataSourceFromKeys = new String[] { "SMS", "SMS", "SMS" };
 		String[] dataSourceToKeys = new String[] { "PMS", "PMS", "PMS" };
 		try {

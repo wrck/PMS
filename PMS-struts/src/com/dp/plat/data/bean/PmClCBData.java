@@ -18,6 +18,7 @@ public class PmClCBData {
 	private double engScore;
 	private double totalScore;
 	private int cbResult;
+	private String approveRemark;
 	private String opinion;
 	private String equExplain;
 	private int evaResult;
@@ -143,6 +144,12 @@ public class PmClCBData {
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
 	}
+    public String getApproveRemark() {
+        return approveRemark;
+    }
+    public void setApproveRemark(String approveRemark) {
+        this.approveRemark = approveRemark;
+    }
 	
 	
 

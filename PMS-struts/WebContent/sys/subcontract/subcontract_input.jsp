@@ -1,3 +1,4 @@
+<%@page import="com.dp.plat.util.Util"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
 <%@ taglib prefix="dp" uri="/dp"%>
@@ -109,6 +110,15 @@ $(document).ready(function(){
     $(document).on('change', "#contractNos", function() {
     	var contractNos = $(this).val() || "";
     	contractNos = contractNos.replace(/ | |　|　/g, "").replace(/，/g, ",");
+    	var contractArr = contractNos.split(",");
+    	var contractNoSet = [];
+    	for(var i in contractArr) {
+    		var contractNo = contractArr[i]
+    		if ($.inArray(contractNo, contractNoSet) == -1) {
+    			contractNoSet.push(contractNo);
+    		}
+    	}
+    	contractNos = contractNoSet.join(",");
     	$(this).val(contractNos);
         chooseSubcontractProject();
     });
@@ -446,6 +456,9 @@ function chooseShipmentInfo(){
         }, 10);
 	    return false;
 	}
+	var map = getSubcontractRelationData(contractNos, projectIds);
+	console.log(map);
+	contractNos = (map.selectedContractNos || []).join(",");
 	//var height = $(window).height();
 	$('body,html').animate({scrollTop: 320}, 500);
     if(flagS){
@@ -455,7 +468,7 @@ function chooseShipmentInfo(){
             url:"module/sub/chooseShipmentInfo.action",
             type:"post",
             dataType:"html",
-            data:{"projectIds":projectIds,"contractNos":contractNos},
+            data:{"projectIds":projectIds,"contractNos":contractNos, selected: JSON.stringify(map.relationsData)},
             success:function(data){
                 data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
                 $("#shipmentListDiv").html(data);
@@ -471,6 +484,81 @@ function chooseShipmentInfo(){
         })
     }
     return false;
+}
+
+/**
+ * 获取转包项目，合同号、项目ID、项目所属办事处的关系
+ */
+function getSubcontractRelationData(contractNos, projectIds) {
+	var contractNoSet = (contractNos || "").split(",");
+	var projectIdSet = (projectIds || "").split(",");
+	var relationsData = [];
+	// 判断哪些销售类型需要检查各合同发货明细的利润中心
+	var checkProfitCenterType = "14";
+	// 判断是否需要检查各合同发货明细的利润中心
+	var needCheckProfitCenter = false;
+	var selectedContractNos = [];
+	$("#projectDisplayTable tbody tr").filter(function(index, tr) { 
+	    var $selectTr = $(tr);
+	    var $officeCode = $selectTr.find(".transferOfficeCode");
+	    var salesType = $officeCode.data("type") || "";
+	    var officeCode = null;
+	    if (checkProfitCenterType == salesType) {
+	    	needCheckProfitCenter = true; 
+	    	officeCode = $.trim($officeCode.val() || $officeCode.text() || "");
+	    }
+	    var $contractNo = $selectTr.find(".transferContractNo");
+	    var contractNo = $.trim($contractNo.val() || $contractNo.text() || "");
+	    var matchC = false;
+	    var sourceContractNo = contractNo;
+	    for(var i in contractNoSet) {
+	        var tc = contractNoSet[i];
+	        if (tc) {
+	        	var tMatch = !!contractNo.match(tc);
+	            matchC = matchC || tMatch;
+	        }
+            if (matchC) {
+            	//sourceContractNo = tc;
+            	break;
+            }
+	    }
+	    var $projectId = $selectTr.find("input[name='selected']");
+	    var matchP = false;
+	    var projectId = ($projectId.val() || "").toString();
+	    if (projectId) {
+	        for(var i in projectIdSet) {
+	            var tpid = projectIdSet[i];
+	            if (tpid) {
+	                matchP = matchP || !!projectId.match(tpid);
+	            }
+	            if (matchP) {
+                    break;
+                }
+	        }
+	    } else {
+	        matchP = true;
+	    }
+	    if (matchC && matchP) {
+	    	// 处理一个项目多个合同的情况
+	    	var cNos = (sourceContractNo || "").split(",");
+	    	for (var i = 0; i < cNos.length; i++) {
+				var cNo = cNos[i];
+				if ($.inArray(cNo, selectedContractNos) == -1) {
+					selectedContractNos.push(cNo);
+				}
+    	        relationsData.push({
+    	            projectId: projectId,
+    	            contractNo: cNo,
+    	            officeCode: officeCode
+    	        });
+			}
+	    }
+	    return matchC && matchP;
+	});
+	return {
+		relationsData: needCheckProfitCenter ? relationsData : [],
+		selectedContractNos: selectedContractNos
+	}
 }
 
 var flagP = true;
@@ -818,8 +906,12 @@ function updateProject(obj){
 					            decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-condensed table-hover table-striped" >
 					            <%-- <display:column property="projectCheckWrapper" titleKey="pm.shipment.check"></display:column> --%>
 					            <%-- <display:column property="projectCode" titleKey="pm.project.projectCode" class="transferProjectCode"></display:column> --%>
+					            <%-- <display:column property="column001" class="hidden transferOfficeCode" headerClass="hidden" media="html"></display:column>  --%>
+                                <display:column class="hidden " headerClass="hidden" media="html">
+                                    <input class="transferOfficeCode" value="${projectDisplayTable.column001}" data-type="${projectDisplayTable.salesType}" />
+                                </display:column> 
 					            <display:column property="projectNameWithCodeWarrper" class="transferProjectName" titleKey="pm.project.projectName" media="html"></display:column> 
-					            <display:column property="contractNo" titleKey="pm.contract" class="transferContractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>
+                                <display:column property="contractNo" titleKey="pm.contract" class="transferContractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>
 					        </display:table>
 					    </div>
 					</td>

@@ -168,6 +168,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
 
         // 1.获取流程变量
         Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("presalesId", presales.getPresalesId());
         vars.put("applyBy", getLoginName());
         // 2.拼接businessKey
         String key = presales.getClass().getSimpleName();
@@ -297,7 +298,8 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         vars.put("pm", presales.getProjectManager());
         vars.put("result", param.getResult());
         vars.put("applyBy", "emRole");
-        vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+//        vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+        vars.put("emRole", MessageUtil.ROLE_PRESALES_STAFF + "");
         // 2.流程走向下一步,因这里涉及到某个角色审批的问题，特殊写好，后续待改进
         Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), getLoginName());
 
@@ -363,7 +365,8 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         // 1.获取流程变量
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("em", "emRole");
-        vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+//        vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+        vars.put("emRole", MessageUtil.ROLE_PRESALES_STAFF + "");
         vars.put("result", param.getResult());
         // 2.流程走向下一步,因这里涉及到某个角色审批的问题，特殊写好，后续待改进
         Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), getLoginName());
@@ -472,6 +475,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         // 1.获取流程变量
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("em", getLoginName());
+        vars.put("emRole", MessageUtil.ROLE_PRESALES_STAFF + "");
         vars.put("result", param.getResult());
         // 2.流程走向下一步,因这里涉及到某个角色审批的问题，特殊写好，后续待改进
         Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), "emRole");
@@ -523,6 +527,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         vars.put("sm", presales.getServiceManager());
         vars.put("result", param.getResult());
         vars.put("pm", presales.getProjectManager());
+        vars.put("emRole", MessageUtil.ROLE_PRESALES_STAFF + "");
         // 2.流程走向下一步,因这里涉及到某个角色审批的问题，特殊写好，后续待改进
         Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), "emRole");
 
@@ -680,12 +685,17 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
             String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
             boolean bool = Util.mkdir(path);
             if (bool) {
+            	String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
                 String targetDirectory = ServletActionContext.getServletContext().getRealPath(path);
                 String[] uploaddeliveryFileNames = ufname.split(",");
 
                 for (int i = 0; i < uploaddeliveryFileNames.length; i++) {
                     String ufn = uploaddeliveryFileNames[i];// 附件名称
                     String targetFileName = ufn.trim();
+                    // 检查文件上传类型
+        			if (!UploadFileUtil.checkFileExt(ufn, uploadExtWhiteList)) {
+        				return false;
+        			}
                     String newName = UploadFileUtil.getUploadFileRename(targetFileName);// 对上传附件进行重命名
                     if (newName == null) {
                         newName = targetFileName;

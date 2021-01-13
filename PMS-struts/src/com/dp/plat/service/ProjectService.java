@@ -181,6 +181,15 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId);
+	   /**
+     * 根据合同号、利润中心查询序列号清单
+     * @param contractNo
+     * @param projectId 
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter);
+
 	/**
 	 * 更新项目周报
 	 * @param projectWeekly
@@ -269,8 +278,16 @@ public interface ProjectService extends BaseService{
 	 * @param installAddress
 	 * @param contractNo 
 	 */
-	void insertInstallAddress(String selected, int projectId,
-			String installAddress, String contractNo);
+	void insertInstallAddress(String selected, int projectId, String installAddress, String contractNo);
+	/**
+     * 更新安装地址
+     * @param selected
+     * @param projectId
+     * @param installAddress
+     * @param contractNo 
+     * @param profitCenter 
+     */
+    void insertInstallAddress(String selected, int projectId, String installAddress, String contractNo, String profitCenter);
 	/**
 	 * 插入项目周报回复内容
 	 * @param paramMap
@@ -303,6 +320,22 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	List<ProjectDeliver> queryDeliverDetailByProjectId(int projectId);
+
+	/**
+	 * 根据projectid,项目类型查询交付件列表
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	List<ProjectDeliver> queryDeliverDetailByProjectIdAndProjectType(int projectId, String projectTypes);
+
+    /**
+     * 根据projectid,数据类型查询交付件列表
+     * @param projectId
+     * @param dataTypeCode
+     * @return
+     */
+    List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode);
 
 	/**
 	 * 根据交付件id删除（软删除）
@@ -656,6 +689,15 @@ public interface ProjectService extends BaseService{
 	int queryShipmentInfoSizeByContractNo(String contractNos);
 
 	/**
+     * 根据利润中心、合同号查询项目发货数量
+     * @param contractNos
+     * @param profitCenter 
+     * @return
+     */
+    int queryShipmentInfoSizeByContractNo(String contractNos, String profitCenter);
+
+    
+	/**
 	 * @param projectId
 	 * @return
 	 */
@@ -675,6 +717,16 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	List<ShipmentInfo> querySoftversionList(String contractNo, int projectId);
+
+	/**
+     * 查询软件版本
+     * @param contractNo
+     * @param projectId
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+
 	/**
 	 * 更新软件版本
 	 * @param softversionList
@@ -747,14 +799,31 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId);
+    /**
+     * 查询可以转移的设备序列号
+     * @param project
+     * @param transferProjectId
+     * @param profitCenter 
+     * @return
+     */
+    List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId, String profitCenter);
 
 	/**
 	 * 插入转移的设备序列号
-	 * @param selected
-	 * @param projectId
-	 * @param contractNo
+     * @param selected
+     * @param project
+     * @param transferProject
 	 */
 	void insertTransferShipment(String selected, Project project, Project transferProject);
+
+	/**
+     * 插入转移的设备序列号
+	 * @param selected
+	 * @param project
+	 * @param transferProject
+	 * @param profitCenter
+	 */
+    void insertTransferShipment(String selected, Project project, Project transferProject, String profitCenter);
 
 	/**
 	 * @param shipmentInfoList
@@ -772,13 +841,6 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	List<Notification> queryNotifyList(int projectId);
-
-    /**
-     * @param projectId
-     * @param dataTypeCode
-     * @return
-     */
-    List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode);
 
     /**
      * @param projectMaintenance
@@ -902,5 +964,29 @@ public interface ProjectService extends BaseService{
      * @param projectId
      */
     void deleteShipmentInstallInfoByProjectId(int projectId);
+
+    /**
+     * 查询项目的维保状态，维保级别，增值服务
+     * @param projectId
+     */
+	Map<String, Object> queryProjectWarrantyState(Integer projectId);
+
+	/**
+	 * 项目维护上传交付件
+	 * @param projectDeliver
+	 * @param deliverId
+	 * @param deliverFile
+	 * @return
+	 */
+	boolean uploadMaintenanceFile(ProjectMaintenanceVO projectMaintenance, ProjectDeliver projectDeliver,
+			String deliverId, ProjectDeliver deliverFile);
+
+	/**
+	 * 查询服务交付列表
+	 * @param projectMaintenance
+	 * @return
+	 */
+	List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(ProjectMaintenanceVO projectMaintenance,
+			DisplayParam displayParam);
 
 }

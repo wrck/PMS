@@ -2,6 +2,7 @@ package com.dp.plat.subcontract.dao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +72,37 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 			boolean excludeTransferOut) {
 		HashMap<String, Object> params = new HashMap<String, Object>();
 		params.put("contractNos", contractNos);
+		params.put("sourceContractNos", contractNos.replaceAll("(-L)|(-C)", ""));
 		params.put("projectIds", projectIds);
 		params.put("excludeTransferOut", excludeTransferOut);
+		return getSqlMapClientTemplate().queryForList("queryShipmentinfoByContractNosAndProjectIds", params);
+	}
+	
+	@Override
+	public List<ShipmentInfo> queryShipmentinfoByContractNosAndProjectIds(Map<String, Object> params) {
+		if (params == null || params.isEmpty()) {
+			return Collections.emptyList();
+		}
+		String contractNos = StringUtils.trimToEmpty((String) params.get("contractNos"));
+		params.put("sourceContractNos", contractNos.replaceAll("(-L)|(-C)", ""));
+		
+		List<Map> contractProfitCenter = (List<Map>) params.get("contractProfitCenter");
+		if (contractProfitCenter != null && !contractProfitCenter.isEmpty()) {
+			boolean hasProfitCenter = false;
+			for (Map map : contractProfitCenter) {
+				String contractNo = StringUtils.trimToEmpty((String) map.get("contractNo"));
+				map.put("sourceContractNo", contractNo.replaceAll("(-L)|(-C)", ""));
+				
+				String officeCode = StringUtils.trimToEmpty((String) map.get("officeCode"));
+				if (StringUtils.isNotBlank(officeCode)) {
+					hasProfitCenter = true; 
+				}
+			}
+			// 如果存在利润中心，则contractNos需要去掉-L后缀
+			if (hasProfitCenter) {
+				params.put("contractNos", contractNos.replaceAll("-L", ""));
+			}
+		}
 		return getSqlMapClientTemplate().queryForList("queryShipmentinfoByContractNosAndProjectIds", params);
 	}
 

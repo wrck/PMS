@@ -57,6 +57,12 @@
             <artifactId>PMS-activiti</artifactId>
             <version>${project.version}</version>
             <type>war</type>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.mybatis</groupId>
+            		<artifactId>mybatis</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
 		
 		<!-- <dependency>
@@ -77,7 +83,7 @@
 			</exclusions>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>pms-struts</artifactId>
 			<version>${project.version}</version>
@@ -95,8 +101,12 @@
 					<artifactId>freemarker</artifactId>
 					<groupId>org.freemarker</groupId>
 				</exclusion>
+				<exclusion>
+					<groupId>com.dp.plat</groupId>
+					<artifactId>activiti-api-unifytask-patch</artifactId>
+				</exclusion>
 			</exclusions>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>pms-struts</artifactId>
@@ -111,6 +121,10 @@
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
 					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.dp.plat</groupId>
+					<artifactId>activiti-api-unifytask-patch</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -210,6 +224,8 @@
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<archiveClasses>true</archiveClasses>
+					<attachClasses>true</attachClasses>
+					<classesClassifier>core</classesClassifier>
 				</configuration>
 			</plugin>
 			<plugin>

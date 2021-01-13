@@ -26,7 +26,7 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 			//判断用户密码是否正确
 			String envirment = loginDao.querySysArg("sys.envirment.argu");
 			String pwd = loginParam.getPassword();
-			if(!"1".equals(envirment)){// 测试环境忽略密码
+			if(!"1".equals(envirment) && user != null){// 测试环境忽略密码
 				pwd = user.getPassword();
 			}
 			if(user != null && user.getPassword().equalsIgnoreCase(pwd)){

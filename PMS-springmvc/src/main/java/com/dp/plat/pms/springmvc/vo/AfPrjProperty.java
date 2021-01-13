@@ -75,6 +75,9 @@ public class AfPrjProperty extends BaseEntity {
 
     // 出货价
     private BigDecimal projectMoney;
+    
+    // 安服出货价
+    private BigDecimal afProjectMoney;
 
     // 提交时间
     @JsonSerialize(using = JsonSerializer.class)
@@ -546,6 +549,24 @@ public class AfPrjProperty extends BaseEntity {
      */
     public void setProjectMoney(BigDecimal projectMoney) {
         this.projectMoney = projectMoney;
+    }
+
+    /**
+     * 获取安服出货价
+     *
+     * @return afProjectMoney - 安服出货价
+     */
+    public BigDecimal getAfProjectMoney() {
+        return afProjectMoney;
+    }
+
+    /**
+     * 设置安服出货价
+     *
+     * @param afProjectMoney 安服出货价
+     */
+    public void setAfProjectMoney(BigDecimal afProjectMoney) {
+        this.afProjectMoney = afProjectMoney;
     }
 
     /**

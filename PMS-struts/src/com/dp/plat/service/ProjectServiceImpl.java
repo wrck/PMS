@@ -37,6 +37,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.orm.ibatis.SqlMapClientTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.dao.ProjectDaoImpl;
@@ -70,11 +73,13 @@ import com.dp.plat.param.RealProductLineBean;
 import com.dp.plat.supervision.entity.ProjectSupervision;
 import com.dp.plat.supervision.vo.ProjectSupervisionVO;
 import com.dp.plat.util.ActivityMessage;
+import com.dp.plat.util.DateUtil;
 import com.dp.plat.util.MailHandleUtil;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
 import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.StringEscUtil;
+import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 
 public class ProjectServiceImpl extends BaseServiceImpl implements ProjectService {
@@ -408,6 +413,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		project.setColumn009(p.getColumn009());
         if (StringUtils.isBlank(project.getSalesType())) {
             project.setSalesType(p.getSalesType());
+        }
+        if (StringUtils.isBlank(project.getAgentChannel())) {
+            project.setAgentChannel(p.getAgentChannel());
         }
 		return project;
 	}
@@ -862,18 +870,33 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId) {
 		return projectDao.queryShipmentInfoByContractNo(contractNo, projectId);
 	}
-
+	
 	@Override
+    public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter) {
+        return projectDao.queryShipmentInfoByContractNo(contractNo, projectId, profitCenter);
+    }
+
+    @Override
 	public int queryShipmentInfoSizeByContractNo(String contractNos) {
 		return projectDao.queryShipmentInfoSizeByContractNo(contractNos);
 	}
-
+    
 	@Override
+    public int queryShipmentInfoSizeByContractNo(String contractNos, String profitCenter) {
+        return projectDao.queryShipmentInfoSizeByContractNo(contractNos, profitCenter);
+    }
+
+    @Override
 	public List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId) {
 		return projectDao.queryTransferShipmentInfoByContractNo(project, transferProjectId);
 	}
 	
 	@Override
+    public List<ShipmentInfo> queryTransferShipmentInfoByContractNo(Project project, int transferProjectId, String profitCenter) {
+        return projectDao.queryTransferShipmentInfoByContractNo(project, transferProjectId, profitCenter);
+    }
+
+    @Override
 	public void deleteShipmentInstallInfoByProjectId(int projectId) {
         projectDao.deleteShipmentInstallInfoByProjectId(projectId);
     }
@@ -1283,6 +1306,61 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 	
 	@Override
+    public void insertInstallAddress(String selected, int projectId, String installAddress, String contractNo, String profitCenter) {
+        String[] contractNos = contractNo.split(",");
+        StringBuilder contracts = new StringBuilder();
+        for (String no : contractNos) {
+            contracts.append("'");
+            contracts.append(no);
+            contracts.append("',");
+        }
+        int len = contracts.length();
+        if (len > 0) {
+            contracts.delete(len - 1, len);
+        }
+        if (StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contracts.toString().replaceAll("-L", "");
+        } else {
+            contractNo = contracts.toString();
+        }
+        
+        String[] barcodes = selected.split(",");
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("projectId", projectId);
+        paramMap.put("installAddress", installAddress);
+        paramMap.put("contractNo", contractNo);
+        paramMap.put("profitCenter", profitCenter);
+        paramMap.put("createBy", UserContext.getUserContext().getUsername());
+        StringBuilder shipmentIds = new StringBuilder();
+        StringBuilder codes = new StringBuilder();
+        for (String barcode : barcodes) {
+            paramMap.put("barcode", barcode.trim());
+            int shipmentId = projectDao.queryProjectShipment(paramMap);
+            if (shipmentId != 0) {
+                shipmentIds.append(shipmentId);
+                shipmentIds.append(",");
+            } else {
+                codes.append("'");
+                codes.append(barcode.trim());
+                codes.append("',");
+            }
+        }
+        int l = shipmentIds.length();
+        if (l > 0) {
+            shipmentIds.delete(l - 1, l);
+            paramMap.put("shipmentIds", shipmentIds.toString());
+            projectDao.updateProjectShipment(paramMap);
+        }
+
+        int s = codes.length();
+        if (s > 0) {
+            codes.delete(s - 1, s);
+            paramMap.put("codes", codes.toString());
+            projectDao.insertProjectShipment(paramMap);
+        }
+    }
+
+    @Override
 	@Transactional
 	public void insertTransferShipment(String selected, Project project, Project transferProject) {
 		String[] contractNos = project.getContractNo().split(",");
@@ -1352,6 +1430,81 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		params.put("deliverName", transferContractNo);
 		this.addDynamicNotification(MessageUtil.NOTIFICATION_CODE_120, project.getProjectId(), params);
 	}
+    
+    @Override
+    @Transactional
+    public void insertTransferShipment(String selected, Project project, Project transferProject, String profitCenter) {
+        String contractNo = project.getContractNo();
+        if (StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
+        }
+        String[] contractNos = contractNo.split(",");
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("transferProjectId", transferProject.getProjectId());
+        for (int i = 0; i < contractNos.length; i++) {
+            contractNos[i] += "-C";
+            paramMap.put("contractNo", contractNos[i]);
+            // 向接收设备转移的项目添加，串货合同号，插入pm_project_contract
+            projectDao.insertTransferContract(paramMap);
+        }
+        String transferContractNo = StringUtils.join(contractNos, ",");
+        
+        User user = UserContext.getUserContext().getUser();
+        paramMap.clear();
+        paramMap.put("chProjectId", project.getProjectId());
+        paramMap.put("chContractNo", contractNo);
+        paramMap.put("transferProjectId", transferProject.getProjectId());
+        paramMap.put("transferContractNo", transferContractNo);
+        paramMap.put("createBy", user.getUsername());
+        
+        Integer[] projectIds = new Integer[] { project.getProjectId(), transferProject.getProjectId() };
+        String[] barcodes = selected.split(",");
+        for (Integer tempProjectId : projectIds) {
+            paramMap.put("projectId", tempProjectId);
+            // 转移标识，默认:-1,转出:1，转入:0
+            if (tempProjectId.equals(project.getProjectId())) {
+                paramMap.put("transferFlag", 1);
+            } else {
+                paramMap.put("transferFlag", 0);
+            }
+            StringBuilder shipmentIds = new StringBuilder();
+            StringBuilder codes = new StringBuilder();
+            for (String barcode : barcodes) {
+                paramMap.put("barcode", barcode.trim());
+                int shipmentId = projectDao.queryProjectShipment(paramMap);
+                if (shipmentId != 0) {
+                    shipmentIds.append(shipmentId);
+                    shipmentIds.append(",");
+                } else {
+                    codes.append("'");
+                    codes.append(barcode.trim());
+                    codes.append("',");
+                }
+            }
+            int l = shipmentIds.length();
+            if (l > 0) {
+                shipmentIds.delete(l - 1, l);
+                paramMap.put("shipmentIds", shipmentIds.toString());
+                projectDao.updateProjectTransferShipment(paramMap);
+            }
+
+            int s = codes.length();
+            if (s > 0) {
+                codes.delete(s - 1, s);
+                paramMap.put("codes", codes.toString());
+                projectDao.insertProjectTransferShipment(paramMap);
+            }
+        }
+        
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("username", user.getRealName());
+        params.put("projectName", project.getProjectName());
+        params.put("backcase", project.getContractNo());
+        params.put("content", selected);
+        params.put("instruction", transferProject.getProjectName());
+        params.put("deliverName", transferContractNo);
+        this.addDynamicNotification(MessageUtil.NOTIFICATION_CODE_120, project.getProjectId(), params);
+    }
 
 	@Override
 	public void insertWeeklyFeedback(Map<String, Object> paramMap) {
@@ -1402,6 +1555,15 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 
 	private boolean updateEventActualFinishDateByTask(ProjectDeliver pd) {
+		// 判断交付件所属项目类型
+		if (pd.getProjectType() != null && !MessageUtil.PROJECT_TYPE_AFTERSALES.equals(pd.getProjectType())) {
+			return false;
+		}
+		// 项目是否存在
+		Project project = projectDao.queryProjectById(pd.getProjectId());
+		if (project == null || project.getProjectId() == 0) {
+			return false;
+		}
 		// 非直签 、督导项目 获取的even节点任务column010为null
 		if (StringUtils.isEmpty(pd.getColumn010())) {
 			pd.setColumn010(null);
@@ -1426,7 +1588,6 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		temp.setProjectPlanState(currentPlan);
 		temp.setProjectId(pd.getProjectId());
 		// 如果当前项目能够修改为闭环申请状态
-		Project project = projectDao.queryProjectById(pd.getProjectId());
 		String closeProcessState = StringUtils.trimToEmpty(project.getCloseProcessState());
 		int canCloseLoop = this.canCloseLoop(project);
         if (canCloseLoop == 0 && closeProcessState.compareTo(MessageUtil.PROJECT_CLOSE_PROCESS_STATE_15) <= 0) {
@@ -1465,6 +1626,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public List<ProjectDeliver> queryDeliverDetailByProjectId(int projectId) {
 		return projectDao.queryDeliverDetailByProjectId(projectId);
 	}
+	
+	@Override
+    public List<ProjectDeliver> queryDeliverDetailByProjectIdAndProjectType(int projectId, String projectTypes) {
+        return projectDao.queryDeliverDetailByProjectIdAndProjectType(projectId, projectTypes);
+    }
 	
     @Override
     public List<ProjectDeliver> queryDeliverDetailByProjectIdAndDeliverType(int projectId, String dataTypeCode) {
@@ -2093,6 +2259,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 
 	@Override
+	@Transactional
     public boolean uploadFile(ProjectDeliver pd, String did, ProjectDeliver deliverFile) {
 	    boolean flag = false;
 	    if (deliverFile == null) {
@@ -2115,12 +2282,17 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
              * true; }
              */
             if (bool) {
+            	String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
                 String targetDirectory = ServletActionContext.getServletContext().getRealPath(path);
                 String[] uploaddeliveryFileNames = ufname.split(",");
 
                 for (int i = 0; i < uploaddeliveryFileNames.length; i++) {
                     String ufn = uploaddeliveryFileNames[i];// 附件名称
                     String targetFileName = ufn.trim();
+                    // 检查文件上传类型
+                    if (!UploadFileUtil.checkFileExt(ufn, uploadExtWhiteList)) {
+                    	return false;
+                    }
                     String newName = this.getUploadFileRename(targetFileName);// 对上传附件进行重命名
                     if (newName == null) {
                         newName = targetFileName;
@@ -2135,6 +2307,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                     ProjectDeliver pdeliver = new ProjectDeliver();
                     pdeliver.setProjectId(pd.getProjectId());
                     pdeliver.setContractNo(pd.getContractNo());
+                    pdeliver.setProjectType(pd.getProjectType());
                     pdeliver.setDeliverId(did);
                     pdeliver.setDeliverableType(pd.getDeliverableType());
                     pdeliver.setDeliverableName(targetFileName);
@@ -2148,8 +2321,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
         }
         return flag;
 	}
-	
+
 	@Override
+	@Transactional
 	public boolean uploadFile(ProjectDeliver pd, String did, File[] ul, String ufname) {
 		String username = UserContext.getUserContext().getUsername();
 		boolean flag = false;
@@ -2167,12 +2341,17 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			 * true; }
 			 */
 			if (bool) {
+            	String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
 				String targetDirectory = ServletActionContext.getServletContext().getRealPath(path);
 				String[] uploaddeliveryFileNames = ufname.split(",");
 
 				for (int i = 0; i < uploaddeliveryFileNames.length; i++) {
 					String ufn = uploaddeliveryFileNames[i];// 附件名称
 					String targetFileName = ufn.trim();
+					// 检查文件上传类型
+					if (!UploadFileUtil.checkFileExt(ufn, uploadExtWhiteList)) {
+						return false;
+					}
 					String newName = this.getUploadFileRename(targetFileName);// 对上传附件进行重命名
 					if (newName == null) {
 						newName = targetFileName;
@@ -2187,6 +2366,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 					ProjectDeliver pdeliver = new ProjectDeliver();
 					pdeliver.setProjectId(pd.getProjectId());
 					pdeliver.setContractNo(pd.getContractNo());
+					pdeliver.setProjectType(pd.getProjectType());
 					pdeliver.setDeliverId(did);
 					pdeliver.setDeliverableType(pd.getDeliverableType());
 					pdeliver.setDeliverableName(targetFileName);
@@ -2563,8 +2743,13 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId) {
 		return projectDao.querySoftversionList(contractNo, projectId);
 	}
-
+	
 	@Override
+    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
+        return projectDao.querySoftversionList(contractNo, projectId, profitCenter);
+    }
+
+    @Override
 	public void updateSoftversion(List<ShipmentInfo> softversionList, SoftChangeLog softChangeLog) {
 		int sameCount = 0;
 		for (Iterator<ShipmentInfo> iterator = softversionList.iterator(); iterator.hasNext();) {
@@ -2688,7 +2873,12 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	@Override
 	public Map<String, String> exportSpotCheckList(Project project) {
 		try {
-			List<Map<String, String>> spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+		    List<Map<String, String>> spotCheckList;
+		    if ("14".equals(project.getSalesType())) {
+		        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId(), project.getColumn001());
+		    } else {
+		        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+		    }
 			String realpath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");
 			XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(realpath+"com/dp/plat/template/spotCheck.xlsx"));
 			XSSFSheet worksheet = workbook.getSheet("sheet1");
@@ -2858,7 +3048,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     @Override
     @Transactional
     public Integer insertOrUpdateProjectMaintenance(ProjectMaintenance projectMaintenance) {
+    	Integer id = projectMaintenance.getId();
         Integer maintenanceId = projectDao.insertOrUpdateProjectMaintenance(projectMaintenance);
+        if (id != null) {
+        	projectMaintenance.setId(id);
+        }
         return maintenanceId;
     }
     
@@ -2868,6 +3062,301 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     }
 
     @Override
+	public Map<String, Object> queryProjectWarrantyState(Integer projectId) {
+		return projectDao.queryProjectWarrantyState(projectId);
+	}
+    
+	@Override
+	@Transactional
+	public boolean uploadMaintenanceFile(ProjectMaintenanceVO projectMaintenance,ProjectDeliver projectDeliver, String deliverId, ProjectDeliver deliverFile) {
+		if(deliverFile == null || deliverFile.getUploaddelivery() == null || deliverFile.getUploaddelivery().length == 0){
+			return false;
+		}
+		this.uploadFile(projectDeliver, deliverId, deliverFile);
+		// 查询交付件名称，已记录系统日志
+		String deliverName = projectDao.queryDeliverName(Integer.parseInt(deliverId.trim()));
+		// 获取交付件、服务、次数参数
+        String mailDeliverFile = basicDataService.querySysArg("pm.project.maintenance.serviceDelivery.deliverFile");
+        if (StringUtils.isBlank(mailDeliverFile)) {
+        	mailDeliverFile = StringEscUtil.getText("pm.project.maintenance.serviceDelivery.deliverFile");
+        }
+        mailDeliverFile = StringUtils.trimToEmpty(mailDeliverFile);
+        //if ("到货签收单".equals(deliverName) || "验收报告-初验".equals(deliverName) || "验收报告-终验".equals(deliverName)) {
+        if (mailDeliverFile.matches("(.)*\\b" + deliverName + "\\b(.)*")) {
+        	// 查询服务的每年次数、服务类型
+//			Pattern p = Pattern.compile("(\\b" + deliverName + "\\b\\$)([^$]*)\\$([^$]*)\\$([^$]*)\\$([^$]*)(\\$;?)");
+//			Matcher m = p.matcher(mailDeliverFile);
+//			String serviceName = "";
+//			Integer yearCount = 4;
+//			String serviceYear = "";
+//			String serviceCode = "";
+//			if (m.find()) {
+//				serviceName  = m.group(2);
+//				serviceYear = m.group(3);
+//				yearCount  = Integer.parseInt(m.group(4));
+//				serviceCode  = m.group(5);
+//			} else {
+//				serviceName = m.group(2);
+//				serviceYear = m.group(3);
+//				yearCount  = Integer.parseInt(m.group(4));
+//				serviceCode  = m.group(5);
+//			}
+        	Map<String, Map<String, Object>> configMap = matchServiceDeliveryConfigMap(mailDeliverFile, "deliverName");
+        	Map<String, Object> config = configMap.get(deliverName) != null ? configMap.get(deliverName) : new HashMap<String, Object>();
+        	String deliverNames = (String) (config.get("deliverNames") != null ? config.get("deliverNames") : "");
+        	String serviceName = (String) (config.get("serviceName") != null ? config.get("serviceName") : "");
+			Integer yearCount = (Integer) (config.get("yearCount") != null ? config.get("yearCount") : 4);
+			String serviceYear = (String) (config.get("serviceYear") != null ? config.get("serviceYear") : "");
+			String serviceCode = (String) (config.get("serviceCode") != null ? config.get("serviceCode") : "");
+//			Integer deliverId = (Integer) (config.get("deliverId") != null ? config.get("deliverId") : 0);
+			
+			Map<String, Object> warrantyState = projectMaintenance.getWarrantyState();
+			
+        	// 计算最近的服务周期
+			Date[] nearlyYearDates = DateUtil.getNearlyYearDates(projectMaintenance.getProcessTime(), (Date) warrantyState.get(serviceCode + "StartTime"), (Date) warrantyState.get(serviceCode + "EndTime"));
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("maintenanceId", projectMaintenance.getId());// 上传在同一日报内，去掉可查找同一项目
+        	map.put("projectId", projectMaintenance.getProjectId());
+        	map.put("deliverId", deliverId);
+        	map.put("serviceType", serviceCode);
+        	map.put("checkDate", true);
+        	map.put("serviceDate", projectMaintenance.getProcessTime());
+        	map.put("startDate", nearlyYearDates[0]);
+        	map.put("endDate", nearlyYearDates[1]);
+        	map.put("mergeQuarterCount", true);
+        	
+			// 多个交付件同时存在条件判断
+			if (deliverNames.contains(",")) {
+//        		projectDeliver.setDeliverableType(deliverNames);
+//				int deliverTypeCount = projectDao.queryProjectMaintenanceDeliverCountByProjectDeliver(projectDeliver);
+//				if (deliverTypeCount > 0) {
+//					return false;
+//				}
+				
+//				ProjectDeliver temp = new ProjectDeliver();
+//				temp.setProjectId(projectMaintenance.getProjectId());
+//				temp.setEventKey(serviceCode);
+//				temp.setUploadTime(projectMaintenance.getProcessTime());
+//				Boolean hasDeliveried = projectDao.queryProjectMaintenanceServiceDeliveriedByProjectDeliver(temp);
+				Boolean hasDeliveried = projectDao.queryProjectMaintenanceServiceDeliveriedByMap(map);
+				if (!hasDeliveried) {
+					return false;
+				}
+			}
+        	
+        	// 查询项目维护对应的项目上传交付件的次数
+        	Map<String, Long> counts = queryProjectMaintenanceDeliverCount(map);
+        	Long serviceCount = counts.get("count");
+//			Long quarterCount = Long.valueOf(String.valueOf(counts.get("quarterCount")));// 本季度上传次数
+        	
+        	// 添加服务交付记录情况
+        	JSONObject serviceDelivery = (JSONObject) JSON.toJSON(projectMaintenance);
+        	serviceDelivery.put("maintenanceId", projectMaintenance.getId());
+			serviceDelivery.put("deliveried", 1);
+			serviceDelivery.put("count", serviceCount);
+			serviceDelivery.put("yearCount", yearCount);
+			serviceDelivery.putAll(map);
+			projectDao.insertProjectServiceDeliveryBySelective(serviceDelivery);
+			
+			// 回填对应的年服务次数、当前服务次数
+			warrantyState.put(serviceYear, yearCount);
+			warrantyState.put(serviceYear.replace("Year", ""), serviceCount);
+			projectMaintenance.setWarrantyState(warrantyState);
+        	
+			// 判断是否在服务期限内，服务期外不发送邮件
+			if (!Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(warrantyState.get(serviceCode + "Enable"))))) {
+				return false;
+			}
+        	// 主送给销售、项目经理、服务经理
+			List<ProjectMember> projectMembers = this.queryValidMemberEmailByProjectIdAndRoles(projectMaintenance.getProjectId(), "10,20,30");
+			HashSet<String> tos = new HashSet<String>();
+			HashSet<String> ccs = new HashSet<String>();
+			HashSet<String> salesNames = new HashSet<String>();
+			for (ProjectMember member : projectMembers) {
+				String email = member.getEmail();
+				if (StringUtils.isBlank(email) && StringUtils.isNotBlank(member.getMemberCode())) {
+					email = this.queryMailByUserNameFromOA(member.getMemberCode());
+				}
+				if (StringUtils.isNotBlank(email)) {
+					if (MessageUtil.MEMBER_SALESMAN.equals(member.getMemberRole())) {
+					    ccs.add(email);
+						if (StringUtils.isNoneBlank(member.getMemberName())) {
+						    salesNames.add(member.getMemberName());
+						}
+					} else if (MessageUtil.MEMBER_PM.equals(member.getMemberRole()) || MessageUtil.MEMBER_SM.equals(member.getMemberRole())) {
+					    tos.add(email);
+					}
+				}
+			}
+			UserManageService userManageService = SpringContext.getApplicationContext().getBean("userManageService", UserManageService.class);
+			Map<String, String> params = new HashMap<String, String>();
+			params.put("roleid", String.valueOf(MessageUtil.ROLE_AREA_LEADER));
+//			params.put("dpNo", projectMaintenance.getOfficeCode());
+			params.put("areaPower", projectMaintenance.getOfficeCode());
+			// 抄送办事处主任
+			List<User> users = userManageService.queryUserWithRoleIdAndDpNoOrInAreaPower(params);
+			for (User user : users) {
+				ccs.add(user.getEmail());
+			}
+			// 抄送服务交付验收小组群组邮箱
+			String acceptanceMail = basicDataService.querySysArg("pm.project.maintenance.serviceDelivery.mail.user");
+			if (StringUtils.isNotBlank(acceptanceMail)) {
+			    ccs.add(acceptanceMail);
+			} else {
+				String cc = StringEscUtil.getText("pm.project.maintenance.serviceDelivery.mail.user");
+				cc = projectDao.queryMailByUsername(cc);
+				if (StringUtils.isNotBlank(cc)) {
+					ccs.add(cc);
+				}
+			}
+			
+			Map<String, Object> context = new HashMap<String, Object>();
+			//context.put("username", salesNames.toString());
+			context.put("username", StringUtils.join(salesNames, "、"));
+			context.put("tos", StringUtils.join(tos, ";"));
+			context.put("ccs",StringUtils.join(ccs, ";"));
+//			context.put("attachFileNames", attachFiles.toString());
+			context.put("templateCode", "maintenanceServiceReportInfo");
+			context.put("projectName", projectMaintenance.getProjectName());
+			context.put("infoType", "通知");
+			context.put("deliverName", deliverName);
+			context.put("serviceName", serviceName);
+			context.put("serviceCount", serviceCount);
+			context.put("remainedCount", yearCount - serviceCount);
+			context.put("content", yearCount - serviceCount > 0 ? "请持续跟踪" : "服务周期内已全部交付完成");
+			context.put("officeName", projectMaintenance.getOfficeName());
+			NotificationTemplateUtil.keepMail(context);
+        }
+		return false;
+	}
+	
+	@Override
+	public List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(
+			ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam) {
+		Map<String, Map<String, Object>> configMap = queryServiceDeliveryConfigMap();
+		if (configMap == null || configMap.isEmpty()) {
+			return Collections.emptyList();
+		}
+		if (projectMaintenance == null) {
+			projectMaintenance = new ProjectMaintenanceVO();
+		}
+		projectMaintenance.setServiceTypes(configMap.keySet());
+		List<Map<String, Object>> list = projectDao.selectProjectMaintenanceServiceDeliveryList(projectMaintenance, displayParam);
+		Date serviceDate = projectMaintenance.getServiceDate() != null ? projectMaintenance.getServiceDate() : new Date();
+		for (Iterator<Map<String, Object>> iterator = list.iterator(); iterator.hasNext();) {
+			Map<String, Object> serviceDelivery = iterator.next();
+        	String serviceType = (String) serviceDelivery.get("serviceType");
+        	Map<String, Object> config = configMap.get(serviceType);
+        	if (config == null || config.isEmpty()) {
+        		iterator.remove();
+        		continue;
+        	}
+        	// 获取对应的参数
+//        	String deliverName = (String) (config.get("deliverName") != null ? config.get("deliverName") : "");
+			String serviceName = (String) (config.get("serviceName") != null ? config.get("serviceName") : "");
+			Integer yearCount = (Integer) (config.get("yearCount") != null ? config.get("yearCount") : 4);
+//			String serviceYear = (String) (config.get("serviceYear") != null ? config.get("serviceYear") : "");
+//			String serviceCode = (String) (config.get("serviceCode") != null ? config.get("serviceCode") : "");
+			Integer deliverId = (Integer) (config.get("deliverId") != null ? config.get("deliverId") : 0);
+			
+//			// 判断是否在服务期限内
+//			if (!Boolean.TRUE.equals(
+//					Boolean.parseBoolean(String.valueOf(serviceDelivery.get(serviceType  + "Enable"))))) {
+//				continue;
+//			}
+
+			// 查询项目维护对应的项目上传交付件的次数
+			Date[] nearlyYearDates = DateUtil.getNearlyYearDates(serviceDate,
+					(Date) serviceDelivery.get(serviceType + "StartTime"),
+					(Date) serviceDelivery.get(serviceType + "EndTime"));
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("projectId", serviceDelivery.get("projectId"));
+			map.put("deliverId", deliverId);
+			map.put("serviceType", serviceType);
+			map.put("checkDate", true);
+			map.put("serviceDate", serviceDate);
+			map.put("startDate", nearlyYearDates[0]);
+			map.put("endDate", nearlyYearDates[1]);
+			map.put("mergeQuarterCount", true);
+			Map<String, Long> counts = this.queryProjectMaintenanceDeliverCount(map);
+			Long serviceCount = counts.get("count");
+			
+			serviceDelivery.put("serviceName", serviceName);
+			serviceDelivery.put("yearCount", yearCount);
+			serviceDelivery.put("serviceCount", serviceCount);
+			serviceDelivery.put("quarterCount", counts.get("quarterCount"));
+			serviceDelivery.put("hasQuarterDeliveried", serviceDelivery.get("hasQuarterDeliveried") != null ? serviceDelivery.get("hasQuarterDeliveried") : (Long.valueOf(String.valueOf(counts.get("quarterCount"))) > 0 ? 1 : 0));
+			serviceDelivery.put("remainedCount", yearCount - serviceCount);
+			serviceDelivery.put("serviceStartDate", nearlyYearDates[0]);
+			serviceDelivery.put("serviceEndDate", nearlyYearDates[1]);
+		}
+		return list;
+	}
+
+	private Map<String, Long> queryProjectMaintenanceDeliverCount(Map<String, Object> params) {
+		return projectDao.queryProjectMaintenanceDeliverCount(params);
+	}
+	
+	/**
+	 * 根据键值对匹配每个服务对应的交付件、服务名、编码、年服务次数等信息
+	 * @param config
+	 * @return
+	 */
+	public Map<String, Map<String, Object>> queryServiceDeliveryConfigMap() {
+		Map<String, Map<String, Object>> serviceConfigMap = new HashMap<String, Map<String,Object>>();
+		try {
+			String config = basicDataService.querySysArg("pm.project.maintenance.serviceDelivery.deliverFile");
+			serviceConfigMap = matchServiceDeliveryConfigMap(config, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return serviceConfigMap;
+	}
+	
+	public Map<String, Map<String, Object>> matchServiceDeliveryConfigMap(String config, String key) {
+		Map<String, Map<String, Object>> serviceConfigMap = new HashMap<String, Map<String,Object>>();
+		try {
+			if (StringUtils.isNotBlank(config)) {
+				// 默认按serviceCode分组
+				key = StringUtils.defaultIfBlank(key, "serviceCode");
+				// 查询服务的每年次数、服务类型
+				Pattern p = Pattern.compile("([^$;]*)\\$([^$]*)\\$([^$]*)\\$([^$]*)\\$([^$]*)\\$([^$]*)(\\$;?)");
+				Matcher m = p.matcher(config);
+				String deliverNames = "";
+				String serviceName = "";
+				Integer yearCount = 4;
+				String serviceYear = "";
+				String serviceCode = "";
+				String deliverIds = "0";
+				while (m.find()) {
+					deliverNames = m.group(1);
+					serviceName = m.group(2);
+					serviceYear = m.group(3);
+					yearCount = Integer.parseInt(m.group(4));
+					serviceCode = m.group(5);
+					deliverIds = m.group(6);
+					
+					String[] pdName = deliverNames.split(",");
+					for (int i = 0; i < pdName.length; i++) {
+						Map<String, Object> map = new HashMap<String, Object>();
+						map.put("deliverName", pdName[i]);
+						map.put("deliverNames", deliverNames);
+						map.put("serviceName", serviceName);
+						map.put("serviceYear", serviceYear);
+						map.put("yearCount", yearCount);
+						map.put("serviceCode", serviceCode);
+						map.put("deliverIds", deliverIds);
+						serviceConfigMap.put(String.valueOf(map.get(key)), map);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return serviceConfigMap;
+	}
+
+	@Override
     public ProjectSupervisionVO selectProjectSupervisionById(Integer id) {
         return projectDao.selectProjectSupervisionById(id);
     }

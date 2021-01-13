@@ -133,6 +133,10 @@ $(document).ready(function(){
 				break;
 		}
 	});
+	
+	if($("#marketName").val()) {
+		$("#projectColumn11").val($("#projectColumn11").val() + "_" + $("#marketName").val());
+	}
 });
 
 function queryalluser(){
@@ -256,6 +260,12 @@ function updateProject(obj){
 }
 
 function submit(){
+	var column011 = $("#projectColumn11").val();
+	if (column011) {
+		var t = $.trim(column011).split("_");
+		$("#projectColumn11").val(t[0]);
+		$("#marketName").val(t[1]);
+	}
 	$("#mainForm").submit();
 }
 </script>
@@ -309,13 +319,13 @@ function submit(){
                 headerValue="--请选择--" cssStyle="width:163px"
                 listValue="basicDataName" list="%{projectCloseProcessStateList}" theme="simple" />
         </div>
-		<div class="form-group form-group-query form-group-width-1">
+		<%-- <div class="form-group form-group-query form-group-width-1">
 			<label for="projectPlanState"><s:text name="pm.engineerStateName" /></label>
 			<s:select name="project.projectPlanState" id="projectPlanState"
 				listKey="basicDataId" cssClass="form-control" headerKey=""
 				headerValue="--请选择--" cssStyle="width:163px"
 				listValue="basicDataName" list="%{projectPlanStateList}" theme="simple" />
-		</div>
+		</div> --%>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="deliverstate"><s:text name="pm.deliverStateName"></s:text></label>
 			<s:select name="project.shipmentState" id="deliverState"
@@ -328,7 +338,8 @@ function submit(){
             <s:select name="project.column011" id="projectColumn11"
                 cssClass="form-control" headerKey=""
                 headerValue="--请选择--" cssStyle="width:163px"
-                list="#{10:'直签', 20:'非直签'}" theme="simple" />
+                list="#{10:'直签', 20:'非直签', '10_运营商市场部': '运营商直签'}" theme="simple" />
+                <s:hidden id="marketName" name="project.column004"></s:hidden>
         </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="projectColumn10"><s:text name="pm.project.projectType" /></label>
@@ -394,6 +405,27 @@ function submit(){
             <s:textfield name="project.barCode" id="barCode"
                 cssStyle="width:163px" cssClass="form-control" />
         </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <label for="warrantyStatus"><s:text name="pm.project.warrantyStatus" /></label>
+            <s:select name="project.warrantyStatus" id="warrantyStatus"
+                cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                list="#{-1:'维保内', 0:'部分保内', 1: '维保外'}" theme="simple" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <label for="warrantyGrade"><s:text name="pm.project.warrantyGrade" /></label>
+            <s:select name="project.warrantyGrade" id="warrantyGrade"
+                cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                list="#{1:'基本维保', 2:'中级维保', 3: '高级维保'}" theme="simple" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <label for="wafService"><s:text name="pm.project.wafService" /></label>
+            <s:select name="project.wafService" id="wafService"
+                cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                list="#{1:'策略调优服务'}" theme="simple" />
+        </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<a href="javascript:void(0)" onclick="submit()"
 				class="btn btn-default btn-sm" style="margin-left: 100px;"> <span
@@ -425,8 +457,8 @@ function submit(){
 				titleKey="pm.project.projectName" media="html"></display:column>
 			<display:column property="projectName"
 				titleKey="pm.project.projectName" media="excel"></display:column>
-			<display:column property="contractNo" titleKey="pm.contract"
-				decorator="com.dp.plat.decorators.ContractNoList"></display:column>
+			<display:column property="contractNo" titleKey="pm.contract" decorator="com.dp.plat.decorators.ContractNoList" media="html"></display:column>
+            <display:column property="contractNo" titleKey="pm.contract" media="excel"></display:column>
             <display:column property="compName" style="width:65px;" titleKey="pm.project.company"></display:column>
 			<display:column property="column001Name" titleKey="pm.officearea"></display:column>
 			<display:column property="projectStateName" titleKey="pm.project.state"></display:column>
@@ -445,9 +477,12 @@ function submit(){
 			<s:if test="%{project.projectState != '10'}">
 			    <display:column property="executionStateName" titleKey="pm.project.executionState"></display:column>
                 <display:column property="closeProcessStateName" titleKey="pm.project.closeProcessState"></display:column>
-				<display:column property="projectPlanStateName" titleKey="pm.current.task"></display:column>
+				<%-- <display:column property="projectPlanStateName" titleKey="pm.current.task"></display:column> --%>
 				<display:column property="shipmentStateName" titleKey="pm.deliverStateName"></display:column>
-                <display:column property="partnerChannel" titleKey="pm.project.partnerChannel"></display:column>
+                <%-- <display:column property="partnerChannel" titleKey="pm.project.partnerChannel"></display:column> --%>
+                
+                <display:column property="agentChannel" titleKey="pm.project.agentChannel"></display:column>
+                <display:column property="serviceChannel" titleKey="pm.project.serviceChannel"></display:column>
             </s:if>
 			<%-- <display:column property="handleWarrper" titleKey="sys.write" style="text-align:center"
 				media="html"></display:column> --%>

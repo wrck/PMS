@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,10 @@ import com.dp.plat.core.exception.UploadException;
  *
  */
 public class FileUtil {
+	/**
+	 * 上传类型白名单
+	 */
+	private final static String UPLOAD_EXT_WHITE_LIST = "doc|docx|xls|xlsx|ppt|pptx|xps|vsd|vsdx|csv|pdf|rar|zip|7z|txt|log|out|bmp|gif|jpg|jpeg|png";
 
 	/**
 	 * 删除文件夹里面的所有文件
@@ -224,10 +229,115 @@ public class FileUtil {
 			String[] fileTypes = fileType.split("\\|");
 			List<String> list = Arrays.asList(fileTypes);
 			if(!list.contains(suffix.toLowerCase())) {
-				throw new UploadException("不允许上传类型为【."+suffix+"】的文件，请上传类型为|"+fileType+"|的文件！");
+				throw new UploadException("不允许上传类型为【."+suffix+"】的文件！");
 			}
 		}
 	}
+	
+	/**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File file) throws Exception {
+    	return checkFileExt(file, null);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File file, String allowFileTypes) throws Exception {
+    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+    	return checkFileExt(file.getName(), allowFileTypes);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File[] files) {
+    	return checkFileExt(files, null);
+    }
+    
+    /**
+     * 检查上传的文件类型
+     * @param files
+     * @return 
+     * @throws UploadException
+     */
+    public static boolean checkFileExt(File[] files, String allowFileTypes) {
+    	boolean result = true;
+    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+    	for (int i = 0; i < files.length; i++) {
+			File file = files[i];
+			result = result && checkFileExt(file.getName(), allowFileTypes);
+		}
+    	return result;
+    }
+    
+    public static boolean checkFileExt(String fileName) {
+		return checkFileExt(fileName, null);
+	}
+    
+    /**
+	 * 检查文件后缀名称是否符合要求
+	 * 
+	 * @param fileName
+	 * @param allowFileType
+     * @return 
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(String fileName, String allowFileType) {
+		allowFileType = StringUtils.defaultIfBlank(allowFileType, UPLOAD_EXT_WHITE_LIST);
+		if (StringUtils.isNotEmpty(allowFileType)) {
+			// 获取文件后缀
+			String suffix = extName(fileName);
+			// 允许的文件类型
+			String[] fileTypes = allowFileType.split("\\|");
+			List<String> list = Arrays.asList(fileTypes);
+			if (StringUtils.isBlank(suffix)) {
+				throw new UploadException("不允许上传类型为空的文件！");
+			} else if (!list.contains(suffix.toLowerCase())) {
+				String prevExt = extName(fileName.replace("." + suffix, ""));
+				boolean showError = true;
+				// 判断是否为压缩包的分卷文件
+				if (StringUtils.isNotBlank(prevExt) && list.contains(prevExt.toLowerCase())) {
+					Pattern pattern = Pattern.compile("[A-Za-z]{1}[0-9]{2}|[0-9]{3}");
+					// 如果符合压缩包并且分卷后缀符合要求，则
+					showError = !pattern.matcher(suffix).matches();
+				}
+				if (showError) {
+					throw new UploadException("不允许上传类型为【." + suffix + "】的文件！");
+				}
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * 获得文件的扩展名（后缀名），扩展名不带“.”
+	 *
+	 * @param fileName 文件名
+	 * @return 扩展名
+	 */
+	public static String extName(String fileName) {
+		if (fileName == null) {
+			return null;
+		}
+		int index = fileName.lastIndexOf(".");
+		if (index == -1) {
+			return "";
+		} else {
+			return fileName.substring(index + 1);
+		}
+	}
+
 	/**
 	 * 	生成唯一的文件名
 	 * @param request

@@ -20,7 +20,7 @@
         </property>
         <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
         <property name="cronExpression">
-            <value>0 0/1 * * * ?</value>
+            <value>0 0/5 * * * ?</value>
         </property>
     </bean>
 
@@ -288,6 +288,29 @@
             <value>00 00 02 * * ?</value>
         </property>
     </bean> 
+    
+    <!-- 项目维护服务交付季度中间月初邮件提醒 -->
+    <bean id="MaintenanceServiceQuarterMailer" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.job.MaintenanceServiceQuarterMailer" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="MaintenanceServiceQuarterMailerTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="MaintenanceServiceQuarterMailer" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 每季度中间月初，6点 -->
+            <value>00 00 06 1 2/3 ?</value>
+        </property>
+    </bean>
+    
     <!-- 总调配中心 -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
@@ -302,10 +325,13 @@
                 <ref bean="ProjectArrivalDelayMailerTrigger" />
                 <ref bean="SubcontractPaymentAutoCompleteTrigger" />
                 <ref bean="MaintenanceDailyReportMailerTrigger" />
-                <ref bean="CloseNotTrackProjectTrigger" />  -->
+                <ref bean="MaintenanceServiceQuarterMailerTrigger" />
+                <ref bean="CloseNotTrackProjectTrigger" /> -->
 
                 <!-- <ref bean="PrjArrivalReceiptMailerTrigger" /> -->
                 <!-- <ref bean="PrjPreAndFinalInspectionMailerTrigger" />  -->
+                
+				<!-- <ref bean="MailTrigger" /> -->
                 
                 <!-- <ref bean="ReportTaskTrigger"/> 从SMS系统获取信息 <ref bean="TaskBySmsTrigger"/> 
                     检测邮件 <ref bean="MailTrigger"/> 合同订单数据 <ref bean="GainOrderBySAPTrigger"/> 

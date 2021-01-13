@@ -60,6 +60,10 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
     public void uploadFile(ProjectDeliver deliver, MultipartFile multipartFile) {
         // 文件名
         String originalFilename = multipartFile.getOriginalFilename();
+        // 检查上传文件类型
+        if (!FileUtil.checkFileExt(originalFilename, SystemConfig.systemVariables.get("pm.upload.file.type.whitelist"))) {
+        	return;
+        }
         // 文件重命名
         String fileName = FileUtil.getFileNameByMD5(multipartFile);
         String webDir = UploadUtils.getWebDir(HttpContext.getCurrentRequest());

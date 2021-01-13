@@ -201,7 +201,8 @@
 		if(sel == 0 || sel == 4){//原厂直服、原厂集成
 			
 			$("#programManagerDiv2").show();
-			$("#programManagerDiv3").hide();
+			//$("#programManagerDiv3").hide();
+			$("#programManagerDiv3").show();
 		}else if(sel == 1 || sel == 3){
 			
 			$("#programManagerDiv2").hide();
@@ -258,10 +259,8 @@
 	    		name="project.column011" id="column011"></s:select>
 		</div>
         <div class="form-group form-group-query">
-            <label for="compId" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.company" /></label>
-            <s:select list="companyList" cssClass="form-control writeTxt engineeManagerTxt" cssStyle="width: 180px;display: inline-block;"
-                headerKey="" headerValue="--请选择--" listKey="id" listValue="name"
-                name="project.compId" id="compId"></s:select>
+            <label for="majorProjectLevel" style="width: 90px;"><s:text name="pm.project.majorProjectLevel" /></label>
+            <s:textfield readonly="true" name="project.majorProjectLevel" id="majorProjectLevel" placeholder="重大项目级别" cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
         </div>
         <br/>
 		<div class="form-group form-group-query">
@@ -298,18 +297,28 @@
 			<label for="deliverChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.deliverChannel" /></label>
 	    	<s:textfield name="project.deliverChannel" id="deliverChannel" placeholder="出货渠道..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
 		</div> --%>
+		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv3">
+			<label for="agentChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.agentChannel" /></label>
+	    	<s:textfield name="project.agentChannel" id="agentChannel" placeholder="下单代理商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
+		</div>
 		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv2">
 			<label for="serviceChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.serviceChannel" /></label>
 	    	<s:textfield name="project.serviceChannel" id="serviceChannel" placeholder="服务提供商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
-		</div>
-		<div class="form-group form-group-query" style="display: none;" id="programManagerDiv3">
-			<label for="agentChannel" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.agentChannel" /></label>
-	    	<s:textfield name="project.agentChannel" id="agentChannel" placeholder="施工代理商..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
 		</div>
 		<div class="form-group form-group-query">
 			<label for="column013" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.finalCustomerName" /></label>
 	    	<s:textfield name="project.column013" id="column013" placeholder="最终客户..." cssClass="form-control writeTxt engineeManagerTxt programManagerTxt" cssStyle="width: 180px;display: inline-block;" />
 		</div><br/>
+        <div class="form-group form-group-query">
+            <label for="customerProjectName" style="width: 90px;"><s:text name="pm.project.customerProjectName" /></label>
+            <s:textfield readonly="true" name="project.customerProjectName" id="customerProjectName" placeholder="客户项目名称..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+        </div>
+        <div class="form-group form-group-query">
+            <label for="compId" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.company" /></label>
+            <s:select list="companyList" cssClass="form-control writeTxt engineeManagerTxt" cssStyle="width: 180px;display: inline-block;"
+                headerKey="" headerValue="--请选择--" listKey="id" listValue="name"
+                name="project.compId" id="compId"></s:select>
+        </div><br/>
         <%-- <div class="form-group form-group-query">
             <label for="salesType" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.salesType" /></label>
             <s:select name="project.salesType" id="salesType" cssClass="form-control writeTxt engineeManagerTxt" onchange="changeProgramManagerTxt(this)" 

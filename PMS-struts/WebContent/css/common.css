@@ -1829,3 +1829,37 @@ span.tipSpan{
     -khtml-user-select: none; /*早期浏览器*/
     user-select: none;
 }
+
+.hover-wrapper {
+	position: relative;
+	white-space: nowrap;
+}
+
+.hover-label {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: space-around;
+    justify-content: space-evenly;
+    background: rgba(255,255,255,0.8);
+    align-items: center;
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+}
+
+.hover-wrapper:hover .hover-label {
+	display: flex;
+	visibility: visible;
+    opacity: 1;
+}
+
+.hover-link, .hover-label a {
+    width: 100%;
+    text-align: center;
+}

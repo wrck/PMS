@@ -129,6 +129,8 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 		}
 		String roleName = SystemConfig.systemVariables.getOrDefault("pm.default.role", "user");
 		String projectTypes = SystemConfig.systemVariables.getOrDefault("pm.default.projectTypes", "");
+		Boolean ignoreCompany = Boolean.parseBoolean(SystemConfig.systemVariables.getOrDefault("pm.ignoreCompany", "false"));
+		String defaultCompId = SystemConfig.systemVariables.getOrDefault("pm.default.compId", "1");
 		List<Role> roleList = roleService.selectRolesByRoleNames(roleName);
 		for (EmployeeVO employee : employeeList) {
 			boolean isNew = true;
@@ -170,6 +172,9 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 			userInfo.setUserId(user.getUserId());
 			userInfo.setRealName(employee.getName());
 			userInfo.setTelphone(employee.getOfficePhone());
+			if (ignoreCompany) {
+				userInfo.setCompID(Integer.valueOf(defaultCompId));
+			}
 			// 新增用户，初始化部门、区域和项目权限
 			if (isNew) {
 				userInfo.setCustom3(employee.getDepLV2Code());// 保存用户二级部门编码
@@ -203,8 +208,8 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 //			identityService.saveUser(userEntity);
 			insertOrUpdateActivitiUser(userEntity);
 		}
-		ehrEmpPowerService.insertEhrDepPower();
-		ehrEmpPowerService.insertEhrEmpPower();
+//		ehrEmpPowerService.insertEhrDepPower();
+//		ehrEmpPowerService.insertEhrEmpPower();
 	}
 
 	@Override

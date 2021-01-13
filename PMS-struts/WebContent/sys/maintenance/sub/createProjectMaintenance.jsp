@@ -92,7 +92,7 @@ a span {
     flex: 1;
 }
 .ui-datepicker-buttonpane button.ui-datepicker-current {
-	opacity: 1;
+    opacity: 1;
 }
 </style>
 <script type="text/javascript">
@@ -117,6 +117,7 @@ a span {
 		});
 		
 		//submitFlow
+		var userOffice = "${user.dpNo}";
 		$(".submitButton").click(function(){
 			var customTos = $("#customTos").val() || "";
 			customTos = customTos.replace(/ |\r|\n|\t/g, "").replace(/；/g, ";").replace(/;+/g,";");
@@ -143,8 +144,8 @@ a span {
                     return false;
                 }
             }
-			for (var i = 0; i < $(".tag-must").length; i++) {
-				var _this = $(".tag-must")[i];
+			for (var i = 0; i < $(".tag-must:visible").length; i++) {
+                var _this = $(".tag-must:visible")[i];
 				var $inpt = $(_this).next().find("[name*='projectMaintenance.'], #pmCLChoseQuesButt");
 				var name = $inpt.attr("name");
 				var type = $inpt.attr("type");
@@ -162,7 +163,7 @@ a span {
 				}
 			}
 			for (var i = 0; i < $(".pmclquescontent:visible").length; i++) {
-				var _this = $(".pmclquescontent")[i];
+                var _this = $(".pmclquescontent:visible")[i];
 				var $opt = $(".yl_one_item", $(_this)).find("[name^='pmClQuesnaireResultLineList']:first");
 				var name = $opt.attr("name") || "";
 				var type = $opt.attr("type");
@@ -176,6 +177,7 @@ a span {
                     return false;
                 }
 			}
+			$(this).bootstrapBtn("loading");
 			$(this).parents("form:first").submit();
 		});
 		
@@ -207,9 +209,10 @@ a span {
 		adjustFrame();
 		
 		date_picker3("processTime");
-		$("#processTime").datepicker('option',{showButtonPanel:true});
+        $("#processTime").datepicker('option',{showButtonPanel:true});
 		
-		uploadCallback("${projectMaintenance.deliverFileIds}");
+		//uploadCallback("${projectMaintenance.deliverFileIds}", "projectDeliver");
+		showUploadFile("${projectMaintenance.deliverFileIds}", globalUploadType);
 		
 		var categoryWithSubMap = [];
 		var subCategory = "${projectMaintenance.subCategory}";
@@ -232,7 +235,21 @@ a span {
                 });
             }
             var category = $("#maintenanceCategory option:selected").val();
-            $(".serviceSalesSupportHidden, .nonBusinessHidden").show();
+            $(".tag[class*='Hidden']").show();
+            $(".tag[class*='Hidden']").next().show();
+            $(".tag[class*='Hidden']").next().find("input, select, textarea").prop("disabled", false);
+            $(".tag[class*='Show']").addClass("hidden").hide();
+            $(".tag[class*='Show']").next().hide();
+            $(".tag[class*='Show']").next().find("input, select, textarea").prop("disabled", true);
+            
+            $("." + category + "Hidden").hide();
+            $("." + category + "Hidden").next().hide();
+            $("." + category + "Hidden").next().find("input, select, textarea").prop("disabled", true);
+            $("." + category + "Show").removeClass("hidden").show();
+            $("." + category + "Show").next().show();
+            $("." + category + "Show").next().find("input, select, textarea").prop("disabled", false);
+            
+            /* $(".serviceSalesSupportHidden, .nonBusinessHidden").show();
             $(".serviceSalesSupportHidden, .nonBusinessHidden").next().show();
             $(".serviceSalesSupportHidden, .nonBusinessHidden").next().find("input, select, textarea").prop("disabled", false);
         	$(".serviceSalesSupportShow, .nonBusinessShow").addClass("hidden").hide();
@@ -242,13 +259,13 @@ a span {
             	$("." + category + "Hidden").next().hide();
             	$("." + category + "Hidden").next().find("input, select, textarea").prop("disabled", true);
             	$("." + category + "Show").removeClass("hidden").show();
-            }/*  else {
+            }  *//* else {
             	//$("#maintenanceTypeTag").addClass("tag-must");
             	$(".serviceSalesSupportHidden, .nonBusinessHidden").show();
                 $(".serviceSalesSupportHidden, .nonBusinessHidden").next().show();
                 $(".serviceSalesSupportHidden, .nonBusinessHidden").next().find("input, select, textarea").prop("disabled", false);
             	$(".serviceSalesSupportShow, .nonBusinessShow").addClass("hidden").hide();
-            } */
+            }*/
             adjustColumns();
             if (category == "nonBusiness") {
             	$("#quesnairePanel .redmark").removeClass("redmark").addClass("noredmark");
@@ -264,7 +281,8 @@ a span {
         $("#maintenanceCategory").on("change", changeCategory);
         
         function adjustColumns() {
-            var $firstHiddenTr = $(".serviceSalesSupportHidden, .nonBusinessHidden").first().parent();
+            //var $firstHiddenTr = $(".serviceSalesSupportHidden, .nonBusinessHidden").first().parent();
+            var $firstHiddenTr = $(".tag[class*='Hidden']").first().parent();
             var $prevTr = $firstHiddenTr;
             $firstHiddenTr.nextAll().each(function() {
                 $nextTr = $(this);
@@ -351,10 +369,11 @@ a span {
         readOnly();
 	});
 	var uploadDialog = 'AjaxUpload';
+	var globalUploadType = "returnForm";// 已哪种方式上传附件：commonUpload-通用上传方法获取fileIds,returnForm-获取上传附件表单数据
 	function uploadTaskFile(projectId ,taskId){
 	    // popWindow('module/sub/upload.action?isAjax=true', 700, 450,'上传附件', uploadDialog, true);
 	    
-	    var uploadType = "commonUpload";// 已哪种方式上传附件：commonUpload-通用上传方法获取fileIds,returnForm-获取上传附件表单数据
+	    var uploadType = globalUploadType;
 	    var projectId = projectId || $("#projectId").val();
         var column010 = "projectMaintenance";
         var projectType = $("#projectType").val();
@@ -366,7 +385,7 @@ a span {
             "&projectDeliver.column011=" + column011 + "&projectDeliver.eventKey=" + eventKey + "&message=" + uploadType, 700, 450,'上传交付件', uploadDialog, true);
 	    return false;
 	}
-	function uploadCallback(fileIds) {
+	function uploadCallback(fileIds, uploadType) {
 		fileIds = $.trim(fileIds);
 		if (!fileIds) {
 			return;
@@ -381,51 +400,132 @@ a span {
 		deliverFileIds = deliverFileIdArr.join(",");
 		$("#deliverFileIds").val(deliverFileIds);
 		$("#hasReport").val(!!deliverFileIds);
-		showUploadFile(deliverFileIds);
+		showUploadFile(deliverFileIds, uploadType);
 		closeWindow(uploadDialog);
 	}
-	function returnFormCallback($form) {
+	function returnFormCallback($form, mergeCallback) {
         if (!$form) {
             return;
         }
         var fileNameArr = [];
         try {
         	$form.find("input[type='file']").each(function() {
-                var fileName = $(this).val();
+                /* var fileName = $(this).val();
                 if (fileName) {
                     fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
                     fileNameArr.push(fileName);
-                }
+                } */
+                var files = this.files || [];
+                for (var i = 0; i < files.length; i++) {
+					var file = files[i];
+					fileNameArr.push(file.name);
+				}
             });
         } catch(e) {}
-        $("#fileNames").html(fileNameArr.join(" | "));
-        /* if (!$("#uploadFormDiv").length) {
-            $("#fileNames").after("<div id='uploadFormDiv' class='hidden'></div>");
-        } */
-        $form.wrapInner("<div id='uploadFormDiv' class='hidden'></div>").children().unwrap().appendTo($("#fileNames").parent(), window.parent.document);
+        if ($("#fileNames").html()) {
+        	$("#fileNames").append(" | ");
+        }
+        $("#fileNames").append(fileNameArr.join(" | "));
+        $("#hasReport").val(!!$.trim($("#fileNames").text()));
+        if (!$("#uploadFormDiv").length) {
+            $form.wrapInner("<div id='uploadFormDiv' class='hidden'></div>").children().unwrap().appendTo($("#fileNames").parent(), window.parent.document);
+        } else if (mergeCallback) {
+        	mergeCallback.call(this, $("#uploadFormDiv"), $form);
+        }
         closeWindow(uploadDialog);
     }
-	function showUploadFile(fileIds) {
-		$.ajax({
-            url : $("base").attr("href") + '/ajax/queryFile.action',
-            type : 'POST',
-            cache: false,
-            data: {fileIds: fileIds},
-            success : function(result) {
-            	var fileList = result.fileList;
-            	var $fileNames = $("#fileNames");
-            	var tags = [];
-            	for (var i = 0; i < fileList.length; i++) {
-					var file = fileList[i];
-					var fileName = file.fileName;
-					var fileId = file.id;
-					var filePath = file.filePath;
-					var tag = '<a href="module/download.action?fileId=' + fileId + '" title="点击下载">' + fileName + '</a>';
-					tags.push(tag);
-				}
-            	$("#fileNames").html(tags.join(" | "));
-            }
-		});
+	function showUploadFile(fileIds, uploadType) {
+		var ctxPath = $("base").attr("href");
+		if (typeof uploadType != "undefined") {
+            var maintenanceId = $("#maintenanceId").val();
+            var projectType = $("#projectType").val();
+            $.ajax({
+                url : $("base").attr("href") + '/maintenanceAjax_uploadFileList.action',
+                type : 'POST',
+                cache: false,
+                data: {
+                	message: uploadType,
+                	"projectMaintenance.id": maintenanceId,
+                	"projectMaintenance.projectType": projectType,
+                	"projectMaintenance.deliverFileIds": fileIds
+            	},
+                success : function(result) {
+                	try {
+                		result = JSON.parse(result);
+                	} catch (e) {
+                		try {
+                    		result = JSON.parse(result.result);
+                		} catch (e) {
+						}
+					}
+                    var type = result.type || [];
+                    var fileList = result.fileList || [];
+                    var projectDeliverList = result.projectDeliverList || [];
+                    var $fileNames = $("#fileNames");
+                    var tags = [];
+                    if (type == "returnForm") {
+                        var regex = RegExp(".*\\.(png|jpg|jpeg|gif)$", "i");
+                    	for (var i = 0; i < projectDeliverList.length; i++) {
+                            var file = projectDeliverList[i];
+                            var fileName = file.deliverableName;
+                            var fileId = file.id;
+                            var filePath = file.deliverablePath;
+                            var link = '<a href="module/DownloadFile.action?downname={fileName}&downpath={encodefilePath}">{fileName}</a>';
+                            var viewTag = '<a href="{ctxPath}{filePath}" target="_blank">预览</a>';
+                            var downloadTag = '<a href="module/DownloadFile.action?downname={fileName}&downpath={encodefilePath}">下载</a>';
+                            var tag = "";
+                            if(regex.test(fileName)) {
+                            	tag += '<span class="hover-wrapper">' 
+                        		   + link
+                        		   + '<label class="hover-label">'
+                            	   + viewTag
+                            	   + "|"
+                            	   + downloadTag
+                            	   + "</label></span>";
+                            } else {
+                            	tag = link;
+                            }
+                            tag = tag.replace(/{fileName}/g, fileName)
+                                .replace(/{encodefilePath}/g, encodeURI(filePath))
+                                .replace(/{filePath}/g, filePath)
+                                .replace(/{ctxPath}/g, ctxPath)
+                            tags.push(tag);
+                        }
+                    } else {
+                        for (var i = 0; i < fileList.length; i++) {
+                            var file = fileList[i];
+                            var fileName = file.fileName;
+                            var fileId = file.id;
+                            var filePath = file.filePath;
+                            var tag = '<a href="module/download.action?fileId=' + fileId + '" title="点击下载">' + fileName + '</a>';
+                            tags.push(tag);
+                        }
+                    }
+                    $("#fileNames").html(tags.join(" | "));
+                }
+            });
+        } else {
+    		$.ajax({
+                url : $("base").attr("href") + '/ajax/queryFile.action',
+                type : 'POST',
+                cache: false,
+                data: {fileIds: fileIds},
+                success : function(result) {
+                	var fileList = result.fileList;
+                	var $fileNames = $("#fileNames");
+                	var tags = [];
+                	for (var i = 0; i < fileList.length; i++) {
+    					var file = fileList[i];
+    					var fileName = file.fileName;
+    					var fileId = file.id;
+    					var filePath = file.filePath;
+    					var tag = '<a href="module/download.action?fileId=' + fileId + '" title="点击下载">' + fileName + '</a>';
+    					tags.push(tag);
+    				}
+                	$("#fileNames").html(tags.join(" | "));
+                }
+    		});
+        }
 	}
 </script>
 </head>
@@ -435,7 +535,7 @@ a span {
 	    <%-- <s:if test="subcontractCallback.quesnaireState == 1"> --%>
 	    <div class="panel panel-default">
 		    <div class="panel-body">
-                    <s:hidden name="projectMaintenance.id"></s:hidden>
+                    <s:hidden id="maintenanceId" name="projectMaintenance.id"></s:hidden>
                     <s:if test="projectMaintenance.projectType == 10">
                         <s:hidden id="updateMaxId" name="projectMaintenance.maxId"></s:hidden>
                         <s:hidden id="projectId" name="project.projectId"></s:hidden>
@@ -451,6 +551,7 @@ a span {
                         <s:hidden id="maintenanceProjectId" name="projectMaintenance.projectId" value="%{presales.presalesId || project.projectId}"></s:hidden>
                     </s:else>
                     <s:hidden id="projectType" name="projectMaintenance.projectType"></s:hidden>
+                    <%-- <s:hidden name="projectMaintenance.userOffice" value="%{user.dpNo}" /> --%>
                     <s:hidden name="redirect"/>
                     
                     <!-- 项目基本信息 -->
@@ -509,11 +610,22 @@ a span {
                             </s:elseif>
                             <s:elseif test="projectMaintenance.projectType == 40">
                                 <tr>
-                                	<s:hidden name="projectMaintenance.officeCode" value="%{user.dpNo}" />
+                                	<%-- <s:hidden name="projectMaintenance.officeCode" value="%{user.dpNo}" /> --%>
+                                    <td class="tag nonBusinessHidden"><s:text name="pm.project.projectCode"></s:text>:</td>
+                                    <td><s:textfield name="projectMaintenance.projectCode" cssClass="form-control"/></td>
+                                    <td class="tag nonBusinessHidden"><s:text name="pm.project.contractNo"></s:text>:</td>
+                                    <td><s:textfield name="projectMaintenance.contractNo" cssClass="form-control"/></td>
+                                </tr>
+                                <tr>
                                     <td class="tag nonBusinessHidden"><s:text name="pm.project.projectName"></s:text>:</td>
-                            		<td colspan="3">
+                            		<td colspan="1">
                             			<s:textfield name="projectMaintenance.projectName" cssClass="form-control"/>
                          			</td>
+                                    <td class="tag nonBusinessHidden"><s:text name="pm.project.officeName"></s:text>:</td>
+                                    <td colspan="1"><s:select name="projectMaintenance.officeCode" id="officeCode"
+                                        listKey="departmentNum" cssClass="form-control" headerKey="%{user.dpNo}"
+                                        headerValue="--请选择--" cssStyle="width:163px"
+                                        listValue="departmentName" list="%{departmentList}" value="%{user.dpNo}" theme="simple" /></td>
                                 </tr>
                             </s:elseif>
                         </s:if>
@@ -543,13 +655,80 @@ a span {
                         <tr>
                             <td class="tag tag-must"><s:text name="pm.project.maintenance.transitHour"></s:text>:</td>
                             <td>
-                                <s:textfield name="projectMaintenance.transitHour" id="transitHour" type="number" value="0" min="0" step="0.1" placeholder="在途耗时" cssClass="form-control" cssStyle="width: 180px;"/>
+                                <s:textfield name="projectMaintenance.transitHour" id="transitHour" type="number" min="0" step="0.1" placeholder="在途耗时" cssClass="form-control" cssStyle="width: 180px;"/>
                             </td>
                             <td class="tag tag-must"><s:text name="pm.project.maintenance.processHour"></s:text>:</td>
                             <td>
-                                <s:textfield name="projectMaintenance.processHour" id="processHour" type="number" value="0" min="0" step="0.1" placeholder="处理耗时" cssClass="form-control" cssStyle="width: 180px;"/>
+                                <s:textfield name="projectMaintenance.processHour" id="processHour" type="number" min="0" step="0.1" placeholder="处理耗时" cssClass="form-control" cssStyle="width: 180px;"/>
                             </td>
                         </tr>
+                        <s:if test="projectMaintenance.projectType == 10">
+                            <tr>
+                                <td class="tag"><s:text name="pm.project.maintenance.warrantyStatus"></s:text>:</td>
+                                <td>
+                                    <div class="display-flex">
+                                        <span class="display-flex-1" style="display:inline-block;">
+                                            <s:select name="projectMaintenance.warrantyStatus" id="warrantyStatus" list="#{-1:'维保内', 0:'部分保内', 1:'维保外'}" value="%{projectMaintenance.warrantyState.warrantyStatus}" headerKey="" headerValue="--请选择---" placeholder="维保状态" cssClass="form-control hidden" cssStyle="width: 180px;"/>
+                                            <%-- <span title="${projectMaintenance.warrantyState.warrantyStatusDesc}">${projectMaintenance.warrantyState.warrantyStatusName}</span> --%>
+                                            <s:property value="projectMaintenance.warrantyState.warrantyStatusName"/>
+                                            <s:if test="projectMaintenance.warrantyState.warrantyStatusName != null">
+                                                <span class="glyphicon glyphicon-question-sign" style="color:#bbb;" title="${projectMaintenance.warrantyState.warrantyStatusDesc}"></span>
+                                                <br>
+                                                <span class="nowrap">
+                                                    (<s:date name="projectMaintenance.warrantyState.warrantyStartTime" format="yyyy-MM-dd" />~<s:date name="projectMaintenance.warrantyState.warrantyEndTime" format="yyyy-MM-dd" />)
+                                                </span>
+                                            </s:if>
+                                        </span>
+                                        <span class="display-flex-1" style="display:inline-block;">
+                                            <s:hidden name="projectMaintenance.warrantyState.warrantyGrade"/>
+                                            <s:property value="projectMaintenance.warrantyState.warrantyGradeName"/>
+                                            <s:if test="projectMaintenance.warrantyState.warrantyGradeName != null">
+                                                <span class="glyphicon glyphicon-question-sign" style="color:#bbb;" title="${projectMaintenance.warrantyState.warrantyGradeDesc}"></span>
+                                                <br>
+                                                <span class="nowrap">
+                                                    <s:if test="projectMaintenance.warrantyState.warrantyGradeEndTime != null">
+                                                        <%-- (截止日期<s:date name="projectMaintenance.warrantyState.warrantyGradeEndTime" format="yyyy-MM-dd" />) --%>
+                                                        (<s:date name="projectMaintenance.warrantyState.warrantyGradeStartTime" format="yyyy-MM-dd" />~<s:date name="projectMaintenance.warrantyState.warrantyGradeEndTime" format="yyyy-MM-dd" />)
+                                                    </s:if>
+                                                    <s:elseif test="projectMaintenance.warrantyState.warrantyEndTime != null">
+                                                        <%-- (截止日期<s:date name="projectMaintenance.warrantyState.warrantyEndTime" format="yyyy-MM-dd" />) --%>
+                                                        (<s:date name="projectMaintenance.warrantyState.warrantyStartTime" format="yyyy-MM-dd" />~<s:date name="projectMaintenance.warrantyState.warrantyEndTime" format="yyyy-MM-dd" />)
+                                                    </s:elseif>
+                                                </span>
+                                            </s:if>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="tag"><s:text name="pm.project.wafService"></s:text>:</td>
+                                <td>
+                                    <div class="display-flex">
+                                        <span class="display-flex-1" style="display:inline-block;">
+                                            <s:hidden name="projectMaintenance.warrantyState.wafService"/>
+                                            <s:property value="projectMaintenance.warrantyState.wafServiceName" default="无"/>
+                                            <s:if test="projectMaintenance.warrantyState.wafServiceName != null">
+                                                <span class="glyphicon glyphicon-question-sign" style="color:#bbb;" title="${projectMaintenance.warrantyState.warrantyServiceDesc}"></span>
+                                                <br>
+                                                <span class="nowrap">
+                                                    (<s:date name="projectMaintenance.warrantyState.wafServiceStartTime" format="yyyy-MM-dd" />~<s:date name="projectMaintenance.warrantyState.wafServiceEndTime" format="yyyy-MM-dd" />)
+                                                </span>
+                                            </s:if>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </s:if>
+                        <s:elseif test="projectMaintenance.projectType == 40">
+                            <tr>
+                                <td class="tag tag-must projectImplementationShow afterSalesMaintenanceShow hidden"><s:text name="pm.project.maintenance.warrantyStatus"></s:text>:</td>
+                                <td>
+                                    <s:select name="projectMaintenance.warrantyStatus" id="warrantyStatus" list="#{-1:'维保内', 0:'部分保内', 1:'维保外'}" headerKey="" headerValue="--请选择---" placeholder="维保状态" cssClass="form-control" cssStyle="width: 180px;"/>
+                                </td>
+                                <td class="tag tag-must projectImplementationShow afterSalesMaintenanceShow hidden"><s:text name="pm.project.maintenance.industryName"></s:text>:</td>
+                                <td>
+                                    <s:textfield name="projectMaintenance.industryName" id="industryName" placeholder="行业" cssClass="form-control" cssStyle="width: 180px;"/>
+                                </td>
+                            </tr>
+                        </s:elseif>
                         <tr>
                             <td class="tag"><s:text name="pm.project.maintenance.processDesc"></s:text>:</td>
                             <td><s:textarea name="projectMaintenance.processDesc" cssClass="form-control"/></td>
@@ -577,6 +756,13 @@ a span {
                             <td><s:textarea id="customCcs" name="projectMaintenance.customCcs" placeholder="额外邮件抄送地址，用英文分号;分割"  cssClass="form-control"/></td>
                         </tr>
                         <tr>
+                            <td class="tag"><s:text name="pm.project.maintenance.userOffice"></s:text>:</td>
+                            <td colspan="1"><s:select name="projectMaintenance.userOffice" id="userOffice"
+                                listKey="departmentNum" cssClass="form-control" headerKey="%{user.dpNo}"
+                                headerValue="--请选择--" cssStyle="width:163px"
+                                listValue="departmentName" list="%{departmentList}" value="%{user.dpNo}" theme="simple" /></td>
+                        </tr>
+                        <tr>
                             <td class="serviceSalesSupportHidden nonBusinessHidden">
                                 <a class="btn btn-success btn-xs" href="javascript:void(0)" onclick="uploadTaskFile(<s:property value='project.projectId' />)">
                                     <span class="glyphicon glyphicon-upload"></span> 上传附件</a>
@@ -591,14 +777,14 @@ a span {
                     <s:if test="pmClosedLoopQuesnaireList != null">
                         <p class="text-info serviceSalesSupportHidden nonBusinessHidden" style="margin-top:-0.75em;">提示：请先选择问卷，否则将丢失已填数据</p>
                         <div class="btn-group btn-group-sm hidden serviceSalesSupportShow nonBusinessShow">
-                            <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;">
+                            <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;" data-loading-text="正在处理...">
                                 <span class="glyphicon glyphicon-floppy-disk" style="font-size:12px;"></span> 保存
                             </button>
                         </div>
                     </s:if>
                     <s:else>
                         <div class="btn-group btn-group-sm">
-                            <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;">
+                            <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;" data-loading-text="正在处理...">
                                 <span class="glyphicon glyphicon-floppy-disk" style="font-size:12px;"></span> 保存
                             </button>
                         </div>
@@ -619,7 +805,7 @@ a span {
                                 <s:select id="pmCLChoseQuesButt" cssClass="form-control  btn-info" cssStyle="width: 160px; display: inline-block;" list="pmClosedLoopQuesnaireList" listKey="id" listValue="questionnaireTemplateName" headerKey="0" headerValue="--请选择--" name="pmClosedLoopQuesnaire.id"></s:select>
                             </label>
                             <div class="btn-group btn-group-sm" style="margin-left:80px;">
-                                <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;">
+                                <button id="submitButton" type="button" class="btn btn-info submitButton" style="margin-right:4px;" data-loading-text="正在处理...">
                                     <span class="glyphicon glyphicon-floppy-disk" style="font-size:12px;"></span> 保存
                                 </button>
                             </div>

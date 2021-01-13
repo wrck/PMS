@@ -7,8 +7,8 @@
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
 		<param-value>
-			classpath:spring.xml,
-			classpath:beans-quartz.xml
+			classpath:spring.xml
+<!-- 			,classpath:beans-quartz.xml -->
 		</param-value>
 	</context-param>
 	<context-param>

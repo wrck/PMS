@@ -2,6 +2,8 @@ package com.dp.plat.data.bean;
 
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.dp.plat.param.ProjectQueryParam;
 import com.dp.plat.util.Base64Util;
 import com.dp.plat.util.Md5Util;
@@ -123,6 +125,7 @@ public class Project extends ProjectQueryParam{
 	private String agentChannel;
 	private String partnerChannel; // 合作伙伴渠道，代理商/服务商
 	private String customerProjectName;
+	private String majorProjectLevel;// 重大项目级别
 	private String orderCreateTime;	//订单创建时间-字符串
 	private Date createTime;		//创建时间
 	private String createBy;		//创建人
@@ -159,6 +162,22 @@ public class Project extends ProjectQueryParam{
 	 * 根据序列号查询项目
 	 */
 	private String barCode; 
+	
+	/**
+	 * 维保状态
+	 */
+	private String warrantyStatus;
+	private String warrantyStatusName;
+	/**
+	 * 维保级别
+	 */
+	private String warrantyGrade;
+	private String warrantyGradeName;
+	/**
+	 * waf服务
+	 */
+	private String wafService;
+	private String wafServiceName;
 	
 	/**
 	 * 项目状态表字段
@@ -1061,7 +1080,15 @@ public class Project extends ProjectQueryParam{
         this.customerProjectName = customerProjectName;
     }
 
-    public String getBarCode() {
+    public String getMajorProjectLevel() {
+		return majorProjectLevel;
+	}
+
+	public void setMajorProjectLevel(String majorProjectLevel) {
+		this.majorProjectLevel = majorProjectLevel;
+	}
+
+	public String getBarCode() {
         return barCode;
     }
 
@@ -1076,7 +1103,56 @@ public class Project extends ProjectQueryParam{
     public void setTeamMemberCodes(String teamMemberCodes) {
         this.teamMemberCodes = teamMemberCodes;
     }
-    
-    
-	
+
+	public String getWarrantyStatus() {
+		return warrantyStatus;
+	}
+
+	public void setWarrantyStatus(String warrantyStatus) {
+		this.warrantyStatus = warrantyStatus;
+	}
+
+	public String getWarrantyStatusName() {
+		return warrantyStatusName;
+	}
+
+	public void setWarrantyStatusName(String warrantyStatusName) {
+		this.warrantyStatusName = warrantyStatusName;
+	}
+
+	public String getWarrantyGrade() {
+		return warrantyGrade;
+	}
+
+	public void setWarrantyGrade(String warrantyGrade) {
+		this.warrantyGrade = warrantyGrade;
+	}
+
+	public String getWarrantyGradeName() {
+		return warrantyGradeName;
+	}
+
+	public void setWarrantyGradeName(String warrantyGradeName) {
+		this.warrantyGradeName = warrantyGradeName;
+	}
+
+	public String getWafService() {
+		return wafService;
+	}
+
+	public void setWafService(String wafService) {
+		this.wafService = wafService;
+	}
+
+	public String getWafServiceName() {
+		return wafServiceName;
+	}
+
+	public void setWafServiceName(String wafServiceName) {
+		this.wafServiceName = wafServiceName;
+	}
+
+	public boolean getCheckWarranty() {
+		return StringUtils.isNotBlank(this.warrantyStatus) || StringUtils.isNotBlank(this.warrantyGrade) || StringUtils.isNotBlank(this.wafService);
+	}
 }

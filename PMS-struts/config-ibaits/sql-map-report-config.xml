@@ -106,7 +106,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	       <!-- 使用max(id) 来替换5.5中通过排序取组内最大值的sql，该方式高版本以不可用 -->
 	    <!-- FROM (SELECT aa.* ,COUNT(aa.id)AS times FROM (SELECT *  FROM pm_cl_evaluation_header ORDER BY createdTime DESC)aa WHERE aa.evaluationType=3 AND aa.status=1 GROUP BY aa.projectCode) a -->
 		<!-- <![CDATA[ -->
-			CREATE TEMPORARY TABLE quality
+			CREATE TEMPORARY TABLE IF NOT EXISTS quality
 			SELECT 
 			c1.questionScore  AS projectScore, 
 			c3.questionScore  AS engScore, t4.evaluationScore ,a.projectId , IFNULL(t3.column001, "") as column001, t4.createdTime , t3.`column011`, t3.`column012`, t3.`columno12_readonly`

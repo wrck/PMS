@@ -61,7 +61,7 @@ public class EhrDataJob {
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("Local");
 		Class<?>[] clazzArrs = new Class[] { Company.class, Department.class, Job.class, Employee.class,
-				EHRLoginAccount.class, Holiday.class };
+				EHRLoginAccount.class/* , Holiday.class */ };
 		String[] dataSourceKeys = new String[] { "EHR", "EHR", "EHR", "EHR", "EHR", "EHR" };
 		try {
 			ehrSynchronizeService.clearSyncState();

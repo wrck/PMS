@@ -1,12 +1,15 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE struts PUBLIC   
+<!-- <!DOCTYPE struts PUBLIC   
         "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"   
-        "http://struts.apache.org/dtds/struts-2.5.dtd">
+        "http://struts.apache.org/dtds/struts-2.5.dtd"> -->
+<!DOCTYPE struts PUBLIC   
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"   
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
 	<!-- 用户登陆 -->
 	<package name="login" extends="struts-default" namespace="/">
 		<!-- struts2.5 动态方法,需要明确指定按,分隔，或者正则匹配  -->
-		<global-allowed-methods>regex:.*</global-allowed-methods>
+		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
 		<action name="Login" class="Login" method="execute">
 			<result name="input">/login.jsp</result>
 			<result name="error">/error.jsp</result>
