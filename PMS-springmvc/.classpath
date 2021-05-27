@@ -38,5 +38,6 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/PMS-activiti"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -82,6 +82,10 @@ public class AfPrjProperty extends BaseEntity {
     // 提交时间
     @JsonSerialize(using = JsonSerializer.class)
     private Date submitTime;
+    
+    // 提交时间
+    @JsonSerialize(using = JsonSerializer.class)
+    private Date predBidDate;
 
     private String serviceTypeName;
 
@@ -585,6 +589,24 @@ public class AfPrjProperty extends BaseEntity {
      */
     public void setSubmitTime(Date submitTime) {
         this.submitTime = submitTime;
+    }
+    
+    /**
+     * 获取投标时间
+     *
+     * @return predBidDate - 投标时间
+     */
+    public Date getPredBidDate() {
+        return predBidDate;
+    }
+
+    /**
+     * 设置投标时间
+     *
+     * @param predBidDate 投标时间
+     */
+    public void setPredBidDate(Date predBidDate) {
+        this.predBidDate = predBidDate;
     }
 
     /**

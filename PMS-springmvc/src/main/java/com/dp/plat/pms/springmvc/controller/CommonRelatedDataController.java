@@ -210,42 +210,32 @@ public class CommonRelatedDataController
 			if (("project".equals(v.getObjType()) || "projectTask".equals(v.getObjType()))
 					&& !UserContext.checkPermission("project:*")) {
 				Map<String, Object> permission = null;
+				PermissionResult permissionResult = null;
 				if ("project".equals(v.getObjType())) {
 					ProjectVO project = new ProjectVO();
 					project.setProjectId(v.getObjId());
-					permission = SpringContext.getBean(IProjectHeaderService.class).checkPermissionMap(project,
+//					permission = SpringContext.getBean(IProjectHeaderService.class).checkPermissionMap(project,
+//							permissions);
+					permissionResult = SpringContext.getBean(IProjectHeaderService.class).checkPermission(project,
 							permissions);
+					permission = permissionResult.getPermissionMap();
 				} else if ("projectTask".equals(v.getObjType())) {
 					TaskVO task = new TaskVO();
 					task.setTaskId(v.getObjId());
-					permission = SpringContext.getBean(IProjectTaskService.class).checkPermissionMap(task, permissions);
+//					permission = SpringContext.getBean(IProjectTaskService.class).checkPermissionMap(task, permissions);
+					permissionResult = SpringContext.getBean(IProjectTaskService.class).checkPermission(task,
+							permissions);
+					permission = permissionResult.getPermissionMap();
 				}
-				// Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
-				// if (Boolean.TRUE.equals(allPerm)) {
-				// isPermit = true;
-				// permissionType = "all";
-				// } else {
-				// String perms = StringUtils.join(permissions, ",");
-				// Boolean editPerm =
-				// Boolean.TRUE.equals(permission.get("edit"));
-				// Boolean viewPerm =
-				// Boolean.TRUE.equals(permission.get("view"));
-				// if (editPerm && perms.matches(".*:(add|edit|delete)\\b,?.*"))
-				// {
-				// isPermit = true;
-				// permissionType = "edit";
-				// } else if ((viewPerm || editPerm) &&
-				// perms.matches(".*:(list|detail)\\b,?.*")) {
-				// isPermit = true;
-				// permissionType = editPerm ? "edit" : "view";
-				// }
-				// }
+//				PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+//						new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+//								RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
 				PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
-						new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
-								RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+						permissionResult.getAllPermitRoles()).checkPermit(permission, permissions);
 				isPermit = checkPermit.isPermit();
 				permissionType = checkPermit.getPermissionType();
-				model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+//				model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+				model.addAllAttributes(checkPermit.getMap());
 			} else {
 				isPermit = true;
 				permissionType = "all";

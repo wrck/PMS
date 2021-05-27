@@ -63,9 +63,9 @@
 										</div>
 									</form>
 		                            <div class="btn-group operate-btn-group">
-		                                <button type="button" class="btn btn-default" data-btn-type="add">创建项目</button>
-		                                <!-- <button type="button" class="btn btn-default" data-btn-type="edit">编辑</button>
-		                                <button type="button" class="btn btn-default" data-btn-type="delete">删除</button> -->
+		                                <button type="button" class="btn btn-default" data-btn-type="add" v-if="checkPermit('add')">创建项目</button>
+		                                <!-- <button type="button" class="btn btn-default" data-btn-type="edit">编辑</button> -->
+		                                <button type="button" class="btn btn-default" data-btn-type="delete" v-if="checkPermit('delete')">删除</button>
 		                            </div>
 		                        </div>
 		                        <table id="all_project_table" class="table table-bordered table-striped table-hover">
@@ -87,7 +87,7 @@
 										</div>
 									</form>
 									<div class="btn-group operate-btn-group">
-		                                <button type="button" class="btn btn-default" data-btn-type="add">创建项目</button>
+		                                <button type="button" class="btn btn-default" data-btn-type="add" v-if="checkPermit('add')">创建项目</button>
 		                                <!-- <button type="button" class="btn btn-default" data-btn-type="edit">编辑</button>
 		                                <button type="button" class="btn btn-default" data-btn-type="delete">删除</button> -->
 		                            </div>
@@ -122,7 +122,11 @@
     <script>
         //tableId,queryId,conditionContainer
         var projectTable;
+        var urlNamespace = "${urlNamespace}";
+        var model = "${model}";
+        var winId= model + "Win";
         var winId="projectWin";
+        var tableId = model + "Table";
         $(function() {
         	initTabByStorage();
         	
@@ -140,8 +144,39 @@
 							el: "#" + this.searchDiv,
 							data: {
 								targetValue: this.data.extData.projectVO,
-	   							fieldList: this.data.columns || []
+	   							fieldList: this.data.columns || [],
+                				
+			                	// 权限控制参数
+								model: this.data.extData.model || model,
+								permissionType: this.data.extData.permissionType || "",
+								permissions: this.data.extData.permissions || [],
+								roles: this.data.extData.roles || []
 	    				 	},
+	    				 	methods: {
+	    				 		checkPermit: function(btn) {
+	    				 			/* var target = event.currentTarget;
+	    				 			btn = btn || $(target).data("btnType"); */
+	    				 			var permissionType = this.permissionType || "";
+	    				 			var permissions = this.permissions || [];
+	    			 				var model = this.model || "";
+	    			 				var permission = model + ":" + btn;
+	    			 				var checkPermitCallback = (router(urlNamespace).callback(model).list || {}).operationCallback;
+	    				 			console.log(permission);
+	    				 			var isPermit = false;
+	    				 			if ((permissionType == "all" 
+	    				 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
+	    				 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
+	    				 					&& ($.inArray(permission, permissions) > -1 || $.inArray(model + ":*", permissions) > -1)) {
+	    				 				isPermit = true;
+	    							}
+	    				 			if (typeof checkPermitCallback == 'function') {
+	    				 				try {
+	    				 					isPermit = checkPermitCallback.call(this, btn) || isPermit;
+	    				 				} catch(e) {}
+	    				 			}
+	    				 			return isPermit;
+	    						},
+	    				 	}
 	                	})
                 	);
                 	
@@ -167,8 +202,39 @@
 							el: "#" + this.searchDiv,
 							data: {
 								targetValue: this.data.extData.projectVO,
-	   							fieldList: this.data.columns || []
+	   							fieldList: this.data.columns || [],
+	   							
+	   							// 权限控制参数
+	   							model: this.data.extData.model || model,
+	    						permissionType: this.data.extData.permissionType || "",
+	    						permissions: this.data.extData.permissions || [],
+	    						roles: this.data.extData.roles || []
 	    				 	},
+	    				 	methods: {
+	    				 		checkPermit: function(btn) {
+	    				 			/* var target = event.currentTarget;
+	    				 			btn = btn || $(target).data("btnType"); */
+	    				 			var permissionType = this.permissionType || "";
+	    				 			var permissions = this.permissions || [];
+	    			 				var model = this.model || "";
+	    			 				var permission = model + ":" + btn;
+	    			 				var checkPermitCallback = (router(urlNamespace).callback(model).list || {}).operationCallback;
+	    				 			console.log(permission);
+	    				 			var isPermit = false;
+	    				 			if ((permissionType == "all" 
+	    				 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
+	    				 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
+	    				 					&& ($.inArray(permission, permissions) > -1 || $.inArray(model + ":*", permissions) > -1)) {
+	    				 				isPermit = true;
+	    							}
+	    				 			if (typeof checkPermitCallback == 'function') {
+	    				 				try {
+	    				 					isPermit = checkPermitCallback.call(this, btn) || isPermit;
+	    				 				} catch(e) {}
+	    				 			}
+	    				 			return isPermit;
+	    						},
+	    				 	}
 	                	})
                 	);
                 	
@@ -212,7 +278,7 @@
                         url:basePath+"/perf/modals/project_detail?id="+rowId
                    });
                     */
-                   window.location.href = basePath + "/perf/project/" + rowId + ".html";
+                   window.location.href = basePath + "/pm/project/" + rowId + ".html";
                    break;
                 case 'delete':
                     if(!rowId){
@@ -220,7 +286,7 @@
                         return false;
                     }
                     modals.confirm("是否要删除该行数据？",function(){
-                        ajaxPost(basePath+"/perf/project/"+rowId+".json?_method=DELETE",null,function(data,status){
+                        ajaxPost(basePath+"/pm/project/"+rowId+".json?_method=DELETE",null,function(data,status){
                         	if(data.status){
                                 modals.info("删除成功！");
                                 commonTable.reloadData();

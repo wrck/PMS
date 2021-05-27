@@ -94,7 +94,11 @@ public class DispatchSettlementController
 			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
 				temp.setOfficeCodes(officeCodes);
 				settlement.setOfficeCodes(officeCodes);
+				
 			}
+			// 添加指派的项目成员
+			temp.setMemberCode(user.getUserName());
+			settlement.setMemberCode(user.getUserName());
 		}
 		tempParam.setModel(temp);
 		pageParam.setModel(settlement);

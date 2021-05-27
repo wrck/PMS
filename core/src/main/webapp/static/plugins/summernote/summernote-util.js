@@ -17,13 +17,17 @@
    
      $.ajax({  
 	        data: data,  
+	        dataType: "text",
 	        type: "POST",  
-	        url: basePath + "/file/summernoteUpload",  
+	        url: basePath + "/file/summernoteUpload.json",
+	        headers: {
+	        	"__RequestVerificationToken": window.__RequestVerificationToken 
+	        },
 	        cache: false,  
 	        contentType: false,  
 	        processData: false,  
 	        success: function(data) {  
-	            if(data){  
+	            if(data){
 	                var files = data.split(";");
 	                for(var i in files){
 	                	$(_this).summernote('insertImage',files[i],'img');

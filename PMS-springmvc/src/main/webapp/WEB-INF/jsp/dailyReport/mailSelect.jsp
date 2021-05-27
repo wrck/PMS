@@ -32,7 +32,7 @@
 </head>
 <body>
 	<section class="content-header">
-		<h4 id="pageTitle" class="fade in m-0">请选择需要在邮件中体现的日报记录行</h4>
+		<h4 id="pageTitle" class="fade in m-0">请选择需要在邮件中体现的日报记录行<!-- <small>（多次发送将产生多封邮件）</small> --></h4>
 		<ol class="breadcrumb"></ol>
 		<button class="close" type="button" data-dismiss="modal" aria-label="Close">
 			<span aria-hidden="true">×</span>

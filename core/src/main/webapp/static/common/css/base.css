@@ -1249,6 +1249,15 @@ td .btn{
 	white-space:nowrap !important;
 }
 
+.table-ineffective-line {
+	opacity: 0.7;
+}
+
+.table-deleted-line {
+	opacity: 0.6;
+    text-decoration: line-through;
+}
+
 #searchDiv{
     display: none;
     margin-bottom: 1rem;
@@ -1560,6 +1569,10 @@ input[type=range]:focus::-ms-fill-upper {
 .datepicker table tr td.disabled, .datepicker table tr td.disabled:hover {
 	cursor: not-allowed;
     text-decoration: line-through;
+}
+
+.daterange-btn .daterange-span~input {
+	display:none;
 }
 
 .form-inline .display-flex .select2-container {

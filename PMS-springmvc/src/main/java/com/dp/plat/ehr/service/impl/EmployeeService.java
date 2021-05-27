@@ -208,8 +208,7 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 //			identityService.saveUser(userEntity);
 			insertOrUpdateActivitiUser(userEntity);
 		}
-//		ehrEmpPowerService.insertEhrDepPower();
-//		ehrEmpPowerService.insertEhrEmpPower();
+		disableInvalidUser();
 	}
 
 	@Override
@@ -222,16 +221,90 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 		return dao.selectEmployeeAppraiserBySelectivePageableVO(pageParam);
 	}
 
-	private void insertOrUpdateActivitiUser(UserEntity userEntity) {
+	@Override
+	@Transactional
+	public void insertOrUpdateActivitiUser(UserEntity userEntity) {
+		// 添加用户
 		identityService.createNativeUserQuery()
 				.sql("INSERT INTO ACT_ID_USER (ID_, REV_, FIRST_, LAST_, EMAIL_, PWD_) "
 						+ "VALUES ( #{user.id}, 1, #{user.firstName}, #{user.lastName}, #{user.email}, #{user.password}) "
 						+ "ON DUPLICATE KEY UPDATE FIRST_ = VALUES(FIRST_), LAST_ = VALUES(LAST_), EMAIL_ = VALUES(EMAIL_), PWD_ = VALUES(PWD_)")
 				.parameter("user", userEntity).singleResult();
 		
+		// 添加分组
+		identityService.createNativeGroupQuery().sql("INSERT `act_id_group` (ID_, REV_, NAME_, TYPE_) " + 
+				"SELECT " + 
+				"    role_name , 1, role_name_zn, role_id " + 
+				"FROM " + 
+				"    `t_role` " + 
+				"ON DUPLICATE KEY UPDATE NAME_ = VALUES(NAME_), TYPE_ = VALUES(TYPE_)").singleResult();
+		
+		// 清空分组对应关系
+		identityService.createNativeGroupQuery().sql("DELETE FROM act_id_membership where USER_ID_ = #{user.id}")
+			.parameter("user", userEntity).singleResult();
+		
+		// 添加分组对应关系
+		identityService.createNativeGroupQuery().sql("INSERT `act_id_membership` (USER_ID_, GROUP_ID_) " + 
+				"SELECT DISTINCT " + 
+				"    ui.`id`, g.ID_ " + 
+				"FROM " + 
+				"    `act_id_group` g " + 
+				"    INNER JOIN t_role r " + 
+				"    ON r.role_name = g.ID_ " + 
+				"    INNER JOIN `t_user_role` ur " + 
+				"        ON ur.role_id = r.role_id " + 
+				"    INNER JOIN t_user_info ui " + 
+				"        ON ui.user_id = ur.user_id " + 
+				"        AND ui.compID = ur.comp_id " + 
+				"WHERE ui.id = #{user.id} " + 
+				"ON DUPLICATE KEY UPDATE USER_ID_ = VALUES(USER_ID_), GROUP_ID_ = VALUES(GROUP_ID_)")
+				.parameter("user", userEntity).singleResult();
+	}
+
+	@Override
+	@Transactional
+	public void initActivitiUser() {
+		disableInvalidUser();
+		
+		// 添加用户
+		identityService.createNativeUserQuery().sql("INSERT INTO ACT_ID_USER (ID_, REV_, FIRST_, LAST_, EMAIL_, PWD_) "
+				+ "select id, 1, realName, u.`user_name`, email, null "
+				+ "from t_user_info ui left join `t_user` u on ui.`user_id` = u.`user_id` "
+				+ "ON DUPLICATE KEY UPDATE FIRST_ = VALUES(FIRST_), LAST_ = VALUES(LAST_), EMAIL_ = VALUES(EMAIL_), PWD_ = VALUES(PWD_)")
+				.singleResult();
+		
+		// 添加分组
+		identityService.createNativeGroupQuery().sql("INSERT `act_id_group` (ID_, REV_, NAME_, TYPE_) " + 
+				"SELECT " + 
+				"    role_name , 1, role_name_zn, role_id " + 
+				"FROM " + 
+				"    `t_role` " + 
+				"ON DUPLICATE KEY UPDATE NAME_ = VALUES(NAME_), TYPE_ = VALUES(TYPE_)").singleResult();
+		
+		// 清空分组对应关系
+		identityService.createNativeGroupQuery().sql("TRUNCATE act_id_membership").singleResult();
+		
+		// 添加分组对应关系
+		identityService.createNativeGroupQuery().sql("INSERT `act_id_membership` (USER_ID_, GROUP_ID_) " + 
+				"SELECT DISTINCT " + 
+				"    ui.`id`, g.ID_ " + 
+				"FROM " + 
+				"    `act_id_group` g " + 
+				"    INNER JOIN t_role r " + 
+				"    ON r.role_name = g.ID_ " + 
+				"    INNER JOIN `t_user_role` ur " + 
+				"        ON ur.role_id = r.role_id " + 
+				"    INNER JOIN t_user_info ui " + 
+				"        ON ui.user_id = ur.user_id " + 
+				"        AND ui.compID = ur.comp_id " + 
+				"ON DUPLICATE KEY UPDATE USER_ID_ = VALUES(USER_ID_), GROUP_ID_ = VALUES(GROUP_ID_)")
+				.singleResult();
+	}
+	
+	private void disableInvalidUser() {
 		// 失效已经离职的用户
 		identityService.createNativeUserQuery()
-		.sql("update t_user_info ui left join t_user u on ui.`user_id` = u.`user_id` left join ehr_employee e on e.`workNo` = ui.`workNo` and e.`compID` = ui.`compID` set ui.`state` = e.`empStatus`, u.`status` = 0 where e.`empStatus` = 2")
-		.singleResult();
+				.sql("update t_user_info ui left join t_user u on ui.`user_id` = u.`user_id` left join ehr_employee e on e.`workNo` = ui.`workNo` and e.`compID` = ui.`compID` set ui.`state` = e.`empStatus`, u.`status` = 0 where e.`empStatus` = 2")
+				.singleResult();
 	}
 }

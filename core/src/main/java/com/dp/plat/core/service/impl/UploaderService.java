@@ -137,7 +137,7 @@ public class UploaderService implements IUploaderService {
 		String webPath = request.getSession().getServletContext().getRealPath("/");
 		DownloadUtils.downFile(response, request, webPath + fileInfo.getPath(), fileInfo.getName());
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr());
+		fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr(), UserContext.getUsername());
 	}
 
 	@Override
@@ -150,7 +150,7 @@ public class UploaderService implements IUploaderService {
 		}
 		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(fileIds, request.getRemoteAddr());
+		fileInfoMapper.insertdownlog(fileIds, request.getRemoteAddr(), UserContext.getUsername());
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class UploaderService implements IUploaderService {
 		// 记录下载日志，方便统计文件下载次数
 		Integer fileId = fileInfo.getId();
 		if (fileId != null && fileId != 0) {
-			fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr());
+			fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr(), UserContext.getUsername());
 		}
 	}
 
@@ -182,7 +182,7 @@ public class UploaderService implements IUploaderService {
 		}
 		if (!fileIds.isEmpty()) {
 			fileInfoMapper.insertdownlog(StringUtils.collectionToDelimitedString(fileIds, ","),
-					request.getRemoteAddr());
+					request.getRemoteAddr(), UserContext.getUsername());
 		}
 	}
 }

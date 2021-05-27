@@ -13,9 +13,45 @@ public class IndustryAssetVO extends IndustryAsset {
 //	private Date effectiveFrom;
 //	private Date effectiveTo;
 	
+	private Boolean checkProject;
+	private String projectTypes;
+	private String officeCodes;
+	private String memberCode;
 	
 	public IndustryAssetVO() {
 		super();
+	}
+
+	public Boolean getCheckProject() {
+		return checkProject;
+	}
+
+	public void setCheckProject(Boolean checkProject) {
+		this.checkProject = checkProject;
+	}
+
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
+	}
+
+	public String getOfficeCodes() {
+		return officeCodes;
+	}
+
+	public void setOfficeCodes(String officeCodes) {
+		this.officeCodes = officeCodes;
+	}
+
+	public String getMemberCode() {
+		return memberCode;
+	}
+
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
 	}
 
 //	public IndustryAssetVO(Integer projectId) {
@@ -67,4 +103,5 @@ public class IndustryAssetVO extends IndustryAsset {
 //		this.setEffectiveFrom(date);
 //		this.setEffectiveTo(date);
 //	}
+	
 }

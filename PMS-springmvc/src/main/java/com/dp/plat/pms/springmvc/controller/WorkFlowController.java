@@ -1,5 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -150,7 +152,11 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 					if (StringUtils.isNotBlank(taskId)) {
 						historicTaskInstanceQuery.taskId(taskId);
 					}
-					List<HistoricTaskInstance> list = historicTaskInstanceQuery.or().taskAssignee(assignee).taskCandidateUser(assignee)/*.taskCandidateGroupIn(new ArrayList<String>(currentUser.getRoles()))*/.endOr().list();
+					List<HistoricTaskInstance> list = historicTaskInstanceQuery.or().taskAssignee(assignee)
+							.taskCandidateUser(assignee)
+							/* .taskCandidateGroupIn(new ArrayList<String>(currentUser.getRoles())) */
+							.taskInvolvedGroupsIn(new ArrayList<String>(currentUser.getRoles())) // 不加会使用inner join，直接指定办理人的历史任务无法查询出来
+							.endOr().list();
 					if (!list.isEmpty()) {
 						task = list.get(Math.max(0, list.size() - 1));
 					}
@@ -191,7 +197,10 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				}
 				model.addAttribute("hideEntity", hideEntity);
 
-				List<Object> fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+				List<Object> fieldList = this.findFieldList(dataType + "_" + v.getTaskKey() + "_workflowForm", DATATYPE_FORM);
+				if (fieldList == null || fieldList.isEmpty()) {
+					fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+				}
 				if (!hasTask) {
 					for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
 						DataFieldRelation field = (DataFieldRelation) iterator.next();
@@ -266,7 +275,18 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			}
 			model.addAttribute("hideEntity", hideEntity);
 
-			List<Object> fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+			PmWorkFlow v = new PmWorkFlow();
+			v.setTaskId(task.getId());
+			v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
+			v.setTaskKey(task.getTaskDefinitionKey());
+			v.setProcInstId(task.getProcessInstanceId());
+			v.setProcessKey(task.getProcessDefinitionId());
+			v.setHasTask(hasTask);
+			
+			List<Object> fieldList = this.findFieldList(dataType + "_" + v.getTaskKey() + "_workflowForm", DATATYPE_FORM);
+			if (fieldList == null || fieldList.isEmpty()) {
+				fieldList = this.findFieldList(dataType + "_workflowForm", DATATYPE_FORM);
+			}
 			if (!hasTask) {
 				for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
 					DataFieldRelation field = (DataFieldRelation) iterator.next();
@@ -275,13 +295,6 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				}
 			}
 			model.addAttribute("workflowFieldList", fieldList);
-			PmWorkFlow v = new PmWorkFlow();
-			v.setTaskId(task.getId());
-			v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
-			v.setTaskKey(task.getTaskDefinitionKey());
-			v.setProcInstId(task.getProcessInstanceId());
-			v.setProcessKey(task.getProcessDefinitionId());
-			v.setHasTask(hasTask);
 			model.addAttribute("workflow", v);
 			model.addAttribute("targetName", "workflow");
 			model.addAttribute("workflowTabList", this.findNavTabList(getDataNameNavTab(), model));

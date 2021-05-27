@@ -446,17 +446,18 @@
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.MemberVO">
-    select m.*, bd.`basicDataName` as memberRoleName  from pm_project_member as m
+    select m.*, bd.`basicDataName` as memberRoleName, ui.realName as createName  
+    from pm_project_member as m
     	left join `fnd_basic_data` bd 
 	        on bd.`dataTypeCode` = 'afProjectMember' 
 	        and m.`memberRole` = bd.`basicDataId`
-    	<!-- left join t_user u 
+    	left join t_user u 
 	        on u.`user_name` = m.`createBy` 
 	    left join t_user_info ui 
 	        on ui.`user_id` = u.`user_id` 
         <if test="model != null and model.orgId != null">
 			and ui.compID = #{model.orgId, jdbcType=INTEGER}
-		</if> -->
+		</if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">

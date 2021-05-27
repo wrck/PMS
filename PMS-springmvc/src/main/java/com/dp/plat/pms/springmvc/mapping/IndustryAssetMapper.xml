@@ -514,6 +514,33 @@
 			<if test="updateTime != null">
 				ia.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
+			<if test="checkProject == true">
+				(
+					(
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						1 = 1 AND
+						<if test="projectTypes != null">
+							FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
+						</if>
+						<if test="officeCodes != null">
+							FIND_IN_SET(ph.`column001`, #{officeCodes}) AND
+						</if>
+					</trim>
+					)
+					<if test="memberCode != null and memberCode != ''">
+						<!-- OR pm.memberCode like concat("%", #{memberCode}, "%") -->
+						OR EXISTS 
+				        (SELECT 
+				            1 
+				        FROM
+				            pm_project_member pm 
+				        WHERE pm.projectId = ph.`projectId` 
+				            AND pm.projectType = ph.`projectType` 
+				            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+				            AND pm.memberCode = #{memberCode})
+					</if>
+				) AND
+			</if>
 		</trim>
 	</where>
   </sql>
@@ -613,6 +640,33 @@
 				</if>
 				<if test="model.updateTime != null">
 					ia.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.checkProject == true">
+					(
+						(
+						<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+							1 = 1 AND
+							<if test="model.projectTypes != null">
+								FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+							</if>
+							<if test="model.officeCodes != null">
+								FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+							</if>
+						</trim>
+						)
+						<if test="model.memberCode != null and model.memberCode != ''">
+							<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+							OR EXISTS 
+					        (SELECT 
+					            1 
+					        FROM
+					            pm_project_member pm 
+					        WHERE pm.projectId = ph.`projectId` 
+					            AND pm.projectType = ph.`projectType` 
+					            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+					            AND pm.memberCode = #{model.memberCode})
+						</if>
+					) AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -863,6 +917,15 @@
     	ia.*<!--  , 
 	    bd.basicDataName as `customInfo.statusName`, bd2.basicDataName as `customInfo.trackStatusName`  -->
     from af_industry_asset as ia
+    <if test="model != null and model.checkProject == true">
+    left join af_industry_asset_project_relation apr 
+        on apr.assetId = ia.id 
+        and apr.`disabled` = false 
+        and ia.`disabled` = false 
+        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+    left join `pm_project` ph 
+        on ph.`projectId` = apr.`projectId` 
+    </if>
     left join `fnd_basic_data` bd 
         on ia.`status` = bd.`basicDataId` 
         and bd.`dataTypeCode` = 'processStatus'
@@ -965,6 +1028,33 @@
 				<if test="model.updateTime != null">
 					ia.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
+				<if test="model.checkProject == true">
+					(
+						(
+						<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+							1 = 1 AND
+							<if test="model.projectTypes != null">
+								FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+							</if>
+							<if test="model.officeCodes != null">
+								FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+							</if>
+						</trim>
+						)
+						<if test="model.memberCode != null and model.memberCode != ''">
+							<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+							OR EXISTS 
+					        (SELECT 
+					            1 
+					        FROM
+					            pm_project_member pm 
+					        WHERE pm.projectId = ph.`projectId` 
+					            AND pm.projectType = ph.`projectType` 
+					            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+					            AND pm.memberCode = #{model.memberCode})
+						</if>
+					) AND
+				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -995,10 +1085,23 @@
 				)
 			</if>
 		</trim>
-	</where> <include refid="sql_pageable_limit" />
+	</where>
+	<if test="model != null and model.checkProject == true">
+    group by ia.id
+    </if>
+	<include refid="sql_pageable_limit" />
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    select count(1) from af_industry_asset as ia
+    select count(distinct ia.id) from af_industry_asset as ia
+    <if test="model != null and model.checkProject == true">
+    left join af_industry_asset_project_relation apr 
+        on apr.assetId = ia.id 
+        and apr.`disabled` = false 
+        and ia.`disabled` = false 
+        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+    left join `pm_project` ph 
+        on ph.`projectId` = apr.`projectId` 
+    </if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
@@ -1094,6 +1197,33 @@
 				</if>
 				<if test="model.updateTime != null">
 					ia.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.checkProject == true">
+					(
+						(
+						<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+							1 = 1 AND
+							<if test="model.projectTypes != null">
+								FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+							</if>
+							<if test="model.officeCodes != null">
+								FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+							</if>
+						</trim>
+						)
+						<if test="model.memberCode != null and model.memberCode != ''">
+							<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+							OR EXISTS 
+					        (SELECT 
+					            1 
+					        FROM
+					            pm_project_member pm 
+					        WHERE pm.projectId = ph.`projectId` 
+					            AND pm.projectType = ph.`projectType` 
+					            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+					            AND pm.memberCode = #{model.memberCode})
+						</if>
+					) AND
 				</if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">

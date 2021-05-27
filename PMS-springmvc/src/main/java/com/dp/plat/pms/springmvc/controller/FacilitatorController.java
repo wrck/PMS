@@ -39,6 +39,7 @@ public class FacilitatorController extends AbstractController<IAbstractBaseServi
 		try {
 			Facilitator facilitator = new Facilitator();
 			facilitator.setId(id);
+			facilitator.setState(false);
 			facilitator.setEffectiveTo(new Date());
 			service.updateByPrimaryKeySelective(facilitator);
 		} catch (Exception e) {

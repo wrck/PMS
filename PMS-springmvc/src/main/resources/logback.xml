@@ -171,7 +171,7 @@
 			<pattern>[%p] %d{yyyy-MM-dd HH:mm:ss,SSS} %l # %m%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${log_dir}/A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
 		</rollingPolicy>
 	</appender>
 	<appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
@@ -189,7 +189,7 @@
 			<pattern>[%p] %d{yyyy-MM-dd HH:mm:ss,SSS} %l # %m%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${log_dir}/A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
 		</rollingPolicy>
 	</appender>
 	<appender name="Stddatatask"
@@ -202,7 +202,7 @@
 			<pattern>[%p] %d{yyyy-MM-dd HH:mm:ss,SSS} %l # %m%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${log_dir}/A_FILE.LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
 		</rollingPolicy>
 	</appender>
 	<logger name="con.dp.plat" level="DEBUG">

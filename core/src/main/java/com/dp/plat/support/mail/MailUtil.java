@@ -699,16 +699,25 @@ public class MailUtil {
 		ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
 		int idxEnd = src.lastIndexOf(":");
 		int idxStart = src.indexOf(":");
+		String contextPath = servletContext.getContextPath();
 		String uri = null;
 		if (idxEnd != idxStart && idxEnd > 0) {
 			uri = src.substring(idxEnd);
-			String contextPath = servletContext.getContextPath();
 			uri = uri.replace(contextPath, "");
 			int idxTemp = uri.indexOf("/");
 			uri = uri.substring(idxTemp);
 		} else {
 			int indexOf = src.indexOf("static");
-			uri = src.substring(indexOf);
+			if (indexOf > 0) {
+				uri = src.substring(indexOf);
+			} else if (idxEnd > 0) {
+				uri = src.substring(idxEnd + 3);
+				int idxTemp = uri.indexOf("/");
+				uri = uri.substring(idxTemp);
+				uri = uri.replace(contextPath, "");
+				idxTemp = uri.indexOf("/");
+				uri = uri.substring(idxTemp);
+			}
 		}
 		String filePath = servletContext.getRealPath(uri);
 		return filePath;
@@ -902,6 +911,15 @@ public class MailUtil {
 	 * @return 0:outer, 1:inner, 2:both, -1:none
 	 */
 	private static int filterMailType(String[] mailStrs) {
+		HashMap<String, String> mailVariables = MailConfig.getMailVariables();
+		boolean needCheckMailType = true;
+		// 判断是否需要分别发送内外网邮箱
+		if (mailVariables != null) {
+			needCheckMailType = Boolean.parseBoolean(mailVariables.getOrDefault("sys.mail.domain.distribute.enable", "true"));
+		}
+		if (!needCheckMailType) {
+			return -1;
+		}
 		HashSet<String> mailDomains = new HashSet<>();
 		Pattern p = Pattern.compile("@(\\w+)(\\.)(\\w+)(\\.\\w+)*");
 		for (String mailStr : mailStrs) {

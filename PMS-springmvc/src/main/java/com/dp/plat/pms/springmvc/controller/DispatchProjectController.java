@@ -5,6 +5,8 @@ import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -34,10 +36,12 @@ import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.util.DownloadUtils;
+import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
+import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
@@ -51,6 +55,7 @@ import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.util.UploadFileUtil;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "dispatch")
@@ -106,6 +111,10 @@ public class DispatchProjectController
 			if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 				temp.setOfficeCodes(officeCodes);
 				dispatch.setOfficeCodes(officeCodes);
+				
+				// 添加指派的项目成员
+				temp.setMemberCode(user.getUserName());
+				dispatch.setMemberCode(user.getUserName());
 			}
 		}
 		tempParam.setModel(temp);
@@ -371,7 +380,8 @@ public class DispatchProjectController
 			t.setType("dispatchWorkContent");
 			List<CommonRelatedData> workContentList = commonRelatedDataService.selectBySelective(t);
 			dataMap.put("workContentList", workContentList);
-			File doc = new DocUtil().createDoc(dataMap, "/template/", "安服框架协议外派单.ftl", fileName, request);
+//			fileName = UploadUtils.getWebDir(request) + File.separator + "template" + File.separator + "Temp_安服框架协议外派单" + File.separator + fileName;
+			File doc = new DocUtil().createDoc(dataMap, "template", "安服框架协议外派单.ftl", fileName, request);
 			DownloadUtils.downFile(response, request, doc.getAbsolutePath(), doc.getName());
 		}
 	}
@@ -425,26 +435,16 @@ public class DispatchProjectController
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(projectId);
 			project.setProjectIds(projectIds);
-			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-//			Boolean allPerm = (Boolean) permission.get("all");
-//			if (Boolean.TRUE.equals(allPerm)) {
-//				isPermit = true;
-//				permissionType = "all";
-//			} else {
-//				String perms = StringUtils.join(permissions, ",");
-//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*:(add|edit|delete|list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "edit";
-//				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*:(list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
-//				}
-//			}
-//			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
-			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", new String[]{ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN}).checkPermit(permission, permissions);
+//			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+//			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", new String[]{ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN}).checkPermit(permission, permissions);
+			PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }, projectPermit.getRoles());
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", allPermitRoles)
+					.checkPermit(projectPermit.getPermissionMap(), permissions);
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
-			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+//			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+			model.addAllAttributes(checkPermit.getMap());
 		} else {
 			isPermit = true;
 			permissionType = "all";

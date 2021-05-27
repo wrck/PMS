@@ -186,7 +186,9 @@ li.active span.warn{
 							break;
                             case null:return '';break;
                         }
-                        return contents.join(splitStr);
+                        return contents.filter(function(item,index) {
+                        	return item ? true : false;
+                        }).join(splitStr);
                     }
                 },
                 {
@@ -286,7 +288,9 @@ li.active span.warn{
 							break;
                             case null:return '';break;
                         }
-                        return contents.join(splitStr);
+                        return contents.filter(function(item,index) {
+                        	return item ? true : false;
+                        }).join(splitStr);
                     }
                 },
                 {

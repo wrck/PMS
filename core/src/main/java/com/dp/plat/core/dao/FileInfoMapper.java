@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.pojo.FileType;
+import com.dp.plat.core.realms.Principal;
 
 public interface FileInfoMapper {
 
@@ -21,4 +22,5 @@ public interface FileInfoMapper {
 	
 	void insertdownlog(@Param("fileIds")String fileIds,@Param("ip") String remoteAddr);
 
+	void insertdownlog(@Param("fileIds")String fileIds,@Param("ip") String remoteAddr, @Param("user") String user);
 }

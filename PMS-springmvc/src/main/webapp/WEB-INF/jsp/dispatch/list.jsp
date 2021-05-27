@@ -103,7 +103,13 @@
 							el: "#" + this.searchDiv,
 							data: {
 								targetValue: this.data.extData.projectVO,
-	   							fieldList: this.data.columns || []
+	   							fieldList: this.data.columns || [],
+	   							
+	   							// 权限控制参数
+	    						model: this.data.extData.model || model,
+	    						permissionType: this.data.extData.permissionType || "",
+	    						permissions: this.data.extData.permissions || [],
+	    						roles: this.data.extData.roles || []
 	    				 	},
 	                	})
                 	);

@@ -16,7 +16,7 @@
 		<property name="targetMethod">
 			<value>execute</value>
 		</property>
-		<property name="concurrent" value="true" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
+		<property name="concurrent" value="false" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
 	</bean>
 	<!-- 定义触发时间 -->
 	<bean id="mailTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -43,7 +43,7 @@
 		<property name="targetMethod">
 			<value>execute</value>
 		</property>
-		<property name="concurrent" value="true" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
+		<property name="concurrent" value="false" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
 	</bean>
 	<!-- 定义触发时间 -->
 	<bean id="ehrDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -70,7 +70,7 @@
 		<property name="targetMethod">
 			<value>execute</value>
 		</property>
-		<property name="concurrent" value="true" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
+		<property name="concurrent" value="false" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
 	</bean>
 	<!-- 定义触发时间 -->
 	<bean id="sseDispatchPaymentTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -97,7 +97,7 @@
 		<property name="targetMethod">
 			<value>execute</value>
 		</property>
-		<property name="concurrent" value="true" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
+		<property name="concurrent" value="false" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
 	</bean>
 	<!-- 定义触发时间 -->
 	<bean id="smsDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -116,10 +116,10 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-			    <ref bean="smsDataTrigger" />
+			    <!-- <ref bean="smsDataTrigger" />
 				<ref bean="sseDispatchPaymentTrigger" />
 				<ref bean="ehrDataTrigger" />
-				<ref bean="mailTrigger" />
+				<ref bean="mailTrigger" /> -->
 			</list>
 		</property>
 	</bean>

@@ -89,7 +89,8 @@
 							<div class="box-footer text-right">
 								<div class="pull-left">
 									<button type="button" class="btn btn-success" v-if="hasTask" data-btn-type="completeTask">任务办理</button>
-									<button type="button" class="btn btn-primary" v-if="canStartProcess" data-btn-type="startProcess">提交审批</button>
+									<button type="button" class="btn btn-primary" v-if="canStartProcess && permissionType && permissionType != 'view'" data-btn-type="startProcess">{{startProcessBtnText}}</button>
+									<span class="footer-tips text-warning" v-if="footerTips">{{footerTips}}</span>
 								</div>
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
@@ -188,6 +189,10 @@
 	    						
 	    						// 任务检查标记
 	    						currentTaskId: "",
+	    						
+	    						// 表单参数
+	    						startProcessBtnText: "提交审批",
+	    						footerTips: ""
 	    				 	}),
 	    				 	computed: {
 	    				 		hasTask: function() {
@@ -240,6 +245,7 @@
 					form = $("#" + formId).form();
 					//form.initFormData(data.targetValue);
 					var $container = $("#" + formId);
+					$container.data("vm", vm);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
@@ -266,6 +272,7 @@
 		                		}, 
 		                		cancel_call: function() {
 		                			$("[type='submit']", form2).removeAttr("disabled");
+		                			$(form2).data("submitCallback", null);
 		                		}
 		                	});
 		                }, 
@@ -384,6 +391,12 @@
 			        			$(_this).data("submitCallback", null);
 			        			submitCallback.call(_this);
 			        		}
+			        		// 是否有默人的表单提交回调函数，用于增强表单提交时间
+			        		if ($(_this).data("defaultSubmitCallback")) {
+			        			var submitCallback = $(_this).data("defaultSubmitCallback");
+			        			//$(_this).data("defaultSubmitCallback", null);
+			        			submitCallback.call(_this);
+			        		}
 	    				}
 	        		});
         		}
@@ -392,23 +405,36 @@
     		$(document).off('click', "#" + appId +' [data-btn-type]');
     		$(document).on("click", "#" + appId +' [data-btn-type]', function(e) {
     			var action = $(this).attr('data-btn-type');
+    			console.log("btn:", action);
                 switch (action) {
                	case 'completeTask':
                		sys.common.toDoWorkflowTask.call(vm, this, vm.currentTaskId, true);
                		break;
                 case 'startProcess':
-                	var modelMethods = router(urlNamespace).methods(model);
-                	var callback = null;/* function() {
-                		handleResult({targetName: vm.targetName, targetValue: vm.targetValue});
-                	}; */
-                	if (modelMethods && typeof modelMethods.startProcess == "function") {
-                		modelMethods.startProcess.call(vm, this, vm.targetValue, callback);
-                	} else {
-	                	sys.common.startProcess.call(vm, this, vm.targetValue, callback);
-                	}
+                	var callback = function() {
+	            		var results = {targetName: vm.targetName, targetValue: vm.targetValue};
+	            		results[results.targetName] = results.targetValue;
+	            		handleResult.call($("#" + formId), results);
+	            	};
+                	startProcess.call(vm, this, vm.targetValue, callback, $("button[data-btn-type='save']", $("#" + formId)).data("ignoreForm"));
                 	break;
                 };
     		});
+    		
+    		function startProcess(el, data, callback, ignoreForm) {
+    			vm = vm || this;
+    			if (!(vm.canStartProcess && vm.permissionType && vm.permissionType != 'view')) {
+            		//modals.info("不满足流程发起条件！");
+            		return;
+            	}
+            	var modelMethods = router(urlNamespace).methods(model);
+            	if (modelMethods && typeof modelMethods.startProcess == "function") {
+            		modelMethods.startProcess.call(vm, el, vm.targetValue, callback, ignoreForm);
+            	} else {
+                	sys.common.startProcess.call(vm, el, vm.targetValue, callback, ignoreForm);
+            	}
+            	return;
+    		}
 		});
 	</script>
 </jsTag>

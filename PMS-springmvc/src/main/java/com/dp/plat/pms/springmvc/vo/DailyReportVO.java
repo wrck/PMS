@@ -20,6 +20,7 @@ public class DailyReportVO extends DailyReport {
 	private String areaPower;
 	private String userPower;
 	private Integer userIdPower;
+	private String memberCode;
 	
 	private String typeName;
 	private String projectTypeName;
@@ -125,6 +126,14 @@ public class DailyReportVO extends DailyReport {
 
 	public void setUserIdPower(Integer userIdPower) {
 		this.userIdPower = userIdPower;
+	}
+
+	public String getMemberCode() {
+		return memberCode;
+	}
+
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
 	}
 
 	public String getServiceManager() {

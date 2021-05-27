@@ -76,6 +76,10 @@
 										<form-input ref="projectProgress" :field="projectProgressField" :form-cols="formCols" :is-create="isCreate" :data-type="dataType" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-input>
 									</div> -->
 								</div>
+								<!-- <div id="adminOperateBtnDiv" v-if="isAdmin && !isCreate" class="pull-left">
+									<button type="button" class="btn btn-success" data-btn-type="merge">合并</button>
+									<button type="button" class="btn btn-danger" v-if="targetValue.projectType == 'afxx' || targetValue.customInfo.isCustom" data-btn-type="transfer">核销</button>
+								</div> -->
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
 							</div>
@@ -149,7 +153,7 @@
 							el: "#" + appId,
 							data: $.extend({}, data, {
 								isModals: isModals,
-								isCreate: id != 0,
+								isCreate: id == 0,
 								isShow: true,
 								dataType: "form",
 								formCols: 4,
@@ -160,6 +164,8 @@
 	   							tabList: data.tabList || [],
 	   							targetName: data.targetName,
 	    						targetValue: data.targetValue,
+	    						
+	    						isAdmin: data.isAdmin || false,
 	    						
 	    						// 项目状态
 	    						projectStateField: {},
@@ -338,6 +344,36 @@
         		}
     		}
     		
+    		$(document).off('click', "#" + appId +' #adminOperateBtnDiv [data-btn-type]');
+    		$(document).on("click", "#" + appId +' #adminOperateBtnDiv [data-btn-type]', function(e) {
+    			var type = $(this).attr('data-btn-type');
+    			var project = vm.targetValue || {};
+    			var url = pm.project.html.projectTransform(project.projectId, type, $.param({projectType:project.projectType, contractNo: project.contractNo}), true);
+    			modals.openWin({
+    	    		title: "项目转换",
+    	    		winId: "project" + type + "Win",
+    	    		width: "85vw",
+    	    		url: url,
+    	    		hideFunc: function(e) {
+    	    			var results = {targetName: vm.targetName, targetValue: vm.targetValue};
+	            		results[results.targetName] = results.targetValue;
+	            		handleResult.call($("#" + formId), results);
+    	    		}
+    	    	})
+    			/* switch (type) {
+               	case 'merge':
+               		pm.project.api.projectTransform(project.projectId, action, $.params({projectType:project.projectType, contractNo: project.contractNo}));
+               		break;
+                case 'transfer':
+                	var callback = function() {
+	            		var results = {targetName: vm.targetName, targetValue: vm.targetValue};
+	            		results[results.targetName] = results.targetValue;
+	            		handleResult.call($("#" + formId), results);
+	            	};
+                	startProcess.call(vm, this, vm.targetValue, callback, $("button[data-btn-type='save']", $("#" + formId)).data("ignoreForm"));
+                	break;
+                }; */
+    		});
 		});
 	    
 	    function uploadDeliverFile(target) {

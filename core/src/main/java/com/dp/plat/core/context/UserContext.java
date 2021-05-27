@@ -29,6 +29,9 @@ public class UserContext {
 	 */
 	public static Principal getCurrentPrincipal() {
 		Principal principal = (Principal) SecurityUtils.getSubject().getPrincipal();
+		if (principal == null) {
+			return new Principal(new User());
+		}
 		return principal;
 	}
 

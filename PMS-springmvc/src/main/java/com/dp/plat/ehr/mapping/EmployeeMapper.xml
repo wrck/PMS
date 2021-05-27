@@ -846,183 +846,188 @@
   </resultMap>
   <!-- <select id="selectBySelectivePageableVO" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.ehr.vo.EmployeeVO"> -->
   <select id="selectBySelectivePageableVO" parameterType="com.dp.plat.core.vo.PageParam" resultMap="simpleEmployeeVOMap">
-    select * from view_ehr_employee
+    select e.*, l.account
+    FROM
+        `view_ehr_employee` e 
+        LEFT JOIN `ehr_login` l 
+            ON e.`empID` = l.empID 
+<!--             AND l.`isDisabled` = 0 -->
     <where>
         <trim prefixOverrides="and |or" suffixOverrides="and |or">
             <if test="model != null ">
                 <if test="model.empID != null and '' != model.empID">
-                    empID = #{model.empID, jdbcType=INTEGER} AND
+                    e.empID = #{model.empID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.workNo != null and '' != model.workNo">
-                    workNo = #{model.workNo, jdbcType=VARCHAR} AND
+                    e.workNo = #{model.workNo, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.name != null and '' != model.name">
-                    name = #{model.name, jdbcType=VARCHAR} AND
+                    e.name = #{model.name, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.eName != null and '' != model.eName">
-                    eName = #{model.eName, jdbcType=VARCHAR} AND
+                    e.eName = #{model.eName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.compID != null and '' != model.compID">
-                    compID = #{model.compID, jdbcType=INTEGER} AND
+                    e.compID = #{model.compID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.depID != null and '' != model.depID">
-                    depID = #{model.depID, jdbcType=INTEGER} AND
+                    e.depID = #{model.depID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.jobID != null and '' != model.jobID">
-                    jobID = #{model.jobID, jdbcType=INTEGER} AND
+                    e.jobID = #{model.jobID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.reportTo != null and '' != model.reportTo">
-                    reportTo = #{model.reportTo, jdbcType=INTEGER} AND
+                    e.reportTo = #{model.reportTo, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.wfreportTo != null and '' != model.wfreportTo">
-                    wfreportTo = #{model.wfreportTo, jdbcType=INTEGER} AND
+                    e.wfreportTo = #{model.wfreportTo, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empStatus != null and '' != model.empStatus">
-                    empStatus = #{model.empStatus, jdbcType=INTEGER} AND
+                    e.empStatus = #{model.empStatus, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.jobStatus != null and '' != model.jobStatus">
-                    jobStatus = #{model.jobStatus, jdbcType=INTEGER} AND
+                    e.jobStatus = #{model.jobStatus, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empType != null and '' != model.empType">
-                    empType = #{model.empType, jdbcType=INTEGER} AND
+                    e.empType = #{model.empType, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.joinDate != null and '' != model.joinDate">
-                    joinDate = #{model.joinDate, jdbcType=TIMESTAMP} AND
+                    e.joinDate = #{model.joinDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.workBeginDate != null and '' != model.workBeginDate">
-                    workBeginDate = #{model.workBeginDate, jdbcType=TIMESTAMP} AND
+                    e.workBeginDate = #{model.workBeginDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.jobBeginDate != null and '' != model.jobBeginDate">
-                    jobBeginDate = #{model.jobBeginDate, jdbcType=TIMESTAMP} AND
+                    e.jobBeginDate = #{model.jobBeginDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.pracBeginDate != null and '' != model.pracBeginDate">
-                    pracBeginDate = #{model.pracBeginDate, jdbcType=TIMESTAMP} AND
+                    e.pracBeginDate = #{model.pracBeginDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.pracEndDate != null and '' != model.pracEndDate">
-                    pracEndDate = #{model.pracEndDate, jdbcType=TIMESTAMP} AND
+                    e.pracEndDate = #{model.pracEndDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.probBeginDate != null and '' != model.probBeginDate">
-                    probBeginDate = #{model.probBeginDate, jdbcType=TIMESTAMP} AND
+                    e.probBeginDate = #{model.probBeginDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.probEndDate != null and '' != model.probEndDate">
-                    probEndDate = #{model.probEndDate, jdbcType=TIMESTAMP} AND
+                    e.probEndDate = #{model.probEndDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.leaveDate != null and '' != model.leaveDate">
-                    leaveDate = #{model.leaveDate, jdbcType=TIMESTAMP} AND
+                    e.leaveDate = #{model.leaveDate, jdbcType=TIMESTAMP} AND
                 </if>
                 <if test="model.gender != null and '' != model.gender">
-                    gender = #{model.gender, jdbcType=INTEGER} AND
+                    e.gender = #{model.gender, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.email != null and '' != model.email">
-                    email = #{model.email, jdbcType=VARCHAR} AND
+                    e.email = #{model.email, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.mobile != null and '' != model.mobile">
-                    mobile = #{model.mobile, jdbcType=VARCHAR} AND
+                    e.mobile = #{model.mobile, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.officePhone != null and '' != model.officePhone">
-                    officePhone = #{model.officePhone, jdbcType=VARCHAR} AND
+                    e.officePhone = #{model.officePhone, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.remark != null and '' != model.remark">
-                    remark = #{model.remark, jdbcType=VARCHAR} AND
+                    e.remark = #{model.remark, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.disabled != null and '' != model.disabled">
-                    disabled = #{model.disabled, jdbcType=INTEGER} AND
+                    e.disabled = #{model.disabled, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empCustom1 != null and '' != model.empCustom1">
-                    empCustom1 = #{model.empCustom1, jdbcType=INTEGER} AND
+                    e.empCustom1 = #{model.empCustom1, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empCustom2 != null and '' != model.empCustom2">
-                    empCustom2 = #{model.empCustom2, jdbcType=INTEGER} AND
+                    e.empCustom2 = #{model.empCustom2, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empCustom3 != null and '' != model.empCustom3">
-                    empCustom3 = #{model.empCustom3, jdbcType=INTEGER} AND
+                    e.empCustom3 = #{model.empCustom3, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.empCustom4 != null and '' != model.empCustom4">
-                    empCustom4 = #{model.empCustom4, jdbcType=VARCHAR} AND
+                    e.empCustom4 = #{model.empCustom4, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.empCustom5 != null and '' != model.empCustom5">
-                    empCustom5 = #{model.empCustom5, jdbcType=INTEGER} AND
+                    e.empCustom5 = #{model.empCustom5, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.compName != null and '' != model.compName">
-                    compName = #{model.compName, jdbcType=VARCHAR} AND
+                    e.compName = #{model.compName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depGrade != null and '' != model.depGrade">
-                    depGrade = #{model.depGrade, jdbcType=INTEGER} AND
+                    e.depGrade = #{model.depGrade, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.depName != null and '' != model.depName">
-                    depName = #{model.depName, jdbcType=VARCHAR} AND
+                    e.depName = #{model.depName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depLV1Name != null and '' != model.depLV1Name">
-                    depLV1Name = #{model.depLV1Name, jdbcType=VARCHAR} AND
+                    e.depLV1Name = #{model.depLV1Name, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depLV2Name != null and '' != model.depLV2Name">
-                    depLV2Name = #{model.depLV2Name, jdbcType=VARCHAR} AND
+                    e.depLV2Name = #{model.depLV2Name, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depLV3Name != null and '' != model.depLV3Name">
-                    depLV3Name = #{model.depLV3Name, jdbcType=VARCHAR} AND
+                    e.depLV3Name = #{model.depLV3Name, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depAllName != null and '' != model.depAllName">
-                    depAllName = #{model.depAllName, jdbcType=VARCHAR} AND
+                    e.depAllName = #{model.depAllName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depLV1ID != null and '' != model.depLV1ID">
-                    depLV1ID = #{model.depLV1ID, jdbcType=INTEGER} AND
+                    e.depLV1ID = #{model.depLV1ID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.depLV2ID != null and '' != model.depLV2ID">
-                    depLV2ID = #{model.depLV2ID, jdbcType=INTEGER} AND
+                    e.depLV2ID = #{model.depLV2ID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.depLV3ID != null and '' != model.depLV3ID">
-                    depLV3ID = #{model.depLV3ID, jdbcType=INTEGER} AND
+                    e.depLV3ID = #{model.depLV3ID, jdbcType=INTEGER} AND
                 </if>
                 <if test="model.jobName != null and '' != model.jobName">
-                    jobName = #{model.jobName, jdbcType=VARCHAR} AND
+                    e.jobName = #{model.jobName, jdbcType=VARCHAR} AND
                 </if>
                   <if test="model.reportToWorkNo != null and '' != model.reportToWorkNo">
-                    reportToWorkNo = #{model.reportToWorkNo, jdbcType=VARCHAR} AND
+                    e.reportToWorkNo = #{model.reportToWorkNo, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.wfreportToWorkNo != null and '' != model.wfreportToWorkNo">
-                    wfreportToWorkNo = #{model.wfreportToWorkNo, jdbcType=VARCHAR} AND
+                    e.wfreportToWorkNo = #{model.wfreportToWorkNo, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.reportToName != null and '' != model.reportToName">
-                    reportToName = #{model.reportToName, jdbcType=VARCHAR} AND
+                    e.reportToName = #{model.reportToName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.wfreportToName != null and '' != model.wfreportToName">
-                    wfreportToName = #{model.wfreportToName, jdbcType=VARCHAR} AND
+                    e.wfreportToName = #{model.wfreportToName, jdbcType=VARCHAR} AND
                 </if>
                 <if test="model.depIDs != null and '' != model.depIDs">
-                    FIND_IN_SET(depID, #{model.depIDs}) AND
+                    FIND_IN_SET(e.depID, #{model.depIDs}) AND
                 </if>
                 <if test="model.adminDepIDs != null and '' != model.adminDepIDs">
                     (
-	                    FIND_IN_SET(depID, #{model.adminDepIDs}) OR
-	                    FIND_IN_SET(depLV1ID, #{model.adminDepIDs}) OR
-	                    FIND_IN_SET(depLV2ID, #{model.adminDepIDs}) OR
-	                    FIND_IN_SET(depLV3ID, #{model.adminDepIDs})
+	                    FIND_IN_SET(e.depID, #{model.adminDepIDs}) OR
+	                    FIND_IN_SET(e.depLV1ID, #{model.adminDepIDs}) OR
+	                    FIND_IN_SET(e.depLV2ID, #{model.adminDepIDs}) OR
+	                    FIND_IN_SET(e.depLV3ID, #{model.adminDepIDs})
                     ) AND
                 </if>
                 <if test="model.workNos != null and '' != model.workNos">
-                    FIND_IN_SET(workNo, #{model.workNos}) AND
+                    FIND_IN_SET(e.workNo, #{model.workNos}) AND
                 </if>
                 <if test="model.workNosExclude != null and '' != model.workNosExclude">
-                    !FIND_IN_SET(workNo, #{model.workNosExclude}) AND
+                    !FIND_IN_SET(e.workNo, #{model.workNosExclude}) AND
                 </if>
             </if>
             <if test="fuzzySearch == true and fuzzy != ''">
                 (
-                    workNo like CONCAT("%", #{fuzzy}, "%") or
-                    name like CONCAT("%", #{fuzzy}, "%") or
-                    eName like CONCAT("%", #{fuzzy}, "%") or
-                    email like CONCAT("%", #{fuzzy}, "%") or
-                    mobile like CONCAT("%", #{fuzzy}, "%") or
-                    officePhone like CONCAT("%", #{fuzzy}, "%") or
-                    remark like CONCAT("%", #{fuzzy}, "%") or
-                    empCustom4 like CONCAT("%", #{fuzzy}, "%") or
-                    depAllName like CONCAT("%", #{fuzzy}, "%") or
-                    compName like CONCAT("%", #{fuzzy}, "%") or
-                    jobName like CONCAT("%", #{fuzzy}, "%") or
-                    reportToWorkNo like CONCAT("%", #{fuzzy}, "%") or
-                    wfreportToWorkNo like CONCAT("%", #{fuzzy}, "%") or
-                    reportToName like CONCAT("%", #{fuzzy}, "%") or
-                    wfreportToName like CONCAT("%", #{fuzzy}, "%")
+                    e.workNo like CONCAT("%", #{fuzzy}, "%") or
+                    e.name like CONCAT("%", #{fuzzy}, "%") or
+                    e.eName like CONCAT("%", #{fuzzy}, "%") or
+                    e.email like CONCAT("%", #{fuzzy}, "%") or
+                    e.mobile like CONCAT("%", #{fuzzy}, "%") or
+                    e.officePhone like CONCAT("%", #{fuzzy}, "%") or
+                    e.remark like CONCAT("%", #{fuzzy}, "%") or
+                    e.empCustom4 like CONCAT("%", #{fuzzy}, "%") or
+                    e.depAllName like CONCAT("%", #{fuzzy}, "%") or
+                    e.compName like CONCAT("%", #{fuzzy}, "%") or
+                    e.jobName like CONCAT("%", #{fuzzy}, "%") or
+                    e.reportToWorkNo like CONCAT("%", #{fuzzy}, "%") or
+                    e.wfreportToWorkNo like CONCAT("%", #{fuzzy}, "%") or
+                    e.reportToName like CONCAT("%", #{fuzzy}, "%") or
+                    e.wfreportToName like CONCAT("%", #{fuzzy}, "%")
                 )
             </if>
         </trim>

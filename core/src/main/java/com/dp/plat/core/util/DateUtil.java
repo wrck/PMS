@@ -97,4 +97,22 @@ public class DateUtil {
 		return c.getTime();
 	}
 	
+	/**
+	 * 获取指定日期所在月所处的周次
+	 * @param time 指定时间
+	 * @param offset 偏移量,默认0表示周日为周的分界
+	 * @return M{d}W{d}
+	 */
+	public static String getMonthWeek(Date time, int offset) {
+		Calendar c = Calendar.getInstance();
+		c.setTime(time);
+		c.add(Calendar.DATE, -offset);
+		int weekInMonth = c.get(Calendar.DAY_OF_WEEK_IN_MONTH);
+//		int weekOfMonth = c.get(Calendar.WEEK_OF_MONTH);
+		int month = c.get(Calendar.MONTH) + 1;
+		
+//		System.out.println(getDateTime("yyyy-MM-dd", time) + "：M" + month + "W" + weekInMonth + "," + weekOfMonth);
+		return "M" + month + "W" + weekInMonth;
+	}
+	
 }

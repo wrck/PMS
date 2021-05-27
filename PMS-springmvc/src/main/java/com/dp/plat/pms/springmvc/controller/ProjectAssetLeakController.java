@@ -1,5 +1,9 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -83,7 +87,7 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		ProjectAssetLeakVO temp = new ProjectAssetLeakVO(v.getProjectId());
 		temp.setDisabled(false);
 		temp.setEffective(new Date());
-		
+		pageParam.setOrderBy("apr.projectId, ia.id desc, l.id desc");
 		
 		pageParam.setTotal(industryAssetLeakRelationService.countProjectAssetLeakBySelectivePageable(tempParam));
 		List<Object> projectAssetList = industryAssetLeakRelationService.selectProjectAssetLeakBySelectivePageable(pageParam);
@@ -113,6 +117,8 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 				if (!checkPermission.isPermit()) {
 					return "redirect:" + Consts.VIEW_UNAUTHORIZED;
 				}
+				model.addAllAttributes(checkPermission.getMap());
+				
 				IndustryLeak leak = service.selectByPrimaryKey(projectRelation.getLeakId());
 				IndustryAsset asset = industryAssetService.selectByPrimaryKey(projectRelation.getAssetId());
 				ProjectAssetLeakVO v = new ProjectAssetLeakVO();
@@ -129,8 +135,6 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 
 				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
-				
-				model.addAllAttributes(checkPermission.getMap());
 			}
 		} else {
 			model.addAttribute("urlNamespace", URL_NAMESPACE);
@@ -190,14 +194,22 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 			if (v.getAssetId() != null) {
 				set.add(v.getAssetId().toString());
 			}
+			ProjectAssetLeakVO assetLeak = new ProjectAssetLeakVO();
+			BeanUtils.copyProperties(v, assetLeak);
 			for (String assetId : set) {
 				if (StringUtils.isNotBlank(assetId)) {
-					ProjectAssetLeakVO assetLeak = new ProjectAssetLeakVO();
-					BeanUtils.copyProperties(v, assetLeak);
 					assetLeak.setAssetId(Integer.valueOf(assetId));
 					industryAssetLeakRelationService.insertProjectAssetLeakSelective(assetLeak);
 				}
 			}
+//			for (String assetId : set) {
+//				if (StringUtils.isNotBlank(assetId)) {
+//					ProjectAssetLeakVO assetLeak = new ProjectAssetLeakVO();
+//					BeanUtils.copyProperties(v, assetLeak);
+//					assetLeak.setAssetId(Integer.valueOf(assetId));
+//					industryAssetLeakRelationService.insertProjectAssetLeakSelective(assetLeak);
+//				}
+//			}
 			model.addAttribute("targetName", this.getTargetName(v.getClass()));
 		} catch (Exception e) {
 			status = false;
@@ -223,13 +235,13 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		PmWorkFlowVO workflow = new PmWorkFlowVO();
 		workflow.setDataId(v.getLeakId());
 		workflow.setDataType(DataType.INDUSTRY_LEAK);
-		workflow.setObjId(v.getProjectId());
-		workflow.setObjType(DataType.PROJECT);
+//		workflow.setObjId(v.getProjectId());
+//		workflow.setObjType(DataType.PROJECT);
 		workflow.setStatus(PmWorkFlowVO.PENDING);
 		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 		
-		v.setStatus("0");
-		v.setTrackStatus(0);
+		leak.setStatus("0");
+		leak.setTrackStatus(0);
 		return super.update(v.getLeakId(), leak, model);
 //		if (!checkPermission(v, model, getDataName() + ":update")) {
 //			model.addAttribute("status", false);
@@ -265,8 +277,8 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 				PmWorkFlowVO workflow = new PmWorkFlowVO();
 				workflow.setDataId(relation.getLeakId());
 				workflow.setDataType(DataType.INDUSTRY_LEAK);
-				workflow.setObjId(relation.getProjectId());
-				workflow.setObjType(DataType.PROJECT);
+//				workflow.setObjId(relation.getProjectId());
+//				workflow.setObjType(DataType.PROJECT);
 				workflow.setStatus(PmWorkFlowVO.PENDING);
 				pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 				
@@ -302,30 +314,19 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		if (!UserContext.checkPermission("industryLeak:*") && v != null && v.getProjectId() != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
-			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-//			Boolean allPerm = (Boolean) permission.get("all");
-//			if (Boolean.TRUE.equals(allPerm)) {
-//				isPermit = true;
-//				permissionType = "all";
-//			} else {
-//				String perms = StringUtils.join(permissions, ",");
-//				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
-//				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
-//				if (editPerm && perms.matches(".*assetLeak:(add|edit|delete|import|list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "edit";
-//				} else if ((viewPerm || editPerm) && perms.matches(".*assetLeak:(list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = editPerm ? "edit" : "view";
-//				}
-//			}
-//			model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
-			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
-					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
-							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+//			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+//			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+//					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+//							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+					RoleConstant.ROLE_PM_AREA_MANAGER }, projectPermit.getRoles());
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", allPermitRoles)
+					.checkPermit(projectPermit.getPermissionMap(), permissions);
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
-			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+//			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+			model.addAllAttributes(checkPermit.getMap());
 		} else {
 			isPermit = true;
 			permissionType = "all";

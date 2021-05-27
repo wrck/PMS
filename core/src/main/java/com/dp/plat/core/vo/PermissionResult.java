@@ -27,6 +27,15 @@ public class PermissionResult {
 	private Collection<String> permissions;
 	
 	/**
+	 * 角色集合
+	 */
+	private Collection<String> roles;
+	
+	private Map<String, Object> permissionMap;
+	
+	private String[] allPermitRoles;
+	
+	/**
 	 * 额外数据
 	 */
 	private Object data;
@@ -73,6 +82,23 @@ public class PermissionResult {
 		this.permissionType = permissionType;
 		this.permissions = permissions;
 	}
+	
+	public PermissionResult(boolean status, String permissionType, Collection<String> permissions, Map<String, Object> permissionMap, String[] allPermitRoles) {
+		this.status = status;
+		this.permissionType = permissionType;
+		this.permissions = permissions;
+		this.permissionMap =permissionMap;
+		this.allPermitRoles = allPermitRoles;
+	}
+	
+	public PermissionResult(boolean status, String permissionType, Collection<String> permissions, Collection<String> roles, Map<String, Object> permissionMap, String[] allPermitRoles) {
+		this.status = status;
+		this.permissionType = permissionType;
+		this.permissions = permissions;
+		this.roles = roles;
+		this.permissionMap =permissionMap;
+		this.allPermitRoles = allPermitRoles;
+	}
 
 	public boolean getStatus() {
 		return status;
@@ -105,6 +131,30 @@ public class PermissionResult {
 	public void setPermissions(Collection<String> permissions) {
 		this.permissions = permissions;
 	}
+	
+	public Collection<String> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Collection<String> roles) {
+		this.roles = roles;
+	}
+
+	public Map<String, Object> getPermissionMap() {
+		return permissionMap;
+	}
+
+	public void setPermissionMap(Map<String, Object> permissionMap) {
+		this.permissionMap = permissionMap;
+	}
+
+	public String[] getAllPermitRoles() {
+		return allPermitRoles;
+	}
+
+	public void setAllPermitRoles(String[] allPermitRoles) {
+		this.allPermitRoles = allPermitRoles;
+	}
 
 	public Object getData() {
 		return data;
@@ -130,6 +180,15 @@ public class PermissionResult {
 	    if (this.permissions != null) {
 	    	map.put("permissions", this.permissions);
 	    }
+	    if (this.roles != null) {
+	    	map.put("roles", this.roles);
+	    }
+//	    if (this.permissionMap != null) {
+//	    	map.put("permissionMap", this.permissionMap);
+//	    }
+//	    if (this.allPermitRoles != null) {
+//	    	map.put("allPermitRoles", this.allPermitRoles);
+//	    }
     	if (this.data != null) {
     		map.put("data", this.data);
     	}

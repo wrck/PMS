@@ -129,6 +129,7 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 </c:if>
+	<script src="${pageContext.request.contextPath}/static/plugins/autocomplete/jquery.autocomplete.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
@@ -315,9 +316,13 @@
 /* 		    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
 			    		$("#facilitatorId", $container).one("change", changeFacilitator);
 		    		}
- */		    		$("#facilitatorId", $container).siblings(".select2-container").one("click", function(e) {
-		    			$("#facilitatorId", $container).on("change", changeFacilitator)
-		    		});
+ */		    		
+					/* $($container).one("click", "#facilitatorId~.select2-container", function(e) {
+	 					$("#facilitatorId", $container).on("change", changeFacilitator)
+		    		}); */
+ 					/* $("#facilitatorId", $container).siblings(".select2-container").one("click", function(e) {
+	 					$("#facilitatorId", $container).on("change", changeFacilitator)
+		    		}); */
 		    		
     			 }
     		})
@@ -381,8 +386,14 @@
 	    			}
 	    		}
 	    		
+	    		$($container).off("change", "#facilitatorId", changeFacilitator);
 	    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
-		    		$("#facilitatorId", $container).one("change", changeFacilitator);
+		    		//$($container).one("change", "#facilitatorId", changeFacilitator);
+		    		$($container).on("change", "#facilitatorId", changeFacilitator);
+	    		} else {
+	    			$($container).one("click", "#facilitatorId~.select2-container", function(e) {
+	 					$("#facilitatorId", $container).on("change", changeFacilitator)
+		    		});
 	    		}
     		}
     		
@@ -525,28 +536,36 @@
     		}
     		
     		function changeFacilitator(e) {
-				var element;
-    			try{
-    				var element =  $($(this).select2("data")[0].element);
-    			} catch(e){}
-				var source = $(element).data("source") || {};
+    			console.log("changeFacilitator");
+    			var $this = $(this);
+				var source = $this.select2('data');
+    			if (source.length > 0) {
+    				source = source[0]; 
+   				} else {
+   					source = {}; 
+ 				}
+    			var element = source.element;
+				var source = $(element).data("source") || source.source || source || {};
 				$("#facilitatorCode", $container).val(source.code);
     			$("#facilitatorName", $container).val(source.name);
     			$("#bankInfo", $container).val(source.bankInfo);
     			$("#bankAccount", $container).val(source.bankAccount);
     			
+   				var render = function(data) {
+    				var placeholder = $("#dispatchSeq").data("placeholder") || $("#dispatchSeq").attr("placeholder");
+    				$("#dispatchSeq").data("placeholder", placeholder);
+    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
+    				$("#dispatchSeq").val("");
+    				
+    				var dispatchNoPlaceholder = $("#dispatchNo").data("placeholder") || $("#dispatchNo").attr("placeholder");
+    				$("#dispatchNo").data("placeholder", dispatchNoPlaceholder);
+    				$("#dispatchNo").attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
+    				$("#dispatchNo").val("");
+   				};
     			if (source.code) {
-    				ajaxGet(pm.router.api(model).generateDispatchSeq(), {facilitatorCode: source.code}, function(data) {
-	    				var placeholder = $("#dispatchSeq").data("placeholder") || $("#dispatchSeq").attr("placeholder");
-	    				$("#dispatchSeq").data("placeholder", placeholder);
-	    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
-	    				$("#dispatchSeq").val("");
-	    				
-	    				var dispatchNoPlaceholder = $("#dispatchNo").data("placeholder") || $("#dispatchNo").attr("placeholder");
-	    				$("#dispatchNo").data("placeholder", dispatchNoPlaceholder);
-	    				$("#dispatchNo").attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
-	    				$("#dispatchNo").val("");
-    				});
+    				ajaxGet(pm.router.api(model).generateDispatchSeq(), {facilitatorCode: source.code}, render);
+    			} else {
+    				render({});
     			}
     		}
 		});

@@ -45,7 +45,10 @@ public class DailyReportService extends AbstractBaseService<DailyReportMapper, D
                 String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
                 if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
                     v.setOfficeCodes(officeCodes);
+                    
                 }
+                // 添加指派的项目成员
+                v.setMemberCode(user.getUserName());
             }
             Map<String, Object> permission = this.checkPermissionMap(v, permissions);
             result = new PermissionUtils().checkPermit(permission, permissions);

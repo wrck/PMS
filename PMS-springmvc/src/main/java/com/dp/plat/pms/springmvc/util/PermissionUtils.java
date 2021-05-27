@@ -1,6 +1,14 @@
 package com.dp.plat.pms.springmvc.util;
 
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAGER;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +60,12 @@ public class PermissionUtils {
 		this.allPermitRoles = allPermitRoles;
 	}
 	
+	public PermissionUtils(String permissionPrefix, Collection<String> allPermitRoles) {
+		this();
+		this.permissionPrefix = StringUtils.trimToEmpty(permissionPrefix);
+		this.allPermitRoles = allPermitRoles != null ? allPermitRoles.toArray(new String[] {}) : null;
+	}
+	
 	public PermissionUtils(String editPermissions, String viewPermissions, String[] allPermitRoles) {
 		this();
 		this.editPermissions = editPermissions;
@@ -69,9 +83,11 @@ public class PermissionUtils {
 		Boolean isPermit = false;
 		String permissionType = "";
 		Collection<String> permissionSet = null;
+		Collection<String> roleSet = null;
 		try {
 			if (permission != null) {
 				permissionSet = (Collection<String>) permission.get("permissions");
+				roleSet = (Collection<String>) permission.getOrDefault("roles", UserContext.getCurrentPrincipal().getRoles());
 				Boolean allPerm = (Boolean) permission.get("all");
 				boolean isRolePermit = false;
 				// 特殊角色权限,当具备访问权限时，进行角色权限增强
@@ -103,7 +119,7 @@ public class PermissionUtils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new PermissionResult(isPermit, permissionType, permissionSet);
+		return new PermissionResult(isPermit, permissionType, permissionSet, roleSet, permission, allPermitRoles);
 	}
 	
 	private String initRegex(String perms) {
@@ -174,4 +190,21 @@ public class PermissionUtils {
 		this.lockedState = lockedState;
 	}
 	
+	/**
+	 * 获取权限交集
+	 * @param allPermistRoles
+	 * @param roles
+	 * @return
+	 */
+	public static String[] getRetainAllRoles(String[] allPermistRoles, Collection<String> roles) {
+		if (allPermistRoles == null) {
+			allPermistRoles = new String[] {};
+		}
+		List<String> allPermitRoleList = new ArrayList<String>(Arrays.asList(allPermistRoles));
+		if (roles != null) {
+			allPermitRoleList.retainAll(roles);
+			allPermistRoles = allPermitRoleList.toArray(new String[] {});
+		}
+		return allPermistRoles;
+	}
 }

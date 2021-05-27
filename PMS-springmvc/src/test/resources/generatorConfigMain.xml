@@ -26,40 +26,40 @@
 		</commentGenerator>
 		<!-- 数据库配置 -->
 		<jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
-			connectionURL="jdbc:mysql:///dppms?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
+			connectionURL="jdbc:mysql:///dpafpms_sturct?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
 			userId="root" password="!Q@W3e4r" >
 			<!-- mysql 6以上，该参数默认为false,会导致不指定catalog时出现无法生成主键查询的问题 -->
 			<property name="nullCatalogMeansCurrent" value="true" />
 		</jdbcConnection>
 		<javaTypeResolver type="com.dp.plat.MyBatisGenerator.config.JavaTypeResolverImpl"></javaTypeResolver>
 		<!-- 生成Model类存放位置 -->
-		<javaModelGenerator targetPackage="com.dp.plat.pms.springmvc.entity"
+		<javaModelGenerator targetPackage="com.dp.plat.warrantyCallback.entity"
 			targetProject="src/main/java">
 			<!-- 设置一个根对象， 如果设置了这个根对象，那么生成的keyClass或者recordClass会继承这个类；在Table的rootClass属性中可以覆盖该选项 
 				注意：如果在key class或者record class中有root class相同的属性，MBG就不会重新生成这些属性了，包括： 1，属性名相同，类型相同，有相同的getter/setter方法； -->
 			<property name="rootClass" value="com.dp.plat.core.entity.BaseEntity" />
 		</javaModelGenerator>
 		<!-- 生成映射文件存放位置 -->
-		<sqlMapGenerator targetPackage="com.dp.plat.pms.springmvc.mapping"
+		<sqlMapGenerator targetPackage="com.dp.plat.warrantyCallback.mapping"
 			targetProject="src/main/java" />
 		<!-- java DAO 类存放位置 -->
-		<javaClientGenerator targetPackage="com.dp.plat.pms.springmvc.dao"
+		<javaClientGenerator targetPackage="com.dp.plat.warrantyCallback.dao"
 			targetProject="src/main/java" type="XMLMAPPER">
 			<!-- 可以为所有生成的接口添加一个父接口，但是MBG只负责生成，不负责检查 -->
 			<!-- <property name="rootInterface" value="com.dp.plat.core.dao.AbstractBaseMapper"  /> -->
 		</javaClientGenerator>
 		<!-- java Service 类存放位置 -->
-        <javaServiceGenerator targetPackage="com.dp.plat.pms.springmvc.service"
-            targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
+        <javaServiceGenerator targetPackage="com.dp.plat.warrantyCallback.service"
+            targetProject="src/main/java" implementationPackage="com.dp.plat.warrantyCallback.service.impl">
         </javaServiceGenerator>
         <!--生成对应表及类名 -->
-		<table tableName="pm_facilitator" domainObjectName="Facilitator"
+		<table tableName="af_industry_leak" domainObjectName="IndustryLeak"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false" delimitAllColumns="true">
-			<property name="tableAlias" value="f" />
+			<property name="tableAlias" value="l" />
 			<property name="useActualColumnNames" value="true" />
 			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
 		</table>

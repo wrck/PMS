@@ -494,20 +494,20 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 					var minDate = $(this).data("daterangepicker").minDate;
 					var maxDate = $(this).data("daterangepicker").maxDate;
 					var _this = this;
-					_ti = setInterval(function() {
+					_this.intervalId = setInterval(function() {
 						$(_this).data('daterangepicker').setStartDate(minDate);
 						$(_this).data('daterangepicker').setEndDate(maxDate);
-						clearInterval(_ti);
+						clearInterval(_this.intervalId);
 					}, 200);
 				})
 				
 				/*if (startTime && endTime) {
 					$(this).find(".daterange-span").text(startTime + " - " + endTime.split(" 23:59:59")[0]);
 					var _this = this;
-					_ti = setInterval(function() {
+					_this.intervalId = setInterval(function() {
 						$(_this).data('daterangepicker').setStartDate(startTime);
 						$(_this).data('daterangepicker').setEndDate(endTime);
-						clearInterval(_ti);
+						clearInterval(_this.intervalId);
 					}, 200);
 				} else {
 					$(this).find(".daterange-span").text("不限");
@@ -711,7 +711,7 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
 		} else {
 			$("#" +this.searchDiv +" .operate-btn-group").appendTo($('#'+this.tableId+'_length', $tableContainer ).parent().next().addClass("dataTables_filter"));
 		}
-		//$("#" +this.searchDiv).css("display","block");
+		$("#" +this.searchDiv).css("display","block");
 		//		if(!$('.col-sm-6:eq(1)', $tableContainer ).html()){ 
 //			$("#" +this.searchDiv).css("display","block").appendTo($('.col-sm-6:eq(1)', $tableContainer ) );
 //		}
@@ -1738,7 +1738,7 @@ CommonTable.prototype.getServerData = function(aoData, fnCallback, oSettings) {/
         tableData.draw = result.pageParam.draw;//这里直接自行返回了draw计数器,应该由后台返回
         tableData.recordsTotal = result.pageParam.total;
         tableData.recordsFiltered = result.pageParam.filtered;//后台不实现过滤功能，每次查询均视作全部结果
-        tableData.data = result.data;
+        tableData.data = result.data || [];
         retData.columns = result.pageParam.columns;
         retData.rowId = result.pageParam.rowId;
         retData.tableData = tableData;
@@ -1850,10 +1850,10 @@ CommonTable.prototype.fnStateLoaded = function (settings, data) {
 			if (startTime && endTime) {
 				$(this).find(".daterange-span").text(startTime + " - " + endTime.split(" 23:59:59")[0]);
 				var _this = this;
-				_ti = setInterval(function() {
+				_this.intervalId = setInterval(function() {
 					$(_this).data('daterangepicker').setStartDate(startTime);
 					$(_this).data('daterangepicker').setEndDate(endTime);
-					clearInterval(_ti);
+					clearInterval(_this.intervalId);
 				}, 200);
 			} else {
 				$(this).find(".daterange-span").text("不限");

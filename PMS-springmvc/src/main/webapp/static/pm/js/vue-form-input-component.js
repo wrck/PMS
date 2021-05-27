@@ -8,7 +8,7 @@ var FormInput = {
 			};	
 		},
 		template: `<div v-if="isPermit">
-						<template v-if="field.type == 'hidden' || !field.visible">
+						<template v-if="field.type == 'hidden' || !fieldVisible">
 							<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 									:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
 									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly"
@@ -268,6 +268,7 @@ var FormInput = {
 		},
 		updated: function() {
 			console.log("updated");
+			var _this = this;
 			var id = this.field.cssId || this.field.field;
 			var $container = this.$root.$el;
 			if (this.field.type == 'range') {
@@ -382,6 +383,18 @@ var FormInput = {
 	 				} catch(e) {}
 	 			}
 				return readonly;
+			},
+			fieldVisible: function(_this, field) {
+				field = field || this.field || {};
+				var permissionType = this.permissionType || "";
+				var visible = field.visible;
+				var visibleCallback = (field.extData || {}).visibleCallback;
+				if (typeof visibleCallback == 'function') {
+	 				try {
+	 					visible = visible && visibleCallback.call(this, field, visible);
+	 				} catch(e) {}
+	 			}
+				return visible;
 			},
 			groupClass: function() {
 				var groupClass = this.formGroupClass;
@@ -605,7 +618,7 @@ var FormInput = {
 	 			var target = event.currentTarget;
 	 			var startDate = $(target).data('startDate') || undefined;
 	 			var endDate = $(target).data('endDate') || undefined;
-	 			var minDate = $(target).data('minDate') || "2014-01-01";
+	 			var minDate = $(target).data('minDate') || "2010-01-01";
 	 			var maxDate = $(target).data('maxDate') || undefined;
 	 			var format = $(target).data('format') || 'YYYY-MM-DD';
 	 			var value = target.value;

@@ -1318,6 +1318,9 @@
 				<if test="model.projectId != null and '' != model.projectId">
 					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
 				</if>
+				<if test="model.projectId != null and '' != model.projectId">
+					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
+				</if>
 				<if test="model.officeCodes != null">
 					FIND_IN_SET(h.officeCode, #{model.officeCodes}) AND
 				</if>
@@ -1435,6 +1438,9 @@
 			</if>
 			<if test="dispatchTime != null">
 				h.`dispatchTime` = #{dispatchTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="dispatchYear != null">
+				#{dispatchYear, jdbcType=INTEGER} = YEAR(h.`dispatchTime`) AND
 			</if>
 			<if test="smsProjectCode != null and '' != smsProjectCode">
 				h.`smsProjectCode` = #{smsProjectCode, jdbcType=VARCHAR} AND
@@ -1571,6 +1577,9 @@
 	<if test="dispatchTime != null">
 		h.`dispatchTime` = #{dispatchTime, jdbcType=TIMESTAMP} AND
 	</if>
+	<if test="dispatchYear != null">
+		#{dispatchYear, jdbcType=INTEGER} = YEAR(h.`dispatchTime`) AND
+	</if>
 	<if test="smsProjectCode != null and '' != smsProjectCode">
 		h.`smsProjectCode` = #{smsProjectCode, jdbcType=VARCHAR} AND
 	</if>
@@ -1700,6 +1709,9 @@
 		</if>
 		<if test="model.dispatchTime != null">
 			h.`dispatchTime` = #{model.dispatchTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.dispatchYear != null">
+			#{model.dispatchYear, jdbcType=INTEGER} = YEAR(h.`dispatchTime`) AND
 		</if>
 		<if test="model.smsProjectCode != null and '' != model.smsProjectCode">
 			h.`smsProjectCode` = #{model.smsProjectCode, jdbcType=VARCHAR} AND

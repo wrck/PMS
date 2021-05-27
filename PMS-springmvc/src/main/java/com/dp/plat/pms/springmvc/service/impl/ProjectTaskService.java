@@ -218,12 +218,20 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
 				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
 					task.setOfficeCodes(officeCodes);
+					
 				}
+				// 添加指派的项目成员
+				task.setMemberCode(user.getUserName());
 			}
 						
+//			Map<String, Object> permission = this.checkPermissionMap(task, permissions);
+//			result = new PermissionUtils(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+//							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
 			Map<String, Object> permission = this.checkPermissionMap(task, permissions);
-			result = new PermissionUtils(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
-							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			Collection<String> roles = (Collection<String>) permission.get("roles");
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+							RoleConstant.ROLE_PM_AREA_MANAGER }, roles);
+			result = new PermissionUtils(allPermitRoles).checkPermit(permission, permissions);
 		} else {
 			isPermit = true;
 			permissionType= "all";

@@ -128,7 +128,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 		return methodStr.toString();
 	}
 	
-	public static Integer insertException(Exception ex) {
+	public static Integer insertException(Throwable e) {
 		ISysLogService sysLogService = (ISysLogService) SpringContext.getBean("sysLogService");
 		SysLog sysLog = new SysLog();
 		try{
@@ -144,7 +144,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 						sysLog.setCreateBy(path[0]);
 					}
 				}
-			} catch (Exception e) {
+			} catch (Exception exception) {
 				sysLog.setCreateBy("system");
 			}
 			
@@ -155,16 +155,16 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 			
 			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 			String methodName = trace[2].toString();
-			sysLog.setDescription("自处理异常" + " -- " + ex.getClass().getName());
+			sysLog.setDescription("自处理异常" + " -- " + e.getClass().getName());
 			sysLog.setMethod(methodName);
-			sysLog.setExceptionCode(ex.getClass().getName());
-			sysLog.setExceptionDetail(ExceptionUtils.getStackTrace(ex));
+			sysLog.setExceptionCode(e.getClass().getName());
+			sysLog.setExceptionDetail(ExceptionUtils.getStackTrace(e));
 			sysLog.setCreateDate(DateUtil.getTodayDateTime());
 			sysLog.setType("1");
 			sysLogService.insertSelective(sysLog);
-		} catch (Throwable e) {
-			ex.printStackTrace();
+		} catch (Throwable t) {
 			e.printStackTrace();
+			t.printStackTrace();
 		}
 		return sysLog.getId();
 	}

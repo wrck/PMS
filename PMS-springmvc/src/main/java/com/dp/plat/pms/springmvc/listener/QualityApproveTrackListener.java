@@ -1,5 +1,6 @@
 package com.dp.plat.pms.springmvc.listener;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.vo.UserInfoVO;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.TaskType;
+import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectMember;
@@ -133,6 +135,8 @@ public class QualityApproveTrackListener {
 				projectTask.setTaskId(pmWorkFlow.getDataId());
 				projectTask.setStatus(dataStatus);
 				projectTask.setCustomInfoByKey("currentTaskId", null);
+				projectTask.setCustomInfoByKey("currentTaskKey", null);
+				projectTask.setCustomInfoByKey("currentProcInstId", null);
 				projectTaskService.updateByPrimaryKeySelective(projectTask);
 			}  else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
 				// 项目资产，更新入库状态和入库时间
@@ -140,6 +144,8 @@ public class QualityApproveTrackListener {
 				industryAsset.setId(pmWorkFlow.getDataId());
 				industryAsset.setStatus(dataStatus);
 				industryAsset.setCustomInfoByKey("currentTaskId", null);
+				industryAsset.setCustomInfoByKey("currentTaskKey", null);
+				industryAsset.setCustomInfoByKey("currentProcInstId", null);
 //					industryAsset.setCustomInfoByKey("trackedComments", taskComments);
 				industryAssetService.updateByPrimaryKeySelective(industryAsset);
 			} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
@@ -148,6 +154,8 @@ public class QualityApproveTrackListener {
 				industryLeak.setId(pmWorkFlow.getDataId());
 				industryLeak.setStatus(dataStatus);
 				industryLeak.setCustomInfoByKey("currentTaskId", null);
+				industryLeak.setCustomInfoByKey("currentTaskKey", null);
+				industryLeak.setCustomInfoByKey("currentProcInstId", null);
 //					industryAsset.setCustomInfoByKey("trackedComments", taskComments);
 				industryLeakService.updateByPrimaryKeySelective(industryLeak);
 			}
@@ -210,6 +218,7 @@ public class QualityApproveTrackListener {
 	 * 任务创建监听器
 	 */
 	public void createTask(DelegateTask delegateTask) throws Exception {
+		String procInstId = delegateTask.getProcessInstanceId();
 		String taskId = delegateTask.getId();
 		String taskKey = delegateTask.getTaskDefinitionKey();
 		String processKey = delegateTask.getProcessDefinitionId();
@@ -249,8 +258,15 @@ public class QualityApproveTrackListener {
 						Map project = (Map) customInfo.getOrDefault(pmWorkFlow.getObjType(), new HashMap<>(0));
 						areaPower = (String) project.getOrDefault("column001", areaPower);
 					}
-				}  else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
+				} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
 					IndustryLeak entity = (IndustryLeak) pmWorkFlow.getEntity();
+					Map customInfo = (Map) entity.getCustomInfo();
+					if (customInfo != null && customInfo.containsKey(pmWorkFlow.getObjType())) {
+						Map project = (Map) customInfo.getOrDefault(pmWorkFlow.getObjType(), new HashMap<>(0));
+						areaPower = (String) project.getOrDefault("column001", areaPower);
+					}
+				} else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
+					IndustryAsset entity = (IndustryAsset) pmWorkFlow.getEntity();
 					Map customInfo = (Map) entity.getCustomInfo();
 					if (customInfo != null && customInfo.containsKey(pmWorkFlow.getObjType())) {
 						Map project = (Map) customInfo.getOrDefault(pmWorkFlow.getObjType(), new HashMap<>(0));
@@ -258,11 +274,14 @@ public class QualityApproveTrackListener {
 					}
 				}
 			}
-			MemberVO t = new MemberVO();
-			t.setProjectId(pmWorkFlow.getObjId());
-			t.setMemberRole(memberRole);
-			t.setEffective(new Date());
-			List<ProjectMember> members = projectMemberService.selectBySelective(t);
+			List<ProjectMember> members = Collections.emptyList();
+			if (StringUtils.isNotBlank(memberRole)) {
+				MemberVO t = new MemberVO();
+				t.setProjectId(pmWorkFlow.getObjId());
+				t.setMemberRole(memberRole);
+				t.setEffective(new Date());
+				members = projectMemberService.selectBySelective(t);
+			}
 			if (!members.isEmpty() && members.size() == 1) {
 				assignee = members.get(0).getMemberCode();
 				UserInfoVO user = userInfoService.selectOneByUserNameAndCompId(assignee);
@@ -287,6 +306,7 @@ public class QualityApproveTrackListener {
 			projectTask.setStatus(taskKey);
 			projectTask.setCustomInfoByKey("currentTaskId", taskId);
 			projectTask.setCustomInfoByKey("currentTaskKey", taskKey);
+			projectTask.setCustomInfoByKey("currentProcInstId", procInstId);
 			projectTaskService.updateByPrimaryKeySelective(projectTask);
 		} else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
 			// 项目资产，更新入库状态和入库时间
@@ -295,6 +315,7 @@ public class QualityApproveTrackListener {
 			industryAsset.setStatus(taskKey);
 			industryAsset.setCustomInfoByKey("currentTaskId", taskId);
 			industryAsset.setCustomInfoByKey("currentTaskKey", taskKey);
+			industryAsset.setCustomInfoByKey("currentProcInstId", procInstId);
 			industryAssetService.updateByPrimaryKeySelective(industryAsset);
 		} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
 			// 行业漏洞，更新入库状态和入库时间
@@ -303,6 +324,7 @@ public class QualityApproveTrackListener {
 			industryLeak.setStatus(taskKey);
 			industryLeak.setCustomInfoByKey("currentTaskId", taskId);
 			industryLeak.setCustomInfoByKey("currentTaskKey", taskKey);
+			industryLeak.setCustomInfoByKey("currentProcInstId", procInstId);
 			industryLeakService.updateByPrimaryKeySelective(industryLeak);
 		}
 		if (assignee != null) {
@@ -435,9 +457,16 @@ public class QualityApproveTrackListener {
 		} else if (candidates != null) {
 			userIds.addAll(candidates);
 		}
+		if (userIds.isEmpty()) {
+			userIds.add(String.valueOf(Integer.MIN_VALUE));
+		}
+		String[] groupIds = StringUtils.split(candidateGroup, ",");
+		if (groupIds == null || groupIds.length == 0) {
+			groupIds = new String[] {"empty"};
+		}
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("userIds", userIds);
-		params.put("groupIds", StringUtils.split(candidateGroup, ","));
+		params.put("groupIds", groupIds);
 		if (!"all".equals(areaPower)) {
 			params.put("areaPower", areaPower);
 		}

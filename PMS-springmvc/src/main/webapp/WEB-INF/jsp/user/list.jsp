@@ -164,6 +164,12 @@
 							sortable: true,
 						},
 						{
+							title : "区域",
+							data : "custom5",
+							visible: true,
+							sortable: true,
+						},
+						{
 							title : "状态",
 							data : "status",
 							visible: true,

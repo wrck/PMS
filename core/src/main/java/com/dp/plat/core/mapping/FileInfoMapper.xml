@@ -48,9 +48,10 @@
 		
 	</select>
 	
-	<insert id="insertdownlog" >
+	<insert id="insertdownlog">
 		<![CDATA[
-			INSERT INTO t_down_log(fileIds ,ip,timeline) VALUES(#{fileIds} ,#{ip},UNIX_TIMESTAMP(NOW()))
+			INSERT INTO t_down_log(fileIds, ip, timeline, downloadTime, user) 
+			VALUES(#{fileIds}, #{ip}, UNIX_TIMESTAMP(NOW()), NOW(), #{user})
 		]]>
 	</insert>
 	

@@ -78,6 +78,14 @@ public class ProjectManageUserService extends UserService implements IProjectMan
 				+ "ON DUPLICATE KEY UPDATE FIRST_ = VALUES(FIRST_), LAST_ = VALUES(LAST_), EMAIL_ = VALUES(EMAIL_), PWD_ = VALUES(PWD_)")
 				.parameter("user", userEntity).singleResult();
 		
+		// 添加分组
+		identityService.createNativeGroupQuery().sql("INSERT `act_id_group` (ID_, REV_, NAME_, TYPE_) " + 
+				"SELECT " + 
+				"    role_name , 1, role_name_zn, role_id " + 
+				"FROM " + 
+				"    `t_role` " + 
+				"ON DUPLICATE KEY UPDATE NAME_ = VALUES(NAME_), TYPE_ = VALUES(TYPE_)").singleResult();
+		
 		// 清空分组对应关系
 		identityService.createNativeGroupQuery().sql("DELETE FROM act_id_membership where USER_ID_ = #{user.id}")
 			.parameter("user", userEntity).singleResult();
@@ -136,7 +144,6 @@ public class ProjectManageUserService extends UserService implements IProjectMan
 				"        AND ui.compID = ur.comp_id " + 
 				"ON DUPLICATE KEY UPDATE USER_ID_ = VALUES(USER_ID_), GROUP_ID_ = VALUES(GROUP_ID_)")
 				.singleResult();
-		
 	}
 
 }

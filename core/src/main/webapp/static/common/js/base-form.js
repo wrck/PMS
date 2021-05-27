@@ -476,6 +476,8 @@ class watcher{
 		            lang:'zh-CN',
 		            placeholder:placeholder,
 		            minHeight:'100px',
+		            dialogsInBody: true,
+		            dialogsFade: true,
 		            // 重写图片上传
 		            callbacks: {
 		                onImageUpload: function(files) {  
@@ -844,6 +846,7 @@ class watcher{
                     	values = values || valueName.join(separator);
                     }
                 }
+                sel.data("sourceData", data);
             }
             _this.fillElemValue(sel[0], values);
         }
@@ -1038,6 +1041,8 @@ class watcher{
 		            lang:'zh-CN',
 		            placeholder:placeholder,
 		            minHeight:'100px',
+		            dialogsInBody: true,
+		            dialogsFade: true,
 		            // 重写图片上传
 		            callbacks: {
 		                onImageUpload: function(files) {  
@@ -1223,7 +1228,7 @@ class watcher{
 					}
 					// 用于ajax请求select传值
 					$(elem).data("selected", value);
-					if ($(elem).hasClass("select2")) {
+					if ($(elem).hasClass("select2") && $(elem).data("select2")) {
 						var tags = $(elem).data("select2").options.options.tags;
 						if (tags) {
 							var tagsValue = value.split(",");
@@ -1280,7 +1285,9 @@ class watcher{
 	}
 	
 	BaseForm.prototype.fillElemValue = function(elem, value) {
-		if (value != undefined && value != null && $.trim(value) != '') {
+		var form = this.$element;
+		if (elem && value != undefined && value != null && $.trim(value) != '') {
+			var el_name = elem.name;
 			var is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';
 			var is_date=$(elem).data("flag")=="datepicker"||$(elem).data("flag")=="datetimepicker"||$(elem).data("flag")=="date";
 			var date_format=$(elem).data("format")||"yyyy-MM-dd";
@@ -1342,7 +1349,7 @@ class watcher{
 				}
 				// 用于ajax请求select传值
 				$(elem).data("selected", value);
-				if ($(elem).hasClass("select2")) {
+				if ($(elem).hasClass("select2") && $(elem).data("select2")) {
 					var tags = $(elem).data("select2").options.options.tags;
 					if (tags) {
 						var tagsValue = value.split(",");

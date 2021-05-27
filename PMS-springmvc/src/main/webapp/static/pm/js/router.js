@@ -189,10 +189,14 @@ pm.project = function() {
 			return $.extend({}, api, {
 				// 查询设备清单
 				orderDetail: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/orderDetail.json?" + $.param({projectType, contractNo}),
+				// 查询产品配置
+				productInfo: (projectId, projectType, projectCode) => namespace + /*(projectId ? ("/" + projectId) : "") + */ "/productInfo.json?" + $.param({projectType, projectCode}),
 				// 查询任务类别
 				projectTask: (projectId, projectType, contractNo) => namespace + (projectId ? ("/" + projectId) : "") + "/task.json?" + $.param({projectType, contractNo}),
 				// 查询项目资产
 				projectAsset: (projectId, projectType) => namespace + (projectId ? ("/" + projectId) : "") + "/asset.json?" + $.param({projectType}),
+				// 项目转移
+				projectTransform: (projectId, transformType, search) => namespace + (projectId ? ("/" + projectId) : "") + "/transform/" + transformType + ".json" + (search ? "?" + search : "").replace("??", "?"),
 				// 初始化报告数据
 				initData: (projectId) => namespace + "/" + projectId + "/initData.json",
 				// 报告数据查询、调整
@@ -218,6 +222,8 @@ pm.project = function() {
 		html: ((namespace) => {
 			var html = pm.common(namespace).html;
 			return $.extend({}, html, {
+				// 项目转移
+				projectTransform: (projectId, transformType, search, isModals) => namespace + (isModals ? "/modals" : "") + (projectId ? ("/" + projectId) : "") + "/transform/" + transformType + ".html" + (search ? "?" + search : "").replace("??", "?"),
 				lineList: (projectId) => namespace + "/" + projectId + "/list.html",
 				// 日志查询
 				logView: (projectId, isModals) => namespace + "/" + projectId + (isModals ? "/modals" : "") + "/log.html",
@@ -304,6 +310,20 @@ pm.projectTask = function() {
 		callback: ((namespace) => {
 			return {
 				detail: {
+					vueCallback: function(data, $container) {
+						var _this = this;
+						_this.startProcessBtnText = "发起安服质量审核";
+						var hasTask = (this.targetValue.customInfo || {}).currentTaskId > 0;
+						if (_this.footerTipsOld == undefined) {
+							_this.footerTipsOld = _this.footerTips;
+						}
+						if (!hasTask || (_this.canStartProcess && _this.permissionType && _this.permissionType != 'view')) {
+							//_this.footerTips = "提示：进度达到100%，可发起安服质量审核，如需研发进行质量审核，请勾选“是”";
+							_this.footerTips = "提示：进度达到100%，如需安服质量审核，可点击发起质量审核流程；若内容发生变更将会终止流程";
+						} else {
+							_this.footerTips = _this.footerTipsOld || "";
+						}
+					},
 					modalCreateCallback: function(options) {
 						console.log("modalCreateCallback");
 						var winId = options.winId;
@@ -327,7 +347,7 @@ pm.projectTask = function() {
 				var canStart = !hasTask && !isNaN(data.status) && data.progress == 100;
 				return canStart;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				var _this = this;
 				data = data || $(el).data("entity");
 		    	if (!data) {
@@ -344,7 +364,7 @@ pm.projectTask = function() {
 					dataId: data.taskId,
 					dataType: "projectTask"
 	            };
-				sys.common.startProcess.call(this, el, entity, callback);
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});
@@ -391,7 +411,7 @@ af.industryAsset = function() {
 				var canStart = !hasTask && !isNaN(data.status);
 				return canStart;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				var _this = this;
 				data = data || $(el).data("entity");
 		    	if (!data) {
@@ -408,7 +428,7 @@ af.industryAsset = function() {
 					dataId: data.id,
 					dataType: "industryAsset"
 	            };
-				sys.common.startProcess.call(this, el, entity, callback);
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});
@@ -436,7 +456,7 @@ af.industryLeak = function() {
 				var canStart = !hasTask && !isNaN(data.status);
 				return canStart;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				var _this = this;
 				data = data || $(el).data("entity");
 		    	if (!data) {
@@ -453,7 +473,7 @@ af.industryLeak = function() {
 					dataId: data.id,
 					dataType: "industryLeak"
 	            };
-				sys.common.startProcess.call(this, el, entity, callback);
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});
@@ -478,10 +498,10 @@ pm.projectAsset = function() {
 		methods: {
 			canStartProcess: function(data) {
 				var hasTask = !!(data.customInfo || {}).currentTaskId;
-				var canStart = !hasTask && !isNaN(data.status);
+				var canStart = !this.isCreate && !hasTask && !isNaN(data.status);
 				return canStart;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				var _this = this;
 				data = data || $(el).data("entity");
 		    	if (!data) {
@@ -498,7 +518,7 @@ pm.projectAsset = function() {
 					dataId: data.assetId,
 					dataType: "industryAsset"
 	            };
-				sys.common.startProcess.call(this, el, entity, callback);
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});
@@ -652,7 +672,7 @@ pm.assetLeak = function() {
 				var canStart = !this.isCreate && !hasTask && !isNaN(data.status);
 				return canStart;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				var _this = this;
 				data = data || $(el).data("entity");
 		    	if (!data) {
@@ -669,7 +689,7 @@ pm.assetLeak = function() {
 					dataId: data.leakId,
 					dataType: "industryLeak"
 	            };
-				sys.common.startProcess.call(this, el, entity, callback);
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});
@@ -909,7 +929,7 @@ pm.dailyReport = function() {
 				    		$("#projectId", $container).on('select2:open', function(event) {
 				    			var $select = $(this).parent();
 				    			var $searchfield = $select.find('.select2-search__field');
-				    			$searchfield.length || ($searchfield = $('.select2-search__field'));
+				    			$searchfield.length || ($searchfield = $(`#select2-${this.id}-results`).parents(".select2-dropdown:first").find(".select2-search__field"));
 				    			setTimeout(function() {
 				    				$searchfield.val($select.find('option:selected[value!=""]').text()).trigger("input");
 				    			}, 2);
@@ -993,7 +1013,7 @@ pm.dailyReport = function() {
 			    				var vm = this;
 			    				$("[data-btn-type='exportWeekDailyReport']", $container).click(function() {
 			    					var $btn = $(this);
-			    					$container.data("submitCallback", function() {
+			    					var submitCallback = function() {
 			    						var processTime = $("#processTime", $container).val();
 				    					var createBy = targetValue.createBy;
 				    					$btn.button("loading");
@@ -1001,14 +1021,20 @@ pm.dailyReport = function() {
 				    					setTimeout(function() {
 				                       	 	$btn.button("reset");
 				                        }, 2000);
-			    					});
+			    					};
+			    					$container.data("submitCallback", submitCallback);
 			    					var formSubmit = $container.data("formSubmit");
 			    					var $submitButton = $container.find("[data-btn-type='save']");
 			    					if (typeof formSubmit == "function") {
 			    						var $bootstrapValidator = $container.data('bootstrapValidator');
 			    						$submitButton = $bootstrapValidator.$submitButton || $submitButton;
-			    						$bootstrapValidator.$submitButton = null;
-			    						formSubmit.call(vm, $bootstrapValidator, $container, $submitButton, true);
+			    						if ($submitButton == null || $submitButton.length == 0) {
+		    			        			$container.data("submitCallback", null);
+		    			        			submitCallback.call($container);
+			    						} else {
+			    							$bootstrapValidator.$submitButton = null;
+			    							formSubmit.call(vm, $bootstrapValidator, $container, $submitButton, true);
+			    						}
 			    					} else {
 			    						$submitButton.click();
 //			    						$container.submit();
@@ -1022,12 +1048,13 @@ pm.dailyReport = function() {
 		})(namespace),
 		methods: {
 			canStartProcess: function(data) {
-				var hasTask = !!(data.customInfo || {}).currentTaskId;
-				var isReported = data.isReported || false;
-				var canStart = !hasTask && isReported && !isNaN(data.status);
-				return canStart;
+//				var hasTask = !!(data.customInfo || {}).currentTaskId;
+//				var isReported = data.isReported || false;
+//				var canStart = !hasTask && isReported && !isNaN(data.status);
+//				return canStart;
+				return false;
 			},
-			startProcess: function(el, data, callback) {
+			startProcess: function(el, data, callback, ignoreForm) {
 				modals.info("暂无日报审核流程");
 //				var _this = this;
 //				data = data || $(el).data("entity");
@@ -1045,7 +1072,7 @@ pm.dailyReport = function() {
 //					dataId: data.leakId,
 //					dataType: "industryLeak"
 //	            };
-//				sys.common.startProcess.call(this, el, entity, callback);
+//				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
 			}
 		}
 	});

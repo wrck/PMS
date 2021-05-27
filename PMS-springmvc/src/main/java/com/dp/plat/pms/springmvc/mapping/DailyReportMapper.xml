@@ -691,12 +691,12 @@
 		<if test="model.processEndTime != null">
 			<![CDATA[ dr.`processTime` <= #{model.processEndTime, jdbcType=TIMESTAMP} AND ]]>
 		</if>
-		<if test="model.projectTypes != null">
+		<!-- <if test="model.projectTypes != null">
 			FIND_IN_SET(dr.`projectType`, CONCAT(#{model.projectTypes, jdbcType=VARCHAR}, ",30,40")) AND 
 		</if>
 		<if test="model.officeCodes != null">
 			FIND_IN_SET(dr.`officeCode`, #{model.officeCodes, jdbcType=VARCHAR}) AND 
-		</if>
+		</if> -->
 		<if test="model.ids != null">
 			<foreach collection="model.ids" item="item" open="dr.`id` in (" close=") AND" separator=",">
 				 #{item}
@@ -785,7 +785,7 @@
 	            pm.effectiveTo > now() 
 	            or pm.effectiveTo is null
 	        ) 
-	        and pm.`memberRole` in ("30", "80") 
+	        and pm.`memberRole` in ("20", "30", "80") 
 	    left join t_user_info ui 
 	        on (
 	            dr.`officeCode` = ui.`custom3` 
@@ -813,20 +813,46 @@
 	        and dr.`subCategory` = bsc.`basicDataId`
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-			<if test="(model.userPower != null and '' != model.userPower) or (model.userIdPower != null and '' != model.userIdPower)">
+			(
 				(
 				<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-					<if test="model.userPower != null and '' != model.userPower">
-							pm.memberCode = #{model.userPower} or 
-					        dr.customInfo -> "$.programManagerCode" = #{model.userPower} or 
-					        dr.createBy = #{model.userPower} or
+					<if test="model.projectTypes != null">
+						FIND_IN_SET(dr.`projectType`, CONCAT(#{model.projectTypes, jdbcType=VARCHAR}, ",30,40")) AND 
 					</if>
-					<if test="model.userIdPower != null and '' != model.userIdPower">
-					        ui.id = #{model.userIdPower} or 
+					<if test="model.officeCodes != null">
+						FIND_IN_SET(dr.`officeCode`, #{model.officeCodes}) AND
 					</if>
+					1 = 1
 				</trim>
-				) AND
-			</if>
+				)
+				<if test="(model.userPower != null and '' != model.userPower) or (model.userIdPower != null and '' != model.userIdPower)">
+					OR (
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						<if test="model.userPower != null and '' != model.userPower">
+								pm.memberCode = #{model.userPower} or 
+								dr.customInfo -> "$.serviceManagerCode" = #{model.userPower} or 
+						        dr.customInfo -> "$.programManagerCode" = #{model.userPower} or 
+						        dr.createBy = #{model.userPower} or
+						</if>
+						<if test="model.userIdPower != null and '' != model.userIdPower">
+						        ui.id = #{model.userIdPower} or 
+						</if>
+					</trim>
+					)
+				</if>
+				<if test="(model.memberCode != null and '' != model.memberCode)">
+					OR (
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						<if test="model.memberCode != null and '' != model.memberCode">
+								pm.memberCode = #{model.memberCode} or 
+								dr.customInfo -> "$.serviceManagerCode" = #{model.memberCode} or 
+						        dr.customInfo -> "$.programManagerCode" = #{model.memberCode} or 
+						        dr.createBy = #{model.memberCode} or
+						</if>
+					</trim>
+					)
+				</if>
+			) AND
 			<include refid="sql_model_where_selective" />
 			<include refid="sql_fuzzy_search" />
 		</trim>
@@ -848,7 +874,7 @@
 	            pm.effectiveTo > now() 
 	            or pm.effectiveTo is null
 	        ) 
-	        and pm.`memberRole` in ("30", "80") 
+	        and pm.`memberRole` in ("20", "30", "80") 
 	    left join t_user_info ui 
 	        on (
 	            dr.`officeCode` = ui.`custom3` 
@@ -864,20 +890,46 @@
 		</if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-			<if test="(model.userPower != null and '' != model.userPower) or (model.userIdPower != null and '' != model.userIdPower)">
+			(
 				(
 				<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-					<if test="model.userPower != null and '' != model.userPower">
-							pm.memberCode = #{model.userPower} or 
-					        dr.customInfo -> "$.programManagerCode" = #{model.userPower} or 
-					        dr.createBy = #{model.userPower} or
+					<if test="model.projectTypes != null">
+						FIND_IN_SET(dr.`projectType`, CONCAT(#{model.projectTypes, jdbcType=VARCHAR}, ",30,40")) AND 
 					</if>
-					<if test="model.userIdPower != null and '' != model.userIdPower">
-					        ui.id = #{model.userIdPower} or 
+					<if test="model.officeCodes != null">
+						FIND_IN_SET(dr.`officeCode`, #{model.officeCodes}) AND
 					</if>
+					1 = 1
 				</trim>
-				) AND
-			</if>
+				)
+				<if test="(model.userPower != null and '' != model.userPower) or (model.userIdPower != null and '' != model.userIdPower)">
+					OR (
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						<if test="model.userPower != null and '' != model.userPower">
+								pm.memberCode = #{model.userPower} or 
+								dr.customInfo -> "$.serviceManagerCode" = #{model.userPower} or 
+						        dr.customInfo -> "$.programManagerCode" = #{model.userPower} or 
+						        dr.createBy = #{model.userPower} or
+						</if>
+						<if test="model.userIdPower != null and '' != model.userIdPower">
+						        ui.id = #{model.userIdPower} or 
+						</if>
+					</trim>
+					)
+				</if>
+				<if test="(model.memberCode != null and '' != model.memberCode)">
+					OR (
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						<if test="model.memberCode != null and '' != model.memberCode">
+								pm.memberCode = #{model.memberCode} or 
+								dr.customInfo -> "$.serviceManagerCode" = #{model.memberCode} or 
+						        dr.customInfo -> "$.programManagerCode" = #{model.memberCode} or 
+						        dr.createBy = #{model.memberCode} or
+						</if>
+					</trim>
+					)
+				</if>
+			) AND
 			<include refid="sql_model_where_selective" />
 			<include refid="sql_fuzzy_search" />
 		</trim>
@@ -889,7 +941,8 @@
 		<result column="edit" javaType="java.lang.Boolean" property="edit" />
 		<result column="view" javaType="java.lang.Boolean" property="view" />
 		<result column="memberRoles" javaType="java.lang.String" property="memberRoles" />
-		<collection column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" />
+		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+		<collection property="roles" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectRoleByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
@@ -898,7 +951,9 @@
 		    max(dr.createBy = #{user.userName}) as `edit`, 
 		    count(pm.id) > 0 or count(ui.id) > 0 as `view`, 
 		    group_concat(distinct pm.memberRole) memberRoles, 
-		    #{permissionTypes} as permissionTypes 
+		    #{permissionTypes} as permissionTypes,
+		    #{user.userInfoId} as userInfoId,
+		    count(ui.id) > 0 hasPower
 		from
 		    `pm_daily_report` dr 
 		    left join pm_project ph 
@@ -911,7 +966,7 @@
 		            pm.effectiveTo > now() 
 		            or pm.effectiveTo is null
 		        ) 
-		        and pm.`memberRole` in ("30", "80") 
+		        and pm.`memberRole` in ("20", "30", "80") 
 		        and pm.memberCode = #{user.userName}
   	]]>
 		    left join t_user_info ui 
@@ -931,24 +986,35 @@
 				</if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-		    (
-	        	pm.memberCode = #{user.userName}
-		        or ui.id = #{user.userInfoId}
-		        or dr.customInfo -> "$.programManagerCode" = #{user.userName}
-		        or dr.createBy = #{user.userName}
-		    ) AND
 			<if test="model.id != null">
 				dr.`id` = #{model.id, jdbcType=INTEGER} AND
 			</if>
 			<if test="model.projectId != null">
 				dr.`projectId` = #{model.projectId, jdbcType=INTEGER} AND
 			</if>
-			<if test="model.projectTypes != null">
-				FIND_IN_SET(dr.`projectType`, CONCAT(#{model.projectTypes, jdbcType=VARCHAR}, ",30,40")) AND 
-			</if>
-			<if test="model.officeCodes != null">
-				FIND_IN_SET(dr.`officeCode`, #{model.officeCodes}) AND
-			</if>
+			(
+				(
+				<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+					<if test="model.projectTypes != null">
+						FIND_IN_SET(dr.`projectType`, CONCAT(#{model.projectTypes, jdbcType=VARCHAR}, ",30,40")) AND 
+					</if>
+					<if test="model.officeCodes != null">
+						FIND_IN_SET(dr.`officeCode`, #{model.officeCodes}) AND
+					</if>
+					1 = 1
+				</trim>
+				)
+				<if test="model.memberCode != null and model.memberCode != ''">
+					OR 
+				    (
+			        	pm.memberCode = #{user.userName}
+				        or ui.id = #{user.userInfoId}
+				        or dr.customInfo -> "$.serviceManagerCode" = #{user.userName}
+				        or dr.customInfo -> "$.programManagerCode" = #{user.userName}
+				        or dr.createBy = #{user.userName}
+				    )
+				</if>
+			) AND
 <!-- 			<if test="model.projectCode != null and '' != model.projectCode">
 				dr.`projectCode` like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
 			</if>

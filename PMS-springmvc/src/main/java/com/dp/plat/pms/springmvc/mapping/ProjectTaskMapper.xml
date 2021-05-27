@@ -666,16 +666,20 @@
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
 		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+		<collection property="roles" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectRoleByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
 	  	select 
-		    count(pm.id) > 0 and count(ui.id) > 0 as `all`, 
-		    count(pm.id) > 0 as edit, 
-		    count(ui.id) > 0 view, 
+		    count(IF(pm.`memberRole` in (20,30,40), pm.id, null)) > 0 
+		    	and count(ui.id) > 0 as `all`, 
+		    count(IF(pm.`memberRole` in (20,30,40), pm.id, null)) > 0 as edit, 
+		    count(IFNULL(pm.id, ui.id)) > 0 view, 
 		    max(ph.projectState) as maxState,
 		    group_concat(distinct pm.memberRole) memberRoles, 
-		    #{permissionTypes} as permissionTypes 
+		    #{permissionTypes} as permissionTypes,
+		    #{user.userInfoId} as userInfoId,
+		    count(ui.id) > 0 hasPower
 		from
 		    pm_project ph 
 		    left join pm_project_task pt 
@@ -697,10 +701,25 @@
 			        and find_in_set(ph.`column001`, ui.`custom5`) 
 				</if>
 		        and find_in_set(ph.projectType, ui.custom4) 
-		where (
+		where <!-- (
 		        pm.memberCode = #{user.userName}
 		        or ui.id = #{user.userInfoId}
-		    ) 
+		    )  -->
+		(
+			(
+			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+				1 = 1
+				<if test="model.projectTypes != null">
+					AND FIND_IN_SET(ph.`projectType`, #{model.projectTypes})
+				</if>
+				<if test="model.officeCodes != null">
+					AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
+				</if>
+			</trim>
+			)
+			or pm.memberCode = #{user.userName}
+	        or ui.id = #{user.userInfoId}
+		) 
 	<if test="model != null">
 		<if test="model.taskId != null">
 			AND pt.taskId = #{model.taskId}
@@ -711,12 +730,12 @@
 		<if test="model.projectIds != null">
 			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
 		</if>
-		<if test="model.projectType != null">
+		<!-- <if test="model.projectType != null">
 			AND FIND_IN_SET(ph.projectType, #{model.projectType})
 		</if>
 		<if test="model.officeCodes != null">
 			AND FIND_IN_SET(ph.`column001`, #{model.officeCodes})
-		</if>
+		</if> -->
 	</if>	
   </select>
   

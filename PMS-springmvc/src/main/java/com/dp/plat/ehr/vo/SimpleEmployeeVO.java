@@ -19,11 +19,14 @@ public class SimpleEmployeeVO {
 
 	// 邮箱
 	private String email;
+	
+	private String mobile;
 
 	private String compName;
 	private String depName;
 	private String jobName;
 	private String depAllName;
+	private String account;
 
 	public Integer getEmpID() {
 		return empID;
@@ -57,6 +60,14 @@ public class SimpleEmployeeVO {
 		this.email = email;
 	}
 
+	public String getMobile() {
+		return mobile;
+	}
+
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+
 	public String getCompName() {
 		return compName;
 	}
@@ -87,6 +98,14 @@ public class SimpleEmployeeVO {
 
 	public void setDepAllName(String depAllName) {
 		this.depAllName = depAllName;
+	}
+
+	public String getAccount() {
+		return account;
+	}
+
+	public void setAccount(String account) {
+		this.account = account;
 	}
 
 }

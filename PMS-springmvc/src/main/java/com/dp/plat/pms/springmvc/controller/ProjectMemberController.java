@@ -1,6 +1,15 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAGER;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
@@ -45,7 +55,13 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 		String view = super.update(id, v, model);
 		
 		if (v.getEffectiveTo() == null || v.getEffectiveTo().after(new Date())) {
-			if (MessageUtil.MEMBER_PM.equals(v.getMemberRole())) {
+			if (MessageUtil.MEMBER_SM.equals(v.getMemberRole())) {
+				ProjectVO project = new ProjectVO();
+				project.setProjectId(v.getProjectId());
+				project.setCustomInfoByKey("serviceManagerCode", v.getMemberCode());
+				project.setCustomInfoByKey("serviceManagerCodeforjson", v.getMemberName());
+				projectHeaderService.updateByPrimaryKeySelective(project);
+			} else if (MessageUtil.MEMBER_PM.equals(v.getMemberRole())) {
 				ProjectVO project = new ProjectVO();
 				project.setProjectId(v.getProjectId());
 				project.setCustomInfoByKey("programManagerCode", v.getMemberCode());
@@ -87,33 +103,38 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 		if (!UserContext.checkPermission("project:*") && v != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
-			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-//			Boolean allPerm = (Boolean) permission.get("all");
-//			if (Boolean.TRUE.equals(allPerm)) {
-//				isPermit = true;
-//				permissionType = "all";
-//			} else {
-//				String perms = StringUtils.join(permissions, ",");
-//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*projectMember:(add|edit|delete|import|upload)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "edit";
-//				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*projectMember:(list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
-//				}
-//			}
-//			// 允许访问的项目类型
-// 			if (UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
-// 				permissionType = "all";
-// 			} else {
-// 				model.addAttribute("permissions", permission.getOrDefault("permissions", model.getAttribute("permissions")));
-// 			}
-			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
-					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
-							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			// 允许访问的项目类型
+			if (!UserContext.hasAnyRoles(ROLE_PM_ADMIN, ROLE_ADMIN)) {
+				Principal user = UserContext.getCurrentPrincipal();
+				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
+				project.setProjectTypes(projectTypes);
+
+				// 非子项目管理员，添加允许访问的办事处权限
+				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
+				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
+					project.setOfficeCodes(officeCodes);
+					
+				}
+				// 添加指派的项目成员
+				project.setMemberCode(user.getUserName());
+			}
+						
+//			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+//			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+//					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+//							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+					RoleConstant.ROLE_PM_AREA_MANAGER }, projectPermit.getRoles());
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", allPermitRoles)
+					.checkPermit(projectPermit.getPermissionMap(), permissions);
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
-			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_AREA_MANAGER, RoleConstant.ROLE_PM_PROGRAM) && "edit".equals(permissionType)) {
+				permissionType = "view";
+			}
+//			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+			model.addAllAttributes(checkPermit.getMap());
 		} else {
 			isPermit = true;
 			permissionType = "all";

@@ -109,7 +109,7 @@ sys.common = function(){
 		var paramsValue = navTab.paramsValue || {};
 		var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
 		var rowId = navTab.rowIds || localTable.getCheckedRowsId() || localTable.getSelectedRowsId() || [];
-		if (!rowId) {
+		if (!rowId || rowId.length == 0) {
 			modals.info('选择需要下载的文件');
 			return;
 		}

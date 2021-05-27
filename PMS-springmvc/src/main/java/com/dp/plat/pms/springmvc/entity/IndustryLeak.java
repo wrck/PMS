@@ -1,16 +1,18 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import java.util.Map;
-import com.dp.plat.core.entity.BaseEntity;
 import java.util.Date;
+import java.util.Map;
+
+import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
+import com.dp.plat.security.annotation.EncryptEntity;
+import com.dp.plat.security.annotation.EncryptField;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+@EncryptEntity
 public class IndustryLeak extends BaseEntity {
 
 	private static final long serialVersionUID = 2341516391504130781L;
-
-	private Integer id;
 
     // 漏洞编号
     private String leakCode;
@@ -25,7 +27,11 @@ public class IndustryLeak extends BaseEntity {
     private String leakLevel;
 
     // 漏洞描述
+    @EncryptField
     private String leakDesc;
+
+    // 所属行业
+    private String industryCode;
 
     // 漏洞原始数据
     private String leakSourceInfo;
@@ -61,20 +67,6 @@ public class IndustryLeak extends BaseEntity {
 
     @JsonSerialize(using = JsonSerializer.class)
     private Date updateTime;
-
-    /**
-     * @return id
-     */
-    public Integer getId() {
-        return id;
-    }
-
-    /**
-     * @param id
-     */
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     /**
      * 获取漏洞编号
@@ -164,6 +156,24 @@ public class IndustryLeak extends BaseEntity {
      */
     public void setLeakDesc(String leakDesc) {
         this.leakDesc = leakDesc;
+    }
+
+    /**
+     * 获取所属行业
+     *
+     * @return industryCode - 所属行业
+     */
+    public String getIndustryCode() {
+        return industryCode;
+    }
+
+    /**
+     * 设置所属行业
+     *
+     * @param industryCode 所属行业
+     */
+    public void setIndustryCode(String industryCode) {
+        this.industryCode = industryCode;
     }
 
     /**

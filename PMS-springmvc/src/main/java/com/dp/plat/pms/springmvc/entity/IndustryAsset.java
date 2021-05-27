@@ -5,8 +5,11 @@ import java.util.Map;
 
 import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
+import com.dp.plat.security.annotation.EncryptEntity;
+import com.dp.plat.security.annotation.EncryptField;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+@EncryptEntity
 public class IndustryAsset extends BaseEntity {
 	
 	private static final long serialVersionUID = -8207505075644971447L;
@@ -17,6 +20,7 @@ public class IndustryAsset extends BaseEntity {
     private String assetNum;
 
     // 资产名称
+    @EncryptField
     private String assetName;
 
     // 资产分类
@@ -26,18 +30,23 @@ public class IndustryAsset extends BaseEntity {
     private String assetType;
 
     // IP/URL地址/域名
+    @EncryptField
     private String assetHost;
 
     // 开放端口情况
+//    @EncryptField
     private String assetOpenPorts;
 
     // 部署应用情况
+    @EncryptField
     private String assetDeployInfo;
 
     // 资产用途
+    @EncryptField
     private String assetUsage;
 
     // 单位名称
+    @EncryptField
     private String customerName;
 
     // 所属行业

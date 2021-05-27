@@ -1,11 +1,18 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
@@ -28,6 +36,7 @@ import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectPlan;
@@ -36,7 +45,6 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProjectType;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
-import com.dp.plat.pms.springmvc.job.DispatchSettlementSEEPaymentJob;
 import com.dp.plat.pms.springmvc.job.SMSDataJob;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
@@ -44,6 +52,7 @@ import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
+import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
 import com.dp.plat.service.PresalesService;
@@ -85,6 +94,11 @@ public class ProjectController
 	@Autowired
 	private IIndustryLeakService industryLeakService;
 
+	@PostConstruct
+	public void init() {
+		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
+	}
+
 	@RequestMapping
 	public String home(Model model) {
 		return VIEW_NAMESPACE + "list";
@@ -96,10 +110,15 @@ public class ProjectController
 			if (!checkPermission(null, model, "project:list")) {
 				return Consts.VIEW_UNAUTHORIZED;
 			}
+			Date now = new Date();
 			Principal user = UserContext.getCurrentPrincipal();
+//			project.setEffectiveTo(now);
+			project.setDisabled(false);
 			// project.setCompId(user.getCompId());
 			PageParam<Object> tempParam = new PageParam<>();
 			ProjectVO temp = new ProjectVO();
+//			temp.setEffectiveTo(now);
+			temp.setDisabled(false);
 			// temp.setCompID(user.getCompId());
 			// 允许访问的项目类型
 			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
@@ -112,7 +131,11 @@ public class ProjectController
 				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
 					temp.setOfficeCodes(officeCodes);
 					project.setOfficeCodes(officeCodes);
+					
 				}
+				// 添加指派的项目成员
+				temp.setMemberCode(user.getUserName());
+				project.setMemberCode(user.getUserName());
 			}
 			tempParam.setModel(temp);
 			pageParam.setModel(project);
@@ -163,6 +186,15 @@ public class ProjectController
 				model.addAttribute("message", "没有权限进行该操作！");
 				return Consts.VIEW_UNAUTHORIZED;
 			}
+			// 如果是普通的项目成员，只拥有查询权限
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_AREA_MANAGER, RoleConstant.ROLE_PM_PROGRAM) && "edit".equals(model.getAttribute("permissionType"))) {
+				model.addAttribute("permissionType", "view");
+			}
+			// 判断是否为管理员，开放特殊按钮
+			if (UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
+					RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
+				model.addAttribute("isAdmin", true);
+			}
 			if (project != null) {
 				model.addAttribute("targetName", "projectVO");
 				model.addAttribute("targetValue", project);
@@ -189,10 +221,12 @@ public class ProjectController
 	@RequestMapping("/detail")
 	public String detail(ProjectVO vo, Model model) {
 		String projectType = vo.getProjectType();
+		boolean isAdmin = true;
 		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
 				RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
+		model.addAttribute("isAdmin", isAdmin);
 		if (HttpContext.isJSON()) {
 			if (!super.checkPermission(vo, model, "project:add")) {
 				return Consts.VIEW_UNAUTHORIZED;
@@ -239,6 +273,9 @@ public class ProjectController
 	public String create(ProjectVO project, Model model) {
 		Boolean status = false;
 		String message = null;
+		if (!super.checkPermission(project, model, "project:add")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
 				RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
 			model.addAttribute("status", status);
@@ -250,7 +287,7 @@ public class ProjectController
 			model.addAttribute("message", "没有权限访问该项目");
 			return Consts.VIEW_UNAUTHORIZED;
 		}
-		// 如果当前合同号已经创建项目，则直接返回不再创建
+		// 判断是否为自定义项目，如果是则生成虚拟项目编码和合同号
 		Boolean isCustom = Boolean.valueOf(String.valueOf(project.getCustomInfoByKey("isCustom")));
 		if (Boolean.TRUE.equals(isCustom)) {
 			String officeCode = project.getColumn001();
@@ -261,6 +298,7 @@ public class ProjectController
 				project.setContractNo(projectCode);
 			}
 		}
+		// 如果当前合同号已经创建项目，则直接返回不再创建
 		Integer count = projectHeaderService.queryProjectContractCountByContractNoAndType(
 				Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
 		if (count != null && count != 0) {
@@ -307,7 +345,100 @@ public class ProjectController
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
+		Boolean status = false;
+		String message = null;
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
+				RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
+			model.addAttribute("status", status);
+			model.addAttribute("message", "没有权限进行该操作");
+			return;
+		}
+		ProjectVO project = projectHeaderService.selectVOByProjectId(id);
+		if (!super.checkPermission(project, model, "project:delete")) {
+			return;
+		}
+		if (!checkProjectTypeAndAreaPower(project, model)) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限访问该项目");
+			return;
+		}
+		project = new ProjectVO(id);
+		project.setDisabled(true);
+		project.setEffectiveTo(new Date());
+		projectHeaderService.updateByPrimaryKeySelective(project);
+		model.addAttribute("status", true);
 	}
+	
+	/**
+	 * 进行合并或核销
+	 * @param projectId
+	 * @param type
+	 * @param project
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = {"{id}/transform/{type}", "/modals/{id}/transform/{type}", "transform/{type}", "/modals/transform/{type}"}, method = RequestMethod.GET)
+	public String toMerge(@PathVariable(value = "id", required = false) Integer projectId,
+			@PathVariable("type") String type, ProjectVO project, Model model) {
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
+				RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
+			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
+		}
+		ProjectVO vo = projectHeaderService.selectVOByProjectId(projectId);
+		if (!checkPermission(vo, model, "project:add", "project:edit")) {
+			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
+		}
+		model.addAttribute("projectId", projectId);
+		Map<String, String> typeName = new HashMap<String, String>();
+		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
+		model.addAttribute("typeName", typeName.get(type));
+		return VIEW_NAMESPACE + "mergeProject";
+	}
+	
+	@RequestMapping(value = {"{id}/transform/{type}", "/transform/{type}"}, method = RequestMethod.POST)
+	public String merge(@PathVariable(value = "id", required = false) Integer projectId,
+			@PathVariable("type") String type, ProjectVO project, Model model) {
+		Boolean status = false;
+		String message = null;
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN,
+				RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_PM_AREA_MANAGER)) {
+			model.addAttribute("status", status);
+			model.addAttribute("message", "没有权限进行该操作");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		ProjectVO vo = null;
+		if (projectId != null) {
+			vo = projectHeaderService.selectVOByProjectId(projectId);
+		} else {
+			Project temp = projectHeaderService.queryProjectByContractNoAndType(project.getContractNo(), project.getProjectType());
+			vo = new ProjectVO();
+			BeanUtils.copyProperties(temp, vo);
+		}
+		if (!checkPermission(vo, model, "project:add", "project:edit")) {
+			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
+		}
+		try {
+			if ("merge".equals(type)) {
+				if (projectId != null) {
+					Result result = projectHeaderService.insertMergeContract(project, projectId);
+					status = (Boolean) result.getStatus();
+					message = result.getMessage();
+				}
+			} else if ("transfer".equals(type)) {
+				
+			}
+			model.addAttribute("targetName", "projectVO");
+		} catch (Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
+		return VIEW_NAMESPACE + "detail";
+	}
+
 
 	@RequestMapping(value = "/{id}/orderDetail")
 	public void orderDetailByProjectId(@PathVariable("id") Integer id, Model model) {
@@ -368,6 +499,44 @@ public class ProjectController
 
 		model.addAttribute("permissionType", "all");
 		model.addAttribute("permissions", new String[] { "orderDetail:*" });
+	}
+	
+	@RequestMapping(value = {"/productInfo", "/{id}/productInfo"})
+	public void productInfoByProjectCode(@PathVariable(name ="id", required = false) Integer projectId, @RequestParam(required = true) String projectType,
+			@RequestParam(required = true) String projectCode, Model model) {
+		if (projectId != null) {
+			ProjectHeader projectHeader = projectHeaderService.selectByPrimaryKey(projectId);
+			if (projectHeader != null) {
+				projectCode = projectHeader.getProjectCode();
+				projectType = projectHeader.getProjectType();
+			}
+		}
+		
+		projectCode = StringUtils.trimToEmpty(projectCode).split("-")[0];
+		
+		List<DataTableColumn> columns = null;
+		List<Object> data = null;
+		if (ProjectType.AF_XX_PROJECT.equals(projectType)) {
+			PresalesService presalesService = SpringContext.getBean("presalesService", PresalesService.class);
+			List<Map<String, Object>> orderDataList = presalesService.queryPresaleLend2RmaInfo(projectCode);
+			data = new ArrayList<Object>(orderDataList.size());
+			data.addAll(orderDataList);
+			columns = findColumnList("lendDetailList");
+		} else {
+			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+			ProjectProduct product = new ProjectProduct();
+			product.setProjectCode(projectCode);
+			product.setProductfirstCode(productCode);
+			List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
+			data = new ArrayList<Object>(orderDataList.size());
+			data.addAll(orderDataList);
+			columns = findColumnList("productInfoList");
+		}
+		model.addAttribute("columns", columns);
+		model.addAttribute("data", data);
+
+		model.addAttribute("permissionType", "all");
+		model.addAttribute("permissions", new String[] { "orderDetail:*", "productInfo:*" });
 	}
 
 	@GetMapping(value = "/{projectId}/task")
@@ -622,6 +791,12 @@ public class ProjectController
 		model.addAllAttributes(result.getMap());
 		// model.addAttribute("permissions",
 		// UserContext.getCurrentPrincipal().getPermissions());
+		
+//		if (!checkProjectTypeAndAreaPower(project, model)) {
+//			Collection<String> roles = (Collection<String>) model.getAttribute("roles");
+//			roles.remove(RoleConstant.ROLE_PM_SUB_ADMIN);
+//			roles.remove(RoleConstant.ROLE_PM_AREA_MANAGER);
+//		}
 		return result.isPermit();
 	}
 

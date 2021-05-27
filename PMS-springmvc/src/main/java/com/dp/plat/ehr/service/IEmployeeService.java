@@ -2,6 +2,8 @@ package com.dp.plat.ehr.service;
 
 import java.util.List;
 
+import org.activiti.engine.impl.persistence.entity.UserEntity;
+
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.ehr.entity.Employee;
@@ -64,5 +66,9 @@ public interface IEmployeeService extends IAbstractBaseService<Employee> {
 	 * @return
 	 */
 	List<EmployeeVO> selectEmployeeWithAccount(EmployeeVO employee);
+
+	void initActivitiUser();
+
+	void insertOrUpdateActivitiUser(UserEntity userEntity);
 	
 }

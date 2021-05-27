@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
@@ -110,7 +109,11 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 					temp.setOfficeCodes(officeCodes);
 					v.setOfficeCodes(officeCodes);
+					
 				}
+				// 添加指派的项目成员
+				temp.setMemberCode(user.getUserName());
+				v.setMemberCode(user.getUserName());
 			}
 //			String officeCode = StringUtils.trimToEmpty(v.getOfficeCode());
 //            ProjectHeader project = null;
@@ -124,6 +127,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 //            }
 			// temp.setCompID(user.getCompId());
 			temp.setDisabled(false);
+			temp.setCreateBy(v.getCreateBy());
 			tempParam.setModel(temp);
 			pageParam.setModel(v);
 
@@ -183,12 +187,13 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
 	public String detail(DailyReportVO v, Model model) {
-		if (!checkPermission(v, model, getDataName() + ":detail")) {
+		if (!super.checkPermission(v, model, getDataName() + ":detail")) {
 			model.addAttribute("status", false);
 			model.addAttribute("message", "没有权限进行该操作！");
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		if (HttpContext.isJSON()) {
+			Integer projectId = v.getProjectId();
 			// 复制新增
 			if (v.getId() != null) {
 				DailyReport dailyReport = service.selectByPrimaryKey(v.getId());
@@ -200,7 +205,6 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 			} else {
 				v = new DailyReportVO();
 			}
-			Integer projectId = v.getProjectId();
 			if (projectId != null) {
 				ProjectHeader temp = projectHeaderService.selectByPrimaryKey(projectId);
 				if(temp != null) {
@@ -303,7 +307,10 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("id") Integer id, Model model) {
-		if (!checkPermission(null, model, getDataName() + ":delete")) {
+		DailyReport dailyReport = service.selectByPrimaryKey(id);
+		DailyReportVO v = new DailyReportVO();
+		BeanUtils.copyProperties(dailyReport, v);
+		if (!checkPermission(v, model, getDataName() + ":delete")) {
 			return;
 		}
 		Boolean status = true;
@@ -316,10 +323,13 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 //			workflow.setStatus(PmWorkFlowVO.PENDING);
 //			pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 			
-			DailyReportVO v = new DailyReportVO();
-			v.setId(id);
-			v.setDisabled(true);
-			service.updateByPrimaryKeySelective(v);
+//			String permissionType = (String) model.getAttribute("permissionType");
+//			if ("all".equals(permissionType) || "edit".equals(permissionType)) {
+				v = new DailyReportVO();
+				v.setId(id);
+				v.setDisabled(true);
+				service.updateByPrimaryKeySelective(v);
+//			}
 		} catch (Exception e) {
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
@@ -366,7 +376,10 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
 				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 					dailyReportVO.setOfficeCodes(officeCodes);
+					
 				}
+				// 添加指派的项目成员
+				dailyReportVO.setMemberCode(user.getUserName());
 			}
 			pageParam.setModel(dailyReportVO);
 			list = service.selectBySelectivePageable(pageParam);
@@ -449,8 +462,8 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 //				v.setProcessStartTime(new Date());
 //				v.setProcessEndTime(new Date());
 //			}
-			if (v.getHasReport() == null) {
-				v.setHasReport(false);
+			if (v.getIsReported() == null) {
+				v.setIsReported(false);
 			}
 			if (HttpContext.isJSON()) {
 				viewName = this.list(pageParam, v, model);
@@ -509,7 +522,10 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
 				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 					dailyReportVO.setOfficeCodes(officeCodes);
+					
 				}
+				// 添加指派的项目成员
+				dailyReportVO.setMemberCode(user.getUserName());
 			}
 			pageParam.setModel(dailyReportVO);
 			list = service.selectBySelectivePageable(pageParam);
@@ -579,7 +595,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				for (Integer id : reportIds) {
 					DailyReport t = new DailyReport();
 					t.setId(id);
-					t.setHasReport(true);
+					t.setIsReported(true);
 					service.updateByPrimaryKeySelective(t);
 				}
 			} catch (Exception e) {

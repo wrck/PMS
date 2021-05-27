@@ -38,7 +38,7 @@
 	      receiveMen, reveiveContactWay, receiveAddress, 
 	      projectType, projectMoney, afProjectMoney, submitTime, 
 	      serviceTypeName, customerProjectName, agentName, 
-	      lendCause)
+	      lendCause, predBidDate)
 	    values
 	    <foreach collection="list" item="item" index="index" separator=",">  
 	     (#{item.id,jdbcType=INTEGER}, #{item.orderExecNumber,jdbcType=VARCHAR}, #{item.projectCode,jdbcType=VARCHAR}, 
@@ -53,7 +53,7 @@
 	      #{item.receiveMen,jdbcType=VARCHAR}, #{item.reveiveContactWay,jdbcType=VARCHAR}, #{item.receiveAddress,jdbcType=VARCHAR}, 
 	      #{item.projectType,jdbcType=VARCHAR}, #{item.projectMoney,jdbcType=DECIMAL}, #{item.afProjectMoney,jdbcType=DECIMAL}, #{item.submitTime,jdbcType=TIMESTAMP}, 
 	      #{item.serviceTypeName,jdbcType=VARCHAR}, #{item.customerProjectName,jdbcType=VARCHAR}, #{item.agentName,jdbcType=VARCHAR}, 
-	      #{item.lendCause,jdbcType=LONGVARCHAR})
+	      #{item.lendCause,jdbcType=LONGVARCHAR}, #{item.predBidDate,jdbcType=TIMESTAMP})
         </foreach>
         ON DUPLICATE KEY UPDATE id = VALUES(id), orderExecNumber = VALUES(orderExecNumber), projectName = VALUES(projectName), 
 			marketCode = VALUES(marketCode), officeCode = VALUES(officeCode), expendId = VALUES(expendId), 
@@ -66,7 +66,8 @@
 			decPath = VALUES(decPath), requireInDate = VALUES(requireInDate), receiveMen = VALUES(receiveMen), 
 			reveiveContactWay = VALUES(reveiveContactWay), receiveAddress = VALUES(receiveAddress), projectType = VALUES(projectType), 
 			projectCode = VALUES(projectCode), serviceTypeName = VALUES(serviceTypeName), customerProjectName = VALUES(customerProjectName), 
-			agentName = VALUES(agentName), lendCause = VALUES(lendCause), projectMoney = VALUES(projectMoney), afProjectMoney = VALUES(afProjectMoney), submitTime = VALUES(submitTime)
+			agentName = VALUES(agentName), lendCause = VALUES(lendCause), projectMoney = VALUES(projectMoney), afProjectMoney = VALUES(afProjectMoney), 
+			submitTime = VALUES(submitTime), predBidDate = VALUES(predBidDate)
     </insert>
     
     <insert id="insertProjectProduct" parameterType="java.util.List">
@@ -97,14 +98,15 @@
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 
 		    `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, 
 		    `objId`, `applyType`, `corporationCode`, `customerProjectName`, `finalCustomerName`, 
-		    `agentName`, projectType, projectMoney, afProjectMoney, submitTime
+		    `agentName`, projectType, projectMoney, afProjectMoney, submitTime, predBidDate
 		) 
 		select distinct
 		    ppfs.id, ppfs.`orderExecNumber`, ppfs.`projectCode`, `projectName`, `salesManCode`, `salesManName`, 
 		    `marketCode`, `marketName`, `systemId`, `systemName`, `expendId`, `expendName`, `industryId`, 
 		    `industryName`, `officeCode`, `officeName`, `serviceTypeName`, `channelName`, `engineeFee`, 
 		    ifnull(`objId`, 0) as objId, `applyType`, ppfs.`corporationCode`, `customerProjectName`, `finalCustomerName`, 
-		    `agentName`, "afss" as projectType, projectMoney, ROUND(SUM(ppfd.purchasePrice * ppfd.num), 2) as afProjectMoney, submitTime
+		    `agentName`, "afss" as projectType, projectMoney, ROUND(SUM(ppfd.purchasePrice * ppfd.num), 2) as afProjectMoney, 
+		    submitTime, predBidDate
 		from
 		    `pm_project_property_from_sms` ppfs 
 		    inner join `pm_project_product_af_from_sms` ppfd 

@@ -16,6 +16,12 @@ public class ProjectVO extends ProjectHeader {
 	
 	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsSubmitTime;
+	@JsonSerialize(using = JsonSerializer.class)
+	private Date smsPredBidDate;
+	
+	private Date smsPredBidStartDate;
+	private Date smsPredBidEndDate;
+	
 	private String smsProjectAmount;
 	private String smsAfProjectAmount;
 	private String smsProjectName;
@@ -33,6 +39,7 @@ public class ProjectVO extends ProjectHeader {
 	private String decPath;
 	
 	private String projectTypes;
+	private String contractNos;
 	
 	public ProjectVO() {
 		super();
@@ -74,6 +81,46 @@ public class ProjectVO extends ProjectHeader {
 	public void setSmsSubmitTime(Date date) {
 		this.smsSubmitTime = date;
 		this.setCustomInfoByKey("smsSubmitTime", date);
+	}
+	
+	/**
+	 * 获取投标时间
+	 * @return
+	 */
+	@JsonSerialize(using = JsonSerializer.class)
+	public Date getSmsPredBidDate() {
+		Object object = getCustomInfoByKey("smsPredBidDate");
+		if (object instanceof String) {
+			smsPredBidDate = DateConverter.covert((String) object);
+		} else if (object instanceof Date){
+			smsPredBidDate = (Date) object;
+		}
+		return smsPredBidDate;
+	}
+
+	/**
+	 * 设置投标时间
+	 * @param date
+	 */
+	public void setSmsPredBidDate(Date date) {
+		this.smsPredBidDate = date;
+		this.setCustomInfoByKey("smsPredBidDate", date);
+	}
+	
+	public Date getSmsPredBidStartDate() {
+		return smsPredBidStartDate;
+	}
+
+	public void setSmsPredBidStartDate(Date smsPredBidStartDate) {
+		this.smsPredBidStartDate = smsPredBidStartDate;
+	}
+
+	public Date getSmsPredBidEndDate() {
+		return smsPredBidEndDate;
+	}
+
+	public void setSmsPredBidEndDate(Date smsPredBidEndDate) {
+		this.smsPredBidEndDate = smsPredBidEndDate;
 	}
 
 	public String getSmsProjectAmount() {
@@ -121,6 +168,29 @@ public class ProjectVO extends ProjectHeader {
 		setCustomInfoByKey("contractNo", contractNo);
 	}
 
+	@Override
+	public String getSalesManCode() {
+		return (String) getCustomInfoByKey("salesManCode");
+//		return super.getSalesManCode();
+	}
+
+	@Override
+	public void setSalesManCode(String salesManCode) {
+		super.setSalesManCode(salesManCode);
+		setCustomInfoByKey("salesManCode", salesManCode);
+	}
+	
+	@Override
+	public String getSalesManName() {
+		return (String) getCustomInfoByKey("salesManName");
+//		return super.getSalesManName();
+	}
+
+	@Override
+	public void setSalesManName(String salesManName) {
+		super.setSalesManName(salesManName);
+		setCustomInfoByKey("salesManName", salesManName);
+	}
 	
 	@Override
 	public String getServiceManagerCode() {
@@ -245,6 +315,14 @@ public class ProjectVO extends ProjectHeader {
 
 	public void setProjectTypes(String projectTypes) {
 		this.projectTypes = projectTypes;
+	}
+
+	public String getContractNos() {
+		return contractNos;
+	}
+
+	public void setContractNos(String contractNos) {
+		this.contractNos = contractNos;
 	}
 	
 }

@@ -91,8 +91,9 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
         DispatchVO temp = new DispatchVO();
         temp.setDispatched(true);
         temp.setFacilitatorCode(facilitatorCode);
-        long count = this.countBySelective(temp) + 1;
         int year = Calendar.getInstance().get(Calendar.YEAR);
+        temp.setDispatchYear(year);
+        long count = this.countBySelective(temp) + 1;
         String seqFormat = SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format", "%02d");
         // String seqFormat =
         // SystemConfig.systemVariables.getOrDefault("pm.project.disptachSeq.format",
@@ -143,34 +144,24 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
         }
         Boolean isPermit = false;
         String permissionType = "";
+        PermissionResult result = null;
         if (!UserContext.checkPermission("project:*") && v != null) {
             ProjectVO project = new ProjectVO();
             project.setProjectId(v.getProjectId());
             project.setProjectIds(v.getProjectIds());
-            Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-            //			Boolean allPerm = Boolean.TRUE.equals(permission.get("all"));
-            //			if (Boolean.TRUE.equals(allPerm)) {
-            //				isPermit = true;
-            //				permissionType = "all";
-            //			} else {
-            //				String perms = StringUtils.join(permissions, ",");
-            //				Boolean editPerm = Boolean.TRUE.equals(permission.get("edit"));
-            //				Boolean viewPerm = Boolean.TRUE.equals(permission.get("view"));
-            //				if (editPerm && perms.matches(".*dispatch:(add|edit|delete|upload|import|list|detail)\\b,?.*")) {
-            //					isPermit = true;
-            //					permissionType = "edit";
-            //				} else if ((viewPerm || editPerm) && perms.matches(".*dispatch:(list|detail)\\b,?.*")) {
-            //					isPermit = true;
-            //					permissionType = editPerm ? "edit" : "view";
-            //				}
-            //			}
-            PermissionResult checkPermit = new PermissionUtils("dispatch:", new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }).checkPermit(permission, permissions);
+//            Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+//            PermissionResult checkPermit = new PermissionUtils("dispatch:", new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }).checkPermit(permission, permissions);
+            PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }, projectPermit.getRoles());
+			PermissionResult checkPermit = new PermissionUtils("dispatch:" , allPermitRoles)
+					.checkPermit(projectPermit.getPermissionMap(), permissions);
             isPermit = checkPermit.isPermit();
             permissionType = checkPermit.getPermissionType();
+            result = checkPermit;
         } else {
             isPermit = true;
             permissionType = "all";
         }
-        return new PermissionResult(isPermit, null, permissionType);
+        return result != null ? result : new PermissionResult(isPermit, null, permissionType);
     }
 }

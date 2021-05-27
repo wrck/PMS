@@ -106,6 +106,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 				if (!checkPermission.isPermit()) {
 					return "redirect:" + Consts.VIEW_UNAUTHORIZED;
 				}
+				model.addAllAttributes(checkPermission.getMap());
+				
 				IndustryAsset asset = service.selectByPrimaryKey(projectRelation.getAssetId());
 				ProjectAssetVO v = new ProjectAssetVO();
 				BeanUtils.copyProperties(asset, v);
@@ -119,8 +121,6 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 
 				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
-				
-				model.addAllAttributes(checkPermission.getMap());
 			}
 		} else {
 			model.addAttribute("urlNamespace", URL_NAMESPACE);
@@ -215,13 +215,13 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		PmWorkFlowVO workflow = new PmWorkFlowVO();
 		workflow.setDataId(v.getAssetId());
 		workflow.setDataType(DataType.INDUSTRY_ASSET);
-		workflow.setObjId(v.getProjectId());
-		workflow.setObjType(DataType.PROJECT);
+//		workflow.setObjId(v.getProjectId());
+//		workflow.setObjType(DataType.PROJECT);
 		workflow.setStatus(PmWorkFlowVO.PENDING);
 		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 		
-		v.setStatus("0");
-		v.setTrackStatus(0);
+		asset.setStatus("0");
+		asset.setTrackStatus(0);
 		return super.update(v.getAssetId(), asset, model);
 //		if (!checkPermission(v, model, getDataName() + ":update")) {
 //			model.addAttribute("status", false);
@@ -257,8 +257,8 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 				PmWorkFlowVO workflow = new PmWorkFlowVO();
 				workflow.setDataId(relation.getAssetId());
 				workflow.setDataType(DataType.INDUSTRY_ASSET);
-				workflow.setObjId(relation.getProjectId());
-				workflow.setObjType(DataType.PROJECT);
+//				workflow.setObjId(relation.getProjectId());
+//				workflow.setObjType(DataType.PROJECT);
 				workflow.setStatus(PmWorkFlowVO.PENDING);
 				pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 				
@@ -292,27 +292,19 @@ public class ProjectAssetController extends AbstractController<IIndustryAssetSer
 		if (!UserContext.checkPermission("project:*") && v != null && v.getProjectId() != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
-			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
-//			Boolean allPerm = (Boolean) permission.get("all");
-//			if (Boolean.TRUE.equals(allPerm)) {
-//				isPermit = true;
-//				permissionType = "all";
-//			} else {
-//				String perms = StringUtils.join(permissions, ",");
-//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*projectAsset:(add|edit|delete|import|list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "edit";
-//				} else if ((Boolean.TRUE.equals(permission.get("edit")) || Boolean.TRUE.equals(permission.get("view"))) && perms.matches(".*projectAsset:(list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = Boolean.TRUE.equals(permission.get("edit")) ? "edit" : "view";
-//				}
-//			}
-			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
-					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
-							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+//			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);
+//			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":",
+//					new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+//							RoleConstant.ROLE_PM_AREA_MANAGER }).checkPermit(permission, permissions);
+			PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
+			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN,
+					RoleConstant.ROLE_PM_AREA_MANAGER }, projectPermit.getRoles());
+			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", allPermitRoles)
+					.checkPermit(projectPermit.getPermissionMap(), permissions);
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
-			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+//			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
+			model.addAllAttributes(checkPermit.getMap());
 		} else {
 			isPermit = true;
 			permissionType = "all";

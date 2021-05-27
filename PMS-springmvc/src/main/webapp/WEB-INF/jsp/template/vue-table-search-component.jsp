@@ -2,135 +2,137 @@
 	pageEncoding="UTF-8"%>
 <template v-for="field in formFieldList">
 	<template v-if="field.searchable">
-		<template v-if="field.type == 'hidden'">
-			<input :id="field.cssId || field.field" type="hidden" data-type="search" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-					:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
-					:disabled="field.disabled" :readonly="field.readonly"
-		>
-		</template>
-		<template v-else-if="field.type == 'textarea'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupTextareaClass">
-				<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<textarea :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" rows="3" style="resize:none;" draggable="false"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-						></textarea>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'date'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+		<template v-if="isPermit(field)">
+			<template v-if="field.type == 'hidden'">
+				<input :id="field.cssId || field.field" type="hidden" data-type="search" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
 						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
-						data-flag="datepicker" :data-format="field.extData.format || field.render" autocomplete="off"
-						:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
-						:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-				>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'datetime'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
-						data-flag="datetimepicker" data-format="field.extData.format || field.render" autocomplete="off"
-						:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
-						:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-				>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'daterange'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'"
-					:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
-					:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
-					:data-format="field.extData.format || field.render"
-				>
-	                <i class="fa fa-calendar mr-0.5"></i>&nbsp;
-	                <span class="daterange-span">不限</span>
-	                <i class="fa fa-caret-down"></i>
-	                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="hidden" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start')" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias" data-type="search"
-						:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
-						:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
-                </button>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'select'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-						:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
-						:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
-						:data-select2-config="JSON.stringify(field.extData['select2-config'])">
-					<template v-if="((field.extData || {}).data || field.extData).length">
-						<option :value="item[field.extValue]" v-for="item in ((field.extData || {}).data || field.extData)" :selected="item[field.extValue] == getFieldValue(field)" >{{item[field.extKey]}}</option>
-					</template>
-					<template v-else-if="field.extData.blank">
-						<option blank="true" :value="field.extData['blank-value']">{{field.extData['blank-text']}}</option>
-					</template>
-				</select>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'urlSelector'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-						:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
-						:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
-						:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
-						:data-select2-config="JSON.stringify(field.extData['select2-config'])"
-						>
-				</select>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'autocomplete'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
-						:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
-						:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src" :data-autoload="field.extData['autoload']"
-						:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
-						:data-autocomplete-config="JSON.stringify(field.extData['autocomplete-config'])"
-				/>
-			</div>
-		</template>
-		<template v-else-if="field.type == 'inputs'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
-						:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
-						:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
-			</div>
-		</template>
-		<template v-else-if="field.type == 'range'">
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<div class="flex-grow-2 range-slider form-control no-border pl-0 pr-0">
-					<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="progress-bar-striped" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-							:value="getFieldValue(field) || 0" :placeholder="field.title || field.name" :style="field.cssStyle" @input="rangeChange($event, field)" @change="rangeChange($event, field)"
-							:defaultValue="parseValue(field, 'extData').defaultValue" :max="field.extData['max']" :min="field.extData['min']" :step="field.extData['step']"
-							:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off">
-					<small class="range-slider-tip">{{getFieldValue(field) || field.extData['min'] || 0}}</small>
+						:disabled="field.disabled" :readonly="field.readonly"
+			>
+			</template>
+			<template v-else-if="field.type == 'textarea'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupTextareaClass">
+					<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<textarea :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" rows="3" style="resize:none;" draggable="false"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+							></textarea>
 				</div>
-			</div>
-		</template>
-		<template v-else>
-			<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-				<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
-				<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-						:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" 
-						:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off"
-						:defaultValue="(field.extData || {})['defaultValue']" :max="(field.extData || {})['max']" :min="(field.extData || {})['min']" :step="(field.extData || {})['step']"
-						>
-			</div>
+			</template>
+			<template v-else-if="field.type == 'date'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+							data-flag="datepicker" :data-format="field.extData.format || field.render" autocomplete="off"
+							:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
+							:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+					>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'datetime'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+							data-flag="datetimepicker" data-format="field.extData.format || field.render" autocomplete="off"
+							:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
+							:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+					>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'daterange'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'"
+						:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
+						:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
+						:data-format="field.extData.format || field.render"
+					>
+		                <i class="fa fa-calendar mr-0.5"></i>&nbsp;
+		                <span class="daterange-span">不限</span>
+		                <i class="fa fa-caret-down"></i>
+		                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="hidden" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start')" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias" data-type="search"
+							:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
+							:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
+	                </button>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'select'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+							:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
+							:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
+							:data-select2-config="JSON.stringify(field.extData['select2-config'])">
+						<template v-if="((field.extData || {}).data || field.extData).length">
+							<option :value="item[field.extValue]" v-for="item in ((field.extData || {}).data || field.extData)" :selected="item[field.extValue] == getFieldValue(field)" >{{item[field.extKey]}}</option>
+						</template>
+						<template v-else-if="field.extData.blank">
+							<option blank="true" :value="field.extData['blank-value']">{{field.extData['blank-text']}}</option>
+						</template>
+					</select>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'urlSelector'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="'width:100%;' + (field.cssStyle || '')"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+							:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
+							:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
+							:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
+							:data-select2-config="JSON.stringify(field.extData['select2-config'])"
+							>
+					</select>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'autocomplete'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :data-selected="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle"
+							:disabled="field.disabled || field.readonly" :readonly="field.readonly" :required="field.required"
+							:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src" :data-autoload="field.extData['autoload']"
+							:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
+							:data-autocomplete-config="JSON.stringify(field.extData['autocomplete-config'])"
+					/>
+				</div>
+			</template>
+			<template v-else-if="field.type == 'inputs'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
+							:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
+							:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
+				</div>
+			</template>
+			<template v-else-if="field.type == 'range'">
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<div class="flex-grow-2 range-slider form-control no-border pl-0 pr-0">
+						<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="progress-bar-striped" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+								:value="getFieldValue(field) || 0" :placeholder="field.title || field.name" :style="field.cssStyle" @input="rangeChange($event, field)" @change="rangeChange($event, field)"
+								:defaultValue="parseValue(field, 'extData').defaultValue" :max="field.extData['max']" :min="field.extData['min']" :step="field.extData['step']"
+								:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off">
+						<small class="range-slider-tip">{{getFieldValue(field) || field.extData['min'] || 0}}</small>
+					</div>
+				</div>
+			</template>
+			<template v-else>
+				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+					<label :for="field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
+					<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+							:value="getFieldValue(field)" :placeholder="field.title || field.name" :style="field.cssStyle" 
+							:disabled="field.disabled" :readonly="field.readonly" :required="field.required" autocomplete="off"
+							:defaultValue="(field.extData || {})['defaultValue']" :max="(field.extData || {})['max']" :min="(field.extData || {})['min']" :step="(field.extData || {})['step']"
+							>
+				</div>
+			</template>
 		</template>
 	</template>
 </template>
@@ -162,7 +164,11 @@
 			fieldList: [],
 			dataType: "table",
 			targetName: "",
-			targetValue: {}
+			targetValue: {},
+			model: "",
+			permissionType: "",
+			permissions: [],
+			roles: [],
 		},
 		created: function(e) {
 			/* var fieldList = this.fieldList;
@@ -207,10 +213,11 @@
 		mounted: function() {
 			console.log("mounted");
 			var _this = this;
-			$("input[type='range']").each(function(index, item) {
+			var $container = this.$root.$el;
+			$("input[type='range']", $container).not(".daterange-inited").each(function(index, item) {
 				_this.rangeChange({currentTarget: item});
 			});
-			$(".daterange-btn").each(function(index, item) {
+			$(".daterange-btn", $container).not(".daterange-inited").each(function(index, item) {
 				_this.dateRangePicker({currentTarget: item});
 			});
 		},
@@ -293,6 +300,28 @@
 	 		}
 	 	},
 	 	methods: {
+	 		isPermit:function(field) {
+				field = field || this.field || {};
+				/*var permissionType = this.permissionType || "";
+	 			var permissions = this.permissions || [];
+ 				var model = this.model || "";
+ 				var permission = model + "." + field.field + "." + (this.isCreate ? "add" : "edit");
+	 			if ((permissionType == "all" 
+	 					|| permissionType == "edit"
+	 					|| permissionType == "view"
+	 					&& $.inArray(permission, permissions) > -1) {
+					return true;
+				}*/
+				var permissionType = this.permissionType || "";
+				var isPermit = permissionType != "";// == "all" || permissionType == "edit";
+				var checkPermitCallback = (field.extData || {}).checkPermitCallback;
+				if (typeof checkPermitCallback == 'function') {
+	 				try {
+	 					isPermit = isPermit && checkPermitCallback.call(this, field, isPermit);
+	 				} catch(e) {}
+	 			}
+	 			return isPermit;
+			},
 	 		getGroupClass: function(field) {
 	 			if (field.cssClass && field.groupClass == undefined) {
 		 			var cssClass = this.getDataValue(field.cssClass);
@@ -404,7 +433,7 @@
 	 			var target = event.currentTarget;
 	 			var startDate = $(target).data('startDate') || undefined;
 	 			var endDate = $(target).data('endDate') || undefined;
-	 			var minDate = $(target).data('minDate') || "2014-01-01";
+	 			var minDate = $(target).data('minDate') || "2010-01-01";
 	 			var maxDate = $(target).data('maxDate') || undefined;
 	 			var format = $(target).data('format') || 'YYYY-MM-DD';
 	 			var value = target.value;
@@ -455,6 +484,7 @@
 	 		            $(".daterange-input-end", this.element).val(end.format('YYYY-MM-DD')+" 23:59:59");
 	 		        }
 	 		    });
+	 			$(target).addClass("daterange-inited");
 	 		}
 	 	}
 	}

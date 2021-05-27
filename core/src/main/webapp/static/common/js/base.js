@@ -3,11 +3,11 @@
  */
 
 function ajaxPost(url , params, callbacks , async, contentType, complete){
-	ajax(url ,'post', params, callbacks , async, contentType, complete)
+	return ajax(url ,'post', params, callbacks , async, contentType, complete)
 }
 
 function ajaxGet(url , params, callbacks , async, contentType, complete){
-	ajax(url ,'get', params, callbacks , async, contentType, complete)
+	return ajax(url ,'get', params, callbacks , async, contentType, complete)
 }
 
 
@@ -110,13 +110,15 @@ function getServerTime(base_path, format) {
  * 格式化日期
  */
 function formatDate(date, format) {
-	if(!date)return date;
-	date = (typeof date == "number") ? new Date(date) : date;
-	try {
-		return date.Format(format);
-	} catch (e) {
-		return date;
-	}
+    if (!date)
+        return date;
+    var newDate = !isNaN(date) ? new Date(Number(date)) : new Date(date);
+    date = !isNaN(newDate.getTime()) ? newDate : date;
+    try {
+        return date.Format(format);
+    } catch (e) {
+        return date;
+    }
 }
 
 Date.prototype.Format = function(fmt) {

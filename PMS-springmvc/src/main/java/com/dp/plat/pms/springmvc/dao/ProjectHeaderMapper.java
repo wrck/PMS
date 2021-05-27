@@ -4,6 +4,7 @@ import com.dp.plat.core.dao.AbstractBaseMapper;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import java.util.List;
 import com.dp.plat.data.bean.Project;
+import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import java.util.Map;
 import org.apache.ibatis.annotations.Param;
@@ -25,4 +26,9 @@ public interface ProjectHeaderMapper extends AbstractBaseMapper<ProjectHeader> {
 	ProjectVO selectVOByProjectId(Object projectId);
 
 	ProjectVO queryProjectStateByProjectId(Object projectId);
+
+	List<ProjectProduct> queryProductInfoFromSmsByProjectCode(ProjectProduct product);
+
+	void insertMergeContract(Map<String, Object> paramMap);
+
 }

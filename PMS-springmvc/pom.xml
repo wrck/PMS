@@ -26,7 +26,7 @@
 			<groupId>com.dp.plat</groupId>
 			<artifactId>MyBatisGenerator</artifactId>
 			<version>0.0.1-RELEASE</version>
-			<scope>test</scope>
+			<!-- <scope>test</scope> -->
 			<exclusions>
 				<exclusion>
 					<artifactId>freemarker</artifactId>

@@ -59,6 +59,18 @@
 		    AND A1.TYPE_ = 'string' 
 		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
         </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
 	    AND RES.SUSPENSION_STATE_ = 1 
 	    AND (
 	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
@@ -147,6 +159,18 @@
 		    AND A1.TYPE_ = 'string' 
 		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
         </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
 	    AND RES.SUSPENSION_STATE_ = 1 
 	    AND (
 	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
@@ -254,6 +278,18 @@
 		    AND A1.VAR_TYPE_ = 'string' 
 		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
         </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
 	    AND (
 	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
 	        OR (
@@ -348,6 +384,18 @@
 		    AND A1.VAR_TYPE_ = 'string' 
 		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
         </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
 	    AND (
 	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
 	        OR (

@@ -1,21 +1,22 @@
 package com.dp.plat.pms.springmvc.dao;
 
+import com.dp.plat.core.dao.AbstractBaseMapper;
 import java.util.Collection;
 import java.util.List;
-
-import com.dp.plat.core.dao.AbstractBaseMapper;
-import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.core.vo.PageParam;
 
 public interface IndustryLeakMapper extends AbstractBaseMapper<IndustryLeak> {
 
-	void createTempTable(String tempTableName);
+    int updateByPrimaryKeyWithBLOBs(IndustryLeak record);
 
-	void insertTempData(String tempTableName, List<Object> list, Collection<String> columns);
+    void createTempTable(String tempTableName);
 
-	List<?> selectTempData(PageParam<?> pageParam);
+    void insertTempData(String tempTableName, List<Object> list, Collection<String> columns);
 
-	long countTempData(PageParam<?> pageParam);
+    List<?> selectTempData(PageParam<?> pageParam);
 
-	void dropTempTable(String tempTableName);
+    long countTempData(PageParam<?> pageParam);
+
+    void dropTempTable(String tempTableName);
 }

@@ -199,6 +199,8 @@ public class PageParam<T> {
 	 */
 	public void setOrderBy(String orderBy) {
 //		orderBy = orderBy.replaceAll("( \\s|\\S)*((%27)|(')|(%3D)|(=)|(/)|(%2F)|(\")|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
+		orderBy = orderBy.replaceAll("&gt;", ">");
+		orderBy = orderBy.replaceAll("&lt;", "<");
 		orderBy = orderBy.replaceAll("( \\s|\\S)*((%3D)|(=)|(/)|(%2F)|((%22)|(-|%2D){2})|(%23)|(%3B)|(;))+(\\s|\\S)*", "");
 		this.orderBy = "".equals(orderBy) ? null : orderBy;
 	}

@@ -15,6 +15,7 @@ public class SettlementVO extends DispatchSettlement {
 	private Integer projectId;
 	private String officeCodes;
 	private String projectTypes;
+	private String memberCode;
 
 	private String smsProjectCode;
 	@JsonSerialize(using = JsonSerializer.class)
@@ -62,6 +63,14 @@ public class SettlementVO extends DispatchSettlement {
 
 	public void setProjectTypes(String projectTypes) {
 		this.projectTypes = projectTypes;
+	}
+
+	public String getMemberCode() {
+		return memberCode;
+	}
+
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
 	}
 
 	public String getSmsProjectCode() {

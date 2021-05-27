@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import freemarker.template.Configuration;
@@ -46,10 +47,22 @@ public class DocUtil {
 		// 加载需要装填的模板
 		Template template = null;
 		try {
-
+			ServletContext servletContext = request.getSession().getServletContext();
+			if (f.getParentFile() == null) {
+				String dir = servletContext.getRealPath("/") + templatePath + File.separator + templateName.split("\\.")[0];
+				f = new File(dir + File.separator + fileName);
+			}
+			if (!f.getParentFile().exists()) {
+				f.getParentFile().mkdirs();
+			}
+			if (f.exists() && f.isFile()) {
+				f.delete();
+			} else {
+				f.createNewFile();
+			}
 			// 设置模板装置方法和路径，FreeMarker支持多种模板装载方法。可以重servlet，classpath,数据库装载。
 			// 加载模板文件，放在/uploadFiles/file/demoDoc下
-			configure.setServletContextForTemplateLoading(request.getSession().getServletContext(), templatePath);
+			configure.setServletContextForTemplateLoading(servletContext, templatePath);
 //			configure.setDirectoryForTemplateLoading(new File(request.getSession().getServletContext().getRealPath("/") + templatePath));
 			// 设置对象包装器
 			// configure.setObjectWrapper(new DefaultObjectWrapper());
@@ -89,7 +102,19 @@ public class DocUtil {
 		// 加载需要装填的模板
 		Template template = null;
 		try {
-
+			if (f.getParentFile() == null) {
+				ClassLoader classLoader = getClass().getClassLoader();
+				String dir = classLoader.getResource("/") + templatePath + File.separator + templateName.split("\\.")[0];
+				f = new File(dir + File.separator + fileName);
+			}
+			if (!f.getParentFile().exists()) {
+				f.getParentFile().mkdirs();
+			}
+			if (f.exists() && f.isFile()) {
+				f.delete();
+			} else {
+				f.createNewFile();
+			}
 			// 设置模板装置方法和路径，FreeMarker支持多种模板装载方法。可以重servlet，classpath,数据库装载。
 			configure.setClassLoaderForTemplateLoading(getClass().getClassLoader(), templatePath);
 			// 设置对象包装器

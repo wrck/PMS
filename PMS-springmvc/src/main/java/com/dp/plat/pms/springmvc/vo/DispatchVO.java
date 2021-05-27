@@ -15,11 +15,17 @@ public class DispatchVO extends DispatchProject {
 	
 	private String officeCodes;
 	private String projectTypes;
+	private String memberCode;
 
 	private String typeName;
 	private String stateName;
 	private String createName;
 	private String officeName;
+
+	/**
+	 * 派单所在年份
+	 */
+	private Integer dispatchYear;
 
 	private String collectContractNos;
 	@JsonSerialize(using = JsonSerializer.class)
@@ -59,6 +65,14 @@ public class DispatchVO extends DispatchProject {
 		this.projectTypes = projectTypes;
 	}
 
+	public String getMemberCode() {
+		return memberCode;
+	}
+
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
+	}
+
 	public String getTypeName() {
 		return typeName;
 	}
@@ -89,6 +103,14 @@ public class DispatchVO extends DispatchProject {
 
 	public void setOfficeName(String officeName) {
 		this.officeName = officeName;
+	}
+
+	public Integer getDispatchYear() {
+		return dispatchYear;
+	}
+
+	public void setDispatchYear(Integer dispatchYear) {
+		this.dispatchYear = dispatchYear;
 	}
 
 	public BigDecimal getCollectedAmount() {

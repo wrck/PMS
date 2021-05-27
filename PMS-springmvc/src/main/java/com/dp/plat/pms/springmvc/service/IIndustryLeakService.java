@@ -7,5 +7,5 @@ import com.dp.plat.core.service.IAbstractBaseService;
  *
  * Created by CodeGenerator
  */
-public interface IIndustryLeakService extends IExcelAnalysisService<IndustryLeak> {
+public interface IIndustryLeakService extends IAbstractBaseService<IndustryLeak> {
 }

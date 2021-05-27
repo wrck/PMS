@@ -16,6 +16,7 @@ public class TaskVO extends ProjectTask {
 	
 	private String projectTypes;
 	private String officeCodes;
+	private String memberCode;
 	
 	public TaskVO() {
 		super();
@@ -61,6 +62,12 @@ public class TaskVO extends ProjectTask {
 	}
 	public void setOfficeCodes(String officeCodes) {
 		this.officeCodes = officeCodes;
+	}
+	public String getMemberCode() {
+		return memberCode;
+	}
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
 	}
 	public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();

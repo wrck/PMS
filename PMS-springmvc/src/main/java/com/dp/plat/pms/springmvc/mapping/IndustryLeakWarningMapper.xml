@@ -746,8 +746,9 @@
   </select>
   
   <select id="selectWarningAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.LeakWarningVO">
-  	select 
-	   lw.*, ia.id as assetId, ia.`assetName`, ia.`assetHost`, ia.`customInfo` as assetCustomInfo
+  	select
+	   lw.*, ia.id as assetId, ia.`assetName`, ia.`assetHost`, ia.`customInfo` as assetCustomInfo,
+	   ph.projectId, ph.projectName
 	from
 	    `af_industry_leak_warning` lw 
 	    left join `af_industry_asset` ia 
@@ -755,16 +756,19 @@
 	            lw.`developerBrand` = ia.`developerBrand`
 	        ) 
 	        or (
-	            ia.`middlewareName` regexp lw.`middlewareName` 
-	            and ia.`middlewareVersion` regexp lw.`middlewareVersion`
+	            <!-- ia.`middlewareName` regexp lw.`middlewareName` 
+	            and  -->
+	            ia.`middlewareVersion` regexp lw.`middlewareVersion`
 	        ) 
 	        or (
-	            ia.`assetOS` regexp lw.`assetOS` 
-	            and ia.`assetOSVersion` regexp lw.`assetOSVersion`
+	            <!-- ia.`assetOS` regexp lw.`assetOS` 
+	            and  -->
+	            ia.`assetOSVersion` regexp lw.`assetOSVersion`
 	        ) 
 	        or (
-	            ia.`assetDB` regexp lw.`assetDB` 
-	            and ia.`assetDBVersion` regexp lw.`assetDBVersion`
+	            <!-- ia.`assetDB` regexp lw.`assetDB` 
+	            and  -->
+	            ia.`assetDBVersion` regexp lw.`assetDBVersion`
 	        ) 
 	        or (
 	            ia.`assetASVersion` regexp lw.`assetASVersion`
@@ -772,19 +776,58 @@
 	        or (
 	            ia.`assetOpenPorts` regexp lw.`ports`
 	        ) 
+    <if test="model != null and model.checkProject == true">
+	    left join af_industry_asset_project_relation apr 
+	        on apr.assetId = ia.id 
+	        and apr.`disabled` = false 
+	        and ia.`disabled` = false 
+	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+	    left join `pm_project` ph 
+	        on ph.`projectId` = apr.`projectId` 
+    </if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			ia.id is not null AND
+			<if test="model != null and model.checkProject == true">
+				(
+					(
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						1 = 1 AND
+						<if test="model.projectTypes != null">
+							FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+						</if>
+						<if test="model.officeCodes != null">
+							FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+						</if>
+					</trim>
+					)
+					<if test="model.memberCode != null and model.memberCode != ''">
+						<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+						OR EXISTS 
+				        (SELECT 
+				            1 
+				        FROM
+				            pm_project_member pm 
+				        WHERE pm.projectId = ph.`projectId` 
+				            AND pm.projectType = ph.`projectType` 
+				            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+				            AND pm.memberCode = #{model.memberCode})
+					</if>
+				) AND
+			</if>
 			<include refid="sql_model_where_condition"></include>
 			<include refid="sql_pageable_fuzzySearch"></include>
 		</trim>
 	</where>
+	<if test="model != null and model.checkProject == true">
+	group by lw.id, ia.id
+	</if>
 	<include refid="sql_pageable_limit"></include>
   </select>
   
   <select id="countWarningAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
   	select 
-	   count(*)
+	   count(distinct lw.id, ia.id)
 	from
 	    `af_industry_leak_warning` lw 
 	    left join `af_industry_asset` ia 
@@ -792,16 +835,19 @@
 	            lw.`developerBrand` = ia.`developerBrand`
 	        ) 
 	        or (
-	            ia.`middlewareName` regexp lw.`middlewareName` 
-	            and ia.`middlewareVersion` regexp lw.`middlewareVersion`
+	            <!-- ia.`middlewareName` regexp lw.`middlewareName` 
+	            and  -->
+	            ia.`middlewareVersion` regexp lw.`middlewareVersion`
 	        ) 
 	        or (
-	            ia.`assetOS` regexp lw.`assetOS` 
-	            and ia.`assetOSVersion` regexp lw.`assetOSVersion`
+	            <!-- ia.`assetOS` regexp lw.`assetOS` 
+	            and  -->
+	            ia.`assetOSVersion` regexp lw.`assetOSVersion`
 	        ) 
 	        or (
-	            ia.`assetDB` regexp lw.`assetDB` 
-	            and ia.`assetDBVersion` regexp lw.`assetDBVersion`
+	            <!-- ia.`assetDB` regexp lw.`assetDB` 
+	            and  -->
+	            ia.`assetDBVersion` regexp lw.`assetDBVersion`
 	        ) 
 	        or (
 	            ia.`assetASVersion` regexp lw.`assetASVersion`
@@ -809,9 +855,45 @@
 	        or (
 	            ia.`assetOpenPorts` regexp lw.`ports`
 	        ) 
+	<if test="model != null and model.checkProject == true">
+	    left join af_industry_asset_project_relation apr 
+	        on apr.assetId = ia.id 
+	        and apr.`disabled` = false 
+	        and ia.`disabled` = false 
+	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+	    left join `pm_project` ph 
+	        on ph.`projectId` = apr.`projectId` 
+    </if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			ia.id is not null AND
+			<if test="model != null and model.checkProject == true">
+				(
+					(
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						1 = 1 AND
+						<if test="model.projectTypes != null">
+							FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+						</if>
+						<if test="model.officeCodes != null">
+							FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+						</if>
+					</trim>
+					)
+					<if test="model.memberCode != null and model.memberCode != ''">
+						<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+						OR EXISTS 
+				        (SELECT 
+				            1 
+				        FROM
+				            pm_project_member pm 
+				        WHERE pm.projectId = ph.`projectId` 
+				            AND pm.projectType = ph.`projectType` 
+				            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+				            AND pm.memberCode = #{model.memberCode})
+					</if>
+				) AND
+			</if>
 			<include refid="sql_model_where_condition"></include>
 			<include refid="sql_pageable_fuzzySearch"></include>
 		</trim>

@@ -29,7 +29,6 @@ import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.param.Consts;
-import com.dp.plat.core.param.Consts.URLPath;
 import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
@@ -41,13 +40,13 @@ import com.dp.plat.core.service.IUserRoleService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.UserDetail;
 import com.dp.plat.ehr.job.EhrDataJob;
 import com.dp.plat.ehr.service.IEmployeeService;
 import com.dp.plat.ehr.vo.EmployeeVO;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
+import com.dp.plat.pms.springmvc.vo.UserDetail;
 import com.dp.plat.pms.springmvc.vo.UserInfoVO;
 
 @Controller

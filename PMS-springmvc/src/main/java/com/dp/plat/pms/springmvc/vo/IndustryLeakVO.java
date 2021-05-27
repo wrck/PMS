@@ -3,7 +3,10 @@ package com.dp.plat.pms.springmvc.vo;
 import java.util.Date;
 
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.security.annotation.EncryptEntity;
+import com.dp.plat.security.annotation.EncryptField;
 
+@EncryptEntity
 public class IndustryLeakVO extends IndustryLeak {
 
 	private Integer projectId;
@@ -11,11 +14,16 @@ public class IndustryLeakVO extends IndustryLeak {
 	private String projectType;
 	
 	private Integer assetId;
+	@EncryptField
 	private String assetName;
 	
 	private Date effectiveFrom;
 	private Date effectiveTo;
 	
+	private Boolean checkProject;
+	private String projectTypes;
+	private String officeCodes;
+	private String memberCode;
 	
 	public IndustryLeakVO() {
 		super();
@@ -92,4 +100,37 @@ public class IndustryLeakVO extends IndustryLeak {
 		this.setEffectiveFrom(date);
 		this.setEffectiveTo(date);
 	}
+
+	public Boolean getCheckProject() {
+		return checkProject;
+	}
+
+	public void setCheckProject(Boolean checkProject) {
+		this.checkProject = checkProject;
+	}
+
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
+	}
+
+	public String getOfficeCodes() {
+		return officeCodes;
+	}
+
+	public void setOfficeCodes(String officeCodes) {
+		this.officeCodes = officeCodes;
+	}
+
+	public String getMemberCode() {
+		return memberCode;
+	}
+
+	public void setMemberCode(String memberCode) {
+		this.memberCode = memberCode;
+	}
+	
 }

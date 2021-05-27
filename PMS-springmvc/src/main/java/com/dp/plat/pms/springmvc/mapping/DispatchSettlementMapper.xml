@@ -998,6 +998,7 @@
 		    CONCAT('"createName":"', IFNULL(spp.customInfo ->> "$.createName", ui.realName), '"'), 
 		    CONCAT(',"useage":"', IFNULL(spps.useage,""), '"'), 
 		    CONCAT(',"paystate":"', IFNULL(spps.paystate,""), '"'),
+		    CONCAT(',"approveState":"', IFNULL(spps.approveState,""), '"'),
 		    CONCAT(',"approveAmount":"', IFNULL(spps.approveAmount, ""), '"'), 
 		    CONCAT(',"offerNum":"', IFNULL(spps.offerNum, ""), '"'), 
 		'}')) AS customInfo
