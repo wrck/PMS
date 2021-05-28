@@ -35,7 +35,15 @@
 				</div>
 			</h1> -->
 			<h1 id="pageTitle" class="fade" :class="{in: isShow}">
-				<span>{{targetValue.projectCode}}</span><small>{{targetValue.projectName}}</small>
+				<span>{{targetValue.projectCode}}</span>
+				<small><span>{{targetValue.projectName}}</span>
+				<template v-if="targetValue.customInfo.transferFromProject">
+					<small>【原项目：<a :href="targetValue.customInfo.transferFromProject.projectId + '.html'">{{targetValue.customInfo.transferFromProject.projectName}}</a>】</small>
+				</template>
+				<template v-if="targetValue.customInfo.transferToProject">
+					<small>【新项目：<a :href="targetValue.customInfo.transferToProject.projectId + '.html'">{{targetValue.customInfo.transferToProject.projectName}}</a>】</small>
+				</template>
+				</small>
 			</h1>
 			<span class="display-none"></span>
 			<ol class="breadcrumb">
@@ -76,10 +84,14 @@
 										<form-input ref="projectProgress" :field="projectProgressField" :form-cols="formCols" :is-create="isCreate" :data-type="dataType" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-input>
 									</div> -->
 								</div>
-								<!-- <div id="adminOperateBtnDiv" v-if="isAdmin && !isCreate" class="pull-left">
+								<!-- <div id="adminOperateBtnDiv" v-if="isAdmin && !isCreate && permissionType && permissionType != 'view'" class="pull-left">
 									<button type="button" class="btn btn-success" data-btn-type="merge">合并</button>
-									<button type="button" class="btn btn-danger" v-if="targetValue.projectType == 'afxx' || targetValue.customInfo.isCustom" data-btn-type="transfer">核销</button>
+									<button type="button" class="btn btn-danger" data-btn-type="transfer">核销至</button>
 								</div> -->
+								<div id="adminOperateBtnDiv" v-if="isAdmin && isCreate && permissionType && permissionType != 'view'" class="pull-left">
+									<button type="button" class="btn btn-success" data-btn-type="merge">合并至</button>
+									<button type="button" class="btn btn-danger" data-btn-type="transfer">核销</button>
+								</div>
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
 								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
 							</div>
@@ -227,6 +239,9 @@
 	    				 		} */
 	    				 	},
 	    				 	computed: {
+	    				 		disabledAll: function() {
+	    				 			return this.targetValue.disabled || false;
+	    				 		},
 	    				 		/* projectStateShow: function() {
 	    				 			return !(this.$refs.projectState || {}).isPermit;
 	    				 		}, */
@@ -261,6 +276,7 @@
 	    				 			fieldList = fieldList || this.fieldList || [];
 		    						for ( var i in fieldList) {
 		    							var field = fieldList[i];
+		    							field.disabled = this.disabledAll || field.disabled;
 		    							if (field.field == 'projectState') {
 		    								field.name += "：";
 		    								field.cssClass = "({groupClass:'m-0', selfClass:'no-border " + this.projectStateLabel + "'})";
@@ -329,7 +345,9 @@
     			keyword = typeof keyword == 'undefined' ? "id" : keyword ||  "id";
     			id = targetValue[keyword] || targetValue.id || 0;
         		if (isCreate) {
-	        		window.location.replace(pm.router.html(model).detail(id));
+        			if (id > 0) {
+		        		window.location.replace(pm.router.html(model).detail(id));
+        			}
         		} else {
         			ajaxGet(pm.router.api(model).detail(id), null, function(data, status){
 	    				if (status == 'success') {
@@ -357,6 +375,13 @@
     	    		hideFunc: function(e) {
     	    			var results = {targetName: vm.targetName, targetValue: vm.targetValue};
 	            		results[results.targetName] = results.targetValue;
+	            		var targetValue = results[results.targetName] || {};
+	            		keyword = typeof keyword == 'undefined' ? "id" : keyword ||  "id";
+	            		newId = targetValue[keyword] || targetValue.id || 0;
+	            		// 如果当前ID与返回的Id不一致，则重置id为0
+	            		if (id > 0 && newId != id) {
+	            			id = 0;
+	            		}
 	            		handleResult.call($("#" + formId), results);
     	    		}
     	    	})

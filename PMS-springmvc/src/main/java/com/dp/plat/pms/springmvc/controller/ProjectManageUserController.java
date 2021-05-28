@@ -82,7 +82,6 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	}
 
 	@RequestMapping("/list")
-	@SystemControllerLog(description = "查看用户列表")
 	public String list(PageParam<Object> pageParam, UserInfoVO userInfo, Model model) {
 		Principal user = UserContext.getCurrentPrincipal();
 		userInfo.setCompID(user.getCompId());

@@ -940,12 +940,12 @@
 		<result column="all" javaType="java.lang.Boolean" property="all" />
 		<result column="edit" javaType="java.lang.Boolean" property="edit" />
 		<result column="view" javaType="java.lang.Boolean" property="view" />
+		<result column="disabled" javaType="java.lang.Boolean" property="disabled" />
 		<result column="memberRoles" javaType="java.lang.String" property="memberRoles" />
 		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
 		<collection property="roles" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectRoleByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
-  	<![CDATA[
 	  	select 
 		    max(dr.createBy = #{user.userName}) as `all`, 
 		    max(dr.createBy = #{user.userName}) as `edit`, 
@@ -953,7 +953,14 @@
 		    group_concat(distinct pm.memberRole) memberRoles, 
 		    #{permissionTypes} as permissionTypes,
 		    #{user.userInfoId} as userInfoId,
-		    count(ui.id) > 0 hasPower
+		    count(ui.id) > 0 hasPower,
+		    <if test="model.projectId != null">
+		    	IFNULL(ph.disabled, (select IF(disabled, 1, 0) as disabled from pm_project where projectId = #{model.projectId} limit 1)) as disabled
+	    	</if>
+	    	<if test="model.projectId == null or model.projectId == ''">
+		    	false as disabled
+	    	</if>
+  	<![CDATA[
 		from
 		    `pm_daily_report` dr 
 		    left join pm_project ph 

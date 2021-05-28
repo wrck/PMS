@@ -6,8 +6,6 @@ import java.util.Map;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.core.vo.Result;
-import com.dp.plat.data.bean.OrderDataFromSap;
-import com.dp.plat.data.bean.Project;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
@@ -94,5 +92,8 @@ public interface IProjectHeaderService extends ProjectService/*IAbstractBaseServ
 
 	List<ProjectProduct> queryProductInfoFromSmsByProjectCode(ProjectProduct project);
 
-	Result insertMergeContract(ProjectVO project, int projectId);
+	Result insertMergeContract(ProjectVO project, Integer projectId);
+
+	Result transferProject(ProjectVO project, Integer projectId, String projectType);
+
 }

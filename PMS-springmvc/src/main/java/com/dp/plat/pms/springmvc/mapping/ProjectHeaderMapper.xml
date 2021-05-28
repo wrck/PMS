@@ -1650,29 +1650,65 @@
   </select>
   
   <select id="queryProductInfoFromSmsByProjectCode" parameterType="com.dp.plat.pms.springmvc.vo.ProjectProduct" resultType="com.dp.plat.pms.springmvc.vo.ProjectProduct">
-	select 
-	    ppfs.* 
-	from
+	SELECT 
+	    ppfs.id, ppfs.`projectCode`, ppfs.`orderExecNumber`, ppfs.`corporationCode`, 
+	    ppfs.ssfrId, ppfs.productCode, ppfs.productfirstCode, 
+	    ppfs.`productName`, ppfs.`productfirstName`, ppfs.`productsubCode`, ppfs.`productSubModel`, ppfs.`productSubName`, ppfs.num,
+	    ppfs.borrowNum, ppfs.price, ppfs.purchaseDiscount, ppfs.purchasePrice
+	FROM
 	    `pm_project_product_af_from_sms` ppfs 
-	    inner join 
-	        (select 
-	            projectCode, max(orderExecNumber) as orderExecNumber 
-	        from
-	            pm_project_product_af_from_sms ppfs
+	    INNER JOIN 
+	        (SELECT 
+	            projectCode, max(orderExecNumber) AS orderExecNumber 
+	        FROM
+	            pm_project_property_af_from_sms ppfs
 	        <where>
-	        	<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+	        	<trim prefixOverrides=" AND | OR " suffixOverrides=" AND | OR ">
 		        	<if test="projectCode != null and projectCode != ''"> ppfs.projectCode = #{projectCode} AND </if>
 		       	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
+		       	 	<if test="projectType != null and projectType != ''"> ppfs.projectType = #{projectType} AND </if>
 	       		</trim>
 	        </where>
-	        group by projectCode) mppfs 
-	        on mppfs.projectCode = ppfs.`projectCode` 
-	        and mppfs.orderExecNumber = ppfs.`orderExecNumber` 
+	        GROUP BY projectCode) mppfs 
+	        ON mppfs.projectCode = ppfs.`projectCode` 
+	        AND mppfs.orderExecNumber = ppfs.`orderExecNumber` 
 	<where>
-		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+		<trim prefixOverrides=" AND | OR " suffixOverrides=" AND | OR ">
      		<if test="projectCode != null and projectCode != ''"> ppfs.projectCode = #{projectCode} AND </if>
     	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
     	 	<if test="productfirstCode != null and productfirstCode != ''"> FIND_IN_SET(ppfs.productfirstCode, #{productfirstCode}) AND </if>
+   		</trim>
+    </where>
+    UNION ALL
+	SELECT 
+	    pplp.id, ppfs.`projectCode`, ppfs.`orderExecNumber`, ppfs.`corporationCode`, 
+	    NULL AS ssfrId, NULL AS productCode, NULL productfirstCode, 
+	    pplp.`productName`, pplp.`productfirstName`, pplp.`productsubCode`, pplp.`productSubModel`, pplp.`productSubName`, pplp.`lendNum` AS num,
+	    pplp.`lendNum` AS borrowNum, NULL AS price, NULL AS purchaseDiscount, NULL AS purchasePrice
+	FROM
+	    `pm_project_property_af_from_sms` ppfs 
+	    INNER JOIN 
+	        (SELECT 
+	            projectCode, MAX(orderExecNumber) AS orderExecNumber 
+	        FROM
+	            pm_project_property_af_from_sms ppfs 
+	        <where>
+	        	<trim prefixOverrides=" AND | OR " suffixOverrides=" AND | OR ">
+		        	<if test="projectCode != null and projectCode != ''"> ppfs.projectCode = #{projectCode} AND </if>
+		       	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
+		       	 	<if test="projectType != null and projectType != ''"> ppfs.projectType = #{projectType} AND </if>
+	       		</trim>
+	        </where>
+	        GROUP BY projectCode) mppfs 
+	        ON mppfs.projectCode = ppfs.`projectCode` 
+	        AND mppfs.orderExecNumber = ppfs.`orderExecNumber` 
+	    INNER JOIN `pm_presales_lend_product_from_sms` pplp 
+	        ON ppfs.`id` = pplp.`lendInfoId` 
+	<where>
+		<trim prefixOverrides=" AND | OR " suffixOverrides=" AND | OR ">
+     		<if test="projectCode != null and projectCode != ''"> ppfs.projectCode = #{projectCode} AND </if>
+    	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
+    	 	<!-- <if test="productfirstCode != null and productfirstCode != ''"> FIND_IN_SET(ppfs.productfirstCode, #{productfirstCode}) AND </if> -->
    		</trim>
     </where>
   </select>
@@ -1681,6 +1717,7 @@
 		<result column="all" property="all" javaType="java.lang.Boolean" />
 		<result column="edit" property="edit" javaType="java.lang.Boolean" />
 		<result column="view" property="view" javaType="java.lang.Boolean" />
+		<result column="disabled" property="disabled" javaType="java.lang.Boolean"/>
 		<result column="projectTypes" property="projectTypes" javaType="java.lang.String" />
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
@@ -1699,7 +1736,8 @@
 		    group_concat(distinct pm.memberRole) memberRoles, 
 		    #{permissionTypes} as permissionTypes,
 		    #{user.userInfoId} as userInfoId,
-		    count(ui.id) > 0 hasPower
+		    count(ui.id) > 0 hasPower,
+		    ph.disabled as disabled
 		from
 		    pm_project ph 
 		    left join pm_project_member pm 
@@ -1824,5 +1862,61 @@
 	        and p.`projectType` = pg.`projectType` 
 	WHERE projectId = #{projectId}
 	LIMIT 1 
+  </insert>
+  
+  <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
+  	select 
+	    *, concat(
+	        "insert into ", tableName, "(", columns, ") select ", replace(
+	            replace(
+	                replace(
+	                    replace(
+	                        columns, "projectId", "'?' as projectId"
+	                    ), "projectType", "'?' as projectType"
+	                ), "objId", "'?' as objId"
+	            ), "objType", "'?' as objType"
+	        ), " from ", tableName, " where ", replace(queryColumns, ",", "='?' AND "), "='?' "
+	    ) as `insertSql`, IF(
+	        queryColumns = "projectIds", concat(
+	            "update ", tableName, " set projectIds = concat(projectIds, ',?') where FIND_IN_SET('?', ", queryColumns, ")"
+	        ), null
+	    ) as `updateSql` 
+	from
+	    (select 
+	        t.`TABLE_NAME` as tableName, group_concat(distinct pc.column_name order by pc.`ORDINAL_POSITION`) primaryKeys, group_concat(
+	            distinct c.column_name 
+	            order by c.`ORDINAL_POSITION`
+	        ) queryColumns, group_concat(
+	            distinct ac.column_name 
+	            order by ac.`ORDINAL_POSITION`
+	        ) columns 
+	    from
+	        information_schema.tables t 
+	        left join information_schema.columns ac 
+	            on t.`TABLE_CATALOG` = ac.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = ac.`TABLE_NAME` 
+	            and ac.`COLUMN_KEY` != "PRI" 
+	        left join information_schema.columns c 
+	            on t.`TABLE_CATALOG` = c.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = c.`TABLE_NAME` 
+	            and c.COLUMN_NAME in ('projectId', 'projectType', 'projectIds', 'objType', 'objId') 
+	        left join information_schema.columns pc 
+	            on t.`TABLE_CATALOG` = pc.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = pc.`TABLE_NAME` 
+	            and pc.`COLUMN_KEY` = "PRI" 
+	    where t.TABLE_SCHEMA = #{schema}
+	        and c.TABLE_SCHEMA = #{schema}
+	        and pc.TABLE_SCHEMA = #{schema}
+	        and ac.TABLE_SCHEMA = #{schema}
+	        and t.TABLE_TYPE = 'BASE TABLE' 
+	    group by tableName) t 
+	where queryColumns in (
+	       "projectId", "projectIds", "projectId,projectType", "objType,objId"
+	    ) 
+	    and tableName not in ('pm_project') 
+  </select>
+  
+  <insert id="executeSql" parameterType="String" >
+  	${executeSql}
   </insert>
 </mapper>

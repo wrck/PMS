@@ -53,7 +53,7 @@
 		                <i class="fa fa-calendar mr-0.5"></i>&nbsp;
 		                <span class="daterange-span">不限</span>
 		                <i class="fa fa-caret-down"></i>
-		                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="hidden" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start')" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias" data-type="search"
+		                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="search" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start')" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
 							:value="getFieldValue(input)" :placeholder="input.title || input.name" :style="input.cssStyle" 
 							:disabled="input.disabled" :readonly="input.readonly" :required="input.required" autocomplete="off">
 	                </button>

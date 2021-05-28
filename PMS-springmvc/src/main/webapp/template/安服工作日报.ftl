@@ -1283,11 +1283,11 @@
 				</Cell>
 				<#-- 
 				<Cell ss:StyleID="s67">
-					<Data ss:Type="String">${(item.customInfo.province)???string("地点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}${item.customInfo.district!}&#10;${(item.projectName)???string("项目名称：", "")}${item.projectName!}&#10;${(item.processDesc)???string("工作内容：", "")}${item.processDesc!}&#10;${(item.processStep)???string("工作成果：", "")}${item.processStep!}</Data>
+					<Data ss:Type="String">${(item.customInfo.province)???string("地　　点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}${item.customInfo.district!}&#10;${(item.projectName)???string("项目名称：", "")}${item.projectName!}&#10;${(item.processDesc)???string("工作内容：", "")}${item.processDesc!}&#10;${(item.processStep)???string("工作成果：", "")}${item.processStep!}</Data>
 				</Cell>
 				-->
 				<Cell ss:StyleID="s67">
-					<Data ss:Type="String">${(item.customInfo.province)???string("地点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}${item.customInfo.district!}&#10;${(item.processDesc)???string("工作内容：", "")}${item.processDesc!}&#10;${(item.processStep)???string("工作成果：", "")}${item.processStep!}</Data>
+					<Data ss:Type="String">${(item.customInfo.province)???string("地　　点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}${item.customInfo.district!}&#10;${(item.processDesc)???string("工作内容：", "")}${item.processDesc!}&#10;${(item.processStep)???string("工作成果：", "")}${item.processStep!}</Data>
 				</Cell>
 				<Cell ss:StyleID="s66">
 					<Data ss:Type="String">${item.customInfo.workload!}</Data>
@@ -1385,7 +1385,7 @@
 					<Data ss:Type="String">成员</Data>
 				</Cell>
 				<Cell ss:StyleID="s55">
-					<Data ss:Type="String">${(nextWeekDate?string("yyyy/MM/dd"))!}</Data>
+					<Data ss:Type="String">${(nextWeekStartDate?string("yyyy/MM/dd"))!}</Data>
 				</Cell>
 				<Cell ss:StyleID="s55" ss:Formula="=RC[-1]+1">
 				</Cell>
@@ -1414,12 +1414,12 @@
 					<Data ss:Type="String"><@compress single_line=true>
 					<#list reportUser.plan[weekDay] as item>
 					${(item.categoryName)???string("任务类型：", "")}${item.categoryName!}${item.subCategoryName!}
-					&#10;${(item.customInfo.province)???string("地点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}
+					&#10;${(item.customInfo.province)???string("地　　点：", "")}${item.customInfo.province!}${(item.customInfo.city)???string("-", "")}${item.customInfo.city!}${(item.customInfo.district)???string("-", "")}
 					${item.customInfo.district!}
 					&#10;${(item.projectName)???string("项目名称：", "")}${item.projectName!}
 					&#10;${(item.customInfo.planProcessHour)???string("计划用时：", "")}${item.customInfo.planProcessHour!0 / 8}
 					&#10;${(item.customInfo.planProcessDesc)???string("工作内容：", "")}${item.customInfo.planProcessDesc!}
-					&#10;${(item.customInfo.planWorkload)???string("工作量：", "")}${item.customInfo.planWorkload!}
+					&#10;${(item.customInfo.planWorkload)???string("工作量　：", "")}${item.customInfo.planWorkload!}
 					<#if item?has_next>&#10;</#if>
 					</#list>
 					</@compress></Data>

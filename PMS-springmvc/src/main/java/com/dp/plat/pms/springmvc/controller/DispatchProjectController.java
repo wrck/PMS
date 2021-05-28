@@ -241,26 +241,29 @@ public class DispatchProjectController
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	@SystemControllerLog(description = "更新【$dispatchVO.dispatchName$】转包记录")
 	public String update(@PathVariable("id") Integer id, DispatchVO dispatch, Model model) {
-		return super.update(id, dispatch, model);
-//		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
-//			model.addAttribute("status", false);
-//			model.addAttribute("message", "没有权限进行该操作！");
-//			return Consts.VIEW_UNAUTHORIZED;
-//		}
-//		Boolean status = true;
-//		String message = null;
-//		try {
-//			dispatchProjectService.updateByPrimaryKeySelective(dispatch);
-//			model.addAttribute("targetName", "dispatchVO");
-//		} catch (Exception e) {
-//			status = false;
-//			Integer errorId = ExceptionHandler.insertException(e);
-//			model.addAttribute("errorId", errorId);
-//			message = e.getMessage();
-//		}
-//		model.addAttribute("status", status);
-//		model.addAttribute("message", message);
-//		return getViewNameSpace() + "detail";
+//		return super.update(id, dispatch, model);
+		if (!checkPermission(dispatch, model, getDataName() + ":edit")) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return Consts.VIEW_UNAUTHORIZED;
+		}
+		Boolean status = true;
+		String message = null;
+		try {
+			dispatchProjectService.updateByPrimaryKeySelective(dispatch);
+			model.addAttribute("targetName", "dispatchVO");
+		} catch (Exception e) {
+			status = false;
+			Integer errorId = ExceptionHandler.insertException(e);
+			model.addAttribute("errorId", errorId);
+			message = e.getMessage();
+			if (message.contains("Duplicate entry")) {
+				message = "派单编号已存在";
+			}
+		}
+		model.addAttribute("status", status);
+		model.addAttribute("message", message);
+		return getViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -322,6 +325,9 @@ public class DispatchProjectController
 			Integer errorId = ExceptionHandler.insertException(e);
 			model.addAttribute("errorId", errorId);
 			message = e.getMessage();
+			if (message.contains("Duplicate entry")) {
+				message = "派单编号已存在";
+			}
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);

@@ -7,7 +7,7 @@ import org.activiti.engine.impl.persistence.entity.UserEntity;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.UserDetail;
+import com.dp.plat.pms.springmvc.vo.UserDetail;
 
 public interface IProjectManageUserService extends IUserService {
 

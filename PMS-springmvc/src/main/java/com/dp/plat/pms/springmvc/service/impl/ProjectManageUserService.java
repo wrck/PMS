@@ -15,10 +15,10 @@ import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.impl.UserService;
 import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.UserDetail;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.dao.ProjectManageUserMapper;
 import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
+import com.dp.plat.pms.springmvc.vo.UserDetail;
 
 @Service("projectManageUserService")
 public class ProjectManageUserService extends UserService implements IProjectManageUserService {
@@ -42,8 +42,8 @@ public class ProjectManageUserService extends UserService implements IProjectMan
 			if (pageParam != null && pageParam.getModel() != null) {
 				UserDetail model = pageParam.getModel();
 				model.setRoleCodes(StringUtils.join(currentPrincipal.getRoles(), ","));
-				model.setCustom4(currentPrincipal.getUserInfo().getCustom4());
-				model.setCustom5(currentPrincipal.getUserInfo().getCustom5());
+				model.setProjectTypes(currentPrincipal.getUserInfo().getCustom4());
+				model.setOfficeCodes(currentPrincipal.getUserInfo().getCustom5());
 			}
 		}
 		return projectManageUserMapper.countBySelectivePageable(pageParam);

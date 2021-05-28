@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,7 +87,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 	@Override
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, DailyReportVO v, Model model) {
-		if (!checkPermission(null, model, getDataName() + ":list")) {
+		if (!checkPermission(v, model, getDataName() + ":list")) {
 			model.addAttribute("data", Collections.emptyList());
 			return Consts.VIEW_UNAUTHORIZED;
 		}
@@ -356,15 +357,15 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 		Date processEndDate = vo.getProcessEndTime();
 		Date processDate = vo.getProcessTime();
 		Date weekStartDate = processStartDate != null ? processStartDate : DateUtil.getWeekStartDay(processDate);
-		Date weekEndDate = processEndDate != null ? processEndDate : DateUtil.getWeekEndDay(processDate, -1);
-		List<Object> list = null;
-		if ("daily".equals(exportType)) {
+		Date weekEndDate = processEndDate != null ? processEndDate : DateUtil.getWeekEndDay(processDate);
+		Date nextWeekStartDate = processStartDate != null ? processStartDate : DateUtil.getWeekStartDay(processDate, -1);
+		Date nextWeekEndDate = processEndDate != null ? processEndDate : DateUtil.getWeekEndDay(processDate, -1);
+		List<Object> list = new ArrayList<Object>();
+		if ("daily".equals(exportType) || "week".equals(exportType)) {
 			PageParam<DailyReportVO> pageParam = new PageParam<DailyReportVO>();
 			pageParam.setPageSize(-1);
 			
 			DailyReportVO dailyReportVO = new DailyReportVO();
-			dailyReportVO.setProcessStartTime(weekStartDate);
-			dailyReportVO.setProcessEndTime(weekEndDate);
 			dailyReportVO.setDisabled(false);
 			dailyReportVO.setCreateBy(vo.getCreateBy());
 			// 允许访问的项目类型
@@ -382,7 +383,20 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				dailyReportVO.setMemberCode(user.getUserName());
 			}
 			pageParam.setModel(dailyReportVO);
-			list = service.selectBySelectivePageable(pageParam);
+			
+			// 当周日报
+			dailyReportVO.setType("report");
+			dailyReportVO.setProcessStartTime(weekStartDate);
+			dailyReportVO.setProcessEndTime(weekEndDate);
+			List<Object> temp = service.selectBySelectivePageable(pageParam);
+			list.addAll(temp);
+			
+			// 下周计划
+			dailyReportVO.setType("plan");
+			dailyReportVO.setProcessStartTime(nextWeekStartDate);
+			dailyReportVO.setProcessEndTime(nextWeekEndDate);
+			temp = service.selectBySelectivePageable(pageParam);
+			list.addAll(temp);
 		}
 		Map<String, String> weekDayMap = new LinkedHashMap<String, String>();
 		weekDayMap.put("W1", "周一");
@@ -392,11 +406,14 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 		weekDayMap.put("W5", "周五");
 		weekDayMap.put("W6", "周六");
 		weekDayMap.put("W7", "周日");
-		if (list != null && !list.isEmpty()) {
+		if (list != null) {
 			Map<String, Object> dataMap = new LinkedHashMap<String, Object>();
-			Date nextWeekDate = DateUtil.getWeekStartDay(processDate, -1);
+			dataMap.put("monthWeek", DateUtil.getMonthWeek(weekEndDate, -2));
 			dataMap.put("weekStartDate", weekStartDate);
-			dataMap.put("nextWeekDate", nextWeekDate);
+			dataMap.put("weekEndDate", weekEndDate);
+			dataMap.put("nextWeekDate", nextWeekStartDate);
+			dataMap.put("nextWeekStartDate", nextWeekStartDate);
+			dataMap.put("nextWeekEndDate", nextWeekEndDate);
 			dataMap.put("weekDayMap", weekDayMap);
 			Map<String, Object> reportUsersMap = new LinkedHashMap<String, Object>();
 			// {nextWeekDate, reportUsers:{reportUser: {reportName, report:[], plan:[]}}}
@@ -409,36 +426,87 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				String weekDay = "W" + (day == 0 ? 7 : day);
 				String reportUser = report.getCreateBy();
 				String reprotName = (String) report.getCustomInfoByKey("createName");
+				Integer projectId = report.getProjectId();
+				String projectName = report.getProjectName();
+				String helpOrChance = report.getRemark(); //求助/挖掘到新项目机会
+				
 				// 按人员进行分组
 				Map<String, Object> userMap = (Map<String, Object>) reportUsersMap.getOrDefault(reportUser, new LinkedHashMap<String, Object>());
 				userMap.put("reportUser", reportUser);
 				userMap.put("reportName", reprotName);
-				// 工作记录拆分为两个ListMap
-				Map<String, List> listMap =  (Map<String, List>) userMap.getOrDefault(type, new LinkedHashMap<String, List>());
-				List reportList = listMap.getOrDefault(weekDay, new ArrayList());
+				
+//				// 按项目名称进行分组
+//				Map<String, Map<String, List>> projectMap= (Map<String, Map<String, List>>) userMap.getOrDefault("projectMap", new LinkedHashMap<String, Object>());
+//				Map<String, List> projectListMap = (Map<String, List>) projectMap.getOrDefault(type, new LinkedHashMap<String, List>());
+//				List projectReportList = (List) projectListMap.getOrDefault(projectName, new ArrayList());
+//				projectReportList.add(report);
+//				projectListMap.put(projectName, projectReportList);
+//				projectMap.put(type, projectListMap);
+//				userMap.put("projectMap", projectMap);
+				
+//				// 存储所有的求助/挖掘到新项目机会
+//				LinkedHashSet<String> helpOrChanceSet = (LinkedHashSet<String>) userMap.getOrDefault("helpOrChanceSet", new LinkedHashSet<String>());
+//				helpOrChanceSet.add(helpOrChance);
+//				userMap.put("helpOrChanceSet", helpOrChanceSet);
+				
+//				Map<String, Object> helpOrChanceMap= (Map<String, Object>) userMap.getOrDefault("helpOrChanceMap", new LinkedHashMap<String, List>());
+//				Set<String> helpOrChanceSet = (Set<String>) helpOrChanceMap.getOrDefault(type, new LinkedHashSet<String>());
+//				helpOrChanceSet.add(helpOrChance);
+//				helpOrChanceMap.put(type, helpOrChanceSet);
+//				userMap.put("helpOrChanceMap", helpOrChanceMap);
+				
+				// 根据日报类型，将工作记录拆分为两个Map
+				Map<String, Object> listMap =  (Map<String, Object>) userMap.getOrDefault(type, new LinkedHashMap<String, Object>());
+				// 按周内星期几汇总日报
+				List reportList = (List) listMap.getOrDefault(weekDay, new ArrayList());
 				reportList.add(report);
 				// Map主键为周内天，值为List
 				listMap.put(weekDay, reportList);
+				
+				// 按项目名称进行分组
+				Map<String, List> projectListMap = (Map<String, List>) listMap.getOrDefault("projectMap", new LinkedHashMap<String, List>());
+				List projectReportList = (List) projectListMap.getOrDefault(projectName, new ArrayList());
+				projectReportList.add(report);
+				projectListMap.put(projectName, projectReportList);
+				listMap.put("projectMap", projectListMap);
+				
+				// 存储所有的求助/挖掘到新项目机会
+				Set<String> helpOrChanceSet = (Set<String>) listMap.getOrDefault("helpOrChanceSet", new LinkedHashSet<String>());
+				helpOrChanceSet.add(helpOrChance);
+				listMap.put("helpOrChanceSet", helpOrChanceSet);
+
 				userMap.put(type, listMap);
 				reportUsersMap.put(reportUser, userMap);
 			}
 			String weekStart = DateUtil.getDateTime("yyyy.MM.dd", weekStartDate);
 			String weekEnd = DateUtil.getDateTime("yyyy.MM.dd", weekEndDate);
-			String zipName = String.format("【日报】%s-%s一周工作记录.zip", weekStart, weekEnd);
+			String zipName = "工作记录";
 			List<FileInfo> files = new ArrayList<FileInfo>(reportUsersMap.size());
-			for (Entry<String, Object> reportUserMap : reportUsersMap.entrySet()) {
-				String reporyUser = reportUserMap.getKey();
-				Map<String, Object> userMap = (Map<String, Object>) reportUserMap.getValue();
-				String reportName = (String) userMap.get("reportName");
-				Map<String, Object> tempMap = new HashMap<String, Object>(1);
-				tempMap.put(reporyUser, userMap);
-				dataMap.put("reportUsers", tempMap);
-				String fileName = String.format("【日报】%s-%s%s一周工作记录.xlsx", weekStart, weekEnd, reportName);
-				File doc = new DocUtil().createDoc(dataMap, "/template/", "安服工作日报.ftl", fileName, request);
+			if ("week".equals(exportType)) {
+				zipName = String.format("【周报】安服工作周报%s-%s.zip", weekStart, weekEnd);
+				dataMap.put("reportUsers", reportUsersMap);
+				String fileName = String.format("【周报】安服工作周报%s-%s.xlsx", weekStart, weekEnd);
+				File doc = new DocUtil().createDoc(dataMap, "/template/", "安服工作周报.ftl", fileName, request);
 				FileInfo fileInfo = new FileInfo();
 				fileInfo.setName(doc.getName());
 				fileInfo.setPath(doc.getAbsolutePath());
 				files.add(fileInfo);
+			} else if ("daily".equals(exportType)) {
+				zipName = String.format("【日报】%s-%s一周工作记录.zip", weekStart, weekEnd);
+				for (Entry<String, Object> reportUserMap : reportUsersMap.entrySet()) {
+					String reporyUser = reportUserMap.getKey();
+					Map<String, Object> userMap = (Map<String, Object>) reportUserMap.getValue();
+					String reportName = (String) userMap.get("reportName");
+					Map<String, Object> tempMap = new HashMap<String, Object>(1);
+					tempMap.put(reporyUser, userMap);
+					dataMap.put("reportUsers", tempMap);
+					String fileName = String.format("【日报】%s-%s%s一周工作记录.xlsx", weekStart, weekEnd, reportName);
+					File doc = new DocUtil().createDoc(dataMap, "/template/", "安服工作日报.ftl", fileName, request);
+					FileInfo fileInfo = new FileInfo();
+					fileInfo.setName(doc.getName());
+					fileInfo.setPath(doc.getAbsolutePath());
+					files.add(fileInfo);
+				}
 			}
 			if (files.size() == 1) {
 				DownloadUtils.downFile(response, request, files.get(0).getPath(), files.get(0).getName());

@@ -90,6 +90,38 @@
 	<if test="roles != null">
 	    FIND_IN_SET(r.role_name, #{roles}) AND
 	</if>
+	<if test="projectTypes != null and projectTypes != ''">
+		exists 
+	    (select 
+	        * 
+	    from
+	        (select 
+	            substring_index(
+	                substring_index(#{projectTypes}, ',', b.id + 1), ',', - 1
+	            ) as projectType 
+	        from
+	            FIND_IN_SET_HELP b 
+	        where (
+	                length(#{projectTypes}) - length(replace(#{projectTypes}, ',', '')) + 1
+	            ) > b.id) t 
+	    where FIND_IN_SET(t.projectType, ui.custom4)) AND
+	</if>
+	<if test="officeCodes != null and officeCodes != ''">
+		exists 
+	    (select 
+	        * 
+	    from
+	        (select 
+	            substring_index(
+	                substring_index(#{officeCodes}, ',', b.id + 1), ',', - 1
+	            ) as officeCode 
+	        from
+	            FIND_IN_SET_HELP b 
+	        where (
+	                length(#{officeCodes}) - length(replace(#{officeCodes}, ',', '')) + 1
+	            ) > b.id) t 
+	    where FIND_IN_SET(t.officeCode, ui.custom5)) AND
+	</if>
 	<if test="custom4 != null and custom4 != ''">
 		exists 
 	    (select 
@@ -191,6 +223,38 @@
 		<if test="model.roles != null">
 		    FIND_IN_SET(r.role_name, #{model.roles}) AND
 		</if>
+		<if test="model.projectTypes != null and model.projectTypes != ''">
+			exists 
+		    (select 
+		        * 
+		    from
+		        (select 
+		            substring_index(
+		                substring_index(#{model.projectTypes}, ',', b.id + 1), ',', - 1
+		            ) as projectType 
+		        from
+		            FIND_IN_SET_HELP b 
+		        where (
+		                length(#{model.projectTypes}) - length(replace(#{model.projectTypes}, ',', '')) + 1
+		            ) > b.id) t 
+		    where FIND_IN_SET(t.projectType, ui.custom4)) AND
+		</if>
+		<if test="model.officeCodes != null and model.officeCodes != ''">
+			exists 
+		    (select 
+		        * 
+		    from
+		        (select 
+		            substring_index(
+		                substring_index(#{model.officeCodes}, ',', b.id + 1), ',', - 1
+		            ) as officeCode 
+		        from
+		            FIND_IN_SET_HELP b 
+		        where (
+		                length(#{model.officeCodes}) - length(replace(#{model.officeCodes}, ',', '')) + 1
+		            ) > b.id) t 
+		    where FIND_IN_SET(t.officeCode, ui.custom5)) AND
+		</if>
 		<if test="model.custom4 != null and model.custom4 != ''">
 			exists 
 		    (select 
@@ -236,6 +300,9 @@
             u.userCustom3 like CONCAT("%", #{fuzzy}, "%") or
 		    ui.email like CONCAT("%", #{fuzzy}, "%") or
 		    ui.realName like CONCAT("%", #{fuzzy}, "%") or
+		    ui.custom3 like CONCAT("%", #{fuzzy}, "%") or
+		    ui.custom4 like CONCAT("%", #{fuzzy}, "%") or
+		    ui.custom5 like CONCAT("%", #{fuzzy}, "%") or
 		    r.role_name like CONCAT("%", #{fuzzy}, "%") or
 		    r.role_name_zn like CONCAT("%", #{fuzzy}, "%")
 		)

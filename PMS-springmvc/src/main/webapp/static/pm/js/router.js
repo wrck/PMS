@@ -714,6 +714,9 @@ pm.dailyReport = function() {
 				exportWeekReport: (params) => {
 					return namespace + "/export/daily/report.html" + (params ? "?" + $.param(params) : "");
 				},
+				exportReport: (type, params) => {
+					return namespace + "/export/" + type +"/report.html" + (params ? "?" + $.param(params) : "");
+				},
 				mailSelect: (mailType, isModals) => namespace + (isModals ? "/modals" : "") + "/mail/" + mailType + "/select.html",
 			}
 		})(namespace),
@@ -762,6 +765,63 @@ pm.dailyReport = function() {
 				                }
 							});
 						}
+						
+						var $exportWeekReportBtnGroup = $('<div class="btn-group operate-btn-group">  <button type="button" data-btn-type="exportWeekReport" class="btn btn-info">导出周报</button></div>');
+						$addBtn.parents(".operate-btn-group:first").before($exportWeekReportBtnGroup);
+						
+						var $exportWeekReportBtn = $exportWeekReportBtnGroup.find("[data-btn-type='exportWeekReport']");
+						$exportWeekReportBtn.on('click', function() {
+			                var action = $(this).attr('data-btn-type');
+			                switch (action) {
+			                case 'exportWeekReport':
+			                	modals.confirm({ 
+			                		//winId: model + "Win",
+			                		title: "导出周报",
+			                		width: "400px",
+			                		text: `<form id="exportWeekReportForm" class="form-horizontal" method="post">
+						                    <div class="box-body p-0">
+						                        <div class="col-sm-12">
+						                            <div>
+						                                <input type="hidden" name="taskId" value="467773">
+						                                <input type="hidden" name="processInstanceId" value="366403">
+						                            </div>
+						                            <div class="form-group">
+						                                <label for="userId" class="col-sm-4 control-label">指定周内日期：</label>
+						                                <div class="col-sm-8">
+						                                    <input id="processTime" class="form-control" autocomplete="off">
+						                                </div>
+						                            </div>
+						                        </div>
+						                    </div>
+						                </form>`,
+			                		callback: function() {
+			                			var processTime = $("#processTime", "#exportWeekReportForm").val() || "";
+			                			router.postDownload(pm.dailyReport.html.exportReport("week", {processTime}));
+			                		}
+									//url: router(urlNamespace).html(model).mailSelect(mailType, true)
+								});
+			                	var minDate = new Date();
+			                	minDate.setFullYear(minDate.getFullYear() - 10);
+			                	$("#processTime", "#exportWeekReportForm").daterangepicker({
+			                		locale: {
+			    	 					format : 'YYYY-MM-DD',
+			    	 					applyLabel: '确认',
+			    	 					cancelLabel: '取消',
+			    	 					fromLabel : '起始时间',
+			    	 					toLabel : '结束时间',
+			    	 					customRangeLabel : '自定义',
+			    	 					firstDay : 1,
+			    	 					daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],  
+			    	 		            monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',  
+			    	 		                    '七月', '八月', '九月', '十月', '十一月', '十二月' ], 
+			    	 				},
+			    	 				minDate: minDate,
+			    	 				maxDate: new Date(),
+			    	 				singleDatePicker: true,
+			    	 				showDropdowns: true
+			                	});
+			                }
+						});
 					}
 				},
 				detail: {

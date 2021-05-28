@@ -98,6 +98,7 @@
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,
 							data: {
+								dataTable: this,
 								targetValue: this.data.extData.targetValue,
 	   							fieldList: this.data.columns || [],
 	   						

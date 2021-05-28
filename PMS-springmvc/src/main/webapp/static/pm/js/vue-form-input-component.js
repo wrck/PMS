@@ -49,7 +49,7 @@ var FormInput = {
 						</template>
 						<template v-else-if="field.type == 'daterange'">
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
 								<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'"
 									:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
 									:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
@@ -66,7 +66,7 @@ var FormInput = {
 						</template>
 						<template v-else-if="field.type == 'distpicker'">
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
 								<div :id="(field.cssId || field.field) + 'Distpicker'" class="distpicker display-flex row col-xs-12"
 									data-toggle="distpicker" :data-placeholder="field.extData.placeholder"
 									:data-auto-select="field.extData.autoSelect" 
@@ -127,7 +127,7 @@ var FormInput = {
 						</template>
 						<template v-else-if="field.type == 'inputs'">
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
 								<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
 										:value="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
 										:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
@@ -307,6 +307,7 @@ var FormInput = {
 			console.log("mounted");
 			var _this = this;
 			var id = this.field.cssId || this.field.field;
+			var $el = this.$el;
 			var $container = this.$root.$el;
 			if (this.field.type == 'range') {
 				var $field = $("#" + id, $container);
@@ -334,6 +335,20 @@ var FormInput = {
 					$(".distpicker").not(".distpicker-inited").each(function(index, item) {
 						_this.distpicker({currentTarget: item});
 					})
+				}
+			}
+			// 初始化事件
+			if (this.field.extData && this.field.extData.events) {
+				var $field = $("#" + id, $el);
+				$field = $field.length ? $field : $("#" + id, $container);
+				if ($field.length) {
+					try {
+						var events = this.field.extData.events;
+						for ( var key in events) {
+							var event = events[key];
+							$field.on(key, eval("("+ event + ")"));
+						}
+					} catch(e) {}
 				}
 			}
 		},

@@ -31,4 +31,16 @@ public interface ProjectHeaderMapper extends AbstractBaseMapper<ProjectHeader> {
 
 	void insertMergeContract(Map<String, Object> paramMap);
 
+	/**
+	 * 查询数据库所有跟project有关的数据表，返回相关字段，查询字段以及转移插入sql
+	 * @return [{tableName, primaryKeys, queryColumns, columns, insertSql}]
+	 */
+	List<Map<String, Object>> selectAllProjectRelateInfos(@Param("schema") String schema);
+
+	/**
+	 * 执行SQL
+	 * @param insertSql
+	 */
+	void executeSql(String insertSql);
+
 }

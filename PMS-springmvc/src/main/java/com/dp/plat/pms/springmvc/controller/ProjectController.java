@@ -1,14 +1,12 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -25,12 +23,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
+import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.core.vo.DataTableColumn;
@@ -50,11 +50,13 @@ import com.dp.plat.pms.springmvc.service.IIndustryAssetProjectRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
+import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
 import com.dp.plat.pms.springmvc.service.IProjectService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.TaskVO;
+import com.dp.plat.pms.springmvc.vo.UserDetail;
 import com.dp.plat.service.PresalesService;
 import com.dp.plat.service.ProjectPlanService;
 import com.dp.plat.service.ProjectService;
@@ -93,6 +95,9 @@ public class ProjectController
 
 	@Autowired
 	private IIndustryLeakService industryLeakService;
+	
+	@Autowired
+	private IProjectManageUserService projectManageUserService;
 
 	@PostConstruct
 	public void init() {
@@ -205,6 +210,10 @@ public class ProjectController
 
 				List<?> navTavList = this.findNavTabList(project.getProjectType() + "_" + DATANAME_NAVTAB, model);
 				model.addAttribute("tabList", navTavList);
+				// 如果项目已失效，则只允许查看
+				if (project.getDisabled()) {
+					model.addAttribute("permissionType", "view");
+				}
 			}
 		} else {
 			ProjectVO vo = new ProjectVO();
@@ -245,6 +254,20 @@ public class ProjectController
 					return Consts.VIEW_UNAUTHORIZED;
 				}
 				
+				// 设置默认的区域负责人
+				if (StringUtils.isNotBlank(project.getColumn001())) {
+					UserDetail user = new UserDetail();
+					user.setRoles(RoleConstant.ROLE_PM_AREA_MANAGER);
+					user.setCustom4(project.getProjectType());
+					user.setCustom5(project.getColumn001());
+					user.setStatus((short) 1);
+					List<UserDetail> areaMangerList = projectManageUserService.selectBySelective(user);
+					// 多个区域负责人选第一个
+					if (areaMangerList != null && !areaMangerList.isEmpty()) {
+						User userDetail = areaMangerList.get(0);
+						project.setServiceManagerCode(userDetail.getUserName());
+					}
+				}
 				project.setProjectType(projectType);
 				project.setProjectCode(projectHeaderService.queryProjectCode(project));
 				model.addAttribute("targetValue", project);
@@ -270,6 +293,7 @@ public class ProjectController
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
+	@SystemControllerLog(description = "创建项目【$project.projectName$】")
 	public String create(ProjectVO project, Model model) {
 		Boolean status = false;
 		String message = null;
@@ -322,6 +346,7 @@ public class ProjectController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	@SystemControllerLog(description = "更新项目【$project.projectName$】")
 	public String update(@PathVariable("id") Integer id, ProjectVO project, Model model) {
 		if (!checkPermission(project, model, "project:edit")) {
 			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
@@ -344,6 +369,7 @@ public class ProjectController
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	@SystemControllerLog(description = "删除项目【$project.projectName$】")
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		Boolean status = false;
 		String message = null;
@@ -396,6 +422,7 @@ public class ProjectController
 	}
 	
 	@RequestMapping(value = {"{id}/transform/{type}", "/transform/{type}"}, method = RequestMethod.POST)
+	@SystemControllerLog(description = "$typeName$项目【$project.projectName$】")
 	public String merge(@PathVariable(value = "id", required = false) Integer projectId,
 			@PathVariable("type") String type, ProjectVO project, Model model) {
 		Boolean status = false;
@@ -418,15 +445,27 @@ public class ProjectController
 			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
 		}
 		try {
+			Result result = new Result(status, projectId, message);
 			if ("merge".equals(type)) {
-				if (projectId != null) {
-					Result result = projectHeaderService.insertMergeContract(project, projectId);
-					status = (Boolean) result.getStatus();
-					message = result.getMessage();
-				}
+				result = projectHeaderService.insertMergeContract(project, projectId);
+				status = (Boolean) result.getStatus();
+				message = result.getMessage();
 			} else if ("transfer".equals(type)) {
-				
+				ProjectVO target = project;
+				if (projectId != null) {
+					Project temp = projectHeaderService.queryProjectByContractNoAndType(project.getContractNos(), project.getProjectTypes());
+					BeanUtils.copyProperties(temp, target);
+//					Map<String, Object> customInfo = (Map<String, Object>) vo.getCustomInfo();
+//					Map<String, Object> newCustomInfo = (Map<String, Object>) target.getCustomInfo();
+//					for (Entry<String, Object> entry : customInfo.entrySet()) {
+//						newCustomInfo.putIfAbsent(entry.getKey(), entry.getValue());
+//					}
+				}
+				result = projectHeaderService.transferProject(target, projectId, vo.getProjectType());
 			}
+			status = (Boolean) result.getStatus();
+			message = result.getMessage();
+			model.addAttribute("projectId", result.getData());
 			model.addAttribute("targetName", "projectVO");
 		} catch (Exception e) {
 			status = false;
@@ -436,6 +475,9 @@ public class ProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
+		Map<String, String> typeName = new HashMap<String, String>();
+		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
+		model.addAttribute("typeName", typeName.get(type));
 		return VIEW_NAMESPACE + "detail";
 	}
 
@@ -532,6 +574,17 @@ public class ProjectController
 			data.addAll(orderDataList);
 			columns = findColumnList("productInfoList");
 		}
+//		ProjectProduct product = new ProjectProduct();
+//		product.setProjectCode(projectCode);
+//		product.setProjectType(projectType);
+//		if (!ProjectType.AF_XX_PROJECT.equals(projectType)) {
+//			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+//			product.setProductfirstCode(productCode);
+//		}
+//		List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
+//		data = new ArrayList<Object>(orderDataList.size());
+//		data.addAll(orderDataList);
+//		columns = findColumnList("productInfoList");
 		model.addAttribute("columns", columns);
 		model.addAttribute("data", data);
 

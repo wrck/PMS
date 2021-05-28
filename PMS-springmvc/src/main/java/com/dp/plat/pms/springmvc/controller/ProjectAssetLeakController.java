@@ -1,14 +1,9 @@
 package com.dp.plat.pms.springmvc.controller;
 
-import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -24,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.dp.plat.core.context.HttpContext;
-import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.PageParam;
@@ -35,7 +29,6 @@ import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
-import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetLeakRelationService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
@@ -311,7 +304,8 @@ public class ProjectAssetLeakController extends AbstractController<IIndustryLeak
 		}
 		boolean isPermit = false;
 		String permissionType = "";
-		if (!UserContext.checkPermission("industryLeak:*") && v != null && v.getProjectId() != null) {
+//		if (!UserContext.checkPermission("industryLeak:*") && v != null && v.getProjectId() != null) {
+		if (v != null && v.getProjectId() != null) {
 			ProjectVO project = new ProjectVO();
 			project.setProjectId(v.getProjectId());
 //			Map<String, Object> permission = projectHeaderService.checkPermissionMap(project, permissions);

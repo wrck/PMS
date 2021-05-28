@@ -253,6 +253,7 @@
             var preTargger = "";
             $(document).on("click", "button[data-btn-type]", function () {
             //$('button[data-btn-type]').click(function() {
+            	var $targetTable = $(this).parents(".dataTables_wrapper:first").find(".dataTable").data("dataTable");
                 var action = $(this).attr('data-btn-type');
                 var rowId=projectTable.getSelectedRowId();
                 switch (action) {
@@ -289,7 +290,7 @@
                         ajaxPost(basePath+"/pm/project/"+rowId+".json?_method=DELETE",null,function(data,status){
                         	if(data.status){
                                 modals.info("删除成功！");
-                                commonTable.reloadData();
+                                $targetTable.reloadData();
                             }else {
                                 modals.info(data.message);
                             }

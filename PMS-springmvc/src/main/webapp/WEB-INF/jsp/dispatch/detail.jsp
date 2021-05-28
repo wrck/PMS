@@ -552,20 +552,37 @@
     			$("#bankAccount", $container).val(source.bankAccount);
     			
    				var render = function(data) {
-    				var placeholder = $("#dispatchSeq").data("placeholder") || $("#dispatchSeq").attr("placeholder");
-    				$("#dispatchSeq").data("placeholder", placeholder);
-    				$("#dispatchSeq").attr("placeholder", data.dispatchSeq || placeholder);
-    				$("#dispatchSeq").val("");
+    				var placeholder = $("#dispatchSeq", $container).data("placeholder") || $("#dispatchSeq", $container).attr("placeholder");
+    				var newPlaceholder = data.dispatchSeq || placeholder;
+    				$("#dispatchSeq", $container).data("placeholder", placeholder);
+    				$("#dispatchSeq", $container).attr("placeholder", newPlaceholder);
+    				var dispatchSeq = $("#dispatchSeq", $container).val();
+    				if (dispatchSeq != newPlaceholder) {
+    					$("#dispatchSeq", $container).val("");
+    				} else {
+	    				//$("#dispatchSeq", $container).val(newPlaceholder == dispatchSeq ? dispatchSeq : "");
+    				}
     				
-    				var dispatchNoPlaceholder = $("#dispatchNo").data("placeholder") || $("#dispatchNo").attr("placeholder");
-    				$("#dispatchNo").data("placeholder", dispatchNoPlaceholder);
-    				$("#dispatchNo").attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
-    				$("#dispatchNo").val("");
+    				var dispatchNoPlaceholder = $("#dispatchNo", $container).data("placeholder") || $("#dispatchNo", $container).attr("placeholder");
+    				var newdispatchNoPlaceholder = data.dispatchNo || dispatchNoPlaceholder;
+    				$("#dispatchNo", $container).data("placeholder", dispatchNoPlaceholder);
+    				$("#dispatchNo", $container).attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
+    				var dispatchNo = $("#dispatchNo", $container).val();
+    				if (dispatchNo != newdispatchNoPlaceholder) {
+    					$("#dispatchNo", $container).val("");
+    				} else {
+	    				//$("#dispatchNo", $container).val(newdispatchNoPlaceholder == dispatchNo ? dispatchNo : "");
+    				}
    				};
     			if (source.code) {
     				ajaxGet(pm.router.api(model).generateDispatchSeq(), {facilitatorCode: source.code}, render);
-    			} else {
+    			} else if (source.selected) {// 选择空项时
     				render({});
+    			} else {// 初始化时
+    				render({
+    					dispatchSeq: $("#dispatchSeq", $container).val() || "",
+    					dispatchNo: $("#dispatchNo", $container).val() || "",
+   					});
     			}
     		}
 		});

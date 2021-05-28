@@ -1,10 +1,5 @@
 package com.dp.plat.pms.springmvc.util;
 
-import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAGER;
-import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.vo.PermissionResult;
 
 public class PermissionUtils {
@@ -88,6 +84,7 @@ public class PermissionUtils {
 			if (permission != null) {
 				permissionSet = (Collection<String>) permission.get("permissions");
 				roleSet = (Collection<String>) permission.getOrDefault("roles", UserContext.getCurrentPrincipal().getRoles());
+				Boolean disabled = Boolean.TRUE.equals(permission.get("disabled"));
 				Boolean allPerm = (Boolean) permission.get("all");
 				boolean isRolePermit = false;
 				// 特殊角色权限,当具备访问权限时，进行角色权限增强
@@ -115,9 +112,13 @@ public class PermissionUtils {
 						permissionType = isRolePermit ? "all" : (editPermit ? "edit" : "view");
 					}
 				}
+				// 如果已失效，则只允许查看
+				if (Boolean.TRUE.equals(disabled) && isPermit) {
+					permissionType = "view";
+				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			ExceptionHandler.insertException(e);
 		}
 		return new PermissionResult(isPermit, permissionType, permissionSet, roleSet, permission, allPermitRoles);
 	}

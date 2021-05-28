@@ -456,6 +456,8 @@
 	        and ia.disabled = false 
 	    left join `pm_project` ph 
 	        on ph.`projectId` = apr.`projectId` 
+	        and ph.`projectId` = alr.`projectId`
+	        and alr.`disabled` = false 
 	        and apr.`disabled` = false 
 	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
 	    left join `fnd_basic_data` bd 

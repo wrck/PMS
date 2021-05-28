@@ -6,18 +6,24 @@ import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAG
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.activiti.engine.TaskService;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +31,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
+import com.dp.plat.core.config.RoutingDataSource;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IAbstractBaseService;
 import com.dp.plat.core.service.IUserInfoService;
@@ -287,7 +297,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	}
 
 	@Override
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional
     public int insertProject(Project project) throws Exception {
         log("创建项目");
         String projectType = project.getProjectType();
@@ -295,7 +305,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
         if (ProjectConstant.ProjectType.JF_SALES_PROJECT.equals(projectType)) {
             super.insertProject(project);
         } else if (ProjectConstant.ProjectType.AF_SALES_PROJECT.equals(projectType) || ProjectConstant.ProjectType.AF_XX_PROJECT.equals(projectType)) {
-            Project p = this.queryProjectByContractNoAndType(project.getContractNo(), project.getProjectType());
+        	Project p = this.queryProjectByContractNoAndType(project.getContractNo(), project.getProjectType());
             String projectState = MessageUtil.PROJECT_STATE_CREATING;
             // p中的部分属性放置到project中
             project = putProperties(project, p);
@@ -572,23 +582,55 @@ public class ProjectHeaderService extends ProjectServiceImpl
     
     @Override
     @Transactional
-	public Result insertMergeContract(ProjectVO project, int projectId) {
-		String[] contractNos = StringUtils.split(project.getContractNos(), ",");
-		String[] projectTypes = StringUtils.split(project.getProjectTypes(), ",");
+	public Result insertMergeContract(ProjectVO project, Integer projectId) {
+    	String[] projectIds = StringUtils.split(project.getProjectIds(), ",");
+    	String[] contractNos, projectTypes;
+    	// 如果项目id不为空，则是待创建项目合并到原有项目的方式
+    	if (projectIds != null && projectIds.length > 0) {
+    		projectId = Integer.valueOf(projectIds[0]);
+    		contractNos = StringUtils.split(project.getContractNo(), ",");
+			projectTypes = StringUtils.split(project.getProjectType(), ",");
+		} else {// 如果项目为空，则是原项目中合并待创建项目方式
+			contractNos = StringUtils.split(project.getContractNos(), ",");
+			projectTypes = StringUtils.split(project.getProjectTypes(), ",");
+		}
+    	
+    	ProjectVO vo = this.selectVOByProjectId(projectId);
+		List<String> contractNoList = Arrays.asList(StringUtils.split(vo.getContractNo(), ","));
+		List<String> projectCodes = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(vo.getSmsProjectCode()), ","));
+		List<String> orderExecNumbers = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(vo.getSmsOrderExecNumber()), ","));
+		String projectAmount = StringUtils.defaultIfBlank(vo.getSmsProjectAmount(), "0");
+		String afProjectAmount = StringUtils.defaultIfBlank(vo.getSmsAfProjectAmount(), "0");
+		List<String> projectAmounts = Arrays.asList(StringUtils.split(StringUtils.defaultIfBlank((String)vo.getCustomInfoByKey("smsAfProjectAmounts"), projectAmount), ","));
+		List<String> afProjectAmounts = Arrays.asList(StringUtils.split(StringUtils.defaultIfBlank((String)vo.getCustomInfoByKey("smsProjectAmounts"), afProjectAmount), ","));
+		
+		BigDecimal projectAmountSum = new BigDecimal(projectAmount).setScale(2, RoundingMode.HALF_UP);
+		BigDecimal afProjectAmountSum = new BigDecimal(afProjectAmount).setScale(2, RoundingMode.HALF_UP);
+		List<String> newContractNos = Arrays.asList(contractNos);
 		Set<String> newProjectCodes = new LinkedHashSet<String>();
 		Set<String> newOrderExecNumbers = new LinkedHashSet<String>();
+		List<String> newProjectAmounts = new ArrayList<String>();
+		List<String> newAfProjectAmounts = new ArrayList<String>();
 		for (int i = 0; i < contractNos.length; i++) {
 			String contractNo = contractNos[i];
 			String projectType = projectTypes[i];
 			// 如果当前合同号已经创建项目，则直接返回不再创建
-			Integer count = this.queryProjectContractCountByContractNoAndType(
-					Util.appendChar((String) project.getContractNo(), "'"), project.getProjectType());
+			Integer count = this.queryProjectContractCountByContractNoAndType(Util.appendChar(contractNo, "'"), projectType);
 			if (count != null && count != 0) {
 				return new Result(Boolean.FALSE, String.format("合同号为【%s】的项目已存在", contractNo));
 			} else {
 				ProjectVO temp = (ProjectVO) this.queryProjectByContractNoAndType(contractNo, projectType);
 				if (!checkProjectTypeAndAreaPower(temp)) {
 					return new Result(Boolean.FALSE, String.format("没有权限访问合同号为【%s】的项目", contractNo));
+				}
+				if (!projectCodes.contains(temp.getSmsProjectCode()) && !newProjectCodes.contains(temp.getSmsProjectCode())) {
+					String newAfProjectAmount = StringUtils.defaultIfBlank(temp.getSmsAfProjectAmount(), "0");
+					String newProjectAmount = StringUtils.defaultIfBlank(temp.getSmsProjectAmount(), "0");
+					newAfProjectAmounts.add(newAfProjectAmount);
+					newProjectAmounts.add(newProjectAmount);
+					
+					afProjectAmountSum = afProjectAmountSum.add(new BigDecimal(newAfProjectAmount));
+					projectAmountSum = projectAmountSum.add(new BigDecimal(newProjectAmount));
 				}
 				newProjectCodes.add(temp.getSmsProjectCode());
 				newOrderExecNumbers.add(temp.getSmsOrderExecNumber());
@@ -610,18 +652,11 @@ public class ProjectHeaderService extends ProjectServiceImpl
 				projectDao.insertMergeTask(paramMap);
 			}
 		}
-		project.setSmsProjectCode(StringUtils.join(newProjectCodes, ","));
-		project.setSmsOrderExecNumber(StringUtils.join(newOrderExecNumbers, ","));
-		
-		ProjectVO vo = this.selectVOByProjectId(projectId);
-		List<String> contractNo = Arrays.asList(StringUtils.split(vo.getContractNo(), ","));
-		List<String> projectCodes = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(vo.getSmsProjectCode()), ","));
-		List<String> orderExecNumbers = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(vo.getSmsOrderExecNumber()), ","));
-		
-		List<String> newContractNos = Arrays.asList(contractNos);
+//		project.setSmsProjectCode(StringUtils.join(newProjectCodes, ","));
+//		project.setSmsOrderExecNumber(StringUtils.join(newOrderExecNumbers, ","));
 		
 		Set<String> contractNoSet = new LinkedHashSet<String>();
-		contractNoSet.addAll(contractNo);
+		contractNoSet.addAll(contractNoList);
 		contractNoSet.addAll(newContractNos);
 		
 		Set<String> projectCodeSet = new LinkedHashSet<String>();
@@ -632,10 +667,19 @@ public class ProjectHeaderService extends ProjectServiceImpl
 		orderExecNumberSet.addAll(orderExecNumbers);
 		orderExecNumberSet.addAll(newOrderExecNumbers);
 		
+		afProjectAmounts = new ArrayList<String>(afProjectAmounts);
+		afProjectAmounts.addAll(newAfProjectAmounts);
+		projectAmounts = new ArrayList<String>(projectAmounts);
+		projectAmounts.addAll(newProjectAmounts);
+		
 		ProjectVO temp = new ProjectVO(projectId);
 		temp.setContractNo(StringUtils.join(contractNoSet, ","));
 		temp.setSmsProjectCode(StringUtils.join(projectCodeSet, ","));
 		temp.setSmsOrderExecNumber(StringUtils.join(orderExecNumberSet, ","));
+		temp.setCustomInfoByKey("smsAfProjectAmounts", StringUtils.join(afProjectAmounts, ","));
+		temp.setCustomInfoByKey("smsProjectAmounts", StringUtils.join(projectAmounts, ","));
+		temp.setSmsAfProjectAmount(afProjectAmountSum.toString());
+		temp.setSmsProjectAmount(projectAmountSum.toString());
 		
 		// 保存每次合并的合同号，项目编码，执行单号
 		List<Map<?, ?>> mergeLog = (List<Map<?, ?>>) vo.getCustomInfoByKey("mergeLog");
@@ -643,13 +687,16 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			mergeLog = new ArrayList<Map<?, ?>>();
 		}
 		mergeLog.add(MapUtils.putAll(new HashMap<Object, Object>(), new Object[] { 
-				"contractNo", newContractNos,
-				"projectType", projectTypes,
-				"smsProjectCode", newProjectCodes, 
-				"smsOrderExecNumber", newOrderExecNumbers }));
+			"contractNo", newContractNos,
+			"projectType", projectTypes,
+			"smsProjectCode", newProjectCodes, 
+			"smsOrderExecNumber", newOrderExecNumbers,
+			"smsAfProjectAmounts", newAfProjectAmounts,
+			"smsProjectAmounts", newProjectAmounts
+		}));
 		temp.setCustomInfoByKey("mergeLog", mergeLog);
 		this.updateByPrimaryKeySelective(temp);
-		return new Result(Boolean.TRUE);
+		return new Result(Boolean.TRUE, projectId, null);
 	}
     
     @Override
@@ -669,6 +716,119 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			}
 		}
 	}
+    
+    @Override
+    @Transactional
+    public Result transferProject(ProjectVO project, Integer projectId, String projectType) {
+    	RoutingDataSource dataSource = SpringContext.getBean("dataSource", RoutingDataSource.class);
+    	Boolean status = false;
+    	String message = "";
+    	Integer newProjectId = null;
+    	try {
+			String[] projectIds = StringUtils.split(project.getProjectIds(), ",");
+			// 如果项目id不为空，则是待创建项目合并到原有项目的方式
+	    	if (projectIds != null && projectIds.length > 0) {
+	    		projectId = Integer.valueOf(projectIds[0]);
+			}
+	    	
+	    	// 如果当前合同号已经创建项目，则直接返回不再创建
+			Integer count = this.queryProjectContractCountByContractNoAndType(
+					Util.appendChar(project.getContractNo(), "'"), project.getProjectType());
+			if (count != null && count != 0) {
+				status = false;
+				message = "该项目合同已存在！";
+			} else {
+				ProjectVO source = this.selectVOByProjectId(projectId);
+				if (source != null) {
+					Map<String, Object> sourceMap = (Map<String, Object>) JSON.toJSON(source);
+					Map<String, Object> projectMap = (Map<String, Object>) JSON.toJSON(project);
+					List<String> ignoreFileds = Arrays.asList(StringUtils.split(SystemConfig.systemVariables.getOrDefault("pm.project.transfer.ignore.fields", ""), ","));
+					List<String> inheritFileds = Arrays.asList(StringUtils.split(SystemConfig.systemVariables.getOrDefault("pm.project.transfer.inherit.fields", ""), ","));
+					// 拷贝原项目主属性
+					for (Entry<String, Object> entry : sourceMap.entrySet()) {
+						// 判断是否为需要忽略的字段
+						if (!ignoreFileds.contains(entry.getKey())) {
+							// 判断是否为需要继承的字段
+							if (inheritFileds.contains(entry.getKey())) {
+								projectMap.put(entry.getKey(), entry.getValue());
+							} else {
+								projectMap.putIfAbsent(entry.getKey(), entry.getValue());
+							}
+						}
+					}
+					// 拷贝原项目的自定义属性
+					Map<String, Object> customInfo = new HashMap<String, Object>((Map<String, Object>) source.getCustomInfo());
+					Map<String, Object> newCustomInfo = new HashMap<String, Object>((Map<String, Object>) project.getCustomInfo());
+					List<String> ignoreCustomFileds = Arrays.asList(StringUtils.split(SystemConfig.systemVariables.getOrDefault("pm.project.transfer.ignore.customFields", ""), ","));
+					List<String> inheritCustomFileds = Arrays.asList(StringUtils.split(SystemConfig.systemVariables.getOrDefault("pm.project.transfer.inherit.customFields", ""), ","));
+					for (Entry<String, Object> entry : customInfo.entrySet()) {
+						// 判断是否为需要忽略的自定义字段
+						if (!ignoreCustomFileds.contains(entry.getKey())) {
+							// 判断是否为需要继承的自定义字段
+							if (inheritCustomFileds.contains(entry.getKey())) {
+								newCustomInfo.put(entry.getKey(), entry.getValue());
+							} else {
+								newCustomInfo.putIfAbsent(entry.getKey(), entry.getValue());
+							}
+						}
+					}
+					ConvertUtils.register(new DateConverter(null), java.util.Date.class); 
+					org.apache.commons.beanutils.BeanUtils.populate(project, projectMap);
+					project.setCustomInfo(newCustomInfo);
+					project.setCustomInfoByKey("transferFromProject", source);
+					
+					// 保存新项目
+					newProjectId = insertProject(project);
+					String schema = dataSource.getConnection().getCatalog();
+					// 获取所有项目关联表，进行数据拷贝
+					List<Map<String, Object>> relateInfos = dao.selectAllProjectRelateInfos(schema);
+					for (Map<String, Object> relateInfo : relateInfos) {
+						String executeSql = "";
+						String tableName = (String) relateInfo.get("tableName");
+						String insertSql = (String) relateInfo.get("insertSql");
+						String updateSql = (String) relateInfo.get("updateSql");
+						String queryColumns = (String) relateInfo.get("queryColumns");
+						insertSql = StringUtils.trimToEmpty(insertSql).replace("?", "%s");
+						updateSql = StringUtils.trimToEmpty(updateSql).replace("?", "%s");
+						// 相关表有projectId，部分表存在projectType，需要分开处理，部分关联表位projectIds关联，则需要添加关联关系，部分通用模块需要通过objType,objId关联
+						if ("projectId".equals(queryColumns)) {
+							executeSql = String.format(insertSql, project.getProjectId(), projectId);
+						} else if ("projectIds".equals(queryColumns)) {
+							executeSql = String.format(updateSql, project.getProjectId(), projectId);
+						} else if ("objType,objId".equals(queryColumns)) {
+							executeSql = String.format(insertSql, "project", project.getProjectId(), "project", projectId);
+						} else if ("objId,objType".equals(queryColumns)) {
+							executeSql = String.format(insertSql, project.getProjectId(), "project", projectId, "project");
+						} else {
+							executeSql = String.format(insertSql, project.getProjectId(), project.getProjectType(), projectId, projectType);
+						}
+						// 项目成员信息在创建项目时会进行新增，避免重复需要排除相同角色的有效项目成员
+						if ("pm_project_member".equals(tableName)) {
+							executeSql += String.format(" AND NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '%s' AND m.projectType = '%s' AND m.`memberCode` = pm_project_member.memberCode AND m.`memberRole` = pm_project_member.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))", project.getProjectId(), project.getProjectType());
+						}
+						dao.executeSql(executeSql);
+					}
+					
+					// 添加核销关联ID,失效原项目
+					project.setCustomInfoByKey("transferFromProject", null);// 避免循环依赖
+					source.setCustomInfoByKey("transferToProject", project);
+					source.setProjectState("100");
+					source.setDisabled(true);
+//					source.setEffectiveTo(new Date());
+					this.updateByPrimaryKeySelective(source);
+					status = true;
+				} else {
+					status = false;
+					message = "原项目不存在，请重新核销！";
+				}
+			}
+		} catch (Exception e) {
+			ExceptionHandler.insertException(e);
+			message = e.getMessage();
+			throw new RuntimeException("核销项目发生异常", e);
+		}
+		return new Result(status, newProjectId, message);
+    }
 
 	@Override
     public Map<String, Object> checkPermission(ProjectVO project) {
@@ -692,7 +852,8 @@ public class ProjectHeaderService extends ProjectServiceImpl
         }
         // 已闭环的项目，不允许修改，只有项目管理员、区域负责人才可以重新打开
         String closedState = SystemConfig.systemVariables.getOrDefault("pm.project.closed.state", "100");
-        if (closedState.equals(permissionMap.get("maxState"))) {
+        // 判断是否已经闭环或者已经失效
+        if (closedState.equals(permissionMap.get("maxState")) || Boolean.TRUE.equals(permissionMap.get("disabled"))) {
         	permissionMap.put("all", Boolean.FALSE);
         	permissionMap.put("edit", Boolean.FALSE);
         }
@@ -765,6 +926,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
         } else {
             isPermit = true;
             permissionType = "all";
+            permissionMap = Collections.singletonMap("all", true);
         }
         
         // 安服、研发质量管理员角色判断任务
@@ -810,6 +972,14 @@ public class ProjectHeaderService extends ProjectServiceImpl
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (p != null) {
+        	// 获取原始项目编码
+        	String projectCode = p.getProjectCode();
+        	project.setProjectCode(projectCode);
+        	// 查询最新的项目编码，带项目数，避免项目数重复
+        	String newProjectCode = this.queryProjectCode(project);
+        	project.setProjectCode(newProjectCode);
         }
         return project;
     }

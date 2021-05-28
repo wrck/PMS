@@ -3,7 +3,7 @@ package com.dp.plat.pms.springmvc.dao;
 import java.util.List;
 
 import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.core.vo.UserDetail;
+import com.dp.plat.pms.springmvc.vo.UserDetail;
 
 public interface ProjectManageUserMapper {
 	

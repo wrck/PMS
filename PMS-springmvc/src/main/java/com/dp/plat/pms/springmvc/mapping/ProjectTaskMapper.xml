@@ -647,6 +647,7 @@
        <where>
 			<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
        			<if test="projectId != null"> AND pbdd.projectId = #{projectId} </if>
+       			<if test="projectType != null"> AND pbdd.projectType = #{projectType} </if>
 		        <if test="taskId != null"> AND pbdd.taskId = #{taskId} </if>
 				<if test="ids != null ">
 					<foreach collection="ids" item="item" open="and pbdd.id in (" close=")" separator=",">#{item}</foreach>
@@ -663,6 +664,7 @@
 		<result column="all" property="all" javaType="java.lang.Boolean"/>
 		<result column="edit" property="edit" javaType="java.lang.Boolean"/>
 		<result column="view" property="view" javaType="java.lang.Boolean"/>
+		<result column="disabled" property="disabled" javaType="java.lang.Boolean"/>
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
 		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
@@ -679,7 +681,8 @@
 		    group_concat(distinct pm.memberRole) memberRoles, 
 		    #{permissionTypes} as permissionTypes,
 		    #{user.userInfoId} as userInfoId,
-		    count(ui.id) > 0 hasPower
+		    count(ui.id) > 0 hasPower,
+		    ph.disabled as disabled
 		from
 		    pm_project ph 
 		    left join pm_project_task pt 

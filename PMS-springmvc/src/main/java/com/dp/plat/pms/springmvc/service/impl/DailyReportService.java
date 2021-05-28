@@ -54,7 +54,13 @@ public class DailyReportService extends AbstractBaseService<DailyReportMapper, D
             result = new PermissionUtils().checkPermit(permission, permissions);
             if (!result.isPermit() && UserContext.checkPermission("dailyReport:*")) {
                 result.setStatus(true);
-                result.setPermissionType("view");
+                // 如果是列表查询，并且项目没有失效，则增加edit权限，允许增删改
+                if (permissions.length == 1 && "dailyReport:list".equals(permissions[0]) && !Boolean.TRUE.equals(permission.get("disabled"))) {
+                	result.setPermissionType("edit");
+                	result.setPermissions(null);
+                } else {
+                	result.setPermissionType("view");
+                }
             }
         } else {
             isPermit = true;

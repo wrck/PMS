@@ -40,6 +40,8 @@ public class ProjectProduct extends BaseEntity {
     private BigDecimal purchaseDiscount;
     
     private BigDecimal purchasePrice;
+    
+    private String projectType;
 
     /**
      * @return id
@@ -285,6 +287,14 @@ public class ProjectProduct extends BaseEntity {
 	 */
 	public void setPurchasePrice(BigDecimal purchasePrice) {
 		this.purchasePrice = purchasePrice;
+	}
+
+	public String getProjectType() {
+		return projectType;
+	}
+
+	public void setProjectType(String projectType) {
+		this.projectType = projectType;
 	}
     
 }
