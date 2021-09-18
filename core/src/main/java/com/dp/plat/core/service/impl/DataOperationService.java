@@ -30,7 +30,7 @@ public class DataOperationService extends AbstractBaseService<DataOperationMappe
 
 	@Override
 	public Map<String, Object> queryExportColumns(String sql) {
-		sql = sql.replaceAll("<[^>]+>", "");
+//		sql = sql.replaceAll("<[^>]+>", "");
 		return dao.queryExportColumns(sql);
 	}
 

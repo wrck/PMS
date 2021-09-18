@@ -23,12 +23,12 @@ import java.util.Set;
 
 import org.activiti.engine.TaskService;
 import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.converters.BigDecimalConverter;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
@@ -772,6 +772,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 							}
 						}
 					}
+					ConvertUtils.register(new BigDecimalConverter(BigDecimal.ZERO), BigDecimal.class); 
 					ConvertUtils.register(new DateConverter(null), java.util.Date.class); 
 					org.apache.commons.beanutils.BeanUtils.populate(project, projectMap);
 					project.setCustomInfo(newCustomInfo);

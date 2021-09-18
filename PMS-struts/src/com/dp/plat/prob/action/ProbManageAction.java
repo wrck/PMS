@@ -7,8 +7,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +19,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.struts2.ServletActionContext;
+import org.springframework.web.util.HtmlUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.dp.plat.action.BaseAction;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
@@ -36,6 +42,8 @@ import com.dp.plat.prob.param.ProbParam;
 import com.dp.plat.prob.service.ProbManageService;
 import com.dp.plat.prob.util.DisplayParamUtil;
 import com.dp.plat.prob.util.ExportUtils;
+import com.dp.plat.prob.util.SoftVersionUtil;
+import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.util.DateUtil;
@@ -85,7 +93,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	private File[] upload;
 	private String uploadFileName;
 	private String seq = File.separator;
-	public String UPLOAD_PATH = "upload" + seq + "file" + seq + "prob";
+//	public String UPLOAD_PATH = "upload" + seq + "file" + seq + "prob";
+	public String UPLOAD_PATH = UploadFileUtil.UPLOAD_PATH + seq + "file" + seq + "prob";
 	private Map<Integer, String> fileMap;
 	// 弹出窗口
 	private String redirect;
@@ -180,6 +189,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			fileMap = probManageService.queryProbFileMap(prob.getProbId());
 			// .3查询受影响的软件版本信息
 			softVersionList = probManageService.querySoftVersionList(prob.getProbId());
+			prob.setAffectedVersion(JSON.toJSONString(softVersionList));
 			// }
 		}
 		return INPUT;
@@ -240,6 +250,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				// }else {
 				// .3查询受影响的软件版本信息
 				softVersionList = probManageService.querySoftVersionList(prob.getProbId());
+				prob.setAffectedVersion(JSON.toJSONString(softVersionList));
 				// }
 				// .4查询子任务
 				if (probRestore == null)
@@ -603,6 +614,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			for (Prob probParam : probParams) {
 				String desc = probParam.getDesc();
 				if (StringUtils.isNotBlank(desc)) {
+					desc = HtmlUtils.htmlUnescape(desc);
 					desc = desc.replaceAll("\r\n", "");
 					desc = desc.replaceAll("<(?!img|br|/p|/table|/tr|/th|/td).*?>", "");
 					desc = desc.replaceAll("<(?!img|br|/p|/table|/tr).*?>", "    ");
@@ -617,6 +629,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 
 				String solution = probParam.getSolution();
 				if (StringUtils.isNotBlank(solution)) {
+					solution = HtmlUtils.htmlUnescape(solution);
 					solution = solution.replaceAll("\r\n", "");
 					solution = solution.replaceAll("<(?!img|br|/p|/table|/tr|/th|/td).*?>", "");
 					solution = solution.replaceAll("<(?!img|br|/p|/table|/tr).*?>", "    ");
@@ -725,6 +738,94 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			// session.setAttribute("softVersionList", softVersionList);
 			result = JSONArray.fromObject(softVersionList).toString();
 			softVersionCodes = null;
+		}
+		return SUCCESS;
+	}
+	
+	/**
+	 * 根据手工录入的信息解析软件版本范围
+	 * @return
+	 */
+	public String parserSoftVersion() {
+		if (softVersion != null && StringUtils.isNotBlank(softVersion.getManualEntry())) {
+			Map<String, Map<String, List<SoftVersionParser>>> versionParser = SoftVersionUtil.createSoftVersionRangeParsers(softVersion.getManualEntry());
+			result = JSON.toJSONString(versionParser, SerializerFeature.DisableCircularReferenceDetect);
+		} else {
+			result = "{}";
+		}
+		return SUCCESS;
+	}
+	
+	public String parserOldSoftVersion() {
+		if (softVersion == null) {
+			softVersion = new SoftVersion();
+		}
+		softVersion.setProbId(Integer.valueOf(0).equals(softVersion.getProbId()) ? null : softVersion.getProbId());
+		softVersion.setSplited(0);
+		List<SoftVersion> versionList = probManageService.querySoftVersionList(softVersion);
+		Map<Integer, List<SoftVersion>> parsedVersionMap = new HashMap<Integer, List<SoftVersion>>(versionList.size());
+		Set<Integer> manualEntryProbSet = new HashSet<Integer>();
+		// 遍历所有版本，对手工输入的进行解析，按probId进行分组，重新保存
+		Long prevGroupId = 0L;
+		for (SoftVersion softVersion : versionList) {
+			int probId = softVersion.getProbId();
+			List<SoftVersion> parsedVersionList = parsedVersionMap.get(probId);
+			if (parsedVersionList == null) {
+				parsedVersionList = new ArrayList<SoftVersion>();
+				parsedVersionMap.put(probId, parsedVersionList);
+			}
+			if (StringUtils.isNotBlank(softVersion.getManualEntry())) {
+				manualEntryProbSet.add(probId);
+				Map<String, Map<String, List<SoftVersionParser>>> parserMap = SoftVersionUtil.createSoftVersionRangeParsers(softVersion.getManualEntry());
+				for (Entry<String, Map<String, List<SoftVersionParser>>> entry : parserMap.entrySet()) {
+					String manualEntry = entry.getKey();
+					Long groupId = System.currentTimeMillis();
+					while(prevGroupId >= groupId) {
+						groupId = System.currentTimeMillis();
+					}
+					Map<String, List<SoftVersionParser>> manualEntrySubMap = entry.getValue();
+					if (manualEntrySubMap.isEmpty()) {
+						SoftVersion parsedVersion = new SoftVersion();
+						parsedVersion.setProbId(probId);
+						parsedVersion.setManualEntry(manualEntry);
+						parsedVersion.setManualEntrySub("");
+						parsedVersion.setEntryStart("");
+						parsedVersion.setEntryEnd("");
+						parsedVersion.setMarkStart("");
+						parsedVersion.setMarkEnd("");
+						parsedVersion.setAffectedType(0);
+						parsedVersion.setGroupId(groupId);
+						parsedVersionList.add(parsedVersion);
+					} else {
+						for (Entry<String, List<SoftVersionParser>> entrySub : manualEntrySubMap.entrySet()) {
+							String manualEntrySub = entrySub.getKey();
+							List<SoftVersionParser> ranges = entrySub.getValue();
+							SoftVersionParser start = ranges.get(0);
+							SoftVersionParser end = ranges.get(1);
+							SoftVersion parsedVersion = new SoftVersion();
+							parsedVersion.setProbId(probId);
+							parsedVersion.setManualEntry(manualEntry);
+							parsedVersion.setManualEntrySub(manualEntrySub);
+							parsedVersion.setEntryStart(start.getVersion());
+							parsedVersion.setEntryEnd(end.getVersion());
+							parsedVersion.setMarkStart(start.getMark());
+							parsedVersion.setMarkEnd(end.getMark());
+							parsedVersion.setAffectedType(0);
+							parsedVersion.setGroupId(groupId);
+							parsedVersionList.add(parsedVersion);
+						}
+					}
+					prevGroupId = groupId;
+				}
+			} else {
+				softVersion.setGroupId(0L);
+				parsedVersionList.add(softVersion);
+			}
+		}
+		for (Entry<Integer, List<SoftVersion>> entry : parsedVersionMap.entrySet()) {
+			Integer probId = entry.getKey();
+			List<SoftVersion> parsedVersionList = entry.getValue();
+			probManageService.updateProbSoftVersion(parsedVersionList, probId);
 		}
 		return SUCCESS;
 	}

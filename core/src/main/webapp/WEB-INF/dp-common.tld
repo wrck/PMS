@@ -24,6 +24,41 @@
             <name>isNav</name>
         </attribute>
     </tag>
+    <tag>
+		<name>JSDebugger</name>
+		<tag-class>com.dp.plat.core.tags.JSDebuggerTag</tag-class>
+		<description>前端反审查处理标签</description>
+		<attribute>
+			<name>type</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>处理方式，redirect、rewrite、callback</description>
+		</attribute>
+		<attribute>
+			<name>content</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>处理方式的内容，redirect：传入 开启控制台后重定向地址，write：传入 开启控制台后重写 document.body 内容，支持传入节点或字符串，callback：传入开启控制台后的回调函数</description>
+		</attribute>
+		<attribute>
+			<name>options</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>optionsJSON格式</description>
+		</attribute>
+		<attribute>
+			<name>clear</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>禁用 console.clear 函数，防止脚本清屏阻断监测</description>
+		</attribute>
+		<attribute>
+			<name>debug</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>是否开启定时 debugger 反爬虫审查</description>
+		</attribute>
+		<attribute>
+			<name>debugTime</name>
+			<rtexprvalue>true</rtexprvalue>
+			<description>定时 debugger 时间间隔（毫秒）</description>
+		</attribute>
+	</tag>
 	<!-- csrf token  -->
 	<tag>
 		<!-- 标签名 -->

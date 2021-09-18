@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -33,8 +34,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.annotation.SystemServiceLog;
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.pojo.SysLog;
@@ -98,9 +101,11 @@ public class SystemLogAspect {
 		final User user = UserContext.getCurrentUser();
 		// User user = (User) session.getAttribute("user");
 		// 请求的IP
-		final String ip = request != null ? request.getRemoteAddr() + ":" + request.getRemotePort() : null;
+		final String ip = request != null ? HttpContext.getCurrentIp(request) + ":" + request.getRemotePort() : null;
+		final String path = request != null ? request.getServletPath() : null;
 		try {
-			SystemLogUtil systemLogUtil = new SystemLogUtil(joinPoint, user, ip, sysLogService);
+			
+			SystemLogUtil systemLogUtil = new SystemLogUtil(joinPoint, user, ip + " -> " + path, sysLogService);
 			
 			queue.add(systemLogUtil);
 			
@@ -132,12 +137,13 @@ public class SystemLogAspect {
 		// User user = (User) session.getAttribute("user");
 
 		// 获取请求ip
-		String ip = request != null ? request.getRemoteAddr() + ":" + request.getRemotePort() : null;
-
+		String ip = request != null ? HttpContext.getCurrentIp(request) + ":" + request.getRemotePort() : null;
+		String path = request != null ? request.getServletPath() : "UNKNOW";
+		ip = ip + " -> " + path;
 		try {
 			/* ========控制台输出========= */
 			String description = processSystemLogDescription(joinPoint, SystemControllerLog.class);
-			String paramsJsonStr = JSON.toJSONString(params);
+			String paramsJsonStr = toJSONString(params);
 
 			logger.debug("=====异常通知开始=====");
 			logger.debug("异常代码:" + e.getClass().getName());
@@ -337,7 +343,7 @@ public class SystemLogAspect {
 				// "(\\w+)\\" + afterSplit, "");
 
 				// 将所有变量参数都转化为map
-				String objStr = JSON.toJSONString(newParams);
+				String objStr = toJSONString(newParams);
 				newParams = JSON.parseObject(objStr, HashMap.class);
 
 				Set<String> fieldSet = new HashSet<String>();
@@ -420,6 +426,21 @@ public class SystemLogAspect {
 		}
 		return ignoreParams;
 	}
+	
+	/**
+	 * 转化为Json字符串
+	 * @param obj
+	 * @return
+	 */
+	public static String toJSONString(Object obj) {
+//		try {
+//			return Jackson2ObjectMapperBuilder.json().build()
+//					.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+//					.writeValueAsString(obj);
+//		} catch (JsonProcessingException e) {
+//		}
+		return JSON.toJSONString(obj, SerializerFeature.WriteDateUseDateFormat);
+	}
 
 	/**
 	 * 将请求参数封装成JSON字符串
@@ -430,7 +451,7 @@ public class SystemLogAspect {
 	 */
 	public static String getParamsJson(JoinPoint joinPoint) throws Exception {
 		Map<String, Object> params = getParamsMap(joinPoint);
-		return JSON.toJSONString(params);
+		return toJSONString(params);
 	}
 
 	/**
@@ -558,7 +579,7 @@ public class SystemLogAspect {
 					if (value instanceof Map) {
 						parseMap = (Map<String, Object>) value;
 					} else {
-						String objStr = JSON.toJSONString(value);
+						String objStr = toJSONString(value);
 						parseMap = JSON.parseObject(objStr, HashMap.class);
 					}
 					for (Entry<String, Object> entry : parseMap.entrySet()) {
@@ -611,7 +632,6 @@ public class SystemLogAspect {
 		}
 		return value;
 	}
-	
 	
 	class LogThread extends Thread {
 		private SystemLogAspect logAspect;
@@ -692,7 +712,7 @@ class SystemLogUtil {
 		try {
 			// *========控制台输出=========*//
 			String description = this.processSystemLogDescription(joinPoint, SystemControllerLog.class);
-			String paramsJsonStr = JSON.toJSONString(params);
+			String paramsJsonStr = toJSONString(params);
 			logger.debug("=====后置通知开始=====");
 			logger.debug("请求方法:" + joinPoint.getSignature().toString());
 			// logger.debug("方法描述:" + getSystemLogDescription(joinPoint,
@@ -731,7 +751,7 @@ class SystemLogUtil {
 		try {
 			/* ========控制台输出========= */
 			String description = processSystemLogDescription(joinPoint, SystemControllerLog.class);
-			String paramsJsonStr = JSON.toJSONString(params);
+			String paramsJsonStr = toJSONString(params);
 
 			logger.debug("=====异常通知开始=====");
 			logger.debug("异常代码:" + e.getClass().getName());
@@ -867,7 +887,7 @@ class SystemLogUtil {
 				// "(\\w+)\\" + afterSplit, "");
 
 				// 将所有变量参数都转化为map
-				String objStr = JSON.toJSONString(newParams);
+				String objStr = toJSONString(newParams);
 				newParams = JSON.parseObject(objStr, HashMap.class);
 
 				Set<String> fieldSet = new HashSet<String>();
@@ -950,7 +970,7 @@ class SystemLogUtil {
 		}
 		return ignoreParams;
 	}
-
+	
 	/**
 	 * 将请求参数封装成JSON字符串
 	 * 
@@ -960,7 +980,7 @@ class SystemLogUtil {
 	 */
 	public String getParamsJson(JoinPoint joinPoint) throws Exception {
 		Map<String, Object> params = getParamsMap(joinPoint);
-		return JSON.toJSONString(params);
+		return toJSONString(params);
 	}
 
 	/**
@@ -1088,12 +1108,15 @@ class SystemLogUtil {
 					if (value instanceof Map) {
 						parseMap = (Map<String, Object>) value;
 					} else {
-						String objStr = JSON.toJSONString(value);
+						String objStr = toJSONString(value);
 						parseMap = JSON.parseObject(objStr, HashMap.class);
 					}
 					for (Entry<String, Object> entry : parseMap.entrySet()) {
 						Object tempValue = entry.getValue();
 						if (tempValue != null) {
+//							if (tempValue instanceof Date) {
+//								tempValue = DateConverter.covert((Date) tempValue);
+//							}
 							newParams.put(prevRelation + relation + "." + entry.getKey(), tempValue);
 						}
 					}
@@ -1140,6 +1163,21 @@ class SystemLogUtil {
 			value = newParams.getOrDefault(key, "");
 		}
 		return value;
+	}
+	
+	/**
+	 * 转化为Json字符串
+	 * @param obj
+	 * @return
+	 */
+	public static String toJSONString(Object obj) {
+//		try {
+//			return Jackson2ObjectMapperBuilder.json().build()
+//					.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+//					.writeValueAsString(obj);
+//		} catch (JsonProcessingException e) {
+//		}
+		return JSON.toJSONString(obj, SerializerFeature.WriteDateUseDateFormat);
 	}
 }
 

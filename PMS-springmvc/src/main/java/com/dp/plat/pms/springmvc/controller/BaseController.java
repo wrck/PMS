@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
@@ -78,15 +79,21 @@ public class BaseController {
 	 * @return
 	 */
 	protected List<DataTableColumn> findColumnList(String dataName, Boolean withSuper) {
+		boolean isExcel = HttpContext.isExcel();
 		List<Object> fieldList = this.findFieldList(dataName, DATATYPE_TABLE, withSuper);
 		List<DataTableColumn> columns = new ArrayList<>();
 		for (Iterator<Object> iterator = fieldList.iterator(); iterator.hasNext();) {
 			DataFieldRelation dataFieldRelation = (DataFieldRelation) iterator.next();
+			String media = dataFieldRelation.getMedia();
 			DataTableColumn dataTableColumn = dataFieldRelation;
 			String alias = dataFieldRelation.getAlias();
 			dataTableColumn.setTitle(dataFieldRelation.getTitle());
 			dataTableColumn.setName(alias);
-			columns.add((DataFieldRelation) dataTableColumn);
+			if (media == null || (isExcel && "excel".equalsIgnoreCase(media))) {
+				columns.add((DataFieldRelation) dataTableColumn);
+			} else if (!isExcel && !"excel".equalsIgnoreCase(media)) {
+				columns.add((DataFieldRelation) dataTableColumn);
+			}
 		}
 		return columns;
 	}

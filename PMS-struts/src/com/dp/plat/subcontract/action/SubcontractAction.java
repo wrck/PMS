@@ -7,15 +7,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.json.annotations.JSON;
 import org.springframework.beans.BeanUtils;
 
@@ -60,7 +64,6 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.PmClosedLoopMark;
 import com.dp.plat.util.PmClosedLoopMarkFactory;
-import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.Preparable;
@@ -138,20 +141,54 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private String redirect;
 	private int tabIndex;
 	private String autoCheckProjects;
+	private String namespace;
 
 	// 分页参数
 	private DisplayParam displayParam;
 
 	@Override
 	public void prepare() throws Exception {
-		System.out.println(getServletRequest().getRequestURI());
+		HttpServletRequest request = getServletRequest();
+		String referer = request.getHeader("Referer");
+		if (StringUtils.isNotBlank(referer)) {
+			URL refererUrl = new URL(referer);
+//			if (refererUrl.getHost().equals(request.getRemoteHost())) {
+				referer = refererUrl.getPath().replace(request.getContextPath(), "");
+				namespace = referer.substring(0, referer.lastIndexOf("/"));
+//			}
+		}
+		if (namespace == null) {
+			ActionMapping actionMapping = (ActionMapping) request.getAttribute("struts.actionMapping");
+			namespace = actionMapping.getNamespace();
+		}
+		if (namespace.startsWith("/")) {
+			namespace = namespace.substring(1, namespace.length());
+		}
+		if (!namespace.startsWith("module")) {
+			namespace = "module";
+		}
 		user = UserContext.getUserContext().getUser();
+	}
+	
+	/**
+	 * 快速查看，如果返回结果为1，则直接进入具体详情页，否则返回列表
+	 * @return
+	 * @throws Exception
+	 */
+	public String view() throws Exception {
+		String view = list();
+		if (subcontractVOList.size() == 1) {
+			subcontract = subcontractVOList.get(0);
+			view = input();
+		} 
+		return view;
 	}
 
 	public String list() throws Exception {
 		if (!((user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) || user.isHasRole(MessageUtil.ROLE_ADMIN)
 				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+				|| user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
 				|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
 			setErrmsg("没有访问权限！");
 			return ERROR;
@@ -161,6 +198,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		}
 		if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+				|| user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
 				|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
 			subcontractVO.setAreaPower(user.getAreapower());
 		}
@@ -199,7 +237,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		}
 		return "list";
 	}
-
+	
 	/**
 	 * 新建
 	 */
@@ -208,6 +246,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		if (!((user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) || user.isHasRole(MessageUtil.ROLE_ADMIN)
 				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+				|| user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
 				|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
 			setErrmsg("没有访问权限！");
 			return ERROR;
@@ -227,6 +266,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 							|| user.isHasRole(MessageUtil.ROLE_AREA_LEADER)))
 					|| user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 					|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+					|| user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
 					|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
 				setErrmsg("没有访问权限！");
 				return ERROR;
@@ -247,6 +287,8 @@ public class SubcontractAction extends BaseAction implements Preparable {
 					tabIndex = 1;
 				} else if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)) {
 					tabIndex = 2;
+				} else if (user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)) {
+					tabIndex = 3;
 				} else if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
 					tabIndex = 4;
 				} else if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) && user.getAreapower() != null
@@ -1501,6 +1543,14 @@ public class SubcontractAction extends BaseAction implements Preparable {
 
 	public void setAutoCheckProjects(String autoCheckProjects) {
 		this.autoCheckProjects = autoCheckProjects;
+	}
+	
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
 	}
 
 	public DisplayParam getDisplayParam() {

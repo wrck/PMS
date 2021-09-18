@@ -38,6 +38,11 @@ public class PrjProperty {
     private BigDecimal projectMoney;
     // 提交时间
     private Date submitTime;
+    // 项目投标时间
+    private Date predBidDate;
+    // 客户联系人
+    private String linkmanName;
+    private String linkmanTel;
 	
 	public String getOrderExecNumber() {
 		return orderExecNumber;
@@ -200,5 +205,23 @@ public class PrjProperty {
 	}
 	public void setSubmitTime(Date submitTime) {
 		this.submitTime = submitTime;
+	}
+	public Date getPredBidDate() {
+		return predBidDate;
+	}
+	public void setPredBidDate(Date predBidDate) {
+		this.predBidDate = predBidDate;
+	}
+	public String getLinkmanName() {
+		return linkmanName;
+	}
+	public void setLinkmanName(String linkmanName) {
+		this.linkmanName = linkmanName;
+	}
+	public String getLinkmanTel() {
+		return linkmanTel;
+	}
+	public void setLinkmanTel(String linkmanTel) {
+		this.linkmanTel = linkmanTel;
 	}
 }

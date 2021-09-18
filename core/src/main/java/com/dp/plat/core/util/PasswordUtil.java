@@ -12,7 +12,7 @@ import org.apache.shiro.util.ByteSource;
 public class PasswordUtil {
 
 	/**
-	 * 对密码进行一次SHA1无盐加密，再对加密后的密码进行1024次MD5有盐加密
+	 * 对密码进行1次SHA1有盐加密，再对加密后的密码进行1024次MD5有盐加密
 	 * 
 	 * @param saltSource
 	 *            盐值
@@ -21,7 +21,7 @@ public class PasswordUtil {
 	 * @return 加密后密码
 	 */
 	public static String encryptPassword(String saltSource, String credentials) {
-		return encryptMD5Password(encryptSHA1Password(credentials), saltSource, 1024);
+		return encryptMD5Password(encryptSHA1Password(credentials, saltSource, 1), saltSource, 1024);
 	}
 
 	/**
@@ -187,13 +187,15 @@ public class PasswordUtil {
 	}
 
 	public static void main(String[] args) {
-		String username = "s02008";
-		String credentials = "1";
-		String hashAlgorithmName = "MD5";
-		ByteSource salt = ByteSource.Util.bytes(username);
-		int hashIterations = 1024;
-		SimpleHash simpleHash = new SimpleHash(hashAlgorithmName, credentials, salt, hashIterations);
-		System.out.println(simpleHash.toString());
+		String username = "w02611";
+//		System.out.println(encryptSHA1Password("123456", username, 1));
+		System.out.println(encryptPassword(username, "123456"));
+//		String credentials = "1";
+//		String hashAlgorithmName = "MD5";
+//		ByteSource salt = ByteSource.Util.bytes(username);
+//		int hashIterations = 1024;
+//		SimpleHash simpleHash = new SimpleHash(hashAlgorithmName, credentials, salt, hashIterations);
+//		System.out.println(simpleHash.toString());
 	}
 
 }

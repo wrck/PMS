@@ -5,12 +5,22 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.QualityParam;
@@ -19,6 +29,7 @@ import com.dp.plat.data.bean.ReportQueryParam;
 import com.dp.plat.data.bean.StatisticsSummarize;
 import com.dp.plat.data.report.EchartsUtil;
 import com.dp.plat.echarts.Echarts;
+import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.ReportDataTypeParam;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
@@ -47,6 +58,8 @@ public class ReportAction extends BaseAction implements Preparable{
 	private List<Department> officeList;
 	private List<BasicDataBean> navTabList;// 项目维护页面选项卡集合
 	private ReportQueryParam queryParam;
+	private Map<String, Object> queryParamMap;
+	private List<Map<String, Object>> dataList;
 	
 	private String data;
 	private String dataJson;
@@ -63,6 +76,16 @@ public class ReportAction extends BaseAction implements Preparable{
 	private String impl0TableHtml;
 	private String impl1TableHtml;
 	private String impl3TableHtml;
+
+	@Override
+	public void prepare() throws Exception {
+		// 	// 数据查询
+		if (queryParam == null) {
+			queryParam = new ReportQueryParam();
+			queryParam.setStartTime(DateUtil.getFirstDay());
+			queryParam.setQuarterStartTime(DateUtil.getQuarterFirstDay(new Date()));
+		}
+	}
 
 	/**
 	 * 报表展示页面
@@ -491,6 +514,343 @@ public class ReportAction extends BaseAction implements Preparable{
 		}
 		return SUCCESS;
 	}
+	
+	public String projectSummaryStatus() {
+		boolean isSub = getServletRequest().getRequestURI().contains("/sub/");
+		// 选项卡
+		navTabList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_NAV_DATA_TAB);
+		if (StringUtils.isNotBlank(dataJson)) {
+			queryParamMap = JSON.parseObject(dataJson, Map.class);
+		}
+		if (queryParamMap == null) {
+			queryParamMap = new HashMap<String, Object>();
+		}
+		// 已创建项目
+		queryParamMap.put("projectState", "30,31,32");
+		// 已发货项目
+		queryParamMap.put("shipmentState", "-1");
+		
+		List<Map<String, Object>> list = reportService.queryProjectSummaryStatus(queryParamMap);
+		// 明细信息，这直接返回列表
+		if ("info".equals(data)) {
+			dataList = list;
+		} else { // 否则，则显示统计页面
+			// 工程计划状态
+			Collection<String> planStateKeys = Arrays.asList(/*"47"*/);
+			Map<String, String> projectPlanStateMap = converter2Map(basicDataService.queryBasicDataBeans("22"), planStateKeys);
+			// 实施状态
+			Collection<String> executionStateKeys = Arrays.asList();
+			Map<String, String> executionStateMap = converter2Map(basicDataService.queryBasicDataBeans("projectExecutionState"), executionStateKeys);
+			// 值和名称的映射关系
+			String executionStateRelationStr = "{" + 
+					"	['',null]: '未填写'," + 
+					"	['5','10']: '未实施'," + 
+					"	['20','30','40']: '实施中'," + 
+					"	['50','60','70','80','90']: '实施完成'" + 
+					"}";
+			Map<Collection<String>, String> executionStateRelation = JSON.parseObject(executionStateRelationStr, LinkedHashMap.class);
+			// 流程状态
+			Collection<String> closeProcessStateKeys = Arrays.asList(/*"10","15","20","30","40","50"*/);
+			Map<String, String> closeProcessStateMap = converter2Map(basicDataService.queryBasicDataBeans("projectCloseProcessState"), closeProcessStateKeys);
+			
+			Map<String, Object> config = new HashMap<String, Object>();
+			config.put("projectPlanStateMap", projectPlanStateMap);
+			config.put("executionStateMap", executionStateMap);
+			config.put("executionStateRelation", executionStateRelation);
+			config.put("closeProcessStateMap", closeProcessStateMap);
+			
+			//String summaryStr = "[{'title':'项目实施状态（直签+非直签）','params':['executionState'],'dimension':'executionState','allCondition':'总计','emptyCondition':'未填写'},{'title':'项目实施状态（直签）','params':['column004','column011'],'expression':'column004=${column004}&&column011=${column011}','condition':[{'regex':'column004=运营商市场部&&column011=10','result':true}],'dimension':'executionState','allCondition':'总计','emptyCondition':'未填写'},{'title':'项目流程状态（直签+非直签）','params':['closeProcessState'],'dimension':'closeProcessState','allCondition':'总计','emptyCondition':'未填写'},{'title':'可闭环项目数','dimensions':[{'params':['column004','column011','projectPlanState'],'expression':'column004=${column004}&&column011=${column011}&&projectPlanState=${projectPlanState}','condition':[{'regex':'column004=运营商市场部&&column011=10&&projectPlanState=47','result':true}],'dimension':'直签可闭环'},{'params':['column004','column011','executionState'],'expression':'column004=${column004}&&column011=${column011}&&executionState=${executionState}','condition':[{'regex':'column004=运营商市场部&&column011=10','result':false},{'regex':'executionState=(50|60|70|80|90)','result':true}],'dimension':'非直签可闭环'}]}]";
+//			String summaryStr = "[{'title':'项目实施状态（直签+非直签）','params':['executionState'],'dimension':'executionState','allCondition':'总计','emptyCondition':'未填写'},{'title':'项目实施状态（直签）','params':['column004','column011'],'expression':'column004=${column004}&&column011=${column011}','condition':[{'regex':'column004=运营商市场部&&column011=10','result':true}],'dimension':'executionState','allCondition':'总计','emptyCondition':'未填写'},{'title':'项目流程状态（直签+非直签）','params':['closeProcessState'],'dimension':'closeProcessState','allCondition':'总计','emptyCondition':'未填写'},{'title':'可闭环项目数','dimensions':[{'params':['column004','column011','projectPlanState'],'expression':'column004=${column004}&&column011=${column011}&&projectPlanState=${projectPlanState}','condition':[{'regex':'column004=运营商市场部&&column011=10&&projectPlanState=47','result':true}],'dimension':'直签可闭环'},{'params':['column004','column011','executionState'],'expression':'column004=${column004}&&column011=${column011}&&executionState=${executionState}','condition':[{'regex':'column004=运营商市场部&&column011=10','result':false,'queryResultName':'exceptZQYY','isReverse':true},{'regex':'executionState=(50|60|70|80|90)','result':true}],'dimension':'非直签可闭环'}],'allCondition':'总计','isQueryUnion':true}]";
+			String summaryStr = basicDataService.querySysArg("pm.report.project.summary.status");
+			List<LinkedHashMap> summaryOptions = JSON.parseArray(summaryStr, LinkedHashMap.class);
+			Map<String, Object> summary = new LinkedHashMap<String, Object>();
+			Map<String, Object> totalSummary = (Map<String, Object>) summary.getOrDefault("全国", new LinkedHashMap<>());
+			for (Map<String, Object> map : list) {
+				String column001 = (String) map.get("column001");
+				String officeName = (String) map.get("officeName");
+//				String column004 = (String) map.get("column004");
+//				String column011 = (String) map.get("column011");
+//				String projectPlanState = (String) map.get("projectPlanState");
+//				String executionState = (String) map.get("executionState");
+//				String closeProcessState = (String) map.get("closeProcessState");
+				
+				Map<String, Object> officeSummary = (Map<String, Object>) summary.getOrDefault(officeName, new LinkedHashMap<>());
+				HashMap<Object, Object> queryOffice = new HashMap<>();
+				queryOffice.put("column001", column001);
+				officeSummary.put("query", queryOffice);
+				for (Map options : summaryOptions) {
+					summaryDimensionStatus(options, map, config, officeSummary);
+					summaryDimensionStatus(options, map, config, totalSummary);
+				}
+				summary.put(officeName, officeSummary);
+			}
+			summary.put("全国", totalSummary);
+//			System.out.println(JSON.toJSONString(summary));
+			
+			// 转化为List
+			dataList = new ArrayList<Map<String,Object>>(summary.size());
+			StringBuilder titleHeader = new StringBuilder();
+			List<String> subTitleHeader = new ArrayList<String>();
+			boolean isFirst = true;
+			String[] tdClassArr = new String[] {"bg-info", "bg-warning", "bg-success", "bg-danger"};
+			for (Entry<String, Object> officeSummary : summary.entrySet()) {
+				Map<String, Object> dataMap = new LinkedHashMap<String, Object>();
+				Map<String, Object> summaryInfo = (Map<String, Object>) officeSummary.getValue();
+				Map<String, Object> summaryStatus = (Map<String, Object>) summaryInfo.getOrDefault("summary", Collections.emptyMap());
+				Map<String, Object> officeQuery = (Map<String, Object>) summaryInfo.getOrDefault("query", Collections.emptyMap());
+				dataMap.put("officeName", officeSummary.getKey());
+				dataMap.put("summaryStatus", summaryStatus);
+				
+				List<Integer> valueTd = new ArrayList<Integer>();
+				List<Object> valueRenderedTd = new ArrayList<Object>();
+				int summaryIndex = 0;
+				for (Entry<String, Object> status : summaryStatus.entrySet()) {
+					String tdClass = tdClassArr[summaryIndex++];
+					String title = status.getKey();
+					Map<String, Object> dimensionSummary = (Map<String, Object>) status.getValue();
+					// 初始化标题
+					if (isFirst) {
+						String thTagPrefixHtml = "<th class='" + tdClass;
+						String thTagHtml = thTagPrefixHtml + "'>";
+						titleHeader.append("</th>").append(thTagPrefixHtml).append("' colspan='").append(dimensionSummary.size()).append("'>").append(title);
+						subTitleHeader.add(thTagHtml + StringUtils.join(dimensionSummary.keySet(), "</th>" + thTagHtml));
+					}
+//					valueTd.addAll(dimensionSummary.values());
+					
+					// 渲染单元格
+					for (Entry<String, Object> summaryCount : dimensionSummary.entrySet()) {
+						String key = summaryCount.getKey();
+						Map<String, Object> value = (Map<String, Object>) summaryCount.getValue();
+						Integer count = (Integer) value.getOrDefault("count", 0);
+						Map<String, Object> query = (Map<String, Object>) value.get("query");
+						Collection<Map<String, Object>> querys = (Collection<Map<String, Object>>) value.get("querys");
+						if (query == null) {
+							query = new HashMap<String, Object>();
+						}
+						query.putAll(officeQuery);
+						if (querys != null) {
+							query.put("querys", querys);
+						}
+						valueTd.add(count);
+						StringBuilder renderedTd = new StringBuilder("<td class='").append(tdClass).append("'>");
+						if (count > 0) {
+//							valueRenderedTd.add("<a href='javascript:void(0);' onclick='summaryInfo(this)' data-query='" + JSON.toJSONString(query) + "'>" + count + "</a>");
+							renderedTd.append("<a href='javascript:void(0);' onclick='summaryInfo(this)' data-query='" + JSON.toJSONString(query) + "'>" + count + "</a>");
+						} else {
+//							valueRenderedTd.add(count);
+							renderedTd.append(count);
+						}
+						valueRenderedTd.add(renderedTd);
+					}
+				}
+				isFirst = false;
+//				valueTd.add(0, null);
+				valueRenderedTd.add(0, null);
+				dataMap.put("expendSummaryStatus", StringUtils.join(valueTd, "</td><td>"));
+				dataMap.put("expendSummaryStatusHtml", StringUtils.join(valueRenderedTd, "</td>"));
+				
+				dataList.add(dataMap);
+			}
+			subTitleHeader.add(0, "");
+			dataJson = StringUtils.join(subTitleHeader, "</th>");
+			if (!getServletRequest().getParameterMap().containsKey("6578706f7274")) {
+				dataJson = titleHeader.toString() + "</tr><tr><th>" + dataJson;
+			}
+		}
+		if (isSub) {
+			return SUCCESS;
+		}
+		return "projectSummaryStatus";
+	}
+	
+	/**
+	 * 将基础数据类型转换为map，筛选有用的Key
+	 * @param beans
+	 * @param keys
+	 * @return
+	 */
+	private Map<String, String> converter2Map(List<BasicDataBean> beans, Collection<String> filterKeys) {
+		if (beans == null || beans.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		boolean needFilter = filterKeys != null && !filterKeys.isEmpty();
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		for (BasicDataBean basicDataBean : beans) {
+			String key = basicDataBean.getBasicDataId();
+			if (needFilter && !filterKeys.contains(key)) {
+				continue;
+			}
+			map.put(key, basicDataBean.getBasicDataName());
+		}
+		return map;
+	}
+	
+	private String fillExpressionParams(String expression, Collection<String> params, Map<String, Object> values) {
+		for (String param : params) {
+			expression = expression.replaceAll("\\Q${" + param + "}\\E", String.valueOf(values.get(param)));
+		}
+		return expression;
+	}
+	
+	private Map summaryDimensionStatus(Map<String, Object> options, Map<String, Object> map, Map<String, Object> config, Map<String, Object> officeSummary) {
+		String title = (String) options.get("title");
+		List<Map> dimensions = (List) options.get("dimensions");
+		if (dimensions == null) {
+			dimensions = Arrays.asList(options);
+		}
+		Boolean isQueryUnion = (Boolean) options.getOrDefault("isQueryUnion", false);
+		for (Map dimensionMap : dimensions) {
+			String dimension = (String) dimensionMap.get("dimension");
+			String dimensionValue = (String) map.getOrDefault(dimension, dimension);
+			List<String> params = (List<String>) dimensionMap.getOrDefault("params", Collections.emptyList());
+			String expression = (String) dimensionMap.get("expression");
+			String allCondition = (String) dimensionMap.getOrDefault("allCondition", options.get("allCondition"));
+			boolean isMatch = true;
+//			Map<String, Object> officeQuery = (Map<String, Object>) officeSummary.getOrDefault("query", Collections.emptyMap());
+			Map<String, Object> query = (Map<String, Object>) dimensionMap.get("query");
+			if (query == null) {
+				query = new HashMap<String, Object>(/* officeQuery */);
+			}
+			if (StringUtils.isNoneBlank(expression)) {
+				String expressionV = fillExpressionParams(expression, params, map);
+				List<Map> conditions = (List<Map>) dimensionMap.get("condition");
+				// 是否将conditions解析为查询参数
+				Boolean isQueryParsed = (Boolean) dimensionMap.getOrDefault("isQueryParsed", false);
+				for (Map condition : conditions) {
+					String regex = (String) condition.get("regex");
+					String queryResultName =  (String) condition.get("queryResultName");
+					Boolean isReverse =  (Boolean) condition.getOrDefault("isReverse", false);
+					Boolean result =  (Boolean) condition.getOrDefault("result", true);
+					
+					// 如果没有解析查询参数，则进行解析，将regex解析成查询参数
+					if (!Boolean.TRUE.equals(isQueryParsed) ) {
+						String queryStr = "{'" + regex.replaceAll("=", "':'")
+								.replaceAll("&&", "','")
+								.replaceAll("\\(", "")
+								.replaceAll("\\)", "")
+								.replaceAll("\\|", ",") + "'}";
+						Map<String, Object> queryInner = JSON.parseObject(queryStr, Map.class);
+						if (query == null || query.isEmpty()) {
+							query = queryInner;
+						} else {
+							query.putAll(queryInner);
+						}
+						if (StringUtils.isNotBlank(queryResultName)) {
+							query.put(queryResultName, isReverse ^ result);
+						}
+					}
+					
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcher = pattern.matcher(expressionV);
+					if (!result.equals(matcher.find())) {
+						isMatch = false;
+						break;
+					}
+				}
+				dimensionMap.put("isQueryParsed", true); 
+			}
+			dimensionMap.put("query", query);
+			
+			Map<String, String> dimensionValueMap = (Map) config.getOrDefault(dimension + "Map", Collections.emptyMap());
+			Map<Collection<String>, String> dimensionValueRelation = (Map) config.getOrDefault(dimension + "Relation", Collections.emptyMap());
+			String dimensionKey = dimensionValue;
+			String dimensionSourceKey = dimensionValue;
+			Map<String, Object> summaryInfo = (Map<String, Object>) officeSummary.getOrDefault("summary", new LinkedHashMap<>());
+			Map<String, Object> dimensionSummary = (Map<String, Object>) summaryInfo.get(title);
+			boolean isFirst = dimensionSummary == null;
+			if (isFirst) {
+				dimensionSummary = new LinkedHashMap<String, Object>();
+			}
+			// 初始化状态值和状态Map
+			if (!dimensionValueRelation.isEmpty()) {
+				// 如果存在值对应关系，则根据值对应关系进行统计
+				for (Entry<Collection<String>, String> entry : dimensionValueRelation.entrySet()) {
+					if (isFirst) {
+						LinkedHashMap value = new LinkedHashMap();
+						value.put("count", 0);
+						HashMap<String, Object> valueQuery = new HashMap<>(query);
+						valueQuery.put(dimension, StringUtils.join(entry.getKey(), ","));
+						value.put("query", valueQuery);
+						dimensionSummary.put(entry.getValue(), value);
+					}
+					if (entry.getKey().contains(dimensionValue)) {
+						dimensionSourceKey = StringUtils.join(entry.getKey(), ",");
+						dimensionKey = entry.getValue();
+					}
+				}
+			} else if (!dimensionValueMap.isEmpty()) {
+				// 如果存在值，则根据值进行统计
+				if (isFirst) {
+					for (Entry<String, String> entry : dimensionValueMap.entrySet()) {
+						LinkedHashMap value = new LinkedHashMap();
+						value.put("count", 0);
+						HashMap<String, Object> valueQuery = new HashMap<>(query);
+						valueQuery.put(dimension, entry.getKey());
+						value.put("query", valueQuery);
+						dimensionSummary.put(entry.getValue(), value);
+					}
+				}
+				dimensionKey = dimensionValueMap.getOrDefault(dimensionValue, dimensionValue);
+			} else {
+				// 如果都不存在，则根据dimensions来统计
+				if (isFirst) {
+					for (Map entry : dimensions) {
+						String tdimension = (String) entry.get("dimension");
+						String tdimensionValue = (String) map.getOrDefault(tdimension, tdimension);
+						LinkedHashMap value = new LinkedHashMap();
+						value.put("count", 0);
+						if (dimension.equals(tdimension)) {
+							value.put("query", new HashMap<>(query));
+						}
+						dimensionSummary.put(tdimensionValue, value);
+					}
+				} 
+			}
+			// 进行统计值累加
+			if (isMatch) {
+				Map<String, Object> value = (Map<String, Object>) dimensionSummary.get(dimensionKey);
+				if (value == null) {
+					value = new LinkedHashMap<String, Object>();
+				}
+				Integer count = (Integer) value.getOrDefault("count", 0);
+				value.put("count", count + 1);
+				
+				if (value.get("query") == null) {
+					HashMap<String, Object> valueQuery = new HashMap<>(query);
+					valueQuery.put(dimension, dimensionSourceKey);
+					value.put("query", valueQuery);
+				}
+				dimensionSummary.put(dimensionKey, value);
+			}
+			// 是否有总计，如果有进行求和
+			if (StringUtils.isNotBlank(allCondition)) {
+				Map<String, Object> allValue = (Map<String, Object>) dimensionSummary.get(allCondition);
+				if (allValue == null) {
+					allValue = new LinkedHashMap<String, Object>();
+				}
+				// 初始化总计的查询条件
+				if (isQueryUnion) {
+					Collection<Map<String, Object>> querys = (Collection<Map<String, Object>>) allValue.get("querys");
+					if (querys == null) {
+						querys = new HashSet<Map<String, Object>>(dimensions.size());
+					}
+					querys.add(query);
+					allValue.put("querys", querys);
+				} else {
+					if (allValue.get("query") == null) {
+						HashMap<String, Object> valueQuery = new HashMap<>(query);
+						allValue.put("query", valueQuery);
+					}
+				}
+				Integer count = (Integer) allValue.getOrDefault("count", 0);
+				allValue.put("count", isMatch ? (count + 1) : count);
+				dimensionSummary.put(allCondition, allValue);
+			}
+			summaryInfo.put(title, dimensionSummary);
+			officeSummary.put("summary", summaryInfo);
+		}
+		return officeSummary;
+	}
 
 	public List<Department> getOfficeList() {
 		return officeList;
@@ -602,17 +962,25 @@ public class ReportAction extends BaseAction implements Preparable{
 	public void setCloseTableHtml(String closeTableHtml) {
 		this.closeTableHtml = closeTableHtml;
 	}
-	@Override
-	public void prepare() throws Exception {
-		// 	// 数据查询
-		if (queryParam == null) {
-			queryParam = new ReportQueryParam();
-			queryParam.setStartTime(DateUtil.getFirstDay());
-			queryParam.setQuarterStartTime(DateUtil.getQuarterFirstDay(new Date()));
-		}
-		
+	public Map<String, Object> getQueryParamMap() {
+		return queryParamMap;
 	}
-	
+	public void setQueryParamMap(Map<String, Object> queryParamMap) {
+		this.queryParamMap = queryParamMap;
+	}
+	public List<Map<String, Object>> getDataList() {
+		return dataList;
+	}
+	public void setDataList(List<Map<String, Object>> dataList) {
+		this.dataList = dataList;
+	}
+
+	/**
+	 * 按时间降序排序
+	 * @param a
+	 * @param b
+	 * @param c
+	 */
 	private void arraySort(Date[] a , String[] b , Double[] c){
 		int n = a.length;
 		for (int i = 0; i < n - 1; i++) {
@@ -634,6 +1002,11 @@ public class ReportAction extends BaseAction implements Preparable{
 		}
 	}
 	
+	/**
+	 * 按分值降序排列
+	 * @param a
+	 * @param b
+	 */
 	private void arraySort(Double[] a, String[] b) {
 		int n = a.length;
 		for (int i = 0; i < n - 1; i++) {

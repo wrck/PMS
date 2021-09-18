@@ -4,10 +4,11 @@
 package com.dp.plat.core.util;
 
 import java.text.MessageFormat;
-import java.util.Hashtable;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.util.StringUtils;
 
@@ -16,7 +17,7 @@ import org.springframework.util.StringUtils;
  *
  */
 public class PropertyUtil {
-	private static Hashtable<String, ResourceBundle> res = new Hashtable<String, ResourceBundle>();
+	private static ConcurrentHashMap<String, Set<ResourceBundle>> res = new ConcurrentHashMap<String, Set<ResourceBundle>>();
 	private static String[] baseNames;
 	static {
 		ResourceBundle rb = PropertyResourceBundle.getBundle("config", Locale.CHINA);
@@ -25,27 +26,51 @@ public class PropertyUtil {
 			baseNames = baseNameStr.split(";");
 		}
 	}
-
-	public static String getProperty(String key) {
+	
+	private static Set<ResourceBundle> getBundles(String key, boolean findNew) {
 		String mod = key.substring(0, key.indexOf("."));
-		try {
-			ResourceBundle rb = res.get(mod);
-			if (null == rb) {
-				for (String baseName : baseNames) {
-					rb = PropertyResourceBundle.getBundle(baseName, Locale.CHINA);
-					if (rb.containsKey(key)) {
-						res.put(mod, rb);
-						break;
-					}
+		Set<ResourceBundle> rbSet = res.get(mod);
+		if (null == rbSet) {
+			rbSet = ConcurrentHashMap.newKeySet();
+		}
+		if (findNew || rbSet.isEmpty()) {
+			for (String baseName : baseNames) {
+				ResourceBundle rb = PropertyResourceBundle.getBundle(baseName, Locale.CHINA);
+				if (rb.containsKey(key)) {
+					rbSet.add(rb);
+					break;
 				}
 			}
-			if (!rb.containsKey(key)) {
+			res.put(mod, rbSet);
+		}
+		return rbSet;
+	}
+
+	public static String getProperty(String key) {
+		return getProperty(key, false);
+	}
+	
+	private static String getProperty(String key, boolean isSecond) {
+		try {
+			Set<ResourceBundle> rbSet = getBundles(key, isSecond);
+			ResourceBundle validRb = null; 
+			for (ResourceBundle rb : rbSet) {
+				if (rb.containsKey(key)) {
+					validRb = rb;
+					break;
+				}
+			}
+			if (validRb == null && !isSecond) {
+				return getProperty(key, true);
+			}
+			if (validRb == null) {
 				return null;
 			}
-			return MessageFormat.format(rb.getString(key), new Object());
+			return MessageFormat.format(validRb.getString(key), new Object());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
+	
 }

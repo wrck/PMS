@@ -93,6 +93,7 @@
         <property name="filters">  
             <map>  
                 <entry key="anyRoles" value-ref="anyRoles"/>  
+                <entry key="hostFilter" value-ref="hostFilter"/>  
             </map>  
         </property>  
     </bean>
@@ -105,6 +106,7 @@
     	class="com.dp.plat.core.factory.FilterChainDefinitionMapBuilder"></bean>
     	
    	<bean id="anyRoles" class="com.dp.plat.core.filter.AnyRolesAuthorizationFilter"></bean>
+   	<bean id="hostFilter" class="com.dp.plat.core.filter.HostFilter"></bean>
    	<!-- Form验证拦截器，对登陆成功和失败进行连接，做自定义操作 -->
    	<!-- <bean id="formAuthenticationFilter" class="com.dp.plat.core.filter.DpFormAuthenticationFilter"></bean> -->
 </beans>

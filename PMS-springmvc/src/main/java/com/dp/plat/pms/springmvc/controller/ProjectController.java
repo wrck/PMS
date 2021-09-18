@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -106,12 +105,15 @@ public class ProjectController
 
 	@RequestMapping
 	public String home(Model model) {
+		if (!checkPermission(null, model, "project:list")) {
+			return Consts.VIEW_UNAUTHORIZED;
+		}
 		return VIEW_NAMESPACE + "list";
 	}
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectVO project, Model model) {
-//		if (HttpContext.isJSON()) {
+		if (!HttpContext.isHTML()) {
 			if (!checkPermission(null, model, "project:list")) {
 				return Consts.VIEW_UNAUTHORIZED;
 			}
@@ -125,6 +127,16 @@ public class ProjectController
 //			temp.setEffectiveTo(now);
 			temp.setDisabled(false);
 			// temp.setCompID(user.getCompId());
+			
+			// 特定角色增加回款信息
+			String tablePrefix = "";
+			String tableDataName = DATANAME_TABLE;
+			String needMacthCollectRoles = SystemConfig.systemVariables.getOrDefault("pm.project.match.collect.roles", StringUtils.join(new String[] {RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN}, ","));
+			if (UserContext.hasAnyRoles(StringUtils.split(needMacthCollectRoles, ","))) {
+				tablePrefix = "matchCollect_";
+				project.setMatchCollectMoney(true);
+				tableDataName = tablePrefix + tableDataName;
+			}
 			// 允许访问的项目类型
 			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
 				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
@@ -136,7 +148,6 @@ public class ProjectController
 				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
 					temp.setOfficeCodes(officeCodes);
 					project.setOfficeCodes(officeCodes);
-					
 				}
 				// 添加指派的项目成员
 				temp.setMemberCode(user.getUserName());
@@ -168,13 +179,13 @@ public class ProjectController
 			}
 			model.addAttribute("data", list);
 
-			List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
+			List<DataTableColumn> columns = this.findColumnList(tableDataName);
 			pageParam.setColumns(columns);
-//		} else {
-//			if (!checkPermission(null, model, "project:list")) {
-//				return Consts.VIEW_UNAUTHORIZED;
-//			}
-//		}
+		} else {
+			if (!checkPermission(null, model, "project:list")) {
+				return Consts.VIEW_UNAUTHORIZED;
+			}
+		}
 		return VIEW_NAMESPACE + "list";
 	}
 
@@ -558,33 +569,36 @@ public class ProjectController
 		
 		List<DataTableColumn> columns = null;
 		List<Object> data = null;
-		if (ProjectType.AF_XX_PROJECT.equals(projectType)) {
-			PresalesService presalesService = SpringContext.getBean("presalesService", PresalesService.class);
-			List<Map<String, Object>> orderDataList = presalesService.queryPresaleLend2RmaInfo(projectCode);
-			data = new ArrayList<Object>(orderDataList.size());
-			data.addAll(orderDataList);
-			columns = findColumnList("lendDetailList");
-		} else {
-			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
-			ProjectProduct product = new ProjectProduct();
-			product.setProjectCode(projectCode);
-			product.setProductfirstCode(productCode);
-			List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
-			data = new ArrayList<Object>(orderDataList.size());
-			data.addAll(orderDataList);
-			columns = findColumnList("productInfoList");
-		}
-//		ProjectProduct product = new ProjectProduct();
-//		product.setProjectCode(projectCode);
-//		product.setProjectType(projectType);
-//		if (!ProjectType.AF_XX_PROJECT.equals(projectType)) {
+//		if (ProjectType.AF_XX_PROJECT.equals(projectType)) {
+//			PresalesService presalesService = SpringContext.getBean("presalesService", PresalesService.class);
+//			List<Map<String, Object>> orderDataList = presalesService.queryPresaleLend2RmaInfo(projectCode);
+//			data = new ArrayList<Object>(orderDataList.size());
+//			data.addAll(orderDataList);
+//			columns = findColumnList("lendDetailList");
+//		} else {
 //			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+//			ProjectProduct product = new ProjectProduct();
+//			product.setProjectCode(projectCode);
 //			product.setProductfirstCode(productCode);
+//			List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
+//			data = new ArrayList<Object>(orderDataList.size());
+//			data.addAll(orderDataList);
+//			columns = findColumnList("productInfoList");
 //		}
-//		List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
-//		data = new ArrayList<Object>(orderDataList.size());
-//		data.addAll(orderDataList);
-//		columns = findColumnList("productInfoList");
+		ProjectProduct product = new ProjectProduct();
+		product.setProjectCode(projectCode);
+		product.setProjectType(projectType);
+		if (!ProjectType.AF_XX_PROJECT.equals(projectType)) {
+			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+			product.setProductfirstCode(productCode);
+		} else {
+			String productName = SystemConfig.systemVariables.getOrDefault("pm_project_af_productName_filter", "");
+			product.setProductfirstName(productName);
+		}
+		List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
+		data = new ArrayList<Object>(orderDataList.size());
+		data.addAll(orderDataList);
+		columns = findColumnList("productInfoList");
 		model.addAttribute("columns", columns);
 		model.addAttribute("data", data);
 

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -166,6 +167,11 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	@Override
 	public List<SoftVersion> querySoftVersionList(int probId) {
 		return probManageDao.querySoftVersionList(probId);
+	}
+	
+	@Override
+	public List<SoftVersion> querySoftVersionList(SoftVersion softVersion) {
+		return probManageDao.querySoftVersionList(softVersion);
 	}
 
 	@Override
@@ -406,8 +412,14 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 		if (softVersionList == null) {
 			softVersionList = probManageDao.querySoftVersionList(prob.getProbId());
 		}
-		StringBuilder softversion = new StringBuilder();
+		Set<String> softversionSet = new LinkedHashSet<String>(softVersionList.size());
 		for (SoftVersion version : softVersionList) {
+			StringBuilder softversion = new StringBuilder();
+			if (version == null) {
+				continue;
+			}
+			softversion.append(StringUtils.defaultIfBlank(version.getAffectedTypeName(), ""));
+			softversion.append("：  ");
 			if (version.getConp() != null) {
 				softversion.append("conp:");
 				softversion.append(version.getConp());
@@ -428,13 +440,15 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 				softversion.append(version.getPcb());
 				softversion.append("  ");
 			}
+			// 分组的只显示一条
 			if (StringUtils.isNotBlank(version.getManualEntry())) {
 				softversion.append(version.getManualEntry());
 				softversion.append("  ");
 			}
-			softversion.append("<br/>");
+//			softversion.append("<br/>");
+			softversionSet.add(softversion.toString());
 		}
-		paraMap.put("$softversion$", softversion.toString());
+		paraMap.put("$softversion$", StringUtils.join(softversionSet, "<br/>"));
 
 		// 根据角色发送不同内容
 		if (isProbAdmin == 1) {

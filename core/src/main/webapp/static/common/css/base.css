@@ -1345,6 +1345,34 @@ td .btn{
 	height: 26px;
 }
 
+.select2-container--default .select2-selection--single button.select2-selection__clear {
+	height: auto;
+	padding: 0;
+	margin-right: 10px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__clear {
+	margin-bottom: 5px;
+}
+
+.select2-container--default .select2-selection--multiple button.select2-selection__choice__remove {
+	border: none;
+	position: relative;
+	padding: 0;
+}
+
+.select2-container--default .select2-selection--multiple button.select2-selection__choice__remove:hover, 
+.select2-container--default .select2-selection--multiple button.select2-selection__choice__remove:focus {
+	background-color: transparent;
+}
+
+.select2-container--default .select2-selection--multiple.select2-selection--multiple-inline {
+	/* min-height: auto; */
+	max-height: 31px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
 .display-flex.has-feedback .help-block {
 	position: absolute;
     bottom: -1rem;
@@ -1547,7 +1575,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .form-inline .display-flex {
     display: inline-flex;
-       align-items: baseline;
+    align-items: baseline;
 }
 
 .form-inline .control-label {

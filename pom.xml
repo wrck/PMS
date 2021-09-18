@@ -8,10 +8,10 @@
 	<name>PMS</name>
 
 	<modules>
-		<module>PMS-struts</module>
+		<module>pms-struts</module>
 		<module>core</module>
-		<module>PMS-activiti</module>
-		<module>PMS-springmvc</module>
+		<module>pms-activiti</module>
+		<module>pms-springmvc</module>
 	</modules>
 
 	<properties>
@@ -45,7 +45,8 @@
 		<!-- <cas.version>3.6.1</cas.version> -->
 		<cas.version>3.2.2</cas.version>
 		<!-- shiro版本 -->
-		<shiro.version>1.4.1</shiro.version>
+		<!-- <shiro.version>1.4.1</shiro.version> -->
+		<shiro.version>1.7.1</shiro.version>
 		
 		<!-- 数据库连接池 -->
 		<commons-dbcp.version>1.4</commons-dbcp.version>
@@ -111,6 +112,9 @@
 
 		<!-- Activiti -->
 		<activiti.version>5.23.0</activiti.version>
+		
+		<!-- HTML Parser -->
+		<jsoup.version>1.14.2</jsoup.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
@@ -534,6 +538,14 @@
 				<version>1.6.2</version>
 			</dependency>
 
+			<!-- HTML Parser -->
+			<dependency>
+			  <!-- jsoup HTML parser library @ https://jsoup.org/ -->
+			  <groupId>org.jsoup</groupId>
+			  <artifactId>jsoup</artifactId>
+			  <version>${jsoup.version}</version>
+			</dependency>
+		
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
@@ -575,6 +587,26 @@
 				<configuration>
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
+				<executions>
+					<execution>
+						<id>copy-xmls</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/classes</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/java</directory>
+									<includes>
+										<include>**/*.xml</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- 生成sources源码包的插件 -->
 			<plugin>

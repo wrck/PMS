@@ -12,4 +12,14 @@
 		<name>leftmenu</name>
 		<tag-class>com.dp.plat.core.tags.LeftMenuTag</tag-class>
 	</tag>
+	<tag>
+		<name>JSDebugger</name>
+		<tag-class>com.dp.plat.core.tags.JSDebuggerTag</tag-class>
+		<attribute><name>type</name></attribute>
+		<attribute><name>clear</name></attribute>
+		<attribute><name>debug</name></attribute>
+		<attribute><name>debugTime</name></attribute>
+		<attribute><name>content</name></attribute>
+		<attribute><name>options</name></attribute>
+	</tag>
 </taglib>

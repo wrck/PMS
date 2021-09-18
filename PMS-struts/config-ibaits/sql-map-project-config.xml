@@ -198,7 +198,7 @@
                             ) 
                             ELSE `ph`.`projectName` 
                         END
-                    ) AS `projectName`, 
+                    ) AS `projectName`, majorProjectLevel,
                     `fd`.`basicDataName` AS `projectStateName`, `ph`.`projectState` AS `projectState`, 
                     GROUP_CONCAT(DISTINCT `pc`.`contractNo` SEPARATOR ',') AS `contractNo`, 
                     `ph`.`column005` AS `systemName`, 
@@ -427,6 +427,7 @@
             <isNotEmpty prepend="and" property="column001"><![CDATA[ ph.column001 = #column001# ]]></isNotEmpty>      
             <isNotEmpty prepend="and" property="column004"><![CDATA[ ph.column004 = #column004# ]]></isNotEmpty>      
             <isNotEmpty prepend="and" property="column011"><![CDATA[ ph.column011 = #column011#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ ph.majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="compId"><![CDATA[ ph.compId = #compId# ]]></isNotEmpty>   
 <!--                 GROUP BY `pc`.`projectGroupCode`,`ph`.`projectCode`  -->
             <![CDATA[
@@ -440,6 +441,7 @@
               NULL                    AS `projectCode`,
               NULL                    AS `rank`,
               IFNULL(IF(p.salesType = '01', p.projectName, pp.projectName), p.projectName)       AS `projectName`,
+              pp.majorProjectLevel    AS `majorProjectLevel`,
               `fd`.`basicDataName`    AS `projectStateName`,
               `fd`.`basicDataId`      AS `projectState`,
               `p`.`contractNo`        AS `contractNo`,
@@ -513,6 +515,7 @@
               NULL                    AS `projectCode`,
               NULL                    AS `rank`,
               IFNULL(IF(p.salesType = '01', p.projectName, pp.projectName), p.projectName)       AS `projectName`,
+              pp.majorProjectLevel    AS `majorProjectLevel`,
               `fd`.`basicDataName`    AS `projectStateName`,
               `fd`.`basicDataId`      AS `projectState`,
               `p`.`contractNo`        AS `contractNo`,
@@ -729,6 +732,7 @@
         <result property="projectId" column="projectId" nullValue="-1"/>
         <result property="projectCode" column="projectCode"/>
         <result property="column010Name" column="rank"/>
+        <result property="majorProjectLevel" column="majorProjectLevel"/>
         <result property="projectName" column="projectName"/>
         <result property="projectStateName" column="projectStateName"/>
         <result property="projectState" column="projectState"/>
@@ -784,6 +788,7 @@
             <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ serviceManager = #serviceManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
             <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ shipmentState = #shipmentState#]]></isNotEqual>
             <isNotEmpty prepend="and" property="createStartTime"><![CDATA[ projectCreateTime >= #createStartTime#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="createEndTime"><![CDATA[ projectCreateTime <= #createEndTime#]]></isNotEmpty>
@@ -825,6 +830,7 @@
             <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ serviceManager = #project.serviceManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.column010"><![CDATA[ rank = #project.column010#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="project.majorProjectLevel"><![CDATA[ majorProjectLevel = #project.majorProjectLevel#]]></isNotEmpty>
             <isNotEqual compareValue="0" prepend="and" property="project.shipmentState"><![CDATA[ shipmentState = #project.shipmentState#]]></isNotEqual>
             <isNotEmpty prepend="and" property="project.createStartTime"><![CDATA[ projectCreateTime >= #project.createStartTime#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.createEndTime"><![CDATA[ projectCreateTime <= #project.createEndTime#]]></isNotEmpty>
@@ -850,6 +856,7 @@
         <result property="projectId" column="projectId" nullValue="-1"/>
         <result property="projectCode" column="projectCode"/>
         <result property="column010Name" column="rank"/>
+        <result property="majorProjectLevel" column="majorProjectLevel"/>
         <result property="projectName" column="projectName"/>
         <result property="projectStateName" column="projectStateName"/>
         <result property="projectState" column="projectState"/>
@@ -942,6 +949,7 @@
         </isNotEmpty>
         <isNotEmpty prepend="and" property="oldProgramManagerCode"> projectManager = #oldProgramManagerCode# </isNotEmpty>
         <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
         <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ shipmentState = #shipmentState#]]></isNotEqual>
         <isNotEmpty prepend="and" property="createStartTime"><![CDATA[ projectCreateTime > #createStartTime#]]></isNotEmpty>
         <isNotEmpty prepend="and" property="createEndTime"><![CDATA[ projectCreateTime < #createEndTime#]]></isNotEmpty>
@@ -1021,6 +1029,7 @@
         </isNotEmpty>
         <isNotEmpty prepend="and" property="project.oldProgramManagerCode"> projectManager = #project.oldProgramManagerCode# </isNotEmpty>
         <isNotEmpty prepend="and" property="project.column010"><![CDATA[ rank = #project.column010#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.majorProjectLevel"><![CDATA[ majorProjectLevel = #project.majorProjectLevel#]]></isNotEmpty>
         <isNotEqual compareValue="0" prepend="and" property="project.shipmentState"><![CDATA[ shipmentState = #project.shipmentState#]]></isNotEqual>
         <isNotEmpty prepend="and" property="project.createStartTime"><![CDATA[ projectCreateTime > #project.createStartTime#]]></isNotEmpty>
         <isNotEmpty prepend="and" property="project.createEndTime"><![CDATA[ projectCreateTime < #project.createEndTime#]]></isNotEmpty>
@@ -1257,7 +1266,7 @@
     
     <select id="query-project-bycontractno" parameterClass="string" resultMap="pmOrderDataFromSap">
         <![CDATA[
-            SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, pppfs.majorProjectLevel,
+            SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
             podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
             IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
             podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
@@ -1280,7 +1289,7 @@
     
     <select id="query-project-bycontractnoAndType" parameterClass="map" resultMap="pmOrderDataFromSap">
         <![CDATA[
-            SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, pppfs.majorProjectLevel,
+            SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
             podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
             IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
             podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
@@ -3186,7 +3195,7 @@
     
     <select id="query_project_group_count" parameterClass="string" resultClass="int">
         <![CDATA[
-            SELECT COUNT(1) FROM pm_project_header WHERE projectCode LIKE '%$projectCode$%' AND effectiveTo IS NULL
+            SELECT COUNT(1) FROM pm_project WHERE projectCode LIKE '%$projectCode$%' AND effectiveTo IS NULL
         ]]>
     </select>
     <insert id="insert_branch_group_relationship" parameterClass="java.util.Map">
@@ -3253,9 +3262,9 @@
 
     <insert id="insert_merge_task" parameterClass="java.util.Map">
         <![CDATA[
-             INSERT INTO `pm_project_task`(`projectId`,`contractNo`,`taskTypeCode`,`taskTypeId`,`eventPlanHappenDate`,`eventPlanHappenDateENG`,`eventActualFinishDate`,
+             INSERT INTO `pm_project_task`(`projectId`, projectType, `contractNo`,`taskTypeCode`,`taskTypeId`,`eventPlanHappenDate`,`eventPlanHappenDateENG`,`eventActualFinishDate`,
                 `createTime`,`createBy`,`effectiveFrom`)
-             SELECT ppt.`projectId` ,#contractNo# ,ppt.`taskTypeCode` ,ppt.`taskTypeId` ,null ,ppt.`eventPlanHappenDateENG` ,
+             SELECT ppt.`projectId`, ppt.projectType, #contractNo# ,ppt.`taskTypeCode` ,ppt.`taskTypeId` ,null ,ppt.`eventPlanHappenDateENG` ,
                 ppt.`eventActualFinishDate` ,now(),#createBy#,now() FROM pm_project_task ppt 
             WHERE 
                 contractNo =  (SELECT contractNo  FROM pm_project_task WHERE  projectId = #projectId# AND effectiveFrom <= NOW() AND
@@ -3296,7 +3305,7 @@
         <![CDATA[
         select count(1) from pm_project_contract t1
           JOIN pm_project_group_relationship t2 ON t1.`projectGroupCode` = t2.`projectGroupCode`
-          JOIN pm_project_header t3 ON t2.`projectCode` = t3.`projectCode` AND t3.`effectiveFrom` <= NOW() 
+          JOIN pm_project t3 ON t2.`projectCode` = t3.`projectCode` AND t3.`effectiveFrom` <= NOW() 
         AND (t3.`effectiveTo` > NOW() OR t3.`effectiveTo` IS NULL)  
         where contractNo in ($contractNo$)
         ]]>
@@ -3427,6 +3436,8 @@
         <result property="opinion" column="opinion" />
         <result property="equExplain" column="equExplain" />    
         <result property="serviceType" column="serviceType"/>
+        <result property="companyName" column="companyName"/>
+        <result property="companyAbbr" column="companyAbbr"/>
     </resultMap>
     
     <select id="query-cbData-list"  parameterClass="com.dp.plat.param.DataQueryParam" resultMap="pmClCBData">
@@ -3448,7 +3459,7 @@
                 WHEN t1.column012 IS NOT NULL 
                 THEN t1.column012 
                 ELSE t1.columno12_readonly 
-            END AS serviceType, t1.compId, fc.name AS companyName
+            END AS serviceType, t1.compId, fc.name AS companyName, fc.abbr AS companyAbbr
             from 
             (
 			    select aa.*, a.times from (SELECT MAX(aa.id) AS id, COUNT(aa.id) AS times FROM pm_cl_evaluation_header aa WHERE aa.evaluationType = 3 AND aa.status = 1 GROUP BY aa.projectCode) a
@@ -3483,6 +3494,9 @@
             ]]>
         </isNotEmpty>
         <isNotEmpty prepend="and" property="serviceType"><![CDATA[ (t1.column012 = #serviceType# or t1.columno12_readonly= #serviceType#)]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="officeCode"><![CDATA[ t1.column001 = #officeCode# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="officeCodes"><![CDATA[ FIND_IN_SET(t1.column001, #officeCodes#) ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="compId"><![CDATA[ t1.compId = #compId# ]]></isNotEmpty>
         <![CDATA[
             group by a.projectCode
         ]]>
@@ -3502,7 +3516,7 @@
                     WHEN t1.column012 IS NOT NULL 
                     THEN t1.column012 
                     ELSE t1.columno12_readonly 
-                END AS serviceType, t1.compId, fc.name AS companyName
+                END AS serviceType, t1.compId, fc.name AS companyName, fc.abbr AS companyAbbr
                 from (
                     SELECT 
                      cb.projectId,cb.applyState, cb.instId, cbq.*, cbq.quesnaireVersion as times
@@ -3553,6 +3567,9 @@
             ]]>
         </isNotEmpty>
         <isNotEmpty prepend="and" property="serviceType"><![CDATA[ (t1.column012 = #serviceType# or t1.columno12_readonly= #serviceType#)]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="officeCode"><![CDATA[ t1.column001 = #officeCode# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="officeCodes"><![CDATA[ FIND_IN_SET(t1.column001, #officeCodes#) ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="compId"><![CDATA[ t1.compId = #compId# ]]></isNotEmpty>
         <![CDATA[
             group by t1.projectCode
         ]]>
@@ -3566,6 +3583,11 @@
                     view_shipment_info_4_pm vsip 
                 WHERE vsip.contract_code = replace(pps.contractNo, "-C", "")
                     AND vsip.barcode = pps.barcode)
+        ]]>
+    </select>
+    <select id="query_history_project_shipment_size" parameterClass="int" resultClass="int">
+        <![CDATA[
+            SELECT COUNT(*) FROM `pm_project_shipment` pps WHERE projectId = #projectId#
         ]]>
     </select>
     <select id="query_project_state" parameterClass="int" resultClass="int">
@@ -5573,6 +5595,7 @@
         <result property="projectName" column="projectName"/>
         <result property="projectState" column="projectState"/>
         <result property="isback" column="isback"/>
+        <result property="compId" column="compId"/>
         <result property="column001" column="column001"/>
         <result property="officeName" column="officeName"/>
         <result property="column002" column="column002"/>
@@ -5606,7 +5629,7 @@
   <select id="queryProjectSimplifyByProjectId" parameterClass="int" resultMap="SimpleProjectById" >
     <![CDATA[
         SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, 
-            GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, 
+            GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, pph.compId,
             CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`) END AS projectName, 
             pph.projectState, pph.isback, pph.column001, fd.departmentName AS officeName, pph.column002, pph.column003, pph.column004, pph.column005, 
             pph.column006, pph.column007, pph.column008, pph.column009, pph.column010, pph.column011,

@@ -24,6 +24,7 @@ import javax.mail.Message;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -420,7 +421,30 @@ public class MailUtil {
 	private static MimeMessage createMimeMessage(Message message, boolean isInner) throws MessagingException {
 		// 判断是否需要身份认证
 		MyAuthenticator authenticator = null;
+		Session session = message.getSession();
+		// 判断原来是否有session
 		MailSenderInfo mailInfo = new MailSenderInfo();
+		if (session != null) {
+			// 填充服务器地址，端口
+			mailInfo.setMailServerHost(StringUtils.defaultIfBlank(session.getProperty("mail.smtp.host"), mailInfo.getMailServerHost()));
+			mailInfo.setMailServerPort(StringUtils.defaultIfBlank(session.getProperty("mail.smtp.port"), mailInfo.getMailServerPort()));
+			// 填充账号密码
+			PasswordAuthentication passwordAuthentication = message.getSession().requestPasswordAuthentication(null, 0, null, null, null);
+			if (passwordAuthentication != null) {
+				mailInfo.setUserName(passwordAuthentication.getUserName());
+				mailInfo.setPassword(passwordAuthentication.getPassword());
+			}
+		}
+		mailInfo.setValidate(true);
+		Address[] formAddress = message.getFrom();
+		try {
+			if (formAddress != null && formAddress.length > 0) {
+				InternetAddress address = (InternetAddress) formAddress[0];
+				mailInfo.setFromAddress(address.getAddress());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 //		mailInfo.setIsInner(isInner);
 		// 补充邮件服务器相关参数
 		completeMailServerVariables(mailInfo);
@@ -718,17 +742,24 @@ public class MailUtil {
 			ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
 			int idxEnd = src.lastIndexOf(":");
 			int idxStart = src.indexOf(":");
+			String contextPath = servletContext.getContextPath();
 			String uri = null;
 			if (idxEnd != idxStart && idxEnd > 0) {
 				uri = src.substring(idxEnd);
-				String contextPath = servletContext.getContextPath();
 				uri = uri.replace(contextPath, "");
 				int idxTemp = uri.indexOf("/");
 				uri = uri.substring(idxTemp);
 			} else {
 				int indexOf = src.indexOf("static");
-				if (indexOf > -1) {
+				if (indexOf > 0) {
 					uri = src.substring(indexOf);
+				} else if (idxEnd > 0) {
+					uri = src.substring(idxEnd + 3);
+					int idxTemp = uri.indexOf("/");
+					uri = uri.substring(idxTemp);
+					uri = uri.replace(contextPath, "");
+					idxTemp = uri.indexOf("/");
+					uri = uri.substring(idxTemp);
 				}
 			}
 			String filePath = servletContext.getRealPath(uri);
@@ -759,15 +790,15 @@ public class MailUtil {
 			fileNames = mailInfo.getAttachFileNames().split("&&");
 		}
 		if (fileNames != null && fileNames.length > 0) {
-			ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
+//			ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
 			for (int i = 0; i < fileNames.length; i++) {
 				MimeBodyPart fileAttaches = new MimeBodyPart();
 				// 选择出每一个附件名
 				String filePath = fileNames[i].split(",")[0];
 				File file = new File(filePath);
-				if (!file.exists()) {
-					filePath = servletContext.getRealPath(filePath);
-				}
+//				if (!file.exists()) {
+//					filePath = servletContext.getRealPath(filePath);
+//				}
 				String displayname = fileNames[i].split(",")[1];
 				// 得到数据源
 				FileDataSource fds = new FileDataSource(filePath);
@@ -858,7 +889,7 @@ public class MailUtil {
 		List<Message> mimeMessageList = new ArrayList<>();
 		if (mailType != 2) {
 			// 原来的邮件类型和最终的一致，则不重新构建消息体
-			if ((mailType == 1 && Boolean.TRUE.equals(isInner)) || (mailType == 0 && !Boolean.TRUE.equals(isInner))) {
+			if ((mailType == 1 && Boolean.TRUE.equals(isInner)) || (mailType == 0 && !Boolean.TRUE.equals(isInner)) || mailType == -1) {
 				mimeMessageList.add(mimeMessage);
 				return mimeMessageList;
 			}
@@ -935,6 +966,17 @@ public class MailUtil {
 	 * @return 0:outer, 1:inner, 2:both, -1:none
 	 */
 	private static int filterMailType(String[] mailStrs) {
+		// 判断是否需要分别发送内外网邮箱
+		boolean needCheckMailType = false;
+		try {
+			BasicDataDao basicDataDao = (BasicDataDao) SpringContext.getBean("basicDataDao");
+			needCheckMailType = Boolean.parseBoolean(StringUtils.defaultIfBlank(basicDataDao.querySysArg("plat.mail.domain.distribute.enable"), "false"));
+		} catch(NullPointerException e) {
+			needCheckMailType = Boolean.parseBoolean(StringUtils.defaultIfBlank(StringEscUtil.getText("plat.mail.domain.distribute.enable"), "false"));;
+		}
+		if (!needCheckMailType) {
+			return -1;
+		}
 		HashSet<String> mailDomains = new HashSet<>();
 		Pattern p = Pattern.compile("@(\\w+)(\\.)(\\w+)(\\.\\w+)*");
 		for (String mailStr : mailStrs) {

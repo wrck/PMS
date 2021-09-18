@@ -1,14 +1,22 @@
 package com.dp.plat.core.view;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,6 +28,8 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.util.ReflectionUtils;
 
 import com.dp.plat.core.util.MessageUtils;
 import com.dp.plat.core.vo.DataTableColumn;
@@ -137,6 +147,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 
 			//动态列名
 			Map<String, String> dynamicColumns = (Map<String, String>) model.get("dynamicColumns");
+			Map<String, Object> renderColumns = Collections.emptyMap();
 			if ((dynamicColumns == null || dynamicColumns.isEmpty()) && (model.containsKey("pageParam") || model.containsKey("columns") && model.get("columns") instanceof List)) {
 				List<DataTableColumn> columns = null;
 				if (model.containsKey("pageParam")) {
@@ -149,6 +160,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 				if (columns != null) {
 					dynamicColumns = new LinkedHashMap<String, String>(columns.size());
 					colValue = new LinkedHashMap<>(columns.size());
+					renderColumns = new LinkedHashMap<>(columns.size());
 					for (DataTableColumn column : columns) {
 						if (!column.getVisible()) {
 							continue;
@@ -157,6 +169,30 @@ public class ExcelView4XLSX extends AbstractExcelView {
 						String v = column.getTitle();
 						dynamicColumns.put(k, v);
 						colValue.put(k, v);
+						if (StringUtils.isNotBlank(column.getRender())) {
+							String render = column.getRender();
+							ScriptEngineManager engineManager = new ScriptEngineManager();
+							ScriptEngine jsEngine = engineManager.getEngineByName("js");
+							jsEngine.eval("var render = " + render);
+							Map<String, Object> options = new HashMap<String, Object>();
+							Map<String, Object> settings = new HashMap<String, Object>();
+							Map<String, Object> aoColumn = new HashMap<String, Object>();
+							aoColumn.put("data", k);
+							try {
+								Field aliasField = ReflectionUtils.findField(column.getClass(), "alias");
+								aliasField.setAccessible(true);
+								Object alias = ReflectionUtils.getField(aliasField, column);
+								aoColumn.put("alias", alias);
+							} catch (Exception e) {
+							}
+							settings.put("aoColumns", Collections.singletonList(aoColumn));
+							options.put("settings", settings);
+							options.put("col", 0);
+							jsEngine.put("renderJS", render);
+							jsEngine.put("options", options);
+							Invocable invocable = (Invocable) jsEngine;
+							renderColumns.put(k, invocable);
+						}
 					}
 				}
 			}
@@ -180,7 +216,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 				hasHeaderTitle = true;
 			}
 			// create data rows
-			createRow(list2, sheet, colValue,dynamicColumns);
+			createRow(list2, sheet, colValue, dynamicColumns, renderColumns);
 //		}
 	}
 
@@ -236,12 +272,12 @@ public class ExcelView4XLSX extends AbstractExcelView {
 		return colCount;
 	}
 
-	protected void createRow(List<Object> list, Sheet sheet, Map<String, String> colValue, Map<String, String> dynamicColumns) throws Exception {
+	protected void createRow(List<Object> list, Sheet sheet, Map<String, String> colValue, Map<String, String> dynamicColumns, Map<String, Object> renderColumns) throws Exception {
 		int rowCount = startRow;
 		for (Object obj : list) {
 			Row aRow = sheet.createRow(rowCount++);
 			int colCount = 0;
-			setCellValue(obj, obj.getClass(), aRow, colCount, colValue ,dynamicColumns);
+			setCellValue(obj, obj.getClass(), aRow, colCount, colValue, dynamicColumns, renderColumns);
 			if (colValue != null) {
 				for (Entry<String, String> entry : colValue.entrySet()) {
 					aRow.createCell(colCount++).setCellValue(entry.getValue());
@@ -249,9 +285,14 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			}
 		}
 	}
+	
+	protected Object getCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
+			String col, Map<String, Object> renderColumns) throws Exception {
+		return getCellValue(obj, clazz, aRow, colCount, col, Collections.emptyMap(), renderColumns);
+	}
 
 	protected Object getCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
-			String col, Map<String, String> dynamicColumns) throws Exception {
+			String col, Map<String, String> dynamicColumns, Map<String, Object> renderColumns) throws Exception {
 		if (StringUtils.isBlank(col)) {
 			return null;
 		}
@@ -268,7 +309,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 					String fieldName = iterator.next();
 					value = map.get(fieldName);
 					if (value != null && iterator.hasNext()) {
-						value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns);
+						value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns, renderColumns);
 					} else {
 						break;
 					}
@@ -279,37 +320,80 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			Field field = null;
 			Object value = null;
 			String column = col;
-			List<String> ks = Arrays.asList(StringUtils.split(column, "."));
-			for (Iterator<String> iterator = ks.iterator(); iterator.hasNext();) {
-				String fieldName = iterator.next();
-				try {
-					if (clazz.getGenericSuperclass() != null) {
-						Class<?> supperClazz = clazz.getSuperclass();
-						value = getCellValue(obj, supperClazz, aRow, colCount, fieldName, dynamicColumns);
-					}
-					if (value == null) {
-						field = clazz.getDeclaredField(fieldName);
-						field.setAccessible(true);
-						value = field.get(obj);
-					}
-					if (value != null && iterator.hasNext()) {
-						value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns);
-					} else {
+			List<String> columns = Arrays.asList(StringUtils.split(column, " "));
+			for (Iterator<String> columnIterator = columns.iterator(); columnIterator.hasNext();) {
+				String subColumn = (String) columnIterator.next();
+				
+//				List<String> ks = Arrays.asList(StringUtils.split(column, "."));
+				List<String> ks = Arrays.asList(StringUtils.split(subColumn, "."));
+				for (Iterator<String> iterator = ks.iterator(); iterator.hasNext();) {
+					String fieldName = iterator.next();
+					try {
+						if (clazz.getGenericSuperclass() != null) {
+							Class<?> supperClazz = clazz.getSuperclass();
+							value = getCellValue(obj, supperClazz, aRow, colCount, fieldName, dynamicColumns, renderColumns);
+						}
+						try {
+							if (value == null) {
+								field = clazz.getDeclaredField(fieldName);
+								field.setAccessible(true);
+								value = field.get(obj);
+							}
+						} catch (NoSuchFieldException e) {}
+						try {
+							if (value == null) {
+								PropertyDescriptor pd = new PropertyDescriptor(fieldName, clazz);
+								Method getMethod = pd.getReadMethod();//获得get方法
+								value = getMethod.invoke(obj);//执行get方法返回一个Object
+							}
+						} catch (IntrospectionException e) {}
+						if (value != null && iterator.hasNext()) {
+							value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns, renderColumns);
+						} else {
+							break;
+						}
+					} catch (NoSuchFieldException | NoSuchMethodException | IntrospectionException e) {
 						break;
 					}
-				} catch (NoSuchFieldException e) {
+				}
+				if (value != null) {
 					break;
 				}
 			}
 			cellValue = value;
 		}
+		try {
+			if (renderColumns.containsKey(col) && obj.getClass().equals(clazz)) {
+				Object render = renderColumns.get(col);
+				Invocable invocable = null;
+				if (render instanceof String) {
+					ScriptEngineManager engineManager = new ScriptEngineManager();
+					ScriptEngine jsEngine = engineManager.getEngineByName("nashorn");
+					jsEngine.eval("var render = " + (String) renderColumns.get(col));
+					invocable = (Invocable) jsEngine;
+				} else if (render instanceof Invocable) {
+					invocable = (Invocable) render;
+				}
+				if (invocable != null) {
+					Object options = ((ScriptEngine) invocable).get("options");
+					Object renderValue = invocable.invokeFunction("render", cellValue, null, obj, options);
+					if (renderValue != null) {
+						cellValue = renderValue;
+					}
+				}
+			}
+		} catch (Exception e) {
+			Object remove = renderColumns.remove(col);
+//			System.err.println(((ScriptEngine) remove).get("renderJS"));
+//			e.printStackTrace();
+		}
 		return cellValue;
 	}
 	
 	protected Integer setCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
-			Map<String, String> colValue, Map<String, String> dynamicColumns) throws Exception {
+			Map<String, String> colValue, Map<String, String> dynamicColumns, Map<String, Object> renderColumns) throws Exception {
 		for (String fieldName : colValue.keySet()) {
-			Object value = getCellValue(obj, clazz, aRow, colCount, fieldName, dynamicColumns);
+			Object value = getCellValue(obj, clazz, aRow, colCount, fieldName, dynamicColumns, renderColumns);
 			if (!(obj instanceof Map)) {
 				String fieldDescription = MessageUtils
 						.getLocaleMessage("export." + clazz.getSimpleName() + "." + fieldName);

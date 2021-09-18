@@ -252,6 +252,10 @@ public class MessageUtil {
 	 */
 	public static final int ROLE_PROB_RD = 20;
 	/**
+	 * 角色为21，表示维保回访人员，与普通项目回访人员角色区分开
+	 */
+	public static final int ROLE_WARRANTY_CALLBACKER = 21;
+	/**
 	 * 批示类型 0批示 1 回复 
 	 */
 	public static final int INSTRUSTION = 0;

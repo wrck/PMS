@@ -363,7 +363,7 @@ function changeRestoreStatus(_this){
 							</div>
 						<!-- 过滤 end-->
 						<!-- 任务进展周报 -->
-							<%-- <div class="panel panel-default weekly" style="display: none">
+							<div class="panel panel-default weekly" style="display: none">
 								<div class="panel-body">
 									<div class="form-group">
 										<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.task.weekly"></s:text></label>
@@ -375,7 +375,7 @@ function changeRestoreStatus(_this){
 								    	</div>	
 									</div>
 								</div>
-							</div> --%>
+							</div> 
 						
 						<!-- 任务进展周报  end-->
 							<table class="table table-striped">

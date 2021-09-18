@@ -32,6 +32,7 @@ import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.util.FileUtil;
+import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.core.vo.Result;
@@ -315,7 +316,8 @@ public class ProjectTaskController extends AbstractController<IProjectTaskServic
 				fileInfo.setPath(deliver.getDeliverablePath());
 				fileInfos.add(fileInfo);
 			}
-			DownloadUtils.downTempZip("upload/temp", FileUtil.generZipFileName(), fileInfos, request, response);
+//			DownloadUtils.downTempZip("upload/temp", FileUtil.generZipFileName(), fileInfos, request, response);
+			DownloadUtils.downTempZip(UploadUtils.UPLOAD_PATH + "/temp", FileUtil.generZipFileName(), fileInfos, request, response);
 //			uploaderService.zipFileDownload(null, fileInfos, request, response);
 		}
 	}

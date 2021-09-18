@@ -174,27 +174,29 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <!-- 创建需要刷新已创建项目设备信息的合同号、projetcId临时表 -->
     <insert id="createTempNeedUpdateProject">
         CREATE TEMPORARY TABLE IF NOT EXISTS temp_needUpdate_project (KEY contractNo(contractNo))
+        <!-- 查询设备清单存在项目数量不为空，不为0，并且SAP中有订单行的项目；或者设备清单存在，但是SAP不存在的项目 -->
         SELECT DISTINCT 
             pl.projectId, pl.contractNo 
         FROM
             `pm_project_product_line` pl 
             LEFT JOIN `pm_order_data_from_sap` a 
-            ON pl.`contractNo` = a.`contractNo`
-            AND a.`orderType` = 0 
+	            ON pl.`contractNo` = a.`contractNo`
+	            AND a.`orderType` = 0 
             LEFT JOIN `pm_order_line_from_sap` b 
                 ON a.orderNumber = b.orderNumber 
                 AND a.compCode = b.compCode 
                 AND a.`orderType` = b.`lineType` 
-        WHERE pl.contractNo IS NOT NULL 
+        WHERE (pl.contractNo IS NOT NULL 
             AND (
                 pl.projectQuantity IS NULL 
                 OR pl.projectQuantity = 0
             )
             AND a.`orderType` = 0
-            AND b.orderNumber IS NOT NULL
+            AND b.orderNumber IS NOT NULL)
+            OR b.orderNumber IS NULL
         
         <!-- 合并查询现在项目中没有设备清单，但SAP中合同号有订单行的项目 -->
-        UNION ALL
+        UNION <!-- ALL -->
         SELECT DISTINCT 
 		    ph.projectId, a.contractNo 
 		FROM
@@ -212,6 +214,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        ON ph.`projectCode` = pgr.`projectCode` 
 		    LEFT JOIN `pm_project_product_line` pl 
 		        ON ph.`projectId` = pl.`projectId` 
+		        AND pl.`orderNumber` = b.`orderNumber`
+        		AND pl.`lineNum` = b.`lineNum`
 		WHERE a.`orderType` = 0 
 		    AND b.orderNumber IS NOT NULL 
 		    AND ph.`projectId` IS NOT NULL 
@@ -238,12 +242,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             pm_project_product_line AS t1 
             JOIN 
                 (SELECT 
-                    id, (@rowno := @rowno + 1) AS rowno 
-                FROM
-                    pm_project_product_line a, 
-                    (SELECT 
-                        (@rowno := 0)) b 
-                ORDER BY a.id) AS t2 SET t1.id = t2.rowno 
+		            * 
+		        FROM
+	                (SELECT 
+	                    id, (@rowno := @rowno + 1) AS rowno 
+	                FROM
+	                    pm_project_product_line a, 
+	                    (SELECT 
+	                        (@rowno := 0)) b 
+	                ORDER BY a.id) AS t2 
+	            ) t2
+	    SET t1.id = t2.rowno 
         WHERE t1.id = t2.id 
     </update>
     
@@ -327,6 +336,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <result property="majorProjectLevel" column="majorProjectLevel"/>
         <result property="projectMoney" column="projectMoney"/>
         <result property="submitTime" column="submitTime"/>
+        <result property="predBidDate" column="predBidDate"/>
+        <result property="linkmanName" column="linkmanName"/>
+        <result property="linkmanTel" column="linkmanTel"/>
     </resultMap>
     <select id="query_v_prj_property_4_pm" resultMap="prjPropertys">
         <![CDATA[
@@ -343,7 +355,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             INSERT INTO pm_project_property_from_sms(`orderExecNumber`,projectCode, projectName, `salesManCode`,`salesManName`,`marketCode`,`marketName`,`systemId`,
                 `systemName`,`expendId`,`expendName`,`industryId`,`industryName`, officeCode, officeName, 
                 serviceTypeName , channelName, engineeFee, objId, applyType, `corporationCode`, customerProjectName,
-                finalCustomerName, agentName, majorProjectLevel, projectMoney, submitTime
+                finalCustomerName, agentName, majorProjectLevel, projectMoney, submitTime, predBidDate,
+                linkmanName, linkmanTel
                 )
             values
         ]]>
@@ -352,7 +365,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
              #list[].orderExecNumber# ,#list[].projectCode#, #list[].projectName#, #list[].salesManCode# ,#list[].salesManName# ,#list[].marketCode# ,#list[].marketName# ,#list[].systemId# ,
              #list[].systemName# ,#list[].expendId# ,#list[].expendName# ,#list[].industryId# ,#list[].industryName#,#list[].officeCode#,#list[].officeName#,
              #list[].serviceTypeName# , #list[].channelName#, #list[].engineeFee#, #list[].objId#, #list[].applyType#, #list[].corporationCode#, 
-             #list[].customerProjectName#, #list[].finalCustomerName#, #list[].agentName#, #list[].majorProjectLevel#, #list[].projectMoney#, #list[].submitTime#
+             #list[].customerProjectName#, #list[].finalCustomerName#, #list[].agentName#, #list[].majorProjectLevel#, #list[].projectMoney#, #list[].submitTime#, #list[].predBidDate#,
+             #list[].linkmanName#, #list[].linkmanTel#
             )
         </iterate>
     </insert>
@@ -1184,7 +1198,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 ON ppfs.`projectCode` = LEFT(ph.`projectCode`, 15) 
         SET ph.customerProjectName = ppfs.customerProjectName,
             ph.majorProjectLevel = ppfs.majorProjectLevel,
-        column013 = IF(trim(IFNULL(ph.column013, "")) > '', ph.`column013`, ppfs.finalCustomerName)
+        	column013 = TRIM(IF(trim(IFNULL(ph.column013, "")) > '', ph.`column013`, ppfs.finalCustomerName))
         <!-- WHERE ppfs.customerProjectName IS NOT NULL -->
     </update>
     

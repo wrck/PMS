@@ -106,7 +106,7 @@ public class DownloadUtils {
 			File[] innerFiles = new File[filesPath.size()];
 
 			for (int i = 0; i < filesPath.size(); i++) {
-				innerFiles[i] = new File(filesPath.get(i).getPath());
+				innerFiles[i] = new File(webPath + filesPath.get(i).getPath());
 			}
 			String md5 = getFileByMD5(innerFiles) + ".zip";
 			String strZipPath = zipDir + "/" + md5;

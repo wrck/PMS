@@ -3,16 +3,26 @@
  */
 package com.dp.plat.core.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.dp.plat.core.annotation.SystemControllerLog;
+import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.pojo.UserInfo;
+import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.util.JsoupUtil;
 
 /**
  * 用于处理ExceptionHandler无法捕获的异常以及404页面
@@ -36,7 +46,7 @@ public class ExceptionController {
 			model.addAttribute("errorLogId", errorLogId);
 		}
 		if (StringUtils.isNotBlank(error)) {
-			model.addAttribute("error", error);
+			model.addAttribute("error", JsoupUtil.clean(error, Safelist.basic()));
 		}
 		return "500";
 	}
@@ -95,7 +105,7 @@ public class ExceptionController {
 		}
 		return modelAndView;
 	}
-	
+
 	/**
 	 * 无权限访问返回页面
 	 * 
@@ -104,5 +114,33 @@ public class ExceptionController {
 	@RequestMapping("/unauthorized")
 	public String unauthorized() {
 		return "unauthorized";
+	}
+
+	/**
+	 * 违规操作，跳转至该路径，记录信息后重定向至404
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("/illegal")
+	@SystemControllerLog(description = "【违规操作】$user.realName$$illegalName$")
+	public String errorIllegal(HttpServletRequest request, HttpServletResponse response, Model model) {
+		Map<String, String> illegalName = MapUtils.putAll(new HashMap<String, String>(),
+				new String[] { 
+					"JSDebugger", "调用前端审查工具",
+					"SQLInject", "进行SQL注入"
+				});
+		Principal principal = UserContext.getCurrentPrincipal();
+		UserInfo user = principal.getUserInfo();
+		String illegal = request.getParameter("illegal");
+		String fromUrl = StringUtils.defaultIfBlank(request.getParameter("fromUrl"), request.getHeader("referer"));
+		model.addAttribute("illegal", illegal);
+		model.addAttribute("illegalName", illegalName.getOrDefault(illegal, illegal));
+		model.addAttribute("user", user);
+		model.addAttribute("fromUrl", fromUrl);
+		model.addAttribute("status", request.getParameter("status"));
+		model.addAttribute("error", request.getParameter("error"));
+		return "404";
 	}
 }

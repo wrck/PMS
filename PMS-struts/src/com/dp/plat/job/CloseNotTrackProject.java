@@ -2,6 +2,7 @@ package com.dp.plat.job;
 
 import java.io.Reader;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 
@@ -15,6 +16,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.data.bean.MailContent;
@@ -52,6 +54,8 @@ public class CloseNotTrackProject implements Job{
 		}
 //		ProjectDao projectDao = ctx.getBean("projectDao", ProjectDao.class);
 		ProjectService projectService = ctx.getBean("projectServiceAgent", ProjectService.class);
+		BasicDataService basicDataService = ctx.getBean("basicDataService", BasicDataService.class);
+		
 		Reader reader = Resources.getResourceAsReader("sqlMapConfig.xml");
 		SqlMapClient sqlMap = SqlMapClientBuilder.buildSqlMapClient(reader);
 		// 创建临时表，得出项目发货状态
@@ -87,6 +91,16 @@ public class CloseNotTrackProject implements Job{
     			}else{
     				project.setColumn011("10");
     			}
+    			try {
+	    			// 设置重大项目级别到项目类别的对应关系
+					String majorProjectLevel = project.getMajorProjectLevel();
+					String majorProjectLevel2PorjectCategory = basicDataService.querySysArg("pm.project.majorProjectLevel2projectCategory");
+					Map<String, Object> relation = JSON.parseObject(majorProjectLevel2PorjectCategory, Map.class);
+					String projectCategory = (String) relation.getOrDefault(majorProjectLevel, MessageUtil.PROJECT_TYPE_NORMAL);
+					project.setColumn010(projectCategory);
+    			} catch (Exception e) {
+    				 e.printStackTrace();
+				}
     			projectService.insertProject(project);// 保存
     			
     			// 立项通知邮件

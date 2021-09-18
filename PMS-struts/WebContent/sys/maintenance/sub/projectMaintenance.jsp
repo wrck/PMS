@@ -54,6 +54,8 @@
         <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="excel"></display:column>
         <display:column property="wafServiceName" titleKey="pm.project.wafService" media="excel"></display:column>
         <display:column property="officeName" titleKey="pm.project.officeName" media="excel"></display:column>
+        <%-- <display:column property="companyAbbr" titleKey="pm.project.company" headerClass="nowrap" media="html"></display:column> --%>
+        <display:column property="companyName" titleKey="pm.project.company" headerClass="nowrap" media="excel"></display:column>
         <display:column property="marketName" titleKey="pm.project.marketName" media="excel"></display:column>
         <display:column property="systemName" titleKey="pm.project.systemName" media="excel"></display:column>
         <display:column property="expendName" titleKey="pm.project.expendName" media="excel"></display:column>

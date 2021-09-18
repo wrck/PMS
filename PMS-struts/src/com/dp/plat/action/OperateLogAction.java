@@ -21,6 +21,7 @@ import org.apache.struts2.ServletActionContext;
 import com.dp.plat.data.bean.OperateLog;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.service.OpLogService;
+import com.dp.plat.util.UploadFileUtil;
 
 public class OperateLogAction extends BaseAction {
 	private static final long serialVersionUID = 1L;
@@ -81,8 +82,10 @@ public class OperateLogAction extends BaseAction {
 			
 			long tx = System.currentTimeMillis();
 			String root = ServletActionContext.getServletContext().getRealPath("/");
-			String pathFile = root+"upload/payment/日志.xlsx";
-			File file = new File(root+"upload/payment");
+//			String pathFile = root+"upload/payment/日志.xlsx";
+//			File file = new File(root+"upload/payment");
+			String pathFile = root + UploadFileUtil.UPLOAD_PATH + "/payment/日志.xlsx";
+			File file = new File(root+ UploadFileUtil.UPLOAD_PATH + "/payment");
 			if(!file.exists()){
 				file.mkdirs();
 			}
@@ -111,8 +114,8 @@ public class OperateLogAction extends BaseAction {
 	public String getDownloadLogName(){
 		   String downFileName= "";
 		   try {
-			   downFileName = "/upload/payment/日志.xlsx";
-			   
+			   //downFileName = "/upload/payment/日志.xlsx";
+			   downFileName = "/" + UploadFileUtil.UPLOAD_PATH + "/payment/日志.xlsx";
 		   } catch (Exception e) {
 		    e.printStackTrace();
 		   }

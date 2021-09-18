@@ -10,9 +10,9 @@
 <meta name="module" content="<s:text name='module.plat' />">
 <meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
 <meta name="function" content="<s:text name='prob.manage' />">
-<link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.css" />
+<link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.min.css" />
 <script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
-<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.js"></script>
+<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
 <script type="text/javascript" src="js/summernote/summernote-util.js"></script>
 <style>
 	.modal-body .form-group{
@@ -42,12 +42,52 @@
     	opacity: 1;
 	}
 	#manualSoftVersion {
-	    padding: 0 15px;
+	    /* padding: 0 15px;
 	    margin-left: -15px;
-        width: calc(80% + 24px);
-        display: none;
+        width: calc(80% + 24px); */
+        display: flex;
+	}
+	.softVersion {
+		position: relative;
+		display: block;
+		border-bottom: 1px solid #ddd;
+		padding: 0.5rem 1.5rem 0.5rem 1rem;
+	}
+	.softVersionSub {
+		position: relative;
+		display: block;
+		border-top: 1px solid #ddd;
+		padding: 0.5rem 0 0.5rem 1.5rem;
+	}
+	.softVersionContainer {
+		position: relative;
+	}
+	.softVersionLink {
+		padding-top: 7px;
+	}
+	.softVersionDel {
+		position: absolute;
+	    right: 1.5rem;
+	    top: calc(50% - 0.5rem);
+		margin-top: -0.25rem;
+	}
+	.softVersionContainer .softVersionDel, .softVersionSub .softVersionDel, .groupManualEntry .softVersionDel{
+		right: 0;
+	}
+	.groupManualEntry {
+		flex-grow: 1;
+		display: flex;
+	    font-weight: bold;
+	    position: relative;
+	}
+	.form-control.affectedType {
+		display: inline;
+		width: auto;
+		height: auto;
+		padding: 2px 0;
 	}
 </style>
+<script type="text/javascript" src="js/prob/render.js"></script>
 <script type="text/javascript">
 	$(function(){
 		//加载日期控件
@@ -183,13 +223,13 @@
 				return false;
 			}
 		}
-		var manualEntry = $("#manualEntry").val();
+		/* var manualEntry = $("#manualEntry").val();
 		if (manualEntry) {
 			var index = $(".softVersion").length;
 			$("#manualEntry").attr("name", "softVersionList[" + index + "].manualEntry");
 		} else {
 			$("#manualEntry").attr("name", "");
-		}
+		} */
 		return true;
 	}
 	
@@ -214,6 +254,20 @@
 	function manualEntry() {
 		$("#manualSoftVersion").show();
 	}
+	$(document).ready(function() {
+		var softVersionJson = `${prob.affectedVersion}`;
+		var $container = $("#softVersionList");
+		$("#manualSubmit").click(function() {
+			var manualEntry = $.trim($("#manualEntry").val());
+			if (!manualEntry) {
+				$("#manualSoftVersion").hide();
+				return;
+			}
+			var affectedType = $.trim($("#affectedType").val());
+			parserSoftVersion({manualEntry, affectedType}, $container);
+		});
+		renderSoftVersions(softVersionJson, {$container});
+	});
 	function clearSoftVersion() {
 		$("#softVersionList").find(".softVersion").remove();
 	}
@@ -414,11 +468,12 @@
 								 	</s:iterator>
 								</div>
 							</div>
-							<div class="form-group">
+							<%-- <div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
 								<div class="col-xs-5 col-sm-5 col-md-5 col-lg-5" id="softVersionList">
-                                    <div id="manualSoftVersion">
+                                    <div id="manualSoftVersion" style="display:none;">
                                         <s:textfield id="manualEntry" cssClass="form-control"></s:textfield>
+                                        <button type="button" id="manualSubmit" class="btn btn-default">确定</button>
                                     </div>
 									<s:iterator value="softVersionList" var="software" status="status">
 										<span class='softVersion'>
@@ -442,6 +497,27 @@
 	                                            <input type="hidden" name="softVersionList[${status.index}].manualEntry" value="${software.manualEntry}">
 	                                            <s:property value="#software.manualEntry"/>
 	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].manualEntrySub" value="${software.manualEntrySub}">
+	                                            <s:property value="#software.manualEntrySub"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].entryStart" value="${software.entryStart}">
+	                                            <s:property value="#software.entryStart"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].entryEnd" value="${software.entryEnd}">
+	                                            <s:property value="#software.entryEnd"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].markStart" value="${software.markStart}">
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].markEnd" value="${software.markEnd}">
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].groupId" value="${software.groupId}">
+	                                        </s:if>
 											<br/>
 										</span>
 									</s:iterator>
@@ -457,6 +533,79 @@
                                         <a href="javascript:void(0)" onclick="clearSoftVersion()">清除影响版本</a>
                                     </label>
 								</s:if>
+							</div> --%>
+							<div class="form-group">
+								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
+								<s:if test="(user.isHasRole(20) == true && (user.getUsername() == prob.trackingUser || prob.probId == 0)) || ((user.isHasRole(18) == true) && (prob.status == 1 || prob.status == 8))">
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
+									</label>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="manualEntry()">手动输入</a>
+                                    </label>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="clearSoftVersion()">清除影响版本</a>
+                                    </label>
+								</s:if>
+							</div>
+							<div class="form-group">
+								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"></label>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 softVersionList" id="softVersionList">
+                                    <div id="manualSoftVersion" style="display:none;">
+                                    	<s:select id="affectedType" cssClass="form-control" style="width: 120px" list="#{1:'盒式系列',2:'框式系列'}" headerKey="0" headerValue="所有系列"></s:select>
+                                        <s:textfield id="manualEntry" cssClass="form-control"></s:textfield>
+                                        <button type="button" id="manualSubmit" class="btn btn-default">添加</button>
+                                    </div>
+									<s:iterator value="softVersionList" var="software" status="status">
+										<div class='softVersion'>
+											<span class="softVersionContainer">
+											<span class="rowNum">${status.index+1}</span>.&nbsp;
+											<s:if test="#software.conp != null">
+												<input type="hidden" name="softVersionList[${status.index}].conp" value="${software.conp}"> 
+												conp:<s:property value="#software.conp"/>
+											</s:if>
+											<s:if test="#software.boot != null">
+												<input type="hidden" name="softVersionList[${status.index}].boot" value="${software.boot}"> 
+												boot:<s:property value="#software.boot"/>
+											</s:if>
+											<s:if test="#software.cpld != null">
+												<input type="hidden" name="softVersionList[${status.index}].cpld" value="${software.cpld}">
+												cpld:<s:property value="#software.cpld"/>
+											</s:if>
+											<s:if test="#software.pcb != null">
+												<input type="hidden" name="softVersionList[${status.index}].pcb" value="${software.pcb}">
+												pcb:<s:property value="#software.pcb"/>
+											</s:if>
+											<s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].manualEntry" value="${software.manualEntry}">
+	                                            <s:property value="#software.manualEntry"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].manualEntrySub" value="${software.manualEntrySub}">
+	                                            <s:property value="#software.manualEntrySub"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].entryStart" value="${software.entryStart}">
+	                                            <s:property value="#software.entryStart"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].entryEnd" value="${software.entryEnd}">
+	                                            <s:property value="#software.entryEnd"/>
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].markStart" value="${software.markStart}">
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].markEnd" value="${software.markEnd}">
+	                                        </s:if>
+	                                        <s:if test="#software.manualEntry != null">
+	                                            <input type="hidden" name="softVersionList[${status.index}].groupId" value="${software.groupId}">
+	                                        </s:if>
+	                                        </span>
+	                                        <span class="glyphicon glyphicon-minus text-danger pull-right softVersionDel"></span>
+										</div>
+									</s:iterator>
+								</div>
 							</div>
 						</div>
 					</div>

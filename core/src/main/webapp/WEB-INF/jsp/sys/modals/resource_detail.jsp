@@ -177,9 +177,12 @@
 			}
 		});
 		var roleData = [];
-		ajaxPost(basePath+"/sys/role/list.json",null,function(data){
+		ajaxPost(basePath+"/sys/role/list.json", {pageSize: -1, orderBy: "priority desc"},function(data){
 			$.each(data.data,function(index,item){
-				roleData.push(item.roleName);
+				roleData.push({
+					id:item.roleName,
+					text: item.roleNameZn
+				});
 			});
 			$("#roleSelect").select2({width:'100%',tags: true,data: roleData,placeholder:"角色控制"});
 		});

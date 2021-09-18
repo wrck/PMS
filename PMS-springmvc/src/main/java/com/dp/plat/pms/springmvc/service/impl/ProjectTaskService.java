@@ -68,16 +68,18 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
         String fileName = FileUtil.getFileNameByMD5(multipartFile);
         String webDir = UploadUtils.getWebDir(HttpContext.getCurrentRequest());
         // 获取文件保存目录
-        String saveDir = UploadUtils.getSaveDir(SystemConfig.systemVariables.getOrDefault("pm.project.deliver.dir", "/upload/delivery/"));
+//        String saveDir = UploadUtils.getSaveDir(SystemConfig.systemVariables.getOrDefault("pm.project.deliver.dir", "/upload/delivery/"));
+        String saveDir = UploadUtils.getSaveDir(SystemConfig.systemVariables.getOrDefault("pm.project.deliver.dir", UploadUtils.UPLOAD_PATH + "/delivery/") + StringUtils.trimToEmpty(deliver.getProjectType()) + "/");
+//        String saveDir = UploadUtils.getSaveDir(UploadUtils.UPLOAD_PATH + "/delivery/" + StringUtils.trimToEmpty(deliver.getProjectType()) + "/");
         // 构造完整的文件保存路径
         String fullPath = webDir + saveDir + fileName;
         // 处理操作系统的差异
-        fullPath = fullPath.replaceAll("//", File.separator);
+        fullPath = fullPath.replace("//", File.separator);
         String shortPath = saveDir + fileName;
         // 处理操作系统的差异
-        shortPath = shortPath.replaceAll("//", File.separator);
+        shortPath = shortPath.replace("//", File.separator);
         // 判断上传目录是否存在
-        UploadUtils.mkdir(webDir, saveDir.replaceAll("//", File.separator));
+        UploadUtils.mkdir(webDir, saveDir.replace("//", File.separator));
         File file = new File(fullPath);
         if (file.isFile() && file.exists()) {
         //
@@ -111,6 +113,7 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
                 paramMap.put("taskId", deliver.getTaskId());
                 paramMap.put("projectType", deliver.getProjectType());
             }
+            // TODO Transfer Upload Path
             projectDao.batchInsertDeliverFiles(paramMap);
         }
     }

@@ -731,6 +731,14 @@ public interface ProjectDao {
 	 * @return
 	 */
 	int queryProjectShipmentSize(int projectId);
+	
+	/**
+	 * 查询已保存安装地址的所有设备，含所有转销、退货设备
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryHistoryProjectShipmentSize(int projectId);
 
 	/**
 	 * 查询有无项目状态表记录
@@ -1402,6 +1410,6 @@ public interface ProjectDao {
 	 */
 	Integer insertProjectServiceDeliveryBySelective(Map<String, Object> serviceDelivery);
 
-
+	Map<String, Object> queryQuestionColumns(String quesType, String resultType);
 
 }

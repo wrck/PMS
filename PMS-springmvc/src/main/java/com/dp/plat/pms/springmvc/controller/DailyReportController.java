@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
@@ -233,6 +234,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
+	@SystemControllerLog(description = "新增[$v.customInfo.createName$][$v.processTime$]日报")
 	public String create(DailyReportVO v, Model model) {
 		if (!super.checkPermission(v, model, getDataName() + ":add")) {
 			model.addAttribute("status", false);
@@ -272,6 +274,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 
 	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
+	@SystemControllerLog(description = "修改[$v.createUser$][$v.processTime$]日报")
 	public String update(@PathVariable("id") Integer id, DailyReportVO v, Model model) {
 		if (!checkPermission(v, model, getDataName() + ":edit")) {
 			return Consts.VIEW_UNAUTHORIZED;
@@ -285,6 +288,11 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 //		pmWorkFlowService.terminateProcess(workflow, "审批内容发生变更！");
 		
 		v.setStatus("0");
+		
+		DailyReport dailyReport = service.selectByPrimaryKey(id);
+		if (dailyReport != null) {
+			v.setCreateUser((String) dailyReport.getCustomInfoByKey("createName"));
+		}
 		
 		Integer projectId = v.getProjectId();
 		if (projectId != null && projectId > 0) {
@@ -307,6 +315,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+	@SystemControllerLog(description = "删除日报")
 	public void delete(@PathVariable("id") Integer id, Model model) {
 		DailyReport dailyReport = service.selectByPrimaryKey(id);
 		DailyReportVO v = new DailyReportVO();

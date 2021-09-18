@@ -19,12 +19,14 @@
 	margin-top: 50px;	
 }
 .ui-multiselect {
-padding: 2px 0 2px 4px;
-text-align: left;
-min-height: 35px;
-min-width: 382px;
+	padding: 2px 0 2px 4px;
+	text-align: left;
+	min-height: 35px;
+	min-width: 382px;
 }
 </style>
+<link rel="stylesheet" type="text/css" href="multiselect/jquery.multiselect.filter.css" />
+<script type="text/javascript" src="multiselect/jquery.multiselect.filter.js"></script>
 <script type="text/javascript">
 
 $(function(){
@@ -60,7 +62,18 @@ $(function(){
 	setselect("role","rolehide",";");
 	multiselect("role","rolehide",";");
 	
-	
+	if ($.fn.multiselectfilter) {
+		$("#userarea").multiselectfilter({
+			label: "搜索",
+			autoReset: true,
+			placeholder: "支持模糊搜索",
+		    filter: function(event, matches){
+		        if( !matches.length ){
+		            // do something
+		        }
+		    }
+		});
+	}
 });
 function checkAllCode(_this,prefix,code){
 	if($(_this).is(':checked')){
@@ -333,8 +346,10 @@ $("#submitButton").click(function(){
 	     	<label  class="col-sm-1 control-label"><span class="redmark">*</span><s:text name="sys.user.area"></s:text><span>:</span></label>
 	    	<div class="col-sm-4">
 	    		<s:hidden name="user.areapower" id="userareahide"></s:hidden>
+	    		<%-- <s:select name="user.dpNo" id="dpNo" listKey="departmentNum" cssClass="form-control" headerKey="" headerValue="--请选择--"
+									listValue="departmentName" list="%{departments}"  theme="simple" /> --%>
 	    		<select id="userarea" multiple="multiple" >
-						<s:iterator value="departmentPowers" var="v">
+						<s:iterator value="departments" var="v">
 							<option value="<s:property value='#v.departmentNum'/>"><s:property
 									value="#v.departmentName" /></option>
 						</s:iterator>

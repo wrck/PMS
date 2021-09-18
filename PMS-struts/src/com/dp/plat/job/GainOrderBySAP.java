@@ -229,6 +229,11 @@ public class GainOrderBySAP implements Job{
 			paramMap.put("id", Integer.parseInt(obj.toString()));
 			sqlMap.update("update_fnd_data_refresh_log_fail", paramMap);
 		} finally {
+			try {
+				sqlMap.commitTransaction();
+			} catch (Exception e) {
+				LOGGER.error("#数据同步结束提交未完成的事务发送异常", e);
+			}
 			sqlMap.endTransaction();
 			LOGGER.debug("#数据同步结束");
 		}

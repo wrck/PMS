@@ -682,7 +682,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
 
             /** 分隔符 **/
             String separator = java.io.File.separator;
-            String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
+            String path = separator + UploadFileUtil.UPLOAD_PATH + separator + "delivery" + separator + new Date().getTime();
             boolean bool = Util.mkdir(path);
             if (bool) {
             	String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");

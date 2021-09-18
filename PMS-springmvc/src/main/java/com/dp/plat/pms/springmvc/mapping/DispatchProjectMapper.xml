@@ -1131,10 +1131,11 @@
 	    sum(sc.`delivered_money_amount`) as deliveredAmount,
 	    sum(sc.`contract_money_amount`) as contractAmount,
 	    group_concat(sc.`contract_num`) as collectContractNos,
-	    settledAmount
+	    ROUND(sum(sc.`collected_money_amount`) / sum(sc.`contract_money_amount`), 4) as collectedRatio, 
+	    ds.settledAmount
 	    <!-- ,ph.customInfo ->> "$.projectProgress" as `customInfo.projectProgress`,
 	    phsd.`basicDataName` as `customInfo.projectStateName` -->
-	    <!-- ,round(settledAmount / replace(h.dispatchAmount, ",","") * 100, 2) as settledRatio -->
+	    ,ROUND(ds.settledAmount / replace(h.dispatchAmount, ",","") * 100, 2) as settledRatio
 	from
 	    <!-- <![CDATA[
 	    (select 

@@ -87,13 +87,14 @@ var FormInput = {
 								<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 										:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
 										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+										:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
 										:data-text="field.extKey" :data-value="field.extValue"
 										:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
 										:data-select2-config="JSON.stringify(field.extData['select2-config'])">
 									<template v-if="((field.extData || {}).data || field.extData).length">
 										<option :value="item[field.extValue]" v-for="item in ((field.extData || {}).data || field.extData)" :selected="item[field.extValue] == fieldValue" >{{item[field.extKey]}}</option>
 									</template>
-									<template v-else-if="field.extData.blank">
+									<template v-else-if="field.extData.blank && !(field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false)">
 										<option blank="true" :value="field.extData['blank-value']">{{field.extData['blank-text']}}</option>
 									</template>
 								</select>
@@ -105,6 +106,7 @@ var FormInput = {
 								<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
 										:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
 										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+										:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
 										:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
 										:data-allow-clear="field.extData.allowClear || false" :data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
 										:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"

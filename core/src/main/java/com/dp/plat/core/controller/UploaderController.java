@@ -36,6 +36,7 @@ import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.FileUtil;
+import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.Result;
 
@@ -73,7 +74,8 @@ public class UploaderController {
 				user = new User();
 				user.setUserName("new");
 			}
-			String relPath = "upload" + FILE_SEPARATOR + "avatar";
+//			String relPath = "upload" + FILE_SEPARATOR + "avatar";
+			String relPath = UploadUtils.UPLOAD_PATH + FILE_SEPARATOR + "avatar";
 			String dirPath = request.getServletContext().getRealPath("/");
 
 			String initParams = "";
@@ -156,7 +158,8 @@ public class UploaderController {
 		StringBuilder result = new StringBuilder();
 		if (contentType.indexOf("multipart/form-data") >= 0) {
 //			String relPath = "static" + FILE_SEPARATOR + "upload" + FILE_SEPARATOR + "summernote";
-			String relPath = "upload" + FILE_SEPARATOR + "summernote";
+//			String relPath = "upload" + FILE_SEPARATOR + "summernote";
+			String relPath = UploadUtils.UPLOAD_PATH + FILE_SEPARATOR + "summernote";
 			String dirPath = request.getServletContext().getRealPath("/");
 
 			BufferedInputStream inputStream;

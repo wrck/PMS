@@ -69,7 +69,10 @@ table thead th{
 			clickNavLi(1,'20');
 			$("#cbStartTime").val($("#hideCbStartTime").text());
 			$("#cbEndTime").val($("#hideCbEndTime").text());
-		} */		
+		} */	
+		//setTimeout(function() {
+			$("#pmCLList").show();
+		//}, 200);
 	});
 	
 	
@@ -85,12 +88,12 @@ table thead th{
 	<div>
 	    <ul class="nav navbar-nav">
 	    	<s:iterator value="navTabList" var="nav" status="index">
-				<s:if test="%{#index.index == 0}">
-	    			<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','module/report_show.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
-	    		</s:if>
-	    		<s:else>
-	    			<li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','module/DataAnalysis.action?1=1')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
-	    		</s:else>
+				<s:if test="%{#index.index == 1}">
+                        <li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','<s:property value='#nav.basicDataAttri1'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+                    </s:if>
+                    <s:else>
+                        <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','<s:property value='#nav.basicDataAttri1'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+                    </s:else>
 	    	</s:iterator>
 		</ul>
 	</div>
@@ -119,27 +122,35 @@ table thead th{
 			    			<s:date name="dataQueryParam.cbEndTime" format="yyyy-MM-dd"></s:date>
 			    		</s:param>
 		    		</s:textfield>
+				<!-- </div>
+                <div class="form-group form-group-query"> -->
 		    		<label for="serviceType" style="font-weight: 500;margin-left:10px;"><s:text name="实施方式：" /></label>
 					<s:select name="dataQueryParam.serviceType" id="serviceType"
 						listKey="basicDataId" cssClass="form-control" headerKey=""
 						headerValue="--请选择--" cssStyle="width:140px;display:inline-block;"
 						listValue="basicDataName" list="%{serviceTypeList}"
 						theme="simple" />
+                    <label for="compId" style="font-weight: 500;margin-left:10px;"><s:text name="pm.project.company" /></label>
+                    <s:select name="dataQueryParam.compId" id="compId"
+                        listKey="id" cssClass="form-control" headerKey=""
+                        headerValue="--请选择--" cssStyle="width:auto;display:inline-block;"
+                        listValue="abbr" list="%{companyList}" theme="simple" />
 					<button style="margin-left: 50px;" type="submit"  class="btn btn-info btn-sm"><s:text name="sys.confirm"></s:text></button>	
-				</div>
-			</s:form>
-		
-		     <div id="pmCLList" style="margin-top:20px;">
+			    </div>
+            </s:form>
+		     <div id="pmCLList" style="margin-top:20px;display: none;">
 				 <display:table
 						name="pmClCBDataList" pagesize="${displayParam.pagesize }" export="true"
 						size="${pmClCBDataList.size()}" sort="external"
 						requestURI="module/DataAnalysis.action"
 						decorator="com.dp.plat.decorators.Wrapper" class="table table-striped"
-						partialList="true">
+						partialList="false">
 						<display:column property="dataCbProName" titleKey="pm.cl.cbdata.projectName" media="html"></display:column>
 						<display:column property="projectName" titleKey="pm.cl.cbdata.projectName" media="excel"></display:column>
 						<display:column property="pmRealName" titleKey="pm.cl.cbdata.pmRealName" ></display:column>
 						<display:column property="officeName" titleKey="pm.cl.cbdata.officeName" ></display:column>
+                        <display:column property="companyAbbr" titleKey="pm.project.company" media="html"></display:column>
+                        <display:column property="companyName" titleKey="pm.project.company" media="excel"></display:column>
 						<display:column property="cbTime" titleKey="pm.cl.cbdata.cbTime" format="{0,date,yyyy-MM-dd}"></display:column>
 						<display:column property="times" titleKey="pm.cl.cbdata.times"></display:column>
 						

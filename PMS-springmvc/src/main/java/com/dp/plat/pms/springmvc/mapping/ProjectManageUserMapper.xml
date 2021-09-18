@@ -368,7 +368,7 @@
 	</where>
 	GROUP BY u.user_id 
 	<if test="roleCodes != null and '' != roleCodes">
-	HAVING mr.maxPriority > max(r.`priority`)
+	HAVING mr.maxPriority >= max(IFNULL(r.`priority`, 0))
 	</if>
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.core.vo.UserDetail" resultType="long">
@@ -403,7 +403,7 @@
 		</where>
 		GROUP BY u.user_id 
 		<if test="roleCodes != null and '' != roleCodes">
-		having mr.maxPriority > max(r.`priority`)
+		having mr.maxPriority >= max(IFNULL(r.`priority`, 0))
 		</if>
     ) t
   </select>
@@ -439,7 +439,7 @@
 	</where>
 	GROUP BY u.user_id 
 	<if test="model != null and model.roleCodes != null and '' != model.roleCodes">
-   	having mr.maxPriority > max(r.`priority`)
+   	having mr.maxPriority >= max(IFNULL(r.`priority`, 0))
 	</if>
 	<include refid="sql_pageable_limit" />
   </select>
@@ -475,7 +475,7 @@
 		</where>
 		GROUP BY u.user_id 
 		<if test="model != null and model.roleCodes != null and '' != model.roleCodes">
-		having mr.maxPriority > max(r.`priority`)
+		having mr.maxPriority >= max(IFNULL(r.`priority`, 0))
 		</if>
 	) t
   </select>

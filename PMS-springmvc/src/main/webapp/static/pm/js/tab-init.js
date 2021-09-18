@@ -82,8 +82,9 @@ function initTabData(config, refresh, navTab, callback) {
     		var columns = resultMap.columns || (resultMap.pageParam || {}).columns || [];
     		var data = resultMap.data;
     		var localTable = $("#" + tableId, $container).data("localTable");
-    		vm.permissionType = resultMap.permissionType || "";
-    		vm.permissions = resultMap.permissions || [];
+    		vm.permissionType = resultMap.permissionType || vm.$parent.permissionType || "";
+    		vm.permissions = resultMap.permissions || vm.$parent.permissions || [];
+    		vm.roles = resultMap.roles || vm.$parent.roles || [];
 //    		console.log(vm);
 //    		var tabList = vm.tabList || [];
 //    		for (var i = 0; i < tabList.length; i++) {

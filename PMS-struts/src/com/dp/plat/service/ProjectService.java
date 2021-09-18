@@ -549,6 +549,13 @@ public interface ProjectService extends BaseService{
 	 */
 	int queryProjectShipment(int projectId);
 	/**
+	 * 查询已保存安装地址的所有设备，含所有转销、退货设备
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	int queryHistoryProjectShipmentSize(int projectId);
+	/**
 	 * 查询要生成的项目编码
 	 * @param project
 	 * @return

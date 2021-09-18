@@ -1,5 +1,6 @@
 package com.dp.plat.core.aop;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -7,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
@@ -18,6 +20,8 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
+import org.apache.shiro.web.filter.PathConfigProcessor;
+import org.apache.shiro.web.filter.PathMatchingFilter;
 import org.apache.shiro.web.filter.mgt.DefaultFilterChainManager;
 import org.apache.shiro.web.filter.mgt.PathMatchingFilterChainResolver;
 import org.apache.shiro.web.servlet.AbstractShiroFilter;
@@ -28,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
@@ -90,6 +95,19 @@ public class SystemCoreFunctionAspect {
 			DefaultFilterChainManager manager = (DefaultFilterChainManager) filterChainResolver.getFilterChainManager();
 
 			// 清空初始权限配置
+			Map<String, Filter> filters = manager.getFilters();
+			for (Filter filter : filters.values()) {
+				try {
+					if (filter instanceof PathConfigProcessor) {
+						Field field = ReflectionUtils.findField(filter.getClass(), "appliedPaths");
+						field.setAccessible(true);
+						Map<String, Object> appliedPaths = (Map<String, Object>) ReflectionUtils.getField(field, filter);
+						appliedPaths.clear();
+					}
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+			}
 			manager.getFilterChains().clear();
 			shiroFilterFactoryBean.getFilterChainDefinitionMap().clear();
 

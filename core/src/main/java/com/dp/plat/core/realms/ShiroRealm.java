@@ -56,9 +56,12 @@ public class ShiroRealm extends AuthorizingRealm {
 		// 增加判断验证码逻辑
 		String captcha = token.getCaptcha();
 		String exitCode = (String) session.getAttribute(CaptchaServlet.KEY_CAPTCHA);
+		session.removeAttribute(CaptchaServlet.KEY_CAPTCHA);
 		if ("1".equals(SystemConfig.systemVariables.get("sys.envirment.argu"))
 				|| "2".equals(SystemConfig.systemVariables.get("sys.envirment.argu"))) {
-			if (exitCode != null && (null == captcha || !captcha.equalsIgnoreCase(exitCode))) {
+			String checkCaptcha = SystemConfig.systemVariables.getOrDefault("sys.login.check.captcha", "1");
+			if ("1".equals(checkCaptcha) && (null == captcha || !captcha.equalsIgnoreCase(exitCode))) {
+//				session.setAttribute(CaptchaServlet.KEY_CAPTCHA, new CaptchaUtil().genRandomCode());
 				throw new CaptchaException("验证码错误！");
 			}
 		}
@@ -93,7 +96,8 @@ public class ShiroRealm extends AuthorizingRealm {
 		Principal principal = new Principal(user);
 		// 2). credentials: 密码.
 		Object credentials = user.getPassword();
-		if ("0".equals(SystemConfig.systemVariables.get("sys.envirment.argu")) || "1".equals(SystemConfig.systemVariables.getOrDefault("sys.adAuth", "0"))) {
+		if ("0".equals(SystemConfig.systemVariables.get("sys.envirment.argu"))
+				|| "1".equals(SystemConfig.systemVariables.getOrDefault("sys.adAuth", "0"))) {
 			credentials = PasswordUtil.encryptMD5Password(new String(token.getPassword()), token.getUsername(), 1024);
 		}
 
@@ -118,25 +122,30 @@ public class ShiroRealm extends AuthorizingRealm {
 		Principal principal = (Principal) principals.getPrimaryPrincipal();
 
 		// 2.1查询用户角色
-		// Set<String> roles = shiroService.queryUserRoleByName(principal.getUserName());
+		// Set<String> roles =
+		// shiroService.queryUserRoleByName(principal.getUserName());
 		Integer compId = principal.getIsSysUser() != 0 ? -1 : principal.getCompId();
 		Set<String> roles = shiroService.queryUserRoleByNameAndCompId(principal.getUserName(), compId);
-		Role maxRole = roleService.selectRoleByRoleName(roles.iterator().next());
-		
+		Role maxRole = null;
+		if (roles.size() > 0) {
+			maxRole = roleService.selectRoleByRoleName(roles.iterator().next());
+		}
+
 		// 2.2查询用户权限字符串集合
-		// Set<String> permissions = shiroService.queryPermissionByUsername(principal.getUserName());
+		// Set<String> permissions =
+		// shiroService.queryPermissionByUsername(principal.getUserName());
 		Set<String> permissions = shiroService.queryPermissionByUsernameAndCompId(principal.getUserName(), compId);
 
 		// 3. 创建 SimpleAuthorizationInfo, 并设置其 roles 属性.
 		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
 		info.addRoles(roles);
 		info.addStringPermissions(permissions);
-		
+
 		// 3.1 将权限更新到当前用户中
 		principal.setRoles(roles);
 		principal.setPermissions(permissions);
 		principal.setMaxRole(maxRole);
-		
+
 		// 4. 返回 SimpleAuthorizationInfo 对象.
 		return info;
 	}

@@ -114,6 +114,9 @@ public class ReportDaoImpl extends BaseDao implements ReportDao {
 	@Override
 	public void insertReportLineDataByList(List<ReportLineData> datas,
 			String dataTypeCode) {
+		if (datas == null || datas.isEmpty()) {
+			return;
+		}
 		Map<String, Object> param = new HashMap<String, Object>();
 		param.put("list", datas);
 		if(dataTypeCode == null){
@@ -192,4 +195,8 @@ public class ReportDaoImpl extends BaseDao implements ReportDao {
 		return (String) getSqlMapClientTemplate().queryForObject("query_report_impl_settingTime", params);
 	}
 
+	@Override
+	public List<Map<String, Object>> queryProjectSummaryStatus(Map<String, Object> params) {
+		return getSqlMapClientTemplate().queryForList("queryProjectSummaryStatus", params);
+	}
 }

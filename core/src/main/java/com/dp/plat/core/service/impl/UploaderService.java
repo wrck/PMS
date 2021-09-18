@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.dao.FileInfoMapper;
 import com.dp.plat.core.pojo.FileInfo;
@@ -120,6 +121,7 @@ public class UploaderService implements IUploaderService {
 		List<FileInfo> list = UploadUtils.uploadMultipartFile(httpRequest, fileType);
 		// 文件上传信息插入数据库
 		for (FileInfo fileInfo : list) {
+			// TODO Transfer Upload Path
 			fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
 		}
 		return list;
@@ -137,7 +139,7 @@ public class UploaderService implements IUploaderService {
 		String webPath = request.getSession().getServletContext().getRealPath("/");
 		DownloadUtils.downFile(response, request, webPath + fileInfo.getPath(), fileInfo.getName());
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr(), UserContext.getUsername());
+		fileInfoMapper.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
 	}
 
 	@Override
@@ -148,9 +150,10 @@ public class UploaderService implements IUploaderService {
 		if (StringUtils.isEmpty(zipName)) {
 			zipName = FileUtil.generZipFileName();
 		}
-		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
+		//DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
+		DownloadUtils.downZip(UploadUtils.UPLOAD_PATH + "/temp", zipName, fileInfos, request, response);
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(fileIds, request.getRemoteAddr(), UserContext.getUsername());
+		fileInfoMapper.insertdownlog(fileIds, HttpContext.getCurrentIp(request), UserContext.getUsername());
 	}
 
 	@Override
@@ -161,7 +164,7 @@ public class UploaderService implements IUploaderService {
 		// 记录下载日志，方便统计文件下载次数
 		Integer fileId = fileInfo.getId();
 		if (fileId != null && fileId != 0) {
-			fileInfoMapper.insertdownlog(String.valueOf(fileId), request.getRemoteAddr(), UserContext.getUsername());
+			fileInfoMapper.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
 		}
 	}
 
@@ -171,7 +174,8 @@ public class UploaderService implements IUploaderService {
 		if (StringUtils.isEmpty(zipName)) {
 			zipName = FileUtil.generZipFileName();
 		}
-		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
+//		DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
+		DownloadUtils.downZip(UploadUtils.UPLOAD_PATH + "/temp", zipName, fileInfos, request, response);
 		// 记录下载日志，方便统计文件下载次数
 		List<Integer> fileIds = new ArrayList<Integer>(fileInfos.size());
 		for (FileInfo fileInfo : fileInfos) {
@@ -182,7 +186,7 @@ public class UploaderService implements IUploaderService {
 		}
 		if (!fileIds.isEmpty()) {
 			fileInfoMapper.insertdownlog(StringUtils.collectionToDelimitedString(fileIds, ","),
-					request.getRemoteAddr(), UserContext.getUsername());
+					HttpContext.getCurrentIp(request), UserContext.getUsername());
 		}
 	}
 }

@@ -253,6 +253,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
             displayParam.setPagesize(50);
         } else {
             displayParam.setPagesize(totalcount);
+            displayParam.setCurrentpage(1);
         }
         displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
         displayParam.setTotalcount(totalcount);
@@ -842,6 +843,15 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public int queryProjectShipmentSize(int projectId) {
         Object obj = getSqlMapClientTemplate().queryForObject("query_project_shipment_size", projectId);
+        if (obj == null) {
+            return 0;
+        }
+        return (Integer) obj;
+    }
+    
+    @Override
+    public int queryHistoryProjectShipmentSize(int projectId) {
+        Object obj = getSqlMapClientTemplate().queryForObject("query_history_project_shipment_size", projectId);
         if (obj == null) {
             return 0;
         }
@@ -1529,7 +1539,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         return (Integer) getSqlMapClientTemplate().insert("insertOrUpdateProjectSupervision", projectSupervision);
     }
     
-    private Map<String, Object> queryQuestionColumns (String quesType, String resultType) {
+    @Override
+    public Map<String, Object> queryQuestionColumns (String quesType, String resultType) {
         getSqlMapClientTemplate().insert("createTempQuesnaireResultLineTable", quesType);
         HashMap<String, Object> params = new  HashMap<>();
         params.put("quesType", quesType);

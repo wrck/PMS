@@ -146,7 +146,7 @@
 				modals.confirm('确认保存？', function() {
 					//Save Data，对应'submit-提交'
 					var params = modPwForm.getFormSimpleData();
-					console.log(params);
+					// console.log(params);
 					var path = '/modifyPassword.json';
 					ajaxPost(basePath + '/modifyPassword.json', params, function(data, status) {
 						if(data.successMsg){

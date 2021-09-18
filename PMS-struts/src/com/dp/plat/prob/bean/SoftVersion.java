@@ -10,7 +10,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class SoftVersion {
 	private int id;
-	private int probId;
+	private Integer probId = 0;
 	private String conp;
 	private Object conp1;
 	private Object conp2;
@@ -28,7 +28,43 @@ public class SoftVersion {
 	private Object pcb2;
 	private String pcbCondition;
 
+	/**
+	 * 手工录入
+	 */
 	private String manualEntry;
+	/**
+	 * 手工录入拆解
+	 */
+	private String manualEntrySub;
+	/**
+	 * 版本范围开始
+	 */
+	private String entryStart;
+	/**
+	 * 版本范围结束
+	 */
+	private String entryEnd;
+	/**
+	 * 缺省补充版本范围开始
+	 */
+	private String markStart;
+	/**
+	 * 缺省补充版本范围结束
+	 */
+	private String markEnd;
+	/**
+	 * 影响版本类型，0：所有系列，1：盒式系列，2：框式系列
+	 */
+	private Integer affectedType;
+	private String affectedTypeName;
+	/**
+	 * 分组ID
+	 */
+	private Long groupId = 0l;
+	/**
+	 * 是否拆解
+	 */
+	private Integer splited = 1;
 	
 	private String createBy;
 	private String updateBy;
@@ -73,11 +109,11 @@ public class SoftVersion {
 		this.id = id;
 	}
 
-	public int getProbId() {
+	public Integer getProbId() {
 		return probId;
 	}
 
-	public void setProbId(int probId) {
+	public void setProbId(Integer probId) {
 		this.probId = probId;
 	}
 
@@ -251,6 +287,78 @@ public class SoftVersion {
 
 	public void setManualEntry(String manualEntry) {
 		this.manualEntry = manualEntry;
+	}
+
+	public String getManualEntrySub() {
+		return manualEntrySub;
+	}
+
+	public void setManualEntrySub(String manualEntrySub) {
+		this.manualEntrySub = manualEntrySub;
+	}
+
+	public String getEntryStart() {
+		return entryStart;
+	}
+
+	public void setEntryStart(String entryStart) {
+		this.entryStart = entryStart;
+	}
+
+	public String getEntryEnd() {
+		return entryEnd;
+	}
+
+	public void setEntryEnd(String entryEnd) {
+		this.entryEnd = entryEnd;
+	}
+
+	public String getMarkStart() {
+		return markStart;
+	}
+
+	public void setMarkStart(String markStart) {
+		this.markStart = markStart;
+	}
+
+	public String getMarkEnd() {
+		return markEnd;
+	}
+
+	public void setMarkEnd(String markEnd) {
+		this.markEnd = markEnd;
+	}
+	
+	public Integer getAffectedType() {
+		return affectedType;
+	}
+
+	public void setAffectedType(Integer affectedType) {
+		this.affectedType = affectedType;
+	}
+	
+	public String getAffectedTypeName() {
+		return affectedTypeName;
+	}
+
+	public void setAffectedTypeName(String affectedTypeName) {
+		this.affectedTypeName = affectedTypeName;
+	}
+
+	public Long getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(Long groupId) {
+		this.groupId = groupId;
+	}
+
+	public Integer getSplited() {
+		return splited;
+	}
+
+	public void setSplited(Integer splited) {
+		this.splited = splited;
 	}
 
 }

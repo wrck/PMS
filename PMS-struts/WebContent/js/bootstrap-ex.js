@@ -133,30 +133,36 @@ function date_picker(inputId){
 }
 
 function date_picker2(inputId){
-	
-	input = document.getElementById(inputId);
-	var v = input.value;
- 	$(input).datepicker({
-	      changeMonth: true,
-	      changeYear: true,
-	    });
-	$(input).datepicker('option',{dateFormat:"y-mm-dd"});
-	$(input).css({"width":"85px"});
-	$("#ui-datepicker-div").hide();
-	$(input).val(v);
+	try {
+		input = document.getElementById(inputId);
+		var v = input.value;
+		$(input).datepicker({
+			changeMonth: true,
+			changeYear: true,
+		});
+		$(input).datepicker('option',{dateFormat:"y-mm-dd"});
+		$(input).css({"width":"85px"});
+		$("#ui-datepicker-div").hide();
+		$(input).val(v);
+	} catch(e) {
+		console.error(e);
+	}
 }
 
 function date_picker3(inputId){
-	
-	input = document.getElementById(inputId);
-	var v = input.value;
-	$(input).datepicker({
-	      changeMonth: true,
-	      changeYear: true,
-	    });
-	$(input).datepicker('option',{dateFormat:"yy-mm-dd"});
-	$("#ui-datepicker-div").hide();
-	//$(input).val(v);
+	try {
+		input = document.getElementById(inputId);
+		var v = input.value;
+		$(input).datepicker({
+		      changeMonth: true,
+		      changeYear: true,
+		    });
+		$(input).datepicker('option',{dateFormat:"yy-mm-dd"});
+		$("#ui-datepicker-div").hide();
+		//$(input).val(v);
+	} catch(e) {
+		console.error(e);
+	}
 }
 
 
@@ -209,7 +215,7 @@ function multiselect(selectID, inputID ,width, height) {
 /**
  * 下拉默认多选
  */
-function installselect(selectID , inputID ,prefix){
+/*function installselect(selectID , inputID ,prefix){
 	var input_value = $("#"+inputID).val();
 	 
 	 $("#"+selectID + "  option").each(function(){
@@ -217,6 +223,18 @@ function installselect(selectID , inputID ,prefix){
 			 $(this).attr("selected", "selected"); 
 		 }	
 	 });
+}*/
+
+function installselect(selectID , inputID ,prefix){
+	var input_value = $("#"+inputID).val();
+	var inputValues = input_value.split(",");
+	$("#"+selectID + "  option").each(function(){
+		var withPreixValue = prefix + $(this).val().toString() + prefix;
+		if ($.inArray(withPreixValue, inputValues) > -1) {
+    	//if(input_value.toString().indexOf(prefix+$(this).val().toString()+prefix)> -1){
+        	$(this).attr("selected", "selected"); 
+        }	
+	});
 }
 
 
@@ -235,9 +253,9 @@ function setselect(selectID ,inputID ,prefix){
  * @returns {Boolean}
  */
 function commonfill(idjson, id , usernameArr , realnameArr){
-	var obj=document.getElementById(idjson);
+	var obj=document.getElementById(idjson) || {value: ""};
 	if(obj.value==""){
-		document.getElementById(id).value="";
+		(document.getElementById(id) || {}).value="";
 	}
 	if(obj.value!=""){
 		var i=0;
@@ -249,7 +267,7 @@ function commonfill(idjson, id , usernameArr , realnameArr){
 		if(i==realnameArr.length){
 			return false;
 		} else{
-			document.getElementById(id).value=usernameArr[i];
+			(document.getElementById(id) || {}).value=usernameArr[i];
 		}
 	}
 }

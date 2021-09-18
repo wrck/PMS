@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
+import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.PmClQuesnaireResultHeader;
 import com.dp.plat.data.bean.PmClQuesnaireResultLine;
@@ -45,6 +46,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
     private DepartmentManageService departmentManageService;
     private BasicDataService basicDataService;
 
+    private List<Company> companyList;
     private List<Department> departmentList;
     private DisplayParam displayParam;
     private Project project;
@@ -80,6 +82,9 @@ public class MaintenanceAction extends BaseAction implements Preparable {
     }
     
     public void prepareExecute() {
+    	// 所属公司
+    	companyList = departmentManageService.queryCompanyList(null);
+    	
         // 办事处集合
         departmentList = departmentManageService.queryDepartments();
 
@@ -284,6 +289,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             if (cbForm == null) {
                 cbForm = new HashMap<>();
             }
+            companyList = departmentManageService.queryCompanyList(null);
             // 办事处集合
             departmentList = departmentManageService.queryDepartments();
             maintenanceTypeList = basicDataService.queryBasicDataBeans("maintenanceType");
@@ -332,12 +338,14 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             Integer projectId = -1;
             String projectCode = projectMaintenance.getProjectCode(),
                     projectName = projectMaintenance.getProjectName(),
-                    officeCode = projectMaintenance.getOfficeCode();
+                    officeCode = projectMaintenance.getOfficeCode(),
+                    compId = projectMaintenance.getCompId();
             if (Integer.valueOf(10).equals(projectType) || (project != null && project.getProjectId() > 0)) {
                 projectId = project.getProjectId();
                 projectCode = project.getProjectCode();
                 projectName = project.getProjectName();
                 officeCode = project.getColumn001();
+                compId = StringUtils.defaultIfBlank(project.getCompId(), compId);
             } else if (Integer.valueOf(20).equals(projectType) || (presales != null && presales.getPresalesId() > 0)) {
                 projectId = presales.getPresalesId();
                 projectCode = presales.getPresalesCode();
@@ -349,6 +357,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             projectMaintenance.setProjectName(projectName);
             projectMaintenance.setOfficeCode(officeCode);
             projectMaintenance.setProjectType(projectType);
+            projectMaintenance.setCompId(compId);
 
             // 新增和最新记录时更新项目实施状态
             if (Integer.valueOf(10).equals(projectType) && (maxId.equals(projectMaintenance.getId()) || maxId.equals(0))) {
@@ -412,6 +421,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
     		displayParam = new DisplayParam();
     	}
     	displayParam.getParam();
+    	companyList = departmentManageService.queryCompanyList(null);
     	// 办事处集合
         departmentList = departmentManageService.queryDepartments();
         
@@ -546,7 +556,15 @@ public class MaintenanceAction extends BaseAction implements Preparable {
         this.presalesService = presalesService;
     }
 
-    public DepartmentManageService getDepartmentManageService() {
+    public List<Company> getCompanyList() {
+		return companyList;
+	}
+
+	public void setCompanyList(List<Company> companyList) {
+		this.companyList = companyList;
+	}
+
+	public DepartmentManageService getDepartmentManageService() {
         return departmentManageService;
     }
 

@@ -371,8 +371,8 @@
   </select>
   
   <insert id="batchInsertUserRole" parameterType="list">
-    insert into t_user_role 
-    values
+    INSERT IGNORE INTO t_user_role 
+    VALUES
     <foreach collection="list" index="index" item="item" separator=",">  
 	    <trim prefix="(" suffix=")" suffixOverrides=",">
 	        #{item.id,jdbcType=INTEGER}, #{item.userId,jdbcType=INTEGER}, #{item.roleId,jdbcType=INTEGER}, #{item.compId,jdbcType=INTEGER}

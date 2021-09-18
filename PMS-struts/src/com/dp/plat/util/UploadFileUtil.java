@@ -24,25 +24,49 @@ import com.dp.plat.exception.UploadException;
 
 /**
  * 文件上传方法
+ * 
  * @author admin
  *
  */
 public class UploadFileUtil {
-	
+
 	/**
 	 * 上传类型白名单
 	 */
 	private final static String UPLOAD_EXT_WHITE_LIST = "doc|docx|xls|xlsx|ppt|pptx|xps|vsd|vsdx|csv|pdf|rar|zip|7z|txt|log|bmp|gif|jpg|jpeg|png";
-	
+
+	private final static String DEFAULT_UPLOAD_PATH = "upload";
+
+	private final static String UPLOAD_PATH_KEY = "plat.upload.path";
+
+	public final static String UPLOAD_PATH;
+
+	static {
+		String uploadPath = DEFAULT_UPLOAD_PATH;
+		try {
+			uploadPath = StringEscUtil.getText(UPLOAD_PATH_KEY);
+			if (uploadPath == null || uploadPath.trim().length() == 0 || UPLOAD_PATH_KEY.equals(uploadPath)) {
+				uploadPath = DEFAULT_UPLOAD_PATH;
+			} else {
+				uploadPath = uploadPath.trim();
+			}
+			uploadPath = uploadPath.replace("\\", "/").replace("//", "/").replace("/", File.separator);
+		} catch (Throwable e) {
+			uploadPath = DEFAULT_UPLOAD_PATH;
+		}
+		UPLOAD_PATH = uploadPath;
+	}
+
 	/**
 	 * 上传单个文件
-	 * @param file 前台页面file标签的name值
-	 * @param filename 文件名称
+	 * 
+	 * @param file        前台页面file标签的name值
+	 * @param filename    文件名称
 	 * @param contentType 文件类型
-	 * @param realpath 文件上传目录
+	 * @param realpath    文件上传目录
 	 * @return
 	 */
-	public boolean uploadFile(File file , String filename , String contentType ,String realpath,ServletContext context){
+	public boolean uploadFile(File file, String filename, String contentType, String realpath, ServletContext context) {
 		try {
 			// 检查文件上传类型
 			if (!checkFileExt(filename)) {
@@ -58,27 +82,27 @@ public class UploadFileUtil {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * 文件上传
-	 * @param upload			上传文件[]
-	 * @param dir				上传目录
-	 * @param uploadFileName	上传文件名称[]
-	 * @param source			保存对象
-	 * @param property			保存路径属性
-	 * @throws IOException 
+	 * 
+	 * @param upload         上传文件[]
+	 * @param dir            上传目录
+	 * @param uploadFileName 上传文件名称[]
+	 * @param source         保存对象
+	 * @param property       保存路径属性
+	 * @throws IOException
 	 */
-	public static void upload(File[] upload, String dir,
-			String uploadFileName) throws Exception {
-		if(upload != null && !upload.equals("")){//为空表示无附件上传
-			boolean bool = Util.createDir(dir);//创建上传路径
-			if(!bool){
+	public static void upload(File[] upload, String dir, String uploadFileName) throws Exception {
+		if (upload != null && !upload.equals("")) {// 为空表示无附件上传
+			boolean bool = Util.createDir(dir);// 创建上传路径
+			if (!bool) {
 				throw new RuntimeException("上传路径不存在");
 			}
 			String targetDirectory = ServletActionContext.getServletContext().getRealPath(dir);
 			String[] uploadFileNames = uploadFileName.split(",");
-			String  targetFileName = "";
-			for(int i = 0; i < uploadFileNames.length; i++){//循环上传附件
+			String targetFileName = "";
+			for (int i = 0; i < uploadFileNames.length; i++) {// 循环上传附件
 				targetFileName = uploadFileNames[i].trim();
 				// 检查文件上传类型
 				if (!checkFileExt(targetFileName)) {
@@ -89,13 +113,14 @@ public class UploadFileUtil {
 			}
 		}
 	}
-	
+
 	/**
 	 * 文件上传,进行MD5校验 ,文件不重复
-	 * @param upload			上传文件[]
-	 * @param dir				上传目录
-	 * @param uploadFileName	上传文件名称字符串
-	 * @throws IOException 
+	 * 
+	 * @param upload         上传文件[]
+	 * @param dir            上传目录
+	 * @param uploadFileName 上传文件名称字符串
+	 * @throws IOException
 	 */
 	public static String uploadNoRepeat(File[] upload, String dir, String uploadFileName) throws Exception {
 		StringBuffer stringBuffer = new StringBuffer();
@@ -106,7 +131,7 @@ public class UploadFileUtil {
 			}
 			String targetDirectory = ServletActionContext.getServletContext().getRealPath(dir);
 			String[] uploadFileNames = uploadFileName.split(",");
-			for(int i = 0; i < uploadFileNames.length; i++){
+			for (int i = 0; i < uploadFileNames.length; i++) {
 				File file = upload[i];
 				String fileName = uploadFileNames[i].trim();
 				// 检查文件上传类型
@@ -125,13 +150,14 @@ public class UploadFileUtil {
 		}
 		return stringBuffer.toString();
 	}
-	
+
 	/**
 	 * 文件上传,进行MD5校验 ,文件不重复
-	 * @param upload			上传文件
-	 * @param dir				上传目录
-	 * @param uploadFileName	上传文件名称
-	 * @throws IOException 
+	 * 
+	 * @param upload         上传文件
+	 * @param dir            上传目录
+	 * @param uploadFileName 上传文件名称
+	 * @throws IOException
 	 */
 	public static String uploadNoRepeat(File upload, String dir, String uploadFileName) throws Exception {
 		StringBuffer stringBuffer = new StringBuffer();
@@ -158,14 +184,15 @@ public class UploadFileUtil {
 		}
 		return stringBuffer.toString();
 	}
-	
+
 	/**
 	 * 
 	 * 文件上传,进行MD5校验 ,文件不重复
-	 * @param upload			上传文件[]
-	 * @param dir				上传目录
-	 * @param uploadFileNames	上传文件名称[]
-	 * @throws IOException 
+	 * 
+	 * @param upload          上传文件[]
+	 * @param dir             上传目录
+	 * @param uploadFileNames 上传文件名称[]
+	 * @throws IOException
 	 */
 	public static String uploadNoRepeat(File[] upload, String dir, String[] uploadFileNames) throws Exception {
 		StringBuffer stringBuffer = new StringBuffer();
@@ -175,7 +202,7 @@ public class UploadFileUtil {
 				directory.mkdirs();
 			}
 			String targetDirectory = ServletActionContext.getServletContext().getRealPath(dir);
-			for(int i = 0; i < uploadFileNames.length; i++){
+			for (int i = 0; i < uploadFileNames.length; i++) {
 				File file = upload[i];
 				String fileName = uploadFileNames[i].trim();
 				// 检查文件上传类型
@@ -194,7 +221,7 @@ public class UploadFileUtil {
 		}
 		return stringBuffer.toString();
 	}
-	
+
 	// 计算文件的 MD5 值
 	public static String getFileMD5(File mFile) throws FileNotFoundException {
 		MessageDigest digest = null;
@@ -220,92 +247,96 @@ public class UploadFileUtil {
 		}
 
 	}
-	
-    public static String getUploadFileRename(String targetFileName) {
-        return getRename(targetFileName);
-    }
 
-    private static String getRename(String targetFileName) {
-        String[] arr = targetFileName.split("\\.");
-        String diff = "";
-        String name = getName();
-        if (arr.length > 0) {
-            diff = arr[arr.length - 1];
-        }
+	public static String getUploadFileRename(String targetFileName) {
+		return getRename(targetFileName);
+	}
 
-        return name + "." + diff;
-    }
+	private static String getRename(String targetFileName) {
+		String[] arr = targetFileName.split("\\.");
+		String diff = "";
+		String name = getName();
+		if (arr.length > 0) {
+			diff = arr[arr.length - 1];
+		}
 
-    private static String getName() {
-        String[] arr = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
-                "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
-        StringBuilder name = new StringBuilder();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        name.append(sdf.format(new Date()));
-        Random random = new Random();
-        for (int i = 0; i < 10; i++) {
-            name.append(arr[random.nextInt(arr.length - 1)]);
-        }
-        return name.toString();
-    }
-    
-    /**
-     * 检查上传的文件类型
-     * @param files
-     * @return 
-     * @throws UploadException
-     */
-    public static boolean checkFileExt(File file) throws Exception {
-    	return checkFileExt(file, null);
-    }
-    
-    /**
-     * 检查上传的文件类型
-     * @param files
-     * @return 
-     * @throws UploadException
-     */
-    public static boolean checkFileExt(File file, String allowFileTypes) throws Exception {
-    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
-    	return checkFileExt(file.getName(), allowFileTypes);
-    }
-    
-    /**
-     * 检查上传的文件类型
-     * @param files
-     * @return 
-     * @throws UploadException
-     */
-    public static boolean checkFileExt(File[] files) {
-    	return checkFileExt(files, null);
-    }
-    
-    /**
-     * 检查上传的文件类型
-     * @param files
-     * @return 
-     * @throws UploadException
-     */
-    public static boolean checkFileExt(File[] files, String allowFileTypes) {
-    	boolean result = true;
-    	allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
-    	for (int i = 0; i < files.length; i++) {
+		return name + "." + diff;
+	}
+
+	private static String getName() {
+		String[] arr = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
+				"q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+		StringBuilder name = new StringBuilder();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		name.append(sdf.format(new Date()));
+		Random random = new Random();
+		for (int i = 0; i < 10; i++) {
+			name.append(arr[random.nextInt(arr.length - 1)]);
+		}
+		return name.toString();
+	}
+
+	/**
+	 * 检查上传的文件类型
+	 * 
+	 * @param files
+	 * @return
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(File file) throws Exception {
+		return checkFileExt(file, null);
+	}
+
+	/**
+	 * 检查上传的文件类型
+	 * 
+	 * @param files
+	 * @return
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(File file, String allowFileTypes) throws Exception {
+		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+		return checkFileExt(file.getName(), allowFileTypes);
+	}
+
+	/**
+	 * 检查上传的文件类型
+	 * 
+	 * @param files
+	 * @return
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(File[] files) {
+		return checkFileExt(files, null);
+	}
+
+	/**
+	 * 检查上传的文件类型
+	 * 
+	 * @param files
+	 * @return
+	 * @throws UploadException
+	 */
+	public static boolean checkFileExt(File[] files, String allowFileTypes) {
+		boolean result = true;
+		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+		for (int i = 0; i < files.length; i++) {
 			File file = files[i];
 			result = result && checkFileExt(file.getName(), allowFileTypes);
 		}
-    	return result;
-    }
-    
-    public static boolean checkFileExt(String fileName) {
+		return result;
+	}
+
+	public static boolean checkFileExt(String fileName) {
 		return checkFileExt(fileName, null);
 	}
-    
-    /**
+
+	/**
 	 * 检查文件后缀名称是否符合要求
 	 * 
 	 * @param fileName
 	 * @param allowFileType
-     * @return 
+	 * @return
 	 * @throws UploadException
 	 */
 	public static boolean checkFileExt(String fileName, String allowFileType) {
@@ -334,7 +365,7 @@ public class UploadFileUtil {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * 获得文件的扩展名（后缀名），扩展名不带“.”
 	 *
@@ -352,10 +383,10 @@ public class UploadFileUtil {
 			return fileName.substring(index + 1);
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		Pattern pattern = Pattern.compile("[A-Za-z]{1}[0-9]{2}|[0-9]{3}");
-        String suffix = "c01";
+		String suffix = "c01";
 		System.out.println(suffix + pattern.matcher(suffix).matches());
 		suffix = "r01";
 		System.out.println(suffix + pattern.matcher(suffix).matches());

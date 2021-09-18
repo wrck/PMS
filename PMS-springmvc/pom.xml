@@ -14,7 +14,9 @@
 	<name>PMS-springmvc</name>
 	<packaging>war</packaging>
 	
-	<properties>
+	<properties> 
+		<!-- 允许Maven后面的resource覆盖同名文件 ,配了resources-plugin不起作用，需要在resources-plugin中配置orerwrite-->
+        <maven.resources.overwrite>true</maven.resources.overwrite> 
 		<!-- shiro版本 -->
 		<shiro.version>1.4.1</shiro.version>
 		<flying.saucer.version>9.1.20</flying.saucer.version>
@@ -26,7 +28,7 @@
 			<groupId>com.dp.plat</groupId>
 			<artifactId>MyBatisGenerator</artifactId>
 			<version>0.0.1-RELEASE</version>
-			<!-- <scope>test</scope> -->
+			<scope>test</scope>
 			<exclusions>
 				<exclusion>
 					<artifactId>freemarker</artifactId>
@@ -41,7 +43,7 @@
 		</dependency>
 		<dependency>
             <groupId>com.dp.plat</groupId>
-            <artifactId>PMS-activiti</artifactId>
+            <artifactId>pms-activiti</artifactId>
             <version>${project.version}</version>
             <classifier>api</classifier>
             <type>jar</type>
@@ -54,7 +56,7 @@
 		</dependency>
         <dependency>
             <groupId>com.dp.plat</groupId>
-            <artifactId>PMS-activiti</artifactId>
+            <artifactId>pms-activiti</artifactId>
             <version>${project.version}</version>
             <type>war</type>
             <exclusions>
@@ -216,16 +218,87 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<!-- PMS2 -->
+			<id>pms2</id>
+			<properties>
+				<profile.build.id>pms2</profile.build.id>
+				<profile.build.name>PMS2</profile.build.name>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<!-- PMS3 -->
+			<id>pms3</id>
+			<properties>
+				<profile.build.id>pms3</profile.build.id>
+				<profile.build.name>AFPMS3</profile.build.name>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<!-- <activeByDefault>true</activeByDefault> -->
+			</activation>
+		</profile>
+		<profile>
+			<!-- 本地开发环境 -->
+			<id>dev</id>
+			<properties>
+				<env>dev</env>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<!-- 发布环境 -->
+			<id>release</id>
+			<properties>
+				<env>release</env>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<!-- <activeByDefault>true</activeByDefault> -->
+			</activation>
+		</profile>
+		<profile>
+			<!-- 测试环境 -->
+			<id>test</id>
+			<properties>
+				<env>test</env>
+			</properties>
+		</profile>
+	</profiles> 
+
 	<build>
-		<finalName>${project.build.name}</finalName>
+		<finalName>${profile.build.name}</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources/</directory>
+				<excludes>
+					<exclude>profiles/**</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>src/main/resources/profiles/${env}/</directory>
+			</resource>
+			<resource>
+				<directory>src/main/resources/profiles/${profile.build.id}/</directory>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
-					<archiveClasses>true</archiveClasses>
+					<!-- <archiveClasses>true</archiveClasses> -->
 					<attachClasses>true</attachClasses>
 					<classesClassifier>core</classesClassifier>
+					<dependentWarExcludes>WEB-INF/lib/*</dependentWarExcludes>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -268,6 +341,7 @@
 				<version>3.0.2</version>
 				<configuration>
 					<encoding>${project.build.sourceEncoding}</encoding>
+					<overwrite>true</overwrite>
 				</configuration>
 			</plugin>
 

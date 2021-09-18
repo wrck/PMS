@@ -63,6 +63,15 @@
 	</section>
 </body>
 <jsTag> 
+	<c:if test="${!empty param.illegal}">
+	<script type="text/javascript">
+    	if (!!"${param.illegal}") {
+    		ajaxPost(basePath + "/illegal.json" + window.location.search, {}, function() {
+    		});
+   			window.location.replace(basePath + "/404.html");
+    	}
+   	</script>
+   	</c:if>
     <script type="text/javascript">
         $(function(){
             var wrapperHt = $(".content-wrapper").innerHeight();

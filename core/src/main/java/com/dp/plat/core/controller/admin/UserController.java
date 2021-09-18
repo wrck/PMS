@@ -3,7 +3,9 @@ package com.dp.plat.core.controller.admin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.filter.CasFilter;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.param.RoleConstant;
 import com.dp.plat.core.pojo.Role;
@@ -37,6 +41,7 @@ import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.UserDetail;
 import com.dp.plat.core.vo.UserInfoVO;
+import com.dp.plat.support.mail.MailUtil;
 
 /**
  * 用户管理
@@ -66,7 +71,7 @@ public class UserController {
 	}
 
 	@RequestMapping("/list")
-	@SystemControllerLog(description = "查看用户列表")
+//	@SystemControllerLog(description = "查看用户列表")
 	public String list(PageParam<UserDetail> pageParam, UserDetail userDetail, Model model) {
 		Principal user = UserContext.getCurrentPrincipal();
 		userDetail.setCompID(user.getCompId());
@@ -119,7 +124,13 @@ public class UserController {
 		model.addAttribute("user", user);
 		model.addAttribute("userInfo", userInfo);
 		model.addAttribute("roleIds", roleIds);
-		model.addAttribute("isCas", SystemConfig.systemVariables.getOrDefault("sys.cas", "0"));
+		String isCas = SystemConfig.systemVariables.getOrDefault("sys.cas", "0");
+		try {
+			CasFilter casFilter = SpringContext.getBean(CasFilter.class);
+		} catch (Exception e) {
+			isCas = "0";
+		}
+		model.addAttribute("isCas", isCas);
 		return Consts.URLPath.SYSTEM_MANAGER + "user_detail";
 	}
 
@@ -133,11 +144,14 @@ public class UserController {
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	@SystemControllerLog(description = "创建用户")
 	public String create(User user, UserInfo userInfo, String roleIds, Model model) {
+		Boolean isNew = true;
+		String randomPassword = PasswordUtil.createRandomPassword(8);
 		user.setCreateTime(new Date());
-		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), "123456"));
+		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), randomPassword));
 		try {
 			userService.insertSelective(user);
 		} catch (DuplicateKeyException e) {
+			isNew = false;
 			user = userService.selectByUserName(user.getUserName());
 		}
 		
@@ -162,6 +176,18 @@ public class UserController {
 		// return "redirect:"+ Consts.URLPath.SYSTEM_MANAGER + "user/" +
 		// user.getUserId() + ".json";
 		model.addAttribute("userId", user.getUserId());
+		
+		// 新用户，发送邮件通知账户已开通，并发送密码
+		if (isNew) {
+			Map<String, Object> context = new HashMap<String, Object>();
+			context.put("templateCode", "sys.user.created.mail");
+			context.put("userName", user.getUserName());
+			context.put("realName", userInfo.getRealName());
+			context.put("bccs", userInfo.getEmail());
+			context.put("randomPassword", randomPassword);
+			context.put("dataSource", new Object[] {userInfo});
+			MailUtil.keepMailWithTemplate(context, true);
+		}
 		return Consts.URLPath.SYSTEM_MANAGER + "user_detail";
 	}
 

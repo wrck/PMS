@@ -20,6 +20,14 @@ public class DataQueryParam {
 	private Date phaseEndTime;//阶段结束时间
 	private Date cbStartTime;
 	private Date cbEndTime;
+	/**
+	 * 所属公司
+	 */
+	private String compId;
+	/**
+	 * 办事处
+	 */
+	private String officeCode;
 	
 	
 	public Date getStartTime() {
@@ -94,6 +102,16 @@ public class DataQueryParam {
 	public void setCbEndTime(Date cbEndTime) {
 		this.cbEndTime = cbEndTime;
 	}
-	
-	
+	public String getCompId() {
+		return compId;
+	}
+	public void setCompId(String compId) {
+		this.compId = compId;
+	}
+	public String getOfficeCode() {
+		return officeCode;
+	}
+	public void setOfficeCode(String officeCode) {
+		this.officeCode = officeCode;
+	}
 }

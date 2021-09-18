@@ -348,6 +348,13 @@ function submit(){
 				headerValue="--请选择--" cssStyle="width:163px"
 				listValue="basicDataName" list="%{projectRankList}" theme="simple" />
 		</div>
+        <div class="form-group form-group-query form-group-width-1">
+            <label for="projectColumn10"><s:text name="pm.project.majorProjectLevel" /></label>
+            <s:select name="project.majorProjectLevel" id="majorProjectLevel"
+                listKey="basicDataName" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                listValue="basicDataName" list="%{majorProjectLevelList}" theme="simple" />
+        </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="sm"><s:text name="pm.project.serviceManager" /></label>
 			<s:textfield id="sm" onfocus="fillsm()" onblur="fillsm()"
@@ -466,6 +473,7 @@ function submit(){
 				<display:column property="column012Name" titleKey="pm.project.implement"></display:column>
 				<display:column property="column010Name" titleKey="pm.project.projectType"></display:column>
 			</s:if>
+            <display:column property="majorProjectLevel" titleKey="pm.project.majorProjectLevel"></display:column>
 			<display:column property="salesManName" style="width:70px" titleKey="pm.project.usernamec"></display:column>
 			<s:if test="%{project.projectState != '10'}">
 				<display:column property="serviceManagerCodeforjson" titleKey="pm.project.programManager"></display:column>

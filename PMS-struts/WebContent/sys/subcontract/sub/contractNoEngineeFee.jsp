@@ -11,7 +11,7 @@
 </head>
 <body>
 	<div style="text-align: left;">
-	   <s:form id="subcontractAmountForm" action="module/subcontract_audit.action">
+	   <s:form id="subcontractAmountForm" action="%{namespace}/subcontract_audit.action">
 		<display:table style="text-align: left;"
             name="subcontractPriceList" pagesize="${subcontractPriceList.size()}" export="false" id="engineeFeeTable"
             size="${subcontractPriceList.size()}" sort="external"

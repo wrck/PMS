@@ -286,8 +286,8 @@
 				<div class="modal-body" id="modRestDiv">
 					<form id="modRestForm" name="modRestForm"
 						class="form-horizontal bv-form" novalidate="novalidate">
-						<input type="hidden" name="user.userId"> <input type="hidden"
-							name="userName">
+						<input type="hidden" name="userId" value="${user.userId}">
+						<input type="hidden" name="userName" value="${user.userName}">
 						<div class="box-body">
 							<div class="form-group has-feedback" id="div_old">
 								<label for="receiveEmail" class="col-sm-2 control-label">邮箱地址：</label>
@@ -516,7 +516,13 @@
 					winId : 'modifyPasswordWin',
 					title : '修改密码',
 					width : '700px',
-					url : basePath + "/pm/modals/password.html?needChangePwd=" + needChangePwd
+					url : basePath + "/base/modals/password.html?needChangePwd=" + needChangePwd,
+					backdrop:"static",
+					hideFunc: function() {
+						if (needChangePwd) {
+							window.location.replace(basePath);
+						}
+					}
 				});
 			})
 			

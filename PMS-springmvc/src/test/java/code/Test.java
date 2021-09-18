@@ -33,14 +33,16 @@ import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 public class Test {
 
 	public static void main(String[] args) {
-		String str = "project:detail,project:add";
-		System.out.println(str.matches(".*:(list|detail),?.*"));
-		
-		String pattern = ":(list|detail),?";
-
-		Pattern r = Pattern.compile(pattern);
-		Matcher m = r.matcher(str);
-		System.out.println(m.find());
+		Pattern pattern = Pattern.compile(".*.admin.*?(?<!UserController)$");
+		System.out.println(pattern.matcher("com.dp.plat.core.controller.admin.UserController").matches());
+//		String str = "project:detail,project:add";
+//		System.out.println(str.matches(".*:(list|detail),?.*"));
+//		
+//		String pattern = ":(list|detail),?";
+//
+//		Pattern r = Pattern.compile(pattern);
+//		Matcher m = r.matcher(str);
+//		System.out.println(m.find());
 
 		//generatorUpdateDuplicateStr(ProjectProduct.class);
 	}

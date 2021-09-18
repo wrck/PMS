@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,9 +38,14 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.ContextLoader;
 
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
@@ -531,7 +538,11 @@ public class MailUtil {
 					continue;
 				}
 				Class<?> c = obj.getClass();
-				Field[] fields = c.getDeclaredFields();
+//				Field[] fields = c.getDeclaredFields();
+				Collection<Field> fields = new HashSet<Field>();
+				ReflectionUtils.doWithFields(c, field -> {
+					fields.add(field);
+				});
 				for (Field field : fields) {
 					field.setAccessible(true);
 					paramNames.add(beforeSplit + field.getName() + afterSplit);
@@ -578,8 +589,19 @@ public class MailUtil {
 				Object value = context.get(name.substring(1, name.length() - 1));
 				value = value == null ? "" : value;
 				String regex = "\\Q" + name + "\\E";
-				subject = subject.replaceAll(regex, value.toString());
-				content = content.replaceAll(regex, value.toString());
+				try {
+					subject = subject.replaceAll(regex, value.toString());
+					content = content.replaceAll(regex, value.toString());
+				} catch (Exception e) {
+					try {
+						value = Matcher.quoteReplacement(value.toString());
+						subject = subject.replaceAll(regex, value.toString());
+						content = content.replaceAll(regex, value.toString());
+					} catch (Exception e2) {
+						ExceptionHandler.insertException(e);
+						ExceptionHandler.insertException(e2);
+					}
+				}
 			}
 		}
 		// 处理实体数据源以外的其他模板值
@@ -605,11 +627,23 @@ public class MailUtil {
 			} else {
 				regex = "\\Q" + beforeSplit + key + afterSplit + "\\E";
 			}
-			subject = subject.replaceAll(regex, value.toString());
-			content = content.replaceAll(regex, value.toString());
+			try {
+				subject = subject.replaceAll(regex, value.toString());
+				content = content.replaceAll(regex, value.toString());
+			} catch (Exception e) {
+				try {
+					value = Matcher.quoteReplacement(value.toString());
+					subject = subject.replaceAll(regex, value.toString());
+					content = content.replaceAll(regex, value.toString());
+				} catch (Exception e2) {
+					ExceptionHandler.insertException(e);
+					ExceptionHandler.insertException(e2);
+				}
+			}
 		}
-		subject = subject.replaceAll("\\" + beforeSplit + "(\\w+)\\" + afterSplit + "", "");
-		content = content.replaceAll("\\" + beforeSplit + "(\\w+)\\" + afterSplit + "", "");
+		String otherPlaceholder = quoteSplit(beforeSplit) + "(\\w+)" + quoteSplit(afterSplit);
+		subject = subject.replaceAll(otherPlaceholder, "");
+		content = content.replaceAll(otherPlaceholder, "");
 		NotificationTemplate processedTemplate = new NotificationTemplate();
 		processedTemplate.setTemplateCode(templateCode);
 		processedTemplate.setSubject(subject);
@@ -676,15 +710,24 @@ public class MailUtil {
 	 */
 	private static List<String> matchImgSrc(MailInfo mailInfo) {
 		List<String> srcList = new ArrayList<String>();
-		Matcher matcherImg = Pattern.compile(IMGURL_REG).matcher(mailInfo.getContent());
-		while (matcherImg.find()) {
-			String imgTag = matcherImg.group() + ">";
-			Matcher matcherSrc = Pattern.compile(IMGSRC_REG).matcher(imgTag);
-			while (matcherSrc.find()) {
-				String src = matcherSrc.group();
-				src = src.replace("\"", "");
-				srcList.add(src);
-			}
+//		Matcher matcherImg = Pattern.compile(IMGURL_REG).matcher(mailInfo.getContent());
+//		while (matcherImg.find()) {
+//			String imgTag = matcherImg.group() + ">";
+//			Matcher matcherSrc = Pattern.compile(IMGSRC_REG).matcher(imgTag);
+//			while (matcherSrc.find()) {
+//				String src = matcherSrc.group();
+//				src = src.replace("\"", "");
+//				srcList.add(src);
+//			}
+//		}
+		Document document = Jsoup.parse(mailInfo.getContent());
+		Elements imgs = document.getElementsByTag("img");
+		Elements images = document.getElementsByTag("image");
+		imgs.addAll(images);
+		for (Element img : imgs) {
+			String src = img.attr("src");
+			src = src.replace("\"", "");
+			srcList.add(src);
 		}
 		return srcList;
 	}
@@ -717,6 +760,8 @@ public class MailUtil {
 				uri = uri.replace(contextPath, "");
 				idxTemp = uri.indexOf("/");
 				uri = uri.substring(idxTemp);
+			} else {
+				uri = src.replace(contextPath, "");;
 			}
 		}
 		String filePath = servletContext.getRealPath(uri);
@@ -835,7 +880,7 @@ public class MailUtil {
 		List<Message> mimeMessageList = new ArrayList<>();
 		if (mailType != 2) {
 			// 原来的邮件类型和最终的一致，则不重新构建消息体
-			if ((mailType == 1 && Boolean.TRUE.equals(isInner)) || (mailType == 0 && !Boolean.TRUE.equals(isInner))) {
+			if ((mailType == 1 && Boolean.TRUE.equals(isInner)) || (mailType == 0 && !Boolean.TRUE.equals(isInner)) || mailType == -1) {
 				mimeMessageList.add(mimeMessage);
 				return mimeMessageList;
 			}
@@ -1057,5 +1102,22 @@ public class MailUtil {
 			e.printStackTrace();
 		}
 		return new InternetAddress(nickEncodeText + "<" + address + ">");
+	}
+	
+	private static String quoteSplit(String split) {
+		if (!split.matches(".*[\\$|\\(|\\)|\\*|\\+|\\.|\\[|\\]|\\?|\\\\|\\/|\\^|\\{|\\}].*")) {
+			return split;
+		}
+		char[] signs =  new char[] {'$','(',')','*','+','.','[',']','?','\\','/','^','{','}'};
+		Arrays.sort(signs);
+		StringBuilder sb = new StringBuilder();
+        for (int i=0; i<split.length(); i++) {
+            char c = split.charAt(i);
+            if (Arrays.binarySearch(signs, c) >= 0) {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
 	}
 }

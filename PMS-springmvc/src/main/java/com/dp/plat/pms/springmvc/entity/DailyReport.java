@@ -1,8 +1,13 @@
 package com.dp.plat.pms.springmvc.entity;
 
 import java.util.Map;
+
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.dp.plat.core.entity.BaseEntity;
 import java.util.Date;
+
+import com.dp.plat.core.serializer.DateSerializer;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -37,6 +42,7 @@ public class DailyReport extends BaseEntity {
 
     // 处理时间
     @JsonSerialize(using = JsonSerializer.class)
+    @JSONField(serializeUsing = DateSerializer.class)
     private Date processTime;
 
     // 事项描述

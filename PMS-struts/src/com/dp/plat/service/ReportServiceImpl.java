@@ -233,11 +233,11 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 	@Override
 	public ReportLineData statisticsTotalData(List<ReportLineData> assignedDatas) {
 		DecimalFormat df  = new DecimalFormat("###.00");
-		int conditionValue = 0;
-		int totalValue = 0;
+		double conditionValue = 0;
+		double totalValue = 0;
 		for(ReportLineData data : assignedDatas){
-			conditionValue += Integer.parseInt(data.getConditionValue());
-			totalValue += Integer.parseInt(data.getTotalValue());
+			conditionValue += Double.parseDouble(data.getConditionValue());
+			totalValue += Double.parseDouble(data.getTotalValue());
 		}
 		String specificValue ;
 		if(totalValue == 0){
@@ -246,7 +246,7 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 			specificValue = df.format((double) conditionValue/totalValue *100);
 		}
 	
-		return new ReportLineData("total" , "全国", conditionValue + "", totalValue + "", specificValue, new Date());
+		return new ReportLineData("total" , "全国", String.valueOf(conditionValue).replaceAll("\\.0*$", ""), String.valueOf(totalValue).replaceAll("\\.0*$", ""), specificValue, new Date());
 	}
 
 	@Override
@@ -454,5 +454,9 @@ public class ReportServiceImpl extends BaseServiceImpl implements ReportService{
 		return allList;
 	}
 
-	
+	@Override
+	public List<Map<String, Object>> queryProjectSummaryStatus(Map<String, Object> params) {
+		return reportDao.queryProjectSummaryStatus(params);
+	}
+
 }

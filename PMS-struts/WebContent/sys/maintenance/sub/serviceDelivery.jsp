@@ -150,6 +150,13 @@
                  cssStyle="width:163px" cssClass="form-control" placeholder="合同号" />
         </div>
         <div class="form-group form-group-query form-group-width-1">
+            <label for="compId"><s:text name="pm.project.company" /></label>
+            <s:select name="projectMaintenance.compId" id="compId"
+                listKey="id" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                listValue="abbr" list="%{companyList}" theme="simple" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="officeCode"><s:text name="pm.project.officeName" /></label>
             <s:select name="projectMaintenance.officeCode" id="officeCode"

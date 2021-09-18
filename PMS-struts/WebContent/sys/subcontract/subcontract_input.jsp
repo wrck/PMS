@@ -109,7 +109,8 @@ $(document).ready(function(){
     
     $(document).on('change', "#contractNos", function() {
     	var contractNos = $(this).val() || "";
-    	contractNos = contractNos.replace(/ | |　|　/g, "").replace(/，/g, ",");
+    	//contractNos = contractNos.replace(/ | |　|　| |\r|\n|\t/g, "").replace(/，/g, ",").replace(/；/g, ",").replace(/;/g,",").replace(/,+/g,",").replace(/,$/g,"");
+    	contractNos = contractNos.replace(/[^A-Za-z0-9\-]/g, ",").replace(/,+/g,",").replace(/,$/g,"");
     	var contractArr = contractNos.split(",");
     	var contractNoSet = [];
     	for(var i in contractArr) {
@@ -206,8 +207,11 @@ $(document).ready(function(){
             $("#subcontractRemark").attr("placeholder", "备注（选填）");
             $("#subcontractRemark").addClass("canEmpty");
         }
+    	/* // 2021-06-28,取消驻场类合同号为空特殊处理，改为驻场类合同号为空
     	// 驻场类合同号可以为空
-        if ($(this).val() == "20") {
+        if ($(this).val() == "20") { */
+    	// 外协类合同号可以为空
+    	if ($(this).val() == "40") {
         	$("#contractNos").addClass("canEmpty");
         } else {
         	$("#contractNos").removeClass("canEmpty");
@@ -796,11 +800,12 @@ function querySubcontractComment(){
     return false;
 }
 
+var namespace = "${namespace}" || "module";
 function submitSave() {
 	$("#saveBtn").bootstrapBtn("loading");
 	var canSubmit = checkSubmit("saveBtn");
     if (canSubmit) {
-		$("#subcontractForm").attr("action", "module/subcontract_create.action");
+		$("#subcontractForm").attr("action", namespace + "/subcontract_create.action");
 		$("#subcontractForm").submit();
     }
 }
@@ -809,7 +814,7 @@ function submitApply() {
 	$("#applyBtn").bootstrapBtn("loading");
 	var canSubmit = checkSubmit("applyBtn");
 	if (canSubmit) {
-		$("#subcontractForm").attr("action", "module/subcontract_apply.action");
+		$("#subcontractForm").attr("action", namespace + "/subcontract_apply.action");
 	    $("#subcontractForm").submit();
 	}
 }
@@ -878,12 +883,15 @@ function autoCompleteFacilitator() {
 }
 
 function updateProject(obj){
-    window.open("module/ProjectModify.action?project.paramId="+obj);
+	var namespace = "${namespace}" || "module";
+	// 如果是财务查看，则直接打开交付件页面
+	var isAccSearch = "${user.isHasRole(16)}" == "true" ? "&result=309" : "";
+    window.open(namespace + "/ProjectModify.action?project.paramId="+obj + isAccSearch);
 }
 </script>
 </head>
 <body>
-    <s:form enctype="multipart/form-data" id="subcontractForm" action="module/subcontract_create.action" method="post" >
+    <s:form enctype="multipart/form-data" id="subcontractForm" action="%{namespace}/subcontract_create.action" method="post" >
 		<fieldset>
 			<legend><b>基本信息</b></legend>
 			<table id="subcontractInfoTable" class="table table-bordered table-hover table-striped noBorder">
@@ -1001,7 +1009,7 @@ function updateProject(obj){
                         </s:if>
                     </td>
                     <td class="mergeTdBorder">
-                        <button id="backBtn" type="button" class="btn btn-default" onclick="javaScript:window.location.href='module/subcontract_list.action'"><span class="glyphicon glyphicon-arrow-left" style="font-size:12px;"></span> 返回</button>
+                        <button id="backBtn" type="button" class="btn btn-default" onclick="javaScript:window.location.href='${namespace}/subcontract_list.action'"><span class="glyphicon glyphicon-arrow-left" style="font-size:12px;"></span> 返回</button>
                     </td>
                     <td class="mergeTdBorder">
                         <s:if test="%{(subcontract.state != 100) && (user.isHasRole(10) || user.isHasRole(11) || user.isHasRole(13))}">

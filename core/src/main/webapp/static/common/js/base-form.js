@@ -456,7 +456,8 @@ class watcher{
 							// Validate the field
 							.validateField(field);
                     }
-				}).parent().css("padding-left", "15px").css("padding-right", "15px")
+				}).attr("autocomplete", "off")
+				.parent().css("padding-left", "15px").css("padding-right", "15px")
 			});
 		}
     }
@@ -788,9 +789,10 @@ class watcher{
         	}
         }
         var _this = this;
+        var multiple = sel.attr("multiple") || sel.data("multiple") || false;
         var blank_value = sel.data("blank-value");
         var blank_text = sel.data("blank-text");
-        var is_blank = sel.data("blank") ? true : false;
+        var is_blank = !multiple && sel.data("blank") ? true : false;
         var src_data = sel.data("src-data") || "data";
         var values = sel.data("selected");
         var builder = function (data) {
@@ -842,7 +844,7 @@ class watcher{
                     	option.data("source", data[i]);
                     }
                     sel.append(option);
-                    if (!is_blank && i == 0) {
+                    if (!multiple && !is_blank && i == 0) {
                     	values = values || valueName.join(separator);
                     }
                 }
@@ -914,7 +916,8 @@ class watcher{
 						// Validate the field
 						.validateField(field);
                 }
-			}).parent().css("padding-left", "15px").css("padding-right", "15px");
+			}).attr("autocomplete", "off")
+			.parent().css("padding-left", "15px").css("padding-right", "15px");
 		}
 		// datetimepicker
 		if (form.find('[data-flag="datetimepicker"]').length > 0) {

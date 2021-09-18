@@ -131,12 +131,22 @@ var NavTab = {
 				var targetValue = this.targetValue || {};
 				var params = navTab.params || [];
 				for (var i = 0; i < params.length; i++) {
-					var param = params[i] || "";
-					var kv = this.parseParam(param, targetValue);
-					param = kv.key || param;
+					var paramName = params[i] || "";
+					var kv = this.parseParam(paramName, targetValue);
+					var param = kv.key || paramName;
 					eval("var " + param + " = targetValue[param] || '';");
 					navTab.paramsValue = navTab.paramsValue || {};
-					navTab.paramsValue[param] = targetValue[param] || "";
+					try {
+						var value = eval(paramName) || "";
+						if (value) {
+							navTab.paramsValue[paramName] = value;
+						} else {
+							navTab.paramsValue[param] = targetValue[param] || "";
+						}
+						
+					} catch(e) {
+						navTab.paramsValue[param] = targetValue[param] || "";
+					}
 				}
 				var url = navTab.src || navTab.url;
 				try {

@@ -11,6 +11,7 @@
 	    <result column="projectExecutionState" jdbcType="VARCHAR" property="projectExecutionState" />
 	    <result column="contractNo" jdbcType="VARCHAR" property="contractNo" />
 	    <result column="officeCode" jdbcType="VARCHAR" property="officeCode" />
+	    <result column="compId" jdbcType="INTEGER" property="compId" />
 	    <result column="type" jdbcType="VARCHAR" property="type" />
 	    <result column="category" jdbcType="VARCHAR" property="category" />
 	    <result column="subCategory" jdbcType="VARCHAR" property="subCategory" />
@@ -49,7 +50,7 @@
   <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
     insert into pm_project_maintenance (id, projectId, projectCode, 
       projectName, projectType, projectExecutionState, contractNo, officeCode, type, 
-      category, subCategory, processTime, 
+      category, subCategory, processTime, compId,
       processDesc, processStep, remainProblem, transitHour, 
       processHour, itemModel, softVersion, 
       enabledFeatures, customTos, customCcs, hasReport, quesnaireId, 
@@ -60,7 +61,7 @@
       )
     values (#id#, #projectId#, #projectCode#, 
       #projectName#, #projectType#, #projectExecutionState#, #contractNo#, #officeCode#, #type#, 
-      #category#, #subCategory#, #processTime#, 
+      #category#, #subCategory#, #processTime#, #compId#,
       #processDesc#, #processStep#, #remainProblem#, #transitHour#, 
       #processHour#, #itemModel#, #softVersion#, 
       #enabledFeatures#, #customTos#, #customCcs#, #hasReport#, #quesnaireId#, 
@@ -86,6 +87,7 @@
       <isNotNull prepend="," property="projectExecutionState"> projectExecutionState </isNotNull>
       <isNotNull prepend="," property="contractNo"> contractNo </isNotNull>
       <isNotNull prepend="," property="officeCode"> officeCode </isNotNull>
+      <isNotNull prepend="," property="compId"> compId </isNotNull>
       <isNotNull prepend="," property="type"> type </isNotNull>
       <isNotNull prepend="," property="category"> category </isNotNull>
       <isNotNull prepend="," property="subCategory"> subCategory </isNotNull>
@@ -130,6 +132,7 @@
       <isNotNull prepend="," property="projectExecutionState"> #projectExecutionState# </isNotNull>
       <isNotNull prepend="," property="contractNo"> #contractNo# </isNotNull>
       <isNotNull prepend="," property="officeCode"> #officeCode# </isNotNull>
+      <isNotNull prepend="," property="compId"> #compId# </isNotNull>
       <isNotNull prepend="," property="type"> #type# </isNotNull>
       <isNotNull prepend="," property="category"> #category# </isNotNull>
       <isNotNull prepend="," property="subCategory"> #subCategory# </isNotNull>
@@ -200,6 +203,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -302,6 +306,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -398,6 +403,7 @@
       <isNotNull prepend="," property="projectExecutionState"> projectExecutionState </isNotNull>
       <isNotNull prepend="," property="contractNo"> contractNo </isNotNull>
       <isNotNull prepend="," property="officeCode"> officeCode </isNotNull>
+      <isNotNull prepend="," property="compId"> compId </isNotNull>
       <isNotNull prepend="," property="type"> type </isNotNull>
       <isNotNull prepend="," property="category"> category </isNotNull>
       <isNotNull prepend="," property="subCategory"> subCategory </isNotNull>
@@ -442,6 +448,7 @@
       <isNotNull prepend="," property="projectExecutionState"> #projectExecutionState# </isNotNull>
       <isNotNull prepend="," property="contractNo"> #contractNo# </isNotNull>
       <isNotNull prepend="," property="officeCode"> #officeCode# </isNotNull>
+      <isNotNull prepend="," property="compId"> #compId# </isNotNull>
       <isNotNull prepend="," property="type"> #type# </isNotNull>
       <isNotNull prepend="," property="category"> #category# </isNotNull>
       <isNotNull prepend="," property="subCategory"> #subCategory# </isNotNull>
@@ -486,6 +493,7 @@
         <isNotNull prepend="," property="projectExecutionState"> projectExecutionState = VALUES(projectExecutionState) </isNotNull>
         <isNotNull prepend="," property="contractNo"> contractNo = VALUES(contractNo) </isNotNull>
         <isNotNull prepend="," property="officeCode"> officeCode = VALUES(officeCode) </isNotNull>
+        <isNotNull prepend="," property="compId"> compId = VALUES(compId) </isNotNull>
         <isNotNull prepend="," property="type"> type = VALUES(type) </isNotNull>
         <isNotNull prepend="," property="category"> category = VALUES(category) </isNotNull>
         <isNotNull prepend="," property="subCategory"> subCategory = VALUES(subCategory) </isNotNull>
@@ -611,7 +619,7 @@
                     s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
                 )
             )
-        ) AS salerName
+        ) AS salerName, c.name as companyName, c.abbr as companyAbbr
 	FROM
 	    pm_project_maintenance m 
 	    LEFT JOIN pm_project_header ph 
@@ -663,6 +671,8 @@
 	        ON d.`departmentNum` = m.`officeCode` 
 	    LEFT JOIN fnd_department d2 
             ON d2.`departmentNum` = m.`userOfiice` 
+        LEFT JOIN fnd_company c 
+            ON c.`id` = m.`compId` 
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
@@ -672,6 +682,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -754,7 +765,7 @@
 	                s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
 	            )
 	        )
-	    ) AS salerName
+	    ) AS salerName, c.name AS companyName, c.abbr as companyAbbr
         <isNotEqual property="projectMaintenance.hideQuesnaire" compareValue="true" prepend=",">
 	        qrt.* 
 	    </isNotEqual>
@@ -877,6 +888,8 @@
 	        ON d.`departmentNum` = m.`officeCode`
 	    LEFT JOIN fnd_department d2 
             ON d2.`departmentNum` = m.`userOffice`
+        LEFT JOIN fnd_company c 
+            ON c.id = m.compId
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="projectMaintenance.id"> m.id = #projectMaintenance.id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.projectId"> m.projectId = #projectMaintenance.projectId# </isNotEmpty>
@@ -886,6 +899,7 @@
         <isNotEmpty prepend="AND" property="projectMaintenance.projectExecutionState"> m.projectExecutionState = #projectMaintenance.projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.contractNo"> m.contractNo = #projectMaintenance.contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.officeCode"> m.officeCode = #projectMaintenance.officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectMaintenance.compId"> m.compId = #projectMaintenance.compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.type"> m.type = #projectMaintenance.type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.category"> m.category = #projectMaintenance.category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.subCategory"> m.subCategory = #projectMaintenance.subCategory# </isNotEmpty>
@@ -992,6 +1006,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -1022,13 +1037,15 @@
         <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
         
-        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
-        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
-    
+    	<isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(#currentTime#, INTERVAL -1 DAY) AND #currentTime# ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </isEmpty>
+        
         <isNotEmpty prepend="AND" property="warrantyStatus"> m.warrantyStatus = #warrantyStatus# </isNotEmpty>
         <isNotEmpty prepend="AND" property="industryName"> m.industryName = #industryName# </isNotEmpty>
         <isNotEmpty prepend="AND" property="userOffice"> m.userOffice = #userOffice# </isNotEmpty>
@@ -1065,7 +1082,7 @@
 	            )
 	        ) 
 	        ELSE prh.salesman 
-	    END AS salerName, 
+	    END AS salerName, c.name AS companyName, c.abbr as companyAbbr,
 	    IFNULL(ph.column004, prh.`marketName`) AS marketName, IFNULL(ph.column005, prh.`systemName`) AS systemName, 
 	    IFNULL(ph.column006, prh.`expendName`) AS expendName, IFNULL(m.industryName, IFNULL(ph.column007, prh.`industryName`)) AS industryName,
 	    ph.column013 AS finalCustomName
@@ -1104,6 +1121,8 @@
             AND bd3.`dataTypeCode` = 'projectExecutionState' 
 	    LEFT JOIN fnd_department d 
 	        ON d.`departmentNum` = m.`officeCode` 
+	    LEFT JOIN fnd_company c 
+            ON c.id = m.compId
 	<dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> m.id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectId"> m.projectId = #projectId# </isNotEmpty>
@@ -1113,6 +1132,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -1143,13 +1163,15 @@
         <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
         
-        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
-        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
-    
+    	<isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(#currentTime#, INTERVAL -1 DAY) AND #currentTime# ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </isEmpty>
+        
         <isNotEmpty prepend="AND" property="warrantyStatus"> m.warrantyStatus = #warrantyStatus# </isNotEmpty>
         <isNotEmpty prepend="AND" property="industryName"> m.industryName = #industryName# </isNotEmpty>
         <isNotEmpty prepend="AND" property="userOffice"> m.userOffice = #userOffice# </isNotEmpty>
@@ -1177,6 +1199,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -1207,12 +1230,14 @@
         <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
         
-        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
-        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
+   		<isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(#currentTime#, INTERVAL -1 DAY) AND #currentTime# ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </isEmpty>
    
         <isNotEmpty prepend="AND" property="warrantyStatus"> m.warrantyStatus = #warrantyStatus# </isNotEmpty>
         <isNotEmpty prepend="AND" property="industryName"> m.industryName = #industryName# </isNotEmpty>
@@ -1240,6 +1265,7 @@
         <isNotEmpty prepend="AND" property="projectExecutionState"> m.projectExecutionState = #projectExecutionState# </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> m.contractNo = #contractNo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> m.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> m.compId = #compId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> m.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="category"> m.category = #category# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subCategory"> m.subCategory = #subCategory# </isNotEmpty>
@@ -1270,12 +1296,14 @@
         <isNotEmpty prepend="AND" property="createStartTime"> <![CDATA[ m.createTime >= #createStartTime# ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
         
-        <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
-        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty>
+        <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, #currentDate#) ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #currentDate#) ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentDate"> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </isEmpty> -->
         <!-- <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #currentTime#) BETWEEN 0 AND 23 ]]> </isNotEmpty>
         <isEmpty prepend="AND" property="currentTime"> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </isEmpty> -->
+        <isNotEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(#currentTime#, INTERVAL -1 DAY) AND #currentTime# ]]> </isNotEmpty>
+        <isEmpty prepend="AND" property="currentTime"> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </isEmpty>
    
         <isNotEmpty prepend="AND" property="warrantyStatus"> m.warrantyStatus = #warrantyStatus# </isNotEmpty>
         <isNotEmpty prepend="AND" property="industryName"> m.industryName = #industryName# </isNotEmpty>
@@ -1419,10 +1447,10 @@
   <sql id="selectProjectWarrantyState">
     SELECT 
         ph.`projectId`, ph.`projectCode`, ph.`projectName`, pg.projectType,
-        ph.`column001` as officeCode, fd.`departmentName` as officeName, 
+        ph.`column001` as officeCode, fd.`departmentName` as officeName, c.name as companyName, c.abbr as companyAbbr,
         ph.column004 AS marketName, ph.column005 AS systemName, 
 	    ph.column006 AS expendName, ph.column007 AS industryName,
-	    ph.column013 AS finalCustomerName,
+	    ph.column013 AS finalCustomerName, ph.compId,
         group_concat(pc.contractNo) as contractNos,
         IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
         IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
@@ -1461,6 +1489,8 @@
             on wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
         LEFT JOIN fnd_department fd
             on fd.`departmentNum` = ph.`column001`
+        LEFT JOIN fnd_company c force key(primary)
+            ON c.id = ph.compId
     WHERE ph.`effectiveTo` is null 
   </sql>
   
@@ -1791,6 +1821,7 @@
         <isNotEmpty prepend="AND" property="projectName"> wcs.projectName like concat("%", #projectName#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="contractNo"> wcs.contractNos like concat("%", #contractNo#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="officeCode"> wcs.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="compId"> wcs.compId = #compId# </isNotEmpty>
         
         <isNotEmpty prepend="AND" property="serviceManager"> sm.memberCode = #serviceManager# </isNotEmpty>
         <isNotEmpty prepend="AND" property="programManager"> (pm.memberCode = #programManager# or pm2.memberCode = #programManager#) </isNotEmpty>

@@ -2,6 +2,7 @@ package com.dp.plat.core.aop;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.pojo.SysLog;
@@ -52,7 +54,7 @@ public class ExceptionAspect {
 				// user = (User) session.getAttribute("user");
 
 				// 获取请求ip
-				ip = request.getRemoteAddr();
+				ip = HttpContext.getCurrentIp(request);
 			}
 
 			// 获取方法参数的json字符串
@@ -74,12 +76,12 @@ public class ExceptionAspect {
 			// session.setAttribute("errorLogId", log.getId());
 		} catch (Exception ex) {
 			log.setExceptionCode(log.getExceptionCode() + "\r\n" + ex.getClass().getName());
-			log.setExceptionDetail(log.getExceptionDetail() + "\r\n" + log.getExceptionDetail());
+			log.setExceptionDetail(log.getExceptionDetail() + "\r\n" + ex.getMessage());
 		} finally {
 			sysLogService.insertSelective(log);
 			if (request != null) {
 				request.setAttribute("errorLogId", log.getId());
-				request.setAttribute("error", log.getExceptionCode());
+				request.setAttribute("error", StringUtils.defaultIfBlank(e.getMessage(), log.getExceptionCode()));
 			}
 		}
 	}

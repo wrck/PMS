@@ -1,5 +1,6 @@
 package com.dp.plat.pms.springmvc.vo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,16 +13,40 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class ProjectVO extends ProjectHeader {
 	
+	// 查询辅助参数
 	private String projectIds;
+	private String projectTypes;
+	private String contractNos;
+	private String projectTypeName;
+	private Boolean matchCollectMoney;
 	
+	private String collectContractNos;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal collectedAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal deliveredAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private BigDecimal contractAmount;
+	@JsonSerialize(using = JsonSerializer.class)
+	private Double collectedRatio;
+	
+	// SMS项目相关信息
+	/**
+	 *  项目提交时间
+	 */
 	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsSubmitTime;
+	/**
+	 *  项目投标时间
+	 */
 	@JsonSerialize(using = JsonSerializer.class)
 	private Date smsPredBidDate;
 	
+	// 项目投标时间，查询参数
 	private Date smsPredBidStartDate;
 	private Date smsPredBidEndDate;
 	
+	// SMS项目相关信息
 	private String smsProjectAmount;
 	private String smsAfProjectAmount;
 	private String smsProjectName;
@@ -37,9 +62,6 @@ public class ProjectVO extends ProjectHeader {
 	private String pspmName;
 	private String salesMenTel;
 	private String decPath;
-	
-	private String projectTypes;
-	private String contractNos;
 	
 	public ProjectVO() {
 		super();
@@ -58,6 +80,78 @@ public class ProjectVO extends ProjectHeader {
 		this.projectIds = projectIds;
 	}
 	
+	public String getProjectTypes() {
+		return projectTypes;
+	}
+
+	public void setProjectTypes(String projectTypes) {
+		this.projectTypes = projectTypes;
+	}
+
+	public String getContractNos() {
+		return contractNos;
+	}
+
+	public void setContractNos(String contractNos) {
+		this.contractNos = contractNos;
+	}
+	
+	public String getProjectTypeName() {
+		return projectTypeName;
+	}
+
+	public void setProjectTypeName(String projectTypeName) {
+		this.projectTypeName = projectTypeName;
+	}
+	
+	public Boolean getMatchCollectMoney() {
+		return matchCollectMoney;
+	}
+
+	public void setMatchCollectMoney(Boolean matchCollectMoney) {
+		this.matchCollectMoney = matchCollectMoney;
+	}
+	
+	public String getCollectContractNos() {
+		return collectContractNos;
+	}
+
+	public void setCollectContractNos(String collectContractNos) {
+		this.collectContractNos = collectContractNos;
+	}
+
+	public BigDecimal getCollectedAmount() {
+		return collectedAmount;
+	}
+
+	public void setCollectedAmount(BigDecimal collectedAmount) {
+		this.collectedAmount = collectedAmount;
+	}
+
+	public BigDecimal getDeliveredAmount() {
+		return deliveredAmount;
+	}
+
+	public void setDeliveredAmount(BigDecimal deliveredAmount) {
+		this.deliveredAmount = deliveredAmount;
+	}
+
+	public BigDecimal getContractAmount() {
+		return contractAmount;
+	}
+
+	public void setContractAmount(BigDecimal contractAmount) {
+		this.contractAmount = contractAmount;
+	}
+
+	public Double getCollectedRatio() {
+		return collectedRatio;
+	}
+
+	public void setCollectedRatio(Double collectedRatio) {
+		this.collectedRatio = collectedRatio;
+	}
+
 	public String getSmsProjectCode() {
 		return (String) getCustomInfoByKey("smsProjectCode");
 	}
@@ -309,20 +403,4 @@ public class ProjectVO extends ProjectHeader {
 		this.setEffectiveTo(date);
 	}
 
-	public String getProjectTypes() {
-		return projectTypes;
-	}
-
-	public void setProjectTypes(String projectTypes) {
-		this.projectTypes = projectTypes;
-	}
-
-	public String getContractNos() {
-		return contractNos;
-	}
-
-	public void setContractNos(String contractNos) {
-		this.contractNos = contractNos;
-	}
-	
 }

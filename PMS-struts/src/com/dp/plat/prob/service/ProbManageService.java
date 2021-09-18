@@ -58,6 +58,12 @@ public interface ProbManageService extends BaseService{
 	 */
 	List<SoftVersion> querySoftVersionList(int probId);
 	/**
+	 * 查询受某个技术公告影响的软件版本
+	 * @param probId
+	 * @return
+	 */
+	List<SoftVersion> querySoftVersionList(SoftVersion softVersion);
+	/**
 	 * 更新软件版本
 	 * @param softVersionList
 	 * @param probId

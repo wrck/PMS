@@ -125,6 +125,15 @@
                     </property>
                 </bean>
                 
+                <bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
+                        <value>sys.project.warrantyCallback.management</value>
+                    </property>
+                    <property name="url">
+                        <value>module/warrantyCallback_customerProject.action</value>
+                    </property>
+                </bean>
+                
 				<bean class="com.dp.plat.support.LeftMenuLi">
 					<property name="text">
 						<value>pm.presales.flow</value>

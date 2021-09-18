@@ -47,6 +47,11 @@ public class DailyReportVO extends DailyReport {
 	
 	private List<String> ids;
 	private String idsStr;
+	
+	private String categorysStr;
+	private String subCategorysStr;
+	private List<String> categorys;
+	private List<String> subCategorys;
 
 	public boolean isHasPower() {
 		return hasPower;
@@ -275,6 +280,50 @@ public class DailyReportVO extends DailyReport {
 		this.idsStr = idsStr;
 		if (idsStr != null) {
 			this.ids = Arrays.asList(idsStr.split(","));
+		}
+	}
+
+	public String getCategorysStr() {
+		return categorysStr;
+	}
+
+	public void setCategorysStr(String categorysStr) {
+		this.categorysStr = categorysStr;
+		if (categorysStr != null) {
+			this.categorys = Arrays.asList(categorysStr.split(","));
+		}
+	}
+
+	public String getSubCategorysStr() {
+		return subCategorysStr;
+	}
+
+	public void setSubCategorysStr(String subCategorysStr) {
+		this.subCategorysStr = subCategorysStr;
+		if (subCategorysStr != null) {
+			this.subCategorys = Arrays.asList(subCategorysStr.split(","));
+		}
+	}
+
+	public List<String> getCategorys() {
+		return categorys;
+	}
+
+	public void setCategorys(List<String> categorys) {
+		this.categorys = categorys;
+		if(categorys != null) {
+			this.categorysStr = String.join(",", categorys);
+		}
+	}
+
+	public List<String> getSubCategorys() {
+		return subCategorys;
+	}
+
+	public void setSubCategorys(List<String> subCategorys) {
+		this.subCategorys = subCategorys;
+		if(subCategorys != null) {
+			this.subCategorysStr = String.join(",", subCategorys);
 		}
 	}
 

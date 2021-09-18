@@ -1,6 +1,7 @@
 package com.dp.plat.action;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.jasig.cas.client.util.AssertionHolder;
 import org.jasig.cas.client.validation.Assertion;
 
@@ -57,6 +58,8 @@ public class LoginAction extends BaseAction{
 		user=new LoginParam();
 		user.setUsername(userName);
 		
+		// 保存cas登录前的页面
+		String defaultPage = loginService.getUserContext().getDefaultPage();
 		if (!loginService.loginCas(user,ip))
 		{
 			loginService.logout();
@@ -64,8 +67,12 @@ public class LoginAction extends BaseAction{
 			return "errorCas";
 		}
 		System.out.println("-------------success------");
-
-		this.setRedirecturl(loginService.getUserContext().getDefaultPage());
+		
+//		this.setRedirecturl(loginService.getUserContext().getDefaultPage());
+		if (StringUtils.isBlank(defaultPage)) {
+			defaultPage = loginService.getUserContext().getDefaultPage();
+		}
+		this.setRedirecturl(defaultPage);
 		
 		return SUCCESS;
 	}
@@ -80,7 +87,8 @@ public class LoginAction extends BaseAction{
 		{
 			e.printStackTrace();
 		}
-		
+		// 保存登录之前的页面
+		String defaultPage = loginService.getUserContext().getDefaultPage();
 		if (!loginService.login(user,ip))
 		{
 			setErrmsg(loginService);
@@ -88,7 +96,11 @@ public class LoginAction extends BaseAction{
 		}
 		System.out.println("-------------success------");
 
-		this.setRedirecturl(loginService.getUserContext().getDefaultPage());
+//		this.setRedirecturl(loginService.getUserContext().getDefaultPage());
+		if (StringUtils.isBlank(defaultPage)) {
+			defaultPage = loginService.getUserContext().getDefaultPage();
+		}
+		this.setRedirecturl(defaultPage);
 		
 		return SUCCESS;
 	}

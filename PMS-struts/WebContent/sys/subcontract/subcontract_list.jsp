@@ -41,7 +41,7 @@
 </head>
 <body>
 	<!-- 查询 -->
-	<s:form id="mainForm" name="mainForm" cssClass="form-inline" action="module/subcontract_list.action">
+	<s:form id="mainForm" name="mainForm" cssClass="form-inline" action="%{namespace}/subcontract_list.action">
 		<div class="form-group form-group-query form-group-width-1">
 			<dp:fielderror accesskey="errmsg" onlyone="true" />
 			<label for="subcontractName"><s:text name="pm.subcontract.subcontractName" /></label>
@@ -121,7 +121,7 @@
 	</div>
 	<div style="position: relative;">
 		<s:if test="user.isHasRole(13) || user.isHasRole(11)">
-	        <a href="module/subcontract_input.action" target="_blank" style="margin-bottom:1rem;" class="btn btn-default btn-sm">申请转包</a>
+	        <a href="${namespace}/subcontract_input.action" target="_blank" style="margin-bottom:1rem;" class="btn btn-default btn-sm">申请转包</a>
 	    </s:if>
 	    <a id="querySubcontractView" class="pull-right" target="_blank" href="" style=" position: absolute; bottom: -1rem; right: 0;">
             <span class="glyphicon glyphicon-picture" style="font-size:12px; color:#428bca;"><span class="panel-heading">查看项目转包流程图&nbsp;</span></span>
@@ -134,10 +134,10 @@
 		<!-- 分页，项目列表 -->
         <display:table name="subcontractVOList" pagesize="${displayParam.pagesize }"
             export="true" size="${displayParam.totalcount }" sort="external"
-            requestURI="module/subcontract_list.action" decorator="com.dp.plat.decorators.Wrapper"
+            requestURI="${namespace}/subcontract_list.action" decorator="com.dp.plat.decorators.Wrapper"
             class="table table-striped" partialList="true" >
             <display:column property="subcontractNo" titleKey="pm.subcontract.subcontractNo" media="html" style="width:150px"></display:column>
-            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" style="word-wrap: break-word; white-space: normal; width:300px;" href="module/subcontract_input.action" paramProperty="id" paramId="subcontract.id" media="html"></display:column>
+            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" style="word-wrap: break-word; white-space: normal; width:300px;" href="${namespace}/subcontract_input.action" paramProperty="id" paramId="subcontract.id" media="html"></display:column>
             <display:column property="contractNos" titleKey="pm.subcontract.contractNos" decorator="com.dp.plat.decorators.ContractNoList" media="html"></display:column>
             <display:column property="typeName" titleKey="pm.subcontract.type" media="html"></display:column>
             <display:column property="officeName" titleKey="pm.subcontract.officeName" media="html"></display:column>
@@ -149,7 +149,7 @@
             <%-- 数据导出列 --%>
             <display:column property="contractNos" titleKey="pm.subcontract.contractNos" media="excel"></display:column>
             <display:column property="subcontractNo" titleKey="pm.subcontract.subcontractNo" media="excel"></display:column>
-            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" href="module/subcontract_input.action" paramProperty="id" paramId="subcontract.id" media="excel"></display:column>
+            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" href="${namespace}/subcontract_input.action" paramProperty="id" paramId="subcontract.id" media="excel"></display:column>
             <display:column property="typeName" titleKey="pm.subcontract.type" media="excel"></display:column>
             <%-- <display:column property="facilitatorName" titleKey="pm.subcontract.facilitator" media="excel"></display:column>
             <display:column property="subcontractAmount" titleKey="pm.subcontract.subcontractAmount" media="excel"></display:column> --%>

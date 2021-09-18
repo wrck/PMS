@@ -208,4 +208,13 @@
         <property name="departmentManageService" ref="departmentManageServiceAgent"></property>
         <property name="userManageService" ref="userManageServiceAgent"></property>
     </bean>
+    
+    <!-- 项目维保回访管理 -->
+    <bean id="WarrantyCallbackAction" class="com.dp.plat.warrantyCallback.action.WarrantyCallbackAction" scope="prototype">
+        <property name="warrantyCallbackService" ref="warrantyCallbackServiceAgent"></property>
+        <property name="basicDataService" ref="basicDataServiceAgent"></property>
+        <property name="projectService" ref="projectServiceAgent"></property>
+        <property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+        <property name="userManageService" ref="userManageServiceAgent"></property>
+    </bean>
 </beans>

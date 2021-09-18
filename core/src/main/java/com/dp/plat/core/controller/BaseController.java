@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.User;
 
 /**
@@ -57,10 +58,10 @@ public class BaseController {
 		return "/base/resource_detail";
 	}
 
-	@RequestMapping("/password")
+	@RequestMapping("modals/password")
 	public String modifyPassword(Boolean needChangePwd, Model model) {
 		model.addAttribute("needChangePwd", needChangePwd);
-		return "/base/modifyPassword";
+		return Consts.URLPath.SYSTEM_MANAGER + "modals/modifyPassword";
 	}
 
 	@RequestMapping("/sysVariable_detail")

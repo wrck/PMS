@@ -1,6 +1,9 @@
 package com.dp.plat.prob.bean;
 
 import java.util.Date;
+import java.util.List;
+
+import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
 
 /**
  * 技术公告信息
@@ -38,6 +41,11 @@ public class Prob {
 	private int visibleRange;// 可见范围
 	private String reader;
 	private int readStatus;
+	
+	// 影响版本类型，1：盒式系列，2：框式系列
+	private Integer affectedType;
+	// 影响版本解析结果
+	private List<SoftVersionParser> softVersionParserList;
 
 	public int getProbId() {
 		return probId;
@@ -269,6 +277,26 @@ public class Prob {
 
 	public void setReadStatus(int readStatus) {
 		this.readStatus = readStatus;
+	}
+	
+	public Integer getAffectedType() {
+		return affectedType;
+	}
+
+	public void setAffectedType(Integer affectedType) {
+		this.affectedType = affectedType;
+	}
+
+	public List<SoftVersionParser> getSoftVersionParserList() {
+		return softVersionParserList;
+	}
+
+	public void setSoftVersionParserList(List<SoftVersionParser> softVersionParserList) {
+		this.softVersionParserList = softVersionParserList;
+	}
+
+	public Boolean getCheckSoft() {
+		return affectedType != null || (affectedVersion != null && affectedVersion.trim().length() > 0);
 	}
 
 }

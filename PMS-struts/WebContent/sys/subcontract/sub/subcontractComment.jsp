@@ -11,7 +11,7 @@
 </head>
 <body>
     <s:if test="%{workflowCommonParam.taskId != null}">
-	    <s:form enctype="multipart/form-data" id="profitSmApproveForm" action="module/subcontract_savePayment.action">
+	    <s:form enctype="multipart/form-data" id="profitSmApproveForm" action="%{namespace}/subcontract_savePayment.action">
 	        <div id="profitSmApproveDiv" style="margin-bottom:20px;">
 	           <fieldset class="hidden">
 	                <s:hidden name="subcontract.id"></s:hidden>

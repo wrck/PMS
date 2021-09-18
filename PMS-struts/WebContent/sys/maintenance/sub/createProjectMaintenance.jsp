@@ -761,6 +761,13 @@ a span {
                                 listKey="departmentNum" cssClass="form-control" headerKey="%{user.dpNo}"
                                 headerValue="--请选择--" cssStyle="width:163px"
                                 listValue="departmentName" list="%{departmentList}" value="%{user.dpNo}" theme="simple" /></td>
+                            <td class="tag tag-must"><s:text name="pm.project.company"></s:text>:</td>
+                            <td colspan="1">
+                                <s:select name="projectMaintenance.compId" id="compId"
+                                    listKey="id" cssClass="form-control" headerKey=""
+                                    headerValue="--请选择--" cssStyle="width:163px"
+                                    listValue="abbr" list="%{companyList}" value="%{projectMaintenance.compId || project.compId || 1}" theme="simple" />
+                            </td>
                         </tr>
                         <tr>
                             <td class="serviceSalesSupportHidden nonBusinessHidden">

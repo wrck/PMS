@@ -54,14 +54,14 @@ ul,li {
 /*********************************************ѡ�**************************************************/
 
 /*********************************************������**************************************************/
-select{
+/* select{
 	height: 24px;
 	padding: 3px;
 	padding-left: 2px;
 }
 input{
 	height: 18px;
-}
+} */
 
 /*********************************************������**************************************************/
 
@@ -82,6 +82,10 @@ img{
 /*********************************************��ѡ��ѡ��**************************************************/
 input[type=radio], input[type=checkbox]{
 	vertical-align: middle;
+}
+
+label + input[type=checkbox], label + input[type=radio] {
+    margin-left: 0.5rem;
 }
 
 /*********************************************��ѡ��ѡ��**************************************************/
@@ -1756,6 +1760,30 @@ hr {
 .display{
 	dispaly:block;
 }
+.display-flex {
+	display: flex;
+}
+.display-inline-flex {
+	display: inline-flex;
+}
+.flex-algin-items-center {
+	align-items: center;
+}
+.flex-algin-content-center {
+	align-content: center;
+}
+.flex-algin-self-center {
+	align-self: center;
+}
+.flex-justify-items-center {
+	justify-items: center;
+}
+.flex-justify-content-center {
+	justify-content: center;
+}
+.flex-justify-self-center {
+	justify-self: center;
+}
 
 .htmlBorder {
 	border: 1px solid red;
@@ -1862,4 +1890,15 @@ span.tipSpan{
 .hover-link, .hover-label a {
     width: 100%;
     text-align: center;
+}
+
+table.table-title-nowrap > thead  th {
+	white-space: nowrap!important;
+}
+
+.longTextTd {
+	min-width: 180px;
+}
+.note-dimension-picker > * {
+	font-size: inherit;
 }

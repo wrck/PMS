@@ -11,6 +11,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.service.LoginService;
@@ -34,7 +36,12 @@ public class UserCheckFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
-		userContext.setUrl(req.getRequestURL().toString());
+		String queryString = req.getQueryString();
+		StringBuffer requestURL = req.getRequestURL();
+		if (StringUtils.isNotBlank(queryString)) {
+			requestURL.append("?").append(queryString);
+		}
+		userContext.setUrl(requestURL.toString());
 		int pos = url.indexOf("/", 1);
 		if(!userContext.isLogin()){
 			String casStr=loginService.querySysArg("sys.cas");
@@ -48,6 +55,7 @@ public class UserCheckFilter implements Filter{
 		if(pos>=0){
 			if (!userContext.isLogin())	//未登录
 			{
+				userContext.setDefaultPage(userContext.getUrl());
 				if(userContext.isCas()){
 					resp.sendRedirect(req.getContextPath()+ "/Login.action");
 					return;

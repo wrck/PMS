@@ -702,6 +702,16 @@
 				 #{item}
 			</foreach>
 		</if>
+		<if test="model.categorys != null">
+			<foreach collection="model.categorys" item="item" open="dr.`category` in (" close=") AND" separator=",">
+				 #{item}
+			</foreach>
+		</if>
+		<if test="model.subCategorys != null">
+			<foreach collection="model.subCategorys" item="item" open="dr.`subCategory` in (" close=") AND" separator=",">
+				 #{item}
+			</foreach>
+		</if>
 	</if>
   </sql>
   <sql id="sql_fuzzy_search">

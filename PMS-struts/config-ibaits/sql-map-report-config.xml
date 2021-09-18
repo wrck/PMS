@@ -600,4 +600,57 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			ORDER BY COUNT(*) DESC LIMIT 1
 		]]>
 	</select>
+	
+	<select id="queryProjectSummaryStatus" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+	    select 
+		    ph.*, group_concat(distinct pc.contractNo) as contractNo,
+		    fd.`departmentName` as officeName, ps.`shipmentState`, ps.`projectPlanState`, ps.`executionState`, ps.`closeProcessState` 
+		from
+		    pm_project_header ph 
+		    left join `pm_project_group_relationship` pgr
+				on ph.`projectCode` = pgr.`projectCode`
+		    left join `pm_project_contract` pc
+				on pc.`projectGroupCode` = pgr.`projectGroupCode`
+		    left join `pm_project_state` ps 
+		        on ph.`projectId` = ps.`projectId` 
+		    left join `fnd_department` fd 
+		        on ph.`column001` = fd.`departmentNum` 
+		where ph.effectiveTo IS NULL 
+			<dynamic prepend="and" open="(" close=")">
+			    <!-- 1 = 1 -->
+				<isNotEmpty prepend="and" property="column011"> ph.column011 = #column011# </isNotEmpty>
+				<isNotEmpty prepend="and" property="column004"> ph.column004 = #column004# </isNotEmpty>
+			</dynamic>
+			<isNotEmpty property="exceptZQYY">
+	             = !#exceptZQYY#
+	        </isNotEmpty>
+			<isNotEmpty prepend="and" property="column001"> ph.column001 = #column001# </isNotEmpty>
+	        <isNotEmpty prepend="and" property="projectState"> FIND_IN_SET(ph.projectState, #projectState#) </isNotEmpty>
+	        <isNotEmpty prepend="and" property="shipmentState"> FIND_IN_SET(ps.shipmentState, #shipmentState#) </isNotEmpty>
+			<isNotEmpty prepend="and" property="projectPlanState"> FIND_IN_SET(ps.projectPlanState, #projectPlanState#) </isNotEmpty>
+			<isNotEmpty prepend="and" property="executionState"> FIND_IN_SET(IFNULL(ps.executionState, ""), #executionState#) </isNotEmpty>
+			<isNotEmpty prepend="and" property="closeProcessState"> FIND_IN_SET(ps.closeProcessState, #closeProcessState#) </isNotEmpty>
+	        <isNotEmpty property="querys">
+		        <iterate property="querys" prepend="and" open="(" close=")" conjunction=" or " >
+		           (
+		            1 = 1
+	                <isNotEmpty property="querys[].exceptZQYY" prepend="and">
+	                     ( 1 = 1
+	                </isNotEmpty>
+	                <isNotEmpty prepend="and" property="querys[].column011"> ph.column011 = #querys[].column011# </isNotEmpty>
+	                <isNotEmpty prepend="and" property="querys[].column004"> ph.column004 = #querys[].column004# </isNotEmpty>
+		            <isNotEmpty property="querys[].exceptZQYY">
+		                 ) = !#querys[].exceptZQYY#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].column001"> ph.column001 = #querys[].column001# </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].projectState"> FIND_IN_SET(ph.projectState, #querys[].projectState#) </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].shipmentState"> FIND_IN_SET(ps.shipmentState, #querys[].shipmentState#) </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].projectPlanState"> FIND_IN_SET(ps.projectPlanState, #querys[].projectPlanState#) </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].executionState"> FIND_IN_SET(IFNULL(ps.executionState, ""), #querys[].executionState#) </isNotEmpty>
+		            <isNotEmpty prepend="and" property="querys[].closeProcessState"> FIND_IN_SET(ps.closeProcessState, #querys[].closeProcessState#) </isNotEmpty>
+		           )
+		        </iterate>
+	        </isNotEmpty>
+		group by ph.`projectId`
+	</select>
 </sqlMap>

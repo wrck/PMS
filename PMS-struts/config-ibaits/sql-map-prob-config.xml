@@ -31,19 +31,56 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
 			AND t2.`effectiveTo` IS NULL
 		]]>	
-		<isNotEmpty prepend=" " property="affectedVersion"> left join (
-		SELECT 
-		  probId, GROUP_CONCAT(
-		      DISTINCT CONCAT(
-		            "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, ""), " manual:", IFNULL(manualEntry, "")
-		        ) SEPARATOR ";"
-		    ) AS affectedVersion
-		FROM
-		    prob_softwares 
-		where datastate = 1    
-		GROUP BY probId) a 
-		on a.probId = t1.id
-		</isNotEmpty>
+		<isEqual prepend=" " property="checkSoft" compareValue="true"> 
+			LEFT JOIN (
+				SELECT 
+				  probId, <!-- GROUP_CONCAT(
+				      DISTINCT CONCAT(
+				            "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, ""), " manual:", IFNULL(manualEntry, "")
+				        ) SEPARATOR ";"
+				    ) AS affectedVersion -->
+				    GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+				FROM
+				    prob_softwares 
+				where datastate = 1    
+				GROUP BY probId) a 
+				on a.probId = t1.id
+			<isNotEmpty property="softVersionParserList">
+			LEFT JOIN (
+		        SELECT 
+		          probId, GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+		        FROM
+		            prob_softwares 
+		        where datastate = 1
+		        <isNotEmpty prepend="AND" property="affectedType"> affectedType in (#affectedType#, 0) </isNotEmpty>
+		        <iterate prepend="AND" property="softVersionParserList" open="(" close=")" conjunction="OR" >
+		        	#softVersionParserList[].mark# between 
+		        	<iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+		        	markStart
+		        	<iterate property="softVersionParserList[].markAllPartsSet">
+		        		, #softVersionParserList[].markAllPartsSet[].key#, #softVersionParserList[].markAllPartsSet[].value#)
+		        	</iterate>
+		        	and 
+		        	<iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+		        	markEnd
+		        	<iterate property="softVersionParserList[].markAllPartsSet">
+		        		, #softVersionParserList[].markAllPartsSet[].key#, #softVersionParserList[].markAllPartsSet[].value#)
+	        		</iterate>
+		        </iterate>
+		        GROUP BY probId
+	        ) sf ON sf.probId = t1.id
+	        </isNotEmpty>
+		</isEqual>
 			where t1.effectiveTo is null
 		<isNotEmpty prepend="and" property="probNum"><![CDATA[ t1.probNum like '%$probNum$%']]></isNotEmpty>
 		<isNotEmpty prepend="and" property="watch"><![CDATA[ t1.watch = #watch#]]></isNotEmpty>
@@ -52,7 +89,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		
 		<isNotEmpty prepend="and" property="productType"><![CDATA[ t1.productType like concat("%", #productType#, "%")]]></isNotEmpty>
         <isNotEmpty prepend="and" property="desc"><![CDATA[ t1.desc like concat("%", #desc#, "%")]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="affectedVersion"><![CDATA[ a.affectedVersion like concat("%", #affectedVersion#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="affectedType"> sf.probId is not null <!-- #affectedType# = sf.affectedTypes --> </isNotEmpty>
+        <isNotEmpty prepend="and" property="affectedVersion">
+        	(
+        	<![CDATA[ a.affectedVersion like concat("%", #affectedVersion#, "%") ]]>
+        	<isNotEmpty prepend="or" property="softVersionParserList"> sf.probId is not null </isNotEmpty>
+        	)
+       	</isNotEmpty>
 		
 		<isNotEmpty property="visibleRange">
             <isNotEqual prepend="and" property="visibleRange" compareValue="-1" open="(" close=")">
@@ -83,19 +126,56 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31'
 			AND t2.`effectiveTo` IS NULL
 		]]>
-			<isNotEmpty prepend=" " property="prob.affectedVersion"> left join (
+		<isEqual prepend=" " property="prob.checkSoft" compareValue="true"> 
+			LEFT JOIN (
 		        SELECT 
-		          probId,  GROUP_CONCAT(
+		          probId,  <!-- GROUP_CONCAT(
 		              DISTINCT CONCAT(
 		                    "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, ""), " manual:", IFNULL(manualEntry, "")
 		                ) SEPARATOR ";"
-		            ) AS affectedVersion
+		            ) AS affectedVersion -->
+		            GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
 		        FROM
 		            prob_softwares 
 		        where datastate = 1
 		        GROUP BY probId) a 
-		        on a.probId = t1.id
+		        ON a.probId = t1.id
+	        <isNotEmpty property="prob.softVersionParserList">
+	        LEFT JOIN (
+		        SELECT 
+		          probId, GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+		        FROM
+		            prob_softwares 
+		        where datastate = 1
+		        <isNotEmpty prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </isNotEmpty>
+		        <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
+		        	#prob.softVersionParserList[].mark# between 
+		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+		        	markStart
+		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">
+		        		, #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+		        	</iterate>
+		        	and 
+		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+		        	markEnd
+		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">
+		        		, #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+	        		</iterate>
+		        </iterate>
+		        GROUP BY probId
+	        ) sf ON sf.probId = t1.id
 	        </isNotEmpty>
+        </isEqual>
 		WHERE t1.effectiveTo IS NULL
 		<isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like '%$prob.probNum$%']]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></isNotEmpty>
@@ -104,7 +184,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		
 		<isNotEmpty prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></isNotEmpty>
         <isNotEmpty prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="prob.affectedVersion"><![CDATA[ a.affectedVersion like concat("%", #prob.affectedVersion#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.affectedType"> sf.probId is not null <!-- #prob.affectedType# = sf.affectedTypes --> </isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.affectedVersion">
+        	(
+        	<![CDATA[ a.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
+        	<isNotEmpty prepend="or" property="prob.softVersionParserList"> sf.probId is not null </isNotEmpty>
+        	)
+       	</isNotEmpty>
         
         <isNotEmpty property="prob.visibleRange">
             <isNotEqual prepend="and" property="prob.visibleRange" compareValue="-1" open="(" close=")">
@@ -319,25 +405,51 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	
 	<update id="update_invalid_softversion" parameterClass="java.util.Map" >
 		<![CDATA[
-			UPDATE prob_softwares SET datastate = 0, updateBy = #updateBy#,  updateTime = NOW() WHERE probId = #probId#;
+			UPDATE prob_softwares SET datastate = 0, updateBy = #updateBy#,  updateTime = NOW() WHERE probId = #probId# and datastate = 1;
 		]]>
 	</update>
 	<insert id="insert_into_softversion" parameterClass="java.util.Map">
 		<![CDATA[
-			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb, manualEntry, datastate,createBy,  createTime) VALUES
+			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb, 
+				manualEntry, manualEntrySub, entryStart, entryEnd, 
+				markStart, markEnd, affectedType, groupId, splited, 
+				datastate,createBy,  createTime) VALUES
 		]]>
 		<iterate conjunction="," property="list">
-			<![CDATA[ (#probId#, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#, #list[].manualEntry#, 1, #createBy#, now() )]]>
+			<![CDATA[ (#probId#, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#, 
+				#list[].manualEntry#, #list[].manualEntrySub#, #list[].entryStart#, #list[].entryEnd#, 
+				#list[].markStart#, #list[].markEnd#, #list[].affectedType#, #list[].groupId#, #list[].splited#, 
+				1, #createBy#, now() )]]>
 		</iterate>
 	</insert>
 
     <resultMap class="SoftVersion" id="SoftVersionMapWithManual" extends="SoftVersionMap">
+    	<result property="probId" column="probId"/>
         <result property="manualEntry" column="manualEntry"/>
+        <result property="manualEntrySub" column="manualEntrySub"/>
+        <result property="entryStart" column="entryStart"/>
+        <result property="entryEnd" column="entryEnd"/>
+        <result property="markStart" column="markStart"/>
+        <result property="markEnd" column="markEnd"/>
+        <result property="affectedType" column="affectedType"/>
+        <result property="affectedTypeName" column="affectedTypeName"/>
+        <result property="groupId" column="groupId"/>
+        <result property="splited" column="splited"/>
     </resultMap>	
-	<select id="query_prob_soft_version" parameterClass="int" resultMap="SoftVersionMapWithManual">
+	<select id="query_prob_soft_version" parameterClass="SoftVersion" resultMap="SoftVersionMapWithManual">
 		<![CDATA[
-			SELECT * FROM prob_softwares WHERE probId = #probId# AND datastate = 1
+			SELECT 
+			    ps.*, bd.`basicDataName` as affectedTypeName 
+			FROM
+			    prob_softwares ps 
+			    LEFT JOIN fnd_basic_data bd 
+			        ON bd.`dataTypeCode` = 'sofeVersionAffectedType' 
+			        AND ps.`affectedType` = bd.`basicDataId` 
+			WHERE ps.datastate = 1
 		]]>
+			<isNotEmpty prepend="AND" property="probId"> ps.probId = #probId# </isNotEmpty>
+			<isNotEmpty prepend="AND" property="splited"> ps.splited = #splited# </isNotEmpty>
+			<isNotEmpty prepend="AND" property="affectedType"> ps.affectedType = #affectedType# </isNotEmpty>
 	</select>
 	<typeAlias alias="Project" type="com.dp.plat.data.bean.Project"/>
 	<typeAlias alias="ProbRestore" type="com.dp.plat.prob.bean.ProbRestore"/>
@@ -809,13 +921,21 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        AND t4.`effectiveTo` IS NULL 
 		    LEFT JOIN 
 		        (SELECT 
-		            probId, GROUP_CONCAT(
+		            probId, <!-- GROUP_CONCAT(
 		              DISTINCT  CONCAT_WS(
 		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("pcb[", pcb, "]"), CONCAT("manual[", manualEntry, "]")
-		                ) SEPARATOR ";"
-		            ) AS affectedVersion 
+		                ) SEPARATOR ";\r\n"
+		            ) AS affectedVersion  -->
+		            GROUP_CONCAT(
+		              DISTINCT CONCAT(bd.`basicDataName`, ":", CONCAT_WS(
+		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("pcb[", pcb, "]"), CONCAT("", manualEntry, "")
+		                )) SEPARATOR ";\r\n"
+		            ) AS affectedVersion
 		        FROM
-		            `prob_softwares` 
+		            `prob_softwares` ps 
+			    LEFT JOIN fnd_basic_data bd 
+			        ON bd.`dataTypeCode` = 'sofeVersionAffectedType' 
+			        AND ps.`affectedType` = bd.`basicDataId` 
 		        WHERE datastate = 1 
 		        GROUP BY probId) t 
 		        ON t.probId = t1.`id` 

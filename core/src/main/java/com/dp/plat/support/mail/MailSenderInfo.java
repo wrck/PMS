@@ -30,6 +30,7 @@ public class MailSenderInfo extends MailInfo {
 		p.put("mail.smtp.port", this.mailServerPort);
 		p.put("mail.smtp.auth", validate ? "true" : "false");
 		p.put("mail.smtp.starttls.enable", validate ? "true" : "false");
+		p.put("mail.smtp.connectiontimeout", "5000"); 
 		return p;
 	}
 
@@ -40,6 +41,7 @@ public class MailSenderInfo extends MailInfo {
 		p.put("mail.smtp.port", mailSenderInfo.getMailServerPort());
 		p.put("mail.smtp.auth", mailSenderInfo.validate ? "true" : "false");
 		p.put("mail.smtp.starttls.enable",  mailSenderInfo.validate ? "true" : "false");
+		p.put("mail.smtp.connectiontimeout", "5000"); 
 		return p;
 	}
 

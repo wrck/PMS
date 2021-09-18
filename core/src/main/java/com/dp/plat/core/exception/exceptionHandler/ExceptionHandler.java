@@ -44,7 +44,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 //		if (StringUtils.isBlank(message)) {
 //			message = ex.getClass().getSimpleName();
 //		}
-		modelAndView.addObject("error", ex.getClass().getSimpleName());
+		modelAndView.addObject("error", StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
 
 		if (errorLogId != null) {
 			// session.removeAttribute("errorLogId");
@@ -75,7 +75,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 				// sysLog.setParams(ArrayUtils.toString(method.getParameters()));
 				sysLog.setExceptionCode(ex.getClass().getName());
 				sysLog.setExceptionDetail(ExceptionUtils.getStackTrace(ex));
-				sysLog.setRequestIp(request.getRemoteAddr());
+				sysLog.setRequestIp(HttpContext.getCurrentIp(request));
 				sysLog.setCreateDate(DateUtil.getTodayDateTime());
 				sysLog.setType("1");
 				sysLogService.insertSelective(sysLog);
@@ -150,7 +150,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
 			
 			if (request != null){
 				sysLog.setParams(JSON.toJSONString(request.getParameterMap()));
-				sysLog.setRequestIp(request.getRemoteAddr());
+				sysLog.setRequestIp(HttpContext.getCurrentIp(request) + " -> " + request.getServletPath());
 			}
 			
 			StackTraceElement[] trace = Thread.currentThread().getStackTrace();

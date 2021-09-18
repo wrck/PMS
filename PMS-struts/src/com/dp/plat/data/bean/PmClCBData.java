@@ -24,6 +24,9 @@ public class PmClCBData {
 	private int evaResult;
 	private int projectId;
 	private String serviceType;
+	private String compId;
+	private String companyName;
+	private String companyAbbr;
 	public int getId() {
 		return id;
 	}
@@ -150,7 +153,22 @@ public class PmClCBData {
     public void setApproveRemark(String approveRemark) {
         this.approveRemark = approveRemark;
     }
-	
-	
-
+	public String getCompId() {
+		return compId;
+	}
+	public void setCompId(String compId) {
+		this.compId = compId;
+	}
+	public String getCompanyName() {
+		return companyName;
+	}
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+	public String getCompanyAbbr() {
+		return companyAbbr;
+	}
+	public void setCompanyAbbr(String companyAbbr) {
+		this.companyAbbr = companyAbbr;
+	}
 }

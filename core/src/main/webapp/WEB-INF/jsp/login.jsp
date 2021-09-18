@@ -30,6 +30,9 @@
     #captcha {
         vertical-align: middle;
     }
+    #img_captcha {
+    	height: 30px;
+    }
   </style>
 </head>
 <body class="hold-transition login-page">
@@ -56,17 +59,17 @@
       <div class="form-group has-feedback">
       	<input type="text" id="captcha" name="captcha" size="10" maxlength="10" class="required" />
       	<label for="codeImg" class="field">
-      	     <img title="点击更换" id="img_captcha" onclick="javascript:refreshCaptcha();" src="${pageContext.request.contextPath}/servlet/captchaCode">
+      	     <img title="点击更换" id="img_captcha" onclick="javascript:refreshCaptcha();" src="${pageContext.request.contextPath}/captchaCode.html">
       	     (看不清<a href="javascript:void(0)" onclick="javascript:refreshCaptcha()">换一张</a>)
 		</label>
       </div>
       <div class="row">
         <div class="col-xs-8">
-          <div class="checkbox icheck">
+          <!-- <div class="checkbox icheck">
             <label>
               <a href="#">忘记密码</a>
             </label>
-          </div>
+          </div> -->
         </div>
         <!-- /.col -->
         <div class="col-xs-4">
@@ -97,7 +100,7 @@
 	var _captcha_id = "#img_captcha";
 	var basePath = "${pageContext.request.contextPath}";
 	function refreshCaptcha() {
-	    $(_captcha_id).attr("src", basePath + "/servlet/captchaCode?t=" + Math.random());
+	    $(_captcha_id).attr("src", basePath + "/captchaCode.html?t=" + Math.random());
 	}
 	$(function () {
 		$('input').iCheck({
@@ -109,7 +112,8 @@
 		    message: '请输入有效值',
 		    submitHandler: function (validator, form, submitButton) {
 	            var params = form.serializeArray();
-	            params[1].value = HashEncrypt.SHA1(params[1].value, true, false);
+	            //params[1].value = HashEncrypt.SHA1(params[1].value, true, false);
+	            params[1].value = HashEncrypt.encryptHash(params[1].value, params[0].value);
 	            params = $.param(params);
 	            var url = $(form).attr("action");
 	            ajaxPost(basePath + "/sys/login.json", params, function (data) {

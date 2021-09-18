@@ -8,10 +8,10 @@
 		<artifactId>pms</artifactId>
 		<version>0.0.1</version>
 	</parent>
-	<artifactId>PMS-activiti</artifactId>
+	<artifactId>pms-activiti</artifactId>
 	<version>0.0.1</version>
 	<packaging>war</packaging>
-	<name>PMS-activiti</name>
+	<name>pms-activiti</name>
 	<url>http://maven.apache.org</url>
 
 	<repositories>
@@ -503,8 +503,13 @@
                 <artifactId>maven-war-plugin</artifactId>  
                 <configuration>
                     <archiveClasses>true</archiveClasses>
-                    <!-- <attachClasses>true</attachClasses>
-                    <classesClassifier>api</classesClassifier> -->
+                    <attachClasses>true</attachClasses>
+                    <classesClassifier>api</classesClassifier>
+                    <overlays>
+                    	<overlay>
+							<excludes>WEB-INF/lib/*</excludes>
+						</overlay>
+                    </overlays>
                 </configuration>  
             </plugin>
             <plugin>

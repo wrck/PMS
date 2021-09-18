@@ -83,6 +83,11 @@
 	<!-- 项目转包 -->
     <bean id="subcontractDao" class="com.dp.plat.subcontract.dao.SubcontractDaoImpl"
         scope="prototype" parent="baseDao"></bean>		
+    <!-- 项目维保回访 -->
+    <bean id="warrantyCallbackDao" class="com.dp.plat.warrantyCallback.dao.WarrantyCallbackDaoImpl"
+        scope="prototype" parent="baseDao">
+        <property name="projectDao" ref="projectDao"/>
+    </bean>		
     <!-- 合格证查询 -->    
     <bean id="certificateDao" class="com.dp.plat.plus.certificate.dao.CertificateDaoImpl"
         scope="prototype" parent="baseDao"></bean>

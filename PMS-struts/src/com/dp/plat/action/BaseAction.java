@@ -102,7 +102,8 @@ public class BaseAction extends ActionSupport implements ServletContextAware,
 	}
 
 /*	public String getUploadExcelPath() {
-		return getServletContext().getRealPath("/upload");
+		//return getServletContext().getRealPath("/upload");
+		return getServletContext().getRealPath("/" + UploadFileUtil.UPLOAD_PARH);
 	}*/
 
 	@Override

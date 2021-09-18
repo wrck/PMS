@@ -6,12 +6,12 @@
 <dp:base />
 <head>
 <!-- 新 Bootstrap 核心 CSS 文件 -->
-<link rel="stylesheet" href="../../bootstrap-3.3.4-dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
 <!-- 引入对Bootstrap的自扩展文件 -->
-<link rel="stylesheet" href="../../css/bootstrap-ex.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap-ex.css" />
 <!-- 可选的Bootstrap主题文件（一般不用引入mian） -->
-<link rel="stylesheet" href="../../bootstrap-3.3.4-dist/css/bootstrap-theme.min.css" />
-<script type="text/javascript" src="../../js/jquery-2.1.4.min.js"></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap-theme.min.css" />
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-2.1.4.min.js"></script>
 <style type="text/css">
 .pccSubmitDiv {
 	margin-top: 10px;

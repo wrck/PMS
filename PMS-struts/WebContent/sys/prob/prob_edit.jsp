@@ -12,7 +12,7 @@
 <meta name="function" content="<s:text name='prob.manage' />">
 <link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.css" />
 <script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
-<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.js"></script>
+<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
 <script type="text/javascript" src="js/summernote/summernote-util.js"></script>
 <style>
 	.probRestoreBoxId{
@@ -23,12 +23,52 @@
 		margin-left:0;
 	}
 	#manualSoftVersion {
-        padding: 0 15px;
-        margin-left: -15px;
-        width: calc(80% + 24px);
-        display: none;
-    }
+	    /* padding: 0 15px;
+	    margin-left: -15px;
+        width: calc(80% + 24px); */
+        display: flex;
+	}
+	.softVersion {
+		position: relative;
+		display: block;
+		border-bottom: 1px solid #ddd;
+		padding: 0.5rem 1.5rem 0.5rem 1rem;
+	}
+	.softVersionSub {
+		position: relative;
+		display: block;
+		border-top: 1px solid #ddd;
+		padding: 0.5rem 0 0.5rem 1.5rem;
+	}
+	.softVersionContainer {
+		position: relative;
+	}
+	.softVersionLink {
+		padding-top: 7px;
+	}
+	.softVersionDel {
+		position: absolute;
+	    right: 1.5rem;
+	    top: calc(50% - 0.5rem);
+		margin-top: -0.25rem;
+	}
+	.softVersionContainer .softVersionDel, .softVersionSub .softVersionDel, .groupManualEntry .softVersionDel{
+		right: 0;
+	}
+	.groupManualEntry {
+		flex-grow: 1;
+		display: flex;
+	    font-weight: bold;
+	    position: relative;
+	}
+	.form-control.affectedType {
+		display: inline;
+		width: auto;
+		height: auto;
+		padding: 2px 0;
+	}
 </style>
+<script type="text/javascript" src="js/prob/render.js"></script>
 <script type="text/javascript">
 	$(function(){
 		//加载日期控件
@@ -105,6 +145,7 @@
 			$("#solution").focus();
 			$("#solution").blur();
 			$("#title").text("编辑技术公告");
+			renderSoftVersions(softVersionJson, {$container: $("#softVersionList")});
 		}
 	}
 	//检索版本
@@ -221,7 +262,22 @@
 	function clearSoftVersion() {
 		$("#softVersionList").find(".softVersion").remove();
     }
+	var softVersionJson = `${prob.affectedVersion}`;
 	$(document).ready(function(){
+		renderSoftVersions(softVersionJson, {
+			$container: $("#affectedVersionList"), 
+			readOnly: true, 
+			ignoreSub: true
+		});
+		$("#manualSubmit").click(function() {
+			var manualEntry = $.trim($("#manualEntry").val());
+			if (!manualEntry) {
+				$("#manualSoftVersion").hide();
+				return;
+			}
+			var affectedType = $.trim($("#affectedType").val());
+			parserSoftVersion({manualEntry, affectedType}, $("#softVersionList"));
+		});
 		$('textarea').bind('input propertychange blur', function() {
 			$(this).css('height','0px');
 			$(this).css('height',this.scrollHeight + 'px');
@@ -252,13 +308,13 @@
 		   	}
 		});
 		$("#mainForm").submit(function(){
-			var manualEntry = $("#manualEntry").val();
+			/* var manualEntry = $("#manualEntry").val();
 	        if (manualEntry) {
 	            var index = $(".softVersion").length;
 	            $("#manualEntry").attr("name", "softVersionList[" + index + "].manualEntry");
 	        } else {
 	            $("#manualEntry").attr("name", "");
-	        }
+	        } */
 			$("input[name='prob.solution']").val($('#solution').summernote('code'));
 			$("input[name='prob.desc']").val($('#desc').summernote('code'));
 		})
@@ -318,7 +374,7 @@
 				</div>
 				<s:form method="post" action="module/prob_edit.action" id="checkForm"
 					cssClass="form-horizontal" name="checkForm" enctype="multipart/form-data">
-					<s:hidden name="prob.probId"></s:hidden>
+					<s:hidden name="prob.probId" id="probId"></s:hidden>
 					<div class="panel panel-default checkDiv">
 						<!-- 信息查看 -->
 						<div class="panel-body " style="background-color: beige;">
@@ -377,7 +433,7 @@
 							</div>
 							<div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
-								<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+								<%-- <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
 									<s:iterator value="softVersionList" var="software">
 										<s:if test="#software.conp != null">
 											conp:<s:property value="#software.conp"/>
@@ -396,7 +452,9 @@
                                         </s:if>
 										<br/>
 									</s:iterator>
-								</div>
+								</div> --%>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 softVersionList" id="affectedVersionList">
+                                </div>
 								<s:hidden name="prob.status"></s:hidden>
 								<s:if test="%{user.isHasRole(18) && (prob.status == 4 || prob.status == 5) && prob.watch == 14}">
 									<div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 text-right">
@@ -642,33 +700,33 @@
 								 	</s:iterator>
 								</div>
 							</div>
-							<div class="form-group">
+							<%-- <div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
-								<div class="col-xs-5 col-sm-5 col-md-5 col-lg-5" id="softVersionList">
-								    <div id="manualSoftVersion">
-                                        <s:textfield id="manualEntry" cssClass="form-control"></s:textfield>
+								<div class="col-xs-5 col-sm-5 col-md-5 col-lg-5" id="softversionlist">
+								    <div id="manualsoftversion">
+                                        <s:textfield id="manualentry" cssclass="form-control"></s:textfield>
                                     </div>
-                                    <s:iterator value="softVersionList" var="software" status="status">
-                                        <span class='softVersion'>
+                                    <s:iterator value="softversionlist" var="software" status="status">
+                                        <span class='softversion'>
                                             <s:if test="#software.conp != null">
-                                                <input type="hidden" name="softVersionList[${status.index}].conp" value="${software.conp}"> 
+                                                <input type="hidden" name="softversionlist[${status.index}].conp" value="${software.conp}"> 
                                                 conp:<s:property value="#software.conp"/>
                                             </s:if>
                                             <s:if test="#software.boot != null">
-                                                <input type="hidden" name="softVersionList[${status.index}].boot" value="${software.boot}"> 
+                                                <input type="hidden" name="softversionlist[${status.index}].boot" value="${software.boot}"> 
                                                 boot:<s:property value="#software.boot"/>
                                             </s:if>
                                             <s:if test="#software.cpld != null">
-                                                <input type="hidden" name="softVersionList[${status.index}].cpld" value="${software.cpld}">
+                                                <input type="hidden" name="softversionlist[${status.index}].cpld" value="${software.cpld}">
                                                 cpld:<s:property value="#software.cpld"/>
                                             </s:if>
                                             <s:if test="#software.pcb != null">
-                                                <input type="hidden" name="softVersionList[${status.index}].pcb" value="${software.pcb}">
+                                                <input type="hidden" name="softversionlist[${status.index}].pcb" value="${software.pcb}">
                                                 pcb:<s:property value="#software.pcb"/>
                                             </s:if>
-                                            <s:if test="#software.manualEntry != null">
-                                                <input type="hidden" name="softVersionList[${status.index}].manualEntry" value="${software.manualEntry}">
-                                                <s:property value="#software.manualEntry"/>
+                                            <s:if test="#software.manualentry != null">
+                                                <input type="hidden" name="softversionlist[${status.index}].manualentry" value="${software.manualentry}">
+                                                <s:property value="#software.manualentry"/>
                                             </s:if>
                                             <br/>
                                         </span>
@@ -676,18 +734,44 @@
 								</div>
 								<!--old 已确认 状态可以检索版本 -->
 								<!--new 新创建或待确认的技术公告允许修改  -->
-								<%-- <s:if test="%{prob.status == 1 || prob.status == 8}"> --%>
+								<％-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --％>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
 										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
 									</label>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
-                                        <a href="javascript:void(0)" onclick="manualEntry()">手动输入</a>
+                                        <a href="javascript:void(0)" onclick="manualentry()">手动输入</a>
                                     </label>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+                                        <a href="javascript:void(0)" onclick="clearsoftversion()">清除影响版本</a>
+                                    </label>
+								<％-- </s:if>  --％>
+							</div> --%>
+							<div class="form-group">
+								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
+								<!--old 已确认 状态可以检索版本 -->
+								<!--new 新创建或待确认的技术公告允许修改  -->
+								<%-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --%>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
+									</label>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="manualEntry()">手动输入</a>
+                                    </label>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
                                         <a href="javascript:void(0)" onclick="clearSoftVersion()">清除影响版本</a>
                                     </label>
-								<%-- </s:if> --%>
+								<%-- </s:if>  --%>
 							</div>
+							<div class="form-group">
+								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"></label>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 softVersionList" id="softVersionList">
+                                    <div id="manualSoftVersion" style="display:none;">
+                                    	<s:select id="affectedType" cssClass="form-control" style="width: 120px" list="#{1:'盒式系列',2:'框式系列'}" headerKey="0" headerValue="所有系列"></s:select>
+                                        <s:textfield id="manualEntry" cssClass="form-control"></s:textfield>
+                                        <button type="button" id="manualSubmit" class="btn btn-default">添加</button>
+                                    </div>
+                                </div>
+                            </div>
 						</div>
 						<div class="panel-footer clearfix">
 							<div class="form-group">

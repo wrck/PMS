@@ -48,6 +48,7 @@
 						<table id="exportPreviewTable" class="table table-bordered table-striped table-hover dataTable">
 						</table>
 						<form id="perviewExportForm" action="${pageContext.request.contextPath}/data/operation/${id}.xlsx" method="post">
+							<input type="hidden" name="__RequestVerificationToken" value="${__RequestVerificationToken}">
 							<input type="hidden" name="columns" value="">
 							<input type="hidden" name="objectName" value="${objectName}">
 							<input type="hidden" name="objectKV" value="">

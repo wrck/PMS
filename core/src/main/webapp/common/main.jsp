@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<myTag:JSDebugger type="redirect" content="${pageContext.request.contextPath}/404.html"></myTag:JSDebugger>
 <title><sitemesh:write property='title'></sitemesh:write></title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">

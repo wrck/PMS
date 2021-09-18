@@ -26,6 +26,9 @@ public class ProjectMaintenance {
     // 办事处编码
     private String officeCode;
 
+    // 所属公司
+    private String compId;
+
     // 任务性质
     private String type;
 
@@ -265,6 +268,24 @@ public class ProjectMaintenance {
      */
     public void setOfficeCode(String officeCode) {
         this.officeCode = officeCode;
+    }
+
+    /**
+     * 获取所属公司
+     *
+     * @return compId - 所属公司
+     */
+    public String getCompId() {
+        return compId;
+    }
+
+    /**
+     * 设置所属公司
+     *
+     * @param compId 所属公司
+     */
+    public void setCompId(String compId) {
+        this.compId = compId;
     }
 
     /**

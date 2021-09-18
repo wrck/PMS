@@ -21,6 +21,8 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
     private boolean hasPower;
     private String typeName;
     private String officeName;
+    private String companyName;
+    private String companyAbbr;
     private String createUser;
     private String areaPower;
     private String userPower;
@@ -84,7 +86,23 @@ public class ProjectMaintenanceVO extends ProjectMaintenance {
         this.officeName = officeName;
     }
 
-    public String getCreateUser() {
+    public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public String getCompanyAbbr() {
+		return companyAbbr;
+	}
+
+	public void setCompanyAbbr(String companyAbbr) {
+		this.companyAbbr = companyAbbr;
+	}
+
+	public String getCreateUser() {
         return createUser;
     }
 

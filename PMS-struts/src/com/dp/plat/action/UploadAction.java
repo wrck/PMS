@@ -35,7 +35,7 @@ public class UploadAction extends BaseAction{
 	private String redirect;
 	private int fileId;
 	private String seq = File.separator;
-	public String UPLOAD_PATH = "upload" +seq + "file";
+	public String UPLOAD_PATH = UploadFileUtil.UPLOAD_PATH +seq + "file";
 	private FileParam fileParam;
 	private String message;
 	private boolean isAjax;

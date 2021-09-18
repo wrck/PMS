@@ -188,8 +188,8 @@
 	                    	path += 'detail.json';
 	                    }
 						ajaxPost(basePath + path, params, function(data, status) {
-							modals.closeWin(winId); 
-							if(status == 'success'){
+							if(data.status){
+								modals.closeWin(winId); 
 								if(id!="0"){//更新
 									modals.info("更新成功！");
 									dataOperationTable.reloadRowData(id); 
@@ -197,6 +197,8 @@
 									 modals.info("保存成功!");
 									dataOperationTable.reloadData(); 
 								}
+							} else {
+								modals.error(data.error || data.message);
 							}
 						});
 					});
@@ -279,7 +281,11 @@
 					flag = false;
 					var sql = $("#script").val();
 					ajaxPost(basePath + "/data/export/queryExportColumns.json", {sql: sql}, function(data) {
-						columnParse(data.columns);
+						if (data.error) {
+							modals.error(data.error);
+						} else {
+							columnParse(data.columns);
+						}
 						/* var columns = data.columns || [];
 						//$("#columns-alias").html("");
 						$("#columns-alias ." + relatedClass).removeClass("relatedClass");

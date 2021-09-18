@@ -23,6 +23,8 @@ min-height: 35px;
 min-width: 382px;
 }
 </style>
+<link rel="stylesheet" type="text/css" href="multiselect/jquery.multiselect.filter.css" />
+<script type="text/javascript" src="multiselect/jquery.multiselect.filter.js"></script>
 <script type="text/javascript">
 function checkAllCode(_this,prefix,code){
 	if($(_this).is(':checked')){
@@ -111,6 +113,19 @@ $(function(){
 	
 	setselect("userarea","userareahide");
 	multiselect("userarea","userareahide");
+	
+	if ($.fn.multiselectfilter) {
+		$("#userarea").multiselectfilter({
+			label: "搜索",
+			autoReset: true,
+			placeholder: "支持模糊搜索",
+		    filter: function(event, matches){
+		        if( !matches.length ){
+		            // do something
+		        }
+		    }
+		});
+	}
 });
 
 //下拉选择多选
@@ -259,7 +274,7 @@ function checkUsername(){
 		    	<div class="col-sm-4">
 		    		<s:hidden name="user.areapower" id="userareahide"></s:hidden>
 		    		<select id="userarea" multiple="multiple" >
-							<s:iterator value="departmentPowers" var="v">
+							<s:iterator value="departments" var="v">
 								<option value="<s:property value='#v.departmentNum'/>"><s:property
 										value="#v.departmentName" /></option>
 							</s:iterator>

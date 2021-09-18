@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -35,6 +36,7 @@ import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.MenuUtil;
 import com.dp.plat.core.vo.UserInfoVO;
+import com.dp.plat.support.CaptchaUtil;
 
 /**
  * 登录控制器
@@ -46,6 +48,8 @@ import com.dp.plat.core.vo.UserInfoVO;
 @Controller
 @RequestMapping(path={"/", Consts.URLPath.SYSTEM_MANAGER})
 public class LoginController {
+	
+	public static final String KEY_CAPTCHA = "SE_KEY_MM_CODE";
 
 	@Resource
 	private IUserService userService;
@@ -77,7 +81,7 @@ public class LoginController {
 	 * @return
 	 */
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
-	@SystemControllerLog(description = "登录")
+	@SystemControllerLog(description = "登录", ignoreParams = {"password"})
 	public String login(@RequestParam(value = "username", required = true) String username,
 			@RequestParam(value = "password", required = true) String password,
 			@RequestParam(value = "captcha") String captcha, HttpServletRequest request, Model model) {
@@ -96,11 +100,11 @@ public class LoginController {
 			// 执行登录.
 			currentUser.login(token);
 			
-			String loginUrl = "/login";
-			String servletPath = request.getServletPath();
-			int lastIndexOf = servletPath.lastIndexOf(loginUrl);
-			String suffix = servletPath.substring(lastIndexOf + loginUrl.length());
-			return "redirect:/sys/success" + suffix;
+//			String loginUrl = "/login";
+//			String servletPath = request.getServletPath();
+//			int lastIndexOf = servletPath.lastIndexOf(loginUrl);
+//			String suffix = servletPath.substring(lastIndexOf + loginUrl.length());
+//			return "redirect:/sys/success" + suffix;
 //			String suffix = request.getServletPath().replace("/login", "");
 //			return "redirect:/success" + suffix;
 		} catch (CaptchaException e) {
@@ -136,8 +140,9 @@ public class LoginController {
 			// 判断用户进入的首页
 			Principal principal = (Principal) SecurityUtils.getSubject().getPrincipal();
 			if (principal.getNeedChangePwd()/* && ".html".equals(suffix)*/) {
-				return "redirect:" + Consts.URLPath.SYSTEM_MANAGER + "user/" + principal.getUserId()
-						+ ".html?needChangePwd=true";
+//				return "redirect:" + Consts.URLPath.SYSTEM_MANAGER + "user/" + principal.getUserId()
+//						+ ".html?needChangePwd=true";
+				return  "redirect:/password.html?needChangePwd=true&redirect=" + principal.getHomePage();
 			}
 			
 			if (StringUtils.isNotBlank(principal.getHomePage()) && !principal.getHomePage().replace(htmlSuffix, "").matches("(/sys)?/success")) {
@@ -202,4 +207,8 @@ public class LoginController {
 		return;
 	}
 
+	@RequestMapping("captchaCode")
+	public void captchaCode(HttpServletRequest req, HttpServletResponse resp) {
+		CaptchaUtil.responseCaptcha(req, resp, KEY_CAPTCHA);
+	}
 }

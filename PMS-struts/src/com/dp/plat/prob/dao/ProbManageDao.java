@@ -39,6 +39,8 @@ public interface ProbManageDao {
 	void saveSoftVersion(List<SoftVersion> softVersionList, int probId);
 
 	List<SoftVersion> querySoftVersionList(int probId);
+	
+	List<SoftVersion> querySoftVersionList(SoftVersion softVersion);
 
 	Map<Integer, String> queryProbFileMap(int probId);
 

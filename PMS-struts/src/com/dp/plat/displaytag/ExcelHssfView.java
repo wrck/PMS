@@ -7,7 +7,7 @@ import javax.servlet.jsp.JspException;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -37,7 +37,7 @@ import org.displaytag.util.HtmlAttributeMap;
  * @author rapruitt
  * @version $Revision: 1086 $ ($Author: rapruitt $)
  */
-public class ExcelHssfView implements BinaryExportView
+public class ExcelHssfView extends AbstractExcelView implements BinaryExportView
 {
 
 	/**
@@ -67,6 +67,8 @@ public class ExcelHssfView implements BinaryExportView
 	public void setParameters(TableModel tableModel, boolean exportFullList,
 			boolean includeHeader, boolean decorateValues)
 	{
+		super.setParameters(tableModel, exportFullList, includeHeader, decorateValues);
+
 		this.model = tableModel;
 		this.exportFull = exportFullList;
 		this.header = includeHeader;
@@ -129,7 +131,8 @@ public class ExcelHssfView implements BinaryExportView
                         htmlAttributes = headerCell.getHtmlAttributes();
                     }
 					if (columnHeader != null && !htmlAttributes.isEmpty() && htmlAttributes.containsValue("splitCell=true")) {
-					    String[] tds = StringUtils.split(String.valueOf(columnHeader), "</th><th>");
+						String[] tds = String.valueOf(columnHeader).split("<\\/th><th[^>]*>");
+					    tds = StringUtils.split(StringUtils.join(tds, "</th><th>"), "</th><th>");
                         for (String td : tds) {
                             Cell cell = xlsRow.createCell((short) colNum++);
                             RichTextString riHeader = new HSSFRichTextString(td);
@@ -169,12 +172,14 @@ public class ExcelHssfView implements BinaryExportView
 					Object value = column.getValue(this.decorated);
 
 					// 获取表格列合并字段splitCell=true，进行分割，转换成多列
-					HtmlAttributeMap htmlAttributes = column.getHeaderCell().getHtmlAttributes();
+					HtmlAttributeMap htmlAttributes = column.getHeaderCell().getHeaderAttributes();
 					if (htmlAttributes.isEmpty()) {
-					    htmlAttributes = column.getHeaderCell().getHeaderAttributes();
+					    htmlAttributes = column.getHeaderCell().getHtmlAttributes();
 					}
 					if (value != null && !htmlAttributes.isEmpty() && htmlAttributes.containsValue("splitCell=true")) {
-				        String[] tds = StringUtils.splitByWholeSeparatorPreserveAllTokens(String.valueOf(value), "</td><td>");
+//						String[] tds = StringUtils.splitByWholeSeparatorPreserveAllTokens(String.valueOf(value), "</td><td>");
+						String[] tds = String.valueOf(String.valueOf(value)).split("<\\/td><td[^>]*>", -1);
+					    tds = StringUtils.splitByWholeSeparatorPreserveAllTokens(StringUtils.join(tds, "</td><td>"), "</td><td>");
 				        for (String td : tds) {
 				            Cell cell = xlsRow.createCell((short) colNum++);
 				            writeCell(td, cell);

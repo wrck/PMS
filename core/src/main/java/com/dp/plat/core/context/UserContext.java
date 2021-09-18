@@ -6,12 +6,19 @@ package com.dp.plat.core.context;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.support.DefaultSubjectContext;
 
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.realms.Principal;
@@ -21,6 +28,94 @@ import com.dp.plat.core.realms.Principal;
  *
  */
 public class UserContext {
+	
+	public static SessionDAO getSessionDAO() {
+		return SpringContext.getBean("sessionDAO", SessionDAO.class);
+	}
+	
+	/**
+	 * 获取生效的用户Session
+	 * @return
+	 */
+	public static Collection<Session> getActiveSessions() {
+		try {
+			SessionDAO sessionDAO = getSessionDAO();
+			return sessionDAO.getActiveSessions();
+	//		Collection<Session> sessions = sessionDAO.getActiveSessions();
+	//		Collection<Session> userSessions = new ArrayList<Session>();
+	//		for (Session session : sessions) {
+	//			SimplePrincipalCollection principalCollection = (SimplePrincipalCollection) session
+	//					.getAttribute(DefaultSubjectContext.PRINCIPALS_SESSION_KEY);
+	//			if (principalCollection == null) {
+	//				continue;
+	//			}
+	//			userSessions.add(session);
+	//		}
+	//		return userSessions;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Collections.emptyList();
+	}
+	
+	/**
+	 * 获取生效的指定用户Session
+	 * @return
+	 */
+	public static Collection<Session> getActiveSessions(String userName) {
+		userName = StringUtils.trimToNull(userName);
+		if (userName == null) {
+			return Collections.emptyList();
+		}
+		Collection<Session> sessions = getActiveSessions();
+		Collection<Session> userSessions = new ArrayList<Session>();
+		for (Session session : sessions) {
+			SimplePrincipalCollection principalCollection = (SimplePrincipalCollection) session
+					.getAttribute(DefaultSubjectContext.PRINCIPALS_SESSION_KEY);
+			if (principalCollection == null) {
+				continue;
+			}
+			Principal principal = (Principal) principalCollection.getPrimaryPrincipal();
+			String tempUserNmae = StringUtils.trimToEmpty(principal.getUserName());
+			if (tempUserNmae.equals(userName)) {
+				userSessions.add(session);
+			}
+		}
+		return userSessions;
+	}
+	
+	/**
+	 * 获取当前所有在线登录信息
+	 * @return
+	 */
+	public static Collection<Principal> getActivePrincipals() {
+//		SessionDAO sessionDAO = SpringContext.getBean("sessionDAO", SessionDAO.class);
+//		Collection<Session> sessions = sessionDAO.getActiveSessions();
+		Collection<Session> sessions = getActiveSessions();
+		Collection<Principal> principals = new ArrayList<Principal>();
+		for (Session session : sessions) {
+			SimplePrincipalCollection principalCollection = (SimplePrincipalCollection) session
+					.getAttribute(DefaultSubjectContext.PRINCIPALS_SESSION_KEY);
+			if (principalCollection == null) {
+				continue;
+			}
+			principals.add((Principal) principalCollection.getPrimaryPrincipal());
+		}
+		return principals;
+	}
+	
+	/**
+	 * 获取当前所有在线用户
+	 * @return
+	 */
+	public static Collection<User> getActiveUsers() {
+		Collection<Principal> principals = getActivePrincipals();
+		Collection<User> users = new ArrayList<User>(principals.size());
+		for (Principal principal : principals) {
+			users.add(createUser(principal));
+		}
+		return users;
+	}
 
 	/**
 	 * 获取当前用户的登录信息
@@ -28,7 +123,11 @@ public class UserContext {
 	 * @return
 	 */
 	public static Principal getCurrentPrincipal() {
-		Principal principal = (Principal) SecurityUtils.getSubject().getPrincipal();
+		Principal principal = null;
+		try {
+			principal = (Principal) SecurityUtils.getSubject().getPrincipal();
+		} catch (Exception e) {
+		}
 		if (principal == null) {
 			return new Principal(new User());
 		}
@@ -63,39 +162,10 @@ public class UserContext {
 	 * @return
 	 */
 	public static User getCurrentUser() {
-		Principal principal = (Principal) SecurityUtils.getSubject().getPrincipal();
-		User user = new User();
-		if (principal == null) {
-			return user;
-		}
-		try {
-			Field[] fields = User.class.getDeclaredFields();
-			for (Field field : fields) {
-				try {
-					String fieldName = field.getName();
-					String methodSubName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-					Method method = principal.getClass().getDeclaredMethod("get" + methodSubName);
-					Object value = method.invoke(principal);
-					if (value == null) {
-						continue;
-					}
-
-					method = User.class.getDeclaredMethod("set" + methodSubName, field.getType());
-					method.invoke(user, value);
-				} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
-					continue;
-				}
-			}
-		} catch (SecurityException e) {
-			user.setUserId(principal.getUserId());
-			user.setUserName(principal.getUserName());
-			user.setStatus(principal.getStatus());
-			e.printStackTrace();
-		}
-		return user;
+		Principal principal = getCurrentPrincipal();
+		return createUser(principal);
 	}
-
+	
 	/**
 	 * 判断当前用户是否有某个角色
 	 * 
@@ -111,9 +181,12 @@ public class UserContext {
 	 * 
 	 * @return
 	 */
-	public static boolean hasAnyRoles(List<String> roleIdentifiers) {
+	public static boolean hasAnyRoles(Collection<String> roleIdentifiers) {
 		PrincipalCollection principalCollection = SecurityUtils.getSubject().getPrincipals();
-		boolean[] bs = SecurityUtils.getSecurityManager().hasRoles(principalCollection, roleIdentifiers);
+		if (!(roleIdentifiers instanceof List)) {
+			roleIdentifiers = new ArrayList<String>(roleIdentifiers);
+		}
+		boolean[] bs = SecurityUtils.getSecurityManager().hasRoles(principalCollection, (List<String>) roleIdentifiers);
 		boolean hasAnyRoles = false;
 		for (boolean b : bs) {
 			hasAnyRoles = b || hasAnyRoles;
@@ -138,7 +211,7 @@ public class UserContext {
 	 * 
 	 * @return
 	 */
-	public static boolean hasAllRoles(List<String> roleIdentifiers) {
+	public static boolean hasAllRoles(Collection<String> roleIdentifiers) {
 		PrincipalCollection principalCollection = SecurityUtils.getSubject().getPrincipals();
 		return SecurityUtils.getSecurityManager().hasAllRoles(principalCollection, roleIdentifiers);
 	}
@@ -196,5 +269,43 @@ public class UserContext {
 			}
 		}
 		return anyPermitted;
+	}
+	
+	/**
+	 * 根据Principal创建User
+	 * @param principal
+	 * @return user
+	 */
+	private static User createUser(Principal principal) {
+		User user = new User();
+		if (principal == null) {
+			return user;
+		}
+		try {
+			Field[] fields = User.class.getDeclaredFields();
+			for (Field field : fields) {
+				try {
+					String fieldName = field.getName();
+					String methodSubName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+					Method method = principal.getClass().getDeclaredMethod("get" + methodSubName);
+					Object value = method.invoke(principal);
+					if (value == null) {
+						continue;
+					}
+
+					method = User.class.getDeclaredMethod("set" + methodSubName, field.getType());
+					method.invoke(user, value);
+				} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException e) {
+					continue;
+				}
+			}
+		} catch (SecurityException e) {
+			user.setUserId(principal.getUserId());
+			user.setUserName(principal.getUserName());
+			user.setStatus(principal.getStatus());
+			e.printStackTrace();
+		}
+		return user;
 	}
 }

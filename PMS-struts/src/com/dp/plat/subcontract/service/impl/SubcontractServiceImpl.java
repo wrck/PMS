@@ -79,7 +79,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	/**
 	 * 上传路径 /upload/subcontract/
 	 */
-	private static final String uploadDir = File.separator + "upload" + File.separator + "subcontract" + File.separator;
+//	private static final String uploadDir = File.separator + "upload" + File.separator + "subcontract" + File.separator;
+	private static final String uploadDir = File.separator + UploadFileUtil.UPLOAD_PATH + File.separator + "subcontract" + File.separator;
 
 	private SubcontractDao dao;
 	private BasicDataService basicDataService;

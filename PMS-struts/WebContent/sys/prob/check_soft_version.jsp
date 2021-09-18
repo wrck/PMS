@@ -5,6 +5,7 @@
 <html>
 <dp:base />
 <head>
+<script type="text/javascript" src="js/prob/render.js"></script>
 <script type="text/javascript">
 	$(function(){
 		$("#confirm").click(function(){
@@ -25,7 +26,13 @@
 					data:{'softVersionCodes':softVersionCodes},
 					dataType:'json',
 					success:function(data){
-						var softversionList =JSON.parse(data.result);
+						renderSoftVersions(data.result, {
+							$container: $("#softVersionList", window.top.document), 
+							readOnly: false, 
+							ignoreSub: false, 
+							onlyAppend: true
+						});
+						/* var softversionList =JSON.parse(data.result);
 						var html = "";
 						var prevCount = $("#softVersionList .softVersion", window.top.document).length;
 						for(var i in softversionList){
@@ -51,7 +58,7 @@
 							html+="<br>";
 							html += "</span>"
 						}
-						$("#softVersionList",window.top.document).append(html);
+						$("#softVersionList",window.top.document).append(html); */
 						closeThis();
 					}
 				})

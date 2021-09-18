@@ -16,6 +16,9 @@
         .column-alias {
         	height: auto;
         }
+        .columns-tip {
+        	padding-top: 0.5rem;
+        }
         
     </style>
 </cssTag>
@@ -81,8 +84,8 @@
                     <div class="form-group export">
                         <label for="columns" class="col-sm-3 control-label">导出列名<br><a href='javascript:void(0)' id="queryExportColumns" class="" title="点击查询SQL包含的字段名">(关联列)</a></label>
                         <div class="col-sm-8">
+                        	<div class="columns-tip">点击“关联列”查询SQL包含的字段名</div>
                         	<ul id="columns-alias" class="list-inline">
-                        		<li class="columns-tip">点击“关联列”查询SQL包含的字段名</li>
                         	</ul>
                         	<input type="hidden" name="columns">
                         </div>
@@ -165,8 +168,8 @@
 	                    	path += 'detail.json';
 	                    }
 						ajaxPost(basePath + path, params, function(data, status) {
-							modals.closeWin(winId); 
-							if(status == 'success'){
+							if(data.status){
+								modals.closeWin(winId); 
 								if(id!="0"){//更新
 									modals.info("更新成功！");
 									dataOperationTable.reloadRowData(id); 
@@ -174,6 +177,8 @@
 									 modals.info("保存成功!");
 									dataOperationTable.reloadData(); 
 								}
+							} else {
+								modals.error(data.error || data.message);
 							}
 						});
 					});
@@ -256,7 +261,11 @@
 					flag = false;
 					var sql = $("#script").val();
 					ajaxPost(basePath + "/data/export/queryExportColumns.json", {sql: sql}, function(data) {
-						columnParse(data.columns);
+						if (data.error) {
+							modals.error(data.error);
+						} else {
+							columnParse(data.columns);
+						}
 						/* var columns = data.columns || [];
 						//$("#columns-alias").html("");
 						$("#columns-alias ." + relatedClass).removeClass("relatedClass");
@@ -301,8 +310,10 @@
 				if ($("#alias-title-" + encodeColumn).length == 0) {
 					if ($("#columns-alias li:eq("+ i +")").length == 1) {
 						$("#columns-alias li:eq("+ i +")").before("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ encodeColumn +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
-					} else {
+					} else if ($("#columns-alias li").length > 0) {
 						$("#columns-alias li:eq("+ (i - 1) +")").after("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ encodeColumn +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
+					} else {
+						$("#columns-alias").append("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ encodeColumn +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
 					}
 					//$("#columns-alias").append("<li class='col-sm-3 " + relatedClass + "'><span class='column' id='alias-title-"+ column +"'>" + column + "</span><input class='column-alias form-control' placeholder='" + column + "别名' value='" + alias + "'></li>");
 				} else {
@@ -314,7 +325,12 @@
 					}
 				}
 			}
-			$("#columns-alias li").not("." + relatedClass).remove();
+			$("#columns-alias li").not("." + relatedClass).not(".columns-tip").remove();
+			if ($("#columns-alias ." + relatedClass).length > 0) {
+				$(".columns-tip").hide();
+			} else {
+				$(".columns-tip").show();
+			}
 		}
 		
 		function columnStringify() {

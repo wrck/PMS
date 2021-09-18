@@ -196,6 +196,17 @@ xmlns="http://www.springframework.org/schema/beans"
         <property name="target" ref="subcontractService"></property>
     </bean>
     
+    <!-- 项目维保回访 -->
+	<bean id="warrantyCallbackService" class="com.dp.plat.warrantyCallback.service.impl.WarrantyCallbackServiceImpl"
+        lazy-init="false" parent="baseServce">
+        <property name="warrantyCallbackDao" ref="warrantyCallbackDao"></property>
+        <property name="basicDataService" ref="basicDataService"></property>
+        <property name="callBackService" ref="callBackService"></property>
+    </bean>
+    <bean id="warrantyCallbackServiceAgent" parent="transactionBaseService">
+        <property name="target" ref="warrantyCallbackService"></property>
+    </bean>
+    
      <!-- 合格证查询接口 -->
     <bean id="certificateServiceAgent" parent="transactionBaseService">
         <property name="target" ref="certificateService"></property>

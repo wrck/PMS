@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.properties.MediaTypeEnum;
@@ -52,8 +51,6 @@ import com.dp.plat.util.Base64Util;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.StringEscUtil;
-
-import cn.hutool.core.convert.impl.URLConverter;
 /**
  * 作为displayTag的装饰器，在JSP页面起作用
  * 通过getPageContext()能获取JSP页面的上下文，进而获取项目绝对路径等信息
@@ -262,23 +259,35 @@ public class Wrapper extends TableDecorator {
 	}
 	
 	public String getProjectNameWarrper(){
-		Project project = (Project) getCurrentRowObject();
-		String state = project.getProjectState();
-		int projectId = project.getProjectId();
-		String projectname = project.getProjectName();
-		if(projectname!= null){
-			if(projectname.startsWith("<")){
-				projectname = projectname.substring(1);
+		Object project = getCurrentRowObject();
+		String state = null;
+		Integer projectId = 0;
+		String projectName = null;
+		String contractNo = null;
+		if (project instanceof Project) {
+			state = ((Project) project).getProjectState();
+			projectId = ((Project) project).getProjectId();
+			projectName = ((Project) project).getProjectName();
+			contractNo = ((Project) project).getContractNo();
+		} else if (project instanceof Map) {
+			state = (String) ((Map<?, ?>) project).get("projectState");
+			projectId = (Integer) ((Map<?, ?>) project).get("projectId");
+			projectName = (String) ((Map<?, ?>) project).get("projectName");
+			contractNo = (String) ((Map<?, ?>) project).get("contractNo");
+		}
+		if(projectName != null){
+			if(projectName.startsWith("<")){
+				projectName = projectName.substring(1);
 			}
-			if(projectname.endsWith(">")){
-				projectname = projectname.substring(0, projectname.length()-1);
+			if(projectName.endsWith(">")){
+				projectName = projectName.substring(0, projectName.length()-1);
 			}
 		}
 		
 		if(state.equals("10") && projectId == -1){//待创建项目
-			return "<a href='javascript:void(0)' class='createMark' onclick='createProject( \""+project.getContractNo()+"\")'>"+projectname+"</a>";
+			return "<a href='javascript:void(0)' class='createMark' onclick='createProject( \""+contractNo+"\")'>"+projectName+"</a>";
 		}else{
-			return "<a href='javascript:void(0)' class='updateMark' onclick='updateProject( \""+ Base64Util.EncodeBase64(project.getProjectId())+"\")'>"+projectname+"</a>";
+			return "<a href='javascript:void(0)' class='updateMark' onclick='updateProject( \""+ Base64Util.EncodeBase64(projectId)+"\")'>"+projectName+"</a>";
 		}
 	}
 	
@@ -670,7 +679,9 @@ public class Wrapper extends TableDecorator {
 					"&nbsp;&nbsp;&nbsp;"+
 					"<a class='deleteQues' href='base/PmClQues_deleteHeader.action?pmClosedLoopQuesnaire.id="+pmClosedLoopQuesnaire.getId()+"'>删除</a>";
 		}else if(pmClosedLoopQuesnaire.getQuestionnaireStatus()==PmClosedLoopConstant.CL_STATUS_SUBMIT){
-			return "<a class='endEffective' href='base/PmClQues_endEffective.action?pmClosedLoopQuesnaire.id="+pmClosedLoopQuesnaire.getId()+"'>失效</a>";
+			return "<a href='base/EditPmClosedLoopQuesnaire.action?pmClosedLoopQuesnaire.id="+pmClosedLoopQuesnaire.getId()+"'>编辑</a>"+
+					"&nbsp;&nbsp;&nbsp;"+
+					"<a class='endEffective' href='base/PmClQues_endEffective.action?pmClosedLoopQuesnaire.id="+pmClosedLoopQuesnaire.getId()+"'>失效</a>";
 		}
 		return "";
 	}

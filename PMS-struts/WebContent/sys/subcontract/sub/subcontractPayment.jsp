@@ -11,7 +11,7 @@
 </head>
 <body>
 	<div style="text-align: left;">
-        <s:form enctype="multipart/form-data" id="subcontractPaymentForm" action="module/subcontract_savePayment.action">
+        <s:form enctype="multipart/form-data" id="subcontractPaymentForm" action="%{namespace}/subcontract_savePayment.action">
             <table id="subcontractInfoTable" class="table table-bordered table-hover table-striped ">
                 <tr style="display:none"><td><s:hidden name="subcontract.id"/></td></tr>
                 <tr>

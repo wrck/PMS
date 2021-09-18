@@ -1,5 +1,6 @@
 package com.dp.plat.core.listener;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,10 +17,13 @@ import org.apache.shiro.authc.AuthenticationListener;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.pojo.Company;
 import com.dp.plat.core.pojo.Menu;
 import com.dp.plat.core.pojo.User;
@@ -205,16 +209,16 @@ public class DpFormAuthenticationListener implements AuthenticationListener {
 		// TODO Auto-generated method stub
 		Principal principal = (Principal) principals.getPrimaryPrincipal();
 		if (principal != null) {
-			ServletRequestAttributes requestContainer = (ServletRequestAttributes) RequestContextHolder
-					.getRequestAttributes();
-			String ip = null;
-			if (requestContainer != null) {
-				HttpServletRequest request = requestContainer.getRequest();
-				ip = getIpAddress(request);
-			} else {
-				ip = SecurityUtils.getSubject().getSession().getHost();
-			}
-
+//			ServletRequestAttributes requestContainer = (ServletRequestAttributes) RequestContextHolder
+//					.getRequestAttributes();
+//			String ip = null;
+//			if (requestContainer != null) {
+//				HttpServletRequest request = requestContainer.getRequest();
+//				ip = getIpAddress(request);
+//			} else {
+//				ip = SecurityUtils.getSubject().getSession().getHost();
+//			}
+			String ip = getIpAddress(null);
 			UserLoginRecord userLoginRecord = new UserLoginRecord();
 			userLoginRecord.setId(principal.getLoginRecordId());
 			userLoginRecord.setLogoutIP(ip);
@@ -265,8 +269,7 @@ public class DpFormAuthenticationListener implements AuthenticationListener {
 	 */
 	private Integer saveLoginInfo(HttpServletRequest request, Principal principal) {
 		if (principal != null) {
-			String ip = null;
-			ip = this.getIpAddress(request);
+			String ip = this.getIpAddress(request);
 			return saveLoginInfo(ip, principal);
 		} else {
 			return null;
@@ -301,16 +304,16 @@ public class DpFormAuthenticationListener implements AuthenticationListener {
 	 */
 	private Integer saveLoginInfo(String loginName) {
 		if (StringUtils.isNotBlank(loginName)) {
-			ServletRequestAttributes requestContainer = (ServletRequestAttributes) RequestContextHolder
-					.getRequestAttributes();
-			String ip = null;
-			if (requestContainer == null) {
-				HttpServletRequest request = requestContainer.getRequest();
-				ip = this.getIpAddress(request);
-			} else {
-				ip = SecurityUtils.getSubject().getSession().getHost();
-			}
-
+//			ServletRequestAttributes requestContainer = (ServletRequestAttributes) RequestContextHolder
+//					.getRequestAttributes();
+//			String ip = HttpContext.getCurrentIp();
+//			if (requestContainer != null) {
+//				HttpServletRequest request = requestContainer.getRequest();
+//				ip = this.getIpAddress(request);
+//			} else {
+//				ip = SecurityUtils.getSubject().getSession().getHost();
+//			}
+			String ip = getIpAddress(null);
 			UserLoginRecord userLoginRecord = new UserLoginRecord();
 			userLoginRecord.setLoginName(loginName);
 			userLoginRecord.setLoginTime(new Date());
@@ -323,21 +326,16 @@ public class DpFormAuthenticationListener implements AuthenticationListener {
 	}
 
 	public String getIpAddress(HttpServletRequest request) {
-		String ip = request.getHeader("x-forwarded-for");
-		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getHeader("Proxy-Client-IP");
-		}
-		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getHeader("WL-Proxy-Client-IP");
-		}
-		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getHeader("HTTP_CLIENT_IP");
-		}
-		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-		}
-		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-			ip = request.getRemoteAddr();
+		String ip = HttpContext.getCurrentIp(request);
+		if (StringUtils.isBlank(ip)) {
+			try {
+				Subject subject = SecurityUtils.getSubject();
+				Field field = ReflectionUtils.findField(subject.getClass(), "servletRequest");
+				field.setAccessible(true);
+				request = (HttpServletRequest) ReflectionUtils.getField(field, subject);
+				ip = HttpContext.getCurrentIp(request);
+			} catch (Exception e) {
+			}
 		}
 		return ip;
 	}

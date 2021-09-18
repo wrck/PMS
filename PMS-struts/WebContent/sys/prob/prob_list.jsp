@@ -65,6 +65,10 @@
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
                 <s:textfield id="desc" name="prob.desc" cssClass="form-control"></s:textfield>
             </div>
+            <label for="status" class="pull-left control-label"><s:text name="prob.info.affected.type"></s:text></label>
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <s:select id="affectedType" name="prob.affectedType" cssClass="form-control" list="#{1:'盒式系列',2:'框式系列'}" headerKey="" headerValue="--请选择--"></s:select>
+            </div>
             <label for="status" class="pull-left control-label"><s:text name="prob.info.affected.version"></s:text></label>
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
                 <s:textfield id="affectedVersion" name="prob.affectedVersion" cssClass="form-control"></s:textfield>

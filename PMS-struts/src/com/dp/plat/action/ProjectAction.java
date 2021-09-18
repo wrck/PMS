@@ -26,7 +26,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.struts2.ServletActionContext;
-import org.apache.struts2.json.annotations.JSON;
+import com.alibaba.fastjson.JSON;
 import org.springframework.beans.BeanUtils;
 
 import com.dp.plat.context.HttpContext;
@@ -111,6 +111,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 	private List<Company> companyList;
 	private List<BasicDataBean> projectTypeList;
 	private List<BasicDataBean> projectRankList;//项目类型集合
+	private List<BasicDataBean> majorProjectLevelList;//重大项目级别
 	private Map<String, String> colMap;
 	private List<User> allusernameList;
 	private List<Person> personList;
@@ -280,6 +281,9 @@ public class ProjectAction extends BaseAction implements Preparable{
 		//项目类型划分
 		projectRankList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_PRORANK);
 		
+		//重大项目界别
+		majorProjectLevelList = basicDataService.queryBasicDataBeans("majorProjectLevel");
+		
 		projectTimeList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_PORJECT_TIME);
 		
 		ssfsList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_SERVICE_TYPE);
@@ -354,6 +358,16 @@ public class ProjectAction extends BaseAction implements Preparable{
 		if(checkProjectNull(project)){
 			try {
 				project = projectService.queryProjectByContractNo(project.getContractNo());
+				try {
+	    			// 设置重大项目级别到项目类别的对应关系
+					String majorProjectLevel = project.getMajorProjectLevel();
+					String majorProjectLevel2PorjectCategory = basicDataService.querySysArg("pm.project.majorProjectLevel2projectCategory");
+					Map<String, Object> relation = JSON.parseObject(majorProjectLevel2PorjectCategory, Map.class);
+					String projectCategory = (String) relation.getOrDefault(majorProjectLevel, MessageUtil.PROJECT_TYPE_NORMAL);
+					project.setColumn010(projectCategory);
+    			} catch (Exception e) {
+    				 e.printStackTrace();
+				}
 				project.setProjectCode(projectService.queryProjectCode(project));
 				orderDataList = projectService.queryOrderLineFromSapByContractNo(project);//排除了退货数据
 				Company company = new Company();
@@ -775,7 +789,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public String checkShipmentInfo() {
 		try {
 			user = UserContext.getUserContext().getUser();
-			result = projectService.queryProjectShipment(project.getProjectId());
+			result = projectService.queryHistoryProjectShipmentSize(project.getProjectId());
 			Project temp = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
 			// 如果是总代借货项目
 			if (temp != null && "14".equals(temp.getSalesType())) {
@@ -1432,7 +1446,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 			
 			/** 分隔符 **/
 			String separator = java.io.File.separator;
-			String path =separator + "upload"+separator+"weekly"+separator +new Date().getTime() ;
+			String path =separator + UploadFileUtil.UPLOAD_PATH + separator+"weekly"+separator +new Date().getTime() ;
 			boolean bool = Util.mkdir(path);
 			if (!bool) {
 				addActionMessage(HttpContext.getMessage("sys.adderror"));
@@ -1482,7 +1496,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 		return SUCCESS;
 	}
 	
-	@JSON(serialize = false)
+	@org.apache.struts2.json.annotations.JSON(serialize = false)
 	public String getDownloadFile() {
 
 		ServletActionContext.getResponse().setHeader("charset", "ISO8859-1");
@@ -1501,7 +1515,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 		return "orderplan.xlsx";
 	}
 
-	@JSON(serialize = false)
+	@org.apache.struts2.json.annotations.JSON(serialize = false)
 	public InputStream getFileStream() throws FileNotFoundException,
 			UnsupportedEncodingException {
 		InputStream in = ServletActionContext.getServletContext().getResourceAsStream(downpath);
@@ -2630,7 +2644,13 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public void setProjectRankList(List<BasicDataBean> projectRankList) {
 		this.projectRankList = projectRankList;
 	}
-	
+	public List<BasicDataBean> getMajorProjectLevelList() {
+		return majorProjectLevelList;
+	}
+	public void setMajorProjectLevelList(List<BasicDataBean> majorProjectLevelList) {
+		this.majorProjectLevelList = majorProjectLevelList;
+	}
+
 	/**
 	 * 批量创建项目或关闭项目  系统管理员权限
 	 * @return
@@ -2689,7 +2709,8 @@ public class ProjectAction extends BaseAction implements Preparable{
 	}
 	private List<Project> parseFileToList(String path ,int batchFunc) throws Exception {
 		List<Project> resultlist = new ArrayList<Project>();
-		String targetDirectory = context.getRealPath("/upload/data");
+//		String targetDirectory = context.getRealPath("/upload/data");
+		String targetDirectory = context.getRealPath("/" + UploadFileUtil.UPLOAD_PATH + "/data");
 		ExcelParser parser;
 		try {
 			parser = new ExcelParser(targetDirectory + File.separator + path);

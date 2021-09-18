@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.BaseDao;
 import com.dp.plat.data.bean.Project;
@@ -19,6 +21,8 @@ import com.dp.plat.prob.bean.ProbRestoreWeekly;
 import com.dp.plat.prob.bean.ProbStatistic;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.util.SoftVersionUtil;
+import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
 import com.dp.plat.util.MessageUtil;
 
 public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
@@ -35,6 +39,11 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	public List<Prob> queryProbList(Prob prob, DisplayParam displayParam) {
 		if (prob == null) {
 			prob = new Prob();
+		}
+		// 根据影响版本解析
+		if (StringUtils.isNotBlank(prob.getAffectedVersion())) {
+			List<SoftVersionParser> softVersionParser = SoftVersionUtil.createSoftVersionParser(prob.getAffectedVersion());
+			prob.setSoftVersionParserList(softVersionParser);
 		}
 		UserContext userContext = UserContext.getUserContext();
 		String username = getCurrUsername();
@@ -86,6 +95,20 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 
 	@Override
 	public void saveSoftVersion(List<SoftVersion> softVersionList, int probId) {
+		// 将conp不为空的进行解析
+		for (SoftVersion softVersion : softVersionList) {
+			if (StringUtils.isNotBlank(softVersion.getConp())) {
+				List<SoftVersionParser> softVersionParser = SoftVersionUtil.createSoftVersionParser(softVersion.getConp());
+				if (!softVersionParser.isEmpty()) {
+					SoftVersionParser parser = softVersionParser.get(0);
+					softVersion.setEntryStart(parser.getVersion());
+					softVersion.setEntryEnd(parser.getVersion());
+					softVersion.setMarkStart(parser.getMark());
+					softVersion.setMarkEnd(parser.getMark());
+					softVersion.setSplited(1);
+				}
+			}
+		}
 		Map<String, Object> paramMap = new HashMap<String, Object>();
 		paramMap.put("probId", probId);
 		paramMap.put("list", softVersionList);
@@ -96,7 +119,18 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<SoftVersion> querySoftVersionList(int probId) {
-		return getSqlMapClientTemplate().queryForList("query_prob_soft_version", probId);
+		SoftVersion softVersion = new SoftVersion();
+		softVersion.setProbId(probId);
+		return querySoftVersionList(softVersion);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<SoftVersion> querySoftVersionList(SoftVersion softVersion) {
+		if (softVersion == null) {
+			softVersion = new SoftVersion();
+		}
+		return getSqlMapClientTemplate().queryForList("query_prob_soft_version", softVersion);
 	}
 
 	@SuppressWarnings("unchecked")

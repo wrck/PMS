@@ -747,8 +747,10 @@
   
   <select id="selectWarningAssetBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.LeakWarningVO">
   	select
-	   lw.*, ia.id as assetId, ia.`assetName`, ia.`assetHost`, ia.`customInfo` as assetCustomInfo,
-	   ph.projectId, ph.projectName
+	   lw.*, ia.id as assetId, ia.`assetName`, ia.`assetHost`, ia.`customInfo` as assetCustomInfo
+	   <if test="model != null and model.checkProject == true">
+	   , ph.projectId, ph.projectName
+	   </if>
 	from
 	    `af_industry_leak_warning` lw 
 	    left join `af_industry_asset` ia 

@@ -18,6 +18,8 @@ import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import com.dp.plat.core.util.MessageUtils;
@@ -59,7 +61,7 @@ public class ExcelView extends AbstractExcelView {
 		int i = 1;
 		for (List<Object> list2 : lists) {
 			// create a new Excel sheet
-			HSSFSheet sheet = (HSSFSheet) workbook.createSheet("sheet" + (i++));
+			Sheet sheet = (Sheet) workbook.createSheet("sheet" + (i++));
 			sheet.setDefaultColumnWidth(30);
 
 			// create style for header cells
@@ -73,7 +75,7 @@ public class ExcelView extends AbstractExcelView {
 			style.setFont(font);
 
 			// create header row
-			HSSFRow header = sheet.createRow(0);
+			Row header = sheet.createRow(0);
 
 			if (list2 != null && !list2.isEmpty()) {
 				Object obj = list2.get(0);
@@ -87,7 +89,7 @@ public class ExcelView extends AbstractExcelView {
 		}
 	}
 
-	private void setHeader(Class<?> clazz, HSSFRow header, CellStyle style, Integer colCount,
+	private void setHeader(Class<?> clazz, Row header, CellStyle style, Integer colCount,
 			Map<String, String> colValue) {
 		setTitle(clazz, header, style, colCount, colValue);
 		if (colValue != null) {
@@ -98,7 +100,7 @@ public class ExcelView extends AbstractExcelView {
 		}
 	}
 
-	private Integer setTitle(Class<?> clazz, HSSFRow header, CellStyle style, Integer colCount,
+	private Integer setTitle(Class<?> clazz, Row header, CellStyle style, Integer colCount,
 			Map<String, String> colValue) {
 		// 获取父节点的title
 		if (clazz.getGenericSuperclass() != null) {
@@ -127,10 +129,10 @@ public class ExcelView extends AbstractExcelView {
 		return colCount;
 	}
 
-	private void createRow(List<Object> list, HSSFSheet sheet, Map<String, String> colValue) throws Exception {
+	private void createRow(List<Object> list, Sheet sheet, Map<String, String> colValue) throws Exception {
 		int rowCount = 1;
 		for (Object obj : list) {
-			HSSFRow aRow = sheet.createRow(rowCount++);
+			Row aRow = sheet.createRow(rowCount++);
 			int colCount = 0;
 			setCellValue(obj, obj.getClass(), aRow, colCount, colValue);
 			if (colValue != null) {
@@ -142,7 +144,7 @@ public class ExcelView extends AbstractExcelView {
 		}
 	}
 
-	private Integer setCellValue(Object obj, Class<?> clazz, HSSFRow aRow, Integer colCount,
+	private Integer setCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
 			Map<String, String> colValue) throws Exception {
 		if (clazz.getGenericSuperclass() != null) {
 			Class<?> supperClazz = clazz.getSuperclass();

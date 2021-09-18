@@ -2,17 +2,20 @@ package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
 import org.activiti.engine.impl.persistence.entity.UserEntity;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -27,7 +30,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
+import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.filter.CasFilter;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.Role;
 import com.dp.plat.core.pojo.User;
@@ -40,6 +45,7 @@ import com.dp.plat.core.service.IUserRoleService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.RoleParam;
 import com.dp.plat.ehr.job.EhrDataJob;
 import com.dp.plat.ehr.service.IEmployeeService;
 import com.dp.plat.ehr.vo.EmployeeVO;
@@ -48,6 +54,7 @@ import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.service.IProjectManageUserService;
 import com.dp.plat.pms.springmvc.vo.UserDetail;
 import com.dp.plat.pms.springmvc.vo.UserInfoVO;
+import com.dp.plat.support.mail.MailUtil;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "user")
@@ -68,24 +75,32 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	
 	@PostConstruct
 	public void init() {
+		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
 		this.setViewModel("user");
 		this.setKeyword("userId");
-		this.setUseTemplate(true);
+		this.setUseTemplate(false);
 	}
 	
 	@RequestMapping
 	public String home(Model model) {
-		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
+		if (!checkPermission(null, model)) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
-		return getTemplateNamespace() + "list";
+		RoleParam rolePage = new RoleParam();
+		rolePage.setModel(new Role());
+		List<Role> roles = roleService.selectBySelective(rolePage );
+		this.setUseTemplate(false);
+		model.addAttribute("roles", roles);
+		return getRealViewNameSpace() + "list";
 	}
 
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, UserInfoVO userInfo, Model model) {
 		Principal user = UserContext.getCurrentPrincipal();
 		userInfo.setCompID(user.getCompId());
-		if (HttpContext.isJSON()) {
+		if (!checkPermission(userInfo, model)) {
+			return Consts.VIEW_UNAUTHORIZED;
+		} else if (!HttpContext.isHTML()) {
 			PageParam<UserDetail> tempParam = new PageParam<>();
 			UserDetail temp = new UserDetail();
 			temp.setCompID(user.getCompId());
@@ -104,17 +119,20 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 			userList = projectManageUserService.selectBySelectivePageable(tempParam);
 			model.addAttribute("data", userList);
 			
+			pageParam.setModel(userDatil);
 			pageParam.setColumns(findColumnList(DATANAME_TABLE));
 			pageParam.setRowId(getKeyword());
-		} else if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
-			return Consts.VIEW_UNAUTHORIZED;
+			model.addAttribute("permissionType", "all");
+			model.addAttribute("permissions", Collections.singleton("user:*"));
 		}
-		return getTemplateNamespace() + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
 	@RequestMapping("{id}")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
-		boolean isAdmin = UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN);
+		UserInfoVO userInfoVO = new UserInfoVO();
+		userInfoVO.setId(id);
+		boolean isAdmin = checkPermission(userInfoVO, model);
 		Principal principal = UserContext.getCurrentPrincipal();
 		Integer currentUserId = principal.getUserId();
 		boolean isCurrentUser = false;
@@ -154,13 +172,19 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		model.addAttribute("user", user);
 		model.addAttribute("userInfo", userInfo);
 		model.addAttribute("roleIds", roleIds);
-		model.addAttribute("isCas", SystemConfig.systemVariables.getOrDefault("sys.cas", "0"));
+		String isCas = SystemConfig.systemVariables.getOrDefault("sys.cas", "0");
+		try {
+			CasFilter casFilter = SpringContext.getBean(CasFilter.class);
+		} catch (Exception e) {
+			isCas = "0";
+		}
+		model.addAttribute("isCas", isCas);
 		return getViewNameSpace() +  "detail";
 	}
 
 	@RequestMapping("/detail")
 	public String detail(UserInfoVO userInfo, Model model) {
-		boolean isAdmin = UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN);
+		boolean isAdmin = checkPermission(userInfo, model);
 		Principal currentPrincipal = UserContext.getCurrentPrincipal();
 		List<Role> roles = roleService.selectBySelective(null);
 		// 允许添加的角色
@@ -181,25 +205,29 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	@SystemControllerLog(description = "创建用户")
 	public String create(@RequestBody UserInfoVO userInfo, Model model) {
-		boolean isAdmin = UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN);
+		boolean isAdmin = checkPermission(userInfo, model);
 		if (!isAdmin) {
 			return "redirect:/unauthorized.html";
 		}
-		Principal currentPrincipal = UserContext.getCurrentPrincipal();
+		Principal currentUser = UserContext.getCurrentPrincipal();
 		User user = userInfo.getUser();
 		
+		Boolean isInnerUser = false;
+		Boolean isNew = true;
 		String userName = user.getUserName();
 		if (StringUtils.isNotBlank(userName)) {
 			EmployeeVO employee = new EmployeeVO();
 			employee.setAccount(user.getUserName());
 			List<EmployeeVO> employeeWithAccount = employeeService.selectEmployeeWithAccount(employee);
 			if (!employeeWithAccount.isEmpty()) {
+				isInnerUser = true;
 				employeeService.initUser(employeeWithAccount);
 			}
 		}
 		
+		String randomPassword = PasswordUtil.createRandomPassword(8);
 		user.setCreateTime(new Date());
-		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), "123456"));
+		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), randomPassword));
 		try {
 			projectManageUserService.insertSelective(user);
 		} catch (DuplicateKeyException e) {
@@ -209,9 +237,18 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		Integer compID = UserContext.getCurrentPrincipal().getCompId();
 		userInfo.setUserId(user.getUserId());
 		userInfo.setCompID(compID);
+		
+		// 允许分配的项目类型
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN)) {
+			List<String> allowProjectTypes = new ArrayList<String>(Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(currentUser.getUserInfo().getCustom4()), ",")));
+			List<String> projectTypes = new ArrayList<String>(Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(userInfo.getCustom4()), ",")));
+			projectTypes.retainAll(allowProjectTypes);
+			userInfo.setCustom4(StringUtils.join(projectTypes, ","));
+		}
 		try {
 			userInfoService.insertSelective(userInfo);
 		} catch (DuplicateKeyException e) {
+			isNew = false;
 			UserInfo userInfoVO = userInfoService.selectOneByUserIdAndCompId(userInfo);
 			userInfo.setId(userInfoVO.getId());
 			userInfo.setRealName(userInfoVO.getRealName());
@@ -221,7 +258,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		}
 		
 		// 允许添加的角色
-		Role maxRole = currentPrincipal.getMaxRole();
+		Role maxRole = currentUser.getMaxRole();
 		int priority = maxRole != null ? maxRole.getPriority() : 0;
 		List<Role> allRoles = roleService.selectBySelective(null);
 		Set<Integer> validRoleIds = new HashSet<Integer>(allRoles.size());
@@ -262,13 +299,27 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		// return "redirect:"+ Consts.URLPath.SYSTEM_MANAGER + "user/" +
 		// user.getUserId() + ".json";
 		model.addAttribute("userId", user.getUserId());
+		
+		// 外部用户，发送邮件通知账户已开通，并发送密码
+		if (isNew && !isInnerUser) {
+			Map<String, Object> context = new HashMap<String, Object>();
+			context.put("templateCode", "sys.user.created.mail");
+			context.put("userName", user.getUserName());
+			context.put("realName", userInfo.getRealName());
+			context.put("bccs", userInfo.getEmail());
+			context.put("randomPassword", randomPassword);
+			context.put("beforeSplit", "${");
+			context.put("afterSplit", "}");
+			context.put("dataSource", new Object[] {userInfo});
+			MailUtil.keepMailWithTemplate(context, true);
+		}
 		return getViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{userId}", method = RequestMethod.PUT)
 	@SystemControllerLog(description = "修改用户信息")
 	public String update(@PathVariable("userId") Integer userId, @RequestBody UserInfoVO userInfo, Model model) {
-		boolean isAdmin = UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN);
+		boolean isAdmin = checkPermission(userInfo, model);
 		Principal currentUser = UserContext.getCurrentPrincipal();
 		Integer currentUserId = currentUser.getUserId();
 		boolean isCurrentUser = false;
@@ -292,6 +343,14 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		info.setUserId(userId);
 		info.setCompID(compId);
 		info = userInfoService.selectOneByUserIdAndCompId(info);
+		
+		// 允许分配的项目类型
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN)) {
+			List<String> allowProjectTypes = new ArrayList<String>(Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(currentUser.getUserInfo().getCustom4()), ",")));
+			List<String> projectTypes = new ArrayList<String>(Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(userInfo.getCustom4()), ",")));
+			projectTypes.retainAll(allowProjectTypes);
+			userInfo.setCustom4(StringUtils.join(projectTypes, ","));
+		}
 		if (info == null) {
 			userInfoService.insertSelective(userInfo);
 		} else {
@@ -383,7 +442,9 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	@RequestMapping(value = "{userId}", method = RequestMethod.DELETE)
 	@SystemControllerLog(description = "删除用户")
 	public void delete(@PathVariable("userId") Integer userId, Model model) {
-		boolean isAdmin = UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN);
+		UserInfoVO vo = new UserInfoVO();
+		vo.setUserId(userId);
+		boolean isAdmin = checkPermission(vo, model);
 		Principal currentUser = UserContext.getCurrentPrincipal();
 		Integer currentUserId = currentUser.getUserId();
 		boolean isCurrentUser = false;
@@ -444,7 +505,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 	
 	@RequestMapping("/param")
 	public void findUserInfoWithParam(HttpServletRequest request, Model model) {
-		List<UserDetail> userList = projectManageUserService.findUserByParam(request.getParameterMap());
+		List<com.dp.plat.core.vo.UserDetail> userList = projectManageUserService.findUserByParam(request.getParameterMap());
 		model.addAttribute("data", userList);
 	}
 	
@@ -454,4 +515,21 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		ehrDataJob.execute();
 		projectManageUserService.initActivitiUser();
 	}
+	
+	@Override
+	public boolean checkPermission(UserInfoVO v, Model model, String... permissions) {
+//		return super.checkPermission(v, model, permissions);
+		String extRolesVar = SystemConfig.systemVariables.getOrDefault("sys.user.manager.extRoles", "");
+		String[] extRoles = StringUtils.split(extRolesVar, ",");
+		String[] roles = new String[] {RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN};
+		Set<String> rolesSet = new HashSet<String>(Arrays.asList(roles));
+		rolesSet.addAll(Arrays.asList(extRoles));
+		if (!UserContext.hasAnyRoles(rolesSet)) {
+			model.addAttribute("status", false);
+			model.addAttribute("message", "没有权限进行该操作！");
+			return false;
+		}
+		return true;
+	}
+
 }

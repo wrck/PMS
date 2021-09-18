@@ -169,4 +169,23 @@ public interface ReportService {
 	 * @return List 0：<code>List<ReportLineData></code> reportLineQualityData ，1：<code>Map<String,String> officeCode - totalSize</code>
 	 */
 	List<Object> queryReportLineRemainderQualityDataAndTotalsize(ReportQueryParam queryParam);
+	
+	/**
+	 * 查询项目的各种状态
+	 * @param params 
+	 * <pre>
+	 * {
+	 *     column001: 办事处,
+	 *     column011: 项目类别，10-直签;20-非直签,
+	 *     projectState: 项目状态,
+	 *     shipmentState: 发货状态,
+	 *     projectPlanState: 工程计划状态,
+	 *     executionState: 实施状态,
+	 *     closeProcessState: 流程状态,
+	 *     exceptZQYY: 是否排除运营商直签项目
+	 * }
+	 * </pre>
+	 * @return mapList
+	 */
+	List<Map<String, Object>> queryProjectSummaryStatus(Map<String, Object> params);
 }

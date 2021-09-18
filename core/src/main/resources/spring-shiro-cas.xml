@@ -102,6 +102,7 @@
                 <entry key="casFilter" value-ref="casFilter"/>  
                 <entry key="casLogoutFilter" value-ref="casLogoutFilter"/>  
                 <entry key="anyRoles" value-ref="anyRoles"/>
+                <entry key="hostFilter" value-ref="hostFilter"/>
             </map>  
         </property>
         <!-- <property name="filters" ref="filters"></property> -->
@@ -115,6 +116,7 @@
     <bean id="filterChainDefinitionMapBuilder" class="com.dp.plat.core.factory.FilterChainDefinitionMapBuilder"></bean>
     
    	<bean id="anyRoles" class="com.dp.plat.core.filter.AnyRolesAuthorizationFilter"></bean>
+   	<bean id="hostFilter" class="com.dp.plat.core.filter.HostFilter"></bean>
    	
    	<bean id="casFilter" class="com.dp.plat.core.filter.CasFilter">
         <!-- 配置验证错误时的失败页面 -->

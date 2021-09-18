@@ -823,7 +823,8 @@
 	    <!-- ROUND(ds.settledAmount / h.dispatchAmount, 4) as settledRatio, 
 	    ROUND(h.collectedAmount / h.deliveredAmount, 4) as collectedRatio,  -->
 	    ROUND(ds.settledAmount / h.dispatchAmount, 4) as settledRatio, 
-    	ROUND(sum(sc.`collected_money_amount`) / sum(sc.`delivered_money_amount`), 4) as collectedRatio, 
+    	<!-- ROUND(sum(sc.`collected_money_amount`) / sum(sc.`delivered_money_amount`), 4) as collectedRatio,  -->
+    	ROUND(sum(sc.`collected_money_amount`) / sum(sc.`contract_money_amount`), 4) as collectedRatio, 
 	    s.* 
 	from
 	    <!-- (select 

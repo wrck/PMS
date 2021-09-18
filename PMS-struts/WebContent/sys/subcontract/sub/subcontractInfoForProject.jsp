@@ -26,7 +26,7 @@
             decorator="com.dp.plat.decorators.Wrapper"
             class="table table-striped" partialList="true">
             <display:column property="subcontractNo" titleKey="pm.subcontract.subcontractNo"></display:column>
-            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" href="module/subcontract_input.action" paramProperty="id" paramId="subcontract.id"></display:column>
+            <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" href="${namespace}/subcontract_input.action" paramProperty="id" paramId="subcontract.id"></display:column>
             <display:column property="contractNos" titleKey="pm.subcontract.contractNos" decorator="com.dp.plat.decorators.ContractNoList "></display:column>
             <display:column property="officeName" titleKey="pm.subcontract.officeName"></display:column>
             <display:column property="facilitatorName" titleKey="pm.subcontract.facilitator"></display:column>

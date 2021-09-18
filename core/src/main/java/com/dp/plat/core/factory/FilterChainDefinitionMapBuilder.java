@@ -35,12 +35,15 @@ public class FilterChainDefinitionMapBuilder {
 		List<Resource> resources = resourceService.selectBySelective(recod);
 		
 		HashMap<String, String> systemVariables = SystemConfig.systemVariables;
-		if (systemVariables == null) {
+		if (systemVariables == null || systemVariables.isEmpty()) {
 			systemVariables = systemVariableService.querySystemVariables();
 			SystemConfig.systemVariables = systemVariables;
 		}
 		String isCas = systemVariables.getOrDefault("sys.cas", "0");
-		
+		// 如果没有casFilter 则调整为非CAS登录
+		if (casFilter == null) {
+			isCas = "0";
+		}
 		LinkedHashMap<String, String> map = new LinkedHashMap<>();
 		for (Resource resource : resources) {
 			String url = resource.getUrl();

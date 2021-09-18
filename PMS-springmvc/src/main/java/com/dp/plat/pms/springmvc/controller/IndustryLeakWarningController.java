@@ -125,11 +125,11 @@ public class IndustryLeakWarningController extends AbstractController<IIndustryL
 				
 				// 允许访问的项目类型
 				Principal user = UserContext.getCurrentPrincipal();
+				temp.setCheckProject(true);
+				v.setCheckProject(true);
 				if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_ADMIN)) {
 					String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
 					if (!StringUtils.containsAny(projectTypes, "afss", "afxx") || !UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
-						temp.setCheckProject(true);
-						v.setCheckProject(true);
 						
 						temp.setProjectTypes(projectTypes);
 						v.setProjectTypes(projectTypes);

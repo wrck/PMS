@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.dp.plat.data.bean.BasicDataBean;
+import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.PmClCBData;
 import com.dp.plat.param.DataQueryParam;
@@ -23,6 +24,7 @@ public class DataAnalysisAction extends BaseAction{
 	private DataAnalysisService dataAnalysisService;
 	private DepartmentManageService departmentManageService;
 	private DataQueryParam dataQueryParam;
+	private List<Company> companyList;
 	private List<Department> officeList;
 	private List<BasicDataBean> serviceTypeList;
 	private List<BasicDataBean> phaseList;
@@ -33,7 +35,8 @@ public class DataAnalysisAction extends BaseAction{
 	private DisplayParam displayParam;
 	
 	public String execute(){
-		
+		// 公司
+		companyList = departmentManageService.queryCompanyList(null);
 		//办事处
 		officeList = departmentManageService.queryDepartments();
 		//项目阶段划分集合
@@ -84,6 +87,14 @@ public class DataAnalysisAction extends BaseAction{
 	public void setDepartmentManageService(
 			DepartmentManageService departmentManageService) {
 		this.departmentManageService = departmentManageService;
+	}
+
+	public List<Company> getCompanyList() {
+		return companyList;
+	}
+
+	public void setCompanyList(List<Company> companyList) {
+		this.companyList = companyList;
 	}
 
 	public List<Department> getOfficeList() {

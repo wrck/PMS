@@ -387,6 +387,7 @@
         <action name="subcontract_*" class="SubcontractAction" method="{1}">
             <result name="{1}">/sys/subcontract/subcontract_{1}.jsp</result>
             <result name="input">/sys/subcontract/subcontract_input.jsp</result>
+            <result name="list">/sys/subcontract/subcontract_list.jsp</result>
             <result name="create" type="redirect">
                 <param name="location">subcontract_input.action</param>
                 <param name="namespace">/module</param>
@@ -440,6 +441,12 @@
         <action name="supervision_*" class="SupervisionAction" method="{1}">
             <result name="{1}">/sys/supervision/supervision_{1}.jsp</result>
             <result name="success">/sys/supervision/supervision_list.jsp</result>
+        </action>
+        
+        <!-- 项目维保回访 -->
+        <action name="warrantyCallback_*" class="WarrantyCallbackAction" method="{1}">
+            <result name="{1}">/sys/warrantyCallback/warrantyCallback_{1}.jsp</result>
+            <result name="success">/sys/warrantyCallback/warrantyCallback_list.jsp</result>
         </action>
 	</package>
 	
@@ -681,6 +688,54 @@
             <result name="success">/sys/subcontract/sub/subcontract{1}.jsp</result>
         </action>
         
+        <!-- 项目转包 -->
+        <action name="subcontract_*" class="SubcontractAction" method="{1}">
+            <result name="{1}">/sys/subcontract/subcontract_{1}.jsp</result>
+            <result name="input">/sys/subcontract/subcontract_input.jsp</result>
+            <result name="list">/sys/subcontract/subcontract_list.jsp</result>
+            <result name="create" type="redirect">
+                <param name="location">subcontract_input.action</param>
+                <param name="namespace">/module/sub</param>
+                <param name="subcontract.id">${subcontract.id}</param>
+            </result>
+            <result name="audit" type="redirect">
+                <param name="location">subcontract_input.action</param>
+                <param name="namespace">/module/sub</param>
+                <param name="subcontract.id">${subcontract.id}</param>
+            </result>
+            <result name="redirect" type="redirect">
+                <param name="location">subcontract_input.action</param>
+                <param name="namespace">/module/sub</param>
+                <param name="subcontract.id">${subcontract.id}</param>
+            </result>
+            <result name="success" type="redirect">
+                <param name="location">subcontract_input.action</param>
+                <param name="namespace">/module/sub</param>
+                <param name="subcontract.id">${subcontract.id}</param>
+            </result>
+            <result name="download" type="stream">
+                <param name="contentType">application/octet-stream;charset=ISO8859-1</param>
+                <param name="contentDisposition">attachment;filename="${downloadFile}"</param>
+                <param name="inputName">fileStream</param>
+                <param name="bufferSize">4096</param>
+            </result>
+            <result name="error">/sys/error.jsp</result>
+        </action>
+        
+        <action name="ProjectModify" class="ProjectAction" method="updateProject">
+            <result name="success" type="redirect">
+                <param name="location">ProjectModify.action</param>
+                <param name="namespace">/module/sub</param>
+                <param name="project.paramId">${project.paramId}</param>
+                <!-- <param name="project.projectId">${project.projectId}</param> -->
+            </result>
+            <result name="invalid" type="redirect">
+                <param name="location">ProjectManage.action</param>
+                <param name="namespace">/module/sub</param>
+            </result>
+            <result name="input">/sys/module/projectmodify.jsp</result>
+        </action>
+        
         <!-- 合格证查询，显示合格证 -->
         <action name="queryCertificate" class="Certificate" method="queryCertificate">
             <result name="success">/certificate/show.jsp</result>
@@ -699,6 +754,21 @@
             <result name="success">/sys/supervision/sub/{1}.jsp</result>
             <result name="error">/sys/sub/error.jsp</result>
             <result name="redirect">/sys/sub/redirect.jsp</result>
+        </action>
+        
+        <!-- 项目维保子页面 -->
+        <action name="warrantyCallback_*" class="WarrantyCallbackAction" method="{1}">
+            <result name="success">/sys/warrantyCallback/sub/{1}.jsp</result>
+            <result name="execute">/sys/warrantyCallback/sub/projectWarrantyCallback.jsp</result>
+            <result name="error">/sys/sub/error.jsp</result>
+            <result name="redirect">/sys/sub/redirect.jsp</result>
+            <result name="{1}">/sys/warrantyCallback/sub/{1}.jsp</result>
+        </action>
+        
+        <!-- 报表统计子页面 -->
+        <action name="report_*" class="ReportAction" method="{1}">
+            <result name="{1}">/sys/report/sub/report_{1}.jsp</result>
+            <result name="success">/sys/report/report_{1}.jsp</result>
         </action>
 	</package>
 	<!-- 工作流 -->
@@ -1073,6 +1143,13 @@
         
         <!-- 项目督查json请求 -->
         <action name="supervisionAjax_*" class="SupervisionAction" method="{1}">
+            <result name="success" type="json">
+                <param name="includeProperties">message, result</param>
+            </result>
+        </action>
+        
+        <!-- 项目维保回访json请求 -->
+        <action name="warrantyCallbackAjax_*" class="WarrantyCallbackAction" method="{1}">
             <result name="success" type="json">
                 <param name="includeProperties">message, result</param>
             </result>

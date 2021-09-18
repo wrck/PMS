@@ -139,7 +139,7 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 			User user = new User();
 			user.setUserId(employee.getEmpID());
 			user.setUserName(employee.getAccount());
-			user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), "123456"));
+			user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), PasswordUtil.createRandomPassword(8)));
 			user.setNeedChangePwd(Boolean.FALSE);
 			user.setUserCustom3(workNo);
 			user.setUserCustom4(employee.getEmpID());
@@ -192,7 +192,7 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 					UserRole userRole = new UserRole();
 					userRole.setRoleId(role.getRoleId());
 					userRole.setUserId(user.getUserId());
-					// userRole.setCompId(userInfo.getCompID());
+					userRole.setCompId(userInfo.getCompID());
 					userRoleService.insertSelective(userRole);
 				}
 			} else {

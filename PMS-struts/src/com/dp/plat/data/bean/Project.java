@@ -81,6 +81,7 @@ public class Project extends ProjectQueryParam{
 	// 公司所属
 	private String compCode; // 公司编码
 	private String compId;// 公司主表Id
+	private String compAbbr;// 公司简称
 	private String compName;// 公司名称
 	
 	private Date projectStartTime;//项目开始时间，指定项目经理时间
@@ -916,8 +917,16 @@ public class Project extends ProjectQueryParam{
     public void setCompId(String compId) {
         this.compId = compId;
     }
+    
+    public String getCompAbbr() {
+		return compAbbr;
+	}
 
-    public String getCompName() {
+	public void setCompAbbr(String compAbbr) {
+		this.compAbbr = compAbbr;
+	}
+
+	public String getCompName() {
         return compName;
     }
 

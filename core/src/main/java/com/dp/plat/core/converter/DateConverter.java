@@ -56,4 +56,15 @@ public class DateConverter implements Converter<String, Date> {
 		}
 		return null;
 	}
+	
+	public static String covert(Date date) {
+		if(date == null)
+			return null;
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+		for (String pattern : dateFormatPattern) {
+			simpleDateFormat.applyPattern(pattern);
+			return simpleDateFormat.format(date);
+		}
+		return null;
+	}
 }

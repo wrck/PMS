@@ -547,11 +547,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		project.setMemberRole(project.getDataTypeCode());
 		project.setMemberCode(membercode);
 		project.setMemberName(memberName);
-		// 这个getMails是根据传进来的的用户名查找邮箱，数据中的username和membercode表达的是同一个意思用户名，
-		project.setEmail(this.getMails(membercode));
 		Integer count = projectDao.queryProjectMemberCountByProject(project);
 		// 如果能查到，说明未更改人员，不做操作，否则插入member表
 		if (count == 0) {
+			// 这个getMails是根据传进来的的用户名查找邮箱，数据中的username和membercode表达的是同一个意思用户名，
+			project.setEmail(this.getMails(membercode));
 			// 这个才是正真的插入
 			projectDao.updateProjectMember(project);// 更新生效的记录即可
 
@@ -608,6 +608,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     }
 
 	@Override
+	@Transactional
 	public boolean updateProjectProgramManagerByProjectId(Project project) {
 		log("指定项目经理");
 		project.setFromFlag(MessageUtil.FLAG_FROM_PROJECT);
@@ -643,6 +644,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 
 	@Override
+	@Transactional
 	public boolean updateProjectProgramManagerByProjectId(Project project, String type) {
 		log("指定项目经理");
 		try {
@@ -1888,8 +1890,10 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			}
 
 			String root = ServletActionContext.getServletContext().getRealPath("/");
-			String pathFile = root + "upload/weekly/" + user.getUsername() + "/" + this.getName() + ".xlsx";
-			File file = new File(root + "upload/weekly/" + user.getUsername());
+//			String pathFile = root + "upload/weekly/" + user.getUsername() + "/" + this.getName() + ".xlsx";
+//			File file = new File(root + "upload/weekly/" + user.getUsername());
+			String pathFile = root + UploadFileUtil.UPLOAD_PATH + "/weekly/" + user.getUsername() + "/" + this.getName() + ".xlsx";
+			File file = new File(root + UploadFileUtil.UPLOAD_PATH + "/weekly/" + user.getUsername());
 			if (!file.exists()) {
 				file.mkdirs();
 			}
@@ -2274,7 +2278,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
             /** 分隔符 **/
             String separator = java.io.File.separator;
-            String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
+//            String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
+            String path = separator + UploadFileUtil.UPLOAD_PATH + separator + "delivery" + separator + new Date().getTime();
             boolean bool = Util.mkdir(path);
             /*
              * if (!bool) {
@@ -2333,7 +2338,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
 			/** 分隔符 **/
 			String separator = java.io.File.separator;
-			String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
+//			String path = separator + "upload" + separator + "delivery" + separator + new Date().getTime();
+			String path = separator + UploadFileUtil.UPLOAD_PATH + separator + "delivery" + separator + new Date().getTime();
 			boolean bool = Util.mkdir(path);
 			/*
 			 * if (!bool) {
@@ -2460,6 +2466,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	@Override
 	public int queryProjectShipment(int projectId) {
 		return projectDao.queryProjectShipmentSize(projectId);
+	}
+	
+	@Override
+	public int queryHistoryProjectShipmentSize(int projectId) {
+		return projectDao.queryHistoryProjectShipmentSize(projectId);
 	}
 
 	@Override
@@ -2916,7 +2927,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 				i++;
 			}
 			String root = ServletActionContext.getServletContext().getRealPath("/");// 项目跟目录
-			String directory = "upload/spotCheck";
+//			String directory = "upload/spotCheck";
+			String directory = UploadFileUtil.UPLOAD_PATH + "/spotCheck";
 			String projectName = StringUtils.trimToEmpty(project.getProjectName()).replaceAll("/", "／");
 			String fileName = projectName + "-现场验货单" + exportTime.getTime() + ".xlsx";
 			String filePath = directory + "/" + fileName;

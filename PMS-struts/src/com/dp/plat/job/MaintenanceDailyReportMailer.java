@@ -129,6 +129,31 @@ public class MaintenanceDailyReportMailer implements Job {
 			System.out.println("###############项目维护每日数据固化结束################");
 		}
     }
+    
+    public void sendMaintenanceDailyReport(Map<String, Object> params, String sendUser, String reportDate) {
+    	if (SpringContext.getApplicationContext() != null) {
+            applicationContext = SpringContext.getApplicationContext();
+        } else {
+            applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+        }
+        ProjectDaoImpl projectDao = applicationContext.getBean("projectDao", ProjectDaoImpl.class);
+    	try {
+            params.put("createBy", sendUser);
+            List<Map<String, Object>> maintenanceList = projectDao.selectDailyMaintenanceMapList(params);
+
+            Map<String, Object> context = new HashMap<>();
+            context.put("currentDate", reportDate);
+            Person currentUser = projectDao.queryPersonFromOaByCode(StringUtils.substring(sendUser, 1));
+            if (currentUser != null) {
+                context.put("currentName", currentUser.getSalesmanName());
+                context.put("mobile", currentUser.getSalesmanTel());
+            }
+            infoMaintenanceDailyReport(maintenanceList, context);
+        } catch (Exception e) {
+            System.out.println("###############项目维护日报发送发生错误################");
+            e.printStackTrace();
+        }
+    }
 
     /**
      * @param maintenanceList

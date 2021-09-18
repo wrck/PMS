@@ -33,12 +33,12 @@
 
 <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
 <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
 <script type="text/javascript" src="bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
 <!-- 解决jQueryUI button 与 bootstrap button 的冲突 -->
 <script type="text/javascript"> $.fn.bootstrapBtn =$.fn.button.noConflict(); </script>
 <script type="text/javascript" src="js/jquery.ui.datepicker-zh-CN.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
 
 <!-- 引入额外扩展js文件 -->
 <script type="text/javascript" src="js/bootstrap-ex.js"></script>

@@ -159,6 +159,13 @@
             <s:textfield name="projectMaintenance.createBy" type="hidden" id="createBy"></s:textfield>
         </div>
         <div class="form-group form-group-query form-group-width-1">
+            <label for="compId"><s:text name="pm.project.company" /></label>
+            <s:select name="projectMaintenance.compId" id="compId"
+                listKey="id" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px"
+                listValue="abbr" list="%{companyList}" theme="simple" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="officeCode"><s:text name="pm.project.maintenance.userOffice" /></label>
             <s:select name="projectMaintenance.userOffice" id="userOffice"
@@ -272,6 +279,8 @@
             <display:column property="warrantyGradeName" titleKey="pm.project.warrantyGrade" media="excel"></display:column>
             <display:column property="wafServiceName" titleKey="pm.project.wafService" media="excel"></display:column>
             <display:column property="officeName" titleKey="pm.project.officeName" headerClass="nowrap"></display:column>
+            <%-- <display:column property="companyAbbr" titleKey="pm.project.company" headerClass="nowrap" media="html"></display:column> --%>
+            <display:column property="companyName" titleKey="pm.project.company" headerClass="nowrap" media="excel"></display:column>
             <display:column property="marketName" titleKey="pm.project.marketName" media="excel"></display:column>
             <display:column property="systemName" titleKey="pm.project.systemName" media="excel"></display:column>
             <display:column property="expendName" titleKey="pm.project.expendName" media="excel"></display:column>
