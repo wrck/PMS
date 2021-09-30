@@ -24,24 +24,23 @@ public class MailSenderInfo extends MailInfo {
 	 * 获得邮件会话属性
 	 */
 	public Properties getProperties() {
-		Properties p = new Properties();
-		p.put("mail.smtp.localhost", "127.0.0.1");
-		p.put("mail.smtp.host", this.mailServerHost);
-		p.put("mail.smtp.port", this.mailServerPort);
-		p.put("mail.smtp.auth", validate ? "true" : "false");
-		p.put("mail.smtp.starttls.enable", validate ? "true" : "false");
-		p.put("mail.smtp.connectiontimeout", "5000"); 
-		return p;
+		return getProperties(this);
 	}
 
 	public Properties getProperties(MailSenderInfo mailSenderInfo) {
 		Properties p = new Properties();
+		p.put("mail.user", mailSenderInfo.getUserName());
+		p.put("mail.from", mailSenderInfo.getFromAddress());
+		p.put("mail.host", mailSenderInfo.getMailServerHost());
 		p.put("mail.smtp.localhost", "127.0.0.1");
+//		p.put("mail.smtp.localaddress", "localhost");
+		p.put("mail.smtp.from", mailSenderInfo.getFromAddress());
 		p.put("mail.smtp.host", mailSenderInfo.getMailServerHost());
 		p.put("mail.smtp.port", mailSenderInfo.getMailServerPort());
 		p.put("mail.smtp.auth", mailSenderInfo.validate ? "true" : "false");
 		p.put("mail.smtp.starttls.enable",  mailSenderInfo.validate ? "true" : "false");
-		p.put("mail.smtp.connectiontimeout", "5000"); 
+		p.put("mail.smtp.connectiontimeout", "5000");
+		p.put("mail.mime.address.usecanonicalhostname", false);
 		return p;
 	}
 

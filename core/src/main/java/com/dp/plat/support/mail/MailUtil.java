@@ -297,7 +297,8 @@ public class MailUtil {
 			insertPictureIntoContent(mailInfo, content);
 
 			mimeMsg.setContent(multipart);
-			mimeMsg.saveChanges();
+//			// 部分情况很耗时，而且Transport.send(Message)方法隐式调用，如果使用Transport.send发送则可以不加
+//			mimeMsg.saveChanges();
 			// 发送邮件
 			return sendMail(mimeMsg, mailInfo);
 		} catch (Exception e) {
