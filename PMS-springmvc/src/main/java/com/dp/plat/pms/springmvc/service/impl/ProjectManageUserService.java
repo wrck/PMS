@@ -1,6 +1,9 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.impl.persistence.entity.UserEntity;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.realms.Principal;
@@ -35,10 +39,15 @@ public class ProjectManageUserService extends UserService implements IProjectMan
 	@Override
 	public long countBySelectivePageable(PageParam<UserDetail> pageParam) {
 		Principal currentPrincipal = UserContext.getCurrentPrincipal();
-		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN)) {
+		String extRolesVar = SystemConfig.systemVariables.getOrDefault("sys.user.manager.extRoles", "");
+		String[] extRoles = StringUtils.split(extRolesVar, ",");
+		String[] roles = new String[] {RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN, RoleConstant.ROLE_PM_SUB_ADMIN};
+		Set<String> rolesSet = new HashSet<String>(Arrays.asList(roles));
+		rolesSet.addAll(Arrays.asList(extRoles));
+		if (!UserContext.hasAnyRoles(rolesSet)) {
 			return 0;
 		}
-		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN) && UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+		if (!UserContext.hasAnyRoles(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_PM_ADMIN) && (UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN) || UserContext.hasAnyRoles(extRoles))) {
 			if (pageParam != null && pageParam.getModel() != null) {
 				UserDetail model = pageParam.getModel();
 				model.setRoleCodes(StringUtils.join(currentPrincipal.getRoles(), ","));

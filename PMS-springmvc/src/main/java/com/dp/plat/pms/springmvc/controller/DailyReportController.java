@@ -619,7 +619,11 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 			NotifyTemplateService notifyTemplateService = SpringContext.getBean(NotifyTemplateService.class);
 			NotifyTemplate notifyTemplate = notifyTemplateService.selectByTemplateCode("pm.af.dailyReport.mail.template");
 			Map<String, Object> dataMap = new LinkedHashMap<String, Object>();
-			Date reportDate = new Date();
+//			// 如果跨天发送，获取当前时间会导致日期标题发生错误
+//			Date reportDate = new Date();
+			// 获取最新的一个日报记录，获取对应的在岗日期，作为该报告的日期
+			DailyReport report = (DailyReport) list.get(0);
+			Date reportDate = report.getProcessTime();
 			int day = reportDate.getDay();
 			String weekDay = "W" + (day == 0 ? 7 : day);
 			dataMap.put("reportDate", DateUtil.getDateTime("yyyy-MM-dd", reportDate));
@@ -667,7 +671,7 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				context.put("ccs", StringUtils.join(ccs, ";"));
 				context.put("subject", subject);
 				context.put("content", content);
-				MailUtil.keepMail(context , false);
+				MailUtil.keepMail(context, false);
 				
 				for (Integer id : reportIds) {
 					DailyReport t = new DailyReport();

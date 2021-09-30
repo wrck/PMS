@@ -88,7 +88,9 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		}
 		RoleParam rolePage = new RoleParam();
 		rolePage.setModel(new Role());
-		List<Role> roles = roleService.selectBySelective(rolePage );
+		rolePage.setOrderBy("priority desc");
+		rolePage.setPageSize(9999L);
+		List<Role> roles = roleService.selectBySelective(rolePage);
 		this.setUseTemplate(false);
 		model.addAttribute("roles", roles);
 		return getRealViewNameSpace() + "list";
@@ -157,7 +159,12 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		userRole.setUserId(id);
 		userRole.setCompId(compId);
 		String roleIds = userRoleService.selectUserRolesByUserIdAndCompId(userRole);
-		List<Role> roles = roleService.selectBySelective(null);
+		
+		RoleParam rolePage = new RoleParam();
+		rolePage.setModel(new Role());
+		rolePage.setOrderBy("priority desc");
+		rolePage.setPageSize(9999L);
+		List<Role> roles = roleService.selectBySelective(rolePage);
 		// 允许添加的角色
 		Role maxRole = principal.getMaxRole();
 		int priority = maxRole != null ? maxRole.getPriority() : 0;
