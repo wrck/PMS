@@ -56,7 +56,6 @@ import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Product;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
-import com.dp.plat.data.bean.ProjectMaintenance;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
 import com.dp.plat.data.bean.ProjectTask;
@@ -66,7 +65,8 @@ import com.dp.plat.data.bean.SoftChangeLog;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WeeklyContent;
 import com.dp.plat.data.bean.WeeklyFeedback;
-import com.dp.plat.data.vo.ProjectMaintenanceVO;
+import com.dp.plat.maintenance.entity.ProjectMaintenance;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Person;
 import com.dp.plat.param.RealProductLineBean;
@@ -398,6 +398,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			return project;
 		}
 		project.setProjectName(p.getProjectName());
+		if (StringUtils.isEmpty(project.getProjectType())) {
+			project.setProjectType(p.getProjectType());
+		}
 		project.setSalesManCode(p.getSalesManCode());
 		project.setSalesManName(p.getSalesManName());
 		project.setColumn001(p.getColumn001());
@@ -544,6 +547,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	@Override
 	public boolean updateProjectMember(Project project, String membercode, String memberName) {
 		// 查询当前生效记录
+		project.setProjectType(StringUtils.defaultIfBlank(project.getProjectType(), MessageUtil.PROJECT_TYPE_AFTERSALES));
 		project.setMemberRole(project.getDataTypeCode());
 		project.setMemberCode(membercode);
 		project.setMemberName(memberName);
@@ -552,6 +556,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		if (count == 0) {
 			// 这个getMails是根据传进来的的用户名查找邮箱，数据中的username和membercode表达的是同一个意思用户名，
 			project.setEmail(this.getMails(membercode));
+			
 			// 这个才是正真的插入
 			projectDao.updateProjectMember(project);// 更新生效的记录即可
 
@@ -582,7 +587,12 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
 	@Override
 	public Project queryProjectByContractNo(String contractNo) {
-		return projectDao.queryProjectByContractNo(contractNo);
+		Project project = projectDao.queryProjectByContractNo(contractNo);
+		if (project != null) {
+			project.setProjectType(StringUtils.defaultIfBlank(project.getProjectType(), MessageUtil.PROJECT_TYPE_AFTERSALES));
+		}
+		return project;
+//		return projectDao.queryProjectByContractNo(contractNo);
 //		return this.queryProjectByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
 	}
 	
@@ -3442,6 +3452,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
         }
         for (Map<String, Object> orderContractInfo : orderContractInfos) {
             String contractNo = StringUtils.trimToEmpty((String) orderContractInfo.get("contractNo"));
+            String projectType = StringUtils.trimToEmpty((String) orderContractInfo.get("projectType"));
             // 合同不为空则进行合并
             if (StringUtils.isNotBlank(contractNo)) {
                 // 查询最大的组编码
@@ -3455,6 +3466,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                 project.setCreateBy(currentUser);
                 project.setCreateTime(new Date());
                 
+                if (StringUtils.isBlank(project.getProjectType())) {
+                	project.setProjectType(StringUtils.defaultIfBlank(projectType, MessageUtil.PROJECT_TYPE_AFTERSALES));
+                }
                 if (StringUtils.isBlank(project.getSmsProjectCode())) {
                     String projectCode = project.getProjectCode();
                     project.setSmsProjectCode(projectCode.substring(0, projectCode.indexOf("-")));
@@ -3481,6 +3495,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
         for (Map<String, Object> orderContractInfo : orderContractInfos) {
             String orderExecNumber = StringUtils.trimToEmpty((String) orderContractInfo.get("orderExecNumber"));
             String contractNo = StringUtils.trimToEmpty((String) orderContractInfo.get("contractNo"));
+            String projectType = StringUtils.trimToEmpty((String) orderContractInfo.get("projectType"));
 //            String salesType = StringUtils.trimToEmpty((String) orderContractInfo.get("salesType"));
             // 合同不为空则进行合并
             if (StringUtils.isNotBlank(contractNo)) {
@@ -3495,6 +3510,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                 project.setCreateBy(currentUser);
                 project.setCreateTime(new Date());
                 
+                if (StringUtils.isBlank(project.getProjectType())) {
+                	project.setProjectType(StringUtils.defaultIfBlank(projectType, MessageUtil.PROJECT_TYPE_AFTERSALES));
+                }
                 if (StringUtils.isBlank(project.getSmsProjectCode())) {
                     String projectCode = project.getProjectCode();
                     project.setSmsProjectCode(projectCode.substring(0, projectCode.indexOf("-")));
@@ -3552,6 +3570,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
             String orderExecNumber = StringUtils.trimToEmpty((String) orderContractInfo.get("orderExecNumber"));
             String contractNo = StringUtils.trimToEmpty((String) orderContractInfo.get("contractNo"));
             String salesType = StringUtils.trimToEmpty((String) orderContractInfo.get("salesType"));
+            String projectType = StringUtils.trimToEmpty((String) orderContractInfo.get("projectType"));
             // 合同不为空则进行合并
             if (StringUtils.isNotBlank(contractNo)) {
                 // 查询最大的组编码
@@ -3565,6 +3584,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                 project.setCreateBy(currentUser);
                 project.setCreateTime(new Date());
                 
+                if (StringUtils.isBlank(project.getProjectType())) {
+                	project.setProjectType(StringUtils.defaultIfBlank(projectType, MessageUtil.PROJECT_TYPE_AFTERSALES));
+                }
                 if (StringUtils.isBlank(project.getSmsProjectCode())) {
                     String projectCode = project.getProjectCode();
                     project.setSmsProjectCode(projectCode.substring(0, projectCode.indexOf("-")));

@@ -10,13 +10,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
@@ -115,6 +117,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private String[] deliverTypes;
 	private List<SubcontractDeliverVO> uploadDeliverList;
 	private SubcontractFacilitator subcontractFacilitator;
+	private SubcontractDeliverVO subcontractDeliverVO;
 	/**
 	 * 选择的序列号
 	 */
@@ -579,9 +582,26 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		try {
 			if (subcontract != null && subcontract.getId() != null) {
 				SubcontractDeliver deliver = new SubcontractDeliver(subcontract.getId());
+				deliver.setEffectiveTo(new Date());
 				subcontractDeliverList = subcontractService.selectSubcontractDeliverVOList(deliver);
 			} else {
 				subcontractDeliverList = new ArrayList<>();
+			}
+		} catch (SubcontractException e) {
+			setErrmsg(e.getMessage());
+			return ERROR;
+		} catch (Exception e) {
+			e.printStackTrace();
+			setErrmsg(ExceptionUtils.getStackTrace(e));
+			return ERROR;
+		}
+		return SUCCESS;
+	}
+	
+	public String deleteSubcontractDeliver() {
+		try {
+			if (subcontractDeliverVO != null && subcontractDeliverVO.getIds() != null) {
+				subcontractService.deleteSubcontractDeliver(subcontractDeliverVO);
 			}
 		} catch (SubcontractException e) {
 			setErrmsg(e.getMessage());
@@ -1391,6 +1411,14 @@ public class SubcontractAction extends BaseAction implements Preparable {
 
 	public void setSubcontractFacilitator(SubcontractFacilitator subcontractFacilitator) {
 		this.subcontractFacilitator = subcontractFacilitator;
+	}
+	
+	public SubcontractDeliverVO getSubcontractDeliverVO() {
+		return subcontractDeliverVO;
+	}
+
+	public void setSubcontractDeliverVO(SubcontractDeliverVO subcontractDeliverVO) {
+		this.subcontractDeliverVO = subcontractDeliverVO;
 	}
 
 	public String[] getSelected() {

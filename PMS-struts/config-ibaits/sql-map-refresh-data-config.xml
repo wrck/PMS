@@ -1295,4 +1295,34 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <delete id="deleteSSESubcontractPayment">
       truncate pm_subcontract_project_payment_sse
     </delete>
+    
+    <!-- 查询SSE的付款信息 -->
+    <select id="querySSEDepartmentSectaryList" resultClass="java.util.HashMap">
+        SELECT * FROM dp_department_sse
+    </select>
+    
+    <insert id="insertSSEDepartmentSectary" parameterClass="list">
+      INSERT INTO `pm_project_maintenance_sectary_from_sse` (
+          `depNum`, `depName`, `pDepNum`, `pDepName`, `sectary`, `status`, `updateTime`
+      ) 
+      VALUES
+      <iterate conjunction=",">
+         (
+            #[].depnum#, #[].depname#, #[].pDepnum#, #[].pDepname#, #[].sectary_jobnum#, #[].status#, #[].updateTime#
+          )
+      </iterate>
+      ;
+      
+      UPDATE 
+		  pm_project_maintenance_sectary_from_sse ms 
+		  INNER JOIN ehr_employee e 
+		      ON ms.`sectary` = e.`workNo` 
+	  SET ms.`sectaryEmail` = e.`email`, 
+		  ms.`sectaryName` = e.`name`, 
+		  ms.`sectaryPhone` = e.`mobile`;
+    </insert>
+    
+    <delete id="deleteSSEDepartmentSectary">
+      truncate pm_project_maintenance_sectary_from_sse
+    </delete>
 </sqlMap>

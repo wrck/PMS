@@ -20,6 +20,15 @@
     </properties>
 	
 	<dependencies>
+		<!-- echarts-utils自己定义的本地工具包 -->
+		<dependency>
+			<groupId>com.dp.plat</groupId>
+			<artifactId>echarts-utils</artifactId>
+			<version>v0.1</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/WebContent/WEB-INF/lib/Utils-v0.1.jar</systemPath>
+		</dependency>
+		<!-- activiti统一待办推送接口 -->
 		<dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>activiti-api-unifytask-patch</artifactId>

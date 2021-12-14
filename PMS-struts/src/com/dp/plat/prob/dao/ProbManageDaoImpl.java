@@ -1,6 +1,8 @@
 package com.dp.plat.prob.dao;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import com.dp.plat.prob.param.ProbParam;
 import com.dp.plat.prob.util.SoftVersionUtil;
 import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
 import com.dp.plat.util.MessageUtil;
+import com.dp.plat.util.StringEscUtil;
 
 public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 
@@ -52,6 +55,14 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 			prob.setVisibleRange(-1);
 		} else if (userContext.isHasRole(MessageUtil.ROLE_PROB_RD)){
 			prob.setTrackingUser(username);
+		} else {
+			// 4：已确认，5：解决中，6：已拒绝，10：已关闭
+			String queryStatus = (String) getSqlMapClientTemplate().queryForObject("query_sys_arg", "prob.common.user.status.query");
+			if (StringUtils.isNotBlank(queryStatus)) {
+				prob.setStatusList(Arrays.asList(queryStatus.split(",")));
+			} else {
+				prob.setStatusList(Arrays.asList(4, 5, 6, 10));
+			}
 		}
 		
 		int total = (int) getSqlMapClientTemplate().queryForObject("query_prob_count", prob);

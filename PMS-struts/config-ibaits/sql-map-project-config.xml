@@ -1169,7 +1169,7 @@
         <![CDATA[
             SELECT salesManCode,salesmanTel,salesManName , CASE WHEN (POSITION('com' IN salesmanMail) >0 AND POSITION('net' IN salesmanMail)>0) THEN ( CASE WHEN POSITION('com' IN salesmanMail) > POSITION('net' IN salesmanMail) THEN  LEFT(salesmanMail,POSITION('net' IN salesmanMail)+2)
             ELSE  RIGHT(salesmanMail,(LENGTH(salesmanMail)-(POSITION('com' IN salesmanMail)+2))) END) 
-             WHEN (POSITION('com' IN salesmanMail) >0  AND  POSITION('net' IN salesmanMail) = 0) THEN  NULL 
+             WHEN (POSITION('com' IN salesmanMail) >0  AND  POSITION('net' IN salesmanMail) = 0) THEN  salesmanMail 
             ELSE salesmanMail END AS salesmanMail
             FROM pm_person_from_oa 
         ]]>
@@ -3001,7 +3001,7 @@
         <![CDATA[
             select salesManCode,salesmanTel,salesManName , CASE WHEN (POSITION('com' IN salesmanMail) >0 AND POSITION('net' IN salesmanMail)>0) THEN ( CASE WHEN POSITION('com' IN salesmanMail) > POSITION('net' IN salesmanMail) THEN  LEFT(salesmanMail,POSITION('net' IN salesmanMail)+2)
             ELSE  RIGHT(salesmanMail,(LENGTH(salesmanMail)-(POSITION('com' IN salesmanMail)+2))) END) 
-            WHEN (POSITION('com' IN salesmanMail) >0  AND  POSITION('net' IN salesmanMail) = 0) THEN  NULL 
+            WHEN (POSITION('com' IN salesmanMail) >0  AND  POSITION('net' IN salesmanMail) = 0) THEN  salesmanMail 
             ELSE salesmanMail END AS salesmanMail from pm_person_from_oa where salesmanCode = #code#
         ]]>
     </select>
@@ -3396,7 +3396,7 @@
     
     <update id="invalid_project_header" parameterClass="int">
         <![CDATA[
-            UPDATE pm_project_header SET effectiveTo = NOW(),updateTime = now() WHERE projectId = #projectId#
+            UPDATE pm_project SET effectiveTo = NOW(),updateTime = now() WHERE projectId = #projectId#
         ]]>
     </update>
     
@@ -3409,7 +3409,8 @@
     
     <update id="invalid_project_group_relationship" parameterClass="int">
         <![CDATA[
-            UPDATE pm_project_group_relationship a, pm_project_header b SET a.`projectCode` = CONCAT(a.`projectCode`,'-his') 
+            UPDATE pm_project_group_relationship a, pm_project b 
+            SET a.`projectCode` = CONCAT(a.`projectCode`,'-his'), a.updateTime = now()
             WHERE a.`projectCode` = b.`projectCode` AND b.`projectId` = #projectId#
         ]]>
     </update>
@@ -3745,18 +3746,18 @@
     </update>
     <update id="update_project_close_time_by_projectId" parameterClass="int">
         <![CDATA[
-            UPDATE pm_project_header SET projectCloseTime = NOW() WHERE projectId = #projectId#
+            UPDATE pm_project SET projectCloseTime = NOW() WHERE projectId = #projectId#
         ]]>
     </update>
     <update id="clear_project_close_time_by_projectId" parameterClass="int">
         <![CDATA[
-            UPDATE pm_project_header SET projectCloseTime = null WHERE projectId = #projectId#
+            UPDATE pm_project SET projectCloseTime = null WHERE projectId = #projectId#
         ]]>
     </update>
     
     <update id="update_project_last_refresh_time" parameterClass="int">
         <![CDATA[
-            UPDATE pm_project_header SET projectRefreshTime = NOW() WHERE projectId = #projectId#
+            UPDATE pm_project SET projectRefreshTime = NOW() WHERE projectId = #projectId#
         ]]>
     </update>
     <update id="update_project_plan_state_by_closeId" parameterClass="int">
@@ -4596,7 +4597,7 @@
     </select>
     
     <!-- 项目维护记录 -->
-    <!-- <resultMap id="MaintenanceMap" class="com.dp.plat.data.bean.ProjectMaintenance">
+    <!-- <resultMap id="MaintenanceMap" class="com.dp.plat.maintenance.entity.ProjectMaintenance">
         <result column="id" jdbcType="INTEGER" property="id" />
         <result column="projectId" jdbcType="INTEGER" property="projectId" />
         <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
@@ -4627,7 +4628,7 @@
         <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
         <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
     </resultMap>
-  <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance (id, projectId, projectCode, 
       projectName, projectType, contractNo, officeCode, type, 
       category, subCategory, processTime, 
@@ -4650,7 +4651,7 @@
          SELECT last_insert_id() as id ;   
     </selectKey>
   </insert>
-  <insert id="insertProjectMaintenanceSelective" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertProjectMaintenanceSelective" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance
     <dynamic open="(" close=")">
       <isNotNull prepend="," property="id"> id </isNotNull>
@@ -4718,12 +4719,12 @@
          SELECT last_insert_id() as id ;   
     </selectKey>
   </insert>
-  <select id="selectProjectMaintenanceById" parameterClass="int" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+  <select id="selectProjectMaintenanceById" parameterClass="int" resultClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
     select * from pm_project_maintenance
     where id = #id#
     limit 1
   </select>
-  <select id="selectProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+  <select id="selectProjectMaintenanceList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
     select m.* from pm_project_maintenance m
         LEFT JOIN pm_project_member sm 
             ON m.`projectId` = sm.`projectId` 
@@ -4785,7 +4786,7 @@
         <isNotEmpty prepend="AND" property="createEndTime"> <![CDATA[ m.createTime <= #createEndTime# ]]> </isNotEmpty>
     </dynamic>
   </select>
-  <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="int">
+  <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultClass="int">
     select count(1) from pm_project_maintenance m
         LEFT JOIN pm_project_member sm 
             ON m.`projectId` = sm.`projectId` 
@@ -4848,7 +4849,7 @@
     </dynamic>
   </select>
   
-  <insert id="insertOrUpdateProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertOrUpdateProjectMaintenance" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance
     <dynamic prepend=" " open="(" close=")">
       <isNotNull prepend="," property="id"> id </isNotNull>
@@ -4947,7 +4948,7 @@
     </selectKey>
   </insert>
   
-  <resultMap class="com.dp.plat.data.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
+  <resultMap class="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
     <result column="officeName" jdbcType="VARCHAR" property="officeName" />
     <result column="typeName" jdbcType="VARCHAR" property="typeName" />
     <result property="quesnaireResultList" column="id" resultMap="business.quesnaireResult"/>
@@ -5007,7 +5008,7 @@
             @rowNo := 0) b
   </select>
  
-  <select id="selectProjectMaintenanceVOList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
+  <select id="selectProjectMaintenanceVOList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
     SELECT 
         m.*, d.`departmentName` AS officeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
             CONCAT(m.createBy, "-", ui.realName), m.createBy
@@ -5088,7 +5089,7 @@
     ORDER BY m.id desc
   </select> -->
   
-  <!-- <select id="selectProjectMaintenanceMapList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
+  <!-- <select id="selectProjectMaintenanceMapList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
    -->
   <!-- <select id="selectProjectMaintenanceMapList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
     SELECT 
@@ -5691,7 +5692,7 @@
     <![CDATA[
 	    CREATE TEMPORARY TABLE IF NOT EXISTS newOrderContractInfoTable (KEY projectId(projectId))
 		SELECT DISTINCT 
-		    ph.projectId, ph.`projectCode`, ph.`projectName`, IFNULL(
+		    ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, IFNULL(
 		        pods.`orderExecNumber`, ppfs.orderExecNumber
 		    ) orderExecNumber, pods2.`contractNo`, pods2.`salesType` 
 		FROM
@@ -5765,7 +5766,7 @@
     <![CDATA[
         CREATE TEMPORARY TABLE IF NOT EXISTS oldOrderContractInfoTable (KEY projectId(projectId))
         SELECT DISTINCT 
-		    ph.projectId, ph.`projectCode`, ph.`projectName`, pods.`orderExecNumber`, pods2.`contractNo`, pods2.`salesType` 
+		    ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, pods.`orderExecNumber`, pods2.`contractNo`, pods2.`salesType` 
 		FROM
 		    soleAgentProjectTable sph 
 		    LEFT JOIN `pm_project_header` ph 

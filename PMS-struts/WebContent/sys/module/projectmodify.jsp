@@ -296,10 +296,15 @@ td a:VISITED {
 	function queryPersonInfo2(json){
 		var userlist = json.personList;
 		for(var i = 0;i < userlist.length;i++){
-			personcodeArr[i] = userlist[i].salesmanCode;
-			personnameArr[i] = userlist[i].salesmanCode+"-"+userlist[i].salesmanName;
+			var code = $.trim(userlist[i].salesmanCode);
+			var email = $.trim(userlist[i].salesmanMail);
+			if (!/^([A-z]\d{5})|([A-z]*_(supp|ss))$/.test(code) && email.length > 0) {
+				code = email.substring(0, 1) + code;
+			}
+			personcodeArr[i] = code;
+			personnameArr[i] = code + "-" + userlist[i].salesmanName;
 			persontelArr[i] = userlist[i].salesmanTel;
-			personmailArr[i] = userlist[i].salesmanMail;
+			personmailArr[i] = email;
 		}
 	}
 	

@@ -195,7 +195,7 @@
     </bean>
     
     <!-- 项目维护管理 -->
-    <bean id="MaintenanceAction" class="com.dp.plat.action.MaintenanceAction" scope="prototype">
+    <bean id="MaintenanceAction" class="com.dp.plat.maintenance.action.MaintenanceAction" scope="prototype">
         <property name="basicDataService" ref="basicDataServiceAgent"></property>
         <property name="projectService" ref="projectServiceAgent"></property>
         <property name="departmentManageService" ref="departmentManageServiceAgent"></property>

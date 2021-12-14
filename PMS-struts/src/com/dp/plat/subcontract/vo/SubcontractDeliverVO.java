@@ -4,6 +4,7 @@
 package com.dp.plat.subcontract.vo;
 
 import java.io.File;
+import java.util.List;
 
 import com.dp.plat.subcontract.entity.SubcontractDeliver;
 
@@ -17,6 +18,7 @@ public class SubcontractDeliverVO extends SubcontractDeliver {
 	private String uploadName;
 	private File[] uploads;
 	private String[] uploadsFileName;
+	private List<Object> ids;
 	
 	public File[] getUploads() {
 		return uploads;
@@ -42,6 +44,10 @@ public class SubcontractDeliverVO extends SubcontractDeliver {
 	public void setUploadName(String uploadName) {
 		this.uploadName = uploadName;
 	}
-	
-	
+	public List<Object> getIds() {
+		return ids;
+	}
+	public void setIds(List<Object> ids) {
+		this.ids = ids;
+	}
 }

@@ -1,13 +1,13 @@
-package com.dp.plat.job;
+package com.dp.plat.maintenance.quartz;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +26,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.dao.BasicDataDao;
-import com.dp.plat.dao.ProjectDao;
 import com.dp.plat.dao.ProjectDaoImpl;
 import com.dp.plat.dao.UserManageDao;
 import com.dp.plat.data.bean.NotificationTemplate;
@@ -49,6 +48,9 @@ public class MaintenanceDailyReportMailer implements Job {
     private ApplicationContext applicationContext = null;
 
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
+    	// 同步办事处秘书
+    	syncDepartmentSectary();
+    	
         System.out.println("###############项目维护日报发送开始################");
         if (SpringContext.getApplicationContext() != null) {
             applicationContext = SpringContext.getApplicationContext();
@@ -85,6 +87,7 @@ public class MaintenanceDailyReportMailer implements Job {
                     List<Map<String, Object>> maintenanceList = projectDao.selectDailyMaintenanceMapList(params);
 
                     Map<String, Object> context = new HashMap<>();
+                    context.put("currentUsername", createBy);
                     context.put("currentDate", reportDate);
                     Person currentUser = projectDao.queryPersonFromOaByCode(StringUtils.substring(createBy, 1));
                     if (currentUser != null) {
@@ -130,6 +133,14 @@ public class MaintenanceDailyReportMailer implements Job {
 		}
     }
     
+    public void syncDepartmentSectary() {
+    	try {
+        	new MaintenanceDepartmentSectaryJob().execute(null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+    
     public void sendMaintenanceDailyReport(Map<String, Object> params, String sendUser, String reportDate) {
     	if (SpringContext.getApplicationContext() != null) {
             applicationContext = SpringContext.getApplicationContext();
@@ -142,6 +153,7 @@ public class MaintenanceDailyReportMailer implements Job {
             List<Map<String, Object>> maintenanceList = projectDao.selectDailyMaintenanceMapList(params);
 
             Map<String, Object> context = new HashMap<>();
+            context.put("currentUsername", sendUser);
             context.put("currentDate", reportDate);
             Person currentUser = projectDao.queryPersonFromOaByCode(StringUtils.substring(sendUser, 1));
             if (currentUser != null) {
@@ -165,7 +177,7 @@ public class MaintenanceDailyReportMailer implements Job {
         } else {
             applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
         }
-        ProjectDao projectDao = applicationContext.getBean("projectDao", ProjectDao.class);
+        ProjectDaoImpl projectDao = applicationContext.getBean("projectDao", ProjectDaoImpl.class);
         UserManageDao userManageDao = applicationContext.getBean("userManageDao", UserManageDao.class);
         BasicDataDao basicDataDao = applicationContext.getBean("basicDataDao", BasicDataDao.class);
 
@@ -185,6 +197,7 @@ public class MaintenanceDailyReportMailer implements Job {
         Set<String> customCcsSet = new HashSet<>();
         Set<String> officeSet = new HashSet<>();
         Set<Integer> projectIdSet = new HashSet<>();
+        String currentUsername = (String) context.get("currentUsername");
         for (Map<String, Object> bean : maintenanceList) {
             // 为上下文添加当前日报用户
             if (!context.containsKey("currentName")) {
@@ -290,7 +303,16 @@ public class MaintenanceDailyReportMailer implements Job {
                 }
             }
         }
-
+        
+        // 抄送秘书
+        Map<String, Object> sectaryEmailMap = projectDao.getSqlMapClientTemplate().queryForMap("queryDepartmentSectary", Collections.singletonMap("username", currentUsername), "username", "sectaryEmail");
+        if (sectaryEmailMap != null) {
+        	String sectaryEmail = (String) sectaryEmailMap.get(currentUsername);
+        	if (StringUtils.isNotBlank(sectaryEmail)) {
+                ccs.add(sectaryEmail);
+            }
+        }
+        
         // 将项目自定义抄送人员加入邮件抄送数组
         ccs.addAll(customCcsSet);
         // 抄送项目维护的sp_core、tsc群组

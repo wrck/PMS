@@ -2,7 +2,7 @@
  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
 <sqlMap namespace="maintenance">
     <!-- 项目维护记录 -->
-    <resultMap id="MaintenanceMap" class="com.dp.plat.data.bean.ProjectMaintenance">
+    <resultMap id="MaintenanceMap" class="com.dp.plat.maintenance.entity.ProjectMaintenance">
 	    <result column="id" jdbcType="INTEGER" property="id" />
 	    <result column="projectId" jdbcType="INTEGER" property="projectId" />
 	    <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
@@ -47,7 +47,7 @@
 	    <result column="warrantyInfo" jdbcType="VARCHAR" property="warrantyInfo" />
 	    <result column="serviceInfo" jdbcType="VARCHAR" property="serviceInfo" />
     </resultMap>
-  <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance (id, projectId, projectCode, 
       projectName, projectType, projectExecutionState, contractNo, officeCode, type, 
       category, subCategory, processTime, compId,
@@ -76,7 +76,7 @@
          SELECT last_insert_id() as id ;   
     </selectKey>
   </insert>
-  <insert id="insertProjectMaintenanceSelective" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertProjectMaintenanceSelective" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance
     <dynamic open="(" close=")" prepend=" ">
       <isNotNull prepend="," property="id"> id </isNotNull>
@@ -172,12 +172,12 @@
          SELECT last_insert_id() as id ;   
     </selectKey>
   </insert>
-  <select id="selectProjectMaintenanceById" parameterClass="int" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+  <select id="selectProjectMaintenanceById" parameterClass="int" resultClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
     select * from pm_project_maintenance
     where id = #id#
     limit 1
   </select>
-  <select id="selectProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="com.dp.plat.data.vo.ProjectMaintenanceVO">
+  <select id="selectProjectMaintenanceList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
     select m.* from pm_project_maintenance m
         LEFT JOIN pm_project_member sm 
             ON m.`projectId` = sm.`projectId` 
@@ -268,7 +268,7 @@
 	    <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
     </dynamic>
   </select>
-  <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultClass="int">
+  <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultClass="int">
     select count(1) from pm_project_maintenance m
 	    LEFT JOIN pm_project_member sm 
             ON m.`projectId` = sm.`projectId` 
@@ -392,7 +392,7 @@
     </dynamic>
   </select>
   
-  <insert id="insertOrUpdateProjectMaintenance" parameterClass="com.dp.plat.data.bean.ProjectMaintenance">
+  <insert id="insertOrUpdateProjectMaintenance" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance
     <dynamic prepend=" " open="(" close=")">
       <isNotNull prepend="," property="id"> id </isNotNull>
@@ -533,13 +533,13 @@
     </selectKey>
   </insert>
   
-  <select id="selectSingleProjectMaintenanceMaxId" parameterClass="com.dp.plat.data.bean.ProjectMaintenance" resultClass="int">
+  <select id="selectSingleProjectMaintenanceMaxId" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance" resultClass="int">
     SELECT IFNULL(MAX(id), 0) maxId FROM pm_project_maintenance 
     WHERE projectId = #projectId# AND projectType = #projectType#
     GROUP BY projectType, projectId
   </select>
   
-  <resultMap class="com.dp.plat.data.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
+  <resultMap class="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
     <result column="officeName" jdbcType="VARCHAR" property="officeName" />
     <result column="typeName" jdbcType="VARCHAR" property="typeName" />
     <result property="quesnaireResultList" column="id" resultMap="business.quesnaireResult"/>
@@ -603,7 +603,7 @@
             @rowNo := 0) b
   </select>
  
-  <select id="selectProjectMaintenanceVOList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
+  <select id="selectProjectMaintenanceVOList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
     SELECT 
 	    m.*, d.`departmentName` AS officeName, d2.`departmentName` AS userOfficeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
 	        CONCAT(m.createBy, "-", ui.realName), m.createBy
@@ -749,7 +749,7 @@
     ORDER BY m.id desc
   </select>
   
-  <!-- <select id="selectProjectMaintenanceMapList" parameterClass="com.dp.plat.data.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
+  <!-- <select id="selectProjectMaintenanceMapList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
    -->
   <select id="selectProjectMaintenanceMapList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
     SELECT 
@@ -1974,4 +1974,26 @@
     DROP TEMPORARY TABLE IF EXISTS smAndPmDpNo_$userPower$;
     DROP TEMPORARY TABLE IF EXISTS serviceManagerPower_$userPower$;
   </statement>
+  
+  <select id="queryDepartmentSectary" parameterClass="java.util.Map" resultClass="java.util.HashMap" remapResults="true">
+  	SELECT 
+	    ui.`username`, ui.`realName`, ui.`dpNo`, d.`departmentName`, 
+	    IFNULL(ve.`depLV2Code`, ve.`depLV1Code`) AS depCode, ve.`depAllName`, 
+	    e.`workNo` AS sectary, e.`name` AS sectaryName, e.`email` AS sectaryEmail, e.`mobile` AS sectaryPhone,
+	    ms.`sectary` AS sectary1, ms2.`sectary` AS sectary2
+	FROM
+	    `fnd_user_info` ui 
+	    LEFT JOIN `pm_project_maintenance_sectary_from_sse` ms 
+	        ON ms.`depNum` = LEFT(ui.`dpNo`, 6)
+	    LEFT JOIN `fnd_department` d 
+	        ON d.`departmentNum` = ui.`dpNo` 
+	    LEFT JOIN view_ehr_employee ve 
+	        ON ve.`workNo` = RIGHT(ui.`username`, 5) 
+	    LEFT JOIN `pm_project_maintenance_sectary_from_sse` ms2 
+	        ON ms2.`depNum` = IFNULL(ve.`depLV2Code`, ve.`depLV1Code`) 
+	    LEFT JOIN ehr_employee e
+		ON e.`workNo` = IFNULL(ms.`sectary`, ms2.`sectary` )
+	WHERE ui.`status` = 1
+	<isNotEmpty prepend="AND" property="username"> ui.username = #username# </isNotEmpty>
+  </select>
 </sqlMap>

@@ -155,6 +155,13 @@ public interface SubcontractService extends BaseService {
 	 * @param deliver
 	 */
 	void insertSubcontractDeliver(SubcontractDeliver deliver);
+	
+	/**
+     * 删除转包交付件
+     * @param subcontractDeliverVO
+     * @return
+     */
+	void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO);
 
 	/**
 	 * @param subcontract

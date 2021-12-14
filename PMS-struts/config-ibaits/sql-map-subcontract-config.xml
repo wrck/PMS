@@ -1081,7 +1081,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="uploadBy"> fl.uploadBy = #uploadBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadTime"> fl.uploadTime = #uploadTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveFrom"> fl.effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> fl.effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(fl.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
   

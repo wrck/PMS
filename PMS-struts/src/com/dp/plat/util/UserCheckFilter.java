@@ -36,12 +36,15 @@ public class UserCheckFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
-		String queryString = req.getQueryString();
-		StringBuffer requestURL = req.getRequestURL();
-		if (StringUtils.isNotBlank(queryString)) {
-			requestURL.append("?").append(queryString);
-		}
-		userContext.setUrl(requestURL.toString());
+//		String method = req.getMethod();
+//		if ("GET".equalsIgnoreCase(method)) {
+			String queryString = req.getQueryString();
+			StringBuffer requestURL = req.getRequestURL();
+			if (StringUtils.isNotBlank(queryString)) {
+				requestURL.append("?").append(queryString);
+			}
+			userContext.setUrl(requestURL.toString());
+//		}
 		int pos = url.indexOf("/", 1);
 		if(!userContext.isLogin()){
 			String casStr=loginService.querySysArg("sys.cas");

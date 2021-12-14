@@ -145,6 +145,12 @@ public interface SubcontractDao {
 	 * @param deliver
 	 */
 	void insertSubcontractDeliver(SubcontractDeliver deliver);
+	
+    /**
+     * 删除项目转包交付件
+     * @param subcontractDeliverVO
+     */
+	void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO);
 
 	/**
 	 * @param subcontract

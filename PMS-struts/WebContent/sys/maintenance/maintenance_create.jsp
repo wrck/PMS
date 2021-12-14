@@ -3,7 +3,7 @@
 <%@ taglib prefix="dp" uri="/dp"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
 <%@page import="com.dp.plat.util.StringEscUtil"%>
-<%@page import="com.dp.plat.data.vo.ProjectMaintenanceVO"%>
+<%@page import="com.dp.plat.maintenance.vo.ProjectMaintenanceVO"%>
 <html>
 <dp:base />
 <head>
@@ -17,7 +17,7 @@
     <display:table id="maintenanceList" class="table table-striped"
         name="maintenanceMapList" pagesize="${maintenanceMapList.size()}" 
         size="${maintenanceMapList.size()}" sort="external" export="true"  requestURI="module/sub/projectSub_projectMaintenance.action?projectMaintenance.projectId=${projectMaintenance.projectId}" 
-        decorator="com.dp.plat.decorators.MaintenanceDecorator" excludedParams="*"
+        decorator="com.dp.plat.maintenance.decorators.MaintenanceDecorator" excludedParams="*"
         partialList="true">
         <display:column property="typeName" titleKey="pm.project.maintenance.type"></display:column>
         <display:column property="processTime" titleKey="pm.project.maintenance.processTime" format="{0,date,yyyy-MM-dd}"></display:column>

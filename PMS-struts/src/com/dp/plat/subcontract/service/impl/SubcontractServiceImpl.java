@@ -485,6 +485,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		return callBackFlag;
 	}
+	
+	@Override
+	public void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO) {
+		dao.deleteSubcontractDeliver(subcontractDeliverVO);
+	}
 
 	/**
 	 * 批量插入或更新转包序列号清单

@@ -86,6 +86,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="watch"><![CDATA[ t1.watch = #watch#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="theme"><![CDATA[ t1.theme like '%$theme$%']]></isNotEmpty>
 		<isNotEmpty prepend="and" property="status"><![CDATA[ t1.`status` = #status#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="statusList">
+			t1.status in
+			<iterate open="(" close=")" conjunction="," property="statusList">
+				#statusList[]#
+			</iterate>
+		</isNotEmpty>
 		
 		<isNotEmpty prepend="and" property="productType"><![CDATA[ t1.productType like concat("%", #productType#, "%")]]></isNotEmpty>
         <isNotEmpty prepend="and" property="desc"><![CDATA[ t1.desc like concat("%", #desc#, "%")]]></isNotEmpty>
@@ -181,6 +187,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.theme"><![CDATA[ t1.theme like '%$prob.theme$%']]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.statusList">
+			t1.status in
+			<iterate open="(" close=")" conjunction="," property="prob.statusList">
+				#prob.statusList[]#
+			</iterate>
+		</isNotEmpty>
 		
 		<isNotEmpty prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></isNotEmpty>
         <isNotEmpty prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></isNotEmpty>
@@ -1192,6 +1204,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		            ) 
 		        END, GROUP_CONCAT(
 		            DISTINCT CONCAT(
+		            	IFNULL(sv.createBy, ""), "-", IFNULL(ui.realName, ""), " ",
 		                scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
 		                CASE
 		                    WHEN sv.`conpChange` = 1 
@@ -1259,7 +1272,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		            ELSE 1 = 1 
 		        END 
 		        AND ps.manualEntry IS NULL
-		        AND ps.`datastate` = 1 
+		        AND ps.`datastate` = 1
+		    LEFT JOIN `fnd_user_info` ui
+				ON ui.username = sv.createBy 
 		WHERE sv.`executeTime` >= #startTime#
             <isNotEmpty prepend="and" property="endTime">
                <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>

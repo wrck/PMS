@@ -1,4 +1,4 @@
-package com.dp.plat.data.bean;
+package com.dp.plat.maintenance.entity;
 
 import java.util.Date;
 

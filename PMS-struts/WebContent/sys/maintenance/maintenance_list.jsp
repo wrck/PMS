@@ -266,7 +266,7 @@
         <display:table id="maintenanceList" class="table table-striped"
             name="maintenanceMapList" pagesize="${displayParam.pagesize}" 
             size="${displayParam.totalcount}" sort="external" export="true"  requestURI="module/maintenance.action" 
-            decorator="com.dp.plat.decorators.MaintenanceDecorator"
+            decorator="com.dp.plat.maintenance.decorators.MaintenanceDecorator"
             partialList="true">
             <display:column property="categoryName" titleKey="pm.project.maintenance.category" headerClass="nowrap"></display:column>
             <display:column property="subCategoryName" titleKey="pm.project.maintenance.subCategory" headerClass="nowrap"></display:column>

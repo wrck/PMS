@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.dp.plat.data.vo;
+package com.dp.plat.maintenance.vo;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.dp.plat.data.bean.ProjectMaintenance;
+import com.dp.plat.maintenance.entity.ProjectMaintenance;
 import com.dp.plat.param.FileParam;
 
 /**

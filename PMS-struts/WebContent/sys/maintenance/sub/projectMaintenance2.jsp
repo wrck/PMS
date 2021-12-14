@@ -3,7 +3,7 @@
 <%@ taglib prefix="dp" uri="/dp"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
 <%@page import="com.dp.plat.util.StringEscUtil"%>
-<%@page import="com.dp.plat.data.vo.ProjectMaintenanceVO"%>
+<%@page import="com.dp.plat.maintenance.vo.ProjectMaintenanceVO"%>
 <html>
 <dp:base />
 <head>
@@ -24,7 +24,7 @@
     <display:table id="maintenanceList" class="table table-striped" style="margin-top:10px;"
         name="maintenanceMapList" pagesize="${maintenanceMapList.size()}" 
         size="${maintenanceMapList.size()}" sort="external" export="true"  requestURI="module/sub/maintenance_projectMaintenance.action?projectMaintenance.projectId=${projectMaintenance.projectId}&projectMaintenance.projectType=${projectMaintenance.projectType}" 
-        decorator="com.dp.plat.decorators.MaintenanceDecorator" excludedParams="*"
+        decorator="com.dp.plat.maintenance.decorators.MaintenanceDecorator" excludedParams="*"
         partialList="true">
         <display:column title="序号">${maintenanceMapList.size() - maintenanceList_rowNum + 1}</display:column>
         <display:column property="categoryName" titleKey="pm.project.maintenance.category"></display:column>

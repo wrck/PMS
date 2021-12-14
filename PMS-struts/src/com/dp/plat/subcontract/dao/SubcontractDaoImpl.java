@@ -3,6 +3,7 @@ package com.dp.plat.subcontract.dao;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,6 +201,24 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 	@Override
 	public void insertSubcontractDeliver(SubcontractDeliver deliver) {
 		getSqlMapClientTemplate().insert("insertSubcontractDeliver", deliver);
+	}
+	
+	@Override
+	public void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO) {
+		List<Object> ids = subcontractDeliverVO.getIds();
+		for (Object id : ids) {
+			if (id == null) {
+				continue;
+			}
+			SubcontractDeliver deliver = new SubcontractDeliver();
+			try {
+				deliver.setId(Integer.valueOf(id.toString()));
+			} catch(NumberFormatException e) {
+				continue;
+			}
+			deliver.setEffectiveTo(new Date());
+			getSqlMapClientTemplate().update("updateSubcontractDeliverByIdSelective", deliver);
+		}
 	}
 
 	@Override

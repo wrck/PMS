@@ -220,7 +220,7 @@
         <display:table id="maintenanceList" class="table table-striped"
             name="maintenanceMapList" pagesize="${displayParam.pagesize}" 
             size="${displayParam.totalcount}" sort="external" export="true"  requestURI="module/sub/maintenance_serviceDelivery.action" 
-            decorator="com.dp.plat.decorators.MaintenanceDecorator"
+            decorator="com.dp.plat.maintenance.decorators.MaintenanceDecorator"
             partialList="true">
             <display:column property="projectCode" titleKey="pm.project.projectCode" media="excel"></display:column>
             <display:column property="projectNameWithURL" titleKey="pm.project.projectName" media="html"></display:column>

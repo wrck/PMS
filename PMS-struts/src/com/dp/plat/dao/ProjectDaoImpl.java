@@ -23,7 +23,6 @@ import com.dp.plat.data.bean.OrderDataFromSap;
 import com.dp.plat.data.bean.Product;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
-import com.dp.plat.data.bean.ProjectMaintenance;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
 import com.dp.plat.data.bean.ProjectTask;
@@ -32,7 +31,8 @@ import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.SoftChangeLog;
 import com.dp.plat.data.bean.WeeklyContent;
 import com.dp.plat.data.bean.WeeklyFeedback;
-import com.dp.plat.data.vo.ProjectMaintenanceVO;
+import com.dp.plat.maintenance.entity.ProjectMaintenance;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Person;
 import com.dp.plat.param.ProjectParam;
@@ -143,7 +143,12 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
 
     @Override
     public Project queryProjectByContractNo(String contractNo) {
-        return (Project) getSqlMapClientTemplate().queryForObject("query-project-bycontractno", contractNo);
+    	Project project = (Project) getSqlMapClientTemplate().queryForObject("query-project-bycontractno", contractNo);
+		if (project != null) {
+			project.setProjectType(StringUtils.defaultIfBlank(project.getProjectType(), MessageUtil.PROJECT_TYPE_AFTERSALES));
+		}
+		return project;
+//        return (Project) getSqlMapClientTemplate().queryForObject("query-project-bycontractno", contractNo);
 //    	return this.queryProjectByContractNoAndType(contractNo, MessageUtil.PROJECT_TYPE_AFTERSALES);
     }
     
@@ -747,7 +752,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
 
     @Override
     public int queryProjectGroupSize(String projectCode) {
-        projectCode = projectCode.substring(0, projectCode.length() - 1);
+    	projectCode = projectCode.split("-")[0];
+//        projectCode = projectCode.substring(0, projectCode.length() - 1);
         return (Integer) getSqlMapClientTemplate().queryForObject("query_project_group_count", projectCode);
     }
 

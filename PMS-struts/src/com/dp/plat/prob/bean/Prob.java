@@ -1,5 +1,6 @@
 package com.dp.plat.prob.bean;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -46,6 +47,9 @@ public class Prob {
 	private Integer affectedType;
 	// 影响版本解析结果
 	private List<SoftVersionParser> softVersionParserList;
+	
+	// 状态查询
+	private List<? extends Object> statusList;
 
 	public int getProbId() {
 		return probId;
@@ -297,6 +301,14 @@ public class Prob {
 
 	public Boolean getCheckSoft() {
 		return affectedType != null || (affectedVersion != null && affectedVersion.trim().length() > 0);
+	}
+
+	public List<? extends Object> getStatusList() {
+		return statusList;
+	}
+
+	public void setStatusList(List<? extends Object> statusList) {
+		this.statusList = statusList;
 	}
 
 }

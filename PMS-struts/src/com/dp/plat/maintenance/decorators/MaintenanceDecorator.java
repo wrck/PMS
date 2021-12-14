@@ -1,4 +1,4 @@
-package com.dp.plat.decorators;
+package com.dp.plat.maintenance.decorators;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
-import com.dp.plat.data.vo.ProjectMaintenanceVO;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.FileParam;
 import com.dp.plat.util.Base64Util;
 

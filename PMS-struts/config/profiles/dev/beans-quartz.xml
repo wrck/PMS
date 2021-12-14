@@ -269,7 +269,7 @@
     </bean> 
     <!-- 项目维护日报 -->
 	<bean id="MaintenanceDailyReportMailer" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-        <property name="jobClass" value="com.dp.plat.job.MaintenanceDailyReportMailer" />
+        <property name="jobClass" value="com.dp.plat.maintenance.quartz.MaintenanceDailyReportMailer" />
         <property name="jobDataAsMap">
             <map>
                 <entry key="timeout">
@@ -291,7 +291,7 @@
     
     <!-- 项目维护服务交付季度中间月初邮件提醒 -->
     <bean id="MaintenanceServiceQuarterMailer" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-        <property name="jobClass" value="com.dp.plat.job.MaintenanceServiceQuarterMailer" />
+        <property name="jobClass" value="com.dp.plat.maintenance.quartz.MaintenanceServiceQuarterMailer" />
         <property name="jobDataAsMap">
             <map>
                 <entry key="timeout">

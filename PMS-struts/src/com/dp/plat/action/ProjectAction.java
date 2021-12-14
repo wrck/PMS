@@ -59,7 +59,7 @@ import com.dp.plat.data.bean.SoftChangeLog;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WeeklyContent;
 import com.dp.plat.data.bean.WeeklyFeedback;
-import com.dp.plat.data.vo.ProjectMaintenanceVO;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Person;
 import com.dp.plat.param.ProjectBatchCgMbParam;
