@@ -1,8 +1,8 @@
-/PMS-struts/${basePath}
-/PMS-springmvc/${basePath}
-/PMS-struts/target
-/PMS-springmvc/target
-/core/target
-logs
-/新建文件夹/
-/新建文件夹 (2)/
+bin/
+.svn/
+target/
+.settings/
+.project
+.classpath
+logs/
+${basePath}/
