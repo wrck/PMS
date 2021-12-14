@@ -229,6 +229,10 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 			if (!employeeWithAccount.isEmpty()) {
 				isInnerUser = true;
 				employeeService.initUser(employeeWithAccount);
+			} else {
+				// 补充员工工号
+				user.setUserCustom3(userName);
+				userInfo.setWorkNo(userName);
 			}
 		}
 		
@@ -237,6 +241,13 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		user.setPassword(PasswordUtil.encryptPassword(user.getUserName(), randomPassword));
 		try {
 			projectManageUserService.insertSelective(user);
+			// 补充员工ID
+			if (user.getUserCustom4() == null) {
+				user.setUserCustom4(user.getUserId());
+				User temp = new User(user.getUserId());
+				temp.setUserCustom4(user.getUserId());
+				projectManageUserService.updateByPrimaryKeySelective(temp);
+			}
 		} catch (DuplicateKeyException e) {
 			user = projectManageUserService.selectByUserName(user.getUserName());
 		}
@@ -359,6 +370,8 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 			userInfo.setCustom4(StringUtils.join(projectTypes, ","));
 		}
 		if (info == null) {
+			// 补充员工工号
+			userInfo.setWorkNo(user.getUserName());
 			userInfoService.insertSelective(userInfo);
 		} else {
 			userInfo.setId(info.getId());

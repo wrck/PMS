@@ -1,23 +1,24 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
 import java.util.Collection;
-import com.dp.plat.core.service.impl.AbstractBaseService;
-import java.util.Map;
-import com.dp.plat.pms.springmvc.util.PermissionUtils;
-import org.springframework.stereotype.Service;
-import com.dp.plat.pms.springmvc.service.IDailyReportService;
-import com.dp.plat.core.context.UserContext;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import com.dp.plat.pms.springmvc.vo.TaskVO;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.dao.DailyReportMapper;
-import org.apache.commons.lang3.StringUtils;
-import com.dp.plat.core.config.SystemConfig;
-import com.dp.plat.core.realms.Principal;
-import com.dp.plat.core.vo.PermissionResult;
-import com.dp.plat.pms.springmvc.vo.DailyReportVO;
 import com.dp.plat.pms.springmvc.entity.DailyReport;
+import com.dp.plat.pms.springmvc.service.IDailyReportService;
+import com.dp.plat.pms.springmvc.util.PermissionUtils;
+import com.dp.plat.pms.springmvc.vo.DailyReportVO;
 
 /**
  *
@@ -45,22 +46,30 @@ public class DailyReportService extends AbstractBaseService<DailyReportMapper, D
                 String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
                 if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
                     v.setOfficeCodes(officeCodes);
-                    
                 }
                 // 添加指派的项目成员
                 v.setMemberCode(user.getUserName());
             }
             Map<String, Object> permission = this.checkPermissionMap(v, permissions);
             result = new PermissionUtils().checkPermit(permission, permissions);
-            if (!result.isPermit() && UserContext.checkPermission("dailyReport:*")) {
+            // 如果具备*权限，则允许操作
+			if (!result.isPermit() && UserContext.checkPermission("dailyReport:*")) {
                 result.setStatus(true);
-                // 如果是列表查询，并且项目没有失效，则增加edit权限，允许增删改
-                if (permissions.length == 1 && "dailyReport:list".equals(permissions[0]) && !Boolean.TRUE.equals(permission.get("disabled"))) {
-                	result.setPermissionType("edit");
-                	result.setPermissions(null);
-                } else {
-                	result.setPermissionType("view");
-                }
+//                // 如果是列表查询，并且项目没有失效，则增加edit权限，允许增删改
+//                if (permissions.length == 1 && "dailyReport:list".equals(permissions[0]) && !Boolean.TRUE.equals(permission.get("disabled"))) {
+//                	result.setPermissionType("edit");
+//                	result.setPermissions(null);
+//                } else {
+//                	result.setPermissionType("view");
+//                }
+            }
+			// 如果是列表查询，并且项目没有失效，则增加edit权限，允许增删改
+            if (permissions.length == 1 && "dailyReport:list".equals(permissions[0]) && !Boolean.TRUE.equals(permission.get("disabled"))) {
+            	result.setStatus(true);
+            	result.setPermissionType("edit");
+            	result.setPermissions(null);
+            } else {
+//            	result.setPermissionType(StringUtils.defaultIfBlank(result.getPermissionType(), "view"));
             }
         } else {
             isPermit = true;

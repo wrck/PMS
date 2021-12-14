@@ -925,14 +925,15 @@ pm.dailyReport = function() {
 				    			    		projectTypes = projectTypes.join(",");
 				    			    	}
 				    			    	params.pageSize = 10;
-					    			    return {
-					    			    	projectTypes: projectTypes,
+					    			    return $.extend({
 					    			    	projectType: projectType,
 					    			        fuzzy: params.term, // search term
 					    			        fuzzySearch: true,
 					    			        pageSize: params.pageSize || 10,
 					    			        start: (params.page - 1) * params.pageSize || 0
-					    			    };
+					    			    }, projectTypes ? {
+					    			    	projectTypes: projectTypes
+					    			    } : {});
 				    			    },
 				    			    processResults: function (data, params) {
 				    			      	params.page = params.page || 1;
@@ -994,38 +995,59 @@ pm.dailyReport = function() {
 				    				$searchfield.val($select.find('option:selected[value!=""]').text()).trigger("input");
 				    			}, 2);
 				    		});
+				    		var projectChangeFunc = function(e){
+			    				try{
+			    					var source = $(this).select2("data");
+			    					if (source.length > 0) {
+			    						source = source[0];
+			    					} else {
+			    						source = {};
+			    					}
+			    					console.log(source, this.value);
+			    					var isTag = $(source.element).data("select2Tag");
+			    					if (isTag || source.id == source.text) {
+			    						$("[value='-1']").attr("value", "0");
+			    						$(source.element).attr("value", -1);
+			    						this.value = -1;
+			    					}
+//					    			var targetValue = vm._data.targetValue || {};
+//					    			targetValue.projectId = $("#projectId").val();
+//					    			vm._data.targetValue = targetValue;
+					    			$("#projectName", $container).val(source.projectName || source.text);
+					    			$("#projectCode", $container).val(source.projectCode || "");
+					    			$("#contractNo", $container).val(source.contractNo || "");
+					    			$("#projectType", $container).val(source.projectType || $("#projectType", $container).val()).trigger("change");
+					    			$("#officeCode", $container).val(source.column001 || $("#officeCode", $container).val()).trigger("change");
+					    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || "").trigger("change");
+					    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || "").trigger("change");
+				    			} catch(e){}
+			    			}
 				    		$("#projectId", $container).siblings(".select2-container").one("click", function(e) {
-				    			var projectChangeFunc = function(e){
-				    				try{
-				    					var source = $(this).select2("data");
-				    					if (source.length > 0) {
-				    						source = source[0];
-				    					} else {
-				    						source = {};
-				    					}
-				    					console.log(source, this.value);
-				    					var isTag = $(source.element).data("select2Tag");
-				    					if (isTag || source.id == source.text) {
-				    						$("[value='-1']").attr("value", "0");
-				    						$(source.element).attr("value", -1);
-				    						this.value = -1;
-				    					}
-	//					    			var targetValue = vm._data.targetValue || {};
-	//					    			targetValue.projectId = $("#projectId").val();
-	//					    			vm._data.targetValue = targetValue;
-						    			$("#projectName", $container).val(source.projectName || source.text);
-						    			$("#projectCode", $container).val(source.projectCode || "");
-						    			$("#contractNo", $container).val(source.contractNo || "");
-						    			$("#projectType", $container).val(source.projectType || $("#projectType", $container).val()).trigger("change");
-						    			$("#officeCode", $container).val(source.column001 || $("#officeCode", $container).val()).trigger("change");
-						    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || "").trigger("change");
-						    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || "").trigger("change");
-					    			} catch(e){}
-				    			}
-				    			
 				    			//$("#projectId", $container).on("change", projectChangeFunc);
 				    			$("#projectId", $container).on("select2:select", projectChangeFunc);
 				    		});
+				    		// 手动调用查询，进行初始值回填更新
+				    		var $projectId = $("#projectId", $container);
+				    		var $select2 = $projectId.data("select2");
+				    		if ($select2) {
+				    			$select2.dataAdapter.query({term: projectName}, function (data) {
+				    				console.log(data);
+				    				var results = data.results || [];
+				    				var result = null;
+				    				for(var i in results) {
+				    					if (results[i].projectId == selectedId) {
+				    						result = results[i];
+				    						break;
+				    					}
+				    				}
+				    				if (result) {
+				    					$projectId.empty();
+				    					$select2.dataAdapter.select(result);
+				    					projectChangeFunc.call($projectId);
+				    				}
+				    			});
+				    		}
+				    		
 			    		}, null, true);
 			    		
 			    		// 如果是创建页面，在保存按钮之后添加继续添加按钮

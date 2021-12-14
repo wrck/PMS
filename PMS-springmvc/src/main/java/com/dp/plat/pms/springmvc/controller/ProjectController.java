@@ -399,10 +399,7 @@ public class ProjectController
 			model.addAttribute("message", "没有权限访问该项目");
 			return;
 		}
-		project = new ProjectVO(id);
-		project.setDisabled(true);
-		project.setEffectiveTo(new Date());
-		projectHeaderService.updateByPrimaryKeySelective(project);
+		projectHeaderService.invalidProject(id);
 		model.addAttribute("status", true);
 	}
 	
@@ -463,6 +460,7 @@ public class ProjectController
 				message = result.getMessage();
 			} else if ("transfer".equals(type)) {
 				ProjectVO target = project;
+				String projectType = vo.getProjectType();
 				if (projectId != null) {
 					Project temp = projectHeaderService.queryProjectByContractNoAndType(project.getContractNos(), project.getProjectTypes());
 					BeanUtils.copyProperties(temp, target);
@@ -471,8 +469,10 @@ public class ProjectController
 //					for (Entry<String, Object> entry : customInfo.entrySet()) {
 //						newCustomInfo.putIfAbsent(entry.getKey(), entry.getValue());
 //					}
+				} else {
+					projectType = project.getProjectTypes();
 				}
-				result = projectHeaderService.transferProject(target, projectId, vo.getProjectType());
+				result = projectHeaderService.transferProject(target, projectId, projectType);
 			}
 			status = (Boolean) result.getStatus();
 			message = result.getMessage();

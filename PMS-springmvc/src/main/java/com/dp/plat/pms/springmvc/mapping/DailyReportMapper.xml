@@ -712,6 +712,9 @@
 				 #{item}
 			</foreach>
 		</if>
+		<if test="model.transferProjectFlag == null">
+			dr.customInfo ->> "$.transferProjectFlag" is null AND
+		</if>
 	</if>
   </sql>
   <sql id="sql_fuzzy_search">
@@ -959,7 +962,9 @@
 	  	select 
 		    max(dr.createBy = #{user.userName}) as `all`, 
 		    max(dr.createBy = #{user.userName}) as `edit`, 
-		    count(pm.id) > 0 or count(ui.id) > 0 as `view`, 
+		    count(pm.id) > 0 or count(ui.id) > 0
+		    or dr.customInfo -> "$.serviceManagerCode" = #{user.userName}
+	        or dr.customInfo -> "$.programManagerCode" = #{user.userName} as `view`, 
 		    group_concat(distinct pm.memberRole) memberRoles, 
 		    #{permissionTypes} as permissionTypes,
 		    #{user.userInfoId} as userInfoId,

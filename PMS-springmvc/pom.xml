@@ -294,10 +294,12 @@
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
+					<workDirectory>${project.build.directory}/work</workDirectory>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<!-- <archiveClasses>true</archiveClasses> -->
 					<attachClasses>true</attachClasses>
 					<classesClassifier>core</classesClassifier>
+					<warSourceExcludes>WEB-INF/lib/pms-struts-*-core.jar</warSourceExcludes>
 					<dependentWarExcludes>WEB-INF/lib/*</dependentWarExcludes>
 				</configuration>
 			</plugin>

@@ -1971,7 +1971,7 @@
 	LIMIT 1 
   </insert>
   
-  <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
+  <!-- <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
   	select 
 	    *, concat(
 	        "insert into ", tableName, "(", columns, ") select ", replace(
@@ -2021,6 +2021,249 @@
 	       "projectId", "projectIds", "projectId,projectType", "objType,objId"
 	    ) 
 	    and tableName not in ('pm_project') 
+  </select> -->
+  
+  <!-- 使用？预处理的方式 -->
+  <select id="selectAllProjectRelateInfosPrepare" resultType="java.util.HashMap">
+  	select 
+	    *, concat(
+	        "insert into ", tableName, "(", columns, ") select ", replace(
+	            replace(
+	                replace(
+	                    replace(
+	                        replace(
+	                            replace(
+	                                replace(
+	                                    replace(
+	                                        columnsWithAlias, concat(tableAlias, ".projectId,"), "'?' as projectId,"
+	                                    ), concat(tableAlias, ".projectType,"), "'?' as projectType,"
+	                                ), concat(tableAlias, ".objId,"), "'?' as objId,"
+	                            ), concat(tableAlias, ".objType,"), "'?' as objType,"
+	                        ), concat(tableAlias, ".projectCode,"), concat("IFNULL(nph.projectCode, ", tableAlias, ".projectCode) projectCode,")
+	                    ), concat(tableAlias, ".projectName,"), concat("IFNULL(nph.projectName, ", tableAlias, ".projectName) projectName,")
+	                ), concat(tableAlias, ".contractNo,"), concat("IFNULL(nph.customInfo ->> '$.contractNo', ", tableAlias, ".contractNo) contractNo,")
+	            ), concat(tableAlias, ".officeCode,"), concat("IFNULL(nph.column001, ", tableAlias, ".officeCode) officeCode,")
+	        ), " from ", tableName, " as ", tableAlias, 
+	        " left join pm_project nph on nph.projectId = '?' and nph.projectType = '?' ", 
+	        " where ", replace(queryColumnsWithAlias, ",", "='?' AND "), "='?' "
+	    ) as `insertSql`, IF(
+	        queryColumns = "projectIds", concat(
+	            "update ", tableName, " as ", tableAlias, " set ", tableAlias, ".projectIds = concat(projectIds, ',?') where FIND_IN_SET('?', ", queryColumnsWithAlias, ")"
+	        ), null
+	    ) as `updateSql`, 
+	    IF(hasCustomInfo <!-- or hasEffectiveTo or hasDisabled or hasDeleted -->, 
+			concat(
+			    "update ", tableName, " as ", tableAlias, 
+			    " set ", 
+				concat_ws(",",
+					IF(hasCustomInfo, concat(tableAlias, ".customInfo = JSON_MERGE_PATCH(IFNULL(", tableAlias, ".customInfo, '{}'), '{\"transferProjectId\": ?, \"transferProjectFlag\": 1}')"), null)
+					<!-- ,IF(hasEffectiveTo, concat(tableAlias, ".effectiveTo = now()"), null)
+					,IF(hasDisabled, concat(tableAlias, ".disabled = true"), null)
+					,IF(hasDeleted, concat(tableAlias, ".deleted = true"), null) -->
+				),
+			    " where ", 
+			    replace(
+					queryColumnsWithAlias, ",", "='?' AND "
+				), "='?' "
+			), null
+	    ) as transferFlagSql
+	from
+	    (select 
+	        t.`TABLE_NAME` as tableName, t.tableAlias, 
+	        group_concat(distinct pc.column_name order by pc.`ORDINAL_POSITION`) primaryKeys, 
+        	group_concat(distinct c.column_name order by c.`column_name`) queryColumns,
+			concat(group_concat(distinct c.column_name order by c.`column_name`), ",", group_concat(distinct ac.column_name order by ac.`ORDINAL_POSITION`)) columns, 
+			concat(group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`), ",", group_concat(distinct concat(t.tableAlias, ".", ac.column_name) order by ac.`ORDINAL_POSITION`)) columnsWithAlias, 
+			group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`) queryColumnsWithAlias,
+			max(ac.`COLUMN_NAME` = 'customInfo') as hasCustomInfo,
+			max(ac.`COLUMN_NAME` = 'effectiveTo') as hasEffectiveTo,
+	        max(ac.`COLUMN_NAME` = 'disabled') as hasDisabled,
+	        max(ac.`COLUMN_NAME` = 'deleted') as hasDeleted
+	    from
+        <![CDATA[
+	        (select 
+	            t.*, GROUP_CONCAT(
+	                SUBSTRING(
+	                    SUBSTRING_INDEX(
+	                        SUBSTRING_INDEX(t.TABLE_NAME, '_', sh.id + 1), '_', - 1
+	                    ), 1, 1
+	                ) separator ""
+	            ) as tableAlias 
+	        from
+	            information_schema.tables t 
+	            left join find_in_set_help sh 
+	                on sh.id < (LENGTH(t.TABLE_NAME) - LENGTH(REPLACE(t.TABLE_NAME, '_', '')) + 1) 
+	        where t.TABLE_SCHEMA = database() 
+	            and t.TABLE_TYPE = 'BASE TABLE' 
+	        group by t.TABLE_NAME) t 
+        ]]>
+	        left join information_schema.columns ac 
+	            on t.`TABLE_CATALOG` = ac.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = ac.`TABLE_NAME` 
+	            and ac.`COLUMN_KEY` != "PRI" 
+	            and ac.COLUMN_NAME not in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns c 
+	            on t.`TABLE_CATALOG` = c.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = c.`TABLE_NAME` 
+	            and c.COLUMN_NAME in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns pc 
+	            on t.`TABLE_CATALOG` = pc.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = pc.`TABLE_NAME` 
+	            and pc.`COLUMN_KEY` = "PRI" 
+	    where t.TABLE_SCHEMA = database() 
+	        and c.TABLE_SCHEMA = database() 
+	        and pc.TABLE_SCHEMA = database() 
+	        and ac.TABLE_SCHEMA = database() 
+	        and t.TABLE_TYPE = 'BASE TABLE' 
+	    group by tableName) t 
+	where queryColumns in (
+	        "projectId", "projectIds", "projectId,projectType", "objId,objType"
+	    ) 
+	    and tableName not in ('pm_project')
+  </select>
+  
+  <!-- 使用$$占位符处理的方式 -->
+  <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
+  	select 
+	    *, concat(
+	        "insert into ", tableName, "(", columns, ") select * from ( select ", replace(
+	            replace(
+	                replace(
+	                    replace(
+	                        replace(
+	                            replace(
+	                                replace(
+	                                    replace(
+	                                        columnsWithAlias, concat(tableAlias, ".projectId,"), "'$projectId$' as projectId,"
+	                                    ), concat(tableAlias, ".projectType,"), "'$projectType$' as projectType,"
+	                                ), concat(tableAlias, ".objId,"), "'$objId$' as objId,"
+	                            ), concat(tableAlias, ".objType,"), "'$objType$' as objType,"
+	                        ), concat(tableAlias, ".projectCode,"), concat("IFNULL(nph.projectCode, ", tableAlias, ".projectCode) projectCode,")
+	                    ), concat(tableAlias, ".projectName,"), concat("IFNULL(nph.projectName, ", tableAlias, ".projectName) projectName,")
+	                ), concat(tableAlias, ".contractNo,"), concat("IFNULL(nph.customInfo ->> '$.contractNo', ", tableAlias, ".contractNo) contractNo,")
+	            ), concat(tableAlias, ".officeCode,"), concat("IFNULL(nph.column001, ", tableAlias, ".officeCode) officeCode,")
+	        ), " from ", tableName, " as ", tableAlias, 
+	        " left join pm_project nph on nph.projectId = '$projectId$' and nph.projectType = '$projectType$' ", 
+	        " where ", whereColumns
+			, " ) ", tableAlias
+	    ) as `insertSql`, IF(
+	        queryColumns = "projectIds", concat(
+	            "update ", tableName, " as ", tableAlias, " set ", tableAlias, ".projectIds = concat(projectIds, ',$projectId$') where FIND_IN_SET('$oldProjectId$', ", queryColumnsWithAlias, ")"
+	        ), null
+	    ) as `updateSql`, 
+	    IF(hasCustomInfo <!-- or hasEffectiveTo or hasDisabled or hasDeleted  -->
+			, concat(
+			    "update ", tableName, " as ", tableAlias, 
+			    " set ", 
+				concat_ws(",",
+					IF(hasCustomInfo, concat(tableAlias, ".customInfo = JSON_MERGE_PATCH(IFNULL(", tableAlias, ".customInfo, '{}'), '{\"transferProjectId\": $projectId$, \"transferProjectFlag\": 1}')"), null)
+					<!-- ,IF(hasEffectiveTo, concat(tableAlias, ".effectiveTo = now()"), null)
+ 					,IF(hasDisabled, concat(tableAlias, ".disabled = true"), null)
+ 					,IF(hasDeleted, concat(tableAlias, ".deleted = true"), null) -->
+				),
+			    " where ", whereColumns
+			), null
+	    ) as transferFlagSql
+<![CDATA[
+		, concat(
+            "MD5(concat_ws('&', IFNULL(", REPLACE(
+                replace(
+                    replace(columnsWithAlias, concat(tableAlias, ".projectId,"), ''), concat(tableAlias, ".projectType,"), ''
+                ), ",", ",'NULL'),IFNULL("
+            ), ",'NULL')", ")", ")"
+        ) md5Sql 
+]]>
+	from
+	(select *, 
+		replace(
+            replace(
+                replace(
+                    replace(
+                        replace(
+                            replace(
+                                replace(
+                                    replace(
+                                        columnsWithAlias, concat(tableAlias, ".projectId,"), "'$projectId$' as projectId,"
+                                    ), concat(tableAlias, ".projectType,"), "'$projectType$' as projectType,"
+                                ), concat(tableAlias, ".objId,"), "'$objId$' as objId,"
+                            ), concat(tableAlias, ".objType,"), "'$objType$' as objType,"
+                        ), concat(tableAlias, ".projectCode,"), concat("IFNULL(nph.projectCode, ", tableAlias, ".projectCode) projectCode,")
+                    ), concat(tableAlias, ".projectName,"), concat("IFNULL(nph.projectName, ", tableAlias, ".projectName) projectName,")
+                ), concat(tableAlias, ".contractNo,"), concat("IFNULL(nph.customInfo ->> '$.contractNo', ", tableAlias, ".contractNo) contractNo,")
+            ), concat(tableAlias, ".officeCode,"), concat("IFNULL(nph.column001, ", tableAlias, ".officeCode) officeCode,")
+        ) as selectColumns, 
+        replace(
+		    replace(
+				replace(
+				    replace(
+						replace(
+						    replace(
+								concat(queryColumnsWithAlias, ",$"), "projectId,", "projectId='$oldProjectId$' AND "
+						    ), "projectType,", "projectType='$oldProjectType$' AND "
+						), "objId,", "objId='$oldObjId$' AND "
+				    ), "objType,", "objType='$oldObjType$' AND "
+				), "projectIds,", "projectIds='$oldProjectId$' AND "
+		    ), " AND $", ""
+		) as whereColumns 
+	from 
+	    (select 
+	        t.`TABLE_NAME` as tableName, t.tableAlias, 
+	        group_concat(distinct pc.column_name order by pc.`ORDINAL_POSITION`) primaryKeys, 
+        	group_concat(distinct c.column_name order by c.`column_name`) queryColumns,
+			concat(group_concat(distinct c.column_name order by c.`column_name`), ",", group_concat(distinct ac.column_name order by ac.`ORDINAL_POSITION`)) columns, 
+			concat(group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`), ",", group_concat(distinct concat(t.tableAlias, ".", ac.column_name) order by ac.`ORDINAL_POSITION`)) columnsWithAlias, 
+			group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`) queryColumnsWithAlias,
+			max(ac.`COLUMN_NAME` = 'customInfo') as hasCustomInfo,
+			max(ac.`COLUMN_NAME` = 'effectiveTo') as hasEffectiveTo,
+	        max(ac.`COLUMN_NAME` = 'disabled') as hasDisabled,
+	        max(ac.`COLUMN_NAME` = 'deleted') as hasDeleted
+	    from
+	        (select 
+	            t.*, GROUP_CONCAT(
+	                SUBSTRING(
+	                    SUBSTRING_INDEX(
+	                        SUBSTRING_INDEX(t.TABLE_NAME, '_', sh.id + 1), '_', - 1
+	                    ), 1, 1
+	                ) separator ""
+	            ) as tableAlias 
+	        from
+	            information_schema.tables t 
+	            left join find_in_set_help sh 
+<![CDATA[    		on sh.id < (LENGTH(t.TABLE_NAME) - LENGTH(REPLACE(t.TABLE_NAME, '_', '')) + 1) ]]>
+	        where t.TABLE_SCHEMA = database() 
+	            and t.TABLE_TYPE = 'BASE TABLE' 
+	        group by t.TABLE_NAME) t 
+	        left join information_schema.columns ac 
+	            on t.`TABLE_CATALOG` = ac.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = ac.`TABLE_NAME` 
+	            and ac.`COLUMN_KEY` != "PRI" 
+	            and ac.COLUMN_NAME not in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns c 
+	            on t.`TABLE_CATALOG` = c.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = c.`TABLE_NAME` 
+	            and c.COLUMN_NAME in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns pc 
+	            on t.`TABLE_CATALOG` = pc.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = pc.`TABLE_NAME` 
+	            and pc.`COLUMN_KEY` = "PRI" 
+	    where t.TABLE_SCHEMA = database() 
+	        and c.TABLE_SCHEMA = database() 
+	        and pc.TABLE_SCHEMA = database() 
+	        and ac.TABLE_SCHEMA = database() 
+	        and t.TABLE_TYPE = 'BASE TABLE' 
+	    group by tableName) t ) t
+	where queryColumns in (
+	        "projectId", "projectIds", "projectId,projectType", "objId,objType"
+	    ) 
+	    and tableName not in ('pm_project')
   </select>
   
   <insert id="executeSql" parameterType="String" >

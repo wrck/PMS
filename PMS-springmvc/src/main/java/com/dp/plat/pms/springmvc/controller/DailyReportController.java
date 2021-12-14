@@ -100,6 +100,11 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 			PageParam<Object> tempParam = new PageParam<>();
 			DailyReportVO temp = new DailyReportVO();
 			Principal user = UserContext.getCurrentPrincipal();
+			// 如果是项目关联查询，则设置transferProjectFlag，查询核销项目的关联日报
+			if (v.getProjectId() != null) {
+				v.setTransferProjectFlag(1);
+				temp.setTransferProjectFlag(1);
+			}
 			// 允许访问的项目类型
 			if (!UserContext.hasAnyRoles(ROLE_PM_ADMIN, ROLE_ADMIN)) {
 				String projectTypes = StringUtils.defaultString(user.getUserInfo().getCustom4(), "-1");
@@ -111,11 +116,14 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
 					temp.setOfficeCodes(officeCodes);
 					v.setOfficeCodes(officeCodes);
-					
 				}
 				// 添加指派的项目成员
-				temp.setMemberCode(user.getUserName());
-				v.setMemberCode(user.getUserName());
+//				temp.setMemberCode(user.getUserName());
+//				v.setMemberCode(user.getUserName());
+				temp.setUserPower(user.getUserName());
+				v.setUserPower(user.getUserName());
+				temp.setUserIdPower(user.getUserInfoId());
+				v.setUserIdPower(user.getUserInfoId());
 			}
 //			String officeCode = StringUtils.trimToEmpty(v.getOfficeCode());
 //            ProjectHeader project = null;
@@ -389,7 +397,9 @@ public class DailyReportController extends AbstractController<IDailyReportServic
 					
 				}
 				// 添加指派的项目成员
-				dailyReportVO.setMemberCode(user.getUserName());
+//				dailyReportVO.setMemberCode(user.getUserName());
+				dailyReportVO.setUserPower(user.getUserName());
+				dailyReportVO.setUserIdPower(user.getUserInfoId());
 			}
 			pageParam.setModel(dailyReportVO);
 			

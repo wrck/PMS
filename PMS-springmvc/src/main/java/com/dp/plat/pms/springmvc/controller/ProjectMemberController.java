@@ -54,18 +54,20 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 	public String update(@PathVariable("id") Integer id, MemberVO v, Model model) {
 		String view = super.update(id, v, model);
 		
-		if (v.getEffectiveTo() == null || v.getEffectiveTo().after(new Date())) {
+		if (MessageUtil.FLAG_FROM_PROJECT.equals(v.getFromFlag()) && (v.getEffectiveTo() == null || v.getEffectiveTo().after(new Date()))) {
+			ProjectVO project = new ProjectVO();
+			project.setProjectId(v.getProjectId());
 			if (MessageUtil.MEMBER_SM.equals(v.getMemberRole())) {
-				ProjectVO project = new ProjectVO();
-				project.setProjectId(v.getProjectId());
 				project.setCustomInfoByKey("serviceManagerCode", v.getMemberCode());
 				project.setCustomInfoByKey("serviceManagerCodeforjson", v.getMemberName());
 				projectHeaderService.updateByPrimaryKeySelective(project);
 			} else if (MessageUtil.MEMBER_PM.equals(v.getMemberRole())) {
-				ProjectVO project = new ProjectVO();
-				project.setProjectId(v.getProjectId());
 				project.setCustomInfoByKey("programManagerCode", v.getMemberCode());
 				project.setCustomInfoByKey("programManagerCodeforjson", v.getMemberName());
+				projectHeaderService.updateByPrimaryKeySelective(project);
+			} else if (MessageUtil.MEMBER_SALESMAN.equals(v.getMemberRole())) {
+				project.setCustomInfoByKey("salesManCode", v.getMemberCode());
+				project.setCustomInfoByKey("salesManName", v.getMemberName());
 				projectHeaderService.updateByPrimaryKeySelective(project);
 			}
 		}

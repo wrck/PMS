@@ -52,6 +52,11 @@ public class DailyReportVO extends DailyReport {
 	private String subCategorysStr;
 	private List<String> categorys;
 	private List<String> subCategorys;
+	
+	/**
+	 * 是否项目核销转移
+	 */
+	private Integer transferProjectFlag;
 
 	public boolean isHasPower() {
 		return hasPower;
@@ -325,6 +330,14 @@ public class DailyReportVO extends DailyReport {
 		if(subCategorys != null) {
 			this.subCategorysStr = String.join(",", subCategorys);
 		}
+	}
+
+	public Integer getTransferProjectFlag() {
+		return transferProjectFlag;
+	}
+
+	public void setTransferProjectFlag(Integer transferProjectFlag) {
+		this.transferProjectFlag = transferProjectFlag;
 	}
 
 }

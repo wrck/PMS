@@ -192,7 +192,7 @@
                                 modals.info("删除成功！");
                                 commonTable.reloadData();
                             }else {
-                                modals.info(data.message);
+                                modals.info(data.message || "删除失败！");
                             }
                         });
                     })

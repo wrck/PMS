@@ -20,12 +20,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.activiti.engine.TaskService;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.converters.BigDecimalConverter;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -780,34 +782,76 @@ public class ProjectHeaderService extends ProjectServiceImpl
 					
 					// 保存新项目
 					newProjectId = insertProject(project);
+					String newProjectType = project.getProjectType();
+					Integer oldProjectId = source.getProjectId();
+					String oldProjectType = source.getProjectType();
 					String schema = dataSource.getConnection().getCatalog();
 					// 获取所有项目关联表，进行数据拷贝
 					List<Map<String, Object>> relateInfos = dao.selectAllProjectRelateInfos(schema);
+					Map<String, Object> params = new HashMap<String, Object>(8);
+					params.put("projectId", newProjectId);
+					params.put("projectType", newProjectType);
+					params.put("objId", newProjectId);
+					params.put("objType", "project");
+					params.put("oldProjectId", oldProjectId);
+					params.put("oldProjectType", oldProjectType);
+					params.put("oldObjId", oldProjectId);
+					params.put("oldObjType", "project");
 					for (Map<String, Object> relateInfo : relateInfos) {
 						String executeSql = "";
 						String tableName = (String) relateInfo.get("tableName");
 						String insertSql = (String) relateInfo.get("insertSql");
 						String updateSql = (String) relateInfo.get("updateSql");
+						String transferFlagSql = (String) relateInfo.get("transferFlagSql");
 						String queryColumns = (String) relateInfo.get("queryColumns");
-						insertSql = StringUtils.trimToEmpty(insertSql).replace("?", "%s");
-						updateSql = StringUtils.trimToEmpty(updateSql).replace("?", "%s");
-						// 相关表有projectId，部分表存在projectType，需要分开处理，部分关联表位projectIds关联，则需要添加关联关系，部分通用模块需要通过objType,objId关联
-						if ("projectId".equals(queryColumns)) {
-							executeSql = String.format(insertSql, project.getProjectId(), projectId);
-						} else if ("projectIds".equals(queryColumns)) {
-							executeSql = String.format(updateSql, project.getProjectId(), projectId);
-						} else if ("objType,objId".equals(queryColumns)) {
-							executeSql = String.format(insertSql, "project", project.getProjectId(), "project", projectId);
-						} else if ("objId,objType".equals(queryColumns)) {
-							executeSql = String.format(insertSql, project.getProjectId(), "project", projectId, "project");
+//						// 改用$key$占位符进行处理
+//						insertSql = StringUtils.trimToEmpty(insertSql).replace("?", "%s");
+//						updateSql = StringUtils.trimToEmpty(updateSql).replace("?", "%s");
+//						transferFlagSql = StringUtils.trimToEmpty(transferFlagSql).replace("?", "%s");
+//						// 相关表有projectId，部分表存在projectType，需要分开处理，部分关联表位projectIds关联，则需要添加关联关系，部分通用模块需要通过objType,objId关联
+//						if ("projectId".equals(queryColumns)) {
+//							executeSql = String.format(insertSql, newProjectId, newProjectId, newProjectType, oldProjectId);
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, oldProjectId);
+//						} else if ("projectIds".equals(queryColumns)) {
+//							executeSql = String.format(updateSql, newProjectId, oldProjectId);
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, oldProjectId);
+//						} else if ("objType,objId".equals(queryColumns)) {
+//							executeSql = String.format(insertSql, "project", newProjectId, newProjectId, newProjectType, "project", oldProjectId);
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, "project", oldProjectId);
+//						} else if ("objId,objType".equals(queryColumns)) {
+//							executeSql = String.format(insertSql, newProjectId, "project", newProjectId, newProjectType, oldProjectId, "project");
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, oldProjectId, "project");
+//						} else if ("projectId,projectType".equals(queryColumns)) {
+//							executeSql = String.format(insertSql, newProjectId, newProjectType, newProjectId, newProjectType, oldProjectId, oldProjectType);
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, oldProjectId, oldProjectType);
+//						} else if ("projectType,projectId".equals(queryColumns)) {
+//							executeSql = String.format(insertSql, newProjectType, newProjectId, newProjectType, newProjectId, oldProjectType, oldProjectId);
+//							transferFlagSql = String.format(transferFlagSql, newProjectId, oldProjectType, oldProjectId);
+//						} else {
+//							continue;
+//						}
+//						// 项目成员信息在创建项目时会进行新增，避免重复需要排除相同角色的有效项目成员
+//						if ("pm_project_member".equals(tableName)) {
+//							executeSql += String.format(" AND NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '%s' AND m.projectType = '%s' AND m.`memberCode` = ppm.memberCode AND m.`memberRole` = ppm.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))", newProjectId, newProjectType);
+//						}
+						// 改用$key$占位符
+						if ("projectIds".equals(queryColumns)) {
+							executeSql = updateSql;
 						} else {
-							executeSql = String.format(insertSql, project.getProjectId(), project.getProjectType(), projectId, projectType);
+							executeSql = insertSql;
 						}
-						// 项目成员信息在创建项目时会进行新增，避免重复需要排除相同角色的有效项目成员
 						if ("pm_project_member".equals(tableName)) {
-							executeSql += String.format(" AND NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '%s' AND m.projectType = '%s' AND m.`memberCode` = pm_project_member.memberCode AND m.`memberRole` = pm_project_member.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))", project.getProjectId(), project.getProjectType());
+							executeSql += " WHERE NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '$projectId$' AND m.projectType = '$projectType$' AND m.`memberCode` = ppm.memberCode AND m.`memberRole` = ppm.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))";
 						}
-						dao.executeSql(executeSql);
+						if (StringUtils.isNotBlank(executeSql)) {
+							executeSql = processSql(executeSql, params);
+							dao.executeSql(executeSql);
+						}
+						// 更新转移标记
+						if (StringUtils.isNotBlank(transferFlagSql)) {
+							executeSql = processSql(transferFlagSql, params);
+							dao.executeSql(executeSql);
+						}
 					}
 					
 					// 添加核销关联ID,失效原项目
@@ -815,7 +859,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 					source.setCustomInfoByKey("transferToProject", project);
 					source.setProjectState("100");
 					source.setDisabled(true);
-//					source.setEffectiveTo(new Date());
+//					source.setEffectiveTo(new Date());// 设置effectiveTo会使项目再次显现出来
 					this.updateByPrimaryKeySelective(source);
 					status = true;
 				} else {
@@ -829,6 +873,19 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			throw new RuntimeException("核销项目发生异常", e);
 		}
 		return new Result(status, newProjectId, message);
+    }
+    
+    @Override
+    @Transactional
+    public void invalidProject(int projectId) {
+    	projectDao.invalidProjectHeader(projectId);// 项目主表
+		projectDao.invalidProjectNotification(projectId);// 项目通知表
+		projectDao.invalidProjectGroupRelationship(projectId);// 失效pm_project_group_relationship
+		
+    	ProjectVO project = new ProjectVO(projectId);
+		project.setDisabled(true);
+		project.setEffectiveTo(new Date());
+		this.updateByPrimaryKeySelective(project);
     }
 
 	@Override
@@ -1007,4 +1064,22 @@ public class ProjectHeaderService extends ProjectServiceImpl
 		}
 		return true;
 	}
+    
+    /**
+     * 处理sql
+     * @param sql
+     * @param params
+     * @return
+     */
+    private String processSql(String sql, Map<String, Object> params) {
+    	if (params == null || StringUtils.isBlank(sql)) {
+    		return sql;
+    	}
+    	for (Entry<String, Object> param : params.entrySet()) {
+			String key = param.getKey();
+			Object value = param.getValue();
+			sql = RegExUtils.replaceAll(sql, Matcher.quoteReplacement("$" + key + "$"), String.valueOf(value));
+		}
+    	return sql;
+    }
 }
