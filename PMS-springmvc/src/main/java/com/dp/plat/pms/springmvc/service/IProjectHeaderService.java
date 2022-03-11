@@ -47,11 +47,12 @@ public interface IProjectHeaderService extends ProjectService/*IAbstractBaseServ
 
     /**
 	 * 分页查询满足条件的记录
+     * @param <T>
 	 * 
 	 * @param pageParam
 	 * @return
 	 */
-    List<Object> selectBySelectivePageable(PageParam<?> pageParam);
+    <T> List<T> selectBySelectivePageable(PageParam<?> pageParam);
 
     /**
 	 * 查询满足条件的所有记录

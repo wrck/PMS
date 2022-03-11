@@ -173,7 +173,7 @@ public class PmClosedLoopQuesnaireServiceImpl extends BaseServiceImpl implements
         pmClQuesnaireResultHeader.setEvaluationHeaderId(0);
         int pmClQuesnaireResultHeaderId = pmClosedLoopQuesnaireDao.addPmClQuesResultHeader(pmClQuesnaireResultHeader);
         // 2.插入问卷结果行信息
-        pmClosedLoopQuesnaireDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeaderId);
+        pmClosedLoopQuesnaireDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
         
         return pmClQuesnaireResultHeaderId;
     }

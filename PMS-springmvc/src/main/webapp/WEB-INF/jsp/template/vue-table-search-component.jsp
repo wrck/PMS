@@ -46,6 +46,7 @@
 				<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 					<label :for="field.cssId || field.searchKey" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}">{{field.title}}</label>
 					<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.searchKey) + 'DaterangeBtn'"
+						data-toggle="daterangepicker" 
 						:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
 						:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
 						:data-format="field.extData.format || field.render"
@@ -436,8 +437,10 @@
 	 				return;
 	 			}
 	 			var target = event.currentTarget;
-	 			var startDate = $(target).data('startDate') || undefined;
-	 			var endDate = $(target).data('endDate') || undefined;
+	 			var startDate = $(".daterange-input-start", this.element).val();
+	 			var endDate = $(".daterange-input-end", this.element).val();
+	 			startDate = startDate || $(target).data('startDate') || undefined;
+	 			endDate = endDate || $(target).data('endDate') || undefined;
 	 			var minDate = $(target).data('minDate') || "2010-01-01";
 	 			var maxDate = $(target).data('maxDate') || undefined;
 	 			var format = $(target).data('format') || 'YYYY-MM-DD';
@@ -446,6 +449,18 @@
 	 			minDate = moment(minDate, minDate ? format : null);
 	 			maxDate = moment(maxDate, maxDate ? format : null);
 	 			var currentDate = moment();
+	 			var daterangepickerCallback = function (start, end, label) {
+	 		        if (label == '不限') {
+	 		        	$('.daterange-span', this.element).html("不限");
+	 		            $(".daterange-input-start", this.element).val("");
+	 		            $(".daterange-input-end", this.element).val("");
+	 		        } else {
+	 		            $('.daterange-span', this.element).html(start.format(format) + ' - ' + end.format(format));
+	 		            $(".daterange-input-start", this.element).val(start.format(format));
+	 		            //$(".daterange-input-end", this.element).val(end.add(1, "days").format("YYYY-MM-DD"));
+	 		            $(".daterange-input-end", this.element).val(end.format('YYYY-MM-DD')+" 23:59:59");
+	 		        }
+	 		    }
 	 			$(target).daterangepicker({
 	 				locale: {
 	 					format : format || 'YYYY-MM-DD',
@@ -468,7 +483,9 @@
 //	 					'最近7天': [moment().subtract(6, 'days'), currentDate],
 //	 					'最近30天': [moment().subtract(29, 'days'), currentDate],
 	 					'这个月': [moment().startOf('month'), moment().endOf('month')],
-	 					'上个月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+	 					'上个月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+ 						'近1年': [moment().subtract(1, 'year'), moment()],
+						'近2年': [moment().subtract(2, 'year'), moment()]
 	 				},
 	 				opens: "left",
 	 				linkedCalendars: false,
@@ -477,18 +494,12 @@
 	 				endDate: endDate ? moment(endDate, endDate ? format : null) : maxDate,
 	 				minDate: minDate,
 	 				maxDate: maxDate,
-	 		    }, function (start, end, label) {
-	 		        if (label == '不限') {
-	 		        	$('.daterange-span', this.element).html("不限");
-	 		            $(".daterange-input-start", this.element).val("");
-	 		            $(".daterange-input-end", this.element).val("");
-	 		        } else {
-	 		            $('.daterange-span', this.element).html(start.format(format) + ' - ' + end.format(format));
-	 		            $(".daterange-input-start", this.element).val(start.format(format));
-	 		            //$(".daterange-input-end", this.element).val(end.add(1, "days").format("YYYY-MM-DD"));
-	 		            $(".daterange-input-end", this.element).val(end.format('YYYY-MM-DD')+" 23:59:59");
-	 		        }
-	 		    });
+	 		    }, daterangepickerCallback);
+	 			var picker = $(target).data("daterangepicker");
+	 			if (picker) {
+		 			picker.calculateChosenLabel();
+		 			daterangepickerCallback.call(picker, picker.startDate, picker.endDate, picker.chosenLabel);
+	 			}
 	 			$(target).addClass("daterange-inited");
 	 		}
 	 	}

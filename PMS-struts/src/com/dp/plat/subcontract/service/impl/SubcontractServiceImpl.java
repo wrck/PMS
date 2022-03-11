@@ -2249,7 +2249,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		pmClQuesnaireResultHeader.setEvaluationHeaderId(0);
 		int pmClQuesnaireResultHeaderId = pmClosedLoopDao.addPmClQuesResultHeader(pmClQuesnaireResultHeader);
 		// 2.插入问卷结果行信息
-		pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeaderId);
+		pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
 
 		// 3.将问卷信息保存进回访流程中
 		// 3.0查询本次审批的问卷是否已经保存过

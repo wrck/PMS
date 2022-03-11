@@ -58,6 +58,7 @@ public class WorkBenchController {
 		workFlow.setProcessKey(StringUtils.join(processKeyList, ","));
 		workFlow.setAssignee(String.valueOf(user.getUserCustom4()));
 		workFlow.setBeginTime(new Date());
+		workFlow.setStatus(PmWorkFlowVO.PENDING);
 		String areaPower = StringUtils.trimToEmpty(user.getUserInfo().getCustom5());
 		List<String> areaList = new ArrayList(Arrays.asList(StringUtils.split(areaPower, ",")));
 		areaList.add("all");
@@ -89,6 +90,7 @@ public class WorkBenchController {
 		workFlow.setProcessKey(StringUtils.join(processKeyList, ","));
 		workFlow.setAssignee(String.valueOf(user.getUserCustom4()));
 		workFlow.setBeginTime(new Date());
+		workFlow.setStatus(PmWorkFlowVO.PENDING);
 		String areaPower = StringUtils.trimToEmpty(user.getUserInfo().getCustom5());
 		List<String> areaList = new ArrayList(Arrays.asList(StringUtils.split(areaPower, ",")));
 		areaList.add("all");

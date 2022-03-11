@@ -389,16 +389,48 @@
 	</dynamic>
   </select>
   
-  <select id="selectProjectWarrantyCallbackMapList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
-    select pwc.*, d.`departmentName` AS officeName, c.name AS companyName, c.abbr as companyAbbr,
+  <sql id="sql_select_projectWarrantyCallbackMapList">
+  	select pwc.*, d.`departmentName` AS officeName, c.name AS companyName, c.abbr as companyAbbr,
     	IFNULL(ssfs1.basicDataName, '未指定') AS serviceName
     	<isNotEqual property="hideQuesnaire" compareValue="true" prepend=",">
 	        qrt.* 
+	    </isNotEqual>
+	    <isNotEqual property="hideWarranty" compareValue="true" prepend=",">
+	        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
+	        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
+	            IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',
+	                IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 1, '维保外', NULL)
+	            )
+	        ) AS warrantyStatusName,
+<!-- 	    MIN(wcs.`warrantyStartTime`) AS warrantyStartTime,
+	        MAX(wcs.`warrantyEndTime`) AS warrantyEndTime, -->
+	        GROUP_CONCAT(DISTINCT CONCAT(wcs.contractNo, ":", wcs.warrantyStatusName, "(", DATE(wcs.`warrantyStartTime`), "~", DATE(wcs.`warrantyEndTime`), ")") SEPARATOR "\r\n") AS warrantyStatusDesc,
+	        MAX(wcs.`warrantyGrade`) warrantyGrade, 
+	        IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
+	            IF(MAX(wcs.`warrantyGrade`) = 2, '中级维保',
+	                IF(MAX(wcs.`warrantyGrade`) = 3, '高级维保', NULL)
+	            )
+	        ) AS warrantyGradeName,
+	        MIN(wcs.`warrantyGradeStartTime`) warrantyGradeStartTime,
+	        MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
+	        GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
+	        IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
+	        GROUP_CONCAT(DISTINCT wcs.renewalDesc SEPARATOR "\r\n") AS renewalDesc
 	    </isNotEqual>
     from pm_project_warranty_callback AS `pwc`
     <isNotEqual property="hideQuesnaire" compareValue="true">
 	    LEFT JOIN projectWarrantyCallback_tempQuesnaireResultTable qrt 
 	        ON qrt.quesnaireResultHeaderId = pwc.`quesnaireId` 
+    </isNotEqual>
+    <isNotEqual property="hideWarranty" compareValue="true">
+        LEFT JOIN pm_project_header ph
+	        ON ph.projectId = pwc.projectId
+	    LEFT JOIN `pm_project_group_relationship` pgr 
+	        ON ph.`projectCode` = pgr.`projectCode` 
+	    LEFT JOIN `pm_project_contract` pc 
+	        ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+	    LEFT JOIN `view_warranty_contract_state` wcs 
+	        ON wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
     </isNotEqual>
     LEFT JOIN fnd_basic_data ssfs1 
             ON ssfs1.dataTypeCode = '15'
@@ -411,7 +443,27 @@
 	<dynamic prepend="where">
 		<include refid="sql_projectWarrantyCallback_model_where_selective" />
 	</dynamic>
+	<isNotEqual property="hideWarranty" compareValue="true">
+		GROUP BY pwc.id
+	</isNotEqual>
+	<dynamic prepend="having">
+		<isNotEqual property="hideWarranty" compareValue="true">
+			<isNotEmpty property="model">
+				<isNotEmpty prepend="AND" property="model.hasRenewal"> hasRenewal = #model.hasRenewal# </isNotEmpty>
+			</isNotEmpty>
+		</isNotEqual>
+	</dynamic>
+  </sql>
+  
+  <select id="selectProjectWarrantyCallbackMapList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+	<include refid="sql_select_projectWarrantyCallbackMapList" />
 	<include refid="sql_projectWarrantyCallback_pageable_limit" />
+  </select>
+  
+  <select id="countProjectWarrantyCallbackMapList" parameterClass="map" resultClass="int">
+    select count(*) from (
+    	<include refid="sql_select_projectWarrantyCallbackMapList" />
+    ) t
   </select>
   
   <sql id="sql_select_projectWarranty">
@@ -474,7 +526,7 @@
             ON wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
         LEFT JOIN 
 	        (SELECT 
-	            projectId, max(id) as id, count(id) as callbackCount, count(renewalIntention = 1) as renewalIntentionCount 
+	            projectId, max(id) as id, count(id) as callbackCount, count(IF(renewalIntention = 1, 1, null)) as renewalIntentionCount 
 	        FROM
 	            pm_project_warranty_callback 
 	        GROUP BY projectId) mpwc 
@@ -531,7 +583,7 @@
 	<isNotEmpty prepend="AND" property="industryName"> ph.column005 like concat("%", #industryName#, "%") </isNotEmpty>
 	<isNotEmpty prepend="AND" property="agentChannel"> prp.partyName like concat("%", #agentChannel#, "%") </isNotEmpty>
 	<isNotEmpty prepend="AND" property="finalCustomerName"> ph.column013 like concat("%", #finalCustomerName#, "%") </isNotEmpty>
-	<isNotEmpty prepend="AND" property="customerNameNotFuzzy"> ph.column013 = #customerNameNotFuzzy# </isNotEmpty>
+	<isNotNull prepend="AND" property="customerNameNotFuzzy"> #customerNameNotFuzzy# = TRIM(IFNULL(ph.column013, "")) </isNotNull>
 	<isNotEmpty prepend="AND" property="serviceImpl"> #serviceImpl# = IFNULL(ph.column012, ph.columno12_readonly) </isNotEmpty>
 	<isNotEmpty prepend="AND" property="renewalIntentionInt"> 
 		<isEqual property="renewalIntentionInt" compareValue="-1"> pwc.renewalIntention is null </isEqual>

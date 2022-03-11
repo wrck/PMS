@@ -783,14 +783,15 @@
 	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.DailyReportVO">
-    <![CDATA[
-    select distinct
+    select <!-- distinct -->
 	    dr.*, bpt.`basicDataName` as projectTypeName, bt.`basicDataName` as typeName, bc.`basicDataName` as categoryName, bsc.`basicDataName` as subCategoryName 
 	from
 	    pm_daily_report AS `dr` 
 	    left join pm_project ph 
 	        on dr.projectId = ph.`projectId` 
 	        and dr.`projectType` = ph.`projectType` 
+    <if test="(model.userPower != null and '' != model.userPower) or (model.memberCode != null and '' != model.memberCode)">
+    <![CDATA[
 	    left join pm_project_member pm 
 	        on ph.projectId = pm.projectId 
 	        and pm.effectiveFrom <= now() 
@@ -799,19 +800,28 @@
 	            or pm.effectiveTo is null
 	        ) 
 	        and pm.`memberRole` in ("20", "30", "80") 
+    ]]>
+		<if test="model.userPower != null and '' != model.userPower">
+			and pm.memberCode = #{model.userPower}
+		</if>
+		<if test="model.memberCode != null and '' != model.memberCode">
+			and pm.memberCode = #{model.memberCode}
+		</if>
+    </if>
+    <if test="model.userIdPower != null and '' != model.userIdPower">
 	    left join t_user_info ui 
 	        on (
 	            dr.`officeCode` = ui.`custom3` 
 	            or find_in_set(dr.`officeCode`, ui.`custom5`)
 	        ) 
 	        and find_in_set(dr.projectType, concat(IFNULL(ui.custom4, ""), ",30,40")) 
-    ]]>
     	<if test="model != null and model.orgId != null">
 			and ui.compID = #{model.orgId, jdbcType=INTEGER}
 		</if>
         <if test="model.userIdPower != null and '' != model.userIdPower">
 			AND ui.id = #{model.userIdPower}
 		</if>
+	</if>
 	    left join `fnd_basic_data` bpt 
 	        on bpt.`dataTypeCode` = 'af_dailyReportProjectType' 
 	        and dr.`projectType` = bpt.`basicDataId` 
@@ -873,13 +883,14 @@
 	<include refid="sql_pageable_limit" />
   </select>
   <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
-    <![CDATA[
     select 
     	count(distinct dr.id) 
     from pm_daily_report AS `dr`
 	    left join pm_project ph 
 	        on dr.projectId = ph.`projectId` 
 	        and dr.`projectType` = ph.`projectType` 
+	<if test="(model.userPower != null and '' != model.userPower) or (model.memberCode != null and '' != model.memberCode)">
+    <![CDATA[
 	    left join pm_project_member pm 
 	        on ph.projectId = pm.projectId 
 	        and pm.effectiveFrom <= now() 
@@ -888,19 +899,28 @@
 	            or pm.effectiveTo is null
 	        ) 
 	        and pm.`memberRole` in ("20", "30", "80") 
+    ]]>
+		<if test="model.userPower != null and '' != model.userPower">
+			and pm.memberCode = #{model.userPower}
+		</if>
+		<if test="model.memberCode != null and '' != model.memberCode">
+			and pm.memberCode = #{model.memberCode}
+		</if>
+    </if>
+    <if test="model.userIdPower != null and '' != model.userIdPower">
 	    left join t_user_info ui 
 	        on (
 	            dr.`officeCode` = ui.`custom3` 
 	            or find_in_set(dr.`officeCode`, ui.`custom5`)
 	        ) 
 	        and find_in_set(dr.projectType, concat(IFNULL(ui.custom4, ""), ",30,40")) 
-    ]]>
     	<if test="model != null and model.orgId != null">
 			and ui.compID = #{model.orgId, jdbcType=INTEGER}
 		</if>
         <if test="model.userIdPower != null and '' != model.userIdPower">
 			AND ui.id = #{model.userIdPower}
 		</if>
+	</if>
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			(

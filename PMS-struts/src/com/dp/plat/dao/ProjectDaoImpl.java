@@ -1547,6 +1547,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     
     @Override
     public Map<String, Object> queryQuestionColumns (String quesType, String resultType) {
+    	// 设置group_contract的最大长度，默认1024
+		getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
         getSqlMapClientTemplate().insert("createTempQuesnaireResultLineTable", quesType);
         HashMap<String, Object> params = new  HashMap<>();
         params.put("quesType", quesType);

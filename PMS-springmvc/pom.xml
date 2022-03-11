@@ -17,8 +17,9 @@
 	<properties> 
 		<!-- 允许Maven后面的resource覆盖同名文件 ,配了resources-plugin不起作用，需要在resources-plugin中配置orerwrite-->
         <maven.resources.overwrite>true</maven.resources.overwrite> 
+        <freemarker.version>2.3.30</freemarker.version>
 		<!-- shiro版本 -->
-		<shiro.version>1.4.1</shiro.version>
+		<!-- <shiro.version>1.4.1</shiro.version> -->
 		<flying.saucer.version>9.1.20</flying.saucer.version>
 	</properties>
 
@@ -129,6 +130,12 @@
 					<artifactId>activiti-api-unifytask-patch</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<artifactId>freemarker</artifactId>
+			<groupId>org.freemarker</groupId>
+			<version>${freemarker.version}</version>
 		</dependency>
 		
 		<dependency>

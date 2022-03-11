@@ -45,6 +45,8 @@ public class BaseVO implements Serializable{
 	public static final String APPROVAL_SUCCESS = "APPROVAL_SUCCESS";
 	//审批失败
 	public static final String APPROVAL_FAILED = "APPROVAL_FAILED";
+	//审批取消
+	public static final String APPROVAL_CANCEL = "APPROVAL_CANCEL";
 	
 	
 	// 申请人id

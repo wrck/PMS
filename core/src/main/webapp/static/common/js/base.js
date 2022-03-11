@@ -313,3 +313,81 @@ function ajaxupload(myform ,uploadUrl, callback){
 		}
 	});
 }
+
+/**
+ * 可解决iframe页面a标签无法下载的问题。
+ * @param url
+ * @param saveName
+ * @returns
+ */
+function getDownload(url, saveName)
+{
+	if(typeof url == 'object' && url instanceof Blob)
+	{
+		url = URL.createObjectURL(url); // 创建blob地址
+	}
+	var aLink = top.window.document.createElement('a');
+	aLink.href = url;
+	aLink.download = saveName || ''; // HTML5新增的属性，指定保存文件名，可以不要后缀，注意，file:///模式下不会生效
+	var event;
+	if(window.MouseEvent) event = new MouseEvent('click');
+	else
+	{
+		event = top.window.document.createEvent('MouseEvents');
+		event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+	}
+	aLink.dispatchEvent(event);
+}
+
+/**
+ * post方式下载文件
+ * @param url
+ * @param saveName
+ * @returns
+ */
+function postDownload(url, formData) {
+	var $target = $((window.event || {}).target);
+	$target.button("loading");
+	if(typeof url == 'object' && url instanceof Blob) {
+		url = URL.createObjectURL(url); // 创建blob地址
+	}
+	var timestamep = new Date().getTime();
+	var iframeName = "downloadFrame" + timestamep;
+	var fromName = "downloadForm" + timestamep;
+	var $iframe = $('<iframe name="' + iframeName + '" style="display: none;" frameborder="0" />'); 
+	var $form = $('<form name="' + fromName + '" style="display: none;" method="post"/>');
+	// 添加iframe加载完成事件
+	var iframe = $iframe[0];
+	if (iframe.attachEvent){
+		iframe.attachEvent("onload", function(){
+			setTimeout(function() {
+				$form.remove();
+				$target.button("reset");
+			}, 60000);
+		});
+	} else {
+		iframe.onload = function(){
+			setTimeout(function() {
+				$form.remove();
+				$target.button("reset");
+			}, 60000);
+		};
+	}
+	$form.append($iframe);  //addxxformfx：form的id
+	$form.attr("action", url);//要提交到的action
+	$form.attr("target", iframeName);//downloadFrame，指向上面iframe的名字
+	
+	// 提交的数据
+	formData = formData || {};
+	// 添加Token
+	formData['__RequestVerificationToken'] = __RequestVerificationToken;
+	for (var name in formData) {
+		var value = formData[name];
+		if (value === undefined) {
+			continue;
+		}
+		$form.append("<input type='hidden' name='" + name + "' value='" + value + "' />");
+	}
+	$("body").append($form);
+	$form.submit();
+}

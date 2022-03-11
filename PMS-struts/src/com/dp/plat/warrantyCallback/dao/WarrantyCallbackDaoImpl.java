@@ -121,8 +121,12 @@ public class WarrantyCallbackDaoImpl extends BaseDao implements WarrantyCallback
 			getSqlMapClientTemplate().insert("createTempQuesnaireResultTable", questionColumns);
 
 			Map<Object, Object> params = new HashMap<>();
+			params.put("model", projectWarrantyCallback);
 			if (displayParam != null && displayParam.getPagesize() != -1) {
-				Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectWarrantyCallbackList", projectWarrantyCallback);
+				params.put("hideQuesnaire", "true");
+//				Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectWarrantyCallbackList", projectWarrantyCallback);
+				Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectWarrantyCallbackMapList", params);
+				params.remove("hideQuesnaire");
 				displayParam.setTotalcount(totalcount);
 				if (!(displayParam.getExport() || displayParam.getPagesize() == -1)) {
 					params.put("hideFiles", "true");
@@ -133,7 +137,6 @@ public class WarrantyCallbackDaoImpl extends BaseDao implements WarrantyCallback
 					displayParam.setOffset(0);
 				}
 			}
-			params.put("model", projectWarrantyCallback);
 			params.put("displayParam", displayParam);
 
 //            WarrantyCallbackPageParam warrantyCallbackPageParam = new WarrantyCallbackPageParam(displayParam);

@@ -135,12 +135,33 @@ public class PmClosedLoopQuesnaireDaoImpl extends BaseDao implements
 	
 	@Override
     public void addPmClQuesResultLineList(List<PmClQuesnaireResultLine>pmClQuesnaireResultLineList, int pmClQuesnaireResultHeaderId){
-	    if (pmClQuesnaireResultLineList == null || pmClQuesnaireResultLineList.isEmpty()) {
+//	    if (pmClQuesnaireResultLineList == null || pmClQuesnaireResultLineList.isEmpty()) {
+//	        return;
+//	    }
+//	    Map<String, Object>parameterMap=new HashMap<String, Object>();
+//        parameterMap.put("pmClQuesnaireResultLineList", pmClQuesnaireResultLineList);
+//        parameterMap.put("pmClQuesnaireResultHeaderId", pmClQuesnaireResultHeaderId);
+//        getSqlMapClientTemplate().insert("insert-quesnaire_result_line-obj", parameterMap);
+		PmClQuesnaireResultHeader temp = new PmClQuesnaireResultHeader();
+		temp.setId(pmClQuesnaireResultHeaderId);
+		PmClQuesnaireResultHeader pmClQuesnaireResultHeader = (PmClQuesnaireResultHeader) getSqlMapClientTemplate().queryForObject("select-quesnaire_result_header-list", temp);
+	    if (pmClQuesnaireResultHeader == null || pmClQuesnaireResultHeader.getId() == 0) {
+	    	pmClQuesnaireResultHeader = temp;
+	    }
+		this.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
+    }
+	
+	@Override
+    public void addPmClQuesResultLineList(List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList, PmClQuesnaireResultHeader pmClQuesnaireResultHeader) {
+	    if (pmClQuesnaireResultHeader == null || pmClQuesnaireResultHeader.getId() == 0) {
 	        return;
 	    }
 	    Map<String, Object>parameterMap=new HashMap<String, Object>();
         parameterMap.put("pmClQuesnaireResultLineList", pmClQuesnaireResultLineList);
-        parameterMap.put("pmClQuesnaireResultHeaderId", pmClQuesnaireResultHeaderId);
+        parameterMap.put("pmClQuesnaireResultHeaderId", pmClQuesnaireResultHeader.getId());
+        if (pmClQuesnaireResultHeader.getQuesnaireTemplateHeaderId() != 0) {
+            parameterMap.put("pmClQuesnaireTemplateHeaderId", pmClQuesnaireResultHeader.getQuesnaireTemplateHeaderId());
+        }
         getSqlMapClientTemplate().insert("insert-quesnaire_result_line-obj", parameterMap);
     }
 }

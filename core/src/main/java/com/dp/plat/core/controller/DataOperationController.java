@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,10 +32,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.dp.plat.core.config.RoutingDataSource;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.SpringContext;
@@ -503,7 +506,7 @@ public class DataOperationController {
 //    		if (!matcherSqlTables.isValid()) {
 //    			throw new RuntimeException(String.format("没有权限访问以下表%s！", matcherSqlTables.getMatchTables()));
 //    		}
-            Result result = checkSql(sql);
+            Result result = checkSql(sql, true);
     		if (!result.isSuccess()) {
     			throw new RuntimeException(result.getMessage());
     		}
@@ -656,7 +659,7 @@ public class DataOperationController {
 //    			model.addAttribute("error", String.format("没有权限访问以下表%s！", matcherSqlTables.getMatchTables()));
 //    			return "/data/data_export_preview";
 //    		}
-            Result result = checkSql(sql);
+            Result result = checkSql(sql, true);
     		if (!result.isSuccess()) {
     			model.addAttribute("status", result.isSuccess());
     			model.addAttribute("error", result.getMessage());
@@ -705,6 +708,18 @@ public class DataOperationController {
     }
     
     private Result checkSql(String sql) {
+    	return checkSql(sql, false);
+    }
+    
+    private Result checkSql(String sql, Map<String, Object> params) {
+    	return checkSql(sql, true, params);
+    }
+    
+    private Result checkSql(String sql, boolean fillParams) {
+    	return checkSql(sql, fillParams, null);
+    }
+    
+    private Result checkSql(String sql, boolean fillParams, Map<String, Object> params) {
 //    	sql = JsoupUtil.unescape(JsoupUtil.clean(sql, Safelist.none()));// 放开Mysql JSON的语法
     	sql = JsoupUtil.unescape(JsoupUtil.clean(sql));
         if (StringUtils.isNotBlank(sql)) {
@@ -715,13 +730,28 @@ public class DataOperationController {
         		String fromUrl = HttpContext.getCurrentRequest().getServletPath();
         		return new Result(false, "redirect:/illegal.json?illegal=SQLInject&fromUrl=" + fromUrl, "参数不合法！");
         	}
+        	
+        	if (fillParams) {
+            	// 替换当前用户参数
+            	Principal user = UserContext.getCurrentPrincipal();
+            	Map<String, Object> variables = new HashMap<String, Object>();
+            	if (params != null) {
+            		variables.putAll(params);
+            	}
+            	variables.put("user", user);
+            	sql = SQLParser.fillSqlParams(sql, variables);
+        	}
+        	
+        	// 获取当前连接数据库的类型
+        	DbType dbType = getCurrentDbType();
+        	
         	String tableWhitelistRegex = SystemConfig.systemVariables.getOrDefault("sys.sql.table.whitelist.regex", PropertyUtil.getProperty("sys.sql.table.whitelist.regex"));
-    		SqlParserResult matcherSqlTables = SQLParser.matcherSqlTables(sql, tableWhitelistRegex);
+        	SqlParserResult matcherSqlTables = SQLParser.matcherSqlTables(sql, tableWhitelistRegex, dbType);
     		if (!matcherSqlTables.isValid()) {
     			return new Result(false, "/base/showExportColumns", String.format("没有权限访问以下表%s！", matcherSqlTables.getMatchTables()));
     		}
     		String tableBlacklistRegex = SystemConfig.systemVariables.getOrDefault("sys.sql.table.blacklist.regex", PropertyUtil.getProperty("sys.sql.table.blacklist.regex"));
-    		matcherSqlTables = SQLParser.unMatcherSqlTables(sql, tableBlacklistRegex);
+    		matcherSqlTables = SQLParser.unMatcherSqlTables(sql, tableBlacklistRegex, dbType);
     		if (!matcherSqlTables.isValid()) {
     			return new Result(false, "/base/showExportColumns", String.format("没有权限访问以下表%s！", matcherSqlTables.getMatchTables()));
     		}
@@ -751,4 +781,13 @@ public class DataOperationController {
         return isPermit;
     }
     
+	/**
+	 * 获取当前链接数据库的数据库类型
+	 * 
+	 * @return
+	 */
+	private DbType getCurrentDbType() {
+		RoutingDataSource dataSource = SpringContext.getBean("dataSource", RoutingDataSource.class);
+		return SQLParser.getCurrentDbType(dataSource);
+	}
 }

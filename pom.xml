@@ -22,12 +22,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- spring版本 -->
-		<spring.version>5.2.4.RELEASE</spring.version>
+		<spring.version>5.3.15</spring.version>
+		<!-- <spring.version>5.2.4.RELEASE</spring.version> -->
 		<!-- <spring.version>4.3.10.RELEASE</spring.version> -->
 
 		<!-- Struts2版本 -->
 		<!-- <struts2.version>2.3.35</struts2.version> -->
-		<struts2.version>2.5.22</struts2.version>
+		<struts2.version>2.5.28.3</struts2.version>
 
 		<!-- 数据库驱动版本号 -->
 		<!-- mysql -->
@@ -38,27 +39,27 @@
 		<ibatis.version>2.3.4.726-patched</ibatis.version>
 		<ibatis-sqlmap.version>2.3.4.726</ibatis-sqlmap.version>
 		<!-- mybatis版本号 -->
-		<mybatis.version>3.5.4</mybatis.version>
-		<mybatis-spring.version>2.0.4</mybatis-spring.version>
+		<mybatis.version>3.5.9</mybatis.version>
+		<mybatis-spring.version>2.0.6</mybatis-spring.version>
 		
 		<!-- CAS单点登录 -->
 		<!-- <cas.version>3.6.1</cas.version> -->
 		<cas.version>3.2.2</cas.version>
 		<!-- shiro版本 -->
 		<!-- <shiro.version>1.4.1</shiro.version> -->
-		<shiro.version>1.7.1</shiro.version>
+		<shiro.version>1.8.0</shiro.version>
 		
 		<!-- 数据库连接池 -->
 		<commons-dbcp.version>1.4</commons-dbcp.version>
-		<commons-dbcp2.version>2.7.0</commons-dbcp2.version>
+		<commons-dbcp2.version>2.9.0</commons-dbcp2.version>
 		<!-- <druid.version>1.1.19</druid.version> -->
-		<druid.version>1.2.5</druid.version>
+		<druid.version>1.2.8</druid.version>
 
 		<!-- quartz定时器版本 -->
 		<quartz.version>2.3.2</quartz.version>
 
 		<!-- aop版本号 -->
-		<aspectj.version>1.9.5</aspectj.version>
+		<aspectj.version>1.9.7</aspectj.version>
 		<cglib.version><!-- 2.2 -->
 			3.3.0
 		</cglib.version>
@@ -81,31 +82,32 @@
 		<sitemesh.version>3.0.1</sitemesh.version>
 
 		<!-- logback日志文件管理包版本 -->
-		<slf4j.version>1.7.26</slf4j.version>
-		<log4j.version>2.16.0</log4j.version>
-		<logback.version>1.2.3</logback.version>
-		<jboss-logging.version>3.4.0.Final</jboss-logging.version>
+		<slf4j.version>1.7.33</slf4j.version>
+		<log4j.version>2.17.1</log4j.version>
+		<logback.version>1.2.10</logback.version>
+		<jboss-logging.version>3.4.3.Final</jboss-logging.version>
 
 		<!-- json相关 -->
 		<!-- alibaba.fasjson -->
-		<fastjson.version>1.2.58</fastjson.version>
+		<fastjson.version>1.2.79</fastjson.version>
 		<!-- jackson -->
 		<jackson-mapper-asl.version>1.9.13</jackson-mapper-asl.version>
-		<jackson.version>2.9.9</jackson.version>
-		<jackson-databind.version>2.9.9.1</jackson-databind.version>
+		<jackson.version>2.13.1</jackson.version>
+		<jackson-databind.version>2.13.1</jackson-databind.version>
 		<!-- joda-time -->
-		<joda-time.version>2.10.3</joda-time.version>
+		<joda-time.version>2.10.13</joda-time.version>
 
 		<!-- POI版本 -->
-		<poi.version>4.1.0</poi.version>
+		<!-- <poi.version>4.1.2</poi.version> -->
+		<poi.version>5.2.0</poi.version>
 		<poi-ooxml.version>${poi.version}</poi-ooxml.version>
 
 		<!-- commons工具包版本 -->
 		<commons-fileupload.version>1.4</commons-fileupload.version>
-		<commons-io.version>2.5</commons-io.version>
-		<commons-codec.version>1.12</commons-codec.version>
+		<commons-io.version>2.11.0</commons-io.version>
+		<commons-codec.version>1.15</commons-codec.version>
 		<commons-lang.version>2.6</commons-lang.version>
-		<commons-lang3.version>3.9</commons-lang3.version>
+		<commons-lang3.version>3.12.0</commons-lang3.version>
 		<!-- commons-logging -->
 		<commons-logging.version>1.2</commons-logging.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
@@ -114,7 +116,7 @@
 		<activiti.version>5.23.0</activiti.version>
 		
 		<!-- HTML Parser -->
-		<jsoup.version>1.14.2</jsoup.version>
+		<jsoup.version>1.14.3</jsoup.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
@@ -311,22 +313,22 @@
 				<artifactId>fastjson</artifactId>
 				<version>${fastjson.version}</version>
 			</dependency>
-			<dependency>
+			<!-- <dependency>
 				<groupId>org.codehaus.jackson</groupId>
 				<artifactId>jackson-mapper-asl</artifactId>
 				<version>${jackson-mapper-asl.version}</version>
-			</dependency>
+			</dependency> -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
 				<version>${jackson-databind.version}</version>
 			</dependency>
-			<dependency>
+			<!-- <dependency>
 				<groupId>net.sf.json-lib</groupId>
 				<artifactId>json-lib</artifactId>
 				<version>2.4</version>
 				<classifier>jdk15</classifier>
-			</dependency>
+			</dependency> -->
 
 			<!-- POI Excel导出相关 -->
 			<dependency>

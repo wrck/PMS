@@ -8,6 +8,8 @@ import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,15 +35,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.config.RoutingDataSource;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.SpringContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.pojo.NotifyTemplate;
 import com.dp.plat.core.realms.Principal;
 import com.dp.plat.core.service.IAbstractBaseService;
+import com.dp.plat.core.service.INotifyTemplateService;
 import com.dp.plat.core.service.IUserInfoService;
+import com.dp.plat.core.util.JsoupUtil;
+import com.dp.plat.core.util.SQLParser;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.core.vo.Result;
@@ -92,6 +99,9 @@ public class ProjectHeaderService extends ProjectServiceImpl
     
     @Autowired 
     private IEmployeeService employeeService;
+    
+    @Autowired 
+    private INotifyTemplateService notifyTemplateService;
     
     @Autowired
     private PmWorkBenchMapper pmWorkBenchDao;
@@ -255,7 +265,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 	 * @param pageParam
 	 * @return
 	 */
-    public List<Object> selectBySelectivePageable(PageParam<?> pageParam) {
+    public <V> List<V> selectBySelectivePageable(PageParam<?> pageParam) {
         return dao.selectBySelectivePageable(pageParam);
     }
 
@@ -723,6 +733,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
     @Transactional
     public Result transferProject(ProjectVO project, Integer projectId, String projectType) {
     	RoutingDataSource dataSource = SpringContext.getBean("dataSource", RoutingDataSource.class);
+    	Connection connection = null;
     	Boolean status = false;
     	String message = "";
     	Integer newProjectId = null;
@@ -778,25 +789,38 @@ public class ProjectHeaderService extends ProjectServiceImpl
 					ConvertUtils.register(new DateConverter(null), java.util.Date.class); 
 					org.apache.commons.beanutils.BeanUtils.populate(project, projectMap);
 					project.setCustomInfo(newCustomInfo);
-					project.setCustomInfoByKey("transferFromProject", source);
 					
-					// 保存新项目
-					newProjectId = insertProject(project);
 					String newProjectType = project.getProjectType();
 					Integer oldProjectId = source.getProjectId();
 					String oldProjectType = source.getProjectType();
-					String schema = dataSource.getConnection().getCatalog();
+					
+					// 保存核销的projectId链
+					List<Integer> linkedProjectIds = (List<Integer>) source.getCustomInfoByKey("transferLinkedProjectIds");
+					if (linkedProjectIds == null) {
+						linkedProjectIds = new ArrayList<Integer>();
+					}
+					linkedProjectIds.add(oldProjectId);
+					project.setCustomInfoByKey("transferLinkedProjectIds", linkedProjectIds);
+					project.setCustomInfoByKey("transferFromProject", source);
+					project.setCustomInfoByKey("transferFromProjectId", oldProjectId);
+					project.setCustomInfoByKey("oldPrimaryKeys", "projectId");
+					project.setCustomInfoByKey("oldPrimaryValues", oldProjectId);
+					
+					// 保存新项目
+					newProjectId = insertProject(project);
+					connection = dataSource.getConnection();
+					String schema = connection.getCatalog();
 					// 获取所有项目关联表，进行数据拷贝
 					List<Map<String, Object>> relateInfos = dao.selectAllProjectRelateInfos(schema);
 					Map<String, Object> params = new HashMap<String, Object>(8);
-					params.put("projectId", newProjectId);
-					params.put("projectType", newProjectType);
-					params.put("objId", newProjectId);
-					params.put("objType", "project");
+					params.put("newProjectId", newProjectId);
+					params.put("newProjectType", newProjectType);
+					params.put("newObjId", newProjectId);
+					params.put("newObjType", "'project'");
 					params.put("oldProjectId", oldProjectId);
 					params.put("oldProjectType", oldProjectType);
 					params.put("oldObjId", oldProjectId);
-					params.put("oldObjType", "project");
+					params.put("oldObjType", "'project','projectTask'");
 					for (Map<String, Object> relateInfo : relateInfos) {
 						String executeSql = "";
 						String tableName = (String) relateInfo.get("tableName");
@@ -841,7 +865,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 							executeSql = insertSql;
 						}
 						if ("pm_project_member".equals(tableName)) {
-							executeSql += " WHERE NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '$projectId$' AND m.projectType = '$projectType$' AND m.`memberCode` = ppm.memberCode AND m.`memberRole` = ppm.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))";
+							executeSql += " WHERE NOT EXISTS (SELECT 1 FROM pm_project_member m WHERE m.projectId = '$newProjectId$' AND m.projectType = '$newProjectType$' AND m.`memberCode` = ppm.memberCode AND m.`memberRole` = ppm.memberRole AND ( m.`effectiveTo` IS NULL OR m.`effectiveTo` > NOW() ))";
 						}
 						if (StringUtils.isNotBlank(executeSql)) {
 							executeSql = processSql(executeSql, params);
@@ -854,9 +878,27 @@ public class ProjectHeaderService extends ProjectServiceImpl
 						}
 					}
 					
+					// 查询项目转移之后需要额外执行的SQL
+					NotifyTemplate template = notifyTemplateService.selectByTemplateCode("pm.project.transfer.ext.sqls");
+					if (template != null) {
+						String escapeSqls = template.getContent();
+						String sqls = JsoupUtil.unescape(escapeSqls);
+						sqls = processSql(sqls, params);
+						List<SQLStatement> statements = SQLParser.parseStatements(sqls, SQLParser.getCurrentDbType(dataSource));
+						for (SQLStatement sqlStatement : statements) {
+							dao.executeSql(sqlStatement.toString());
+						}
+					}
+					
 					// 添加核销关联ID,失效原项目
 					project.setCustomInfoByKey("transferFromProject", null);// 避免循环依赖
+					source.setCustomInfoByKey("transferProjectFlag", 1);
 					source.setCustomInfoByKey("transferToProject", project);
+					source.setCustomInfoByKey("transferToProjectId", newProjectId);
+					Integer transferFromProjectId = (Integer) source.getCustomInfoByKey("transferFromProjectId");
+					source.setCustomInfoByKey("transferFromProjectId", transferFromProjectId != null ? transferFromProjectId : oldProjectId);
+					source.setCustomInfoByKey("oldPrimaryKeys", "projectId");
+					source.setCustomInfoByKey("oldPrimaryValues", oldProjectId);
 					source.setProjectState("100");
 					source.setDisabled(true);
 //					source.setEffectiveTo(new Date());// 设置effectiveTo会使项目再次显现出来
@@ -871,6 +913,13 @@ public class ProjectHeaderService extends ProjectServiceImpl
 			ExceptionHandler.insertException(e);
 			message = e.getMessage();
 			throw new RuntimeException("核销项目发生异常", e);
+		} finally {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (SQLException e) {
+				}
+			}
 		}
 		return new Result(status, newProjectId, message);
     }

@@ -306,6 +306,9 @@
 		<error-code>500</error-code>
 		<location>/to500.html</location>
 	</error-page>
+	<error-page>
+		<location>/404.html</location>
+	</error-page>
 	<login-config>
 		<auth-method>BASIC</auth-method>
 	</login-config>

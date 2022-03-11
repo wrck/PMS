@@ -2902,7 +2902,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		    }
 			String realpath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");
 			XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(realpath+"com/dp/plat/template/spotCheck.xlsx"));
-			XSSFSheet worksheet = workbook.getSheet("sheet1");
+			XSSFSheet worksheet = workbook.getSheetAt(0);
 			XSSFRow row = null;
 			XSSFCell cell = null;
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -2925,6 +2925,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			// 填入明细
 			int i = 6;
 			XSSFRow defaultRow = null;
+			if (spotCheckList.isEmpty()) {
+				spotCheckList.add(new HashMap<String, String>());
+			}
 			for (Map<String, String> bean : spotCheckList) {
 				row = createRow(worksheet, i);
 				defaultRow = worksheet.getRow(i + 1);
@@ -2936,6 +2939,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 				cell = createCell(row, 5, bean.get("remark"), defaultRow);
 				i++;
 			}
+			worksheet.removeRow(defaultRow);
+			worksheet.shiftRows(i + 1, worksheet.getLastRowNum(), -1);
+			
 			String root = ServletActionContext.getServletContext().getRealPath("/");// 项目跟目录
 //			String directory = "upload/spotCheck";
 			String directory = UploadFileUtil.UPLOAD_PATH + "/spotCheck";
@@ -2971,7 +2977,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 //        sheet.addMergedRegion(cellRangeAddress);
         row = sheet.createRow(rowIndex);  
         return row;
-    }  
+    }
 	
 	private XSSFCell createCell(XSSFRow row, int cellIndex, String value, XSSFRow defaultRow) {
 		XSSFCellStyle cellStyle = defaultRow.getCell(cellIndex).getCellStyle();
@@ -2981,7 +2987,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		cell.setCellType(cellType);
 		
 		// 合并单元格
-		//mergeCell(row, cellIndex, defaultRow);
+//		mergeCell(row, cellIndex, defaultRow);
 		
 		if (StringUtils.isNotBlank(value)) {
 			cell.setCellValue(value);

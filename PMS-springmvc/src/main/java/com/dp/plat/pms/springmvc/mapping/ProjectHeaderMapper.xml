@@ -478,159 +478,292 @@
     where projectId = #{projectId,jdbcType=INTEGER}
   </update>
   
+  <sql id="sql_where_selective">
+  	<if test="projectId != null">
+		ph.projectId = #{projectId, jdbcType=INTEGER} AND
+	</if>
+	<if test="projectType != null and '' != projectType">
+		ph.projectType = #{projectType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectCode != null and '' != projectCode">
+		ph.projectCode = #{projectCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectName != null and '' != projectName">
+		ph.projectName = #{projectName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectState != null and '' != projectState">
+		ph.projectState = #{projectState, jdbcType=VARCHAR} AND
+	</if>
+	<if test="isback != null and '' != isback">
+		ph.isback = #{isback, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column001 != null and '' != column001">
+		ph.column001 = #{column001, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column002 != null and '' != column002">
+		ph.column002 = #{column002, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column003 != null and '' != column003">
+		ph.column003 = #{column003, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column004 != null and '' != column004">
+		ph.column004 = #{column004, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column005 != null and '' != column005">
+		ph.column005 = #{column005, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column006 != null and '' != column006">
+		ph.column006 = #{column006, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column007 != null and '' != column007">
+		ph.column007 = #{column007, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column008 != null and '' != column008">
+		ph.column008 = #{column008, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column009 != null">
+		ph.column009 = #{column009, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="column010 != null and '' != column010">
+		ph.column010 = #{column010, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column011 != null and '' != column011">
+		ph.column011 = #{column011, jdbcType=VARCHAR} AND
+	</if>
+	<if test="column012 != null and '' != column012">
+		ph.column012 = #{column012, jdbcType=VARCHAR} AND
+	</if>
+	<if test="columno12_readonly != null">
+		ph.columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
+	</if>
+	<if test="column013 != null and '' != column013">
+		ph.column013 = #{column013, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customerProjectName != null and '' != customerProjectName">
+		ph.customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="salesType != null and '' != salesType">
+		ph.salesType = #{salesType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="compId != null">
+		ph.compId = #{compId, jdbcType=INTEGER} AND
+	</if>
+	<if test="createTime != null">
+		ph.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="createBy != null and '' != createBy">
+		ph.createBy = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		ph.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		ph.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="effectiveFrom != null">
+		<![CDATA[ ph.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+	</if>
+	<if test="effectiveTo != null">
+		<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+	</if>
+	<if test="disabled != null">
+		ph.disabled = #{disabled, jdbcType=BIT} AND
+	</if>
+	<if test="projectStartTime != null">
+		ph.projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="projectRefreshTime != null">
+		ph.projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="projectCloseTime != null">
+		ph.projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="customInfo != null">
+		ph.customInfo = #{customInfo, jdbcType=JSON} AND
+	</if>
+	<if test="customConfig != null">
+		ph.customConfig = #{customConfig, jdbcType=JSON} AND
+	</if>
+	<if test="column014 != null and '' != column014">
+		ph.column014 = #{column014, jdbcType=LONGVARCHAR} AND
+	</if>
+	<if test="projectTypes != null">
+		FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
+	</if>
+	<if test="officeCodes != null">
+		FIND_IN_SET(ph.`column001`, #{officeCodes}) AND 
+	</if>
+  </sql>
+  
+  <sql id="sql_model_where_selective">
+  	<if test="model != null ">
+		<if test="model.projectId != null">
+			ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.projectType != null and '' != model.projectType">
+			ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectCode != null and '' != model.projectCode">
+			ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.projectName != null and '' != model.projectName">
+			(ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") OR
+			 ph.customInfo -> '$.projectAlias' like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
+			) AND
+		</if>
+		<if test="model.projectState != null and '' != model.projectState">
+			ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.isback != null and '' != model.isback">
+			ph.isback = #{model.isback, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column001 != null and '' != model.column001">
+			ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column002 != null and '' != model.column002">
+			ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column003 != null and '' != model.column003">
+			ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.column004 != null and '' != model.column004">
+			ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.column005 != null and '' != model.column005">
+			ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.column006 != null and '' != model.column006">
+			ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.column007 != null and '' != model.column007">
+			ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.column008 != null and '' != model.column008">
+			ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column009 != null">
+			ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.column010 != null and '' != model.column010">
+			ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column011 != null and '' != model.column011">
+			ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.column012 != null and '' != model.column012">
+			ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.columno12_readonly != null">
+			ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.column013 != null and '' != model.column013">
+			ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
+		</if>
+		<if test="model.customerProjectName != null and '' != model.customerProjectName">
+			ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.salesType != null and '' != model.salesType">
+			ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.compId != null">
+			ph.compId = #{model.compId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.createTime != null">
+			ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.effectiveFrom != null">
+			<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+		</if>
+		<if test="model.effectiveTo != null">
+			<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+		</if>
+		<if test="model.disabled != null">
+			ph.disabled = #{model.disabled, jdbcType=BIT} AND
+		</if>
+		<if test="model.projectStartTime != null">
+			ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.projectRefreshTime != null">
+			ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.projectCloseTime != null">
+			ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.customInfo != null">
+			<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+			<foreach collection="model.customInfo" item="value" index="key">
+		    	ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+		    </foreach>
+		</if>
+		<if test="model.customConfig != null">
+			<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
+			<foreach collection="model.customConfig" item="value" index="key">
+			   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
+		    </foreach>
+		</if>
+		<if test="model.column014 != null and '' != model.column014">
+			ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
+		</if>
+		<if test="model.smsPredBidStartDate != null">
+			ph.customInfo -> '$.smsPredBidDate' >= #{model.smsPredBidStartDate, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.smsPredBidEndDate != null">
+			<![CDATA[ ph.customInfo -> '$.smsPredBidDate' <= #{model.smsPredBidEndDate, jdbcType=TIMESTAMP} AND ]]>
+		</if>
+	</if>
+  </sql>
+  
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  
+  <sql id="sql_fuzzy_search">
+    <if test="fuzzySearch == true and fuzzy != ''">
+		(
+			ph.projectType like CONCAT("%", #{fuzzy}, "%") or
+			ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
+			ph.projectName like CONCAT("%", #{fuzzy}, "%") or
+			ph.projectState like CONCAT("%", #{fuzzy}, "%") or
+			ph.isback like CONCAT("%", #{fuzzy}, "%") or
+			ph.column001 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column002 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column003 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column004 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column005 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column006 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column007 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column008 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column010 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column011 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column012 like CONCAT("%", #{fuzzy}, "%") or
+			ph.column013 like CONCAT("%", #{fuzzy}, "%") or
+			ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
+			ph.salesType like CONCAT("%", #{fuzzy}, "%") or
+			ph.customInfo like CONCAT("%", #{fuzzy}, "%") or
+			ph.customConfig like CONCAT("%", #{fuzzy}, "%") or
+			ph.column014 like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+  </sql>
+  
   <sql id="sql_model_where">
     <where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-			<if test="model != null ">
-				<if test="model.projectId != null">
-					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.projectType != null and '' != model.projectType">
-					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.projectName != null and '' != model.projectName">
-					(ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") OR
-					 ph.customInfo -> '$.projectAlias' like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
-					) AND
-				</if>
-				<if test="model.projectState != null and '' != model.projectState">
-					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.isback != null and '' != model.isback">
-					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column001 != null and '' != model.column001">
-					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column002 != null and '' != model.column002">
-					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column008 != null and '' != model.column008">
-					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column009 != null">
-					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.column010 != null and '' != model.column010">
-					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column011 != null and '' != model.column011">
-					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column012 != null and '' != model.column012">
-					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.columno12_readonly != null">
-					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.customerProjectName != null and '' != model.customerProjectName">
-					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.salesType != null and '' != model.salesType">
-					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.compId != null">
-					ph.compId = #{model.compId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.createTime != null">
-					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.createBy != null and '' != model.createBy">
-					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.updateTime != null">
-					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.updateBy != null and '' != model.updateBy">
-					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.effectiveFrom != null">
-					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
-				</if>
-				<if test="model.effectiveTo != null">
-					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
-				</if>
-				<if test="model.disabled != null">
-					ph.disabled = #{model.disabled, jdbcType=BIT} AND
-				</if>
-				<if test="model.projectStartTime != null">
-					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectRefreshTime != null">
-					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectCloseTime != null">
-					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.customInfo != null">
-					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
-					<foreach collection="model.customInfo" item="value" index="key">
-				    	ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.customConfig != null">
-					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
-					<foreach collection="model.customConfig" item="value" index="key">
-					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.column014 != null and '' != model.column014">
-					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
-				</if>
-				<if test="model.smsPredBidStartDate != null">
-					ph.customInfo -> '$.smsPredBidDate' >= #{model.smsPredBidStartDate, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.smsPredBidEndDate != null">
-					<![CDATA[ ph.customInfo -> '$.smsPredBidDate' <= #{model.smsPredBidEndDate, jdbcType=TIMESTAMP} AND ]]>
-				</if>
-			</if>
-			<if test="fuzzySearch == true and fuzzy != ''">
-				(
-					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
-					ph.isback like CONCAT("%", #{fuzzy}, "%") or
-					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
-					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
-					ph.createBy like CONCAT("%", #{fuzzy}, "%") or
-					ph.updateBy like CONCAT("%", #{fuzzy}, "%") or
-					ph.column014 like CONCAT("%", #{fuzzy}, "%")
-				)
-			</if>
+			<include refid="sql_model_where_selective" />
+			<include refid="sql_fuzzy_search" />
 		</trim>
 	</where>
   </sql>
@@ -647,245 +780,11 @@
   </sql>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultMap="BaseResultMap">
     select * from pm_project as ph
-	<where>
-		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-			<if test="projectId != null">
-				ph.projectId = #{projectId, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectType != null and '' != projectType">
-				ph.projectType = #{projectType, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectCode != null and '' != projectCode">
-				ph.projectCode = #{projectCode, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectName != null and '' != projectName">
-				ph.projectName = #{projectName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectState != null and '' != projectState">
-				ph.projectState = #{projectState, jdbcType=VARCHAR} AND
-			</if>
-			<if test="isback != null and '' != isback">
-				ph.isback = #{isback, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column001 != null and '' != column001">
-				ph.column001 = #{column001, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column002 != null and '' != column002">
-				ph.column002 = #{column002, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column003 != null and '' != column003">
-				ph.column003 = #{column003, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column004 != null and '' != column004">
-				ph.column004 = #{column004, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column005 != null and '' != column005">
-				ph.column005 = #{column005, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column006 != null and '' != column006">
-				ph.column006 = #{column006, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column007 != null and '' != column007">
-				ph.column007 = #{column007, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column008 != null and '' != column008">
-				ph.column008 = #{column008, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column009 != null">
-				ph.column009 = #{column009, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="column010 != null and '' != column010">
-				ph.column010 = #{column010, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column011 != null and '' != column011">
-				ph.column011 = #{column011, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column012 != null and '' != column012">
-				ph.column012 = #{column012, jdbcType=VARCHAR} AND
-			</if>
-			<if test="columno12_readonly != null">
-				ph.columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
-			</if>
-			<if test="column013 != null and '' != column013">
-				ph.column013 = #{column013, jdbcType=VARCHAR} AND
-			</if>
-			<if test="customerProjectName != null and '' != customerProjectName">
-				ph.customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="salesType != null and '' != salesType">
-				ph.salesType = #{salesType, jdbcType=VARCHAR} AND
-			</if>
-			<if test="compId != null">
-				ph.compId = #{compId, jdbcType=INTEGER} AND
-			</if>
-			<if test="createTime != null">
-				ph.createTime = #{createTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="createBy != null and '' != createBy">
-				ph.createBy = #{createBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="updateTime != null">
-				ph.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="updateBy != null and '' != updateBy">
-				ph.updateBy = #{updateBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="effectiveFrom != null">
-				<![CDATA[ ph.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
-			</if>
-			<if test="effectiveTo != null">
-				<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
-			</if>
-			<if test="disabled != null">
-				ph.disabled = #{disabled, jdbcType=BIT} AND
-			</if>
-			<if test="projectStartTime != null">
-				ph.projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="projectRefreshTime != null">
-				ph.projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="projectCloseTime != null">
-				ph.projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="customInfo != null">
-				ph.customInfo = #{customInfo, jdbcType=JSON} AND
-			</if>
-			<if test="customConfig != null">
-				ph.customConfig = #{customConfig, jdbcType=JSON} AND
-			</if>
-			<if test="column014 != null and '' != column014">
-				ph.column014 = #{column014, jdbcType=LONGVARCHAR} AND
-			</if>
-			<if test="projectTypes != null">
-				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
-			</if>
-			<if test="officeCodes != null">
-				FIND_IN_SET(ph.`column001`, #{officeCodes}) AND 
-			</if>
-		</trim>
-	</where>
+	<include refid="sql_where" />
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.ProjectHeader" resultType="long">
     select count(1) from pm_project as ph
-	<where>
-		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
-			<if test="projectId != null">
-				ph.projectId = #{projectId, jdbcType=INTEGER} AND
-			</if>
-			<if test="projectType != null and '' != projectType">
-				ph.projectType = #{projectType, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectCode != null and '' != projectCode">
-				ph.projectCode = #{projectCode, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectName != null and '' != projectName">
-				ph.projectName = #{projectName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="projectState != null and '' != projectState">
-				ph.projectState = #{projectState, jdbcType=VARCHAR} AND
-			</if>
-			<if test="isback != null and '' != isback">
-				ph.isback = #{isback, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column001 != null and '' != column001">
-				ph.column001 = #{column001, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column002 != null and '' != column002">
-				ph.column002 = #{column002, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column003 != null and '' != column003">
-				ph.column003 = #{column003, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column004 != null and '' != column004">
-				ph.column004 = #{column004, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column005 != null and '' != column005">
-				ph.column005 = #{column005, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column006 != null and '' != column006">
-				ph.column006 = #{column006, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column007 != null and '' != column007">
-				ph.column007 = #{column007, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column008 != null and '' != column008">
-				ph.column008 = #{column008, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column009 != null">
-				ph.column009 = #{column009, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="column010 != null and '' != column010">
-				ph.column010 = #{column010, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column011 != null and '' != column011">
-				ph.column011 = #{column011, jdbcType=VARCHAR} AND
-			</if>
-			<if test="column012 != null and '' != column012">
-				ph.column012 = #{column012, jdbcType=VARCHAR} AND
-			</if>
-			<if test="columno12_readonly != null">
-				ph.columno12_readonly = #{columno12_readonly, jdbcType=INTEGER} AND
-			</if>
-			<if test="column013 != null and '' != column013">
-				ph.column013 = #{column013, jdbcType=VARCHAR} AND
-			</if>
-			<if test="customerProjectName != null and '' != customerProjectName">
-				ph.customerProjectName = #{customerProjectName, jdbcType=VARCHAR} AND
-			</if>
-			<if test="salesType != null and '' != salesType">
-				ph.salesType = #{salesType, jdbcType=VARCHAR} AND
-			</if>
-			<if test="compId != null">
-				ph.compId = #{compId, jdbcType=INTEGER} AND
-			</if>
-			<if test="createTime != null">
-				ph.createTime = #{createTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="createBy != null and '' != createBy">
-				ph.createBy = #{createBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="updateTime != null">
-				ph.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="updateBy != null and '' != updateBy">
-				ph.updateBy = #{updateBy, jdbcType=VARCHAR} AND
-			</if>
-			<if test="effectiveFrom != null">
-				<![CDATA[ ph.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
-			</if>
-			<if test="effectiveTo != null">
-				<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
-			</if>
-			<if test="disabled != null">
-				ph.disabled = #{disabled, jdbcType=BIT} AND
-			</if>
-			<if test="projectStartTime != null">
-				ph.projectStartTime = #{projectStartTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="projectRefreshTime != null">
-				ph.projectRefreshTime = #{projectRefreshTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="projectCloseTime != null">
-				ph.projectCloseTime = #{projectCloseTime, jdbcType=TIMESTAMP} AND
-			</if>
-			<if test="customInfo != null">
-				ph.customInfo = #{customInfo, jdbcType=JSON} AND
-			</if>
-			<if test="customConfig != null">
-				ph.customConfig = #{customConfig, jdbcType=JSON} AND
-			</if>
-			<if test="column014 != null and '' != column014">
-				ph.column014 = #{column014, jdbcType=LONGVARCHAR} AND
-			</if>
-			<if test="projectTypes != null">
-				FIND_IN_SET(ph.`projectType`, #{projectTypes}) AND 
-			</if>
-			<if test="officeCodes != null">
-				FIND_IN_SET(ph.`column001`, #{officeCodes}) AND 
-			</if>
-		</trim>
-	</where>
+	<include refid="sql_where" />
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectVO">
     SELECT 
@@ -924,128 +823,6 @@
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.projectId != null">
-					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.projectType != null and '' != model.projectType">
-					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.projectName != null and '' != model.projectName">
-					(ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") OR
-					 ph.customInfo -> '$.projectAlias' like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
-					) AND
-				</if>
-				<if test="model.projectState != null and '' != model.projectState">
-					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.isback != null and '' != model.isback">
-					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column001 != null and '' != model.column001">
-					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column002 != null and '' != model.column002">
-					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column008 != null and '' != model.column008">
-					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column009 != null">
-					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.column010 != null and '' != model.column010">
-					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column011 != null and '' != model.column011">
-					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column012 != null and '' != model.column012">
-					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.columno12_readonly != null">
-					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.customerProjectName != null and '' != model.customerProjectName">
-					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.salesType != null and '' != model.salesType">
-					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.compId != null">
-					ph.compId = #{model.compId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.createTime != null">
-					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.createBy != null and '' != model.createBy">
-					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.updateTime != null">
-					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.updateBy != null and '' != model.updateBy">
-					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.effectiveFrom != null">
-					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
-				</if>
-				<if test="model.effectiveTo != null">
-					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
-				</if>
-				<if test="model.disabled != null">
-					ph.disabled = #{model.disabled, jdbcType=BIT} AND
-				</if>
-				<if test="model.projectStartTime != null">
-					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectRefreshTime != null">
-					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectCloseTime != null">
-					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.customInfo != null">
-					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
-					<foreach collection="model.customInfo" item="value" index="key">
-				    	ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.customConfig != null">
-					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
-					<foreach collection="model.customConfig" item="value" index="key">
-					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.column014 != null and '' != model.column014">
-					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
-				</if>
-				<if test="model.smsPredBidStartDate != null">
-					ph.customInfo -> '$.smsPredBidDate' >= #{model.smsPredBidStartDate, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.smsPredBidEndDate != null">
-					<![CDATA[ ph.customInfo -> '$.smsPredBidDate' <= #{model.smsPredBidEndDate, jdbcType=TIMESTAMP} AND ]]>
-				</if>
 			(
 				(
 				<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
@@ -1072,32 +849,11 @@
 				</if>
 			) AND
 			</if>
-			<if test="fuzzySearch == true and fuzzy != ''">
-				(
-					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
-					ph.isback like CONCAT("%", #{fuzzy}, "%") or
-					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
-					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
-					ph.customInfo like CONCAT("%", #{fuzzy}, "%") or
-					ph.customConfig like CONCAT("%", #{fuzzy}, "%") or
-					ph.column014 like CONCAT("%", #{fuzzy}, "%")
-				)
+			<if test="model.projectIds != null and model.projectIds != ''">
+				FIND_IN_SET(ph.`projectId`, #{model.projectIds}) AND 
 			</if>
+			<include refid="sql_model_where_selective" />
+			<include refid="sql_fuzzy_search" />
 		</trim>
 	</where>
 	<if test="model != null and model.matchCollectMoney == true">
@@ -1118,128 +874,6 @@
 	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<if test="model != null ">
-				<if test="model.projectId != null">
-					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.projectType != null and '' != model.projectType">
-					ph.projectType = #{model.projectType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.projectCode != null and '' != model.projectCode">
-					ph.projectCode like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.projectName != null and '' != model.projectName">
-					(ph.projectName like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%") OR
-					 ph.customInfo -> '$.projectAlias' like concat("%", #{model.projectName, jdbcType=VARCHAR}, "%")
-					) AND
-				</if>
-				<if test="model.projectState != null and '' != model.projectState">
-					ph.projectState = #{model.projectState, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.isback != null and '' != model.isback">
-					ph.isback = #{model.isback, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column001 != null and '' != model.column001">
-					ph.column001 = #{model.column001, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column002 != null and '' != model.column002">
-					ph.column002 = #{model.column002, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column003 != null and '' != model.column003">
-					ph.column003 like concat("%", #{model.column003, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column004 != null and '' != model.column004">
-					ph.column004 like concat("%", #{model.column004, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column005 != null and '' != model.column005">
-					ph.column005 like concat("%", #{model.column005, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column006 != null and '' != model.column006">
-					ph.column006 like concat("%", #{model.column006, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column007 != null and '' != model.column007">
-					ph.column007 like concat("%", #{model.column007, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.column008 != null and '' != model.column008">
-					ph.column008 = #{model.column008, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column009 != null">
-					ph.column009 = #{model.column009, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.column010 != null and '' != model.column010">
-					ph.column010 = #{model.column010, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column011 != null and '' != model.column011">
-					ph.column011 = #{model.column011, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.column012 != null and '' != model.column012">
-					ph.column012 = #{model.column012, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.columno12_readonly != null">
-					ph.columno12_readonly = #{model.columno12_readonly, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.column013 != null and '' != model.column013">
-					ph.column013 like concat("%", #{model.column013, jdbcType=VARCHAR}, "%") AND
-				</if>
-				<if test="model.customerProjectName != null and '' != model.customerProjectName">
-					ph.customerProjectName = #{model.customerProjectName, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.salesType != null and '' != model.salesType">
-					ph.salesType = #{model.salesType, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.compId != null">
-					ph.compId = #{model.compId, jdbcType=INTEGER} AND
-				</if>
-				<if test="model.createTime != null">
-					ph.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.createBy != null and '' != model.createBy">
-					ph.createBy = #{model.createBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.updateTime != null">
-					ph.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.updateBy != null and '' != model.updateBy">
-					ph.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
-				</if>
-				<if test="model.effectiveFrom != null">
-					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
-				</if>
-				<if test="model.effectiveTo != null">
-					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
-				</if>
-				<if test="model.disabled != null">
-					ph.disabled = #{model.disabled, jdbcType=BIT} AND
-				</if>
-				<if test="model.projectStartTime != null">
-					ph.projectStartTime = #{model.projectStartTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectRefreshTime != null">
-					ph.projectRefreshTime = #{model.projectRefreshTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.projectCloseTime != null">
-					ph.projectCloseTime = #{model.projectCloseTime, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.customInfo != null">
-					<!-- ph.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
-					<foreach collection="model.customInfo" item="value" index="key">
-				    	ph.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.customConfig != null">
-					<!-- ph.customConfig = #{model.customConfig, jdbcType=JSON} AND -->
-					<foreach collection="model.customConfig" item="value" index="key">
-					   ph.customConfig -> '$.${key}' like concat("%", #{value}, "%") AND
-				    </foreach>
-				</if>
-				<if test="model.column014 != null and '' != model.column014">
-					ph.column014 = #{model.column014, jdbcType=LONGVARCHAR} AND
-				</if>
-				<if test="model.smsPredBidStartDate != null">
-					ph.customInfo -> '$.smsPredBidDate' >= #{model.smsPredBidStartDate, jdbcType=TIMESTAMP} AND
-				</if>
-				<if test="model.smsPredBidEndDate != null">
-					<![CDATA[ ph.customInfo -> '$.smsPredBidDate' <= #{model.smsPredBidEndDate, jdbcType=TIMESTAMP} AND ]]>
-				</if>
 			(
 				(
 				<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
@@ -1266,32 +900,11 @@
 				</if>
 			) AND
 			</if>
-			<if test="fuzzySearch == true and fuzzy != ''">
-				(
-					ph.projectType like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectCode like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.projectState like CONCAT("%", #{fuzzy}, "%") or
-					ph.isback like CONCAT("%", #{fuzzy}, "%") or
-					ph.column001 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column002 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column003 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column004 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column005 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column006 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column007 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column008 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column010 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column011 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column012 like CONCAT("%", #{fuzzy}, "%") or
-					ph.column013 like CONCAT("%", #{fuzzy}, "%") or
-					ph.customerProjectName like CONCAT("%", #{fuzzy}, "%") or
-					ph.salesType like CONCAT("%", #{fuzzy}, "%") or
-					ph.customInfo like CONCAT("%", #{fuzzy}, "%") or
-					ph.customConfig like CONCAT("%", #{fuzzy}, "%") or
-					ph.column014 like CONCAT("%", #{fuzzy}, "%")
-				)
+			<if test="model.projectIds != null and model.projectIds != ''">
+				FIND_IN_SET(ph.`projectId`, #{model.projectIds}) AND 
 			</if>
+			<include refid="sql_model_where_selective" />
+			<include refid="sql_fuzzy_search" />
 		</trim>
 	</where>
   </select>
@@ -2127,7 +1740,7 @@
   </select>
   
   <!-- 使用$$占位符处理的方式 -->
-  <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
+  <select id="selectAllProjectRelateInfosBak" resultType="java.util.HashMap">
   	select 
 	    *, concat(
 	        "insert into ", tableName, "(", columns, ") select * from ( select ", replace(
@@ -2217,6 +1830,167 @@
 			concat(group_concat(distinct c.column_name order by c.`column_name`), ",", group_concat(distinct ac.column_name order by ac.`ORDINAL_POSITION`)) columns, 
 			concat(group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`), ",", group_concat(distinct concat(t.tableAlias, ".", ac.column_name) order by ac.`ORDINAL_POSITION`)) columnsWithAlias, 
 			group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`) queryColumnsWithAlias,
+			max(ac.`COLUMN_NAME` = 'customInfo') as hasCustomInfo,
+			max(ac.`COLUMN_NAME` = 'effectiveTo') as hasEffectiveTo,
+	        max(ac.`COLUMN_NAME` = 'disabled') as hasDisabled,
+	        max(ac.`COLUMN_NAME` = 'deleted') as hasDeleted
+	    from
+	        (select 
+	            t.*, GROUP_CONCAT(
+	                SUBSTRING(
+	                    SUBSTRING_INDEX(
+	                        SUBSTRING_INDEX(t.TABLE_NAME, '_', sh.id + 1), '_', - 1
+	                    ), 1, 1
+	                ) separator ""
+	            ) as tableAlias 
+	        from
+	            information_schema.tables t 
+	            left join find_in_set_help sh 
+<![CDATA[    		on sh.id < (LENGTH(t.TABLE_NAME) - LENGTH(REPLACE(t.TABLE_NAME, '_', '')) + 1) ]]>
+	        where t.TABLE_SCHEMA = database() 
+	            and t.TABLE_TYPE = 'BASE TABLE' 
+	        group by t.TABLE_NAME) t 
+	        left join information_schema.columns ac 
+	            on t.`TABLE_CATALOG` = ac.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = ac.`TABLE_NAME` 
+	            and ac.`COLUMN_KEY` != "PRI" 
+	            and ac.COLUMN_NAME not in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns c 
+	            on t.`TABLE_CATALOG` = c.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = c.`TABLE_NAME` 
+	            and c.COLUMN_NAME in (
+	                'projectId', 'projectType', 'projectIds', 'objType', 'objId'
+	            ) 
+	        left join information_schema.columns pc 
+	            on t.`TABLE_CATALOG` = pc.`TABLE_CATALOG` 
+	            and t.`TABLE_NAME` = pc.`TABLE_NAME` 
+	            and pc.`COLUMN_KEY` = "PRI" 
+	    where t.TABLE_SCHEMA = database() 
+	        and c.TABLE_SCHEMA = database() 
+	        and pc.TABLE_SCHEMA = database() 
+	        and ac.TABLE_SCHEMA = database() 
+	        and t.TABLE_TYPE = 'BASE TABLE' 
+	    group by tableName) t ) t
+	where queryColumns in (
+	        "projectId", "projectIds", "projectId,projectType", "objId,objType"
+	    ) 
+	    and tableName not in ('pm_project')
+  </select>
+  
+  <!-- 使用$$占位符处理的方式 -->
+  <select id="selectAllProjectRelateInfos" resultType="java.util.HashMap">
+  	select 
+	    *, concat(
+            "insert into ", tableName, "(", columns, ") select * from ( select ", 
+                replace(selectColumns, concat(tableAlias, ".customInfo"), concat("JSON_MERGE_PRESERVE(IFNULL(", tableAlias, ".customInfo, '{}'), ", transferValues, ") as customInfo")),
+	        " from ", tableName, " as ", tableAlias, 
+            " left join pm_project nph on nph.projectId = '$newProjectId$' and nph.projectType = '$newProjectType$' ", 
+	        " where ", whereColumns
+			, " ) ", tableAlias
+	    ) as `insertSql`, IF(
+	        queryColumns = "projectIds", concat(
+                "update ", tableName, " as ", tableAlias, " set ", tableAlias, ".projectIds = concat(projectIds, ',$newProjectId$') where FIND_IN_SET('$oldProjectId$', ", queryColumnsWithAlias, ") AND !FIND_IN_SET('$newProjectId$', ", queryColumnsWithAlias, ")"
+	        ), null
+	    ) as `updateSql`, 
+	    IF(hasCustomInfo <!-- or hasEffectiveTo or hasDisabled or hasDeleted  -->
+			, concat(
+			    "update ", tableName, " as ", tableAlias, 
+			    " set ", 
+				concat_ws(",",
+					IF(hasCustomInfo, concat(tableAlias, ".customInfo = JSON_MERGE_PATCH(JSON_MERGE_PRESERVE(IFNULL(", tableAlias, ".customInfo, '{}'), ", transferValues, "), JSON_OBJECT('transferProjectFlag', 1))"), null)
+					<!-- ,IF(hasEffectiveTo, concat(tableAlias, ".effectiveTo = now()"), null)
+ 					,IF(hasDisabled, concat(tableAlias, ".disabled = true"), null)
+ 					,IF(hasDeleted, concat(tableAlias, ".deleted = true"), null) -->
+				),
+			    " where ", whereColumns
+			), null
+	    ) as transferFlagSql
+<![CDATA[
+		, concat(
+            "MD5(concat_ws('&', IFNULL(", REPLACE(
+                md5Columns, ",", ",'NULL'),IFNULL("
+            ), ",'NULL')", ")", ")"
+        ) md5Sql 
+]]>
+	from
+	(select *, 
+		replace(
+            replace(
+                replace(
+                    replace(
+                        replace(
+                            replace(
+                                replace(
+                                    replace(
+                                        columnsWithAlias, concat(tableAlias, ".projectId,"), "'$newProjectId$' as projectId,"
+                                    ), concat(tableAlias, ".projectType,"), "'$newProjectType$' as projectType,"
+                                ), concat(tableAlias, ".objId,"), "'$newObjId$' as objId,"
+                            ), concat(tableAlias, ".objType,"), "$newObjType$ as objType,"
+                        ), concat(tableAlias, ".projectCode,"), concat("IFNULL(nph.projectCode, ", tableAlias, ".projectCode) projectCode,")
+                    ), concat(tableAlias, ".projectName,"), concat("IFNULL(nph.projectName, ", tableAlias, ".projectName) projectName,")
+                ), concat(tableAlias, ".contractNo,"), concat("IFNULL(nph.customInfo ->> '$.contractNo', ", tableAlias, ".contractNo) contractNo,")
+            ), concat(tableAlias, ".officeCode,"), concat("IFNULL(nph.column001, ", tableAlias, ".officeCode) officeCode,")
+        ) as selectColumns, 
+        replace(
+		    replace(
+				replace(
+				    replace(
+						replace(
+						    replace(
+								concat(queryColumnsWithAlias, ",$"), "projectId,", "projectId='$oldProjectId$' AND "
+						    ), "projectType,", "projectType='$oldProjectType$' AND "
+						), "objType,", "objType in ($oldObjType$) AND "
+		    	<!-- ), "objId,", "objId='$oldObjId$' AND " -->
+				    ), concat(tableAlias, ".objId,"), concat("'$oldObjId$' = IF(", tableAlias, ".objType = 'project', ", tableAlias, ".objId, JSON_UNQUOTE(JSON_EXTRACT(", tableAlias, ".`customInfo`, concat('$.', LOWER(REPLACE(", tableAlias, ".objType, 'project', '')), '.projectId')))) AND ")
+                ), concat(tableAlias, ".projectIds,"), concat("FIND_IN_SET('$oldProjectId$', ", tableAlias, ".projectIds) AND ")
+		    ), " AND $", ""
+		) as whereColumns,
+		replace(
+            replace(
+                replace(
+                    replace(
+                        replace(
+                            replace(
+                                concat(queryColumnsWithAlias, ",$"), "projectId,", "projectId='$oldProjectId$' AND "
+                            ), "projectType,", "projectType='$oldProjectType$' AND "
+                        ), "objType,", "objType in ($oldObjType$) AND "
+                    ), "objId,", "objId='$oldObjId$' AND "
+                ), concat(tableAlias, ".projectIds,"), concat("FIND_IN_SET('$oldProjectId$', ", tableAlias, ".projectIds) AND ")
+            ), " AND $", ""
+        ) as newWhereColumns,
+        replace(replace(replace(
+        replace(replace(replace(
+        replace(replace(replace(
+        replace(replace(replace(
+            replace(concat(columnsWithAlias, ",$"), concat(tableAlias, ".projectId,"), ''), 
+                concat(tableAlias, ".projectType,"), ''),
+                concat(tableAlias, ".projectCode,"), ''),
+                concat(tableAlias, ".projectName,"), ''),
+                concat(tableAlias, ".contractNo,"), ''),
+                concat(tableAlias, ".officeCode,"), ''),
+                concat(tableAlias, ".updateBy,"), ''),
+                concat(tableAlias, ".updateTime,"), ''),
+                concat(tableAlias, ".effectiveTo,"), ''),
+                concat(tableAlias, ".customInfo,"), ''),
+                concat(tableAlias, ".disabled,"), ''),
+                concat(tableAlias, ".deleted,"), ''),
+            ",$", ""
+        ) AS md5Columns,
+<![CDATA[
+        concat("concat_ws('&', IFNULL(", REPLACE(primaryKeysWithAlias, ",", ",'NULL'),IFNULL("), ",'NULL')", ")") as oldPrimaryValues,
+        concat("JSON_OBJECT('transferToProjectId', $newProjectId$, 'transferFromProjectId', $oldProjectId$, 'oldPrimaryKeys', '", primaryKeys, "', 'oldPrimaryValues', ", concat("concat_ws('&', IFNULL(", REPLACE(primaryKeysWithAlias, ",", ",'NULL'),IFNULL("), ",'NULL')", ")"), ")") as transferValues
+]]>
+	from 
+	    (select 
+	        t.`TABLE_NAME` as tableName, t.tableAlias, 
+	        group_concat(distinct pc.column_name order by pc.`ORDINAL_POSITION`) primaryKeys, 
+        	group_concat(distinct c.column_name order by c.`column_name`) queryColumns,
+			concat(group_concat(distinct c.column_name order by c.`column_name`), ",", group_concat(distinct ac.column_name order by ac.`ORDINAL_POSITION`)) columns, 
+			concat(group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`), ",", group_concat(distinct concat(t.tableAlias, ".", ac.column_name) order by ac.`ORDINAL_POSITION`)) columnsWithAlias, 
+			group_concat(distinct concat(t.tableAlias, ".", c.column_name) order by c.`column_name`) queryColumnsWithAlias,
+            group_concat(distinct concat(t.tableAlias, ".", pc.column_name) order by pc.`ORDINAL_POSITION`) primaryKeysWithAlias, 
 			max(ac.`COLUMN_NAME` = 'customInfo') as hasCustomInfo,
 			max(ac.`COLUMN_NAME` = 'effectiveTo') as hasEffectiveTo,
 	        max(ac.`COLUMN_NAME` = 'disabled') as hasDisabled,

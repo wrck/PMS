@@ -50,7 +50,8 @@ var FormInput = {
 						<template v-else-if="field.type == 'daterange'">
 							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
 								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'"
+								<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'" 
+									data-toggle="daterangepicker"
 									:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
 									:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
 									:data-format="field.extData.format || field.render"
@@ -633,8 +634,12 @@ var FormInput = {
 	 				return;
 	 			}
 	 			var target = event.currentTarget;
-	 			var startDate = $(target).data('startDate') || undefined;
-	 			var endDate = $(target).data('endDate') || undefined;
+	 			var startDate = $(".daterange-input-start", this.element).val();
+	 			var endDate = $(".daterange-input-end", this.element).val();
+	 			startDate = startDate || $(target).data('startDate') || undefined;
+	 			endDate = endDate || $(target).data('endDate') || undefined;
+//	 			var startDate = $(target).data('startDate') || undefined;
+//	 			var endDate = $(target).data('endDate') || undefined;
 	 			var minDate = $(target).data('minDate') || "2010-01-01";
 	 			var maxDate = $(target).data('maxDate') || undefined;
 	 			var format = $(target).data('format') || 'YYYY-MM-DD';
@@ -643,6 +648,18 @@ var FormInput = {
 	 			minDate = moment(minDate, minDate ? format : null);
 	 			maxDate = moment(maxDate, maxDate ? format : null);
 	 			var currentDate = moment();
+	 			var daterangepickerCallback = function (start, end, label) {
+	 		        if (label == '不限') {
+	 		        	$('.daterange-span', this.element).html("不限");
+	 		            $(".daterange-input-start", this.element).val("");
+	 		            $(".daterange-input-end", this.element).val("");
+	 		        } else {
+	 		            $('.daterange-span', this.element).html(start.format(format) + ' - ' + end.format(format));
+	 		            $(".daterange-input-start", this.element).val(start.format(format));
+	 		            //$(".daterange-input-end", this.element).val(end.add(1, "days").format("YYYY-MM-DD"));
+	 		            $(".daterange-input-end", this.element).val(end.format(format)+" 23:59:59");
+	 		        }
+	 		    }
 	 			$(target).daterangepicker({
 	 				locale: {
 	 					format : format || 'YYYY-MM-DD',
@@ -674,18 +691,14 @@ var FormInput = {
 	 				endDate: endDate ? moment(endDate, endDate ? format : null) : maxDate,
 	 				minDate: minDate,
 	 				maxDate: maxDate,
-	 		    }, function (start, end, label) {
-	 		        if (label == '不限') {
-	 		        	$('.daterange-span', this.element).html("不限");
-	 		            $(".daterange-input-start", this.element).val("");
-	 		            $(".daterange-input-end", this.element).val("");
-	 		        } else {
-	 		            $('.daterange-span', this.element).html(start.format(format) + ' - ' + end.format(format));
-	 		            $(".daterange-input-start", this.element).val(start.format(format));
-	 		            //$(".daterange-input-end", this.element).val(end.add(1, "days").format("YYYY-MM-DD"));
-	 		            $(".daterange-input-end", this.element).val(end.format('YYYY-MM-DD')+" 23:59:59");
-	 		        }
-	 		    });
+	 		    }, daterangepickerCallback);
+	 			
+	 			var picker = $(target).data("daterangepicker");
+	 			if (picker) {
+		 			picker.calculateChosenLabel();
+		 			daterangepickerCallback.call(picker, picker.startDate, picker.endDate, picker.chosenLabel);
+	 			}
+	 			console.log($(target).data("daterangepicker"));
 	 			$(target).addClass("daterange-inited");
 	 		},
 	 		checkDistPicker: function(event) {

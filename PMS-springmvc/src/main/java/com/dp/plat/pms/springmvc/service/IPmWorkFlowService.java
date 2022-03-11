@@ -109,4 +109,11 @@ public interface IPmWorkFlowService extends IAbstractBaseService<PmWorkFlow> {
      * @return mailList
      */
 	List<String> selectActivitiUserMails(Map<String, Object> params);
+
+	/**
+	 * 装饰流程变量实体
+	 * @param pmWorkFlow
+	 * @return
+	 */
+	PmWorkFlow decoratorEntity(PmWorkFlow pmWorkFlow);
 }

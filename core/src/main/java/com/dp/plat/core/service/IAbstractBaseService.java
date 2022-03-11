@@ -46,7 +46,7 @@ public abstract interface IAbstractBaseService<T> {
 	 * @param pageParam
 	 * @return
 	 */
-	List<Object> selectBySelectivePageable(PageParam<?> pageParam);
+	<V> List<V> selectBySelectivePageable(PageParam<?> pageParam);
 	
 	/**
 	 * 查询满足条件的所有记录

@@ -62,6 +62,7 @@
 		<mvc:message-converters>
 			<ref bean="mappingJacksonHttpMessageConverter" />    <!-- JSON转换器 -->
 		</mvc:message-converters>
+		<mvc:path-matching suffix-pattern="true"/>
 	</mvc:annotation-driven>
 	
 	<!-- 允许对静态资源文件的访问 -->

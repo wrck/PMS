@@ -165,12 +165,6 @@
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="renewalIntention"><s:text name="pm.project.warrantyCallback.renewalIntention" /></label>
-            <s:select list="#{true: '有', false: '无'}" name="projectWarrantyCallback.renewalIntention" id="renewalIntention"
-                cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
-        </div>
-        <div class="form-group form-group-query form-group-width-1">
-            <dp:fielderror accesskey="errmsg" onlyone="true" />
-            <label for="renewalIntention"><s:text name="pm.project.warrantyCallback.renewalIntention" /></label>
             <s:select list="#{1: '有', 0: '无', 2: '待定'}" name="projectWarrantyCallback.renewalIntention" id="renewalIntention"
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
         </div>
@@ -247,6 +241,9 @@
             <%-- <display:column titleKey="pm.project.warrantyCallback.renewalIntention" headerClass="nowrap">
             	${!empty warrantyCallbackList.renewalIntention ? (warrantyCallbackList.renewalIntention ? "有" : "无") : "未回访"}
             </display:column> --%>
+            <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasRenewal">
+            	${!empty warrantyCallbackList.hasRenewal ? (warrantyCallbackList.hasRenewal == 1 ? "有" : "无") : "无"}
+            </display:column>
             <display:column property="callbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.callbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
             <display:column property="nextCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.nextCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
             <display:column property="remark" titleKey="pm.remark"></display:column>

@@ -1848,6 +1848,8 @@ CommonTable.prototype.fnStateLoaded = function (settings, data) {
 			var startTime = $(this).find(".daterange-input-start").val();
 			var endTime = $(this).find(".daterange-input-end").val();
 			if (startTime && endTime) {
+				startTime = formatDate(startTime, "yyyy-MM-dd");
+				endTime = formatDate(endTime, "yyyy-MM-dd HH:mm:ss");
 				$(this).find(".daterange-span").text(startTime + " - " + endTime.split(" 23:59:59")[0]);
 				var _this = this;
 				_this.intervalId = setInterval(function() {

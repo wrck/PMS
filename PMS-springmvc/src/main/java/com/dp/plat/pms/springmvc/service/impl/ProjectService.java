@@ -106,7 +106,7 @@ public class ProjectService extends ProjectServiceImpl /*extends AbstractBaseSer
 	 * @param pageParam
 	 * @return
 	 */
-	public List<Object> selectBySelectivePageable(PageParam<?> pageParam) {
+	public <V> List<V> selectBySelectivePageable(PageParam<?> pageParam) {
 		return dao.selectBySelectivePageable(pageParam);
 	}
 

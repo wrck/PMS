@@ -1,6 +1,5 @@
 package com.dp.plat.pms.springmvc.controller;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +48,10 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
+import com.dp.plat.pms.springmvc.entity.IndustryAsset;
+import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
@@ -184,7 +186,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 						pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
 								.processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
 					}
-					Object entity = pmWorkFlow.getEntity();
+					Object entity = decoratorEntity(pmWorkFlow);
 					List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
 					for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
 						DataFieldRelation field = (DataFieldRelation) iterator.next();
@@ -259,10 +261,12 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
 						.processInstanceId(task.getProcessInstanceId()).variableName("entity").singleResult().getValue();
 			}
-			Object entity = pmWorkFlow.getEntity();
+			pmWorkFlow.setProcInstId(task.getProcessInstanceId());
+			
 			String dataType = pmWorkFlow.getDataType();
 			Boolean hideEntity = Boolean.valueOf(HttpContext.getCurrentRequest().getParameter("hideEntity"));
 			if (!hideEntity) {
+				Object entity = decoratorEntity(pmWorkFlow);
 				List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
 				for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
 					DataFieldRelation field = (DataFieldRelation) iterator.next();
@@ -727,4 +731,13 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 		return super.checkPermission(v, model, permissions);
 	}
 
+	/**
+	 * 装饰流程变量实体
+	 * @param pmWorkFlow
+	 * @return
+	 */
+	public Object decoratorEntity(PmWorkFlow pmWorkFlow) {
+		PmWorkFlow entity = pmWorkFlowService.decoratorEntity(pmWorkFlow);
+		return entity.getEntity();
+	}
 }

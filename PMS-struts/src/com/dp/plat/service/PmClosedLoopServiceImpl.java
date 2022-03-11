@@ -313,7 +313,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 			}
 			
 			//3.插入问卷结果行信息
-			pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeaderId);
+			pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
 			
 			
 			//认领任务,但不办理
@@ -352,7 +352,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 			//3.删除回访问卷行信息，并插入
 			pmClosedLoopDao.deletePmClQuesResultLine(pmClQuesnaireResultLine);
 			pmClQuesnaireResultLine.setId(returnId);
-			pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, returnId2);
+			pmClosedLoopDao.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
 			
 			return pmClEvaluationHeader.getId();
 		}

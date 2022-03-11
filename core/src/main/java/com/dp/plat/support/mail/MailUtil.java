@@ -577,17 +577,28 @@ public class MailUtil {
 			subject = templete.getSubject();
 			content = templete.getContent();
 		}
+		String beforeSplit = DEFAULT_BEFORE_SPLIT;
+		String afterSplit = DEFAULT_AFTER_SPLIT;
+		if (context.get("beforeSplit") != null) {
+			beforeSplit = (String) context.get("beforeSplit");
+		}
+		if (context.get("afterSplit") != null) {
+			afterSplit = (String) context.get("afterSplit");
+		}
 		// 实体数据源，模板值以实体数据源的值为准，若无实体数据源，则以context中的对应值为准
 		Object[] objects = (Object[]) context.get("dataSource");
 		if (objects != null) {
-			if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
-				paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
-						objects, context);
-			} else {
-				paramNames = getTemplateParams(objects, context);
-			}
+//			if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
+//				paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
+//						objects, context);
+//			} else {
+//				paramNames = getTemplateParams(objects, context);
+//			}
+			paramNames = getTemplateParams(beforeSplit, afterSplit, objects, context);
 			for (String name : paramNames) {
-				Object value = context.get(name.substring(1, name.length() - 1));
+//				String key = name.substring(1, name.length() - 1);
+				String key = name.replace(beforeSplit, "").replace(afterSplit, "");
+				Object value = context.get(key);
 				value = value == null ? "" : value;
 				String regex = "\\Q" + name + "\\E";
 				try {
@@ -606,14 +617,6 @@ public class MailUtil {
 			}
 		}
 		// 处理实体数据源以外的其他模板值
-		String beforeSplit = DEFAULT_BEFORE_SPLIT;
-		String afterSplit = DEFAULT_AFTER_SPLIT;
-		if (context.get("beforeSplit") != null) {
-			beforeSplit = (String) context.get("beforeSplit");
-		}
-		if (context.get("afterSplit") != null) {
-			afterSplit = (String) context.get("afterSplit");
-		}
 		for (Entry<String, Object> entry : context.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();

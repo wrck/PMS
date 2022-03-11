@@ -76,6 +76,12 @@
 	                cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
 	        </div>
 	        <div class="form-group form-group-query form-group-width-1">
+	            <dp:fielderror accesskey="errmsg" onlyone="true" />
+	            <label for="hasRenewal"><s:text name="pm.project.warrantyCallback.hasRenewal" /></label>
+	            <s:select list="#{1: '有', 0: '无'}" name="projectWarrantyCallback.hasRenewal" id="hasRenewal"
+	                cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+	        </div>
+	        <div class="form-group form-group-query form-group-width-1">
 	            <label>维保结束日期</label>
 	            <s:textfield id="warrantyEndTimeStart" name="projectWarrantyCallback.warrantyEndTimeStart" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="开始时间" autocomplete="off"></s:textfield>
 	            <s:textfield id="warrantyEndTimeEnd" name="projectWarrantyCallback.warrantyEndTimeEnd" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="结束时间" autocomplete="off"></s:textfield>
@@ -160,6 +166,9 @@
         	${!empty warrantyCallbackList.renewalIntention ? (warrantyCallbackList.renewalIntention ? "有" : "无") : "未回访"}
         </display:column> --%>
         <%-- <display:column property="callbackCount" headerClass="nowrap" titleKey="pm.project.warrantyCallback.callbackCount"></display:column> --%>
+        <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasRenewal">
+        	${!empty warrantyCallbackList.hasRenewal ? (warrantyCallbackList.hasRenewal == 1 ? "有" : "无") : "无"}
+        </display:column>
         <display:column property="callbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.callbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
       	<display:column property="nextCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.nextCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
         <display:column property="remark" titleKey="pm.remark"></display:column>

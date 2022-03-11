@@ -74,8 +74,12 @@ public class PmClosedLoopDaoImpl extends BaseDao implements PmClosedLoopDao {
 //		parameterMap.put("pmClQuesnaireResultLineList", pmClQuesnaireResultLineList);
 //		parameterMap.put("pmClQuesnaireResultHeaderId", pmClQuesnaireResultHeaderId);
 //		getSqlMapClientTemplate().insert("insert-quesnaire_result_line-obj", parameterMap);
-	    PmClQuesnaireResultHeader pmClQuesnaireResultHeader = new PmClQuesnaireResultHeader();
-	    pmClQuesnaireResultHeader.setId(pmClQuesnaireResultHeaderId);
+		PmClQuesnaireResultHeader temp = new PmClQuesnaireResultHeader();
+		temp.setId(pmClQuesnaireResultHeaderId);
+		PmClQuesnaireResultHeader pmClQuesnaireResultHeader = (PmClQuesnaireResultHeader) getSqlMapClientTemplate().queryForObject("select-quesnaire_result_header-list", temp);
+	    if (pmClQuesnaireResultHeader == null || pmClQuesnaireResultHeader.getId() == 0) {
+	    	pmClQuesnaireResultHeader = temp;
+	    }
 	    this.addPmClQuesResultLineList(pmClQuesnaireResultLineList, pmClQuesnaireResultHeader);
 	}
 	

@@ -2172,7 +2172,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   
   <select id="querySubcontractExportData" parameterClass="com.dp.plat.subcontract.vo.SubcontractProjectVO" resultClass="com.dp.plat.subcontract.vo.SubcontractProjectVO">
     select 
-        h.`contractNos`, h.`subcontractNo`, h.`subcontractName`, bd.`basicDataName` AS typeName, h.`facilitatorName`, h.`subcontractAmount`, office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, h.`createTime` 
+        h.`contractNos`, h.`subcontractNo`, h.`subcontractName`, bd.`basicDataName` AS typeName, h.`facilitatorName`, h.`subcontractAmount`, 
+        office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, 
+        h.`createTime`, CONCAT(h.createBy, "-", ui.`realName`) AS createName
         <isEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> zrTask.zrApproverTime </isEqual>
         <isNotEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> h.zrApproveTime as zrApproverTime</isNotEqual>,
         bd1.`basicDataName` AS stateName, bd2.`basicDataName` AS callbackStateName, h.`isAccrued`, h.`isInvoiced`, pp.confirmTime, 
@@ -2236,6 +2238,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         left join fnd_department profitDep 
             on profitDep.`departmentNum` = h.`profitDepCode` 
             and profitDep.`status` = 1
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
     where h.effectiveTo is NULL
         <isNotEmpty prepend="AND" property="id"> h.id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractName"> h.subcontractName like concat("%", #subcontractName#, "%") </isNotEmpty>

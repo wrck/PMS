@@ -1,42 +1,49 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
-import org.activiti.engine.task.TaskInfo;
-import org.activiti.engine.task.Task;
-import org.activiti.engine.HistoryService;
+import java.util.ArrayList;
 import java.util.Date;
-import com.dp.plat.activiti.service.IProcessService;
-import com.dp.plat.core.vo.PageParam;
-import org.activiti.engine.history.HistoricVariableInstance;
-import com.dp.plat.util.ProjectUtils;
-import org.springframework.stereotype.Service;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.apache.commons.lang.StringUtils;
-import com.dp.plat.pms.springmvc.dao.PmWorkFlowMapper;
-import org.activiti.engine.history.HistoricTaskInstanceQuery;
-import com.dp.plat.core.vo.Result;
-import org.activiti.engine.history.NativeHistoricTaskInstanceQuery;
-import org.activiti.engine.task.TaskQuery;
-import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.dp.plat.core.realms.Principal;
 import java.util.HashMap;
-import org.activiti.engine.runtime.ProcessInstance;
-import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
-import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import java.util.List;
-import com.dp.plat.activiti.entity.BaseVO;
-import com.dp.plat.core.service.impl.AbstractBaseService;
-import org.activiti.engine.identity.Group;
 import java.util.Map;
-import org.activiti.engine.task.NativeTaskQuery;
+
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
-import com.dp.plat.core.context.UserContext;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
-import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
-import java.util.ArrayList;
-import org.springframework.transaction.annotation.Transactional;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.history.NativeHistoricTaskInstanceQuery;
+import org.activiti.engine.identity.Group;
 import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.NativeTaskQuery;
+import org.activiti.engine.task.Task;
+import org.activiti.engine.task.TaskInfo;
+import org.activiti.engine.task.TaskQuery;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dp.plat.activiti.entity.BaseVO;
+import com.dp.plat.activiti.service.IProcessService;
+import com.dp.plat.core.context.SpringContext;
+import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
+import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.service.IAbstractBaseService;
+import com.dp.plat.core.service.impl.AbstractBaseService;
+import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
+import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
+import com.dp.plat.pms.springmvc.dao.PmWorkFlowMapper;
+import com.dp.plat.pms.springmvc.entity.IndustryAsset;
+import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
+import com.dp.plat.pms.springmvc.entity.ProjectTask;
+import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
+import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 
 /**
  *
@@ -59,7 +66,7 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
 
     @Autowired
     private IProcessService processService;
-
+    
     @Override
     public List<PmWorkFlow> selectRunTasksByAssigneeAndProcessKeyAndTaskKey(PageParam<PmWorkFlow> pageParam, Integer assignee, String processKey, String taskKey) {
         // TaskQuery taskQuery =
@@ -519,6 +526,7 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
         //		runtimeService.setProcessInstanceName(processInstanceId, stringBuilder.toString());
         pmWorkFlow.setProcInstId(processInstanceId);
         dao.updateByPrimaryKeySelective(pmWorkFlow);
+        runtimeService.setVariable(processInstanceId, "entity", pmWorkFlow);
         //		Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).active().singleResult();
         //		if (null != task) {
         //			pmWorkFlow.setTaskId(task.getId());
@@ -554,4 +562,64 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
     public List<String> selectActivitiUserMails(Map<String, Object> params) {
 		return dao.selectActivitiUserMails(params);
     }
+    
+    /**
+	 * 装饰流程变量实体
+	 * @param pmWorkFlow
+	 * @return
+	 */
+    @Override
+	public PmWorkFlow decoratorEntity(PmWorkFlow pmWorkFlow) {
+		if (pmWorkFlow == null || StringUtils.isBlank(pmWorkFlow.getProcInstId())) {
+			return pmWorkFlow;
+		}
+		Object entity = pmWorkFlow.getEntity();
+		// 查询数据库的最新流程记录
+		PageParam<PmWorkFlow> pageParam = new PageParam<PmWorkFlow>();
+		pageParam.setOrderBy("id desc");
+		pageParam.setPageSize(1);
+		PmWorkFlow temp = new PmWorkFlow();
+		temp.setProcessKey(pmWorkFlow.getProcessKey());
+		temp.setProcInstId(pmWorkFlow.getProcInstId());
+		pageParam.setModel(temp);
+		List<Object> list = this.selectBySelectivePageable(pageParam);
+		if (list == null || list.isEmpty()) {
+			return pmWorkFlow;
+		}
+		BaseVO old = pmWorkFlow;
+		
+		pmWorkFlow = (PmWorkFlow) list.get(0);
+		pmWorkFlow.setApplyUserId(old.getApplyUserId());
+		pmWorkFlow.setBusinessKey(pmWorkFlow.getId().toString());
+//		String objType = pmWorkFlow.getObjType();
+		Integer objId = pmWorkFlow.getObjId();
+		String dataType = pmWorkFlow.getDataType();
+		Integer dataId = pmWorkFlow.getDataId();
+		if (!pmWorkFlow.getBusinessKey().equalsIgnoreCase(old.getBusinessKey())) {
+			String serviceBeanName = dataType + "Service";
+			IAbstractBaseService<?> service = null;
+			try { 
+				service = SpringContext.getBean(serviceBeanName, IAbstractBaseService.class);
+			} catch (Exception e) {
+			}
+			if (DataType.PROJECT_TASK.equals(dataType)) {
+				ProjectTask projectTask = (ProjectTask) entity;
+				projectTask.setProjectId(objId);
+				projectTask.setTaskId(dataId);
+			}  else if (DataType.INDUSTRY_ASSET.equals(dataType)) {
+				// 项目资产，更新入库状态和入库时间
+				IndustryAsset industryAsset = (IndustryAsset) entity;
+				industryAsset.setId(dataId);
+			} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
+				// 行业漏洞，更新入库状态和入库时间
+				IndustryLeak industryLeak = (IndustryLeak) entity;
+				industryLeak.setId(dataId);
+			}
+			if (service != null) {
+				entity = service.selectByPrimaryKey(dataId);
+			}
+		}
+		pmWorkFlow.setEntity(entity);
+		return pmWorkFlow;
+	}
 }

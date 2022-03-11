@@ -6,8 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -15,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dp.plat.core.exception.UploadException;
+
 
 /**
  * @author w02611
@@ -356,5 +360,87 @@ public class FileUtil {
 	 */
 	public static String generZipFileName() {
 		return generFileName("zip");
+	}
+	
+	public static String getWebRoot() {
+		try {
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			URL resource = classLoader.getResource("");
+			String path = resource.getPath();
+			if (path != null) {
+				return getParent(new File(path), 2).getPath() + File.separator;
+			}
+		} catch (Exception e) {
+			String webAppRootKey = System.getProperty("webAppRootKey");
+			if (StringUtils.isBlank(webAppRootKey)) {
+				webAppRootKey = "webapp.root";
+			}
+			return System.getProperty(webAppRootKey);
+		}
+		return null;
+	}
+
+	public static String getParent(String filePath, int level) {
+		final File parent = getParent(new File(filePath), level);
+		try {
+			return null == parent ? null : parent.getCanonicalPath();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static File getParent(File file, int level) {
+		if (level < 1 || null == file) {
+			return file;
+		}
+
+		File parentFile;
+		try {
+			parentFile = file.getCanonicalFile().getParentFile();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		if (1 == level) {
+			return parentFile;
+		}
+		return getParent(parentFile, level - 1);
+	}
+
+	/**
+	 * 搜索文件
+	 * @param path 指定路径下进行搜索
+	 * @param keyword 关键词
+	 * @param type 类型，all:文件和文件夹, dir:文件夹, file:文件
+	 * @param fuzzy 是否模糊查找
+	 * @return
+	 */
+	public static List<File> filterFiles(String path, String keyword, String type, Boolean fuzzy, Boolean searchSub) {
+		File dir = new File(path);
+		if (!dir.exists()) {
+			return Collections.emptyList();
+		}
+		File[] files = null;
+		if (dir.isDirectory()) {
+			files = dir.listFiles();
+		} else {
+			files = new File[] {dir};
+		}
+		List<File> fileList = new ArrayList<File>(files.length);
+		String pathKeyword = File.separator + keyword + File.separator;
+		for (File file : files) {
+			String filePath = file.getPath();
+			String name = file.getName();
+			if (((Boolean.TRUE.equals(fuzzy) && name.contains(keyword)) || name.equalsIgnoreCase(keyword) || filePath.contains(pathKeyword))
+					&& ("all".equalsIgnoreCase(type) 
+						|| ("dir".equalsIgnoreCase(type) && file.isDirectory())
+						|| ("file".equalsIgnoreCase(type) && file.isFile()))) {
+				fileList.add(file);
+				if (Boolean.TRUE.equals(searchSub) && file.isDirectory()) {
+					List<File> subDirFiles = filterFiles(file.getPath(), keyword, type, fuzzy, searchSub);
+					fileList.addAll(subDirFiles);
+				}
+			}
+		}
+		return fileList;
 	}
 }

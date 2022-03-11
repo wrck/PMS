@@ -268,7 +268,7 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
             	if (list != null && !list.isEmpty()) {
             		warrantyState = list.get(0);
             	} else {
-            		projectService.queryProjectWarrantyState(project.getProjectId());
+            		warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
             	}
 	            projectWarrantyCallback.setWarrantyState(warrantyState);
             }

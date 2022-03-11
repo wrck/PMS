@@ -869,13 +869,13 @@ pm.dailyReport = function() {
 							$(typeHide, $container).parents(".form-group").hide();
 							
 							if (type == 'report') {
-								$("[data-flag='datepicker']").each(function() {
+								$("[data-flag='datepicker']", $container).each(function() {
 									var endDate = $(this).data("dateEndDate");
 									$(this).datepicker('setEndDate', endDate);
-									$("[data-flag='datepicker']").datepicker('update', $(this).val());
+									$(this).datepicker('update', $(this).val());
 								})
 							} else {
-								$("[data-flag='datepicker']").datepicker('setEndDate', nextWeekEndDate);
+								$("[data-flag='datepicker']", $container).datepicker('setEndDate', nextWeekEndDate);
 							}
 							 
 						});
@@ -918,7 +918,7 @@ pm.dailyReport = function() {
 				    			    	var projectTypes = null;
 				    			    	if (projectType == "40") {
 				    			    		projectTypes = [];
-				    			    		$("#projectType option").not("[value='30']").not("[value='40']").each(function(item, index) {
+				    			    		$("#projectType option", $container).not("[value='30']").not("[value='40']").each(function(item, index) {
 				    			    			$(this).val() && projectTypes.push($(this).val());
 			    			    			});
 				    			    		projectType = null;
@@ -990,7 +990,7 @@ pm.dailyReport = function() {
 				    		$("#projectId", $container).on('select2:open', function(event) {
 				    			var $select = $(this).parent();
 				    			var $searchfield = $select.find('.select2-search__field');
-				    			$searchfield.length || ($searchfield = $(`#select2-${this.id}-results`).parents(".select2-dropdown:first").find(".select2-search__field"));
+				    			$searchfield.length || ($searchfield = $(`#select2-${this.id}-results`, $container).parents(".select2-dropdown:first").find(".select2-search__field"));
 				    			setTimeout(function() {
 				    				$searchfield.val($select.find('option:selected[value!=""]').text()).trigger("input");
 				    			}, 2);

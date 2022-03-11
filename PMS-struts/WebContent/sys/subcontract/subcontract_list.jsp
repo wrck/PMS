@@ -157,6 +157,7 @@
             <display:column property="subcontractAmount" title="成交价" media="excel"></display:column>
             <display:column property="officeName" titleKey="pm.subcontract.officeName" media="excel"></display:column>
             <display:column property="profitDepName" titleKey="pm.subcontract.profitDep" media="excel"></display:column>
+            <display:column property="createName" titleKey="pm.subcontract.createName" media="excel"></display:column>
             <display:column property="createTime" titleKey="pm.subcontract.createTime" format="{0,date,yyyy-MM-dd HH:mm:ss}" media="excel"></display:column>
             <display:column property="zrApproverTime" titleKey="pm.subcontract.zrApproverTime" format="{0,date,yyyy-MM-dd HH:mm:ss}" media="excel"></display:column>
             <display:column property="stateName" titleKey="pm.subcontract.state" media="excel"></display:column>

@@ -52,7 +52,6 @@ import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.opensymphony.xwork2.Preparable;
 
-import net.sf.json.JSONArray;
 
 /**
  * 技术公告管理 2016 -04- 14
@@ -215,7 +214,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probManageService.bacthDeleteProbRestores(probRestoreIds);
 			result = "200";
 		} catch (Exception e) {
-			result = JSONArray.fromObject(e).toString();
+			result = JSON.toJSONString(e);
 			return SUCCESS;
 		}
 		return SUCCESS;
@@ -410,7 +409,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probRestore.setRestoreStatus(10);
 			probRestoreTaskList = probManageService.queryProbRestoreTaskList(probRestore, null);
 			softVersionList = probManageService.querySoftVersionList(probRestore.getProbId());
-			result = JSONArray.fromObject(softVersionList).toString();
+			result = JSON.toJSONString(softVersionList);
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -491,7 +490,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				probRestoreTaskList = probManageService.queryProbRestoreTaskList(probRestore, null);
 			}
 			softVersionList = probManageService.querySoftVersionList(probRestore.getProbId());
-			result = JSONArray.fromObject(softVersionList).toString();
+			result = JSON.toJSONString(softVersionList);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -736,7 +735,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 			// HttpSession session = getServletRequest().getSession();
 			// session.setAttribute("softVersionList", softVersionList);
-			result = JSONArray.fromObject(softVersionList).toString();
+			result = JSON.toJSONString(softVersionList);
 			softVersionCodes = null;
 		}
 		return SUCCESS;

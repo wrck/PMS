@@ -13,6 +13,7 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.delegate.VariableScope;
 import org.activiti.engine.impl.persistence.entity.CommentEntity;
 import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 import org.activiti.engine.task.Comment;
@@ -97,7 +98,8 @@ public class QualityApproveTrackListener {
 	public void processStartExecution(DelegateExecution delegateExecution) throws Exception {
 		String executionId = delegateExecution.getId();
 		String processKey = delegateExecution.getProcessDefinitionId();
-		PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
+//		PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
+		PmWorkFlow pmWorkFlow = getCurrentEntity(delegateExecution);
 		
 		String dataType = pmWorkFlow.getDataType();
 		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType);
@@ -125,7 +127,9 @@ public class QualityApproveTrackListener {
 			String taskId = delegateExecution.getId();
 			ExecutionEntity executionEntity = (ExecutionEntity) delegateExecution;
 			String processKey = executionEntity.getProcessDefinitionKey();
-			PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
+//			PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
+			PmWorkFlow pmWorkFlow = getCurrentEntity(delegateExecution);
+			
 			Boolean isPass = Boolean.TRUE.equals(delegateExecution.getVariable("isPass"));
 			String dataType = pmWorkFlow.getDataType();
 			String workflowStatus = isPass ? BaseVO.APPROVAL_SUCCESS : BaseVO.APPROVAL_FAILED;
@@ -223,7 +227,8 @@ public class QualityApproveTrackListener {
 		String taskKey = delegateTask.getTaskDefinitionKey();
 		String processKey = delegateTask.getProcessDefinitionId();
 		
-		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+//		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+		PmWorkFlow pmWorkFlow = getCurrentEntity(delegateTask);
 		String objType = pmWorkFlow.getObjType();
 		String dataType = pmWorkFlow.getDataType();
 		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
@@ -370,7 +375,8 @@ public class QualityApproveTrackListener {
 		String taskId = delegateTask.getId();
 		String taskKey = delegateTask.getTaskDefinitionKey();
 		String processKey = delegateTask.getProcessDefinitionId();
-		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+//		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+		PmWorkFlow pmWorkFlow = getCurrentEntity(delegateTask);
 		
 		String dataType = pmWorkFlow.getDataType();
 		Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
@@ -934,4 +940,14 @@ public class QualityApproveTrackListener {
 //		planParticipantSummaryService.updateByPrimaryKeySelective(participantSummary);
 	}
 	
+	private PmWorkFlow getCurrentEntity(VariableScope variableScope) {
+		PmWorkFlow pmWorkFlow = variableScope.getVariable("entity", PmWorkFlow.class);
+		if (variableScope instanceof DelegateTask) {
+			pmWorkFlow.setProcInstId(StringUtils.defaultIfBlank(pmWorkFlow.getProcInstId(), ((DelegateTask) variableScope).getProcessInstanceId()));
+		} else if (variableScope instanceof DelegateExecution) {
+			pmWorkFlow.setProcInstId(StringUtils.defaultIfBlank(pmWorkFlow.getProcInstId(), ((DelegateExecution) variableScope).getProcessInstanceId()));
+		}
+		pmWorkFlow = pmFlowService.decoratorEntity(pmWorkFlow);
+		return pmWorkFlow;
+	}
 }

@@ -7,14 +7,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.service.BasicDataService;
-
-import net.sf.json.JSONObject;
 
 /**
  * @author w02611
@@ -39,7 +39,7 @@ public class UserUtil {
 			if (StringUtils.isBlank(relationsJSON)) {
 				relationsJSON = "{}";
 			}
-			JSONObject relations = JSONObject.fromObject(relationsJSON);
+			Map<String, Object> relations = JSON.parseObject(relationsJSON);
 			for (String area : areaList) {
 				String newArea = transferDepNo(area, relations);
 				if (StringUtils.isNotBlank(newArea) && !newAreaList.contains(newArea)) {
@@ -80,7 +80,7 @@ public class UserUtil {
 	 * @param relations
 	 * @return
 	 */
-	public static String transferDepNo(String area, JSONObject relations) {
+	public static String transferDepNo(String area, Map<String, Object> relations) {
 		return transferDepNo(area, relations, 0);
 	}
 
@@ -93,25 +93,25 @@ public class UserUtil {
 	 * @param relations
 	 * @return
 	 */
-	public static String transferDepNo(String area, JSONObject relations, int direction) {
+	public static String transferDepNo(String area, Map<String, Object> relations, int direction) {
 		String newArea = area;
 		String prevDep = "";
 		String nextDep = "";
-		if (relations == null || relations.isEmpty() || relations.isNullObject()) {
+		if (relations == null || relations.isEmpty()) {
 			BasicDataService basicDataService = SpringContext.getApplicationContext().getBean("basicDataService",
 					BasicDataService.class);
 			String relationsJSON = basicDataService.querySysArg("dep.market2suport.relationsJSON");
 			if (StringUtils.isBlank(relationsJSON)) {
 				relationsJSON = "{}";
 			}
-			relations = JSONObject.fromObject(relationsJSON);
+			relations = JSON.parseObject(relationsJSON);
 		}
 		String suffix = "*";
-        for (Iterator<?> iterator = relations.keys(); iterator.hasNext();) {
+        for (Iterator<String> iterator = relations.keySet().iterator(); iterator.hasNext();) {
             String keySuffix = "";
             String valueSuffix = "";
-            String key = (String) iterator.next();
-            String value = relations.getString(key);
+            String key = iterator.next();
+            String value = String.valueOf(relations.get(key));
             if (key.contains(suffix)) {
                 key = key.replace(suffix, "");
                 keySuffix = "." + suffix;
@@ -152,25 +152,25 @@ public class UserUtil {
      * @param relations
      * @return
      */
-    public static Set<String> transferDepNos(String area, JSONObject relations, int direction) {
+    public static Set<String> transferDepNos(String area, Map<String, Object> relations, int direction) {
         String prevDep = "";
         String nextDep = "";
-        if (relations == null || relations.isEmpty() || relations.isNullObject()) {
+        if (relations == null || relations.isEmpty()) {
             BasicDataService basicDataService = SpringContext.getApplicationContext().getBean("basicDataService",
                     BasicDataService.class);
             String relationsJSON = basicDataService.querySysArg("dep.market2suport.relationsJSON");
             if (StringUtils.isBlank(relationsJSON)) {
                 relationsJSON = "{}";
             }
-            relations = JSONObject.fromObject(relationsJSON);
+            relations = JSON.parseObject(relationsJSON);
         }
         String suffix = "*";
         Set<String> areaSet = new HashSet<>();
-        for (Iterator<?> iterator = relations.keys(); iterator.hasNext();) {
+        for (Iterator<String> iterator = relations.keySet().iterator(); iterator.hasNext();) {
             String keySuffix = "";
             String valueSuffix = "";
-            String key = (String) iterator.next();
-            String value = relations.getString(key);
+            String key = iterator.next();
+            String value = String.valueOf(relations.get(key));
             if (key.contains(suffix)) {
                 key = key.replace(suffix, "");
                 keySuffix = "." + suffix;
@@ -214,7 +214,7 @@ public class UserUtil {
             relationsJSON = "{}";
         }
         
-        JSONObject relations = JSONObject.fromObject(relationsJSON);
+        Map<String, Object> relations = JSON.parseObject(relationsJSON);
         String areaPower = "165000";
         if (StringUtils.isNotBlank(areaPower)) {
             Set<String> newAreaList = new HashSet<>();

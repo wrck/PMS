@@ -71,6 +71,9 @@
 		<if test="model.dataId != null">
 			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
 		</if>
+		<if test="model.status != null">
+			AND pw.status = #{model.status, jdbcType=VARCHAR}
+		</if>
 	    AND RES.SUSPENSION_STATE_ = 1 
 	    AND (
 	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
@@ -170,6 +173,9 @@
 		</if>
 		<if test="model.dataId != null">
 			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
+		<if test="model.status != null">
+			AND pw.status = #{model.status, jdbcType=VARCHAR}
 		</if>
 	    AND RES.SUSPENSION_STATE_ = 1 
 	    AND (

@@ -125,4 +125,10 @@ public interface PmClosedLoopQuesnaireDao {
      * @param pmClQuesnaireResultHeaderId
      */
     void addPmClQuesResultLineList(List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList, int pmClQuesnaireResultHeaderId);
+
+    /**
+     * @param pmClQuesnaireResultLineList
+     * @param pmClQuesnaireResultHeader
+     */
+	void addPmClQuesResultLineList(List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList, PmClQuesnaireResultHeader pmClQuesnaireResultHeader);
 }

@@ -61,6 +61,11 @@ import com.dp.plat.service.ProjectPlanService;
 import com.dp.plat.service.ProjectService;
 import com.dp.plat.util.Util;
 
+/**
+ * 项目管理控制器
+ * @author w02611
+ *
+ */
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "project")
 public class ProjectController
@@ -103,6 +108,7 @@ public class ProjectController
 		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
 	}
 
+	@Override
 	@RequestMapping
 	public String home(Model model) {
 		if (!checkPermission(null, model, "project:list")) {
@@ -111,6 +117,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "list";
 	}
 
+	@Override
 	@RequestMapping("/list")
 	public String list(PageParam<Object> pageParam, ProjectVO project, Model model) {
 		if (!HttpContext.isHTML()) {
@@ -189,6 +196,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "list";
 	}
 
+	@Override
 	@RequestMapping("{id}")
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
@@ -238,6 +246,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "detail";
 	}
 
+	@Override
 	@RequestMapping("/detail")
 	public String detail(ProjectVO vo, Model model) {
 		String projectType = vo.getProjectType();
@@ -303,6 +312,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "detail";
 	}
 
+	@Override
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
 	@SystemControllerLog(description = "创建项目【$project.projectName$】")
 	public String create(ProjectVO project, Model model) {
@@ -356,6 +366,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "detail";
 	}
 
+	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
 	@SystemControllerLog(description = "更新项目【$project.projectName$】")
 	public String update(@PathVariable("id") Integer id, ProjectVO project, Model model) {
@@ -365,7 +376,8 @@ public class ProjectController
 		Boolean status = true;
 		String message = null;
 		try {
-			projectHeaderService.updateProjectByProjectId(project);// 工程管理部权限
+			// 工程管理部权限
+			projectHeaderService.updateProjectByProjectId(project);
 			projectHeaderService.updateByPrimaryKeySelective(project);
 			// projectHeaderService.updateProjectProgramManagerByProjectId(project,null);
 		} catch (Exception e) {
@@ -379,6 +391,7 @@ public class ProjectController
 		return VIEW_NAMESPACE + "detail";
 	}
 
+	@Override
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	@SystemControllerLog(description = "删除项目【$project.projectName$】")
 	public void delete(@PathVariable("id") Integer id, Model model) {
@@ -423,7 +436,7 @@ public class ProjectController
 			return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
 		}
 		model.addAttribute("projectId", projectId);
-		Map<String, String> typeName = new HashMap<String, String>();
+		Map<String, String> typeName = new HashMap<String, String>(6);
 		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
 		model.addAttribute("typeName", typeName.get(type));
 		return VIEW_NAMESPACE + "mergeProject";
@@ -486,16 +499,31 @@ public class ProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		Map<String, String> typeName = new HashMap<String, String>();
+		Map<String, String> typeName = new HashMap<String, String>(6);
 		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
 		model.addAttribute("typeName", typeName.get(type));
 		return VIEW_NAMESPACE + "detail";
 	}
 
 
-	@RequestMapping(value = "/{id}/orderDetail")
-	public void orderDetailByProjectId(@PathVariable("id") Integer id, Model model) {
-		ProjectHeader temp = projectHeaderService.selectByPrimaryKey(id);
+	@RequestMapping(value = "/{ids}/orderDetail")
+	public void orderDetailByProjectId(@PathVariable("ids") String ids, Model model) {
+		ProjectHeader temp = null;
+		String[] idArr = StringUtils.split(ids, ",");
+		if (idArr.length > 1) {
+			PageParam<ProjectHeader> pageParam = new PageParam<>();
+			ProjectVO project = new ProjectVO();
+			project.setProjectIds(ids);
+			project.setDisabled(false);
+			pageParam.setModel(project);
+			List<ProjectHeader> projects = projectHeaderService.selectBySelectivePageable(pageParam);
+			if (projects == null || projects.isEmpty()) {
+				return;
+			}
+			temp = projects.get(0);
+		} else {
+			temp = projectHeaderService.selectByPrimaryKey(Integer.valueOf(ids));
+		}
 		if (temp == null) {
 			return;
 		}
@@ -512,10 +540,9 @@ public class ProjectController
 			data.addAll(orderDataList);
 			columns = findColumnList("lendDetailList");
 		} else {
-			List<OrderDataFromSap> orderDataList = projectHeaderService
-					.queryOrderDataListByProjectId(project.getProjectId());// 查询产品列表
-			List<OrderDataFromSap> rmaOrderDataList = projectHeaderService
-					.queryRmaOrderDataByContractNo(project.getContractNo());
+			// 查询产品列表
+			List<OrderDataFromSap> orderDataList = projectHeaderService.queryOrderDataListByProjectId(project.getProjectId());
+			List<OrderDataFromSap> rmaOrderDataList = projectHeaderService.queryRmaOrderDataByContractNo(project.getContractNo());
 			orderDataList.addAll(rmaOrderDataList);
 			data = new ArrayList<Object>(orderDataList.size());
 			data.addAll(orderDataList);

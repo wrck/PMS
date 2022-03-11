@@ -30,7 +30,12 @@ public class DateConverter implements Converter<String, Date> {
 				simpleDateFormat.applyPattern(pattern);
 				return simpleDateFormat.parse(stringDate);
 			} catch (ParseException e) {
-				parseException = e;
+				try {
+					long time = Long.parseLong(stringDate);
+					return new Date(time);
+				} catch (NumberFormatException e2) {
+					parseException = e;
+				}
 			}
 		}
 		if (parseException != null) {
@@ -49,7 +54,12 @@ public class DateConverter implements Converter<String, Date> {
 				simpleDateFormat.applyPattern(pattern);
 				return simpleDateFormat.parse(stringDate);
 			} catch (ParseException e) {
-				parseException = e;
+				try {
+					long time = Long.parseLong(stringDate);
+					return new Date(time);
+				} catch (NumberFormatException e2) {
+					parseException = e;
+				}
 			}
 		}
 		if (parseException != null) {

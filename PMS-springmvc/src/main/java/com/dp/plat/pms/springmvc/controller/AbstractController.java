@@ -14,7 +14,6 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.SecurityUtils;
 import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
@@ -37,6 +36,14 @@ import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
 import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
 
+/**
+ * 通用控制器
+ * @author w02611
+ *
+ * @param <Service>
+ * @param <T>
+ * @param <V>
+ */
 public abstract class AbstractController<Service extends IAbstractBaseService<T>, T, V> extends BaseController {
 
 	private final ThreadLocal<Map<String, Object>> localVariables = new ThreadLocal<Map<String, Object>>();
@@ -274,7 +281,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		Result result = null;
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new HashMap<String, Object>(6);
 		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
 		params.put("columns", columnList);
 		params.put("targetValue", v);
@@ -302,7 +309,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		if (!checkPermission(v, model, getDataName() + ":import")) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
-		Map<String, Object> params = new HashMap<String, Object>();
+//		Map<String, Object> params = new HashMap<String, Object>();
 		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
 		pageParam.setColumns(columnList);
 		pageParam.setModel(v);
@@ -347,7 +354,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 			return Consts.VIEW_UNAUTHORIZED;
 		}
 		Result result = null;
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new HashMap<String, Object>(6);
 		List<DataTableColumn> columnList = findColumnList(getDataNameTable());
 		params.put("columns", columnList);
 		params.put("targetValue", v);
@@ -375,7 +382,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		}
 		Result result;
 		try {
-			Map<String, Object> params = new HashMap<String, Object>();
+			Map<String, Object> params = new HashMap<String, Object>(6);
 			Method method = service.getClass().getMethod("submitTempTable", Map.class, String.class, Collection.class);
 			result = (Result) method.invoke(service, params, tempTableName, JSON.parseArray(columns, String.class));
 		} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
@@ -517,7 +524,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 	public void setLocalVariables(String key, Object value) {
 		Map<String, Object> map = localVariables.get();
 		if (map == null) {
-			map = new ConcurrentHashMap<>();
+			map = new ConcurrentHashMap<>(12);
 		}
 		map.put(key, value);
 		localVariables.set(map);

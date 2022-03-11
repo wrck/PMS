@@ -3,17 +3,18 @@ package com.dp.plat.support;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.jsp.PageContext;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.VContext;
 import com.dp.plat.service.BasicDataService;
-
-import net.sf.json.JSONArray;
 
 public class LeftMenu {
 	private static Map<String, String> externalGroupMap = null;
@@ -56,12 +57,13 @@ public class LeftMenu {
 			return null;
 		}
 		// JSON转换
-		JSONArray jsonObj = JSONArray.fromObject(jsonStrBody);
+		List<LeftMenuExternalGroup> jsonObj = JSON.parseArray(jsonStrBody, LeftMenuExternalGroup.class);
 
 		Map<String, Class> classMap = new HashMap<String, Class>();
 		classMap.put("children", LeftMenuExternalLi.class);
-		LeftMenuGroupInterface[] group = (LeftMenuGroupInterface[]) JSONArray.toArray(jsonObj,
-				LeftMenuExternalGroup.class, classMap);
+//		LeftMenuGroupInterface[] group = (LeftMenuGroupInterface[]) JSONArray.toArray(jsonObj,
+//				LeftMenuExternalGroup.class, classMap);
+		LeftMenuGroupInterface[] group = jsonObj.toArray(new LeftMenuGroupInterface[] {});
 		return group;
 	}
 
@@ -126,11 +128,11 @@ public class LeftMenu {
 
 		menuGroup.setChildren(lis);
 		external[0] = menuGroup;
-		JSONArray jsonObject = JSONArray.fromObject(external);
+		Object jsonObject = JSON.toJSON(external);
 		System.out.println(jsonObject.toString());
 
 		LeftMenuGroupInterface[] externalGroup = new LeftMenu().parseExternalGroup(jsonObject.toString());
-		jsonObject = JSONArray.fromObject(externalGroup);
+		jsonObject = JSONArray.toJSON(externalGroup);
 		System.out.println(jsonObject.toString());
 		// Map<String, Class> classMap = new HashMap<String, Class>();
 		// classMap.put("lis", LeftMenuLi.class);
