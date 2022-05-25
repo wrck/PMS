@@ -840,6 +840,32 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         ]]>
     </insert>
     
+    <!-- 同步市场部联动维度信息 -->
+    <select id="query_view_market_system_expend_industry" resultClass="java.util.HashMap" >
+        SELECT * FROM view_market_system_expend_industry
+    </select>
+    <delete id="delete_pm_project_market_relations_from_sms" >
+        truncate table pm_project_market_relations_from_sms
+    </delete>
+    <insert id="insert_pm_project_market_relations_from_sms" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_project_market_relations_from_sms(
+            	marketCode, marketName
+   				, systemCode, systemName
+				, expendCode, expendName
+				, industryCode, industryName)
+        ]]>
+        values
+        <iterate conjunction="," property="list">
+            (
+            	#list[].marketCode#, #list[].marketName#
+   				, #list[].systemCode#, #list[].systemName#
+				, #list[].expendCode#, #list[].expendName#
+				, #list[].industryCode#, #list[].industryName#
+            )
+        </iterate>
+    </insert>
+    
     
     <select id="query_pm_self_service_project" resultClass="com.dp.plat.data.bean.Project">
         <![CDATA[

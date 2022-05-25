@@ -81,7 +81,7 @@ a span {
     content: "*";
     vertical-align: middle;
 }
-.tag-must:before {
+.tag-must:not(.tag-must-ignore):before, .tag-must-plus:not(.tag-must-ignore):before {
     color: red;
 }
 .display-flex {
@@ -144,8 +144,9 @@ a span {
                     return false;
                 }
             }
-			for (var i = 0; i < $(".tag-must:visible").length; i++) {
-                var _this = $(".tag-must:visible")[i];
+            var $tagMusts = $(".tag-must:visible,.tag-must-plus:visible").not(".tag-must-ignore")
+			for (var i = 0; i < $tagMusts.length; i++) {
+                var _this = $tagMusts[i];
 				var $inpt = $(_this).next().find("[name*='projectMaintenance.'], #pmCLChoseQuesButt");
 				var name = $inpt.attr("name");
 				var type = $inpt.attr("type");
@@ -278,7 +279,17 @@ a span {
         }
         changeCategory();
         $("#maintenanceSubCategory").val(subCategory);
+        function changeSubCategory(){
+        	var subCategory = $("#maintenanceSubCategory option:selected").val();
+            $(".tag[class*='_Must']").removeClass("tag-must-plus");
+            $(".tag[class*='_NotMust']").removeClass("tag-must-ignore");
+            
+            $("." + subCategory + "_Must").addClass("tag-must-plus");
+            $("." + subCategory + "_NotMust").addClass("tag-must-ignore");
+        }
+        changeSubCategory();
         $("#maintenanceCategory").on("change", changeCategory);
+        $("#maintenanceSubCategory").on("change", changeSubCategory);
         
         function adjustColumns() {
             //var $firstHiddenTr = $(".serviceSalesSupportHidden, .nonBusinessHidden").first().parent();
@@ -736,9 +747,9 @@ a span {
                             <td><s:textarea name="projectMaintenance.processStep" cssClass="form-control"/></td>
                         </tr>
                         <tr>
-                            <td class="tag serviceSalesSupportHidden nonBusinessHidden"><s:text name="pm.project.maintenance.itemModel"></s:text>:</td>
+                            <td class="tag serviceSalesSupportHidden nonBusinessHidden projectImplementation_09_Must afterSalesMaintenance_01_Must"><s:text name="pm.project.maintenance.itemModel"></s:text>:</td>
                             <td><s:textarea name="projectMaintenance.itemModel" cssClass="form-control"/></td>
-                            <td class="tag serviceSalesSupportHidden nonBusinessHidden"><s:text name="pm.project.maintenance.softVersion"></s:text>:</td>
+                            <td class="tag serviceSalesSupportHidden nonBusinessHidden projectImplementation_09_Must afterSalesMaintenance_01_Must"><s:text name="pm.project.maintenance.softVersion"></s:text>:</td>
                             <td><s:textarea name="projectMaintenance.softVersion" cssClass="form-control"/></td>
                         </tr>
                         <tr>

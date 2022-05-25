@@ -83,7 +83,9 @@
 <body>
     <!-- 查询 -->
     <s:form id="mainForm" name="mainForm" cssClass="form-inline" action="%{namespace}/warrantyCallback_projectWarranty.action">
-        <s:hidden name="projectWarrantyCallback.customerNameNotFuzzy"></s:hidden>
+        <s:if test="%{projectWarrantyCallback.customerNameNotFuzzy != null}">
+	        <s:hidden name="projectWarrantyCallback.customerNameNotFuzzy"></s:hidden>
+        </s:if>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="projectName"><s:text name="pm.project.projectName" /></label>

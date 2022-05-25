@@ -996,4 +996,6 @@ public interface ProjectService extends BaseService{
 	List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(ProjectMaintenanceVO projectMaintenance,
 			DisplayParam displayParam);
 
+	List<Map<String, Object>> queryMarketRelations();
+
 }

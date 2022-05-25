@@ -1342,7 +1342,9 @@ td a:VISITED {
 			$("#updateSoftVersion").hide();
 		}
 	}
-	
+	var loadingHtml = "<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>" + 
+		"	<img src='./images/loading-circle.gif'/>" + 
+		"</div>";
 	function updateSoftVersion(){
 		$changeRemark = $("textarea[name='softChangeLog.changeRemark']");
 		$(".software").each(function(){
@@ -1370,16 +1372,56 @@ td a:VISITED {
 			return false;
 		}
 		$changeRemark.val($changeRemark.val().replace(/\n/g,"<br>"));
+		
+		// 解析成json格式
+		var assembly = function(res, name, val) {
+            res = res || {};
+            var sind = name.indexOf('.');
+            var sp_name = sind > -1 ? name.substring(0, sind) : name;
+            var sc_name = sind > -1 ? name.substring(sind + 1) : "";
+            var listMatchs = sp_name.match(/(\w+)\[(\d+)\]/) || [];
+            var spl_name = listMatchs[1];
+            var spl_index = listMatchs[2];
+            // 是否是数组
+            if (spl_name) {
+                res[spl_name] = res[spl_name] || [];
+                res[spl_name][spl_index] = sind > -1 ? assembly(res[spl_name][spl_index], sc_name, val) : val;
+            } else {
+                res[sp_name] = sind > -1 ? assembly(res[sp_name], sc_name, val) : val;
+            }
+            return res;
+        };
+     	// 封装成JSON,避免list数量多时会导致超过请求参数个数限制的问题
+        var softVersionJson = {};
+     	var barCodes = [];
+        $.each($("#softversionForm").serializeArray(), function() {
+            var entity = $(this)[0];
+            //console.log(entity);
+            var key = entity.name;
+            var value = entity.value;
+            // 过滤参数为空的情况
+            if (value == '') {
+                return;
+            }
+            if (key.indexOf("barCode") > -1 && $.inArray(value, barCodes) > -1) {
+            	return;
+            }
+            softVersionJson = assembly(softVersionJson, key, value);
+        })
+        softVersionJson = JSON.stringify(softVersionJson);
 		$.ajax({
 			url :"updateSoftVersion.action",
 			type :"post",
 			dataType :"json",
-			data : $("#softversionForm").serialize(),
+			//data : $("#softversionForm").serialize(),
+			data : {softVersionJson: softVersionJson},
 			success:function(data){
 				var result = data.result;
 				if(result == 310){
 					alert('更新成功');
-					window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
+					$(".softversionDiv").html(loadingHtml);
+					checkSoftVesion();
+					//window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
 				}else{
 					alert('更新失败');
 				}
@@ -1437,7 +1479,20 @@ td a:VISITED {
 			newSoftVersion = temp[temp.length - 1];
 		}
 		if(newSoftVersion!= '' &&  oldSoftVersion != newSoftVersion){
-			size = $("#softversionEdit table tr").size() - 3;
+			var $softs = $("input[name$='." + softType + "'].software", softItemCode ? (".itemCode_" + softItemCode) : undefined);
+			$softs.each(function() {
+				var soft = $(this);
+				if(soft.val() == oldSoftVersion){
+					soft.val(newSoftVersion);
+					bakvalue = soft.attr("bakValue").trim();
+					if(bakvalue !=  newSoftVersion){
+						$("#"+soft[0].id+"Change").val(1);
+					}else{
+						$("#"+soft[0].id+"Change").val(0);
+					}
+				}
+			})
+			/* size = $("#softversionEdit table tr").size() - 3;
 			for(i = 0; i < size ; i ++){
 				if (softItemCode) {
 					soft = $(".itemCode_" + softItemCode + " input[name='softversionList["+i+"]."+softType+"']");
@@ -1453,7 +1508,7 @@ td a:VISITED {
 						$("#"+soft[0].id+"Change").val(0);
 					}
 				}
-			}		
+			}		 */
 		}
 	}
 	

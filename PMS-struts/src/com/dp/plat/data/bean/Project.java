@@ -1,6 +1,8 @@
 package com.dp.plat.data.bean;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -208,6 +210,11 @@ public class Project extends ProjectQueryParam{
 	 */
 	private String teamMemberCodes;
 	
+	/**
+	 * 自定义信息
+	 */
+	private Map<?, ?> customInfo;
+
 	public Project() {
 	    super();
     }
@@ -1163,5 +1170,67 @@ public class Project extends ProjectQueryParam{
 
 	public boolean getCheckWarranty() {
 		return StringUtils.isNotBlank(this.warrantyStatus) || StringUtils.isNotBlank(this.warrantyGrade) || StringUtils.isNotBlank(this.wafService);
+	}
+	
+	/**
+	 * 获取自定义信息
+	 *
+	 * @return customInfo - 自定义信息
+	 */
+	public Map<?, ?> getCustomInfo() {
+		return customInfo;
+	}
+
+	/**
+	 * 设置自定义信息
+	 *
+	 * @param customInfo 自定义信息
+	 */
+	public void setCustomInfo(Map<?, ?> customInfo) {
+		this.customInfo = customInfo;
+	}
+
+	/**
+	 * 获取指定的自定义字段值
+	 * @param key
+	 * @return
+	 */
+	public Object getCustomInfoByKey(String key) {
+		return getCustomInfoByKey(key, null);
+	}
+	
+	/**
+	 * 获取指定的自定义字段值
+	 * @param key
+	 * @return
+	 */
+	public Object getCustomInfoByKey(String key, Object defaultValue) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.getOrDefault(key, defaultValue);
+		}
+		return defaultValue;
+	}
+
+	/**
+	 * 设置指定的自定义字段值
+	 * @param key
+	 * @param value
+	 */
+	public void setCustomInfoByKey(String key, Object value) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo == null) {
+			customInfo = new HashMap<>();
+			this.setCustomInfo(customInfo);
+		}
+		customInfo.put(key, value);
+	}
+
+	public String getSmsProjectAmount() {
+		return (String) getCustomInfoByKey("smsProjectAmount");
+	}
+
+	public void setSmsProjectAmount(String smsProjectAmount) {
+		this.setCustomInfoByKey("smsProjectAmount", smsProjectAmount);
 	}
 }

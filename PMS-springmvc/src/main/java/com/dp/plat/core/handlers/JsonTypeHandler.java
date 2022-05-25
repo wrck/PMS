@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
@@ -56,15 +55,9 @@ public class JsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 		if (obj instanceof String) {
 			return obj.toString();
 		}
-//		boolean isPrimitive = false;
-//		try {
-//			isPrimitive = ((Class) obj.getClass().getField("TYPE").get(null)).isPrimitive();
-//		} catch (Exception e) {
-//		}
-		if (ParserConfig.isPrimitive2(obj.getClass())) {
+		if (isPrimitiveOrEnum(obj.getClass())) {
 			return String.valueOf(obj);
 		}
-//		return JSON.toJSON(obj).toString();
 		return JSON.toJSONString(obj, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteNullListAsEmpty,
 				SerializerFeature.WriteNullStringAsEmpty, SerializerFeature.WriteDateUseDateFormat);
 	}

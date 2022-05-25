@@ -288,7 +288,7 @@ public class UserController {
 			UserRole userRole = new UserRole();
 			userRole.setCompId(compId);
 			userRole.setUserId(id);
-			String userRoleIds = userRoleService.selectUserRolesByUserIdAndCompId(userRole );
+			String userRoleIds = StringUtils.trimToEmpty(userRoleService.selectUserRolesByUserIdAndCompId(userRole));
 			List<String> roleIdList = Arrays.asList(StringUtils.split(userRoleIds, ","));
 			List<UserRole> del = new ArrayList<>(roleIdList.size());
 			for (String oldRole : roleIdList) {

@@ -318,7 +318,12 @@
             <s:select list="companyList" cssClass="form-control writeTxt engineeManagerTxt" cssStyle="width: 180px;display: inline-block;"
                 headerKey="" headerValue="--请选择--" listKey="id" listValue="name"
                 name="project.compId" id="compId"></s:select>
-        </div><br/>
+        </div>
+        <div class="form-group form-group-query">
+            <label for="smsProjectAmount" style="width: 90px;"><s:text name="项目金额" /></label>
+            <s:textfield readonly="true" name="project.smsProjectAmount"  id="smsProjectAmount" placeholder="项目金额..." cssClass="form-control" cssStyle="width: 180px;display: inline-block;" />
+        </div>
+        <br/>
         <%-- <div class="form-group form-group-query">
             <label for="salesType" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.salesType" /></label>
             <s:select name="project.salesType" id="salesType" cssClass="form-control writeTxt engineeManagerTxt" onchange="changeProgramManagerTxt(this)" 

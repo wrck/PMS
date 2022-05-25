@@ -144,7 +144,9 @@
 					searching:true,
 					rowId: 'userId',
 			});
-			$('button[data-btn-type]').click(function() {
+			$(document).off('click', "#" + tableId  + '_wrapper button[data-btn-type]');
+            $(document).on('click', "#" + tableId  + '_wrapper button[data-btn-type]', function() {
+			//$('button[data-btn-type]').click(function() {
 				var action = $(this).attr('data-btn-type');
 				var rowId = commonTable.getSelectedRowId();
 				switch (action) {
@@ -174,12 +176,12 @@
 						return false;
 					}
 					modals.confirm("是否要删除该行数据？",function(){
-						ajaxPost(basePath+"/pm/user/"+rowId+".html?_method=DELETE",null,function(data){
+						ajaxPost(basePath+"/pm/user/"+rowId+".json?_method=DELETE",null,function(data){
 							if(data.success){
 								//modals.correct("已删除该数据");
 								commonTable.reloadRowData();
 							}else{
-								modals.error("用户数据被引用，不可删除！");
+								modals.error(data.message || "删除失败！");
 							}
 						});
 					})

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -26,9 +27,11 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.struts2.ServletActionContext;
-import com.alibaba.fastjson.JSON;
 import org.springframework.beans.BeanUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.dp.plat.context.HttpContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
@@ -345,6 +348,10 @@ public class ProjectAction extends BaseAction implements Preparable{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		List<Map<String, Object>> marketRelations = projectService.queryMarketRelations();
+		String jsonString = JSON.toJSONString(marketRelations);
+		cbForm = new HashMap<String, Object>();
+		cbForm.put("marketRelationsWithSubMap", marketRelations);
 		return SUCCESS;
 	}
 	
@@ -357,11 +364,20 @@ public class ProjectAction extends BaseAction implements Preparable{
 		//如果没有任何参数传入，则无需做保存操作
 		if(checkProjectNull(project)){
 			try {
+				if (project == null) {
+					setErrmsg("合同号不能为空");
+					return ERROR;
+				}
 				project = projectService.queryProjectByContractNo(project.getContractNo());
+				if (project == null) {
+					setErrmsg("该合同号不存在");
+					return ERROR;
+				}
 				try {
 	    			// 设置重大项目级别到项目类别的对应关系
 					String majorProjectLevel = project.getMajorProjectLevel();
 					String majorProjectLevel2PorjectCategory = basicDataService.querySysArg("pm.project.majorProjectLevel2projectCategory");
+					majorProjectLevel2PorjectCategory = StringUtils.defaultIfBlank(majorProjectLevel2PorjectCategory, "{}");
 					Map<String, Object> relation = JSON.parseObject(majorProjectLevel2PorjectCategory, Map.class);
 					String projectCategory = (String) relation.getOrDefault(majorProjectLevel, MessageUtil.PROJECT_TYPE_NORMAL);
 					project.setColumn010(projectCategory);
@@ -382,6 +398,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 				//如果当前合同号已经创建项目，则直接返回不再创建
 				Integer count = projectService.queryProjectContractCountByContractNo(Util.appendChar(project.getContractNo(), "'"));
 				if(count != null && count != 0){
+					setErrmsg("该合同号已创建项目");
 					return ERROR;
 				}
 				projectService.insertProject(project);//保存
@@ -854,6 +871,17 @@ public class ProjectAction extends BaseAction implements Preparable{
 	 */
 	public String updateSoftVersion(){
 		try {
+			HttpServletRequest request = getServletRequest();
+	        String softVersionJson = request.getParameter("softVersionJson");
+	        if (StringUtils.isNotBlank(softVersionJson)) {
+	        	//将解码后的参数转换为 json 对象
+	        	JSONObject json = JSONObject.parseObject(softVersionJson);
+	        	JSONArray listArray = json.getJSONArray("softversionList");
+	        	JSONObject logMap = json.getJSONObject("softChangeLog");
+	        	softversionList = listArray.toJavaList(ShipmentInfo.class);
+	        	softChangeLog = logMap.toJavaObject(SoftChangeLog.class);
+	        }
+            //从 json 对象中获取参数进行后续操作
 			projectService.updateSoftversion(softversionList,softChangeLog);
 			result = 310;
 		} catch (Exception e) {

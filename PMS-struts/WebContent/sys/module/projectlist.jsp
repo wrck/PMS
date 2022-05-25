@@ -42,6 +42,23 @@
 	width: 230px;
 }
 
+.form-group-width-2 {
+	width: 564px;
+}
+
+.form-inline .form-group .select-group {
+	display: inline-flex;
+}
+
+.form-inline .form-group.form-group-width-2  .select-group {
+	width: 460px;
+}
+
+.form-inline .form-group .select-group select {
+	display: inline-flex;
+	width: calc(447px / 4);
+}
+
 label {
 	width: 99px;
 }
@@ -134,9 +151,9 @@ $(document).ready(function(){
 		}
 	});
 	
-	if($("#marketName").val()) {
+	/* if($("#marketName").val()) {
 		$("#projectColumn11").val($("#projectColumn11").val() + "_" + $("#marketName").val());
-	}
+	} */
 });
 
 function queryalluser(){
@@ -264,10 +281,61 @@ function submit(){
 	if (column011) {
 		var t = $.trim(column011).split("_");
 		$("#projectColumn11").val(t[0]);
-		$("#marketName").val(t[1]);
+		//$("#marketName").val(t[1]);
+		//$("#marketCode").val(t[1]).trigger();
 	}
 	$("#mainForm").submit();
 }
+
+var marketRelationsWithSubMap = [];
+var subMarketRelations = "${projectMaintenance.subCategory}";
+try {
+	marketRelationsWithSubMap = "${cbForm.marketRelationsWithSubMap}".replace(/=/g, "':'").replace(/\{/g, "{'").replace(/, /g, "', '").replace(/\}/g, "'}").replace(/\}', '\{/g, "}, {").replace(/\]', /g, "], ").replace(/':'\[/g, "':[").replace(/\]'\}/g, "]}").replace(/\}\]'/g, "}]").replace(/'/g,'"');
+	marketRelationsWithSubMap = JSON.parse(marketRelationsWithSubMap);
+} catch (e) {
+	marketRelationsWithSubMap = [];
+}
+var selectedRelationsMap = {};
+function changeMarketRelations(){
+	var $this = $(this);
+	var $selected = $("option:selected", $this);
+	//var value = $selected.val() || $selected.data("selected");
+    var index = $selected.index();
+    var parentCode = $this.data("parentCode");
+    var childCode = $this.data("childCode");
+    var currentCode = $this.attr("id");
+    // 获取上级的所选值
+    var relations = selectedRelationsMap[parentCode] || {children: marketRelationsWithSubMap};
+    // 获取当前属性的所选值
+    relations = (relations.children || [])[index - 1] || {};
+    // 缓存当前属性的所选值，便于下级属性联动时获取所有可选值
+    selectedRelationsMap[currentCode] = currentCode ? relations : null;
+    // 清除下级属性的所选值缓存
+    selectedRelationsMap[childCode] = null;
+    // 获取下级属性的所有可选值
+    var children = relations.children || [];
+   	// 移除子属性的所有动态值
+   	$("#" + childCode).find(".dynamic-option").remove();
+   	$("#" + childCode).nextAll(".marketRelation").find(".dynamic-option").remove();
+   	// 添加子属性新的动态选项
+   	var $child = $("#" + childCode);
+   	var childName = childCode.replace("Code", "Name");
+    $(children).each(function(){
+    	$child.append("<option class='dynamic-option' value='"+this[childName]+"'>"+this[childName]+"</option>");
+    });
+    // 赋子属性的初始值
+    var childSelected = $child.data("selected");
+    if (childSelected) {
+    	// 获取初始值后进行清空，避免上级属性发生变更后，下级仍然赋值的问题
+	    $child.data("selected", null);
+    	// 赋值后触发change事件，进行下级属性的联动
+	    $child.val(childSelected).trigger("change");
+    }
+}
+$(document).ready(function(){
+	$(".marketRelation").on("change", changeMarketRelations);
+	$("#marketCode").trigger("change");
+});
 </script>
 </head>
 <body>
@@ -333,13 +401,36 @@ function submit(){
 				headerValue="--请选择--" cssStyle="width:163px"
 				listValue="basicDataName" list="%{deliverStateList}" theme="simple" />
 		</div>
+		<div class="form-group form-group-query form-group-width-2">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="marketCode"><s:text name="pm.project.market" /></label>
+            <div class="select-group">
+	            <s:select id="marketCode" name="project.column004" data-selected="%{project.column004}"
+	            	data-parent-code="" data-child-code="systemCode"
+	                list="cbForm.marketRelationsWithSubMap" listKey="marketName" listValue="marketName" 
+	                cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+	            <s:select id="systemCode" name="project.column005" data-selected="%{project.column005}"
+	            	data-parent-code="marketCode" data-child-code="expendCode"
+	                list="#{}" listKey="systemName" listValue="systemName" 
+	                cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+	            <s:select id="expendCode" name="project.column006" data-selected="%{project.column006}"
+	            	data-parent-code="systemCode" data-child-code="industryCode"
+	            	list="#{}" listKey="expendName" listValue="expendName" 
+	                cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+	            <s:select id="industryCode" name="project.column007" data-selected="%{project.column007}"
+	            	data-parent-code="expendCode" data-child-code=""
+	                list="#{}" listKey="industryName" listValue="industryName" 
+	                cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+            </div>
+        </div>
         <div class="form-group form-group-query form-group-width-1">
             <label for="projectColumn11"><s:text name="pm.project.projectCategory" /></label>
             <s:select name="project.column011" id="projectColumn11"
                 cssClass="form-control" headerKey=""
                 headerValue="--请选择--" cssStyle="width:163px"
-                list="#{10:'直签', 20:'非直签', '10_运营商市场部': '运营商直签'}" theme="simple" />
-                <s:hidden id="marketName" name="project.column004"></s:hidden>
+                list="#{10:'直签', 20:'非直签'}" theme="simple" />
+                <%-- list="#{10:'直签', 20:'非直签', '10_运营商市场部': '运营商直签'}" theme="simple" />
+                	 <s:hidden id="marketName" name="project.column004"></s:hidden> --%>
         </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="projectColumn10"><s:text name="pm.project.projectType" /></label>

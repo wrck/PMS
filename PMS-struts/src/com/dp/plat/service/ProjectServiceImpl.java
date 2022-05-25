@@ -3651,4 +3651,9 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
             projectDao.updateProjectSalesType(paramMap);
         }
     }
+    
+    @Override
+    public List<Map<String, Object>> queryMarketRelations() {
+		return projectDao.queryMarketRelations();
+	}
 }

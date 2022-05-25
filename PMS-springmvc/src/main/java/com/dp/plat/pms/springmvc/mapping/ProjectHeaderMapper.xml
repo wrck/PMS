@@ -1886,7 +1886,10 @@
             "insert into ", tableName, "(", columns, ") select * from ( select ", 
                 replace(selectColumns, concat(tableAlias, ".customInfo"), concat("JSON_MERGE_PRESERVE(IFNULL(", tableAlias, ".customInfo, '{}'), ", transferValues, ") as customInfo")),
 	        " from ", tableName, " as ", tableAlias, 
-            " left join pm_project nph on nph.projectId = '$newProjectId$' and nph.projectType = '$newProjectType$' ", 
+	        IF(locate("nph.", selectColumns), 
+                " left join pm_project nph on nph.projectId = '$newProjectId$' and nph.projectType = '$newProjectType$' ", 
+                ""
+            ),
 	        " where ", whereColumns
 			, " ) ", tableAlias
 	    ) as `insertSql`, IF(

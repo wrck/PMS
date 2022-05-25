@@ -1620,4 +1620,10 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         }
         getSqlMapClientTemplate().update("updateProjectSalesType", params);
     }
+
+	@Override
+	public List<Map<String, Object>> queryMarketRelations() {
+		return getSqlMapClientTemplate().queryForList("queryMarketRelations");
+	}
+    
 }

@@ -12,8 +12,8 @@ import org.springframework.util.Assert;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONValidator;
 import com.alibaba.fastjson.parser.Feature;
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
@@ -22,7 +22,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
  * @author hubin
  * @since 2019-08-25
  */
-//@MappedTypes({ Object.class, Map.class, AbstractCollection.class })
+/*@MappedTypes({ Object.class, Map.class, AbstractCollection.class })*/
 @MappedTypes({ /* Object.class, */Map.class, JSONObject.class, ArrayList.class})
 @MappedJdbcTypes(value = { JdbcType.OTHER, JdbcType.JSON })
 public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
@@ -43,7 +43,8 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 
 	@Override
 	protected Object parse(String json) {
-		if (JSON.isValid(json)) {
+//		if (JSON.isValid(json)) {
+		if (JSONValidator.from(json).validate()) {
 			return JSON.parseObject(json, type, Feature.AllowISO8601DateFormat);
 		} else {
 			return json;
@@ -60,11 +61,11 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 		if (obj instanceof String) {
 			return obj.toString();
 		}
-		if (ParserConfig.isPrimitive2(obj.getClass())) {
+		if (isPrimitiveOrEnum(obj.getClass())) {
 			return String.valueOf(obj);
 		}
 		return JSON.toJSONString(obj,
-				SerializerFeature.WriteMapNullValue,  SerializerFeature.WriteNullListAsEmpty/*,
-				SerializerFeature.WriteNullStringAsEmpty*/, SerializerFeature.WriteDateUseDateFormat);
+				SerializerFeature.WriteMapNullValue,  SerializerFeature.WriteNullListAsEmpty
+				/*, SerializerFeature.WriteNullStringAsEmpty*/, SerializerFeature.WriteDateUseDateFormat);
 	}
 }

@@ -296,7 +296,10 @@
             <display:column property="processTime" titleKey="pm.project.maintenance.processTime" format="{0,date,yyyy-MM-dd}"></display:column>
             <display:column property="transitHour" titleKey="pm.project.maintenance.transitHour" style="width: 52px"></display:column>
             <display:column property="processHour" titleKey="pm.project.maintenance.processHour" style="width: 52px"></display:column>
-            <display:column property="createUser" titleKey="pm.project.maintenance.createUser"></display:column>
+            <display:column titleKey="pm.project.maintenance.createUser" media="html">
+            	 <a href="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&projectMaintenance.maxId=${maintenanceList.id}&projectMaintenance.category=${maintenanceList.category}&projectMaintenance.projectType=${maintenanceList.projectType}&project.projectId=${maintenanceList.projectId}', 1000, 650,'', 'BudgetUpload', true);">${maintenanceList.createUser}</a>
+            </display:column>
+            <display:column property="createUser" titleKey="pm.project.maintenance.createUser" media="excel"></display:column>
             <display:column property="userOfficeName" titleKey="pm.project.maintenance.userOffice" media="excel"></display:column>
             <display:column property="itemModel" titleKey="pm.project.maintenance.itemModel" media="excel"></display:column>
             <display:column property="softVersion" titleKey="pm.project.maintenance.softVersion" media="excel"></display:column>

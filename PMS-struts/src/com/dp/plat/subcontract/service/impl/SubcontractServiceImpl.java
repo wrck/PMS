@@ -719,11 +719,12 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 //				nextAssign[2] = nextPerson.getEmail();
 				try {
 					nextAssign = getNextAssignPer(MessageUtil.ROLE_AREA_LEADER, subcontractVO.getProfitDepCode());
-					if ("1".compareTo(nextAssign[3]) < 0) {
+					// 不再判断是否只有一个办事处主任，直接使用角色候选
+//					if ("1".compareTo(nextAssign[3]) < 0) {
 						nextAssign[0] = subcontractVO.getProfitDepName() + "主任";
 						nextAssign[1] = subcontractVO.getProfitDepName() + "主任";
 						candidateRole = String.valueOf(MessageUtil.ROLE_AREA_LEADER);
-					}
+//					}
 					vars.put("isAreaLeaderAudit", true);
 				} catch(SubcontractException e) {
 					throw new SubcontractException("没有找到办事处主任！");
@@ -941,11 +942,12 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 //			nextAssign[2] = nextPerson.getEmail();
 			try {
 				nextAssign = getNextAssignPer(MessageUtil.ROLE_AREA_LEADER, subcontractVO.getProfitDepCode());
-				if ("1".compareTo(nextAssign[3]) < 0) {
+				// 不再判断是否只有一个办事处主任，直接使用角色候选
+//				if ("1".compareTo(nextAssign[3]) < 0) {
 					nextAssign[0] = subcontractVO.getProfitDepName() + "主任";
 					nextAssign[1] = subcontractVO.getProfitDepName() + "主任";
 					candidateRole = String.valueOf(MessageUtil.ROLE_AREA_LEADER);
-				}
+//				}
 			} catch(SubcontractException e) {
 				throw new SubcontractException("没有找到办事处主任！");
 			}

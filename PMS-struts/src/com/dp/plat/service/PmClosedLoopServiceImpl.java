@@ -669,7 +669,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 		if(nowStatus==PmClosedLoopConstant.CL_EVALU_TYPE_CL){
 			List<ProjectMember>projectMemberList = projectService.queryProjectMembers(project.getProjectId());	//获取所有项目组成员邮箱
 			for (ProjectMember memberObj : projectMemberList) {
-				if(memberObj.getEmail()!=null&&!(memberObj.getEmail().equals(""))){
+				if(memberObj.getDataState() == 1 && memberObj.getEmail()!=null&&!(memberObj.getEmail().equals(""))){
 					if(memberObj.getEmail().endsWith(PmClosedLoopConstant.DP_MAIL)){
 						mailSet.add(memberObj.getEmail());
 					}

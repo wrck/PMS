@@ -1412,4 +1412,6 @@ public interface ProjectDao {
 
 	Map<String, Object> queryQuestionColumns(String quesType, String resultType);
 
+	List<Map<String, Object>> queryMarketRelations();
+
 }

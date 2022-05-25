@@ -224,19 +224,28 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             }
             if (project != null) {
                 project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
-                if (project == null || !(user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
-                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
-                        || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
-                                || user.getUsername().equals(project.getProgramManagerCodeB())
-                                || StringUtils.contains(project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
-                    setErrmsg("没有访问权限！");
-                    return ERROR;
-                }
+				if (project == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER))
+						|| (user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
+								&& (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+										|| user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)))
+						|| (project != null && (user.getUsername().equals(project.getServiceManagerCode())
+								|| user.getUsername().equals(project.getProgramManagerCode())
+								|| user.getUsername().equals(project.getProgramManagerCodeB()) || StringUtils.contains(
+										project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
+					setErrmsg("没有访问权限！");
+					return ERROR;
+				}
                 projectType = 10;
             } else if (presales != null) {
                 presales = presalesService.queryPresalesById(presales.getPresalesId());
-                if (presales == null || !(user.getAreapower().contains(StringUtils.trimToEmpty(presales.getOfficeCode()))
-                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
+                if (presales == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+						|| user.isHasRole(MessageUtil.ROLE_PRESALES_STAFF))
+						|| (user.getAreapower().contains(StringUtils.trimToEmpty(presales.getOfficeCode()))
+                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)))
                         || (presales != null && (user.getUsername().equals(presales.getServiceManager()) || user.getUsername().equals(presales.getProjectManager()))))) {
                     setErrmsg("没有访问权限！");
                     return ERROR;

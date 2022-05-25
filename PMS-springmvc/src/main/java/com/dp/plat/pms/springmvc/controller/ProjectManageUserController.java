@@ -45,6 +45,7 @@ import com.dp.plat.core.service.IUserRoleService;
 import com.dp.plat.core.service.IUserService;
 import com.dp.plat.core.util.PasswordUtil;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.core.vo.RoleParam;
 import com.dp.plat.ehr.job.EhrDataJob;
 import com.dp.plat.ehr.service.IEmployeeService;
@@ -471,6 +472,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		if (userId.equals(currentUserId)) {
 			isCurrentUser = true;
 		} else if (!userId.equals(currentUserId) && !isAdmin) {
+			model.addAllAttributes(new Result(false, "没有权限进行该操作！").getMap());
 			return;
 		}
 		Integer compId = UserContext.getCurrentPrincipal().getCompId();
@@ -483,7 +485,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 			UserRole userRole = new UserRole();
 			userRole.setCompId(compId);
 			userRole.setUserId(userId);
-			String userRoleIds = userRoleService.selectUserRolesByUserIdAndCompId(userRole );
+			String userRoleIds = StringUtils.trimToEmpty(userRoleService.selectUserRolesByUserIdAndCompId(userRole));
 			List<String> roleIdList = Arrays.asList(StringUtils.split(userRoleIds, ","));
 			List<UserRole> del = new ArrayList<>(roleIdList.size());
 			for (String oldRole : roleIdList) {
@@ -501,6 +503,7 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		if (userInfos.isEmpty()) {
 			projectManageUserService.deleteByPrimaryKey(userId);
 		}
+		model.addAllAttributes(new Result(true, "删除成功").getMap());
 	}
 
 	@RequestMapping(value = "checkUnique", method = RequestMethod.POST)

@@ -2354,9 +2354,19 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     DELETE 
     FROM
         pm_subcontract_project_payment 
-    WHERE (`amount` = '' OR `amount` = '0.00')
-        AND `confirmTime` IS NULL
-        AND (`remark` = '' OR `remark` IS NULL)
+    WHERE 
+   	(
+	    (
+	    	(`amount` = '' OR FORMAT(`amount`, 2) = '0.00')
+	        AND `confirmTime` IS NULL
+	        <!-- AND (`remark` = '' OR `remark` IS NULL) -->
+	    )
+	    OR (
+	    <!-- 删除sse中已经删除的报销行 -->
+            sseId NOT IN (SELECT id FROM `pm_subcontract_project_payment_sse`) 
+            AND sseId > 0
+        )
+    )
         AND FIND_IN_SET(subcontractId, #subcontractIds#)
   </delete>
   

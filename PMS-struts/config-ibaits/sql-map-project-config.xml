@@ -425,7 +425,10 @@
             <isNotEmpty prepend="and" property="executionState"><![CDATA[ state.executionState = #executionState#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="closeProcessState"><![CDATA[ state.closeProcessState = #closeProcessState#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column001"><![CDATA[ ph.column001 = #column001# ]]></isNotEmpty>      
-            <isNotEmpty prepend="and" property="column004"><![CDATA[ ph.column004 = #column004# ]]></isNotEmpty>      
+            <isNotEmpty prepend="and" property="column004"><![CDATA[ ph.column004 = #column004# ]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="column005"><![CDATA[ ph.column005 = #column005# ]]></isNotEmpty>      
+            <isNotEmpty prepend="and" property="column006"><![CDATA[ ph.column006 = #column006# ]]></isNotEmpty>      
+            <isNotEmpty prepend="and" property="column007"><![CDATA[ ph.column007 = #column007# ]]></isNotEmpty>  
             <isNotEmpty prepend="and" property="column011"><![CDATA[ ph.column011 = #column011#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ ph.majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="compId"><![CDATA[ ph.compId = #compId# ]]></isNotEmpty>   
@@ -1051,11 +1054,11 @@
     <insert id="insert-project" parameterClass="com.dp.plat.data.bean.Project">
         insert into pm_project_header (projectCode, projectName, projectState,isback, column001, column002, column003, column004, column005,
         column006, column007, column008, column009, column010, column011, column012, columno12_readonly, column013, salesType, customerProjectName, majorProjectLevel,
-        compId, createTime, createBy, effectiveFrom, effectiveTo) 
+        compId, createTime, createBy, effectiveFrom, effectiveTo, customInfo) 
         values
         (#projectCode#, #projectName#, #projectState#,#isback# ,#column001#, #column002#, #column003#, #column004#, #column005#,
         #column006#, #column007#, #column008#, #column009#, #column010#, #column011#, #column012#,#column012Readonly#, #column013#, #salesType#, #customerProjectName#, #majorProjectLevel#,
-        #compId#, NOW(), #createBy# , NOW(), NULL)
+        #compId#, NOW(), #createBy# , NOW(), NULL, #customInfo:JSON#)
         <selectKey resultClass="int"  keyProperty="projectId">    
              SELECT last_insert_id() as id    
         </selectKey>
@@ -1262,18 +1265,20 @@
         <result property="compCode" column="compCode"/>
         <result property="compId" column="compId"/>
         <result property="salesType" column="salesType" nullValue="01"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     
     <select id="query-project-bycontractno" parameterClass="string" resultMap="pmOrderDataFromSap">
         <![CDATA[
             SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
-            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
-            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
-            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
-            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
-            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
-            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
-            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType
+	            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
+	            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
+	            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
+	            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
+	            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
+	            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
+	            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
+	            concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
             FROM pm_order_data_from_sap podfs
             LEFT JOIN pm_project_property_from_sms pppfs ON podfs.orderExecNumber = pppfs.orderExecNumber 
             LEFT JOIN pm_project_header pph ON podfs.contractNo = pph.projectCode
@@ -1290,13 +1295,14 @@
     <select id="query-project-bycontractnoAndType" parameterClass="map" resultMap="pmOrderDataFromSap">
         <![CDATA[
             SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
-            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
-            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
-            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
-            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
-            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
-            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
-            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType
+	            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
+	            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
+	            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
+	            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
+	            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
+	            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
+	            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
+	            concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
             FROM pm_order_data_from_sap podfs
             LEFT JOIN pm_project_property_from_sms pppfs ON podfs.orderExecNumber = pppfs.orderExecNumber 
             LEFT JOIN pm_project_header pph ON podfs.contractNo = pph.projectCode
@@ -5955,4 +5961,30 @@
 	</isEmpty>
 	WHERE ph.`projectId` = #projectId#
   </update>
+  
+  	<resultMap class="java.util.HashMap" id="MarketWithSub" groupBy="marketCode">
+	  <result column="marketCode" jdbcType="VARCHAR" property="marketCode" />
+	  <result column="marketName" jdbcType="VARCHAR" property="marketName" />
+	  <result property="children" javaType="java.util.ArrayList" column="marketCode" resultMap="business.SystemWithSub"/>
+	</resultMap>
+	<resultMap class="java.util.HashMap" id="SystemWithSub" groupBy="systemCode">
+	  <result column="systemCode" jdbcType="VARCHAR" property="systemCode" />
+	  <result column="systemName" jdbcType="VARCHAR" property="systemName" />
+	  <result property="children" javaType="java.util.ArrayList" column="systemCode" resultMap="business.ExpendWithSub"/>
+	</resultMap>
+	<resultMap class="java.util.HashMap" id="ExpendWithSub" groupBy="expendCode">
+	  <result column="expendCode" jdbcType="VARCHAR" property="expendCode" />
+	  <result column="expendName" jdbcType="VARCHAR" property="expendName" />
+	  <result property="children" javaType="java.util.ArrayList" column="expendCode" resultMap="business.IndustryWithSub"/>
+	</resultMap>
+	<resultMap class="java.util.HashMap" id="IndustryWithSub">
+  	 	<result column="industryCode" jdbcType="VARCHAR" property="industryCode" />
+	  	<result column="industryName" jdbcType="VARCHAR" property="industryName" />
+  	</resultMap>
+	<select id="queryMarketRelations" resultMap="MarketWithSub" >
+		<![CDATA[
+			select * from pm_project_market_relations_from_sms
+		]]>
+	</select>
+  
 </sqlMap>

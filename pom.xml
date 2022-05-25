@@ -22,13 +22,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- spring版本 -->
-		<spring.version>5.3.15</spring.version>
+		<spring.version>5.3.19</spring.version>
 		<!-- <spring.version>5.2.4.RELEASE</spring.version> -->
 		<!-- <spring.version>4.3.10.RELEASE</spring.version> -->
 
 		<!-- Struts2版本 -->
 		<!-- <struts2.version>2.3.35</struts2.version> -->
-		<struts2.version>2.5.28.3</struts2.version>
+		<struts2.version>2.5.30</struts2.version>
 
 		<!-- 数据库驱动版本号 -->
 		<!-- mysql -->
@@ -89,7 +89,8 @@
 
 		<!-- json相关 -->
 		<!-- alibaba.fasjson -->
-		<fastjson.version>1.2.79</fastjson.version>
+		<fastjson.version>1.2.80</fastjson.version>
+		<fastjson2.version>2.0.3-SNAPSHOT</fastjson2.version>
 		<!-- jackson -->
 		<jackson-mapper-asl.version>1.9.13</jackson-mapper-asl.version>
 		<jackson.version>2.13.1</jackson.version>
@@ -308,11 +309,22 @@
 
 
 			<!-- JSON -->
+			<!-- <dependency>
+				<groupId>com.alibaba</groupId>
+				<artifactId>fastjson</artifactId>
+				<version>${fastjson.version}</version>
+			</dependency> -->
+			<!-- fastjson2 兼容包 -->
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
 				<version>${fastjson.version}</version>
 			</dependency>
+			<!-- <dependency>
+				<groupId>com.alibaba.fastjson2</groupId>
+				<artifactId>fastjson2</artifactId>
+				<version>${fastjson2.version}</version>
+			</dependency> -->
 			<!-- <dependency>
 				<groupId>org.codehaus.jackson</groupId>
 				<artifactId>jackson-mapper-asl</artifactId>
