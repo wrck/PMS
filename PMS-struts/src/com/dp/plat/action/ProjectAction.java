@@ -1074,15 +1074,8 @@ public class ProjectAction extends BaseAction implements Preparable{
 			mc.setBackcase(p.getColumn014());
 			info.setSubject(MailHandleUtil.dealwithMail(template.getNotificationSubject(), mc));//邮件主题替换
 			info.setContent(MailHandleUtil.dealwithMail(template.getNotificationContent(), mc));//邮件内容替换
-			
-			String arg = basicDataService.querySysArg("sys.envirment.argu");
-			if(arg.equals("0")){//测试环境
-				info.setTos("linyaoyan@dptech.com");
-				info.setCcs("jiangpiliang@dptech.com");
-			}else{
-				info.setTos(p.getTos());
-				info.setCcs(p.getCos());
-			}
+			info.setTos(p.getTos());
+			info.setCcs(p.getCos());
 			sendMailService.keepMailInfo(info);
 		}		
 	}

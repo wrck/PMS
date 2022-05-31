@@ -36,11 +36,11 @@ public class PmClosedLoopUtil {
 		
 		mailSenderInfo.setMailExpectSendTime(new Date());
 		mailSenderInfo.setSendFlag(0);
-		mailSenderInfo.setMailServerHost("172.153.254.12");
-		mailSenderInfo.setMailServerPort("25");
-		mailSenderInfo.setFromAddress("pms@dptech.com");
-		mailSenderInfo.setUserName("pms@dptech.com");
-		mailSenderInfo.setPassword("2Bk29UamZr");
+//		mailSenderInfo.setMailServerHost("172.153.254.12");
+//		mailSenderInfo.setMailServerPort("25");
+//		mailSenderInfo.setFromAddress("pms@dptech.com");
+//		mailSenderInfo.setUserName("pms@dptech.com");
+//		mailSenderInfo.setPassword("2Bk29UamZr");
 		return mailSenderInfo;
 	}
 	

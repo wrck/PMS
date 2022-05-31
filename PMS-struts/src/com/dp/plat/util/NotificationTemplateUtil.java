@@ -184,21 +184,21 @@ public class NotificationTemplateUtil {
         if (info.getMailExpectSendTime() == null) {
             info.setMailExpectSendTime(new Date());
         }
-        if (info.getMailServerPort() == null) {
-            info.setMailServerPort("25");
-        }
-        if (info.getMailServerHost() == null) {
-            info.setMailServerHost("172.153.254.12");
-        }
-        if (info.getUserName() == null) {
-            info.setUserName("pms@dptech.com");
-        }
-        if (info.getPassword() == null) {
-            info.setPassword("2Bk29UamZr");
-        }
-        if (info.getFromAddress() == null) {
-            info.setFromAddress("pms@dptech.com");
-        }
+//        if (info.getMailServerPort() == null) {
+//            info.setMailServerPort("25");
+//        }
+//        if (info.getMailServerHost() == null) {
+//            info.setMailServerHost("172.153.254.12");
+//        }
+//        if (info.getUserName() == null) {
+//            info.setUserName("pms@dptech.com");
+//        }
+//        if (info.getPassword() == null) {
+//            info.setPassword("2Bk29UamZr");
+//        }
+//        if (info.getFromAddress() == null) {
+//            info.setFromAddress("pms@dptech.com");
+//        }
         sendMailDao.keepMailInfo(info);
     }
 

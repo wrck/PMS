@@ -6,8 +6,10 @@ import java.util.Properties;
 public class MailSenderInfo {
 	private int id;
 	// 发送邮件的服务器的IP和端口
-	private String mailServerHost = "172.153.254.12";
-	private String mailServerPort = "25";
+	private String mailServerHost;
+	private String mailServerPort;
+	// 邮件发送昵称
+	private String fromNick;
 	// 邮件发送者的地址
 	private String fromAddress;
 	// 邮件接收者的地址
@@ -38,12 +40,7 @@ public class MailSenderInfo {
 	 * 获得邮件会话属性
 	 */
 	public Properties getProperties() {
-		Properties p = new Properties();
-		p.put("mail.smtp.host", this.mailServerHost);
-		p.put("mail.smtp.port", this.mailServerPort);
-		p.put("mail.smtp.localhost", "127.0.0.1");
-		p.put("mail.smtp.auth", validate ? "true" : "false");
-		return p;
+		return getProperties(this);
 	}
 	
 	public Properties getProperties(MailSenderInfo mailSenderInfo){
@@ -79,6 +76,15 @@ public class MailSenderInfo {
 	public void setValidate(boolean validate) {
 		this.validate = validate;
 	}
+	
+	public String getFromNick() {
+		return fromNick;
+	}
+
+	public void setFromNick(String fromNick) {
+		this.fromNick = fromNick;
+	}
+
 	public String getFromAddress() {
 		return fromAddress;
 	}

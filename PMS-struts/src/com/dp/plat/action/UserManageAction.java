@@ -168,11 +168,11 @@ public class UserManageAction extends BaseAction {
 		// 邮件通知用户
 		user = userManageService.queryUserByUserName(user.getUsername());
 		MailSenderInfo mailInfo = new MailSenderInfo();
-		mailInfo.setMailServerPort("25");
-		mailInfo.setValidate(true);
-		mailInfo.setUserName("pms@dptech.com");
-		mailInfo.setPassword("2Bk29UamZr");
-		mailInfo.setFromAddress("pms@dptech.com");
+//		mailInfo.setMailServerPort("25");
+//		mailInfo.setValidate(true);
+//		mailInfo.setUserName("pms@dptech.com");
+//		mailInfo.setPassword("2Bk29UamZr");
+//		mailInfo.setFromAddress("pms@dptech.com");
 		mailInfo.setToAddress(user.getEmail());
 		mailInfo.setSubject("PMS系统账号密码重置");
 		mailInfo.setContent("尊敬的用户 " + user.getRealName()

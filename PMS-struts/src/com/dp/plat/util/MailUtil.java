@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -356,8 +357,8 @@ public class MailUtil {
 	 * @param mailSenderInfo
 	 */
 	private static void completeMailServerVariables(MailSenderInfo mailSenderInfo) {
-//		HashMap<String, String> systemVariables = MailConfig.getMailVariables();
-//		mailSenderInfo.setFromNick(systemVariables.get("sys.mail.defaultNick"));
+		Map<String, String> systemVariables = MailConfig.getMailVariables();
+		mailSenderInfo.setFromNick(systemVariables.get("sys.mail.defaultNick"));
 //		if (Boolean.TRUE.equals(mailSenderInfo.getIsInner())) {
 //			mailSenderInfo.setMailServerHost(systemVariables.get("sys.innerMail.server.host"));
 //			mailSenderInfo.setMailServerPort(systemVariables.get("sys.innerMail.server.port"));
@@ -366,12 +367,12 @@ public class MailUtil {
 //			mailSenderInfo.setPassword(systemVariables.get("sys.innerMail.server.password"));
 //			mailSenderInfo.setFromAddress(systemVariables.get("sys.innerMail.server.fromAddress"));
 //		} else {
-//			mailSenderInfo.setMailServerHost(systemVariables.get("sys.mail.server.host"));
-//			mailSenderInfo.setMailServerPort(systemVariables.get("sys.mail.server.port"));
-//			mailSenderInfo.setValidate(true);
-//			mailSenderInfo.setUserName(systemVariables.get("sys.mail.server.username"));
-//			mailSenderInfo.setPassword(systemVariables.get("sys.mail.server.password"));
-//			mailSenderInfo.setFromAddress(systemVariables.get("sys.mail.server.fromAddress"));
+			mailSenderInfo.setMailServerHost(systemVariables.get("sys.mail.server.host"));
+			mailSenderInfo.setMailServerPort(systemVariables.get("sys.mail.server.port"));
+			mailSenderInfo.setValidate(true);
+			mailSenderInfo.setUserName(systemVariables.get("sys.mail.server.username"));
+			mailSenderInfo.setPassword(systemVariables.get("sys.mail.server.password"));
+			mailSenderInfo.setFromAddress(systemVariables.get("sys.mail.server.fromAddress"));
 //		}
 	}
 
@@ -1149,5 +1150,14 @@ public class MailUtil {
 			mailInfo.setBcc(bcc);
 		}
 		return sendMailWithAttachments(mailInfo);
+	}
+	
+	public static void main(String[] args) {
+		MailSenderInfo mailInfo = new MailSenderInfo();
+		mailInfo.setSubject("TEST 587");
+		mailInfo.setContent("TEST 587");
+		mailInfo.setToAddress("wenrencaike@dptech.com");
+		mailInfo.setMailServerPort("111");
+		MailUtil.sendMailWithAttachments(mailInfo);
 	}
 }

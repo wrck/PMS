@@ -1322,7 +1322,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       truncate pm_subcontract_project_payment_sse
     </delete>
     
-    <!-- 查询SSE的付款信息 -->
+    <!-- 查询SSE的办事处秘书信息 -->
     <select id="querySSEDepartmentSectaryList" resultClass="java.util.HashMap">
         SELECT * FROM dp_department_sse
     </select>
