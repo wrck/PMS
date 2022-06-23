@@ -1,6 +1,7 @@
 package com.dp.plat.util.test;
 
 import javax.mail.Address;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.dp.plat.data.bean.MailSenderInfo;

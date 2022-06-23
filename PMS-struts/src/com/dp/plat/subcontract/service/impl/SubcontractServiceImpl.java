@@ -639,6 +639,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		vars.put(SubcontractConstant.TASK_PROFIT_SERVICEMANAGER, "profitSmRole");
 		vars.put("profitSmRole", tempSubcontract.getProfitDepCode2Office() + "smRole");
 		vars.put("dpNo", tempSubcontract.getProfitDepCode2Office());
+//		vars.put("profitSmRole", tempSubcontract.getProfitDepCode() + "smRole");
+//		vars.put("dpNo", tempSubcontract.getProfitDepCode());
 		workFlowService.doSelfTask(task, procInstId, "发起项目转包申请", vars);
 
 		// 6.增加自定义的审批意见
@@ -700,7 +702,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			
 			// 特殊部门由办事处主任审批
 			String officeCodes = StringUtils.trimToEmpty(basicDataService.querySysArg(SubcontractTemplate.AREA_LEADER_AUDIT_ENGINEE_FEE_OFFICES));
-			if (officeCodes.contains(subcontractVO.getProfitDepCode2Office())) {
+			if (officeCodes.contains(subcontractVO.getProfitDepCode())) {
 //				Map<String, String> params = new HashMap<>();
 //				params.put("roleid", MessageUtil.ROLE_AREA_LEADER + "");
 //				params.put("areaPower", subcontract.getProfitDepCode());
@@ -772,7 +774,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_LEADER, nextAssign[0]);
 		}
 		vars.put("emlRole", candidateRole);
-		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
+//		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
+		vars.put("dpNo", subcontractVO.getProfitDepCode());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 
@@ -985,7 +988,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			vars.put(SubcontractConstant.TASK_USER_AREA_LEADER, nextAssign[0]);
 			vars.put("zrRole", "");
 		}
-		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
+//		vars.put("dpNo", subcontractVO.getProfitDepCode2Office());
+		vars.put("dpNo", subcontractVO.getProfitDepCode());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 
@@ -1196,7 +1200,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		Map<String, Object> vars = new HashMap<String, Object>();
 		vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
 		vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
-		vars.put("dpNo", subcontract.getProfitDepCode2Office());
+//		vars.put("dpNo", subcontract.getProfitDepCode2Office());
+		vars.put("dpNo", subcontract.getProfitDepCode());
 		vars.put("result", taskParam.getApproveStatus());
 		this.submitSelfTask(taskParam, vars);
 

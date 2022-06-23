@@ -672,7 +672,8 @@ public class MailUtil {
 		// 1:正式环境，2：正式试运行，0：测试环境
 		if ("1".equals(envirmentArgu) || "2".equals(envirmentArgu)) {
 			// 主送
-			InternetAddress[] tos = filterEmailAddress(mailInfo.getTos(), ";");
+			String toRecipients = StringUtils.join(Arrays.asList(mailInfo.getToAddress(), mailInfo.getTos()), ";");
+			InternetAddress[] tos = filterEmailAddress(toRecipients, ";");
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 			// 抄送
 			InternetAddress[] ccs = filterEmailAddress(mailInfo.getCcs(), ";");
