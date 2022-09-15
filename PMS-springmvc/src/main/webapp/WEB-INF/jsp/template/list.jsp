@@ -51,6 +51,7 @@
 								</div>
 							</form>
                             <div class="btn-group operate-btn-group">
+                                <button type="button" class="btn btn-default" data-btn-type="import" v-if="checkPermit('import')">导入</button>
                                 <button type="button" class="btn btn-default" data-btn-type="add" v-if="checkPermit('add')">新增</button>
                                 <button type="button" class="btn btn-default" data-btn-type="edit" v-if="checkPermit('edit')">编辑</button>
                                 <button type="button" class="btn btn-default" data-btn-type="delete" v-if="checkPermit('delete')">删除</button>
@@ -86,6 +87,7 @@
         var commonTable;
         var urlNamespace = "${urlNamespace}";
         var model = "${model}";
+        var keyword = "${keyword}" || "id";
         var winId= model + "Win";
         var tableId = model + "Table";
         $(function() {
@@ -93,7 +95,7 @@
         	$("#commonTable").attr("id", tableId);
             commonTable = new CommonTable(tableId, router(urlNamespace).api(model).list(search), "searchDiv",{
                 searching :true,
-                rowId: 'id',
+                rowId: keyword,
                 beforeInitConfig: function() {
                 	vm = new Vue($.extend(true, {}, formVueConfig || {}, {
 							el: "#" + this.searchDiv,
@@ -157,6 +159,14 @@
                 var action = $(this).attr('data-btn-type');
                 var rowId= commonTable.getSelectedRowId();
                 switch (action) {
+                case 'import':
+                    modals.openWin({
+                         winId: winId,
+                         title:'导入信息',
+                         width: '75vw',
+                         url: router(urlNamespace).html(model).import(search, true)
+                    });
+                    break;
                 case 'add':
                     /*    modals.openWin({
                         winId:winId,
@@ -208,7 +218,8 @@
                     modals.info('请点击需要查看的行');
                     return false;
                 }
-                var url = router(urlNamespace).html(model).detail(rowId);
+            	var row = commonTable.getSelectedRowData();
+                var url = router(urlNamespace).html(model).detail(rowId, null, row);
                 window.open(url);
             });
             

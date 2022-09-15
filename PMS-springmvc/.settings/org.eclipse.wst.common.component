@@ -4,6 +4,10 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/target/generated-sources/annotations"/>
+        <dependent-module archiveName="pms-ext-d365-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-ext-d365/pms-ext-d365">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module deploy-path="/" handle="module:/overlay/prj/core?includes=**/**&amp;excludes=WEB-INF/lib/*">
             <dependency-type>consumes</dependency-type>
         </dependent-module>
@@ -14,6 +18,7 @@
             <dependency-type>consumes</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/PMS-springmvc/target/classes"/>
-        <property name="context-root" value="PMS2"/>
+        <property name="component.exclusion.patterns" value="WEB-INF/lib/pms-struts-*-core.jar"/>
+        <property name="context-root" value="PMS"/>
     </wb-module>
 </project-modules>

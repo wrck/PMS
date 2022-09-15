@@ -80,6 +80,11 @@ public class SubcontractConstant {
 	 * 回访流程KEY
 	 */
 	public static final String PROCESS_CALLBACK_KEY = "SubcontractCallBack";
+	
+	/**
+     * 转包验收流程KEY
+     */
+    public static final String PROCESS_INSPECTION_KEY = "SubcontractInspection";
 
 	/**
 	 * 审批任务KEY
@@ -97,7 +102,7 @@ public class SubcontractConstant {
 	public static final String TASK_KEY_CLOSE = "closeTask";
 
 	/**
-	 * 闭环任务KEY
+	 * 生成合同任务KEY
 	 */
 	public static final String TASK_KEY_GENERATE_CONTRACT = "generateContractTask";
 
@@ -131,6 +136,10 @@ public class SubcontractConstant {
 	 * 转包交付件类型KEY
 	 */
 	public static final String SUBCONTRACT_DELIVER_TYPE_KEY = "subcontractDeliverState";
+	/**
+     * 转包税率KEY
+     */
+    public static final String SUBCONTRACT_TAX_KEY = "subcontractTax";
 
 	/**
 	 * 流程任务TaskKey
@@ -181,6 +190,11 @@ public class SubcontractConstant {
 		 * 付款任务KEY
 		 */
 		public static final String APPROVE_PAYMENT = "approvePaymentTask";
+		
+		/**
+		 * 验收确认Key
+		 */
+		public static final String ACCEPTANCE_TASK = "acceptanceTask";
 	}
 
 	/**

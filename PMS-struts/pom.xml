@@ -33,8 +33,14 @@
 			<groupId>com.dp.plat</groupId>
 			<artifactId>activiti-api-unifytask-patch</artifactId>
 			<!-- <version>5.14</version> -->
-			<version>5.22</version>
+			<version>5.22.0.v20220902</version>
 		</dependency>
+		<dependency>
+		  <groupId>com.dp.plat</groupId>
+		  <artifactId>pms-ext-d365</artifactId>
+		  <version>${project.version}</version>
+		</dependency>
+		
 		<!-- <dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>cache-redis-mybatis</artifactId>

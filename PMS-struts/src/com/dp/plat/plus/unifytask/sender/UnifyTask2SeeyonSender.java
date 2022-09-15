@@ -284,8 +284,9 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 		String url = String.format("%s/%s%s", targetUrl, urlPath, token);
 		String pushData = JSON.toJSONString(seeyonTask);
 		seeyonTask.setPushData(pushData);
-		String responseBody = HttpUtil.post(url, pushData, timeout);
-		return JSON.parseObject(responseBody, UnifyTaskResult.class);
+		return new UnifyTaskResult(false);
+//		String responseBody = HttpUtil.post(url, pushData, timeout);
+//		return JSON.parseObject(responseBody, UnifyTaskResult.class);
 	}
 
 	private String getToken() {

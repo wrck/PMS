@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.dp.plat.core.service.impl.SynchronizeService;
 import com.dp.plat.pms.springmvc.dao.PmSynchronizeMapper;
+import com.dp.plat.pms.springmvc.entity.Facilitator;
 import com.dp.plat.pms.springmvc.entity.OfstContractHead;
 import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
@@ -69,4 +70,25 @@ public class PmSynchronizeService extends SynchronizeService implements IPmSynch
 	public void clearAllOfstContractHeadSAP() {
 		perfSynchronizeMapper.clearAllOfstContractHeadSAP();
 	}
+
+    @Override
+    public List<Facilitator> selectAllFacilitator() {
+        return perfSynchronizeMapper.selectAllFacilitator();
+    }
+
+    @Override
+    public void clearAllFacilitator() {
+        perfSynchronizeMapper.clearAllFacilitator();
+    }
+
+    @Override
+    public void insertFacilitator(List<Facilitator> list) {
+        perfSynchronizeMapper.insertFacilitator(list);
+    }
+
+    @Override
+    public void insertOrUpdateFacilitatorFromD365() {
+        perfSynchronizeMapper.insertOrUpdateFacilitatorFromD365();
+    }
+	
 }

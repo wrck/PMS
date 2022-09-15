@@ -1,0 +1,20 @@
+package com.dp.plat.subcontract.vo;
+
+import java.util.List;
+
+import com.dp.plat.subcontract.entity.SubcontractDeliver;
+import com.dp.plat.subcontract.entity.SubcontractPayment;
+
+public class SubcontractPaymentVO extends SubcontractPayment {
+
+    private List<SubcontractDeliver> delivers;
+
+    public List<SubcontractDeliver> getDelivers() {
+        return delivers;
+    }
+
+    public void setDelivers(List<SubcontractDeliver> delivers) {
+        this.delivers = delivers;
+    }
+    
+}

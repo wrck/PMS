@@ -1,12 +1,12 @@
 package com.dp.plat.pms.springmvc.controller;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -25,7 +25,6 @@ import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
-import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.CommonRelatedData;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.ICommonRelatedDataService;
@@ -48,7 +47,12 @@ public class CommonRelatedDataController
 		this.setUseTemplate(true);
 	}
 	
-	
+	@Override
+    public void initModelAttr(Integer id, CommonRelatedDataVO v, HttpServletRequest httpRequest, Model model) {
+        super.initModelAttr(id, v, httpRequest, model);
+        clearLocalVariables();
+        setLocalVariables("dataPrefix", v.getType());
+    }
 
 	@Override
 	public String list(PageParam<Object> pageParam, CommonRelatedDataVO relatedData, Model model) {
@@ -247,5 +251,12 @@ public class CommonRelatedDataController
 		model.addAttribute("permissionType", permissionType);
 		return isPermit;
 	}
+
+    @Override
+    protected CommonRelatedDataVO newInstance(Class<?> clazz, Object... kvs) {
+        CommonRelatedDataVO vo = super.newInstance(clazz, kvs);
+        vo.setType(getDataName());
+        return vo;
+    }
 
 }

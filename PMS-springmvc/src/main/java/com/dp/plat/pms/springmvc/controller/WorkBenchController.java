@@ -46,10 +46,12 @@ public class WorkBenchController {
 		Principal user = UserContext.getCurrentPrincipal();
 		List<String> processKeyList = new ArrayList<>();
 		processKeyList.add(ProcessType.QUALITY_APPROVE_TRACK);
+		processKeyList.add(ProcessType.SUBCONTRACT_INSPECTION);
 		List<String> taskKeyList = new ArrayList<>();
 		taskKeyList.add(TaskType.AF_APPROVE_TASK);
 		taskKeyList.add(TaskType.YF_APPROVE_TASK);
 		taskKeyList.add(TaskType.TRACK_TASK);
+		taskKeyList.add(TaskType.ACCEPTANCE_TASK);
 		
 //		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectRunTasksByAssigneeAndProcessKeyAndTaskKey(
 //				pageParam, user.getUserCustom4(), processKeyList, taskKeyList);
@@ -60,7 +62,7 @@ public class WorkBenchController {
 		workFlow.setBeginTime(new Date());
 		workFlow.setStatus(PmWorkFlowVO.PENDING);
 		String areaPower = StringUtils.trimToEmpty(user.getUserInfo().getCustom5());
-		List<String> areaList = new ArrayList(Arrays.asList(StringUtils.split(areaPower, ",")));
+		List<String> areaList = new ArrayList<String>(Arrays.asList(StringUtils.split(areaPower, ",")));
 		areaList.add("all");
 		workFlow.setAreaPower(StringUtils.join(areaList, ","));
 		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectRunTasksByAssigneeAndProcessKeyAndTaskKey(pageParam, workFlow);
@@ -77,10 +79,13 @@ public class WorkBenchController {
 		Principal user = UserContext.getCurrentPrincipal();
 		List<String> processKeyList = new ArrayList<>();
 		processKeyList.add(ProcessType.QUALITY_APPROVE_TRACK);
+		processKeyList.add(ProcessType.SUBCONTRACT_INSPECTION);
 		List<String> taskKeyList = new ArrayList<>();
 		taskKeyList.add(TaskType.AF_APPROVE_TASK);
 		taskKeyList.add(TaskType.YF_APPROVE_TASK);
 		taskKeyList.add(TaskType.TRACK_TASK);
+		taskKeyList.add(TaskType.ACCEPTANCE_TASK);
+		
 //		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectRunTasksByAssigneeAndProcessKeyAndTaskKey(
 //				pageParam, user.getUserCustom4(), processKeyList, taskKeyList);
 //		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectRunTasksByAssigneeAndProcessKeyAndTaskKey(
@@ -92,7 +97,7 @@ public class WorkBenchController {
 		workFlow.setBeginTime(new Date());
 		workFlow.setStatus(PmWorkFlowVO.PENDING);
 		String areaPower = StringUtils.trimToEmpty(user.getUserInfo().getCustom5());
-		List<String> areaList = new ArrayList(Arrays.asList(StringUtils.split(areaPower, ",")));
+		List<String> areaList = new ArrayList<String>(Arrays.asList(StringUtils.split(areaPower, ",")));
 		areaList.add("all");
 		workFlow.setAreaPower(StringUtils.join(areaList, ","));
 		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectRunTasksByAssigneeAndProcessKeyAndTaskKey(pageParam, workFlow);
@@ -115,7 +120,7 @@ public class WorkBenchController {
 		PmWorkFlowVO workFlow = new PmWorkFlowVO();
 		workFlow.setAssignee(String.valueOf(user.getUserCustom4()));
 		String areaPower = StringUtils.trimToEmpty(user.getUserInfo().getCustom5());
-		List<String> areaList = new ArrayList(Arrays.asList(StringUtils.split(areaPower, ",")));
+		List<String> areaList = new ArrayList<String>(Arrays.asList(StringUtils.split(areaPower, ",")));
 		areaList.add("all");
 		workFlow.setAreaPower(StringUtils.join(areaList, ","));
 		List<PmWorkFlow> pmWorkFlowList = pmWorkBenchService.selectFinishedTasksByAssignee(pageParam, workFlow);

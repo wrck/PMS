@@ -1,7 +1,6 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,16 +34,12 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
-import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.job.DispatchSettlementSEEPaymentJob;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.util.DocUtil;
-import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
-import com.dp.plat.pms.springmvc.vo.ProjectDeliver;
-import com.dp.plat.pms.springmvc.vo.ProjectVO;
 import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 @Controller
@@ -63,8 +58,9 @@ public class DispatchSettlementController
 
 	@PostConstruct
 	public void init() {
+		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
 		this.setViewModel("settlement");
-		this.setUseTemplate(false);
+		this.setUseTemplate(true);
 	}
 
 	@RequestMapping("/list")
@@ -91,7 +87,7 @@ public class DispatchSettlementController
 			
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_FINANCIAL_AP)) {
 				temp.setOfficeCodes(officeCodes);
 				settlement.setOfficeCodes(officeCodes);
 				
@@ -114,7 +110,7 @@ public class DispatchSettlementController
 
 		List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
 		pageParam.setColumns(columns);
-		return getViewNameSpace() + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
@@ -147,6 +143,9 @@ public class DispatchSettlementController
 				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
 				
+				List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+				model.addAttribute("buttonList", buttonList);
+				
 				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
 			}
@@ -156,7 +155,7 @@ public class DispatchSettlementController
 			String servletPath = HttpContext.getCurrentRequest().getServletPath();
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value= {"/detail", "/modals/detail"})
@@ -221,13 +220,16 @@ public class DispatchSettlementController
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 			
+			List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+			model.addAttribute("buttonList", buttonList);
+			
 			model.addAttribute("status", status);
 			model.addAttribute("message", message);
 		} else {
 			String servletPath = HttpContext.getCurrentRequest().getServletPath();
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
@@ -266,7 +268,7 @@ public class DispatchSettlementController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
@@ -291,8 +293,35 @@ public class DispatchSettlementController
 //		}
 //		model.addAttribute("status", status);
 //		model.addAttribute("message", message);
-//		return getViewNameSpace() + "detail";
+//		return getRealViewNameSpace() + "detail";
 	}
+	
+	@RequestMapping(value = "submit", method = RequestMethod.POST)
+    @SystemControllerLog(description = "转包合同【$settlementVO.dispatch.dispatchNo$】确认结算")
+    public void settlementSubmit(SettlementVO settlement, Model model) {
+        Boolean status = true;
+        String message = null;
+        if (!checkPermission(settlement, model, getDataName() + ":submit")) {
+            model.addAttribute("status", false);
+            model.addAttribute("message", "没有权限进行该操作！");
+            return;
+        }
+        try {
+            dispatchSettlementService.insertOrUpdateSelective(settlement);
+            model.addAttribute("targetName", "settlementVO");
+            dispatchSettlementService.settlementSubmit(settlement.getId(), settlement);
+        } catch (Exception e) {
+            status = false;
+            Integer errorId = ExceptionHandler.insertException(e);
+            model.addAttribute("errorId", errorId);
+            message = e.getMessage();
+            if (message.contains("Duplicate entry")) {
+                message = "结算编号已存在";
+            }
+        }
+        model.addAttribute("status", status);
+        model.addAttribute("message", message);
+    }
 	
 	
 	@PostMapping("{id}/projectInfoDoc")
@@ -357,6 +386,8 @@ public class DispatchSettlementController
 		model.addAttribute("message", message);
 	}
 	
+	
+	
 	@RequestMapping("/syncPayment")
 	public void syncSettlementPayment(Model model) {
 		DispatchSettlementSEEPaymentJob settlementSEEPaymentJob = new DispatchSettlementSEEPaymentJob();
@@ -375,25 +406,14 @@ public class DispatchSettlementController
 			DispatchVO dispatchVO = new DispatchVO();
 			dispatchVO.setProjectId(projectId);
 			dispatchVO.setId(v.getDispatchId());
-//			Map<String, Boolean> permission = new HashMap<String, Boolean>();
 			PermissionResult permissionResult = dispatchProjectService.checkPermission(dispatchVO, "dispatch:list", "dispatch:detail");
 			model.addAllAttributes(permissionResult.getMap());
+			// 如果开启结算后只允许查询，则调整为view
+			String readOnlyWhenSettled = SystemConfig.systemVariables.getOrDefault("pm.dispatch.settlement.settled.readonly", "1");
+			if ("1".equals(readOnlyWhenSettled) && Boolean.TRUE.equals(v.getSettled()) || Boolean.TRUE.equals(v.hasTask())) {
+			    model.addAttribute("permissionType", "view");
+			}
 			return permissionResult.isPermit();
-//			Boolean allPerm = permission.get("all");
-//			if (Boolean.TRUE.equals(allPerm)) {
-//				isPermit = true;
-//				permissionType = "all";
-//			} else {
-//				String perms = StringUtils.join(permissions, ",");
-//				if (Boolean.TRUE.equals(permission.get("edit")) && perms.matches(".*settlement:(add|edit|delete)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "edit";
-//				}
-//				if (Boolean.TRUE.equals(permission.get("view")) && perms.matches(".*settlement:(list|detail)\\b,?.*")) {
-//					isPermit = true;
-//					permissionType = "view";
-//				}
-//			}
 		} else {
 			isPermit = true;
 			permissionType = "all";

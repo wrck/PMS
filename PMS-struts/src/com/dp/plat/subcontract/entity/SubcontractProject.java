@@ -5,7 +5,7 @@ import java.util.Date;
 import com.dp.plat.util.UserUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class SubcontractProject {
+public class SubcontractProject extends BaseEntity {
 	private Integer id;
 
 	// 转包名称
@@ -95,6 +95,7 @@ public class SubcontractProject {
 	 * @param id
 	 */
 	public void setId(Integer id) {
+	    super.setId(id);
 		this.id = id;
 	}
 
@@ -526,6 +527,7 @@ public class SubcontractProject {
 	 * @param createBy
 	 */
 	public void setCreateBy(String createBy) {
+	    super.setCreateBy(createBy);
 		this.createBy = createBy;
 	}
 
@@ -540,6 +542,7 @@ public class SubcontractProject {
 	 * @param createTime
 	 */
 	public void setCreateTime(Date createTime) {
+	    super.setCreateTime(createTime);
 		this.createTime = createTime;
 	}
 
@@ -554,6 +557,7 @@ public class SubcontractProject {
 	 * @param updateBy
 	 */
 	public void setUpdateBy(String updateBy) {
+	    super.setUpdateBy(updateBy);
 		this.updateBy = updateBy;
 	}
 
@@ -568,6 +572,7 @@ public class SubcontractProject {
 	 * @param updateTime
 	 */
 	public void setUpdateTime(Date updateTime) {
+	    super.setUpdateTime(updateTime);
 		this.updateTime = updateTime;
 	}
 }

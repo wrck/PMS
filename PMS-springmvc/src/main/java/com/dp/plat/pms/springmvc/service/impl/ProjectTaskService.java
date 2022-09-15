@@ -219,7 +219,7 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+				if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_FINANCIAL_AP)) {
 					task.setOfficeCodes(officeCodes);
 					
 				}

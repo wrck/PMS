@@ -14,6 +14,7 @@ public class BaseDao {
 	private OpLogDao logger;
 	private SqlMapClientTemplate sqlMapClientTemplate;
 	private SqlMapClientTemplate sqlMapClientTemplateSAP;
+	private SqlMapClientTemplate sqlMapClientTemplateERP;
 
 	public SqlMapClientTemplate getSqlMapClientTemplateSAP() {
 		return sqlMapClientTemplateSAP;
@@ -22,6 +23,14 @@ public class BaseDao {
 	public void setSqlMapClientTemplateSAP(SqlMapClientTemplate sqlMapClientTemplateSAP) {
 		this.sqlMapClientTemplateSAP = sqlMapClientTemplateSAP;
 	}
+	
+	public SqlMapClientTemplate getSqlMapClientTemplateERP() {
+        return sqlMapClientTemplateERP;
+    }
+
+    public void setSqlMapClientTemplateERP(SqlMapClientTemplate sqlMapClientTemplateERP) {
+        this.sqlMapClientTemplateERP = sqlMapClientTemplateERP;
+    }
 
 	public void setSqlMapClientTemplate(SqlMapClientTemplate sqlMapClientTemplate) {
 		this.sqlMapClientTemplate = sqlMapClientTemplate;

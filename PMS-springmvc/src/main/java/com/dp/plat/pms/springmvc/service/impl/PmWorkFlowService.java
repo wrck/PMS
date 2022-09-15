@@ -22,6 +22,7 @@ import org.activiti.engine.task.Task;
 import org.activiti.engine.task.TaskInfo;
 import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,12 +39,17 @@ import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.dao.PmWorkFlowMapper;
+import com.dp.plat.pms.springmvc.entity.DispatchProject;
+import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.entity.IndustryAsset;
 import com.dp.plat.pms.springmvc.entity.IndustryLeak;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
 import com.dp.plat.pms.springmvc.entity.ProjectTask;
+import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
+import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
+import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 /**
  *
@@ -602,6 +608,9 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
 				service = SpringContext.getBean(serviceBeanName, IAbstractBaseService.class);
 			} catch (Exception e) {
 			}
+			if (service != null) {
+			    entity = service.selectByPrimaryKey(dataId);
+			}
 			if (DataType.PROJECT_TASK.equals(dataType)) {
 				ProjectTask projectTask = (ProjectTask) entity;
 				projectTask.setProjectId(objId);
@@ -614,11 +623,20 @@ public class PmWorkFlowService extends AbstractBaseService<PmWorkFlowMapper, PmW
 				// 行业漏洞，更新入库状态和入库时间
 				IndustryLeak industryLeak = (IndustryLeak) entity;
 				industryLeak.setId(dataId);
-			}
-			if (service != null) {
-				entity = service.selectByPrimaryKey(dataId);
-			}
+			} else if (DataType.PROJECT_DISPATCH.equals(dataType)) {
+			    DispatchProject dispatch = (DispatchProject) entity;
+			    dispatch.setId(dataId);
+            }
 		}
+		if (DataType.DISPATCH_SETTLEMENT.equals(dataType)) {
+            DispatchSettlement settlement = (DispatchSettlement) entity;
+            SettlementVO settlementVO = new SettlementVO();
+            BeanUtils.copyProperties(settlement, settlementVO);
+            IDispatchProjectService dispatchProjectService = SpringContext.getBean("dispatchProjectService", IDispatchProjectService.class);
+            DispatchVO dispatch = dispatchProjectService.selectDispatchVOWithAmount(settlementVO.getDispatchId());
+            settlementVO.setDispatch(dispatch);
+            entity = settlementVO;
+        }
 		pmWorkFlow.setEntity(entity);
 		return pmWorkFlow;
 	}

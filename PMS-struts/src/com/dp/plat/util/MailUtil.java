@@ -241,7 +241,9 @@ public class MailUtil {
 				sendMailWithAttachments(senderInfo);
 				info = senderInfo;
 			}
-			mailUtil.mailInfoService.keepMailInfo(info);
+			if (mailUtil != null && mailUtil.mailInfoService != null) {
+			    mailUtil.mailInfoService.keepMailInfo(info);			    
+			}
 		}
 	}
 

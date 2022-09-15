@@ -1,12 +1,14 @@
 package com.dp.plat.param;
 
 import java.util.Date;
+
+import com.dp.plat.data.bean.CustomInfoEntity;
 /**
  * 从ERP刷新的订单头信息
  * @author admin
  *
  */
-public class OrderBean {
+public class OrderBean extends CustomInfoEntity {
 	private String orderNumber;
 	private String contractNo;
 	private String orderExecNumber;

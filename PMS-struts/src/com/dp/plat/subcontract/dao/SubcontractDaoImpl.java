@@ -363,9 +363,9 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
         getSqlMapClientTemplate().delete("deleteEmptySubcontractPayment", subcontractIds);
     }
     
-    
     @Override
     public void updateSSESubcontractPaymentTime() {
         getSqlMapClientTemplate().update("updateSSESubcontractPaymentTime");
     }
+
 }

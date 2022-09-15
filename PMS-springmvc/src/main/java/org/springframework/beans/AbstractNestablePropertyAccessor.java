@@ -275,6 +275,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			try {
 				processKeyedProperty(tokens, pv);
 			} catch (InvalidPropertyException e) {
+			    // XXX MODIFIED
 //				PropertyTokenHolder tokenHolder = new PropertyTokenHolder(tokens.keys[tokens.keys.length - 1]);
 				PropertyValue npv = new PropertyValue(pv.getName().replace("[", ".").replace("]", ""), pv.getValue());
 				setPropertyValue(npv);

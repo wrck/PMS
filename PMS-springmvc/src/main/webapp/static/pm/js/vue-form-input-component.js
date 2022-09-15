@@ -1,199 +1,198 @@
+let GlobalTemplates = {
+		hidden: `<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
+						:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+						:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly"
+				>`,
+		textarea: `<div class="form-group display-flex" :class="getGroupClass(field) || groupTextareaClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle" :rows="(field.extData || {}).rows || 3" style="resize:none;" draggable="false"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" data-flag="autosize"
+									></textarea>
+						</div>`,
+		date: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+									data-flag="datepicker" :data-format="field.extData.format || field.render" autocomplete="off"
+									:data-date-start-date="field.extData.startDate" :data-date-end-date="field.extData.endDate"
+									:data-date-today-btn="field.extData.todayBtn"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+							>
+						</div>`,
+		datetime: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+									data-flag="datetimepicker" :data-format="field.extData.format || field.render" autocomplete="off"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+									:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
+									:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
+							>
+						</div>`,
+		daterange: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'" 
+								data-toggle="daterangepicker"
+								:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
+								:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
+								:data-format="field.extData.format || field.render"
+							>
+				                <i class="fa fa-calendar mr-0.5"></i>&nbsp;
+				                <span class="daterange-span">不限</span>
+				                <i class="fa fa-caret-down"></i>
+				                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="hidden" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start') + ' ' + (getSelfClass(input) || input.cssClass || '')" :name="input.field" :data-alias="input.alias" data-type="search"
+									:value="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
+									:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
+			                </button>
+						</div>`,
+		distpicker: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<div :id="(field.cssId || field.field) + 'Distpicker'" class="distpicker display-flex row col-xs-12"
+								data-toggle="distpicker" :data-placeholder="field.extData.placeholder"
+								:data-auto-select="field.extData.autoSelect" 
+								:data-province="field.extData.province"
+								:data-city="field.extData.city"
+								:data-district="field.extData.district"
+								:data-value-type="field.extData.valueType"
+								>
+							  	<select :id="input.cssId || input.field" v-for="(input, index) in field.inputs" class="form-control flex-grow-2" :class="(getSelfClass(input) || input.cssClass || '')" :name="input.field" :data-alias="input.alias"
+									:value="input.value" :data-selected="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
+									:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
+								</select>
+							</div>
+						</div>`,
+		select: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+									:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
+									:data-text="field.extKey" :data-value="field.extValue"
+									:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
+									:data-select2-config="JSON.stringify(field.extData['select2-config'])">
+								<template v-if="((field.extData || {}).data || field.extData).length">
+									<option :value="item[field.extValue]" v-for="item in ((field.extData || {}).data || field.extData)" :selected="item[field.extValue] == fieldValue" >{{item[field.extKey]}}</option>
+								</template>
+								<template v-else-if="field.extData.blank && !(field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false)">
+									<option blank="true" :value="field.extData['blank-value']">{{field.extData['blank-text']}}</option>
+								</template>
+							</select>
+						</div>`,
+		urlSelector: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+									:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
+									:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
+									:data-allow-clear="field.extData.allowClear || false" :data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
+									:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
+									:data-select2-config="JSON.stringify(field.extData['select2-config'])"
+									>
+							</select>
+						</div>`,
+		autocomplete: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+									:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src" :data-autoload="field.extData['autoload']"
+									:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
+									:data-autocomplete-config="JSON.stringify(field.extData['autocomplete-config'])"
+							/>
+						</div>`,
+		inputs: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
+									:value="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
+									:data-flag="input.extData.dataFlag"
+									:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" 
+									:required="input.required" autocomplete="off">
+						</div>`,
+		range: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<div class="flex-grow-2 range-slider form-control no-border pl-0 pr-0">
+								<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="progress-bar-striped" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+										:value="fieldValue || 0" :placeholder="field.title || field.name" :style="field.cssStyle" @input="rangeChange($event, field)" @change="rangeChange($event, field)"
+										:defaultValue="parseValue(field, 'extData').defaultValue" :max="field.extData['max']" :min="field.extData['min']" :step="field.extData['step']"
+										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
+								<small class="range-slider-tip">{{fieldValue || field.extData['min'] || 0}}</small>
+							</div>
+						</div>`,
+		radio: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<div class="flex-grow-2 form-control no-border pl-0 pr-0">
+							<template v-for="item in ((parseValue(field, 'extData') || {}).data || field.extData)">
+								<label :for="(field.cssId || field.field) + '_' + item[field.extValue]" style="text-align: right;" class="control-label flex-shrink-0 radio">{{item[field.extKey]}}
+								<input :id="(field.cssId || field.field) + '_' + item[field.extValue]" :type="field.type" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+										:value="item[field.extValue]" :checked="item[field.extValue] == fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
+										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
+										data-flag="icheck" 
+								/>
+								</label>
+							</template>
+							</div>
+						</div>`,
+		file: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="(field.cssId || field.field) + '_hidden'" type="hidden" :name="field.field" :data-alias="field.alias"
+								:value="fieldValue || (field.extData || {}).defaultValue" :placeholder="field.title || field.name"
+								:disabled="field.disabled" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
+							<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" 
+								:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off" :style="field.cssStyle" 
+								:allowType="(field.extData || {}).allowType" :uploadUrl="(field.extData || {}).uploadUrl"
+								:multiple="(field.extData || {}).multiple"
+							>
+							<button type="button" style="padding-top:5.5px;padding-bottom:5.5px;" class="btn btn-success flex-grow-1" @click="commonUploadFile($event, field)" :disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly">上传</button>
+						</div>`,
+		button: `<button :id="field.cssId || field.field" :type="field.render(targetValue, field) || 'button'" class="btn" :class="getSelfClass(field) || field.cssClass" :data-btn-type="field.field" style="margin:0 0.15rem" :style="field.cssStyle" :disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly">{{field.name}}</button>
+				`,
+		buttons: `<div class="form-group" :class="getGroupClass(field) || groupClass">
+							<template v-for="input in field.inputs">
+								<button :id="input.cssId || input.field" :type="field.render(targetValue, input)" :data-btn-type="input.field"
+									class="btn" :class="getSelfClass(input) || input.cssClass" style="margin:0 0.15rem" :style="input.cssStyle" 
+									:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly">{{input.name}}</button>
+							</template>
+						</div>`,
+		default: `<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
+							<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
+							<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
+									:value="fieldValue || (field.extData || {}).defaultValue" :placeholder="field.title || field.name" :style="field.cssStyle" 
+									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off"
+									:max="(field.extData || {})['max']" :min="(field.extData || {})['min']" :step="(field.extData || {})['step']"
+							>
+						</div>`
+	}
 var FormInput = {
 		name: "formInput",
 		data: function() {
 			return {
-				fieldList: [],
-				targetValue: {},
-				targetName: "",
+//				fieldList: [],
+//				targetValue: {},
+//				targetName: "",
 			};	
 		},
-		template: `<div v-if="isPermit">
-						<template v-if="field.type == 'hidden' || !fieldVisible">
-							<input :id="field.cssId || field.field" type="hidden" class="form-control flex-grow-2" :class="field.cssClass" :name="field.field" :data-alias="field.alias"
-									:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly"
-							>
-						</template>
-						<template v-else-if="field.type == 'textarea'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupTextareaClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<textarea :id="field.cssId || field.field" :type="field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle" :rows="(field.extData || {}).rows || 3" style="resize:none;" draggable="false"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" data-flag="autosize"
-										></textarea>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'date'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-										data-flag="datepicker" :data-format="field.extData.format || field.render" autocomplete="off"
-										:data-date-start-date="field.extData.startDate" :data-date-end-date="field.extData.endDate"
-										:data-date-today-btn="field.extData.todayBtn"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-								>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'datetime'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="field.cssId || field.field" type="text" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-										data-flag="datetimepicker" :data-format="field.extData.format || field.render" autocomplete="off"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-										:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
-										:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
-								>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'daterange'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<button type="button" class="btn border-gray daterange-btn form-control" :id="(field.cssId || field.field) + 'DaterangeBtn'" 
-									data-toggle="daterangepicker"
-									:data-start-date="field.extData.startDate" :data-end-date="field.extData.endDate"
-									:data-max-date="field.extData.maxDate" :data-min-date="field.extData.minDate"
-									:data-format="field.extData.format || field.render"
-								>
-					                <i class="fa fa-calendar mr-0.5"></i>&nbsp;
-					                <span class="daterange-span">不限</span>
-					                <i class="fa fa-caret-down"></i>
-					                <input :id="input.cssId || input.field" v-for="(input, index) in field.inputs" type="hidden" class="form-control flex-grow-2" :class="'daterange-input-' + (index%2 ? 'end' : 'start') + ' ' + (getSelfClass(input) || input.cssClass || '')" :name="input.field" :data-alias="input.alias" data-type="search"
-										:value="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
-										:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
-				                </button>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'distpicker'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<div :id="(field.cssId || field.field) + 'Distpicker'" class="distpicker display-flex row col-xs-12"
-									data-toggle="distpicker" :data-placeholder="field.extData.placeholder"
-									:data-auto-select="field.extData.autoSelect" 
-									:data-province="field.extData.province"
-									:data-city="field.extData.city"
-									:data-district="field.extData.district"
-									:data-value-type="field.extData.valueType"
-									>
-								  	<select :id="input.cssId || input.field" v-for="(input, index) in field.inputs" class="form-control flex-grow-2" :class="(getSelfClass(input) || input.cssClass || '')" :name="input.field" :data-alias="input.alias"
-										:value="input.value" :data-selected="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
-										:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
-								</div>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'select'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-										:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
-										:data-text="field.extKey" :data-value="field.extValue"
-										:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
-										:data-select2-config="JSON.stringify(field.extData['select2-config'])">
-									<template v-if="((field.extData || {}).data || field.extData).length">
-										<option :value="item[field.extValue]" v-for="item in ((field.extData || {}).data || field.extData)" :selected="item[field.extValue] == fieldValue" >{{item[field.extKey]}}</option>
-									</template>
-									<template v-else-if="field.extData.blank && !(field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false)">
-										<option blank="true" :value="field.extData['blank-value']">{{field.extData['blank-text']}}</option>
-									</template>
-								</select>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'urlSelector'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<select :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-										:multiple="field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false"
-										:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src || field.extData" :data-autoload="field.extData['autoload']"
-										:data-allow-clear="field.extData.allowClear || false" :data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
-										:data-blank="field.extData.blank || false" :data-blank-value="field.extData['blank-value']" :data-blank-text="field.extData['blank-text']"
-										:data-select2-config="JSON.stringify(field.extData['select2-config'])"
-										>
-								</select>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'autocomplete'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="field.cssId || field.field" type="search" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue" :data-selected="fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-										:data-flag="field.type" :data-src="(parseValue(field, 'extData') || {}).src" :data-autoload="field.extData['autoload']"
-										:data-src-data="field.extData['src-data']" :data-text="field.extKey" :data-value="field.extValue" :data-store-source="field.extData['store-source']"
-										:data-autocomplete-config="JSON.stringify(field.extData['autocomplete-config'])"
-								/>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'inputs'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}" :values="fieldValue"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="input.cssId || input.field" v-for="input in field.inputs" :type="dataType == 'table' && input.searchable ? 'search' : 'text'" class="form-control flex-grow-2" :class="getSelfClass(input) || input.cssClass" :name="input.field" :data-alias="input.alias"
-										:value="input.value" :placeholder="input.title || input.name" :style="input.cssStyle" 
-										:disabled="input.disabled || fieldReadonly" :readonly="input.readonly || fieldReadonly" :required="input.required" autocomplete="off">
-							</div>
-						</template>
-						<template v-else-if="field.type == 'range'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<div class="flex-grow-2 range-slider form-control no-border pl-0 pr-0">
-									<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="progress-bar-striped" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-											:value="fieldValue || 0" :placeholder="field.title || field.name" :style="field.cssStyle" @input="rangeChange($event, field)" @change="rangeChange($event, field)"
-											:defaultValue="parseValue(field, 'extData').defaultValue" :max="field.extData['max']" :min="field.extData['min']" :step="field.extData['step']"
-											:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
-									<small class="range-slider-tip">{{fieldValue || field.extData['min'] || 0}}</small>
-								</div>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'radio'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<div class="flex-grow-2 form-control no-border pl-0 pr-0">
-								<template v-for="item in ((parseValue(field, 'extData') || {}).data || field.extData)">
-									<label :for="(field.cssId || field.field) + '_' + item[field.extValue]" style="text-align: right;" class="control-label flex-shrink-0 radio">{{item[field.extKey]}}
-									<input :id="(field.cssId || field.field) + '_' + item[field.extValue]" :type="field.type" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-											:value="item[field.extValue]" :checked="item[field.extValue] == fieldValue" :placeholder="field.title || field.name" :style="field.cssStyle"
-											:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required"
-											data-flag="icheck" 
-									/>
-									</label>
-								</template>
-								</div>
-							</div>
-						</template>
-						<template v-else-if="field.type == 'file'">
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="(field.cssId || field.field) + '_hidden'" type="hidden" :name="field.field" :data-alias="field.alias"
-									:value="fieldValue || (field.extData || {}).defaultValue" :placeholder="field.title || field.name"
-									:disabled="field.disabled" :readonly="fieldReadonly" :required="field.required" autocomplete="off">
-								<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" 
-									:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off" :style="field.cssStyle" 
-									:allowType="(field.extData || {}).allowType" :uploadUrl="(field.extData || {}).uploadUrl"
-									:multiple="(field.extData || {}).multiple"
-								>
-								<button type="button" style="padding-top:5.5px;padding-bottom:5.5px;" class="btn btn-success flex-grow-1" @click="commonUploadFile($event, field)" :disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly">上传</button>
-							</div>
-						</template>
-						<template v-else>
-							<div class="form-group display-flex" :class="getGroupClass(field) || groupClass">
-								<label :for="field.cssId || field.field" style="text-align: right;" class="control-label flex-shrink-0" :style="{width: maxLabelWidth}"><span :class="{'redMark':field.required}">{{field.name}}</span></label>
-								<input :id="field.cssId || field.field" :type="dataType == 'table' && field.searchable ? 'search' : field.type" class="form-control flex-grow-2" :class="getSelfClass(field) || field.cssClass" :name="field.field" :data-alias="field.alias"
-										:value="fieldValue || (field.extData || {}).defaultValue" :placeholder="field.title || field.name" :style="field.cssStyle" 
-										:disabled="field.disabled || fieldReadonly" :readonly="fieldReadonly" :required="field.required" autocomplete="off"
-										:max="(field.extData || {})['max']" :min="(field.extData || {})['min']" :step="(field.extData || {})['step']"
-								>
-							</div>
-						</template>
-				</div>`,
+		render: function (createElement) {
+			if (this.isPermit) {
+				var fieldType = this.fieldType;
+				var template = GlobalTemplates[fieldType] || GlobalTemplates['default'];
+				var options = this.$options;
+				return Vue.compile(template, {
+					outputSourceRange: true,
+					shouldDecodeNewlines: options.shouldDecodeNewlines,
+					shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
+					delimiters: options.delimiters,
+					comments: options.comments
+				}, this).render.call(this, createElement);
+			}
+			return "";
+		},
 		props: {
 		    formColsGroupClass: {
 		    	type: Object,
-		    	default: /*function() {
-					return */{
+		    	default: function() {
+					return {
 						1: {
 							formGroupClass: "col-xs-12 col-sm-12 col-md-12",
 							formGroupTextareaClass: "col-xs-12 col-sm-12 col-md-12",
@@ -211,7 +210,7 @@ var FormInput = {
 							formGroupTextareaClass: "col-xs-12 col-sm-12 col-md-6",
 						}
 					}
-		    	/*}*/
+		    	}
 		    },
 		    formCols: {
 		    	type: Number,
@@ -231,7 +230,7 @@ var FormInput = {
 		    },
 			field: {
 				type: Object,
-				default: {}
+				default: () => {}
 			},
 			dataType: {
 				type: String,
@@ -242,7 +241,8 @@ var FormInput = {
 				default: ""
 			},
 			targetValue: {
-				type: Object
+				type: Object,
+				default: () => {}
 			},
 			model: {
 				type: String,
@@ -254,11 +254,11 @@ var FormInput = {
 			},
 			permissions: {
 				type: Array,
-				default: []
+				default: ()=>[]
 			},
 			roles: {
 				type: Array,
-				default: []
+				default: ()=>[]
 			},
 			timestamp:  {
 				type: Number,
@@ -270,92 +270,18 @@ var FormInput = {
 		created: function(e) {
 		},
 		updated: function() {
-			console.log("updated");
-			var _this = this;
-			var id = this.field.cssId || this.field.field;
-			var $container = this.$root.$el;
-			if (this.field.type == 'range') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.rangeChange({currentTarget: $field[0]});
-				} else {
-					$("input[type='range']").not(".range-inited").each(function(index, item) {
-						_this.rangeChange({currentTarget: item});
-					})
-				}
-			} else if (this.field.type == 'daterange') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.dateRangePicker({currentTarget: $field[0]});
-				} else {
-					$(".daterange-btn").not(".daterange-inited").each(function(index, item) {
-						_this.dateRangePicker({currentTarget: item});
-					})
-				}
-			} else if (this.field.type == 'distpicker') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.distpicker({currentTarget: $field[0]});
-				} else {
-					$(".distpicker").not(".distpicker-inited").each(function(index, item) {
-						_this.distpicker({currentTarget: item});
-					})
-				}
-			} else if (this.field.type == 'select' || this.field.type == 'urlSelector') {
-				var $field = $("#" + id, $container);
-				$field.trigger("change");
-			}
+			console.log("updated", this.field.cssId || this.field.field);
+			this.refreshInput(true);
 		},
 		mounted: function() {
-			console.log("mounted");
-			var _this = this;
-			var id = this.field.cssId || this.field.field;
-			var $el = this.$el;
-			var $container = this.$root.$el;
-			if (this.field.type == 'range') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.rangeChange({currentTarget: $field[0]});
-				} else {
-					$("input[type='range']").not(".range-inited").each(function(index, item) {
-						_this.rangeChange({currentTarget: item});
-					})
-				}
-			} else if (this.field.type == 'daterange') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.dateRangePicker({currentTarget: $field[0]});
-				} else {
-					$(".daterange-btn").not(".daterange-inited").each(function(index, item) {
-						_this.dateRangePicker({currentTarget: item});
-					})
-				}
-			} else if (this.field.type == 'distpicker') {
-				var $field = $("#" + id, $container);
-				if ($field.length) {
-					_this.distpicker({currentTarget: $field[0]});
-				} else {
-					$(".distpicker").not(".distpicker-inited").each(function(index, item) {
-						_this.distpicker({currentTarget: item});
-					})
-				}
-			}
-			// 初始化事件
-			if (this.field.extData && this.field.extData.events) {
-				var $field = $("#" + id, $el);
-				$field = $field.length ? $field : $("#" + id, $container);
-				if ($field.length) {
-					try {
-						var events = this.field.extData.events;
-						for ( var key in events) {
-							var event = events[key];
-							$field.on(key, eval("("+ event + ")"));
-						}
-					} catch(e) {}
-				}
-			}
+			console.log("mounted", this.field.cssId || this.field.field);
+			this.refreshInput();
 		},
 		computed: {
+			fieldType: function() {
+				var type = this.field.type || 'default';
+				return !this.fieldVisible ? 'hidden' : type;
+			},
 			fieldValue: function() {
 				var targetValue = this.targetValue || {};
 				var field = this.field;
@@ -368,18 +294,8 @@ var FormInput = {
 				}
 				return this.getFieldValue(field);
 			},
-			isPermit:function(_this, field) {
+			isPermit: function(_this, field) {
 				field = field || this.field || {};
-				/*var permissionType = this.permissionType || "";
-	 			var permissions = this.permissions || [];
- 				var model = this.model || "";
- 				var permission = model + "." + field.field + "." + (this.isCreate ? "add" : "edit");
-	 			if ((permissionType == "all" 
-	 					|| permissionType == "edit"
-	 					|| permissionType == "view"
-	 					&& $.inArray(permission, permissions) > -1) {
-					return true;
-				}*/
 				var permissionType = this.permissionType || "";
 				var isPermit = permissionType != "";// == "all" || permissionType == "edit";
 				var checkPermitCallback = (field.extData || {}).checkPermitCallback;
@@ -390,6 +306,23 @@ var FormInput = {
 	 			}
 	 			return isPermit;
 			},
+//			isPermit: {
+//				get(_this, field) {
+//					field = field || this.field || {};
+//					var permissionType = this.permissionType || "";
+//					var isPermit = permissionType != "";// == "all" || permissionType == "edit";
+//					var checkPermitCallback = (field.extData || {}).checkPermitCallback;
+//					if (typeof checkPermitCallback == 'function') {
+//		 				try {
+//		 					isPermit = isPermit && checkPermitCallback.call(this, field, isPermit);
+//		 				} catch(e) {}
+//		 			}
+//		 			return isPermit;
+//				},
+//				set(v) {
+//					
+//				}
+//			},
 			fieldReadonly: function(_this, field) {
 				field = field || this.field || {};
 				var permissionType = this.permissionType || "";
@@ -549,7 +482,8 @@ var FormInput = {
 	 			$tip.css("left", "calc(" + process + "% + 1rem - " + tipWidth + " - " + process / 100 * 2 + "rem)");
 	 			$(target).addClass("range-inited");
 	 		},
-	 		isPermit: function(type, data, ext) {
+	 		//isPermit: function(type, data, ext) {
+	 		checkPermit: function(type, data, ext) {
 	 			var permissionType = data.permissionType || this.permissionType || "";
 	 			var permissions = this.permissions || [];
  				var model = data.type || data.model || this.model || "";
@@ -706,14 +640,6 @@ var FormInput = {
 	 			if ($.fn && $.fn.distpicker) {
 	 				return true;
 	 			} else {
-//	 				var $head = $('head');
-//	 				var cssUrl = basePath + "/static/plugins/daterangepicker/daterangepicker.css";
-//	 			    if($("link[href='"+cssUrl+"']").length==0){
-//	 			        $("<link>")
-//	 			          .appendTo($head)                               // *注意*：一定要先添加到DOM树中
-//	 			          .attr({type : 'text/css', rel : 'stylesheet'})  // 然后再设置href属性，否则在IE下可能
-//	 			          .attr('href', cssUrl);                          // 该css文件不生效
-//	 			    };
 	 				$.when(
 					    $.getScript(basePath + "/static/plugins/distpicker/distpicker.min.js"),
 					    $.Deferred(function(deferred){
@@ -748,5 +674,74 @@ var FormInput = {
 	 			});
 	 			$(target).addClass("distpicker-inited");
 	 		},
+	 		refreshInput(triggerSelectChange) {
+	 			var _this = this;
+				var id = this.field.cssId || this.field.field;
+				var $el = this.$el;
+				var $container = this.$root.$el;
+				if (this.field.type == 'range') {
+					var $field = $("#" + id, $container);
+					if ($field.length) {
+						_this.rangeChange({currentTarget: $field[0]});
+					} else {
+						$("input[type='range']").not(".range-inited").each(function(index, item) {
+							_this.rangeChange({currentTarget: item});
+						})
+					}
+				} else if (this.field.type == 'daterange') {
+					var $field = $("#" + id, $container);
+					if ($field.length) {
+						_this.dateRangePicker({currentTarget: $field[0]});
+					} else {
+						$(".daterange-btn").not(".daterange-inited").each(function(index, item) {
+							_this.dateRangePicker({currentTarget: item});
+						})
+					}
+				} else if (this.field.type == 'distpicker') {
+					var $field = $("#" + id, $container);
+					if ($field.length) {
+						_this.distpicker({currentTarget: $field[0]});
+					} else {
+						$(".distpicker").not(".distpicker-inited").each(function(index, item) {
+							_this.distpicker({currentTarget: item});
+						})
+					}
+				} else {
+					var $from = $($el).parents("form:first");
+				    var baseForm = $from.data("baseForm") || {};
+				    if (typeof baseForm.fillElemValue == 'function') {
+				    	var $inputs = $($el).find('input[name], select[name], textarea[name], label[name]');
+				    	$inputs = $inputs.length ? $inputs : $el;
+				    	if ($inputs.length == 1) {
+				    		baseForm.fillElemValue($inputs[0], this.fieldValue);
+				    	}
+				    }
+//					if (triggerSelectChange && (this.field.type == 'select' || this.field.type == 'urlSelector')) {
+//						var $field = $("#" + id, $container);
+//						var field = this.field;
+//						var multiple = field.extData.multiple || (field.extData['select2-config'] || {}).multiple || false;
+//						var value = this.fieldValue || '';
+//						if (multiple) {
+//							value = value.split(",");
+//						}
+//						$field.val(value);
+//						$field.trigger("change");
+//					}
+				}
+				// 初始化事件
+				if (this.field.extData && this.field.extData.events) {
+					var $field = $el.id == id ? $($el) : $("#" + id, $el);
+					$field = $field.length ? $field : $("#" + id, $container);
+					if ($field.length) {
+						try {
+							var events = this.field.extData.events;
+							for ( var key in events) {
+								var event = events[key];
+								$field.on(key, eval("("+ event + ")"));
+							}
+						} catch(e) {}
+					}
+				}
+	 		}
 	 	}
 	};

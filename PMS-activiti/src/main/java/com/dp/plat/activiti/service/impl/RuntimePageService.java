@@ -4,7 +4,6 @@
 package com.dp.plat.activiti.service.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import com.dp.plat.activiti.entity.BaseVO;
 import com.dp.plat.activiti.entity.Constants;
 import com.dp.plat.activiti.service.IRuntimePageService;
 import com.dp.plat.activiti.vo.ActivityVo;
@@ -104,7 +102,7 @@ public class RuntimePageService implements IRuntimePageService {
 				.processInstanceId(processInstanceId).singleResult();
 		/* String activityId=processInstance.getActivityId(); */
 		List<String> activeIds = new ArrayList<>();
-		ProcessDefinitionEntity processDefinition;
+		ProcessDefinitionEntity processDefinition = null;
 		// 已完成后processInstance为null
 		String startUserId = null;
 		if (processInstance != null) {
@@ -114,12 +112,18 @@ public class RuntimePageService implements IRuntimePageService {
 		} else {
 			HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
 					.processInstanceId(processInstanceId).singleResult();
-			processDefinition = (ProcessDefinitionEntity) repositoryService
-					.getProcessDefinition(historicProcessInstance.getProcessDefinitionId());
-			startUserId = historicProcessInstance.getStartUserId();
+			if (historicProcessInstance != null) {
+				processDefinition = (ProcessDefinitionEntity) repositoryService
+						.getProcessDefinition(historicProcessInstance.getProcessDefinitionId());
+				startUserId = historicProcessInstance.getStartUserId();
+			}
 		}
-
-		List<ActivityImpl> activityList = processDefinition.getActivities();
+		List<ActivityImpl> activityList;
+		if (processDefinition != null) {
+			activityList = processDefinition.getActivities();
+		} else {
+			activityList = new ArrayList<ActivityImpl>(0);
+		}
 
 		List<ActivityVo> voList = new ArrayList<>();
 		for (HistoricActivityInstance historicActivityInstance : historicActivityInstanceList) {

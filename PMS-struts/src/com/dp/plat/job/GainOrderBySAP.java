@@ -25,7 +25,12 @@ import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
-
+/**
+ * @deprecated 已经废弃合并至GainOrderByERP
+ * @see GainOrderByERP
+ * @author w02611
+ */
+@Deprecated
 public class GainOrderBySAP implements Job{
     private static final Logger LOGGER = Logger.getLogger(GainOrderBySAP.class);
     

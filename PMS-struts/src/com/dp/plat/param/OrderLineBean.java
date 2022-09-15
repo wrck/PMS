@@ -1,12 +1,15 @@
 package com.dp.plat.param;
+
+import com.dp.plat.data.bean.CustomInfoEntity;
+
 /**
  * 从ERP刷新订单行信息
  * @author admin
  *
  */
-public class OrderLineBean {
+public class OrderLineBean extends CustomInfoEntity {
 	private String orderNumber;
-	private int lineNum;
+	private String lineNum;
 	private String itemCode;
 	private String itemDesc;
 	private int orderQuantity;
@@ -15,18 +18,20 @@ public class OrderLineBean {
 	private int openQuantity;
 	private String bundleCode;
 	private int warrantyMonth;
+	private int lineType;
 	private String compCode;
 	private String profitCenter;
+	private String realOrderExecNumber;
 	public String getOrderNumber() {
 		return orderNumber;
 	}
 	public void setOrderNumber(String orderNumber) {
 		this.orderNumber = orderNumber;
 	}
-	public int getLineNum() {
+	public String getLineNum() {
 		return lineNum;
 	}
-	public void setLineNum(int lineNum) {
+	public void setLineNum(String lineNum) {
 		this.lineNum = lineNum;
 	}
 	public String getItemCode() {
@@ -71,6 +76,12 @@ public class OrderLineBean {
 	public void setDeliverQuantity(int deliverQuantity) {
 		this.deliverQuantity = deliverQuantity;
 	}
+	public int getLineType() {
+	    return lineType;
+	}
+	public void setLineType(int lineType) {
+	    this.lineType = lineType;
+	}
     public String getCompCode() {
         return compCode;
     }
@@ -82,5 +93,11 @@ public class OrderLineBean {
     }
     public void setProfitCenter(String profitCenter) {
         this.profitCenter = profitCenter;
+    }
+    public String getRealOrderExecNumber() {
+        return realOrderExecNumber;
+    }
+    public void setRealOrderExecNumber(String realOrderExecNumber) {
+        this.realOrderExecNumber = realOrderExecNumber;
     }
 }

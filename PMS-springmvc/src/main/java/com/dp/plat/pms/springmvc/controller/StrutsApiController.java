@@ -20,7 +20,7 @@ import com.dp.plat.service.DepartmentManageService;
 
 @Controller
 @RequestMapping("api")
-public class StructsApiController {
+public class StrutsApiController {
 	
 	@Autowired
 	@Qualifier("departmentManageService")

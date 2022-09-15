@@ -1,6 +1,6 @@
 package com.dp.plat.data.bean;
 
-public class WorkflowCommonParam {
+public class WorkflowCommonParam extends CustomInfoEntity {
 	private String deploymentId;// 部署id
 	private String imageName;//
 	private String taskId;// 任务id

@@ -998,4 +998,11 @@ public interface ProjectService extends BaseService{
 
 	List<Map<String, Object>> queryMarketRelations();
 
+	/**
+	 * 查询合同号的交付件完成情况
+	 * @param paramMap
+	 * @return
+	 */
+    List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> paramMap);
+
 }

@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 
 import javax.persistence.Id;
 
+import org.apache.xalan.xsltc.compiler.util.TestGenerator;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -30,6 +32,7 @@ import com.dp.plat.core.entity.DataOperation;
 import com.dp.plat.core.exception.ExcelImportException;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.pms.springmvc.entity.Facilitator;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
@@ -40,7 +43,11 @@ import com.dp.plat.pms.springmvc.vo.ProjectVO;
  */
 public class Test {
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
+        generatorUpdateDuplicateStr(Facilitator.class);
+    }
+    
+	public static void main2(String[] args) {
 //		Pattern pattern = Pattern.compile(".*.admin.*?(?<!UserController)$");
 //		System.out.println(pattern.matcher("com.dp.plat.core.controller.admin.UserController").matches());
 ////		String str = "project:detail,project:add";

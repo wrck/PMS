@@ -7,13 +7,18 @@ var NavTab = {
 			return {
 			};	
 		},
-		template: `<div v-if="navTabList.length > 0" :id="tabContainerId" class="tab-content box box-primary mt-1">
-				<ul :id="tabWrapperId" class="nav nav-tabs">
-				<li v-for="navTab in navTabList">
-					<a v-if="navTab.isPermit" :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
-				</li>
+		template: `
+		<div v-if="navTabList.length > 0" :id="tabContainerId" class="tab-content box box-primary mt-1">
+			<ul :id="tabWrapperId" class="nav nav-tabs">
+				<template v-for="navTab in navTabList">
+					<li v-if="navTab.isPermit">
+						<a :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
+					</li>
+				</template>
 			</ul>
-			<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-for="navTab in navTabList" v-if="navTab.isPermit" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
+			<template v-for="navTab in navTabList">
+				<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-if="navTab.isPermit" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
+			</template>
 		</div>`,
 		props: {
 			tabContentId: {
@@ -28,12 +33,12 @@ var NavTab = {
 		    },
 		    tabList: {
 		    	type: Array,
-				default: [],
+				default: () => [],
 			    required: true
 		    },
 			targetValue: {
 				type: Object,
-				default: {},
+				default: () => {},
 				required: true
 			},
 			model: {
@@ -46,11 +51,11 @@ var NavTab = {
 			},
 			permissions: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			roles: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			timestamp:  {
 				type: Number,

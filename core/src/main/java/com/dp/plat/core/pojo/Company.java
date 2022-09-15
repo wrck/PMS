@@ -11,6 +11,9 @@ public class Company {
 
     // 公司编号
     private String compCode;
+    
+    // 公司账套
+    private String compAccount;
 
     // 公司名称
     private String compName;
@@ -107,6 +110,24 @@ public class Company {
      */
     public void setCompCode(String compCode) {
         this.compCode = compCode;
+    }
+
+    /**
+     * 获取公司账套
+     *
+     * @return compAccount - 公司账套
+     */
+    public String getCompAccount() {
+        return compAccount;
+    }
+
+    /**
+     * 设置公司账套
+     *
+     * @param compAccount 公司账套
+     */
+    public void setCompAccount(String compAccount) {
+        this.compAccount = compAccount;
     }
 
     /**

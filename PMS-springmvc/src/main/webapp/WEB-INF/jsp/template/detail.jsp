@@ -68,7 +68,7 @@
 </cssTag>
 </head>
 <body>
-	<div id="app">
+	<div id="app" class="vmAppContainer">
 		<!-- Content Header (Page header) -->
 		<section class="content-header">
 			<h1 id="pageTitle" class="fade" :class="{in: isShow}"></h1>
@@ -93,6 +93,7 @@
 									<span class="footer-tips text-warning" v-if="footerTips">{{footerTips}}</span>
 								</div>
 								<button type="button" class="btn btn-default" data-btn-type="cancel" data-dismiss="modal">{{isModals ? "取消" : "返回"}}</button>
+								<form-inputs ref="formButtons" :form-class="'display-inline'" :form-cols="formCols" :field-list="buttonList" :target-name="targetName" :target-value="targetValue" :is-create="isCreate" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model"></form-inputs>
 								<button type="submit" class="btn btn-primary" v-if="permissionType && permissionType != 'view'" data-btn-type="save">保存</button>
 							</div>
 							<!-- /.box-footer -->
@@ -123,7 +124,7 @@
 	<script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
 	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
-	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
+	<script src="${pageContext.request.contextPath}/static/vue/vue.js"></script>
 </c:if>
 	<script src="${pageContext.request.contextPath}/static/plugins/autocomplete/jquery.autocomplete.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
@@ -155,7 +156,7 @@
 	    	var url = id == 0 ? router(urlNamespace).api(model).create(search) : router(urlNamespace).api(model).detail(id, search);
     		ajaxGet(url, null, function(data, status){
 				if (status == 'success') {
-					vm = new Vue($.extend(true, {
+					var vmOptions = $.extend(true, {
 							components: {
 							    'form-inputs': FormInputs,
 							    'nav-tab': NavTab,
@@ -164,36 +165,40 @@
 							// mixins: [formVueConfig]
 						}, /* formVueConfig || {}, tabVueConfig || {}, */ {
 							el: "#" + appId,
-							data: $.extend({}, data, {
-								isModals: isModals,
-								isCreate: id == 0,
-								isShow: false,
-								dataType: "form",
-								formCols: 2,
-								//formGroupClass: "col-sm-6 col-md-3",
-								//formGroupTextareaClass: "col-sm-12 col-md-6",
-								formAction: router(urlNamespace).api(model).detail(id),
-	   							fieldList: data.fieldList || [],
-	   							tabList: data.tabList || [],
-	   							targetName: data.targetName || data.model || model,
-	    						targetValue: data.targetValue || {},
-	    						
-	    						// 权限控制参数
-	    						urlNamespace: data.urlNamespace || urlNamespace,
-	    						model: data.model || model,
-	    						keyword: data.keyword || keyword,
-	    						permissionType: data.permissionType || "",
-	    						//permissionType: data.permissionType == undefined ? "all" : (data.permissionType || ""),
-	    						permissions: data.permissions || [],
-	    						roles: data.roles || [],
-	    						
-	    						// 任务检查标记
-	    						currentTaskId: "",
-	    						
-	    						// 表单参数
-	    						startProcessBtnText: "提交审批",
-	    						footerTips: ""
-	    				 	}),
+							data: function() {
+								return $.extend({}, data, {
+									isModals: isModals,
+									isCreate: id == 0,
+									isShow: false,
+									dataType: "form",
+									formCols: 2,
+									//formGroupClass: "col-sm-6 col-md-3",
+									//formGroupTextareaClass: "col-sm-12 col-md-6",
+									formAction: router(urlNamespace).api(model).detail(id),
+		   							fieldList: data.fieldList || [],
+		   							tabList: data.tabList || [],
+		   							buttonList: data.buttonList || [],
+		   							targetName: data.targetName || data.model || model,
+		    						targetValue: data.targetValue || {},
+		    						
+		    						// 权限控制参数
+		    						urlNamespace: data.urlNamespace || urlNamespace,
+		    						model: data.model || model,
+		    						pathSearch: search || "",
+		    						keyword: data.keyword || keyword,
+		    						permissionType: data.permissionType || "",
+		    						//permissionType: data.permissionType == undefined ? "all" : (data.permissionType || ""),
+		    						permissions: data.permissions || [],
+		    						roles: data.roles || [],
+		    						
+		    						// 任务检查标记
+		    						currentTaskId: "",
+		    						
+		    						// 表单参数
+		    						startProcessBtnText: "提交审批",
+		    					    footerTips: ""
+								});
+	    				 	},
 	    				 	computed: {
 	    				 		hasTask: function() {
 	    				 			var _this = this;
@@ -202,7 +207,7 @@
 	    				 			if (typeof hasTask == "undefined" || hasTask == null) {
 	    				 				var currentTaskId = (this.targetValue.customInfo || {}).currentTaskId || taskId;
 	    				 				var currentProcInstId = (this.targetValue.customInfo || {}).currentProcInstId;
-	    				 				console.log(currentTaskId);
+	    				 				console.log("currentTaskId:", currentTaskId);
 	    				 				if (currentTaskId) {
 	        				 				ajaxGet(router("/").api("workflow").checkTask(currentTaskId, currentProcInstId), {}, function(data) {
 	        				 					_this.targetValue.hasTask = !!data.hasTask;
@@ -238,7 +243,9 @@
 				 				return false;
 	    				 	} */
     				 	}
-					));
+					);
+                    //vm = Vue.createApp(vmOptions).mount('#' + appId);
+                    vm = new Vue(vmOptions);
 					// 获取表单验证要求
 					varFields = vm.$refs["formInputs"].fieldValidators;
 					
@@ -311,7 +318,7 @@
 	    			}
 	    			var btnType = $(submitButton, form2).data("btn-type");
                 	var confirmText = btnType == "save" ? "保存" : $(submitButton, form2).text();
-	        		var url = btnType == 'submit' ? router(urlNamespace).api(model).submit() : (id == 0 ? router(urlNamespace).api(model).create() : router(urlNamespace).api(model).update(id));
+	        		var url = btnType == 'submit' ? router(urlNamespace).api(model).submit(id) : (id == 0 ? router(urlNamespace).api(model).create() : router(urlNamespace).api(model).update(id));
 	        		ajaxPost(url, formData, function(data,status){
 	        			if(data.status){
 	        				if (!hideInfo) {
@@ -373,7 +380,12 @@
 	    				if (status == 'success') {
 	    					vm._data.fieldList = data.fieldList || [];
 	    					vm._data.tabList = data.tabList || [];
+	    					vm._data.buttonList = data.buttonList || [];
 	   						vm._data.targetValue = data.targetValue;
+	   						vm._data.permissionType = data.permissionType || "",
+	   						vm._data.permissions = data.permissions || [],
+	   						vm._data.roles = data.roles || [],
+	   						
 	   						vm._data.currentTaskId = "";
 	   						//form.initFormData(data.targetValue);
 	   						
@@ -381,7 +393,7 @@
 				        	if (router(urlNamespace).callback(model).detail) {
 				        		var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
 				        		if (typeof vueCallback == 'function') {
-				        			vueCallback.call(vm, data, $("#" + appId));
+				        			vueCallback.call(vm, data, $("#" + formId));
 				        		}
 				        	}
 		                	

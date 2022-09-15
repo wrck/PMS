@@ -3,7 +3,10 @@ var TabPane = {
 		data: function() {
 			return {
 				isUpdated: false,
-				tabId: this.cssId || (this.navTab.type + 'Tab' + this.timestamp) 
+				tabId: this.cssId || (this.navTab.type + 'Tab' + this.timestamp),
+				permissionType: "",
+				permissions: [],
+				roles: []
 			};
 		},
 		template: `<div class="tab-pane fade" :id="tabId" 
@@ -29,6 +32,7 @@ var TabPane = {
 		    },
 		    navTab: {
 			    type: Object,
+			    default: () => {}
 		    },
 //			url: {
 //			    type: String,
@@ -48,24 +52,25 @@ var TabPane = {
 //			drawType: String,
 //			tableConfig: Object,
 			targetValue: {
-				type: Object
+				type: Object,
+				default: () => {}
 			},
 			model: {
 				type: String,
 				default: ""
 			},
-			permissionType: {
-				type: String,
-				default: ""
-			},
-			permissions: {
-				type: Array,
-				default: []
-			},
-			roles: {
-				type: Array,
-				default: []
-			},
+//			permissionType: {
+//				type: String,
+//				default: ""
+//			},
+//			permissions: {
+//				type: Array,
+//				default: () => []
+//			},
+//			roles: {
+//				type: Array,
+//				default: () => []
+//			},
 			timestamp:  {
 				type: Number,
 				default: function() {

@@ -894,7 +894,6 @@ public class ProjectAction extends BaseAction implements Preparable{
 	 * @return
 	 */
 	public String checkhistsoftversion(){
-		
 		changeLogList = projectService.queryHistSoftChangeLog(softChangeLog.getProjectId());
 		changeLogList.add(new SoftChangeLog(-1,"V0(出厂版本)"));
 		contractNo = null;

@@ -184,6 +184,11 @@ li.active span.warn{
                             	contents.push(entity.leakLevel);
                             	contents.push(entity.leakName);
 							break;
+                            case 'settlement':
+                                contents.push(entity.settleSeq);
+                                contents.push(entity.acceptanceDesc);
+                                contents.push(entity.progressDesc);
+                            break;
                             case null:return '';break;
                         }
                         return contents.filter(function(item,index) {
@@ -244,71 +249,7 @@ li.active span.warn{
         var finished_config = {
             searching: true,
             rowId: 'taskId',
-            "columns" : [
-                 {
-                    title : "任务名称",
-                    data : "taskName",
-                    name : "res.TASK_DEF_KEY_",
-                    visible: true,
-                    //sortable: false,
-                },
-                {
-                    title : "类别",
-                    data : "taskDesc",
-                    name : "res.DESCRIPTION_",
-                    class: "text-center",
-                    visible: true,
-                    render: function(data, type, row) {
-                    	return (data || "").split(splitStr)[0];
-                    }
-                },
-                {
-                    title : "审核内容",
-                    data : "dataType",
-                    name : "pw.dataType",
-                    visible: true,
-                    //sortable: false,
-                    class: "text-center",
-                    render:function(data, type, row){
-                    	var entity = row.entity || {};
-                    	var contents = [];
-                        switch (data){
-                            case 'projectTask':
-                            	contents.push((entity.customInfo || {}).eventValue);
-                            	contents.push(entity.taskName);
-                            	break;
-                            case 'industryAsset':
-                            	contents.push(entity.assetType);
-                            	contents.push(entity.assetName);
-                            break;
-                            case 'industryLeak':
-                            	contents.push(entity.leakType);
-                            	contents.push(entity.leakLevel);
-                            	contents.push(entity.leakName);
-							break;
-                            case null:return '';break;
-                        }
-                        return contents.filter(function(item,index) {
-                        	return item ? true : false;
-                        }).join(splitStr);
-                    }
-                },
-                {
-                    title : "当前办理人",
-                    data : "assigneeName",
-                    name : "RES.ASSIGNEE_",
-                    class: "text-center",
-                    visible: true,
-                    //sortable: false,
-                },
-                {
-                    title : "任务开始时间",
-                    data : "beginTime",
-                    name : "RES.CREATE_TIME",
-                    class: "text-center",
-                    visible: true,
-                    //sortable: false,
-                },
+            "columns" : [].concat(commonConfig.columns, [
                 {
                     title : "办理时间",
                     data : "endTime",
@@ -317,7 +258,7 @@ li.active span.warn{
                     visible: true,
                     //sortable: false,
                 },
-             ],
+             ]),
             "columnDefs" : [ {
                 // 定义操作列,######以下是重点########
                 targets : 6,//操作按钮目标列

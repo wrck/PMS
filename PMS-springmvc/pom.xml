@@ -21,21 +21,17 @@
 		<!-- shiro版本 -->
 		<!-- <shiro.version>1.4.1</shiro.version> -->
 		<flying.saucer.version>9.1.20</flying.saucer.version>
+		<!-- 阿里easyExcel版本 -->
+		<!-- <easyexcel.version>2.1.6</easyexcel.version> -->
+		<easyexcel.version>3.1.1</easyexcel.version>
 	</properties>
 	
 	<dependencies>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-			<version>2.0.3-SNAPSHOT</version>
-			<!-- <version>2.0.2</version> -->
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba.fastjson2</groupId>
-			<artifactId>fastjson2</artifactId>
-			<version>2.0.3-SNAPSHOT</version>
-			<!-- <version>2.0.2</version> -->
-		</dependency>
+	    <dependency>
+	       <groupId>com.dp.plat</groupId>
+	       <artifactId>pms-ext-d365</artifactId>
+	       <version>${project.version}</version>
+	    </dependency>
 		<dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>MyBatisGenerator</artifactId>
@@ -88,12 +84,16 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>easyexcel</artifactId>
-			<version>2.1.6</version>
+			<version>${easyexcel.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>cglib</groupId>
 					<artifactId>cglib</artifactId>
 				</exclusion>
+		        <exclusion>
+		            <artifactId>poi-ooxml-schemas</artifactId>
+		            <groupId>org.apache.poi</groupId>
+		        </exclusion>
 			</exclusions>
 		</dependency>
 

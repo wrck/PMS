@@ -59,4 +59,11 @@ public class SynchronizeService implements ISynchronizeService {
 		synchronizeMapper.clearSyncState();
 	}
 
+	/**
+     * 全量更新时清空指定的同步状态表，避免增量同步失败，导致数据丢失
+     */
+    @Override
+    public void deleteSyncState(SyncState syncState) {
+        synchronizeMapper.deleteSyncState(syncState);
+    }
 }

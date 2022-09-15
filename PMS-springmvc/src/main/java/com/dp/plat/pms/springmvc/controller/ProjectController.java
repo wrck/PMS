@@ -106,6 +106,8 @@ public class ProjectController
 	@PostConstruct
 	public void init() {
 		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
+		this.setKeyword("projectId");
+		this.setUseTemplate(false);
 	}
 
 	@Override
@@ -114,7 +116,7 @@ public class ProjectController
 		if (!checkPermission(null, model, "project:list")) {
 			return Consts.VIEW_UNAUTHORIZED;
 		}
-		return VIEW_NAMESPACE + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
 	@Override
@@ -152,7 +154,7 @@ public class ProjectController
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN)) {
+				if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_FINANCIAL_AP)) {
 					temp.setOfficeCodes(officeCodes);
 					project.setOfficeCodes(officeCodes);
 				}
@@ -193,7 +195,7 @@ public class ProjectController
 				return Consts.VIEW_UNAUTHORIZED;
 			}
 		}
-		return VIEW_NAMESPACE + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
 	@Override
@@ -243,7 +245,7 @@ public class ProjectController
 				return Consts.VIEW_UNAUTHORIZED;
 			}
 		}
-		return VIEW_NAMESPACE + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@Override
@@ -266,7 +268,7 @@ public class ProjectController
 				if (project == null) {
 					model.addAttribute("status", false);
 					model.addAttribute("message", "该项目合同已存在");
-					return VIEW_NAMESPACE + "detail";
+					return getRealViewNameSpace() + "detail";
 				}
 				if (!checkProjectTypeAndAreaPower(project, model)) {
 					model.addAttribute("status", false);
@@ -309,7 +311,7 @@ public class ProjectController
 			model.addAttribute("tabList", navTavList);
 		}
 		model.addAttribute("projectType", projectType);
-		return VIEW_NAMESPACE + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@Override
@@ -363,7 +365,7 @@ public class ProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return VIEW_NAMESPACE + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@Override
@@ -388,7 +390,7 @@ public class ProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return VIEW_NAMESPACE + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@Override
@@ -439,7 +441,7 @@ public class ProjectController
 		Map<String, String> typeName = new HashMap<String, String>(6);
 		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
 		model.addAttribute("typeName", typeName.get(type));
-		return VIEW_NAMESPACE + "mergeProject";
+		return getRealViewNameSpace() + "mergeProject";
 	}
 	
 	@RequestMapping(value = {"{id}/transform/{type}", "/transform/{type}"}, method = RequestMethod.POST)
@@ -502,7 +504,7 @@ public class ProjectController
 		Map<String, String> typeName = new HashMap<String, String>(6);
 		MapUtils.putAll(typeName, new String[] {"merge", "合并", "transfer", "核销"});
 		model.addAttribute("typeName", typeName.get(type));
-		return VIEW_NAMESPACE + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 
@@ -910,7 +912,7 @@ public class ProjectController
 
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN) && !officeCodes.contains(officeCode)) {
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN) && !officeCodes.contains(officeCode)) {
 				return false;
 			}
 		}

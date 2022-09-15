@@ -4,6 +4,7 @@ import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_AREA_MANAGER;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_FINANCIAL_AP;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -995,7 +996,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
+				if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN, ROLE_FINANCIAL_AP)) {
 					project.setOfficeCodes(officeCodes);
 					
 					if (!officeCodes.contains(officeCode)) {
@@ -1107,7 +1108,7 @@ public class ProjectHeaderService extends ProjectServiceImpl
 
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(RoleConstant.ROLE_PM_SUB_ADMIN) && !officeCodes.contains(officeCode)) {
+			if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN) && !officeCodes.contains(officeCode)) {
 				return false;
 			}
 		}

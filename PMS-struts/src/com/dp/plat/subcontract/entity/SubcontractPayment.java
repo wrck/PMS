@@ -4,7 +4,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class SubcontractPayment {
+public class SubcontractPayment extends BaseEntity {
 	private Integer id;
 
 	// 转包项目Id
@@ -51,6 +51,7 @@ public class SubcontractPayment {
 	 * @param id
 	 */
 	public void setId(Integer id) {
+	    super.setId(id);
 		this.id = id;
 	}
 
@@ -198,6 +199,7 @@ public class SubcontractPayment {
 	 * @param createTime
 	 */
 	public void setCreateTime(Date createTime) {
+	    super.setCreateTime(createTime);
 		this.createTime = createTime;
 	}
 
@@ -212,6 +214,7 @@ public class SubcontractPayment {
 	 * @param createBy
 	 */
 	public void setCreateBy(String createBy) {
+	    super.setCreateBy(createBy);
 		this.createBy = createBy;
 	}
 
@@ -226,6 +229,7 @@ public class SubcontractPayment {
 	 * @param updateTime
 	 */
 	public void setUpdateTime(Date updateTime) {
+	    super.setUpdateTime(updateTime);
 		this.updateTime = updateTime;
 	}
 
@@ -240,6 +244,7 @@ public class SubcontractPayment {
 	 * @param updateBy
 	 */
 	public void setUpdateBy(String updateBy) {
+	    super.setUpdateBy(updateBy);
 		this.updateBy = updateBy;
 	}
 }

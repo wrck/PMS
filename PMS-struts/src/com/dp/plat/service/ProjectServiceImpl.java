@@ -533,7 +533,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 				callBackService.updateCallBackApplyState(callBack.getCallBackId(), ActivityMessage.FLOW_REJECT);
 			}
 		}
-		ProjectUtils.terminateActivities(taskIds);
+		ProjectUtils.terminateActivities(taskIds, "项目经理更新终止在待办流程");
 	}
 
 	/**
@@ -2757,7 +2757,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		if (StringUtils.isNotBlank(pmCloseTaskId)) {
 			taskIds.add(pmCloseTaskId);
 		}
-		ProjectUtils.terminateActivities(taskIds);
+		ProjectUtils.terminateActivities(taskIds, "不予跟踪后系统自动终止正在进行的任务");
 	}
 
 	@Override
@@ -3656,4 +3656,10 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     public List<Map<String, Object>> queryMarketRelations() {
 		return projectDao.queryMarketRelations();
 	}
+    
+    @Override
+    public List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> params) {
+        return projectDao.selectContractAcceptanceDeliveryInfo(params);
+    }
+    
 }

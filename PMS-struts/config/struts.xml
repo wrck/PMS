@@ -16,7 +16,7 @@
 	<!-- string 工厂 -->
 	<constant name="struts.objectFactory" value="spring"></constant>
 	<!-- 上传文件大小限制 -->
-	<constant name="struts.multipart.maxSize" value="105760000" />
+	<constant name="struts.multipart.maxSize" value="209715200" />
 	<!-- 编码格式 -->
 	<constant name="struts.i18n.encoding" value="UTF-8"/>
 	<!-- 定义基础包 -->
@@ -33,7 +33,7 @@
 				</interceptor-ref>
 				<interceptor-ref name="fileUpload">
 					<param name="maximumSize">
-						105760000
+						209715200
 					</param>
 					<param name="allowedTypes">
 					</param>

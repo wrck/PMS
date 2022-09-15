@@ -34,5 +34,10 @@ public interface SynchronizeMapper {
 	 * 全量更新时清空同步状态表，避免增量同步失败，导致数据丢失
 	 */
 	void clearSyncState();
+	
+	/**
+     * 全量更新时清空指定的同步状态表，避免增量同步失败，导致数据丢失
+     */
+    void deleteSyncState(SyncState syncState);
 
 }

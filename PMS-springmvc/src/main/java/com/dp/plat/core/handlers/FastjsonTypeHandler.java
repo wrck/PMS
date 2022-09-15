@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
-import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
@@ -45,7 +44,7 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 	protected Object parse(String json) {
 //		if (JSON.isValid(json)) {
 		if (JSONValidator.from(json).validate()) {
-			return JSON.parseObject(json, type, Feature.AllowISO8601DateFormat);
+			return JSON.parseObject(json, type);
 		} else {
 			return json;
 		}

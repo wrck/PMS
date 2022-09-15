@@ -217,8 +217,9 @@ public class WarrantyCallbackDecorator extends TableDecorator {
         }
         User user = UserContext.getUserContext().getUser();
         StringBuilder url = new StringBuilder();
-        if (Boolean.FALSE.equals(state)
-                && (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
+        if (Boolean.FALSE.equals(state) && (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+                || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER))) {
             taskName = "办理";
             url.append("<a href='javascript:void(0)' onclick='").append("openQuesTask(\"").append(supervisionId).append("\")'>").append(taskName).append("</a>");
         }

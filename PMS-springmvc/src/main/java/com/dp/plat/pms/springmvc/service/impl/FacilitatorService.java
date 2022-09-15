@@ -17,18 +17,17 @@ import com.dp.plat.pms.springmvc.service.IFacilitatorService;
 @Service("facilitatorService")
 public class FacilitatorService extends AbstractBaseService<FacilitatorMapper, Facilitator> implements IFacilitatorService, IExcelAnalysisService<Facilitator> {
 
-private final static String sourceTableName = "pm_facilitator";
-	
-	@Autowired
-	private ExcelAnalysisMapper excelAnalysisMapper;
-	
-	@Override
-	public ExcelAnalysisMapper getExcelAnalysisDao() {
-		return excelAnalysisMapper;
-	}
-	
-	public String getSourceTableName() {
-		return sourceTableName;
-	}
-	
+    private static final String sourceTableName = "pm_facilitator";
+
+    @Autowired
+    private ExcelAnalysisMapper excelAnalysisMapper;
+
+    @Override
+    public ExcelAnalysisMapper getExcelAnalysisDao() {
+        return excelAnalysisMapper;
+    }
+
+    public String getSourceTableName() {
+        return sourceTableName;
+    }
 }

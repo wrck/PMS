@@ -6,7 +6,7 @@ package com.dp.plat.core.exception;
  * @author x02561
  *
  */
-public class ExcelImportException extends RuntimeException {
+public class ExcelImportException extends RuntimeException implements CustomExceptionInterface {
 
 	private static final long serialVersionUID = 1L;
 

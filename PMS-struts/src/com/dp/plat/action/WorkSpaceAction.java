@@ -127,13 +127,15 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 			// }
 			// }
 			if (navTabMap.containsKey("subcontractTask")) {
-				if (user.isHasRole(MessageUtil.ROLE_AREA_LEADER) && user.getRoleids().length() == 3) {
+				if (user.isHasAnyRole(MessageUtil.ROLE_AREA_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF) && user.getRoleids().length() == 3) {
 					BasicDataBean navTab = navTabMap.get("subcontractTask");
 					tabIndex = 5;
 					navTabMap.clear();
 					navTabMap.put(navTab.getBasicDataId(), navTab);
+				} else if (user.isHasAnyRole(MessageUtil.ROLE_AREA_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF)) {
+				    tabIndex = 5;
 				} else {
-					navTabMap.remove("subcontractTask");
+				    navTabMap.remove("subcontractTask");
 				}
 			}
 		}

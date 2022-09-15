@@ -12,7 +12,7 @@
 		<display:table style="text-align: left;"
             name="subcontractDeliverList" pagesize="${subcontractDeliverList.size()}" export="false" id="subcontractDeliverTable"
             size="${subcontractDeliverList.size()}" sort="external"
-            decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-condensed table-hover table-striped" 
+            decorator="com.dp.plat.subcontract.decorators.SubcontractDecorator" class="displayTable table table-condensed table-hover table-striped" 
             partialList="true" >
             <display:column property="subcontractFileName" titleKey="file.name"></display:column>
             <display:column property="typeName" titleKey="pm.subcontract.deliver.type"></display:column>

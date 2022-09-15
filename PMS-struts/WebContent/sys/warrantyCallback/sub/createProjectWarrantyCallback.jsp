@@ -117,20 +117,24 @@ a span {
 					return false;
 				}
 			}
-			for (var i = 0; i < $(".pmclquescontent").length; i++) {
-				var _this = $(".pmclquescontent")[i];
-				var $opt = $(".yl_one_item", $(_this)).find("[name^='pmClQuesnaireResultLineList']:first");
-				var name = $opt.attr("name") || "";
-				var type = $opt.attr("type");
-				var $target = $("[name='" + name + "']" + (type == 'radio' || type == 'checkbox' ? ":checked" : ""), $(".yl_one_item", $(_this)));
-				var $redmark = $(".redmark", $(_this));
-				var value = $target.val();
-                if (!value && $redmark.length > 0) {
-                	var title = $.trim($redmark.text()) + $.trim($(".yl_title span:first", $(_this)).text());
-                    alert(title.replace(/ |\r|\n/g, "") + "不能为空！");
-                    $target.focus();
-                    return false;
-                }
+			// 校验问卷是否必填,无续保意向，不校验问卷
+			var renewalIntention = $("[name='projectWarrantyCallback.renewalIntention']:checked").val();
+			if (renewalIntention != '0') {
+				for (var i = 0; i < $(".pmclquescontent").length; i++) {
+					var _this = $(".pmclquescontent")[i];
+					var $opt = $(".yl_one_item", $(_this)).find("[name^='pmClQuesnaireResultLineList']:first");
+					var name = $opt.attr("name") || "";
+					var type = $opt.attr("type");
+					var $target = $("[name='" + name + "']" + (type == 'radio' || type == 'checkbox' ? ":checked" : ""), $(".yl_one_item", $(_this)));
+					var $redmark = $(".redmark", $(_this));
+					var value = $target.val();
+	                if (!value && $redmark.length > 0) {
+	                	var title = $.trim($redmark.text()) + $.trim($(".yl_title span:first", $(_this)).text());
+	                    alert(title.replace(/ |\r|\n/g, "") + "不能为空！");
+	                    $target.focus();
+	                    return false;
+	                }
+				}
 			}
 			$(this).parents("form:first").submit();
 		});
@@ -224,6 +228,22 @@ a span {
             }
 		});
 	}
+	function showOrderData() {
+		var projectId = $("#projectId").val();
+		var contractNo = "${project.contractNo}";
+		popWindow('module/sub/checkOrderData.action?project.projectId=' + projectId + "&project.contractNo=" + contractNo, "95vw", 450,'设备清单', 'OrderData', true);
+	    var targetWindow = $("#OrderData iframe")[0].contentWindow;
+	    targetWindow.showBarcode = function() {
+	    	showBarcode(targetWindow);
+	    };
+	}
+	function showBarcode(_target) {
+        var projectId = "${project.projectId}";
+        var contractNo = "${project.contractNo}";
+        var projectState = "${project.projectState}";
+        var officeCode = "${project.column001}";
+        (_target || window).popWindow('module/sub/checkShipmentInfo.action?project.projectId=' + projectId + "&project.contractNo=" + contractNo + "&project.projectState="+projectState+ "&project.column001="+officeCode, "95vw", 450,'序列号明细', 'ShipmentInfo', true);
+    }
 </script>
 </head>
 <body>
@@ -289,7 +309,7 @@ a span {
 	                        <td class="tag"><s:text name="pm.project.warrantyStatus"></s:text>:</td>
 	                        <td>
 	                            <div class="display-flex">
-	                                <span class="display-flex-1" style="display:inline-block;">
+	                                <span class="display-flex-1" style="display:inline-block;width:100%">
 	                                    <s:select name="projectWarrantyCallback.warrantyStatus" id="warrantyStatus" list="#{-1:'维保内', 0:'部分保内', 1:'维保外'}" value="%{projectWarrantyCallback.warrantyState.warrantyStatus}" headerKey="" headerValue="--请选择---" placeholder="维保状态" cssClass="form-control hidden" cssStyle="width: 180px;"/>
 	                                    <%-- <span title="${projectWarrantyCallback.warrantyState.warrantyStatusDesc}">${projectWarrantyCallback.warrantyState.warrantyStatusName}</span> --%>
 	                                    <s:property value="projectWarrantyCallback.warrantyState.warrantyStatusName"/>
@@ -300,6 +320,7 @@ a span {
 	                                            (<s:date name="projectWarrantyCallback.warrantyState.warrantyStartTime" format="yyyy-MM-dd" />~<s:date name="projectWarrantyCallback.warrantyState.warrantyEndTime" format="yyyy-MM-dd" />)
 	                                        </span>
 	                                    </s:if>
+	                                    <a class="pull-right" href="javascript:void(0);" onclick="showOrderData()" >设备清单</a>
 	                                </span>
 	                            </div>
 	                        </td>
@@ -353,7 +374,7 @@ a span {
                         </tr>
                         <tr>
                             <td class="tag tag-must"><s:text name="pm.project.warrantyCallback.renewalIntention"></s:text>:</td>
-                            <td><s:radio list="#{0:'无', 1:'有', 2:'待定'}" name="projectWarrantyCallback.renewalIntention"/></td>
+                            <td><s:radio list="#{0:'无', 1:'有', 2:'待定'}" id="renewalIntention" name="projectWarrantyCallback.renewalIntention"/></td>
                             <td class="tag"><s:text name="pm.remark"></s:text>:</td>
                             <td><s:textarea name="projectWarrantyCallback.remark" cssClass="form-control"/></td>
                         </tr>
@@ -527,7 +548,6 @@ a span {
 																	<s:else>
 																		<div>
 																			<span class="redmark">*<s:property value="#obja.questionNum" />.</span>
-																			
 																		</div>
 																	</s:else>
 																</td>

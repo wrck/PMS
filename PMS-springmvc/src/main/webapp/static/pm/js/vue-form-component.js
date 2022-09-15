@@ -5,21 +5,26 @@ var FormInputs = {
 		},
 		data: function() {
 			return {
-				fieldList: [],
-				targetValue: {},
-				targetName: "",
+//				fieldList: [],
+//				targetValue: {},
+//				targetName: "",
+				fieldValidators: {}
 			};	
 		},
-		template: `<div>
+		template: `<div class="form-inputs" :class="formClass">
 						<template v-for="field in formFieldList">
 							<form-input :field="field" :form-cols="formCols" :is-create="isCreate" :form-cols-group-class="formColsGroupClass" :data-type="dataType" :max-label-width="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
 						</template>
 					</div>`,
 		props: {
+			formClass: {
+				type: String,
+				default: ""
+			},
 		    formColsGroupClass: {
 		    	type: Object,
-		    	default: /*function() {
-					return */{
+		    	default: function() {
+					return {
 						1: {
 							formGroupClass: "col-xs-12 col-sm-12 col-md-12",
 							formGroupTextareaClass: "col-xs-12 col-sm-12 col-md-12",
@@ -37,7 +42,7 @@ var FormInputs = {
 							formGroupTextareaClass: "col-xs-12 col-sm-12 col-md-6",
 						}
 					}
-		    	/*}*/
+		    	}
 		    },
 		    formCols: {
 		    	type: Number,
@@ -49,7 +54,7 @@ var FormInputs = {
 		    },
 			fieldList: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 		    dataType: {
 				type: String,
@@ -60,7 +65,8 @@ var FormInputs = {
 				default: ""
 			},
 			targetValue: {
-				type: Object
+				type: Object,
+				default: () => {}
 			},
 			model: {
 				type: String,
@@ -72,11 +78,11 @@ var FormInputs = {
 			},
 			permissions: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			roles: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			timestamp:  {
 				type: Number,
@@ -84,10 +90,10 @@ var FormInputs = {
 					return new Date().getTime();
 				}
 			},
-			fieldValidators: {
-				type: Object,
-				default: {}
-			}
+//			fieldValidators: {
+//				type: Object,
+//				default: () => {}
+//			}
 		},
 		created: function(e) {
 			/* var fieldList = this.fieldList;
@@ -162,9 +168,12 @@ var FormInputs = {
 					if (field['extData']) {
 						this.parseValue(field, "extData", true);
 					} else {
-						field["extData"] = '';
+						field['extData'] = '';
 					}
-					if (field.type == 'inputs' || field.type == 'daterange' || field.type == "distpicker") {
+					if (field['render']) {
+						this.parseValue(field, "render", true);
+					}
+					if (field.type == 'inputs' || field.type == 'buttons' ||field.type == 'daterange' || field.type == "distpicker") {
 						// inputs 拥有相同的标签，在一个组内进行显示，以下参数需要拆分，用空格相隔
 						var keys = ['alias', 'name', 'title', 'titleKey', 'cssId', 'cssClass', 'cssStyle'];
 						var mutliField = this.parseValue(field, 'field', false) || [];
@@ -177,6 +186,7 @@ var FormInputs = {
 							field.field = mutliField.join(" ");
 						}
 						var inputs = [];
+						var groupValues = {};
 						for(var i in mutliField) {
 							var input = $.extend({}, field);
 							input['field'] = mutliField[i];
@@ -187,6 +197,17 @@ var FormInputs = {
 								if(key == 'cssClass') {
 									values = values['selfClass'] || values;
 								}
+								// 判断是否为对象
+								if (typeof values === 'object') {
+									// 如果是对象，则遍历属性值，取self开头的属性值
+									for ( var subKey in values) {
+										if (subKey.startsWith("group")) {
+											groupValues[key] = values[subKey] || field[key];
+										} else if (subKey.startsWith("self")) {
+											values = values[subKey] || values;
+										}
+									}
+								}
 								typeof values == 'string' && (values = values.split(" "));
 								var value = null;
 								if (i < values.length) {
@@ -195,6 +216,9 @@ var FormInputs = {
 								input[key] = value;
 							}
 							inputs.push(input);
+						}
+						for ( var key in groupValues) {
+							field[key] = groupValues[key] || field[key];
 						}
 						field.inputs = inputs;
 					}

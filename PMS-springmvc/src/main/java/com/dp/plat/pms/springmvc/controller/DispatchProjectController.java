@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_FINANCIAL_AP;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
@@ -71,8 +72,9 @@ public class DispatchProjectController
 
 	@PostConstruct
 	public void init() {
+		this.setUrlNameSpace(ProjectConstant.URLPath.PROJECT_MANAGER);
 		this.setViewModel("dispatch");
-		this.setUseTemplate(false);
+		this.setUseTemplate(true);
 	}
 
 	@RequestMapping("/list")
@@ -102,7 +104,7 @@ public class DispatchProjectController
 			
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasRole(ROLE_PM_SUB_ADMIN)) {
+			if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN, ROLE_FINANCIAL_AP)) {
 				temp.setOfficeCodes(officeCodes);
 				dispatch.setOfficeCodes(officeCodes);
 				
@@ -125,7 +127,7 @@ public class DispatchProjectController
 
 		List<DataTableColumn> columns = this.findColumnList(DATANAME_TABLE);
 		pageParam.setColumns(columns);
-		return getViewNameSpace() + "list";
+		return getRealViewNameSpace() + "list";
 	}
 
 	@RequestMapping(value = { "/{id}", "/modals/{id}" })
@@ -145,6 +147,9 @@ public class DispatchProjectController
 				
 				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
+				
+				List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+				model.addAttribute("buttonList", buttonList);
 
 				String navDataName = DATANAME_NAVTAB;
 				if (Boolean.TRUE.equals(dispatch.getDispatched())) {
@@ -159,7 +164,7 @@ public class DispatchProjectController
 			String servletPath = HttpContext.getCurrentRequest().getServletPath();
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = { "/detail", "/modals/detail" })
@@ -198,11 +203,14 @@ public class DispatchProjectController
 //			}
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
+			
+			List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+			model.addAttribute("buttonList", buttonList);
 		} else {
 			String servletPath = HttpContext.getCurrentRequest().getServletPath();
 			model.addAttribute("isModals", servletPath.contains("/modals/"));
 		}
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "/detail", method = RequestMethod.POST)
@@ -229,7 +237,7 @@ public class DispatchProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.PUT)
@@ -257,7 +265,7 @@ public class DispatchProjectController
 		}
 		model.addAttribute("status", status);
 		model.addAttribute("message", message);
-		return getViewNameSpace() + "detail";
+		return getRealViewNameSpace() + "detail";
 	}
 
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
@@ -301,7 +309,7 @@ public class DispatchProjectController
 	}
 
 	@RequestMapping(value = "submit", method = RequestMethod.POST)
-	@SystemControllerLog(description = "删除【$targetValue.dispatchName$】转包记录")
+	@SystemControllerLog(description = "派单【$targetValue.dispatchName$】转包记录")
 	public void dispatchSubmit(DispatchVO dispatch, Model model) {
 		Boolean status = true;
 		String message = null;
@@ -318,8 +326,8 @@ public class DispatchProjectController
 			status = false;
 			Integer errorId = ExceptionHandler.insertException(e);
 			model.addAttribute("errorId", errorId);
-			message = e.getMessage();
-			if (message.contains("Duplicate entry")) {
+			message = StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getSimpleName());
+			if (message != null && message.contains("Duplicate entry")) {
 				message = "派单编号已存在";
 			}
 		}

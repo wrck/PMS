@@ -346,7 +346,10 @@ public class WarrantyCallbackServiceImpl extends BaseServiceImpl implements Warr
 			} else if (context.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
 				// params.put("roleGroup", "cbRole");
 				roleGroup = "cbRole";
-			} else if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
+			} else if (context.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)) {
+                // params.put("roleGroup", "wcbRole");
+                roleGroup = "role_" + MessageUtil.ROLE_WARRANTY_CALLBACKER;
+            } else if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
 				roleGroup = "zrRole,role_" + MessageUtil.ROLE_AREA_LEADER;
 				params.put("checkProfitDep", "true");
 			}
