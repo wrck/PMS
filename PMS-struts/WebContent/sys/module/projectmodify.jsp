@@ -1399,10 +1399,10 @@ td a:VISITED {
             //console.log(entity);
             var key = entity.name;
             var value = entity.value;
-            // 过滤参数为空的情况
+            /* // 过滤参数为空的情况
             if (value == '') {
                 return;
-            }
+            } */
             if (key.indexOf("barCode") > -1 && $.inArray(value, barCodes) > -1) {
             	return;
             }

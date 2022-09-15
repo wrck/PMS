@@ -364,6 +364,11 @@ public interface SubcontractService extends BaseService {
 	 * @param delIds
 	 */
 	void saveSubcontractPayment(List<SubcontractPayment> subcontractPaymentList, Integer[] delIds);
+	
+    /**
+     * @param subcontractPayment
+     */
+    void updateSubcontractPaymentByIdSelective(SubcontractPayment subcontractPayment);
 
 	/**
 	 * @param subcontractId
@@ -487,6 +492,13 @@ public interface SubcontractService extends BaseService {
 	 * @return
 	 */
 	String approvePaymentFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract);
+	
+    /**
+     * 验收审批流程
+     * @param workflowCommonParam
+     * @param subcontract
+     */
+	String submitAcceptanceFlow(WorkflowCommonParam workflowCommonParam, SubcontractProject subcontract);
 
 	/**
 	 * 服务经理查询被驳回的转包申请，显示在待办事项中

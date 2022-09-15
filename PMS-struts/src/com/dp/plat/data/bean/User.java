@@ -38,6 +38,17 @@ public class User {
 		return false;
 	}
 	
+	public boolean isHasAnyRole(int... roleIds){
+	    for (int roleId : roleIds) {
+	        String role = ";" + roleId +  ";";
+	        String roles = getRoleids();
+	        if(roles.indexOf(role) != -1){
+	            return true;
+	        }
+        }
+        return false;
+    }
+	
 	/**
 	 * 返回当前用户有角色数量
 	 * @return

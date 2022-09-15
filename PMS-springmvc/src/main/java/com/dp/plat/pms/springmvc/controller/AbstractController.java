@@ -115,7 +115,7 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 			// Principal user = UserContext.getCurrentPrincipal();
 			// v.setCompId(user.getCompId());
 			PageParam<Object> tempParam = new PageParam<>();
-			V temp = getVClass().newInstance();
+			V temp = newInstance(getVClass());
 			// temp.setCompID(user.getCompId());
 			tempParam.setModel(temp);
 			pageParam.setModel(v);
@@ -152,6 +152,9 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 
 				List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 				model.addAttribute("fieldList", fieldList);
+				
+				List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+				model.addAttribute("buttonList", buttonList);
 
 				List<?> navTavList = this.findNavTabList(getDataNameNavTab(), model);
 				model.addAttribute("tabList", navTavList);
@@ -179,6 +182,9 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 
 			List<Object> fieldList = this.findFieldList(getDataNameForm(), DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
+			
+			List<Object> buttonList = this.findFieldList(getDataNameForm() + "Btn", DATATYPE_FORM);
+			model.addAttribute("buttonList", buttonList);
 		} else {
 			model.addAttribute("urlNamespace", URL_NAMESPACE);
 			model.addAttribute("model", getViewModel());
@@ -526,7 +532,11 @@ public abstract class AbstractController<Service extends IAbstractBaseService<T>
 		if (map == null) {
 			map = new ConcurrentHashMap<>(12);
 		}
-		map.put(key, value);
+		if (value != null) {
+		    map.put(key, value);
+		} else {
+		    map.remove(key);
+		}
 		localVariables.set(map);
 	}
 

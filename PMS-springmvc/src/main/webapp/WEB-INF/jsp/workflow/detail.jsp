@@ -89,7 +89,7 @@
 		<section class="content">
 			<div class="row">
 				<div class="col-xs-12">
-					<div class="box box-info formContainer" v-if="targetValue">
+					<div class="box box-info formContainer" v-if="!hideEntity">
 						<div class="box-header">审核内容</div>
 						<div id="taskEntityFormDiv" class="box-body row ml-0 form-inline fade" :class="{in: isShow}">
 							<form-inputs :form-cols="formCols" :field-list="fieldList" :target-name="targetName" :target-value="targetValue" :permissions="permissions" :permission-type="permissionType" :roles="roles" :model="model"></form-inputs>
@@ -191,7 +191,7 @@
 								formAction: router(urlNamespace).api(model).detail(id),
 	   							fieldList: data.fieldList || [],
 	   							targetName: data.targetName || "",
-	    						targetValue: data.targetValue|| "",
+	    						targetValue: data.targetValue || {},
 	    						tabList: data.tabList || [],
 	    						hideEntity: data.hideEntity || false,
 	    						
@@ -208,14 +208,15 @@
     				 	}
 					));
 					taskEntityForm = $("#taskEntityFormDiv").form();
-					taskEntityForm.initFormData(data.targetValue);
+					//taskEntityForm.initFormData(data.targetValue);
 					
 					// 获取表单验证要求
-					varFields = vm.$refs["formInputs"].fieldValidators;
+					varFields = (vm.$refs["formInputs"] || {}).fieldValidators;
 					
 					form = $("#" + formId).form();
 					//form.initFormData(data.workflow);
 					var $container = $("#" + formId);
+					$container.data("vm", vm);
 		    		$("#" + formId).bootstrapValidator({
 		                message: '请输入有效值',
 		                feedbackIcons:sys.common.feedbackIcons,
@@ -226,6 +227,7 @@
 		                		callback: function () {
 			                		var index3 = layer.load(1);
 			                		var formData = form.getFormSimpleData();
+			                		formData = handleData.call(form2, formData);
 			                		var url = basePath + "/workflow/complete/" + formData.taskId + ".json";
 			                		ajaxPost(url, formData,function(data,status){
 			                			if(data.status){
@@ -246,11 +248,34 @@
 		                }, 
 		    			fields : varFields
 		    		});
+		    		
+		    		// 初始化完成回调函数
+                    if (router(urlNamespace).callback(model).detail) {
+                        var vueCallback = (router(urlNamespace).callback(model).detail || {}).vueCallback;
+                        if (typeof vueCallback == 'function') {
+                            vueCallback.call(vm, data, $container);
+                        }
+                    }
+                    
+                    vm.isShow = true;
     			 }
     		})
     		
-    		function handleData() {
-    			
+    		function handleData(formData) {
+    			formData = formData || {};
+    			var newFormData = {};
+    			var customData = {};
+    			var sysField = ['taskId', 'isPass', 'content'];
+    			for(var key in formData) {
+    			    console.log(key, formData[key]);
+    				if ($.inArray(key, sysField) >= 0) {
+    					newFormData[key] = formData[key];
+    				} else {
+    					customData[key] = formData[key];
+    				}
+    			}
+    			formData.data = JSON.stringify(customData);
+				return formData;
     		}
     		
     		function handleResult(results){
@@ -281,7 +306,7 @@
 	   						vm._data.workflow = data.workflow || {};
 	   						
 	   						form.clearForm();
-	   						form.initFormData(data.workflow);
+	   						//form.initFormData(data.workflow);
 	   						
 	   						var wfvm = vm.$refs['workflowTab'];
 	   						wfvm.refreshNavTab({target: $('li.active a[data-toggle="tab"]', wfvm.$el)});

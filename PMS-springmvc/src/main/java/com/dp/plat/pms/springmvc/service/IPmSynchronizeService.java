@@ -3,6 +3,7 @@ package com.dp.plat.pms.springmvc.service;
 import java.util.List;
 
 import com.dp.plat.core.service.ISynchronizeService;
+import com.dp.plat.pms.springmvc.entity.Facilitator;
 import com.dp.plat.pms.springmvc.entity.OfstContractHead;
 import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
@@ -32,4 +33,10 @@ public interface IPmSynchronizeService extends ISynchronizeService {
 	int insertOfstContractHeadSAP(List<OfstContractHeadSAP> record);
 	List<OfstContractHead> selectAllOfstContractHeadSAP();
 	void clearAllOfstContractHeadSAP();
+	
+    List<Facilitator> selectAllFacilitator();
+    void clearAllFacilitator();
+    void insertFacilitator(List<Facilitator> list);
+    void insertOrUpdateFacilitatorFromD365();
+	
 }

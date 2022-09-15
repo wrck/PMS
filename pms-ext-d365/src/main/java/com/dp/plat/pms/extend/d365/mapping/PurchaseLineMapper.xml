@@ -1,0 +1,755 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.extend.d365.dao.PurchaseLineMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.extend.d365.entity.PurchaseLine">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="headerId" jdbcType="INTEGER" property="headerId" />
+    <result column="purchId" jdbcType="VARCHAR" property="purchId" />
+    <result column="lineNum" jdbcType="VARCHAR" property="lineNum" />
+    <result column="itemId" jdbcType="VARCHAR" property="itemId" />
+    <result column="purchQty" jdbcType="DECIMAL" property="purchQty" />
+    <result column="purchPrice" jdbcType="DECIMAL" property="purchPrice" />
+    <result column="taxItemGroup" jdbcType="VARCHAR" property="taxItemGroup" />
+    <result column="inventSerialId" jdbcType="VARCHAR" property="inventSerialId" />
+    <result column="inventSiteId" jdbcType="VARCHAR" property="inventSiteId" />
+    <result column="inventLocationId" jdbcType="VARCHAR" property="inventLocationId" />
+    <result column="wmsLocationId" jdbcType="VARCHAR" property="wmsLocationId" />
+    <result column="inventTransId" jdbcType="VARCHAR" property="inventTransId" />
+    <result column="officeCode" jdbcType="VARCHAR" property="officeCode" />
+    <result column="deliveryDate" jdbcType="DATE" property="deliveryDate" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="multiDimID" jdbcType="VARCHAR" property="multiDimID" />
+    <result column="investmentProject" jdbcType="VARCHAR" property="investmentProject" />
+    <result column="dimBankAccount" jdbcType="VARCHAR" property="dimBankAccount" />
+    <result column="dimCustomer" jdbcType="VARCHAR" property="dimCustomer" />
+    <result column="dimVendor" jdbcType="VARCHAR" property="dimVendor" />
+    <result column="dimEmployee" jdbcType="VARCHAR" property="dimEmployee" />
+    <result column="dimContract" jdbcType="VARCHAR" property="dimContract" />
+    <result column="dimDepartment" jdbcType="VARCHAR" property="dimDepartment" />
+    <result column="dimBU" jdbcType="VARCHAR" property="dimBU" />
+    <result column="dimProductLine" jdbcType="VARCHAR" property="dimProductLine" />
+    <result column="dimTerritory" jdbcType="VARCHAR" property="dimTerritory" />
+    <result column="dimIndustry" jdbcType="VARCHAR" property="dimIndustry" />
+    <result column="dimMultiDimID" jdbcType="VARCHAR" property="dimMultiDimID" />
+    <result column="dataAreaId" jdbcType="VARCHAR" property="dataAreaId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `headerId`, `purchId`, `lineNum`, `itemId`, `purchQty`, `purchPrice`, `taxItemGroup`, 
+    `inventSerialId`, `inventSiteId`, `inventLocationId`, `wmsLocationId`, `inventTransId`, 
+    `officeCode`, `deliveryDate`, `remark`, `multiDimID`, `investmentProject`, `dimBankAccount`, 
+    `dimCustomer`, `dimVendor`, `dimEmployee`, `dimContract`, `dimDepartment`, `dimBU`, 
+    `dimProductLine`, `dimTerritory`, `dimIndustry`, `dimMultiDimID`, `dataAreaId`, `customInfo`, 
+    `createBy`, `createTime`, `updateBy`, `updateTime`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from dp_erp_purchase_order_line
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from dp_erp_purchase_order_line
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_order_line (`headerId`, `purchId`, `lineNum`, 
+      `itemId`, `purchQty`, `purchPrice`, 
+      `taxItemGroup`, `inventSerialId`, `inventSiteId`, 
+      `inventLocationId`, `wmsLocationId`, `inventTransId`, 
+      `officeCode`, `deliveryDate`, `remark`, 
+      `multiDimID`, `investmentProject`, `dimBankAccount`, 
+      `dimCustomer`, `dimVendor`, `dimEmployee`, 
+      `dimContract`, `dimDepartment`, `dimBU`, 
+      `dimProductLine`, `dimTerritory`, `dimIndustry`, 
+      `dimMultiDimID`, `dataAreaId`, `customInfo`, 
+      `createBy`, `createTime`, `updateBy`, 
+      `updateTime`)
+    values (#{headerId,jdbcType=INTEGER}, #{purchId,jdbcType=VARCHAR}, #{lineNum,jdbcType=VARCHAR}, 
+      #{itemId,jdbcType=VARCHAR}, #{purchQty,jdbcType=DECIMAL}, #{purchPrice,jdbcType=DECIMAL}, 
+      #{taxItemGroup,jdbcType=VARCHAR}, #{inventSerialId,jdbcType=VARCHAR}, #{inventSiteId,jdbcType=VARCHAR}, 
+      #{inventLocationId,jdbcType=VARCHAR}, #{wmsLocationId,jdbcType=VARCHAR}, #{inventTransId,jdbcType=VARCHAR}, 
+      #{officeCode,jdbcType=VARCHAR}, #{deliveryDate,jdbcType=DATE}, #{remark,jdbcType=VARCHAR}, 
+      #{multiDimID,jdbcType=VARCHAR}, #{investmentProject,jdbcType=VARCHAR}, #{dimBankAccount,jdbcType=VARCHAR}, 
+      #{dimCustomer,jdbcType=VARCHAR}, #{dimVendor,jdbcType=VARCHAR}, #{dimEmployee,jdbcType=VARCHAR}, 
+      #{dimContract,jdbcType=VARCHAR}, #{dimDepartment,jdbcType=VARCHAR}, #{dimBU,jdbcType=VARCHAR}, 
+      #{dimProductLine,jdbcType=VARCHAR}, #{dimTerritory,jdbcType=VARCHAR}, #{dimIndustry,jdbcType=VARCHAR}, 
+      #{dimMultiDimID,jdbcType=VARCHAR}, #{dataAreaId,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_order_line
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="headerId != null">
+        `headerId`,
+      </if>
+      <if test="purchId != null">
+        `purchId`,
+      </if>
+      <if test="lineNum != null">
+        `lineNum`,
+      </if>
+      <if test="itemId != null">
+        `itemId`,
+      </if>
+      <if test="purchQty != null">
+        `purchQty`,
+      </if>
+      <if test="purchPrice != null">
+        `purchPrice`,
+      </if>
+      <if test="taxItemGroup != null">
+        `taxItemGroup`,
+      </if>
+      <if test="inventSerialId != null">
+        `inventSerialId`,
+      </if>
+      <if test="inventSiteId != null">
+        `inventSiteId`,
+      </if>
+      <if test="inventLocationId != null">
+        `inventLocationId`,
+      </if>
+      <if test="wmsLocationId != null">
+        `wmsLocationId`,
+      </if>
+      <if test="inventTransId != null">
+        `inventTransId`,
+      </if>
+      <if test="officeCode != null">
+        `officeCode`,
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate`,
+      </if>
+      <if test="remark != null">
+        `remark`,
+      </if>
+      <if test="multiDimID != null">
+        `multiDimID`,
+      </if>
+      <if test="investmentProject != null">
+        `investmentProject`,
+      </if>
+      <if test="dimBankAccount != null">
+        `dimBankAccount`,
+      </if>
+      <if test="dimCustomer != null">
+        `dimCustomer`,
+      </if>
+      <if test="dimVendor != null">
+        `dimVendor`,
+      </if>
+      <if test="dimEmployee != null">
+        `dimEmployee`,
+      </if>
+      <if test="dimContract != null">
+        `dimContract`,
+      </if>
+      <if test="dimDepartment != null">
+        `dimDepartment`,
+      </if>
+      <if test="dimBU != null">
+        `dimBU`,
+      </if>
+      <if test="dimProductLine != null">
+        `dimProductLine`,
+      </if>
+      <if test="dimTerritory != null">
+        `dimTerritory`,
+      </if>
+      <if test="dimIndustry != null">
+        `dimIndustry`,
+      </if>
+      <if test="dimMultiDimID != null">
+        `dimMultiDimID`,
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="headerId != null">
+        #{headerId,jdbcType=INTEGER},
+      </if>
+      <if test="purchId != null">
+        #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="lineNum != null">
+        #{lineNum,jdbcType=VARCHAR},
+      </if>
+      <if test="itemId != null">
+        #{itemId,jdbcType=VARCHAR},
+      </if>
+      <if test="purchQty != null">
+        #{purchQty,jdbcType=DECIMAL},
+      </if>
+      <if test="purchPrice != null">
+        #{purchPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="taxItemGroup != null">
+        #{taxItemGroup,jdbcType=VARCHAR},
+      </if>
+      <if test="inventSerialId != null">
+        #{inventSerialId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventSiteId != null">
+        #{inventSiteId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventLocationId != null">
+        #{inventLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="wmsLocationId != null">
+        #{wmsLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventTransId != null">
+        #{inventTransId,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="multiDimID != null">
+        #{multiDimID,jdbcType=VARCHAR},
+      </if>
+      <if test="investmentProject != null">
+        #{investmentProject,jdbcType=VARCHAR},
+      </if>
+      <if test="dimBankAccount != null">
+        #{dimBankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="dimCustomer != null">
+        #{dimCustomer,jdbcType=VARCHAR},
+      </if>
+      <if test="dimVendor != null">
+        #{dimVendor,jdbcType=VARCHAR},
+      </if>
+      <if test="dimEmployee != null">
+        #{dimEmployee,jdbcType=VARCHAR},
+      </if>
+      <if test="dimContract != null">
+        #{dimContract,jdbcType=VARCHAR},
+      </if>
+      <if test="dimDepartment != null">
+        #{dimDepartment,jdbcType=VARCHAR},
+      </if>
+      <if test="dimBU != null">
+        #{dimBU,jdbcType=VARCHAR},
+      </if>
+      <if test="dimProductLine != null">
+        #{dimProductLine,jdbcType=VARCHAR},
+      </if>
+      <if test="dimTerritory != null">
+        #{dimTerritory,jdbcType=VARCHAR},
+      </if>
+      <if test="dimIndustry != null">
+        #{dimIndustry,jdbcType=VARCHAR},
+      </if>
+      <if test="dimMultiDimID != null">
+        #{dimMultiDimID,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAreaId != null">
+        #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine">
+    update dp_erp_purchase_order_line
+    <set>
+      <if test="headerId != null">
+        `headerId` = #{headerId,jdbcType=INTEGER},
+      </if>
+      <if test="purchId != null">
+        `purchId` = #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="lineNum != null">
+        `lineNum` = #{lineNum,jdbcType=VARCHAR},
+      </if>
+      <if test="itemId != null">
+        `itemId` = #{itemId,jdbcType=VARCHAR},
+      </if>
+      <if test="purchQty != null">
+        `purchQty` = #{purchQty,jdbcType=DECIMAL},
+      </if>
+      <if test="purchPrice != null">
+        `purchPrice` = #{purchPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="taxItemGroup != null">
+        `taxItemGroup` = #{taxItemGroup,jdbcType=VARCHAR},
+      </if>
+      <if test="inventSerialId != null">
+        `inventSerialId` = #{inventSerialId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventSiteId != null">
+        `inventSiteId` = #{inventSiteId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventLocationId != null">
+        `inventLocationId` = #{inventLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="wmsLocationId != null">
+        `wmsLocationId` = #{wmsLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="inventTransId != null">
+        `inventTransId` = #{inventTransId,jdbcType=VARCHAR},
+      </if>
+      <if test="officeCode != null">
+        `officeCode` = #{officeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="remark != null">
+        `remark` = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="multiDimID != null">
+        `multiDimID` = #{multiDimID,jdbcType=VARCHAR},
+      </if>
+      <if test="investmentProject != null">
+        `investmentProject` = #{investmentProject,jdbcType=VARCHAR},
+      </if>
+      <if test="dimBankAccount != null">
+        `dimBankAccount` = #{dimBankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="dimCustomer != null">
+        `dimCustomer` = #{dimCustomer,jdbcType=VARCHAR},
+      </if>
+      <if test="dimVendor != null">
+        `dimVendor` = #{dimVendor,jdbcType=VARCHAR},
+      </if>
+      <if test="dimEmployee != null">
+        `dimEmployee` = #{dimEmployee,jdbcType=VARCHAR},
+      </if>
+      <if test="dimContract != null">
+        `dimContract` = #{dimContract,jdbcType=VARCHAR},
+      </if>
+      <if test="dimDepartment != null">
+        `dimDepartment` = #{dimDepartment,jdbcType=VARCHAR},
+      </if>
+      <if test="dimBU != null">
+        `dimBU` = #{dimBU,jdbcType=VARCHAR},
+      </if>
+      <if test="dimProductLine != null">
+        `dimProductLine` = #{dimProductLine,jdbcType=VARCHAR},
+      </if>
+      <if test="dimTerritory != null">
+        `dimTerritory` = #{dimTerritory,jdbcType=VARCHAR},
+      </if>
+      <if test="dimIndustry != null">
+        `dimIndustry` = #{dimIndustry,jdbcType=VARCHAR},
+      </if>
+      <if test="dimMultiDimID != null">
+        `dimMultiDimID` = #{dimMultiDimID,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        `customInfo` = #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine">
+    update dp_erp_purchase_order_line
+    set `headerId` = #{headerId,jdbcType=INTEGER},
+      `purchId` = #{purchId,jdbcType=VARCHAR},
+      `lineNum` = #{lineNum,jdbcType=VARCHAR},
+      `itemId` = #{itemId,jdbcType=VARCHAR},
+      `purchQty` = #{purchQty,jdbcType=DECIMAL},
+      `purchPrice` = #{purchPrice,jdbcType=DECIMAL},
+      `taxItemGroup` = #{taxItemGroup,jdbcType=VARCHAR},
+      `inventSerialId` = #{inventSerialId,jdbcType=VARCHAR},
+      `inventSiteId` = #{inventSiteId,jdbcType=VARCHAR},
+      `inventLocationId` = #{inventLocationId,jdbcType=VARCHAR},
+      `wmsLocationId` = #{wmsLocationId,jdbcType=VARCHAR},
+      `inventTransId` = #{inventTransId,jdbcType=VARCHAR},
+      `officeCode` = #{officeCode,jdbcType=VARCHAR},
+      `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      `remark` = #{remark,jdbcType=VARCHAR},
+      `multiDimID` = #{multiDimID,jdbcType=VARCHAR},
+      `investmentProject` = #{investmentProject,jdbcType=VARCHAR},
+      `dimBankAccount` = #{dimBankAccount,jdbcType=VARCHAR},
+      `dimCustomer` = #{dimCustomer,jdbcType=VARCHAR},
+      `dimVendor` = #{dimVendor,jdbcType=VARCHAR},
+      `dimEmployee` = #{dimEmployee,jdbcType=VARCHAR},
+      `dimContract` = #{dimContract,jdbcType=VARCHAR},
+      `dimDepartment` = #{dimDepartment,jdbcType=VARCHAR},
+      `dimBU` = #{dimBU,jdbcType=VARCHAR},
+      `dimProductLine` = #{dimProductLine,jdbcType=VARCHAR},
+      `dimTerritory` = #{dimTerritory,jdbcType=VARCHAR},
+      `dimIndustry` = #{dimIndustry,jdbcType=VARCHAR},
+      `dimMultiDimID` = #{dimMultiDimID,jdbcType=VARCHAR},
+      `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      `customInfo` = #{customInfo,jdbcType=JSON},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+		pol.`id` = #{id, jdbcType=INTEGER} AND
+	</if>
+	<if test="headerId != null">
+		pol.`headerId` = #{headerId, jdbcType=INTEGER} AND
+	</if>
+	<if test="purchId != null and '' != purchId">
+		pol.`purchId` = #{purchId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="lineNum != null and '' != lineNum">
+		pol.`lineNum` = #{lineNum, jdbcType=VARCHAR} AND
+	</if>
+	<if test="itemId != null and '' != itemId">
+		pol.`itemId` = #{itemId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="purchQty != null">
+		pol.`purchQty` = #{purchQty, jdbcType=DECIMAL} AND
+	</if>
+	<if test="purchPrice != null">
+		pol.`purchPrice` = #{purchPrice, jdbcType=DECIMAL} AND
+	</if>
+	<if test="taxItemGroup != null and '' != taxItemGroup">
+		pol.`taxItemGroup` = #{taxItemGroup, jdbcType=VARCHAR} AND
+	</if>
+	<if test="inventSerialId != null and '' != inventSerialId">
+		pol.`inventSerialId` = #{inventSerialId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="inventSiteId != null and '' != inventSiteId">
+		pol.`inventSiteId` = #{inventSiteId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="inventLocationId != null and '' != inventLocationId">
+		pol.`inventLocationId` = #{inventLocationId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="wmsLocationId != null and '' != wmsLocationId">
+		pol.`wmsLocationId` = #{wmsLocationId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="inventTransId != null and '' != inventTransId">
+		pol.`inventTransId` = #{inventTransId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="officeCode != null and '' != officeCode">
+		pol.`officeCode` = #{officeCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="deliveryDate != null">
+		pol.`deliveryDate` = #{deliveryDate, jdbcType=DATE} AND
+	</if>
+	<if test="remark != null and '' != remark">
+		pol.`remark` = #{remark, jdbcType=VARCHAR} AND
+	</if>
+	<if test="multiDimID != null and '' != multiDimID">
+		pol.`multiDimID` = #{multiDimID, jdbcType=VARCHAR} AND
+	</if>
+	<if test="investmentProject != null and '' != investmentProject">
+		pol.`investmentProject` = #{investmentProject, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimBankAccount != null and '' != dimBankAccount">
+		pol.`dimBankAccount` = #{dimBankAccount, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimCustomer != null and '' != dimCustomer">
+		pol.`dimCustomer` = #{dimCustomer, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimVendor != null and '' != dimVendor">
+		pol.`dimVendor` = #{dimVendor, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimEmployee != null and '' != dimEmployee">
+		pol.`dimEmployee` = #{dimEmployee, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimContract != null and '' != dimContract">
+		pol.`dimContract` = #{dimContract, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimDepartment != null and '' != dimDepartment">
+		pol.`dimDepartment` = #{dimDepartment, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimBU != null and '' != dimBU">
+		pol.`dimBU` = #{dimBU, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimProductLine != null and '' != dimProductLine">
+		pol.`dimProductLine` = #{dimProductLine, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimTerritory != null and '' != dimTerritory">
+		pol.`dimTerritory` = #{dimTerritory, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimIndustry != null and '' != dimIndustry">
+		pol.`dimIndustry` = #{dimIndustry, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dimMultiDimID != null and '' != dimMultiDimID">
+		pol.`dimMultiDimID` = #{dimMultiDimID, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dataAreaId != null and '' != dataAreaId">
+		pol.`dataAreaId` = #{dataAreaId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customInfo != null">
+		pol.`customInfo` = #{customInfo, jdbcType=JSON} AND
+	</if>
+	<if test="createBy != null and '' != createBy">
+		pol.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="createTime != null">
+		pol.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		pol.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		pol.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+	
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.id != null">
+			pol.`id` = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.headerId != null">
+			pol.`headerId` = #{model.headerId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.purchId != null and '' != model.purchId">
+			pol.`purchId` = #{model.purchId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.lineNum != null and '' != model.lineNum">
+			pol.`lineNum` = #{model.lineNum, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.itemId != null and '' != model.itemId">
+			pol.`itemId` = #{model.itemId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.purchQty != null">
+			pol.`purchQty` = #{model.purchQty, jdbcType=DECIMAL} AND
+		</if>
+		<if test="model.purchPrice != null">
+			pol.`purchPrice` = #{model.purchPrice, jdbcType=DECIMAL} AND
+		</if>
+		<if test="model.taxItemGroup != null and '' != model.taxItemGroup">
+			pol.`taxItemGroup` = #{model.taxItemGroup, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.inventSerialId != null and '' != model.inventSerialId">
+			pol.`inventSerialId` = #{model.inventSerialId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.inventSiteId != null and '' != model.inventSiteId">
+			pol.`inventSiteId` = #{model.inventSiteId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.inventLocationId != null and '' != model.inventLocationId">
+			pol.`inventLocationId` = #{model.inventLocationId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.wmsLocationId != null and '' != model.wmsLocationId">
+			pol.`wmsLocationId` = #{model.wmsLocationId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.inventTransId != null and '' != model.inventTransId">
+			pol.`inventTransId` = #{model.inventTransId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.officeCode != null and '' != model.officeCode">
+			pol.`officeCode` = #{model.officeCode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.deliveryDate != null">
+			pol.`deliveryDate` = #{model.deliveryDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.remark != null and '' != model.remark">
+			pol.`remark` = #{model.remark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.multiDimID != null and '' != model.multiDimID">
+			pol.`multiDimID` = #{model.multiDimID, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.investmentProject != null and '' != model.investmentProject">
+			pol.`investmentProject` = #{model.investmentProject, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimBankAccount != null and '' != model.dimBankAccount">
+			pol.`dimBankAccount` = #{model.dimBankAccount, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimCustomer != null and '' != model.dimCustomer">
+			pol.`dimCustomer` = #{model.dimCustomer, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimVendor != null and '' != model.dimVendor">
+			pol.`dimVendor` = #{model.dimVendor, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimEmployee != null and '' != model.dimEmployee">
+			pol.`dimEmployee` = #{model.dimEmployee, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimContract != null and '' != model.dimContract">
+			pol.`dimContract` = #{model.dimContract, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimDepartment != null and '' != model.dimDepartment">
+			pol.`dimDepartment` = #{model.dimDepartment, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimBU != null and '' != model.dimBU">
+			pol.`dimBU` = #{model.dimBU, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimProductLine != null and '' != model.dimProductLine">
+			pol.`dimProductLine` = #{model.dimProductLine, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimTerritory != null and '' != model.dimTerritory">
+			pol.`dimTerritory` = #{model.dimTerritory, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimIndustry != null and '' != model.dimIndustry">
+			pol.`dimIndustry` = #{model.dimIndustry, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dimMultiDimID != null and '' != model.dimMultiDimID">
+			pol.`dimMultiDimID` = #{model.dimMultiDimID, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dataAreaId != null and '' != model.dataAreaId">
+			pol.`dataAreaId` = #{model.dataAreaId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customInfo != null">
+			pol.`customInfo` = #{model.customInfo, jdbcType=JSON} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			pol.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.createTime != null">
+			pol.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			pol.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			pol.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			pol.`purchId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`lineNum` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`itemId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`taxItemGroup` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`inventSerialId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`inventSiteId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`inventLocationId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`wmsLocationId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`inventTransId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`officeCode` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`remark` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`multiDimID` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`investmentProject` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimBankAccount` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimCustomer` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimVendor` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimEmployee` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimContract` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimDepartment` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimBU` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimProductLine` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimTerritory` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimIndustry` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dimMultiDimID` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`dataAreaId` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+			pol.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_order_line AS `pol`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseLine" resultType="long">
+    select count(1) from dp_erp_purchase_order_line AS `pol`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <!-- <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_order_line AS `pol`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from dp_erp_purchase_order_line AS `pol`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </select> -->
+</mapper>

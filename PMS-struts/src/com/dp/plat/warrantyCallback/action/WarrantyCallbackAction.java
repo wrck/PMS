@@ -141,8 +141,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
      */
     public String projectWarrantyCallback() {
         user = UserContext.getUserContext().getUser();
-        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
                 || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
@@ -190,13 +192,13 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
 			}
             // warrantyCallbackList =
             // projectService.selectProjectWarrantyCallbackVOList(projectWarrantyCallback);
-			if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
-					|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-					|| user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-					|| user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER))) {
-				projectWarrantyCallback.setAreaPower(user.getAreapower());
-				projectWarrantyCallback.setUserPower(user.getUsername());
-			}
+            if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                    || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+                    || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER))) {
+                projectWarrantyCallback.setAreaPower(user.getAreapower());
+                projectWarrantyCallback.setUserPower(user.getUsername());
+            }
             projectWarrantyCallback.setIsDelete(false);
             warrantyCallbackMapList = warrantyCallbackService.selectProjectWarrantyCallbackMapList(projectWarrantyCallback, displayParam);
         } else {
@@ -219,8 +221,12 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
         user = UserContext.getUserContext().getUser();
         if (project == null || !(user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
                 && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
-                || (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))
-                || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
+                || (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                        || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                        || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+                        || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER))
+                || (project != null && (user.getUsername().equals(project.getServiceManagerCode())
+                        || user.getUsername().equals(project.getProgramManagerCode())
                         || user.getUsername().equals(project.getProgramManagerCodeB()))))) {
             setErrmsg("没有访问权限！");
             return ERROR;
@@ -321,8 +327,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
     }
     
     public String projectWarranty() throws Exception {
-    	if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
                 || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
@@ -339,10 +347,11 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
         } else {
 	        warrantyCallbackMapList = warrantyCallbackService.selectProjectWarranty(projectWarrantyCallback, displayParam);
         }
-    	if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
-				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
-			projectWarrantyCallback.setHasPower(true);
-		}
+        if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+            projectWarrantyCallback.setHasPower(true);
+        }
     	// 办事处集合
     	departmentList = departmentManageService.queryDepartments();
     	//施工类型--服务类型
@@ -351,8 +360,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
     }
     
     public String customerProject() throws Exception {
-    	if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
                 || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
@@ -369,10 +380,11 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
         } else {
 	        warrantyCallbackMapList = warrantyCallbackService.selectCustomerProjectWarrantyCallbackStatistics(projectWarrantyCallback, displayParam);
         }
-    	if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
-				|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
-			projectWarrantyCallback.setHasPower(true);
-		}
+        if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+            projectWarrantyCallback.setHasPower(true);
+        }
     	// 办事处集合
     	departmentList = departmentManageService.queryDepartments();
     	//施工类型--服务类型

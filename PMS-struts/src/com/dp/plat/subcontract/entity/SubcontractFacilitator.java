@@ -12,16 +12,22 @@ public class SubcontractFacilitator {
     // 服务商名
     private String name;
 
+    // 服务商编号
+    private String code;
+
+    // 服务商账户
+    private String account;
+
     // 开户行信息
     private String bankInfo;
 
     // 收款账户
     private String bankAccount;
-    
+
     // 邮箱收件人
     private String receiver;
-    
-	// 邮箱地址
+
+    // 邮箱地址
     private String email;
 
     // 状态
@@ -76,6 +82,42 @@ public class SubcontractFacilitator {
     }
 
     /**
+     * 获取服务商编号
+     *
+     * @return code - 服务商编号
+     */
+    public String getCode() {
+        return code;
+    }
+
+    /**
+     * 设置服务商编号
+     *
+     * @param code 服务商编号
+     */
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    /**
+     * 获取服务商账户
+     *
+     * @return account - 服务商账户
+     */
+    public String getAccount() {
+        return account;
+    }
+
+    /**
+     * 设置服务商账户
+     *
+     * @param account 服务商账户
+     */
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    /**
      * 获取开户行信息
      *
      * @return bankInfo - 开户行信息
@@ -110,26 +152,26 @@ public class SubcontractFacilitator {
     public void setBankAccount(String bankAccount) {
         this.bankAccount = bankAccount;
     }
-    
+
     /**
      * 获取邮箱收件人
      *
      * @return receiver - 邮箱收件人
      */
     public String getReceiver() {
-		return receiver;
-	}
+        return receiver;
+    }
 
     /**
      * 设置邮箱收件人
      *
      * @param receiver 邮箱收件人
      */
-	public void setReceiver(String receiver) {
-		this.receiver = receiver;
-	}
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
+    }
 
-	/**
+    /**
      * 获取邮箱地址
      *
      * @return email - 邮箱地址

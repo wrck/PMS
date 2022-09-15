@@ -1,4 +1,14 @@
-$.namespace("router");
+$.initRouter = function(namespace) {
+	// 创建命名空间
+	var rt = $.namespace(namespace);
+	// 创建缓存命名空间
+	cachedRouters = $.namespace("cachedRouters");
+	// 延迟进行缓存
+	setTimeout(function() {
+        cachedRouters[namespace] = $.namespace(namespace);
+    }, 0);
+}
+$.initRouter("router");
 router = function(namespace) {
 	return {
 		api: (model) => {
@@ -80,7 +90,7 @@ router = function(namespace) {
 	}
 };
 
-$.namespace("router.common");
+$.initRouter("router.common");
 router.common = function(namespace) {
 	return {
 		api:((namespace) => {
@@ -139,7 +149,7 @@ router.common = function(namespace) {
 	}
 };
 
-$.namespace("pm.router");
+$.initRouter("pm.router");
 pm.router = function(model) {
 	return {
 		api: (model) => {
@@ -172,7 +182,7 @@ pm.router = function(model) {
 	}
 }();
 
-$.namespace("pm.common");
+$.initRouter("pm.common");
 pm.common = function(namespace) {
 	return router.common(namespace);
 };
@@ -180,7 +190,7 @@ pm.common = function(namespace) {
 /**
  * 项目管理
  */
-$.namespace("pm.project");
+$.initRouter("pm.project");
 pm.project = function() {
 	var namespace =  ctx + "/pm/project";
 	return {
@@ -245,11 +255,11 @@ pm.project = function() {
 /**
  * 派单管理
  */
-$.namespace("pm.dispatch");
+$.initRouter("pm.dispatch");
 pm.dispatch = function() {
 	var namespace =  ctx + "/pm/dispatch";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 				submit:() => namespace + "/submit.json",
@@ -264,41 +274,511 @@ pm.dispatch = function() {
 				},
 			};
 		})(namespace),
-		
+		callback: ((namespace) => {
+			return {
+				detail: {
+					vueCallback: function(data, $container) {
+						var _this = this;
+						var vm = _this;
+						// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
+			    		var selectedId = (data.targetValue || {}).projectIds;
+			    		var selectedText = (data.targetValue || {}).dispatchName;
+			    		var project = ((data.targetValue || {}).customInfo || {}).project || {};
+			    		$("#projectIds", $container).select2({
+			    			allowClear: true,
+			    			dropdownAutoWidth: true,
+			    			data: selectedId ? [$.extend(true, {}, project, {id: selectedId, text: selectedText})] : [],// 设置初始值
+			    			ajax: {
+			    			    url: basePath + "/pm/project/list.json",
+			    			    dataType: 'json',
+			    			    delay: 250,
+			    			    data: function (params) {
+			    			      return {
+			    			        fuzzy: params.term, // search term
+			    			        fuzzySearch: true,
+			    			        pageSize: 30,
+			    			        start: (params.page - 1) * 30 || 0
+			    			      };
+			    			    },
+			    			    processResults: function (data, params) {
+			    			      	params.page = params.page || 1;
+								  	var list = data.data || [];
+								  	var results = $.map(list, function (obj) {
+								  		obj.id = obj.id || obj.projectId;
+								  		obj.text = obj.projectName;
+									  	return obj;
+									});
+			    			      	return {
+			    			        	results: results,
+			    			        	pagination: {
+			    			          		more: (params.page * 30) < data.pageParam.filtered
+			    			       		}
+			    			      	};
+			    			    },
+			    			    cache: true
+			    			},
+			    			placeholder: '搜索项目名称',
+			    			minimumInputLength: 4,
+			    			templateResult: function(repo) {
+								if (repo.loading) {
+									return repo.text;
+								}
+								
+								var $container = $(
+									"<div class='select2-result-repository clearfix'>" +
+								      "<div class='select2-result-repository__meta'>" +
+								        "<div class='select2-result-repository__title'></div>" +
+								        "<div class='select2-result-repository__description'></div>" +
+								        "<div class='select2-result-repository__statistics'>" +
+								          "<div class='select2-result-repository__smsSubmitTime'></div>" +
+								          "<div class='select2-result-repository__smsProjectAmount'></div>" +
+								        "</div>" +
+								      "</div>" +
+								    "</div>"
+								);
+								
+								$container.find(".select2-result-repository__title").append("<div>" + repo.projectCode + "</div>");
+								$container.find(".select2-result-repository__title").append("<div>" + (repo.contractNo || "") + "</div>");
+								$container.find(".select2-result-repository__description").text(repo.projectName);
+								$container.find(".select2-result-repository__forks").append(repo.contractNo);
+								$container.find(".select2-result-repository__smsSubmitTime").append((repo.customInfo || {}).smsSubmitTime);
+								$container.find(".select2-result-repository__smsProjectAmount").append((repo.customInfo || {}).smsProjectAmount);
+								
+								return $container;
+							},
+			    			templateSelection: function(repo) {
+			        			return repo.projectName || repo.text;
+			        		}
+			    		});
+			    		/* if (projectIdsPlaceholder) {
+			    			$(".select2-selection__placeholder").css("color", 'inherit');
+			    		} */
+			    		
+			    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
+			    		$("#projectIds", $container).siblings(".select2-container").one("click", function(e) {
+			    			$("#projectIds", $container).on("change", function(e){
+			    				try{
+			    					var source = $(this).select2("data");
+			    					console.log(source);
+			    					if (source.length > 0) {
+			    						source = source[0];
+			    					} else {
+			    						source = {};
+			    					}
+			    					var targetValue = vm._data.targetValue || {};
+			    					var customInfo = targetValue.customInfo || {};
+			    					targetValue.projectName = source.projectName;
+			    					targetValue.dispatchName = source.projectName;
+			    					targetValue.smsProjectCode = source.smsProjectCode || (source.customInfo || {}).smsProjectCode;
+			    					targetValue.smsSubmitTime = source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime;
+			    					targetValue.smsProjectAmount = source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount;
+			    					targetValue.smsAfProjectAmount = source.smsAfProjectAmount || (source.customInfo || {}).smsAfProjectAmount;
+			    					
+			    					targetValue.customInfo = customInfo;
+					    			targetValue.customInfo.project = source;
+					    			targetValue.customInfo.projectIds = source.projectId;
+					    			targetValue.customInfo.project.projectId = source.projectId;
+					    			vm._data.targetValue = targetValue;
+					    			
+			    					/* $("#projectName", $container).val(source.projectName);
+			    					$("#dispatchName", $container).val(source.projectName);
+				    				$("#smsProjectCode", $container).val(source.smsProjectCode || (source.customInfo || {}).smsProjectCode);
+					    			$("#smsSubmitTime", $container).val(source.smsSubmitTime || (source.customInfo || {}).smsSubmitTime);
+					    			$("#smsProjectAmount", $container).val(source.smsProjectAmount || (source.customInfo || {}).smsProjectAmount);
+					    			$("#smsAfProjectAmount", $container).val(source.smsAfProjectAmount || (source.customInfo || {}).smsAfProjectAmount); */
+				    			} catch(e){}
+			    			});
+			    		});
+			    		// 检查是否已派单
+			    		if (!_this.checkDispatched) {
+			    			_this.checkDispatched = $router.methods.checkDispatched;
+			    		}
+			    		_this.checkDispatched.call(_this, data, $container);
+					},
+					modalCreateCallback: function(options) {
+						console.log("modalCreateCallback");
+						var winId = options.winId;
+        				if (!$("#" + winId).length) {
+        					winId = $(this).parents(".modal.in:first").attr("id");
+        				}
+						modals.removeData(winId);
+        				$("#" + winId).modal({ 
+							remote: options.url
+						});
+					},
+					shouldHideWin: function() {
+						return false;
+					}
+				}
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && !isNaN(data.status) && data.progress == 100;
+				return canStart;
+			},
+			startProcess: function(el, data, callback, ignoreForm) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "QualityApproveTrack",
+					objId: data.projectId,
+					objType: 'project',
+					dataId: data.taskId,
+					dataType: "projectTask"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
+			},
+			checkDispatched: function(data, $container) {
+				var _this = this;
+    			// 如果已经派单则不允许修改项目和服务商
+	    		var isDispatched = (data.targetValue || {}).dispatched;
+	    		var dispatchType = (data.targetValue || {}).type;
+	    		console.log("checkDispatched", isDispatched);
+	    		if (isDispatched == true) {
+	    			$("#projectIds", $container).attr("disabled", true);
+	    			/*$("#dispatchType", $container).attr("disabled", true);
+	    			$("#profitDepCode", $container).attr("disabled", true);
+	    			$("#dispatchAmount", $container).attr("disabled", true);*/
+	    			$("#facilitatorId", $container).attr("disabled", true);
+	    			$("#dispatchSeq", $container).attr("disabled", true);
+	    			if (dispatchType == 'frameworkAgreement') {
+		    			$("#dispatchNo", $container).attr("disabled", true);
+	    			} else {
+	    				$("#dispatchNo", $container).attr("disabled", false);
+	    			}
+	    		}
+	    		if (!_this.changeFacilitator && $router.methods.changeFacilitator) {
+	    			_this.changeFacilitator = function(e) {
+	    				$router.methods.changeFacilitator.call(this, e, $container);
+	    			}
+	    		}
+	    		var changeFacilitator = _this.changeFacilitator;
+	    		$($container).off("change", "#facilitatorId", changeFacilitator);
+	    		if ((data.targetValue || {}).facilitatorId && !isDispatched) {
+		    		//$($container).one("change", "#facilitatorId", changeFacilitator);
+		    		$($container).on("change", "#facilitatorId", changeFacilitator);
+	    		} else {
+	    			$($container).one("click", "#facilitatorId~.select2-container", function(e) {
+	 					$("#facilitatorId", $container).on("change", changeFacilitator)
+		    		});
+	    		}
+    		},
+    		changeFacilitator: function(e, $container) {
+    			console.log("changeFacilitator");
+    			var $this = $(this);
+				var source = $this.select2('data');
+    			if (source.length > 0) {
+    				source = source[0]; 
+   				} else {
+   					source = {}; 
+ 				}
+    			var element = source.element;
+				var source = $(element).data("source") || source.source || source || {};
+				var oldCode = $("#facilitatorCode", $container).val();
+				$("#facilitatorCode", $container).val(source.code);
+    			$("#facilitatorName", $container).val(source.name);
+    			$("#bankInfo", $container).val(source.bankInfo);
+    			$("#bankAccount", $container).val(source.bankAccount);
+    			
+   				var render = function(data) {
+   					console.log("changeFacilitatorRender", data);
+    				var placeholder = $("#dispatchSeq", $container).data("placeholder") || $("#dispatchSeq", $container).attr("placeholder");
+    				var newPlaceholder = data.dispatchSeq || placeholder;
+    				$("#dispatchSeq", $container).data("placeholder", placeholder);
+    				$("#dispatchSeq", $container).attr("placeholder", newPlaceholder);
+    				var dispatchSeq = $("#dispatchSeq", $container).val();
+    				if (dispatchSeq != newPlaceholder) {
+    					$("#dispatchSeq", $container).val("");
+    				} else {
+	    				//$("#dispatchSeq", $container).val(newPlaceholder == dispatchSeq ? dispatchSeq : "");
+    				}
+    				
+    				var dispatchNoPlaceholder = $("#dispatchNo", $container).data("placeholder") || $("#dispatchNo", $container).attr("placeholder");
+    				var newdispatchNoPlaceholder = data.dispatchNo || dispatchNoPlaceholder;
+    				$("#dispatchNo", $container).data("placeholder", dispatchNoPlaceholder);
+    				$("#dispatchNo", $container).attr("placeholder", data.dispatchNo || dispatchNoPlaceholder);
+    				var dispatchNo = $("#dispatchNo", $container).val();
+    				if (dispatchNo != newdispatchNoPlaceholder) {
+    					$("#dispatchNo", $container).val("");
+    				} else {
+	    				//$("#dispatchNo", $container).val(newdispatchNoPlaceholder == dispatchNo ? dispatchNo : "");
+    				}
+   				};
+    			if (source.code) {
+    				ajaxGet($router.api.generateDispatchSeq(), {facilitatorCode: source.code}, render);
+    			} else if (source.selected) {// 选择空项时
+    				render({});
+    			} else {// 初始化时
+    				render({
+    					dispatchSeq: $("#dispatchSeq", $container).val() || "",
+    					dispatchNo: $("#dispatchNo", $container).val() || "",
+   					});
+    			}
+    		}
+		}
 	});
+	return $router;
 }();
 
 /**
  * 结算管理
  */
-$.namespace("pm.settlement");
+$.initRouter("pm.settlement");
 pm.settlement = function() {
 	var namespace =  ctx + "/pm/settlement";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
+				submit:() => namespace + "/submit.json",
+				generateSettleSeq:()=> namespace + "/generateSettleSeq.json"
 			};
 		})(namespace),
 		html: ((namespace) => {
 			return {
+				detail: (settleId, isModals, row) => {
+					var rowId = row ? row.id : settleId;
+	                var url = null;
+	                if (!rowId) {
+	                 	var dispatch = row.dispatch || {};
+	                 	var dispatchId = dispatch.id || row.dispatchId || "";
+	                 	url = commonRouter.html.create($.param({dispatchId}), isModals);
+	                } else {
+	                 	url = commonRouter.html.detail(rowId, isModals);
+	                }
+	                return url;
+				},
 				exportProjectInfo: (settleId, exportType) => {
 					var exportType = exportType || "doc";
 					return namespace + "/" + settleId + "/projectInfoDoc.html";
 				},
 			};
 		})(namespace),
+		callback: ((namespace) => {
+			return {
+				list: {
+					vueCallback: function(dataTable, $container) {
+						// 添加Excel导出按钮
+						var config = dataTable.config || {};
+						config.exportData = {
+		                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+		                	fileName: "外派结算",
+		                	type: ["excel"]
+		                };
+						dataTable.config = config;
+						dataTable.exportData = config.exportData;
+						dataTable.exporting = true;
+					}
+				},
+				detail: {
+					vueCallback: function(data, $container) {
+						var _this = this;
+						var vm = _this;
+						var search = vm.pathSearch || '';
+						// 服务商Select2初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的服务商信息
+			    		var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
+			    		var selectedId = (data.targetValue || {}).dispatchId;
+			    		//var selectedText = (data.targetValue || {}).dispatchSeq;
+			    		var selectedText = ((data.targetValue || {}).dispatch || {}).dispatchNo;
+			    		$("#dispatchId", $container).select2({
+		    			    dataAdapter: dataCacheAdapter,// 数据分页缓存适配器，在base-form中定义
+			    			allowClear: true,
+			    			dropdownAutoWidth:true,
+			    			data: selectedId ? [$.extend({id: selectedId, text: selectedText}, data.targetValue.dispatch)] : [],// 设置初始值
+			    			ajax: {
+			    			    url: basePath + "/pm/dispatch/listWithSettleInfo.json?" + search,
+			    			    dataType: 'json',
+			    			    delay: 250,
+			    			    data: function (params) {
+			    			    	params.pageSize = 10;
+				    			    return {
+				    			    	// search term
+				    			        //dispatchSeq: params.term,
+				    			        dispatchNo: params.term,
+				    			        fuzzySearch: true,
+				    			        pageSize: params.pageSize || 10,
+				    			        start: (params.page - 1) * params.pageSize || 0
+				    			    };
+			    			    },
+			    			    processResults: function (data, params) {
+			    			      	params.page = params.page || 1;
+								  	var list = data.data || [];
+								  	var results = $.map(list, function (obj) {
+								  		obj.id = obj.id;
+								  		//obj.text = obj.dispatchSeq;
+								  		obj.text = obj.dispatchNo;
+									  	return obj;
+									});
+			    			      	return {
+			    			        	results: results,
+			    			        	pagination: {
+			    			          		more: (params.page * (params.pageSize || 10)) < data.pageParam.filtered
+			    			       		}
+			    			      	};
+			    			    },
+			    			    cache: true
+			    			},
+			    			//placeholder: '搜索派单编号',
+			    			placeholder: '搜索转包合同号',
+			    			minimumInputLength: 4,
+			    			templateResult: function(repo) {
+			    				if (repo.loading) {
+									return repo.text;
+								}
+								
+								var $container = $(
+									"<div class='select2-result-repository clearfix'>" +
+								      "<div class='select2-result-repository__meta'>" +
+								        "<div class='select2-result-repository__title'></div>" +
+								        "<div class='select2-result-repository__description'></div>" +
+								        "<div class='select2-result-repository__statistics'>" +
+								          "<div class='select2-result-repository__smsSubmitTime'></div>" +
+								          "<div class='select2-result-repository__smsProjectAmount'></div>" +
+								        "</div>" +
+								      "</div>" +
+								    "</div>"
+								);
+								
+								$container.find(".select2-result-repository__title").append("<div style='margin-right:1rem'>" + repo.dispatchSeq + "</div>");
+								$container.find(".select2-result-repository__title").append("<div>" + (repo.dispatchNo || "") + "</div>");
+								$container.find(".select2-result-repository__description").text(repo.smsProjectName || repo.dispatchName);
+								$container.find(".select2-result-repository__smsSubmitTime").append(repo.smsSubmitTime || (repo.customInfo || {}).smsSubmitTime);
+								$container.find(".select2-result-repository__smsProjectAmount").append(repo.smsProjectAmount || (repo.customInfo || {}).smsProjectAmount);
+								
+								return $container;
+			    			},
+			    			templateSelection: function(repo) {
+		    	    			return repo.projectName || repo.text;
+		    	    		},
+			    		});
+			    		/* if (dispatchIdPlaceholder) {
+			    			$(".select2-selection__placeholder").css("color", 'inherit');
+			    		} */
+			    		
+			    		if (!_this.generateSettleSeq && $router.methods.generateSettleSeq) {
+			    			_this.generateSettleSeq = function(e) {
+			    				$router.methods.generateSettleSeq.call(this, e, $container);
+			    			}
+			    		}
+			    		var generateSettleSeq = _this.generateSettleSeq;
+			    		// 项目名称初始化完成之后，添加change事件，避免直接添加change事件，无法获取原始保存的信息
+			    		$("#dispatchId", $container).siblings(".select2-container").one("click", function(e) {
+			    			$("#dispatchId", $container).on("change", function(e){
+			    				try{
+			    					var source = $(this).select2("data");
+			    					if (source.length > 0) {
+			    						source = source[0];
+			    					} else {
+			    						source = {};
+			    					}
+			    					console.log(source, this.value);
+			    					/* $("#smsProjectName", $container).val(source.smsProjectName || source.dispatchName);
+			    					$("#contractNos", $container).val(source.contractNos);
+			    					$("#dispatchSeq", $container).val(source.dispatchSeq);
+				    				$("#smsProjectCode", $container).val(source.smsProjectCode);
+				    				$("#smsOrderExecNumber", $container).val(source.smsOrderExecNumber || (source.customInfo || {}).smsOrderExecNumber);
+					    			$("#smsSubmitTime", $container).val(source.smsSubmitTime);
+					    			$("#smsProjectAmount", $container).val(source.smsProjectAmount); */
+					    			var targetValue = vm._data.targetValue || {};
+					    			targetValue.dispatch = source;
+					    			targetValue.dispatchId = source.id;
+					    			targetValue.dispatchSeq = source.dispatchSeq;
+					    			targetValue.dispatch.dispatchNo = source.dispatchNo;
+					    			
+					    			/* var customInfo = source.customInfo || {};
+					    			targetValue.dispatch.customInfo = customInfo;
+					    			targetValue.dispatch.customInfo.projectProgress = (source.customInfo || {}).projectProgress; */
+					    			vm._data.targetValue = targetValue;
+					    			
+					    			// 生成结算编号
+					    			generateSettleSeq();
+				    			} catch(e){}
+			    			});
+			    		});
+			    		// 绑定当次付款比例、当次付款金额的change事件，生成结算编号
+			    		$("#ratio,#amount", $container).change(generateSettleSeq);
+					},
+					modalCreateCallback: function(options) {
+						console.log("modalCreateCallback");
+						var winId = options.winId;
+        				if (!$("#" + winId).length) {
+        					winId = $(this).parents(".modal.in:first").attr("id");
+        				}
+						modals.removeData(winId);
+        				$("#" + winId).modal({ 
+							remote: options.url
+						});
+					},
+					shouldHideWin: function() {
+						return false;
+					}
+				}
+			};
+		})(namespace),
+		methods: {
+			canStartProcess: function(data) {
+				var hasTask = !!(data.customInfo || {}).currentTaskId;
+				var canStart = !hasTask && data.id > 0 && !data.settled;
+				return canStart;
+			},
+			startProcess: function(el, data, callback, ignoreForm) {
+				var _this = this;
+				data = data || $(el).data("entity");
+		    	if (!data) {
+		        	return false;
+		    	}
+		    	try {
+		    		data = JSON.parse(data.replace(/'/g, '"'));
+		    	} catch(e) {}
+		    	
+				var entity = {
+					processKey: "SubcontractInspection",
+					objId: data.dispatchId,
+					objType: 'dispatch',
+					dataId: data.id,
+					dataType: "settlement"
+	            };
+				sys.common.startProcess.call(this, el, entity, callback, ignoreForm);
+			},
+			generateSettleSeq(e, $container) {
+    			var dispatchSeq = $("#dispatchSeq", $container).val();
+    			var smsProjectName = $("#smsProjectName", $container).val();
+    			var ratio = Number($.trim($("#ratio", $container).val()).replace("%", ""));
+    			var amount = $("#amount", $container).val();
+    			
+    			$("#ratio", $container).val(ratio);
+    			
+    			if ($(this)[0] == $("#ratio", $container)[0]) {
+    				var dispatchAmount = Number($.trim($("#dispatchAmount").val()).replace(",", "")) || 0;
+       				amount = (dispatchAmount * ratio / 100).toFixed(2);
+       				$("#amount", $container).val(amount);
+    			}
+   				
+    			var settleSeq = [dispatchSeq, smsProjectName, ratio, amount];
+    			$("#settleSeq", $container).val(settleSeq.join("-"));
+    		}
+		},
 	});
+	return $router;
 }();
 
 /**
  * 人员管理
  */
-$.namespace("pm.projectTask");
+$.initRouter("pm.projectTask");
 pm.projectTask = function() {
 	var namespace =  ctx + "/pm/project/task";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -368,16 +848,17 @@ pm.projectTask = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 人员管理
  */
-$.namespace("pm.projectMember");
+$.initRouter("pm.projectMember");
 pm.projectMember = function() {
 	var namespace =  ctx + "/pm/member";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -387,16 +868,17 @@ pm.projectMember = function() {
 			};
 		})(namespace),
 	});
+	return $router;
 }();
 
 /**
  * 行业资产
  */
-$.namespace("af.industryAsset");
+$.initRouter("af.industryAsset");
 af.industryAsset = function() {
 	var namespace =  ctx + "/af/industry/asset";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -432,16 +914,17 @@ af.industryAsset = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 行业漏洞
  */
-$.namespace("af.industryLeak");
+$.initRouter("af.industryLeak");
 af.industryLeak = function() {
 	var namespace =  ctx + "/af/industry/leak";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -477,16 +960,17 @@ af.industryLeak = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 项目资产
  */
-$.namespace("pm.projectAsset");
+$.initRouter("pm.projectAsset");
 pm.projectAsset = function() {
 	var namespace =  ctx + "/pm/project/asset";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -522,16 +1006,17 @@ pm.projectAsset = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 项目资产
  */
-$.namespace("af.industryWarningAsset");
+$.initRouter("af.industryWarningAsset");
 af.industryWarningAsset = function() {
 	var namespace =  ctx + "/af/industry/warning/asset";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -551,16 +1036,17 @@ af.industryWarningAsset = function() {
 			};
 		})(namespace),
 	});
+	return $router;
 }();
 
 /**
  * 项目资产漏洞
  */
-$.namespace("pm.assetLeak");
+$.initRouter("pm.assetLeak");
 pm.assetLeak = function() {
 	var namespace =  ctx + "/pm/asset/leak";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -693,16 +1179,17 @@ pm.assetLeak = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 工作日报
  */
-$.namespace("pm.dailyReport");
+$.initRouter("pm.dailyReport");
 pm.dailyReport = function() {
 	var namespace =  ctx + "/pm/daily/report";
-	var rt = pm.common(namespace);
-	return $.extend(true, {}, rt, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 				mailSelect: (mailType, search) => namespace + "/mail/" + mailType + "/select.json" + (search ? "?" + search : "").replace("??", "?"),
@@ -879,21 +1366,6 @@ pm.dailyReport = function() {
 							}
 							 
 						});
-//			    		ajaxGet(pm.router.api("projectAsset").list(), {projectId}, function(data) {
-//			    			var list = data.data || [];
-//			    			var results = $.map(list, function (obj) {
-//			    				obj.id = obj.assetId;
-//			    				obj.text = obj.assetName;
-//			    				return obj;
-//			    			});
-//			    			$("#assetIds", $container).select2({
-//			    				multiple: true,
-//			    				allowClear: true,
-//			    				dropdownAutoWidth:true,
-//			    				data: results,// 设置初始值
-//			    				placeholder: '搜索项目资产名'
-//			    			})
-//			    		});
 						var projectName = (data.targetValue || {}).projectName;
 						var selectedId = (data.targetValue || {}).projectId;
 			    		//var dataCacheAdapter = $.fn.select2.amd.require('select2/data/dataCacheAdapter');
@@ -1018,8 +1490,15 @@ pm.dailyReport = function() {
 					    			$("#contractNo", $container).val(source.contractNo || "");
 					    			$("#projectType", $container).val(source.projectType || $("#projectType", $container).val()).trigger("change");
 					    			$("#officeCode", $container).val(source.column001 || $("#officeCode", $container).val()).trigger("change");
-					    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || "").trigger("change");
-					    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || "").trigger("change");
+					    			var programManagerCode = "";
+					    			var programManagerName = "";
+					    			// 当初始化时，返回已填内容，如果是选择变更，这更新为项目对应的内容
+					    			if (!this.value) {
+					    				programManagerCode = $("#programManagerCode", $container).val();
+					    				programManagerName = $("#programManagerName", $container).val();
+					    			}
+					    			$("#programManagerCode", $container).val((source.customInfo || {}).programManagerCode || programManagerCode).trigger("change");
+					    			$("#programManagerName", $container).val((source.customInfo || {}).programManagerCodeforjson || programManagerName).trigger("change");
 				    			} catch(e){}
 			    			}
 				    		$("#projectId", $container).siblings(".select2-container").one("click", function(e) {
@@ -1158,16 +1637,17 @@ pm.dailyReport = function() {
 			}
 		}
 	});
+	return $router;
 }();
 
 /**
  * 服务商管理
  */
-$.namespace("pm.facilitator");
+$.initRouter("pm.facilitator");
 pm.facilitator = function() {
 	var namespace =  ctx + "/pm/facilitator";
-	var rt = pm.common(namespace);
-	return $.extend(true, {}, rt, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 			};
@@ -1214,17 +1694,18 @@ pm.facilitator = function() {
 				},
 			}
 		})(namespace),
-	})
+	});
+	return $router;
 }();
 
 /**
  * 流程
  */
-$.namespace("workflow");
+$.initRouter("workflow");
 workflow = function() {
 	var namespace =  ctx + "/workflow";
-	var router = pm.common(namespace);
-	return $.extend(true, {}, router, {
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
 		api:((namespace) => {
 			return {
 				startProcess: () => namespace + "/startProcess.json",
@@ -1239,8 +1720,39 @@ workflow = function() {
 			};
 		})(namespace),
 		callback: ((namespace) => {
+			return {
+				detail: {
+					vueCallback: function(data, $container) {
+						var _this = this;
+						var vm = _this;
+						var targetObjType = (data.workflow || {}).objType;
+						var targetModel = (data.workflow || {}).dataType;
+						var targetRouter = null;
+						for (var namespace in cachedRouters) {
+							var regex = new RegExp("\\b" + targetModel + "\\b");
+							if (regex.test(namespace)) {
+								targetRouter = cachedRouters[namespace];
+								break;
+							}
+						}
+						var vueCallback = null;
+						if (targetRouter) {
+							vueCallback = (targetRouter.callback.detail || {}).vueCallback;
+						} else {
+							var urlNamespace =  _this.urlNamespace;
+							if (router(urlNamespace).callback(targetModel).detail) {
+								vueCallback = (router(urlNamespace).callback(targetModel).detail || {}).vueCallback;
+							}
+						}
+						if (typeof vueCallback == 'function') {
+							vueCallback.call(_this, data, $("#taskEntityFormDiv"));
+						}
+					}
+				}
+			}
 		})(namespace),
 	});
+	return $router;
 }();
 
 router.getDownload = function(url, isInner) {

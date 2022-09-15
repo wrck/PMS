@@ -62,6 +62,11 @@
 	<select id="clearSyncState">
 		truncate table t_sync_state
 	</select>
+	
+	<select id="deleteSyncState" parameterType="string" resultType="map">
+        delete from t_sync_state
+        where tableObject = #{tableObject}
+    </select>
 
 	<insert id="insertSyncLog" parameterType="com.dp.plat.core.pojo.SyncLog">
 		insert into t_sync_log

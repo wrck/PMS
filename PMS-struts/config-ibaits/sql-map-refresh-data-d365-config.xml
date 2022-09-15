@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+    <select id="selectOrderInfoFromD365" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT * from DPtech_V_SO_SALES_ORDER_4_PMS 
+        ]]>
+    </select>
+    <insert id="insertOrderInfoFromD365" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO `pm_order_data_from_erp_d365`( orderNumber ,contractNo , orderExecNumber , orderCreateTime ,customerRequireTime ,
+             customerCode ,customerName,projectName,orderComment,orderType, compCode, salesType, customInfo) values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderCreateTime#,#list[].customerRequireTime#,
+              #list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#list[].orderType#, #list[].compCode#,
+              #list[].salesType#, #list[].customInfo#
+            )
+        </iterate>
+    </insert>
+    <delete id="deleteOrderInfoFromD365" >
+        truncate table pm_order_data_from_erp_d365
+    </delete>
+    <select id="selectOrderLineFromD365" resultClass="java.util.HashMap">
+        SELECT * from DPtech_V_SO_SALES_LINE_4_PMS 
+    </select>
+    <insert id="insertOrderLineFromD365" parameterClass="java.util.Map">
+        INSERT INTO `pm_order_line_from_erp_d365`(orderNumber ,lineNum ,itemCode ,itemDesc ,
+            orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType, compCode, profitCenter, realOrderExecNumber, customInfo) values
+        <iterate conjunction="," property="list">
+        (
+            #list[].orderNumber#,#list[].lineNum#,#list[].itemCode#,#list[].itemDesc#,
+            #list[].orderQuantity#,#list[].openQuantity#,#list[].bundleCode#,#list[].warrantyMonth#,
+            #list[].lineType#, #list[].compCode#, #list[].profitCenter#, #list[].realOrderExecNumber#,
+            #list[].customInfo#
+        )
+        </iterate>
+    </insert>
+    <delete id="deleteOrderLineFromD365" >
+        truncate table pm_order_line_from_erp_d365
+    </delete>
+</sqlMap>

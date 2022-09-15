@@ -6,6 +6,7 @@
     <result column="compCode" jdbcType="VARCHAR" property="compCode" />
     <result column="compName" jdbcType="VARCHAR" property="compName" />
     <result column="compAbbr" jdbcType="VARCHAR" property="compAbbr" />
+    <result column="compAccount" jdbcType="VARCHAR" property="compAccount" />
     <result column="adminID" jdbcType="INTEGER" property="adminID" />
     <result column="compGrade" jdbcType="INTEGER" property="compGrade" />
     <result column="lawyer" jdbcType="VARCHAR" property="lawyer" />
@@ -26,7 +27,7 @@
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, compCode, compName, compAbbr, adminID, compGrade, lawyer, address, regAddress, 
+    id, compCode, compName, compAbbr, compAccount, adminID, compGrade, lawyer, address, regAddress, 
     tel, fax, postCode, webSite, state, effectiveFrom, effectiveTo, disabledTime, remark, 
     createBy, createTime, updateBy, updateTime
   </sql>
@@ -44,7 +45,7 @@
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into t_company (compCode, compName, compAbbr, 
+    insert into t_company (compCode, compName, compAbbr, compAccount, 
       adminID, compGrade, lawyer, 
       address, regAddress, tel, 
       fax, postCode, webSite, 
@@ -52,7 +53,7 @@
       disabledTime, remark, createBy, 
       createTime, updateBy, updateTime
       )
-    values (#{compCode,jdbcType=VARCHAR}, #{compName,jdbcType=VARCHAR}, #{compAbbr,jdbcType=VARCHAR}, 
+    values (#{compCode,jdbcType=VARCHAR}, #{compName,jdbcType=VARCHAR}, #{compAbbr,jdbcType=VARCHAR}, #{compAccount,jdbcType=VARCHAR}, 
       #{adminID,jdbcType=INTEGER}, #{compGrade,jdbcType=INTEGER}, #{lawyer,jdbcType=VARCHAR}, 
       #{address,jdbcType=VARCHAR}, #{regAddress,jdbcType=VARCHAR}, #{tel,jdbcType=VARCHAR}, 
       #{fax,jdbcType=VARCHAR}, #{postCode,jdbcType=VARCHAR}, #{webSite,jdbcType=VARCHAR}, 
@@ -75,6 +76,9 @@
       </if>
       <if test="compAbbr != null">
         compAbbr,
+      </if>
+      <if test="compAccount != null">
+        compAccount,
       </if>
       <if test="adminID != null">
         adminID,
@@ -140,6 +144,9 @@
       </if>
       <if test="compAbbr != null">
         #{compAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="compAccount != null">
+        #{compAccount,jdbcType=VARCHAR},
       </if>
       <if test="adminID != null">
         #{adminID,jdbcType=INTEGER},
@@ -209,6 +216,9 @@
       <if test="compAbbr != null">
         compAbbr = #{compAbbr,jdbcType=VARCHAR},
       </if>
+      <if test="compAccount != null">
+        compAccount = #{compAccount,jdbcType=VARCHAR},
+      </if>
       <if test="adminID != null">
         adminID = #{adminID,jdbcType=INTEGER},
       </if>
@@ -271,6 +281,7 @@
     set compCode = #{compCode,jdbcType=VARCHAR},
       compName = #{compName,jdbcType=VARCHAR},
       compAbbr = #{compAbbr,jdbcType=VARCHAR},
+      compAccount = #{compAccount,jdbcType=VARCHAR},
       adminID = #{adminID,jdbcType=INTEGER},
       compGrade = #{compGrade,jdbcType=INTEGER},
       lawyer = #{lawyer,jdbcType=VARCHAR},
@@ -307,6 +318,9 @@
 			<if test="compAbbr != null and '' != compAbbr">
 				compAbbr = #{compAbbr, jdbcType=VARCHAR} AND
 			</if>
+			<if test="compAccount != null and '' != compAccount">
+                compAccount = #{compAccount, jdbcType=VARCHAR} AND
+            </if>
 			<if test="adminID != null and '' != adminID">
 				adminID = #{adminID, jdbcType=INTEGER} AND
 			</if>
@@ -380,6 +394,9 @@
 			<if test="compAbbr != null and '' != compAbbr">
 				compAbbr = #{compAbbr, jdbcType=VARCHAR} AND
 			</if>
+			<if test="compAccount != null and '' != compAccount">
+                compAccount = #{compAccount, jdbcType=VARCHAR} AND
+            </if>
 			<if test="adminID != null and '' != adminID">
 				adminID = #{adminID, jdbcType=INTEGER} AND
 			</if>
@@ -454,6 +471,9 @@
 				<if test="model.compAbbr != null and '' != model.compAbbr">
 					compAbbr = #{model.compAbbr, jdbcType=VARCHAR} AND
 				</if>
+				<if test="model.compAccount != null and '' != model.compAccount">
+                    compAccount = #{model.compAccount, jdbcType=VARCHAR} AND
+                </if>
 				<if test="model.adminID != null and '' != model.adminID">
 					adminID = #{model.adminID, jdbcType=INTEGER} AND
 				</if>
@@ -514,6 +534,7 @@
 					compCode like CONCAT("%", #{fuzzy}, "%") or
 					compName like CONCAT("%", #{fuzzy}, "%") or
 					compAbbr like CONCAT("%", #{fuzzy}, "%") or
+					compAccount like CONCAT("%", #{fuzzy}, "%") or
 					lawyer like CONCAT("%", #{fuzzy}, "%") or
 					address like CONCAT("%", #{fuzzy}, "%") or
 					regAddress like CONCAT("%", #{fuzzy}, "%") or
@@ -555,6 +576,9 @@
 				<if test="model.compAbbr != null and '' != model.compAbbr">
 					compAbbr = #{model.compAbbr, jdbcType=VARCHAR} AND
 				</if>
+				<if test="model.compAccount != null and '' != model.compAccount">
+                    compAccount = #{model.compAccount, jdbcType=VARCHAR} AND
+                </if>
 				<if test="model.adminID != null and '' != model.adminID">
 					adminID = #{model.adminID, jdbcType=INTEGER} AND
 				</if>
@@ -615,6 +639,7 @@
 					compCode like CONCAT("%", #{fuzzy}, "%") or
 					compName like CONCAT("%", #{fuzzy}, "%") or
 					compAbbr like CONCAT("%", #{fuzzy}, "%") or
+					compAccount like CONCAT("%", #{fuzzy}, "%") or
 					lawyer like CONCAT("%", #{fuzzy}, "%") or
 					address like CONCAT("%", #{fuzzy}, "%") or
 					regAddress like CONCAT("%", #{fuzzy}, "%") or

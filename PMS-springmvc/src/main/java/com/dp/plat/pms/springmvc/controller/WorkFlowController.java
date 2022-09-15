@@ -23,6 +23,7 @@ import org.activiti.engine.task.TaskInfo;
 import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.collections.BeanMap;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,6 +38,7 @@ import com.dp.plat.activiti.service.impl.RuntimePageService;
 import com.dp.plat.activiti.vo.ActivityVo;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.exception.CustomExceptionInterface;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.User;
@@ -48,10 +50,11 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
-import com.dp.plat.pms.springmvc.entity.IndustryAsset;
-import com.dp.plat.pms.springmvc.entity.IndustryLeak;
+import com.dp.plat.pms.springmvc.entity.DispatchProject;
+import com.dp.plat.pms.springmvc.entity.DispatchSettlement;
 import com.dp.plat.pms.springmvc.entity.PmWorkFlow;
-import com.dp.plat.pms.springmvc.entity.ProjectTask;
+import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
+import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.service.IIndustryAssetService;
 import com.dp.plat.pms.springmvc.service.IIndustryLeakService;
 import com.dp.plat.pms.springmvc.service.IPmWorkFlowService;
@@ -59,6 +62,7 @@ import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.service.IProjectTaskService;
 import com.dp.plat.pms.springmvc.vo.PmWorkFlowVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.pms.springmvc.vo.SettlementVO;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.WORKFLOW_MANAGER)
@@ -93,6 +97,12 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 
 	@Autowired
 	private IIndustryLeakService industryLeakService;
+	
+	@Autowired
+	private IDispatchProjectService dispatchProjectService;
+
+	@Autowired
+	private IDispatchSettlementService dispatchSettlementService;
 
 	@PostConstruct
 	private void init() {
@@ -279,7 +289,8 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			}
 			model.addAttribute("hideEntity", hideEntity);
 
-			PmWorkFlow v = new PmWorkFlow();
+			//PmWorkFlow v = new PmWorkFlow();
+			PmWorkFlow v = pmWorkFlow;
 			v.setTaskId(task.getId());
 			v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
 			v.setTaskKey(task.getTaskDefinitionKey());
@@ -349,8 +360,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 		// return;
 		// }
 		// 考虑存在候选任务的办理问题
-		Task task = taskService.createTaskQuery().taskId(taskId)
-				.taskCandidateOrAssigned(String.valueOf(user.getUserCustom4())).singleResult();
+		Task task = taskService.createTaskQuery().taskId(taskId).taskCandidateOrAssigned(String.valueOf(user.getUserCustom4())).singleResult();
 		if (task == null) {
 			return;
 		}
@@ -384,7 +394,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			Exception ee = e;
 			while (ee.getCause() != null) {
 				ee = (Exception) ee.getCause();
-				if (ee instanceof CustomActivitiException || e.getClass().equals(Exception.class)) {
+				if (ee instanceof CustomActivitiException || ee instanceof CustomExceptionInterface || ee.getClass().getSimpleName().equalsIgnoreCase("CustomRuntimeException") || e.getClass().equals(Exception.class)) {
 					errorMsg = ee.getMessage();
 					break;
 				}
@@ -578,6 +588,39 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 					entity = industryAssetService.selectByPrimaryKey(dataId);
 				} else if (DataType.INDUSTRY_LEAK.equals(dataType)) {
 					entity = industryLeakService.selectByPrimaryKey(dataId);
+				}
+				if (entity != null) {
+					pmWorkFlowService.startProcess(pmWorkFlow, entity);
+					model.addAttribute("currentTaskId", pmWorkFlow.getTaskId());
+					model.addAttribute("currentProcInstId", pmWorkFlow.getProcInstId());
+				}
+			} else if (ProjectConstant.ProcessType.SUBCONTRACT_INSPECTION.equals(processKey)) {
+				String objType = pmWorkFlow.getObjType();
+				Integer objId = pmWorkFlow.getObjId();
+				String dataType = pmWorkFlow.getDataType();
+				Integer dataId = pmWorkFlow.getDataId();
+				// 对象类型为project,检查是否有操作权限
+				if (DataType.PROJECT.equals(objType)) {
+					ProjectVO project = new ProjectVO();
+					project.setProjectId(objId);
+					PermissionResult permission = projectHeaderService.checkPermission(project, "project:edit", "dispatch:edit");
+					if (!permission.isPermit()) {
+						model.addAllAttributes(permission.getMap());
+						return;
+					}
+					pmWorkFlow.setCustomInfoByKey("projectTypes", permission.getData());
+				}
+				// 项目任务流程发起
+				Object entity = null;
+				if (DataType.PROJECT_DISPATCH.equals(dataType)) {
+					entity = dispatchProjectService.selectByPrimaryKey(dataId);
+				} else if (DataType.DISPATCH_SETTLEMENT.equals(dataType)) {
+					DispatchSettlement settlement = dispatchSettlementService.selectByPrimaryKey(dataId);
+					SettlementVO settlementVO = new SettlementVO();
+					BeanUtils.copyProperties(settlement, settlementVO);
+					DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(settlementVO.getDispatchId());
+                    settlementVO.setDispatch(dispatch);
+                    entity = settlementVO;
 				}
 				if (entity != null) {
 					pmWorkFlowService.startProcess(pmWorkFlow, entity);

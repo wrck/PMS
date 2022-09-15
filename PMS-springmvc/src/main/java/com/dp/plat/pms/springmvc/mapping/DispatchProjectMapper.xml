@@ -544,21 +544,21 @@
   </update>
   <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" resultMap="BaseResultMap">
     select * from pm_dispatch_project_header AS `h`
-	<include refid="baseWhereSql"></include>
-	<!-- <where>
+	<!-- <include refid="baseWhereSql"></include> -->
+	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<include refid="sql_where_selective" />
 		</trim>
-	</where> -->
+	</where>
   </select>
   <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DispatchProject" resultType="long">
     select count(1) from pm_dispatch_project_header AS `h`
-	<include refid="baseWhereSql"></include>
-	<!-- <where>
+	<!-- <include refid="baseWhereSql"></include> -->
+	<where>
 		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
 			<include refid="sql_where_selective" />
 		</trim>
-	</where> -->
+	</where>
   </select>
   <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.DispatchVO">
     select h.*, d.`departmentName` as officeName, d1.`departmentName` as profitDepName,
@@ -1000,59 +1000,7 @@
 	        <if test="orgId != null">
 				and ui.compID = #{orgId, jdbcType=INTEGER}
 			</if>
-	where h.`effectiveTo` is null 
-	<trim prefixOverrides="and | or" suffixOverrides="and | or">
-		<if test="id != null"> and h.id = #{id} </if>
-        <if test="dispatchName != null"> and h.dispatchName like concat("%", #{dispatchName}, "%") </if>
-        <if test="contractNos != null"> and (h.contractNos like concat("%", #{contractNos}, "%") or h.dispatchNo like concat("%", #{contractNos}, "%")) </if>
-        <if test="projectIds != null"> and h.projectIds like concat("%", #{projectIds}, "%")  </if>
-        <if test="dispatchSeq != null"> and h.dispatchSeq like concat("%", #{dispatchSeq}, "%") </if>
-        <if test="type != null"> and h.type = #{type} </if>
-        <if test="state != null"> and h.state = #{state} </if>
-        <if test="callbackState != null"> and callbackState = #{callbackState}  </if>
-        <if test="facilitatorId != null"> and h.facilitatorId = #{facilitatorId} </if>
-        <if test="facilitatorName != null"> and h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
-        <if test="bankInfo != null"> and h.bankInfo = #{bankInfo} </if>
-        <if test="bankAccount != null"> and h.bankAccount = #{bankAccount} </if>
-        <if test="officeCode != null"> and h.officeCode = #{officeCode} </if>
-        <if test="profitDepCode != null"> and h.profitDepCode = #{profitDepCode} </if>
-        <if test="dispatchNo != null"> and h.dispatchNo = #{dispatchNo} </if>
-        <if test="isAccrued != null"> and h.isAccrued = #{isAccrued} </if>
-        <if test="isInvoiced != null"> and isInvoiced = #{isInvoiced} </if>
-        <if test="dispatchAmount != null"> and dispatchAmount = #{dispatchAmount} </if>
-        <if test="reason != null"> and h.reason = #{reason} </if>
-        <if test="remark != null"> and h.remark = #{remark} </if>
-        <if test="effectiveFrom != null"> and h.effectiveFrom = #{effectiveFrom} </if>
-        <if test="effectiveTo != null"> and h.effectiveTo = #{effectiveTo} </if>
-        <if test="createBy != null"> and h.createBy = #{createBy} </if>
-        <if test="createTime != null"> and h.createTime = #{createTime} </if>
-        <if test="updateBy != null"> and h.updateBy = #{updateBy} </if>
-        <if test="updateTime != null"> and h.updateTime = #{updateTime} </if>
-        <if test="areaPower != null"> and (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
-        <if test="projectId != null"> and FIND_IN_SET(#{projectId}, h.projectIds) </if>
-		<if test="pageParam != null">
-			<if test="pageParam.fuzzySearch == true and pageParam.fuzzy != ''">
-				and (
-					h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
-					h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
-					h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
-					h.contractNos like CONCAT("%", #{fuzzy}, "%") or
-					h.facilitatorName like CONCAT("%", #{fuzzy}, "%")
-				)
-			</if>
-		</if>
-	</trim>
-	<if test="pageParam != null">
-		<if test="pageParam.orderBy != null">
-	        order by ${pageParam.orderBy}
-	    </if>
-	    <if test="pageParam.orderBy == null">
-	        order by id desc
-	    </if>
-	    <if test="pageParam.start != null and pageParam.pageSize != -1">
-	        limit #{pageParam.start}, #{pageParam.pageSize}
-    	</if>
-   	</if>
+	<include refid="baseWhereSql" />
   </select>
   
   <select id="countDispatchProjectVOList" parameterType="com.dp.plat.pms.springmvc.vo.DispatchVO" resultType="long">
@@ -1060,48 +1008,7 @@
   		count(*)
 	from
 	    `pm_dispatch_project_header` h 
-	where h.`effectiveTo` is null 
-	<trim prefixOverrides="and | or" suffixOverrides="and | or">
-		<if test="id != null"> and h.id = #{id} </if>
-        <if test="dispatchName != null"> and h.dispatchName like concat("%", #{dispatchName}, "%") </if>
-        <if test="contractNos != null"> and (h.contractNos like concat("%", #{contractNos}, "%") or h.dispatchNo like concat("%", #{contractNos}, "%")) </if>
-        <if test="projectIds != null"> and h.projectIds like concat("%", #{projectIds}, "%")  </if>
-        <if test="dispatchSeq != null"> and h.dispatchSeq like concat("%", #{dispatchSeq}, "%") </if>
-        <if test="type != null"> and h.type = #{type} </if>
-        <if test="state != null"> and h.state = #{state} </if>
-        <if test="callbackState != null"> and callbackState = #{callbackState}  </if>
-        <if test="facilitatorId != null"> and h.facilitatorId = #{facilitatorId} </if>
-        <if test="facilitatorName != null"> and h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
-        <if test="bankInfo != null"> and h.bankInfo = #{bankInfo} </if>
-        <if test="bankAccount != null"> and h.bankAccount = #{bankAccount} </if>
-        <if test="officeCode != null"> and h.officeCode = #{officeCode} </if>
-        <if test="profitDepCode != null"> and h.profitDepCode = #{profitDepCode} </if>
-        <if test="dispatchNo != null"> and h.dispatchNo = #{dispatchNo} </if>
-        <if test="isAccrued != null"> and h.isAccrued = #{isAccrued} </if>
-        <if test="isInvoiced != null"> and isInvoiced = #{isInvoiced} </if>
-        <if test="dispatchAmount != null"> and dispatchAmount = #{dispatchAmount} </if>
-        <if test="reason != null"> and h.reason = #{reason} </if>
-        <if test="remark != null"> and h.remark = #{remark} </if>
-        <if test="effectiveFrom != null"> and h.effectiveFrom = #{effectiveFrom} </if>
-        <if test="effectiveTo != null"> and h.effectiveTo = #{effectiveTo} </if>
-        <if test="createBy != null"> and h.createBy = #{createBy} </if>
-        <if test="createTime != null"> and h.createTime = #{createTime} </if>
-        <if test="updateBy != null"> and h.updateBy = #{updateBy} </if>
-        <if test="updateTime != null"> and h.updateTime = #{updateTime} </if>
-        <if test="areaPower != null"> and (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
-        <if test="projectId != null"> and FIND_IN_SET(#{projectId}, h.projectIds) </if>
-		<if test="pageParam != null">
-			<if test="pageParam.fuzzySearch == true and pageParam.fuzzy != ''">
-				and (
-					h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
-					h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
-					h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
-					h.contractNos like CONCAT("%", #{fuzzy}, "%") or
-					h.facilitatorName like CONCAT("%", #{fuzzy}, "%")
-				)
-			</if>
-		</if>
-	</trim>
+	<include refid="baseWhereSql" />
   </select>
   
   <select id="selectDispatchVOWithAmountBySelective" parameterType="com.dp.plat.pms.springmvc.vo.DispatchVO" resultType="com.dp.plat.pms.springmvc.vo.DispatchVO">
@@ -1495,135 +1402,135 @@
   
   <sql id="sql_where_selective">
     <if test="id != null">
-		h.`id` = #{id, jdbcType=INTEGER} AND
-	</if>
-	<if test="dispatchName != null and '' != dispatchName">
-		h.`dispatchName` = #{dispatchName, jdbcType=VARCHAR} AND
-	</if>
-	<if test="dispatchNo != null and '' != dispatchNo">
-		h.`dispatchNo` = #{dispatchNo, jdbcType=VARCHAR} AND
-	</if>
-	<if test="dispatchSeq != null and '' != dispatchSeq">
-		h.`dispatchSeq` = #{dispatchSeq, jdbcType=VARCHAR} AND
-	</if>
-	<if test="contractNos != null and '' != contractNos">
-		h.`contractNos` = #{contractNos, jdbcType=VARCHAR} AND
-	</if>
-	<if test="projectIds != null and '' != projectIds">
-		h.`projectIds` = #{projectIds, jdbcType=VARCHAR} AND
-	</if>
-	<if test="type != null and '' != type">
-		h.`type` = #{type, jdbcType=VARCHAR} AND
-	</if>
-	<if test="state != null">
-		h.`state` = #{state, jdbcType=INTEGER} AND
-	</if>
-	<if test="peopleNum != null">
-		h.`peopleNum` = #{peopleNum, jdbcType=INTEGER} AND
-	</if>
-	<if test="callbackState != null">
-		h.`callbackState` = #{callbackState, jdbcType=INTEGER} AND
-	</if>
-	<if test="facilitatorId != null">
-		h.`facilitatorId` = #{facilitatorId, jdbcType=INTEGER} AND
-	</if>
-	<if test="facilitatorCode != null and '' != facilitatorCode">
-		h.`facilitatorCode` = #{facilitatorCode, jdbcType=VARCHAR} AND
-	</if>
-	<if test="facilitatorName != null and '' != facilitatorName">
-		h.`facilitatorName` = #{facilitatorName, jdbcType=VARCHAR} AND
-	</if>
-	<if test="bankInfo != null and '' != bankInfo">
-		h.`bankInfo` = #{bankInfo, jdbcType=VARCHAR} AND
-	</if>
-	<if test="bankAccount != null and '' != bankAccount">
-		h.`bankAccount` = #{bankAccount, jdbcType=VARCHAR} AND
-	</if>
-	<if test="officeCode != null and '' != officeCode">
-		h.`officeCode` = #{officeCode, jdbcType=VARCHAR} AND
-	</if>
-	<if test="profitDepCode != null and '' != profitDepCode">
-		h.`profitDepCode` = #{profitDepCode, jdbcType=VARCHAR} AND
-	</if>
-	<if test="dutyPerson != null and '' != dutyPerson">
-		h.`dutyPerson` = #{dutyPerson, jdbcType=VARCHAR} AND
-	</if>
-	<if test="officeDutyPerson != null and '' != officeDutyPerson">
-		h.`officeDutyPerson` = #{officeDutyPerson, jdbcType=VARCHAR} AND
-	</if>
-	<if test="isAccrued != null">
-		h.`isAccrued` = #{isAccrued, jdbcType=BIT} AND
-	</if>
-	<if test="isInvoiced != null">
-		h.`isInvoiced` = #{isInvoiced, jdbcType=BIT} AND
-	</if>
-	<if test="dispatchAmount != null and '' != dispatchAmount">
-		h.`dispatchAmount` = #{dispatchAmount, jdbcType=VARCHAR} AND
-	</if>
-	<if test="prepaidInfo != null and '' != prepaidInfo">
-		h.`prepaidInfo` = #{prepaidInfo, jdbcType=VARCHAR} AND
-	</if>
-	<if test="prepaidRule != null and '' != prepaidRule">
-		h.`prepaidRule` = #{prepaidRule, jdbcType=VARCHAR} AND
-	</if>
-	<if test="acceptanceInfo != null and '' != acceptanceInfo">
-		h.`acceptanceInfo` = #{acceptanceInfo, jdbcType=VARCHAR} AND
-	</if>
-	<if test="reason != null and '' != reason">
-		h.`reason` = #{reason, jdbcType=VARCHAR} AND
-	</if>
-	<if test="remark != null and '' != remark">
-		h.`remark` = #{remark, jdbcType=VARCHAR} AND
-	</if>
-	<if test="dispatchTime != null">
-		h.`dispatchTime` = #{dispatchTime, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="dispatchYear != null">
-		#{dispatchYear, jdbcType=INTEGER} = YEAR(h.`dispatchTime`) AND
-	</if>
-	<if test="smsProjectCode != null and '' != smsProjectCode">
-		h.`smsProjectCode` = #{smsProjectCode, jdbcType=VARCHAR} AND
-	</if>
-	<if test="smsSubmitTime != null">
-		h.`smsSubmitTime` = #{smsSubmitTime, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="smsProjectAmount != null and '' != smsProjectAmount">
-		h.`smsProjectAmount` = #{smsProjectAmount, jdbcType=VARCHAR} AND
-	</if>
-	<if test="smsAfProjectAmount != null and '' != smsAfProjectAmount">
-		h.`smsAfProjectAmount` = #{smsAfProjectAmount, jdbcType=VARCHAR} AND
-	</if>
-	<if test="effectiveFrom != null">
-		h.`effectiveFrom` = #{effectiveFrom, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="effectiveTo != null">
-		h.`effectiveTo` = #{effectiveTo, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="disabled != null">
-		h.`disabled` = #{disabled, jdbcType=BIT} AND
-	</if>
-	<if test="dispatched != null">
-		h.`dispatched` = #{dispatched, jdbcType=BIT} AND
-	</if>
-	<if test="settled != null">
-		h.`settled` = #{settled, jdbcType=BIT} AND
-	</if>
-	<if test="createBy != null and '' != createBy">
-		h.`createBy` = #{createBy, jdbcType=VARCHAR} AND
-	</if>
-	<if test="createTime != null">
-		h.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="updateBy != null and '' != updateBy">
-		h.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
-	</if>
-	<if test="updateTime != null">
-		h.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
-	</if>
-	<if test="customInfo != null and '' != customInfo">
-		h.`customInfo` = #{customInfo, jdbcType=OTHER} AND
-	</if>
-	
+        h.`id` = #{id, jdbcType=INTEGER} AND
+    </if>
+    <if test="dispatchName != null and '' != dispatchName">
+        h.`dispatchName` = #{dispatchName, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dispatchNo != null and '' != dispatchNo">
+        h.`dispatchNo` = #{dispatchNo, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dispatchSeq != null and '' != dispatchSeq">
+        h.`dispatchSeq` = #{dispatchSeq, jdbcType=VARCHAR} AND
+    </if>
+    <if test="contractNos != null and '' != contractNos">
+        h.`contractNos` = #{contractNos, jdbcType=VARCHAR} AND
+    </if>
+    <if test="projectIds != null and '' != projectIds">
+        h.`projectIds` = #{projectIds, jdbcType=VARCHAR} AND
+    </if>
+    <if test="type != null and '' != type">
+        h.`type` = #{type, jdbcType=VARCHAR} AND
+    </if>
+    <if test="state != null">
+        h.`state` = #{state, jdbcType=INTEGER} AND
+    </if>
+    <if test="peopleNum != null">
+        h.`peopleNum` = #{peopleNum, jdbcType=INTEGER} AND
+    </if>
+    <if test="callbackState != null">
+        h.`callbackState` = #{callbackState, jdbcType=INTEGER} AND
+    </if>
+    <if test="facilitatorId != null">
+        h.`facilitatorId` = #{facilitatorId, jdbcType=INTEGER} AND
+    </if>
+    <if test="facilitatorCode != null and '' != facilitatorCode">
+        h.`facilitatorCode` = #{facilitatorCode, jdbcType=VARCHAR} AND
+    </if>
+    <if test="facilitatorName != null and '' != facilitatorName">
+        h.`facilitatorName` = #{facilitatorName, jdbcType=VARCHAR} AND
+    </if>
+    <if test="bankInfo != null and '' != bankInfo">
+        h.`bankInfo` = #{bankInfo, jdbcType=VARCHAR} AND
+    </if>
+    <if test="bankAccount != null and '' != bankAccount">
+        h.`bankAccount` = #{bankAccount, jdbcType=VARCHAR} AND
+    </if>
+    <if test="officeCode != null and '' != officeCode">
+        h.`officeCode` = #{officeCode, jdbcType=VARCHAR} AND
+    </if>
+    <if test="profitDepCode != null and '' != profitDepCode">
+        h.`profitDepCode` = #{profitDepCode, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dutyPerson != null and '' != dutyPerson">
+        h.`dutyPerson` = #{dutyPerson, jdbcType=VARCHAR} AND
+    </if>
+    <if test="officeDutyPerson != null and '' != officeDutyPerson">
+        h.`officeDutyPerson` = #{officeDutyPerson, jdbcType=VARCHAR} AND
+    </if>
+    <if test="isAccrued != null">
+        h.`isAccrued` = #{isAccrued, jdbcType=BIT} AND
+    </if>
+    <if test="isInvoiced != null">
+        h.`isInvoiced` = #{isInvoiced, jdbcType=BIT} AND
+    </if>
+    <if test="dispatchAmount != null and '' != dispatchAmount">
+        h.`dispatchAmount` = #{dispatchAmount, jdbcType=VARCHAR} AND
+    </if>
+    <if test="prepaidInfo != null and '' != prepaidInfo">
+        h.`prepaidInfo` = #{prepaidInfo, jdbcType=VARCHAR} AND
+    </if>
+    <if test="prepaidRule != null and '' != prepaidRule">
+        h.`prepaidRule` = #{prepaidRule, jdbcType=VARCHAR} AND
+    </if>
+    <if test="acceptanceInfo != null and '' != acceptanceInfo">
+        h.`acceptanceInfo` = #{acceptanceInfo, jdbcType=VARCHAR} AND
+    </if>
+    <if test="reason != null and '' != reason">
+        h.`reason` = #{reason, jdbcType=VARCHAR} AND
+    </if>
+    <if test="remark != null and '' != remark">
+        h.`remark` = #{remark, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dispatchTime != null">
+        h.`dispatchTime` = #{dispatchTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="dispatchYear != null">
+        #{dispatchYear, jdbcType=INTEGER} = YEAR(h.`dispatchTime`) AND
+    </if>
+    <if test="smsProjectCode != null and '' != smsProjectCode">
+        h.`smsProjectCode` = #{smsProjectCode, jdbcType=VARCHAR} AND
+    </if>
+    <if test="smsSubmitTime != null">
+        h.`smsSubmitTime` = #{smsSubmitTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="smsProjectAmount != null and '' != smsProjectAmount">
+        h.`smsProjectAmount` = #{smsProjectAmount, jdbcType=VARCHAR} AND
+    </if>
+    <if test="smsAfProjectAmount != null and '' != smsAfProjectAmount">
+        h.`smsAfProjectAmount` = #{smsAfProjectAmount, jdbcType=VARCHAR} AND
+    </if>
+    <if test="effectiveFrom != null">
+        <![CDATA[ h.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+    </if>
+    <if test="effectiveTo != null">
+        <!-- h.effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND -->
+        <![CDATA[ (h.`effectiveTo` is null or h.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+    </if>
+    <if test="disabled != null">
+        h.`disabled` = #{disabled, jdbcType=BIT} AND
+    </if>
+    <if test="dispatched != null">
+        h.`dispatched` = #{dispatched, jdbcType=BIT} AND
+    </if>
+    <if test="settled != null">
+        h.`settled` = #{settled, jdbcType=BIT} AND
+    </if>
+    <if test="createBy != null and '' != createBy">
+        h.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="createTime != null">
+        h.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="updateBy != null and '' != updateBy">
+        h.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="updateTime != null">
+        h.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="customInfo != null and '' != customInfo">
+        h.`customInfo` = #{customInfo, jdbcType=OTHER} AND
+    </if>
   </sql>
   <sql id="sql_model_where_selective">
     <if test="model != null ">
@@ -1727,11 +1634,12 @@
 			h.`smsAfProjectAmount` = #{model.smsAfProjectAmount, jdbcType=VARCHAR} AND
 		</if>
 		<if test="model.effectiveFrom != null">
-			h.`effectiveFrom` = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
-		</if>
-		<if test="model.effectiveTo != null">
-			h.`effectiveTo` = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
-		</if>
+            <![CDATA[ h.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+	    </if>
+	    <if test="model.effectiveTo != null">
+			<!-- h.`effectiveTo` = #{model.effectiveTo, jdbcType=TIMESTAMP} AND -->
+	        <![CDATA[ (h.`effectiveTo` is null or h.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+	    </if>
 		<if test="model.disabled != null">
 			h.`disabled` = #{model.disabled, jdbcType=BIT} AND
 		</if>

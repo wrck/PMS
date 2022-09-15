@@ -15,6 +15,7 @@ public class Company {
 	private String code;
 	private String name;
 	private String abbr;
+	private String account;
 	private String  website;
 	private Integer status;
 	private Integer pid;
@@ -24,7 +25,6 @@ public class Company {
 	private Date updateTime;
 	
 	public Company() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public Company(Integer id) {
@@ -55,7 +55,13 @@ public class Company {
 	public void setAbbr(String abbr) {
 		this.abbr = abbr;
 	}
-	public String getWebsite() {
+	public String getAccount() {
+        return account;
+    }
+    public void setAccount(String account) {
+        this.account = account;
+    }
+    public String getWebsite() {
 		return website;
 	}
 	public void setWebsite(String website) {

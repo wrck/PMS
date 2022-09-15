@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.extend.d365.dao.PurchaseMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.extend.d365.entity.Purchase">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="sourceType" jdbcType="VARCHAR" property="sourceType" />
+    <result column="sourceId" jdbcType="INTEGER" property="sourceId" />
+    <result column="purchPoolId" jdbcType="VARCHAR" property="purchPoolId" />
+    <result column="purchId" jdbcType="VARCHAR" property="purchId" />
+    <result column="vendAccount" jdbcType="VARCHAR" property="vendAccount" />
+    <result column="purchName" jdbcType="VARCHAR" property="purchName" />
+    <result column="purContract" jdbcType="VARCHAR" property="purContract" />
+    <result column="salesContract" jdbcType="VARCHAR" property="salesContract" />
+    <result column="contractAmount" jdbcType="VARCHAR" property="contractAmount" />
+    <result column="workerPurchPlacer" jdbcType="VARCHAR" property="workerPurchPlacer" />
+    <result column="applicant" jdbcType="VARCHAR" property="applicant" />
+    <result column="inventLocationId" jdbcType="VARCHAR" property="inventLocationId" />
+    <result column="deliveryDate" jdbcType="DATE" property="deliveryDate" />
+    <result column="dlvMode" jdbcType="VARCHAR" property="dlvMode" />
+    <result column="dlvTerm" jdbcType="VARCHAR" property="dlvTerm" />
+    <result column="payment" jdbcType="VARCHAR" property="payment" />
+    <result column="paymMode" jdbcType="VARCHAR" property="paymMode" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="otherSysNum" jdbcType="VARCHAR" property="otherSysNum" />
+    <result column="projectName" jdbcType="VARCHAR" property="projectName" />
+    <result column="projectProgress" jdbcType="VARCHAR" property="projectProgress" />
+    <result column="subcontractType" jdbcType="VARCHAR" property="subcontractType" />
+    <result column="subcontStartDate" jdbcType="DATE" property="subcontStartDate" />
+    <result column="subcontEndDate" jdbcType="DATE" property="subcontEndDate" />
+    <result column="dataAreaId" jdbcType="VARCHAR" property="dataAreaId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `sourceType`, `sourceId`, `purchPoolId`, `purchId`, `vendAccount`, `purchName`, 
+    `purContract`, `salesContract`, `contractAmount`, `workerPurchPlacer`, `applicant`, 
+    `inventLocationId`, `deliveryDate`, `dlvMode`, `dlvTerm`, `payment`, `paymMode`, 
+    `remark`, `otherSysNum`, `projectName`, `projectProgress`, `subcontractType`, `subcontStartDate`, 
+    `subcontEndDate`, `dataAreaId`, `customInfo`, `createBy`, `createTime`, `updateBy`, 
+    `updateTime`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from dp_erp_purchase_order_header
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from dp_erp_purchase_order_header
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_order_header (`sourceType`, `sourceId`, `purchPoolId`, 
+      `purchId`, `vendAccount`, `purchName`, 
+      `purContract`, `salesContract`, `contractAmount`, 
+      `workerPurchPlacer`, `applicant`, `inventLocationId`, 
+      `deliveryDate`, `dlvMode`, `dlvTerm`, 
+      `payment`, `paymMode`, `remark`, 
+      `otherSysNum`, `projectName`, `projectProgress`, 
+      `subcontractType`, `subcontStartDate`, `subcontEndDate`, 
+      `dataAreaId`, `customInfo`, `createBy`, 
+      `createTime`, `updateBy`, `updateTime`
+      )
+    values (#{sourceType,jdbcType=VARCHAR}, #{sourceId,jdbcType=INTEGER}, #{purchPoolId,jdbcType=VARCHAR}, 
+      #{purchId,jdbcType=VARCHAR}, #{vendAccount,jdbcType=VARCHAR}, #{purchName,jdbcType=VARCHAR}, 
+      #{purContract,jdbcType=VARCHAR}, #{salesContract,jdbcType=VARCHAR}, #{contractAmount,jdbcType=VARCHAR}, 
+      #{workerPurchPlacer,jdbcType=VARCHAR}, #{applicant,jdbcType=VARCHAR}, #{inventLocationId,jdbcType=VARCHAR}, 
+      #{deliveryDate,jdbcType=DATE}, #{dlvMode,jdbcType=VARCHAR}, #{dlvTerm,jdbcType=VARCHAR}, 
+      #{payment,jdbcType=VARCHAR}, #{paymMode,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{otherSysNum,jdbcType=VARCHAR}, #{projectName,jdbcType=VARCHAR}, #{projectProgress,jdbcType=VARCHAR}, 
+      #{subcontractType,jdbcType=VARCHAR}, #{subcontStartDate,jdbcType=DATE}, #{subcontEndDate,jdbcType=DATE}, 
+      #{dataAreaId,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_order_header
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sourceType != null">
+        `sourceType`,
+      </if>
+      <if test="sourceId != null">
+        `sourceId`,
+      </if>
+      <if test="purchPoolId != null">
+        `purchPoolId`,
+      </if>
+      <if test="purchId != null">
+        `purchId`,
+      </if>
+      <if test="vendAccount != null">
+        `vendAccount`,
+      </if>
+      <if test="purchName != null">
+        `purchName`,
+      </if>
+      <if test="purContract != null">
+        `purContract`,
+      </if>
+      <if test="salesContract != null">
+        `salesContract`,
+      </if>
+      <if test="contractAmount != null">
+        `contractAmount`,
+      </if>
+      <if test="workerPurchPlacer != null">
+        `workerPurchPlacer`,
+      </if>
+      <if test="applicant != null">
+        `applicant`,
+      </if>
+      <if test="inventLocationId != null">
+        `inventLocationId`,
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate`,
+      </if>
+      <if test="dlvMode != null">
+        `dlvMode`,
+      </if>
+      <if test="dlvTerm != null">
+        `dlvTerm`,
+      </if>
+      <if test="payment != null">
+        `payment`,
+      </if>
+      <if test="paymMode != null">
+        `paymMode`,
+      </if>
+      <if test="remark != null">
+        `remark`,
+      </if>
+      <if test="otherSysNum != null">
+        `otherSysNum`,
+      </if>
+      <if test="projectName != null">
+        `projectName`,
+      </if>
+      <if test="projectProgress != null">
+        `projectProgress`,
+      </if>
+      <if test="subcontractType != null">
+        `subcontractType`,
+      </if>
+      <if test="subcontStartDate != null">
+        `subcontStartDate`,
+      </if>
+      <if test="subcontEndDate != null">
+        `subcontEndDate`,
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sourceType != null">
+        #{sourceType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceId != null">
+        #{sourceId,jdbcType=INTEGER},
+      </if>
+      <if test="purchPoolId != null">
+        #{purchPoolId,jdbcType=VARCHAR},
+      </if>
+      <if test="purchId != null">
+        #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="vendAccount != null">
+        #{vendAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="purchName != null">
+        #{purchName,jdbcType=VARCHAR},
+      </if>
+      <if test="purContract != null">
+        #{purContract,jdbcType=VARCHAR},
+      </if>
+      <if test="salesContract != null">
+        #{salesContract,jdbcType=VARCHAR},
+      </if>
+      <if test="contractAmount != null">
+        #{contractAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="workerPurchPlacer != null">
+        #{workerPurchPlacer,jdbcType=VARCHAR},
+      </if>
+      <if test="applicant != null">
+        #{applicant,jdbcType=VARCHAR},
+      </if>
+      <if test="inventLocationId != null">
+        #{inventLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="dlvMode != null">
+        #{dlvMode,jdbcType=VARCHAR},
+      </if>
+      <if test="dlvTerm != null">
+        #{dlvTerm,jdbcType=VARCHAR},
+      </if>
+      <if test="payment != null">
+        #{payment,jdbcType=VARCHAR},
+      </if>
+      <if test="paymMode != null">
+        #{paymMode,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="otherSysNum != null">
+        #{otherSysNum,jdbcType=VARCHAR},
+      </if>
+      <if test="projectName != null">
+        #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="projectProgress != null">
+        #{projectProgress,jdbcType=VARCHAR},
+      </if>
+      <if test="subcontractType != null">
+        #{subcontractType,jdbcType=VARCHAR},
+      </if>
+      <if test="subcontStartDate != null">
+        #{subcontStartDate,jdbcType=DATE},
+      </if>
+      <if test="subcontEndDate != null">
+        #{subcontEndDate,jdbcType=DATE},
+      </if>
+      <if test="dataAreaId != null">
+        #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase">
+    update dp_erp_purchase_order_header
+    <set>
+      <if test="sourceType != null">
+        `sourceType` = #{sourceType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceId != null">
+        `sourceId` = #{sourceId,jdbcType=INTEGER},
+      </if>
+      <if test="purchPoolId != null">
+        `purchPoolId` = #{purchPoolId,jdbcType=VARCHAR},
+      </if>
+      <if test="purchId != null">
+        `purchId` = #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="vendAccount != null">
+        `vendAccount` = #{vendAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="purchName != null">
+        `purchName` = #{purchName,jdbcType=VARCHAR},
+      </if>
+      <if test="purContract != null">
+        `purContract` = #{purContract,jdbcType=VARCHAR},
+      </if>
+      <if test="salesContract != null">
+        `salesContract` = #{salesContract,jdbcType=VARCHAR},
+      </if>
+      <if test="contractAmount != null">
+        `contractAmount` = #{contractAmount,jdbcType=VARCHAR},
+      </if>
+      <if test="workerPurchPlacer != null">
+        `workerPurchPlacer` = #{workerPurchPlacer,jdbcType=VARCHAR},
+      </if>
+      <if test="applicant != null">
+        `applicant` = #{applicant,jdbcType=VARCHAR},
+      </if>
+      <if test="inventLocationId != null">
+        `inventLocationId` = #{inventLocationId,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="dlvMode != null">
+        `dlvMode` = #{dlvMode,jdbcType=VARCHAR},
+      </if>
+      <if test="dlvTerm != null">
+        `dlvTerm` = #{dlvTerm,jdbcType=VARCHAR},
+      </if>
+      <if test="payment != null">
+        `payment` = #{payment,jdbcType=VARCHAR},
+      </if>
+      <if test="paymMode != null">
+        `paymMode` = #{paymMode,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        `remark` = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="otherSysNum != null">
+        `otherSysNum` = #{otherSysNum,jdbcType=VARCHAR},
+      </if>
+      <if test="projectName != null">
+        `projectName` = #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="projectProgress != null">
+        `projectProgress` = #{projectProgress,jdbcType=VARCHAR},
+      </if>
+      <if test="subcontractType != null">
+        `subcontractType` = #{subcontractType,jdbcType=VARCHAR},
+      </if>
+      <if test="subcontStartDate != null">
+        `subcontStartDate` = #{subcontStartDate,jdbcType=DATE},
+      </if>
+      <if test="subcontEndDate != null">
+        `subcontEndDate` = #{subcontEndDate,jdbcType=DATE},
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        `customInfo` = #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase">
+    update dp_erp_purchase_order_header
+    set `sourceType` = #{sourceType,jdbcType=VARCHAR},
+      `sourceId` = #{sourceId,jdbcType=INTEGER},
+      `purchPoolId` = #{purchPoolId,jdbcType=VARCHAR},
+      `purchId` = #{purchId,jdbcType=VARCHAR},
+      `vendAccount` = #{vendAccount,jdbcType=VARCHAR},
+      `purchName` = #{purchName,jdbcType=VARCHAR},
+      `purContract` = #{purContract,jdbcType=VARCHAR},
+      `salesContract` = #{salesContract,jdbcType=VARCHAR},
+      `contractAmount` = #{contractAmount,jdbcType=VARCHAR},
+      `workerPurchPlacer` = #{workerPurchPlacer,jdbcType=VARCHAR},
+      `applicant` = #{applicant,jdbcType=VARCHAR},
+      `inventLocationId` = #{inventLocationId,jdbcType=VARCHAR},
+      `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      `dlvMode` = #{dlvMode,jdbcType=VARCHAR},
+      `dlvTerm` = #{dlvTerm,jdbcType=VARCHAR},
+      `payment` = #{payment,jdbcType=VARCHAR},
+      `paymMode` = #{paymMode,jdbcType=VARCHAR},
+      `remark` = #{remark,jdbcType=VARCHAR},
+      `otherSysNum` = #{otherSysNum,jdbcType=VARCHAR},
+      `projectName` = #{projectName,jdbcType=VARCHAR},
+      `projectProgress` = #{projectProgress,jdbcType=VARCHAR},
+      `subcontractType` = #{subcontractType,jdbcType=VARCHAR},
+      `subcontStartDate` = #{subcontStartDate,jdbcType=DATE},
+      `subcontEndDate` = #{subcontEndDate,jdbcType=DATE},
+      `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      `customInfo` = #{customInfo,jdbcType=JSON},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+		poh.`id` = #{id, jdbcType=INTEGER} AND
+	</if>
+	<if test="sourceType != null and '' != sourceType">
+		poh.`sourceType` = #{sourceType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="sourceId != null">
+		poh.`sourceId` = #{sourceId, jdbcType=INTEGER} AND
+	</if>
+	<if test="purchPoolId != null and '' != purchPoolId">
+		poh.`purchPoolId` = #{purchPoolId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="purchId != null and '' != purchId">
+		poh.`purchId` = #{purchId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="vendAccount != null and '' != vendAccount">
+		poh.`vendAccount` = #{vendAccount, jdbcType=VARCHAR} AND
+	</if>
+	<if test="purchName != null and '' != purchName">
+		poh.`purchName` = #{purchName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="purContract != null and '' != purContract">
+		poh.`purContract` = #{purContract, jdbcType=VARCHAR} AND
+	</if>
+	<if test="salesContract != null and '' != salesContract">
+		poh.`salesContract` = #{salesContract, jdbcType=VARCHAR} AND
+	</if>
+	<if test="contractAmount != null and '' != contractAmount">
+		poh.`contractAmount` = #{contractAmount, jdbcType=VARCHAR} AND
+	</if>
+	<if test="workerPurchPlacer != null and '' != workerPurchPlacer">
+		poh.`workerPurchPlacer` = #{workerPurchPlacer, jdbcType=VARCHAR} AND
+	</if>
+	<if test="applicant != null and '' != applicant">
+		poh.`applicant` = #{applicant, jdbcType=VARCHAR} AND
+	</if>
+	<if test="inventLocationId != null and '' != inventLocationId">
+		poh.`inventLocationId` = #{inventLocationId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="deliveryDate != null">
+		poh.`deliveryDate` = #{deliveryDate, jdbcType=DATE} AND
+	</if>
+	<if test="dlvMode != null and '' != dlvMode">
+		poh.`dlvMode` = #{dlvMode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dlvTerm != null and '' != dlvTerm">
+		poh.`dlvTerm` = #{dlvTerm, jdbcType=VARCHAR} AND
+	</if>
+	<if test="payment != null and '' != payment">
+		poh.`payment` = #{payment, jdbcType=VARCHAR} AND
+	</if>
+	<if test="paymMode != null and '' != paymMode">
+		poh.`paymMode` = #{paymMode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="remark != null and '' != remark">
+		poh.`remark` = #{remark, jdbcType=VARCHAR} AND
+	</if>
+	<if test="otherSysNum != null and '' != otherSysNum">
+		poh.`otherSysNum` = #{otherSysNum, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectName != null and '' != projectName">
+		poh.`projectName` = #{projectName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectProgress != null and '' != projectProgress">
+		poh.`projectProgress` = #{projectProgress, jdbcType=VARCHAR} AND
+	</if>
+	<if test="subcontractType != null and '' != subcontractType">
+		poh.`subcontractType` = #{subcontractType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="subcontStartDate != null">
+		poh.`subcontStartDate` = #{subcontStartDate, jdbcType=DATE} AND
+	</if>
+	<if test="subcontEndDate != null">
+		poh.`subcontEndDate` = #{subcontEndDate, jdbcType=DATE} AND
+	</if>
+	<if test="dataAreaId != null and '' != dataAreaId">
+		poh.`dataAreaId` = #{dataAreaId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customInfo != null">
+		poh.`customInfo` = #{customInfo, jdbcType=JSON} AND
+	</if>
+	<if test="createBy != null and '' != createBy">
+		poh.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="createTime != null">
+		poh.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		poh.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		poh.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+	
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.id != null">
+			poh.`id` = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.sourceType != null and '' != model.sourceType">
+			poh.`sourceType` = #{model.sourceType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.sourceId != null">
+			poh.`sourceId` = #{model.sourceId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.purchPoolId != null and '' != model.purchPoolId">
+			poh.`purchPoolId` = #{model.purchPoolId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.purchId != null and '' != model.purchId">
+			poh.`purchId` = #{model.purchId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.vendAccount != null and '' != model.vendAccount">
+			poh.`vendAccount` = #{model.vendAccount, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.purchName != null and '' != model.purchName">
+			poh.`purchName` = #{model.purchName, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.purContract != null and '' != model.purContract">
+			poh.`purContract` = #{model.purContract, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.salesContract != null and '' != model.salesContract">
+			poh.`salesContract` = #{model.salesContract, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.contractAmount != null and '' != model.contractAmount">
+			poh.`contractAmount` = #{model.contractAmount, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.workerPurchPlacer != null and '' != model.workerPurchPlacer">
+			poh.`workerPurchPlacer` = #{model.workerPurchPlacer, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.applicant != null and '' != model.applicant">
+			poh.`applicant` = #{model.applicant, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.inventLocationId != null and '' != model.inventLocationId">
+			poh.`inventLocationId` = #{model.inventLocationId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.deliveryDate != null">
+			poh.`deliveryDate` = #{model.deliveryDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.dlvMode != null and '' != model.dlvMode">
+			poh.`dlvMode` = #{model.dlvMode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dlvTerm != null and '' != model.dlvTerm">
+			poh.`dlvTerm` = #{model.dlvTerm, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.payment != null and '' != model.payment">
+			poh.`payment` = #{model.payment, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.paymMode != null and '' != model.paymMode">
+			poh.`paymMode` = #{model.paymMode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.remark != null and '' != model.remark">
+			poh.`remark` = #{model.remark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.otherSysNum != null and '' != model.otherSysNum">
+			poh.`otherSysNum` = #{model.otherSysNum, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectName != null and '' != model.projectName">
+			poh.`projectName` = #{model.projectName, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectProgress != null and '' != model.projectProgress">
+			poh.`projectProgress` = #{model.projectProgress, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.subcontractType != null and '' != model.subcontractType">
+			poh.`subcontractType` = #{model.subcontractType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.subcontStartDate != null">
+			poh.`subcontStartDate` = #{model.subcontStartDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.subcontEndDate != null">
+			poh.`subcontEndDate` = #{model.subcontEndDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.dataAreaId != null and '' != model.dataAreaId">
+			poh.`dataAreaId` = #{model.dataAreaId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customInfo != null">
+			poh.`customInfo` = #{model.customInfo, jdbcType=JSON} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			poh.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.createTime != null">
+			poh.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			poh.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			poh.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			poh.`sourceType` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`purchPoolId` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`purchId` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`vendAccount` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`purchName` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`purContract` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`salesContract` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`contractAmount` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`workerPurchPlacer` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`applicant` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`inventLocationId` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`dlvMode` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`dlvTerm` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`payment` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`paymMode` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`remark` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`otherSysNum` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`projectName` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`projectProgress` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`subcontractType` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`dataAreaId` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+			poh.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_order_header AS `poh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.Purchase" resultType="long">
+    select count(1) from dp_erp_purchase_order_header AS `poh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <!-- <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_order_header AS `poh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from dp_erp_purchase_order_header AS `poh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </select> -->
+</mapper>

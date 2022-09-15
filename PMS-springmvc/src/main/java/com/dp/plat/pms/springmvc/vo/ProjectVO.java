@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.dp.plat.core.converter.DateConverter;
 import com.dp.plat.core.serializer.JsonSerializer;
-import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -365,6 +364,14 @@ public class ProjectVO extends ProjectHeader {
 		Map<?, ?> customInfo = getCustomInfo();
 		if (customInfo != null && !customInfo.isEmpty()) {
 			return customInfo.get(key);
+		}
+		return null;
+	}
+	
+	public Object getCustomInfoByKey(String key, Object defaultValue) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.getOrDefault(key, defaultValue);
 		}
 		return null;
 	}

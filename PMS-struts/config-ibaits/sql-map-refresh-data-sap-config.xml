@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+    <!-- 从ERP刷新订单信息 -->
+    <resultMap class="com.dp.plat.param.OrderBean" id="OrderBeans">
+        <result property="orderNumber" column="order_number"/>
+        <result property="contractNo" column="contract_number"/>
+        <result property="orderExecNumber" column="order_exec_number"/>
+        <result property="orderCreateTime" column="order_creation_date"/>
+        <result property="customerRequireTime" column="customer_require_date"/>
+        <result property="customerCode" column="customer_code"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="projectName" column="project_name"/>
+        <result property="orderComment" column="comment"/>
+        <result property="compCode" column="company_code" nullValue="0"/>
+        <result property="salesType" column="u_sordertype"/>
+    </resultMap>
+    <select id="query_DP_V_SO_ORDER_4_PMS"  resultMap="OrderBeans">
+        <![CDATA[
+            SELECT * from dp_reports.DP_V_SO_ORDER_4_PMS 
+        ]]>
+    </select>
+    <!-- 退货信息 -->
+    <resultMap class="com.dp.plat.param.OrderBean" id="RmaOrderBeans">
+        <result property="orderNumber" column="rma_order_number"/>
+        <result property="contractNo" column="contract_number"/>
+        <result property="orderExecNumber" column="order_exec_number"/>
+        <result property="orderCreateTime" column="order_creation_date"/>
+        <result property="customerRequireTime" column="customer_require_date"/>
+        <result property="customerCode" column="customer_code"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="projectName" column="project_name"/>
+        <result property="orderComment" column="comment"/>
+        <result property="compCode" column="company_code" nullValue="0"/>
+        <result property="salesType" column="u_sordertype"/>
+    </resultMap>
+    <select id="query_DP_V_RMA_ORDER_4_PMS" resultMap="RmaOrderBeans">
+        <![CDATA[
+            SELECT * from dp_reports.DP_V_RMA_ORDER_4_PMS       
+        ]]>
+    </select>
+    
+    <insert id="insert_pm_order_data" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO `pm_order_data_from_erp_sap`( orderNumber ,contractNo , orderExecNumber , orderCreateTime ,customerRequireTime ,
+             customerCode ,customerName,projectName,orderComment,orderType, compCode, salesType) values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderCreateTime#,#list[].customerRequireTime#,
+              #list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#orderType#, #list[].compCode#,
+              #list[].salesType#
+            )
+        </iterate>
+    </insert>
+    <delete id="delete_pm_order_data" >
+        <![CDATA[
+            truncate table pm_order_data_from_erp_sap
+        ]]>
+    </delete>
+    <resultMap class="com.dp.plat.param.OrderLineBean" id="orderLineBeans">
+        <result property="orderNumber" column="order_number"/>
+        <result property="lineNum" column="LineNum"/>
+        <result property="itemCode" column="item_code"/>
+        <result property="itemDesc" column="item_description"/>
+        <result property="orderQuantity" column="order_quantity" nullValue="0"/>
+        <result property="openQuantity" column="open_quantity" nullValue="0"/>
+        <result property="bundleCode" column="bundle_parent_item_code"/>
+        <result property="warrantyMonth" column="warranty_by_month" nullValue="0"/>
+        <result property="compCode" column="company_code" nullValue="0"/>
+        <result property="profitCenter" column="profitcenter"/>
+    </resultMap>
+    <select id="query_DP_V_SO_LINE_4_PMS" resultMap="orderLineBeans">
+        <![CDATA[
+            select * from dp_reports.DP_V_SO_LINE_4_PMS
+        ]]>
+    </select>
+    
+    <select id="query_DP_V_RMA_LINE_4_PMS" resultMap="orderLineBeans">
+        <![CDATA[
+            SELECT * from dp_reports.DP_V_RMA_LINE_4_PMS
+        ]]>
+    </select>
+    <delete id="delete_pm_order_line" >
+        <![CDATA[
+            truncate table pm_order_line_from_erp_sap
+        ]]>
+    </delete>
+    <insert id="insert_pm_order_line" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO `pm_order_line_from_erp_sap`(orderNumber ,lineNum ,itemCode ,itemDesc ,
+                orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType, compCode, profitCenter) values
+        ]]>
+        <iterate conjunction="," property="lineList">
+            (
+            #lineList[].orderNumber#,#lineList[].lineNum#,#lineList[].itemCode#,#lineList[].itemDesc#,
+            #lineList[].orderQuantity#,#lineList[].openQuantity#,#lineList[].bundleCode#,#lineList[].warrantyMonth#,
+            #lineType#, #lineList[].compCode#, #lineList[].profitCenter#
+            )
+        </iterate>
+    </insert>
+    
+    <select id="query_2_DP_V_SO_LINE_4_PMS" parameterClass="string" resultMap="orderLineBeans">
+        <![CDATA[
+            SELECT b.* from dp_reports.DP_V_SO_ORDER_4_PMS a 
+             LEFT JOIN dp_reports.DP_V_SO_LINE_4_PMS b 
+                 on a.order_number = b.order_number 
+                 and a.company_code = b.company_code
+            where a.contract_number = #contractNo# 
+                 and  b.order_number is not null
+        ]]>
+    </select>
+    
+    <select id="query_lend_delivery_off_list" resultClass="java.util.HashMap">
+        <![CDATA[ 
+            select * from dp_reports.DP_V_SO_DELIVERY_OFF_4_PMS
+        ]]>
+    </select>
+    
+    <insert id="insert_pm_presales_lend_2_delivery_off_from_sap" parameterClass="List">
+        INSERT INTO `pm_presales_lend_2_delivery_off_from_sap` (
+            `orderNumber`, `lineId`, `itemCode`, `ppliCode`, `contract`, 
+            `deliveryDate`, `rmaDate`) 
+        VALUES 
+        <iterate conjunction=",">
+            (
+                #[].orderNumber#, #[].linenum#, #[].itemcode#, #[].salesorder#, #[].contract#, 
+                #[].outdate#, #[].indate#
+            )
+        </iterate>
+    </insert>
+    
+
+    <!-- 获取SAP的订单数据 -->
+    <select id="selectOrderInfoFromSAP" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT 
+                order_number AS orderNumber, contract_number AS contractNo, order_exec_number As orderExecNumber
+                , order_creation_date As orderCreateTime, customer_require_date AS customerRequireTime
+                , customer_code AS customerCode, customer_name AS customerName, project_name AS projectName
+                , comment AS orderComment
+                , company_code AS compCode, u_sordertype AS salesType
+                , 0 AS orderType 
+            FROM dp_reports.DP_V_SO_ORDER_4_PMS 
+            UNION ALL
+            SELECT 
+                rma_order_number AS orderNumber, contract_number AS contractNo, order_exec_number As orderExecNumber
+                , order_creation_date As orderCreateTime, customer_require_date AS customerRequireTime
+                , customer_code AS customerCode, customer_name AS customerName, project_name AS projectName
+                , comment AS orderComment
+                , company_code AS compCode, u_sordertype AS salesType
+                , 1 AS orderType 
+            FROM dp_reports.DP_V_RMA_ORDER_4_PMS
+        ]]>
+    </select>
+    <insert id="insertOrderInfoFromSAP" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO `pm_order_data_from_erp_sap`( orderNumber ,contractNo , orderExecNumber , orderCreateTime ,customerRequireTime ,
+             customerCode ,customerName,projectName,orderComment,orderType, compCode, salesType) values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderCreateTime#,#list[].customerRequireTime#,
+              #list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#list[].orderType#, #list[].compCode#,
+              #list[].salesType#
+            )
+        </iterate>
+    </insert>
+    <delete id="deleteOrderInfoFromSAP" >
+        truncate table pm_order_data_from_erp_sap
+    </delete>
+    
+    <select id="selectOrderLineFromSAP" resultClass="java.util.HashMap">
+        SELECT 
+            order_number AS orderNumber, LineNum AS lineNum, item_code AS itemCode, item_description AS itemDesc
+            , order_quantity AS orderQuantity, open_quantity AS openQuantity
+            , bundle_parent_item_code AS bundleCode, warranty_by_month AS warrantyMonth
+            , company_code AS compCode, profitCenter AS profitCenter
+            , 0 AS lineType 
+        FROM dp_reports.DP_V_SO_LINE_4_PMS
+        UNION ALL
+        SELECT order_number AS orderNumber, LineNum AS lineNum, item_code AS itemCode, item_description AS itemDesc
+            , order_quantity AS orderQuantity, open_quantity AS openQuantity
+            , bundle_parent_item_code AS bundleCode, warranty_by_month AS warrantyMonth
+            , company_code AS compCode, profitCenter AS profitCenter
+            , 1 AS lineType 
+        FROM dp_reports.DP_V_RMA_LINE_4_PMS
+    </select>
+    <insert id="insertOrderLineFromSAP" parameterClass="java.util.Map">
+        INSERT INTO `pm_order_line_from_erp_sap`(orderNumber ,lineNum ,itemCode ,itemDesc ,
+            orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType, compCode, profitCenter) values
+        <iterate conjunction="," property="list">
+        (
+            #list[].orderNumber#,#list[].lineNum#,#list[].itemCode#,#list[].itemDesc#,
+            #list[].orderQuantity#,#list[].openQuantity#,#list[].bundleCode#,#list[].warrantyMonth#,
+            #list[].lineType#, #list[].compCode#, #list[].profitCenter#
+        )
+        </iterate>
+    </insert>
+    <delete id="deleteOrderLineFromSAP" >
+        truncate table pm_order_line_from_erp_sap
+    </delete>
+</sqlMap>

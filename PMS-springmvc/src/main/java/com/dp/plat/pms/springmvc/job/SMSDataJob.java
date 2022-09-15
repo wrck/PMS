@@ -65,7 +65,7 @@ public class SMSDataJob {
 		String[] dataSourceFromKeys = new String[] { "SMS", "SMS", "SMS" };
 		String[] dataSourceToKeys = new String[] { "PMS", "PMS", "PMS" };
 		try {
-			pmSynchronizeService.clearSyncState();
+//			pmSynchronizeService.clearSyncState();
 			Integer threadPoolSize = 3;
 			try {
 				threadPoolSize = Integer

@@ -93,6 +93,11 @@
                     <div class="box-body">
                         <div class="col-sm-12">
                             <div class="form-group has-feedback">
+                                <div class="col-sm-8">
+                                    <input id="token" type="hidden" name="__RequestVerificationToken" value="${__RequestVerificationToken}" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group has-feedback">
 								<label for="name" class="col-sm-3 control-label">名称：</label>
 								<div class="col-sm-8">
 								    <input type="text" name="name" class="form-control" id="name" placeholder="Model名称">

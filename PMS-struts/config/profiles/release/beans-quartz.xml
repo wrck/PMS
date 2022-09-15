@@ -69,6 +69,28 @@
         </property>
     </bean>
     
+    <!-- 合同订单数据 -->
+    <bean id="GainOrderByERP" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.job.GainOrderByERP" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="GainOrderByERPTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="GainOrderByERP" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 50 23 * * ?</value>
+        </property>
+    </bean>
+    
     <!-- 自动不予跟踪代理商用户自服项目 -->
 	<bean id="CloseNotTrackProject" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.dp.plat.job.CloseNotTrackProject" />
@@ -224,6 +246,28 @@
         </property>
     </bean>
     
+    <!-- 项目交付件完成情况同步至D365收款计划 -->
+    <bean id="PushContractAcceptanceDeliveryJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.job.PushContractAcceptanceDeliveryJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="PushContractAcceptanceDeliveryJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="PushContractAcceptanceDeliveryJob" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>00 25 07 * * ?</value> -->
+            <value>00 00 08,13 * * ?</value>
+        </property>
+    </bean> 
+    
     <!-- 项目转包余款邮件提醒 -->
     <bean id="SubcontractNextPaymentMailer" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.dp.plat.subcontract.quartz.SubcontractNextPaymentMailer" />
@@ -267,6 +311,7 @@
             <value>00 00 08,13 * * ?</value>
         </property>
     </bean> 
+    
     <!-- 项目维护日报 -->
 	<bean id="MaintenanceDailyReportMailer" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.dp.plat.maintenance.quartz.MaintenanceDailyReportMailer" />
@@ -318,7 +363,8 @@
                 <ref bean="ReportTaskTrigger" />
                 <ref bean="TaskBySmsTrigger" />
                 <ref bean="MailTrigger" />
-                <ref bean="GainOrderBySAPTrigger" />
+                <!-- <ref bean="GainOrderBySAPTrigger" /> -->
+                <ref bean="GainOrderByERPTrigger" />
                 <ref bean="GainPersonByOATrigger" />
                 <ref bean="SubcontractNextPaymentMailerTrigger" />
                 <ref bean="ProjectInspectionMailerTrigger" />
@@ -327,6 +373,7 @@
                 <ref bean="MaintenanceDailyReportMailerTrigger" />
                 <ref bean="MaintenanceServiceQuarterMailerTrigger" />
                 <ref bean="CloseNotTrackProjectTrigger" />
+                <ref bean="PushContractAcceptanceDeliveryJobTrigger" />
 
                 <!-- <ref bean="PrjArrivalReceiptMailerTrigger" /> -->
                 <!-- <ref bean="PrjPreAndFinalInspectionMailerTrigger" />  -->

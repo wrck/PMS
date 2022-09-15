@@ -201,6 +201,7 @@
 		                submitHandler: function(validator, form2, submitButton){
 		                	var btnType = $(submitButton).data("btn-type");
 		                	var confirmText = btnType == "save" ? "保存" : "派单";
+		                	confirmText = $(submitButton).text() || confirmText;
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
 		                			formSubmit.call(vm, validator, form2, submitButton);

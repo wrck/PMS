@@ -25,6 +25,10 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
         </property> -->
     </bean>
     
+    <!-- 项目验收监听器 -->
+    <bean id="subcontractInspectionListener" class="com.dp.plat.subcontract.listener.SubcontractInspectionListener">
+    </bean>
+    
 	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
 	    <!-- 数据源 -->
 		<property name="dataSource" ref="dataSource" />
@@ -40,26 +44,50 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 		<!-- 5.13版本全局事件监听器实现方式 -->
         <property name="customDefaultBpmnParseHandlers">
             <list>
+                <!-- 一种类型的taskHandler只能定义一个，否者会覆盖 -->
                 <bean class="com.dp.plat.activiti.unifytask.handler.UnifyTaskBPMNParserHandler" >
-                    <!-- 
-                        class: 完整类路径
-                        $,#会被xml解析，所以后台拼接为#{taskListener}
-                        delegateExpression: taskListener
-                        expression: taskListener.notify(delegateTask)
-                    -->
-                    <property name="implementationType" value="delegateExpression"></property>
-                    <property name="implementation" value="unifyTaskListener"></property>
-                    <!-- 需要触发的事件 -->
-                    <property name="events">
-                        <list>
-                            <value>create</value>
-                            <value>assignment</value>
-                            <value>complete</value>
-                            <value>delete</value>
-                            <!-- 自定义的挂起，激活事件 -->
-                            <value>ENTITY_ACTIVATED</value>
-                            <value>ENTITY_SUSPENDED</value>
-                        </list>
+                    <property name="parsers">
+	                    <list>
+	                        <bean class="com.dp.plat.activiti.unifytask.handler.UnifyTaskBPMNParser" >
+								      <!-- 
+								    class: 完整类路径
+								    $,#会被xml解析，所以后台拼接为#{taskListener}
+								    delegateExpression: taskListener
+								    expression: taskListener.notify(delegateTask)
+								-->
+								<property name="implementationType" value="delegateExpression"></property>
+								<property name="implementation" value="unifyTaskListener"></property>
+								<!-- 需要触发的事件 -->
+								<property name="events">
+								    <list>
+								        <value>create</value>
+								        <value>assignment</value>
+								        <value>complete</value>
+								        <value>delete</value>
+								        <!-- 自定义的挂起，激活事件 -->
+								        <value>ENTITY_ACTIVATED</value>
+								        <value>ENTITY_SUSPENDED</value>
+								    </list>
+								</property>
+	                        </bean>
+	                        <bean class="com.dp.plat.activiti.unifytask.handler.UnifyTaskBPMNParser" >
+			                    <!-- 
+			                        class: 完整类路径
+			                        $,#会被xml解析，所以后台拼接为#{taskListener}
+			                        delegateExpression: taskListener
+			                        expression: taskListener.notify(delegateTask)
+			                    -->
+			                    <property name="implementationType" value="delegateExpression"></property>
+			                    <property name="implementation" value="subcontractInspectionListener"></property>
+			                    <!-- 需要触发的事件 -->
+			                    <property name="events">
+			                        <list>
+			                            <value>complete</value>
+			                            <value>delete</value>
+			                        </list>
+			                    </property>
+			                </bean>
+	                    </list>
                     </property>
                 </bean>
             </list>

@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.entity;
 
 import java.util.Date;
+import java.util.Map;
 
 import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
@@ -11,6 +12,9 @@ public class Facilitator extends BaseEntity {
 
     // 服务商编号
     private String code;
+
+    // 服务商账号
+    private String account;
 
     // 服务商名
     private String name;
@@ -67,6 +71,9 @@ public class Facilitator extends BaseEntity {
     @JsonSerialize(using = JsonSerializer.class)
     private Date updateTime;
 
+    // 自定义信息
+    private Map customInfo;
+
     /**
      * @return id
      */
@@ -97,6 +104,24 @@ public class Facilitator extends BaseEntity {
      */
     public void setCode(String code) {
         this.code = code;
+    }
+
+    /**
+     * 获取服务商账号
+     *
+     * @return account - 服务商账号
+     */
+    public String getAccount() {
+        return account;
+    }
+
+    /**
+     * 设置服务商账号
+     *
+     * @param account 服务商账号
+     */
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     /**
@@ -415,5 +440,23 @@ public class Facilitator extends BaseEntity {
      */
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
+    }
+
+    /**
+     * 获取自定义信息
+     *
+     * @return customInfo - 自定义信息
+     */
+    public Map getCustomInfo() {
+        return customInfo;
+    }
+
+    /**
+     * 设置自定义信息
+     *
+     * @param customInfo 自定义信息
+     */
+    public void setCustomInfo(Map customInfo) {
+        this.customInfo = customInfo;
     }
 }

@@ -1,9 +1,7 @@
 package com.dp.plat.core.controller.admin;
 
 import java.io.File;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +12,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.param.Consts;
-import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.pojo.SysLog;
 import com.dp.plat.core.service.ISysLogService;
 import com.dp.plat.core.util.DownloadUtils;
@@ -104,7 +102,7 @@ public class SysLogController {
 						map.put("type", type);
 						map.put("filePath", file.getPath());
 						map.put("filePathEncode", Base64Utils.encodeToUrlSafeString(file.getPath().getBytes()));
-						map.put("fileSize", file.getTotalSpace());
+						map.put("fileSize", FileUtils.sizeOf(file));
 						map.put("lastModified", file.lastModified());
 						map.put("typeLevel", type + String.format("%0" + deep + "d", level));
 						diskList.add(map);

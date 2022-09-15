@@ -4,7 +4,7 @@ package com.dp.plat.core.exception;
  * @author j01441
  *
  */
-public class UploadException extends RuntimeException{
+public class UploadException extends RuntimeException implements CustomExceptionInterface {
 
 	/**
 	 * 

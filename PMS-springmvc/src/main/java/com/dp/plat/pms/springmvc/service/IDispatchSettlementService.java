@@ -14,6 +14,10 @@ import com.dp.plat.core.vo.PageParam;
  */
 public interface IDispatchSettlementService extends IAbstractBaseService<DispatchSettlement> {
 
+    void insertOrUpdateSelective(SettlementVO settlement);
+    
+    void settlementSubmit(Integer id, SettlementVO settlement);
+
 	long countSettlementWidthDispatchPageable(PageParam<Object> pageParam);
 
 	List<Object> selectSettlementWidthDispatchPageable(PageParam<Object> pageParam);
@@ -27,4 +31,5 @@ public interface IDispatchSettlementService extends IAbstractBaseService<Dispatc
 	void saveSettlementPayment(List<SettlementVO> settlementPaymentList);
 
 	void saveSettlementPayment(List<SettlementVO> settlementPaymentList, Integer[] delIds);
+
 }

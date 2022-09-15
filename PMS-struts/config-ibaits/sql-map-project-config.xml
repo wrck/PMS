@@ -623,6 +623,7 @@
 		        ON ol.`itemCode` = fi.`item` 
 		    LEFT JOIN `pm_order_data_from_sap` od 
 		        ON od.`orderNumber` = ol.`orderNumber` 
+		        AND od.orderType = ol.lineType
 		        AND od.`orderType` = 0 
 		        AND od.compCode = ol.compCode 
 		WHERE fi.`itemname` LIKE CONCAT(#itemModel#, "%") 
@@ -2043,6 +2044,7 @@
         FROM
             pm_order_line_from_sap polfs
         LEFT JOIN pm_order_data_from_sap podfs ON polfs.orderNumber = podfs.orderNumber
+            AND podfs.orderType = polfs.lineType
             AND podfs.`orderType` = 0
             AND polfs.compCode = podfs.compCode
         LEFT JOIN fb_items fi
@@ -2076,6 +2078,7 @@
             a2.`openQuantity`,a2.`orderNumber` ,a2.`lineNum`,0 AS deliverQuantity,'$contractNo$' AS contractNo  
              FROM pm_order_data_from_sap a1 
             LEFT JOIN pm_order_line_from_sap a2 ON a1.`orderNumber` = a2.`orderNumber`
+                 AND a1.orderType = a2.lineType
                  AND a1.compCode = a2.compCode
             WHERE a1.`contractNo` = #contractNo# AND a1.`orderType` = 1 AND a2.`lineType` =1;
         ]]>
@@ -3159,6 +3162,7 @@
                 `pm_order_line_from_sap` a 
                 LEFT JOIN `pm_order_data_from_sap` b 
                     ON a.`orderNumber` = b.`orderNumber` 
+                    AND a.lineType = b.orderType
                     AND a.`compCode` = b.`compCode` 
             WHERE b.contractNo = #contractNo#
         ]]>
@@ -5987,4 +5991,31 @@
 		]]>
 	</select>
   
+    <!-- 查询合同验收交付件信息 -->
+	<select id="selectContractAcceptanceDeliveryInfo" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+	    SELECT a.contractNo, bd.basicDataId AS smsDeliverType, bd.`basicDataName` AS deliverablesReq
+	        , MAX(IF(bd.`basicDataId` = d.basicDataName, uploadTime, NULL)) AS actualDate
+	        , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverableName, NULL)) AS deliverableNames
+	        , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverablePath, NULL)) AS deliverablePaths
+	        , fc.account AS dataAreaId
+	    FROM `pm_basic_deliver_detail` `a`
+	        LEFT JOIN `pm_basic_prj_deliver` `b` ON `a`.`deliverId` = `b`.`id`
+	        LEFT JOIN `fnd_basic_data` `c`
+	        ON `b`.`dataTypeCodeSon` = `c`.`dataTypeCode`
+	            AND `b`.`basicDataIdSon` = `c`.`basicDataId`
+	        JOIN `fnd_basic_data` `d`
+	        ON `d`.`dataTypeCode` = '19'
+	            AND `b`.`basicDataIdSon` = `d`.`basicDataId`
+	        LEFT JOIN fnd_basic_data bd ON bd.dataTypeCode = 'd365DeliverablesReq'
+	        LEFT JOIN pm_order_data_from_sap pod ON pod.contractNo = a.contractNo
+	        LEFT JOIN fnd_company fc ON fc.code = pod.compCode
+	    WHERE `a`.`contractNo` IS NOT NULL
+	        AND a.`effectiveTo` IS NULL
+	        AND a.contractNo IN (
+	            SELECT DISTINCT contractNo
+	            FROM `pm_basic_deliver_detail`
+	            WHERE #dateDiff# >= DATEDIFF(NOW(), IFNULL(effectiveTo, uploadTime))
+	        )
+	    GROUP BY contractNo, smsDeliverType
+	</select>
 </sqlMap>

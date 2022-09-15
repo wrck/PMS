@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.impl.identity.Authentication;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +75,7 @@ import com.dp.plat.util.NotificationTemplateUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.UserUtil;
 import com.dp.plat.util.Util;
+import com.dp.plat.util.WorkflowUtil;
 
 public class SubcontractServiceImpl extends BaseServiceImpl implements SubcontractService {
 
@@ -307,7 +310,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	/**
 	 * @param subcontractPayment
 	 */
-	private void updateSubcontractPaymentByIdSelective(SubcontractPayment subcontractPayment) {
+	public void updateSubcontractPaymentByIdSelective(SubcontractPayment subcontractPayment) {
 		subcontractPayment.setUpdateBy(getLoginName());
 		subcontractPayment.setUpdateTime(new Date());
 		dao.updateSubcontractPaymentByIdSelective(subcontractPayment);
@@ -329,6 +332,9 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		if (subcontractPaymentList != null && !subcontractPaymentList.isEmpty()) {
 			for (SubcontractPayment subcontractPayment : subcontractPaymentList) {
+			    if (subcontractPayment == null) {
+			        continue;
+			    }
 				if (subcontractPayment.getId() != null) {
 					this.updateSubcontractPaymentByIdSelective(subcontractPayment);
 				} else {
@@ -466,6 +472,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 							return false;
 						}
 						SubcontractDeliver deliver = new SubcontractDeliver(subcontractId);
+						deliver.setPaymentId(deliverVO.getPaymentId());
 						deliver.setFileName(fileName);
 						fileName = UploadFileUtil.uploadNoRepeat(file, uploadDir, fileName);
 						deliver.setFilePath(uploadDir + fileName);
@@ -1324,9 +1331,15 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	@Transactional
 	public String generateContractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract) {
 		log("项目转包生成合同号");
+		String subcontractNo = StringUtils.trimToEmpty(subcontract.getSubcontractNo());
+		if (StringUtils.isBlank(subcontractNo)) {
+		    throw new SubcontractException("请填写正确的转包合同号！");
+		}
+		
 		// 更改项目转包状态
 		SubcontractProject tempSubcontract = new SubcontractProject();
 		tempSubcontract.setId(subcontract.getId());
+		tempSubcontract.setSubcontractNo(subcontractNo);
 		tempSubcontract.setState(SubcontractStatus.EXECUTING);// 合同已生成.执行中
 		dao.updateSubcontractProjectByIdSelective(tempSubcontract);
 
@@ -1509,18 +1522,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
     @Transactional
     public String applyPaymentFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract, String nowUser) {
         log("项目转包服务经理提交付款信息");
-        // 更改项目转包状态
-        SubcontractProject tempSubcontract = new SubcontractProject();
-        tempSubcontract.setId(subcontract.getId());
-        tempSubcontract.setState(SubcontractStatus.EXECUTING);// 合同已生成.执行中
-        dao.updateSubcontractProjectByIdSelective(tempSubcontract);
-
+        
         if (StringUtils.isBlank(nowUser)) {
             nowUser = UserContext.getUserContext().getUser().getUsername();
         }
-        String processKey = SubcontractConstant.PROCESS_SUBCONTRACT_KEY;
-        subcontract = dao.selectSubcontractProjectById(subcontract.getId());
-
+        
         HashMap<String, Object> params = new HashMap<>();
         params.put("checkOffice", "true");
         List<Task> taskList = querySubcontractTaskList(TaskKey.APPLY_PAYMENT, "smRole", subcontract.getId(),
@@ -1532,6 +1538,15 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
         } else {
             throw new SubcontractException("没有【" + nowUser + "】的待办任务！任务办理失败！");
         }
+        
+        // 更改项目转包状态
+        SubcontractProject tempSubcontract = new SubcontractProject();
+        tempSubcontract.setId(subcontract.getId());
+        tempSubcontract.setState(SubcontractStatus.EXECUTING);// 合同已生成.执行中
+        dao.updateSubcontractProjectByIdSelective(tempSubcontract);
+
+        String processKey = SubcontractConstant.PROCESS_SUBCONTRACT_KEY;
+        subcontract = dao.selectSubcontractProjectById(subcontract.getId());
 
         // 增加流程变量
         String[] nextAssignee = new String[2];
@@ -1549,7 +1564,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
             vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
             nextAssignee[0] = "工程人员";
             nextAssignee[1] = "工程人员";
+            // 从流程中获取下级任务办理人
+            nextAssignee[0] = StringUtils.defaultIfBlank((String) taskService.getVariable(task.getId(), "nextAssigneeCode"),  nextAssignee[0]);
+            nextAssignee[1] = StringUtils.defaultIfBlank((String) taskService.getVariable(task.getId(), "nextAssigneeName"),  nextAssignee[1]);
         }
+  
         taskParam.setComment("服务经理申请付款");
         vars.put("dpNo", subcontract.getOfficeCode());
         vars.put("paymentApplicant", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
@@ -1632,6 +1651,17 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	@Transactional
 	public String submitCallBackFlow2(WorkflowCommonParam taskParam, SubcontractCallback subcontractCallback) {
 		String processKey = SubcontractConstant.PROCESS_CALLBACK_KEY;
+		String nowUser = UserContext.getUserContext().getUser().getUsername();
+		
+		// 办理任务
+		List<Task> taskList = querySubcontractTaskList(TaskKey.CALLBACK, taskParam.getTaskId());
+		Task task = null;
+		if (taskList != null && !taskList.isEmpty()) {
+		    task = taskList.get(0);
+		    taskParam.setTaskId(task.getId());
+		} else {
+		    throw new SubcontractException("没有【" + nowUser + "】的待办任务！任务办理失败！");
+		}
 		// 更改项目回访状态
 		// SubcontractProject tempSubcontract = new SubcontractProject();
 		SubcontractProjectVO tempSubcontract = this
@@ -1642,18 +1672,31 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		tempSubcontract.setId(subcontractCallback.getSubcontractId());
 		String[] nextAssignee = new String[] { "", "" };
 		Map<String, Object> vars = new HashMap<String, Object>();
-		if (taskParam.getApproveStatus() == CALLBACK_PASS) {
-			tempSubcontract.setCallbackState(60);
-			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
-			vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
-			nextAssignee[0] = "工程人员";
-			nextAssignee[1] = "工程人员";
-		} else if (taskParam.getApproveStatus() == CALLBACK_DISABLE) {
-			tempSubcontract.setCallbackState(50);
-			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
-			vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
-			nextAssignee[0] = "工程人员";
-			nextAssignee[1] = "工程人员";
+		if (taskParam.getApproveStatus() == CALLBACK_PASS || taskParam.getApproveStatus() == CALLBACK_DISABLE) {
+		    if (taskParam.getApproveStatus() == CALLBACK_PASS) {
+	            tempSubcontract.setCallbackState(60);
+            } else if (taskParam.getApproveStatus() == CALLBACK_DISABLE) {
+                tempSubcontract.setCallbackState(50);
+            }
+            vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
+            vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+            nextAssignee[0] = "工程人员";
+            nextAssignee[1] = "工程人员";
+		    // 从流程中获取下级任务办理人
+            nextAssignee[0] = StringUtils.defaultIfBlank((String) taskService.getVariable(task.getId(), "nextAssigneeCode"),  nextAssignee[0]);
+            nextAssignee[1] = StringUtils.defaultIfBlank((String) taskService.getVariable(task.getId(), "nextAssigneeName"),  nextAssignee[1]);
+//		} else if (taskParam.getApproveStatus() == CALLBACK_PASS) {
+//			tempSubcontract.setCallbackState(60);
+//			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
+//			vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+//			nextAssignee[0] = "工程人员";
+//			nextAssignee[1] = "工程人员";
+//		} else if (taskParam.getApproveStatus() == CALLBACK_DISABLE) {
+//			tempSubcontract.setCallbackState(50);
+//			vars.put(SubcontractConstant.TASK_USER_ENGINEEMANAGER_EMP, "emRole");
+//			vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
+//			nextAssignee[0] = "工程人员";
+//			nextAssignee[1] = "工程人员";
 		} else if (taskParam.getApproveStatus() == CALLBACK_REJECT) {
 			tempSubcontract.setCallbackState(-20);
 			String officeCode = tempSubcontract.getOfficeCode();
@@ -1669,17 +1712,6 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		dao.updateSubcontractProjectByIdSelective(tempSubcontract);
 
-		String nowUser = UserContext.getUserContext().getUser().getUsername();
-
-		// 办理任务
-		List<Task> taskList = querySubcontractTaskList(TaskKey.CALLBACK, taskParam.getTaskId());
-		Task task = null;
-		if (taskList != null && !taskList.isEmpty()) {
-			task = taskList.get(0);
-			taskParam.setTaskId(task.getId());
-		} else {
-			throw new SubcontractException("没有【" + nowUser + "】的待办任务！任务办理失败！");
-		}
 
 		// 增加流程变量
 		vars.put("result", taskParam.getApproveStatus());
@@ -1825,16 +1857,16 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			mailMap.put("tos", tos);
 			if (taskParam.getApproveStatus() == CLOSE_ABLE) {
 				mailMap.put("templateCode", SubcontractTemplate.CLOSE_NOTIFY_CODE);
-			} else if (taskParam.getApproveStatus() == PAYMENT) {
-				String paiedAmount = this.querySubcontractPaiedAmount(subcontract.getId());
-				if (StringUtils.isBlank(paiedAmount)) {
-					throw new SubcontractException("付款金额为空！");
-				}
-				DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
-				BigDecimal b = new BigDecimal(paiedAmount);
-				paiedAmount = decimalFormat.format(b);
-				mailMap.put("paiedAmount", paiedAmount);
-				mailMap.put("templateCode", SubcontractTemplate.PAYMENT_FINISH_NOTIFY_CODE);
+//			} else if (taskParam.getApproveStatus() == PAYMENT) {
+//				String paiedAmount = this.querySubcontractPaiedAmount(subcontract.getId());
+//				if (StringUtils.isBlank(paiedAmount)) {
+//					throw new SubcontractException("付款金额为空！");
+//				}
+//				DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
+//				BigDecimal b = new BigDecimal(paiedAmount);
+//				paiedAmount = decimalFormat.format(b);
+//				mailMap.put("paiedAmount", paiedAmount);
+//				mailMap.put("templateCode", SubcontractTemplate.PAYMENT_FINISH_NOTIFY_CODE);
 			} else if (taskParam.getApproveStatus() == REJECT) {
 				mailMap.put("ccs", basicDataService.querySysArg(SubcontractTemplate.SUBCONTRACT_CCS_MAIL));
 				mailMap.put("templateCode", SubcontractTemplate.APPROVE_REJECT_NOTIFY_CODE);
@@ -1849,8 +1881,105 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		NotificationTemplateUtil.keepMail(mailMap);
 		return "";
 	}
-
+	
 	@Override
+    public String submitAcceptanceFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract) {
+	    log("项目转包验收审批");
+        String nowUser = UserContext.getUserContext().getUser().getUsername();
+	    // 办理任务
+	    List<Task> taskList = querySubcontractTaskList(TaskKey.ACCEPTANCE_TASK, taskParam.getTaskId());
+	    Task task = null;
+	    if (taskList != null && !taskList.isEmpty()) {
+	        task = taskList.get(0);
+	        taskParam.setTaskId(task.getId());
+	    } else {
+	        throw new SubcontractException("没有【" + nowUser + "】的待办任务！任务办理失败！");
+	    }
+	    
+        // 更改项目转包状态
+        // SubcontractProject tempSubcontract = new SubcontractProject();
+        SubcontractProject tempSubcontract = this.selectSubcontractProjectById(subcontract.getId());
+        if (tempSubcontract == null) {
+            tempSubcontract = new SubcontractProject();
+        }
+
+        tempSubcontract.setId(subcontract.getId());
+        String[] nextAssignee = new String[] { "", "" };
+        Boolean isPass = false;
+        if (taskParam.getApproveStatus() == AGREE) {
+            isPass = true;
+            nextAssignee[0] = "工程人员";
+            nextAssignee[1] = "工程人员";
+            // 从流程中获取下级任务办理人
+            nextAssignee[0] = StringUtils.defaultIfBlank((String) taskService.getVariableLocal(task.getId(), "nextAssigneeCode"),  nextAssignee[0]);
+            nextAssignee[1] = StringUtils.defaultIfBlank((String) taskService.getVariableLocal(task.getId(), "nextAssigneeName"),  nextAssignee[1]);
+        } else if (taskParam.getApproveStatus() == REJECT) {
+            isPass = false;
+            String officeCode = tempSubcontract.getOfficeCode();
+            Department department = departmentManageService.queryDepartmentByDepartmentNum(officeCode);
+            if (department != null) {
+                nextAssignee[0] += department.getDepartmentName();
+                nextAssignee[1] += department.getDepartmentName();
+            }
+            nextAssignee[0] += "服务经理";
+            nextAssignee[1] += "服务经理";
+        } else {
+            throw new SubcontractException("请选择审批意见！");
+        }
+        dao.updateSubcontractProjectByIdSelective(tempSubcontract);
+
+        String processKey = SubcontractConstant.PROCESS_INSPECTION_KEY;
+        subcontract = dao.selectSubcontractProjectVOById(subcontract.getId());
+
+        // 增加流程变量
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("isPass", isPass);
+        vars.put("result", taskParam.getApproveStatus());
+        vars.put("dpNo", tempSubcontract.getOfficeCode());
+        vars.put("data", taskParam.getCustomInfoByKey("approveData"));
+        this.submitSelfTask(taskParam, vars);
+
+        // 3.增加自定义的审批意见
+        workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
+                task.getProcessInstanceId(), taskParam.getApproveStatus(), taskParam.getComment(), nextAssignee[0],
+                nextAssignee[1]);
+        // 邮件
+        // String tos =
+        // userManageService.queryMailsByRoleAndOfficeCodes(tempSubcontract.getOfficeCode(),
+        // MessageUtil.ROLE_SERVICEMANAGER);
+        String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, tempSubcontract.getOfficeCode());
+        String tos = nextAssignPer[2];
+        HashMap<String, Object> mailMap = new HashMap<>();
+        if (StringUtils.isNotBlank(tos)) {
+            mailMap.put("tos", tos);
+            if (taskParam.getApproveStatus() == CLOSE_ABLE) {
+                mailMap.put("templateCode", SubcontractTemplate.CLOSE_NOTIFY_CODE);
+            } else if (taskParam.getApproveStatus() == PAYMENT) {
+                String paiedAmount = this.querySubcontractPaiedAmount(subcontract.getId());
+                if (StringUtils.isBlank(paiedAmount)) {
+                    throw new SubcontractException("付款金额为空！");
+                }
+                DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
+                BigDecimal b = new BigDecimal(paiedAmount);
+                paiedAmount = decimalFormat.format(b);
+                mailMap.put("paiedAmount", paiedAmount);
+                mailMap.put("templateCode", SubcontractTemplate.PAYMENT_FINISH_NOTIFY_CODE);
+            } else if (taskParam.getApproveStatus() == REJECT) {
+                mailMap.put("ccs", basicDataService.querySysArg(SubcontractTemplate.SUBCONTRACT_CCS_MAIL));
+                mailMap.put("templateCode", SubcontractTemplate.APPROVE_REJECT_NOTIFY_CODE);
+            }
+            // mailMap.put("username", ((SubcontractProjectVO)
+            // subcontract).getOfficeName() + "服务经理");
+            mailMap.put("username", nextAssignPer[1]);
+            mailMap.put("subcontractName", subcontract.getSubcontractName());
+            mailMap.put("taskAssignee", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
+            mailMap.put("comment", taskParam.getComment());
+        }
+        NotificationTemplateUtil.keepMail(mailMap);
+        return "";
+    }
+
+    @Override
 	@Transactional
 	public String startCallBackFlow(Integer subcontractId) {
 		log("触发项目转包回访流程");
@@ -2013,12 +2142,20 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		if (StringUtils.isBlank(comment)) {
 			comment = "终止流程";
 		}
-		for (Task task : taskList) {
-			// instIds.add(task.getProcessInstanceId());
-			runtimeService.deleteProcessInstance(task.getProcessInstanceId(), comment);
-			workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(),
-					task.getId(), task.getProcessInstanceId(), CommentStatus.CLOSE_DISABLE, comment, nextAssignee[0],
-					nextAssignee[1]);
+		while(!taskList.isEmpty()) {
+    		for (Task task : taskList) {
+    		    String tempProcessKey = task.getProcessDefinitionId().split(":")[0];
+    		    WorkflowUtil.terminateActivities(task.getId(), comment);
+    		    workFlowService.addSelfActComment(subcontract.getId(), tempProcessKey, task.getTaskDefinitionKey(),
+    		                              task.getId(), task.getProcessInstanceId(), CommentStatus.CLOSE_DISABLE, comment, nextAssignee[0],
+    		                              nextAssignee[1]);
+    //		    // instIds.add(task.getProcessInstanceId());
+    //    		runtimeService.deleteProcessInstance(task.getProcessInstanceId(), comment);
+    //    		workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(),
+    //    		        task.getId(), task.getProcessInstanceId(), CommentStatus.CLOSE_DISABLE, comment, nextAssignee[0],
+    //    		        nextAssignee[1]);
+    		}
+    		taskList = dao.querySubcontractTaskList(params);
 		}
 
 		Map<String, Object> mailMap = new HashMap<String, Object>();
@@ -2207,23 +2344,82 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		params.put("taskId", taskId);
 		params.put("subcontractId", subcontractId);
+		List<Map> roleGroups = new ArrayList<>();
+		List<String> roles = new ArrayList<String>();
 		if (StringUtils.isBlank(roleGroup)) {
 			if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 					|| context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
-				roleGroup = "emRole";
+			    roles.add("emRole");
+			    roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+		            "roleGroup", "emRole",
+			    }));
+			    roles.add("role_" + MessageUtil.ROLE_ENGINEEMANAGER);
+			    roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                    "roleGroup", "role_" + MessageUtil.ROLE_ENGINEEMANAGER,
+                }));
 				if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
-					roleGroup += ",role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER;
+				    roles.add("role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
+					roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+	                    "roleGroup", "role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER,
+	                }));
 				}
 				// params.put("roleGroup", "emRole");
-			} else if (context.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
-				// params.put("roleGroup", "cbRole");
-				roleGroup = "cbRole";
-			} else if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
-				roleGroup = "zrRole,role_" + MessageUtil.ROLE_AREA_LEADER;
-				params.put("checkProfitDep", "true");
 			}
+			if (context.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
+				// params.put("roleGroup", "cbRole");
+			    roles.add("cbRole");
+				roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                    "roleGroup", "cbRole",
+                }));
+			}
+			if (context.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
+			    roles.add("zrRole,role_" + MessageUtil.ROLE_AREA_LEADER);
+//				params.put("checkProfitDep", "true");
+				roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                    "roleGroup", "zrRole",
+                    "checkProfitDep", true
+                }));
+				roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                    "roleGroup", "role_" + MessageUtil.ROLE_AREA_LEADER,
+                    "checkProfitDep", true
+                }));
+			}
+			if (context.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)) {
+                roles.add("role_" + MessageUtil.ROLE_FINANCIAL_STAFF);
+                roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                    "roleGroup", "role_" + MessageUtil.ROLE_FINANCIAL_STAFF
+                }));
+            }
+		} else {
+		    Map<String, Integer> roleMap = new HashMap<String, Integer>();
+		    roleMap.put("pmRole", MessageUtil.ROLE_PROGRAMMANAGER);
+		    roleMap.put("smRole", MessageUtil.ROLE_SERVICEMANAGER);
+		    roleMap.put("profitSmRole", MessageUtil.ROLE_SERVICEMANAGER);
+		    roleMap.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER);
+		    roleMap.put("cbRole", MessageUtil.ROLE_CALLBACKPER);
+		    roleMap.put("zrRole", MessageUtil.ROLE_AREA_LEADER);
+		    roles = Arrays.asList(roleGroup.split(","));
+		    for (String roleName : roles) {
+		        Integer role = roleMap.get(roleName);
+		        if (role == null) {
+		            String tmp = roleName.replace("role_", "");
+		            try {
+		                role = Integer.parseInt(tmp);
+		            } catch (Exception e) {
+		                role = -1;
+                    }
+		        }
+		        if (context.isHasRole(role)) {
+    		        roleGroups.add(MapUtils.putAll(new HashMap<String, Object>(), new Object[] {
+                        "roleGroup", roleName,
+                        "checkProfitDep", params.get("checkProfitDep"),
+                        "checkOffice", params.get("checkOffice")
+                    }));
+		        }
+            }
 		}
-		params.put("roleGroup", roleGroup);
+		
+	    params.put("roleGroups", roleGroups);
 		return dao.querySubcontractTaskList(params);
 	}
 

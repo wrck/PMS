@@ -623,7 +623,7 @@ class watcher{
                     		var results = config.transformResult.call(item, data);
                     		config.lookup = results.suggestions;
                     		$(item).autocomplete('setOptions', config);
-                    	})
+                    	}, item)
                     } else {
                     	if (config.lazy) {
                     		$(item).one("click", function() {
@@ -632,7 +632,7 @@ class watcher{
                             		var results = config.transformResult.call(item, data);
                             		config.lookup = results.suggestions;
                             		$(item).autocomplete('setOptions', config);
-                            	})
+                            	}, item)
                     		})
                     	} else {
                     		config.serviceUrl = config.serviceUrl || url;
@@ -646,7 +646,7 @@ class watcher{
 //                    	config.lookup = function(query, done) {
 //                    		_this.getDataByUrl(config.serviceUrl, function(data) {
 //                    			done(data);
-//                    		});
+//                    		}, item);
 //                    	}
             			
 //                        var that = this;
@@ -734,13 +734,13 @@ class watcher{
     //数据来源为url的 radio checkbox
     BaseForm.prototype.buildAjaxUrlBox = function (selector, url) {
         var builder = this.buildAjaxBox(selector);
-        $dataSource.getDataByUrl(url, builder);
+        $dataSource.getDataByUrl(url, builder, selector);
     }
     //数据来源为字典的下拉框
     BaseForm.prototype.buildAjaxDictSelect = function (selector, dictCode) {
         var builder = this.buildAjaxSelector(selector);
         if (builder) {
-        	$dataSource.getDict(dictCode, builder);
+        	$dataSource.getDict(dictCode, builder, selector);
         }
     }
     //数据来源为url的下拉框
@@ -752,7 +752,7 @@ class watcher{
     	if (!isSame) {
     		var builder = this.buildAjaxSelector(selector);
     		if (builder) {
-    			this.getDataByUrl(url, builder);
+    			this.getDataByUrl(url, builder, selector);
     		}
     	}
     }
@@ -780,7 +780,7 @@ class watcher{
     //下拉框组件生成
     BaseForm.prototype.buildAjaxSelector = function (selector) {
         var sel = $(selector);
-        var allowClear = $(selector).data("allowClear") ? true: false;
+        var allowClear = $(selector).data("allowClear") || ($(selector).data("select2Config") || {}).allowClear ? true: false;
         if (sel.children().length > 0) {
         	if (allowClear) {
         		$(selector).html("");
@@ -855,15 +855,22 @@ class watcher{
         return builder;
     }
     
-    BaseForm.prototype.getDataByUrl = function(url, callback) {
+    BaseForm.prototype.getDataByUrl = function(url, callback, selector) {
     	if(!url.startsWith(basePath)) {
     		url = basePath + url;
+    	}
+    	// 标记正在加载，避免部分初始化在数据加载之前造成数据显示错误，例如select2 启用tag；
+    	if (selector) {
+    		$(selector).data("isLoading", true);
     	}
     	ajaxPost(url, {}, function(data) {
     		//if (data.data && data.data.length > 0 && callback) {
     		if (data && callback) {
                 callback(data);
             } 
+    		if (selector) {
+        		$(selector).removeData("isLoading");
+        	}
     	});
     }
 //	var BaseForm=function(element,options){
@@ -1164,6 +1171,10 @@ class watcher{
 		var that = this;
 		form.find('input[name], select[name], textarea[name], label[name]').each(function(ind, elem) {
 			var obj = $(elem), el_name = obj.attr('name'), value;
+			var isLoading = $(elem).data("isLoading") || false;
+			if (isLoading) {
+				return;
+			}
 			try {
 				value = eval('json_data.' + el_name);
 			} catch (e) {

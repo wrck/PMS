@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.springframework.util.StreamUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 /**
@@ -56,12 +57,12 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 				requestBodyStr = getRequestBody(request);
 				if (null != requestBodyStr && !"".equals(requestBodyStr)) {
 					String temp = escapeHtml(requestBodyStr);
-					JSONObject resultJson = JSONObject.parseObject(temp);
+					JSONObject resultJson = JSON.parseObject(temp);
 					requestBody = resultJson.toString().getBytes(getCharset());
 				} else {
 					requestBody = new byte[0];
 				}
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				if (null == requestBody && null != requestBodyStr) {
 					requestBody = requestBodyStr.getBytes(getCharset());
 				}

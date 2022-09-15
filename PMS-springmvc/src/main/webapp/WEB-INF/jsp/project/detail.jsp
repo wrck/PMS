@@ -297,7 +297,7 @@
 					));
 					window.projectVm = vm;
 					// 获取表单验证要求
-					varFields = vm.$refs["formInputs"].fieldValidators;
+					varFields = (vm.$refs["formInputs"] || {}).fieldValidators;
 					
 					form = $("#" + formId).form();
 					//form.initFormData(data.targetValue);

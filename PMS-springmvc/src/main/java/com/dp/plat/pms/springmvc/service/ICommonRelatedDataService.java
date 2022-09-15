@@ -7,5 +7,5 @@ import com.dp.plat.core.service.IAbstractBaseService;
  *
  * Created by CodeGenerator
  */
-public interface ICommonRelatedDataService extends IAbstractBaseService<CommonRelatedData> {
+public interface ICommonRelatedDataService extends IExcelAnalysisService<CommonRelatedData> {
 }

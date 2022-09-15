@@ -3,7 +3,7 @@
  */
 //$("body .wrapper .content-wrapper").css("minHeight",$(window).height() - $("header.main-header").height() - $("footer.main-footer").outerHeight());
 // 默认展开至二级菜单
-function menuInit() {
+function menuInit2() {
 	$(".treeview").addClass("active");
 	$(".treeview>.treeview-menu").addClass("active");
 	var href = window.location.href;
@@ -20,6 +20,42 @@ function menuInit() {
 			$(".breadcrumb").prev().text(title);
 			if(breadcrumb){
 				var html = "<li><a href='"+ basePath +"/success.html'><i class='fa fa-dashboard'></i>首页</a></li>";
+				//var crumbs= $(".sidebar-menu .active>a");
+				var crumbs= $(".active>a, a:first",$(this).parents(".treeview"));
+				for(var i=0; i<crumbs.length; i++){
+					crumb = crumbs[i];
+					var li = "<li>";
+					if(i == crumbs.length-1){
+						li = "<li  class='active'>";
+					}
+					html+=li+"<a href='"+$(crumb).attr("href")+"'>"+$(crumb).find(".menu-name").text().trim()+"</a></li>"
+				}
+				breadcrumb.html(html);
+			}
+		}
+	})
+}
+function menuInit() {
+	$(".treeview").addClass("active");
+	$(".treeview>.treeview-menu").addClass("active");
+	var href = window.location.href;
+	var menuName = $(".content-header>h1").text();
+//	href = href.split("?")[0];
+	$(".treeview-menu a").each(function(){
+		var url = $(this).attr("href");
+		var aName = $(this).text().trim();
+//		url = url.split("?")[0];
+//		url = url.replace(".html","");
+		if(url && (href.indexOf(url)>-1 || href.indexOf(url+"/")>-1) || menuName.indexOf(aName)>-1){
+			// 展开选中的菜单
+			$(this).parents("li").addClass("active");
+			// 导航栏标题
+	        var title = $(this).text().trim();
+			// 绘制导航栏
+			var breadcrumb = $(".breadcrumb");
+			$(".breadcrumb").prev().text(title);
+			if(breadcrumb){
+				var html = "<li><a href='"+ basePath +"/sys/success.html'><i class='fa fa-dashboard'></i>首页</a></li>";
 				//var crumbs= $(".sidebar-menu .active>a");
 				var crumbs= $(".active>a, a:first",$(this).parents(".treeview"));
 				for(var i=0; i<crumbs.length; i++){

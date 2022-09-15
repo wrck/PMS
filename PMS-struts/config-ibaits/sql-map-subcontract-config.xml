@@ -31,11 +31,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
       <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
       <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+      <result column="customInfo" jdbcType="JSON" property="customInfo" />
     </resultMap>
   <sql id="SubcontractProject_List">
     id, subcontractName, contractNos, projectIds, type, state, callbackState, facilitatorId, facilitatorName, bankInfo, bankAccount, officeCode, profitDepCode, 
     subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason, remark, effectiveFrom, effectiveTo, zrApproveTime, createBy, createTime, 
-    updateBy, updateTime
+    updateBy, updateTime, customInfo
   </sql>
   <select id="selectSubcontractProjectById" parameterClass="java.lang.Integer" resultMap="SubcontractProject">
     select 
@@ -56,13 +57,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       profitDepCode, facilitatorName, bankInfo, bankAccount, subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason,
       remark, effectiveFrom, effectiveTo, zrApproveTime,
       createBy, createTime, updateBy, 
-      updateTime)
+      updateTime, customInfo)
     values (#subcontractName#, #contractNos#, #projectIds#, #type#, 
       #state#, #callbackState#, #facilitatorId#, #officeCode#, 
       #profitDepCode#, #facilitatorName#, #bankInfo#, #bankAccount#, #subcontractNo#, #isAccrued#, #isInvoiced#, #subcontractAmount#, #reason#,
       #remark#, #effectiveFrom#, #effectiveTo#, #zrApproveTime#,
       #createBy#, #createTime#, #updateBy#, 
-      #updateTime#)
+      #updateTime#, #customInfo:JSON#)
   </insert>
   <insert id="insertSubcontractProjectSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractProject">
     <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
@@ -95,6 +96,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createTime"> createTime  </isNotNull>
       <isNotNull prepend="," property="updateBy"> updateBy  </isNotNull>
       <isNotNull prepend="," property="updateTime"> updateTime  </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull removeFirstPrepend="true" prepend="," property="subcontractName"> #subcontractName# </isNotNull>
@@ -122,6 +124,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
       <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
       <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> #customInfo:JSON# </isNotNull>
     </dynamic>
   </insert>
   <update id="updateSubcontractProjectByIdSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractProject">
@@ -152,6 +155,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createTime"> createTime = #createTime# </isNotNull>
       <isNotNull prepend="," property="updateBy"> updateBy = #updateBy# </isNotNull>
       <isNotNull prepend="," property="updateTime"> updateTime = #updateTime# </isNotNull>
+      <isNotNull prepend="," property="customInfo">
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
     where id = #id#
   </update>
@@ -181,7 +188,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       createBy = #createBy#,
       createTime = #createTime#,
       updateBy = #updateBy#,
-      updateTime = #updateTime#
+      updateTime = #updateTime#,
+      <!-- customInfo = #customInfo:JSON# -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
     where id = #id#
   </update>
   <select id="selectSubcontractProjectList" parameterClass="com.dp.plat.subcontract.entity.SubcontractProject" resultMap="SubcontractProject">
@@ -206,8 +215,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
@@ -237,8 +246,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
@@ -309,8 +318,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> h.createTime = #createTime# </isNotEmpty>
@@ -358,8 +367,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
@@ -448,8 +457,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> h.createTime = #createTime# </isNotEmpty>
@@ -539,8 +548,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> h.createTime = #createTime# </isNotEmpty>
@@ -796,6 +805,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <resultMap id="SubcontractFacilitator" class="com.dp.plat.subcontract.entity.SubcontractFacilitator">
     <result column="id" jdbcType="INTEGER" property="id" />
     <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="code" jdbcType="VARCHAR" property="code" />
+    <result column="account" jdbcType="VARCHAR" property="account" />
     <result column="bankInfo" jdbcType="VARCHAR" property="bankInfo" />
     <result column="bankAccount" jdbcType="VARCHAR" property="bankAccount" />
     <result column="receiver" jdbcType="VARCHAR" property="receiver" />
@@ -809,7 +820,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="SubcontractFacilitator_Column_List">
-    id, name, bankInfo, bankAccount, receiver, email, state, effectiveFrom, effectiveTo, createBy, createTime, 
+    id, name, code, account, bankInfo, bankAccount, receiver, email, state, effectiveFrom, effectiveTo, createBy, createTime, 
     updateBy, updateTime
   </sql>
   <select id="selectSubcontractFacilitatorById" parameterClass="java.lang.Integer" resultMap="SubcontractFacilitator">
@@ -826,11 +837,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <selectKey keyProperty="id" type ="post" resultClass="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into pm_subcontract_facilitator (name, bankInfo, bankAccount, receiver, email,
+    insert into pm_subcontract_facilitator (name, code, account, 
+      bankInfo, bankAccount, receiver, email,
       state, effectiveFrom, effectiveTo, 
       createBy, createTime, updateBy, 
       updateTime)
-    values (#name#, #bankInfo#, #bankAccount#, #receiver#, #email#,
+    values (#name#, #code#, #account#, 
+      #bankInfo#, #bankAccount#, #receiver#, #email#,
       #state#, #effectiveFrom#, #effectiveTo#, 
       #createBy#, #createTime#, #updateBy#, 
       #updateTime#)
@@ -842,6 +855,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     insert into pm_subcontract_facilitator
     <dynamic open="(" close=")" prepend=" ">
       <isNotNull prepend="," property="name"> name </isNotNull>
+      <isNotNull prepend="," property="code"> code </isNotNull>
+      <isNotNull prepend="," property="account"> account </isNotNull>
       <isNotNull prepend="," property="bankInfo"> bankInfo </isNotNull>
       <isNotNull prepend="," property="bankAccount"> bankAccount </isNotNull>
       <isNotNull prepend="," property="receiver"> receiver </isNotNull>
@@ -856,6 +871,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull prepend="," property="name"> #name# </isNotNull>
+      <isNotNull prepend="," property="code"> #code# </isNotNull>
+      <isNotNull prepend="," property="account"> #account# </isNotNull>
       <isNotNull prepend="," property="bankInfo"> #bankInfo# </isNotNull>
       <isNotNull prepend="," property="bankAccount"> #bankAccount# </isNotNull>
       <isNotNull prepend="," property="receiver"> #receiver# </isNotNull>
@@ -873,6 +890,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     update pm_subcontract_facilitator
     <dynamic prepend="set">
       <isNotNull prepend="," property="name"> name = #name# </isNotNull>
+      <isNotNull prepend="," property="code"> code = #code# </isNotNull>
+      <isNotNull prepend="," property="account"> account = #account# </isNotNull>
       <isNotNull prepend="," property="bankInfo"> bankInfo = #bankInfo# </isNotNull>
       <isNotNull prepend="," property="bankAccount"> bankAccount = #bankAccount# </isNotNull>
       <isNotNull prepend="," property="receiver"> receiver = #receiver# </isNotNull>
@@ -890,6 +909,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <update id="updateSubcontractFacilitatorById" parameterClass="com.dp.plat.subcontract.entity.SubcontractFacilitator">
     update pm_subcontract_facilitator
     set name = #name#,
+      code = #code#,
+      account = #account#,
       bankInfo = #bankInfo#,
       bankAccount = #bankAccount#,
       receiver = #receiver#,
@@ -907,14 +928,16 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     select * from pm_subcontract_facilitator
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="code"> code = #code# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="account"> account = #account# </isNotEmpty>
         <isNotEmpty prepend="AND" property="name"> name like concat("%", #name#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="bankInfo"> bankInfo like concat("%", #bankInfo#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="bankAccount"> bankAccount = #bankAccount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="receiver"> receiver = #receiver# </isNotEmpty>
         <isNotEmpty prepend="AND" property="email"> email = #email# </isNotEmpty>
         <isNotEmpty prepend="AND" property="state"> state = #state# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
@@ -925,14 +948,16 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     select count(1) from pm_subcontract_facilitator
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="code"> code = #code# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="account"> account = #account# </isNotEmpty>
         <isNotEmpty prepend="AND" property="name"> name like concat("%", #name#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="bankInfo"> bankInfo like concat("%", #bankInfo#, "%") </isNotEmpty>
         <isNotEmpty prepend="AND" property="bankAccount"> bankAccount = #bankAccount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="receiver"> receiver = #receiver# </isNotEmpty>
         <isNotEmpty prepend="AND" property="email"> email = #email# </isNotEmpty>
         <isNotEmpty prepend="AND" property="state"> state = #state# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
@@ -943,6 +968,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <resultMap id="SubcontractDeliver" class="com.dp.plat.subcontract.entity.SubcontractDeliver">
     <result column="id" jdbcType="INTEGER" property="id" />
     <result column="subcontractId" jdbcType="INTEGER" property="subcontractId" />
+    <result column="paymentId" jdbcType="INTEGER" property="paymentId" />
     <result column="fileName" jdbcType="VARCHAR" property="fileName" />
     <result column="filePath" jdbcType="VARCHAR" property="filePath" />
     <result column="type" jdbcType="VARCHAR" property="type" />
@@ -952,7 +978,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
   </resultMap>
   <sql id="SubcontractDeliver_Column_List">
-    id, subcontractId, fileName, filePath, type, uploadBy, uploadTime, effectiveFrom, 
+    id, subcontractId, paymentId, fileName, filePath, type, uploadBy, uploadTime, effectiveFrom, 
     effectiveTo
   </sql>
   <select id="selectSubcontractDeliverById" parameterClass="java.lang.Integer" resultMap="SubcontractDeliver">
@@ -969,10 +995,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <selectKey keyProperty="id" type ="post" resultClass="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into pm_subcontract_deliver_files (subcontractId, fileName, filePath, 
+    insert into pm_subcontract_deliver_files (subcontractId, paymentId, fileName, filePath, 
       type, uploadBy, uploadTime, 
       effectiveFrom, effectiveTo)
-    values (#subcontractId#, #fileName#, #filePath#, 
+    values (#subcontractId#, #paymentId#, #fileName#, #filePath#, 
       #type#, #uploadBy#, #uploadTime#, 
       #effectiveFrom#, #effectiveTo#)
   </insert>
@@ -983,6 +1009,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     insert into pm_subcontract_deliver_files
     <dynamic open="(" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> subcontractId </isNotNull>
+      <isNotNull prepend="," property="paymentId"> paymentId </isNotNull>
       <isNotNull prepend="," property="fileName"> fileName </isNotNull>
       <isNotNull prepend="," property="filePath"> filePath </isNotNull>
       <isNotNull prepend="," property="type"> type </isNotNull>
@@ -993,6 +1020,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> #subcontractId# </isNotNull>
+      <isNotNull prepend="," property="paymentId"> #paymentId# </isNotNull>
       <isNotNull prepend="," property="fileName"> #fileName# </isNotNull>
       <isNotNull prepend="," property="filePath"> #filePath# </isNotNull>
       <isNotNull prepend="," property="type"> #type# </isNotNull>
@@ -1006,6 +1034,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     update pm_subcontract_deliver_files
     <dynamic prepend="set">
       <isNotNull prepend="," property="subcontractId"> subcontractId = #subcontractId# </isNotNull>
+      <isNotNull prepend="," property="paymentId"> paymentId = #paymentId# </isNotNull>
       <isNotNull prepend="," property="fileName"> fileName = #fileName# </isNotNull>
       <isNotNull prepend="," property="filePath"> filePath = #filePath# </isNotNull>
       <isNotNull prepend="," property="type"> type = #type# </isNotNull>
@@ -1019,6 +1048,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <update id="updateSubcontractDeliverById" parameterClass="com.dp.plat.subcontract.entity.SubcontractDeliver">
     update pm_subcontract_deliver_files
     set subcontractId = #subcontractId#,
+      paymentId = #paymentId#,
       fileName = #fileName#,
       filePath = #filePath#,
       type = #type#,
@@ -1033,13 +1063,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="paymentId"> paymentId = #paymentId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="fileName"> fileName = #fileName# </isNotEmpty>
         <isNotEmpty prepend="AND" property="filePath"> filePath = #filePath# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadBy"> uploadBy = #uploadBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadTime"> uploadTime = #uploadTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
   <select id="countSubcontractDeliverList" parameterClass="com.dp.plat.subcontract.entity.SubcontractDeliver" resultClass="long">
@@ -1047,13 +1078,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="paymentId"> paymentId = #paymentId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="fileName"> fileName = #fileName# </isNotEmpty>
         <isNotEmpty prepend="AND" property="filePath"> filePath = #filePath# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadBy"> uploadBy = #uploadBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadTime"> uploadTime = #uploadTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
   
@@ -1064,7 +1096,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             WHEN ui.username IS NOT NULL 
             THEN CONCAT(ui.username, "-", ui.realName) 
             ELSE fl.uploadBy 
-        END AS uploadName, bd.`basicDataName` AS typeName 
+        END AS uploadName, IFNULL(bd.`basicDataName`, fl.type) AS typeName 
     FROM
         pm_subcontract_deliver_files fl 
         LEFT JOIN `fnd_basic_data` bd 
@@ -1075,12 +1107,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> fl.id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> fl.subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="paymentId"> fl.paymentId = #paymentId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="fileName"> fl.fileName = #fileName# </isNotEmpty>
         <isNotEmpty prepend="AND" property="filePath"> fl.filePath = #filePath# </isNotEmpty>
         <isNotEmpty prepend="AND" property="type"> fl.type = #type# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadBy"> fl.uploadBy = #uploadBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="uploadTime"> fl.uploadTime = #uploadTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> fl.effectiveFrom = #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> fl.effectiveFrom >= #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(fl.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
@@ -1099,10 +1132,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="createBy" jdbcType="VARCHAR" property="createBy" />
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
     <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
   </resultMap>
   <sql id="SubcontractPayment_Column_List">
     id, subcontractId, ratio, amount, confirmTime, paymentTime, remark, sseId, createTime, createBy, 
-    updateTime, updateBy
+    updateTime, updateBy, customInfo
   </sql>
   <select id="selectSubcontractPaymentById" parameterClass="java.lang.Integer" resultMap="SubcontractPayment">
     select 
@@ -1120,11 +1154,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </selectKey>
     insert into pm_subcontract_project_payment (subcontractId, ratio, amount, confirmTime, 
       paymentTime, remark, sseId, createTime, 
-      createBy, updateTime, updateBy
+      createBy, updateTime, updateBy, customInfo
       )
     values (#subcontractId#, #ratio#, FORMAT(REPLACE(#amount#, ",", ""), 2), #confirmTime#, 
       #paymentTime#, #remark#, #sseId#, #createTime#, 
-      #createBy#, #updateTime#, #updateBy#
+      #createBy#, #updateTime#, #updateBy#, #customInfo:JSON#
       )
   </insert>
   <insert id="insertSubcontractPaymentSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractPayment">
@@ -1144,6 +1178,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createBy"> createBy </isNotNull>
       <isNotNull prepend="," property="updateTime"> updateTime </isNotNull>
       <isNotNull prepend="," property="updateBy"> updateBy </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> #subcontractId# </isNotNull>
@@ -1157,6 +1192,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
       <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
       <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> #customInfo:JSON# </isNotNull>
     </dynamic>
   </insert>
   <update id="updateSubcontractPaymentByIdSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractPayment">
@@ -1173,6 +1209,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="createBy"> createBy = #createBy# </isNotNull>
       <isNotNull prepend="," property="updateTime"> updateTime = #updateTime# </isNotNull>
       <isNotNull prepend="," property="updateBy"> updateBy = #updateBy# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> 
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
     where id = #id#
   </update>
@@ -1188,7 +1228,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       createTime = #createTime#,
       createBy = #createBy#,
       updateTime = #updateTime#,
-      updateBy = #updateBy#
+      updateBy = #updateBy#,
+      <!-- customInfo = #customInfo:JSON# -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
     where id = #id#
   </update>
   <select id="selectSubcontractPaymentList" parameterClass="com.dp.plat.subcontract.entity.SubcontractPayment" resultMap="SubcontractPayment">
@@ -1205,6 +1247,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="customInfo"> customInfo = #customInfo:JSON# </isNotEmpty>
     </dynamic>
   </select>
   <select id="countSubcontractPaymentList" parameterClass="com.dp.plat.subcontract.entity.SubcontractPayment" resultClass="long">
@@ -1221,6 +1264,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="createBy"> createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="customInfo"> customInfo = #customInfo:JSON# </isNotEmpty>
     </dynamic>
   </select>
   
@@ -1342,8 +1386,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
   <select id="countSubcontractCallbackList" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultClass="long">
@@ -1359,8 +1403,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
   </select>
   
@@ -1377,8 +1421,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="createTime"> createTime = #createTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateBy"> updateBy = #updateBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
     </dynamic>
     order by createTime desc
     limit 1
@@ -1913,6 +1957,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             AND A0.TASK_ID_ IS NULL 
             AND A0.NAME_ = 'subcontractId' 
             AND A0.TYPE_ = 'integer' 
+            AND h.effectiveTo IS NULL
         LEFT JOIN fnd_user_info ui 
             ON RES.`ASSIGNEE_` = ui.`username` 
             AND ui.`status` = 1 
@@ -1928,7 +1973,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             D.KEY_ = #processKey#
         </isNotEmpty>
         <isEmpty property="processKey" prepend="AND">
-            (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack')
+            <!-- (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack' or D.KEY_ = 'SubcontractInspection') -->
+            D.KEY_ in ('Subcontract', 'SubcontractCallBack', 'SubcontractInspection')
         </isEmpty>
         <isNotEmpty property="taskId" prepend="AND">
             RES.ID_ = #taskId#
@@ -1984,6 +2030,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 AND dep2.isParam = 1 
                 AND dep.`status` = 1 
         WHERE h.`state` < 0 AND FIND_IN_SET(h.`officeCode`, #areaPower#)
+            AND h.effectiveTo IS NULL
     ]]>
   </select>
   
@@ -2059,12 +2106,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             AND A0.TASK_ID_ IS NULL 
             AND A0.NAME_ = 'subcontractId' 
             AND A0.TYPE_ = 'integer' 
+            AND h.effectiveTo IS NULL
     WHERE RES.SUSPENSION_STATE_ = 1 
         <isNotEmpty property="processKey" prepend="AND">
             D.KEY_ = #processKey#
         </isNotEmpty>
         <isEmpty property="processKey" prepend="AND">
-            (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack')
+            <!-- (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack' or D.KEY_ = 'SubcontractInspection') -->
+            D.KEY_ in ('Subcontract', 'SubcontractCallBack', 'SubcontractInspection')
         </isEmpty>
         <isNotEmpty property="taskId" prepend="AND">
             RES.ID_ = #taskId#
@@ -2098,6 +2147,19 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                     FIND_IN_SET(h.`profitDepCode`, #areaPower#)
                 </isNotEmpty>
             </isNotEmpty>
+            <isNotEmpty property="roleGroups">
+                <iterate property="roleGroups">
+                    <isNotEmpty property="roleGroups[].roleGroup" prepend="OR" open="(" close=")">
+                        RES.ASSIGNEE_ = #roleGroups[].roleGroup# 
+                        <isNotEmpty property="roleGroups[].checkOffice" prepend="and">
+                            FIND_IN_SET(h.`officeCode`, #areaPower#)
+                        </isNotEmpty>
+                        <isNotEmpty property="roleGroups[].checkProfitDep" prepend="and">
+                            FIND_IN_SET(h.`profitDepCode`, #areaPower#)
+                        </isNotEmpty>
+                    </isNotEmpty>
+                </iterate>
+            </isNotEmpty>
             )
     ORDER BY RES.CREATE_TIME_ DESC 
   </select>
@@ -2106,9 +2168,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     SELECT 
         rp.NAME_ AS processName, bd.basicDataName AS statusName, ht.NAME_ AS taskName, ach.message AS 'comment', ach.assigneeTime, 
         CASE
-            WHEN ach.`procdefKey` = 'Subcontract' 
-            THEN ach.objId 
-            ELSE spc.subcontractId 
+            WHEN ach.`procdefKey` = 'SubcontractCallback' 
+            THEN spc.subcontractId 
+            ELSE ach.objId
         END AS subcontractId, 
         CASE
             WHEN ach.taskId = spc.taskId 
@@ -2140,7 +2202,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             <isNotEmpty prepend="AND" > spc.`subcontractId` = #subcontractId#</isNotEmpty>
         )
         OR (
-            ach.`procdefKey` = 'Subcontract' 
+            ach.`procdefKey` in ('Subcontract', 'SubcontractInspection')
             <isNotEmpty prepend="AND" > ach.`objId` = #subcontractId#</isNotEmpty>
         )
     ORDER BY ach.`assigneeTime` ASC 
@@ -2260,8 +2322,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
         <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom = #effectiveFrom# </isNotEmpty>
-        <isNotEmpty prepend="AND" property="effectiveTo"> h.effectiveTo = #effectiveTo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
         <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
         <isNotEmpty prepend="AND" property="createTime"> h.createTime = #createTime# </isNotEmpty>
@@ -2322,6 +2384,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         INNER JOIN `pm_subcontract_project_header` ph 
             ON ph.`id` = ppp.`subcontractId` 
             AND ph.`type` = '10' 
+            AND ph.effectiveTo is NULL
     WHERE ret.TASK_DEF_KEY_ = 'applyPaymentTask' 
         AND ppp.monthDiff >= 10 
         AND DATE_FORMAT(NOW(), '%Y-%m-%d') = DATE_FORMAT(

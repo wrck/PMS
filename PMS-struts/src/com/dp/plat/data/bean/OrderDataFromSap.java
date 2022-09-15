@@ -15,7 +15,7 @@ public class OrderDataFromSap {
 	private int deliverQuantity;
 	private int openQuantity;
 	private String orderNumber;
-	private int lineNum;
+	private String lineNum;
 	private String barcode;
 	private String receiveName;
 	private String emsNum;
@@ -57,10 +57,10 @@ public class OrderDataFromSap {
 	public void setOpenQuantity(int openQuantity) {
 		this.openQuantity = openQuantity;
 	}
-	public int getLineNum() {
+	public String getLineNum() {
 		return lineNum;
 	}
-	public void setLineNum(int lineNum) {
+	public void setLineNum(String lineNum) {
 		this.lineNum = lineNum;
 	}
 	public String getOrderNumber() {

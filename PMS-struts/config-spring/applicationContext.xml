@@ -69,6 +69,26 @@ xmlns="http://www.springframework.org/schema/beans"
 		</property>
 	</bean>
 	
+	<!-- D365数据源 -->
+    <bean id="dataSourceD365"
+        class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${d365.database.driverClassName}" />
+        <property name="url" value="${d365.database.url}" />
+        <property name="username" value="${d365.database.username}" />
+        <property name="password" value="${d365.database.password}"/>
+    </bean>
+    <bean id="sqlMapClientD365" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="configLocation">
+            <value>classpath:sql-map-config.xml</value>
+        </property>
+        <property name="dataSource" ref="dataSourceD365"></property>
+    </bean>
+    <bean id="sqlMapClientTemplateD365" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+        <property name="sqlMapClient">
+            <ref bean="sqlMapClientD365" />
+        </property>
+    </bean>
+	
 	<tx:annotation-driven transaction-manager="transactionManager" />
 	<!-- 事务管理 -->
 	<bean id="transactionManager"
@@ -138,18 +158,6 @@ xmlns="http://www.springframework.org/schema/beans"
     </bean>  
     <bean id="blackListListener" class="com.dp.plat.util.BlackListNotifier" /> 
    
-    
-    
-    <!-- 记录日志 -->
-<!--     <bean id="xmlHandler" class="com.dp.plat.aop.XMLAdvice" />
-    <aop:config>  
-        <aop:aspect id="aspect" ref="xmlHandler">  
-            <aop:pointcut id="pointUserMgr" expression="execution(* com.dp.plat.service.ProjectService.queryProjectById(..))"/>  
-            <aop:before method="doBefore"  pointcut-ref="pointUserMgr"/>  
-            <aop:after method="doAfter"  pointcut-ref="pointUserMgr"/>  
-            <aop:around method="doAround"  pointcut-ref="pointUserMgr"/>  
-            <aop:after-returning method="doReturn"  pointcut-ref="pointUserMgr"/>  
-            <aop:after-throwing method="doThrowing" throwing="ex" pointcut-ref="pointUserMgr"/>  
-        </aop:aspect>  
-    </aop:config> -->
+    <!-- 拓展项目的mybatis配置 -->
+    <import resource="spring-extend-mybatis.xml" />
 </beans>

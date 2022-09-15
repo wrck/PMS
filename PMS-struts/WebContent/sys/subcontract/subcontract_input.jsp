@@ -1045,7 +1045,7 @@ function updateProject(obj){
                             <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
 	               </s:iterator> --%>
                     <li name="navli" class="active nav0" onclick="clickNavLi(0, 'subcontractLineDiv')"><a href="javascript:void(0)">转包清单</a></li>
-                    <s:if test="%{user.isHasRole(10) || user.isHasRole(9)}">
+                    <s:if test="%{user.isHasRole(10) || user.isHasRole(9) || user.isHasRole(16)}">
                         <li name="navli" class="nav1" onclick="clickNavLi(1, 'engineeFeeDiv')"><a href="javascript:void(0)">工程服务费</a></li>
                     </s:if>
                     <li name="navli" class="nav2" onclick="clickNavLi(2, 'subcontractPaymentDiv')"><a href="javascript:void(0)">付款信息</a></li>

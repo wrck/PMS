@@ -37,7 +37,7 @@ import com.dp.plat.pms.springmvc.vo.ProjectProduct;
  * @author w02611
  *
  */
-public class SapFacilitatorJob {
+public class D365FacilitatorJob {
 	/**
 	 * 批量插入数量
 	 */
@@ -63,10 +63,10 @@ public class SapFacilitatorJob {
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
 		Class<?>[] clazzArrs = new Class[] {Facilitator.class};
-		String[] dataSourceFromKeys = new String[] { "SAP" };
+		String[] dataSourceFromKeys = new String[] { "D365" };
 		String[] dataSourceToKeys = new String[] { "PMS" };
 		try {
-			pmSynchronizeService.clearSyncState();
+//			pmSynchronizeService.clearSyncState();
 			Integer threadPoolSize = 3;
 			try {
 				threadPoolSize = Integer
@@ -96,6 +96,8 @@ public class SapFacilitatorJob {
 			threadPool.shutdown();
 			while (!threadPool.isTerminated()) {
 			}
+			
+			pmSynchronizeService.insertOrUpdateFacilitatorFromD365();
 
 			syncLog.setIsSuccess(true);
 			long b = System.currentTimeMillis();
@@ -110,7 +112,7 @@ public class SapFacilitatorJob {
 					Object dataSource = ctx.getBean("dataSource" + key);
 					if (dataSource != null) {
 						if (dataSource instanceof DruidDataSource) {
-							((DruidDataSource) dataSource).restart();
+//							((DruidDataSource) dataSource).restart();
 						} else if(dataSource instanceof DriverManagerDataSource) {
 							((DriverManagerDataSource) dataSource).getConnection().close();
 						}
@@ -209,6 +211,6 @@ public class SapFacilitatorJob {
 
 	
 	public static void main(String[] args) {
-		new SapFacilitatorJob().execute();
+		new D365FacilitatorJob().execute();
 	}
 }

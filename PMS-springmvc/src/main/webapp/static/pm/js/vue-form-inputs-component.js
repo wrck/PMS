@@ -5,12 +5,12 @@ var FormInputs = {
 		},
 		data: function() {
 			return {
-				fieldList: [],
-				targetValue: {},
-				targetName: "",
+//				fieldList: [],
+//				targetValue: {},
+//				targetName: "",
 			};	
 		},
-		template: `<div>
+		template: `<div class="form-inputs" :class="formClass">
 						<template v-for="field in formFieldList">
 							<form-input :field="field" :form-cols="formCols" :is-create="isCreate" :form-cols-group-class="formColsGroupClass" :data-type="dataType" :max-label-width="maxLabelWidth" :target-name="targetName" :target-value="targetValue" :permission-type="permissionType" :permissions="permissions" :roles="roles" :model="model" :timestamp="timestamp"></form-input>
 						</template>
@@ -135,6 +135,7 @@ var FormInputs = {
 //					</template>
 //				</div>`,
 		props: {
+			formClass: String,
 		    formColsGroupClass: {
 		    	type: Object,
 		    	default: function() {
@@ -164,7 +165,7 @@ var FormInputs = {
 		    },
 			fieldList: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 		    dataType: {
 				type: String,
@@ -175,7 +176,8 @@ var FormInputs = {
 				default: ""
 			},
 			targetValue: {
-				type: Object
+				type: Object,
+				default: () => {}
 			},
 			isCreate: {
 				type: Boolean,
@@ -191,11 +193,11 @@ var FormInputs = {
 			},
 			permissions: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			roles: {
 				type: Array,
-				default: []
+				default: () => []
 			},
 			timestamp:  {
 				type: Number,
@@ -203,6 +205,10 @@ var FormInputs = {
 					return new Date().getTime();
 				}
 			},
+			fieldValidators: {
+				type: Object,
+				default: () => {}
+			}
 		},
 		created: function(e) {
 			/* var fieldList = this.fieldList;
@@ -268,12 +274,18 @@ var FormInputs = {
 			},
 			formFieldList: function() {
 				var fieldList = this.fieldList;
+				var fieldValidators = {};
 				for (var i in fieldList) {
 					var field = fieldList[i];
 					if (field['extData']) {
 						this.parseValue(field, "extData", true);
+					} else {
+						field['extData'] = '';
 					}
-					if (field.type == 'inputs') {
+					if (field['render']) {
+						this.parseValue(field, "render", true);
+					}
+					if (field.type == 'inputs' || field.type == 'buttons') {
 						// inputs 拥有相同的标签，在一个组内进行显示，以下参数需要拆分，用空格相隔
 						var keys = ['alias', 'name', 'title', 'titleKey', 'cssId', 'cssClass', 'cssStyle'];
 						var mutliField = this.parseValue(field, 'field', false) || [];
@@ -301,7 +313,30 @@ var FormInputs = {
 						}
 						field.inputs = inputs;
 					}
+					if (field.required && field.visible && field.type != 'hidden') {
+						var fieldValidator = (field.extData || {}).fieldValidator;
+						if (!fieldValidator) {
+							var type = field.type || "text"
+							var op = "输入";
+							if ($.inArray(type, ["select", "urlSelector", "date", "datetime", "radio", "checkbox"]) != -1) {
+								op = "选择";
+							} else if (type == "file") {
+								op = "上传";
+							} else {
+								op = "输入";
+							}
+							fieldValidator = {
+								validators : {
+									notEmpty : {
+										message : '请' + op + field.name
+									}
+								}
+							}
+						}
+						fieldValidators[field.field] = fieldValidator;
+					}
 				}
+				this.fieldValidators = fieldValidators;
 				return fieldList;
 			},
 	 		maxLabelWidth: function() {

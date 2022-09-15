@@ -6,7 +6,7 @@ import org.apache.shiro.authc.AuthenticationException;
  * @author j01441
  *
  */
-public class CaptchaException extends AuthenticationException{
+public class CaptchaException extends AuthenticationException implements CustomExceptionInterface {
 
 	/**
 	 * 

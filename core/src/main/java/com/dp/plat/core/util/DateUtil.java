@@ -19,13 +19,21 @@ public class DateUtil {
 	 */
 	public static String getTodayDate() {
 		Date today = new Date();
-		return getDateTime("yyyy-MM-dd", today);
+		return getDate(today);
 	}
 
 	public static String getTodayDateTime() {
 		Date today = new Date();
-		return getDateTime("yyyy-MM-dd HH:mm:ss", today);
+		return getDateTime(today);
 	}
+	
+	public static final String getDate(Date date) {
+        return getDateTime("yyyy-MM-dd", date);
+    }
+	
+	public static final String getDateTime(Date dateTime) {
+	    return getDateTime("yyyy-MM-dd HH:mm:ss", dateTime);
+    }
 
 	public static final String getDateTime(String aMask, Date aDate) {
 		SimpleDateFormat df = null;

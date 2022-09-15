@@ -82,7 +82,7 @@
 				searchInline: true,
 				rowId: 'filePathEncode',
 				orderFixed: [[0, 'asc', 'typeLevel']],
-				order: [[3, 'desc', 'lastModified']],
+				order: [[4, 'desc', 'lastModified']],
 				"columns" : [
 					{
 						name : "typeLevel",
@@ -138,7 +138,7 @@
 					}],
 				"columnDefs" : [ {
 	                // 定义操作列,######以下是重点########
-	                targets : 4,//操作按钮目标列
+	                targets : 5,//操作按钮目标列
 	                data : "type",
 	                title: "操作",
 	                sortable: false,

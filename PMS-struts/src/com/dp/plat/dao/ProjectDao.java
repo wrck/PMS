@@ -1414,4 +1414,11 @@ public interface ProjectDao {
 
 	List<Map<String, Object>> queryMarketRelations();
 
+	/**
+	 * 查询合同号的交付件完成情况
+	 * @param params
+	 * @return
+	 */
+    List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> params);
+
 }

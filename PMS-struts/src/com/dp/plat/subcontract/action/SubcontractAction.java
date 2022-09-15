@@ -10,16 +10,16 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.json.annotations.JSON;
@@ -60,6 +60,7 @@ import com.dp.plat.subcontract.service.SubcontractService;
 import com.dp.plat.subcontract.vo.SubcontractComment;
 import com.dp.plat.subcontract.vo.SubcontractDeliverVO;
 import com.dp.plat.subcontract.vo.SubcontractPageParam;
+import com.dp.plat.subcontract.vo.SubcontractPaymentVO;
 import com.dp.plat.subcontract.vo.SubcontractProjectVO;
 import com.dp.plat.util.Base64Util;
 import com.dp.plat.util.MessageUtil;
@@ -91,6 +92,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private List<SubcontractFacilitator> facilitatorList;
 	private List<BasicDataBean> stateList;
 	private List<BasicDataBean> callbackStateList;
+	private List<BasicDataBean> taxList;
 	private User user;
 
 	// 主数据
@@ -116,6 +118,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private String[] deliverNames;
 	private String[] deliverTypes;
 	private List<SubcontractDeliverVO> uploadDeliverList;
+	private List<SubcontractDeliverVO> paymentDeliverList;
 	private SubcontractFacilitator subcontractFacilitator;
 	private SubcontractDeliverVO subcontractDeliverVO;
 	/**
@@ -288,7 +291,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 				if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
 						|| user.isHasRole(MessageUtil.ROLE_AREA_LEADER)) {
 					tabIndex = 1;
-				} else if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)) {
+				} else if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)) {
 					tabIndex = 2;
 				} else if (user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)) {
 					tabIndex = 3;
@@ -343,13 +346,13 @@ public class SubcontractAction extends BaseAction implements Preparable {
 				result = e.getMessage();
 			}
 		}
-		// 办理付款任务
-		if (workflowCommonParam != null && workflowCommonParam.getTaskId() != null
-				&& workflowCommonParam.getFlag() == 1) {
-			if (TaskKey.PROFIT_SERVICE_APPROVE.equals(workflowCommonParam.getOutcome())) {
-				subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
-			}
-		}
+//		// 办理付款任务
+//		if (workflowCommonParam != null && workflowCommonParam.getTaskId() != null
+//				&& workflowCommonParam.getFlag() == 1) {
+//			if (TaskKey.PROFIT_SERVICE_APPROVE.equals(workflowCommonParam.getOutcome())) {
+//				subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
+//			}
+//		}
 		return "create";
 	}
 
@@ -674,10 +677,23 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	 */
 	public String querySubcontractPayment() {
 		try {
+		    taxList = basicDataService.queryBasicDataBeanAll(SubcontractConstant.SUBCONTRACT_TAX_KEY);
 			if (subcontract != null && subcontract.getId() != null) {
+			    subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
 				SubcontractPayment payment = new SubcontractPayment();
 				payment.setSubcontractId(subcontract.getId());
 				subcontractPaymentList = subcontractService.selectSubcontractPaymentList(payment);
+				subcontractPaymentList = subcontractPaymentList.parallelStream().map(p-> {
+				    SubcontractPaymentVO paymentVO = new SubcontractPaymentVO();
+				    BeanUtils.copyProperties(p, paymentVO);
+				    SubcontractDeliver deliver = new SubcontractDeliver();
+				    deliver.setSubcontractId(p.getSubcontractId());
+				    deliver.setPaymentId(p.getId());
+				    deliver.setEffectiveTo(new Date());
+				    List<SubcontractDeliver> deliverList = subcontractService.selectSubcontractDeliverList(deliver);
+				    paymentVO.setDelivers(deliverList);
+				    return paymentVO;
+				}).collect(Collectors.toList());
 				// workflowCommonParam =
 				// subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
 				// SubcontractConstant.TASK_KEY_CLOSE);
@@ -706,6 +722,10 @@ public class SubcontractAction extends BaseAction implements Preparable {
 					workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
 							TaskKey.APPROVE_PAYMENT);
 				}
+				if (workflowCommonParam == null) {
+                    workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
+                            TaskKey.ACCEPTANCE_TASK);
+                }
 			} else {
 				subcontractPaymentList = new ArrayList<>();
 			}
@@ -729,20 +749,53 @@ public class SubcontractAction extends BaseAction implements Preparable {
 				if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
 						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
 					create();
-					subcontractService.saveSubcontractPayment(subcontractPaymentList, delIds);
+//					 付款信息由提交付款任务时修改
+//					subcontractService.saveSubcontractPayment(subcontractPaymentList, delIds);
 				}
 				// 办理付款任务
-				if (workflowCommonParam != null && workflowCommonParam.getTaskId() != null
-						&& workflowCommonParam.getFlag() == 1) {
-					if (TaskKey.GENERATE_CONTRACT.equals(workflowCommonParam.getOutcome())) {
-						subcontractService.generateContractFlow(workflowCommonParam, subcontract);
-					} else if (TaskKey.APPROVE_PAYMENT.equals(workflowCommonParam.getOutcome())) {
-						subcontractService.approvePaymentFlow(workflowCommonParam, subcontract);
-					} else if (TaskKey.PROFIT_SERVICE_APPROVE.equals(workflowCommonParam.getOutcome())) {
-						subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
-					} else {
-						subcontractService.applyPaymentFlow(workflowCommonParam, subcontract);
-					}
+				if (workflowCommonParam != null && workflowCommonParam.getTaskId() != null) {
+				    // 付款信息由提交付款任务时创建
+				    if (TaskKey.APPLY_PAYMENT.equals(workflowCommonParam.getOutcome()) && subcontractPaymentList != null) {
+                        subcontractService.saveSubcontractPayment(subcontractPaymentList, delIds);
+                        for (int index = 0; index < subcontractPaymentList.size(); index++) {
+                            SubcontractPayment payment = subcontractPaymentList.get(index);
+                            if (payment != null) {
+                                SubcontractDeliverVO deliver = paymentDeliverList.get(index);
+                                deliver.setPaymentId(payment.getId());
+                            }
+                        }
+                        subcontractService.saveDeliverFiles(subcontract.getId(), paymentDeliverList);
+				    }
+                    
+				    if (workflowCommonParam.getFlag() == 1) {
+    					if (TaskKey.GENERATE_CONTRACT.equals(workflowCommonParam.getOutcome())) {
+    						subcontractService.generateContractFlow(workflowCommonParam, subcontract);
+    					} else if (TaskKey.APPROVE_PAYMENT.equals(workflowCommonParam.getOutcome())) {
+    						subcontractService.approvePaymentFlow(workflowCommonParam, subcontract);
+    					} else if (TaskKey.PROFIT_SERVICE_APPROVE.equals(workflowCommonParam.getOutcome())) {
+    						subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
+    					} else if (TaskKey.ACCEPTANCE_TASK.equals(workflowCommonParam.getOutcome())) {
+//    					    // 审批不通过，则清空审批是上传的自定义信息字段
+//    					    if (workflowCommonParam.getApproveStatus() != AGREE) {
+//    					        for (int index = 0; index < subcontractPaymentList.size(); index++) {
+//    	                            SubcontractPayment payment = subcontractPaymentList.get(index);
+//    	                            if (payment != null) {
+//    	                                Map<String, Object> customInfo = payment.getCustomInfo();
+//    	                                if (customInfo != null && !customInfo.isEmpty()) {
+//    	                                    for (Entry<String, Object> entry : customInfo.entrySet()) {
+//    	                                        customInfo.put(entry.getKey(), "");
+//    	                                    }
+//    	                                }
+//    	                            }
+//    	                        }
+//    					    }
+//    					    subcontractService.saveSubcontractPayment(subcontractPaymentList, delIds);
+    					    subcontractService.submitAcceptanceFlow(workflowCommonParam, subcontract);
+    					} else {
+    					    // 提交付款
+    						subcontractService.applyPaymentFlow(workflowCommonParam, subcontract);
+    					}
+				    }
 				}
 			}
 		} catch (SubcontractException e) {
@@ -1253,7 +1306,15 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		this.callbackStateList = callbackStateList;
 	}
 
-	public User getUser() {
+	public List<BasicDataBean> getTaxList() {
+        return taxList;
+    }
+
+    public void setTaxList(List<BasicDataBean> taxList) {
+        this.taxList = taxList;
+    }
+
+    public User getUser() {
 		return user;
 	}
 
@@ -1316,6 +1377,8 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public void setSubcontractDeliverList(List<SubcontractDeliverVO> subcontractDeliverList) {
 		this.subcontractDeliverList = subcontractDeliverList;
 	}
+	
+	
 
 	public List<Map<String, Object>> getEngineeFeeList() {
 		return engineeFeeList;
@@ -1404,8 +1467,16 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public void setUploadDeliverList(List<SubcontractDeliverVO> uploadDeliverList) {
 		this.uploadDeliverList = uploadDeliverList;
 	}
+	
+	public List<SubcontractDeliverVO> getPaymentDeliverList() {
+        return paymentDeliverList;
+    }
 
-	public SubcontractFacilitator getSubcontractFacilitator() {
+    public void setPaymentDeliverList(List<SubcontractDeliverVO> paymentDeliverList) {
+        this.paymentDeliverList = paymentDeliverList;
+    }
+
+    public SubcontractFacilitator getSubcontractFacilitator() {
 		return subcontractFacilitator;
 	}
 

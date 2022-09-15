@@ -9,6 +9,9 @@ public class SubcontractDeliver {
 
 	// 转包项目ID
 	private Integer subcontractId;
+	
+	// 转包付款ID
+	private Integer paymentId;
 
 	// 交付件名称
 	private String fileName;
@@ -74,8 +77,27 @@ public class SubcontractDeliver {
 	public void setSubcontractId(Integer subcontractId) {
 		this.subcontractId = subcontractId;
 	}
+	
+	/**
+     * 获取转包付款ID
+     *
+     * @return paymentId - 转包付款ID
+     */
+	public Integer getPaymentId() {
+        return paymentId;
+    }
 
 	/**
+     * 设置转包付款ID
+     *
+     * @param paymentId
+     *            转包付款ID
+     */
+    public void setPaymentId(Integer paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    /**
 	 * 获取交付件名称
 	 *
 	 * @return fileName - 交付件名称

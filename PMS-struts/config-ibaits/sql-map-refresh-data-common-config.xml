@@ -1,110 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>  
-<!DOCTYPE sqlMap  
+<!DOCTYPE sqlMap
 PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
-"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">
 <sqlMap>
     <select id="test" resultClass="int">
         <![CDATA[
             select count(1) from pm_column_of_relationship
         ]]>
     </select>
-    <!-- 从ERP刷新订单信息 -->
-    <resultMap class="com.dp.plat.param.OrderBean" id="OrderBeans">
-        <result property="orderNumber" column="order_number"/>
-        <result property="contractNo" column="contract_number"/>
-        <result property="orderExecNumber" column="order_exec_number"/>
-        <result property="orderCreateTime" column="order_creation_date"/>
-        <result property="customerRequireTime" column="customer_require_date"/>
-        <result property="customerCode" column="customer_code"/>
-        <result property="customerName" column="customer_name"/>
-        <result property="projectName" column="project_name"/>
-        <result property="orderComment" column="comment"/>
-        <result property="compCode" column="company_code" nullValue="0"/>
-        <result property="salesType" column="u_sordertype"/>
-    </resultMap>
-    <select id="query_DP_V_SO_ORDER_4_PMS"  resultMap="OrderBeans">
-        <![CDATA[
-            SELECT * from dp_reports.DP_V_SO_ORDER_4_PMS 
-        ]]>
-    </select>
-    <!-- 退货信息 -->
-    <resultMap class="com.dp.plat.param.OrderBean" id="RmaOrderBeans">
-        <result property="orderNumber" column="rma_order_number"/>
-        <result property="contractNo" column="contract_number"/>
-        <result property="orderExecNumber" column="order_exec_number"/>
-        <result property="orderCreateTime" column="order_creation_date"/>
-        <result property="customerRequireTime" column="customer_require_date"/>
-        <result property="customerCode" column="customer_code"/>
-        <result property="customerName" column="customer_name"/>
-        <result property="projectName" column="project_name"/>
-        <result property="orderComment" column="comment"/>
-        <result property="compCode" column="company_code" nullValue="0"/>
-        <result property="salesType" column="u_sordertype"/>
-    </resultMap>
-    <select id="query_DP_V_RMA_ORDER_4_PMS" resultMap="RmaOrderBeans">
-        <![CDATA[
-            SELECT * from dp_reports.DP_V_RMA_ORDER_4_PMS       
-        ]]>
-    </select>
-    
-    <insert id="insert_pm_order_data" parameterClass="java.util.Map">
-        <![CDATA[
-            INSERT INTO `pm_order_data_from_sap_source`( orderNumber ,contractNo , orderExecNumber , orderCreateTime ,customerRequireTime ,
-             customerCode ,customerName,projectName,orderComment,orderType, compCode, salesType) values
-        ]]>
-        <iterate conjunction="," property="list">
-            ( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderCreateTime#,#list[].customerRequireTime#,
-              #list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#orderType#, #list[].compCode#,
-              #list[].salesType#
-            )
-        </iterate>
-    </insert>
-    <delete id="delete_pm_order_data" >
-        <![CDATA[
-            truncate table pm_order_data_from_sap_source
-        ]]>
-    </delete>
-    <resultMap class="com.dp.plat.param.OrderLineBean" id="orderLineBeans">
-        <result property="orderNumber" column="order_number"/>
-        <result property="lineNum" column="LineNum"/>
-        <result property="itemCode" column="item_code"/>
-        <result property="itemDesc" column="item_description"/>
-        <result property="orderQuantity" column="order_quantity" nullValue="0"/>
-        <result property="openQuantity" column="open_quantity" nullValue="0"/>
-        <result property="bundleCode" column="bundle_parent_item_code"/>
-        <result property="warrantyMonth" column="warranty_by_month" nullValue="0"/>
-        <result property="compCode" column="company_code" nullValue="0"/>
-        <result property="profitCenter" column="profitcenter"/>
-    </resultMap>
-    <select id="query_DP_V_SO_LINE_4_PMS" resultMap="orderLineBeans">
-        <![CDATA[
-            select * from dp_reports.DP_V_SO_LINE_4_PMS
-        ]]>
-    </select>
-    
-    <select id="query_DP_V_RMA_LINE_4_PMS" resultMap="orderLineBeans">
-        <![CDATA[
-            SELECT * from dp_reports.DP_V_RMA_LINE_4_PMS
-        ]]>
-    </select>
-    <delete id="delete_pm_order_line" >
-        <![CDATA[
-            truncate table pm_order_line_from_sap_source
-        ]]>
-    </delete>
-    <insert id="insert_pm_order_line" parameterClass="java.util.Map">
-        <![CDATA[
-            INSERT INTO `pm_order_line_from_sap_source`(orderNumber ,lineNum ,itemCode ,itemDesc ,
-                orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType, compCode, profitCenter) values
-        ]]>
-        <iterate conjunction="," property="lineList">
-            (
-            #lineList[].orderNumber#,#lineList[].lineNum#,#lineList[].itemCode#,#lineList[].itemDesc#,
-            #lineList[].orderQuantity#,#lineList[].openQuantity#,#lineList[].bundleCode#,#lineList[].warrantyMonth#,
-            #lineType#, #lineList[].compCode#, #lineList[].profitCenter#
-            )
-        </iterate>
-    </insert>
+
     <procedure id="callSplitSoleAgentLendOrderInfo">
         call splitSoleAgentLendOrderInfo();
     </procedure>
@@ -117,18 +21,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <![CDATA[
             SELECT DISTINCT projectId , contractNo FROM `pm_project_product_line` 
             WHERE contractNo IS NOT NULL AND (projectQuantity IS NULL OR projectQuantity = 0);
-        ]]>
-    </select>
-    
-    
-    <select id="query_2_DP_V_SO_LINE_4_PMS" parameterClass="string" resultMap="orderLineBeans">
-        <![CDATA[
-            SELECT b.* from dp_reports.DP_V_SO_ORDER_4_PMS a 
-             LEFT JOIN dp_reports.DP_V_SO_LINE_4_PMS b 
-                 on a.order_number = b.order_number 
-                 and a.company_code = b.company_code
-            where a.contract_number = #contractNo# 
-                 and  b.order_number is not null
         ]]>
     </select>
     
@@ -150,27 +42,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </iterate>
     </insert>
     
-    <select id="query_v_soleagent_lend_4_pms" resultClass="java.util.HashMap">
-       select * from v_soleagent_lend_4_pms
-    </select>
-    
-    <delete id="delete_pm_project_soleagent_lend_from_sms">
-       TRUNCATE TABLE `pm_project_soleagent_lend_from_sms`
-    </delete>
-    
-    <insert id="insert_pm_project_soleagent_lend_from_sms" parameterClass="map">
-       INSERT INTO `pm_project_soleagent_lend_from_sms` (
-           `soleAgentLendId`, `orderExecNumber`, `orderCodes`, 
-           `contract`, `projectName`, `soleAgent`, `profitCenter`) 
-       VALUES 
-       <iterate conjunction="," property="list">
-            (
-             #list[].soleAgentLendId#, #list[].orderExecNumber#, #list[].orderCodes#, 
-             #list[].contract#, #list[].projectName#, #list[].soleAgent#, #list[].profitCenter#
-            )
-       </iterate>
-    </insert>
-    
     <!-- 创建需要刷新已创建项目设备信息的合同号、projetcId临时表 -->
     <insert id="createTempNeedUpdateProject">
         CREATE TEMPORARY TABLE IF NOT EXISTS temp_needUpdate_project (KEY contractNo(contractNo))
@@ -180,8 +51,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         FROM
             `pm_project_product_line` pl 
             LEFT JOIN `pm_order_data_from_sap` a 
-	            ON pl.`contractNo` = a.`contractNo`
-	            AND a.`orderType` = 0 
+                ON pl.`contractNo` = a.`contractNo`
+                AND a.`orderType` = 0 
             LEFT JOIN `pm_order_line_from_sap` b 
                 ON a.orderNumber = b.orderNumber 
                 AND a.compCode = b.compCode 
@@ -198,28 +69,28 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <!-- 合并查询现在项目中没有设备清单，但SAP中合同号有订单行的项目 -->
         UNION <!-- ALL -->
         SELECT DISTINCT 
-		    ph.projectId, a.contractNo 
-		FROM
-		    `pm_order_data_from_sap` a 
-		    LEFT JOIN `pm_order_line_from_sap` b 
-		        ON a.orderNumber = b.orderNumber 
-		        AND a.compCode = b.compCode 
-		        AND a.`orderType` = b.`lineType` 
-		    LEFT JOIN `pm_project_contract` pc 
-		        ON pc.`contractNo` = a.`contractNo` 
-		        AND a.`orderType` = 0 
-		    LEFT JOIN `pm_project_group_relationship` pgr 
-		        ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
-		    LEFT JOIN `pm_project_header` ph 
-		        ON ph.`projectCode` = pgr.`projectCode` 
-		    LEFT JOIN `pm_project_product_line` pl 
-		        ON ph.`projectId` = pl.`projectId` 
-		        AND pl.`orderNumber` = b.`orderNumber`
-        		AND pl.`lineNum` = b.`lineNum`
-		WHERE a.`orderType` = 0 
-		    AND b.orderNumber IS NOT NULL 
-		    AND ph.`projectId` IS NOT NULL 
-		    AND pl.`id` IS NULL
+            ph.projectId, a.contractNo 
+        FROM
+            `pm_order_data_from_sap` a 
+            LEFT JOIN `pm_order_line_from_sap` b 
+                ON a.orderNumber = b.orderNumber 
+                AND a.compCode = b.compCode 
+                AND a.`orderType` = b.`lineType` 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pc.`contractNo` = a.`contractNo` 
+                AND a.`orderType` = 0 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
+            LEFT JOIN `pm_project_header` ph 
+                ON ph.`projectCode` = pgr.`projectCode` 
+            LEFT JOIN `pm_project_product_line` pl 
+                ON ph.`projectId` = pl.`projectId` 
+                AND pl.`orderNumber` = b.`orderNumber`
+                AND pl.`lineNum` = b.`lineNum`
+        WHERE a.`orderType` = 0 
+            AND b.orderNumber IS NOT NULL 
+            AND ph.`projectId` IS NOT NULL 
+            AND pl.`id` IS NULL
     </insert>
     
     <!-- 删除需要更新的项目的原产品信息 -->
@@ -242,17 +113,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             pm_project_product_line AS t1 
             JOIN 
                 (SELECT 
-		            * 
-		        FROM
-	                (SELECT 
-	                    id, (@rowno := @rowno + 1) AS rowno 
-	                FROM
-	                    pm_project_product_line a, 
-	                    (SELECT 
-	                        (@rowno := 0)) b 
-	                ORDER BY a.id) AS t2 
-	            ) t2
-	    SET t1.id = t2.rowno 
+                    * 
+                FROM
+                    (SELECT 
+                        id, (@rowno := @rowno + 1) AS rowno 
+                    FROM
+                        pm_project_product_line a, 
+                        (SELECT 
+                            (@rowno := 0)) b 
+                    ORDER BY a.id) AS t2 
+                ) t2
+        SET t1.id = t2.rowno 
         WHERE t1.id = t2.id 
     </update>
     
@@ -307,69 +178,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         ]]>
     </update>
     
-    <!-- 从SMS刷新项目信息 -->
-    <resultMap class="com.dp.plat.param.PrjProperty" id="prjPropertys">
-        <result property="orderExecNumber" column="orderCodeReal"/>
-        <result property="projectCode" column="projectCode"/>
-        <result property="projectName" column="projectName"/>
-        <result property="salesManCode" column="usernamec"/>
-        <result property="salesManName" column="realName"/>
-        <result property="marketCode" column="marketCode"/>
-        <result property="marketName" column="marketName"/>
-        <result property="systemId" column="systemid" nullValue="-1"/>
-        <result property="systemName" column="systemName"/>
-        <result property="expendId" column="expendId" nullValue="-1"/>
-        <result property="expendName" column="expendName"/>
-        <result property="industryId" column="industryid" nullValue="-1"/>
-        <result property="industryName" column="industryName"/>
-        <result property="officeCode" column="officeCode"/>
-        <result property="officeName" column="officeName"/>
-        <result property="serviceTypeName" column="serviceTypeName"/>
-        <result property="channelName" column="channelName"/>
-        <result property="engineeFee" column="engineeFee"/>
-        <result property="objId" column="objId"/>
-        <result property="applyType" column="applyType"/>
-        <result property="corporationCode" column="corporationCode" nullValue="01"/>
-        <result property="customerProjectName" column="customerProjectName"/>
-        <result property="finalCustomerName" column="finalCustomerName"/>
-        <result property="agentName" column="agentName"/>
-        <result property="majorProjectLevel" column="majorProjectLevel"/>
-        <result property="projectMoney" column="projectMoney"/>
-        <result property="submitTime" column="submitTime"/>
-        <result property="predBidDate" column="predBidDate"/>
-        <result property="linkmanName" column="linkmanName"/>
-        <result property="linkmanTel" column="linkmanTel"/>
-    </resultMap>
-    <select id="query_v_prj_property_4_pm" resultMap="prjPropertys">
-        <![CDATA[
-            SELECT * FROM v_prj_property_4_pm
-        ]]>
-    </select>
-    <delete id="delete_pm_project_property_from_sms" >
-        <![CDATA[
-            truncate table pm_project_property_from_sms
-        ]]>
-    </delete>
-    <insert id="insert_pm_project_property_from_sms" parameterClass="java.util.Map">
-        <![CDATA[
-            INSERT INTO pm_project_property_from_sms(`orderExecNumber`,projectCode, projectName, `salesManCode`,`salesManName`,`marketCode`,`marketName`,`systemId`,
-                `systemName`,`expendId`,`expendName`,`industryId`,`industryName`, officeCode, officeName, 
-                serviceTypeName , channelName, engineeFee, objId, applyType, `corporationCode`, customerProjectName,
-                finalCustomerName, agentName, majorProjectLevel, projectMoney, submitTime, predBidDate,
-                linkmanName, linkmanTel
-                )
-            values
-        ]]>
-        <iterate conjunction="," property="list">
-            (
-             #list[].orderExecNumber# ,#list[].projectCode#, #list[].projectName#, #list[].salesManCode# ,#list[].salesManName# ,#list[].marketCode# ,#list[].marketName# ,#list[].systemId# ,
-             #list[].systemName# ,#list[].expendId# ,#list[].expendName# ,#list[].industryId# ,#list[].industryName#,#list[].officeCode#,#list[].officeName#,
-             #list[].serviceTypeName# , #list[].channelName#, #list[].engineeFee#, #list[].objId#, #list[].applyType#, #list[].corporationCode#, 
-             #list[].customerProjectName#, #list[].finalCustomerName#, #list[].agentName#, #list[].majorProjectLevel#, #list[].projectMoney#, #list[].submitTime#, #list[].predBidDate#,
-             #list[].linkmanName#, #list[].linkmanTel#
-            )
-        </iterate>
-    </insert>
     <!-- 刷新OA人员信息 -->
     <resultMap class="com.dp.plat.param.Person" id="person">
         <result property="salesmanCode" column="work_card_number"/>
@@ -443,11 +251,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     
     <update id="invalidQuitProjectQuitSalesMan">
         UPDATE 
-		    pm_project_member pm 
-		    INNER JOIN `pm_person_from_oa_temp` po 
-		        ON po.`salesmanCode` = RIGHT(pm.`memberCode`, 5) 
-		SET effectiveTo = NOW() 
-		WHERE pm.memberRole = '10' AND pm.effectiveTo IS NULL;
+            pm_project_member pm 
+            INNER JOIN `pm_person_from_oa_temp` po 
+                ON po.`salesmanCode` = RIGHT(pm.`memberCode`, 5) 
+        SET effectiveTo = NOW() 
+        WHERE pm.memberRole = '10' AND pm.effectiveTo IS NULL;
     </update>
     
     <resultMap class="com.dp.plat.data.bean.MailSenderInfo" id="MailInfo">
@@ -513,171 +321,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             UPDATE pm_project_state t1 , tmp SET t1.`shipmentState` = tmp.deliverstate , t1.`shipmentTime` = NOW() WHERE t1.`projectId` = tmp.projectId ;
         ]]>
     </update>
-    <resultMap class="com.dp.plat.param.LendInfoParam" id="LendInfoMap">
-        <result property="lendInfoId" column="lendInfoId"/>
-        <result property="projectCode" column="projectCode"/>
-        <result property="projectName" column="projectName"/>
-        <result property="dutyName" column="dutyName"/>
-        <result property="dutyContactWay" column="dutyContactWay"/>
-        <result property="decPath" column="decPath"/>
-        <result property="officeCode" column="officeCode"/>
-        <result property="marketName" column="marketName"/>
-        <result property="systemName" column="systemName"/>
-        <result property="expendName" column="expendName"/>
-        <result property="industryName" column="industryName"/>
-        <result property="pspm" column="pspm"/>
-    </resultMap>
-    <select id="query_lend_info_list" resultMap="LendInfoMap">
-        <![CDATA[ 
-            select * from v_lend_info_4_pms  
-        ]]>
-    </select>
-    <resultMap class="com.dp.plat.param.LendProductParam" id="LendProductMap">
-        <result property="lendInfoId" column="lendInfoId"/>
-        <result property="productFirstName" column="productfirstName"/>
-        <result property="productName" column="productName"/>
-        <result property="productSubCode" column="productsubCode"/>
-        <result property="productSubModel" column="productSubModel"/>
-        <result property="productSubName" column="productSubName"/>
-        <result property="lendNum" column="lendNum"/>
-        <result property="memo" column="memo"/>
-        <result property="orderNum" column="orderQty" nullValue="0"/>
-        <result property="deliverNum" column="dlvQty" nullValue="0"/>
-        <result property="hexiaoNum" column="rmaQty" nullValue="0"/>
-        <result property="transferNum" column="borrowNum" nullValue="0"/>
-    </resultMap>
-    <!-- <select id="query_lend_product_list" resultMap="LendProductMap"> -->
-    <select id="query_lend_product_list" resultClass="com.dp.plat.param.LendProductParam">
-        <![CDATA[ 
-            select * from v_lend_products_4_pms
-        ]]>
-    </select>
-    <select id="query_lend_order_list" resultClass="java.util.HashMap">
-        <![CDATA[ 
-            select * from v_lend_products_sale_4_pm
-        ]]>
-    </select>
-    <select id="query_lend_2_sale_list" resultClass="java.util.HashMap">
-        <![CDATA[ 
-            select * from v_lend_products_tosale_4_pms
-        ]]>
-    </select>
-    <select id="query_lend_2_rma_list" resultClass="java.util.HashMap">
-        <![CDATA[ 
-            select * from v_lend_products_torma_4_pms
-        ]]>
-    </select>
-    
-    <select id="query_lend_delivery_off_list" resultClass="java.util.HashMap">
-        <![CDATA[ 
-            select * from dp_reports.DP_V_SO_DELIVERY_OFF_4_PMS
-        ]]>
-    </select>
-    
-    <delete id="delete_pm_presales_lend_info_from_sms">
-        truncate pm_presales_lend_info_from_sms;
-    </delete>
-    <delete id="delete_pm_presales_lend_product_from_sms">
-        truncate pm_presales_lend_product_from_sms;
-    </delete>
-    <delete id="delete_pm_presales_lend_order_from_sms">
-        truncate pm_presales_lend_order_from_sms;
-    </delete>
-    <delete id="delete_pm_presales_lend_2_sale_from_sms">
-        truncate pm_presales_lend_2_sale_from_sms;
-    </delete>
-    <delete id="delete_pm_presales_lend_2_rma_from_sms">
-        truncate pm_presales_lend_2_rma_from_sms;
-    </delete>
-    <delete id="delete_pm_presales_lend_2_delivery_off_from_sap">
-        truncate pm_presales_lend_2_delivery_off_from_sap;
-    </delete>
-    <insert id="insert_pm_presales_lend_info_from_sms" parameterClass="List">
-        <![CDATA[
-            INSERT INTO pm_presales_lend_info_from_sms( projectCode,  projectName,  marketName,  systemName,  expendName,
-             industryName,  officeCode,  dutyName,  pspm,  dutyContactWay,  lendInfoId,
-             decPath)
-            VALUES
-        ]]>
-        <iterate conjunction=",">
-            (
-            #[].projectCode#, #[].projectName#, #[].marketName#, #[].systemName#, #[].expendName#,
-            #[].industryName#, #[].officeCode#, #[].dutyName#, #[].pspm#, #[].dutyContactWay#, #[].lendInfoId#,
-            #[].decPath#
-            )
-        </iterate>
-    </insert>
-    <insert id="insert_pm_presales_lend_product_from_sms" parameterClass="List">
-        <![CDATA[
-            INSERT INTO pm_presales_lend_product_from_sms(lendInfoId, productFirstName, productName, productSubCode,
-               productSubModel, productSubName, lendNum, memo
-            ) VALUES
-        ]]>
-        <iterate conjunction=",">
-            (
-                #[].lendInfoId# ,#[].productFirstName# ,#[].productName# ,#[].productSubCode# ,
-                #[].productSubModel# ,#[].productSubName# ,#[].lendNum# ,#[].memo#
-            )
-        </iterate>
-    </insert>
-    <insert id="insert_pm_presales_lend_order_from_sms" parameterClass="List">
-        INSERT INTO `pm_presales_lend_order_from_sms` (`id`, `orderNumber`, `ppliCode`, `orderType`, `contract`, 
-            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
-            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
-            `lineId`, `systemId`, `canceled`, `discountVersion`, `borrowNum`) 
-        VALUES 
-        <iterate conjunction=",">
-            (
-                #[].id#, #[].orderNumber#, #[].ppliCode#, #[].orderType#, #[].contract#, 
-                #[].customer#, #[].projectName#, #[].businessunit#, #[].office#, #[].dutyperson#, #[].itemcode#, 
-                #[].description#, #[].orderQty#, #[].dlvQty#, #[].rmaQty#, #[].lineStatus#, #[].createDate#, 
-                #[].lineId#, #[].systemId#, #[].canceled#, #[].discountVersion#, #[].borrowNum#
-            )
-        </iterate>
-    </insert>
-    <insert id="insert_pm_presales_lend_2_sale_from_sms" parameterClass="List">
-        <![CDATA[
-            INSERT INTO pm_presales_lend_2_sale_from_sms(
-               productfirstName, productName, projectCode, productSubCode,
-               productSubModel, productSubName, 
-               num, borrowNum, contract, memo
-            ) VALUES
-        ]]>
-        <iterate conjunction=",">
-            (
-                #[].productfirstName#, #[].productName#, #[].projectCode#, #[].productSubCode#,
-                #[].productSubModel#, #[].productSubName#, 
-                #[].num#, #[].borrowNum#, #[].contract#, #[].memo#
-            )
-        </iterate>
-    </insert>
-    <insert id="insert_pm_presales_lend_2_rma_from_sms" parameterClass="List">
-        INSERT INTO `pm_presales_lend_2_rma_from_sms` (`id`, `orderNumber`, `ppliCode`, `orderType`, `contract`, 
-            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
-            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
-            `lineId`, `systemId`, `canceled`, `productfirstName`, `productName`) 
-        VALUES 
-        <iterate conjunction=",">
-            (
-                #[].id#, #[].orderNumber#, #[].ppliCode#, #[].orderType#, #[].contract#, 
-                #[].customer#, #[].projectName#, #[].businessunit#, #[].office#, #[].dutyperson#, #[].itemcode#, 
-                #[].description#, #[].orderQty#, #[].dlvQty#, #[].rmaQty#, #[].lineStatus#, #[].createDate#, 
-                #[].lineId#, #[].systemId#, #[].canceled#, #[].productfirstName#, #[].productName#
-            )
-        </iterate>
-    </insert>
-    <insert id="insert_pm_presales_lend_2_delivery_off_from_sap" parameterClass="List">
-        INSERT INTO `pm_presales_lend_2_delivery_off_from_sap` (
-            `orderNumber`, `lineId`, `itemCode`, `ppliCode`, `contract`, 
-            `deliveryDate`, `rmaDate`) 
-        VALUES 
-        <iterate conjunction=",">
-            (
-                #[].orderNumber#, #[].linenum#, #[].itemcode#, #[].salesorder#, #[].contract#, 
-                #[].outdate#, #[].indate#
-            )
-        </iterate>
-    </insert>
+
     <!-- 售前项目核销汇总信息 -->
     <insert id="create_pm_presales_project_rma_info">
         CREATE TABLE IF NOT EXISTS pm_presales_project_rma_info (KEY contract(contract), KEY itemcode(itemcode))
@@ -794,30 +438,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </iterate>
     </insert>
     
-    <!-- 同步项目真实订单设备清单 -->
-    <select id="query_view_refer_product" resultClass="com.dp.plat.param.RealProductLineBean" >
-        <![CDATA[
-            SELECT * FROM view_refer_product
-        ]]>
-    </select>
-    <delete id="delete_pm_project_real_product_line_from_sms" >
-        <![CDATA[
-            truncate table pm_project_real_product_line_from_sms
-        ]]>
-    </delete>
-    <insert id="insert_pm_project_real_product_line_from_sms" parameterClass="java.util.Map">
-        <![CDATA[
-            INSERT INTO pm_project_real_product_line_from_sms(projectCode ,orderExecNumber, productFirstName, productName, productSubCode ,productSubModel, productSubName, num, memo)
-            values
-        ]]>
-        <iterate conjunction="," property="list">
-            (
-             #list[].projectCode# ,#list[].orderExecNumber#,#list[].productFirstName# ,#list[].productName# ,#list[].productSubCode# ,#list[].productSubModel# ,#list[].productSubName# ,
-             #list[].num# ,#list[].memo#
-            )
-        </iterate>
-    </insert>
-    
     <delete id="delete_pm_project_product_line_real" >
         <![CDATA[
             truncate table pm_project_product_line_real
@@ -839,33 +459,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 ON pph.`projectCode` = ppgr.`projectCode`
         ]]>
     </insert>
-    
-    <!-- 同步市场部联动维度信息 -->
-    <select id="query_view_market_system_expend_industry" resultClass="java.util.HashMap" >
-        SELECT * FROM view_market_system_expend_industry
-    </select>
-    <delete id="delete_pm_project_market_relations_from_sms" >
-        truncate table pm_project_market_relations_from_sms
-    </delete>
-    <insert id="insert_pm_project_market_relations_from_sms" parameterClass="java.util.Map">
-        <![CDATA[
-            INSERT INTO pm_project_market_relations_from_sms(
-            	marketCode, marketName
-   				, systemCode, systemName
-				, expendCode, expendName
-				, industryCode, industryName)
-        ]]>
-        values
-        <iterate conjunction="," property="list">
-            (
-            	#list[].marketCode#, #list[].marketName#
-   				, #list[].systemCode#, #list[].systemName#
-				, #list[].expendCode#, #list[].expendName#
-				, #list[].industryCode#, #list[].industryName#
-            )
-        </iterate>
-    </insert>
-    
     
     <select id="query_pm_self_service_project" resultClass="com.dp.plat.data.bean.Project">
         <![CDATA[
@@ -1049,16 +642,16 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <insert id="create_temp_max_ppfs">
         CREATE TEMPORARY TABLE temp_max_ppfs (KEY id (id), KEY projectCode (projectCode)) 
         SELECT 
-		    id, projectCode, orderExecNumber, serviceTypeName, channelName, agentName, 
-		    salesManCode, salesManName, corporationCode, customerProjectName, finalCustomerName,
-		    majorProjectLevel
-		FROM
-		    pm_project_property_from_sms t1 
-		WHERE id IN 
-		    (SELECT 
-		        id 
-		    FROM
-		        temp_max_ppfsId)
+            id, projectCode, orderExecNumber, serviceTypeName, channelName, agentName, 
+            salesManCode, salesManName, corporationCode, customerProjectName, finalCustomerName,
+            majorProjectLevel
+        FROM
+            pm_project_property_from_sms t1 
+        WHERE id IN 
+            (SELECT 
+                id 
+            FROM
+                temp_max_ppfsId)
     </insert>
     
     <insert id="create_temp_max_prpId">
@@ -1088,49 +681,49 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <![CDATA[
             CREATE TEMPORARY TABLE serviceType_and_channelName_table 
             SELECT 
-			    ph.`projectId`, ppfs.projectCode, ph.column012, ph.`columno12_readonly`, 
-			    fbd.basicDataName, ppfs.`serviceTypeName`, ppfs.`channelName`, ppfs.agentName, prp.id, 
-			    prp.partyRole, prp.partyName, ppfs.salesManCode, ppfs.salesManName 
-			FROM
-			    pm_project_header ph 
-			    LEFT JOIN temp_max_ppfs ppfs 
-			        ON ppfs.projectCode = LEFT(ph.projectCode, 15) 
-			    LEFT JOIN pm_project_related_party prp 
-			        ON ph.`projectId` = prp.projectId 
-			        AND prp.id IN 
-			        (SELECT 
-			            id 
-			        FROM
-			            temp_max_prpId) 
-			    LEFT JOIN fnd_basic_data fbd 
-			        ON ppfs.serviceTypeName = fbd.basicDataId 
-			        AND fbd.dataTypeCode = 21 
-			        AND fbd.effectiveFrom <= NOW() 
-			        AND (
-			            fbd.effectiveTo > NOW() 
-			            OR fbd.effectiveTo IS NULL
-			        ) 
-			    LEFT JOIN temp_not_ppfs tppfs 
-			        ON tppfs.id = ppfs.id 
-			        AND ph.`columno12_readonly` = tppfs.basicDataName 
-			    LEFT JOIN pm_project_related_party prp1 
-			        ON prp1.`id` = prp.`id` 
-			        AND (
-			            ppfs.`agentName` = prp1.`partyName` 
-			            OR ppfs.agentName IS NULL 
-			            OR ppfs.`agentName` = ''
-			        ) 
-			WHERE (
-			        tppfs.id IS NULL 
-			        OR (
-			            prp1.id IS NULL 
-			            AND prp.id IS NOT NULL
-			        )
-			    ) 
-			    AND ppfs.`agentName` != prp.`partyName` 
-			    AND ph.`effectiveTo` is null
+                ph.`projectId`, ppfs.projectCode, ph.column012, ph.`columno12_readonly`, 
+                fbd.basicDataName, ppfs.`serviceTypeName`, ppfs.`channelName`, ppfs.agentName, prp.id, 
+                prp.partyRole, prp.partyName, ppfs.salesManCode, ppfs.salesManName 
+            FROM
+                pm_project_header ph 
+                LEFT JOIN temp_max_ppfs ppfs 
+                    ON ppfs.projectCode = LEFT(ph.projectCode, 15) 
+                LEFT JOIN pm_project_related_party prp 
+                    ON ph.`projectId` = prp.projectId 
+                    AND prp.id IN 
+                    (SELECT 
+                        id 
+                    FROM
+                        temp_max_prpId) 
+                LEFT JOIN fnd_basic_data fbd 
+                    ON ppfs.serviceTypeName = fbd.basicDataId 
+                    AND fbd.dataTypeCode = 21 
+                    AND fbd.effectiveFrom <= NOW() 
+                    AND (
+                        fbd.effectiveTo > NOW() 
+                        OR fbd.effectiveTo IS NULL
+                    ) 
+                LEFT JOIN temp_not_ppfs tppfs 
+                    ON tppfs.id = ppfs.id 
+                    AND ph.`columno12_readonly` = tppfs.basicDataName 
+                LEFT JOIN pm_project_related_party prp1 
+                    ON prp1.`id` = prp.`id` 
+                    AND (
+                        ppfs.`agentName` = prp1.`partyName` 
+                        OR ppfs.agentName IS NULL 
+                        OR ppfs.`agentName` = ''
+                    ) 
+            WHERE (
+                    tppfs.id IS NULL 
+                    OR (
+                        prp1.id IS NULL 
+                        AND prp.id IS NOT NULL
+                    )
+                ) 
+                AND ppfs.`agentName` != prp.`partyName` 
+                AND ph.`effectiveTo` is null
        ]]>
-<!-- 			    AND ppfs.`serviceTypeName` IS NOT NULL -->
+<!--                AND ppfs.`serviceTypeName` IS NOT NULL -->
     </insert>
     
     <insert id="create_temp_project_sales_change">
@@ -1224,7 +817,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 ON ppfs.`projectCode` = LEFT(ph.`projectCode`, 15) 
         SET ph.customerProjectName = ppfs.customerProjectName,
             ph.majorProjectLevel = ppfs.majorProjectLevel,
-        	column013 = TRIM(IF(trim(IFNULL(ph.column013, "")) > '', ph.`column013`, ppfs.finalCustomerName))
+            column013 = TRIM(IF(trim(IFNULL(ph.column013, "")) > '', ph.`column013`, ppfs.finalCustomerName))
         <!-- WHERE ppfs.customerProjectName IS NOT NULL -->
     </update>
     
@@ -1297,58 +890,62 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             temp_project_sales_change 
     </insert>
     
-    
-    <!-- 查询SSE的付款信息 -->
-    <select id="querySSESubcontractPaymentList" resultClass="java.util.HashMap">
-        SELECT * FROM `v_service_offer_4_pms`
+    <select id="selectOrderInfoFromERP" resultClass="java.util.HashMap">
+        SELECT `pod`.`id` AS `id`, `pod`.`orderNumber` AS `orderNumber`, `pod`.`contractNo` AS `contractNo`, `pod`.`orderExecNumber` AS `orderExecNumber`, `pod`.`orderCreateTime` AS `orderCreateTime`
+		    , `pod`.`customerRequireTime` AS `customerRequireTime`, `pod`.`customerCode` AS `customerCode`, `pod`.`customerName` AS `customerName`, `pod`.`projectName` AS `projectName`, `pod`.`orderComment` AS `orderComment`
+		    , `pod`.`orderType` AS `orderType`, `fc`.`code` AS `compCode`, `pod`.`salesType` AS `salesType`, `pod`.`customInfo` AS `customInfo`, `pod`.`syncTime` AS `syncTime`
+		    , 'D365' AS `source`, CONCAT(LEFT(orderExecNumber, 12), SUBSTR(orderExecNumber, 14)) AS orderExecNumberShort
+		FROM `pm_order_data_from_erp_d365` `pod`
+		    LEFT JOIN `fnd_company` `fc` ON `fc`.`account` = `pod`.`compCode`
+		UNION ALL
+		SELECT `pod`.`id` AS `id`, `pod`.`orderNumber` AS `orderNumber`, `pod`.`contractNo` AS `contractNo`, `pod`.`orderExecNumber` AS `orderExecNumber`, `pod`.`orderCreateTime` AS `orderCreateTime`
+		    , `pod`.`customerRequireTime` AS `customerRequireTime`, `pod`.`customerCode` AS `customerCode`, `pod`.`customerName` AS `customerName`, `pod`.`projectName` AS `projectName`, `pod`.`orderComment` AS `orderComment`
+		    , `pod`.`orderType` AS `orderType`, `pod`.`compCode` AS `compCode`, `pod`.`salesType` AS `salesType`, NULL AS `customInfo`, NULL AS `syncTime`
+		    , 'SAP' AS `source`, CONCAT(LEFT(orderExecNumber, 12), SUBSTR(orderExecNumber, 14)) AS orderExecNumberShort
+		FROM `pm_order_data_from_erp_sap` `pod`
     </select>
-    
-    <insert id="insertSSESubcontractPayment" parameterClass="list">
-      INSERT INTO `pm_subcontract_project_payment_sse` (
-          `id`, `workNo`, `name`, `offerNum`, `applyAmount`, `receiver`, `bank`, `bankAccount`, `useage`, `paystate`, `confirmTime`, `paymentTime`, `approveState`, `type`, `approveAmount`, `remark`, `subcontractNo`
-      ) 
-      VALUES
-      <iterate conjunction=",">
-         (
-            #[].id#, #[].workNo#, #[].name#, #[].offerNum#, #[].applyAmount#, 
-            #[].receiver#, #[].bank#, #[].bankAccount#, #[].useage#, 
-            #[].paystate#, #[].confirmTime#, #[].paymentTime#, #[].approveState#, 
-            #[].type#, #[].approveAmount#, #[].remark#, #[].subcontractNo#
-          )
-      </iterate>
+    <insert id="insertOrderInfoFromERP" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO `pm_order_data_from_erp_source`( orderNumber ,contractNo , orderExecNumber, orderExecNumberShort , orderCreateTime ,customerRequireTime ,
+             customerCode ,customerName,projectName,orderComment,orderType, compCode, salesType, customInfo, source) values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].orderNumber#,#list[].contractNo#,#list[].orderExecNumber#,#list[].orderExecNumberShort#,#list[].orderCreateTime#,#list[].customerRequireTime#,
+              #list[].customerCode#,#list[].customerName#,#list[].projectName#,#list[].orderComment#,#list[].orderType#, #list[].compCode#,
+              #list[].salesType#, #list[].customInfo#, #list[].source#
+            )
+        </iterate>
     </insert>
-    
-    <delete id="deleteSSESubcontractPayment">
-      truncate pm_subcontract_project_payment_sse
+    <delete id="deleteOrderInfoFromERP" >
+        truncate table pm_order_data_from_erp_source
     </delete>
-    
-    <!-- 查询SSE的办事处秘书信息 -->
-    <select id="querySSEDepartmentSectaryList" resultClass="java.util.HashMap">
-        SELECT * FROM dp_department_sse
+    <select id="selectOrderLineFromERP" resultClass="java.util.HashMap">
+        SELECT `pol`.`id` AS `id`, `pol`.`orderNumber` AS `orderNumber`, `pol`.`lineNum` AS `lineNum`, `pol`.`itemCode` AS `itemCode`, `pol`.`itemDesc` AS `itemDesc`
+		    , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
+		    , `fc`.`code` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, `pol`.`realOrderExecNumber` AS `realOrderExecNumber`, `pol`.`customInfo` AS `customInfo`, `pol`.`syncTime` AS `syncTime`
+		    , 'D365' AS `source`
+		FROM `pm_order_line_from_erp_d365` `pol`
+		    LEFT JOIN `fnd_company` `fc` ON `fc`.`account` = `pol`.`compCode`
+		UNION ALL
+		SELECT `pol`.`id` AS `id`, `pol`.`orderNumber` AS `orderNumber`, `pol`.`lineNum` AS `lineNum`, `pol`.`itemCode` AS `itemCode`, `pol`.`itemDesc` AS `itemDesc`
+		    , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
+		    , `pol`.`compCode` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, NULL AS `realOrderExecNumber`, NULL AS `customInfo`, NULL AS `syncTime`
+		    , 'SAP' AS `source`
+		FROM `pm_order_line_from_erp_sap` `pol`
     </select>
-    
-    <insert id="insertSSEDepartmentSectary" parameterClass="list">
-      INSERT INTO `pm_project_maintenance_sectary_from_sse` (
-          `depNum`, `depName`, `pDepNum`, `pDepName`, `sectary`, `status`, `updateTime`
-      ) 
-      VALUES
-      <iterate conjunction=",">
-         (
-            #[].depnum#, #[].depname#, #[].pDepnum#, #[].pDepname#, #[].sectary_jobnum#, #[].status#, #[].updateTime#
-          )
-      </iterate>
-      ;
-      
-      UPDATE 
-		  pm_project_maintenance_sectary_from_sse ms 
-		  INNER JOIN ehr_employee e 
-		      ON ms.`sectary` = e.`workNo` 
-	  SET ms.`sectaryEmail` = e.`email`, 
-		  ms.`sectaryName` = e.`name`, 
-		  ms.`sectaryPhone` = e.`mobile`;
+    <insert id="insertOrderLineFromERP" parameterClass="java.util.Map">
+        INSERT INTO `pm_order_line_from_erp_source`(orderNumber ,lineNum ,itemCode ,itemDesc ,
+            orderQuantity ,openQuantity ,bundleCode ,warrantyMonth,lineType, compCode, profitCenter, realOrderExecNumber, customInfo, source) values
+        <iterate conjunction="," property="list">
+        (
+            #list[].orderNumber#,#list[].lineNum#,#list[].itemCode#,#list[].itemDesc#,
+            #list[].orderQuantity#,#list[].openQuantity#,#list[].bundleCode#,#list[].warrantyMonth#,
+            #list[].lineType#, #list[].compCode#, #list[].profitCenter#, #list[].realOrderExecNumber#,
+            #list[].customInfo#, #list[].source#
+        )
+        </iterate>
     </insert>
-    
-    <delete id="deleteSSEDepartmentSectary">
-      truncate pm_project_maintenance_sectary_from_sse
+    <delete id="deleteOrderLineFromERP" >
+        truncate table pm_order_line_from_erp_source
     </delete>
 </sqlMap>

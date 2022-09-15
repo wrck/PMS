@@ -1,7 +1,6 @@
 package com.dp.plat.pms.springmvc.constant;
 
 import com.dp.plat.core.param.Consts;
-import com.dp.plat.util.MessageUtil;
 
 public class ProjectConstant {
 
@@ -66,12 +65,28 @@ public class ProjectConstant {
 		 */
 		public final static String QUALITY_APPROVE_TRACK = "QualityApproveTrack";
 		
+		/**
+		 * 质量审批跟踪流程
+		 */
+		public final static String SUBCONTRACT_INSPECTION = "SubcontractInspection";
+		
 		public static final class TaskType {
+			/**
+			 * 安服质量审核任务
+			 */
 			public static final String AF_APPROVE_TASK = "afApproveTask";
-			
+			/**
+			 * 研发质量审核任务
+			 */
 			public static final String YF_APPROVE_TASK = "yfApproveTask";
-			
+			/**
+			 * 任务跟踪任务
+			 */
 			public static final String TRACK_TASK = "trackTask";
+			/**
+			 * 验收材料审批任务
+			 */
+			public static final String ACCEPTANCE_TASK = "acceptanceTask";
 
 			public static final String END = "end";
 			
@@ -79,16 +94,34 @@ public class ProjectConstant {
 		}
 		
 		public static final class DataType {
-			
+			/**
+			 * 项目
+			 */
 			public static final String PROJECT = "project";
-			
+			/**
+			 * 项目任务
+			 */
 			public final static String PROJECT_TASK = "projectTask";
-			
-			public final static String INDUSTRY_ASSET = "industryAsset";
-			
-			public final static String INDUSTRY_LEAK = "industryLeak";
-			
+			/**
+			 * 项目机会点
+			 */
 			public final static String PROJECT_OPPORTUNITY = "projectOpportunity";
+			/**
+			 * 项目外派
+			 */
+			public final static String PROJECT_DISPATCH = "dispatch";
+			/**
+			 * 项目外派结算
+			 */
+			public final static String DISPATCH_SETTLEMENT = "settlement";
+			/**
+			 * 行业资产
+			 */
+			public final static String INDUSTRY_ASSET = "industryAsset";
+			/**
+			 * 行业漏洞
+			 */
+			public final static String INDUSTRY_LEAK = "industryLeak";
 
 		}
 	}

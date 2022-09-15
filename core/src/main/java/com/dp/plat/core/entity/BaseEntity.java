@@ -86,6 +86,18 @@ public class BaseEntity implements Serializable{
 	public void setOrgId(Integer orgId) {
 		this.orgId = orgId;
 	}
+	
+	/**
+	 * 判断是否存在待办任务
+	 * @return
+	 */
+	public Boolean hasTask() {
+	    String currentTaskId = String.valueOf(this.getCustomInfoByKey("currentTaskId", "")).trim();
+	    if (!"null".equalsIgnoreCase(currentTaskId) && currentTaskId.length() != 0 && !"0".equals(currentTaskId)) {
+	        return true;
+	    }
+	    return false;
+	}
 
 	public Map getCustomInfo() {
 		return customInfo;
@@ -101,6 +113,14 @@ public class BaseEntity implements Serializable{
 			return customInfo.get(key);
 		}
 		return null;
+	}
+	
+	public Object getCustomInfoByKey(String key, Object defaultValue) {
+		Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+		if (customInfo != null && !customInfo.isEmpty()) {
+			return customInfo.getOrDefault(key, defaultValue);
+		}
+		return defaultValue;
 	}
 
 	public void setCustomInfoByKey(String key, Object value) {

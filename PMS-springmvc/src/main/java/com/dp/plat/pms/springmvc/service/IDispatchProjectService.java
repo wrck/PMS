@@ -1,12 +1,13 @@
 package com.dp.plat.pms.springmvc.service;
 
-import java.util.List;
 import java.util.Date;
-import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.pms.springmvc.vo.DispatchVO;
-import com.dp.plat.core.vo.PermissionResult;
+import java.util.List;
+
 import com.dp.plat.core.service.IAbstractBaseService;
+import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.PermissionResult;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
+import com.dp.plat.pms.springmvc.vo.DispatchVO;
 
 /**
  *
@@ -14,9 +15,15 @@ import com.dp.plat.pms.springmvc.entity.DispatchProject;
  */
 public interface IDispatchProjectService extends IAbstractBaseService<DispatchProject> {
 
-    void dispatchSubmit(Integer id, DispatchVO dispatch);
-
     void insertOrUpdateSelective(DispatchProject dispatch);
+    
+    List<DispatchVO> selectDispatchProjectVOList(DispatchVO dispatch);
+    
+    Long countDispatchProjectVOList(DispatchVO dispatch);
+
+    DispatchVO selectVOByPrimaryKey(Integer id);
+
+    void dispatchSubmit(Integer id, DispatchVO dispatch);
 
     /**
 	 * 生成派单编号
@@ -41,6 +48,14 @@ public interface IDispatchProjectService extends IAbstractBaseService<DispatchPr
     List<DispatchVO> selectDispatchVOWithAmountBySelective(DispatchVO dispatchProject);
 
     List<DispatchVO> selectDispatchVOWithAmountBySelectivePageable(PageParam<Object> pageParam);
+    
+    /**
+     * 查询派单信息，带合同回款情况，以及结算情况
+     * @param dispatchProject
+     * @return
+     */
+    DispatchVO selectDispatchVOWithAmount(Integer dispatchId);
 
     PermissionResult checkPermission(DispatchVO dispatchVO, String... permissions);
+
 }

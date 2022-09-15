@@ -20,5 +20,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"
              <property name="JDBC.Password" value="${sms.database.password}"/>  
         </dataSource>  
     </transactionManager> 
-    <sqlMap resource="sql-map-refresh-data-config.xml"/>  
+    <!-- <sqlMap resource="sql-map-refresh-data-config.xml"/>  --> 
+    <sqlMap resource="sql-map-refresh-data-sms-config.xml"/>
 </sqlMapConfig>  

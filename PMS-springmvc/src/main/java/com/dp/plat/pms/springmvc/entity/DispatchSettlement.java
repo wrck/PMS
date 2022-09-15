@@ -82,6 +82,9 @@ public class DispatchSettlement extends BaseEntity {
 
     // 删除标记
     private Boolean disabled;
+    
+    // 结算标记
+    private Boolean settled;
 
     /**
      * @return id
@@ -511,5 +514,23 @@ public class DispatchSettlement extends BaseEntity {
      */
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
+    }
+    
+    /**
+     * 获取结算标记
+     *
+     * @return settled - 结算标记
+     */
+    public Boolean getSettled() {
+        return settled;
+    }
+
+    /**
+     * 设置结算标记
+     *
+     * @param settled 结算标记
+     */
+    public void setSettled(Boolean settled) {
+        this.settled = settled;
     }
 }
