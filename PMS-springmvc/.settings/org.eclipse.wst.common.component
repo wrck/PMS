@@ -19,6 +19,6 @@
         </dependent-module>
         <property name="java-output-path" value="/PMS-springmvc/target/classes"/>
         <property name="component.exclusion.patterns" value="WEB-INF/lib/pms-struts-*-core.jar"/>
-        <property name="context-root" value="PMS"/>
+        <property name="context-root" value="PMS2"/>
     </wb-module>
 </project-modules>

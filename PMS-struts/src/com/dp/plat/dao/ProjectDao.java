@@ -1,6 +1,5 @@
 package com.dp.plat.dao;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1137,6 +1136,24 @@ public interface ProjectDao {
 	 * 
 	 */
 	void truncateSpotCheckIgnoreItem();
+	
+	/**
+     * 查询过保提醒函，除去已转出的设备
+     * 
+     * @param contractNos
+     * @param projectId
+     * @return
+     */
+    List<Map<String, String>> queryOverWarrantyRemindList(String contractNos, int projectId);
+    /**
+     * 查询过保提醒函，除去已转出的设备
+     * 
+     * @param contractNos
+     * @param projectId
+     * @param profitCenter 
+     * @return
+     */
+    List<Map<String, String>> queryOverWarrantyRemindList(String contractNos, int projectId, String profitCenter);
 
 	/**
 	 * @param projectId

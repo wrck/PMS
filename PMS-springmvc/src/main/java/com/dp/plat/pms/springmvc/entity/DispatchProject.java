@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class DispatchProject extends BaseEntity {
 
+    private static final long serialVersionUID = -1603453622099015975L;
+
     // 外派名称
     private String dispatchName;
 

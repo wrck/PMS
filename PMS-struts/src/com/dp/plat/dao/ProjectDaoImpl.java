@@ -411,6 +411,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         }
         Map<String, Object> params = new HashMap<>(2);
         params.put("contractNo", contractNos);
+        params.put("sourceContractNo", contractNos.replaceAll("(-L)|(-C)", ""));
         params.put("profitCenter", profitCenter);
         return (int) getSqlMapClientTemplate().queryForObject("query_shipmentInfo_size_by_contractNoAndProfitCenter", params);
     }
@@ -446,6 +447,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
             map.put("profitCenter", profitCenter);
         }
         map.put("contractNo", Util.appendChar(contractNo, "'"));
+        map.put("sourceContractNo", Util.appendChar(contractNo, "'").replaceAll("(-L)|(-C)", ""));
         map.put("projectId", project.getProjectId());
         String[] contractNos = contractNo.split(",");
         for (int i = 0; i < contractNos.length; i++) {
@@ -1113,12 +1115,13 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<Map<String, String>> querySpotCheckList(String contractNo, int projectId) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("contractNo", contractNo);
-        map.put("projectId", projectId);
-        // 设置group_contract的最大长度，默认1024
-        getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
-        return getSqlMapClientTemplate().queryForList("querySpotCheckList", map);
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        map.put("contractNo", contractNo);
+//        map.put("projectId", projectId);
+//        // 设置group_contract的最大长度，默认1024
+//        getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+//        return getSqlMapClientTemplate().queryForList("querySpotCheckList", map);
+        return this.querySpotCheckList(contractNo, projectId, null);
     }
     
     @Override
@@ -1128,6 +1131,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
             contractNo = contractNo.replaceAll("-L", "");
         }
         map.put("contractNo", contractNo);
+        map.put("sourceContractNo", StringUtils.trimToEmpty(contractNo).replaceAll("(-L)|(-C)", ""));
         map.put("projectId", projectId);
         map.put("profitCenter", profitCenter);
         // 设置group_contract的最大长度，默认1024
@@ -1143,6 +1147,26 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public void truncateSpotCheckIgnoreItem() {
         getSqlMapClientTemplate().delete("truncateSpotCheckIgnoreItem");
+    }
+    
+    @Override
+    public List<Map<String, String>> queryOverWarrantyRemindList(String contractNo, int projectId) {
+        return this.queryOverWarrantyRemindList(contractNo, projectId, null);
+    }
+    
+    @Override
+    public List<Map<String, String>> queryOverWarrantyRemindList(String contractNo, int projectId, String profitCenter) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
+            contractNo = contractNo.replaceAll("-L", "");
+        }
+        map.put("contractNo", contractNo);
+        map.put("sourceContractNo", StringUtils.trimToEmpty(contractNo).replaceAll("(-L)|(-C)", ""));
+        map.put("projectId", projectId);
+        map.put("profitCenter", profitCenter);
+        // 设置group_contract的最大长度，默认1024
+        getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+        return getSqlMapClientTemplate().queryForList("queryOverWarrantyRemindList", map);
     }
 
     @Override

@@ -14,7 +14,7 @@ function shipformSubmit(){
 	if(!checkshipform()){
 		return false;
 	}
-	var projectId = $("#projectId").val();
+	var projectId = $("#projectId").val() || $("[name='projectId']").val();
 	$.ajax({
 		url :"<%=request.getContextPath()%>/SaveInstallAdress.action",
 		type :"post",
@@ -112,10 +112,21 @@ function deleteShipmentInfo() {
                 </div>
             </s:if> --%>
             <div class='pull-right' style="margin-right: 15px;">
-                <a onclick="exportSpotCheck(this)" class="btn btn-success" href="javascript:void(0)"><span class="glyphicon glyphicon-cloud-download"></span> 下载现场验货单</a>
+                <a onclick="exportOverWarrantyRemind(this)" class="btn btn-success" href="javascript:void(0)"><span class="glyphicon glyphicon-cloud-download"></span> 设备过保提醒函</a>
+                <a onclick="exportSpotCheck(this)" class="btn btn-success" href="javascript:void(0)"><span class="glyphicon glyphicon-cloud-download"></span> 现场验货单</a>
                 <s:if test="user.isHasRole(13) || user.isHasRole(1)">
                     <a onclick="importSpotCheckIgnoreItem(this)" class="btn btn-info" href="javascript:void(0)"><span class="glyphicon glyphicon-upload"></span> 导入非明细Item</a>
                     <a onclick="transferShipment(this)" class="btn btn-danger" href="javascript:void(0)"><span class="glyphicon glyphicon-retweet"></span> 转移</a>
+                    <script>
+                    function importSpotCheckIgnoreItem(_this) {
+                        popWindow('module/sub/importSpotCheckIgnoreItem.action', 1100, 650,'转移设备', 'BudgetUpload', true);
+                    }
+                    function transferShipment(_this){
+                        projectId = $("#projectId,[name='projectId']").val();
+                        popWindow('module/sub/transferShipment.action?transferType=1&projectId='+projectId, 1100, 650,'转移设备', 'BudgetUpload', true);
+                        return false;
+                    }
+                    </script>
                 </s:if>
                 <s:if test="result > 0 && (project.projectState != '100' || (project.projectState == '100' && (user.isHasRole(13) || user.isHasRole(1)))) && (user.isHasRole(13) || user.isHasRole(1) || user.areapower.contains(project.column001))">
                     <a onclick="deleteShipmentInfo(this)" class="btn btn-danger" href="javascript:void(0)"><span class="glyphicon glyphicon-trash"></span> 删除安装信息</a>
@@ -146,6 +157,16 @@ function deleteShipmentInfo() {
                     }
                     </script>
                 </s:if>
+                <script>
+                    function exportSpotCheck(_this) {
+                        var projectId = $("#projectId,[name='projectId']").val();
+                        window.open("module/exportSpotCheck.action?projectId=" + projectId);
+                    }
+                    function exportOverWarrantyRemind(_this) {
+                        var projectId = $("#projectId,[name='projectId']").val();
+                        window.open("module/exportOverWarrantyRemind.action?projectId=" + projectId);
+                    }
+                </script>
 		    </div>
 			<s:hidden name="projectId" value="%{project.projectId}" ></s:hidden>
             <s:hidden name="project.column001" value="%{project.column001}" ></s:hidden>
@@ -164,10 +185,15 @@ function deleteShipmentInfo() {
 					</display:column>
 					<display:column property="itemCodeRelation" titleKey="pm.shipment.itemCode"></display:column>
 					<display:column property="itemNameRelation" titleKey="pm.shipment.itemName"></display:column>
-					<display:column property="receiveName" titleKey="pm.shipment.receiveName"></display:column>
-					<display:column property="emsNum" titleKey="pm.shipment.emsNum"></display:column>
-					<display:column property="packdate" titleKey="pm.shipment.packdate" format="{0,date,yyyy-MM-dd}"></display:column>
-					<display:column property="emsCompany" titleKey="pm.shipment.emsCompany"></display:column>
+					<display:column property="receiveName" titleKey="pm.shipment.receiveName" class="nowrap"></display:column>
+					<display:column property="emsNum" titleKey="pm.shipment.emsNum" headerClass="nowrap"></display:column>
+					<display:column property="packdate" titleKey="pm.shipment.packdate" format="{0,date,yyyy-MM-dd}" class="nowrap"></display:column>
+					<display:column property="extInfo.warrantyStartTime" title="维保开始" format="{0,date,yyyy-MM-dd}" class="nowrap"></display:column>
+                    <display:column property="extInfo.warrantyEndTime" title="维保结束" format="{0,date,yyyy-MM-dd}" class="nowrap"></display:column>
+                    <display:column property="extInfo.warrantyMonth" title="维保月限" headerClass="nowrap"></display:column>
+                    <display:column title="维保状态" headerClass="nowrap">${displaytable3.extInfo.warrantyDiff > 0 ? '维保外' : (displaytable3.extInfo.warrantyDiff < 0 ? '维保内' : '即将过保')}</display:column>
+                    
+                    <display:column property="emsCompany" titleKey="pm.shipment.emsCompany" headerClass="nowrap"></display:column>
 					<display:column property="installAddress" titleKey="pm.project.receiveAddress"></display:column>
 					<display:column property="transferFlagWrapper" titleKey="pm.project.transferFlag" media="html"></display:column>
 					<display:column titleKey="pm.project.transferFlag" media="excel">

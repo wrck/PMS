@@ -14,7 +14,7 @@ public class IndustryAsset extends BaseEntity {
 	
 	private static final long serialVersionUID = -8207505075644971447L;
 
-	private Integer id;
+    private Integer id;
 
     // 资产编号
     private String assetNum;

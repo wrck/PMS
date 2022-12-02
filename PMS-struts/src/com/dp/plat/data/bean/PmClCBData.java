@@ -2,7 +2,7 @@ package com.dp.plat.data.bean;
 
 import java.util.Date;
 
-public class PmClCBData {
+public class PmClCBData extends CustomInfoEntity {
 	private int id;
 	private String projectName;
 	private String pmUserName;

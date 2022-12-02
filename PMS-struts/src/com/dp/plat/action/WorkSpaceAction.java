@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
+import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.DpActProcDesc;
 import com.dp.plat.data.bean.DpActProcType;
@@ -51,6 +52,9 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	private String tabName;// 选项卡，由于tabIndex 多变，改用tabName，前台自动查找相应索引
 	private Boolean isCbRole;
 	private List<Map<String, Object>> subcontractTaskList = new ArrayList<>();
+	// 通用查询条件
+	private Map<String, String> queryParams = new HashMap<String, String>();
+	private Map<String, Object> returnParams = new HashMap<String, Object>();
 
 	@Override
 	public void prepare() throws Exception {
@@ -250,6 +254,8 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	 * @throws Exception
 	 */
 	public String dailyTask() throws Exception {
+	    tabIndex = 0;
+	    tabName = "dailyTask";
 		return execute();
 	}
 
@@ -288,7 +294,11 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	 * @throws Exception
 	 */
 	public String subcontractTask() throws Exception {
-		subcontractTaskList = workspaceService.qerySubcontractTaskList();
+	    Company company = new Company();
+        company.setStatus(1);
+        List<Company> compList = departmentManageService.queryCompanyList(company);
+        returnParams.put("compList", compList);
+		subcontractTaskList = workspaceService.querySubcontractTaskList(queryParams);
 		tabIndex = 5;
 //		if (UserContext.getUserContext().isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
 //			workspaceService.qerySubcontractTaskList();
@@ -487,5 +497,21 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	public void setSubcontractTaskList(List<Map<String, Object>> subcontractTaskList) {
 		this.subcontractTaskList = subcontractTaskList;
 	}
+
+    public Map<String, String> getQueryParams() {
+        return queryParams;
+    }
+
+    public void setQueryParams(Map<String, String> queryParams) {
+        this.queryParams = queryParams;
+    }
+
+    public Map<String, Object> getReturnParams() {
+        return returnParams;
+    }
+
+    public void setReturnParams(Map<String, Object> returnParams) {
+        this.returnParams = returnParams;
+    }
 
 }

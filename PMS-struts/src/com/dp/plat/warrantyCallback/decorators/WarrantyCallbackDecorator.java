@@ -1,12 +1,14 @@
 package com.dp.plat.warrantyCallback.decorators;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.jsp.PageContext;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.model.HeaderCell;
@@ -14,11 +16,9 @@ import org.displaytag.model.TableModel;
 import org.displaytag.util.HtmlAttributeMap;
 import org.springframework.beans.BeanUtils;
 
-import com.dp.plat.context.UserContext;
-import com.dp.plat.data.bean.User;
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.param.FileParam;
 import com.dp.plat.util.Base64Util;
-import com.dp.plat.util.MessageUtil;
 import com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO;
 
 /**
@@ -199,38 +199,75 @@ public class WarrantyCallbackDecorator extends TableDecorator {
 
     public String getOperateUrl() {
         Object obj = getCurrentRowObject();
-        int supervisionId = 0;
-        String taskName = "";
-        Boolean state = true;
-        String createUser = "";
+        Object projectId = null;
+        Object id = null;
+        Object latestId = null;
+        Object latestRenewalIntention = null;
+        Object latestPhoneAnswerState = null;
         if (obj instanceof ProjectWarrantyCallbackVO) {
-            supervisionId = ((ProjectWarrantyCallbackVO) obj).getId();
-//            state = ((ProjectWarrantyCallbackVO) obj).getState();
-            createUser = ((ProjectWarrantyCallbackVO) obj).getCreateBy();
+            ProjectWarrantyCallbackVO vo = ((ProjectWarrantyCallbackVO) obj);
+            projectId = vo.getProjectId();
+            latestId = vo.getId();
+            id = vo.getId();
+            latestRenewalIntention = vo.getRenewalIntention();
         } else if (obj instanceof Map) {
-            supervisionId = (int) ((Map) obj).get("id");
-//            state = (Boolean) ((Map) obj).get("state");
-            createUser = (String) ((Map) obj).get("createBy");
+            Map<String, Object> vo = ((Map) obj);
+            projectId = vo.get("projectId");
+            id = vo.get("id");
+            latestId = vo.get("latestId");
+            latestRenewalIntention = vo.get("latestRenewalIntention");
+            latestPhoneAnswerState = vo.get("latestPhoneAnswerState");
         }
-        if (Boolean.TRUE.equals(state)) {
-            return "";
+        boolean canEdit = ProjectWarrantyCallbackVO.canEdit(latestRenewalIntention, latestPhoneAnswerState);
+        id = canEdit ? latestId : id;
+        StringBuilder html = new StringBuilder();
+        html.append("<a class=\"btn btn-xs btn-info\" href=\"javascript:popWindow('module/sub/warrantyCallback_createProjectWarrantyCallback.action?project.projectId=${projectId}&projectWarrantyCallback.id=${id}', '95vw', 600, '维保回访', 'createProjectWarrantyCallback', true)\">回访</a>");
+        if (latestRenewalIntention != null) {
+            html.append(" <a class=\"btn btn-xs btn-success\" href=\"javascript:popWindow('module/sub/warrantyCallback_projectWarrantyCallback.action?projectWarrantyCallback.projectId=${projectId}&projectWarrantyCallback.id=${id}', '95vw', 600, '维保回访记录', 'ProjectWarrantyCallback', true)\">查看</a>");
         }
-        User user = UserContext.getUserContext().getUser();
-        StringBuilder url = new StringBuilder();
-        if (Boolean.FALSE.equals(state) && (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-                || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER))) {
-            taskName = "办理";
-            url.append("<a href='javascript:void(0)' onclick='").append("openQuesTask(\"").append(supervisionId).append("\")'>").append(taskName).append("</a>");
-        }
-        if (Boolean.FALSE.equals(state) && (createUser.equals(user.getUsername()) || (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)))) {
-            if (StringUtils.isNotBlank(taskName)) {
-                url.append(" | ");
-            }
-            taskName = "删除";
-            url.append("<a href='javascript:void(0)' onclick='").append("deleteWarrantyCallback(\"").append(supervisionId).append("\")'>").append(taskName).append("</a>");
-        }
-        return url.toString();
+        
+        return html.toString().replace("${id}", ObjectUtils.defaultIfNull(id, "").toString())
+                .replace("${projectId}", ObjectUtils.defaultIfNull(projectId, "").toString());
     }
     
+    /**
+     * 获取续保意向描述
+     * @return
+     */
+    public String getRenewalIntentionName() {
+        Object obj = getCurrentRowObject();
+        Object renewalIntention = null;
+        if (obj instanceof ProjectWarrantyCallbackVO) {
+            ProjectWarrantyCallbackVO vo = ((ProjectWarrantyCallbackVO) obj);
+            renewalIntention = vo.getRenewalIntention();
+        } else if (obj instanceof Map) {
+            Map vo = ((Map) obj);
+            renewalIntention = vo.get("renewalIntention");
+        }
+        return (String) RenewalIntentionDecorator.getRenewalIntentionName(renewalIntention);
+    }
+    
+    /**
+     * 获取续保意向描述
+     * @return
+     */
+    public String getPhoneAnswerStateName() {
+        Object obj = getCurrentRowObject();
+        Object phoneAnswerState = null;
+        Object phoneAnswerStateName = null;
+        if (obj instanceof ProjectWarrantyCallbackVO) {
+            ProjectWarrantyCallbackVO vo = ((ProjectWarrantyCallbackVO) obj);
+            phoneAnswerState = vo.getCustomInfoByKey("phoneAnswerState");
+            phoneAnswerStateName = vo.getCustomInfoByKey("phoneAnswerStateName");
+        } else if (obj instanceof Map) {
+            Map vo = ((Map) obj);
+            Map customIfno = JSON.parseObject(ObjectUtils.defaultIfNull(vo.get("customInfo"), "{}").toString(), HashMap.class);
+            phoneAnswerState = customIfno.getOrDefault("phoneAnswerState", vo.get("phoneAnswerState"));
+            phoneAnswerStateName = customIfno.getOrDefault("phoneAnswerStateName", vo.get("phoneAnswerStateName"));
+        }
+        if (phoneAnswerStateName != null) {
+            return phoneAnswerStateName.toString();
+        }
+        return phoneAnswerState != null ? phoneAnswerState.toString() : "";
+    }
 }

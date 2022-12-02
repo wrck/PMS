@@ -402,6 +402,10 @@
 							notEmpty : {
 								message : '请输入登录名'
 							},
+					        regexp: { //正则校验
+					            regexp: /^\S+$/, 
+					            message:'用户名存在空白字符'
+					        },
 							remote:{
 								message: "该用户名已存在，请重新输入",
 								url: "checkUnique.json",
@@ -490,6 +494,21 @@
 					if (roleIds) {
 						$("#roleSelect").val(roleIds.split(",")).trigger('change');
 					}
+					
+					var officeCode = userInfo.custom3;
+                    if (officeCode) {
+                        $("#officeCode").val(officeCode.split(",")).trigger('change');
+                    }
+                    
+					var projectTypes = userInfo.custom4;
+                    if (projectTypes) {
+                        $("#projectTypePower").val(projectTypes.split(",")).trigger('change');
+                    }
+					
+                    var areaPower = userInfo.custom5;
+                    if (areaPower) {
+                        $("#areaPower").val(areaPower.split(",")).trigger('change');
+                    }
 					
 					//头像回填
 					/*  ajaxPost(basePath+"/pm/user/getAvatar",{userId:id},function(result){

@@ -23,9 +23,11 @@ import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.impl.identity.Authentication;
+import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 import org.activiti.engine.impl.persistence.entity.HistoricProcessInstanceEntity;
 import org.activiti.engine.impl.persistence.entity.HistoricTaskInstanceEntity;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.impl.pvm.PvmActivity;
 import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
@@ -512,11 +514,11 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 	@Override
 	public Map<String, Object> getCurrentActivityCoordinates(String taskId) {
 		Map<String, Object> coordinates = new HashMap<String, Object>();
-		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-		ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+		TaskEntity task = (TaskEntity) taskService.createTaskQuery().taskId(taskId).singleResult();
+		ExecutionEntity pi = (ExecutionEntity) runtimeService.createProcessInstanceQuery()
 				.processInstanceId(task.getProcessInstanceId()).singleResult();
-
-		String currentActivitiId = pi.getActivityId();
+		
+		String currentActivitiId = pi.getActivityId() != null ? pi.getActivityId() : task.getTaskDefinitionKey();
 		ProcessDefinitionEntity pde = (ProcessDefinitionEntity) repositoryService
 				.getProcessDefinition(task.getProcessDefinitionId());
 

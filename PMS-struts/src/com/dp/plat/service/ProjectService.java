@@ -833,9 +833,16 @@ public interface ProjectService extends BaseService{
     void insertTransferShipment(String selected, Project project, Project transferProject, String profitCenter);
 
 	/**
-	 * @param shipmentInfoList
+	 * 导出现场验货单
+	 * @param project
 	 */
 	Map<String, String> exportSpotCheckList(Project project);
+	
+	/**
+	 * 导出过保提醒函
+     * @param project
+     */
+    Map<String, String> exportOverWarrantyRemindList(Project project);
 
 	/**
 	 * 导入现场验货单需要忽略序列号明细的item

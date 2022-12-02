@@ -247,8 +247,8 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
                 .projectName((String) dispatch.getDispatchName()) // 项目名称
                 .projectProgress((String) minProgressProject.getCustomInfoByKey("projectProgress", "0")) // 项目进度
                 .subcontractType((String) config.getOrDefault("typeTag", "安服") + dispatchVO.getCustomInfoByKey("serviceType", dispatchVO.getCustomInfoByKey("typeName", dispatchVO.getTypeName()))) // 转包类型
-                .subcontStartDate((String) dispatch.getCustomInfoByKey("subcontStartDate")) // 转包周期开始
-                .subcontEndDate((String) dispatch.getCustomInfoByKey("subcontEndDate")) // 转包周期结束
+                .subcontStartDate(StringUtils.trimToNull((String) dispatch.getCustomInfoByKey("subcontStartDate"))) // 转包周期开始
+                .subcontEndDate(StringUtils.trimToNull((String) dispatch.getCustomInfoByKey("subcontEndDate"))) // 转包周期结束
                 .applicant(workNo) // 申请人
                 .workerPurchPlacer(workNo) // 订货人
         ;

@@ -181,8 +181,11 @@ public class QuestionnarieUtil {
                     pmClQuesnaireResultHeader = new PmClQuesnaireResultHeader();
                 }
                 pmClQuesnaireResultHeader.setId(quesnaireId);
-                PmClQuesnaireResultHeader resultHeader = pmClosedLoopService.queryPmClQuesResultHeaderList(pmClQuesnaireResultHeader).get(0);
-                BeanUtils.copyProperties(resultHeader, pmClQuesnaireResultHeader);
+                List<PmClQuesnaireResultHeader> resultHeaderList = pmClosedLoopService.queryPmClQuesResultHeaderList(pmClQuesnaireResultHeader);
+                if (resultHeaderList != null && !resultHeaderList.isEmpty()) {
+                    PmClQuesnaireResultHeader resultHeader = pmClosedLoopService.queryPmClQuesResultHeaderList(pmClQuesnaireResultHeader).get(0);
+                    BeanUtils.copyProperties(resultHeader, pmClQuesnaireResultHeader);
+                }
             }
         }
 

@@ -1361,6 +1361,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		vars.put("sm", "smRole");
 		vars.put("smRole", MessageUtil.ROLE_SERVICEMANAGER + "");
 		vars.put("dpNo", subcontract.getOfficeCode());
+		vars.put("result", taskParam.getApproveStatus());
 		taskParam.setComment("生成转包合同号");
 		this.submitSelfTask(taskParam, vars);
 
@@ -1552,7 +1553,8 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
         String[] nextAssignee = new String[2];
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("approveStatus", 1); // 统一待办任务推OA状态
-        if (subcontract.getType() != null && subcontract.getType().equals(SubcontractType.MAINTENANCE)) {
+        boolean needCallback = "1".equals(StringUtils.defaultIfBlank(basicDataService.querySysArg("pm.subcontract.type" + String.valueOf(subcontract.getType()) + ".needCallback.enable"), "0"));
+        if (subcontract.getType() != null && needCallback) {
             vars.put("result", 1);
             vars.put("cb", "cbRole");
             vars.put("cbRole", MessageUtil.ROLE_CALLBACKPER + "");
@@ -1935,7 +1937,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("isPass", isPass);
         vars.put("result", taskParam.getApproveStatus());
-        vars.put("dpNo", tempSubcontract.getOfficeCode());
+        //vars.put("dpNo", tempSubcontract.getProfitDepCode());
         vars.put("data", taskParam.getCustomInfoByKey("approveData"));
         this.submitSelfTask(taskParam, vars);
 

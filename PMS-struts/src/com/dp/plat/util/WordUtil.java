@@ -48,9 +48,8 @@ public class WordUtil {
 			// 设置编码
 			configuration.setDefaultEncoding("UTF-8");
 
-			// ftl模板文件统一放至 com.dp.plat.freemarker 
-			configuration.setClassForTemplateLoading(WordUtil.class,
-					"/com/dp/plat/template/");
+			// ftl模板文件统一放至 com.dp.plat.template 
+			configuration.setClassForTemplateLoading(WordUtil.class, "/com/dp/plat/template/");
 
 			// 获取模板
 			Template template = configuration.getTemplate(templateName);

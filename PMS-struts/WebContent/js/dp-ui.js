@@ -33,7 +33,7 @@ function showPopWin(url, width, height, returnFunc, showCloseBox, title)
 				var loadingImg = "/images/loading-circle.gif";
 				contextPath = contextPath || ".";
 				loadingImg = (contextPath + "/images/loading-circle.gif").replace("//", "/");
-				$(this).html(" <iframe id='" + dialogFrm + "' src='" + url
+				$(this).html(" <iframe id='" + dialogFrm + "' name='" + dialogFrm + "' src='" + url
 				 + "' style=\"width:100%;height:100%;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\"  "
 				 + "> </iframe>"); 
 				$("#"+dialogFrm).contents().find("body").append("<div style='height:100%;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'><img src='" + loadingImg + "'/></div>");
@@ -109,7 +109,7 @@ function popWindow(url, width, height, title, dialogid, modal)
 					loadingImg = (contextPath + loadingImg).replace("//", "/");
 					loadingImg2 = (contextPath + loadingImg2).replace("//", "/");
 					
-					$(this).html(" <iframe id='" + dialogFrm + "' src='" + url
+					$(this).html(" <iframe id='" + dialogFrm + "' name='" + dialogFrm + "' src='" + url
 					 + "' style=\"width:100%;height:100%;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\"  "
 					 + "> </iframe>"); 
 //					$("#"+dialogFrm).contents().find("body").append("<div style='height:100%;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'><img src='./images/loading-circle.gif'/></div>");

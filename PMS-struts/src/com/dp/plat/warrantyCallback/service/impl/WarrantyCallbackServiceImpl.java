@@ -7,12 +7,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.activiti.engine.TaskService;
 import org.activiti.engine.task.Task;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.PmClosedLoopDao;
 import com.dp.plat.data.bean.Project;
@@ -227,6 +229,52 @@ public class WarrantyCallbackServiceImpl extends BaseServiceImpl implements Warr
 			ProjectWarrantyCallbackVO projectWarrantyCallback, DisplayParam displayParam) {
 		return dao.selectProjectWarrantyCallbackMapList(projectWarrantyCallback, displayParam);
 	}
+	
+	/**
+	 * 填充项目维保信息
+	 * @param projectWarrantyCallback
+	 * @return filled
+	 */
+	@Override
+	public ProjectWarrantyCallbackVO fillProjectWarrantyInfo(ProjectWarrantyCallbackVO projectWarrantyCallback) {
+	    Map<String, Object> projectWarranty = this.selectProjectWarrantyByProjectId(projectWarrantyCallback.getProjectId());
+        // 设置项目维保状态和维保级别、增值服务等维保明细
+	    projectWarrantyCallback.setWarrantyState(projectWarranty != null ? new HashMap<String, Object>(projectWarranty) : null);
+	    
+        // 填充项目相关及维保基础信息
+        Object customInfoTemp = projectWarranty.remove("customInfo");
+        try {
+            org.apache.commons.beanutils.BeanUtils.populate(projectWarrantyCallback, projectWarranty);
+        } catch (Exception e) {
+        }
+        if (projectWarrantyCallback.getId() != null) {
+            Map<String, Object> tempMap = JSON.parseObject(customInfoTemp instanceof String ? (String) customInfoTemp : JSON.toJSONString(customInfoTemp), HashMap.class);
+            if (tempMap != null) {
+                Map<String, Object> customInfo = projectWarrantyCallback.getCustomInfo();
+                if (customInfo != null) {
+                    for (Entry<String, Object> entry : tempMap.entrySet()) {
+                        if (!customInfo.containsKey(entry.getKey())) {
+                            projectWarrantyCallback.setCustomInfoByKey(entry.getKey(), entry.getValue());
+                        }
+                    }
+                } else {
+                    projectWarrantyCallback.setCustomInfo(tempMap);
+                }
+            }
+        }
+        return projectWarrantyCallback;
+	}
+	
+	@Override
+    public Map<String, Object> selectProjectWarrantyByProjectId(Integer projectId) {
+        ProjectWarrantyCallbackVO projectWarrantyCallback = new ProjectWarrantyCallbackVO();
+        projectWarrantyCallback.setProjectId(projectId);
+        List<Map<String, Object>> list = this.selectProjectWarranty(projectWarrantyCallback);
+        if (list != null && !list.isEmpty()) {
+            return list.get(0);
+        }
+        return null;
+    }
 	
 	@Override
 	public List<Map<String, Object>> selectProjectWarranty(ProjectWarrantyCallbackVO projectWarrantyCallback) {

@@ -5,7 +5,9 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class SubcontractPayment extends BaseEntity {
-	private Integer id;
+	private static final long serialVersionUID = -7561611893804201575L;
+
+    private Integer id;
 
 	// 转包项目Id
 	private Integer subcontractId;
@@ -28,7 +30,7 @@ public class SubcontractPayment extends BaseEntity {
 	private String remark;
 	
     // sse报销单审批行ID
-    private Integer sseId;
+    private Long sseId;
 
 	@JsonFormat(pattern = "yyyy-MM-dd mm:HH:ss", locale = "zh", timezone = "GMT+8")
 	private Date createTime;
@@ -174,7 +176,7 @@ public class SubcontractPayment extends BaseEntity {
      *
      * @return sseId - sse报销单审批行ID
      */
-	public Integer getSseId() {
+	public Long getSseId() {
         return sseId;
     }
 
@@ -184,7 +186,7 @@ public class SubcontractPayment extends BaseEntity {
      * @param sseId
      *            sse报销单审批行ID
      */
-    public void setSseId(Integer sseId) {
+    public void setSseId(Long sseId) {
         this.sseId = sseId;
     }
 

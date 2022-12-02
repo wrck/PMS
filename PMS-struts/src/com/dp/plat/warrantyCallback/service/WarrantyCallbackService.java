@@ -72,6 +72,8 @@ public interface WarrantyCallbackService extends BaseService {
 	List<Map<String, Object>> selectProjectWarrantyCallbackMapList(ProjectWarrantyCallbackVO projectWarrantyCallback,
 			DisplayParam displayParam);
 
+	Map<String, Object> selectProjectWarrantyByProjectId(Integer projectId);
+
 	List<Map<String, Object>> selectProjectWarranty(ProjectWarrantyCallbackVO projectWarrantyCallback);
 
 	List<Map<String, Object>> selectProjectWarranty(ProjectWarrantyCallbackVO projectWarrantyCallback,
@@ -79,5 +81,13 @@ public interface WarrantyCallbackService extends BaseService {
 
 	List<Map<String, Object>> selectCustomerProjectWarrantyCallbackStatistics(
 			ProjectWarrantyCallbackVO projectWarrantyCallback, DisplayParam displayParam);
+
+    /**
+     * 填充项目维保信息
+     * @param projectWarrantyCallback
+     * @return filled
+     */
+    ProjectWarrantyCallbackVO fillProjectWarrantyInfo(ProjectWarrantyCallbackVO projectWarrantyCallback);
+
 
 }

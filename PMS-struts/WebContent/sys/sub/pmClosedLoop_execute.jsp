@@ -445,7 +445,7 @@ var pmCLProjectTaskId="";
 					</li>
 				</ul>
 				<s:iterator value="projectMemberList" id="objmeber" status="indexmeber">
-				    <s:if test="#objmeber.memberRole==60&&#objmeber.dataState==1">
+				    <s:if test="#objmeber.memberRole=='60'&&#objmeber.dataState==1">
 						<ul>
 							<li class="headerLi" style="width:20%">
 								<span style="font-weight: 700;"><s:text name="pm.cl.name"></s:text>：</span><span><s:property value="%{#objmeber.memberName}"/></span>

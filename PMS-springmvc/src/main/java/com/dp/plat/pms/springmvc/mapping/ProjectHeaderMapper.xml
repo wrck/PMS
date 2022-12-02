@@ -1447,9 +1447,9 @@
   <select id="checkPermission" resultMap="permissionMap">
   	<![CDATA[
 	  	select 
-		    count(IF(pm.`memberRole` in (20,30,40), pm.id, null)) > 0 
+		    count(IF(pm.`memberRole` in ('20', '30', '40'), pm.id, null)) > 0 
 		    	and count(ui.id) > 0 as `all`, 
-		    count(IF(pm.`memberRole` in (20,30,40), pm.id, null)) > 0 as edit, 
+		    count(IF(pm.`memberRole` in ('20', '30', '40'), pm.id, null)) > 0 as edit, 
 		    count(IFNULL(pm.id, ui.id)) > 0 view,
 		    group_concat(distinct ph.projectType) as projectTypes,
 		    max(ph.projectState) as maxState,

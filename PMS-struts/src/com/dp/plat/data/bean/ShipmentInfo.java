@@ -1,12 +1,15 @@
 package com.dp.plat.data.bean;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ShipmentInfo {
 	private int projectId;
 	private String contractNo;
 	private String barCode;
 	private String itemCode;
+	private String itemModel;
 	private String itemName;
 	private String receiveName;
 	private String emsNum;
@@ -43,7 +46,11 @@ public class ShipmentInfo {
 	// 母子公司发货存在一物双码，barCode2为系统发货记录序列号对应的条形码
     private String barCode2;
     private String itemCode2;
+    private String itemModel2;
     private String itemName2;
+    
+    // 额外拓展信息
+    private Map<String, Object> extInfo = new HashMap<String, Object>();
     
 	public String getContractNo() {
 		return contractNo;
@@ -63,7 +70,13 @@ public class ShipmentInfo {
 	public void setItemCode(String itemCode) {
 		this.itemCode = itemCode;
 	}
-	public String getItemName() {
+	public String getItemModel() {
+        return itemModel;
+    }
+    public void setItemModel(String itemModel) {
+        this.itemModel = itemModel;
+    }
+    public String getItemName() {
 		return itemName;
 	}
 	public void setItemName(String itemName) {
@@ -243,11 +256,23 @@ public class ShipmentInfo {
     public void setItemCode2(String itemCode2) {
         this.itemCode2 = itemCode2;
     }
+    public String getItemModel2() {
+        return itemModel2;
+    }
+    public void setItemModel2(String itemModel2) {
+        this.itemModel2 = itemModel2;
+    }
     public String getItemName2() {
         return itemName2;
     }
     public void setItemName2(String itemName2) {
         this.itemName2 = itemName2;
+    }
+    public Map<String, Object> getExtInfo() {
+        return extInfo;
+    }
+    public void setExtInfo(Map<String, Object> extInfo) {
+        this.extInfo = extInfo;
     }
 	
 }

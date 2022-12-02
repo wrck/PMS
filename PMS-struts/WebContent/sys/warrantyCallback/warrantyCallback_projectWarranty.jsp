@@ -32,7 +32,7 @@
     	var namespace = "${namespace}";
     	var url = "${namespace}/ProjectModify.action?project.paramId="+obj + "&result=315";
     	if (namespace.lastIndexOf("/sub") > -1) {
-    		popWindow(url, "95vw", 600, "项目信息")
+    		popWindow(url, "95vw", 600, "项目信息", "Project", true)
     	} else {
 	        window.open(url);
     	}
@@ -147,8 +147,17 @@
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="renewalIntention"><s:text name="pm.project.warrantyCallback.renewalIntention" /></label>
-            <s:select list="#{-1: '未回访', 1: '有', 0: '无', 2: '待定'}" name="projectWarrantyCallback.renewalIntentionInt" id="renewalIntention"
+            <s:select list="#{1: '有', 0: '无', 2: '待定', 3: '未接听'}" name="projectWarrantyCallback.renewalIntentionInt" id="renewalIntention"
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="phoneAnswerState"><s:text name="pm.project.warrantyCallback.phoneAnswerState" /></label>
+            <s:select name="projectWarrantyCallback.customStrInfo.phoneAnswerState" id="phoneAnswerState"
+                listKey="basicDataId" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px;"
+                listValue="basicDataName" list="%{cbForm.phoneAnswerStates}"
+                theme="simple" />
         </div>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
@@ -190,6 +199,17 @@
             size="${displayParam.totalcount}" sort="external" export="true"  requestURI="${namespace}/warrantyCallback_projectWarranty.action" 
             decorator="com.dp.plat.warrantyCallback.decorators.WarrantyCallbackDecorator"
             partialList="true">
+            <display:column property="operateUrl" class="nowrap" title="操作" media="html"></display:column>
+	        <%-- <display:column title="操作">
+	            <a class="btn btn-xs btn-info" href='javascript:popWindow("module/sub/warrantyCallback_createProjectWarrantyCallback.action?project.projectId=${warrantyCallbackList.projectId}&projectWarrantyCallback.id=${warrantyCallbackList.latestRenewalIntention == 3 ? warrantyCallbackList.latestId : warrantyCallbackList.id}", "95vw", 600, "维保回访", "createProjectWarrantyCallback", true)'>回访</a>
+            	${!empty warrantyCallbackList.latestRenewalIntention ? "".format('<a class="btn btn-xs btn-success" href=\'javascript:popWindow("module/sub/warrantyCallback_projectWarrantyCallback.action?projectWarrantyCallback.projectId=%s&projectWarrantyCallback.id=%s", "95vw", 600, "维保回访记录", "ProjectWarrantyCallback", true)\'>查看</a>', warrantyCallbackList.projectId, warrantyCallbackList.id != null ? warrantyCallbackList.latestId : "") : ""}
+	        </display:column> --%>
+            
+            <display:column property="latestCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.callbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
+            <display:column property="latestNextCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.nextCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
+            <display:column property="latestRemark" headerClass="nowrap" titleKey="pm.remark"></display:column>
+
+            
             <display:column property="officeName" class="nowrap" titleKey="pm.project.officeName"></display:column>
             <display:column property="industryName" class="nowrap" titleKey="pm.project.maintenance.industryName"></display:column>
             <display:column property="contractNos" titleKey="pm.project.contractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>
@@ -205,6 +225,8 @@
             <display:column property="customer2" class="nowrap" title="客户联系人(SMS)"></display:column>
             <display:column property="customerContact2" title="客户联系方式(SMS)"></display:column>
             <display:column property="latestRenewalIntention" headerClass="nowrap" titleKey="pm.project.warrantyCallback.renewalIntention" decorator="com.dp.plat.warrantyCallback.decorators.RenewalIntentionDecorator"></display:column>
+            <display:column property="phoneAnswerStateName" headerClass="nowrap" titleKey="pm.project.warrantyCallback.phoneAnswerState" ></display:column>
+            
             <%-- <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.renewalIntention">
             	${!empty warrantyCallbackList.latestRenewalIntention ? (warrantyCallbackList.latestRenewalIntention ? "有" : "无") : "未回访"}
             </display:column> --%>
@@ -212,18 +234,6 @@
             <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasRenewal">
             	${!empty warrantyCallbackList.hasRenewal ? (warrantyCallbackList.hasRenewal == 1 ? "有" : "无") : "无"}
             </display:column>
-            <display:column property="latestCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.callbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
-            <display:column property="latestNextCallbackTime" class="nowrap" titleKey="pm.project.warrantyCallback.nextCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
-            <display:column property="latestRemark" headerClass="nowrap" titleKey="pm.remark"></display:column>
-
-            <%-- <s:if test="user.isHasRole(10) || user.isHasRole(13) || user.isHasRole(14)"> --%>
-            <%-- <display:column property="operateUrl" class="nowrap" title="操作" media="html"></display:column>
-	        </s:if> --%>
-	        <display:column title="操作">
-	            <a class="btn btn-xs btn-info" href='javascript:popWindow("module/sub/warrantyCallback_createProjectWarrantyCallback.action?project.projectId=${warrantyCallbackList.projectId}&projectWarrantyCallback.id=${warrantyCallbackList.id}", "75vw", 600, "维保回访")'>回访</a>
-            	${!empty warrantyCallbackList.latestRenewalIntention ? "".format('<a class="btn btn-xs btn-success" href=\'javascript:popWindow("module/sub/warrantyCallback_projectWarrantyCallback.action?projectWarrantyCallback.projectId=%s&projectWarrantyCallback.id=%s", "95vw", 600, "维保回访记录")\'>查看</a>', warrantyCallbackList.projectId, warrantyCallbackList.id != null ? warrantyCallbackList.id : "") : ""}
-	        </display:column>
-	        <%-- </s:if> --%>
             <display:setProperty name="export.excel.filename" value="${project.projectName}项目维保记录.xls" />
         </display:table>
     </div>

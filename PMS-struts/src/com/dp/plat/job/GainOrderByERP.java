@@ -36,6 +36,17 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
 		
         // 更新项目设备清单
         updateProjectProductLine(params);
+        
+        // 更新项目发货状态
+        try {
+            log.debug("#更新项目发货状态开始");
+            UpdateShipmentState.work();
+            log.debug("#更新项目发货状态结束");
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", "更新项目发货状态", e);
+        } finally {
+            log.info("{}-结束", "更新项目发货状态");
+        }
 	}
 	
 	/**
@@ -88,7 +99,7 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
 			// 刷新SAP同步订单行明细数据
             syncData("OrderInfoFromSAP", "SAP", params);
 			// 刷新SAP同步订单行明细数据
-//			syncData("OrderLineFromSAP", "SAP", params);
+			syncData("OrderLineFromSAP", "SAP", params);
 			return true;
 		} catch (Exception e) {
 			log.error("{}-发生异常：{}", tag, e);

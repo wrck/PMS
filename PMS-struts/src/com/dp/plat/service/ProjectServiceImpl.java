@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,10 +21,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.activiti.engine.TaskService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Footer;
@@ -81,6 +85,7 @@ import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
+import com.dp.plat.util.WordUtil;
 
 public class ProjectServiceImpl extends BaseServiceImpl implements ProjectService {
 	protected ProjectDao projectDao;
@@ -2893,20 +2898,26 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	
 	@Override
 	public Map<String, String> exportSpotCheckList(Project project) {
+	    List<Map<String, String>> spotCheckList;
+	    if ("14".equals(project.getSalesType())) {
+	        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId(), project.getColumn001());
+	    } else {
+	        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+	    }
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		Date exportTime = new Date();
+		String contractNos = project.getContractNo().replaceAll(",", "、");
+		String root = ServletActionContext.getServletContext().getRealPath("/");// 项目跟目录
+//			String directory = "upload/spotCheck";
+		String directory = UploadFileUtil.UPLOAD_PATH + "/spotCheck";
+		String projectName = StringUtils.trimToEmpty(project.getProjectName()).replaceAll("/", "／");
+		String exportFileName = projectName + "-现场验货单" + exportTime.getTime();
 		try {
-		    List<Map<String, String>> spotCheckList;
-		    if ("14".equals(project.getSalesType())) {
-		        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId(), project.getColumn001());
-		    } else {
-		        spotCheckList = projectDao.querySpotCheckList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
-		    }
-			String realpath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");
+		    String realpath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");
 			XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(realpath+"com/dp/plat/template/spotCheck.xlsx"));
 			XSSFSheet worksheet = workbook.getSheetAt(0);
 			XSSFRow row = null;
 			XSSFCell cell = null;
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-			Date exportTime = new Date();
 			//Header header = worksheet.getHeader();
 			//header.setRight(sdf.format(new Date()));
 			Footer footer = worksheet.getFooter();
@@ -2919,7 +2930,6 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			// 填入合同号
 			row = worksheet.getRow(3);
 			cell = row.getCell(2);
-			String contractNos = project.getContractNo().replaceAll(",", "、");
 			cell.setCellValue(contractNos);
 			
 			// 填入明细
@@ -2942,11 +2952,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			worksheet.removeRow(defaultRow);
 			worksheet.shiftRows(i + 1, worksheet.getLastRowNum(), -1);
 			
-			String root = ServletActionContext.getServletContext().getRealPath("/");// 项目跟目录
-//			String directory = "upload/spotCheck";
-			String directory = UploadFileUtil.UPLOAD_PATH + "/spotCheck";
-			String projectName = StringUtils.trimToEmpty(project.getProjectName()).replaceAll("/", "／");
-			String fileName = projectName + "-现场验货单" + exportTime.getTime() + ".xlsx";
+			String fileName = exportFileName + ".xlsx";
 			String filePath = directory + "/" + fileName;
 			File file = new File(root + directory);
 			if (!file.exists()) {
@@ -2962,10 +2968,89 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			map.put("fileName", fileName);
 			return map;
 		} catch (Exception e) {
-			e.printStackTrace();
+		    e.printStackTrace();
+		    
+		    try {
+    		    // 如果导出Excel失败，则导出Doc文件
+    		    Map<String, Object> dataMap = new HashMap<String, Object>();
+    		    dataMap.put("projectName", project.getProjectName());
+                dataMap.put("contractNos", contractNos);
+                dataMap.put("exportTime", sdf.format(exportTime));
+                dataMap.put("spotCheckList", spotCheckList);
+    
+                String fileName = exportFileName + ".doc";
+                String filePath = directory + "/" + fileName;
+                boolean success = WordUtil.createWord(dataMap, "spotCheckDoc.ftl", root + "/" + directory, fileName);
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("filePath", "/" + filePath);
+                map.put("fileName", fileName);
+                return map;
+		    } catch (Exception e2) {
+		        e2.printStackTrace();
+		    }
 		}
 		return null;
 	}
+	
+	@Override
+    public Map<String, String> exportOverWarrantyRemindList(Project project) {
+        try {
+            List<Map<String, String>> overWarrantyRemindList;
+            if ("14".equals(project.getSalesType())) {
+                overWarrantyRemindList = projectDao.queryOverWarrantyRemindList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId(), project.getColumn001());
+            } else {
+                overWarrantyRemindList = projectDao.queryOverWarrantyRemindList(Util.appendChar(project.getContractNo(), "'"), project.getProjectId());
+            }
+            List<String> contractNos = Arrays.asList(StringUtils.split(project.getContractNo(), ","));
+            Stream<String> stream = contractNos.parallelStream().map(contractNo -> {
+                Project temp = this.queryProjectByContractNo(contractNo);
+                if (temp != null) {
+                    return temp.getOrderCreateTime();
+                }
+                return null;
+            }).filter(time -> {
+                return time != null;
+            }).sorted();
+            Object[] array = stream.toArray();
+            Object periodStartDate = null;
+            Object periodEndDate = null;
+            if (array.length > 0) {
+                periodStartDate = array[0];
+                periodEndDate = array[array.length - 1];
+            }
+            
+            String customerName = project.getColumn013();
+            String warrantyStatus = project.getWarrantyStatusName();
+            
+            Person serviceManager = projectDao.queryPersonFromOaByCode(StringUtils.rightPad(StringUtils.right(project.getServiceManagerCode(), 5), 5, "0"));
+            if (serviceManager == null) {
+                serviceManager = new Person();
+            }
+            Map<String, Object> dataMap = new HashMap<String, Object>();
+            dataMap.put("customerName", project.getColumn013());
+            dataMap.put("serviceManagerName", serviceManager.getSalesmanName());
+            dataMap.put("serviceManagerPhone", serviceManager.getSalesmanTel());
+            dataMap.put("serviceManagerEmail", serviceManager.getSalesmanMail());
+            dataMap.put("periodStartDate", periodStartDate);
+            dataMap.put("periodEndDate", periodEndDate);
+            dataMap.put("warrantyStatus", warrantyStatus);
+            dataMap.put("overWarrantyRemindList", overWarrantyRemindList);
+
+            String root = ServletActionContext.getServletContext().getRealPath("/");// 项目跟目录
+            String directory = UploadFileUtil.UPLOAD_PATH + "/overWarrantyRemind";
+            
+            String fileName = "《设备过保提醒函》-" + customerName + ".doc";
+            String filePath = directory + "/" + fileName;
+            boolean success = WordUtil.createWord(dataMap, "《设备过保提醒函》.ftl", root + "/" + directory, fileName);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("filePath", "/" + filePath);
+            map.put("fileName", fileName);
+            return map;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 	
 	private XSSFRow createRow(XSSFSheet sheet, Integer rowIndex) {  
         XSSFRow row = null;  
@@ -2988,6 +3073,23 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		
 		// 合并单元格
 //		mergeCell(row, cellIndex, defaultRow);
+		
+//		// 最大单元格32767问题，只能解决报错，内容会被截断
+//		SpreadsheetVersion excel2007 = SpreadsheetVersion.EXCEL2007;
+//		if (StringUtils.length(value) > excel2007.getMaxTextLength()) {
+//		    if (Integer.MAX_VALUE != excel2007.getMaxTextLength()) {
+//		        try {
+//		            // SpreadsheetVersion.EXCEL2007的_maxTextLength变量 
+//		            Field field = excel2007.getClass().getDeclaredField("_maxTextLength");
+//		            // 关闭反射机制的安全检查，可以提高性能
+//		            field.setAccessible(true);
+//		            // 重新设置这个变量属性值
+//		            field.set(excel2007, Integer.MAX_VALUE);
+//		        } catch (Exception e) {
+//		            e.printStackTrace();
+//		        }
+//		    }
+//		}
 		
 		if (StringUtils.isNotBlank(value)) {
 			cell.setCellValue(value);

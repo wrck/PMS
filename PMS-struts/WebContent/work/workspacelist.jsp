@@ -15,13 +15,16 @@
 	table thead th, .nowrap{
 		white-space: nowrap;
 	}
+    .timeTd {
+        min-width: 6.3em;
+    }
 </style>
 <script type="text/javascript">
 var realnameArr3 = new Array();
 var usernameArr3  = new Array();
 $(function(){
 	var firstTab = "<s:property value='navTabList[0].basicDataId'/>";
-	$("."+firstTab).removeClass("hideDiv");	
+	//$("."+firstTab).removeClass("hideDiv");	
 	
 	$("#history").click(function(){
 		if($("#history").is(":checked")){
@@ -151,12 +154,13 @@ function fillpm2(){
 		    		<s:else>
 		    			<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','module/Workspace!<s:property value='#nav.basicDataId'/>.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
 		    		</s:else> --%>
-		    		<s:if test="%{#index.index == 0}">
-                        <li name="navli" class="active nav<s:property value='#nav.sortId'/>" data-sort="<s:property value='#nav.sortId'/>" data-name="<s:property value='#nav.basicDataId'/>" onclick="clickSwitchTab(<s:property value='#nav.sortId'/>,'<s:property value='#nav.basicDataId'/>','module/Workspace!<s:property value='#nav.basicDataId'/>.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+		    		<%-- <s:if test="%{#index.index == 0}">
+                        <li name="navli" class="nav<s:property value='#nav.sortId'/>" data-sort="<s:property value='#nav.sortId'/>" data-name="<s:property value='#nav.basicDataId'/>" onclick="clickSwitchTab(<s:property value='#nav.sortId'/>,'<s:property value='#nav.basicDataId'/>','module/Workspace!<s:property value='#nav.basicDataId'/>.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
                     </s:if>
                     <s:else>
                         <li name="navli" class="nav<s:property value='#nav.sortId'/>" data-sort="<s:property value='#nav.sortId'/>" data-name="<s:property value='#nav.basicDataId'/>" onclick="clickSwitchTab(<s:property value='#nav.sortId'/>,'<s:property value='#nav.basicDataId'/>','module/Workspace!<s:property value='#nav.basicDataId'/>.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
-                    </s:else>
+                    </s:else> --%>
+                    <li name="navli" class="${nav.basicDataId == tabName ? 'active' : ''} nav<s:property value='#nav.sortId'/>" data-sort="<s:property value='#nav.sortId'/>" data-name="<s:property value='#nav.basicDataId'/>" onclick="clickSwitchTab(<s:property value='#nav.sortId'/>,'<s:property value='#nav.basicDataId'/>','module/Workspace!<s:property value='#nav.basicDataId'/>.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
 		    	</s:iterator>
 			</ul>
 		</div>
@@ -317,22 +321,64 @@ function fillpm2(){
 		</display:table>
 	</div>
 	<div class="navDiv hideDiv subcontractTask">
+    <s:if test="%{tabName == 'subcontractTask'}">
+        <!-- 搜索栏：项目名称，办事处，项目经理 -->
+        <s:form id="subcontractTaskForm" name="subcontractTaskForm" cssClass="form-inline" action="module/Workspace!subcontractTask.action">
+            <div class="form-group form-group-query form-group-width-1">
+                <dp:fielderror accesskey="errmsg" onlyone="true" />
+                <label for="subcontractName"><s:text name="pm.subcontract.subcontractName" /></label>
+                <s:textfield name="queryParams.subcontractName" id="subcontractName"
+                    placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
+            </div>
+            <div class="form-group form-group-query form-group-width-1">
+                <dp:fielderror accesskey="errmsg" onlyone="true" />
+                <label for="contractNos">&nbsp;&nbsp;&nbsp;<s:text name="pm.subcontract.contractNos" /></label>
+                <s:textfield name="queryParams.contractNos" id="contractNos"
+                     cssStyle="width:163px" cssClass="form-control" placeholder="合同号/转包合同号" />
+            </div>
+            <%-- <s:if test="user.isHasRole(1) || user.isHasRole(10) || user.isHasRole(13) || user.isHasRole(16)"> --%>
+            <div class="form-group form-group-query form-group-width-1">
+                <dp:fielderror accesskey="errmsg" onlyone="true" />
+                <label for="purchId">采购订单号</label>
+                <s:textfield name="queryParams.purchId" id="purchId"
+                     cssStyle="width:163px" cssClass="form-control" placeholder="采购订单号" />
+            </div>
+            <%-- </s:if> --%>
+            <div class="form-group form-group-query form-group-width-1">
+                <dp:fielderror accesskey="errmsg" onlyone="true" />
+                <label for="subcontractOrgId"><s:text name="pm.project.company" /></label>
+                <s:select id="subcontractOrgId" list="returnParams.compList" name="queryParams.orgId" cssClass="form-control " listKey="id" listValueKey="abbr" headerKey="" headerValue="--请选择--"/>
+            </div>
+             
+            <div class="form-group form-group-query form-group-width-1">
+                <button class="btn btn-default btn-sm" style="margin-left: 100px;" id="noticeQuery"> <span
+                    class="glyphicon glyphicon-search"></span> <s:text name="sys.query"></s:text>
+                </button>
+            </div>
+            <br/>
+            <br/>
+            <br/>
+        </s:form>
         <display:table id="subcontractTaskList"
             name="subcontractTaskList" pagesize="${subcontractTaskList.size()}" 
             size="${subcontractTaskList.size()}" sort="external" export="false"
             decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-striped"
             partialList="true">
+            <display:column property="purchId" title="采购订单号"></display:column>
             <display:column property="subcontractNo" titleKey="pm.subcontract.subcontractNo"></display:column>
             <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName"></display:column>
             <display:column property="contractNos" titleKey="pm.subcontract.contractNos" decorator="com.dp.plat.decorators.ContractNoList "></display:column>
             <display:column property="officeName" titleKey="pm.subcontract.officeName"></display:column>
             <display:column property="profitDepName" titleKey="pm.subcontract.profitDep"></display:column>
-            <display:column property="processName" titleKey="pm.subcontract.processName"></display:column>
+            <%-- <display:column property="processName" titleKey="pm.subcontract.processName"></display:column> --%>
             <display:column property="taskName" titleKey="pm.subcontract.taskName"></display:column>
-            <display:column property="assigneeName" titleKey="workflow.transactor"></display:column>
-            <display:column property="createTime" titleKey="fnd.baisc.data.createTime" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
+            <display:column property="assigneeName" titleKey="workflow.transactor" class="nowrap"></display:column>
+            <%-- <display:column property="paymentStatus" titleKey="pm.subcontract.state" class="nowrap"></display:column> --%>
+            <display:column property="compAbbr" titleKey="pm.project.company"></display:column>
+            <display:column property="createTime" titleKey="fnd.baisc.data.createTime" headerClass="timeTd" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
             <display:column property="subcontractWsOperator" titleKey="display.operate" class="nowrap"></display:column>
         </display:table>
+    </s:if>
     </div>
 </body>
 </html>

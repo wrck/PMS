@@ -48,20 +48,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 				FROM
 				    prob_softwares 
 				where datastate = 1    
-				GROUP BY probId) a 
-				on a.probId = t1.id
 			<isNotEmpty property="softVersionParserList">
-			LEFT JOIN (
-		        SELECT 
-		          probId, GROUP_CONCAT(
-		              DISTINCT concat_ws(
-		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
-		                ) SEPARATOR ";"
-		            ) AS affectedVersion,
-		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
-		        FROM
-		            prob_softwares 
-		        where datastate = 1
 		        <isNotEmpty prepend="AND" property="affectedType"> affectedType in (#affectedType#, 0) </isNotEmpty>
 		        <iterate prepend="AND" property="softVersionParserList" open="(" close=")" conjunction="OR" >
 		        	#softVersionParserList[].mark# between 
@@ -77,9 +64,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        		, #softVersionParserList[].markAllPartsSet[].key#, #softVersionParserList[].markAllPartsSet[].value#)
 	        		</iterate>
 		        </iterate>
+	        </isNotEmpty>
 		        GROUP BY probId
 	        ) sf ON sf.probId = t1.id
-	        </isNotEmpty>
 		</isEqual>
 			where t1.effectiveTo is null
 		<isNotEmpty prepend="and" property="probNum"><![CDATA[ t1.probNum like '%$probNum$%']]></isNotEmpty>
@@ -98,7 +85,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="and" property="affectedType"> sf.probId is not null <!-- #affectedType# = sf.affectedTypes --> </isNotEmpty>
         <isNotEmpty prepend="and" property="affectedVersion">
         	(
-        	<![CDATA[ a.affectedVersion like concat("%", #affectedVersion#, "%") ]]>
+        	<![CDATA[ sf.affectedVersion like concat("%", #affectedVersion#, "%") ]]>
         	<isNotEmpty prepend="or" property="softVersionParserList"> sf.probId is not null </isNotEmpty>
         	)
        	</isNotEmpty>
@@ -149,20 +136,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        FROM
 		            prob_softwares 
 		        where datastate = 1
-		        GROUP BY probId) a 
-		        ON a.probId = t1.id
 	        <isNotEmpty property="prob.softVersionParserList">
-	        LEFT JOIN (
-		        SELECT 
-		          probId, GROUP_CONCAT(
-		              DISTINCT concat_ws(
-		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
-		                ) SEPARATOR ";"
-		            ) AS affectedVersion,
-		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
-		        FROM
-		            prob_softwares 
-		        where datastate = 1
 		        <isNotEmpty prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </isNotEmpty>
 		        <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
 		        	#prob.softVersionParserList[].mark# between 
@@ -178,9 +152,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        		, #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
 	        		</iterate>
 		        </iterate>
+	        </isNotEmpty>
 		        GROUP BY probId
 	        ) sf ON sf.probId = t1.id
-	        </isNotEmpty>
         </isEqual>
 		WHERE t1.effectiveTo IS NULL
 		<isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like '%$prob.probNum$%']]></isNotEmpty>
@@ -199,7 +173,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="and" property="prob.affectedType"> sf.probId is not null <!-- #prob.affectedType# = sf.affectedTypes --> </isNotEmpty>
         <isNotEmpty prepend="and" property="prob.affectedVersion">
         	(
-        	<![CDATA[ a.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
+        	<![CDATA[ sf.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
         	<isNotEmpty prepend="or" property="prob.softVersionParserList"> sf.probId is not null </isNotEmpty>
         	)
        	</isNotEmpty>

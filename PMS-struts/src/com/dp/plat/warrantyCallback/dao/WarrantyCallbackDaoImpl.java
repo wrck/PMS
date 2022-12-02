@@ -157,62 +157,82 @@ public class WarrantyCallbackDaoImpl extends BaseDao implements WarrantyCallback
 	@Override
 	public List<Map<String, Object>> selectProjectWarranty(ProjectWarrantyCallbackVO projectWarrantyCallback,
 			DisplayParam displayParam) {
-//		if (displayParam != null && displayParam.getPagesize() == -1) {
-//			displayParam = null;
-//		}
-		BeanMap beanMap = BeanMap.create(projectWarrantyCallback);
-		Map params = new HashMap(beanMap);
-		if (displayParam != null && displayParam.getPagesize() != -1) {
-			Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectWarranty", params);
-			displayParam.setTotalcount(totalcount);
-			if (!(displayParam.getExport() || displayParam.getPagesize() == -1)) {
-//				displayParam.setPagesize(50);
-				displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
-			} else {
-				displayParam.setPagesize(totalcount);
-				displayParam.setOffset(0);
-			}
-		}
-//		params.put("model", projectWarrantyCallback);
-		params.put("displayParam", displayParam);
-		List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectProjectWarranty", params);
-
-//        WarrantyCallbackPageParam warrantyCallbackPageParam = new WarrantyCallbackPageParam(displayParam);
-//        BeanUtils.copyProperties(projectWarrantyCallback, warrantyCallbackPageParam);
-//        List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectProjectWarranty", warrantyCallbackPageParam);
-		if (displayParam != null && displayParam.getPagesize() == -1) {
-			displayParam.setPagesize(Math.max(list.size(), displayParam.getPagesize()));
-			displayParam.setTotalcount(Math.max(list.size(), displayParam.getTotalcount()));
-		}
-		return list;
+	    BeanMap beanMap = BeanMap.create(projectWarrantyCallback);
+	    Map params = new HashMap(beanMap);
+	    params.put("tempSuffix", System.currentTimeMillis());
+	    
+	    try {
+    //		if (displayParam != null && displayParam.getPagesize() == -1) {
+    //			displayParam = null;
+    //		}
+    		// 设置group_contract的最大长度，默认1024
+    		getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+    		getSqlMapClientTemplate().insert("createTempProjectWarrantyTable", params);
+    		
+    		if (displayParam != null && displayParam.getPagesize() != -1) {
+    			Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countProjectWarranty", params);
+    			displayParam.setTotalcount(totalcount);
+    			if (!(displayParam.getExport() || displayParam.getPagesize() == -1)) {
+    //				displayParam.setPagesize(50);
+    				displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+    			} else {
+    				displayParam.setPagesize(totalcount);
+    				displayParam.setOffset(0);
+    			}
+    		}
+    //		params.put("model", projectWarrantyCallback);
+    		params.put("displayParam", displayParam);
+    		List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectProjectWarranty", params);
+    
+    //        WarrantyCallbackPageParam warrantyCallbackPageParam = new WarrantyCallbackPageParam(displayParam);
+    //        BeanUtils.copyProperties(projectWarrantyCallback, warrantyCallbackPageParam);
+    //        List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectProjectWarranty", warrantyCallbackPageParam);
+    		if (displayParam != null && displayParam.getPagesize() == -1) {
+    			displayParam.setPagesize(Math.max(list.size(), displayParam.getPagesize()));
+    			displayParam.setTotalcount(Math.max(list.size(), displayParam.getTotalcount()));
+    		}
+    		return list;
+	    } finally {
+	        getSqlMapClientTemplate().delete("deleteTempProjectWarrantyTable", params);
+        }
 	}
 	
 	@Override
 	public List<Map<String, Object>> selectCustomerProjectWarrantyCallbackStatistics(ProjectWarrantyCallbackVO projectWarrantyCallback,
 			DisplayParam displayParam) {
-//		if (displayParam != null && displayParam.getPagesize() == -1) {
-//			displayParam = null;
-//		}
-		BeanMap beanMap = BeanMap.create(projectWarrantyCallback);
-		Map params = new HashMap(beanMap);
-		if (displayParam != null && displayParam.getPagesize() != -1) {
-			Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countCustomerProjectWarrantyCallbackStatistics", params );
-			displayParam.setTotalcount(totalcount);
-			if (!(displayParam.getExport() || displayParam.getPagesize() == -1)) {
-//				displayParam.setPagesize(50);
-				displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
-			} else {
-				displayParam.setPagesize(totalcount);
-				displayParam.setOffset(0);
-			}
-		}
-		params.put("displayParam", displayParam);
-		List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectCustomerProjectWarrantyCallbackStatistics", params);
-		if (displayParam != null && displayParam.getPagesize() == -1) {
-			displayParam.setPagesize(Math.max(list.size(), displayParam.getPagesize()));
-			displayParam.setTotalcount(Math.max(list.size(), displayParam.getTotalcount()));
-		}
-		return list;
+	    BeanMap beanMap = BeanMap.create(projectWarrantyCallback);
+        Map params = new HashMap(beanMap);
+        params.put("tempSuffix", System.currentTimeMillis());
+        
+        try {
+    //		if (displayParam != null && displayParam.getPagesize() == -1) {
+    //			displayParam = null;
+    //		}
+            // 设置group_contract的最大长度，默认1024
+            getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+            getSqlMapClientTemplate().insert("createTempProjectWarrantyTable", params);
+            
+    		if (displayParam != null && displayParam.getPagesize() != -1) {
+    			Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("countCustomerProjectWarrantyCallbackStatistics", params );
+    			displayParam.setTotalcount(totalcount);
+    			if (!(displayParam.getExport() || displayParam.getPagesize() == -1)) {
+    //				displayParam.setPagesize(50);
+    				displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+    			} else {
+    				displayParam.setPagesize(totalcount);
+    				displayParam.setOffset(0);
+    			}
+    		}
+    		params.put("displayParam", displayParam);
+    		List<Map<String, Object>> list = getSqlMapClientTemplate().queryForList("selectCustomerProjectWarrantyCallbackStatistics", params);
+    		if (displayParam != null && displayParam.getPagesize() == -1) {
+    			displayParam.setPagesize(Math.max(list.size(), displayParam.getPagesize()));
+    			displayParam.setTotalcount(Math.max(list.size(), displayParam.getTotalcount()));
+    		}
+    		return list;
+        } finally {
+            getSqlMapClientTemplate().delete("deleteTempProjectWarrantyTable", params);
+        }
 	}
 
 	@Override

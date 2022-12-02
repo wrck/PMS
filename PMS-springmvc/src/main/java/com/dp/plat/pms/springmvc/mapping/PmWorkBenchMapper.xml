@@ -95,7 +95,8 @@
 		AND	(
 				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
 				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
-				g.NAME_ like CONCAT("%", #{fuzzy}, "%")
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+                JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
 			)
 		</if>
   </select>
@@ -198,7 +199,8 @@
 		AND	(
 				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
 				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
-				g.NAME_ like CONCAT("%", #{fuzzy}, "%")
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
 			)
 		</if>
 	<if test="orderBy != null and orderBy != ''">
@@ -311,7 +313,8 @@
 		AND	(
 				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
 				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
-				g.NAME_ like CONCAT("%", #{fuzzy}, "%")
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
 			)
 		</if>
   </select>
@@ -417,7 +420,8 @@
 		AND	(
 				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
 				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
-				g.NAME_ like CONCAT("%", #{fuzzy}, "%")
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
 			)
 		</if>
 	<if test="orderBy != null and orderBy != ''">

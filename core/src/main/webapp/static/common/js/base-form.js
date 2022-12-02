@@ -1171,14 +1171,16 @@ class watcher{
 		var that = this;
 		form.find('input[name], select[name], textarea[name], label[name]').each(function(ind, elem) {
 			var obj = $(elem), el_name = obj.attr('name'), value;
-			var isLoading = $(elem).data("isLoading") || false;
-			if (isLoading) {
-				return;
-			}
 			try {
 				value = eval('json_data.' + el_name);
 			} catch (e) {
 				value = null;
+			}
+			// 用于ajax请求select传值
+			$(elem).data("selected", value);
+			var isLoading = $(elem).data("isLoading") || false;
+			if (isLoading) {
+				return;
 			}
 			if (value != undefined && value != null && $.trim(value) != '') {
 				var is_radio = elem.type == 'radio', is_ckbox = elem.type == 'checkbox';

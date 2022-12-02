@@ -179,6 +179,7 @@ public class SubcontractInspectionListener {
 			DispatchVO dispatch = new DispatchVO();
 			dispatch.setId(pmWorkFlow.getDataId());
 			dispatch.setState(isPass ? 20 : 0);
+			dispatch.setCustomInfoByKey("approveState", isPass ? "审批通过" : "审批驳回");
 			dispatch.setCustomInfoByKey("currentTaskId", null);
 			dispatch.setCustomInfoByKey("currentTaskKey", null);
 			dispatch.setCustomInfoByKey("currentProcInstId", null);
@@ -187,6 +188,7 @@ public class SubcontractInspectionListener {
 			SettlementVO settlement = new SettlementVO();
 			settlement.setId(pmWorkFlow.getDataId());
 			settlement.setState(isPass ? 20 : 0);
+			settlement.setCustomInfoByKey("approveState", isPass ? "审批通过" : "审批驳回");
 			settlement.setCustomInfoByKey("currentTaskId", null);
 			settlement.setCustomInfoByKey("currentTaskKey", null);
 			settlement.setCustomInfoByKey("currentProcInstId", null);
@@ -331,6 +333,7 @@ public class SubcontractInspectionListener {
 			DispatchVO dispatch = new DispatchVO();
 			dispatch.setId(pmWorkFlow.getDataId());
 //			dispatch.setStatus(taskKey);
+			dispatch.setCustomInfoByKey("approveState", taskDefinedVariables.getOrDefault("taskName", "") + "审批中");
 			dispatch.setCustomInfoByKey("currentTaskId", taskId);
 			dispatch.setCustomInfoByKey("currentTaskKey", taskKey);
 			dispatch.setCustomInfoByKey("currentProcInstId", procInstId);
@@ -339,6 +342,7 @@ public class SubcontractInspectionListener {
 			SettlementVO settlement = new SettlementVO();
 			settlement.setId(pmWorkFlow.getDataId());
 //			settlement.setStatus(taskKey);
+			settlement.setCustomInfoByKey("approveState", taskDefinedVariables.getOrDefault("taskName", "") + "审批中");
 			settlement.setCustomInfoByKey("currentTaskId", taskId);
 			settlement.setCustomInfoByKey("currentTaskKey", taskKey);
 			settlement.setCustomInfoByKey("currentProcInstId", procInstId);

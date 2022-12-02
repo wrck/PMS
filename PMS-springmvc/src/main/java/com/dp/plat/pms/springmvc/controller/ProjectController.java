@@ -617,13 +617,13 @@ public class ProjectController
 		ProjectProduct product = new ProjectProduct();
 		product.setProjectCode(projectCode);
 		product.setProjectType(projectType);
-		if (!ProjectType.AF_XX_PROJECT.equals(projectType)) {
-			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
-			product.setProductfirstCode(productCode);
-		} else {
-			String productName = SystemConfig.systemVariables.getOrDefault("pm_project_af_productName_filter", "");
-			product.setProductfirstName(productName);
-		}
+//		if (!ProjectType.AF_XX_PROJECT.equals(projectType)) {
+//			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+//			product.setProductfirstCode(productCode);
+//		} else {
+//			String productName = SystemConfig.systemVariables.getOrDefault("pm_project_af_productName_filter", "");
+//			product.setProductfirstName(productName);
+//		}
 		List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
 		data = new ArrayList<Object>(orderDataList.size());
 		data.addAll(orderDataList);

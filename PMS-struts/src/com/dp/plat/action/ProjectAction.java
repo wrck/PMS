@@ -532,6 +532,23 @@ public class ProjectAction extends BaseAction implements Preparable{
 	}
 	
 	/**
+     * 现场验货单下载
+     * @return
+     */
+    public String exportOverWarrantyRemind() {
+        if (projectId != 0) {
+            project = projectService.queryProjectById(projectId);
+            Map<String, String> params = projectService.exportOverWarrantyRemindList(project);
+            if (params != null) {
+                downpath = params.get("filePath");
+                downname = params.get("fileName");
+                return SUCCESS;
+            }
+        }
+        return ERROR;
+    }
+	
+	/**
 	 * 导入现场验货单不需要序列号明细的item
 	 * @return
 	 */
@@ -609,6 +626,8 @@ public class ProjectAction extends BaseAction implements Preparable{
 	}
 	  
 	public String updateProject(){
+	    UserContext userContext = UserContext.getUserContext();
+	    String currentName = StringUtils.defaultIfBlank(userContext.getUsername(), "unknow");
 		if(checkProjectNull(project)){
 			if(project.getProjectId() == 0 && project.getParamId() != null){
 				project.setProjectId((Integer.parseInt(Base64Util.decodeBase64(project.getParamId()).toString())));
@@ -618,7 +637,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 			
 			modifyflag = obtainModifyflag(prjstate);
 			
-			if(UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)){
+			if(userContext.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)){
 				weeklyList = projectService.queryProjectWeeklyList(project.getProjectId(), MessageUtil.WEEKLY_STATE_ALL );
 			}else{
 				weeklyList = projectService.queryProjectWeeklyList(project.getProjectId(), MessageUtil.WEEKLY_STATE_SUBMIT );
@@ -711,7 +730,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 				
 				String isback = projectService.queryProjectStateByProjectId(project);
 				boolean b = false;//判断是否包含在以下3个if中
-				if(UserContext.getUserContext().isHasRole( MessageUtil.ROLE_ENGINEEMANAGER )){//角色为工程管理部且项目状态为30
+				if(userContext.isHasRole( MessageUtil.ROLE_ENGINEEMANAGER )){//角色为工程管理部且项目状态为30
 					if(project.getServiceManagerCode() == null || "".equals(project.getServiceManagerCode())){//项目回退到未创建状态
 						projectService.invalidProject(project.getProjectId());
 						return "invalid";//回到项目管理列表
@@ -721,7 +740,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 					b = true;
 				}
 				//服务经理指定项目经理
-				else if(UserContext.getUserContext().getUsername().equals(project.getServiceManagerCode())&&
+				else if(currentName.equals(project.getServiceManagerCode())&&
 						checkPrjState(isback, new String[]{MessageUtil.PROJECT_CREATE_STATE30, MessageUtil.PROJECT_CREATE_STATE32 ,MessageUtil.PROJECT_CREATE_STATE34})){
 					b =	projectService.updateProjectProgramManagerByProjectId(project,null);//服务经理 - 根据projectid更新项目经理
 					// FIXME 在一个action中连续执行updateProjectProgramManagerByProjectId方法，第二次执行时updateChannel()时，第一次执行updateChannel()所做数据库update，insert操作不会失效，这里只能先用延时来解决
@@ -750,13 +769,23 @@ public class ProjectAction extends BaseAction implements Preparable{
 //						}
 //					}
 //					b = true;
-				} else if ((UserContext.getUserContext().getUsername().equals(project.getProgramManagerCode())
-						|| UserContext.getUserContext().getUsername().equals(project.getProgramManagerCodeB()))
+				} else if ((currentName.equals(project.getProgramManagerCode())
+						|| currentName.equals(project.getProgramManagerCodeB()))
 						&& checkPrjState(isback, new String[] { MessageUtil.PROJECT_CREATE_STATE30,
 								MessageUtil.PROJECT_CREATE_STATE32, MessageUtil.PROJECT_CREATE_STATE34 })) {
 					projectService.updateChannel(project);// 更新渠道信息
 					projectService.updateProjectImplByProjectId(project);// 更新项目实施方式和最终客户名称
-				}
+				} else {
+				    Project nowProject = projectService.queryProjectById(project.getProjectId());
+				    if ((currentName.equals(nowProject.getServiceManagerCode()) 
+				        || currentName.equals(nowProject.getProgramManagerCode())
+                        || currentName.equals(nowProject.getProgramManagerCodeB()))
+                        && ("20".equals(nowProject.getProjectState()) || "100".equals(nowProject.getProjectState()))) {
+    				    // 已闭环或者不予跟踪的项目允许修改渠道信息以及最终客户名称
+                        projectService.updateChannel(project);// 更新渠道信息
+                        projectService.updateProjectImplByProjectId(project);// 更新项目实施方式和最终客户名称
+				    }
+                }
 				if(!b){
 					modifyflag = 1;
 				}

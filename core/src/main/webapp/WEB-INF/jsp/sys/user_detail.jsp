@@ -303,6 +303,10 @@
 							notEmpty : {
 								message : '请输入登录名'
 							},
+							regexp: { //正则校验
+                                regexp: /^\S+$/, 
+                                message:'用户名存在空白字符'
+                            },
 							remote:{
 								message: "该用户名已存在，请重新输入",
 								url: "checkUnique.json",

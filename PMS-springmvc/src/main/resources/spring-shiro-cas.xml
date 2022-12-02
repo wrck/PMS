@@ -115,8 +115,21 @@
     
     <bean id="filterChainDefinitionMapBuilder" class="com.dp.plat.core.factory.FilterChainDefinitionMapBuilder"></bean>
     
+    <!-- 任一角色过滤器 -->
    	<bean id="anyRoles" class="com.dp.plat.core.filter.AnyRolesAuthorizationFilter"></bean>
+    <!-- ip地址过滤拦截器 -->
    	<bean id="hostFilter" class="com.dp.plat.core.filter.HostFilter"></bean>
+   	<!-- shiro 1.6起增加了invalidRequestFilter，主要拦截以下url中的符号，如果不需要可以直接进行禁用-->
+    <bean id="invalidRequest" class="org.apache.shiro.web.filter.InvalidRequestFilter">
+        <!-- 如果不需要可以直接进行禁用 -->
+        <property name="enabled" value="false" />
+        <!-- 拦截url中的\\ -->
+        <property name="blockBackslash" value="false" />
+        <!-- 拦截url中的; 如果使用URL rewriting to allow for a jsessionid in the URL, 必须设置blockSemicolon = false. -->
+        <property name="blockSemicolon" value="false" />
+        <!-- 拦截url中的中文 -->
+        <property name="blockNonAscii" value="false" />
+    </bean>
    	
    	<bean id="casFilter" class="com.dp.plat.core.filter.CasFilter">
         <!-- 配置验证错误时的失败页面 -->

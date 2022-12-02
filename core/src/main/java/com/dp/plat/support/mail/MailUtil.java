@@ -225,6 +225,10 @@ public class MailUtil {
 			context.put("subject", template[0]);
 			context.put("content", template[1]);
 		}
+		// 标题或者内容为空则不发送邮件
+		if (StringUtils.isBlank((String) context.get("subject")) || StringUtils.isBlank((String) context.get("content"))) {
+		    return;
+		}
 		keepMail(context, isSendNow);
 	}
 

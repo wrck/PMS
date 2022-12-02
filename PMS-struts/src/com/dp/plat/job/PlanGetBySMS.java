@@ -83,7 +83,7 @@ public class PlanGetBySMS{
 				
 				if(dataTypeCode != null && basicDataId != null){
 					//更新pm_project_task
-					String updatesql = "update pm_project_task set eventPlanHappenDate = '" + eventPlanHappenDate + "', visibleFlag = '1'"
+					String updatesql = "update pm_project_task set eventPlanHappenDate = " + (eventPlanHappenDate == null ? "null" : "'" + eventPlanHappenDate + "'") + ", visibleFlag = '1'"
 							+ " where taskTypeCode = '" + dataTypeCode + "' and taskTypeId = '" + basicDataId + "' and contractNo = '" + contractNo
 							+ "' and effectiveFrom <= NOW() and (effectiveTo > NOW() or effectiveTo is null)";
 					cs.addBatch(updatesql);

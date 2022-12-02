@@ -21,21 +21,6 @@ var NavTab = {
 			</template>
 		</div>`,
 		props: {
-			tabContentId: {
-			    type: String,
-				default: ""
-		    },
-		    navTabWrapper: {
-			    type: String,
-				default: function() {
-					return (this.tabContentId || "");
-				}
-		    },
-		    tabList: {
-		    	type: Array,
-				default: () => [],
-			    required: true
-		    },
 			targetValue: {
 				type: Object,
 				default: () => {},
@@ -63,7 +48,23 @@ var NavTab = {
 					return new Date().getTime();
 				}
 			},
-			
+			tabContentId: {
+			    type: String,
+				default: function() {
+					return (this.model || "");
+				}
+		    },
+		    navTabWrapper: {
+			    type: String,
+				default: function() {
+					return (this.tabContentId || "");
+				}
+		    },
+		    tabList: {
+		    	type: Array,
+				default: () => [],
+			    required: true
+		    },
 		},
 		created: function(e) {
 			console.log("created");

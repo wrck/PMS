@@ -148,6 +148,60 @@ sys.common = function(){
 		}
 	}
 	
+	var baseUploadTabDelete = function(e, navTab) {
+		var actionType = 'delete';
+		var urlNamespace = navTab.urlNamespace || window.urlNamespace;
+		var type = navTab.model || navTab.type;
+		var $target = $(e.target);
+		var deletePath = navTab.deletePath;
+		var paramsValue = navTab.paramsValue || {};
+		var localTable = $target.parents(".dataTables_wrapper:first").find("table.dataTable").data("localTable");
+		var rowId = navTab.rowIds || localTable.getCheckedRowsId() || localTable.getSelectedRowsId() || [];
+		if (!rowId || rowId.length == 0) {
+			modals.info('选择需要删除的文件');
+			return;
+		}
+		var delFileIds = rowId.join(",") || [];
+		var params = navTab.params || [];
+		var selectors = [];
+		var $appContainer = $target.parents(".vmAppContainer:first");
+		for(var param of params) {
+			selectors.push("[type=hidden][name='" + param + "']");
+		}
+		var $fileHidden = $(selectors.join(","), $appContainer);
+		var fileIds = $.trim($fileHidden.val() || "");
+		fileIds = fileIds ? fileIds.split(",") : [];
+		
+		var newFileIds = fileIds.filter(v => delFileIds.indexOf(v) == -1);
+		$fileHidden.val(newFileIds.join(",") || "0");
+		
+		var $fileBtn = $fileHidden.nextAll("button:first");
+		var $form = $fileBtn.parents("form:first");
+		var $submit = $form.find("button[data-btn-type='save']");
+		$submit.data("targetTip", "删除");
+		$submit.click();
+	}
+	
+	var checkBaseUploadTabDeleteBtn = function(btn){
+		console.log(this, btn);
+		var componentTag = this.$options._componentTag;
+		var navTab = this.navTab || btn;
+		if (btn != navTab) {
+			var params = navTab.params || [];
+			var selectors = [];
+			var $appContainer = this.$root.$el;
+			for(var param of params) {
+				selectors.push("[type=hidden][name='" + param + "']");
+			}
+			var $fileHidden = $(selectors.join(","), $appContainer);
+			var fileUploadVm = $fileHidden.parent().prop("__vue__");
+			var sourcePermit = fileUploadVm.checkPermit("btn", fileUploadVm, btn);
+			console.log(fileUploadVm, sourcePermit);
+			return sourcePermit;
+		}
+		return true;
+	}
+	
 	toDoWorkflowTask = function(elm, taskId, hideEntity, callback) {
 		var _this = this;
 		modals.openWin({
@@ -186,6 +240,7 @@ sys.common = function(){
 					$submit = $form.find("[type='submit']:first");
 				}
 				if ($submit.length > 0) {
+					$submit.data("targetTip", $(el).text() || "发起流程");
 					$submit.click();
 				} else {
 					$form.submit();
@@ -242,6 +297,8 @@ sys.common = function(){
 		upload: upload,
 		baseUploadTabDownload: baseUploadTabDownload,
 		baseUploadTabZipDownload: baseUploadTabZipDownload,
+		baseUploadTabDelete: baseUploadTabDelete,
+		checkBaseUploadTabDeleteBtn: checkBaseUploadTabDeleteBtn,
 		toDoWorkflowTask: toDoWorkflowTask,
 		startQualityApprove: startQualityApprove,
 		startProcess: startProcess,

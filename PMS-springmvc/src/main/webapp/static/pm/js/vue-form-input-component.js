@@ -503,13 +503,13 @@ var FormInput = {
 	 		},
 	 		commonUploadFile: function(event, field) {
 	 			var $target = $(event.currentTarget);
-	 			var $file = $target.prev();
+	 			var $file = $target.prevAll("[type=file]:first");
 	 			var _this = this;
 	 			simpleAjaxUploadFile($file,function(result){
 					var result = eval('(' + result + ')');
 					//上传成功
 					var files = result.data || [];
-					var $fileHidden = $file.prev();
+					var $fileHidden = $file.prevAll("[type=hidden]:first");
 					var fileIds = $.trim($fileHidden.val() || "");
 					fileIds = fileIds ? fileIds.split(",") : [];
 					if(result.success){
@@ -525,6 +525,7 @@ var FormInput = {
 						
 						var $form = $target.parents("form:first");
 						var $submit = $form.find("button[data-btn-type='save']");
+						$submit.data("targetTip", "上传");
 						$submit.click();
 						
 						var callback = (field.extData || {}).uploadFileCallback;
@@ -729,7 +730,7 @@ var FormInput = {
 //					}
 				}
 				// 初始化事件
-				if (this.field.extData && this.field.extData.events) {
+				if (!triggerSelectChange && this.field.extData && this.field.extData.events) {
 					var $field = $el.id == id ? $($el) : $("#" + id, $el);
 					$field = $field.length ? $field : $("#" + id, $container);
 					if ($field.length) {
@@ -737,7 +738,8 @@ var FormInput = {
 							var events = this.field.extData.events;
 							for ( var key in events) {
 								var event = events[key];
-								$field.on(key, eval("("+ event + ")"));
+								var func = eval("("+ event + ")");
+								$field.on(key, func);
 							}
 						} catch(e) {}
 					}

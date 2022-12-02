@@ -390,11 +390,11 @@ public class Wrapper extends TableDecorator {
 		Map<String, Object> object = (Map<String, Object>) getCurrentRowObject();
 		if (object.get("taskId") != null) {
 			String html = "<a href='module/subcontract_input.action?subcontract.id=" + object.get("subcontractId") + "'>办理</a>";
-			if (!"-1".equals(object.get("taskId").toString())) {
-				html += "&nbsp;&nbsp;&nbsp;"
-						+ "<a target='_blank' href='work/sub/WorkFlowViewCurrentImage.action?param.taskId="
-						+ object.get("taskId") + "'>查看当前流程</a>";
-			}
+//			if (!"-1".equals(object.get("taskId").toString())) {
+//				html += "&nbsp;&nbsp;&nbsp;"
+//						+ "<a target='_blank' href='work/sub/WorkFlowViewCurrentImage.action?param.taskId="
+//						+ object.get("taskId") + "'>流程图</a>";
+//			}
 			return html;
 //			return "<a href='module/subcontract_input.action?subcontract.id=" + object.get("subcontractId") + "'>办理</a>"
 //					+ "&nbsp;&nbsp;&nbsp;"

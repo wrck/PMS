@@ -1,9 +1,12 @@
 package com.dp.plat.subcontract.vo;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.time.DateUtils;
 
+import com.dp.plat.data.bean.JsonCustomInfo;
 import com.dp.plat.subcontract.entity.SubcontractProject;
 
 public class SubcontractProjectVO extends SubcontractProject {
@@ -38,6 +41,9 @@ public class SubcontractProjectVO extends SubcontractProject {
 	 * 距最后一次付款相隔月份
 	 */
 	private int monthDiff;
+	
+	// 拓展信息
+    private JsonCustomInfo extInfo = new JsonCustomInfo(new HashMap<String, Object>());
 	
 	public String getTypeName() {
 		return typeName;
@@ -191,5 +197,13 @@ public class SubcontractProjectVO extends SubcontractProject {
 	public void setMonthDiff(int monthDiff) {
 		this.monthDiff = monthDiff;
 	}
+
+    public JsonCustomInfo getExtInfo() {
+        return extInfo;
+    }
+
+    public void setExtInfo(Map<String, Object> extInfo) {
+        this.extInfo = new JsonCustomInfo(extInfo);
+    }
 
 }

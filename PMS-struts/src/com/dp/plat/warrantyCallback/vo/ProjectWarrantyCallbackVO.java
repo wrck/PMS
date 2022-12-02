@@ -14,8 +14,9 @@ import com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback;
  * @author w02611
  */
 public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
-
-	private String projectCode;
+	private static final long serialVersionUID = 2148976595233026978L;
+	
+    private String projectCode;
     private boolean hasPower;
     private String typeName;
     private String officeName;
@@ -311,4 +312,25 @@ public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
 		return warrantyState;
 	}
 
+	/**
+	 * 是否允许编辑，续保状态为3，或者接听情况以-开头
+	 * @return
+	 */
+	public boolean canEdit() {
+	    return canEdit(this.getRenewalIntention(), this.getCustomInfoByKey("phoneAnswerState", "0"));
+	}
+	
+	/**
+	 * 是否允许编辑，续保状态为3，或者接听情况以-开头
+	 * @param renewalIntention
+	 * @param phoneAnswerState
+	 * @return
+	 */
+	public static boolean canEdit(Object renewalIntention, Object phoneAnswerState) {
+//        // 是否允许编辑，续保状态为3，或者接听情况以-开头
+//        if (Integer.valueOf(3).equals(renewalIntention) || (phoneAnswerState != null && phoneAnswerState.toString().startsWith("-"))) {
+//            return true;
+//        }
+        return false;
+    }
 }

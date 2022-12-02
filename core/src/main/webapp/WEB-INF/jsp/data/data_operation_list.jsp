@@ -252,6 +252,8 @@
 				exportProgressInterval = window.setInterval(getProgressBar, interval);
 			}
 		})
+		// 防止json内容显示
+	    $(".modal-content", "#" + operationName).css("color", "transparent");
 	}
 	
 	function getProgressBar(container){

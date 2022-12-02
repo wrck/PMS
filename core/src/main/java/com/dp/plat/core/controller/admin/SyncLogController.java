@@ -1,16 +1,22 @@
 package com.dp.plat.core.controller.admin;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.quartz.impl.JobDetailImpl;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.dp.plat.core.context.SpringContext;
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
 import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.service.ISyncLogService;
@@ -59,4 +65,18 @@ public class SyncLogController {
 		model.addAttribute("syncLog", sysLog);
 		return Consts.URLPath.SYSTEM_MANAGER + "synclog_detail";
 	}
+	
+	@RequestMapping("/syncData")
+    public void syncData(String type, Model model) throws InvocationTargetException, IllegalAccessException {
+	    try {
+            JobDetailImpl job = SpringContext.getBean(type, JobDetailImpl.class);
+            MethodInvokingJobDetailFactoryBean invoker = (MethodInvokingJobDetailFactoryBean) job.getJobDataMap().get("methodInvoker");
+            invoker.invoke();
+            model.addAttribute("status", true);
+	    } catch (Exception e) {
+	        ExceptionHandler.insertException(e);
+	        model.addAttribute("status", false);
+	        model.addAttribute("message", e.getMessage());
+        }
+    }
 }

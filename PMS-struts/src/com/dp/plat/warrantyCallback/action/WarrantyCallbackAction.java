@@ -3,6 +3,7 @@ package com.dp.plat.warrantyCallback.action;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -207,8 +208,12 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
         }
         // 办事处集合
         departmentList = departmentManageService.queryDepartments();
-        //施工类型--服务类型
+        // 施工类型--服务类型
         warrantyCallbackTypeList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_SERVICE_TYPE);
+        // 接听状态
+        List<BasicDataBean> phoneAnswerStates = basicDataService.queryBasicDataBeans("projectWarrantyCallback_phoneAnswerState");
+        cbForm = cbForm != null ? cbForm : new HashMap<String, Object>();
+        cbForm.put("phoneAnswerStates", phoneAnswerStates);
         return SUCCESS;
     }
 
@@ -237,23 +242,29 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
             if (projectWarrantyCallback != null && projectWarrantyCallback.getId() != null) {
                 projectWarrantyCallback = warrantyCallbackService.selectProjectWarrantyCallbackVOById(projectWarrantyCallback.getId());
                 quesnaireId = projectWarrantyCallback.getQuesnaireId();
-            } else {
-            	if (projectWarrantyCallback == null) {
-            		projectWarrantyCallback = new ProjectWarrantyCallbackVO();
-            	}
-            	projectWarrantyCallback.setProjectId(project.getProjectId());
-            	List<Map<String, Object>> list = warrantyCallbackService.selectProjectWarranty(projectWarrantyCallback, null);
-            	if (list != null && !list.isEmpty()) {
-            		try {
-						org.apache.commons.beanutils.BeanUtils.populate(projectWarrantyCallback, list.get(0));
-					} catch (Exception e) {
-					}
-            	}
             }
-            warrantyCallbackTypeList = basicDataService.queryBasicDataBeans("warrantyCallbackType");
+            
+            // 为空或者ID为空，或者续保意向为未接听，则更新最新的数据
+            boolean canEidt = projectWarrantyCallback == null || projectWarrantyCallback.getId() == null || projectWarrantyCallback.canEdit();
+            if (projectWarrantyCallback == null) {
+                projectWarrantyCallback = new ProjectWarrantyCallbackVO();
+            }
+            
+            if (project != null) {
+                projectWarrantyCallback.setProjectId(project.getProjectId());
+                if (canEidt) {
+                    // 填充项目及维保基础信息
+                    projectWarrantyCallback = warrantyCallbackService.fillProjectWarrantyInfo(projectWarrantyCallback);
+                }
+                // 如果前面填充的信息为空，则查询项目维保状态和维保级别、增值服务等
+                if (projectWarrantyCallback.getWarrantyState() == null) {
+                    Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
+                    projectWarrantyCallback.setWarrantyState(warrantyState);
+                }
+            }
+            
             PmClosedLoopQuesnaire quesObj = new PmClosedLoopQuesnaire();
             quesObj.setQuesType("projectWarrantyCallback");
-//            quesObj.setQuesType("projectSupervision");
             
             // 获取生效的问卷分类
             pmClosedLoopQuesnaireList = QuestionnarieUtil.findPmClosedLoopQuesnaireList(quesObj);
@@ -265,28 +276,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
                 int quesnaireState = 0;
                 cbForm = QuestionnarieUtil.getCbForm(quesnaireId, pmClosedLoopQuesnaire, pmClQuesnaireResultHeader, quesnaireState);
             }
-            if (project != null) {
-	            // 查询项目维保状态和维保级别、增值服务等
-				ProjectWarrantyCallbackVO temp = new ProjectWarrantyCallbackVO();
-				temp.setProjectId(project.getProjectId());
-				List<Map<String, Object>> list = warrantyCallbackService.selectProjectWarranty(temp  , null);
-				Map<String, Object> warrantyState = null;
-            	if (list != null && !list.isEmpty()) {
-            		warrantyState = list.get(0);
-            	} else {
-            		warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
-            	}
-	            projectWarrantyCallback.setWarrantyState(warrantyState);
-            }
         } else {
         	projectWarrantyCallback.setProjectId(project.getProjectId());
-        	List<Map<String, Object>> list = warrantyCallbackService.selectProjectWarranty(projectWarrantyCallback, null);
-        	if (list != null && !list.isEmpty()) {
-        		try {
-					org.apache.commons.beanutils.BeanUtils.populate(projectWarrantyCallback, list.get(0));
-				} catch (Exception e) {
-				}
-        	}
+        	// 填充项目维保信息
+        	projectWarrantyCallback = warrantyCallbackService.fillProjectWarrantyInfo(projectWarrantyCallback);
             // 问卷提交
             if (pmClQuesnaireResultHeader != null && pmClQuesnaireResultHeader.getStatus() != 0) {
                 if (pmClQuesnaireResultHeader.getStatus() == 1) {// 已提交，计算分数
@@ -322,7 +315,7 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
                 warrantyCallbackService.insertOrUpdateProjectWarrantyCallback(projectWarrantyCallback);
                 result = "success";
             }
-        }
+        } 
         return SUCCESS;
     }
     
@@ -340,6 +333,12 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
     	}
     	displayParam.setSort("officeCode, customerContact1 desc, customerContact2 desc");
     	displayParam.getParam();
+    	
+    	// 判断是否查询数量
+    	if ("queryCount".equals(result)) {
+    	    displayParam.setPagesize(0);
+    	}
+    	
     	if (projectWarrantyCallback == null) {
             projectWarrantyCallback = new ProjectWarrantyCallbackVO();
             warrantyCallbackMapList = new ArrayList<Map<String,Object>>();
@@ -347,6 +346,15 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
         } else {
 	        warrantyCallbackMapList = warrantyCallbackService.selectProjectWarranty(projectWarrantyCallback, displayParam);
         }
+    	
+    	// 判断是否查询数量
+        if ("queryCount".equals(result)) {
+            message = result;
+            result = String.valueOf(displayParam.getTotalcount());
+            return SUCCESS;
+        }
+    	
+    	
         if (user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_WARRANTY_CALLBACKER)
                 || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
                 || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
@@ -356,6 +364,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
     	departmentList = departmentManageService.queryDepartments();
     	//施工类型--服务类型
     	warrantyCallbackTypeList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_SERVICE_TYPE);
+    	// 接听状态
+        List<BasicDataBean> phoneAnswerStates = basicDataService.queryBasicDataBeans("projectWarrantyCallback_phoneAnswerState");
+        cbForm = cbForm != null ? cbForm : new HashMap<String, Object>();
+        cbForm.put("phoneAnswerStates", phoneAnswerStates);
 		return "projectWarranty";
     }
     
@@ -389,6 +401,10 @@ public class WarrantyCallbackAction extends BaseAction implements Preparable {
     	departmentList = departmentManageService.queryDepartments();
     	//施工类型--服务类型
     	warrantyCallbackTypeList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_SERVICE_TYPE);
+    	// 接听状态
+        List<BasicDataBean> phoneAnswerStates = basicDataService.queryBasicDataBeans("projectWarrantyCallback_phoneAnswerState");
+        cbForm = cbForm != null ? cbForm : new HashMap<String, Object>();
+        cbForm.put("phoneAnswerStates", phoneAnswerStates);
 		return "customerProject";
     }
 

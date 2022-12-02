@@ -10,13 +10,25 @@
     </select>
     
     <select id="selectAllFacilitator" resultType="com.dp.plat.pms.springmvc.entity.Facilitator">
-        SELECT vendCode AS account, vendName AS name
-		    , bankName AS bankInfo, bankNum AS bankAccount
-		    , cnaps AS cnapsCode
-		    , CASE WHEN status = 1 THEN 1 ELSE 0 END AS state
-		    , v.vendSubClasses AS relateType
-		    , '{}' AS customInfo
+        SELECT vendCode AS account, vendName AS name, bankName AS bankInfo, bankNum AS bankAccount, cnaps AS cnapsCode
+		    , CASE 
+		        WHEN status = 1 THEN 1
+		        ELSE 0
+		    END AS state
+		    , ISNULL(v.vendSubClasses, '') + CASE 
+		        WHEN ISNULL(v.vendSubClasses, '') = ''
+		            OR ISNULL(vi.vendorType, '') = ''
+		        THEN ''
+		        ELSE N'、'
+		    END + ISNULL(vi.vendorType, '') AS relateType
+		    , '{'
+		    + '"vendSubClasses":"' + ISNULL(v.vendSubClasses, '') + '",'
+		    + '"vendorType":"' + ISNULL(vi.vendorType, '') + '"'
+		    + '}' AS customInfo
 		FROM DPtech_V_Vend v
+		    LEFT JOIN IWS_VendInfoUpdate vi
+		    ON v.vendCode = vi.accountNum
+		        AND vi.dataAreaId = 'D001'
 		WHERE v.vendClasses = N'行政采购供应商'
 		  <!--  AND (v.vendSubClasses LIKE N'%安服外包%'
 		        OR v.vendSubClasses LIKE N'%用服外包%'
@@ -131,7 +143,7 @@
 			, customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), VALUES(customInfo))
     </insert>
     
-    <insert id="splitAfProjectByProductCode" parameterType="String">
+    <insert id="splitAfProjectByProductCode" parameterType="map">
    	    <!-- truncate pm_project_property_af_from_sms; -->
     	insert into pm_project_property_af_from_sms (
 		    id, `orderExecNumber`, `projectCode`, `projectName`, `salesManCode`, `salesManName`, 
@@ -153,9 +165,35 @@
 		        on ppfs.`orderExecNumber` = ppfd.`orderExecNumber` 
 		        and ppfs.`projectCode` = ppfd.`projectCode` 
 		<where>
-			<if test="_parameter != null and _parameter != ''" >
-				FIND_IN_SET(ppfd.`productfirstCode`, #{_parameter})
-			</if>
+		    <trim suffixOverrides="and | or">
+				<if test="productfirstCodes != null and productfirstCodes != ''" >
+					FIND_IN_SET(ppfd.`productfirstCode`, #{productfirstCodes}) AND
+				</if>
+				<if test="productCodes != null and productCodes != ''" >
+	                FIND_IN_SET(ppfd.`productCode`, #{productCodes}) AND
+	            </if>
+	            <if test="groups != null" >
+					<foreach collection="groups" index="key" item="group" separator=" or " open="(" close=")">
+		                (
+		                <trim suffixOverrides="and | or">
+			                <if test="group.productfirstCode != null and group.productfirstCode != ''">
+			                    ppfd.`productfirstCode` = #{group.productfirstCode} AND
+			                </if>
+			                <if test="group.productCode != null and group.productCode != ''">
+			                    ppfd.`productCode` = #{group.productCode} AND
+			                </if>
+			                <if test="group.productfirstCodes != null and group.productfirstCodes != ''">
+                                FIND_IN_SET(ppfd.`productfirstCode`, #{group.productfirstCodes}) AND
+                            </if>
+			                <if test="group.productCodes != null and group.productCodes != ''" >
+			                    FIND_IN_SET(ppfd.`productCode`, #{group.productCodes}) AND
+			                </if>
+		                </trim>
+		                )
+					</foreach>
+					AND 
+				</if>
+			</trim>
 		</where>
 		group by ppfs.`id` ;
     </insert>
@@ -365,4 +403,121 @@
             customInfo = VALUES(customInfo);
 		    
  	</insert>
+ 	
+ 	<select id="selectAllPurchaseReceiptSettlement" parameterType="java.util.Map" resultType="com.dp.plat.pms.springmvc.vo.PurchaseReceiptSettlement">
+ 	    SELECT pil.* FROM DPtech_V_PO_Packingslip_Invoice_Line pil
+ 	    <where> 
+ 	      <trim prefixOverrides="OR | AND" suffixOverrides="OR | AND">
+	 	      <if test="purchPoolId != null"> pil.purchPoolId = #{purchPoolId} AND </if>
+	 	      <if test="purchPoolIds != null and purchPoolIds.size() > 0">
+	 	          pil.purchPoolId IN (
+	 	          <foreach collection="purchPoolIds" item="item" separator=",">
+	 	             #{item}
+	 	          </foreach>
+	 	          ) AND
+	 	      </if>
+	 	      <if test="dataAreaId != null"> pil.dataAreaId = #{dataAreaId} AND </if>
+ 	      </trim>
+ 	    </where>
+ 	</select>
+ 	
+ 	<delete id="clearAllPurchaseReceiptSettlement">
+ 	    TRUNCATE pm_dispatch_project_settlement_from_d365
+ 	</delete>
+ 	
+ 	<insert id="insertPurchaseReceiptSettlement" parameterType="java.util.List" >
+ 	    insert into pm_dispatch_project_settlement_from_d365 (
+ 	      `slipId`, 
+ 	      `inventTransId`, `vendAccount`, `innerInvoiceId`, 
+	      `invoiceDate`, `invoiceId`, `purchId`, 
+	      `purchName`, `purchPoolId`, `packingSlipId`, 
+	      `packingSlipRemark`, `slipQty`, `receiveQty`, 
+	      `invoiceQty`, `price`, `invoicePrice`, 
+	      `receiveAmount`, `invoiceAmount`, `settleQty`, 
+	      `lineAmount`, `invoiceAmountTotal`, `settleAmountTotal`, 
+	      `settleAmount`, `confirmTime`, `settleTime`, 
+	      `projectProgress`, `otherSysNum`, `partition`, 
+	      `dataAreaId`, `settleId`)
+	    values 
+	    <foreach collection="list" item="item" index="index" separator=",">  
+	    (#{item.slipId,jdbcType=BIGINT}, #{item.inventTransId,jdbcType=VARCHAR}, #{item.vendAccount,jdbcType=VARCHAR}, #{item.innerInvoiceId,jdbcType=VARCHAR}, 
+	      #{item.invoiceDate,jdbcType=TIMESTAMP}, #{item.invoiceId,jdbcType=VARCHAR}, #{item.purchId,jdbcType=VARCHAR}, 
+	      #{item.purchName,jdbcType=VARCHAR}, #{item.purchPoolId,jdbcType=VARCHAR}, #{item.packingSlipId,jdbcType=VARCHAR}, 
+	      #{item.packingSlipRemark,jdbcType=VARCHAR}, #{item.slipQty,jdbcType=DECIMAL}, #{item.receiveQty,jdbcType=DECIMAL}, 
+	      #{item.invoiceQty,jdbcType=DECIMAL}, #{item.price,jdbcType=DECIMAL}, #{item.invoicePrice,jdbcType=DECIMAL}, 
+	      #{item.receiveAmount,jdbcType=DECIMAL}, #{item.invoiceAmount,jdbcType=DECIMAL}, #{item.settleQty,jdbcType=DECIMAL}, 
+	      #{item.lineAmount,jdbcType=DECIMAL}, #{item.invoiceAmountTotal,jdbcType=DECIMAL}, #{item.settleAmountTotal,jdbcType=DECIMAL}, 
+	      #{item.settleAmount,jdbcType=DECIMAL}, #{item.confirmTime,jdbcType=TIMESTAMP}, #{item.settleTime,jdbcType=TIMESTAMP}, 
+	      #{item.projectProgress,jdbcType=VARCHAR}, #{item.otherSysNum,jdbcType=VARCHAR}, #{item.partition,jdbcType=BIGINT}, 
+	      #{item.dataAreaId,jdbcType=VARCHAR}, #{item.settleId,jdbcType=BIGINT})
+        </foreach>
+        ON DUPLICATE KEY UPDATE inventTransId = VALUES(inventTransId), innerInvoiceId = VALUES(innerInvoiceId), invoiceDate = VALUES(invoiceDate), 
+			invoiceId = VALUES(invoiceId), purchId = VALUES(purchId), vendAccount = VALUES(vendAccount), 
+			purchName = VALUES(purchName), purchPoolId = VALUES(purchPoolId), packingSlipId = VALUES(packingSlipId), 
+			packingSlipRemark = VALUES(packingSlipRemark), slipQty = VALUES(slipQty), receiveQty = VALUES(receiveQty), 
+			invoiceQty = VALUES(invoiceQty), price = VALUES(price), invoicePrice = VALUES(invoicePrice), 
+			receiveAmount = VALUES(receiveAmount), invoiceAmount = VALUES(invoiceAmount), settleQty = VALUES(settleQty), 
+			lineAmount = VALUES(lineAmount), invoiceAmountTotal = VALUES(invoiceAmountTotal), settleAmountTotal = VALUES(settleAmountTotal), 
+			settleAmount = VALUES(settleAmount), confirmTime = VALUES(confirmTime), settleTime = VALUES(settleTime), 
+			projectProgress = VALUES(projectProgress), otherSysNum = VALUES(otherSysNum), `partition` = VALUES(`partition`), 
+			dataAreaId = VALUES(dataAreaId), settleId = VALUES(settleId) 
+ 	</insert>
+ 	
+ 	<sql id="d365PurchSettledInfoJSON">
+        REPLACE(CONCAT('{"paidAmount":"', ROUND(IFNULL(dps.settleAmount, 0), 2), '"',
+              ', "paid":', dps.settleId IS NOT NULL AND dps.settleAmount = dps.lineAmount,
+              ', "paidState":"', IF(dps.settleAmount = dps.lineAmount, '已付款', IF(dps.invoiceAmount = 0, '待开票', IF(dps.slipId IS NOT NULL, '待付款', ''))), '"',
+              ', "paystate":"', IF(dps.settleAmount = dps.lineAmount, '已付款', IF(dps.invoiceAmount = 0, '待开票', IF(dps.slipId IS NOT NULL, '待付款', ''))), '"',
+              ', "invoiceId":"', IFNULL(dps.`invoiceId`, ''), '"',
+              ', "innerInvoiceId":"', IFNULL(dps.`innerInvoiceId`, ''), '"',
+              ', "invoiceDate":"', IFNULL(dps.`invoiceDate`, ''), '"',
+              ', "invoiceAmount":"', IFNULL(dps.`invoiceAmount`, ''), '"',
+              ', "relateSource": "D365"',
+        '}'), '\\', '\\\\')
+ 	</sql>
+ 	
+ 	<update id="updateDispatchAndSubcontractPaymentFromD365ByOne">
+        <!-- 更新项目转包的付款信息 -->
+        UPDATE
+            pm_dispatch_project_settlement_from_d365 dps 
+        LEFT JOIN `pm_dispatch_project_settlement` ds 
+            ON dps.`packingSlipId` = ds.`customInfo` ->> '$.packingSlipId'
+        LEFT JOIN `pm_subcontract_project_payment` sp 
+            ON dps.`packingSlipId` = sp.`customInfo` ->> '$.packingSlipId'
+        SET <!-- 安服项目转包结算数据更新 -->
+            ds.paymentTime = DATE_ADD(dps.`settleTime`, INTERVAL 8 HOUR)
+            , ds.sseId = dps.slipId
+            , ds.settled = dps.settleId IS NOT NULL AND dps.settleAmount = dps.lineAmount
+            , ds.customInfo = JSON_MERGE_PATCH(IFNULL(ds.customInfo, "{}"), <include refid="d365PurchSettledInfoJSON" />)
+              
+            <!-- 用服项目转包结算数据更新 -->
+            , sp.paymentTime = DATE_ADD(dps.`settleTime`, INTERVAL 8 HOUR)
+            , sp.sseId = dps.slipId
+            , sp.customInfo = JSON_MERGE_PATCH(IFNULL(sp.customInfo, "{}"), <include refid="d365PurchSettledInfoJSON" />)
+         WHERE (ds.id IS NOT NULL AND 0 = IFNULL(ds.`customInfo` ->> '$.paid', 0))
+           OR (sp.id IS NOT NULL AND 0 = IFNULL(sp.`customInfo` ->> '$.paid', 0));
+    </update>
+ 	
+ 	<update id="updateDispatchAndSubcontractPaymentFromD365">
+ 	    <!-- 安服项目转包结算数据更新 -->
+        UPDATE
+            `pm_dispatch_project_settlement` ds 
+	    INNER JOIN pm_dispatch_project_settlement_from_d365 dps 
+            ON dps.`packingSlipId` = ds.`customInfo` ->> '$.packingSlipId'
+	    SET ds.paymentTime = DATE_ADD(dps.`settleTime`, INTERVAL 8 HOUR)
+	        , ds.sseId = dps.slipId
+	        , ds.settled = dps.settleId IS NOT NULL AND dps.settleAmount = dps.lineAmount
+	        , ds.customInfo = JSON_MERGE_PATCH(IFNULL(ds.customInfo, "{}"), <include refid="d365PurchSettledInfoJSON" />)
+	     WHERE (ds.id IS NOT NULL AND 0 = IFNULL(ds.`customInfo` ->> '$.paid', 0));
+	    
+	    <!-- 用服项目转包结算数据更新 -->
+        UPDATE
+            `pm_subcontract_project_payment` sp 
+        INNER JOIN pm_dispatch_project_settlement_from_d365 dps 
+            ON dps.`packingSlipId` = sp.`customInfo` ->> '$.packingSlipId'
+        SET sp.paymentTime = DATE_ADD(dps.`settleTime`, INTERVAL 8 HOUR)
+            , sp.sseId = dps.slipId
+            , sp.customInfo = JSON_MERGE_PATCH(IFNULL(sp.customInfo, "{}"), <include refid="d365PurchSettledInfoJSON" />)
+         WHERE (sp.id IS NOT NULL AND 0 = IFNULL(sp.`customInfo` ->> '$.paid', 0));
+ 	</update>
 </mapper>

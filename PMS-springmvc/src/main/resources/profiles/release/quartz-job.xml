@@ -112,7 +112,7 @@
 	</bean>
 	
 	<!-- 要调用的工作类 -->
-    <bean id="d365DataJob" class="com.dp.plat.pms.springmvc.job.D365FacilitatorJob"></bean>
+    <bean id="d365DataJob" class="com.dp.plat.pms.springmvc.job.D365DataJob"></bean>
     <!-- 定义调用对象和调用对象的方法 -->
     <bean id="d365DataTask"
         class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">

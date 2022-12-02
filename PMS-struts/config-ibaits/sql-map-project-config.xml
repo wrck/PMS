@@ -164,7 +164,7 @@
                       (`pm3`.`effectiveTo` > NOW()) 
                       OR ISNULL(`pm3`.`effectiveTo`)
                     )
-                  LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = 30 GROUP BY projectId ASC) pm4 
+                  LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = '30' GROUP BY projectId ASC) pm4 
                     ON ph.projectId = pm4.projectId
                   LEFT JOIN pm_project_state state 
                     ON state.`projectId` = ph.projectId 
@@ -1402,7 +1402,7 @@
             AND (ppm3.effectiveFrom <= NOW() AND (ppm3.effectiveTo > NOW() OR ppm3.effectiveTo IS NULL))
             LEFT JOIN pm_project_member ppm6 ON ppm6.projectId = pph.projectId AND ppm6.memberRole = '10' AND ppm6.fromFlag = 2
             AND (ppm6.effectiveFrom <= NOW() AND (ppm6.effectiveTo > NOW() OR ppm6.effectiveTo IS NULL))
-            LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = 30 GROUP BY projectId ASC) ppm7
+            LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = '30' GROUP BY projectId ASC) ppm7
             ON pph.projectId = ppm7.projectId  
             LEFT JOIN pm_project_group_relationship ppgr ON ppgr.projectCode = pph.projectCode
             LEFT JOIN pm_project_contract ppc ON ppc.projectGroupCode = ppgr.projectGroupCode
@@ -1813,7 +1813,7 @@
                 FROM
                     pm_project_member m 
                 WHERE m.effectiveTo IS NULL 
-                    AND m.memberRole = 60 
+                    AND m.memberRole = '60' 
                 GROUP BY m.projectId) mm 
                 ON mm.projectId = t1.projectId 
             LEFT JOIN fnd_department t2 ON t1.column001 = t2.departmentNum AND t2.`status` = 1
@@ -1881,7 +1881,7 @@
         FROM
             pm_project_member m 
         WHERE m.effectiveTo IS NULL 
-            AND m.memberRole = 60 
+            AND m.memberRole = '60' 
         GROUP BY m.projectId 
     </insert>
     
@@ -2143,9 +2143,11 @@
         <result property="contractNo" column="contractNo"/>
         <result property="barCode" column="barCode"/>
         <result property="itemCode" column="itemCode"/>
+        <result property="itemModel" column="itemModel"/>
         <result property="itemName" column="itemName"/>
         <result property="barCode2" column="barCode2"/>
         <result property="itemCode2" column="itemCode2"/>
+        <result property="itemModel2" column="itemModel2"/>
         <result property="itemName2" column="itemName2"/>
         <result property="receiveName" column="receiveName"/>
         <result property="emsNum" column="emsNum"/>
@@ -2157,6 +2159,10 @@
         <result property="transferProjectId" column="transferProjectId"/>
         <result property="transferContractNo" column="transferContractNo"/>
         <result property="transferFlag" column="transferFlag"/>
+        <result property="extInfo.warrantyStartTime" column="warrantyStartTime" />
+        <result property="extInfo.warrantyEndTime" column="warrantyEndTime" />
+        <result property="extInfo.warrantyMonth" column="warrantyMonth" />
+        <result property="extInfo.warrantyDiff" column="warrantyDiff" />
     </resultMap>
     <!-- <select id="query-shipmentinfo-bycontractno" parameterClass="java.util.Map" resultMap="shipmentinfo">
         SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName, 
@@ -2182,40 +2188,48 @@
     </select> -->
     
     <select id="query-shipmentinfo-bycontractno" parameterClass="java.util.Map" resultMap="shipmentinfo">
-        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName, 
-	        vsep.receiveName receiveName, vsep.emsNum emsNum, vsep.packdate packdate, vsep.emsCompany emsCompany,NULL AS installAddress,
-	        NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
-	        vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemName2 itemName2
-        FROM view_shipment_info_4_pm vsip 
-	        LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
-	        WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
-	            and contractNo in ($contractNo$) and projectId = #projectId#
-	        )
-	        <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
-        UNION ALL 
-        SELECT pps.`contractNo`,pps.`barcode`,pps.`itemCode`,pps.`itemName`,pps.`receiveName`,pps.`emsNum`,pps.`packdate`,pps.`emsCompany`,pps.`installAddress`, 
-	        pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
-	        sbr.`sn2` AS barCode2, sbr.`item2` AS itemCode2, fi.describe_ AS itemName2
-        FROM pm_project_shipment pps 
-	        LEFT JOIN `fb_shipment_barcode_relation` sbr 
-		        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
-		        AND pps.barcode = sbr.sn1 
-		    LEFT JOIN fb_items fi 
-		        ON fi.`item` = sbr.`item2` 
-        WHERE contractNo in ($contractNo$) and projectId = #projectId#
-             <isEqual prepend="AND" property="excludeTransferOut" compareValue="">transferFlag != 1</isEqual>
-             AND EXISTS 
-            (SELECT 
-                1 
-            FROM
-                view_shipment_info_4_pm vsip 
-                LEFT JOIN view_shipment_ems_4_pm vsep 
-                    ON vsep.contract_code = vsip.contract_code 
-                    AND vsep.packId = vsip.packId 
-            WHERE vsip.contract_code IN ($sourceContractNo$)
-            <!-- WHERE FIND_IN_SET(vsip.contract_code, REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
-                AND vsip.barcode = pps.barcode)
-        ORDER BY transferFlag asc
+	   SELECT pps.*, vw.`warrantyStartTime`, vw.`warrantyEndTime`, vw.`warrantyMonth`, vw.`diff` AS warrantyDiff FROM (
+	        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemModel, vsip.itemName itemName, 
+		        vsep.receiveName receiveName, vsep.emsNum emsNum, vsep.packdate packdate, vsep.emsCompany emsCompany,NULL AS installAddress,
+		        NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
+		        vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemModel2 AS itemModel2, vsip.itemName2 itemName2
+	        FROM view_shipment_info_4_pm vsip 
+		        LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+		        WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+		            and contractNo in ($contractNo$) and projectId = #projectId#
+		        )
+		        <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
+	        UNION ALL 
+	        SELECT DISTINCT pps.`contractNo`,pps.`barcode`,pps.`itemCode`, fi0.itemname AS itemModel, pps.`itemName`,pps.`receiveName`,pps.`emsNum`,pps.`packdate`,pps.`emsCompany`,pps.`installAddress`, 
+		        pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
+		        sbr.`sn2` AS barCode2, sbr.`item2` AS itemCode2, fi.itemname AS itemModel2, fi.describe_ AS itemName2
+	        FROM pm_project_shipment pps 
+		        LEFT JOIN `fb_shipment_barcode_relation` sbr 
+			        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
+			        AND pps.barcode = sbr.sn1 
+			    LEFT JOIN fb_items fi0 
+                    ON fi0.`item` = pps.itemCode
+			    LEFT JOIN fb_items fi 
+			        ON fi.`item` = sbr.`item2` 
+	        WHERE contractNo in ($contractNo$) and projectId = #projectId#
+	             <isEqual prepend="AND" property="excludeTransferOut" compareValue="">transferFlag != 1</isEqual>
+	             AND EXISTS 
+	            (SELECT 
+	                1 
+	            FROM
+	                view_shipment_info_4_pm vsip 
+	                LEFT JOIN view_shipment_ems_4_pm vsep 
+	                    ON vsep.contract_code = vsip.contract_code 
+	                    AND vsep.packId = vsip.packId 
+	            WHERE vsip.contract_code IN ($sourceContractNo$)
+	            <!-- WHERE FIND_IN_SET(vsip.contract_code, REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
+	                AND vsip.barcode = pps.barcode)
+       ) pps
+       LEFT JOIN `view_warranty` vw
+           ON <!-- vw.`contract_code` = pps.contractNo  -->
+           vw.contract_code in ($sourceContractNo$)
+           AND vw.`barcode` = pps.barcode
+       ORDER BY transferFlag asc
     </select>
     <select id="query_shipmentInfo_size_by_contractNo" parameterClass="string" resultClass="int">
         <![CDATA[
@@ -2287,7 +2301,7 @@
             WHERE contractNo IN ($contractNo$) AND t1.projectId = #projectId#    AND t2.conp IS NOT NULL   
             
         ]]> -->
-        SELECT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName,  
+        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName,  
             CASE WHEN t3.conp IS NULL THEN t.`conp` ELSE t3.conp END AS conp,t3.conpBak,t3.conpChange,
             CASE WHEN t3.boot IS NULL THEN t.`boot` ELSE t3.boot END AS boot,t3.bootBak ,t3.bootChange, 
             CASE WHEN t3.cpld IS NULL THEN t.`cpld` ELSE t3.cpld END AS cpld,t3.cpldBak , t3.cpldChange,   
@@ -2300,7 +2314,7 @@
         WHERE vsip.contract_code IN ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment WHERE vsip.barcode = barcode and projectId = #projectId#)    
         <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
         UNION ALL     
-        SELECT t1.`contractNo`,t1.`barcode`,t1.`itemCode`,t1.`itemName`,    
+        SELECT DISTINCT t1.`contractNo`,t1.`barcode`,t1.`itemCode`,t1.`itemName`,    
             CASE WHEN t4.conp IS NULL THEN t2.`conp` ELSE t4.conp END AS conp,  t4.conpBak ,t4.conpChange,
             CASE WHEN t4.boot IS NULL THEN t2.`boot` ELSE t4.boot END AS boot,   t4.bootBak ,t4.bootChange,
             CASE WHEN t4.cpld IS NULL THEN t2.`cpld` ELSE t4.cpld END AS cpld,   t4.cpldBak , t4.cpldChange,
@@ -2622,7 +2636,7 @@
         <![CDATA[
             INSERT INTO `pm_project_shipment`(`projectId`,`barcode`,`itemCode`,`itemName`,`receiveName`,`emsNum`,`emsCompany`,`packdate`,
                 `contractNo`,`installAddress`,`createTime`,`createBy`)
-            SELECT  #projectId#, a.barcode,a.itemCode , a.itemName ,b.`receiveName` ,b.`emsNum`,b.`emsCompany`,b.`packdate`,
+            SELECT DISTINCT #projectId#, a.barcode,a.itemCode , a.itemName ,b.`receiveName` ,b.`emsNum`,b.`emsCompany`,b.`packdate`,
                 b.`contract_code` , #installAddress#,NOW(),#createBy# FROM view_shipment_info_4_pm a LEFT JOIN view_shipment_ems_4_pm b ON a.contract_code = b.`contract_code` AND a.packId = b.`packId`
             WHERE a.contract_code in ($contractNo$) AND a.barcode IN ($codes$)
         ]]>
@@ -3284,7 +3298,7 @@
     <select id="query_member_address" parameterClass="int" resultClass="string">
         <![CDATA[
             SELECT GROUP_CONCAT(a.`email`) FROM pm_project_member  a 
-            WHERE a.`memberRole` IN (10,40 ,70 ,71) 
+            WHERE a.`memberRole` IN ('10', '40', '70', '71') 
                 AND a.`effectiveFrom` <= NOW() 
                 AND ( a.`effectiveTo` IS NULL OR a.`effectiveTo` > NOW())
                 AND a.`projectId` = #projectId#  
@@ -3449,20 +3463,24 @@
         <result property="serviceType" column="serviceType"/>
         <result property="companyName" column="companyName"/>
         <result property="companyAbbr" column="companyAbbr"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     
     <select id="query-cbData-list"  parameterClass="com.dp.plat.param.DataQueryParam" resultMap="pmClCBData">
         <!-- 5.7以上不支持desc group by  -->
         <!-- (select aa.* ,count(aa.id)as times from (select *  from pm_cl_evaluation_header order by createdTime desc)aa where aa.evaluationType=3 and aa.status=1 group by aa.projectCode) a -->
-        <![CDATA[
-            select 
+        select 
             a.id as id,a.projectName as projectName,a.projectCode as projectCode,a.evaluationResult as evaResult,a.times as times,a.projectId as projectId,
             case when a.updatedTime is null then a.createdTime else a.updatedTime end as cbTime ,
             b.quesMarkScore as totalScore, b.quesMarkResult as cbResult,
             e1.questionAnswer as equExplain, e2.questionAnswer as opinion,
             a.evaluationComment as approveRemark,
-            c1.questionScore  as projectScore,  c2.questionScore  as equScore,
-            c3.questionScore  as engScore,  c4.questionScore  as otherScore ,t2.departmentName as officeName, t3.memberName as pmRealName,
+            <!-- c1.questionScore  as projectScore,  c2.questionScore  as equScore,
+            c3.questionScore  as engScore,  c4.questionScore  as otherScore , -->
+            c.questionScore10  AS projectScore,  c.questionScore20  AS equScore,
+            c.questionScore30  AS engScore,  c.questionScore40  AS otherScore,
+            t2.departmentName as officeName, t3.memberName as pmRealName,
+        <![CDATA[
             CASE
                 WHEN t1.column012 IS NULL 
                 AND t1.columno12_readonly = - 1 
@@ -3471,6 +3489,7 @@
                 THEN t1.column012 
                 ELSE t1.columno12_readonly 
             END AS serviceType, t1.compId, fc.name AS companyName, fc.abbr AS companyAbbr
+            , CONCAT('{"productHarmfulSubstanceControl":"', er3.questionOptionsContent, '"', '}') AS `customInfo`
             from 
             (
 			    select aa.*, a.times from (SELECT MAX(aa.id) AS id, COUNT(aa.id) AS times FROM pm_cl_evaluation_header aa WHERE aa.evaluationType = 3 AND aa.status = 1 GROUP BY aa.projectCode) a
@@ -3478,22 +3497,28 @@
 			    on aa.id = a.id
 		    ) a
             left join pm_cl_quesnaire_result_header b on a.id=b.evaluationHeaderId and b.status=1
+        ]]>
+            LEFT JOIN (SELECT quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,SUM(IF(c1.quesTypeForCB=10, questionScore, NULL)) AS questionScore10,SUM(IF(c1.quesTypeForCB=20, questionScore, NULL)) AS questionScore20,SUM(IF(c1.quesTypeForCB=30, questionScore, NULL)) AS questionScore30,SUM(IF(c1.quesTypeForCB=40, questionScore, NULL)) AS questionScore40  FROM pm_cl_quesnaire_result_line c1 WHERE quesTypeForCB IN (10,20,30,40) GROUP BY quesnaireResultHeaderId) c  ON b.id=c.quesnaireResultHeaderId
+            <!--
             left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c1  on b.id=c1.quesnaireResultHeaderId  and c1.quesTypeForCB=10 
             left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c2  on b.id=c2.quesnaireResultHeaderId  and c2.quesTypeForCB=20
             left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c3  on b.id=c3.quesnaireResultHeaderId  and c3.quesTypeForCB=30 
             left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c4  on b.id=c4.quesnaireResultHeaderId  and c4.quesTypeForCB=40
+             -->
             left join pm_cl_quesnaire_template_line d1 on b.quesnaireTemplateHeaderId=d1.quesnaireTemplateHeaderId and d1.questionNum=5
             left join pm_cl_quesnaire_result_line e1 on e1.quesnaireResultHeaderId=b.id and e1.quesnaireTemplateLineId=d1.id
             left join pm_cl_quesnaire_template_line d2 on b.quesnaireTemplateHeaderId=d2.quesnaireTemplateHeaderId and d2.questionNum=8
             left join pm_cl_quesnaire_result_line e2 on e2.quesnaireResultHeaderId=b.id and e2.quesnaireTemplateLineId=d2.id
+            LEFT JOIN pm_cl_quesnaire_template_line d3 ON b.quesnaireTemplateHeaderId=d3.quesnaireTemplateHeaderId AND d3.questionNum=9
+            LEFT JOIN pm_cl_quesnaire_result_line e3 ON e3.quesnaireResultHeaderId=b.id AND e3.quesnaireTemplateLineId=d3.id
+            LEFT JOIN pm_cl_quesnaire_template_options er3 ON er3.questionId = d3.id AND er3.id = e3.questionTemplateOptId
             LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
             LEFT JOIN fnd_department t2 ON t1.column001 = t2.departmentNum
-            LEFT JOIN pm_project_member t3 ON t1.projectId = t3.projectId AND t3.memberRole = 30    AND t3.effectiveTo IS NULL
+            LEFT JOIN pm_project_member t3 ON t1.projectId = t3.projectId AND t3.memberRole = '30'    AND t3.effectiveTo IS NULL
             LEFT JOIN `fnd_company` fc ON t1.compId = fc.id
-        ]]>
-        <![CDATA[ 
-            where t1.projectState != 20
-        ]]>
+    <![CDATA[ 
+        where t1.projectState != 20
+    ]]>
         <isNotEmpty prepend="and" property="cbStartTime">
             <![CDATA[ 
             DATE_FORMAT(a.createdTime,'%Y-%m-%d')>=DATE_FORMAT(#cbStartTime#,'%Y-%m-%d')
@@ -3508,65 +3533,74 @@
         <isNotEmpty prepend="and" property="officeCode"><![CDATA[ t1.column001 = #officeCode# ]]></isNotEmpty>
         <isNotEmpty prepend="and" property="officeCodes"><![CDATA[ FIND_IN_SET(t1.column001, #officeCodes#) ]]></isNotEmpty>
         <isNotEmpty prepend="and" property="compId"><![CDATA[ t1.compId = #compId# ]]></isNotEmpty>
-        <![CDATA[
-            group by a.projectCode
-        ]]>
-        <![CDATA[
-            UNION
-            select  a.quesnaireId as id,t1.projectName as projectName,t1.projectCode as projectCode,b.quesMarkResult as evaResult,a.times as times,a.projectId as projectId,
-                case when a.updateTime is null then a.createTime else a.updateTime end as cbTime ,
-                b.quesMarkScore as totalScore, b.quesMarkResult as cbResult,
-                e1.questionAnswer as equExplain, e2.questionAnswer as opinion,
-                ahc.message as approveMessage,
-                c1.questionScore  as projectScore,  c2.questionScore  as equScore,
-                c3.questionScore  as engScore,  c4.questionScore  as otherScore ,t2.departmentName as officeName, t3.memberName as pmRealName,
-                CASE
-                    WHEN t1.column012 IS NULL 
-                    AND t1.columno12_readonly = - 1 
-                    THEN t1.column012 
-                    WHEN t1.column012 IS NOT NULL 
-                    THEN t1.column012 
-                    ELSE t1.columno12_readonly 
-                END AS serviceType, t1.compId, fc.name AS companyName, fc.abbr AS companyAbbr
-                from (
-                    SELECT 
-                     cb.projectId,cb.applyState, cb.instId, cbq.*, cbq.quesnaireVersion as times
-                    FROM
-                      pm_cl_callback cb 
-                      LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
-                        ON cb.id = cbq.callBackId 
-                        AND cbq.quesnaireState = 1
-                    where cb.applyState != -1 and cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
-                    ORDER BY cbq.createTime desc
-                ) a
-                INNER JOIN 
-			    (
-			        SELECT 
-			         cb.projectId, MAX(cbq.createTime) createTime
-			        FROM
-			          pm_cl_callback cb 
-			          LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
-			        ON cb.id = cbq.callBackId 
-			        AND cbq.quesnaireState = 1
-			        WHERE cb.applyState != -1 AND cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
-			        GROUP BY cb.`projectId`
-			    ) ma ON ma.createTime = a.createTime AND ma.projectId = a.projectId
-                left join (select ach.* from (select max(id) as maxId from `fnd_act_hi_comment` ahc left join `act_hi_taskinst` aht on ahc.taskId = aht.ID_ where procdefKey = 'CallBack' and aht.TASK_DEF_KEY_ = 'usertask2' group by objId, procdefKey, instId) t left join fnd_act_hi_comment ach on ach.id = t.maxId) ahc on a.instId = ahc.instId 
-                left join pm_cl_quesnaire_result_header b on a.quesnaireId=b.id and b.status=1
-                left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c1  on b.id=c1.quesnaireResultHeaderId  and c1.quesTypeForCB=10 
-                left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c2  on b.id=c2.quesnaireResultHeaderId  and c2.quesTypeForCB=20
-                left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c3  on b.id=c3.quesnaireResultHeaderId  and c3.quesTypeForCB=30 
-                left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c4  on b.id=c4.quesnaireResultHeaderId  and c4.quesTypeForCB=40
-                left join pm_cl_quesnaire_template_line d1 on b.quesnaireTemplateHeaderId=d1.quesnaireTemplateHeaderId and d1.questionNum=5
-                left join pm_cl_quesnaire_result_line e1 on e1.quesnaireResultHeaderId=b.id and e1.quesnaireTemplateLineId=d1.id
-                left join pm_cl_quesnaire_template_line d2 on b.quesnaireTemplateHeaderId=d2.quesnaireTemplateHeaderId and d2.questionNum=8
-                left join pm_cl_quesnaire_result_line e2 on e2.quesnaireResultHeaderId=b.id and e2.quesnaireTemplateLineId=d2.id
-                LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
-                LEFT JOIN fnd_department t2 ON t1.column001 = t2.departmentNum
-                LEFT JOIN pm_project_member t3 ON t1.projectId = t3.projectId AND t3.memberRole = 30    AND t3.effectiveTo IS null
-                LEFT JOIN `fnd_company` fc ON t1.compId = fc.id
-            WHERE t1.projectState != 20
-        ]]>
+    <![CDATA[
+        group by a.projectCode
+    ]]>
+        UNION
+        select  a.quesnaireId as id,t1.projectName as projectName,t1.projectCode as projectCode,b.quesMarkResult as evaResult,a.times as times,a.projectId as projectId,
+            case when a.updateTime is null then a.createTime else a.updateTime end as cbTime ,
+            b.quesMarkScore as totalScore, b.quesMarkResult as cbResult,
+            e1.questionAnswer as equExplain, e2.questionAnswer as opinion,
+            ahc.message as approveMessage,
+            <!-- c1.questionScore  as projectScore,  c2.questionScore  as equScore,
+            c3.questionScore  as engScore,  c4.questionScore  as otherScore , -->
+            c.questionScore10  AS projectScore,  c.questionScore20  AS equScore,
+            c.questionScore30  AS engScore,  c.questionScore40  AS otherScore,
+            t2.departmentName as officeName, t3.memberName as pmRealName,
+    <![CDATA[
+            CASE
+                WHEN t1.column012 IS NULL 
+                AND t1.columno12_readonly = - 1 
+                THEN t1.column012 
+                WHEN t1.column012 IS NOT NULL 
+                THEN t1.column012 
+                ELSE t1.columno12_readonly 
+            END AS serviceType, t1.compId, fc.name AS companyName, fc.abbr AS companyAbbr
+            , CONCAT('{"productHarmfulSubstanceControl":"', er3.questionOptionsContent, '"', '}') AS `customInfo`
+        from (
+            SELECT 
+                cb.projectId,cb.applyState, cb.instId, cbq.*, cbq.quesnaireVersion as times
+            FROM
+                pm_cl_callback cb 
+                LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
+                    ON cb.id = cbq.callBackId 
+                    AND cbq.quesnaireState = 1
+            where cb.applyState != -1 and cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
+            ORDER BY cbq.createTime desc
+	        ) a
+	        INNER JOIN (
+				SELECT 
+	                cb.projectId, MAX(cbq.createTime) createTime
+				FROM
+		            pm_cl_callback cb 
+	                LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
+	                    ON cb.id = cbq.callBackId 
+		                AND cbq.quesnaireState = 1
+			    WHERE cb.applyState != -1 AND cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
+	            GROUP BY cb.`projectId`
+	        ) ma ON ma.createTime = a.createTime AND ma.projectId = a.projectId
+	        left join (select ach.* from (select max(id) as maxId from `fnd_act_hi_comment` ahc left join `act_hi_taskinst` aht on ahc.taskId = aht.ID_ where procdefKey = 'CallBack' and aht.TASK_DEF_KEY_ = 'usertask2' group by objId, procdefKey, instId) t left join fnd_act_hi_comment ach on ach.id = t.maxId) ahc on a.instId = ahc.instId 
+	        left join pm_cl_quesnaire_result_header b on a.quesnaireId=b.id and b.status=1
+    ]]>
+            LEFT JOIN (SELECT quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,SUM(IF(c1.quesTypeForCB=10, questionScore, NULL)) AS questionScore10,SUM(IF(c1.quesTypeForCB=20, questionScore, NULL)) AS questionScore20,SUM(IF(c1.quesTypeForCB=30, questionScore, NULL)) AS questionScore30,SUM(IF(c1.quesTypeForCB=40, questionScore, NULL)) AS questionScore40  FROM pm_cl_quesnaire_result_line c1 WHERE quesTypeForCB IN (10,20,30,40) GROUP BY quesnaireResultHeaderId) c  ON b.id=c.quesnaireResultHeaderId
+            <!-- 
+            left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c1  on b.id=c1.quesnaireResultHeaderId  and c1.quesTypeForCB=10 
+            left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c2  on b.id=c2.quesnaireResultHeaderId  and c2.quesTypeForCB=20
+            left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c3  on b.id=c3.quesnaireResultHeaderId  and c3.quesTypeForCB=30 
+            left join (select quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,sum(questionScore) as questionScore  from pm_cl_quesnaire_result_line group by quesnaireResultHeaderId,quesTypeForCB) c4  on b.id=c4.quesnaireResultHeaderId  and c4.quesTypeForCB=40
+             -->
+            left join pm_cl_quesnaire_template_line d1 on b.quesnaireTemplateHeaderId=d1.quesnaireTemplateHeaderId and d1.questionNum=5
+            left join pm_cl_quesnaire_result_line e1 on e1.quesnaireResultHeaderId=b.id and e1.quesnaireTemplateLineId=d1.id
+            left join pm_cl_quesnaire_template_line d2 on b.quesnaireTemplateHeaderId=d2.quesnaireTemplateHeaderId and d2.questionNum=8
+            left join pm_cl_quesnaire_result_line e2 on e2.quesnaireResultHeaderId=b.id and e2.quesnaireTemplateLineId=d2.id
+            LEFT JOIN pm_cl_quesnaire_template_line d3 ON b.quesnaireTemplateHeaderId=d3.quesnaireTemplateHeaderId AND d3.questionNum=9
+            LEFT JOIN pm_cl_quesnaire_result_line e3 ON e3.quesnaireResultHeaderId=b.id AND e3.quesnaireTemplateLineId=d3.id
+            LEFT JOIN pm_cl_quesnaire_template_options er3 ON er3.questionId = d3.id AND er3.id = e3.questionTemplateOptId
+            LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
+            LEFT JOIN fnd_department t2 ON t1.column001 = t2.departmentNum
+            LEFT JOIN pm_project_member t3 ON t1.projectId = t3.projectId AND t3.memberRole = '30'    AND t3.effectiveTo IS null
+            LEFT JOIN `fnd_company` fc ON t1.compId = fc.id
+        WHERE t1.projectState != 20
         <isNotEmpty prepend="and" property="cbStartTime">
             <![CDATA[ 
             DATE_FORMAT(a.createTime,'%Y-%m-%d')>=DATE_FORMAT(#cbStartTime#,'%Y-%m-%d')
@@ -4191,7 +4225,7 @@
 	            COUNT(1) AS qty,
 	            CASE
 	                WHEN igi.itemCode IS NULL 
-	                THEN GROUP_CONCAT(IF(barCode2 IS NULL, barcode, CONCAT(barcode, '(', barCode2, ')')) SEPARATOR '、') 
+	                THEN GROUP_CONCAT(IF(barCode2 IS NULL, barcode, CONCAT(barcode, '(', barCode2, ')')) ORDER BY barCode SEPARATOR '、') 
 	                ELSE '' 
 	            END AS barCodes
 	        FROM
@@ -4204,7 +4238,7 @@
 	                )
                 <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
 	            UNION ALL 
-	            SELECT pps.`contractNo`, pps.`barcode`, pps.`itemCode`, pps.transferFlag, sbr.sn2 as barCode2, sbr.item2 
+	            SELECT DISTINCT pps.`contractNo`, pps.`barcode`, pps.`itemCode`, pps.transferFlag, sbr.sn2 as barCode2, sbr.item2 
 	            FROM pm_project_shipment pps 
 		            LEFT JOIN `fb_shipment_barcode_relation` sbr 
 				        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
@@ -4218,7 +4252,8 @@
 	                    LEFT JOIN view_shipment_ems_4_pm vsep 
 	                        ON vsep.contract_code = vsip.contract_code 
 	                        AND vsep.packId = vsip.packId 
-	                WHERE FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNo#, '-C', ''), "'",''))
+	                WHERE vsip.contract_code in ($sourceContractNo$)
+	                   <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
 	                    AND vsip.barcode = pps.barcode)
 	            ORDER BY transferFlag asc) t
 	            LEFT JOIN `fb_items` fi
@@ -4242,6 +4277,68 @@
            (#[].itemCode#, #[].itemModel#, #[].itemName#)
        </iterate>
     </insert>
+    
+    <!-- 导出过保提醒函 -->
+    <select id="queryOverWarrantyRemindList" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+        SELECT 
+            contractNo, itemCode, 
+            IF(itemModel = IFNULL(itemModel2, itemModel), itemModel, CONCAT(t.itemModel, '\r\n(', itemModel2, ')')) AS itemModel, 
+            IF(itemName = IFNULL(itemName2, itemName), itemName, CONCAT(t.itemName, '\r\n(', itemName2, ')')) AS itemName, 
+            t.qty, t.barCodes, t.warrantyEndTime 
+        FROM
+            (SELECT 
+                contractNo, IF(t.itemCode2 IS NULL, t.itemCode, CONCAT(t.itemCode, '\r\n(', itemCode2, ')')) AS itemCode, 
+                CASE WHEN fi.`itemname` IS NULL OR fi.itemname = '' OR fi.itemname = '/' THEN fi.describe_  ELSE fi.itemname END AS itemModel, 
+                CASE WHEN fi2.`itemname` IS NULL OR fi2.itemname = '' OR fi2.itemname = '/' THEN fi2.describe_  ELSE fi2.itemname END AS itemModel2, 
+                fi.describe_ AS itemName, fi2.describe_ AS itemName2,
+                COUNT(1) AS qty,
+                GROUP_CONCAT(DISTINCT IF(t.barCode2 IS NULL, t.barcode, CONCAT(t.barcode, '(', t.barCode2, ')')) ORDER BY t.barCode SEPARATOR '、' ) AS barCodes, 
+                MIN(vw.warrantyEndTime) AS warrantyEndTime
+            FROM
+                (
+                SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, -1 AS transferFlag, vsip.barcode2 barCode2, vsip.itemcode2 
+                FROM view_shipment_info_4_pm vsip 
+                    LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+                    WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+                        and contractNo in ($contractNo$) and projectId = #projectId#
+                    )
+                <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
+                UNION ALL 
+                SELECT DISTINCT pps.`contractNo`, pps.`barcode`, pps.`itemCode`, pps.transferFlag, sbr.sn2 as barCode2, sbr.item2 
+                FROM pm_project_shipment pps 
+                    LEFT JOIN `fb_shipment_barcode_relation` sbr 
+                        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
+                        AND pps.barcode = sbr.sn1 
+                WHERE contractNo in ($contractNo$) AND projectId = #projectId#
+                     AND EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        view_shipment_info_4_pm vsip 
+                        LEFT JOIN view_shipment_ems_4_pm vsep 
+                            ON vsep.contract_code = vsip.contract_code 
+                            AND vsep.packId = vsip.packId 
+                    WHERE vsip.contract_code in ($sourceContractNo$)
+                        <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
+                        AND vsip.barcode = pps.barcode)
+                <!-- ORDER BY transferFlag asc -->
+                ) t
+                LEFT JOIN `fb_items` fi
+                    ON fi.`item` = t.itemCode
+                LEFT JOIN `fb_items` fi2 
+                    ON fi2.`item` = t.itemCode2 
+                LEFT JOIN `view_warranty` vw
+                    ON vw.contract_code in ($sourceContractNo$)
+                    AND vw.barcode = t.barcode
+            WHERE t.transferFlag != 1
+                AND vw.warrantyEndTime IS NOT NULL
+            GROUP BY t.itemCode, vw.warrantyEndTime) t
+        ORDER BY t.contractNo, t.itemCode, warrantyEndTime, t.qty DESC;
+       <!-- GROUP BY t.itemCode) t
+        ORDER BY t.contractNo, LEFT(t.itemCode, 4) ASC, warrantyEndTime, t.qty DESC; -->
+    </select>
+    
+    
     
     <select id="query_project_notify_list" parameterClass="int" resultClass="com.dp.plat.data.bean.Notification">
         <![CDATA[
@@ -4433,18 +4530,18 @@
                 GROUP BY t.`projectId`, t.`contractNo`) t 
                 LEFT JOIN pm_project_member sales 
                     ON sales.`projectId` = t.projectId 
-                    AND sales.memberRole = 10 
+                    AND sales.memberRole = '10' 
                     AND sales.`effectiveTo` IS NULL 
                 LEFT JOIN pm_project_member pm1 
                     ON pm1.`projectId` = t.projectId 
-                    AND pm1.memberRole = 30 
+                    AND pm1.memberRole = '30' 
                     AND pm1.`effectiveTo` IS NULL 
                     AND pm1.`fromFlag` = 1 
                 LEFT JOIN pm_project_member pm2 
                     ON pm2.`projectId` = t.projectId 
                     AND pm2.`fromFlag` = 2 
                     AND pm2.`effectiveTo` IS NULL 
-                    AND pm2.memberRole = 30 
+                    AND pm2.memberRole = '30' 
                 LEFT JOIN fnd_department fd 
                     ON fd.`departmentNum` = t.officeCode 
         ]]>
@@ -4549,18 +4646,18 @@
                 GROUP BY t.`projectId`, t.`contractNo`) t 
                 LEFT JOIN pm_project_member sales 
                     ON sales.`projectId` = t.projectId 
-                    AND sales.memberRole = 10 
+                    AND sales.memberRole = '10' 
                     AND sales.`effectiveTo` IS NULL 
                 LEFT JOIN pm_project_member pm1 
                     ON pm1.`projectId` = t.projectId 
-                    AND pm1.memberRole = 30 
+                    AND pm1.memberRole = '30' 
                     AND pm1.`effectiveTo` IS NULL 
                     AND pm1.`fromFlag` = 1 
                 LEFT JOIN pm_project_member pm2 
                     ON pm2.`projectId` = t.projectId 
                     AND pm2.`fromFlag` = 2 
                     AND pm2.`effectiveTo` IS NULL 
-                    AND pm2.memberRole = 30 
+                    AND pm2.memberRole = '30' 
                 LEFT JOIN fnd_department fd 
                     ON fd.`departmentNum` = t.officeCode 
         ]]> -->

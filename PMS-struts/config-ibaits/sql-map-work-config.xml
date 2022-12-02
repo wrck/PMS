@@ -262,7 +262,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        FROM
 		            pm_project_member m 
 		        WHERE m.effectiveTo IS NULL 
-		            AND m.memberRole = 60 
+		            AND m.memberRole = '60' 
 		        GROUP BY m.projectId) mm 
 		        ON mm.projectId = t3.projectId 
 			LEFT JOIN fnd_user_info t6 ON t1.`ASSIGNEE_` = t6.`username` AND t6.`status` = 1
@@ -488,7 +488,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    `pm_project_supervision` ps 
 		    LEFT JOIN pm_project_member pm 
 		        ON ps.`projectId` = pm.`projectId` 
-		        AND pm.`memberRole` = 30 
+		        AND pm.`memberRole` = '30' 
 		        AND pm.`effectiveTo` IS NULL 
 		    LEFT JOIN fnd_department d 
 		        ON ps.`officeCode` = d.`departmentNum` 

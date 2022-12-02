@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Date;
 
 public class IndustryAssetLeakRelation extends BaseEntity {
+    private static final long serialVersionUID = -5099520480801461689L;
+
     private Integer id;
 
     // 项目ID

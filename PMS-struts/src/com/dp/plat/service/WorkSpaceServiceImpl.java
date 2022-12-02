@@ -2,6 +2,7 @@ package com.dp.plat.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -344,10 +345,18 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 	public List<ProbParam> queryProbTaskList() {
 		return workspaceDao.queryProbTaskList();
 	}
+	
+	@Override
+    public List<Map<String, Object>> querySubcontractTaskList() {
+        return this.querySubcontractTaskList(Collections.emptyMap());
+    }
 
 	@Override
-	public List<Map<String, Object>> qerySubcontractTaskList() {
+	public List<Map<String, Object>> querySubcontractTaskList(Map<String, String> queryParams) {
 		HashMap<String, Object> params = new HashMap<>();
+		if (queryParams != null) {
+		    params.putAll(queryParams);
+		}
 		UserContext context = UserContext.getUserContext();
 		params.put("assignee", getLoginName());
 		String areaPower = StringUtils.trimToEmpty(context.getUser().getAreapower());
@@ -444,16 +453,43 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 				e.printStackTrace();
 			}
 		}
+		
+		List<Map<String, Object>> apTaskList = new ArrayList<>();
+        if (context.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)) {
+            // params.put("roleGroup", "role_" + MessageUtil.ROLE_FINANCIAL_STAFF);
+            // apTaskList = workspaceDao.querySubcontractTaskList(params);
+            HashMap<String, Object> roleGroup = new HashMap<>();
+            roleGroup.put("roleGroup", "role_" + MessageUtil.ROLE_FINANCIAL_STAFF);
+            roleGroups.add(roleGroup);
+        }
+//		try {
+//    		String[] roleids = StringUtils.split(UserContext.getUserContext().getUser().getRoleids(), ",");
+//    		for (String roleId : roleids) {
+//    		    String role = "role_" + roleId.replaceAll(";", "");
+//    		    HashMap<String, Object> roleGroup = new HashMap<>();
+//                roleGroup.put("roleGroup", role);
+//                roleGroups.add(roleGroup);
+//                
+//                roleGroup = new HashMap<>();
+//                roleGroup.put("roleGroup", role);
+//                roleGroup.put("checkOffice", true);
+//                roleGroups.add(roleGroup);
+//            }
+//		} catch (Exception e) {
+//		    e.printStackTrace();
+//        }
+		
 		params.put("roleGroups", roleGroups);
 		allTaskList = workspaceDao.querySubcontractTaskList(params);
 		allTaskList.addAll(emTaskList);
 		allTaskList.addAll(cbTaskList);
 		allTaskList.addAll(zrTaskList);
+		allTaskList.addAll(apTaskList);
 		allTaskList.addAll(smTaskList);
 		return allTaskList;
 		// return workspaceDao.querySubcontractTaskList(params);
 	}
-
+	
     @Override
     public List<DpActProcDesc> queryProjectSupervisionTask(HashMap params) {
         return workspaceDao.queryProjectSupervisionTask(params);

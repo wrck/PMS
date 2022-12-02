@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class IndustryAssetProjectRelation extends BaseEntity {
 
+    private static final long serialVersionUID = -3089676730138179850L;
+
     private Integer id;
 
     // 项目ID

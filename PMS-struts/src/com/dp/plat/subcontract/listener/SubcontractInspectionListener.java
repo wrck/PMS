@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
@@ -84,9 +86,9 @@ import cn.hutool.core.date.DateUtil;
 @SuppressWarnings({ "rawtypes", "unused", "unchecked" })
 public class SubcontractInspectionListener implements TaskListener {
     private static final long serialVersionUID = 1L;
-    private final static String OBJ_TYPE_SUBCONTRCT = "subcontract";
-    private final static String DATA_TYPE_SUBCONTRACT = "subcontract";
-    private final static String DATA_TYPE_PAYMENT = "payment";
+    public final static String OBJ_TYPE_SUBCONTRCT = "subcontract";
+    public final static String DATA_TYPE_SUBCONTRACT = "subcontract";
+    public final static String DATA_TYPE_PAYMENT = "payment";
 
     private final static String definedVariablesKey = "pm.workflow.subcontractInspection.defineVariable";
     private final static String defaultDefinedVariables = "{}";
@@ -138,9 +140,12 @@ public class SubcontractInspectionListener implements TaskListener {
         if (SubcontractConstant.PROCESS_SUBCONTRACT_KEY.equals(processKey)) {
             if (TaskListener.EVENTNAME_COMPLETE.equals(eventName) && TaskKey.GENERATE_CONTRACT.equals(taskKey)) {
                 Integer subcontractId = delegateTask.getVariable("subcontractId", Integer.class);
-                SubcontractProjectVO subcontract = subcontractService.selectSubcontractProjectVOById(subcontractId);
-                // 推D365采购订单
-                pushPurchaseOrder(subcontract);
+                Integer result = delegateTask.getVariableLocal("result", Integer.class);
+                if (result != null) {
+                    SubcontractProjectVO subcontract = subcontractService.selectSubcontractProjectVOById(subcontractId);
+                    // 推D365采购订单
+                    pushPurchaseOrder(subcontract);
+                }
             }
         } else if (SubcontractConstant.PROCESS_INSPECTION_KEY.equals(processKey)) {
             System.out.println(eventName);
@@ -313,6 +318,7 @@ public class SubcontractInspectionListener implements TaskListener {
         String candidateGroup = (String) currentAssigneeConfig.get("candidateGroup");
         String candidateRole = (String) currentAssigneeConfig.get("candidateRole");
         String permissionProjectTypes = (String) currentAssigneeConfig.get("permissionProjectTypes");
+        boolean checkDep = (boolean) currentAssigneeConfig.getOrDefault("checkDep", false);
         String areaPower = (String) currentAssigneeConfig.get("areaPower");
         String assigneeName = (String) currentAssigneeConfig.get("assigneeName");
         
@@ -329,7 +335,11 @@ public class SubcontractInspectionListener implements TaskListener {
             delegateTask.setAssignee(candidateRole);
         }
         delegateTask.setVariableLocal("startTime", new Date());
+        delegateTask.setVariableLocal("checkDep", checkDep);
         delegateTask.setVariableLocal("areaPower", areaPower);
+//        if (!"all".equals(areaPower)) {
+            delegateTask.setVariableLocal("dpNo", areaPower);
+//        }
         delegateTask.setVariableLocal("projectTypes", permissionProjectTypes);
         if (loopCounter == 0) {
             ExecutionEntity execution = ((TaskEntity) delegateTask).getExecution();
@@ -474,6 +484,7 @@ public class SubcontractInspectionListener implements TaskListener {
         config.put("candidates", candidates);
         config.put("candidateGroup", candidateGroup);
         config.put("candidateRole", candidateRole);
+        config.put("checkDep", checkArea);
         config.put("areaPower", areaPower);
         config.put("permissionProjectTypes", permissionProjectTypes);
         config.put("assigneeCode", StringUtils.join(assigeeCodes, ","));
@@ -544,6 +555,11 @@ public class SubcontractInspectionListener implements TaskListener {
         runtimeService.setVariable(delegateTask.getProcessInstanceId(), "entity", pmWorkFlow);
     }
 
+    /**
+     * 获取定义的数据类型的流程变量
+     * @param dataType
+     * @return
+     */
     private Map<String, Object> getTaskDefinedVariable(String dataType) {
         String definedVars = getSysArg(definedVariablesKey);
         definedVars = StringUtils.defaultIfBlank(definedVars, defaultDefinedVariables);
@@ -553,12 +569,38 @@ public class SubcontractInspectionListener implements TaskListener {
         return taskDefinedVariables;
     }
 
+    /**
+     * 获取定义的数据类型的任务的流程变量
+     * @param dataType
+     * @param taskType
+     * @return
+     */
     private List<Map<String, Object>> getTaskDefinedVariable(String dataType, String taskType) {
         Map<String, Object> definedVariable = this.getTaskDefinedVariable(dataType);
 
         List<Map<String, Object>> taskDefinedVariables = (List<Map<String, Object>>) definedVariable
                 .getOrDefault(taskType, new ArrayList<Map<String, Object>>());
         return taskDefinedVariables;
+    }
+    
+    /**
+     * 获取定义的数据类型的任务审批状态
+     * @param dataType
+     * @param taskType
+     * @return
+     */
+    public static Map<String, String> getTaskApprovedStatusList(String dataType, String taskType) {
+        SubcontractInspectionListener listener = SpringContext.getBean("subcontractInspectionListener", SubcontractInspectionListener.class);
+        List<Map<String, Object>> taskDefinedVariable = listener.getTaskDefinedVariable(dataType, taskType);
+        Map<String, String> approvedStatusMap = new LinkedHashMap<String, String>(taskDefinedVariable.size());
+        approvedStatusMap.put("待审批", "待审批");
+        for (Map<String, Object> var : taskDefinedVariable) {
+            String approvedStatus = var.getOrDefault("taskName", "") + "审批中";
+            approvedStatusMap.put(approvedStatus, approvedStatus);
+        }
+        approvedStatusMap.put("审批驳回", "审批驳回");
+        approvedStatusMap.put("审批通过", "审批通过");
+        return approvedStatusMap;
     }
 
     private List<String> selectActivitiUserMails(String assignee, Set<String> candidates, String candidateGroup,
@@ -618,7 +660,7 @@ public class SubcontractInspectionListener implements TaskListener {
     public void pushPurchaseOrder(SubcontractProject subcontract) {
         Integer subcontractType = subcontract.getType();
         // 获取项目转包推采购订单的配置项
-        String configStr = getSysArg("pm.project.subcontract.pushPurchaseOrder.config");
+        String configStr = getSysArg("sys.d365.api.config");
         configStr = StringUtils.defaultIfBlank(configStr, "{}");
         Map<String, Object> config = JSON.parseObject(configStr, new TypeReference<HashMap<String, Object>>() {});
         boolean enablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
@@ -713,8 +755,8 @@ public class SubcontractInspectionListener implements TaskListener {
                 .projectName((String) subcontract.getSubcontractName()) // 项目名称
                 .projectProgress((String) minProgressProject.getCustomInfoByKey("projectProgress", "0")) // 项目进度
                 .subcontractType((String) config.getOrDefault("typeTag", "用服") + subcontract.getCustomInfoByKey("typeName", subcontractVO.getTypeName())) // 转包类型
-                .subcontStartDate((String) subcontract.getCustomInfoByKey("subcontStartDate")) // 转包周期开始
-                .subcontEndDate((String) subcontract.getCustomInfoByKey("subcontEndDate")) // 转包周期结束
+                .subcontStartDate(StringUtils.trimToNull((String) subcontract.getCustomInfoByKey("subcontStartDate"))) // 转包周期开始
+                .subcontEndDate(StringUtils.trimToNull((String) subcontract.getCustomInfoByKey("subcontEndDate"))) // 转包周期结束
                 .applicant(workNo) // 申请人
                 .workerPurchPlacer(workNo) // 订货人
         ;
@@ -837,7 +879,7 @@ public class SubcontractInspectionListener implements TaskListener {
      */
     public void pushPurchaseReceipt(List<SubcontractPayment> payments) {
         // 获取项目转包推采购订单的配置项
-        String configStr = getSysArg("pm.project.subcontract.pushPurchaseOrder.config");
+        String configStr = getSysArg("sys.d365.api.config");
         configStr = StringUtils.defaultIfBlank(configStr, "{}");
         Map<String, Object> config = JSON.parseObject(configStr, new TypeReference<HashMap<String, Object>>() {});
         boolean enablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));

@@ -17,13 +17,16 @@ public class RenewalIntentionDecorator implements DisplaytagColumnDecorator {
 	
 	static {
 		kvMap = MapUtils.putAll(new HashMap<Integer, String>(),
-				new Object[] { null, "未回访", 0, "无", 1, "有", 2, "待定" });
+				new Object[] { null, "未回访", 0, "无", 1, "有", 2, "待定", 3, "未接听" });
 	}
 
 	@Override
 	public Object decorate(Object columnValue, PageContext pageContext, MediaTypeEnum media)
 			throws DecoratorException {
-		return kvMap.get(columnValue);
+		return getRenewalIntentionName(columnValue);
 	}
 	
+	public static Object getRenewalIntentionName(Object renewalIntention) {
+	    return kvMap.get(renewalIntention);
+	}
 }

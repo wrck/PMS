@@ -48,12 +48,20 @@
 			<s:textfield name="subcontractVO.subcontractName" id="subcontractName"
 				placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
 		</div>
-		<div class="form-group form-group-query form-group-width-1">
-			<dp:fielderror accesskey="errmsg" onlyone="true" />
-			<label for="contractNos">&nbsp;&nbsp;&nbsp;<s:text name="pm.subcontract.contractNos" /></label>
-			<s:textfield name="subcontractVO.contractNos" id="contractNos"
-				 cssStyle="width:163px" cssClass="form-control" placeholder="合同号/转包合同号" />
-		</div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="contractNos">&nbsp;&nbsp;&nbsp;<s:text name="pm.subcontract.contractNos" /></label>
+            <s:textfield name="subcontractVO.contractNos" id="contractNos"
+                 cssStyle="width:163px" cssClass="form-control" placeholder="合同号/转包合同号" />
+        </div>
+        <%-- <s:if test="user.isHasRole(1) || user.isHasRole(10) || user.isHasRole(13) || user.isHasRole(16)"> --%>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="contractNos">采购订单号</label>
+            <s:textfield name="subcontractVO.customStrInfo.purchId" id="contractNos"
+                 cssStyle="width:163px" cssClass="form-control" placeholder="采购订单号" />
+        </div>
+        <%-- </s:if> --%>
 		<div class="form-group form-group-query form-group-width-1">
 			<dp:fielderror accesskey="errmsg" onlyone="true" />
 			<label for="officeCode"><s:text name="pm.subcontract.officeName"/></label>
@@ -108,6 +116,23 @@
                 cssClass="form-control" listKey="basicDataId" listValue="basicDataName"
                 headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
         </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="paymentStatus">付款审批状态</label>
+            <s:select list="commonMap.paymentStatusList" name="subcontractVO.customStrInfo.paymentStatus" id="paid" cssClass="form-control" 
+                headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="paid">付款状态</label>
+            <s:select list="#{0:'待付款',1:'已付款'}" name="subcontractVO.customStrInfo.paid" id="paid" cssClass="form-control" 
+                headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="subcontractOrgId">所属公司</label>
+            <s:select id="subcontractOrgId" list="compList" name="subcontractVO.orgId" cssClass="form-control taskOnly task-generateContractTask" listKey="id" listValueKey="abbr" headerKey="" headerValue="--请选择--"/>
+        </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<button class="btn btn-default btn-sm">
 				<span class="glyphicon glyphicon-search"></span> 查询
@@ -132,10 +157,13 @@
 		<div style="text-align: right;">
 		</div>
 		<!-- 分页，项目列表 -->
-        <display:table name="subcontractVOList" pagesize="${displayParam.pagesize }"
+        <display:table id="subcontractTable" name="subcontractVOList" pagesize="${displayParam.pagesize }"
             export="true" size="${displayParam.totalcount }" sort="external"
             requestURI="${namespace}/subcontract_list.action" decorator="com.dp.plat.decorators.Wrapper"
             class="table table-striped" partialList="true" >
+            <%-- <s:if test="user.isHasRole(1) || user.isHasRole(10) || user.isHasRole(13) || user.isHasRole(16)"> --%>
+            <display:column property="customInfo.purchId" title="采购订单号" headerClass="nowrap"></display:column>
+            <%-- </s:if> --%>
             <display:column property="subcontractNo" titleKey="pm.subcontract.subcontractNo" media="html" style="width:150px"></display:column>
             <display:column property="subcontractName" titleKey="pm.subcontract.subcontractName" style="word-wrap: break-word; white-space: normal; width:300px;" href="${namespace}/subcontract_input.action" paramProperty="id" paramId="subcontract.id" media="html"></display:column>
             <display:column property="contractNos" titleKey="pm.subcontract.contractNos" decorator="com.dp.plat.decorators.ContractNoList" media="html"></display:column>
@@ -168,6 +196,7 @@
             <display:column property="paidRatio" titleKey="pm.subcontract.paidRatio" media="excel"></display:column>
             <display:column property="paidAmountWrapper" titleKey="pm.subcontract.paidAmount" headerClass="nowrap" class="text-right"></display:column>
             <display:column property="paymentTime" titleKey="pm.subcontract.paymentTime" format="{0,date,yyyy-MM-dd HH:mm:ss}" media="excel"></display:column>
+            <display:column class="status nowrap" title="最新付款状态">${subcontractTable.extInfo.status}${subcontractTable.extInfo.paystate != null ? '，'.concat(subcontractTable.extInfo.paystate) : ''}</display:column>
             <display:column property="remark" titleKey="pm.subcontract.remark" media="excel"></display:column>
         </display:table>
 	</div>

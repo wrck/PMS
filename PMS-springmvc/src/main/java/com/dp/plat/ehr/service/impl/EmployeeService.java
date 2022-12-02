@@ -205,6 +205,7 @@ public class EmployeeService extends AbstractBaseService<EmployeeMapper, Employe
 			userEntity.setFirstName(employee.getName());
 			userEntity.setLastName(workNo);
 			userEntity.setEmail(employee.getEmail());
+			userEntity.setPassword(user.getUserName());
 //			identityService.saveUser(userEntity);
 			insertOrUpdateActivitiUser(userEntity);
 		}

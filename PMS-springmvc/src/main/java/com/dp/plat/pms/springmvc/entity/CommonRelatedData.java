@@ -1,8 +1,9 @@
 package com.dp.plat.pms.springmvc.entity;
 
-import java.util.Map;
-import com.dp.plat.core.entity.BaseEntity;
 import java.util.Date;
+import java.util.Map;
+
+import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 

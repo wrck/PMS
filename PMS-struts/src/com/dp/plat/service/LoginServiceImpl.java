@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.ServletActionContext;
+
 import com.dp.plat.context.HttpContext;
 import com.dp.plat.dao.LoginDao;
 import com.dp.plat.data.bean.Role;
@@ -21,10 +24,19 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 	public boolean login(LoginParam loginParam, String ip) {
 		boolean result = false;
 		try {
+		    String envirment = loginDao.querySysArg("sys.envirment.argu");
+		    //验证码
+		    if("1".equals(envirment)){
+		        String validation = StringUtils.trimToEmpty(loginParam.getValidation());
+		        String captchaCode = (String) ServletActionContext.getRequest().getSession().getAttribute("rand");
+		        if(!validation.equals(captchaCode)){
+		            addErrmsg(StringEscUtil.getText("sys.errorchecknum"));
+		            return result;
+		        }
+		    }
 			String username = loginParam.getUsername();
 			User user = loginDao.querUser(username);
 			//判断用户密码是否正确
-			String envirment = loginDao.querySysArg("sys.envirment.argu");
 			String pwd = loginParam.getPassword();
 			if(!"1".equals(envirment) && user != null){// 测试环境忽略密码
 				pwd = user.getPassword();

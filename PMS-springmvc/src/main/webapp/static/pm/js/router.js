@@ -1754,6 +1754,23 @@ workflow = function() {
 	});
 	return $router;
 }();
+$.initRouter("workflowTask");
+workflowTask = function() {
+	var namespace =  ctx + "/workflow/task";
+	var commonRouter = pm.common(namespace);
+	var $router = $.extend(true, {}, commonRouter, {
+		api:((namespace) => {
+			return {
+			};
+		})(namespace),
+		html: ((namespace) => {
+			return {
+			};
+		})(namespace),
+		callback: workflow.callback,
+	});
+	return $router;
+}();
 
 router.getDownload = function(url, isInner) {
 	if(!url) {

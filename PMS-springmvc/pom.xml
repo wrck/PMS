@@ -24,14 +24,45 @@
 		<!-- 阿里easyExcel版本 -->
 		<!-- <easyexcel.version>2.1.6</easyexcel.version> -->
 		<easyexcel.version>3.1.1</easyexcel.version>
+		<!-- hutool -->
+		<hutool.version>5.7.20</hutool.version>
 	</properties>
 	
 	<dependencies>
+	    <dependency>
+	    	<groupId>com.dp.plat</groupId>
+	    	<artifactId>MyBatisGenerator</artifactId>
+	    	<version>0.0.1-RELEASE</version>
+	    	<scope>test</scope>
+	    </dependency>
+
+	    <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>activiti-api-unifytask-mybatis</artifactId>
+            <!-- <version>5.14</version> -->
+            <version>5.22.0.v20220902</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.activiti</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 	    <dependency>
 	       <groupId>com.dp.plat</groupId>
 	       <artifactId>pms-ext-d365</artifactId>
 	       <version>${project.version}</version>
 	    </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-core</artifactId>
+            <version>${hutool.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-http</artifactId>
+            <version>${hutool.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>MyBatisGenerator</artifactId>
@@ -139,6 +170,9 @@
 				<exclusion>
 					<groupId>com.dp.plat</groupId>
 					<artifactId>activiti-api-unifytask-patch</artifactId>
+				</exclusion>
+				<exclusion>
+		            <groupId>cn.hutool</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>

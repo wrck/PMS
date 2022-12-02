@@ -124,7 +124,10 @@
 	    				 			if ((permissionType == "all" 
 	    				 					|| permissionType == "edit" && RegExp(/:(add|edit|upload|delete|import)\b,?/).test(permission) 
 	    				 					|| (permissionType == "edit" || permissionType == "view") && RegExp(/:(list|detail|download|batchDownload)\b,?/).test(permission))
-	    				 					&& ($.inArray(permission, permissions) > -1 || $.inArray(model + ":*", permissions) > -1)) {
+	    				 					&& ($.inArray(permission, permissions) > -1
+	    				 							|| (btn != 'import' && $.inArray(model + ":*", permissions) > -1)
+    				 						)
+		 							) {
 	    				 				isPermit = true;
 	    							}
 	    				 			if (typeof checkPermitCallback == 'function') {

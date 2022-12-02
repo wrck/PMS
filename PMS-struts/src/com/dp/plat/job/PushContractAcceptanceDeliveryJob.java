@@ -24,7 +24,6 @@ import com.dp.plat.context.SpringContext;
 import com.dp.plat.pms.extend.d365.util.D365Api;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.ProjectService;
-import com.dp.plat.subcontract.service.SubcontractService;
 import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
@@ -54,11 +53,11 @@ public class PushContractAcceptanceDeliveryJob implements Job {
         }
         BasicDataService basicDataService = ctx.getBean("basicDataService", BasicDataService.class);
         // 获取项目转包推采购订单的配置项
-        String configStr = basicDataService.querySysArg("pm.project.subcontract.pushPurchaseOrder.config");
+        String configStr = basicDataService.querySysArg("sys.d365.api.config");
         configStr = StringUtils.defaultIfBlank(configStr, "{}");
         Map<String, Object> config = JSON.parseObject(configStr, new TypeReference<HashMap<String, Object>>() {});
-        boolean enablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
-        if (!enablePushPurchaseOrder) {
+        boolean enablePushContractAcceptanceDelivery = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushContractAcceptanceDelivery"))));
+        if (!enablePushContractAcceptanceDelivery) {
             return;
         }
         
@@ -73,8 +72,9 @@ public class PushContractAcceptanceDeliveryJob implements Job {
 		paramMap.put("refreshFrom", new Date());
 		Object obj = sqlMap.insert("insert_fnd_data_refresh_log", paramMap);
 		try {
-		    // 查询7天内发生变化的交付件信息
-		    paramMap.put("dateDiff", 90);
+		    // 查询30天内发生变化的交付件信息
+		    Integer dateDiff = (Integer) config.getOrDefault("acceptanceDeliveryDiff", 30);
+		    paramMap.put("dateDiff", dateDiff);
 		    ProjectService projectService = SpringContext.getBean("projectService", ProjectService.class);
 			List<Map<String, Object>> list = projectService.selectContractAcceptanceDeliveryInfo(paramMap);
 			// 按账套，合同分组
@@ -83,27 +83,43 @@ public class PushContractAcceptanceDeliveryJob implements Job {
 			    String contractNo = (String) line.get("contractNo");
 			    String dataAreaId = (String) line.get("dataAreaId");
 			    Map<String, List<Map<String, Object>>> contractMap = dataContractMap.getOrDefault(dataAreaId, new HashMap<String, List<Map<String,Object>>>());
-			    List<Map<String, Object>> lines = contractMap.getOrDefault(line.get("contractNo"), new ArrayList<Map<String,Object>>());
+			    List<Map<String, Object>> lines = contractMap.getOrDefault(contractNo, new ArrayList<Map<String,Object>>());
 			    lines.add(line);
 			    contractMap.put(contractNo, lines);
 			    dataContractMap.put(dataAreaId, contractMap);
             }
 			
+			Map<String, Map<String, List<Map<String, Object>>>> successMap = new HashMap<String, Map<String, List<Map<String,Object>>>>();
+			Map<String, Map<String, List<Map<String, Object>>>> errorMap = new HashMap<String, Map<String, List<Map<String,Object>>>>();
 			for (Entry<String, Map<String, List<Map<String, Object>>>> dataMap : dataContractMap.entrySet()) {
 			    String dataAreaId = dataMap.getKey();
 			    Map<String, List<Map<String, Object>>> contractMap = dataMap.getValue();
 			    for (Entry<String, List<Map<String, Object>>> linesMap : contractMap.entrySet()) {
 			        String contractNo = linesMap.getKey();
 			        List<Map<String, Object>> lines = linesMap.getValue();
-			        D365Api.pushContractAcceptanceDeliveryInfo(dataAreaId, contractNo, lines, config);
+			        
+			        Map<String, Map<String, List<Map<String, Object>>>> resultMap = successMap;
+			        try {
+			            D365Api.pushContractAcceptanceDeliveryInfo(dataAreaId, contractNo, lines, config);
+			            resultMap = successMap;
+                    } catch (Exception e) {
+                        contractNo = contractNo + StringUtils.trimToEmpty(e.getMessage());
+                        resultMap = errorMap;
+			        }
+			        Map<String, List<Map<String, Object>>> result = resultMap.getOrDefault(dataAreaId, new HashMap<String, List<Map<String,Object>>>());
+			        result.put(contractNo, lines);
+			        resultMap.put(dataAreaId, result);
                 }
             }
+			Map<String, Map<String, Map<String, List<Map<String, Object>>>>> resultMap = new HashMap<String, Map<String,Map<String,List<Map<String,Object>>>>>();
+			resultMap.put("success", successMap);
+			resultMap.put("error", errorMap);
+			paramMap.put("refreshException", JSON.toJSONString(resultMap));
 			
 			// 更新成功日志
 			paramMap.put("id", Integer.parseInt(obj.toString()));
 			paramMap.put("refreshTo", new Date());
 			paramMap.put("refreshState", 1);
-			sqlMap.update("update_fnd_data_refresh_log_success", paramMap);
 		} catch (Exception e) {
 			e.printStackTrace();
             if (sqlMap != null) {
@@ -116,8 +132,8 @@ public class PushContractAcceptanceDeliveryJob implements Job {
 			// 更新失败日志
 			paramMap.put("refreshException", ExceptionUtils.getStackTrace(e));
 			paramMap.put("id", Integer.parseInt(obj.toString()));
-			sqlMap.update("update_fnd_data_refresh_log_fail", paramMap);
 		} finally {
+		    sqlMap.update("update_fnd_data_refresh_log", paramMap);
 			sqlMap.endTransaction();
 		}
 	}

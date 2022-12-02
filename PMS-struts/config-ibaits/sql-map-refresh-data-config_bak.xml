@@ -392,11 +392,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             INSERT INTO pm_project_member(projectId , memberRole ,memberCode , memberName , phoneNum ,email ,fromFlag ,createTime ,effectiveFrom )          
             SELECT t1.`projectId` , 10 ,t3.`salesManCode` ,t3.`salesManName`, t4.salesManTel, t4.salesmanMail,1 , NOW() ,NOW() 
             FROM pm_project_header t1
-            JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NOT NULL AND t2.`memberRole` = 10
+            JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NOT NULL AND t2.`memberRole` = '10'
             LEFT JOIN pm_project_property_from_sms t3 ON LEFT(t1.projectCode ,14 )  = LEFT(t3.projectCode ,14 )
             LEFT JOIN pm_person_from_oa t4 ON t4.salesmanCode = RIGHT(t3.`salesManCode` ,5)
             JOIN ( 
-                SELECT MAX(id) AS memberId,projectId FROM pm_project_member WHERE memberRole = 10  GROUP BY projectId 
+                SELECT MAX(id) AS memberId,projectId FROM pm_project_member WHERE memberRole = '10'  GROUP BY projectId 
              ) t  ON t1.projectId = t.projectId AND t2.id = t.memberId
             WHERE t1.`projectState` IN (30,31,32)  AND t2.`memberCode` != t3.`salesManCode` 
         ]]>

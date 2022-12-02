@@ -27,6 +27,8 @@
         $("#createUser").autocomplete({
             source: realnameArr
         }); */
+        
+        showNextCallbackTips();
     });
     function updateProject(obj){
         window.open("${namespace}/ProjectModify.action?project.paramId="+obj + "&result=315");
@@ -72,31 +74,70 @@
             }
         }
     } */
-    function showProjectWarranty(customerName, params) {
-    	customerName = customerName || "";
+    function getFormParams(customerName, params, formatToJson) {
     	var params = params || {};
-    	params["projectWarrantyCallback.customerNameNotFuzzy"] = customerName;
-    	var paramArray = $("#mainForm").serializeArray() || [];
-    	for ( var name in params) {
-    	    var value = params[name];
-    	    var index = 0;
-    	    var length = paramArray.length;
-    	    for (index = 0; index < length; index++) {
-				var item = paramArray[index];
-    	        var k = item.name;
-    	        if (k == name) {
-    	            item.value = value;
-    	            break;
-    	        }/*  else if (item.value == "") {
-    	        	paramArray[index] = undefined;
-    	        } */
-    	    }
-    	    if (index == length) {
-    	    	paramArray.push({name: name, value: value});
-    	    }
-    	}
-    	var search = $.param(paramArray);
-    	popWindow("module/sub/warrantyCallback_projectWarranty.action?" + search, "95vw", 600, "维保回访");
+        if (!(customerName === null)) {
+            customerName = customerName || "";
+            params["projectWarrantyCallback.customerNameNotFuzzy"] = customerName;
+        }
+        var paramArray = $("#mainForm").serializeArray() || [];
+        for (var name in params) {
+            var value = params[name];
+            var index = 0;
+            var length = paramArray.length;
+            for (index = 0; index < length; index++) {
+                var item = paramArray[index];
+                var k = item.name;
+                if (k == name) {
+                    item.value = value;
+                    break;
+                }/*  else if (item.value == "") {
+                    paramArray[index] = undefined;
+                } */
+            }
+            if (index == length) {
+                paramArray.push({name: name, value: value});
+            }
+        }
+        return paramArray;
+    }
+    function showNextCallbackTips() {
+    	var storeKey = location.pathname + "_tipDayDiff";
+    	var dayDiff = Number(localStorage.getItem(storeKey)) || 7;
+        $("#tipDayDiff").val(dayDiff);
+        
+    	$("#tipDayDiff").off("change");
+        $("#tipDayDiff").change(function() {
+        	localStorage.setItem(storeKey, $(this).val());
+        	showNextCallbackTips();
+        })
+        var currentDate = new Date();
+        var startDate = new Date();
+        var endDate = new Date();
+        startDate = new Date(startDate.setDate(currentDate.getDay() - 1 - dayDiff ));
+        endDate = new Date(endDate.setDate(currentDate.getDay() - 1 + dayDiff ));
+
+        endDate = endDate.format('yyyy-MM-dd');
+        startDate = startDate.format('yyyy-MM-dd');
+        console.log(startDate, endDate);
+        var queryStr = `{
+            'projectWarrantyCallback.nextCallbackTimeStart': '\${startDate}',
+            'projectWarrantyCallback.nextCallbackTimeEnd': '\${endDate}'
+        }`.replace(/\s/g, '');
+        var query = getFormParams(null, eval(`(\${queryStr})`));
+        $.ajax({
+            url:'${namespace}/s/warrantyCallbackAjax_projectWarranty.action?result=queryCount',
+            type:'post',
+            data: query,
+            success: function(data) {
+                var result = data.result;
+                $("#nextCallbackTips").html(`<a href="javascript:void(0)" onclick="showProjectWarranty(null, \${queryStr})">下次回访日期\${startDate}~\${endDate}，共\${result}个项目</a>`);
+            }
+        });
+    }
+    function showProjectWarranty(customerName, params) {
+    	var search = $.param(getFormParams(customerName, params));
+    	popWindow("module/sub/warrantyCallback_projectWarranty.action?" + search, "95vw", 600, "维保回访", "CustomerProject", true);
     }
 </script>
 </head>
@@ -165,8 +206,17 @@
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="renewalIntention"><s:text name="pm.project.warrantyCallback.renewalIntention" /></label>
-            <s:select list="#{-1: '未回访', 1: '有', 0: '无', 2: '待定'}" name="projectWarrantyCallback.renewalIntentionInt" id="renewalIntention"
+            <s:select list="#{-1: '未回访', 1: '有', 0: '无', 2: '待定', 3: '未接听'}" name="projectWarrantyCallback.renewalIntentionInt" id="renewalIntention"
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="phoneAnswerState"><s:text name="pm.project.warrantyCallback.phoneAnswerState" /></label>
+            <s:select name="projectWarrantyCallback.customStrInfo.phoneAnswerState" id="phoneAnswerState"
+                listKey="basicDataId" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px;"
+                listValue="basicDataName" list="%{cbForm.phoneAnswerStates}"
+                theme="simple" />
         </div>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
@@ -203,12 +253,16 @@
     </div>
     <div>
 	    <s:if test="%{projectWarrantyCallback.hasPower == true}">
-	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarranty.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'BudgetUpload', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
+	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarranty.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'ProjectWarranty', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
 	            <span class="glyphicon glyphicon-list" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;项目列表</span>
 	        </button>
-	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarrantyCallback.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'BudgetUpload', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
+	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarrantyCallback.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'ProjectWarrantyCallback', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
 	            <span class="glyphicon glyphicon-list" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;回访记录</span>
 	        </button>
+            <div style="display:inline-block;">
+                <span>提示间隔<input class="form-control" id='tipDayDiff' placeholder="7" style="display: inline;width: 3em;height: 2em;padding:0;text-align:center;"/>天：</span>
+                <span id="nextCallbackTips"></span>
+            </div>
 	    </s:if>
     </div>
     <div>

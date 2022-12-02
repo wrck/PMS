@@ -130,6 +130,16 @@ td a:VISITED {
 			$(".writeTxt").attr("disabled", "true");
 		}
 		
+		// 闭环或者不予跟踪项目允许更新代理商和客户信息
+		if($.inArray("<s:property value='project.projectState'/>", ["20", "100"]) > -1 &&
+            (("<s:property value ='user.isHasRole(11)'/>" == "true" && servicename == loginname) //服务经理
+                 || ("<s:property value ='user.isHasRole(12)'/>" == "true" && (loginname == pm || loginname == pmb)) //项目经理
+                 || ("<s:property value ='user.isHasRole(13)'/>" == "true") // 工程管理部
+            )
+        ) {
+            $("#saveBtn").removeAttr("disabled");
+        }
+		
 		$(".dailishang").hide();
 		
 		$(".dailishanghide").show();
@@ -1114,7 +1124,7 @@ td a:VISITED {
 			$("#memberRole"+obj).focus();
 			return false;
 		}
-		if(memberRole == 60 && phoneNum == ""){//最终客户必填电话信息
+		if(memberRole == '60' && phoneNum == ""){//最终客户必填电话信息
 			alert("最终客户必须填写电话信息");
 			$("#phoneNum"+obj).focus();
 			return false;
@@ -1698,6 +1708,10 @@ td a:VISITED {
 		var projectId = $("#projectId").val();
         window.open("module/exportSpotCheck.action?projectId=" + projectId);
 	}
+	function exportOverWarrantyRemind() {
+        var projectId = $("#projectId").val();
+        window.open("module/exportOverWarrantyRemind.action?projectId=" + projectId);
+    }
 	/* ###########################序列号明细######################################## */
     /* ###########################局点信息，软件版本######################################## */
 	var flag3 = true;
@@ -2074,11 +2088,11 @@ td a:VISITED {
 			<label for="notGrantTailCause" style="width: 90px;"><span class="redmark">*</span><s:text name="pm.project.notGrantTailCause" /></label>
 			<s:textarea cssClass="form-control" rows="3" name="project.column008" id="notGrantTailCause" cssStyle="width: 400px;" placeholder="不予跟踪原因..." ></s:textarea>
 		</div>
-		<s:if test="%{project.projectState != '100'}">
+		<%-- <s:if test="%{project.projectState != '100'}"> --%>
 			<div class="form-group form-group-query dailishanghide" >
-				<button type="button" onclick="checkSubmit()" class="btn btn-info btn-block writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.btn"></s:text></button>
+				<button id="saveBtn" type="button" onclick="checkSubmit()" class="btn btn-info btn-block writeTxt submitBtn" style="width: 80px;"><s:text name="pm.project.btn"></s:text></button>
 			</div>
-		</s:if>
+		<%-- </s:if> --%>
 		<s:if test="%{ (user.getUsername() == project.programManagerCode || user.getUsername() == project.programManagerCodeB ) || user.getUsername() == project.serviceManagerCode}">
 			<div class="form-group form-group-query  dailishang" >
 					<button type="button" onclick="back20Submit_service()" class="btn btn-default btn-block submitBtn" style="width: 100px;"><s:text name="不予跟踪"></s:text></button>

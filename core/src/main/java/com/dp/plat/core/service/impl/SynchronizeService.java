@@ -48,6 +48,9 @@ public class SynchronizeService implements ISynchronizeService {
 	 */
 	@Override
 	public void insertSyncLog(SyncLog syncLog) {
+	    if (syncLog == null) {
+            return;
+        }
 		synchronizeMapper.insertSyncLog(syncLog);
 	}
 

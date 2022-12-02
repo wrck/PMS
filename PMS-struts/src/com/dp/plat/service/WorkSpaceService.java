@@ -114,12 +114,19 @@ public interface WorkSpaceService extends BaseService {
 	 * 查询项目转包任务
 	 * @return
 	 */
-	List<Map<String, Object>> qerySubcontractTaskList();
+	List<Map<String, Object>> querySubcontractTaskList();
+	/**
+     * 查询项目转包任务
+     * @return
+     */
+	List<Map<String, Object>> querySubcontractTaskList(Map<String, String> queryParams);
 
 
     /**
      * @param hashMap
      */
     List<DpActProcDesc> queryProjectSupervisionTask(HashMap hashMap);
+
+
 
 }

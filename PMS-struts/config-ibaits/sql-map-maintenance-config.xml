@@ -1099,7 +1099,7 @@
 	        ON s.`projectId` = m.`projectId` 
 	        AND s.`projectType` = m.`projectType` 
 	        AND m.`projectType` = 10 
-	        AND s.`memberRole` = 10 
+	        AND s.`memberRole` = '10' 
 	        AND s.`effectiveTo` IS NULL 
 	    LEFT JOIN `pm_presales_project_header` prh 
 	        ON prh.`presalesId` = m.`projectId` 

@@ -110,7 +110,7 @@ public class DispatchSettlementService extends AbstractBaseService<DispatchSettl
         temp.setYear(year);
         temp.setQuarter(quarter);
         temp.setMonth(month);
-        temp.setSettled(true);
+//        temp.setSettled(true);
         temp.setConfirmTime(new Date());
 //        temp.setSettleSeq(generateSettleSeq(settlement));
         // 派单执行中

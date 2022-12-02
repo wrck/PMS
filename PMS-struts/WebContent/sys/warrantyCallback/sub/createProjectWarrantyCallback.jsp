@@ -101,6 +101,13 @@ a span {
 			$("#quesnaireState").val(1);
 			$("#cbCLForm").submit();
 		});
+		// 单选题默认选中最后一个
+		$("#cbCLDiv .content_pm_proplem").each(function() {
+			var $radio = $(this).find('[type="radio"]');
+			if ($radio.length > 0 && !$radio.is(":checked")) {
+				$radio.last().prop("checked", true);
+			}
+		})
 		
 		//submitFlow
 		$("#submitButton").click(function(){
@@ -166,13 +173,39 @@ a span {
 		}
 		adjustFrame();
 		
-		//date_picker3("processTime");
+		$(document).on("change", ".fillHiddenName:input", function() {
+            var $this = $(this);
+            var isSelect = $this.is("select");
+            var isRadio = $this.is("[type=radio]");
+            var text = "";
+            if (isSelect) {
+                text = $this.find("option:selected").text();
+            } else if (isRadio) {
+                text = $this.parent().find("[for='" + $this.attr("id") + "']").text();
+            }
+            text = $.trim(text);
+            console.log(text);
+            
+            $(this).siblings("[type='hidden']").val(text);
+        })
+		
+		// 续保意向：3为未接听，接听状态：<0，则刷新对应时间
+		var renewalIntention = "${projectWarrantyCallback.renewalIntention}";
+		var phoneAnswerState = "${projectWarrantyCallback.customStrInfo.phoneAnswerState}" || "0";
+		var canEdit = '${projectWarrantyCallback.canEdit()}';
 		date_picker3("callbackTime");
+		var currentTime = new Date();
         $("#callbackTime").datepicker('option',{showButtonPanel:true});
+        if (!$("#callbackTime").val() || canEdit == 'true') {
+        	$("#callbackTime").datepicker("setDate", currentTime);
+        }
         
         date_picker3("nextCallbackTime");
+        var nextOffsetDay = 180;
         $("#nextCallbackTime").datepicker('option',{showButtonPanel:true});
-		
+        if (!$("#nextCallbackTime").val() || canEdit == 'true') {
+            $("#nextCallbackTime").datepicker("setDate", nextOffsetDay);
+        }
 		<%-- uploadCallback("${projectWarrantyCallback.deliverFileIds}"); --%>
 	});
 	var uploadDialog = 'AjaxUpload';
@@ -374,7 +407,17 @@ a span {
                         </tr>
                         <tr>
                             <td class="tag tag-must"><s:text name="pm.project.warrantyCallback.renewalIntention"></s:text>:</td>
-                            <td><s:radio list="#{0:'无', 1:'有', 2:'待定'}" id="renewalIntention" name="projectWarrantyCallback.renewalIntention"/></td>
+                            <td>
+                                <s:radio list="#{0:'无', 1:'有', 2:'待定'}" id="renewalIntention" name="projectWarrantyCallback.renewalIntention" cssClass="fillHiddenName" listCssClass="fillHiddenName"/>
+                                <s:hidden name="projectWarrantyCallback.customStrInfo.renewalIntentionName"></s:hidden>
+                            </td>
+                            <td class="tag tag-must"><s:text name="接听情况"></s:text>:</td>
+                            <td>
+                                <s:radio list="#{10:'已接听', -10:'拒接', -20:'无效号码', -30: '联系方式失效'}" id="phoneAnswerState" name="projectWarrantyCallback.customStrInfo.phoneAnswerState" cssClass="fillHiddenName" listCssClass="fillHiddenName"/>
+                                <s:hidden name="projectWarrantyCallback.customStrInfo.phoneAnswerStateName"></s:hidden>
+                            </td>
+                        </tr>
+                        <tr>
                             <td class="tag"><s:text name="pm.remark"></s:text>:</td>
                             <td><s:textarea name="projectWarrantyCallback.remark" cssClass="form-control"/></td>
                         </tr>

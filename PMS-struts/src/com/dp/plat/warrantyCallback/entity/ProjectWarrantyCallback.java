@@ -1,12 +1,14 @@
 package com.dp.plat.warrantyCallback.entity;
 
 import java.util.Date;
-import java.util.Map;
 
+import com.dp.plat.data.bean.CustomInfoEntity;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class ProjectWarrantyCallback {
+public class ProjectWarrantyCallback extends CustomInfoEntity {
+    private static final long serialVersionUID = -1247085251106221811L;
+
     // 项目维保回访问卷表
     private Integer id;
 
@@ -101,8 +103,6 @@ public class ProjectWarrantyCallback {
 
     @JsonSerialize(using = JsonSerializer.class)
     private Date updateTime;
-
-    private Map customInfo;
 
     /**
      * 获取项目维保回访问卷表
@@ -646,17 +646,4 @@ public class ProjectWarrantyCallback {
         this.updateTime = updateTime;
     }
 
-    /**
-     * @return customInfo
-     */
-    public Map getCustomInfo() {
-        return customInfo;
-    }
-
-    /**
-     * @param customInfo
-     */
-    public void setCustomInfo(Map customInfo) {
-        this.customInfo = customInfo;
-    }
 }

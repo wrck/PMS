@@ -1,13 +1,25 @@
 package com.dp.plat.pms.springmvc.entity;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectInputStream.GetField;
+import java.io.ObjectStreamClass;
+import java.io.ObjectStreamField;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.Map;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.util.ReflectionUtils;
 
 import com.dp.plat.core.entity.BaseEntity;
 import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class DispatchSettlement extends BaseEntity {
+    private static final long serialVersionUID = -1847087742463025236L;
 
     private Integer id;
 
@@ -56,7 +68,7 @@ public class DispatchSettlement extends BaseEntity {
     private Integer state;
 
     // sse报销单审批行ID
-    private Integer sseId;
+    private Long sseId;
 
     // 结算年份
     private Integer year;
@@ -357,7 +369,7 @@ public class DispatchSettlement extends BaseEntity {
      *
      * @return sseId - sse报销单审批行ID
      */
-    public Integer getSseId() {
+    public Long getSseId() {
         return sseId;
     }
 
@@ -366,8 +378,22 @@ public class DispatchSettlement extends BaseEntity {
      *
      * @param sseId sse报销单审批行ID
      */
-    public void setSseId(Integer sseId) {
+    public void setSseId(Long sseId) {
         this.sseId = sseId;
+    }
+    
+    /**
+     * 设置sse报销单审批行ID
+     *
+     * @param sseId sse报销单审批行ID
+     * 
+     * @deprecated 兼容历史序列化字段
+     */
+    @Deprecated
+    public void setSseId(Integer sseId) {
+        if (sseId != null) {
+            this.sseId = Long.valueOf(sseId);
+        }
     }
 
     /**
@@ -532,5 +558,32 @@ public class DispatchSettlement extends BaseEntity {
      */
     public void setSettled(Boolean settled) {
         this.settled = settled;
+    }
+    
+    private void readObject(final ObjectInputStream ois) throws IOException, ClassNotFoundException {
+//        Method method = ReflectionUtils.findMethod(ois.getClass(), "readClassDescriptor");
+//        method.setAccessible(true);
+//        ObjectStreamClass desc = (ObjectStreamClass) ReflectionUtils.invokeMethod(method, ois);
+        GetField readFields = ois.readFields();
+        ObjectStreamClass desc = readFields.getObjectStreamClass();
+        ObjectStreamField[] fields = desc.getFields();
+        for (ObjectStreamField field : fields) {
+            String fieldName = field.getName();
+            Object value = readFields.get(fieldName, null);
+            if (value == null) {
+                continue;
+            }
+            String methodName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+            Method method = ReflectionUtils.findMethod(this.getClass(), methodName, value.getClass());
+            if (method == null) {
+                method = ReflectionUtils.findMethod(this.getClass(), methodName, null);
+            }
+            try {
+                method.setAccessible(true);
+                method.invoke(this, value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

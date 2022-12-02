@@ -26,7 +26,7 @@
 		</commentGenerator>
 		<!-- 数据库配置 -->
 		<jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
-			connectionURL="jdbc:mysql:///dpafpms_1?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
+			connectionURL="jdbc:mysql:///dppms_d365_check?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=GMT%2B8"
 			userId="root" password="!Q@W3e4r" >
 			<!-- mysql 6以上，该参数默认为false,会导致不指定catalog时出现无法生成主键查询的问题 -->
 			<property name="nullCatalogMeansCurrent" value="true" />
@@ -53,15 +53,15 @@
             targetProject="src/main/java" implementationPackage="com.dp.plat.pms.springmvc.service.impl">
         </javaServiceGenerator>
         <!--生成对应表及类名 -->
-		<table tableName="pm_facilitator" domainObjectName="Facilitator"
+		<table tableName="pm_dispatch_project_settlement_from_d365" domainObjectName="PurchaseReceiptSettlement"
 			enableInsert="true" enableSelectByPrimaryKey="true"
 			enableUpdateByPrimaryKey="true" enableDeleteByPrimaryKey="true"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false" delimitAllColumns="true">
-			<property name="tableAlias" value="f" />
+			<property name="tableAlias" value="prs" />
 			<property name="useActualColumnNames" value="true" />
-			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+			<generatedKey column="slipId" sqlStatement="Mysql" identity="true" />
 		</table>
 	</context>
 </generatorConfiguration>

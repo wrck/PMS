@@ -124,9 +124,10 @@ public class D365Api {
 		    try {
 		        String expiresOn = cachedToken.getExpiresOn();
 		        if (StringUtils.isBlank(expiresOn) && cachedToken.getExpiresIn() != null) {
-		            long timeInMillis = Calendar.getInstance().getTimeInMillis();
+		            long timeInMillis = cachedToken.getTimestamp() != null ? Long.parseLong(cachedToken.getTimestamp()) : Calendar.getInstance().getTimeInMillis();
 		            long expiresIn = Long.parseLong(cachedToken.getExpiresIn());
 		            expiresOn = String.valueOf(timeInMillis / 1000 + expiresIn);
+		            cachedToken.setExpiresOn(expiresOn);
 		        }
     			long expiresOnTimeInMillis = Long.parseLong(expiresOn) * 1000;
     			if (expiresOnTimeInMillis >= Calendar.getInstance().getTimeInMillis()) {
@@ -145,6 +146,7 @@ public class D365Api {
 		TokenResponse tokenResponse = postForm(tokenUrl, request, false);
 		if (tokenResponse != null  && tokenResponse.getError() == null && tokenResponse.getAccessToken() != null) {
 			cachedToken = tokenResponse;
+			cachedToken.setTimestamp(String.valueOf(Calendar.getInstance().getTimeInMillis()));
 		} else {
 			cachedToken = null;
 		}
@@ -368,6 +370,7 @@ public class D365Api {
         Request<Response> request = new Request<Response>();
         HashMap<String, Object> requestBody = new HashMap<String, Object>();
         requestBody.put("dataAreaId", dataAreaId);
+        requestBody.put("contract", contractNo);
         requestBody.put("line", lines);
         request.setRequest(requestBody);
         Response response = D365Api.postBody((String) config.get("paymentSchedUrl"), request);

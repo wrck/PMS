@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class IndustryLeakWarning extends BaseEntity {
 
+    private static final long serialVersionUID = -1495701291361861604L;
+
     private Integer id;
 
     // 漏洞名称

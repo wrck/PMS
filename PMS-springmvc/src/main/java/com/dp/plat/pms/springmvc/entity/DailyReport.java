@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class DailyReport extends BaseEntity {
 
+    private static final long serialVersionUID = -6420208791089443784L;
+
     // 项目头信息主键
     private Integer projectId;
 

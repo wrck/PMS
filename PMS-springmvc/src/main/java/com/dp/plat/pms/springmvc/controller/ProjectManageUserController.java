@@ -310,8 +310,9 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		UserEntity userEntity = new UserEntity();
 		userEntity.setId(userInfo.getId().toString());
 		userEntity.setFirstName(userInfo.getRealName());
-		userEntity.setLastName(user.getUserName());
+		userEntity.setLastName(userInfo.getWorkNo());
 		userEntity.setEmail(userInfo.getEmail());
+		userEntity.setPassword(user.getUserName());
 //					identityService.saveUser(userEntity);
 		projectManageUserService.insertOrUpdateActivitiUser(userEntity);
 
@@ -451,8 +452,9 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		UserEntity userEntity = new UserEntity();
 		userEntity.setId(userInfo.getId().toString());
 		userEntity.setFirstName(userInfo.getRealName());
-		userEntity.setLastName(user.getUserName());
+		userEntity.setLastName(userInfo.getWorkNo());
 		userEntity.setEmail(userInfo.getEmail());
+		userEntity.setPassword(user.getUserName());
 //					identityService.saveUser(userEntity);
 		projectManageUserService.insertOrUpdateActivitiUser(userEntity);
 		// return "redirect:" + Consts.URLPath.SYSTEM_MANAGER + "user/" + userId

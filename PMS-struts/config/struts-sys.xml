@@ -345,6 +345,15 @@
             </result>
         </action>
         
+        <action name="exportOverWarrantyRemind" class="ProjectAction" method="exportOverWarrantyRemind">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream;charset=ISO8859-1</param>
+                <param name="contentDisposition">attachment;filename="${downloadFile}"</param>
+                <param name="inputName">fileStream</param>
+                <param name="bufferSize">4096</param>
+            </result>
+        </action>
+        
 		<!-- 待办事项     工作台 -->
 		<action name="Workspace" class="WorkSpaceAction" >
 			<result name="success">/work/workspacelist.jsp</result>

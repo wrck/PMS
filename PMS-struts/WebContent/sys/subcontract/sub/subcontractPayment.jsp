@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="dp" uri="/dp"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
 <%@page import="com.dp.plat.util.StringEscUtil"%>
@@ -35,6 +36,11 @@
                         <%-- <s:textfield type="number" name="subcontract.customStrInfo.taxRate" id="taxRate" cssClass="form-control" style="display:inline-block;width: 100px;" autocomplete="off" placeholder="税率"/> --%>
                         <s:select id="subcontractTax" list="taxList" name="subcontract.customStrInfo.taxItemGroup" cssClass="form-control taskOnly task-generateContractTask" listKey="basicDataId" listValueKey="basicDataName" headerKey="" headerValue="--请选择--"/>
                     </td>
+                    <td class="nowrap">公司:</td>
+                    <td class="nowrap">
+                        <%-- <s:textfield type="number" name="subcontract.customStrInfo.taxRate" id="taxRate" cssClass="form-control" style="display:inline-block;width: 100px;" autocomplete="off" placeholder="税率"/> --%>
+                        <s:select id="subcontractOrgId" list="compList" name="subcontract.orgId" cssClass="form-control taskOnly task-generateContractTask" listKey="id" listValueKey="abbr" headerKey="" headerValue="--请选择--"/>
+                    </td>
                     <td class="nowrap">转包周期:</td>
                     <td>
                         <div class="display-inline-flex">
@@ -58,23 +64,34 @@
                 name="subcontractPaymentList" export="false" id="subcontractPaymentTable"
                 size="${subcontractPaymentList.size()}" sort="external" requestURI="module/sub/querySubcontractPayment.action"
                 decorator="com.dp.plat.subcontract.decorators.SubcontractDecorator" class="displayTable table table-condensed table-hover table-striped">
+                <s:set value="%{column.extData}" var="extData"></s:set>
+                
                 <display:column title="序号" headerClass="text-center nowrap" class="text-center rowNum nowrap">
                     ${subcontractPaymentTable_rowNum}
                 </display:column>
-                <display:column property="id" headerClass="hidden" class="text-input id hidden" title="hidden" media="html"></display:column>
-                <display:column property="subcontractId" headerClass="hidden" class="text-input subcontractId hidden ignore" title="hidden" media="html"></display:column>
+                <display:column property="id" headerClass="hidden" class="text-input id hidden" title="id" media="html"></display:column>
+                <display:column property="subcontractId" headerClass="hidden" class="text-input subcontractId hidden ignore" title="subcontractId" media="html"></display:column>
                 <display:column property="ratio" class="text-input ratio nowrap" titleKey="pm.subcontract.ratio"></display:column>
                 <display:column property="amount" class="text-input amount nowrap" titleKey="pm.subcontract.amount"></display:column>
-                <s:if test="%{workflowCommonParam.outcome == 'acceptanceTask'}">
+                <%-- <s:if test="%{workflowCommonParam.outcome == 'acceptanceTask'}"> --%>
                 <display:column property="paymentApprovedAmountWrapper" class="approvedAmount nowrap"  title="审批金额" media="html">
                     <input name="subcontractPaymentList[0].customStrInfo.approvedAmount" value="${subcontractPaymentTable.customStrInfo.approvedAmount != null ? subcontractPaymentTable.customStrInfo.approvedAmount : subcontract.subcontractAmount}" class="form-control" >
                 </display:column>
-                </s:if>
+                <%-- </s:if> --%>
+                <%-- <c:if test="${subcontractPaymentTable.paymentTime != null}">
+                <display:column class="paiedAmount nowrap ${subcontractPaymentTable.paymentTime != null ? '' : 'hidden'}" headerClass="${subcontractPaymentTable.paymentTime != null ? '' : 'hidden'}" title="已付金额" media="html">
+                    ${subcontractPaymentTable.customStrInfo.paiedAmount != null ? subcontractPaymentTable.customStrInfo.paiedAmount : subcontractPaymentTable.amount}
+                </display:column>
+                </c:if> --%>
+                <%-- <display:column class="paiedAmount nowrap " headerClass="nowrap" title="已付金额" media="html">
+                    ${subcontractPaymentTable.customStrInfo.paidAmount != null && subcontractPaymentTable.customStrInfo.paidAmount != 0 ? subcontractPaymentTable.customStrInfo.paidAmount : subcontractPaymentTable.amount}
+                </display:column> --%>
+                <display:column property="paidAmountWrapper" class="paidAmount nowrap" headerClass="nowrap" title="已付金额" media="html"></display:column>
                 <display:column property="confirmTime" headerClass="nowrap" class="confirmTime nowrap" titleKey="pm.subcontract.confirmTime" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
                 <display:column property="paymentTime" headerClass="nowrap" class="paymentTime nowrap" titleKey="pm.subcontract.paymentTime" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
                 <display:column property="remark" class="text-input remark" titleKey="pm.subcontract.remark"></display:column>
                 <display:column class="text-input customStrInfo.invoiceNumber" title="发票号码">${subcontractPaymentTable.customStrInfo.invoiceNumber}</display:column>
-                <display:column class="status nowrap" title="状态">${subcontractPaymentTable.customStrInfo.status}</display:column>
+                <display:column class="status nowrap" title="状态">${subcontractPaymentTable.customStrInfo.status}${subcontractPaymentTable.customStrInfo.paystate != null ? '，'.concat(subcontractPaymentTable.customStrInfo.paystate) : ''}</display:column>
                 <display:column property="deliverableName" class="deliverList" title="附件"></display:column>
                 <s:if test="%{workflowCommonParam.outcome == 'applyPaymentTask'}">
                 <display:column title="操作" media="html">
@@ -90,6 +107,8 @@
                             <td class="text-input subcontractId hidden ignore"><input name="subcontractPaymentList[0].subcontractId" value='<s:property value="subcontract.id"/>' class="form-control ignore"></td>
                             <td class="text-input ratio"><input name="subcontractPaymentList[0].ratio" class="form-control" readonly="readonly"></td>
                             <td class="text-input amount"><input name="subcontractPaymentList[0].amount" class="form-control" ></td>
+                            <td class="approvedAmount"><!-- <input name="subcontractPaymentList[0].approvedAmount" class="form-control"> --></td>
+                            <td class="paidAmount"><!-- <input name="subcontractPaymentList[0].paidAmount" class="form-control"> --></td>
                             <td class="confirmTime"><!-- <input name="subcontractPaymentList[0].confirmTime" class="form-control"> --></td>
                             <td class="paymentTime"><!-- <input name="subcontractPaymentList[0].paymentTime" class="form-control"> --></td>
                             <td class="text-input remark"><input name="subcontractPaymentList[0].remark" class="form-control"></td>
@@ -245,6 +264,16 @@
                             alert("请输入转包合同号！");
                             var $btn = $(this).find("button");
                             $("#subcontractPaymentForm input[name='subcontract.subcontractNo']").focus();
+                            setTimeout(function() {
+                                $btn.bootstrapBtn("reset");
+                            }, 10);
+                            return false;
+                        }
+                        var subcontractTax = $.trim($("#subcontractPaymentForm #subcontractTax").val());
+                        if (subcontractTax == '') {
+                            alert("请选择转包税率！");
+                            var $btn = $(this).find("button");
+                            $("#subcontractPaymentForm #subcontractTax").focus();
                             setTimeout(function() {
                                 $btn.bootstrapBtn("reset");
                             }, 10);
@@ -469,7 +498,7 @@
                     $("tr.readLine .glyphicon-minus", $tbody).hide();
                     $("tr.inputLine .text-input", $tbody).each(function(index) {
                         var value = $.trim($(this).text()) || $.trim($(this).find("input").val()) || "";
-                        var name = $.trim($.trim($(this).attr('class')).replace(/(\btext-input\b)|(\bhidden\b)/g, ""));
+                        var name = $.trim($.trim($(this).attr('class')).replace(/(\btext-input\b)|(\bhidden\b)|(\bnowrap\b)/g, ""));
                         var cssClass = "";
                         if (name.indexOf("ignore") > -1) {
                             cssClass = "ignore";
@@ -561,14 +590,17 @@
                     var sumAmount = 0;
                     var paiedAmount = 0;
                     $("#subcontractPaymentTable tbody .amount").each(function(){
+                    	var $tr = $(this).parents("tr:first");
                         var amount = Number(($.trim($(this).text()) || $.trim($(this).find("input").val())).replace(/,/g, "")) || 0;
+                        var $paidAmount = $tr.find(".paidAmount");
+                        var paidAmt = Number(($.trim($paidAmount.text()) || $.trim($paidAmount.find("input").val())).replace(/,/g, "")) || amount;
                         if (!isNaN(amount)) {
                             sumAmount += amount;
                             try {
-                                var $paymentTime = $(this).parents("tr:first").find(".paymentTime");
+                                var $paymentTime = $tr.find(".paymentTime");
                                 var paymentTime = $.trim($paymentTime.text()) || $.trim($paymentTime.find("input").val()) || "";
                                 if (paymentTime) {
-                                       paiedAmount += amount;
+                                       paiedAmount += paidAmt;
                                 }
                             } catch(e) {}
                         }

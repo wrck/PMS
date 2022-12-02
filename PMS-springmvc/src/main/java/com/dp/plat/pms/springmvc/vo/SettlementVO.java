@@ -12,7 +12,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class SettlementVO extends DispatchSettlement {
 
-	private Integer projectId;
+	private static final long serialVersionUID = -1876732175283061850L;
+	
+    private Integer projectId;
 	private String officeCodes;
 	private String projectTypes;
 	private String memberCode;

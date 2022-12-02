@@ -58,12 +58,14 @@ public class BaseAction extends ActionSupport implements ServletContextAware,
 		for (String warnMsg : service.getWarnmsg()) {
 			this.addFieldError("warnmsg", warnMsg);
 		}
+		service.clearErrMsg();
 	}
 
 	protected void setWarnMessage(BaseService service) {
 		for (String msg : service.getWarnmsg()) {
 			this.addFieldError("warnmsg", msg);
 		}
+		service.clearErrMsg();
 	}
 
 	public List<String> getErrmsg(BaseService service) {

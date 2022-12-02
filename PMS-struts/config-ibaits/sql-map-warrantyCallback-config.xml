@@ -182,7 +182,10 @@
       <isNotNull prepend="," property="createTime"> `createTime` = #createTime:TIMESTAMP# </isNotNull>
       <isNotNull prepend="," property="updateBy"> `updateBy` = #updateBy:VARCHAR# </isNotNull>
       <isNotNull prepend="," property="updateTime"> `updateTime` = #updateTime:TIMESTAMP# </isNotNull>
-      <isNotNull prepend="," property="customInfo"> `customInfo` = #customInfo:JSON# </isNotNull>
+      <!-- <isNotNull prepend="," property="customInfo"> `customInfo` = #customInfo:JSON# </isNotNull> -->
+      <isNotNull prepend="," property="customInfo">
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
     where `id` = #id:INTEGER#
   </update>
@@ -218,7 +221,8 @@
       `createTime` = #createTime:TIMESTAMP#,
       `updateBy` = #updateBy:VARCHAR#,
       `updateTime` = #updateTime:TIMESTAMP#,
-      `customInfo` = #customInfo:JSON#
+      <!-- `customInfo` = #customInfo:JSON# -->
+      `customInfo` = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
     where `id` = #id:INTEGER#
   </update>
   
@@ -259,7 +263,19 @@
 	<isNotEmpty prepend="AND" property="createTime"> pwc.`createTime` = #createTime# </isNotEmpty>
 	<isNotEmpty prepend="AND" property="updateBy"> pwc.`updateBy` = #updateBy# </isNotEmpty>
 	<isNotEmpty prepend="AND" property="updateTime"> pwc.`updateTime` = #updateTime# </isNotEmpty>
-	<isNotEmpty prepend="AND" property="customInfo"> pwc.`customInfo` = #customInfo# </isNotEmpty>
+	<!-- <isNotEmpty prepend="AND" property="customInfo"> pwc.`customInfo` = #customInfo# </isNotEmpty> -->
+	<isNotEmpty property="customInfo">
+        <iterate property="customInfo.iterator" >
+            <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                #customInfo.iterator[].value# = pwc.customInfo ->> '$$.$customInfo.iterator[].key$'
+            </isNotEmpty>
+        </iterate>
+        <!-- <isNotEmpty prepend="AND" property="customInfo.phoneAnswerState"> 
+            <isEqual property="customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </isEqual>
+            <isNotEqual property="customInfo.phoneAnswerState" compareValue="0"> #customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </isNotEqual>
+        </isNotEmpty> -->
+    </isNotEmpty>
+	
 	<isNotEmpty prepend="AND" property="warrantyEndTimeStart"> pwc.warrantyEndTime >= #warrantyEndTimeStart# </isNotEmpty>
    	<isNotEmpty prepend="AND" property="warrantyEndTimeEnd"> #warrantyEndTimeEnd# >= pwc.warrantyEndTime </isNotEmpty>
    	<isNotEmpty prepend="AND" property="processStartTime"> pwc.callbackTime >= #processStartTime# </isNotEmpty>
@@ -316,7 +332,19 @@
 		<isNotEmpty prepend="AND" property="model.createTime"> pwc.`createTime` = #model.createTime# </isNotEmpty>
 		<isNotEmpty prepend="AND" property="model.updateBy"> pwc.`updateBy` = #model.updateBy# </isNotEmpty>
 		<isNotEmpty prepend="AND" property="model.updateTime"> pwc.`updateTime` = #model.updateTime# </isNotEmpty>
-		<isNotEmpty prepend="AND" property="model.customInfo"> pwc.`customInfo` = #model.customInfo# </isNotEmpty>
+		<!-- <isNotEmpty prepend="AND" property="model.customInfo"> pwc.`customInfo` = #model.customInfo# </isNotEmpty> -->
+		<isNotEmpty property="model.customInfo">
+		    <iterate property="model.customInfo.iterator" >
+	            <isNotEmpty prepend="AND" property="model.customInfo.iterator[].value">
+	                #model.customInfo.iterator[].value# = pwc.customInfo ->> '$$.$model.customInfo.iterator[].key$'
+	            </isNotEmpty>
+	        </iterate>
+            <!-- <isNotEmpty prepend="AND" property="model.customInfo.phoneAnswerState"> 
+                <isEqual property="model.customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </isEqual>
+                <isNotEqual property="model.customInfo.phoneAnswerState" compareValue="0"> #model.customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </isNotEqual>
+            </isNotEmpty> -->
+        </isNotEmpty>
+        
 		<isNotEmpty prepend="AND" property="model.warrantyEndTimeStart"> pwc.warrantyEndTime >= #model.warrantyEndTimeStart# </isNotEmpty>
    		<isNotEmpty prepend="AND" property="model.warrantyEndTimeEnd"> #model.warrantyEndTimeEnd# >= pwc.warrantyEndTime </isNotEmpty>
    		<isNotEmpty prepend="AND" property="model.processStartTime"> pwc.callbackTime >= #model.processStartTime# </isNotEmpty>
@@ -480,21 +508,21 @@
 		IFNULL(ph.column012, ph.columno12_readonly) AS serviceImpl, 
 		IFNULL(IFNULL(ssfs1.basicDataName, ssfs2.basicDataName), '未指定') AS serviceName,
         GROUP_CONCAT(DISTINCT pc.contractNo) as contractNos,
-        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
-        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
+        IFNULL(IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))), 1) warrantyStatus, 
+        IFNULL(IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
             IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',
                 IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 1, '维保外', NULL)
             )
-        ) AS warrantyStatusName,
+        ), '维保外') AS warrantyStatusName,
         MIN(wcs.`warrantyStartTime`) AS warrantyStartTime,
         MAX(wcs.`warrantyEndTime`) AS warrantyEndTime,
         GROUP_CONCAT(DISTINCT CONCAT(wcs.contractNo, ":", wcs.warrantyStatusName, "(", DATE(wcs.`warrantyStartTime`), "~", DATE(wcs.`warrantyEndTime`), ")") SEPARATOR "\r\n") AS warrantyStatusDesc,
-        MAX(wcs.`warrantyGrade`) warrantyGrade, 
-        IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
+        IFNULL(MAX(wcs.`warrantyGrade`), 0) warrantyGrade, 
+        IFNULL(IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
             IF(MAX(wcs.`warrantyGrade`) = 2, '中级维保',
                 IF(MAX(wcs.`warrantyGrade`) = 3, '高级维保', NULL)
             )
-        ) AS warrantyGradeName,
+        ), '无维保') AS warrantyGradeName,
         MIN(wcs.`warrantyGradeStartTime`) warrantyGradeStartTime,
         MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
         GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
@@ -506,10 +534,14 @@
         MAX(wcs.`wafServiceEndTime`) wafServiceEndTime,
         IF(DATE(NOW()) >= MIN(wcs.`wafServiceStartTime`) AND MAX(wcs.`wafServiceEndTime`) >= DATE(NOW()), "true", "false") AS wafServiceEnable,
         GROUP_CONCAT(DISTINCT CONCAT(wcs.itemDesc, "(", DATE(wcs.`wafServiceStartTime`), "~", DATE(wcs.`wafServiceEndTime`), ")") SEPARATOR "\r\n") AS warrantyServiceDesc, -->
+    	pwc.id AS latestId,
     	pwc.`renewalIntention` as latestRenewalIntention,
+    	pwc.`customInfo` ->> '$$.phoneAnswerState' AS latestPhoneAnswerState,
+    	pwc.`customInfo` ->> '$$.phoneAnswerStateName' AS latestPhoneAnswerStateName,
     	pwc.`callbackTime` as latestCallbackTime,
     	pwc.`nextCallbackTime` as latestNextCallbackTime,
     	pwc.`remark` as latestRemark,
+    	pwc.customInfo AS customInfo,
     	IFNULL(mpwc.callbackCount, 0) callbackCount,
     	IFNULL(mpwc.renewalIntentionCount, 0) renewalIntentionCount,
     	IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
@@ -559,87 +591,102 @@
     WHERE ph.`effectiveTo` is null
   </sql>
   
+  <sql id="sql_projectWarranty_where">
+    <isNotEmpty prepend="AND" property="projectId"> ph.projectId = #projectId# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="projectCode"> ph.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
+    <isNotEmpty prepend="AND" property="projectName"> ph.projectName like concat("%", #projectName#, "%") </isNotEmpty>
+    <isNotEmpty prepend="AND" property="officeCode"> ph.column001 = #officeCode# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="industryName"> ph.column005 like concat("%", #industryName#, "%") </isNotEmpty>
+    <isNotEmpty prepend="AND" property="agentChannel"> prp.partyName like concat("%", #agentChannel#, "%") </isNotEmpty>
+    <isNotEmpty prepend="AND" property="finalCustomerName"> ph.column013 like concat("%", #finalCustomerName#, "%") </isNotEmpty>
+    <isNotNull prepend="AND" property="customerNameNotFuzzy"> #customerNameNotFuzzy# = TRIM(IFNULL(ph.column013, "")) </isNotNull>
+    <isNotEmpty prepend="AND" property="serviceImpl"> #serviceImpl# = IFNULL(ph.column012, ph.columno12_readonly) </isNotEmpty>
+    <isNotEmpty prepend="AND" property="renewalIntentionInt"> 
+        <isEqual property="renewalIntentionInt" compareValue="-1"> pwc.renewalIntention is null </isEqual>
+        <isNotEqual property="renewalIntentionInt" compareValue="-1"> pwc.renewalIntention = #renewalIntentionInt# </isNotEqual>
+    </isNotEmpty>
+    <isNotEmpty property="customInfo">
+        <iterate property="customInfo.iterator" >
+            <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+	            #customInfo.iterator[].value# = pwc.customInfo ->> '$$.$customInfo.iterator[].key$'
+            </isNotEmpty>
+        </iterate>
+	    <!-- <isNotEmpty prepend="AND" property="customInfo.phoneAnswerState"> 
+	        <isEqual property="customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </isEqual>
+	        <isNotEqual property="customInfo.phoneAnswerState" compareValue="0"> #customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </isNotEqual>
+	    </isNotEmpty> -->
+    </isNotEmpty>
+    <isNotEmpty prepend="AND" property="compId"> ph.compId = #compId# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="warrantyEndTimeStart"> wcs.warrantyEndTime >= #warrantyEndTimeStart# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="warrantyEndTimeEnd"> #warrantyEndTimeEnd# >= wcs.warrantyEndTime </isNotEmpty>
+    <isNotEmpty prepend="AND" property="processStartTime"> pwc.callbackTime >= #processStartTime# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="processEndTime"> #processEndTime# >= pwc.callbackTime </isNotEmpty>
+    <isNotEmpty prepend="AND" property="callbackTimeStart"> pwc.callbackTime >= #callbackTimeStart# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="callbackTimeEnd"> #callbackTimeEnd# >= pwc.callbackTime </isNotEmpty>
+    <isNotEmpty prepend="AND" property="nextCallbackTimeStart"> pwc.nextCallbackTime >= #nextCallbackTimeStart# </isNotEmpty>
+    <isNotEmpty prepend="AND" property="nextCallbackTimeEnd"> #nextCallbackTimeEnd# >= pwc.nextCallbackTime </isNotEmpty>
+    GROUP BY ph.projectCode
+    <dynamic prepend="having">
+        <isNotEmpty prepend="AND" property="contractNos"> contractNos like concat("%", #contractNos#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="customerSearch">
+        (
+            customer1 like concat("%", #customerSearch#, "%") 
+            or customer2 like concat("%", #customerSearch#, "%") 
+            or customerContact1 like concat("%", #customerSearch#, "%") 
+            or customerContact2 like concat("%", #customerSearch#, "%")
+        )
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="customerContactSearch">
+        (
+            customerContact1 like concat("%", #customerContactSearch#, "%") 
+            or customerContact2 like concat("%", #customerContactSearch#, "%") 
+        )
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasCallback"> callbackCount > 0 </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasRenewal"> hasRenewal = #hasRenewal# </isNotEmpty>
+    </dynamic>
+  </sql>
+  
   <insert id="createTempProjectWarrantyTable" parameterClass="map">
     CREATE TEMPORARY TABLE IF NOT EXISTS temp_project_warranty_$tempSuffix$ (
         KEY projectId (projectId),
         KEY warrantyStatus(warrantyStatus),
         KEY warrantyGrade(warrantyGrade),
-        KEY wafService(wafService)
+        KEY callbackCount(callbackCount),
+        KEY hasRenewal(hasRenewal)
     ) AS
     <include refid="sql_select_projectWarranty"/>
-    <isNotEmpty prepend="AND" property="projectId"> ph.projectId = #projectId# </isNotEmpty>
-    GROUP BY ph.projectCode;
+    <include refid="sql_projectWarranty_where"/>
+    <!-- <isNotEmpty prepend="AND" property="projectId"> ph.projectId = #projectId# </isNotEmpty>
+    GROUP BY ph.projectCode; -->
   </insert>
   
   <delete id="deleteTempProjectWarrantyTable" parameterClass="map">
     DROP TEMPORARY TABLE IF EXISTS temp_project_warranty_$tempSuffix$;
   </delete>
   
-  <sql id="sql_projectWarranty_where">
-  	<isNotEmpty prepend="AND" property="projectId"> ph.projectId = #projectId# </isNotEmpty>
-	<isNotEmpty prepend="AND" property="projectCode"> ph.projectCode like concat("%", #projectCode#, "%") </isNotEmpty>
-	<isNotEmpty prepend="AND" property="projectName"> ph.projectName like concat("%", #projectName#, "%") </isNotEmpty>
-	<isNotEmpty prepend="AND" property="officeCode"> ph.column001 = #officeCode# </isNotEmpty>
-	<isNotEmpty prepend="AND" property="industryName"> ph.column005 like concat("%", #industryName#, "%") </isNotEmpty>
-	<isNotEmpty prepend="AND" property="agentChannel"> prp.partyName like concat("%", #agentChannel#, "%") </isNotEmpty>
-	<isNotEmpty prepend="AND" property="finalCustomerName"> ph.column013 like concat("%", #finalCustomerName#, "%") </isNotEmpty>
-	<isNotNull prepend="AND" property="customerNameNotFuzzy"> #customerNameNotFuzzy# = TRIM(IFNULL(ph.column013, "")) </isNotNull>
-	<isNotEmpty prepend="AND" property="serviceImpl"> #serviceImpl# = IFNULL(ph.column012, ph.columno12_readonly) </isNotEmpty>
-	<isNotEmpty prepend="AND" property="renewalIntentionInt"> 
-		<isEqual property="renewalIntentionInt" compareValue="-1"> pwc.renewalIntention is null </isEqual>
-		<isNotEqual property="renewalIntentionInt" compareValue="-1"> pwc.renewalIntention = #renewalIntentionInt# </isNotEqual>
-	</isNotEmpty>
-	<isNotEmpty prepend="AND" property="compId"> ph.compId = #compId# </isNotEmpty>
-	<isNotEmpty prepend="AND" property="warrantyEndTimeStart"> wcs.warrantyEndTime >= #warrantyEndTimeStart# </isNotEmpty>
-	<isNotEmpty prepend="AND" property="warrantyEndTimeEnd"> #warrantyEndTimeEnd# >= wcs.warrantyEndTime </isNotEmpty>
-	<isNotEmpty prepend="AND" property="processStartTime"> pwc.callbackTime >= #processStartTime# </isNotEmpty>
- 	<isNotEmpty prepend="AND" property="processEndTime"> #processEndTime# >= pwc.callbackTime </isNotEmpty>
- 	<isNotEmpty prepend="AND" property="callbackTimeStart"> pwc.callbackTime >= #callbackTimeStart# </isNotEmpty>
- 	<isNotEmpty prepend="AND" property="callbackTimeEnd"> #callbackTimeEnd# >= pwc.callbackTime </isNotEmpty>
- 	<isNotEmpty prepend="AND" property="nextCallbackTimeStart"> pwc.nextCallbackTime >= #nextCallbackTimeStart# </isNotEmpty>
- 	<isNotEmpty prepend="AND" property="nextCallbackTimeEnd"> #nextCallbackTimeEnd# >= pwc.nextCallbackTime </isNotEmpty>
-	GROUP BY ph.projectCode
-	<dynamic prepend="having">
-		<isNotEmpty prepend="AND" property="contractNos"> contractNos like concat("%", #contractNos#, "%") </isNotEmpty>
-		<isNotEmpty prepend="AND" property="customerSearch">
-		(
-			customer1 like concat("%", #customerSearch#, "%") 
-			or customer2 like concat("%", #customerSearch#, "%") 
-			or customerContact1 like concat("%", #customerSearch#, "%") 
-			or customerContact2 like concat("%", #customerSearch#, "%")
-		)
-		</isNotEmpty>
-		<isNotEmpty prepend="AND" property="customerContactSearch">
-		(
-			customerContact1 like concat("%", #customerContactSearch#, "%") 
-			or customerContact2 like concat("%", #customerContactSearch#, "%") 
-		)
-		</isNotEmpty>
-		<isNotEmpty prepend="AND" property="hasCallback"> callbackCount > 0 </isNotEmpty>
-		<isNotEmpty prepend="AND" property="hasRenewal"> hasRenewal = #hasRenewal# </isNotEmpty>
-	</dynamic>
-  </sql>
-  
   <!-- 查询维保 -->
   <select id="countProjectWarranty" parameterClass="map" resultClass="int">
-     select count(*) from (
+     <!-- select count(*) from (
 	     <include refid="sql_select_projectWarranty"/>
 	     <include refid="sql_projectWarranty_where"/>
-   	 ) t
+   	 ) t -->
+   	 select count(*) from temp_project_warranty_$tempSuffix$ t
   </select>
   
   <!-- 查询维保 -->
   <select id="selectProjectWarranty" parameterClass="map" resultClass="java.util.HashMap">
-     <include refid="sql_select_projectWarranty"/>
-     <include refid="sql_projectWarranty_where"/>
+     select * from temp_project_warranty_$tempSuffix$ t
+     <!-- <include refid="sql_select_projectWarranty"/>
+     <include refid="sql_projectWarranty_where"/> -->
 	 <include refid="sql_projectWarrantyCallback_pageable_limit" />
   </select>
   
   <select id="countCustomerProjectWarrantyCallbackStatistics" parameterClass="map" resultClass="int">
-  	 select count(distinct trim(IFNULL(finalCustomerName, ""))) from (
+  	 select count(distinct trim(IFNULL(finalCustomerName, ""))) from temp_project_warranty_$tempSuffix$ t <!-- (
 		 <include refid="sql_select_projectWarranty"/>
 	     <include refid="sql_projectWarranty_where"/>
-     ) t
+     ) t --> 
   </select>
   
   <select id="selectCustomerProjectWarrantyCallbackStatistics" parameterClass="map" resultClass="java.util.HashMap">
@@ -653,10 +700,10 @@
   	 	count(IF(hasRenewal = 1, 1, null)) as renewalCount,
   	 	max(latestCallbackTime) as latestCallbackTime,
   	 	max(latestNextCallbackTime) as latestNextCallbackTime
-  	 from (
+  	 from temp_project_warranty_$tempSuffix$ t <!-- (
 		 <include refid="sql_select_projectWarranty"/>
 	     <include refid="sql_projectWarranty_where"/>
-     ) t
+     ) t -->
      group by trim(IFNULL(finalCustomerName, ""))
      <include refid="sql_projectWarrantyCallback_pageable_limit" />
   </select>

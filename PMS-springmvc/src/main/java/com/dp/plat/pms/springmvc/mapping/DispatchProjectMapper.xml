@@ -1220,9 +1220,12 @@
 				<if test="model.updateTime != null">
 					h.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
 				</if>
-				<if test="model.customInfo != null and '' != model.customInfo">
-					h.customInfo = #{model.customInfo, jdbcType=OTHER} AND
-				</if>
+				<if test="model.customInfo != null">
+		            <!-- h.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+		            <foreach collection="model.customInfo" item="value" index="key">
+		                h.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+		            </foreach>
+		        </if>
 				<if test="model.projectId != null and '' != model.projectId">
 					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
 				</if>
@@ -1241,7 +1244,8 @@
 					h.contractNos like CONCAT("%", #{fuzzy}, "%") or
 					h.facilitatorName like CONCAT("%", #{fuzzy}, "%") or
 					h.smsProjectCode like CONCAT("%", #{fuzzy}, "%") or
-					h.smsProjectAmount like CONCAT("%", #{fuzzy}, "%")
+					h.smsProjectAmount like CONCAT("%", #{fuzzy}, "%") or
+					h.customInfo like CONCAT("%", #{fuzzy}, "%")
 				)
 			</if>
 		</trim>
@@ -1390,9 +1394,12 @@
 			<if test="updateTime != null">
 				h.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
 			</if>
-			<if test="customInfo != null and '' != customInfo">
-				h.`customInfo` = #{customInfo, jdbcType=OTHER} AND
-			</if>
+			<if test="customInfo != null">
+                <!-- h.customInfo = #{customInfo, jdbcType=JSON} AND -->
+                <foreach collection="customInfo" item="value" index="key">
+                    h.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+                </foreach>
+            </if>
 			<if test="officeCodes != null">
 				FIND_IN_SET(h.officeCode, #{officeCodes}) AND
 			</if>
@@ -1528,8 +1535,11 @@
     <if test="updateTime != null">
         h.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
     </if>
-    <if test="customInfo != null and '' != customInfo">
-        h.`customInfo` = #{customInfo, jdbcType=OTHER} AND
+    <if test="customInfo != null">
+        <!-- h.customInfo = #{customInfo, jdbcType=JSON} AND -->
+        <foreach collection="customInfo" item="value" index="key">
+            h.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+        </foreach>
     </if>
   </sql>
   <sql id="sql_model_where_selective">
@@ -1661,9 +1671,12 @@
 		<if test="model.updateTime != null">
 			h.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
 		</if>
-		<if test="model.customInfo != null and '' != model.customInfo">
-			h.`customInfo` = #{model.customInfo, jdbcType=OTHER} AND
-		</if>
+		<if test="model.customInfo != null">
+            <!-- h.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+            <foreach collection="model.customInfo" item="value" index="key">
+                h.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+            </foreach>
+        </if>
 	</if>
 	<if test="fuzzySearch == true and fuzzy != ''">
 		(

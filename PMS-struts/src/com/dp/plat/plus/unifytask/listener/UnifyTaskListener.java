@@ -219,7 +219,7 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 	public User getUserByUserId(String userId, Map<String, Object> extParams) {
 //		User activiUser = super.getUserByUserId(userId, extParams);
 		
-		extParams = getRoleGroupMap(extParams);
+		extParams = getRoleGroupMap(userId, extParams);
 //		Map<String, Object> roleGroupMap = getRoleGroupMap(extParams);
 //		if (extParams == null) {
 //			extParams = roleGroupMap;
@@ -250,7 +250,7 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 		User activiUser = this.getUserByUserId(userId, extParams);
 		List<User> activitiUsers = new ArrayList<User>();
 		if (activiUser == null) {
-			extParams = getRoleGroupMap(extParams);
+			extParams = getRoleGroupMap(userId, extParams);
 //			Map<String, Object> roleGroupMap = getRoleGroupMap();
 //			if (extParams == null) {
 //				extParams = roleGroupMap;
@@ -297,9 +297,9 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 			extParams = Collections.emptyMap();
 		}
 		String dpNo = null;
-		boolean needCheckDep = false;
-		if (extParams.containsKey("checkRoleDep")) {
-			Collection checkRoles = (Collection) extParams.get("checkRoleDep");
+		boolean needCheckDep = Boolean.TRUE.equals(extParams.getOrDefault("checkDep", false));
+		if (!needCheckDep && extParams.containsKey("checkRoleDep")) {
+			Collection<?> checkRoles = (Collection<?>) extParams.get("checkRoleDep");
 			needCheckDep = checkRoles.contains(groupId);
 		}
 		if (needCheckDep) {
@@ -417,6 +417,21 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 		return getRoleGroupMap(null);
 	}
 	
+	private Map<String, Object> getRoleGroupMap(String assignee, Map<String, Object> extParams) {
+	    long nanoTime = System.nanoTime();
+	    // 将办理人放入params中，用于角色办理人的情况解析对应的roleId
+	    String tempAssigneeKey = "assignee" + nanoTime;
+	    try {
+	        if (extParams == null) {
+	            extParams = new HashMap<String, Object>();
+	        }
+	        extParams.put(tempAssigneeKey, assignee);
+	        return getRoleGroupMap(extParams);
+	    } finally {
+            extParams.remove(tempAssigneeKey);
+        }
+	}
+	
 	private Map<String, Object> getRoleGroupMap(Map<String, Object> extParams) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("cbRole", MessageUtil.ROLE_CALLBACKPER);
@@ -438,6 +453,14 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 		map.put("checkRoleDep", needCheckRoleList);
 		
 		if (extParams != null && !extParams.isEmpty()) {
+		    // 判断变量值中是否有role_的角色变量，进行roleGroup补充
+	        for (Entry<String, Object> entry : extParams.entrySet()) {
+	            String key = String.valueOf(entry.getValue());
+	            if (key.startsWith("role_") && !map.containsKey(key)) {
+	                String role = key.replaceFirst("role_", "");
+	                map.put(key, role);
+	            }
+	        }
 			for (Entry<String, Object> roleGroup : map.entrySet()) {
 				if(!extParams.containsKey(roleGroup.getKey())) {
 					extParams.put(roleGroup.getKey(), roleGroup.getValue());

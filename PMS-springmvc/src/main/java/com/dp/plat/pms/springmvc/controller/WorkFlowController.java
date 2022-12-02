@@ -18,6 +18,7 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.activiti.engine.task.TaskInfo;
 import org.activiti.engine.task.TaskQuery;
@@ -183,19 +184,29 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
 				v.setTaskKey(task.getTaskDefinitionKey());
 				v.setProcInstId(task.getProcessInstanceId());
-				v.setProcessKey(task.getProcessDefinitionId());
+				v.setProcessKey(StringUtils.substringBefore(task.getProcessDefinitionId(), ":"));
 				v.setHasTask(hasTask);
 				
 				String dataType = v.getDataType();
 				Boolean hideEntity = Boolean.valueOf(HttpContext.getCurrentRequest().getParameter("hideEntity"));
 				if (!hideEntity) {
 					PmWorkFlow pmWorkFlow = null;
-					if (hasTask) {
-						pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
-					} else {
-						pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
-								.processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
-					}
+					try {
+    					if (hasTask) {
+    						pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
+    					} else {
+    						pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
+    								.processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
+    					}
+					} catch (Exception e) {
+                    }
+					// 当流程实体为空时，查询最新的流程实体，如果存在任务并进行变量更新
+                    if (pmWorkFlow == null) {
+                        pmWorkFlow = v;
+                        if (hasTask) {
+			                  runtimeService.setVariable(processInstanceId, "entity", pmWorkFlow);
+                        }
+                    }
 					Object entity = decoratorEntity(pmWorkFlow);
 					List<Object> fieldList = this.findFieldList(dataType + "Form", DATATYPE_FORM);
 					for (Iterator<?> iterator = fieldList.iterator(); iterator.hasNext();) {
@@ -264,13 +275,26 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 				return "redirect:/" + Consts.VIEW_UNAUTHORIZED + ".html";
 			}
 
+			String processInstanceId = task.getProcessInstanceId();
 			PmWorkFlow pmWorkFlow = null;
-			if (hasTask) {
-				pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
-			} else {
-				pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
-						.processInstanceId(task.getProcessInstanceId()).variableName("entity").singleResult().getValue();
-			}
+			try {
+                if (hasTask) {
+                    pmWorkFlow = taskService.getVariable(taskId, "entity", PmWorkFlow.class);
+                } else {
+                    pmWorkFlow = (PmWorkFlow) historyService.createHistoricVariableInstanceQuery()
+                            .processInstanceId(processInstanceId).variableName("entity").singleResult().getValue();
+                }
+            } catch (Exception e) {
+            }
+			// 当流程实体为空时，查询最新的流程实体，如果存在任务并进行变量更新
+            if (pmWorkFlow == null) {
+                ProcessInstance processInstance = runtimeService.createProcessInstanceQuery()
+                        .processInstanceId(processInstanceId).singleResult();
+                pmWorkFlow = pmWorkFlowService.selectByPrimaryKey(Integer.parseInt(processInstance.getBusinessKey()));
+                if (hasTask) {
+                    runtimeService.setVariable(processInstanceId, "entity", pmWorkFlow);
+                }
+            }
 			pmWorkFlow.setProcInstId(task.getProcessInstanceId());
 			
 			String dataType = pmWorkFlow.getDataType();
@@ -295,7 +319,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			v.setTitle(task.getDescription() != null ? task.getDescription() : task.getName());
 			v.setTaskKey(task.getTaskDefinitionKey());
 			v.setProcInstId(task.getProcessInstanceId());
-			v.setProcessKey(task.getProcessDefinitionId());
+			v.setProcessKey(StringUtils.substringBefore(task.getProcessDefinitionId(), ":"));
 			v.setHasTask(hasTask);
 			
 			List<Object> fieldList = this.findFieldList(dataType + "_" + v.getTaskKey() + "_workflowForm", DATATYPE_FORM);
@@ -312,10 +336,11 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 			model.addAttribute("workflowFieldList", fieldList);
 			model.addAttribute("workflow", v);
 			model.addAttribute("targetName", "workflow");
-			model.addAttribute("workflowTabList", this.findNavTabList(getDataNameNavTab(), model));
+//			model.addAttribute("workflowTabList", this.findNavTabList(getDataNameNavTab(), model));
 		} else {
 			// model.addAttribute("urlNamespace", URLPath.WORKFLOW_MANAGER);
 			 model.addAttribute("model", "workflowTask");
+	            // model.addAttribute("model", "workflow");
 			model.addAttribute("keyword", "id");
 			model.addAttribute("id", taskId);
 
@@ -619,6 +644,7 @@ public class WorkFlowController extends AbstractController<IPmWorkFlowService, P
 					SettlementVO settlementVO = new SettlementVO();
 					BeanUtils.copyProperties(settlement, settlementVO);
 					DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(settlementVO.getDispatchId());
+//					DispatchProject dispatch = dispatchProjectService.selectDispatchVOWithAmount(settlementVO.getDispatchId());
                     settlementVO.setDispatch(dispatch);
                     entity = settlementVO;
 				}

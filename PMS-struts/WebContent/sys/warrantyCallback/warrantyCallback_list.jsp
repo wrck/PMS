@@ -165,8 +165,17 @@
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="renewalIntention"><s:text name="pm.project.warrantyCallback.renewalIntention" /></label>
-            <s:select list="#{1: '有', 0: '无', 2: '待定'}" name="projectWarrantyCallback.renewalIntention" id="renewalIntention"
+            <s:select list="#{1: '有', 0: '无', 2: '待定', 3: '未接听'}" name="projectWarrantyCallback.renewalIntention" id="renewalIntention"
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="phoneAnswerState"><s:text name="pm.project.warrantyCallback.phoneAnswerState" /></label>
+            <s:select name="projectWarrantyCallback.customStrInfo.phoneAnswerState" id="phoneAnswerState"
+                listKey="basicDataId" cssClass="form-control" headerKey=""
+                headerValue="--请选择--" cssStyle="width:163px;"
+                listValue="basicDataName" list="%{cbForm.phoneAnswerStates}"
+                theme="simple" />
         </div>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
@@ -206,7 +215,7 @@
     </div>
     <div>
 	    <s:if test="%{projectWarrantyCallback.hasPower == true}">
-	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarranty.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'BudgetUpload', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
+	        <button onclick="javascript:popWindow('module/sub/warrantyCallback_projectWarranty.action', '95vw', 650,'<s:text name="sys.project.warrantyCallback.management"></s:text>', 'ProjectWarranty', true);" value="pmAddPrjWarrantyCallbackButton" type="button" rel="noreferrer" class="btn btn-default" style="margin-right:4px;margin-bottom:1rem;">
 	            <span class="glyphicon glyphicon-list" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;项目列表</span>
 	        </button>
 	    </s:if>
@@ -241,6 +250,7 @@
             <%-- <display:column titleKey="pm.project.warrantyCallback.renewalIntention" headerClass="nowrap">
             	${!empty warrantyCallbackList.renewalIntention ? (warrantyCallbackList.renewalIntention ? "有" : "无") : "未回访"}
             </display:column> --%>
+            <display:column property="phoneAnswerStateName" headerClass="nowrap" titleKey="pm.project.warrantyCallback.phoneAnswerState" ></display:column>
             <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasRenewal">
             	${!empty warrantyCallbackList.hasRenewal ? (warrantyCallbackList.hasRenewal == 1 ? "有" : "无") : "无"}
             </display:column>

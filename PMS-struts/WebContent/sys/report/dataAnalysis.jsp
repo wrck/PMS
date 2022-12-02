@@ -164,10 +164,11 @@ table thead th{
                         <display:column property="approveRemark" style="width:200px" titleKey="pm.cl.cbdata.opinion"></display:column>
 						<display:column property="dataCbOpion" titleKey="pm.cl.cbdata.opinion"  media="html"></display:column>
 						<display:column property="dataCbEquain" titleKey="pm.cl.cbdata.equExplain" media="html"></display:column>
+						<display:column property="customInfo.productHarmfulSubstanceControl" title="产品有害物控制满意度" ></display:column>
 						
 						<display:column property="opinion" style="width:200px" titleKey="pm.cl.cbdata.opinion" media="excel"></display:column>
 						<display:column property="equExplain" titleKey="pm.cl.cbdata.equExplain" media="excel"></display:column>
-						<display:setProperty name="export.excel.filename"
+                        <display:setProperty name="export.excel.filename"
 								value='<%=StringEscUtil.getText("pm.cl.cbdata.list")%>'>
 							</display:setProperty>
 					</display:table> 

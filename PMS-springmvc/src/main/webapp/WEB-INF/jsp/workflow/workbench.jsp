@@ -147,6 +147,7 @@ li.active span.warn{
                     title : "任务名称",
                     data : "taskName",
                     name : "res.TASK_DEF_KEY_",
+                    class: "text-nowrap",
                     visible: true,
                     //sortable: false,
                 },
@@ -154,7 +155,7 @@ li.active span.warn{
                     title : "类别",
                     data : "taskDesc",
                     name : "res.DESCRIPTION_",
-                    class: "text-center",
+                    class: "text-center text-nowrap",
                     visible: true,
                     render: function(data, type, row) {
                     	return (data || "").split(splitStr)[0];
@@ -185,6 +186,8 @@ li.active span.warn{
                             	contents.push(entity.leakName);
 							break;
                             case 'settlement':
+                            	contents.push((entity.customInfo || {}).purchId || ((entity.dispatch || {}).customInfo || {}).purchId);
+                            	contents.push((entity.dispatch || {}).dispatchNo);
                                 contents.push(entity.settleSeq);
                                 contents.push(entity.acceptanceDesc);
                                 contents.push(entity.progressDesc);
@@ -229,16 +232,16 @@ li.active span.warn{
                 data : "formUrl",
                 title:"操作",
                 sortable: false,
-                class: "text-center",
+                class: "text-center text-nowrap",
                 render : function(data, type, row) {
                     var id = row.taskId;
                     var html = "";
                     html += "<a class='btn btn-xs btn-success' href='"+basePath+data+"?taskId="+row.taskId+"'><i class='fa fa-location-arrow'></i>办理</a>";
                     if (row.dataType != row.objType) {
                     	var url = pm.router.html(row.objType).detail(row.objId);
-	                    html += "<a class='btn btn-xs btn-warning ml-05' href='"+url+"'><i class='fa fa-link'></i> 链接</a>";
+	                    html += "<a class='btn btn-xs btn-warning' href='"+url+"'><i class='fa fa-link'></i> 链接</a>";
 	                }
-                    html += "<a class='btn btn-xs btn-info ml-05' onClick = 'showProcessInfo("+row.procInstId+")'><i class='fa fa-fw fa-cloud-download'></i>流程明细</a>";
+                    html += "<a class='btn btn-xs btn-info' onClick = 'showProcessInfo("+row.procInstId+")'><i class='fa fa-fw fa-cloud-download'></i>流程明细</a>";
                     return html;
                 }
             } ],
@@ -265,19 +268,19 @@ li.active span.warn{
                 data : "formUrl",
                 title:"操作",
                 sortable: false,
-                class: "text-center",
+                class: "text-center text-nowrap",
                 render : function(data, type, row) {
                     var id = row.taskId;
                     var html = "";
                     html += "<a class='btn btn-xs btn-success' href='"+basePath+data+"'><i class='fa fa-location-arrow'></i> 查看</a>";
                     if (row.canWithdraw) {
-	                    html += "<a class='btn btn-xs btn-danger ml-05' data-btn-type='withdraw'><i class='fa fa-undo'></i> 撤回</a>";
+	                    html += "<a class='btn btn-xs btn-danger' data-btn-type='withdraw'><i class='fa fa-undo'></i> 撤回</a>";
 	                }
                     if (row.dataType != row.objType) {
                     	var url = pm.router.html(row.objType).detail(row.objId);
-	                    html += "<a class='btn btn-xs btn-warning ml-05' href='"+url+"'><i class='fa fa-link'></i> 链接</a>";
+	                    html += "<a class='btn btn-xs btn-warning' href='"+url+"'><i class='fa fa-link'></i> 链接</a>";
 	                }
-	                html += "<a class='btn btn-xs btn-info ml-05' onClick = 'showProcessInfo("+row.procInstId+")'><i class='fa fa-fw fa-cloud-download'></i> 流程明细</a>";
+	                html += "<a class='btn btn-xs btn-info' onClick = 'showProcessInfo("+row.procInstId+")'><i class='fa fa-fw fa-cloud-download'></i> 流程明细</a>";
                     return html;
                 }
             } ],

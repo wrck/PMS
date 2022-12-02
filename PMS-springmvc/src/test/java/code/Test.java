@@ -36,6 +36,7 @@ import com.dp.plat.pms.springmvc.entity.Facilitator;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.pms.springmvc.vo.PurchaseReceiptSettlement;
 
 /**
  * @author w02611
@@ -44,7 +45,7 @@ import com.dp.plat.pms.springmvc.vo.ProjectVO;
 public class Test {
 
     public static void main(String[] args) {
-        generatorUpdateDuplicateStr(Facilitator.class);
+        generatorUpdateDuplicateStr(PurchaseReceiptSettlement.class);
     }
     
 	public static void main2(String[] args) {

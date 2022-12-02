@@ -8,6 +8,8 @@ import com.dp.plat.core.serializer.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class Facilitator extends BaseEntity {
+    private static final long serialVersionUID = -409758155659955934L;
+
     private Integer id;
 
     // 服务商编号

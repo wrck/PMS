@@ -243,7 +243,7 @@ public abstract class AbstractSynchronizeTask implements Job {
 	    Map<String, Object> logParams = (Map<String, Object>) params.getOrDefault("logParams", new HashMap());
         //更新日志
         try {
-            sqlMap.update("update_fnd_data_refresh_log_success", logParams);
+            sqlMap.update("update_fnd_data_refresh_log", logParams);
         } catch (SQLException e) {
         }
     }

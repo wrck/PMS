@@ -198,6 +198,9 @@
 		                submitHandler: function(validator, form2, submitButton){
 		                	var btnType = $(submitButton).data("btn-type");
 		                	var confirmText = btnType == "save" ? "保存" : "派单";
+		                	// 外部触发保存的提示，使用后置为空
+                            confirmText = $(submitButton).data("targetTip") || confirmText;
+                            $(submitButton).data("targetTip", null);
 		                	modals.confirm({text:'确认' + confirmText + '？', 
 		                		callback: function () {
 		                			formSubmit.call(vm, validator, form2, submitButton);

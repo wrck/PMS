@@ -135,14 +135,14 @@ public class DispatchProjectController
 	public String findOne(@PathVariable("id") Integer id, Model model) {
 		if (HttpContext.isJSON()) {
 			DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(id);
-			DispatchVO vo = new DispatchVO();
-			BeanUtils.copyProperties(dispatch, vo);
-			if (!checkPermission(vo, model, getDataName() + ":detail")) {
-				model.addAttribute("status", false);
-				model.addAttribute("message", "没有权限进行该操作！");
-				return Consts.VIEW_UNAUTHORIZED;
-			}
 			if (dispatch != null) {
+    			DispatchVO vo = new DispatchVO();
+    			BeanUtils.copyProperties(dispatch, vo);
+    			if (!checkPermission(vo, model, getDataName() + ":detail")) {
+    				model.addAttribute("status", false);
+    				model.addAttribute("message", "没有权限进行该操作！");
+    				return Consts.VIEW_UNAUTHORIZED;
+    			}
 				model.addAttribute("targetValue", dispatch);
 				
 				List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
@@ -355,7 +355,7 @@ public class DispatchProjectController
 			String dispatchName = (StringUtils.trimToEmpty(dispatch.getDispatchName()) + "项目").replace("项目项目", "项目");
 			dispatch.setDispatchName(dispatchName);
 			
-			String fileName = String.format("%s[安全服务项目]%s外派.docx", dispatch.getDispatchSeq(), dispatchName);
+			String fileName = String.format("%s[安全服务项目]%s外派.doc", dispatch.getDispatchSeq(), dispatchName);
 			
 			String dutyPerson = vo.getDutyPerson();
 			UserInfo ui = new UserInfo();

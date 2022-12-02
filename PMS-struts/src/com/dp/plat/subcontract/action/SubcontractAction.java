@@ -26,9 +26,12 @@ import org.apache.struts2.json.annotations.JSON;
 import org.springframework.beans.BeanUtils;
 
 import com.dp.plat.action.BaseAction;
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
+import com.dp.plat.data.bean.Company;
 import com.dp.plat.data.bean.Department;
+import com.dp.plat.data.bean.JsonCustomInfo;
 import com.dp.plat.data.bean.PmClQuesnaireResultHeader;
 import com.dp.plat.data.bean.PmClQuesnaireResultLine;
 import com.dp.plat.data.bean.PmClosedLoopQuesnaire;
@@ -56,6 +59,7 @@ import com.dp.plat.subcontract.entity.SubcontractPayment;
 import com.dp.plat.subcontract.entity.SubcontractPrice;
 import com.dp.plat.subcontract.entity.SubcontractProject;
 import com.dp.plat.subcontract.exception.SubcontractException;
+import com.dp.plat.subcontract.listener.SubcontractInspectionListener;
 import com.dp.plat.subcontract.service.SubcontractService;
 import com.dp.plat.subcontract.vo.SubcontractComment;
 import com.dp.plat.subcontract.vo.SubcontractDeliverVO;
@@ -70,6 +74,8 @@ import com.dp.plat.util.PmClosedLoopMarkFactory;
 import com.dp.plat.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.Preparable;
+
+import cn.hutool.core.map.MapUtil;
 
 /**
  * @author w02611
@@ -93,6 +99,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private List<BasicDataBean> stateList;
 	private List<BasicDataBean> callbackStateList;
 	private List<BasicDataBean> taxList;
+	private List<Company> compList;
 	private User user;
 
 	// 主数据
@@ -148,6 +155,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private int tabIndex;
 	private String autoCheckProjects;
 	private String namespace;
+	private Map<String, Object> commonMap;
 
 	// 分页参数
 	private DisplayParam displayParam;
@@ -231,6 +239,25 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			displayParam = new DisplayParam();
 		}
 		String export = getServletRequest().getParameter("6578706f7274");
+		
+		// 增加额外的查询参数
+		JsonCustomInfo extInfo = subcontractVO.getExtInfo();
+		if (extInfo == null) {
+		    extInfo = new JsonCustomInfo(new HashMap<String, Object>());
+		}
+		extInfo.put("needPayment", true);
+		subcontractVO.setExtInfo(extInfo);
+		
+		// 公司集合
+        Company company = new Company();
+        company.setStatus(1);
+        compList = departmentManageService.queryCompanyList(company);
+		
+        // 查询流程中设置的付款审批状态
+		Map<String, String> paymentStatusList = SubcontractInspectionListener.getTaskApprovedStatusList(SubcontractInspectionListener.DATA_TYPE_PAYMENT, TaskKey.ACCEPTANCE_TASK);
+		commonMap = new HashMap<String, Object>();
+		commonMap.put("paymentStatusList", paymentStatusList);
+		
 		if ("1".equals(export)) {
 			subcontractVOList = subcontractService.querySubcontractExportData(subcontractVO);
 			displayParam.setPagesize(subcontractVOList.size());
@@ -729,6 +756,10 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			} else {
 				subcontractPaymentList = new ArrayList<>();
 			}
+			// 公司集合
+			Company company = new Company();
+			company.setStatus(1);
+			compList = departmentManageService.queryCompanyList(company);
 		} catch (SubcontractException e) {
 			setErrmsg(e.getMessage());
 			return ERROR;
@@ -1282,7 +1313,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		this.profitDepList = profitDepList;
 	}
 
-	public List<SubcontractFacilitator> getFacilitatorList() {
+    public List<SubcontractFacilitator> getFacilitatorList() {
 		return facilitatorList;
 	}
 
@@ -1312,6 +1343,14 @@ public class SubcontractAction extends BaseAction implements Preparable {
 
     public void setTaxList(List<BasicDataBean> taxList) {
         this.taxList = taxList;
+    }
+    
+    public List<Company> getCompList() {
+        return compList;
+    }
+
+    public void setCompList(List<Company> compList) {
+        this.compList = compList;
     }
 
     public User getUser() {
@@ -1663,5 +1702,13 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+
+    public Map<String, Object> getCommonMap() {
+        return commonMap;
+    }
+
+    public void setCommonMap(Map<String, Object> commonMap) {
+        this.commonMap = commonMap;
+    }
 
 }

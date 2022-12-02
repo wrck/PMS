@@ -57,7 +57,10 @@
                                     <option value="0">失败</option>
                                 </select>
                             </div>
-			                <div class="btn-group">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success" data-btn-type="syncData">同步数据</button>
+                            </div>
+			                <div class="btn-group operate-btn-group">
 								<button type="button" class="btn btn-primary" data-btn-type="search">查询</button>
 								<button type="button" class="btn btn-default" data-btn-type="reset">重置</button>
 							</div>
@@ -181,6 +184,30 @@
 		                }
 		            } ]
 				});
+			
+			$(document).on("click", 'button[data-btn-type]', function() {
+                var action = $(this).attr('data-btn-type');
+                var rowId = commonTable.getSelectedRowId();
+                switch (action) {
+                case 'syncData':
+        			modals.confirm({
+        			    "title": "输入任务Key", 
+        				"text": "<input class='form-control' id='taskKey' name='taskKey' />", 
+        				callback: function() {
+            			    var $modal = $(this).parents(".modal:first");
+            			    var taskKey = $("#taskKey", $modal).val();
+            			    console.log(this, arguments, taskKey);
+            			    if (taskKey) {
+            			    	modals.info("正在同步");
+            			        ajaxPost("synclog/syncData.json", {type:taskKey},function(data) {
+            			            modals.info(data.message || "同步成功");
+            			        })
+            			    }
+        			    }
+        			});
+        			break;
+                }
+			})
 		});
 	</script>
 </jsTag>

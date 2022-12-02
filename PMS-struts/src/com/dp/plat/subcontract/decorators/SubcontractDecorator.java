@@ -23,6 +23,7 @@ import com.dp.plat.subcontract.vo.SubcontractProjectVO;
 import com.dp.plat.util.Base64Util;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.StringEscUtil;
+import com.dp.plat.util.Util;
 import com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO;
 
 /**
@@ -84,22 +85,29 @@ public class SubcontractDecorator extends TableDecorator {
     }
     
     public String getPaidAmountWrapper() {
-        SubcontractProjectVO object = (SubcontractProjectVO) getCurrentRowObject();
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
-        if (StringUtils.isNotBlank(object.getPaidAmount())) {
-            BigDecimal b = new BigDecimal(object.getPaidAmount());
-            return decimalFormat.format(b);
+        Object object = getCurrentRowObject();
+        String paidAmount = "";
+        if (object instanceof SubcontractProjectVO) {
+            paidAmount = ((SubcontractProjectVO) object).getPaidAmount();
+        } else if (object instanceof SubcontractPaymentVO) {
+            SubcontractPaymentVO payment = ((SubcontractPaymentVO) object);
+            if (payment.getPaymentTime() != null) {
+                paidAmount = payment.getAmount();
+            }
+            paidAmount = String.valueOf(payment.getCustomInfoByKey("paidAmount", paidAmount));
         }
-        return "";
+        
+        return Util.formatDecimal(paidAmount);
     }
     public String getPaymentApprovedAmountWrapper() {
         Object object = getCurrentRowObject();
         StringBuilder html = new StringBuilder("");
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
         if (object instanceof SubcontractPaymentVO) {
             SubcontractPaymentVO payment = (SubcontractPaymentVO) object;
-            String amount = payment.getAmount();
-            String approvedAmount = StringUtils.defaultIfBlank((String) payment.getCustomInfoByKey("approvedAmount"), amount);
+            String amount = Util.formatDecimal(payment.getAmount());
+            String approvedAmount = Util.formatDecimal(payment.getCustomInfoByKey("approvedAmount"));
+            String showDefaultAmount = StringUtils.defaultIfBlank(approvedAmount, amount);
+            
             if (!(Boolean.valueOf(String.valueOf(payment.getCustomInfoByKey("approved"))) || payment.getConfirmTime() != null)) {
                 WorkflowCommonParam workflowCommonParam = (WorkflowCommonParam) this.getPageContext().findAttribute("workflowCommonParam");
                 if (workflowCommonParam != null && TaskKey.ACCEPTANCE_TASK.equals(workflowCommonParam.getOutcome())) {
@@ -108,15 +116,15 @@ public class SubcontractDecorator extends TableDecorator {
                     //html.append("<input name='subcontractPaymentList[0].customStrInfo.approvedAmount' value='")
                     // //使用workflowParam的自定义字段传参
                     html.append("<input name='approvedAmount' value='")
-                        .append(approvedAmount)
+                        .append(showDefaultAmount)
                         .append("' data-type='payment' data-id='").append(payment.getId())
-                        .append("' data-key='approvedAmount' data-value='").append(approvedAmount)
+                        .append("' data-key='approvedAmount' data-value='").append(showDefaultAmount)
                         .append("' class='form-control task-acceptanceTask task-customInfo' />");
                 } else {
                     html.append(approvedAmount);
                 }
             } else {
-                html.append(approvedAmount);
+                html.append(showDefaultAmount);
             }
         }
         return html.toString();

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,6 +19,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.config.DataSourceHolder;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.SpringContext;
@@ -27,7 +29,6 @@ import com.dp.plat.core.util.DateUtil;
 import com.dp.plat.pms.springmvc.entity.OfstContractHeadSAP;
 import com.dp.plat.pms.springmvc.service.IPmSynchronizeService;
 import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
-//github.com/wrck/PMS
 import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 
 /**
@@ -97,7 +98,7 @@ public class SMSDataJob {
 			}
 
 			// 拆分工程实施项目以及安服项目
-			String productCode = SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "");
+			Map<String, Object> productCodeFilter = JSON.parseObject(SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "{}"), Map.class);
 			SyncLog log = new SyncLog(pmSynchronizeService.getClass() + ".splitAfProjectByProductCode", "SplitAfProject", SYNC_TYPE);
 			try {
 				String dataForm = "PMS";
@@ -105,7 +106,7 @@ public class SMSDataJob {
 				DataSourceHolder.setDataSourceType(dataForm);
 				log.setDataFrom(dataForm);
 				log.setDataTo(dataTo);
-				pmSynchronizeService.splitAfProjectByProductCode(productCode);
+				pmSynchronizeService.splitAfProjectByProductCode(productCodeFilter);
 				log.setIsSuccess(true);
 			} catch (Exception e) {
 				log.setException(ExceptionUtils.getStackTrace(e));
