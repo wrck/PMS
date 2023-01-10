@@ -9,6 +9,7 @@
 	</decorator>
 	<decorator name="main" page="main.jsp">
 		<pattern>/*/*</pattern>
+		<pattern>/404.action</pattern>
 	</decorator>
 	<excludes>
 		<pattern>/*/sub/ToUploadFile*</pattern>

@@ -281,6 +281,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	public void insertSubcontractProject(SubcontractProject subcontract) {
 		subcontract.setCreateBy(getLoginName());
 		subcontract.setCreateTime(new Date());
+		subcontract.setEffectiveFrom(subcontract.getCreateTime());
 		dao.insertSubcontractProject(subcontract);
 	}
 
@@ -289,6 +290,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	public void insertSubcontractProjectSelective(SubcontractProject subcontract) {
 		subcontract.setCreateBy(getLoginName());
 		subcontract.setCreateTime(new Date());
+		subcontract.setEffectiveFrom(subcontract.getCreateTime());
 		dao.insertSubcontractProjectSelective(subcontract);
 	}
 

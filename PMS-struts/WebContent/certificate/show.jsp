@@ -8,7 +8,21 @@
     <script type="text/javascript" src="${pageContext.request.contextPath}/certificate/js/canvas2image.js"></script>
     <script>
         $(function() {
-            convert2canvas("pic", 4);
+        	<%--// 图片过大是会出现加载不完全就渲染的问题
+            //convert2canvas("pic", 4);
+            --%>
+            // 图片加载完成后进行转化
+            imgLoad($("#bxk")[0], function() {
+                convert2canvas("pic", 4);
+            });
+            function imgLoad(img, callback) {
+                var timer = setInterval(function() {
+                    if (img.complete) {
+                        clearInterval(timer)
+                        callback(img)
+                    }
+                }, 50)
+            }
             /* html2canvas($("#pic")[0], {
                     height: $("#pic").outerHeight(),
                 }).then(function (canvas) {
@@ -40,7 +54,7 @@
                 useCORS: true // 【重要】开启跨域配置
             };
             try {
-                html2canvas(shareContent, opts).then(function (canvas) {
+            	html2canvas(shareContent, opts).then(function (canvas) {
                     var context = canvas.getContext('2d');
                     // 【重要】关闭抗锯齿
                     context.mozImageSmoothingEnabled = false;
@@ -50,20 +64,20 @@
 
                     // 【重要】默认转化的格式为png,也可设置为其他格式
                     var img = Canvas2Image.convertToPNG(canvas, canvas.width, canvas.height);
-
-                    document.body.appendChild(img);
+                    img.id = 'printImg';
+                    //document.body.appendChild(img);
 
                     $(img).css({
                         "width": canvas.width / scale + "px",
                         "height": canvas.height / scale + "px",
                     }).addClass('f-full');
                     //$("#" + elmId).hide();
-                    $("#" + elmId).remove();
+                    $("#" + elmId).html(img);
                 });
             } catch(e) {
-                $("#" + elmId).text("该浏览器版本不支持合格证打印，建议使用谷歌浏览器！").css("color", "red");
-                //$("#" + elmId).remove();
-                //alert("该浏览器版本不支持合格证打印，建议使用谷歌浏览器！");
+            	$("#" + elmId).text("该浏览器版本不支持合格证打印，建议使用谷歌浏览器！").css("color", "red");
+            	//$("#" + elmId).remove();
+            	//alert("该浏览器版本不支持合格证打印，建议使用谷歌浏览器！");
             }
         }
 
@@ -72,6 +86,10 @@
         html {
             font-size: 12px;
             font-family: "SimSun" !important;
+        }
+        html,body {
+            margin: 0;
+            padding: 0;
         }
         #pic {
             opacity: 1;
@@ -121,16 +139,23 @@
             font-size: 0.8em;
             font-family: "SimSun" !important;
         }
+        
+        #bxk {
+            /* height: 210mm; */
+            width: 297mm;
+        }
     </style>
 </head>
-<body style="max-width:150mm">
+<body>
     <s:if test='errmsg == "" && barcode != null'>
-        <div id="pic" style="display: inline-block;position:relative;">
-            <img id="hgz" src="${pageContext.request.contextPath}/certificate/image/hgz.png">
+        <div id="pic" style="display: inline-block;position:relative;page-break-after:always">
+            <%-- <img id="hgz" src="${pageContext.request.contextPath}/certificate/image/hgz.png">
             <div id="yz" data-qc='${results.oqcNo}'>
                 <img src="${pageContext.request.contextPath}/certificate/image/yz_1.png">
             </div>
-            <span id="prdDate">${results.productionDate}</span>
+            <span id="prdDate">${results.productionDate}</span> --%>
+            
+            <img id="bxk" src="${pageContext.request.contextPath}/certificate/image/bxk_300.png">
         </div>
     </s:if>
     <s:else>

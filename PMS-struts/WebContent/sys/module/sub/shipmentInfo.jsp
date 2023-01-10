@@ -203,7 +203,7 @@ function deleteShipmentInfo() {
 					</display:setProperty>
 				</display:table>
 			</div>
-            <s:if test="%{project.projectState != '100' || (project.projectState == '100' && (user.isHasRole(13) || user.isHasRole(1)))}"><!-- 控制闭环状态不能再做操作 -->
+            <s:if test="%{(project.projectState != '100' && (user.isHasRole(1) || user.isHasRole(11) || user.isHasRole(12) || user.isHasRole(13))) || (project.projectState == '100' && (user.isHasRole(13) || user.isHasRole(1)))}"><!-- 控制闭环状态不能再做操作 -->
                 <div class="form-group form-group-query">
                     <label for="receiveAddress"><span class="redmark">*</span><s:text name="pm.project.receiveAddress" />:</label>
                     <textarea class="form-control" rows="3" name="installAddress" id="receiveAddress" cols="100"></textarea>

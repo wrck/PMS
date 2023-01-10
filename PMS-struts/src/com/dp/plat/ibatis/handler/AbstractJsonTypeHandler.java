@@ -83,9 +83,9 @@ public abstract class AbstractJsonTypeHandler<T> extends BaseTypeHandler<T> impl
 		return StringUtils.isBlank(json) ? null : parse(json);
 	}
 
-	protected abstract T parse(String json);
+	public abstract T parse(String json);
 
-	protected abstract Object toJson(T obj);
+	public abstract Object toJson(T obj);
 
-	protected abstract String toJsonString(T obj);
+	public abstract String toJsonString(T obj);
 }

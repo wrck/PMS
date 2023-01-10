@@ -81,7 +81,7 @@ min-width: 382px;
 		<div>
 		    <ul class="nav navbar-nav">
 		    	<s:iterator value="navTabList" var="nav" status="index">
-					<s:if test="%{#index.index == 0}">
+					<s:if test="%{#index.index == 0 || navTabList.size() == 1}">
 		    			<li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','module/report_input.action')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
 		    		</s:if>
 		    		<s:else>

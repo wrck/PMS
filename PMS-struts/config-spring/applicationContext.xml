@@ -157,6 +157,10 @@ xmlns="http://www.springframework.org/schema/beans"
 	<bean id="emailer" class="com.dp.plat.util.EmailBean">  
     </bean>  
     <bean id="blackListListener" class="com.dp.plat.util.BlackListNotifier" /> 
+    
+    <!-- <bean id="CSRFTokenManager" class="com.dp.plat.security.csrf.CSRFTokenManager" >
+        <constructor-arg name="csrfTokenName" value="csrfToken"/>
+    </bean> -->
    
     <!-- 拓展项目的mybatis配置 -->
     <import resource="spring-extend-mybatis.xml" />

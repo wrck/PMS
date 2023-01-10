@@ -123,7 +123,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			<![CDATA[( t1.projectCode = #presalesCode# or t1.presalesCode = #presalesCode# )]]>
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="projectName">
-			<![CDATA[ t1.projectName like '%$projectName$%']]>
+			<![CDATA[ t1.projectName like CONCAT('%', #projectName#, '%')]]>
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="projectType">
             <![CDATA[ t1.projectType = #projectType#]]>
@@ -131,6 +131,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="officeCode">
 			<![CDATA[ t1.officeCode = #officeCode#]]>
 		</isNotEmpty>
+		<iterate prepend="AND" property="officeCodeList" open=" t1.officeCode in (" close=") " conjunction=",">#officeCodeList[]#</iterate>
 		<isNotEmpty prepend="and" property="projectState">
 			<![CDATA[ t1.projectState = #projectState#]]>
 		</isNotEmpty>
@@ -234,7 +235,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			<![CDATA[ (t1.projectCode = #presales.presalesCode# or t1.presalesCode = #presales.presalesCode# )]]>
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="presales.projectName">
-			<![CDATA[ t1.projectName like '%$presales.projectName$%']]>
+			<![CDATA[ t1.projectName like CONCAT('%', #presales.projectName#, '%')]]>
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="presales.projectType">
             <![CDATA[ t1.projectType = #presales.projectType#]]>
@@ -242,6 +243,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="presales.officeCode">
 			<![CDATA[ t1.officeCode = #presales.officeCode#]]>
 		</isNotEmpty>
+        <iterate prepend="AND" property="presales.officeCodeList" open=" t1.officeCode in (" close=") " conjunction=",">#presales.officeCodeList[]#</iterate>
 		<isNotEmpty prepend="and" property="presales.projectState">
 			<![CDATA[ t1.projectState = #presales.projectState#]]>
 		</isNotEmpty>
@@ -353,7 +355,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	
 	<update id="update_presales_code" parameterClass="java.util.Map">
 		<![CDATA[
-			UPDATE pm_presales_project_header SET presalesCode = CONCAT( projectCode , '-', $num$) 
+			UPDATE pm_presales_project_header SET presalesCode = CONCAT( projectCode , '-', #num#) 
 			WHERE presalesId =  #presalesId#; 
 		]]>
 	</update>
@@ -371,7 +373,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<insert id="insert_presales_tasks" parameterClass="java.util.Map" >
 		<![CDATA[
 			INSERT INTO pm_project_task(projectId ,projectType ,taskTypeCode ,taskTypeId , remark, createTime ,createBy,effectiveFrom )
-			SELECT $projectId$ , $projectType$, dataTypeCode , basicDataId , null, NOW() ,#createBy# , NOW() FROM fnd_basic_data 
+			SELECT #projectId# , #projectType#, dataTypeCode , basicDataId , null, NOW() ,#createBy# , NOW() FROM fnd_basic_data 
 			WHERE dataTypeCode = #taskTypeCode#
 			order by sortId
 		]]>
@@ -401,7 +403,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	</select>
 	<update id="update_presales_task_files" parameterClass="java.util.Map">
 		<![CDATA[
-			UPDATE pm_project_task SET deliverFileIds =  CASE WHEN  deliverFileIds IS NULL OR deliverFileIds = '' THEN '$fileIds$' ELSE CONCAT(deliverFileIds ,',', '$fileIds$') END WHERE taskId = #taskId#;    
+			UPDATE pm_project_task SET deliverFileIds =  CASE WHEN  deliverFileIds IS NULL OR deliverFileIds = '' THEN #fileIds# ELSE CONCAT(deliverFileIds ,',', #fileIds#) END WHERE taskId = #taskId#;    
 		]]>
 	</update>
 	<update id="update_presales_task_finshedtime" parameterClass="java.util.Map">
@@ -414,7 +416,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	</update>
 	<update id="update_presales_confirmfiles" parameterClass="java.util.Map">
 		<![CDATA[
-			UPDATE pm_presales_project_header SET confirmFileIds = CASE WHEN  confirmFileIds IS NULL OR confirmFileIds = '' THEN '$fileIds$' ELSE CONCAT(confirmFileIds ,',', '$fileIds$') END 
+			UPDATE pm_presales_project_header SET confirmFileIds = CASE WHEN  confirmFileIds IS NULL OR confirmFileIds = '' THEN #fileIds# ELSE CONCAT(confirmFileIds ,',', #fileIds#) END 
 			WHERE presalesId = #presalesid#;    
 		]]>
 	</update>
@@ -435,9 +437,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			        and t1.projectId = t2.projectId 
 			set 
 			    t1.deliverFileIds = case
-			        when t1.deliverFileIds like '%$fileId$,%' then replace(@temp, '$fileId$,', '')
-					when t1.deliverFileIds like '%,$fileId$' then replace(@temp, ',$fileId$', '')
-			        else replace(@temp, '$fileId$', null)
+			        when t1.deliverFileIds like CONCAT('%', #fileId#, ',%') then replace(@temp, CONCAT(#fileId#, ','), '')
+					when t1.deliverFileIds like CONCAT('%,', #fileId#') then replace(@temp, CONCAT(',', #fileId#), '')
+			        else replace(@temp, #fileId#, null)
 			    end
 			where
 			    t1.taskId = #taskId#
@@ -457,9 +459,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			        t2.presalesId = #presalesId# ) t2 ON t1.presalesId = t2.presalesId 
 			set 
 			    t1.confirmFileIds = case
-			        when t1.confirmFileIds like '%$fileId$,%' then replace(@temp, '$fileId$,', '')
-			        when t1.confirmFileIds like '%,$fileId$' then replace(@temp, ',$fileId$', '')
-			        else replace(@temp, '$fileId$', null)
+			        when t1.confirmFileIds like CONCAT('%', #fileId#, ',%') then replace(@temp, CONCAT(#fileId#, ','), '')
+			        when t1.confirmFileIds like CONCAT('%,', #fileId#') then replace(@temp, CONCAT(',', #fileId#), '')
+			        else replace(@temp, #fileId#, null)
 			    end
 			where
 			    t1.presalesId = #presalesId#;
@@ -674,7 +676,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             <![CDATA[ (t1.projectCode = #presalesCode# or t1.presalesCode = #presalesCode# )]]>
         </isNotEmpty>
         <isNotEmpty prepend="and" property="projectName">
-            <![CDATA[ t1.projectName like '%$projectName$%']]>
+            <![CDATA[ t1.projectName like CONCAT('%', #projectName#, '%')]]>
         </isNotEmpty>
         <isNotEmpty prepend="and" property="officeCode">
             <![CDATA[ t1.officeCode = #officeCode#]]>

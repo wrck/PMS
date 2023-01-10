@@ -37,7 +37,7 @@ public class UploadFileUtil {
 
 	private final static String DEFAULT_UPLOAD_PATH = "upload";
 
-	private final static String UPLOAD_PATH_KEY = "plat.upload.path";
+	private final static String UPLOAD_PATH_KEY = "sys.upload.path";
 
 	public final static String UPLOAD_PATH;
 

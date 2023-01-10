@@ -35,7 +35,7 @@ public class UploadAction extends BaseAction{
 	private String redirect;
 	private int fileId;
 	private String seq = File.separator;
-	public String UPLOAD_PATH = UploadFileUtil.UPLOAD_PATH +seq + "file";
+    public String UPLOAD_PATH = UploadFileUtil.UPLOAD_PATH + seq + "file";
 	private FileParam fileParam;
 	private String message;
 	private boolean isAjax;
@@ -51,7 +51,7 @@ public class UploadAction extends BaseAction{
 			return INPUT;
 		}
 		try {
-			String path = UPLOAD_PATH +seq+ Util.getRandNumber();
+            String path = UPLOAD_PATH + seq + Util.getRandNumber();
 			UploadFileUtil.upload(upload, path, uploadFileName);
 			String fileIds =  basicDataService.insertFileInfo(seq + path + seq, uploadFileName, uploadFileType);
 //			HttpSession session = getServletRequest().getSession();

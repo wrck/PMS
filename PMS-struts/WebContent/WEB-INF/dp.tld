@@ -122,5 +122,17 @@
 	<tag>
 		<name>leftmenu</name>
 		<tag-class>com.dp.plat.tags.LeftMenuTag</tag-class>
+		<attribute>
+		    <name>menu</name>
+		</attribute>
+		<attribute>
+            <name>module</name>
+        </attribute>
+        <attribute>
+            <name>group</name>
+        </attribute>
+        <attribute>
+            <name>function</name>
+        </attribute>
 	</tag>
 </taglib>

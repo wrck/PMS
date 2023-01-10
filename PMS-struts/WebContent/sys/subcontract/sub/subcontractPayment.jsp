@@ -429,7 +429,12 @@
                 function calcRatio() {
                     var sumRatio = 0;
                     var isValid = true;
+                    var subcontractAmount = $.trim($("#subcontractInfoTable #subcontractAmount").text());
+                    subcontractAmount = Number(subcontractAmount.replace(/,/g, ""));
+                    var sumAmount = 0;
+                    var $prevRatio = $("#subcontractPaymentTable tbody .ratio").first();
                     $("#subcontractPaymentTable tbody .ratio").each(function(){
+                    	var $ratio = $(this);
                         var ratioStr = $.trim($(this).text()) || $.trim($(this).find("input").val());
                         if (ratioStr != '' && ratioStr.match(ratioRegx) == null) {
                             isValid = false;
@@ -453,11 +458,36 @@
                         if (!isNaN(ratio)) {
                             sumRatio += ratio;
                             sumRatio = Number(sumRatio.toFixed("2"));
+                            $prevRatio = $ratio;
+                        }
+                        
+                        // 求总金额
+                        var $amount = $(this).siblings(".amount");
+                        var amount = Number(($.trim($amount.text()) || $.trim($amount.find("input").val()) || "0").replace(/,/g, ""));
+                        if (!isNaN(amount)) {
+                            sumAmount += amount;
                         }
                     });
                     if (String(sumRatio).match(ratioRegx) == null) {
-                        alert("总比例无效，请检查!");
-                        return false;
+                    	sumAmount = Number(sumAmount.toFixed("2"));
+                    	subcontractAmount = Number(subcontractAmount.toFixed("2"));
+                    	// 如果总比例无效，但是总计正常，则忽略。部分金额付款比例四舍五入会出现总比例大于100的情况
+                    	if (sumAmount > subcontractAmount) {
+                            alert("总比例无效，请检查!");
+                            return false;
+                    	} else {
+                    		// 根据总金额重新计算比例
+                    		var amountRatio = Number((sumAmount / subcontractAmount * 100).toFixed("2"));
+                    		// 获取最后一个付款比例
+                    		var ratioStr = $.trim($prevRatio.text()) || $.trim($prevRatio.find("input").val());
+                    		var ratio = Number(ratioStr) || 0;
+                    		// 计算最后一个付款比例之前的总比例
+                    		var prevSumRatio = Number((sumRatio - ratio).toFixed("2"));
+                    		// 重新计算最后一个付款比例处理尾差
+                    		var newRatio = amountRatio - prevSumRatio;
+                    		$prevRatio.find("input").val(newRatio);
+                    		sumRatio = amountRatio;
+                    	}
                     }
                     $("#sumRatio").text(sumRatio);
                     return isValid;

@@ -2,6 +2,7 @@ package com.dp.plat.data.bean;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -254,6 +255,9 @@ public class Project extends ProjectQueryParam{
 	public void setProjectState(String projectState) {
 		this.projectState = projectState;
 	}
+	public List<String> getProjectStateList() {
+        return Util.splitToList(projectState, ",", "'");
+    }
 	public String getProjectStateName() {
 		return projectStateName;
 	}
@@ -692,6 +696,9 @@ public class Project extends ProjectQueryParam{
 	public void setOfficeCodes(String officeCodes) {
 		this.officeCodes = officeCodes;
 	}
+	public List<String> getOfficeCodeList() {
+        return Util.splitToList(officeCodes, ",", "'");
+    }
 	public String getMarketName() {
 		return marketName;
 	}

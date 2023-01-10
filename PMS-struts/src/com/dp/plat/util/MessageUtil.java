@@ -204,6 +204,14 @@ public class MessageUtil {
 	 */
 	public static final int ROLE_COMMON = 3;//
 	/**
+     * 角色id为5，表示项目管理员
+     */
+    public static final int ROLE_PROJECT_ADMIN = 5;
+    /**
+     * 角色id为6，表示项目查阅人员
+     */
+    public static final int ROLE_PROJECT_VIEWER = 6;
+	/**
 	 * 角色为9，表示办事处主任
 	 */
 	public static final int ROLE_AREA_LEADER = 9;//

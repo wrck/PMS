@@ -1,11 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
 <%@ taglib prefix="dp" uri="/dp"%>
+<%@page import="com.dp.plat.context.UserContext"%>
 <%@ taglib prefix="decorator"
 	uri="http://www.opensymphony.com/sitemesh/decorator"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
+<decorator:usePage id="mypage"></decorator:usePage>
 <dp:base />
 <title>
 	<s:text name="sys.title"></s:text>
@@ -67,8 +69,9 @@
 			<!-- 用于限制页面宽度 -->
 			<!-- 页面的Banner -->
 			<tr>
-				<td colspan="2" class="mainframe_head"><%@include
-						file="/plat/common/header.jsp"%></td>
+				<td colspan="2" class="mainframe_head">
+                    <%@include file="/plat/common/header.jsp"%>
+                </td>
 			</tr>
 			<tr>
 				<td colspan="2">
@@ -96,18 +99,21 @@
 										<td class="navileft">
 
 											<ol class="breadcrumb">
-												<li><decorator:usePage id="mypage"></decorator:usePage>
+												<li>
 													<%
 														String netm = mypage.getProperty("meta.netm");
-														if (netm == null || netm.equals("0")) {
-															out.print(mypage.getProperty("meta.group"));
+													    String group = mypage.getProperty("meta.group");
+														if ((netm == null || netm.equals("0")) && group != null) {
+															out.print(group);
 														} else {
 															String netmgroup = mypage.getProperty("meta.netmgroup");
-															if (netmgroup == null) {
-																out.print(mypage.getProperty("meta.group"));
-															} else {
+															if (netmgroup == null && group != null) {
+																out.print(group);
+															} else if (netmgroup != null) {
 																out.print(netmgroup);
-															}
+															} else {
+															    out.print("未知");
+                                                            }
 														}
 													%></li>
 

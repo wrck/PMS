@@ -92,6 +92,14 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
 	Project queryProjectById(int projectId);
+	
+	/**
+     * 根据project查询有权限的项目信息
+     * 
+     * @param project
+     * @return
+     */
+    Project queryProjectByPowerId(Project project);
 
 	/**
 	 * 根据projectid更新项目经理-服务经理权限

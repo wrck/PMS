@@ -42,13 +42,24 @@ public class SpringContext implements ApplicationContextAware {
 	public static Object getBean(String name) throws BeansException {
 		return applicationContext.getBean(name);
 	}
+	
+	/**
+     * 获取对象 这里重写了bean方法，起主要作用
+     * 
+     * @param requiredType
+     * @return <T> 一个以所给类型注册的bean的实例
+     * @throws BeansException
+     */
+    public static <T> T getBean(Class<T> requiredType) throws BeansException {
+        return applicationContext.getBean(requiredType);
+    }
 
 	/**
      * 获取对象 这里重写了bean方法，起主要作用
      * 
      * @param name
 	 * @param requiredType 
-     * @return Object 一个以所给名字注册的bean的实例
+     * @return <T> 一个以所给名字类型注册的bean的实例
      * @throws BeansException
      */
     public static <T> T getBean(String name, Class<T> requiredType) throws BeansException {

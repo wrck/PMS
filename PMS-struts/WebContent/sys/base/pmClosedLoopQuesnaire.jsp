@@ -10,8 +10,7 @@
 <dp:base />
 <meta name="menu" content="SysLeftMenu">
 <meta name="module" content="<s:text name='module.plat' />">
-<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
-<%-- <meta name="supfunction" content="<s:text name='sys.leftmenu.ordermanage' />"> --%>
+<meta name="group" content="<s:text name='sys.leftmenu.basemanage' />">
 <meta name="function" content="<s:text name='pm.cl.quesMana' />">
 <script type="text/javascript">
 	$(function(){

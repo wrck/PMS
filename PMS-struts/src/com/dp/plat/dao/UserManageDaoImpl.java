@@ -17,6 +17,7 @@ import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Md5Param;
 import com.dp.plat.param.ProjectBatchCgMbParam;
 import com.dp.plat.param.UserParam;
+import com.dp.plat.util.MailUtil;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.UserUtil;
 
@@ -64,7 +65,7 @@ public class UserManageDaoImpl extends BaseDao implements UserManageDao {
 
 	@Override
 	public void updatepwdbyuser(User user) {
-		getSqlMapClientTemplate().update("update-pwd-byusername", user.getUsername());
+		getSqlMapClientTemplate().update("update-pwd-byusername", user);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -80,6 +81,31 @@ public class UserManageDaoImpl extends BaseDao implements UserManageDao {
 		}
 		return roleList;
 	}
+	
+	@SuppressWarnings("unchecked")
+    @Override
+    public List<UserMenu> queryAllMenuList() {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+        map.put("superId", 0);
+        List<UserMenu> list = getSqlMapClientTemplate().queryForList("query_menu_modules", map);
+        queryAllMenuList(list);
+        return list;
+    }
+	
+	public List<UserMenu> queryAllMenuList(List<UserMenu> list) {
+	    Map<String, Integer> map = new HashMap<String, Integer>();
+        if (list != null && list.size() > 0) {
+            for (Iterator<UserMenu> iterator = list.iterator(); iterator.hasNext();) {
+                UserMenu userMenu = (UserMenu) iterator.next();
+                map.put("superId", userMenu.getId());
+                List<UserMenu> subList = getSqlMapClientTemplate().queryForList("query_menu_modules", map);
+                userMenu.setUserMenuList(subList);
+                queryAllMenuList(subList);
+            }
+        }
+
+        return list;
+    }
 
 	@SuppressWarnings("unchecked")
 	@Override

@@ -38,13 +38,32 @@ public class User {
 		return false;
 	}
 	
-	public boolean isHasAnyRole(int... roleIds){
-	    for (int roleId : roleIds) {
-	        String role = ";" + roleId +  ";";
-	        String roles = getRoleids();
-	        if(roles.indexOf(role) != -1){
-	            return true;
-	        }
+	public boolean isHasAnyRole(Object... roleIds){
+        for (Object roleId : roleIds) {
+            String role = ";" + String.valueOf(roleId) +  ";";
+            String roles = getRoleids();
+            if(roles.indexOf(role) != -1){
+                return true;
+            }
+        }
+        return false;
+    }
+	
+	public boolean isHasAnyRole(String roleIdsStr){
+        try {
+            if (roleIdsStr != null) {
+                String[] roleIdArr = roleIdsStr.trim().split(",");
+                Integer[] roleIds = new Integer[roleIdArr.length];
+                int i = 0;
+                for (String roleId : roleIdArr) {
+                    try {
+                        roleIds[i++] = Integer.parseInt(roleId);
+                    } catch (Exception e) {
+                    }
+                }
+                return isHasAnyRole(roleIds);
+            }
+        } catch(Exception e) {
         }
         return false;
     }

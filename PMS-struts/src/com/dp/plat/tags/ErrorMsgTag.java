@@ -35,11 +35,13 @@ public class ErrorMsgTag extends TagSupport
             HttpServletRequest request = (HttpServletRequest) pageContext .getRequest();
             JspWriter out = pageContext.getOut();//输出到JSP页面，调用out.print()
 
-        	ValueStack vs = (ValueStack)request.getAttribute("struts.valueStack");
         	HashMap<String, Object> map = new HashMap<String, Object>();
-        	map.put("fieldErrors", vs.findValue("fieldErrors"));
         	map.put("accesskey", accesskey);
         	map.put("onlyone", onlyone);
+        	ValueStack vs = (ValueStack)request.getAttribute("struts.valueStack");
+        	if (vs != null) {
+        	    map.put("fieldErrors", vs.findValue("fieldErrors"));
+        	}
 
         	VContext.getVM(out, "com/dp/plat/vmpage/ErrorMsgTag.vm", map);
 

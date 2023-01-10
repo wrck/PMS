@@ -19,10 +19,13 @@ filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod='scale',s
      	<td width="25%" colspan="2">
          	<span>
 	         	<a href="Logout.action"><FONT color="white"><s:text name="plat.header.exit"></s:text></FONT></a>
-         		<strong class="fontWhite">[<%=((UserContext)SpringContext.getBean("userContext")).getUsername()%>-</strong>
-         		<strong class="fontWhite"><%=((UserContext)SpringContext.getBean("userContext")).getUser().getRealName()%>]</strong>
+                <strong class="fontWhite">[${currentDisplayUser.username}-${currentDisplayUser.realName}]</strong>
+         		<%-- <strong class="fontWhite">[<%=((UserContext)SpringContext.getBean("userContext")).getUsername()%>-</strong>
+         		<strong class="fontWhite"><%=((UserContext)SpringContext.getBean("userContext")).getUser().getRealName()%>]</strong> --%>
+                <s:if test="%{!currentIsCas}">
+                    <a href="${pageContext.request.contextPath}/sys/Password.action"><FONT color="white">修改密码</FONT></a>
+                </s:if>
          	</span>
-      
 		</td>
       </tr>
 </table>

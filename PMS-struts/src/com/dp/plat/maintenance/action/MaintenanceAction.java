@@ -141,9 +141,11 @@ public class MaintenanceAction extends BaseAction implements Preparable {
      */
     public String projectMaintenance() {
         user = UserContext.getUserContext().getUser();
-        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-                || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER)
+                || user.isHasAnyRole(MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_PROJECT_VIEWER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
         }
@@ -183,7 +185,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             // maintenanceList =
             // projectService.selectProjectMaintenanceVOList(projectMaintenance);
             if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
+                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))) {
                 projectMaintenance.setAreaPower(user.getAreapower());
                 projectMaintenance.setUserPower(user.getUsername());
                 
@@ -200,7 +202,9 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             }
             // 在售后项目中查询维护记录，设置当前项目实施状态
             if (project != null && (projectMaintenance.isHasPower()
-                    || (user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)))) {
+                    || (user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                            || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                            || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN)))) {
                 projectExecutionStateList = basicDataService.queryBasicDataBeans("projectExecutionState");
                 projectMaintenance.setProjectExecutionState(project.getExecutionState());
             }
@@ -226,10 +230,12 @@ public class MaintenanceAction extends BaseAction implements Preparable {
                 project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
 				if (project == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
 						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER))
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+						|| user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))
 						|| (user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
 								&& (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
-										|| user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)))
+										|| user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
+										|| user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)))
 						|| (project != null && (user.getUsername().equals(project.getServiceManagerCode())
 								|| user.getUsername().equals(project.getProgramManagerCode())
 								|| user.getUsername().equals(project.getProgramManagerCodeB()) || StringUtils.contains(
@@ -241,12 +247,15 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             } else if (presales != null) {
                 presales = presalesService.queryPresalesById(presales.getPresalesId());
                 if (presales == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
-						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
-						|| user.isHasRole(MessageUtil.ROLE_PRESALES_STAFF))
-						|| (user.getAreapower().contains(StringUtils.trimToEmpty(presales.getOfficeCode()))
-                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)))
-                        || (presales != null && (user.getUsername().equals(presales.getServiceManager()) || user.getUsername().equals(presales.getProjectManager()))))) {
+                        || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                        || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                        || user.isHasRole(MessageUtil.ROLE_PRESALES_STAFF))
+                        || (user.getAreapower().contains(StringUtils.trimToEmpty(presales.getOfficeCode()))
+                                && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                                        || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
+                                        || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)))
+                        || (presales != null && (user.getUsername().equals(presales.getServiceManager())
+                                || user.getUsername().equals(presales.getProjectManager()))))) {
                     setErrmsg("没有访问权限！");
                     return ERROR;
                 }
@@ -421,9 +430,11 @@ public class MaintenanceAction extends BaseAction implements Preparable {
     
     public String serviceDelivery() throws Exception {
     	user = UserContext.getUserContext().getUser();
-        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
-                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-                || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN) || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
         }
@@ -449,7 +460,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
 	    // maintenanceList =
 	    // projectService.selectProjectMaintenanceVOList(projectMaintenance);
 	    if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-	            || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
+	            || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))) {
 	        projectMaintenance.setAreaPower(user.getAreapower());
 //	        projectMaintenance.setUserPower(user.getUsername());
 //	        

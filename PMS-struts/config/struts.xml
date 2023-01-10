@@ -21,13 +21,25 @@
 	<constant name="struts.i18n.encoding" value="UTF-8"/>
 	<!-- 定义基础包 -->
 	
+	<!-- XSS拦截器 -->
+    <!-- <bean name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor"></bean> -->
+	
 	<package name="basepackage" extends="struts-default" abstract="true">
 		<!-- 定义拦截栈 -->
 		<interceptors>
 			<interceptor name="MyInterceptor" class="com.dp.plat.interceptor.MyInterceptor"></interceptor>
 			
+			<!-- XSS拦截器 -->
+            <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
+                <param name="enable">true</param>
+                <param name="excludeUrls">/base/executeSql.*</param>
+                <param name="cleanUrls">/module/prob_*</param>
+                <param name="encodeUrls">/*</param>
+            </interceptor>
+			
 			<!--基础拦截栈，不对start方法进行校验 -->
 			<interceptor-stack name="baseStack">
+			    <interceptor-ref name="XssStrutsInterceptor"></interceptor-ref>
 				<interceptor-ref name="MyInterceptor">
 					<!-- <param name="excludeMethods">executepwd,editlogin</param> -->
 				</interceptor-ref>
@@ -48,7 +60,7 @@
 			</interceptor-stack>
 		</interceptors>
 
-		 <!--设置默认拦截栈 -->
+		<!--设置默认拦截栈 -->
 		<default-interceptor-ref name="baseStack"></default-interceptor-ref> 
 		
 		
@@ -58,13 +70,44 @@
 			<result name="globalLogin">/index.jsp</result>
 			<result name="globalAdminLogin">/error403.jsp</result>
 			<result name="errorRole">/error403.jsp</result>
+			<result name="error">/error.jsp</result>
 		</global-results>
+		
+		<global-exception-mappings>
+		    <exception-mapping result="error" exception="java.lang.Exception">/error.jsp</exception-mapping>
+		</global-exception-mappings>
 		
 		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
 		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
 	</package>
 	
+	
 	<package name="defaultJson" extends="json-default" abstract="true">
+	    <interceptors>
+	        <!-- XSS拦截器 -->
+            <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
+                <param name="enable">true</param>
+                <param name="excludeUrls">/base/executeSql.*</param>
+                <param name="cleanUrls">/module/prob_*</param>
+                <param name="encodeUrls">/*</param>
+            </interceptor>
+            
+            <!--基础拦截栈，不对start方法进行校验 -->
+            <interceptor-stack name="baseStack">
+                <interceptor-ref name="XssStrutsInterceptor"></interceptor-ref>
+                
+                <interceptor-ref name="defaultStack">
+                </interceptor-ref>
+            </interceptor-stack>
+        </interceptors>
+
+        <!--设置默认拦截栈 -->
+        <default-interceptor-ref name="baseStack"></default-interceptor-ref>
+        
+        <global-exception-mappings>
+            <exception-mapping result="error" exception="java.lang.Exception">/error.jsp</exception-mapping>
+        </global-exception-mappings>
+        
 		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
 		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
 	</package>

@@ -109,7 +109,7 @@ public class SupervisionAction extends BaseAction implements Preparable {
         user = UserContext.getUserContext().getUser();
         if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)
                 || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER)
-                || user.isHasRole(MessageUtil.ROLE_AREA_LEADER))) {
+                || user.isHasRole(MessageUtil.ROLE_AREA_LEADER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN) || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER))) {
             setErrmsg("没有访问权限！");
             return ERROR;
         }
@@ -141,7 +141,7 @@ public class SupervisionAction extends BaseAction implements Preparable {
             // supervisionList =
             // projectService.selectProjectSupervisionVOList(projectSupervision);
             if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
-                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))) {
+                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))) {
                 projectSupervision.setAreaPower(user.getAreapower());
                 projectSupervision.setUserPower(user.getUsername());
             }
@@ -161,11 +161,18 @@ public class SupervisionAction extends BaseAction implements Preparable {
         }
         project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
         user = UserContext.getUserContext().getUser();
-        if (project == null || !(user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
-                && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
-                || (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER) || user.isHasRole(MessageUtil.ROLE_CALLBACKPER))
-                || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
-                        || user.getUsername().equals(project.getProgramManagerCodeB()))))) {
+        if (project == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))
+                || (user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
+                        && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                                || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
+                                || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)))
+                || (project != null && (user.getUsername().equals(project.getServiceManagerCode())
+                        || user.getUsername().equals(project.getProgramManagerCode())
+                        || user.getUsername().equals(project.getProgramManagerCodeB()) || StringUtils.contains(
+                                project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
             setErrmsg("没有访问权限！");
             return ERROR;
         }

@@ -8,19 +8,25 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.dp.plat.context.HttpContext;
+import com.dp.plat.context.SpringContext;
+import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.Department;
-import com.dp.plat.data.bean.MailSenderInfo;
 import com.dp.plat.data.bean.Role;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.UserMenu;
+import com.dp.plat.exception.CustomRuntimeException;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.ProjectBatchCgMbParam;
 import com.dp.plat.service.DepartmentManageService;
+import com.dp.plat.service.PasswordService;
 import com.dp.plat.service.UserManageService;
+import com.dp.plat.util.MailUtil;
+import com.dp.plat.util.MessageUtil;
+import com.dp.plat.util.PasswordUtil;
 import com.dp.plat.util.ProjectUtils;
-import com.dp.plat.util.test.SimpleMailSender;
+import com.opensymphony.xwork2.Preparable;
 
-public class UserManageAction extends BaseAction {
+public class UserManageAction extends BaseAction implements Preparable {
 	private static final long serialVersionUID = 1L;
 	private DisplayParam displayParam;
 	private UserManageService userManageService;
@@ -38,6 +44,16 @@ public class UserManageAction extends BaseAction {
 	
 	private String newMemberCode;
 	private String changeType;//用户角色变更类型，service、program、both，用于更新项目的服务经理、项目经理
+	
+	
+	@Override
+    public void prepare() throws Exception {
+	    if (!UserContext.getUserContext().isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+	        setErrmsg("没有访问权限！");
+	        throw new CustomRuntimeException(getErrmsg());
+	    }
+    }
+
 	// 用户管理列表
 	public String execute() throws Exception {
 		if(displayParam == null){
@@ -59,31 +75,32 @@ public class UserManageAction extends BaseAction {
 		return SUCCESS;
 	}
 	
-	private List<User> dealWith(List<User> userlist2,
-			Map<String, String> roleMap) {
-		StringBuilder roleName = null;
-		for(User user : userlist2){
-			roleName = new StringBuilder();
-			for(String roleId : roleMap.keySet()){
-				if(user.getRoleids() != null && user.getRoleids().indexOf(roleId) != -1){
-					roleName.append(roleMap.get(roleId));
-					roleName.append(",");
-				}
-			}
-			if(roleName.length()>0){
-				roleName.deleteCharAt(roleName.length()-1);
-			}
-			user.setRoleName(roleName.toString());
-		}
-		return userlist2;
-	}
-	private Map<String, String> dealWith(List<Role> rolelist2) {
-		Map<String, String> map = new HashMap<String, String>();
-		for(Role role :rolelist2){
-			map.put(";"+role.getId()+";", role.getRoleName());
-		}
-		return map;
-	}
+    private List<User> dealWith(List<User> userlist2, Map<String, String> roleMap) {
+        StringBuilder roleName = null;
+        for (User user : userlist2) {
+            roleName = new StringBuilder();
+            for (String roleId : roleMap.keySet()) {
+                if (user.getRoleids() != null && user.getRoleids().indexOf(roleId) != -1) {
+                    roleName.append(roleMap.get(roleId));
+                    roleName.append(",");
+                }
+            }
+            if (roleName.length() > 0) {
+                roleName.deleteCharAt(roleName.length() - 1);
+            }
+            user.setRoleName(roleName.toString());
+        }
+        return userlist2;
+    }
+
+    private Map<String, String> dealWith(List<Role> rolelist2) {
+        Map<String, String> map = new HashMap<String, String>();
+        for (Role role : rolelist2) {
+            map.put(";" + role.getId() + ";", role.getRoleName());
+        }
+        return map;
+    }
+    
 	//增加用户数据
 	public String add() {
 		if(user==null){
@@ -99,11 +116,29 @@ public class UserManageAction extends BaseAction {
 				setErrmsg("填写错误");
 				return ERROR;
 			}
-			userManageService.addUserInfo(user , usermenuids);
+			String randomPassword = PasswordUtil.generatePass();
+			user.setPassword(PasswordUtil.encryptMD5Password(randomPassword, user.getUsername()));
+            userManageService.addUserInfo(user, usermenuids);
+            
+            if (user.getId() > 0 && !UserContext.getUserContext().isCas()) {
+                Map<String, Object> context = new HashMap<String, Object>();
+                context.put("templateCode", "userAddOrRestPwdMailInfo");
+                context.put("title", "帐号已开通");
+                context.put("realName", user.getRealName());
+                context.put("userName", user.getUsername());
+                context.put("randomPassword", randomPassword);
+                context.put("content", context.get("title"));
+                context.put("tos", user.getEmail());
+                context.put("beforeSplit", "${");
+                context.put("afterSplit", "}");
+                MailUtil.keepMailWithTemplate(context, true);
+//            NotificationTemplateUtil.keepMail(context);
+            }
 		}
 		
 		return SUCCESS;
 	}
+	
 	/**
 	 * 检查用户账号是否重复
 	 * @return
@@ -164,24 +199,29 @@ public class UserManageAction extends BaseAction {
 	 */
 	public String pwdreset() {
 		// 密码重置
-		userManageService.updatepwdbyuser(user);
-		// 邮件通知用户
-		user = userManageService.queryUserByUserName(user.getUsername());
-		MailSenderInfo mailInfo = new MailSenderInfo();
-//		mailInfo.setMailServerPort("25");
-//		mailInfo.setValidate(true);
-//		mailInfo.setUserName("pms@dptech.com");
-//		mailInfo.setPassword("2Bk29UamZr");
-//		mailInfo.setFromAddress("pms@dptech.com");
-		mailInfo.setToAddress(user.getEmail());
-		mailInfo.setSubject("PMS系统账号密码重置");
-		mailInfo.setContent("尊敬的用户 " + user.getRealName()
-				+ " 您好：<br><br>	您的系统密码已重置！" + "<br>您的账号：" + user.getUsername()
-				+ "。<br>您的密码为：1q2w3e4r"
-				+ "。<br>请登陆后立即修改密码，谢谢！ 该邮件为系统自动发出，请勿回复！  IT部");
-		SimpleMailSender.sendHtmlMail(mailInfo);// 发送html格式
-		java.lang.System.out.println("发送成功！");
-
+	    String randomPassword = PasswordUtil.generatePass();
+	    user = userManageService.queryUserByUserId(user.getId());
+        user.setPassword(PasswordUtil.encryptMD5Password(randomPassword, user.getUsername()));
+        user.setPwdoverdue(new Date());
+        userManageService.updatepwdbyuser(user);
+        
+        // 邮件通知用户
+        Map<String, Object> context = new HashMap<String, Object>();
+        context.put("templateCode", "userAddOrRestPwdMailInfo");
+        context.put("title", "帐号密码已重置");
+        context.put("realName", user.getRealName());
+        context.put("userName", user.getUsername());
+        context.put("randomPassword", randomPassword);
+        context.put("content", context.get("title"));
+        context.put("tos", user.getEmail());
+        context.put("beforeSplit", "${");
+        context.put("afterSplit", "}");
+        MailUtil.keepMailWithTemplate(context, true);
+        
+        
+        PasswordService passwordService = SpringContext.getBean("passwordService", PasswordService.class);
+        passwordService.forcedOffline(user.getUsername());
+        result = 1;
 		return SUCCESS;
 	}
 

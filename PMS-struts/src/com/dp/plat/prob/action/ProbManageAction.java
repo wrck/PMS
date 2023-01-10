@@ -566,7 +566,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				String path = UPLOAD_PATH + seq + Util.getRandNumber();
 				UploadFileUtil.upload(upload, path, uploadFileName);
 				fileIds = basicDataService.insertFileInfo(path + seq, uploadFileName);// 为了邮件附件取绝对路径
-				prob.setAttachments("'" + fileIds + "'");
+				prob.setAttachments(fileIds);
 			}
 			// //0.2获取session中检索的软件版本
 			// HttpSession session = getServletRequest().getSession();

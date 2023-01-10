@@ -1,6 +1,9 @@
 package com.dp.plat.prob.bean;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 技术公告修复任务对象
@@ -224,5 +227,7 @@ public class ProbRestore {
 	public void setAreapower(String areapower) {
 		this.areapower = areapower;
 	}
-	
+	public List<String> getAreapowerList() {
+	    return areapower != null ? Arrays.asList(areapower.replaceAll("'\"", "").split(",")) : new ArrayList<String>(0);
+    }
 }

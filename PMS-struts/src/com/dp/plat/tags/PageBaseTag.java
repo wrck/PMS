@@ -3,7 +3,11 @@ package com.dp.plat.tags;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
+
+import com.dp.plat.context.UserContext;
+import com.opensymphony.xwork2.util.ValueStack;
 
 public class PageBaseTag extends TagSupport
 {
@@ -28,7 +32,14 @@ public class PageBaseTag extends TagSupport
         {
             HttpServletRequest request = (HttpServletRequest) pageContext .getRequest();
             JspWriter out = pageContext.getOut();
-
+            
+            UserContext userContext = UserContext.getUserContext();
+            pageContext.setAttribute("currentDisplayUser", userContext.getUser(), PageContext.REQUEST_SCOPE);
+            pageContext.setAttribute("currentIsCas", userContext.isCas(), PageContext.REQUEST_SCOPE);
+            ValueStack vs = (ValueStack) request.getAttribute("struts.valueStack");
+            vs.setValue("currentDisplayUser", userContext.getUser());
+            vs.setValue("currentIsCas", userContext.isCas());
+            
             String path = request.getContextPath();
             String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
             out.println("<base href=\"" + basePath + "\"></base>");

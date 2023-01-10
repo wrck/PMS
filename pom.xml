@@ -13,6 +13,7 @@
 		<module>pms-activiti</module>
 		<module>pms-springmvc</module>
 		<module>pms-ext-d365</module>
+		<module>pms-security</module>
 	</modules>
 
 	<properties>
@@ -511,6 +512,11 @@
 				<artifactId>commons-dbcp2</artifactId>
 				<version>${commons-dbcp2.version}</version>
 			</dependency>
+			<dependency>
+                <groupId>com.alibaba</groupId>
+	            <artifactId>druid</artifactId>
+	            <version>${druid.version}</version>
+	        </dependency>
 
 			<!-- DisplayTag -->
 			<dependency>

@@ -616,11 +616,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    left join `fnd_department` fd 
 		        on ph.`column001` = fd.`departmentNum` 
 		where ph.effectiveTo IS NULL 
+		    <!-- 区域查询权限 -->
+		    <isNotEmpty prepend="and" property="areaPowers"> 
+		         ph.column001 in ('', <iterate property="areaPowers" conjunction=", ">#areaPowers[]#</iterate>)
+		    </isNotEmpty>
+		
 			<dynamic prepend="and" open="(" close=")">
 			    <!-- 1 = 1 -->
 				<isNotEmpty prepend="and" property="column011"> ph.column011 = #column011# </isNotEmpty>
 				<isNotEmpty prepend="and" property="column004"> ph.column004 = #column004# </isNotEmpty>
 			</dynamic>
+			<!-- 是否排除运营商直签项目 -->
 			<isNotEmpty property="exceptZQYY">
 	             = !#exceptZQYY#
 	        </isNotEmpty>
@@ -634,11 +640,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        <iterate property="querys" prepend="and" open="(" close=")" conjunction=" or " >
 		           (
 		            1 = 1
+		            <!-- 是否排除运营商直签项目 -->
 	                <isNotEmpty property="querys[].exceptZQYY" prepend="and">
 	                     ( 1 = 1
 	                </isNotEmpty>
 	                <isNotEmpty prepend="and" property="querys[].column011"> ph.column011 = #querys[].column011# </isNotEmpty>
 	                <isNotEmpty prepend="and" property="querys[].column004"> ph.column004 = #querys[].column004# </isNotEmpty>
+		            <!-- 是否排除运营商直签项目 -->
 		            <isNotEmpty property="querys[].exceptZQYY">
 		                 ) = !#querys[].exceptZQYY#
 		            </isNotEmpty>

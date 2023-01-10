@@ -55,6 +55,11 @@ public class UserManageServiceImpl extends BaseServiceImpl implements UserManage
 	public List<Role> queryRolelist() {
 		return userManageDao.queryRolelist();
 	}
+	
+	@Override
+    public List<UserMenu> queryAllMenuList() {
+        return userManageDao.queryAllMenuList();
+    }
 
 	@Override
 	public List<UserMenu> queryUserMenuList() {

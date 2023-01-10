@@ -1,6 +1,18 @@
 package com.dp.plat.util;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -10,12 +22,19 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jasig.cas.client.authentication.AuthenticationFilter;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
+import com.dp.plat.data.bean.User;
+import com.dp.plat.data.bean.UserMenu;
 import com.dp.plat.service.LoginService;
+import com.dp.plat.service.UserManageService;
 
 public class UserCheckFilter implements Filter{
 
@@ -30,8 +49,13 @@ public class UserCheckFilter implements Filter{
 		HttpServletResponse resp = (HttpServletResponse) response;
 		UserContext userContext = (UserContext) SpringContext.getBean("userContext");
 		LoginService loginService=(LoginService)SpringContext.getBean("loginService");
-		String url = req.getRequestURI().substring(
-				req.getContextPath().length());
+		String url = req.getRequestURI().substring(req.getContextPath().length());
+		// 检查是否需要强制修改密码
+		String changePasswordRedirect = getChangePasswordRedirect(req);
+		if (StringUtils.isNotBlank(changePasswordRedirect)) {
+		    resp.sendRedirect(req.getContextPath()+ changePasswordRedirect);
+		    return;
+		}
 		if(url.contains("module/DownloadFile.action")){
 			chain.doFilter(request, response);
 			return;
@@ -45,7 +69,7 @@ public class UserCheckFilter implements Filter{
 			}
 			userContext.setUrl(requestURL.toString());
 //		}
-		int pos = url.indexOf("/", 1);
+		int pos = url.indexOf("/", 0);
 		if(!userContext.isLogin()){
 			String casStr=loginService.querySysArg("sys.cas");
 			if(casStr.equals("0")){
@@ -54,28 +78,42 @@ public class UserCheckFilter implements Filter{
 				userContext.setCas(true);
 			}
 		}
+        // 未登录
+        if (!userContext.isLogin() && !(url.contains("index.jsp")||url.contains("login.jsp")||url.contains("Login.action") ||url.contains("Login!start.action"))) {
+            userContext.setDefaultPage(userContext.getUrl());
+            resp.sendRedirect(req.getContextPath() + "/Login.action");
+            return;
+        }
+//		if(pos>=0){
+//			if (!userContext.isLogin())	//未登录
+//			{
+//				userContext.setDefaultPage(userContext.getUrl());
+//				if(userContext.isCas()){
+//					resp.sendRedirect(req.getContextPath()+ "/Login.action");
+//					return;
+//				}else{
+//					if(url.indexOf("Login") == -1){
+//						resp.sendRedirect(req.getContextPath()+ "/index.jsp?errmsg=Login Timeout!");
+//						return;
+//					}
+//				}
+//			} 
+//		}else{
+//			if(userContext.isCas()&&(url.contains("index.jsp")||url.contains("login.jsp")||url.contains("Login!start.action"))){
+//				resp.sendRedirect(req.getContextPath()+ "/Login.action");
+//				return;
+//			}
+//		}
 		
-		if(pos>=0){
-			if (!userContext.isLogin())	//未登录
-			{
-				userContext.setDefaultPage(userContext.getUrl());
-				if(userContext.isCas()){
-					resp.sendRedirect(req.getContextPath()+ "/Login.action");
-					return;
-				}else{
-					if(url.indexOf("Login") == -1){
-						resp.sendRedirect(req.getContextPath()+ "/index.jsp?errmsg=Login Timeout!");
-						return;
-					}
-				}
-			} 
-		}else{
-			if(userContext.isCas()&&(url.contains("index.jsp")||url.contains("login.jsp")||url.contains("Login!start.action"))){
-				resp.sendRedirect(req.getContextPath()+ "/Login.action");
-				return;
-			}
-		}
-		
+        // 权限判断
+        if (userContext.isLogin()) {
+            if(!checkHandlerMapping(url)) {
+                resp.sendRedirect(req.getContextPath()+ "/404.action");
+                return;
+            }
+        }
+        
+        // handlerMapping不匹配的url直接放行
 		chain.doFilter(request, response);
 	}
 
@@ -84,5 +122,212 @@ public class UserCheckFilter implements Filter{
 		
 	}
 	
-
+	/**
+	 * 获取修改密码的重定向地址
+	 * @param request
+	 * @return 如果需要修改密码返回，否则不返回
+	 */
+	public String getChangePasswordRedirect(HttpServletRequest request) {
+        UserContext userContext = UserContext.getUserContext();
+        boolean authenticated = userContext.isLogin();
+        if (!authenticated) {
+            return null;
+        }
+        String servletPath = request.getServletPath();
+        HttpSession session = request.getSession();
+        Object needChangePwd = session.getAttribute("needChangePwd");
+        if (Boolean.FALSE.equals(needChangePwd)) {
+            return null;
+        }
+        User user = userContext.getUser();
+        Date currentDate = new Date();
+        Date pwdoverdue = user.getPwdoverdue();
+        pwdoverdue = pwdoverdue != null ? pwdoverdue : currentDate;
+        needChangePwd = !currentDate.before(pwdoverdue);
+        boolean isCas = userContext.isCas();
+        AuthenticationFilter casFilter = null;
+        try {
+            casFilter = SpringContext.getBean(AuthenticationFilter.class);
+            isCas = casFilter != null;
+        } catch (NoSuchBeanDefinitionException e) {
+            isCas = false;
+        }
+        Boolean isNeed = Boolean.TRUE.equals(needChangePwd) && !isCas;
+        if (!isNeed) {
+            return null;
+        }
+        
+        LoginService loginService = (LoginService) SpringContext.getBean("loginService");
+        String redirect = loginService.querySysArg("sys.change.password.redirect");
+        String excludeUrls = loginService.querySysArg("sys.change.password.redirect.excludeUrls");
+        if (redirect == null || redirect.contains(servletPath) || 
+                (excludeUrls != null && excludeUrls.contains(servletPath))) {
+            return null;
+        }
+        isNeed = isNeed && redirect != null && redirect.length() > 0;
+        session.setAttribute("needChangePwd", isNeed);
+        return isNeed ? redirect : null;
+    }
+	
+	public boolean checkHandlerMapping(String url) {
+	    UserContext userContext = UserContext.getUserContext();
+	    if (!userContext.isLogin()) {
+	        return true;
+	    }
+	    // 获取缓存的用户handlerMaping
+        Map<String, Object> extData = userContext.getExtData();
+        Map<String, Object> cachedUserHandlerMapping = (Map<String, Object>) extData.get("cachedUserHandlerMapping");
+        if (cachedUserHandlerMapping == null) {
+            cachedUserHandlerMapping = new ConcurrentHashMap<String, Object>();
+            extData.put("cachedUserHandlerMapping", cachedUserHandlerMapping);
+        }
+        if (cachedUserHandlerMapping.containsKey(url)) {
+            return Boolean.valueOf(String.valueOf(cachedUserHandlerMapping.get(url)));
+        }
+	    
+	    boolean isValid = true;
+	    UserManageService userManageService = SpringContext.getBean("userManageService", UserManageService.class);
+        // 当前用户拥有的菜单ID
+        String menuIds = userManageService.queryUserMenuidsByUserid(userContext.getUser().getId());
+        List<String> menuIdList = Arrays.asList(menuIds.split(","));
+        // 将系统菜单进行解析
+        Map<String, Object> handlerMapping = handlerMapping();
+        
+        try {
+            // handlerMapping匹配url
+            for (Entry<String, Object> handler : handlerMapping.entrySet()) {
+                String path = handler.getKey();
+                UserMenu menu = (UserMenu) handler.getValue();
+                // 匹配到的url，判断用户是否有权限
+                if (FilenameUtils.wildcardMatch(url, path)) {
+                    // 如果有权限则跳转，如果没权限转到404
+                    if (menuIdList.contains(String.valueOf(menu.getId()))) {
+                        isValid = true;
+                    } else {
+                        isValid = false;
+                    }
+                    return isValid;
+                }
+            }
+            return isValid;
+        } finally {
+            cachedUserHandlerMapping.put(url, isValid);
+        }
+	}
+	
+	/**
+     * 判断当前环境变量，如果不存在handlerMapping则解析用户菜单，转换为url通配地址
+     * @param menuList
+     * @return {
+     *     url:menu
+     * }
+     */
+    public Map<String, Object> handlerMapping() {
+        UserContext userContext = UserContext.getUserContext();
+        Map<String, Object> extData = userContext.getExtData();
+        if (extData == null) {
+            extData = new ConcurrentHashMap<String, Object>();
+        }
+        userContext.setExtData(extData);
+        Map<String, Object> handlerMapping = (Map<String, Object>) extData.get("handlerMapping");
+        if (handlerMapping != null && !handlerMapping.isEmpty()) {
+            return handlerMapping;
+        }
+        UserManageService userManageService = SpringContext.getBean("userManageService", UserManageService.class);
+        // 所有系统菜单
+        List<UserMenu> menuList = userManageService.queryAllMenuList();
+        Map<String, Object> urlMap = parseUrlHandler(menuList);
+        handlerMapping = new ConcurrentHashMap<String, Object>(urlMap);
+//      handlerMapping.putAll(urlMap);
+        extData.put("handlerMapping", handlerMapping);
+        return handlerMapping;
+    }
+	
+	/**
+	 * 判断当前环境变量，如果不存在handlerMapping则解析用户菜单，转换为url通配地址
+	 * @param menuList
+	 * @return {
+	 *     url:menu
+	 * }
+	 */
+	public Map<String, Object> handlerMapping(List<UserMenu> menuList) {
+	    UserContext userContext = UserContext.getUserContext();
+	    Map<String, Object> extData = userContext.getExtData();
+	    if (extData == null) {
+	        extData = new ConcurrentHashMap<String, Object>();
+	    }
+	    userContext.setExtData(extData);
+	    Map<String, Object> handlerMapping = (Map<String, Object>) extData.get("handlerMapping");
+	    if (handlerMapping != null && !handlerMapping.isEmpty()) {
+	        return handlerMapping;
+	    }
+	    Map<String, Object> urlMap = parseUrlHandler(menuList);
+	    handlerMapping = new ConcurrentHashMap<String, Object>(urlMap);
+//	    handlerMapping.putAll(urlMap);
+	    extData.put("handlerMapping", handlerMapping);
+	    return handlerMapping;
+	}
+	
+	/**
+     * 解析用户菜单，转换为url通配地址
+     * @param menuList
+     * @return {
+     *     url:menu
+     * }
+     */
+	private Map<String, Object> parseUrlHandler(List<UserMenu> menuList) {
+	    if (menuList == null || menuList.isEmpty()) {
+	        return Collections.emptyMap();
+	    }
+	    Map<String, Object> urlMap = new HashMap<String, Object>(menuList.size() * 3 * 3 / 4);
+        for (UserMenu userMenu : menuList) {
+            Map<String, Object> subUrlMap = parseUrlHandler(userMenu.getUserMenuList());
+            urlMap.putAll(subUrlMap);
+            
+            String url = userMenu.getPath();
+            if (StringUtils.isBlank(url)) {
+                continue;
+            }
+            URI uri;
+            String path = url;
+            try {
+                uri = new URI(url);
+                path = uri.getPath();
+            } catch (URISyntaxException e) {
+                path = url;
+            }
+            if (!path.startsWith("/")) {
+                path = "/" + path;
+            }
+            boolean isAction = path.endsWith(".action");
+            Set<String> pathList = new HashSet<String>();
+            pathList.add(path);
+            // 将这类的地址/module/Module_method.action /module/Module!method.action
+            //    转换为/module/Module_*.action
+            //        /module/Module!*.action 
+            //        /module/Module/*.action
+            pathList.add(path.replaceAll("([_])[^\\.|\\/|!]*", "$1*"));
+            pathList.add(path.replaceAll("([!])[^\\.|\\/|!]*", "$1*"));
+            pathList.add(path.replaceAll("([_|!])[^\\.|\\/|!]*", "/*"));
+            // 将这类的地址/module/ModuleManage.action /module/ModuleManager.action /module/ModuleAction.action
+            //    转换为/module/Module*.action
+            //        /module/Module/*.action
+            pathList.add(path.replaceAll("(Manager?)|(Action)[^\\.|\\/|!]*", "*"));
+            pathList.add(path.replaceAll("(Manager?)|(Action)[^\\.|\\/|!]*", "/*"));
+            // 将这类的地址/module/Module.action
+            //    转换为/module/Module_*.action
+            //        /module/Module!*.action 
+            //        /module/Module/*.action
+            if (isAction) {
+                pathList.add(path.replaceAll(".action", "_*.action"));
+                pathList.add(path.replaceAll(".action", "!*.action"));
+                pathList.add(path.replaceAll(".action", "/*.action"));
+            }
+            
+            for (String handler : pathList) {
+                urlMap.put(handler, userMenu);
+            }
+        }
+        return urlMap;
+	}
 }

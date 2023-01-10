@@ -824,8 +824,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       itemCode, itemName
       <isNotNull prepend="," property="createBy"> createTime, createBy </isNotNull>
       <isNotNull prepend="," property="updateBy"> updateTime, updateBy </isNotNull>)
-    Select '$subcontractId$', ph.projectId, fi.`itemname` AS itemModel, t.*
-      <isNotNull prepend="," property="createBy"> now(), '$createBy$' </isNotNull>
+    Select #subcontractId#, ph.projectId, fi.`itemname` AS itemModel, t.*
+      <isNotNull prepend="," property="createBy"> now(), #createBy# </isNotNull>
       <isNotNull prepend="," property="updateBy"> null, null </isNotNull>
     From (
         SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName
@@ -1757,7 +1757,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
           
           <isNotEmpty property="contractNos">
               <iterate prepend="AND" open="(" close=")" property="contractNos" conjunction="or" >
-                contractNo like '%$contractNos[]$%'
+                contractNo like CONCAT('%', #contractNos[]#, '%')
               </iterate>
           </isNotEmpty>
           <isNotEmpty prepend="AND" property="projectIds"> FIND_IN_SET(projectId, #projectIds#)</isNotEmpty>
@@ -1841,7 +1841,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <dynamic prepend="where">
           <isNotEmpty property="contractNos">
               <iterate prepend="AND" open="(" close=")" property="contractNos" conjunction="or" >
-                contractNo like '%$contractNos[]$%'
+                contractNo like CONCAT('%', #contractNos[]#, '%')
               </iterate>
           </isNotEmpty>
           <isNotEmpty prepend="AND" property="projectIds"> FIND_IN_SET(projectId, #projectIds#)</isNotEmpty>

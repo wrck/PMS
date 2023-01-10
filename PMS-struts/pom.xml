@@ -35,11 +35,25 @@
 			<!-- <version>5.14</version> -->
 			<version>5.22.0.v20220902</version>
 		</dependency>
+		<!-- D365集成接口 -->
 		<dependency>
 		  <groupId>com.dp.plat</groupId>
 		  <artifactId>pms-ext-d365</artifactId>
 		  <version>${project.version}</version>
 		</dependency>
+		<!-- 安全组件  -->
+		<dependency>
+          <groupId>com.dp.plat</groupId>
+          <artifactId>pms-security</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <!-- HTML Parser -->
+        <dependency>
+            <!-- jsoup HTML parser library @ https://jsoup.org/ -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </dependency>
+		
 		
 		<!-- <dependency>
 			<groupId>com.dp.plat</groupId>
@@ -158,6 +172,11 @@
 		    <artifactId>ibatis-sqlmap</artifactId>
 		    <version>${ibatis-sqlmap.version}</version>
 		</dependency>
+		<!-- <dependency>
+		    <groupId>opensymphony</groupId>
+		    <artifactId>oscache</artifactId>
+		    <version>2.4.1</version>
+	    </dependency> -->
 		<dependency>
 		    <groupId>org.mybatis</groupId>
 		    <artifactId>mybatis-2-spring</artifactId>
@@ -515,6 +534,30 @@
 	</dependencies>
 	
 	<profiles>
+	    <profile>
+            <!-- PMS -->
+            <id>pms</id>
+            <properties>
+                <profile.build.id>pms</profile.build.id>
+                <profile.build.name>PMS</profile.build.name>
+            </properties>
+            <activation>
+                <!-- 设置默认激活这个配置 -->
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <!-- YFPMS -->
+            <id>yfpms</id>
+            <properties>
+                <profile.build.id>yfpms</profile.build.id>
+                <profile.build.name>YFPMS</profile.build.name>
+            </properties>
+            <activation>
+                <!-- 设置默认激活这个配置 -->
+                <!-- <activeByDefault>true</activeByDefault> -->
+            </activation>
+        </profile>
 		<profile>
 			<!-- 本地开发环境 -->
 			<id>dev</id>
@@ -547,7 +590,7 @@
 	</profiles> 
 	
 	<build>
-		<finalName>${project.name}</finalName>
+		<finalName>${profile.build.name}</finalName>
 		<sourceDirectory>src</sourceDirectory>
 	    <resources>
 	      <resource>
@@ -572,6 +615,9 @@
 			  	<exclude>web*.xml</exclude>
 	  	      </excludes>
 		  </resource>
+		  <resource>
+              <directory>config/profiles/${profile.build.id}/</directory>
+          </resource>
 	      <resource>
 	        <directory>config-ibaits</directory>
 	        <excludes>
@@ -661,7 +707,7 @@
 				<version>3.0.1</version>
 				<configuration>
 					<attach>true</attach>
-					<!-- <encoding>${project.build.sourceEncoding}</encoding> -->
+					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
 				<executions>
 					<execution>

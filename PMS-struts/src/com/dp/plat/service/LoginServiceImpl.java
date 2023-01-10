@@ -3,6 +3,7 @@ package com.dp.plat.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
@@ -93,6 +94,12 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 				
 				String defaultPage = loginDao.queryUserDefaultPage(user.getId());
 				getUserContext().login(user, ip, permissionMap,defaultPage,roleMenuPowerMap);
+				
+				// 用户功能菜单项名称对应关系，用于菜单项权限控制
+				Map<String, List<String>> permissionNameMap = loginDao.queryUserMenuNameMap(user.getId());
+				Map<String, Object> extData = new ConcurrentHashMap<String, Object>();
+				extData.put("permissionNameMap", permissionNameMap);
+                getUserContext().setExtData(extData);
 				//记录日志
 				log("登录");
 				return true;
@@ -167,6 +174,12 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 				
 				String defaultPage = loginDao.queryUserDefaultPage(user.getId());
 				getUserContext().login(user, ip, permissionMap,defaultPage,roleMenuPowerMap);
+				
+				// 用户功能菜单项名称对应关系，用于菜单项权限控制
+                Map<String, List<String>> permissionNameMap = loginDao.queryUserMenuNameMap(user.getId());
+                Map<String, Object> extData = new ConcurrentHashMap<String, Object>();
+                extData.put("permissionNameMap", permissionNameMap);
+                getUserContext().setExtData(extData);
 				//记录日志
 				log("登录");
 				return true;

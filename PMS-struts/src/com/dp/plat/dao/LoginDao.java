@@ -17,6 +17,12 @@ public interface LoginDao {
 	 */
 	Map<String, Integer> queryUserMenuMap(int userId);
 	/**
+     * 获取用户功能权限名称对应关系
+     * @param userId
+     * @return
+     */
+	Map<String, List<String>> queryUserMenuNameMap(int userId);
+	/**
 	 * 获取用户默认的登录系统首页
 	 * @param userId
 	 * @return
@@ -35,4 +41,5 @@ public interface LoginDao {
 	 * @return
 	 */
 	String querySysArg(String code);
+
 }

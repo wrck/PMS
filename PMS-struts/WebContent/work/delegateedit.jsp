@@ -11,7 +11,7 @@
 <dp:base />
 <meta name="menu" content="SysMenuGroupStaticDataManage">
 <meta name="module" content="<s:text name='module.plat' />">
-<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="group" content="<s:text name='sys.leftmenu.workflowmanage' />">
 <meta name="function" content="<s:text name='procDefDelegate.title' />">
 <script type="text/javascript">
 var realnameArr=new Array();

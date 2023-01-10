@@ -19,6 +19,10 @@
 		<action name="Logout" class="Login" method="logout">
 			<result name="success">/redirect.jsp</result>			
 		</action>
+		
+		<action name="404" class="Login" method="error404">
+		     <result>/404.jsp</result>
+		</action>
 	</package>
 	<!-- 基础信息维护 -->
 	<package name="base" extends="basepackage" namespace="/base">
@@ -243,6 +247,7 @@
 				<param name="prepare.alwaysInvokePrepare">false</param>
 			</interceptor-ref>
 			<result name="{1}">/sys/presales/presales_{1}.jsp</result>
+			<result name="{2}">/sys/presales/presales_{2}.jsp</result>
 			<!-- <result name="success">/sys/sub/addsuccess.jsp</result> -->
 			<result name="success">/sys/presales/sub/redirect.jsp</result>
 			<result name="downsuccess">/sys/success.jsp</result>
@@ -1079,6 +1084,11 @@
 				<param name="includeProperties">user\.username,user\.realName</param>
 			</result>
 		</action>
+		<action name="resetPassword" class="UserManageAction" method="pwdreset">
+            <result name="success" type="json">
+                <param name="includeProperties">user\.username,result</param>
+            </result>
+        </action>
 		<!-- 更新设备软件版本 -->
 		<action name="updateSoftVersion" class="ProjectAction" method="updateSoftVersion">
 			<result name="success" type="json">

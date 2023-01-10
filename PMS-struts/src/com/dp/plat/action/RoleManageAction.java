@@ -87,7 +87,7 @@ public class RoleManageAction extends BaseAction{
 		displayParam.getParam();
 		roleList=roleManageService.queryRoleList(displayParam, role);
 		rolemenuidList=roleManageService.queryRoleMenuPowerList(role);
-		if(roleList.get(0)==null||rolemenuidList==null||rolemenuidList.size()==0){
+        if (roleList.get(0) == null/* ||rolemenuidList==null||rolemenuidList.size()==0 */){
 			return ERROR;
 		}else{
 			role=roleList.get(0);

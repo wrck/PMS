@@ -107,8 +107,8 @@
 		            	var totalPrice = $("#totalPrice").text();
 		            	var html = "<input id='subcontractTotalPrice' name='subcontract.subcontractAmount' value='" + totalPrice + "' data-bakValue='" + totalPrice + "' class='form-control'>";
 		                $("#totalPrice").html(html);
-		            	$("input[name*='.price']").maskMoney({defaultZero: true,allowZero:true,precision:0});
-		            	$("#subcontractTotalPrice").maskMoney({defaultZero: true,allowZero:true,precision:0});
+		            	$("input[name*='.price']").maskMoney({defaultZero: true,allowZero:true,precision:2});
+		            	$("#subcontractTotalPrice").maskMoney({defaultZero: true,allowZero:true,precision:2});
 		            }
 	            </script>
             </s:if>

@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -307,19 +308,19 @@ public class ProjectAction extends BaseAction implements Preparable{
 		user = UserContext.getUserContext().getUser();
 		if(project == null){
 			project = new Project();
-			if(user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN)){
+			if(user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN)){
 				project.setProjectState(MessageUtil.PROJECT_STATE_CREATING);
 			}else{
 				project.setProjectState(MessageUtil.PROJECT_STATE_30);
 			}
 		}
-		if( user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)){
-			project.setProjectState(MessageUtil.PROJECT_STATE_CLOSEDLOOP);
-		}
+        if (user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF) && StringUtils.isBlank(project.getProjectState())) {
+            project.setProjectState(MessageUtil.PROJECT_STATE_CLOSEDLOOP);
+        }
 		projectState = project.getProjectState();
 		if(MessageUtil.PROJECT_STATE_30.equals(project.getProjectState())){
-			project.setProjectState(MessageUtil.PROJECT_STATE_30+"," + MessageUtil.PROJECT_STATE_31 +","+ MessageUtil.PROJECT_STATE_32);
-		}
+            project.setProjectState(MessageUtil.PROJECT_STATE_30 + "," + MessageUtil.PROJECT_STATE_31 + "," + MessageUtil.PROJECT_STATE_32);
+        }
 		
 		if(displayParam == null){
 			displayParam = new DisplayParam();
@@ -334,16 +335,14 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public String execute() throws Exception {
 		try {
 			initProject();
-			if((user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) 
-					||user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
-					|| user.isHasRole(MessageUtil.ROLE_COMMON))//服务经理 || 项目经理 || 普通用户
-					&& !user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)){//按权限查询已创建项目
-				projectlist = projectService.queryProjectListByPower(project, displayParam);
-			}else if(user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) 
-					|| user.isHasRole(MessageUtil.ROLE_ADMIN)
-					|| user.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)){//查询全部项目(工程管理部或管理员)
-				projectlist = projectService.queryProjectList(project , displayParam);
-			}
+            if (user.isHasAnyRole(MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_ADMIN,
+                    MessageUtil.ROLE_FINANCIAL_STAFF, MessageUtil.ROLE_PROJECT_ADMIN)) {// 查询全部项目(工程管理部或管理员或财务人员或项目管理员)
+                projectlist = projectService.queryProjectList(project, displayParam);
+            } else if ((user.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER,
+                    MessageUtil.ROLE_COMMON, MessageUtil.ROLE_PROJECT_VIEWER))// 服务经理 || 项目经理 || 普通用户 || 项目查阅人员
+            ) {// 按权限查询已创建项目
+                projectlist = projectService.queryProjectListByPower(project, displayParam);
+            }
 			project.setProjectState(projectState);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -628,10 +627,38 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public String updateProject(){
 	    UserContext userContext = UserContext.getUserContext();
 	    String currentName = StringUtils.defaultIfBlank(userContext.getUsername(), "unknow");
+	    
+	    if (project == null) {
+	        project = new Project(-1);
+	    }
+	    if(project.getProjectId() == 0 && project.getParamId() != null){
+	        project.setProjectId((Integer.parseInt(Base64Util.decodeBase64(project.getParamId()).toString())));
+	    }
+        if (!(userContext.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER,
+                MessageUtil.ROLE_ENGINEEMANAGER_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF, MessageUtil.ROLE_CALLBACKPER,
+                MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_WARRANTY_CALLBACKER))
+        ) {
+            Project temp = new Project(project.getProjectId());
+            temp.setBarCode(project.getBarCode()); // 按序列号搜索查看项目
+            temp.setProjectName(project.getProjectName()); // 按项目名称搜索查看项目
+            List<Project> list = Collections.singletonList(projectService.queryProjectByPowerId(project));
+//            List<Project> list = projectService.queryProjectListByPower(temp, displayParam);
+            boolean hasPower = false;
+            if (!list.isEmpty()) {
+                for (Project project : list) {
+                    if (project != null && temp.getProjectId().equals(project.getProjectId())) {
+                        hasPower = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasPower) {
+                setErrmsg("没有权限访问！");
+                return ERROR;
+            }
+        }
+
 		if(checkProjectNull(project)){
-			if(project.getProjectId() == 0 && project.getParamId() != null){
-				project.setProjectId((Integer.parseInt(Base64Util.decodeBase64(project.getParamId()).toString())));
-			}
 			project = projectService.queryProjectById(project.getProjectId());
 			String prjstate = projectService.queryProjectStateByProjectId(project);
 			
@@ -664,6 +691,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 			instructionList =  projectService.queryInstructionList(project.getProjectId());
 			projectMemberList = projectService.queryProjectMembers(project.getProjectId());
 			memberRoleList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_MEMBER_ROLE);
+			basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_MEMBER_ROLE);
 			memberRoleList = dowithMemberRoleList(memberRoleList);//处理项目成员角色,控制项目经理和服务经理从上面项目信息中指定
 			navTabList = obtainNavTabList(project); 
             // 公司列表
@@ -738,54 +766,54 @@ public class ProjectAction extends BaseAction implements Preparable{
 						projectService.updateProjectByProjectId(project);//工程管理部权限
 					}
 					b = true;
-				}
-				//服务经理指定项目经理
-				else if(currentName.equals(project.getServiceManagerCode())&&
-						checkPrjState(isback, new String[]{MessageUtil.PROJECT_CREATE_STATE30, MessageUtil.PROJECT_CREATE_STATE32 ,MessageUtil.PROJECT_CREATE_STATE34})){
-					b =	projectService.updateProjectProgramManagerByProjectId(project,null);//服务经理 - 根据projectid更新项目经理
-					// FIXME 在一个action中连续执行updateProjectProgramManagerByProjectId方法，第二次执行时updateChannel()时，第一次执行updateChannel()所做数据库update，insert操作不会失效，这里只能先用延时来解决
-//					Thread.sleep(1000);
-//					boolean ff = projectService.updateProjectProgramManagerByProjectId(project,"B");//服务经理 - 根据projectid更新项目经理B
-//					if(f || ff){//成功指定项目经理B
-//						NotificationTemplate template = null;
-//						project = projectService.queryProjectById(project.getProjectId());
-//						
-//						if(MessageUtil.PROJECT_TYPE_NORMAL.equals(project.getColumn010())){//普通类
-//							template = projectService.queryNotificationTemplate(MessageUtil.NOTIFICATION_CODE_PMNOMINATE_NORMAL);
-//						}else if(MessageUtil.PROJECT_TYPE_ENGINEE.equals(project.getColumn010())){//工程类
-//							template = projectService.queryNotificationTemplate(MessageUtil.NOTIFICATION_CODE_PMNOMINATE_ENGINEE);
-//						}
-//						String serviceUsername = project.getServiceManagerCode();
-//						project.setCos(projectService.getMails(serviceUsername));//抄送服务经理
-//						if(f){
-//							String programUsername = project.getProgramManagerCode();
-//							project.setTos(projectService.getMails(programUsername));//主送项目经理
-//							this.keepMailInfo(project, template, project.getProgramManagerCodeforjson());
-//						}
-//						if(ff){
-//							String programUsernameB = project.getProgramManagerCodeB();
-//							project.setTos(projectService.getMails(programUsernameB));
-//							this.keepMailInfo(project, template, project.getProgramManagerCodeforjsonB());
-//						}
-//					}
-//					b = true;
-				} else if ((currentName.equals(project.getProgramManagerCode())
-						|| currentName.equals(project.getProgramManagerCodeB()))
-						&& checkPrjState(isback, new String[] { MessageUtil.PROJECT_CREATE_STATE30,
-								MessageUtil.PROJECT_CREATE_STATE32, MessageUtil.PROJECT_CREATE_STATE34 })) {
-					projectService.updateChannel(project);// 更新渠道信息
-					projectService.updateProjectImplByProjectId(project);// 更新项目实施方式和最终客户名称
 				} else {
 				    Project nowProject = projectService.queryProjectById(project.getProjectId());
-				    if ((currentName.equals(nowProject.getServiceManagerCode()) 
-				        || currentName.equals(nowProject.getProgramManagerCode())
+                    if ((currentName.equals(nowProject.getServiceManagerCode()) 
+                        || currentName.equals(nowProject.getProgramManagerCode())
                         || currentName.equals(nowProject.getProgramManagerCodeB()))
                         && ("20".equals(nowProject.getProjectState()) || "100".equals(nowProject.getProjectState()))) {
-    				    // 已闭环或者不予跟踪的项目允许修改渠道信息以及最终客户名称
+                        // 已闭环或者不予跟踪的项目允许修改渠道信息以及最终客户名称
                         projectService.updateChannel(project);// 更新渠道信息
                         projectService.updateProjectImplByProjectId(project);// 更新项目实施方式和最终客户名称
-				    }
-                }
+                    }
+    				//服务经理指定项目经理
+    				else if(currentName.equals(project.getServiceManagerCode())&&
+    						checkPrjState(isback, new String[]{MessageUtil.PROJECT_CREATE_STATE30, MessageUtil.PROJECT_CREATE_STATE32 ,MessageUtil.PROJECT_CREATE_STATE34})){
+    					b =	projectService.updateProjectProgramManagerByProjectId(project,null);//服务经理 - 根据projectid更新项目经理
+    					// FIXME 在一个action中连续执行updateProjectProgramManagerByProjectId方法，第二次执行时updateChannel()时，第一次执行updateChannel()所做数据库update，insert操作不会失效，这里只能先用延时来解决
+    //					Thread.sleep(1000);
+    //					boolean ff = projectService.updateProjectProgramManagerByProjectId(project,"B");//服务经理 - 根据projectid更新项目经理B
+    //					if(f || ff){//成功指定项目经理B
+    //						NotificationTemplate template = null;
+    //						project = projectService.queryProjectById(project.getProjectId());
+    //						
+    //						if(MessageUtil.PROJECT_TYPE_NORMAL.equals(project.getColumn010())){//普通类
+    //							template = projectService.queryNotificationTemplate(MessageUtil.NOTIFICATION_CODE_PMNOMINATE_NORMAL);
+    //						}else if(MessageUtil.PROJECT_TYPE_ENGINEE.equals(project.getColumn010())){//工程类
+    //							template = projectService.queryNotificationTemplate(MessageUtil.NOTIFICATION_CODE_PMNOMINATE_ENGINEE);
+    //						}
+    //						String serviceUsername = project.getServiceManagerCode();
+    //						project.setCos(projectService.getMails(serviceUsername));//抄送服务经理
+    //						if(f){
+    //							String programUsername = project.getProgramManagerCode();
+    //							project.setTos(projectService.getMails(programUsername));//主送项目经理
+    //							this.keepMailInfo(project, template, project.getProgramManagerCodeforjson());
+    //						}
+    //						if(ff){
+    //							String programUsernameB = project.getProgramManagerCodeB();
+    //							project.setTos(projectService.getMails(programUsernameB));
+    //							this.keepMailInfo(project, template, project.getProgramManagerCodeforjsonB());
+    //						}
+    //					}
+    //					b = true;
+    				} else if ((currentName.equals(project.getProgramManagerCode())
+    						|| currentName.equals(project.getProgramManagerCodeB()))
+    						&& checkPrjState(isback, new String[] { MessageUtil.PROJECT_CREATE_STATE30,
+    								MessageUtil.PROJECT_CREATE_STATE32, MessageUtil.PROJECT_CREATE_STATE34 })) {
+    					projectService.updateChannel(project);// 更新渠道信息
+    					projectService.updateProjectImplByProjectId(project);// 更新项目实施方式和最终客户名称
+    				}
+				}
 				if(!b){
 					modifyflag = 1;
 				}
@@ -1567,6 +1595,11 @@ public class ProjectAction extends BaseAction implements Preparable{
 	@org.apache.struts2.json.annotations.JSON(serialize = false)
 	public InputStream getFileStream() throws FileNotFoundException,
 			UnsupportedEncodingException {
+	    String uploadPrefix = StringUtils.split(UploadFileUtil.UPLOAD_PATH, "\\/")[0];
+	    String dowloadPrefix = StringUtils.split(downpath, "\\/")[0];
+	    if (downpath != null && !uploadPrefix.startsWith(dowloadPrefix)) {
+	        downpath = uploadPrefix + File.separator + downpath;
+	    }
 		InputStream in = ServletActionContext.getServletContext().getResourceAsStream(downpath);
 		// 不存在时，对中文进行转换，再找一次，如果不一致，按原路径查询
 		if (null == in) {

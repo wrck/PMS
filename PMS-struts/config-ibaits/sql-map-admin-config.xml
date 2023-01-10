@@ -1,24 +1,60 @@
 <!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
 <sqlMap namespace="business">
+    <cacheModel type="CopyLRU" id="userCache" readOnly="true">
+        <flushInterval hours="1"/>
+        <flushOnExecute statement="insert-user-object"/>
+        <flushOnExecute statement="update-user-object"/>
+	    <flushOnExecute statement="update-user"/>
+	    <flushOnExecute statement="update-user-chageloginpass"/>
+        <flushOnExecute statement="update-pwd-byusername"/>
+        <flushOnExecute statement="update-md5pwd-byusername"/>
+	    <flushOnExecute statement="insert-menuForUser-object"/>
+	    <flushOnExecute statement="delete-menuForUser-byUserId"/>
+	    
+	    <flushOnExecute statement="delete-roleMenuPower-byRoleId"/>
+	    <flushOnExecute statement="insert-roleMenuPower-object"/>
+	    <flushOnExecute statement="insert-roleObject"/>
+	    <flushOnExecute statement="update-roleObject"/>
+	    <flushOnExecute statement="update_user_power"/>
+	    <flushOnExecute statement="insert_user_power"/>
+	    
+        <property name="size" value="50"/>
+    </cacheModel>
 	<!-- 查询用户权限 -->
 	<resultMap class="java.util.HashMap" id="user_permissions">
 		<result property="menuCode" column="menuCode" javaType="java.lang.String"/>
 		<result property="menuValue" column="menuValue" javaType="java.lang.Integer"/>
 	</resultMap>
-	<select id="query_permissions_by_name" resultMap="user_permissions" parameterClass="int">
+	<select id="query_permissions_by_name" resultMap="user_permissions" parameterClass="int" cacheModel="userCache">
 		<![CDATA[
 			SELECT menuCode,menuValue FROM fnd_user_menus 
 			WHERE  fnd_user_id = #userId# AND effectiveFrom < NOW() 
 			AND( effectiveTo > NOW() OR effectiveTo IS NULL)
 		]]>
 	</select>
+	<select id="query_permissions_name_code_by_userId" parameterClass="int" resultClass="java.util.HashMap" cacheModel="userCache">
+        <![CDATA[
+            SELECT 
+			    m.`menuName`, um.menuCode 
+			FROM
+			    fnd_user_menus um
+			    LEFT JOIN `fnd_menus` m
+			    ON um.`menuCode` = m.`menuCode`
+			WHERE um.fnd_user_id = #userId# 
+			    AND um.effectiveFrom < NOW() 
+			    AND (
+			        um.effectiveTo > NOW() 
+			        OR um.effectiveTo IS NULL
+			    )
+        ]]>
+    </select>
 	<!-- 查询用户角色集合 -->
 	<resultMap class="com.dp.plat.data.bean.Role" id="RoleList">
 		<result property="id" column="id" nullValue="0"/>
 		<result property="roleName" column="roleName"/>
 	</resultMap>
-	<select id="query_sys_roles" resultMap="RoleList">
+	<select id="query_sys_roles" resultMap="RoleList" cacheModel="userCache">
 		<![CDATA[
 			select id ,roleName from fnd_roles where status = 1 
 		]]>
@@ -32,12 +68,12 @@
 		<result property="superId" column="superId"/>
 		<result property="path" column="path"/>
 	</resultMap>
-	<select id="query_menu_modules" resultMap="UserSuperMenu" parameterClass="java.util.Map">
+	<select id="query_menu_modules" resultMap="UserSuperMenu" parameterClass="java.util.Map" cacheModel="userCache">
 		<![CDATA[
 			SELECT * FROM fnd_menus WHERE superId = #superId# and effectiveFrom < NOW() AND( effectiveTo > NOW() OR effectiveTo IS NULL);;
 		]]>
 	</select>
-	<select id="query-menu-byId" parameterClass="int" resultMap="UserSuperMenu">
+	<select id="query-menu-byId" parameterClass="int" resultMap="UserSuperMenu" cacheModel="userCache">
 		<![CDATA[
 			select * from fnd_menus where id = #id# and effectiveFrom < NOW() AND( effectiveTo > NOW() OR effectiveTo IS NULL);
 		]]>
@@ -55,7 +91,7 @@
 		<result property="areapower" column="areapower"/>
 		<result property="roleids" column="roleIds"/>
 	</resultMap>
-	<select id="query_user_by_id" parameterClass="int" resultMap="user_All">
+	<select id="query_user_by_id" parameterClass="int" resultMap="user_All" cacheModel="userCache">
 		<![CDATA[
 			select a.id,a.username,a.password,a.email,a.realName,a.status,a.pwdoverdue,a.roleIds,
 			b.id as defaultPage , a.dpNo,c.`areapower`
@@ -67,7 +103,7 @@
 		]]>
 	</select>
 	
-	<select id="query_usermenuids_by_id" parameterClass="int" resultClass="string">
+	<select id="query_usermenuids_by_id" parameterClass="int" resultClass="string" cacheModel="userCache">
 		<![CDATA[
 			SELECT GROUP_CONCAT(m.id) FROM fnd_user_menus p, fnd_menus m 
 			WHERE fnd_user_id = #id# AND p.`menuCode` = m.`menuCode`  AND p.`menuValue` = 1;
@@ -86,6 +122,7 @@
 		<result property="isemail" column="isemail" nullValue="1"/>
 		<result property="dpNo" column="dpNo"/>
 		<result property="areapower" column="areapower"/>
+		<result property="pwdoverdue" column="pwdoverdue"/>
 	</resultMap>
 	<resultMap class="com.dp.plat.data.bean.User" id="userRole">
 		<result property="id" column="id"/>
@@ -108,26 +145,26 @@
 		<result property="isemail" column="isemail"/>
 	</resultMap>
 	
-	<select id="get-id-byname" parameterClass="string" resultClass="int">
+	<select id="get-id-byname" parameterClass="string" resultClass="int" cacheModel="userCache">
 		<![CDATA[
 		select id from fnd_user_info
 		where username = #username#
 		]]>
 	</select>
 	<!-- 根据用户名查询用户 -->
-	<select id="query-user-by-name" parameterClass="string" resultMap="LoginInfo">
+	<select id="query-user-by-name" parameterClass="string" resultMap="LoginInfo" cacheModel="userCache">
 		<![CDATA[
 			select u.* , CASE WHEN  (p.`areapower` IS NULL OR p.`areapower` = '' ) THEN '-1' ELSE p.`areapower` END AS areapower from fnd_user_info u LEFT JOIN fnd_user_power p ON u.`id` = p.`fndUserId` 
 			where u.username = #name# and u.status = 1 limit 1
 		]]>
 	</select>
 	<!-- 查询所有的用户 -->
-	<select id="query-user-count" parameterClass="com.dp.plat.data.bean.User" resultClass="int">
+	<select id="query-user-count" parameterClass="com.dp.plat.data.bean.User" resultClass="int" cacheModel="userCache">
 		<![CDATA[
 		select count(1) from fnd_user_info user where 1 = 1
 		]]>
-		<isNotEmpty prepend="AND" property="username"> (username like '%$username$%' or realName like '%$username$%')</isNotEmpty>
-		<isNotEmpty prepend="and" property="roleids"> roleIds like '%$roleids$%' </isNotEmpty>
+		<isNotEmpty prepend="AND" property="username"> (username like CONCAT('%', #username#, '%') or realName like CONCAT('%', #username#, '%'))</isNotEmpty>
+		<isNotEmpty prepend="and" property="roleids"> roleIds like CONCAT('%', #roleids#, '%') </isNotEmpty>
 	</select>
 	<!-- 配置缓存模型  -->
 <!-- 	<cacheModel type="OSCache" id="user_cache" readOnly="true" serialize="true">
@@ -135,13 +172,13 @@
 		<flushOnExecute statement="insertUser"/>
 		<property name="size" value="500"/>
 	</cacheModel> -->
-	<select id="query-userlist" parameterClass="com.dp.plat.param.UserParam" resultMap="userRole" ><!-- cacheModel="user_cache" -->
+	<select id="query-userlist" parameterClass="com.dp.plat.param.UserParam" resultMap="userRole" cacheModel="userCache"><!-- cacheModel="user_cache" -->
 		<![CDATA[
 			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user
  			  where 1 = 1
 		]]>
-		<isNotEmpty prepend="AND" property="user.username"><![CDATA[  ( user.username like '%$user.username$%' or realName like '%$user.username$%' )]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="user.roleids"><![CDATA[ user.roleIds like '%$user.roleids$%']]></isNotEmpty>
+		<isNotEmpty prepend="AND" property="user.username"><![CDATA[  ( user.username like CONCAT('%', #user.username#, '%') or realName like CONCAT('%', user.username, '%') )]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="user.roleids"><![CDATA[ user.roleIds like CONCAT('%', #user.roleids#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend=" order by " property="displayParam.sort">
 			#displayParam.sort#
 			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
@@ -156,14 +193,14 @@
 		</isNotEmpty>
 	</select>
 	
-	<select id="query-userlist-all" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" >
+	<select id="query-userlist-all" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
 		<![CDATA[
 			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user
 		]]>
 		<dynamic prepend="where">
 			<isNotEqual prepend="and" property="status" compareValue="0"><![CDATA[ status=#status# ]]></isNotEqual>
 			<isNotEmpty prepend="and" property="username"><![CDATA[  user.username like =#username# ]]></isNotEmpty>
-			<isNotEmpty prepend="and" property="roleids"><![CDATA[ user.roleIds like '%$roleids$%']]></isNotEmpty>
+			<isNotEmpty prepend="and" property="roleids"><![CDATA[ user.roleIds like CONCAT('%', #roleids#, '%')]]></isNotEmpty>
 		</dynamic>
 	</select>
 	
@@ -171,7 +208,7 @@
 		<result property="username" column="username"/>
 		<result property="realName" column="realName"/>
 	</resultMap>
-	<select id="query-all-user" resultMap="extendsUserInfo">
+	<select id="query-all-user" resultMap="extendsUserInfo" cacheModel="userCache">
 		<![CDATA[
 		select username, realName from fnd_user_info
 		]]>
@@ -187,13 +224,14 @@
 		where id = #id#
 		]]>
 	</update>
-	<update id="update-pwd-byusername" parameterClass="string">
+	<update id="update-pwd-byusername" parameterClass="com.dp.plat.data.bean.User">
 		<![CDATA[
-		update fnd_user_info set password = '5416d7cd6ef195a0f7622a9c56b55e84'
-		where username = #username#
+		update fnd_user_info set password = #password#
 		]]>
+		<isNotEmpty prepend="," property="pwdoverdue"> pwdoverdue = #pwdoverdue# </isNotEmpty>
+		where username = #username#
 	</update>
-	<select id="select-roleid-byRoleName" parameterClass="string" resultClass="int">
+	<select id="select-roleid-byRoleName" parameterClass="string" resultClass="int" cacheModel="userCache">
 		<![CDATA[
 		select id from role
 		where roleName = #roleName#
@@ -201,10 +239,12 @@
 	</select>
 	<!-- 用户管理 -->
 	<insert id="insert-user-object" parameterClass="com.dp.plat.data.bean.User">
-		<![CDATA[
-		insert into fnd_user_info(username,email,realName,status,roleIds,isemail,pwdoverdue,defaultPage,dpNo,createBy,createTime, effectiveFrom)
-		values(#username#,#email#,#realName#,1,#roleids#,1,now(),#defaultPage#,#dpNo#,#createBy# ,now(),now())
-		]]>
+		insert into fnd_user_info(username
+		<isNotEmpty prepend="," property="password">password</isNotEmpty>
+		,email,realName,status,roleIds,isemail,pwdoverdue,defaultPage,dpNo,createBy,createTime, effectiveFrom)
+		values(#username#
+		<isNotEmpty prepend="," property="password">#password#</isNotEmpty>
+		,#email#,#realName#,1,#roleids#,1,now(),#defaultPage#,#dpNo#,#createBy# ,now(),now())
 		<selectKey resultClass="int"  keyProperty="id">    
              SELECT last_insert_id() as id ;   
         </selectKey>
@@ -233,7 +273,7 @@
 		where username = #username#
 		]]>
 	</update>
-	<select id="select-user" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole">
+	<select id="select-user" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
 		<![CDATA[
 		select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue
 		from fnd_user_info user 
@@ -256,7 +296,7 @@
 		<result property="isemail" column="isemail" javaType="java.lang.Integer"/>
 	</resultMap>
 	
-	<select id="query_user_allMap" resultMap="userAllMap">
+	<select id="query_user_allMap" resultMap="userAllMap" cacheModel="userCache">
 		<![CDATA[
 			select * from fnd_user_info
 		]]>
@@ -278,13 +318,13 @@
 		<result property="menuId" column="menuId"/>
 	</resultMap>
 	<!-- 角色管理 -->
-	<select id="query-role-count" parameterClass="com.dp.plat.data.bean.Role"  resultClass="int">
+	<select id="query-role-count" parameterClass="com.dp.plat.data.bean.Role"  resultClass="int" cacheModel="userCache">
 		<![CDATA[
 		select count(1) from fnd_roles  
 		]]>
 		<dynamic prepend="WHERE">
 			<isNotEmpty prepend="AND" property="roleName">
-			 	roleName like '%$roleName$%'
+			 	roleName like CONCAT('%', #roleName#, '%')
 			 </isNotEmpty>
 			  <isNotEqual prepend="AND" property="id" compareValue="0">
 					id=#id#
@@ -292,13 +332,13 @@
 		</dynamic>
 	</select>
 	
-	<select id="query-rolelist" parameterClass="com.dp.plat.param.RoleParam" resultMap="roleMap">
+	<select id="query-rolelist" parameterClass="com.dp.plat.param.RoleParam" resultMap="roleMap" cacheModel="userCache">
 		<![CDATA[
 		select * from fnd_roles 
 		]]>
 		<dynamic prepend="WHERE">
 			<isNotEmpty prepend="AND" property="role.roleName">
-			 	roleName like '%$role.roleName$%'
+			 	roleName like CONCAT('%', #role.roleName#, '%')
 			 </isNotEmpty>
 			 <isNotEqual prepend="AND" property="role.id" compareValue="0">
 					id=#role.id#
@@ -318,7 +358,7 @@
 		</isNotEmpty>
 	</select>
 	
-	<select id="query-roleMenu-list" parameterClass="com.dp.plat.data.bean.Role" resultMap="roleMenuMap">
+	<select id="query-roleMenu-list" parameterClass="com.dp.plat.data.bean.Role" resultMap="roleMenuMap" cacheModel="userCache">
 		<![CDATA[
 			select * from fnd_role_menus where roleId=#id#
 		]]>
@@ -385,10 +425,10 @@
 		]]>
 		<dynamic prepend="WHERE">
 			<isNotEmpty prepend="AND" property="departmentNum">
-			 	departmentNum like '%$departmentNum$%'
+			 	departmentNum like CONCAT('%', #departmentNum#, '%')
 			 </isNotEmpty>
 			 <isNotEmpty prepend="AND" property="departmentName">
-			 	departmentName like '%$departmentName$%'
+			 	departmentName like CONCAT('%', #departmentName#, '%')
 			 </isNotEmpty>
 		</dynamic>
 	</select>
@@ -399,10 +439,10 @@
 		]]>
 		<dynamic prepend="WHERE">
 			<isNotEmpty prepend="AND" property="department.departmentNum">
-			 	departmentNum like '%$department.departmentNum$%'
+			 	departmentNum like CONCAT('%', #department.departmentNum#, '%')
 			 </isNotEmpty>
 			 <isNotEmpty prepend="AND" property="department.departmentName">
-			 	departmentName like '%$department.departmentName$%'
+			 	departmentName like CONCAT('%', #department.departmentName#, '%')
 			 </isNotEmpty>
 		</dynamic>
 		<isNotEmpty prepend=" order by " property="displayParam.sort">
@@ -656,10 +696,10 @@
 			select departmentNum,departmentName from fnd_department where 1 = 1 and status = 1
 		]]>
 		<isNotEmpty prepend="AND" property="departmentNum">
-		 	<![CDATA[ departmentNum like '%$departmentNum$%']]> 
+		 	<![CDATA[ departmentNum like CONCAT('%', #departmentNum#, '%')]]> 
 		 </isNotEmpty>
 		 <isNotEmpty prepend="AND" property="departmentName">
-		 	<![CDATA[ departmentName like '%$departmentName$%']]>
+		 	<![CDATA[ departmentName like CONCAT('%', #departmentName#, '%')]]>
 		 </isNotEmpty>
 		 <isNotEqual compareValue="0" prepend="and" property="isparam">
 		 	<![CDATA[
@@ -681,6 +721,14 @@
 		]]>
 	</insert>
 	
+	<cacheModel type="CopyLRU" id="basicCache" readOnly="true">
+        <flushInterval hours="24"/>
+        <flushOnExecute statement="update_basic_data"/>
+        <flushOnExecute statement="insert_basic_data"/>
+        
+        <property name="size" value="50"/>
+    </cacheModel>
+	
 	<!-- 基础数据操作 -->
 	<resultMap class="com.dp.plat.data.bean.BasicDataBean" id="basicData">
 		<result property="id" column="id"/>
@@ -693,7 +741,7 @@
 		<result property="effectiveFrom" column="effectiveFrom"/>
 		<result property="effectiveTo" column="effectiveTo"/>
 	</resultMap>
-	<select id="query_basic_data" parameterClass="string" resultMap="basicData">
+	<select id="query_basic_data" parameterClass="string" resultMap="basicData" cacheModel="basicCache">
 		<![CDATA[
 			select * from fnd_basic_data where  effectiveFrom < now()
 			and ( effectiveTo is null or effectiveTo > now() )
@@ -701,7 +749,7 @@
 			order by sortId
 		]]>
 	</select>
-	<select id="query_basicdata_by_attri" parameterClass="java.util.Map" resultMap="basicData">
+	<select id="query_basicdata_by_attri" parameterClass="java.util.Map" resultMap="basicData" cacheModel="basicCache">
 		<![CDATA[
 			select * from fnd_basic_data where  effectiveFrom < now()
 			and ( effectiveTo is null or effectiveTo > now() )
@@ -720,7 +768,7 @@
 		<result property="effectiveFrom" column="effectiveFrom"/>
 		<result property="effectiveTo" column="effectiveTo"/>
 	</resultMap>
-	<select id="query_basic_data_all" parameterClass="string" resultMap="basicDataALl">
+	<select id="query_basic_data_all" parameterClass="string" resultMap="basicDataALl" cacheModel="basicCache">
 		<![CDATA[
 			select a.* ,b.dataTypeName from fnd_basic_data a LEFT JOIN fnd_basic_data_type b ON a.`dataTypeCode` = b.`dataTypeCode`  
 		]]>
@@ -733,12 +781,12 @@
 		<result property="basicDataTypeCode" column="dataTypeCode"/>
 		<result property="basicDataTypeName" column="dataTypeName"/>
 	</resultMap>
-	<select id="query_basic_data_type" parameterClass="string" resultMap="baiscDataType">
+	<select id="query_basic_data_type" parameterClass="string" resultMap="baiscDataType" cacheModel="basicCache">
 		<![CDATA[
 			SELECT dataTypeCode ,dataTypeName FROM fnd_basic_data_type WHERE STATUS = 1 AND effectiveFrom < NOW() AND (effectiveTo IS NULL OR effectiveTo > NOW())
 		]]>
 	</select>
-	<select id="query_basic_data_one" parameterClass="int" resultMap="basicDataALl">
+	<select id="query_basic_data_one" parameterClass="int" resultMap="basicDataALl" cacheModel="basicCache">
 		<![CDATA[
 			select a.* ,b.dataTypeName from fnd_basic_data a LEFT JOIN fnd_basic_data_type b ON a.`dataTypeCode` = b.`dataTypeCode`  where a.id = #id#
 		]]>
@@ -765,19 +813,19 @@
 			VALUES(#basicDataTypeCode# ,#basicDataId# , #basicDataName# , #sortId# , #createTime# ,#createBy# ,#effectiveFrom# ,#effectiveTo#)
 		]]>
 	</insert>
-	<select id="find_basic_data_id" parameterClass="java.util.Map" resultClass="int">
+	<select id="find_basic_data_id" parameterClass="java.util.Map" resultClass="int" cacheModel="basicCache">
 		<![CDATA[
 			SELECT COUNT(1) as size FROM fnd_basic_data WHERE dataTypeCode = #dataTypeCode# AND basicDataId = #basicDataId#
 		]]>
 	</select>
-	<select id="query_sys_arg" parameterClass="string" resultClass="string">
+	<select id="query_sys_arg" parameterClass="string" resultClass="string" cacheModel="basicCache">
 		<![CDATA[
 			select var from fnd_sys_arg where code = #code# and effectiveFrom <= now() 
 			and (effectiveTo is null or effectiveTo > now()) 
 		]]>
 	</select>
 	
-	<select id="query_username_size" parameterClass="string" resultClass="int">
+	<select id="query_username_size" parameterClass="string" resultClass="int" cacheModel="userCache">
 		<![CDATA[
 			SELECT COUNT(1) FROM fnd_user_info WHERE username = #username# AND effectiveFrom <= NOW() AND (effectiveTo IS NULL OR effectiveTo > NOW())
 		]]>
@@ -786,10 +834,10 @@
 		<result property="username" column="username"/>
 		<result property="realName" column="realName"/>
 	</resultMap>
-	<select id="query_user_with_role" parameterClass="int" resultMap="hasRoleUsers">
+	<select id="query_user_with_role" parameterClass="int" resultMap="hasRoleUsers" cacheModel="userCache">
 		<![CDATA[
 			SELECT username ,realName FROM fnd_user_info u 
-			WHERE u.`status` = 1 AND roleIds LIKE '%;$roleid$;%'
+			WHERE u.`status` = 1 AND roleIds LIKE CONCAT('%;', #roleid#, ';%')
 		]]>
 	</select>
 	<resultMap class="com.dp.plat.data.bean.User" id="dpNoHasRoleUsers">
@@ -798,20 +846,20 @@
 		<result property="dpNo" column="dpNo"/>
 		<result property="email" column="email"/>
 	</resultMap>
-	<select id="query_user_with_dpNo_role" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers">
+	<select id="query_user_with_dpNo_role" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers" cacheModel="userCache">
 		<![CDATA[
 			SELECT username ,realName,dpNo, email FROM fnd_user_info u 
-			WHERE u.`status` = 1 and  roleIds LIKE '%;$roleid$;%'
+			WHERE u.`status` = 1 and  roleIds LIKE CONCAT('%;', #roleid#, ';%')
 		]]>
 		<dynamic>
 			<isNotEmpty prepend="and" property="dpNo"><![CDATA[ dpNo=#dpNo#]]></isNotEmpty>
         </dynamic>
 	</select>
-	<select id="query_user_with_dpNo_role_orin_areaPower" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers">
+	<select id="query_user_with_dpNo_role_orin_areaPower" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers" cacheModel="userCache">
         <![CDATA[
             SELECT u.username, u.realName, u.dpNo, u.email FROM fnd_user_info u 
             left join fnd_user_power up on up.fndUserId = u.id
-            WHERE u.`status` = 1 and  u.roleIds LIKE '%;$roleid$;%'
+            WHERE u.`status` = 1 and  u.roleIds LIKE CONCAT('%;', #roleid#, ';%')
         ]]>
         <dynamic>
             <isNotEmpty prepend="and" property="dpNo"><![CDATA[ u.dpNo=#dpNo#]]></isNotEmpty>
@@ -844,7 +892,7 @@
 	</select>
 	<select id="query_file_map" parameterClass="String" resultClass="java.util.HashMap">
 		<![CDATA[
-			SELECT id , fileName FROM fnd_files WHERE id IN ($fileIds$);
+			SELECT id , fileName FROM fnd_files WHERE FIND_IN_SET(id, #fileIds#);
 		]]>
 	</select>
 	<resultMap class="com.dp.plat.param.FileParam" id="FileParamMap">
@@ -858,24 +906,24 @@
 		<![CDATA[
 			SELECT t1.* , CONCAT(t2.`username` , '-' , t2.`realName`) AS uploader FROM fnd_files t1
 				LEFT JOIN fnd_user_info t2 ON t1.`uploadBy` = t2.`username` 
-			WHERE t1.id IN ($fileIds$);
+			WHERE FIND_IN_SET(t1.id, #fileIds#);
 		]]>
 	</select>
 	
-	<select id="query_basic_data_for_map" parameterClass="string" resultClass="java.util.HashMap">
+	<select id="query_basic_data_for_map" parameterClass="string" resultClass="java.util.HashMap" cacheModel="basicCache">
 		<![CDATA[
 			SELECT basicDataId ,basicDataName FROM fnd_basic_data 
 			WHERE dataTypeCode = #dataTypeCode# AND effectiveTo IS NULL;
 		]]>
 	</select>
 	
-	<select id="query_basicdataname_byId" parameterClass="string" resultClass="string">
+	<select id="query_basicdataname_byId" parameterClass="string" resultClass="string" cacheModel="basicCache">
 		<![CDATA[
 			SELECT basicDataName FROM fnd_basic_data WHERE basicDataId = #basicDataId#
 		]]>
 	</select>
 	
-	<select id="query_basicdata_bydataId" parameterClass="string" resultClass="com.dp.plat.data.bean.BasicDataBean">
+	<select id="query_basicdata_bydataId" parameterClass="string" resultClass="com.dp.plat.data.bean.BasicDataBean" cacheModel="basicCache">
 		<![CDATA[
 			select * from fnd_basic_data where basicDataId = #basicDataId#
 		]]>
@@ -888,7 +936,7 @@
 	
 	<select id="query_mails_with_role" parameterClass="int" resultClass="string">
 		<![CDATA[
-			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info WHERE roleIds LIKE '%;$roleId$;%'
+			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info WHERE roleIds LIKE CONCAT('%;', #roleId#, ';%')
 			and `status` = 1 
 		]]>
 	</select>
@@ -897,17 +945,17 @@
 			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info 
 			WHERE `status` = 1
 		]]>
-		<isNotEmpty prepend="and" property="roleId"><![CDATA[ roleIds LIKE '%;$roleId$;%']]></isNotEmpty>
-		<isNotEmpty prepend="and" property="officeCodes"><![CDATA[ dpNo in ($officeCodes$)]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="roleId"><![CDATA[ roleIds LIKE CONCAT('%;', #roleId#, ';%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="officeCodes"><![CDATA[ FIND_IN_SET(dpNo, #officeCodes#)]]></isNotEmpty>
 	</select>
 	<select id="query_mails_and_office" parameterClass="java.util.Map" resultClass="string">
 		<![CDATA[
 			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info 
-			WHERE (roleIds LIKE '%;12;%' or roleIds LIKE '%;13;%') and  dpNo in ($officeCodes$) and `status` = 1
+			WHERE (roleIds LIKE '%;12;%' or roleIds LIKE '%;13;%') and  FIND_IN_SET(dpNo, #officeCodes#) and `status` = 1
 		]]>
 	</select>
 	
-	<select id="queryCompanyList" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company">
+	<select id="queryCompanyList" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company" cacheModel="basicCache">
         <![CDATA[
             SELECT * FROM fnd_company
         ]]>
@@ -920,7 +968,7 @@
         </dynamic>
     </select>
     
-    <select id="queryCompanyOne" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company">
+    <select id="queryCompanyOne" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company" cacheModel="basicCache">
         <![CDATA[
             SELECT * FROM fnd_company
         ]]>
@@ -944,7 +992,7 @@
 	  <result property="subCategory" column="subCategory" />
 	  <result property="subCategoryName" column="subCategoryName"/>
 	</resultMap>
-    <select id="query_basic_data_for_map_with_sub" parameterClass="map" resultMap="BasicDataWithSub">
+    <select id="query_basic_data_for_map_with_sub" parameterClass="map" resultMap="BasicDataWithSub" cacheModel="basicCache">
         SELECT 
 		    b1.basicDataId AS category, b1.basicDataName AS categoryName, b1.basicDataAttri1 AS categoryAttr, b2.basicDataId AS subCategory, b2.basicDataName AS subCategoryName 
 		FROM

@@ -1,5 +1,7 @@
 package com.dp.plat.dao;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +21,20 @@ public class LoginDaoImpl extends BaseDao implements LoginDao{
 	public Map<String, Integer> queryUserMenuMap(int userId ) {
 		return getSqlMapClientTemplate().queryForMap("query_permissions_by_name", userId, "menuCode" ,"menuValue");
 	}
-
+	
+	@Override
+    public Map<String, List<String>> queryUserMenuNameMap(int userId ) {
+        List<Map<String, String>> list = getSqlMapClientTemplate().queryForList("query_permissions_name_code_by_userId", userId);
+        Map<String, List<String>> nameMap = new HashMap<String, List<String>>(list.size());
+        for (Map<String, String> map : list) {
+            String name = map.get("menuName");
+            List<String> names = nameMap.getOrDefault(name, new ArrayList<String>(1));
+            names.add(map.get("menuCode"));
+            nameMap.put(name, names);
+        }
+        return nameMap;
+	}
+	
 	@Override
 	public String queryUserDefaultPage(int userId) {
 		Object obj = getSqlMapClientTemplate().queryForObject("query_defaultpage_by_username_1", userId);

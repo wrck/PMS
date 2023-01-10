@@ -5,8 +5,10 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,8 +40,13 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.ContextLoader;
 
 import com.dp.plat.context.SpringContext;
@@ -221,6 +228,10 @@ public class MailUtil {
 			context.put("subject", template[0]);
 			context.put("content", template[1]);
 		}
+		// 标题或者内容为空则不发送邮件
+		if (StringUtils.isBlank((String) context.get("subject")) || StringUtils.isBlank((String) context.get("content"))) {
+		    return;
+		}
 		keepMail(context, isSendNow);
 	}
 
@@ -296,7 +307,8 @@ public class MailUtil {
 			insertPictureIntoContent(mailInfo, content);
 
 			mimeMsg.setContent(multipart);
-			mimeMsg.saveChanges();
+//			// 部分情况很耗时，而且Transport.send(Message)方法隐式调用，如果使用Transport.send发送则可以不加
+//			mimeMsg.saveChanges();
 			// 发送邮件
 			return sendMail(mimeMsg, mailInfo);
 		} catch (Exception e) {
@@ -567,7 +579,11 @@ public class MailUtil {
 					continue;
 				}
 				Class<?> c = obj.getClass();
-				Field[] fields = c.getDeclaredFields();
+//				Field[] fields = c.getDeclaredFields();
+				Collection<Field> fields = new HashSet<Field>();
+				ReflectionUtils.doWithFields(c, field -> {
+					fields.add(field);
+				});
 				for (Field field : fields) {
 					field.setAccessible(true);
 					paramNames.add(beforeSplit + field.getName() + afterSplit);
@@ -601,32 +617,48 @@ public class MailUtil {
 			subject = templete.getNotificationSubject();
 			content = templete.getNotificationContent();
 		}
+		String beforeSplit = DEFAULT_BEFORE_SPLIT;
+        String afterSplit = DEFAULT_AFTER_SPLIT;
+        if (context.get("beforeSplit") != null) {
+            beforeSplit = (String) context.get("beforeSplit");
+        }
+        if (context.get("afterSplit") != null) {
+            afterSplit = (String) context.get("afterSplit");
+        }
 		// 实体数据源，模板值以实体数据源的值为准，若无实体数据源，则以context中的对应值为准
 		Object[] objects = (Object[]) context.get("dataSource");
 		if (objects != null) {
-			if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
-				paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
-						objects, context);
-			} else {
-				paramNames = getTemplateParams(objects, context);
-			}
+//			if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
+//				paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
+//						objects, context);
+//			} else {
+//				paramNames = getTemplateParams(objects, context);
+//			}
+			paramNames = getTemplateParams(beforeSplit, afterSplit, objects, context);
 			for (String name : paramNames) {
-				Object value = context.get(name.substring(1, name.length() - 1));
+//				String key = name.substring(1, name.length() - 1);
+				String key = name.replace(beforeSplit, "").replace(afterSplit, "");
+				Object value = context.get(key);
 				value = value == null ? "" : value;
 				String regex = "\\Q" + name + "\\E";
-				subject = subject.replaceAll(regex, value.toString());
-				content = content.replaceAll(regex, value.toString());
+				try {
+				    subject = subject.replaceAll(regex, value.toString());
+				    content = content.replaceAll(regex, value.toString());
+				} catch (Exception e) {
+					try {
+						value = Matcher.quoteReplacement(value.toString());
+						subject = subject.replaceAll(regex, value.toString());
+						content = content.replaceAll(regex, value.toString());
+					} catch (Exception e2) {
+//						ExceptionHandler.insertException(e);
+//						ExceptionHandler.insertException(e2);
+					    e.printStackTrace();
+					    e2.printStackTrace();
+					}
+				}
 			}
 		}
 		// 处理实体数据源以外的其他模板值
-		String beforeSplit = DEFAULT_BEFORE_SPLIT;
-		String afterSplit = DEFAULT_AFTER_SPLIT;
-		if (context.get("beforeSplit") != null) {
-			beforeSplit = (String) context.get("beforeSplit");
-		}
-		if (context.get("afterSplit") != null) {
-			afterSplit = (String) context.get("afterSplit");
-		}
 		for (Entry<String, Object> entry : context.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
@@ -641,11 +673,25 @@ public class MailUtil {
 			} else {
 				regex = "\\Q" + beforeSplit + key + afterSplit + "\\E";
 			}
-			subject = subject.replaceAll(regex, value.toString());
-			content = content.replaceAll(regex, value.toString());
+			try {
+                subject = subject.replaceAll(regex, value.toString());
+                content = content.replaceAll(regex, value.toString());
+            } catch (Exception e) {
+                try {
+                    value = Matcher.quoteReplacement(value.toString());
+                    subject = subject.replaceAll(regex, value.toString());
+                    content = content.replaceAll(regex, value.toString());
+                } catch (Exception e2) {
+//                    ExceptionHandler.insertException(e);
+//                    ExceptionHandler.insertException(e2);
+                    e.printStackTrace();
+                    e2.printStackTrace();
+                }
+            }
 		}
-		subject = subject.replaceAll("\\" + beforeSplit + "(\\w+)\\" + afterSplit + "", "");
-		content = content.replaceAll("\\" + beforeSplit + "(\\w+)\\" + afterSplit + "", "");
+		String otherPlaceholder = quoteSplit(beforeSplit) + "(\\w+)" + quoteSplit(afterSplit);
+		subject = subject.replaceAll(otherPlaceholder, "");
+		content = content.replaceAll(otherPlaceholder, "");
 		NotificationTemplate processedTemplate = new NotificationTemplate();
 		processedTemplate.setTemplateCode(templateCode);
 		processedTemplate.setNotificationSubject(subject);
@@ -722,15 +768,24 @@ public class MailUtil {
 	 */
 	private static List<String> matchImgSrc(MailSenderInfo mailInfo) {
 		List<String> srcList = new ArrayList<String>();
-		Matcher matcherImg = Pattern.compile(IMGURL_REG).matcher(mailInfo.getContent());
-		while (matcherImg.find()) {
-			String imgTag = matcherImg.group() + ">";
-			Matcher matcherSrc = Pattern.compile(IMGSRC_REG).matcher(imgTag);
-			while (matcherSrc.find()) {
-				String src = matcherSrc.group();
-				src = src.replace("\"", "");
-				srcList.add(src);
-			}
+//		Matcher matcherImg = Pattern.compile(IMGURL_REG).matcher(mailInfo.getContent());
+//		while (matcherImg.find()) {
+//			String imgTag = matcherImg.group() + ">";
+//			Matcher matcherSrc = Pattern.compile(IMGSRC_REG).matcher(imgTag);
+//			while (matcherSrc.find()) {
+//				String src = matcherSrc.group();
+//				src = src.replace("\"", "");
+//				srcList.add(src);
+//			}
+//		}
+		Document document = Jsoup.parse(mailInfo.getContent());
+		Elements imgs = document.getElementsByTag("img");
+		Elements images = document.getElementsByTag("image");
+		imgs.addAll(images);
+		for (Element img : imgs) {
+			String src = img.attr("src");
+			src = src.replace("\"", "");
+			srcList.add(src);
 		}
 		return srcList;
 	}
@@ -764,7 +819,9 @@ public class MailUtil {
 					uri = uri.replace(contextPath, "");
 					idxTemp = uri.indexOf("/");
 					uri = uri.substring(idxTemp);
-				}
+				} else {
+	                uri = src.replace(contextPath, "");;
+	            }
 			}
 			String filePath = servletContext.getRealPath(uri);
 			File file = new File(filePath);
@@ -830,16 +887,13 @@ public class MailUtil {
 		bodyMultipart.addBodyPart(htmlPart);
 		List<String> srcList = matchImgSrc(mailInfo);
 		for (String src : srcList) {
-			String filePath = getImgRealPath(src);
-			if (src.equals(filePath)) {
-				continue;
-			}
 			MimeBodyPart gifPart = new MimeBodyPart();
+			bodyMultipart.addBodyPart(gifPart);
+			String filePath = getImgRealPath(src);
 			DataSource gifds = new FileDataSource(filePath);
 			DataHandler gifdh = new DataHandler(gifds);
 			gifPart.setDataHandler(gifdh);
 			gifPart.setHeader("Content-Location", src);
-			bodyMultipart.addBodyPart(gifPart);
 		}
 
 		htmlPart.setContent(mailInfo.getContent(), "text/html;charset=utf-8");
@@ -1127,33 +1181,107 @@ public class MailUtil {
 	 * @return 重发时候成功
 	 */
 	private static boolean removeInvalidAddressAndResend(MailSenderInfo mailInfo, Address[] invalidAddresses) {
-		boolean needResend = invalidAddresses != null && invalidAddresses.length > 0;
-		if (!needResend) {
-			return needResend;
-		}
-		if (StringUtils.isNotBlank(mailInfo.getTos())) {
-			String tos = mailInfo.getTos();
-			for (Address invalid : invalidAddresses) {
-				tos = tos.replaceFirst(";?" + invalid.toString() + ";?", ";");
-			}
-			mailInfo.setTos(tos);
-		}
-		if (StringUtils.isNotBlank(mailInfo.getCcs())) {
-			String ccs = mailInfo.getCcs();
-			for (Address invalid : invalidAddresses) {
-				ccs = ccs.replaceFirst(";?" + invalid.toString() + ";?", ";");
-			}
-			mailInfo.setCcs(ccs);
-		}
-		if (StringUtils.isNotBlank(mailInfo.getBcc())) {
-			String bcc = mailInfo.getBcc();
-			for (Address invalid : invalidAddresses) {
-				bcc = bcc.replaceFirst(";?" + invalid.toString() + ";?", ";");
-			}
-			mailInfo.setBcc(bcc);
-		}
-		return sendMailWithAttachments(mailInfo);
+	    boolean needResend = invalidAddresses != null && invalidAddresses.length > 0;
+        if (!needResend) {
+            return needResend;
+        }
+        
+//        Set<String> to = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getToAddress(), ";,")));
+//        Set<String> tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+//        Set<String> ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+//        Set<String> bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";,")));
+//        
+        Set<String> tos = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getToAddress())) {
+            tos.add(mailInfo.getToAddress());
+            mailInfo.setToAddress(null);
+        }
+        if (StringUtils.isNotEmpty(mailInfo.getTos())) {
+            tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+        }
+        Set<String> ccs = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getCcs())) {
+            ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+        }
+        Set<String> bccs = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getBcc())) {
+            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBcc(), ";,")));
+        }
+        for (Address invalid : invalidAddresses) {
+            String invalidAddress = invalid.toString();
+            tos.remove(invalidAddress);
+            ccs.remove(invalidAddress);
+            bccs.remove(invalidAddress);
+        }
+        
+        for (Address invalidAddress : invalidAddresses) {
+            String invalid = invalidAddress.toString();
+            tos.remove(invalid);
+            ccs.remove(invalid);
+            bccs.remove(invalid);
+        }
+        
+        // 如果移除无效地址之后所有收件人为空则不重新发送
+        if ((tos.size() + ccs.size() + bccs.size()) == 0) {
+            return false;
+        }
+        
+        mailInfo.setTos(StringUtils.join(tos, ";"));
+        mailInfo.setCcs(StringUtils.join(ccs, ";"));
+        mailInfo.setBcc(StringUtils.join(bccs, ";"));
+        return sendMailWithAttachments(mailInfo);
+        
+//		boolean needResend = invalidAddresses != null && invalidAddresses.length > 0;
+//		if (!needResend) {
+//			return needResend;
+//		}
+//		if (StringUtils.isNotBlank(mailInfo.getToAddress())) {
+//            String to = mailInfo.getToAddress();
+//            for (Address invalid : invalidAddresses) {
+//                to = to.replaceAll(";?" + invalid.toString() + ";?", ";");
+//            }
+//            mailInfo.setToAddress(to);
+//        }
+//		if (StringUtils.isNotBlank(mailInfo.getTos())) {
+//			String tos = mailInfo.getTos();
+//			for (Address invalid : invalidAddresses) {
+//				tos = tos.replaceAll(";?" + invalid.toString() + ";?", ";");
+//			}
+//			mailInfo.setTos(tos);
+//		}
+//		if (StringUtils.isNotBlank(mailInfo.getCcs())) {
+//			String ccs = mailInfo.getCcs();
+//			for (Address invalid : invalidAddresses) {
+//				ccs = ccs.replaceAll(";?" + invalid.toString() + ";?", ";");
+//			}
+//			mailInfo.setCcs(ccs);
+//		}
+//		if (StringUtils.isNotBlank(mailInfo.getBcc())) {
+//			String bcc = mailInfo.getBcc();
+//			for (Address invalid : invalidAddresses) {
+//				bcc = bcc.replaceAll(";?" + invalid.toString() + ";?", ";");
+//			}
+//			mailInfo.setBcc(bcc);
+//		}
+//		return sendMailWithAttachments(mailInfo);
 	}
+	
+	private static String quoteSplit(String split) {
+        if (!split.matches(".*[\\$|\\(|\\)|\\*|\\+|\\.|\\[|\\]|\\?|\\\\|\\/|\\^|\\{|\\}].*")) {
+            return split;
+        }
+        char[] signs =  new char[] {'$','(',')','*','+','.','[',']','?','\\','/','^','{','}'};
+        Arrays.sort(signs);
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<split.length(); i++) {
+            char c = split.charAt(i);
+            if (Arrays.binarySearch(signs, c) >= 0) {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
 	
 	public static void main(String[] args) {
 		MailSenderInfo mailInfo = new MailSenderInfo();

@@ -29,7 +29,7 @@ public class LoginAction extends BaseAction{
 		}else {
 			return this.noCasLogin();
 		}
-	}	
+	}
 	
 	private String casLogin(){
 		String ip = new String();
@@ -106,8 +106,14 @@ public class LoginAction extends BaseAction{
 	}
 	
 	public String logout()throws Exception{
+	    
 		if(UserContext.getUserContext().isCas()){ 
-			String url=	UserContext.getUserContext().getUrl();
+		    
+//		    AuthenticationFilter casFilter = SpringContext.getBean(AuthenticationFilter.class);
+//		    String casServerLoginUrl = String.valueOf(ReflectionUtils.getField(ReflectionUtils.findField(casFilter.getClass(), "casServerLoginUrl"), casFilter));
+//		    casServerLoginUrl = StringUtils.defaultIfBlank(casServerLoginUrl, "https://cas.dptech.com:8443/");
+//		    URL uri = new URI(casServerLoginUrl).toURL();
+            String url = UserContext.getUserContext().getUrl();
 			String urlString="https://cas.dptech.com:8443/logout?service="+url.substring(0, url.lastIndexOf("/") + 1) + "Login.action";
 			this.setRedirecturl(urlString);
 		}else{
@@ -115,6 +121,10 @@ public class LoginAction extends BaseAction{
 		}
 		loginService.logout();
 		return SUCCESS;
+	}
+	
+	public String error404() {
+	    return SUCCESS;
 	}
 	
 	public String getRedirecturl() {

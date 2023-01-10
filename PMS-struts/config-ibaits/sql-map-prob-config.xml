@@ -69,9 +69,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	        ) sf ON sf.probId = t1.id
 		</isEqual>
 			where t1.effectiveTo is null
-		<isNotEmpty prepend="and" property="probNum"><![CDATA[ t1.probNum like '%$probNum$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probNum"><![CDATA[ t1.probNum like CONCAT('%', #probNum#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="watch"><![CDATA[ t1.watch = #watch#]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="theme"><![CDATA[ t1.theme like '%$theme$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="theme"><![CDATA[ t1.theme like CONCAT('%', #theme#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="status"><![CDATA[ t1.`status` = #status#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="statusList">
 			t1.status in
@@ -157,9 +157,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	        ) sf ON sf.probId = t1.id
         </isEqual>
 		WHERE t1.effectiveTo IS NULL
-		<isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like '%$prob.probNum$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like CONCAT('%', #prob.probNum#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="prob.theme"><![CDATA[ t1.theme like '%$prob.theme$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="prob.theme"><![CDATA[ t1.theme like CONCAT('%', #prob.theme#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="prob.statusList">
 			t1.status in
@@ -264,7 +264,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="duedate"><![CDATA[ duedate = #duedate#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="priority"><![CDATA[ priority = #priority#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="productType"><![CDATA[ productType = #productType#]]> </isNotEmpty>
-		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',',$attachments$)]]></isNotEmpty>
+		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',', #attachments#)]]></isNotEmpty>
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
@@ -283,7 +283,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="duedate"><![CDATA[ duedate = #duedate#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="priority"><![CDATA[ priority = #priority#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="productType"><![CDATA[ productType = #productType#]]> </isNotEmpty>
-		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',',$attachments$)]]></isNotEmpty>
+		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',', #attachments#)]]></isNotEmpty>
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
@@ -331,47 +331,47 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             SELECT conp, cpld, boot, pcb FROM prob_soft_version) t
 		WHERE 1 = 1		
 		<isEqual property="conpCondition" compareValue="between">
-			<isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ #conp1# and #conp2# ]]> </isNotEmpty>
+			<isNotEmpty prepend="and" property="conp"><![CDATA[ conp between #conp1# and #conp2# ]]> </isNotEmpty>
 		</isEqual>
 		<isNotEqual property="conpCondition" compareValue="between">
 		    <isEqual property="conpCondition" compareValue="regexp">
-	            <isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ #conp#]]> </isNotEmpty>
+	            <isNotEmpty prepend="and" property="conp"><![CDATA[ conp regexp #conp#]]> </isNotEmpty>
 	        </isEqual>
 	        <isNotEqual property="conpCondition" compareValue="regexp">
-				<isNotEmpty prepend="and" property="conp"><![CDATA[ conp $conpCondition$ '%$conp$%']]> </isNotEmpty>
+				<isNotEmpty prepend="and" property="conp"><![CDATA[ conp like CONCAT('%', #conp#, '%')]]> </isNotEmpty>
             </isNotEqual>
 		</isNotEqual>
 		<isEqual property="cpldCondition" compareValue="between">
-		    <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ #cpld1# and #cpld2# ]]> </isNotEmpty>
+		    <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld between #cpld1# and #cpld2# ]]> </isNotEmpty>
 		</isEqual>
 		<isNotEqual property="cpldCondition" compareValue="between">
 		    <isEqual property="cpldCondition" compareValue="regexp">
-                <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ #cpld#]]> </isNotEmpty>
+                <isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld regexp #cpld#]]> </isNotEmpty>
             </isEqual>
             <isNotEqual property="cpldCondition" compareValue="regexp">
-				<isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld $cpldCondition$ '%$cpld$%']]> </isNotEmpty>
+				<isNotEmpty prepend="and" property="cpld"><![CDATA[ cpld like CONCAT('%', #cpld#, '%')]]> </isNotEmpty>
             </isNotEqual>
 		</isNotEqual>
 		<isEqual property="bootCondition" compareValue="between">
-			<isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ #boot1# and #boot2# ]]> </isNotEmpty>
+			<isNotEmpty prepend="and" property="boot"><![CDATA[ boot between #boot1# and #boot2# ]]> </isNotEmpty>
 		</isEqual>
 		<isNotEqual property="bootCondition" compareValue="between">
 		    <isEqual property="bootCondition" compareValue="regexp">
-                <isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ #boot#]]> </isNotEmpty>
+                <isNotEmpty prepend="and" property="boot"><![CDATA[ boot regexp #boot#]]> </isNotEmpty>
             </isEqual>
             <isNotEqual property="bootCondition" compareValue="regexp">
-				<isNotEmpty prepend="and" property="boot"><![CDATA[ boot $bootCondition$ '%$boot$%']]> </isNotEmpty>
+				<isNotEmpty prepend="and" property="boot"><![CDATA[ boot like CONCAT('%', #boot#, '%')]]> </isNotEmpty>
             </isNotEqual>
 		</isNotEqual>
 		<isEqual property="pcbCondition" compareValue="between">
-			<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ #pcb1# and #pcb2# ]]> </isNotEmpty>
+			<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb between #pcb1# and #pcb2# ]]> </isNotEmpty>
 		</isEqual>
 		<isNotEqual property="pcbCondition" compareValue="between">
 		    <isEqual property="pcbCondition" compareValue="regexp">
-                <isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ #pcb#]]> </isNotEmpty>
+                <isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb regexp #pcb#]]> </isNotEmpty>
             </isEqual>
             <isNotEqual property="pcbCondition" compareValue="regexp">
-				<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb $pcbCondition$ '%$pcb$%']]> </isNotEmpty>
+				<isNotEmpty prepend="and" property="pcb"><![CDATA[ pcb like CONCAT('%', #pcb#, '%')]]> </isNotEmpty>
             </isNotEqual>
 		</isNotEqual>
 		order by 1
@@ -533,9 +533,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			    AND NOT EXISTS 
 			    (SELECT * FROM prob_restore WHERE serialNum = t1.serial_number AND probId = #probRestore.probId#) 
 		]]>
-		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ t1.serial_number like '$probRestore.serialNum$%']]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like '$probRestore.itemModel$%']]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ t6.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ t1.serial_number like concat(#probRestore.serialNum#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ t6.projectName like concat('%', #probRestore.projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ t4.contractNo = #probRestore.contractNo#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ t6.column001 = #probRestore.officeCode#]]></isNotEmpty>
 		<![CDATA[
@@ -587,9 +587,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 					<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
 				</isEmpty> -->
 				<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
-				<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like '%$projectName$%']]></isNotEmpty>
+				<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like concat('%', #projectName#, '%')]]></isNotEmpty>
 				<isNotEmpty prepend="and" property="serialNum"><![CDATA[ a1.serialNum = #serialNum# ]]></isNotEmpty>
-				<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like '$itemModel$%']]></isNotEmpty>
+				<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like concat(#itemModel#, '%')]]></isNotEmpty>
 				<isNotEmpty prepend="and" property="contractNo"><![CDATA[ a1.contractNo = #contractNo#]]></isNotEmpty>
 				<isNotEqual prepend="and" property="restoreStatus" compareValue="0">
 					<![CDATA[ a4.restoreStatus = #restoreStatus#]]>
@@ -619,9 +619,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
 		</isEmpty> -->
 		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ a1.officeCode = #officeCode#]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like '%$projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ a1.projectName like concat('%', #projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="serialNum"><![CDATA[ a1.serialNum = #serialNum# ]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like '$itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="itemModel"><![CDATA[ a1.itemModel like concat(#itemModel#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="contractNo"><![CDATA[ a1.contractNo = #contractNo#]]></isNotEmpty>
 		<isNotEqual prepend="and" property="restoreStatus" compareValue="0">
 			<![CDATA[ a4.restoreStatus = #restoreStatus#]]>
@@ -686,9 +686,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
 		</isEmpty> -->
 		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like concat('%', #probRestore.projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like '$probRestore.itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
 		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
 			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
@@ -736,9 +736,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
 		</isEmpty> -->
 		<isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like '%$probRestore.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like concat('%', #probRestore.projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like '$probRestore.itemModel$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
 		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
 			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
@@ -774,13 +774,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<![CDATA[ assignee = #assignee#]]>
 		</isNotEmpty>
 		<![CDATA[
-			,updateBy = #updateBy#,updateTime = now() WHERE id IN ($restoreIds$);
+			,updateBy = #updateBy#,updateTime = now() WHERE FIND_IN_SET(id, #restoreIds#);
 		]]>
 	</update>
 	
 	<update id="update_prob_restore_assignee" parameterClass="java.util.Map">
 		<![CDATA[
-			UPDATE prob_restore SET assignee = #assignee#,assigneeRole = 0 ,updateBy = #updateBy#,updateTime = now()  WHERE id IN ($restoreIds$);
+			UPDATE prob_restore SET assignee = #assignee#,assigneeRole = 0 ,updateBy = #updateBy#,updateTime = now()  WHERE FIND_IN_SET(id, #restoreIds#);
 		]]>
 	</update>
 	<select id="query_prob_restore_process_size" parameterClass="int" resultClass="int">
@@ -799,7 +799,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	</resultMap>
 	<select id="query_prob_file_list" parameterClass="string" resultMap="ProbFile">
 		<![CDATA[
-			SELECT fileName,filePath FROM fnd_files WHERE FIND_IN_SET(id , '$fileIds$');
+			SELECT fileName,filePath FROM fnd_files WHERE FIND_IN_SET(id , #fileIds#);
 		]]>
 	</select>
 	<insert id="insert_prob_task_weekly" parameterClass="java.util.Map">
@@ -829,13 +829,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<![CDATA[
 			SELECT GROUP_CONCAT(DISTINCT t2.email SEPARATOR ';') as emails FROM prob_restore t1
 			LEFT JOIN fnd_user_info t2 ON t1.`assignee` = t2.`username` AND t2.`status` = 1
-			WHERE t1.`id` IN ($restoreIds$)
+			WHERE FIND_IN_SET(t1.`id`, #restoreIds#)
 		]]>
 	</select>
 	
 	<delete id="batch_delete_probRestores" parameterClass="string">
 		<![CDATA[
-			delete from prob_restore where id in ($probRestoreIds$)
+			delete from prob_restore where FIND_IN_SET(id, #probRestoreIds#)
 		]]>
 	</delete>
 	
@@ -870,7 +870,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			    LEFT JOIN `pm_project_soft_change_logs` scl 
 			        ON pr.`projectId` = scl.`projectId` 
 			        AND scl.`latest` = 1
-			WHERE pr.id IN ($restoreIds$)
+			WHERE FIND_IN_SET(pr.id, #restoreIds#)
 		]]>
 	</select>
 	
@@ -882,7 +882,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			    LEFT JOIN fnd_user_info ui 
 			        ON pr.`officeCode` = ui.`dpNo` 
 			        AND ui.`status` = 1 
-	       	WHERE pr.id IN ($restoreIds$)
+	       	WHERE FIND_IN_SET(pr.id, #restoreIds#)
 		]]>
 	</select>
 	
@@ -1251,7 +1251,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 				ON ui.username = sv.createBy 
 		WHERE sv.`executeTime` >= #startTime#
             <isNotEmpty prepend="and" property="endTime">
-               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+               <![CDATA[ sv.`executeTime` <= CONCAT(#endTime#, ' 23:59:59')]]>
             </isNotEmpty>
             and (sv.`conpChange` = 1 or sv.`bootChange` = 1 or sv.`cpldChange` = 1 or sv.`pcbChange` = 1)
 		GROUP BY sv.`projectId`, sv.`barcode`

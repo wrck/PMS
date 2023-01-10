@@ -1,5 +1,8 @@
 package com.dp.plat.data.bean;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,7 @@ public class Presales extends ActivityBaseBean {
 	private String industryName;//行业
 	private String officeCode;//办事处编码
 	private String officeName;//办事处名称
+	private String officeCodes;//办事处权限
 	private String salesman;//销售人员
 	private String salesmanLink;//联系方式
 	private String productManager;//产品经理
@@ -180,7 +184,17 @@ public class Presales extends ActivityBaseBean {
 	public void setOfficeName(String officeName) {
 		this.officeName = officeName;
 	}
-	public String getSalesman() {
+	public String getOfficeCodes() {
+        return officeCodes;
+    }
+    public void setOfficeCodes(String officeCodes) {
+        this.officeCodes = officeCodes;
+    }
+    public List<String> getOfficeCodeList() {
+        return officeCodes != null ? Arrays.asList(officeCodes.split(",")) : new ArrayList<String>(0);
+    }
+    
+    public String getSalesman() {
 		return salesman;
 	}
 	public void setSalesman(String salesman) {

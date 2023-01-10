@@ -41,7 +41,7 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 	}
 
 	@Override
-	protected Object parse(String json) {
+	public Object parse(String json) {
 		if (JSON.isValid(json)) {
             return JSON.parseObject(json, type/* , Feature.AllowISO8601DateFormat */);
 		} else {
@@ -50,12 +50,12 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 	}
 
 	@Override
-	protected Object toJson(Object obj) {
+	public Object toJson(Object obj) {
 		return JSON.toJSON(obj);
 	}
 
 	@Override
-	protected String toJsonString(Object obj) {
+	public String toJsonString(Object obj) {
 		if (obj instanceof String) {
 			return obj.toString();
 		}

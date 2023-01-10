@@ -48,7 +48,7 @@
             <div>
                 <ul class="nav navbar-nav">
                     <s:iterator value="navTabList" var="nav" status="index">
-                        <s:if test="%{#index.index == 2}">
+                        <s:if test="%{#index.index == 2 || navTabList.size() == 1}">
                             <li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickSwitchTab(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>','<s:property value='#nav.basicDataAttri1'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
                         </s:if>
                         <s:else>

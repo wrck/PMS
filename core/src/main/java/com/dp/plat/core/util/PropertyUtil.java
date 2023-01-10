@@ -20,12 +20,18 @@ public class PropertyUtil {
 	private static ConcurrentHashMap<String, Set<ResourceBundle>> res = new ConcurrentHashMap<String, Set<ResourceBundle>>();
 	private static String[] baseNames;
 	static {
-		ResourceBundle rb = PropertyResourceBundle.getBundle("config", Locale.CHINA);
-		String baseNameStr = rb.getString("sys.resources");
-		if (!StringUtils.isEmpty(baseNameStr)) {
-			baseNames = baseNameStr.split(";");
-		}
-	}
+        try {
+            ResourceBundle rb = PropertyResourceBundle.getBundle("config", Locale.CHINA);
+            String baseNameStr = rb.containsKey("sys.resources") ? rb.getString("sys.resources") : "config";
+            if (!StringUtils.isEmpty(baseNameStr)) {
+                baseNames = baseNameStr.split(";");
+            } else {
+                baseNames = new String[0];
+            }
+        } catch (Exception e) {
+            baseNames = new String[0];
+        }
+    }
 	
 	private static Set<ResourceBundle> getBundles(String key, boolean findNew) {
 		String mod = key.substring(0, key.indexOf("."));

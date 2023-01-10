@@ -78,18 +78,48 @@ var usernameArr3  = new Array();
 
 $(document).ready(function(){
 	
-	queryalluser();
-	$("#salesname").autocomplete({
-		source: realnameArr,
-	});
-	queryallsysuser();
-	$("#sm").autocomplete({
-		source: realnameArr2,
-	});
-	queryprogramuser();
-	$("#pm").autocomplete({
-		source: realnameArr3,
-	});
+	initAutoComplete("#salesname", queryalluser, queryuser2, function(items) {
+		$(this).autocomplete({
+	        source: items,
+	    }).trigger("blur");
+	})
+// 	queryalluser();
+// 	$("#salesname").autocomplete({
+// 		source: realnameArr,
+// 		/* source: function(query, callback) {
+// 			var items = renderAutoCompleteItems(usernameArr, realnameArr);
+// 			items = $.ui.autocomplete.filter(items, query.term);
+// 			callback(items);
+// 		} */
+// 	});
+	initAutoComplete("#sm", queryallsysuser, querysysuser2, function(items) {
+        $(this).autocomplete({
+            source: items,
+        }).trigger("blur");
+    })
+// 	queryallsysuser();
+// 	$("#sm").autocomplete({
+// 		source: realnameArr2,
+// 		/* source: function(query, callback) {
+//             var items = renderAutoCompleteItems(usernameArr2, realnameArr2);
+//             items = $.ui.autocomplete.filter(items, query.term);
+//             callback(items);
+//         } */
+// 	});
+	initAutoComplete("#pm", queryprogramuser, queryprogramuser2, function(items) {
+        $(this).autocomplete({
+            source: items,
+        }).trigger("blur");
+    })
+// 	/* queryprogramuser();
+// 	$("#pm").autocomplete({
+// 		source: realnameArr3,
+// 		/* source: function(query, callback) {
+//             var items = renderAutoCompleteItems(usernameArr3, realnameArr3);
+//             items = $.ui.autocomplete.filter(items, query.term);
+//             callback(items);
+//         } */
+// 	}); */
 	
 	
 	$(".table-striped th").last().css({"text-align":"center"});
@@ -156,13 +186,55 @@ $(document).ready(function(){
 	} */
 });
 
-function queryalluser(){
+function renderAutoCompleteItems(values, labels) {
+	var items = [];
+	values = values || [];
+	labels = labels || values; 
+	for (var i = 0; i < values.length; i++) {
+		var value = values[i];
+		var label = labels[i];
+		items.push({
+			label: label,
+			value: value
+		});
+	}
+	return items;
+}
+
+function initAutoComplete(el, source, process, callback) {
+	var items = [];
+	if (!source || $.isArray(source) || typeof source === 'string') {
+		items = source;
+		if (process) {
+    		items = process.call($(el), items) || items;
+		}
+        $(el).autocomplete({
+            source: items,
+        });
+        if (callback) {
+            callback.call(el, items);
+        }
+	} else if (typeof source == 'function') {
+		source.call($(el), function(data) {
+			var items = [];
+			if (process) {
+	            items = process.call($(el), data) || items;
+	        }
+			if (callback) {
+	            callback.call($(el), items);
+	        }
+		});
+	}
+}
+
+function queryalluser(process, callback){
 	$.ajax({
 		url:'queryperson.action',
 		type:'post',
 		dataType:'json',
 		data:{},
-		success:queryuser2
+		success: process || queryuser2,
+		complete: callback
 	});
 }
 function queryuser2(json){
@@ -171,15 +243,17 @@ function queryuser2(json){
 		usernameArr[i] = userlist[i].salesmanCode;
 		realnameArr[i] = userlist[i].salesmanCode+"-"+userlist[i].salesmanName;
 	}
+	return realnameArr;
 }
 
-function queryallsysuser(){
+function queryallsysuser(process, callback){
 	$.ajax({
 		url:'queryalluser.action',
 		type:'post',
 		dataType:'json',
 		data:{roleid :11},
-		success:querysysuser2
+		success:process || querysysuser2,
+		complete: callback
 	});
 }
 function querysysuser2(json){
@@ -188,15 +262,17 @@ function querysysuser2(json){
 		usernameArr2[i] = userlist[i].username;
 		realnameArr2[i] = userlist[i].username+"-"+userlist[i].realName;
 	}
+	return realnameArr2;
 }
 
-function queryprogramuser(){
+function queryprogramuser(process, callback){
 	$.ajax({
 		url:'queryalluser.action',
 		type:'post',
 		dataType:'json',
 		data:{roleid :12},
-		success:queryprogramuser2
+		success:process || queryprogramuser2,
+        complete: callback
 	});
 }
 function queryprogramuser2(json){
@@ -205,6 +281,7 @@ function queryprogramuser2(json){
 		usernameArr3[i] = userlist[i].username;
 		realnameArr3[i] = userlist[i].username+"-"+userlist[i].realName;
 	}
+	return realnameArr3;
 }
 
 function fillsalesman(){
@@ -273,7 +350,9 @@ function createProject(obj){
 
 function updateProject(obj){
 	//window.location = "module/ProjectModify.action?project.paramId="+obj;
-	window.open("module/ProjectModify.action?project.paramId="+obj);
+	var barCode = $.trim($("#barCode").val());
+	var projectName = $.trim($("#projectName").val());
+	window.open("module/ProjectModify.action?project.paramId="+obj + "&project.barCode=" + barCode + "&project.projectName=" + projectName);
 }
 
 function submit(){
@@ -356,12 +435,12 @@ $(document).ready(function(){
 			<label for="officearea"><s:text name="pm.officearea" /></label>
 			<s:select name="project.column001" id="officearea"
 				listKey="departmentNum" cssClass="form-control" headerKey=""
-				headerValue="--请选择--" cssStyle="width:163px" value="%{user.dpNo}"
+				headerValue="--请选择--" cssStyle="width:163px" value="%{project.column001 != null ? project.column001 : user.dpNo}"
 				listValue="departmentName" list="%{departmentList}" theme="simple" />
 		</div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="salesname"><s:text name="pm.salesman" /></label>
-			<s:textfield id="salesname" onfocus="fillsalesman()"
+			<s:textfield id="salesname" name="project.salesManName" onfocus="fillsalesman()" 
 				onblur="fillsalesman()" cssStyle="width:163px" placeholder="支持模糊搜索"
 				cssClass="form-control" />
 			<s:hidden name="project.salesManCode" value="" id="salesnamehide"></s:hidden>
@@ -448,13 +527,13 @@ $(document).ready(function(){
         </div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="sm"><s:text name="pm.project.serviceManager" /></label>
-			<s:textfield id="sm" onfocus="fillsm()" onblur="fillsm()"
+			<s:textfield id="sm" name="project.serviceManagerCodeforjson" onfocus="fillsm()" onblur="fillsm()" 
 				cssStyle="width:163px" placeholder="支持模糊搜索" cssClass="form-control" />
 			<s:hidden name="project.serviceManagerCode" value="" id="smhide"></s:hidden>
 		</div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="pm"><s:text name="pm.project.programManager" /></label>
-			<s:textfield id="pm" onfocus="fillpm()" onblur="fillpm()"
+			<s:textfield id="pm" name="project.programManagerCodeforjson" onfocus="fillpm()" onblur="fillpm()" 
 				cssStyle="width:163px" placeholder="支持模糊搜索" cssClass="form-control" />
 			<s:hidden name="project.programManagerCode" value="" id="pmhide"></s:hidden>
 		</div>

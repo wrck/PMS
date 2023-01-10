@@ -4,6 +4,10 @@
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
 <html>
 <dp:base />
+<meta name="menu" content="SysLeftMenu">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="function" content="<s:text name='pm.presales.flow' />">
 <head>
 <!-- 新 Bootstrap 核心 CSS 文件 -->
 <link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap.min.css" />

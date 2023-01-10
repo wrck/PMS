@@ -141,7 +141,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			      MAX(id) id 
 			    FROM
 			    `pm_cl_evaluation_header` t
-			 	WHERE t.projectId IN ($projectIds$) 
+			 	WHERE FIND_IN_SET(t.projectId, #projectIds#) 
 			    	AND t.nextAcceptPerson = #oldNextAcceptPerson# 
 			  	GROUP BY t.projectId) tt)
 		]]>

@@ -1,6 +1,7 @@
 package com.dp.plat.dao;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,10 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public List<Project> queryProjectList(Project project, DisplayParam displayParam) {
         try {
+            if (displayParam == null) {
+                displayParam = new DisplayParam();
+            }
+            
 	    	// 判断是否有产品类型这个搜索条件
 	        if (StringUtils.isNotBlank(project.getItemModel())) {
 	            // getSqlMapClientTemplate().insert("create_temp_tb_contractNo_filter_itemModel",
@@ -177,6 +182,12 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
     
     @Override
+    public Project queryProjectByPowerId(Project project) {
+        List<Project> list = queryProjectByPower(project, null, true);
+        return list != null && !list.isEmpty() ? list.get(0) : null;
+    }
+    
+    @Override
     public Project queryProjectSimplifyByProjectId(Integer projectId) {
         return (Project) getSqlMapClientTemplate().queryForObject("queryProjectSimplifyByProjectId", projectId);
     }
@@ -199,6 +210,98 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<Project> queryProjectListByPower(Project project, DisplayParam displayParam) {
+        return queryProjectByPower(project, displayParam, false);
+//        if (displayParam == null) {
+//            displayParam = new DisplayParam();
+//        }
+//        
+//        UserContext context = UserContext.getUserContext();
+//        if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN)) {
+//            // 搜索权限条件不变
+//        } else if (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
+//            // 只能搜服务经理或项目经理是当前用户的
+//            project.setOfficeCodes(Util.appendChar(context.getUser().getAreapower(), "'"));
+//
+//            // old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理
+//            project.setOldServiceManagerCode(project.getServiceManagerCode());
+//            project.setOldProgramManagerCode(project.getProgramManagerCode());
+//
+//            project.setServiceManagerCode(getCurrUsername());
+//        } else if (context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)) {
+//            // 只能搜项目经理是当前用户的
+//            project.setOfficeCodes(Util.appendChar(context.getUser().getAreapower(), "'"));
+//
+//            // old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理
+//            project.setOldServiceManagerCode(project.getServiceManagerCode());
+//            project.setOldProgramManagerCode(project.getProgramManagerCode());
+//
+//            project.setProgramManagerCode(getCurrUsername());
+//        } else if (context.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)) {
+//            // 只能搜指定区域的项目
+//            project.setOfficeCodes(Util.appendChar(context.getUser().getAreapower(), "'"));
+//        } else {
+//            return null;
+//        }
+//        
+//        // 项目经理或者服务经理搜索时，不限制以下特殊情况权限特殊处理
+//        Project tempProject = project;
+//        if (!(context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN))) {
+//            // 序列号查询，不限制权限
+//            if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
+//                project = new Project();
+//                BeanUtils.copyProperties(tempProject, project, new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
+//            }
+//            // 项目名搜索，只限制办事处，不限制是否指派
+//            if (StringUtils.isNotBlank(project.getProjectName()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
+//                project = new Project();
+//                BeanUtils.copyProperties(tempProject, project, new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
+//            }
+//        }
+//        // 判断是否有产品类型这个搜索条件
+//        if (StringUtils.isNotBlank(project.getItemModel())) {
+//            // getSqlMapClientTemplate().insert("create_temp_tb_contractNo_filter_itemModel",
+//            // project);
+//            getSqlMapClientTemplate().insert("create_temp_tb_projectId_filter_itemModel", project);
+//        }
+//        
+//        // 判断是否有维保状态、维保级别、WAF服务查询条件
+//        if (project.getCheckWarranty()) {
+//        	getSqlMapClientTemplate().insert("create_temp_table_project_contract_warrantyState", project);
+//        }
+//        
+//        getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
+//
+//        Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("query_project_bypower_count", project);
+//
+//        if (!displayParam.getExport()) {
+//            displayParam.setPagesize(50);
+//        } else {
+//            displayParam.setPagesize(totalcount);
+//            displayParam.setCurrentpage(1);
+//        }
+//        displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+//        displayParam.setTotalcount(totalcount);
+//        ProjectParam param = new ProjectParam();
+//        param.setDisplayParam(displayParam);
+//        param.setProject(project);
+//        List<Project> projects = (List<Project>) getSqlMapClientTemplate().queryForList("query_project_bypower_list", param);
+//        getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
+//        // getSqlMapClientTemplate().update("drop_temp_tb_contractNo_filter_itemModel");//删除临时表
+//        getSqlMapClientTemplate().update("drop_temp_tb_projectId_filter_itemModel");// 删除临时表
+//        getSqlMapClientTemplate().update("drop_temp_table_project_contract_warrantyState");// 删除临时表
+////        // 序列号查询去除权限查询后，还原原来的查询条件
+////        if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))) {
+////            project = tempProject;
+////        }
+//        project = tempProject;
+//        return projects;
+    }
+    
+    private List<Project> queryProjectByPower(Project project, DisplayParam displayParam, Boolean isOne) {
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+        
         UserContext context = UserContext.getUserContext();
         if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN)) {
             // 搜索权限条件不变
@@ -220,6 +323,9 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
             project.setOldProgramManagerCode(project.getProgramManagerCode());
 
             project.setProgramManagerCode(getCurrUsername());
+        } else if (context.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)) {
+            // 只能搜指定区域的项目
+            project.setOfficeCodes(Util.appendChar(context.getUser().getAreapower(), "'"));
         } else {
             return null;
         }
@@ -228,12 +334,12 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         Project tempProject = project;
         if (!(context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN))) {
             // 序列号查询，不限制权限
-            if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))) {
+            if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
                 project = new Project();
                 BeanUtils.copyProperties(tempProject, project, new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
             }
             // 项目名搜索，只限制办事处，不限制是否指派
-            if (StringUtils.isNotBlank(project.getProjectName()) && (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))) {
+            if (StringUtils.isNotBlank(project.getProjectName()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
                 project = new Project();
                 BeanUtils.copyProperties(tempProject, project, new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
             }
@@ -247,26 +353,29 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         
         // 判断是否有维保状态、维保级别、WAF服务查询条件
         if (project.getCheckWarranty()) {
-        	getSqlMapClientTemplate().insert("create_temp_table_project_contract_warrantyState", project);
+            getSqlMapClientTemplate().insert("create_temp_table_project_contract_warrantyState", project);
         }
         
-        getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
-
-        Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("query_project_bypower_count", project);
-
-        if (!displayParam.getExport()) {
-            displayParam.setPagesize(50);
+        List<Project> projects = Collections.emptyList();
+        if (!Boolean.TRUE.equals(isOne)) {
+            getSqlMapClientTemplate().update("create_tmp_tb_project", project);// 创建临时表
+            Integer totalcount = (Integer) getSqlMapClientTemplate().queryForObject("query_project_bypower_count", project);
+            if (!displayParam.getExport()) {
+                displayParam.setPagesize(50);
+            } else {
+                displayParam.setPagesize(totalcount);
+                displayParam.setCurrentpage(1);
+            }
+            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+            displayParam.setTotalcount(totalcount);
+            ProjectParam param = new ProjectParam();
+            param.setDisplayParam(displayParam);
+            param.setProject(project);
+            projects = (List<Project>) getSqlMapClientTemplate().queryForList("query_project_bypower_list", param);
+            getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
         } else {
-            displayParam.setPagesize(totalcount);
-            displayParam.setCurrentpage(1);
+            projects = (List<Project>) getSqlMapClientTemplate().queryForList("query_project_by_power_Id", project);
         }
-        displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
-        displayParam.setTotalcount(totalcount);
-        ProjectParam param = new ProjectParam();
-        param.setDisplayParam(displayParam);
-        param.setProject(project);
-        List<Project> projects = (List<Project>) getSqlMapClientTemplate().queryForList("query_project_bypower_list", param);
-        getSqlMapClientTemplate().update("drop_tmp_tb_project");// 删除临时表
         // getSqlMapClientTemplate().update("drop_temp_tb_contractNo_filter_itemModel");//删除临时表
         getSqlMapClientTemplate().update("drop_temp_tb_projectId_filter_itemModel");// 删除临时表
         getSqlMapClientTemplate().update("drop_temp_table_project_contract_warrantyState");// 删除临时表
@@ -277,7 +386,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         project = tempProject;
         return projects;
     }
-
+    
     @Override
     public int insertProjectWeekly(ProjectWeekly projectWeekly) {
         return (Integer) getSqlMapClientTemplate().insert("insert_project_weekly", projectWeekly);

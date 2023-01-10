@@ -9,7 +9,7 @@
 <dp:base />
 <meta name="menu" content="SysLeftMenu">
 <meta name="module" content="<s:text name='module.plat' />">
-<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="group" content="<s:text name='sys.leftmenu.workflowmanage' />">
 <meta name="function" content="<s:text name='procDefDelegate.title' />">
 <script>
 function doActionCheck(formid, action)

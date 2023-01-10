@@ -45,8 +45,11 @@ public class PresalesDaoImpl extends BaseDao implements PresalesDao {
 	public List<Presales> queryPresalesList(Presales presales, DisplayParam displayParam)
 			throws UnsupportedEncodingException {
 		UserContext context = UserContext.getUserContext();
-		if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN)
-				|| context.isHasRole(MessageUtil.ROLE_PRESALES_STAFF)) {
+		if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) 
+		        || context.isHasRole(MessageUtil.ROLE_ADMIN)
+				|| context.isHasRole(MessageUtil.ROLE_PRESALES_STAFF)
+				|| context.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
+				|| context.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN)) {
 			// 搜索权限条件不变
 		} else if (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
 			// 只能搜服务经理或项目经理是当前用户的
@@ -54,6 +57,8 @@ public class PresalesDaoImpl extends BaseDao implements PresalesDao {
 		} else if (context.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)) {
 			// 只能搜项目经理是当前用户的
 			presales.setProjectManager(getCurrUsername());
+		} else if (context.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)) {
+		    presales.setOfficeCodes(context.getUser().getAreapower());
 		} else {
 			return null;
 		}

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +28,7 @@ import javax.mail.Message;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
@@ -37,6 +39,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -347,7 +350,10 @@ public class MailUtil {
 			mailInfo.setSendTime(new Date());
 			mailInfo.setSendFlag(true);
 			return true;
-		} catch (Exception e) {
+		} catch (SendFailedException e) {
+		    ExceptionHandler.insertException(e);
+            return removeInvalidAddressAndResend(mailInfo, e.getInvalidAddresses());
+        } catch (Exception e) {
 			ExceptionHandler.insertException(e);
 		}
 		int faliedCount = mailInfo.getFailedCount() != null ? mailInfo.getFailedCount() : 0;
@@ -1112,6 +1118,64 @@ public class MailUtil {
 		}
 		return new InternetAddress(nickEncodeText + "<" + address + ">");
 	}
+	
+	/**
+     * 移除无效的地址并进行重发
+     * @param mailInfo
+     * @param invalidAddresses
+     * @return 重发时候成功
+     */
+    private static boolean removeInvalidAddressAndResend(MailSenderInfo mailInfo, Address[] invalidAddresses) {
+        boolean needResend = invalidAddresses != null && invalidAddresses.length > 0;
+        if (!needResend) {
+            return needResend;
+        }
+        
+//        Set<String> to = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getToAddress(), ";,")));
+//        Set<String> tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+//        Set<String> ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+//        Set<String> bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";,")));
+//        
+        Set<String> tos = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getToAddress())) {
+            tos.add(mailInfo.getToAddress());
+            mailInfo.setToAddress(null);
+        }
+        if (StringUtils.isNotEmpty(mailInfo.getTos())) {
+            tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+        }
+        Set<String> ccs = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getCcs())) {
+            ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+        }
+        Set<String> bccs = new LinkedHashSet<String>(0);
+        if (StringUtils.isNotEmpty(mailInfo.getBccs())) {
+            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";,")));
+        }
+        for (Address invalid : invalidAddresses) {
+            String invalidAddress = invalid.toString();
+            tos.remove(invalidAddress);
+            ccs.remove(invalidAddress);
+            bccs.remove(invalidAddress);
+        }
+        
+        for (Address invalidAddress : invalidAddresses) {
+            String invalid = invalidAddress.toString();
+            tos.remove(invalid);
+            ccs.remove(invalid);
+            bccs.remove(invalid);
+        }
+        
+        // 如果移除无效地址之后所有收件人为空则不重新发送
+        if ((tos.size() + ccs.size() + bccs.size()) == 0) {
+            return false;
+        }
+        
+        mailInfo.setTos(StringUtils.join(tos, ";"));
+        mailInfo.setCcs(StringUtils.join(ccs, ";"));
+        mailInfo.setBccs(StringUtils.join(bccs, ";"));
+        return sendMailWithAttachments(mailInfo);
+    }
 	
 	private static String quoteSplit(String split) {
 		if (!split.matches(".*[\\$|\\(|\\)|\\*|\\+|\\.|\\[|\\]|\\?|\\\\|\\/|\\^|\\{|\\}].*")) {

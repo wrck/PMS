@@ -38,6 +38,8 @@ public interface UserManageDao {
 	void updatepwdbyuser(User user);
 
 	List<Role> queryRolelist();
+	
+    List<UserMenu> queryAllMenuList();
 
 	List<UserMenu> queryUserMenuList();
 

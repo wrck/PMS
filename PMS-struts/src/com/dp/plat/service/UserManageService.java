@@ -46,7 +46,12 @@ public interface UserManageService {
 	 */
 	List<Role> queryRolelist();
 	/**
-	 * 查询系统菜单
+     * 查询所有系统菜单
+     * @return
+     */
+    List<UserMenu> queryAllMenuList();
+	/**
+	 * 查询系统菜单，非管理员过滤管理员功能
 	 * @return
 	 */
 	List<UserMenu> queryUserMenuList();

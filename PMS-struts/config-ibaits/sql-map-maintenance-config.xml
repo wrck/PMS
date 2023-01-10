@@ -670,7 +670,7 @@
 	    LEFT JOIN fnd_department d 
 	        ON d.`departmentNum` = m.`officeCode` 
 	    LEFT JOIN fnd_department d2 
-            ON d2.`departmentNum` = m.`userOfiice` 
+            ON d2.`departmentNum` = m.`userOffice` 
         LEFT JOIN fnd_company c 
             ON c.`id` = m.`compId` 
     <dynamic prepend="where">

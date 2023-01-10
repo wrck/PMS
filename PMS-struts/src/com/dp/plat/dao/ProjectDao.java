@@ -137,6 +137,14 @@ public interface ProjectDao {
 	 * @return
 	 */
 	Project queryProjectById(int projectId);
+	
+	/**
+     * 根据project查询有权限的项目信息
+     * 
+     * @param project
+     * @return
+     */
+    Project queryProjectByPowerId(Project project);
 
     /**
      * 查询项目简化信息，只包含服务经理，项目经理，部门

@@ -8,12 +8,14 @@ import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -187,34 +189,47 @@ public class HttpContext
 
 	}
 
-	private static Hashtable<String, ResourceBundle> res = new Hashtable<String, ResourceBundle>();
+	private static Hashtable<String, Set<ResourceBundle>> res = new Hashtable<String, Set<ResourceBundle>>();
 	private static String[] baseNames;
 	
 	static {
 		ResourceBundle rb = PropertyResourceBundle.getBundle("system", Locale.CHINA);
 		String baseNameStr = rb.getString("plat.config.resourses");
-		if(StringUtils.isNotBlank(baseNameStr))
-			baseNames = baseNameStr.split(";");
+		if(StringUtils.isNotBlank(baseNameStr)) {
+		    baseNames = baseNameStr.split(";");
+		}
 	}
 	
 	public static String getMessage(String key, Object... args)
 	{
 		String mod = key.substring(0, key.indexOf("."));
 		try{
-			ResourceBundle rb = res.get(mod);
-			if (null == rb) {
-				for (String baseName : baseNames) {
-					rb = PropertyResourceBundle.getBundle(baseName, Locale.CHINA);
-					if (rb.containsKey(key)) {
-						res.put(mod, rb);
-						break;
-					}
-				}
+			Set<ResourceBundle> rbs = res.get(mod);
+            if (null == rbs) {
+			    rbs = new HashSet<ResourceBundle>();
 			}
-			if(!rb.containsKey(key)){
-				return key;
-			}
-			return MessageFormat.format(rb.getString(key), args);
+            for (ResourceBundle rb : rbs) {
+                if(rb.containsKey(key)){
+                    return MessageFormat.format(rb.getString(key), args);
+                }
+            }
+            boolean fetchNew = false;
+            for (String baseName : baseNames) {
+                try {
+                    ResourceBundle rb = PropertyResourceBundle.getBundle(baseName, Locale.CHINA);
+                    if (rb.containsKey(key)) {
+                        rbs.add(rb);
+                        fetchNew = true;
+                        break;
+                    }
+                } catch (Exception e) {
+                }
+            }
+            res.put(mod, rbs);
+            if (fetchNew) {
+              return getMessage(key, args);
+            }
+			return key;
 		}
 		catch (Exception e)
 		{

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.displaytag.decorator.TableDecorator;
@@ -31,6 +32,7 @@ public class PresalesDecorator extends TableDecorator {
         String taskDefKey = presales.getTaskDefKey();
         if( presales.getApplyState() == ActivityMessage.FLOW_RUNING || presales.getApplyState() == ActivityMessage.FLOW_UNSTART
                 ){//任务ID不为空，且为当前办理人
+            boolean canCreate = context.isHasAnyRole(MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_PRESALES_STAFF);
             if("usertask2".equals(taskDefKey) && username.equals(presales.getTaskAssignee())){
                 return "<a href='module/presales_smaduit.action?presales.presalesId="+presales.getPresalesId()+"'>办理</a>";
             } else if("usertask3".equals(taskDefKey) && username.equals(presales.getTaskAssignee())){
@@ -39,7 +41,7 @@ public class PresalesDecorator extends TableDecorator {
                 return "<a href='module/presales_emaduit.action?presales.presalesId="+presales.getPresalesId()+"'>回访</a>";
             } else if("usertask1".equals(taskDefKey) && "emRole".equals(presales.getTaskAssignee()) && (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_PRESALES_STAFF))){
                 return "<a href='module/presales_input.action?presales.presalesId="+presales.getPresalesId()+"' >办理</a>";
-            } else if(presales.getApplyState() == ActivityMessage.FLOW_UNSTART){
+            } else if(presales.getApplyState() == ActivityMessage.FLOW_UNSTART && canCreate){
                 return "<a href='module/presales_input.action?presales.presalesId="+presales.getPresalesId()+"' >创建</a>";
             }
         }

@@ -16,7 +16,7 @@
 	sys_addinit(init);
 
 	function change(){
-		document.getElementById("pass").value = hex_md5(document.getElementById("pass").value);
+		document.getElementById("pass").value = hex_md5($("#username").val().trim() + $("#pass").val().trim());
 	}
 	function reloadImage(url){
 		$.ajax({

@@ -172,7 +172,8 @@ public class PasswordUtil {
 		char[] str = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
 				't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
 				'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
-				'9', '~', '!', '@', '#', '$', '%', '^', '&', '*', '_', '-', '.' };
+				'9', '~', '!', '@', '#', '$', '%', '^', '&', '*', '_', '-', '.'
+		};
 		int length = 8;
 		if (pwdLength.length > 1 && pwdLength[0] > 8) {
 			length = pwdLength[0];
@@ -188,7 +189,8 @@ public class PasswordUtil {
 
 	public static void main(String[] args) {
 		String username = "w02611";
-//		System.out.println(encryptSHA1Password("123456", username, 1));
+		
+		System.out.println(encryptMD5Password("1q2w3e4r", username));
 		System.out.println(encryptPassword(username, "123456"));
 //		String credentials = "1";
 //		String hashAlgorithmName = "MD5";

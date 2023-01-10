@@ -1,10 +1,14 @@
 package com.dp.plat.action;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -196,17 +200,30 @@ public class PresalesAction extends BaseAction implements Preparable {
 	 * 准备发起流程申请,或重新申请
 	 */
 	public String input() {
-		try {
-			presales = presalesService.queryPresalesById(presales.getPresalesId());
-			productList = presalesService.queryPresalesProductByPresalesId(presales.getPresalesId());
-			commentList = presalesService.queryPresalesCommentList(presales.getPresalesId());
-			projectTypeList = basicDataService.queryBasicDataBeans(PROJECT_TYPE_CODE);
-		} catch (Exception e) {
-			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
-			return ERROR;
-		}
-		return "input";
+	    UserContext userContext = UserContext.getUserContext();
+	    if (userContext.isHasAnyRole(MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_PRESALES_STAFF)) {
+    	    try {
+    	        presales = presalesService.queryPresalesById(presales.getPresalesId());
+    	        productList = presalesService.queryPresalesProductByPresalesId(presales.getPresalesId());
+    	        commentList = presalesService.queryPresalesCommentList(presales.getPresalesId());
+    	        projectTypeList = basicDataService.queryBasicDataBeans(PROJECT_TYPE_CODE);
+    	    } catch (Exception e) {
+    	        e.printStackTrace();
+    	        setErrmsg(ExceptionUtils.getStackTrace(e));
+    	        return ERROR;
+    	    }
+    	    return "input";
+	    } else if (userContext.isHasAnyRole(MessageUtil.ROLE_PROJECT_VIEWER)) {
+	        HttpServletRequest request = getServletRequest();
+	        HttpServletResponse response = getServletResponse();
+	        try {
+	            response.sendRedirect(request.getRequestURI().replace("input", "read") + "?" + request.getQueryString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+	        return SUCCESS;
+	    }
+	    return ERROR;
 	}
 
 	/**
@@ -240,8 +257,7 @@ public class PresalesAction extends BaseAction implements Preparable {
 			presales = presalesService.queryPresalesById(presales.getPresalesId());
 			productList = presalesService.queryPresalesProductByPresalesId(presales.getPresalesId());
 			commentList = presalesService.queryPresalesCommentList(presales.getPresalesId());
-			taskList = presalesService.queryPresalesTaskList(presales.getPresalesId(),
-					ProjectTypeParam.TYPE_OF_PRESALES);
+			taskList = presalesService.queryPresalesTaskList(presales.getPresalesId(), ProjectTypeParam.TYPE_OF_PRESALES);
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));

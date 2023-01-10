@@ -1,4 +1,4 @@
-﻿<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
 <sqlMap namespace="business">
     <insert id="insert_questionnaire_template_header_oneObj" parameterClass="com.dp.plat.data.bean.PmClosedLoopQuesnaire">
@@ -40,152 +40,8 @@
         ]]>
     </update>
     
-    <!-- 创建临时表 -->
-    <update id="create_tmp_tb_project">
-        <![CDATA[
-            CREATE TEMPORARY TABLE IF NOT EXISTS tmp_tb_project 
-        ]]>
+    <sql id="sql_query_project_by_power_table">
         <isNotEqual compareValue="10" property="projectState">
-        <!-- <![CDATA[  
-                SELECT 
-                  `ph`.`projectId` AS `projectId`,
-                  `ph`.`projectCode` AS `projectCode`,
-                  `rank`.`basicDataName` AS `rank`,
-                  (
-                    CASE
-                      WHEN (
-                        `pr`.`mergeBranchMark` IS NOT NULL
-                      ) 
-                      THEN CONCAT(
-                        `ph`.`projectName`,
-                        '-',
-                        `pr`.`mergeBranchMark`
-                      ) 
-                      ELSE `ph`.`projectName` 
-                    END
-                  ) AS `projectName`,
-                  `fd`.`basicDataName` AS `projectStateName`,
-                  `ph`.`projectState` AS `projectState`,
-                  GROUP_CONCAT(DISTINCT `pc`.`contractNo` SEPARATOR ',') AS `contractNo`,
-                  `ph`.compId,
-                  `ph`.`column001` AS `officeCode`,
-                  `d`.`departmentName` AS `officeName`,
-                  `pm`.`memberCode` AS `salesManCode`,
-                  `pm`.`memberName` AS `salesManName`,
-                  `pm4`.`createTime` AS `projectStartTime`,
-                  ph.createTime AS projectCreateTime,
-                  `ph`.`column005` AS `systemName`,
-                  `pm2`.`memberCode` AS `serviceManager`,
-                  `pm2`.`memberName` AS `serviceManagerName`,
-                  `pm3`.`memberCode` AS `projectManager`,
-                  `pm3`.`memberName` AS `projectManagerName`,
-                  shipmentState.`basicDataName` AS shipmentStateName,
-                  state.`shipmentState`,
-                  planState.`basicDataName` AS planStateName,
-                  state.`projectPlanState`,
-                  ph.projectRefreshTime,
-                  ph.projectCloseTime ,
-                  CASE WHEN ph.column012 IS NULL AND ph.columno12_readonly = -1 THEN ph.column012  
-                       WHEN ph.column012 IS NOT NULL THEN ph.column012  
-                    ELSE ph.columno12_readonly END AS ssfs ,
-                  CASE WHEN ph.column012 IS NULL AND ph.columno12_readonly = -1 THEN '未指定' 
-                       WHEN ph.column012 IS NOT NULL THEN ssfs1.basicDataName   
-                    ELSE ssfs2.basicDataName END AS ssfsName    
-                FROM
-                  `pm_project_header` `ph` 
-                  LEFT JOIN `pm_project_group_relationship` `pr` 
-                    ON (
-                      (
-                        `ph`.`projectCode` = `pr`.`projectCode`
-                      )
-                    ) 
-                  LEFT JOIN `pm_project_contract` `pc` 
-                    ON (
-                      (
-                        `pr`.`projectGroupCode` = `pc`.`projectGroupCode`
-                      )
-                    ) 
-                  LEFT JOIN `pm_project_group` `pg` 
-                    ON (
-                      `pr`.`projectGroupCode` = `pg`.`projectGroupCode`
-                    ) 
-                    AND (`pg`.`projectType` = '10') 
-                  LEFT JOIN `fnd_basic_data` `fd` 
-                    ON (
-                      `fd`.`basicDataId` = `ph`.`projectState`
-                    ) 
-                    AND (`fd`.`dataTypeCode` = '02') 
-                    AND (`fd`.`effectiveFrom` < NOW()) 
-                    AND (
-                      (`fd`.`effectiveTo` > NOW()) 
-                      OR ISNULL(`fd`.`effectiveTo`)
-                    ) 
-                  LEFT JOIN `fnd_basic_data` `rank` 
-                    ON (
-                      `ph`.`column010` = `rank`.`basicDataId`
-                    ) 
-                    AND (`rank`.`dataTypeCode` = '05') 
-                    AND (`rank`.`effectiveFrom` <= NOW()) 
-                    AND (
-                      (`rank`.`effectiveTo` > NOW()) 
-                      OR ISNULL(`rank`.`effectiveTo`)
-                    ) 
-                  LEFT JOIN `fnd_department` `d` 
-                    ON (
-                      `d`.`departmentNum` = `ph`.`column001`
-                    ) 
-                  LEFT JOIN `pm_project_member` `pm` 
-                    ON (
-                      `ph`.`projectId` = `pm`.`projectId`
-                    ) 
-                    AND (`pm`.`memberRole` = '10') 
-                    AND (`pm`.`effectiveFrom` < NOW()) 
-                    AND (
-                      (`pm`.`effectiveTo` > NOW()) 
-                      OR ISNULL(`pm`.`effectiveTo`)
-                    ) 
-                  LEFT JOIN `pm_project_member` `pm2` 
-                    ON (
-                      `ph`.`projectId` = `pm2`.`projectId`
-                    ) 
-                    AND (`pm2`.`memberRole` = '20') 
-                    AND (`pm2`.`effectiveFrom` < NOW()) 
-                    AND (
-                      (`pm2`.`effectiveTo` > NOW()) 
-                      OR ISNULL(`pm2`.`effectiveTo`)
-                    ) 
-                  LEFT JOIN `pm_project_member` `pm3` 
-                    ON (
-                      `ph`.`projectId` = `pm3`.`projectId`
-                    ) 
-                    AND (`pm3`.`memberRole` = '30') 
-                    AND (`pm3`.`effectiveFrom` < NOW()) 
-                    AND (
-                      (`pm3`.`effectiveTo` > NOW()) 
-                      OR ISNULL(`pm3`.`effectiveTo`)
-                    )
-                  LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = '30' GROUP BY projectId ASC) pm4 
-                    ON ph.projectId = pm4.projectId
-                  LEFT JOIN pm_project_state state 
-                    ON state.`projectId` = ph.projectId 
-                  LEFT JOIN fnd_basic_data shipmentState 
-                    ON shipmentState.`basicDataId` = state.`shipmentState` 
-                    AND shipmentState.`dataTypeCode` = '20' 
-                    AND shipmentState.`effectiveTo` IS NULL 
-                  LEFT JOIN fnd_basic_data planState 
-                    ON planState.`dataTypeCode` = '22' 
-                    AND planState.`effectiveTo` IS NULL AND
-                    planState.`basicDataId` = state.`projectPlanState` 
-                  LEFT JOIN fnd_basic_data ssfs1 
-                  ON ssfs1.dataTypeCode = '15'
-                  AND ssfs1.effectiveTo IS NULL
-                  AND   ssfs1.basicDataId = ph.column012
-                    LEFT JOIN fnd_basic_data ssfs2 
-                  ON ssfs2.dataTypeCode = '15'
-                  AND ssfs2.effectiveTo IS NULL
-                  AND   ssfs2.basicDataId = ph.columno12_readonly 
-                WHERE ISNULL(`ph`.`effectiveTo`) 
-           ]]> -->
            <![CDATA[
                 SELECT 
                     `ph`.`projectId` AS `projectId`, `ph`.`projectCode` AS `projectCode`, `rank`.`basicDataName` AS `rank`, (
@@ -294,8 +150,8 @@
                                 OR `sb`.`rma_no` = 'null'
                             )) sc 
                  ]]> 
-					    ON sc.contractNo = REPLACE(REPLACE(pc.`contractNo`, "-L", ""), "-C", "") 
-						AND CASE WHEN ph.salesType = '14' THEN sc.profitCenter = ph.column001 ELSE 1 = 1 END
+                        ON sc.contractNo = REPLACE(REPLACE(pc.`contractNo`, "-L", ""), "-C", "") 
+                        AND CASE WHEN ph.salesType = '14' THEN sc.profitCenter = ph.column001 ELSE 1 = 1 END
                  <!-- ON pc.`contractNo` = sc.contractNo -->
              </isNotEmpty>
              <isEqual property="checkWarranty" compareValue="true">
@@ -386,7 +242,8 @@
                         AND ssfs2.basicDataId = ph.columno12_readonly 
                         AND ssfs2.effectiveTo IS NULL 
                 WHERE ISNULL(`ph`.`effectiveTo`) 
-           ]]>
+            ]]>
+            <isNotEqual prepend="AND" property="projectId" compareValue="0"> ph.projectId = #projectId# </isNotEqual>
             <isNotEmpty prepend="and" property="serviceManagerCode">
                 <![CDATA[ 
                 (
@@ -419,7 +276,13 @@
                     </isNotEmpty>
                     )
             </isNotEmpty>
-            <isNotEmpty prepend="and" property="projectState"><![CDATA[ ph.projectState in ( $projectState$ )]]></isNotEmpty>
+            <isEmpty property="serviceManagerCode">
+                <isEmpty property="programManagerCode">
+                    <isNotEmpty prepend="and" property="officeCodes"> ph.column001 IN ($officeCodes$) </isNotEmpty>
+                </isEmpty>
+            </isEmpty>
+            
+            <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(ph.projectState, #projectState# )]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ state.projectPlanState = #projectPlanState# ]]></isNotEmpty>
             <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ state.shipmentState = #shipmentState#]]></isNotEqual>
             <isNotEmpty prepend="and" property="executionState"><![CDATA[ state.executionState = #executionState#]]></isNotEmpty>
@@ -511,7 +374,8 @@
                       WHERE (`p`.`contractNo` = `t1`.`contractNo`)) AND v.contractNo IS NOT NULL;
             ]]>
         </isEqual>
-        <isEmpty prepend="UNION" property="projectState">
+        <isEmpty prepend="UNION ALL" property="projectState">
+        <isEqual prepend="AND" property="projectId" compareValue="0">
                 <![CDATA[
                 SELECT DISTINCT
               NULL                    AS `projectId`,
@@ -584,7 +448,172 @@
                               OR ISNULL(`t3`.`effectiveTo`))
                       WHERE (`p`.`contractNo` = `t1`.`contractNo`)) AND v.contractNo IS NOT NULL;
             ]]>
+        </isEqual>
         </isEmpty>
+    </sql>
+    
+    <sql id="sql_query_project_by_power_where">
+        <![CDATA[
+            where projectId > 0 
+        ]]>
+        <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(projectState, #projectState#) ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ projectPlanState = #projectPlanState# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="column001"><![CDATA[ officeCode = #column001#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like CONCAT('%', #contractNo#, '%') or projectCode like CONCAT('%', #contractNo#, '%'))]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like CONCAT('%', #salesManCode#)]]></isNotEmpty>
+        <!-- <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ (serviceManager = #serviceManagerCode# or projectManager = #serviceManagerCode#)]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="serviceManagerCode">
+            <![CDATA[ 
+                (
+                    (serviceManager = #serviceManagerCode# 
+                        or 
+                        projectManager = #serviceManagerCode#)
+            ]]>
+                    <isNotEmpty property="officeCodes">
+                        OR (
+                            officeCode IN ($officeCodes$) 
+                            AND (
+                                projectState = 20 
+                                or projectState = 100
+                            )
+                        )
+                    </isNotEmpty>
+                )
+        </isNotEmpty>
+        <!-- <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="programManagerCode">
+            <![CDATA[ 
+                (
+                    projectManager = #programManagerCode# 
+            ]]>
+                <isNotEmpty property="officeCodes">
+                    OR (
+                        officeCode IN ($officeCodes$) 
+                        AND (
+                            projectState = 20 
+                            or projectState = 100
+                        )
+                    )
+                </isNotEmpty>
+                )
+        </isNotEmpty>
+        <isEmpty property="serviceManagerCode">
+            <isEmpty property="programManagerCode">
+                <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty>
+            </isEmpty>
+        </isEmpty>
+        <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
+        <isNotEmpty prepend="and" property="oldServiceManagerCode">
+            (serviceManager = #oldServiceManagerCode# or projectManager = #oldServiceManagerCode#)
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="oldProgramManagerCode"> projectManager = #oldProgramManagerCode# </isNotEmpty>
+        <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
+        <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ shipmentState = #shipmentState#]]></isNotEqual>
+        <isNotEmpty prepend="and" property="createStartTime"><![CDATA[ projectCreateTime > #createStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="createEndTime"><![CDATA[ projectCreateTime < #createEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="refreshStartTime"><![CDATA[ projectRefreshTime > #refreshStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="refreshEndTime"><![CDATA[ projectRefreshTime < #refreshEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="closeStartTime"><![CDATA[ projectCloseTime > #closeStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="closeEndTime"><![CDATA[ projectCloseTime < #closeEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="column012"><![CDATA[ ssfs = #column012#]]></isNotEmpty>
+        
+        <!-- <isNotEmpty prepend="and" property="itemModel"><![CDATA[ filteredProjectId is not null]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="compId"><![CDATA[ compId = #compId# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="partnerChannel"><![CDATA[ partnerChannel like CONCAT("%", #partnerChannel#, "%") ]]></isNotEmpty>
+    </sql>
+    
+    <sql id="sql_query_project_by_power_where_page">
+        <!-- <isNotEmpty property="project.itemModel">
+                left join temp_tb_contractNo_filter_itemModel c
+                    on FIND_IN_SET(c.filteredContractNo, t1.contractNo) 
+        </isNotEmpty> -->
+        <!-- <isNotEmpty property="project.itemModel">
+                left join temp_tb_projectId_filter_itemModel 
+                    on filteredProjectId = t1.projectId
+        </isNotEmpty> -->
+            left join fnd_company cc on cc.id = t1.compId
+        <![CDATA[
+            where projectId > 0 
+        ]]>
+        <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like CONCAT('%', #project.projectName#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ FIND_IN_SET(projectState, #project.projectState# )]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.projectPlanState"><![CDATA[ projectPlanState = #project.projectPlanState# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.column001"><![CDATA[ officeCode = #project.column001#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like CONCAT('%', #project.contractNo#, '%') or projectCode like CONCAT('%', #project.contractNo#, '%'))]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like CONCAT('%', #project.salesManCode#)]]></isNotEmpty>
+        <!-- <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ (serviceManager = #project.serviceManagerCode# or projectManager = #project.serviceManagerCode# )]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="project.serviceManagerCode">
+            <![CDATA[ 
+                (
+                    (serviceManager = #project.serviceManagerCode# 
+                        or projectManager = #project.serviceManagerCode#)
+            ]]>
+                    <isNotEmpty property="project.officeCodes">
+                        OR (
+                            officeCode IN ($project.officeCodes$) 
+                            AND (
+                                projectState = 20 
+                                or projectState = 100
+                            )
+                        )
+                    </isNotEmpty>
+                )
+        </isNotEmpty>
+        <!-- <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="project.programManagerCode">
+                <![CDATA[ 
+                    (
+                        projectManager = #project.programManagerCode# 
+                ]]>
+                    <isNotEmpty property="project.officeCodes">
+                        OR (
+                            officeCode IN ($project.officeCodes$) 
+                            AND (
+                                projectState = 20 
+                                OR projectState = 100
+                            )
+                        )
+                    </isNotEmpty>
+                    )
+        </isNotEmpty>
+        <isEmpty property="project.serviceManagerCode">
+            <isEmpty property="project.programManagerCode">
+                <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty>
+            </isEmpty>
+        </isEmpty>
+        <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
+        <isNotEmpty prepend="and" property="project.oldServiceManagerCode">
+            (serviceManager = #project.oldServiceManagerCode# or projectManager = #project.oldServiceManagerCode#)
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="project.oldProgramManagerCode"> projectManager = #project.oldProgramManagerCode# </isNotEmpty>
+        <isNotEmpty prepend="and" property="project.column010"><![CDATA[ rank = #project.column010#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.majorProjectLevel"><![CDATA[ majorProjectLevel = #project.majorProjectLevel#]]></isNotEmpty>
+        <isNotEqual compareValue="0" prepend="and" property="project.shipmentState"><![CDATA[ shipmentState = #project.shipmentState#]]></isNotEqual>
+        <isNotEmpty prepend="and" property="project.createStartTime"><![CDATA[ projectCreateTime > #project.createStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.createEndTime"><![CDATA[ projectCreateTime < #project.createEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.refreshStartTime"><![CDATA[ projectRefreshTime > #project.refreshStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.refreshEndTime"><![CDATA[ projectRefreshTime < #project.refreshEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.closeStartTime"><![CDATA[ projectCloseTime > #project.closeStartTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.closeEndTime"><![CDATA[ projectCloseTime < #project.closeEndTime#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.column012"><![CDATA[ ssfs = #project.column012#]]></isNotEmpty>
+        
+        <!-- <isNotEmpty prepend="and" property="project.itemModel"><![CDATA[ filteredProjectId is not null]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="project.compId"><![CDATA[ compId = #project.compId# ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="project.partnerChannel"><![CDATA[ partnerChannel like CONCAT("%", #project.partnerChannel#, "%") ]]></isNotEmpty>
+        <![CDATA[ order by  projectManager ASC , projectStartTime DESC  ,rank DESC ]]>  
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#, #displayParam.pagesize# 
+        </isNotEmpty>
+    </sql>
+    
+    <!-- 创建临时表 -->
+    <update id="create_tmp_tb_project">
+        <![CDATA[
+            CREATE TEMPORARY TABLE IF NOT EXISTS tmp_tb_project 
+        ]]>
+        <include refid="sql_query_project_by_power_table"/>
     </update>
     <update id="create_tmp_tb_shipstate">
         <![CDATA[
@@ -616,18 +645,18 @@
                 ON ol.`itemCode` = fi.`item`
         WHERE fi.`itemname` LIKE CONCAT(#itemModel#, "%") -->
         SELECT DISTINCT 
-		    od.`contractNo` AS filteredContractNo 
-		FROM
-		    `fb_items` fi 
-		    LEFT JOIN `pm_order_line_from_sap` ol 
-		        ON ol.`itemCode` = fi.`item` 
-		    LEFT JOIN `pm_order_data_from_sap` od 
-		        ON od.`orderNumber` = ol.`orderNumber` 
-		        AND od.orderType = ol.lineType
-		        AND od.`orderType` = 0 
-		        AND od.compCode = ol.compCode 
-		WHERE fi.`itemname` LIKE CONCAT(#itemModel#, "%") 
-		    AND od.`id` IS NOT NULL
+            od.`contractNo` AS filteredContractNo 
+        FROM
+            `fb_items` fi 
+            LEFT JOIN `pm_order_line_from_sap` ol 
+                ON ol.`itemCode` = fi.`item` 
+            LEFT JOIN `pm_order_data_from_sap` od 
+                ON od.`orderNumber` = ol.`orderNumber` 
+                AND od.orderType = ol.lineType
+                AND od.`orderType` = 0 
+                AND od.compCode = ol.compCode 
+        WHERE fi.`itemname` LIKE CONCAT(#itemModel#, "%") 
+            AND od.`id` IS NOT NULL
     </insert>
     <!-- 删除临时表 -->
     <update id="drop_temp_tb_contractNo_filter_itemModel">
@@ -692,31 +721,31 @@
             KEY wafService(wafService)
         ) AS
         select 
-		    ph.`projectId`, ph.`projectName`, 
-		    sum(distinct wcs.`diff`) warrantyStatus, 
-		    IF(sum(distinct wcs.`diff`) = - 1, '维保内',
+            ph.`projectId`, ph.`projectName`, 
+            sum(distinct wcs.`diff`) warrantyStatus, 
+            IF(sum(distinct wcs.`diff`) = - 1, '维保内',
                 IF(sum(distinct wcs.`diff`) = 0, '部分保外',
                     IF(sum(distinct wcs.`diff`) = 1, '维保外', NULL)
                 )
             ) AS warrantyStatusName,
-		    max(wcs.`warrantyGrade`) warrantyGrade, 
-		    IF(max(wcs.`warrantyGrade`) = - 1, '基本维保',
+            max(wcs.`warrantyGrade`) warrantyGrade, 
+            IF(max(wcs.`warrantyGrade`) = - 1, '基本维保',
                 IF(max(wcs.`warrantyGrade`) = 0, '中级维保',
                     IF(max(wcs.`warrantyGrade`) = 1, '高级维保', NULL)
                 )
             ) AS warrantyGradeName,
-		    IFNULL(max(wcs.`wafService`), 0) wafService,
-		    IF(max(wcs.`wafService`) = 1, "策略调优服务", NULL) as  wafServiceName
-		from
-		    `pm_project_header` ph 
-		    left join `pm_project_group_relationship` pgr 
-		        on ph.`projectCode` = pgr.`projectCode` 
-		    left join `pm_project_contract` pc 
-		        on pc.`projectGroupCode` = pgr.`projectGroupCode` 
-		    left join `view_warranty_contract_state` wcs 
-		        on wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
-		where ph.`effectiveTo` is null 
-		group by pgr.`projectCode`;
+            IFNULL(max(wcs.`wafService`), 0) wafService,
+            IF(max(wcs.`wafService`) = 1, "策略调优服务", NULL) as  wafServiceName
+        from
+            `pm_project_header` ph 
+            left join `pm_project_group_relationship` pgr 
+                on ph.`projectCode` = pgr.`projectCode` 
+            left join `pm_project_contract` pc 
+                on pc.`projectGroupCode` = pgr.`projectGroupCode` 
+            left join `view_warranty_contract_state` wcs 
+                on wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
+        where ph.`effectiveTo` is null 
+        group by pgr.`projectCode`;
     </insert>
     
     <delete id="drop_temp_table_project_contract_warrantyState">
@@ -783,12 +812,13 @@
                     on filteredProjectId = t1.projectId
         </isNotEmpty> -->
         <dynamic prepend="where">
-            <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like '%$projectName$%']]></isNotEmpty>
-            <isNotEmpty prepend="and" property="projectState"><![CDATA[ projectState in ( $projectState$ )]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(projectState, #projectState# )]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ projectPlanState = #projectPlanState# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column001"><![CDATA[ officeCode = #column001#]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like '%$contractNo$%' or projectCode like '%$contractNo$%')]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like '%$salesManCode$']]></isNotEmpty>
+            <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty>
+            <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like CONCAT('%', #contractNo#, '%') or projectCode like CONCAT('%', #contractNo#, '%'))]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like CONCAT('%', #salesManCode#)]]></isNotEmpty>
             <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ serviceManager = #serviceManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
@@ -825,12 +855,13 @@
             left join fnd_company c
                 on c.id = t1.compId
         <dynamic prepend="where">
-            <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like '%$project.projectName$%']]></isNotEmpty>
-            <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ projectState in ( $project.projectState$ ) ]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like CONCAT('%', #project.projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ FIND_IN_SET(projectState, #project.projectState# ) ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.projectPlanState"><![CDATA[ projectPlanState = #project.projectPlanState# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.column001"><![CDATA[ officeCode = #project.column001#]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like '%$project.contractNo$%' or projectCode like '%$project.contractNo$%')]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like '%$project.salesManCode$']]></isNotEmpty>
+            <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty>
+            <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like CONCAT('%', #project.contractNo#, '%') or projectCode like CONCAT('%', #project.contractNo#, '%'))]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like CONCAT('%', #project.salesManCode#)]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ serviceManager = #project.serviceManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.column010"><![CDATA[ rank = #project.column010#]]></isNotEmpty>
@@ -894,78 +925,7 @@
         <![CDATA[
             SELECT count(*) FROM tmp_tb_project t1
         ]]>
-        <!-- <isNotEmpty property="itemModel">
-                left join temp_tb_contractNo_filter_itemModel c
-                    on FIND_IN_SET(c.filteredContractNo, t1.contractNo) 
-        </isNotEmpty> -->
-        <!-- <isNotEmpty property="itemModel">
-                left join temp_tb_projectId_filter_itemModel 
-                    on filteredProjectId = t1.projectId
-        </isNotEmpty> -->
-        <![CDATA[
-            where projectId > 0 
-        ]]>
-        <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like '%$projectName$%']]></isNotEmpty>
-        <isNotEmpty prepend="and" property="projectState"><![CDATA[ projectState in ($projectState$) ]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ projectPlanState = #projectPlanState# ]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="column001"><![CDATA[ officeCode = #column001#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like '%$contractNo$%' or projectCode like '%$contractNo$%')]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like '%$salesManCode$']]></isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ (serviceManager = #serviceManagerCode# or projectManager = #serviceManagerCode#)]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="serviceManagerCode">
-            <![CDATA[ 
-                (
-                    (serviceManager = #serviceManagerCode# 
-                        or 
-                        projectManager = #serviceManagerCode#)
-            ]]>
-                    <isNotEmpty property="officeCodes">
-                        OR (
-                            officeCode IN ($officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                or projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                )
-        </isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="programManagerCode">
-            <![CDATA[ 
-                (
-                    projectManager = #programManagerCode# 
-            ]]>
-                <isNotEmpty property="officeCodes">
-                    OR (
-                        officeCode IN ($officeCodes$) 
-                        AND (
-                            projectState = 20 
-                            or projectState = 100
-                        )
-                    )
-                </isNotEmpty>
-                )
-        </isNotEmpty>
-        <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
-        <isNotEmpty prepend="and" property="oldServiceManagerCode">
-            (serviceManager = #oldServiceManagerCode# or projectManager = #oldServiceManagerCode#)
-        </isNotEmpty>
-        <isNotEmpty prepend="and" property="oldProgramManagerCode"> projectManager = #oldProgramManagerCode# </isNotEmpty>
-        <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="majorProjectLevel"><![CDATA[ majorProjectLevel = #majorProjectLevel#]]></isNotEmpty>
-        <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ shipmentState = #shipmentState#]]></isNotEqual>
-        <isNotEmpty prepend="and" property="createStartTime"><![CDATA[ projectCreateTime > #createStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="createEndTime"><![CDATA[ projectCreateTime < #createEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="refreshStartTime"><![CDATA[ projectRefreshTime > #refreshStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="refreshEndTime"><![CDATA[ projectRefreshTime < #refreshEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="closeStartTime"><![CDATA[ projectCloseTime > #closeStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="closeEndTime"><![CDATA[ projectCloseTime < #closeEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="column012"><![CDATA[ ssfs = #column012#]]></isNotEmpty>
-        
-        <!-- <isNotEmpty prepend="and" property="itemModel"><![CDATA[ filteredProjectId is not null]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="compId"><![CDATA[ compId = #compId# ]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="partnerChannel"><![CDATA[ partnerChannel like CONCAT("%", #partnerChannel#, "%") ]]></isNotEmpty>
+        <include refid="sql_query_project_by_power_where"/>
     </select>
 
     
@@ -974,82 +934,7 @@
         <![CDATA[
             SELECT t1.*, cc.abbr as compName FROM tmp_tb_project t1
         ]]>
-        <!-- <isNotEmpty property="project.itemModel">
-                left join temp_tb_contractNo_filter_itemModel c
-                    on FIND_IN_SET(c.filteredContractNo, t1.contractNo) 
-        </isNotEmpty> -->
-        <!-- <isNotEmpty property="project.itemModel">
-                left join temp_tb_projectId_filter_itemModel 
-                    on filteredProjectId = t1.projectId
-        </isNotEmpty> -->
-            left join fnd_company cc on cc.id = t1.compId
-        <![CDATA[
-            where projectId > 0 
-        ]]>
-        <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like '%$project.projectName$%']]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ projectState in( $project.projectState$ )]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.projectPlanState"><![CDATA[ projectPlanState = #project.projectPlanState# ]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.column001"><![CDATA[ officeCode = #project.column001#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like '%$project.contractNo$%' or projectCode like '%$project.contractNo$%')]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like '%$project.salesManCode$']]></isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ (serviceManager = #project.serviceManagerCode# or projectManager = #project.serviceManagerCode# )]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="project.serviceManagerCode">
-            <![CDATA[ 
-                (
-                    (serviceManager = #project.serviceManagerCode# 
-                        or projectManager = #project.serviceManagerCode#)
-            ]]>
-                    <isNotEmpty property="project.officeCodes">
-                        OR (
-                            officeCode IN ($project.officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                or projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                )
-        </isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="project.programManagerCode">
-                <![CDATA[ 
-                    (
-                        projectManager = #project.programManagerCode# 
-                ]]>
-                    <isNotEmpty property="project.officeCodes">
-                        OR (
-                            officeCode IN ($project.officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                OR projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                    )
-        </isNotEmpty>
-        <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
-        <isNotEmpty prepend="and" property="project.oldServiceManagerCode">
-            (serviceManager = #project.oldServiceManagerCode# or projectManager = #project.oldServiceManagerCode#)
-        </isNotEmpty>
-        <isNotEmpty prepend="and" property="project.oldProgramManagerCode"> projectManager = #project.oldProgramManagerCode# </isNotEmpty>
-        <isNotEmpty prepend="and" property="project.column010"><![CDATA[ rank = #project.column010#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.majorProjectLevel"><![CDATA[ majorProjectLevel = #project.majorProjectLevel#]]></isNotEmpty>
-        <isNotEqual compareValue="0" prepend="and" property="project.shipmentState"><![CDATA[ shipmentState = #project.shipmentState#]]></isNotEqual>
-        <isNotEmpty prepend="and" property="project.createStartTime"><![CDATA[ projectCreateTime > #project.createStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.createEndTime"><![CDATA[ projectCreateTime < #project.createEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.refreshStartTime"><![CDATA[ projectRefreshTime > #project.refreshStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.refreshEndTime"><![CDATA[ projectRefreshTime < #project.refreshEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.closeStartTime"><![CDATA[ projectCloseTime > #project.closeStartTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.closeEndTime"><![CDATA[ projectCloseTime < #project.closeEndTime#]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.column012"><![CDATA[ ssfs = #project.column012#]]></isNotEmpty>
-        
-        <!-- <isNotEmpty prepend="and" property="project.itemModel"><![CDATA[ filteredProjectId is not null]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="project.compId"><![CDATA[ compId = #project.compId# ]]></isNotEmpty>
-        <isNotEmpty prepend="and" property="project.partnerChannel"><![CDATA[ partnerChannel like CONCAT("%", #project.partnerChannel#, "%") ]]></isNotEmpty>
-        <![CDATA[ order by  projectManager ASC , projectStartTime DESC  ,rank DESC ]]>  
-        <isNotEmpty property="displayParam.offset">
-            limit #displayParam.offset#, #displayParam.pagesize# 
-        </isNotEmpty>
+        <include refid="sql_query_project_by_power_where_page"/>
     </select>
     
     <insert id="insert-project" parameterClass="com.dp.plat.data.bean.Project">
@@ -1118,10 +1003,10 @@
                 a.id=#id#
              </isNotEqual>
             <isNotEmpty prepend="and" property="questionnaireTemplateName">
-                <![CDATA[  a.questionnaireTemplateName like '%$questionnaireTemplateName$%' ]]>
+                <![CDATA[  a.questionnaireTemplateName like CONCAT('%', #questionnaireTemplateName#, '%') ]]>
             </isNotEmpty>
             <isNotEmpty prepend="and" property="questionnaireTemplateNum">
-                <![CDATA[  a.questionnaireTemplateNum like '%$questionnaireTemplateNum$%' ]]>
+                <![CDATA[  a.questionnaireTemplateNum like CONCAT('%', #questionnaireTemplateNum#, '%') ]]>
             </isNotEmpty>
             <isNotEmpty prepend="and" property="quesType">
                 <![CDATA[  a.quesType =#quesType# ]]>
@@ -1272,14 +1157,14 @@
     <select id="query-project-bycontractno" parameterClass="string" resultMap="pmOrderDataFromSap">
         <![CDATA[
             SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
-	            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
-	            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
-	            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
-	            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
-	            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
-	            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
-	            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
-	            concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
+                podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
+                IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
+                podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
+                pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
+                pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
+                fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
+                pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
+                concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
             FROM pm_order_data_from_sap podfs
             LEFT JOIN pm_project_property_from_sms pppfs ON podfs.orderExecNumber = pppfs.orderExecNumber 
             LEFT JOIN pm_project_header pph ON podfs.contractNo = pph.projectCode
@@ -1296,14 +1181,14 @@
     <select id="query-project-bycontractnoAndType" parameterClass="map" resultMap="pmOrderDataFromSap">
         <![CDATA[
             SELECT t1.basicDataName AS serviceType, pppfs.agentName, pppfs.customerProjectName, IFNULL(pppfs.majorProjectLevel, "无") majorProjectLevel,
-	            podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
-	            IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
-	            podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
-	            pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
-	            pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
-	            fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
-	            pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
-	            concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
+                podfs.contractNo contractNo, CASE WHEN pppfs.projectCode IS NULL THEN podfs.contractNo ELSE pppfs.projectCode END AS projectCode, 
+                IFNULL(IF(podfs.salesType = '01', podfs.projectName, pppfs.projectName), podfs.projectName) AS projectName,
+                podfs.orderCreateTime orderCreateTime, podfs.customerCode customerCode, podfs.customerName customerName, pppfs.salesManCode salesManCode, 
+                pppfs.salesManName salesManName, pppfs.marketCode marketCode, pppfs.marketName marketName, pppfs.systemId systemId, pppfs.systemName systemName, 
+                pppfs.expendId expendId, pppfs.expendName expendName, pppfs.industryId, pppfs.industryName industryName, pppfs.officeCode officeCode, 
+                fd.departmentName officeName, ppm.memberCode memberCode, ppm.memberName memberName, pph.column008 column008, pph.column010 column010, pph.column011 column011,
+                pph.column012 column012, TRIM(IF(TRIM(IFNULL(pppfs.finalCustomerName, "")) > "", pppfs.finalCustomerName, pph.column013)) column013, podfs.compCode, c.id AS compId, podfs.salesType,
+                concat("{'smsProjectAmount':'", IFNULL(pppfs.projectMoney, 0), "'}") as customInfo
             FROM pm_order_data_from_sap podfs
             LEFT JOIN pm_project_property_from_sms pppfs ON podfs.orderExecNumber = pppfs.orderExecNumber 
             LEFT JOIN pm_project_header pph ON podfs.contractNo = pph.projectCode
@@ -1372,50 +1257,6 @@
     </resultMap>
     
     <select id="query_project_byId" parameterClass="int" resultMap="pmProjectById">
-        <!-- case when ppm2.createTime is null then ppm7.createTime else ppm2.createTime end AS projectStartTime , -->
-        <!-- <![CDATA[
-            SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
-             CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`
-            ) END AS projectName , pph.projectState,state.`basicDataName` AS projectStateName, pph.isback, pph.isback, pph.column001, fd.departmentName, pph.column002, pph.column003, pph.column004, pph.column005, 
-            pph.column006, pph.column007, pph.column008, pph.column009, pph.column010, pph.column011,case when  pph.column012 is null or pph.column012 = '' then pph.columno12_readonly else pph.column012 end as column012, 
-            pph.columno12_readonly,  pph.column013, pph.column014, pph.compId, pph.customerProjectName,
-            case when ppm1.memberCode is null then ppm4.memberCode else ppm1.memberCode end as serviceManagerCode, 
-            case when ppm1.memberName is null then ppm4.memberName else ppm1.memberName end as serviceManagerCodeforjson, 
-            case when ppm2.memberCode is null then ppm5.memberCode else ppm2.memberCode end as programManagerCode,
-            case when ppm2.memberName is null then ppm5.memberName else ppm2.memberName end as programManagerCodeforjson,
-            ppm5.memberCode as programManagerCodeB,
-            ppm5.memberName as programManagerCodeforjsonB,
-            ppm7.createTime AS projectStartTime ,
-            case when ppm3.memberCode is null then ppm6.memberCode else ppm3.memberCode end as salesManCode, 
-            case when ppm3.memberName is null then ppm6.memberName else ppm3.memberName end as salesManName, 
-            pprp1.partyName partyName1, pprp2.partyName partyName2, pprp3.partyName partyName3
-            FROM pm_project_header pph 
-            LEFT JOIN pm_project_member ppm1 ON ppm1.projectId = pph.projectId AND ppm1.memberRole = '20' AND ppm1.fromFlag = 1
-            AND (ppm1.effectiveFrom <= NOW() AND (ppm1.effectiveTo > NOW() OR ppm1.effectiveTo IS NULL))
-            LEFT JOIN pm_project_member ppm4 ON ppm4.projectId = pph.projectId AND ppm4.memberRole = '20' AND ppm4.fromFlag = 2
-            AND (ppm4.effectiveFrom <= NOW() AND (ppm4.effectiveTo > NOW() OR ppm4.effectiveTo IS NULL))
-            LEFT JOIN pm_project_member ppm2 ON ppm2.projectId = pph.projectId AND ppm2.memberRole = '30' AND ppm2.fromFlag = 1
-            AND (ppm2.effectiveFrom <= NOW() AND (ppm2.effectiveTo > NOW() OR ppm2.effectiveTo IS NULL))
-            LEFT JOIN pm_project_member ppm5 ON ppm5.projectId = pph.projectId AND ppm5.memberRole = '30' AND ppm5.fromFlag = 2
-            AND (ppm5.effectiveFrom <= NOW() AND (ppm5.effectiveTo > NOW() OR ppm5.effectiveTo IS NULL))
-            LEFT JOIN pm_project_member ppm3 ON ppm3.projectId = pph.projectId AND ppm3.memberRole = '10' AND ppm3.fromFlag = 1
-            AND (ppm3.effectiveFrom <= NOW() AND (ppm3.effectiveTo > NOW() OR ppm3.effectiveTo IS NULL))
-            LEFT JOIN pm_project_member ppm6 ON ppm6.projectId = pph.projectId AND ppm6.memberRole = '10' AND ppm6.fromFlag = 2
-            AND (ppm6.effectiveFrom <= NOW() AND (ppm6.effectiveTo > NOW() OR ppm6.effectiveTo IS NULL))
-            LEFT JOIN  (SELECT projectId, createTime FROM `pm_project_member` WHERE memberRole = '30' GROUP BY projectId ASC) ppm7
-            ON pph.projectId = ppm7.projectId  
-            LEFT JOIN pm_project_group_relationship ppgr ON ppgr.projectCode = pph.projectCode
-            LEFT JOIN pm_project_contract ppc ON ppc.projectGroupCode = ppgr.projectGroupCode
-            LEFT JOIN fnd_department fd ON fd.departmentNum = pph.column001
-            LEFT JOIN pm_project_related_party pprp1 ON pprp1.projectId = pph.projectId AND pprp1.partyRole = '10'
-            AND (pprp1.effectiveFrom <= NOW() AND (pprp1.effectiveTo > NOW() OR pprp1.effectiveTo IS NULL))
-            LEFT JOIN pm_project_related_party pprp2 ON pprp2.projectId = pph.projectId AND pprp2.partyRole = '20'
-            AND (pprp2.effectiveFrom <= NOW() AND (pprp2.effectiveTo > NOW() OR pprp2.effectiveTo IS NULL))
-            LEFT JOIN pm_project_related_party pprp3 ON pprp3.projectId = pph.projectId AND pprp3.partyRole = '30'
-            AND (pprp3.effectiveFrom <= NOW() AND (pprp3.effectiveTo > NOW() OR pprp3.effectiveTo IS NULL))
-            LEFT JOIN `fnd_basic_data` state ON  state.`basicDataId` = pph.projectState AND state.`dataTypeCode` = '02'
-            WHERE pph.projectId = #projectId# LIMIT 1
-        ]]> -->
         <![CDATA[
             SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
              CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`
@@ -1462,6 +1303,15 @@
             LEFT JOIN fnd_basic_data closeProcessState ON closeProcessState.`dataTypeCode` = 'projectCloseProcessState' AND closeProcessState.`basicDataId` = ps.`closeProcessState`
             WHERE pph.projectId = #projectId# LIMIT 1
         ]]>
+    </select>
+    
+    <select id="query_project_by_power_Id" parameterClass="com.dp.plat.data.bean.Project" resultMap="projectcreatedList">
+        select *, cc.abbr as compName from (
+        <include refid="sql_query_project_by_power_table"/>
+        ) t1
+        left join fnd_company cc on cc.id = t1.compId
+        <include refid="sql_query_project_by_power_where"/>
+        limit 1
     </select>
     
     <update id="update-projectmember" parameterClass="com.dp.plat.data.bean.Project">
@@ -2068,14 +1918,14 @@
         <![CDATA[
             SELECT t2.`contractNo` as rmaContractNo ,t1.`itemCode` ,t1.`itemDesc`  as itemName, (0 - t1.orderQuantity) AS orderQuantity , 
                 t1.`openQuantity` ,t1.`orderNumber`,t1.`lineNum`,(t1.`openQuantity` - t1.`openQuantity`) deliverQuantity,
-                '$contractNo$' as contractNo
+                #contractNo# as contractNo
             FROM pm_order_line_from_sap t1 LEFT JOIN pm_order_data_from_sap t2 ON t1.`orderNumber` = t2.`orderNumber` 
                 AND t1.`lineType` = t2.`orderType`
                 AND t1.compCode = t2.compCode
-            WHERE t2.`orderComment` LIKE '%$contractNo$%' AND t2.`orderType` = 1
+            WHERE t2.`orderComment` LIKE CONCAT('%', #contractNo#, '%') AND t2.`orderType` = 1
             UNION ALL
             SELECT a1.`contractNo` AS rmaContractNo , a2.`itemCode` ,a2.`itemDesc` AS itemName,(0-a2.`orderQuantity`) AS orderQuantity,
-            a2.`openQuantity`,a2.`orderNumber` ,a2.`lineNum`,0 AS deliverQuantity,'$contractNo$' AS contractNo  
+            a2.`openQuantity`,a2.`orderNumber` ,a2.`lineNum`,0 AS deliverQuantity, #contractNo# AS contractNo  
              FROM pm_order_data_from_sap a1 
             LEFT JOIN pm_order_line_from_sap a2 ON a1.`orderNumber` = a2.`orderNumber`
                  AND a1.orderType = a2.lineType
@@ -2188,42 +2038,42 @@
     </select> -->
     
     <select id="query-shipmentinfo-bycontractno" parameterClass="java.util.Map" resultMap="shipmentinfo">
-	   SELECT pps.*, vw.`warrantyStartTime`, vw.`warrantyEndTime`, vw.`warrantyMonth`, vw.`diff` AS warrantyDiff FROM (
-	        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemModel, vsip.itemName itemName, 
-		        vsep.receiveName receiveName, vsep.emsNum emsNum, vsep.packdate packdate, vsep.emsCompany emsCompany,NULL AS installAddress,
-		        NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
-		        vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemModel2 AS itemModel2, vsip.itemName2 itemName2
-	        FROM view_shipment_info_4_pm vsip 
-		        LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
-		        WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
-		            and contractNo in ($contractNo$) and projectId = #projectId#
-		        )
-		        <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
-	        UNION ALL 
-	        SELECT DISTINCT pps.`contractNo`,pps.`barcode`,pps.`itemCode`, fi0.itemname AS itemModel, pps.`itemName`,pps.`receiveName`,pps.`emsNum`,pps.`packdate`,pps.`emsCompany`,pps.`installAddress`, 
-		        pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
-		        sbr.`sn2` AS barCode2, sbr.`item2` AS itemCode2, fi.itemname AS itemModel2, fi.describe_ AS itemName2
-	        FROM pm_project_shipment pps 
-		        LEFT JOIN `fb_shipment_barcode_relation` sbr 
-			        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
-			        AND pps.barcode = sbr.sn1 
-			    LEFT JOIN fb_items fi0 
+       SELECT pps.*, vw.`warrantyStartTime`, vw.`warrantyEndTime`, vw.`warrantyMonth`, vw.`diff` AS warrantyDiff FROM (
+            SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemModel, vsip.itemName itemName, 
+                vsep.receiveName receiveName, vsep.emsNum emsNum, vsep.packdate packdate, vsep.emsCompany emsCompany,NULL AS installAddress,
+                NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
+                vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemModel2 AS itemModel2, vsip.itemName2 itemName2
+            FROM view_shipment_info_4_pm vsip 
+                LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+                WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+                    and contractNo in ($contractNo$) and projectId = #projectId#
+                )
+                <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
+            UNION ALL 
+            SELECT DISTINCT pps.`contractNo`,pps.`barcode`,pps.`itemCode`, fi0.itemname AS itemModel, pps.`itemName`,pps.`receiveName`,pps.`emsNum`,pps.`packdate`,pps.`emsCompany`,pps.`installAddress`, 
+                pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
+                sbr.`sn2` AS barCode2, sbr.`item2` AS itemCode2, fi.itemname AS itemModel2, fi.describe_ AS itemName2
+            FROM pm_project_shipment pps 
+                LEFT JOIN `fb_shipment_barcode_relation` sbr 
+                    ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
+                    AND pps.barcode = sbr.sn1 
+                LEFT JOIN fb_items fi0 
                     ON fi0.`item` = pps.itemCode
-			    LEFT JOIN fb_items fi 
-			        ON fi.`item` = sbr.`item2` 
-	        WHERE contractNo in ($contractNo$) and projectId = #projectId#
-	             <isEqual prepend="AND" property="excludeTransferOut" compareValue="">transferFlag != 1</isEqual>
-	             AND EXISTS 
-	            (SELECT 
-	                1 
-	            FROM
-	                view_shipment_info_4_pm vsip 
-	                LEFT JOIN view_shipment_ems_4_pm vsep 
-	                    ON vsep.contract_code = vsip.contract_code 
-	                    AND vsep.packId = vsip.packId 
-	            WHERE vsip.contract_code IN ($sourceContractNo$)
-	            <!-- WHERE FIND_IN_SET(vsip.contract_code, REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
-	                AND vsip.barcode = pps.barcode)
+                LEFT JOIN fb_items fi 
+                    ON fi.`item` = sbr.`item2` 
+            WHERE contractNo in ($contractNo$) and projectId = #projectId#
+                 <isEqual prepend="AND" property="excludeTransferOut" compareValue="">transferFlag != 1</isEqual>
+                 AND EXISTS 
+                (SELECT 
+                    1 
+                FROM
+                    view_shipment_info_4_pm vsip 
+                    LEFT JOIN view_shipment_ems_4_pm vsep 
+                        ON vsep.contract_code = vsip.contract_code 
+                        AND vsep.packId = vsip.packId 
+                WHERE vsip.contract_code IN ($sourceContractNo$)
+                <!-- WHERE FIND_IN_SET(vsip.contract_code, REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
+                    AND vsip.barcode = pps.barcode)
        ) pps
        LEFT JOIN `view_warranty` vw
            ON <!-- vw.`contract_code` = pps.contractNo  -->
@@ -2427,22 +2277,22 @@
              ORDER BY conpChange  DESC ,bootChange DESC , cpldChange DESC ,pcbChange DESC
         ]]> -->
         SELECT 
-		    sv.*, MAX(sbr.`item2`) AS itemCode2, MAX(sbr.`sn2`) AS barCode2 
-		FROM
-		    pm_project_soft_version sv 
-		    LEFT JOIN `pm_project_header` ph 
-		        ON sv.`projectId` = ph.`projectId` 
-		    LEFT JOIN `pm_project_group_relationship` pgr 
-		        ON pgr.`projectCode` = ph.`projectCode` 
-		    LEFT JOIN `pm_project_contract` pc 
-		        ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
-		    LEFT JOIN `fb_shipment_barcode_relation` sbr 
-		        ON sbr.contract = REPLACE(pc.contractNo, '-C', '')
-		        AND sv.barcode = sbr.sn1 
-		WHERE sv.projectId = #projectId# 
-		    AND sv.logId = #id# 
-	    GROUP BY sv.`id`
-		ORDER BY sv.conpChange DESC, sv.bootChange DESC, sv.cpldChange DESC, sv.pcbChange DESC 
+            sv.*, MAX(sbr.`item2`) AS itemCode2, MAX(sbr.`sn2`) AS barCode2 
+        FROM
+            pm_project_soft_version sv 
+            LEFT JOIN `pm_project_header` ph 
+                ON sv.`projectId` = ph.`projectId` 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON pgr.`projectCode` = ph.`projectCode` 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+            LEFT JOIN `fb_shipment_barcode_relation` sbr 
+                ON sbr.contract = REPLACE(pc.contractNo, '-C', '')
+                AND sv.barcode = sbr.sn1 
+        WHERE sv.projectId = #projectId# 
+            AND sv.logId = #id# 
+        GROUP BY sv.`id`
+        ORDER BY sv.conpChange DESC, sv.bootChange DESC, sv.cpldChange DESC, sv.pcbChange DESC 
     </select>
     <resultMap class="com.dp.plat.data.bean.SoftChangeLog" id="SoftChangeLogOne">
         <result property="id" column="id"/>
@@ -2726,10 +2576,10 @@
                 GROUP BY `ph`.`projectCode`
                 ) t
         <dynamic prepend="where">
-            <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like '%$projectName$%']]></isNotEmpty>
-            <isNotEmpty prepend="and" property="projectState"><![CDATA[ projectState in ( $projectState$ ) ]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(projectState, #projectState# ) ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column001"><![CDATA[ officeCode = #column001#]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="projectCode"><![CDATA[ (contractNo like '%$projectCode$%' or projectCode like '%$projectCode$%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectCode"><![CDATA[ (contractNo like CONCAT('%', #projectCode#, '%') or projectCode like CONCAT('%', #projectCode#, '%'))]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column010"><![CDATA[ rank = #column010#]]></isNotEmpty>
         </dynamic>
     </select>
@@ -2762,8 +2612,8 @@
             SELECT pps.`contractNo`,pps.`barcode`,pps.`itemCode`,pps.`itemName`,pps.`receiveName`,pps.`emsNum`,pps.`packdate`,pps.`emsCompany`,pps.`installAddress`, 
             sbr.sn2 AS barCode2, sbr.item2 AS itemCode2, fi.describe_ AS itemName2
             FROM pm_project_shipment pps    
-	            LEFT JOIN `fb_shipment_barcode_relation` sbr ON sbr.contract = REPLACE(pps.contractNo, '-C', '') AND pps.barcode = sbr.sn1 
-	            LEFT JOIN `fb_items` fi ON fi.item = sbr.item2 
+                LEFT JOIN `fb_shipment_barcode_relation` sbr ON sbr.contract = REPLACE(pps.contractNo, '-C', '') AND pps.barcode = sbr.sn1 
+                LEFT JOIN `fb_items` fi ON fi.item = sbr.item2 
             WHERE contractNo IN($contractNo$) and projectId = #projectId#
                  AND transferFlag != 1
                  AND EXISTS 
@@ -2875,29 +2725,29 @@
     <select id="queryNeededUndelivedProjectDeliverList" parameterClass="com.dp.plat.data.bean.ProjectDeliver" resultMap="projectDeliver">
        <![CDATA[
         SELECT 
-		   pbpd.id, CONCAT(pbpd.dataTypeCodeSon, '-', pbpd.basicDataIdSon) deliverKey, fbd.basicDataName deliverValue, pbpd.isNeed ,
+           pbpd.id, CONCAT(pbpd.dataTypeCodeSon, '-', pbpd.basicDataIdSon) deliverKey, fbd.basicDataName deliverValue, pbpd.isNeed ,
           CONCAT(pbpd.dataTypeCode, '-', pbpd.basicDataId) eventKey
-		FROM
-		    `pm_basic_prj_deliver` pbpd 
-		    LEFT JOIN fnd_basic_data fbd 
-		        ON pbpd.dataTypeCodeSon = fbd.dataTypeCode 
-		        AND pbpd.basicDataIdSon = fbd.basicDataId 
-		WHERE pbpd.column011 = #column011# 
-		    AND pbpd.dataTypeCode = #dataTypeCode# 
-		    AND pbpd.`isNeed` = 1 
-		    AND pbpd.effectiveTo IS NULL 
-		    AND NOT EXISTS (
-		    SELECT 1 FROM `pm_basic_deliver_detail` ppd 
-		        WHERE ppd.`deliverId` = pbpd.`id` 
-		        AND ppd.`projectId` = #projectId# 
-	            AND ppd.effectiveFrom <= NOW() 
-		        AND (
-		            ppd.effectiveTo > NOW() 
-		            OR ppd.effectiveTo IS NULL
-		        ) 
-		    )
+        FROM
+            `pm_basic_prj_deliver` pbpd 
+            LEFT JOIN fnd_basic_data fbd 
+                ON pbpd.dataTypeCodeSon = fbd.dataTypeCode 
+                AND pbpd.basicDataIdSon = fbd.basicDataId 
+        WHERE pbpd.column011 = #column011# 
+            AND pbpd.dataTypeCode = #dataTypeCode# 
+            AND pbpd.`isNeed` = 1 
+            AND pbpd.effectiveTo IS NULL 
+            AND NOT EXISTS (
+            SELECT 1 FROM `pm_basic_deliver_detail` ppd 
+                WHERE ppd.`deliverId` = pbpd.`id` 
+                AND ppd.`projectId` = #projectId# 
+                AND ppd.effectiveFrom <= NOW() 
+                AND (
+                    ppd.effectiveTo > NOW() 
+                    OR ppd.effectiveTo IS NULL
+                ) 
+            )
         ]]>
-	    <isNotNull prepend="and " property="column010"> pbpd.column010 = #column010# </isNotNull>
+        <isNotNull prepend="and " property="column010"> pbpd.column010 = #column010# </isNotNull>
         <isNull prepend="and " property="column010"> pbpd.column010 is null </isNull>
     </select>
     
@@ -3079,7 +2929,7 @@
     <select id="query-projectdeliver-byid" parameterClass="int" resultClass="com.dp.plat.data.bean.ProjectDeliver">
         <![CDATA[
             SELECT pbpd.column010 column010, pbpd.column011 column011, pbpd.dataTypeCode dataTypeCode, pbpd.basicDataId basicDataId, pbdd.projectId projectId,
-            	pbdd.projectType, pbdd.taskId, pbdd.deliverId 
+                pbdd.projectType, pbdd.taskId, pbdd.deliverId 
             FROM pm_basic_prj_deliver pbpd LEFT JOIN pm_basic_deliver_detail pbdd ON pbdd.deliverId = pbpd.id WHERE pbdd.id = #id# limit 1
         ]]>
     </select>
@@ -3123,17 +2973,17 @@
     
     <select id="query_mail_byusername" parameterClass="string" resultClass="string">
         <![CDATA[
-            SELECT email FROM `fnd_user_info` WHERE username like '%$username$%' and effectiveTo is null
+            SELECT email FROM `fnd_user_info` WHERE username = #username# and effectiveTo is null
         ]]>
     </select>
     <select id="query_mail_byroleid" parameterClass="int" resultClass="string">
         <![CDATA[
-            SELECT GROUP_CONCAT( email SEPARATOR ';') AS mails FROM `fnd_user_info` WHERE roleIds  LIKE '%;$roleId$;%' AND isemail = 1 AND status = 1;
+            SELECT GROUP_CONCAT( email SEPARATOR ';') AS mails FROM `fnd_user_info` WHERE roleIds  LIKE CONCAT('%;', #roleId#, ';%') AND isemail = 1 AND status = 1;
         ]]>
     </select>
     <select id="query_usernames_byroleId" parameterClass="int" resultClass="string">
         <![CDATA[
-            SELECT GROUP_CONCAT( username) AS mails FROM `fnd_user_info` WHERE roleIds  LIKE '%;$roleId$;%' ;
+            SELECT GROUP_CONCAT( username) AS mails FROM `fnd_user_info` WHERE roleIds  LIKE CONCAT('%;', #roleId#, ';%') ;
         ]]>
     </select>
     
@@ -3150,7 +3000,7 @@
         <![CDATA[
             SELECT  a.`contractNo` , IFNULL(IF(a.salesType = '01', a.`projectName`, b.projectName), a.projectName) as projectName ,a.`customerName` ,a.`orderCreateTime` , b.`marketName` , b.`salesManName` FROM `pm_order_data_from_sap` a 
             LEFT JOIN  pm_project_property_from_sms b ON a.`orderExecNumber` = b.`orderExecNumber` 
-            WHERE contractNo LIKE '%$mergeContractNo$%'
+            WHERE contractNo LIKE CONCAT('%', #mergeContractNo#, '%')
         ]]>
     </select>
     <insert id="insert_merge_contract" parameterClass="java.util.Map">
@@ -3184,43 +3034,44 @@
     
     <delete id="deleteProjectUnlinkedContractProductLine" parameterClass="int">
         <!-- DELETE 
-		    pl 
-		FROM
-		    pm_project_product_line pl 
-		    LEFT JOIN `pm_project_header` ph 
-		        ON pl.`projectId` = ph.`projectId` 
-		    LEFT JOIN `pm_project_group_relationship` pgr 
-		        ON ph.`projectCode` = pgr.`projectCode` 
-		    LEFT JOIN `pm_project_contract` pc 
-		        ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
-		        AND pl.`contractNo` = pc.`contractNo` 
-		WHERE ph.`projectId` IS NOT NULL 
-		    AND ph.`effectiveTo` IS NULL 
-		    AND pc.`contractNo` IS NULL 
-		    AND ph.projectId = #projectId# -->
-	    DELETE 
-		    pl 
-		FROM
-		    pm_project_product_line pl 
-		WHERE pl.projectId = #projectId#
-		    AND NOT EXISTS 
-		    (SELECT 
-		        1 
-		    FROM
-		        `pm_project_header` ph 
-		        LEFT JOIN `pm_project_group_relationship` pgr 
-		            ON ph.`projectCode` = pgr.`projectCode` 
-		        LEFT JOIN `pm_project_contract` pc 
-		            ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
-		    WHERE pl.`projectId` = ph.`projectId` 
-		        AND pl.contractNo = pc.`contractNo` 
-		        AND ph.`effectiveTo` IS NULL)
+            pl 
+        FROM
+            pm_project_product_line pl 
+            LEFT JOIN `pm_project_header` ph 
+                ON pl.`projectId` = ph.`projectId` 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON ph.`projectCode` = pgr.`projectCode` 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+                AND pl.`contractNo` = pc.`contractNo` 
+        WHERE ph.`projectId` IS NOT NULL 
+            AND ph.`effectiveTo` IS NULL 
+            AND pc.`contractNo` IS NULL 
+            AND ph.projectId = #projectId# -->
+        DELETE 
+            pl 
+        FROM
+            pm_project_product_line pl 
+        WHERE pl.projectId = #projectId#
+            AND NOT EXISTS 
+            (SELECT 
+                1 
+            FROM
+                `pm_project_header` ph 
+                LEFT JOIN `pm_project_group_relationship` pgr 
+                    ON ph.`projectCode` = pgr.`projectCode` 
+                LEFT JOIN `pm_project_contract` pc 
+                    ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+            WHERE pl.`projectId` = ph.`projectId` 
+                AND pl.contractNo = pc.`contractNo` 
+                AND ph.`effectiveTo` IS NULL)
     </delete>
     
     <select id="query_project_group_count" parameterClass="string" resultClass="int">
         <![CDATA[
-            SELECT COUNT(1) FROM pm_project WHERE projectCode LIKE '%$projectCode$%' AND effectiveTo IS NULL
+            SELECT COUNT(1) FROM pm_project WHERE projectCode LIKE CONCAT('%', #projectCode#, '%') 
         ]]>
+            <!-- AND effectiveTo IS NULL -->
     </select>
     <insert id="insert_branch_group_relationship" parameterClass="java.util.Map">
         <![CDATA[
@@ -3492,10 +3343,10 @@
             , CONCAT('{"productHarmfulSubstanceControl":"', er3.questionOptionsContent, '"', '}') AS `customInfo`
             from 
             (
-			    select aa.*, a.times from (SELECT MAX(aa.id) AS id, COUNT(aa.id) AS times FROM pm_cl_evaluation_header aa WHERE aa.evaluationType = 3 AND aa.status = 1 GROUP BY aa.projectCode) a
-			    left join pm_cl_evaluation_header aa
-			    on aa.id = a.id
-		    ) a
+                select aa.*, a.times from (SELECT MAX(aa.id) AS id, COUNT(aa.id) AS times FROM pm_cl_evaluation_header aa WHERE aa.evaluationType = 3 AND aa.status = 1 GROUP BY aa.projectCode) a
+                left join pm_cl_evaluation_header aa
+                on aa.id = a.id
+            ) a
             left join pm_cl_quesnaire_result_header b on a.id=b.evaluationHeaderId and b.status=1
         ]]>
             LEFT JOIN (SELECT quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,SUM(IF(c1.quesTypeForCB=10, questionScore, NULL)) AS questionScore10,SUM(IF(c1.quesTypeForCB=20, questionScore, NULL)) AS questionScore20,SUM(IF(c1.quesTypeForCB=30, questionScore, NULL)) AS questionScore30,SUM(IF(c1.quesTypeForCB=40, questionScore, NULL)) AS questionScore40  FROM pm_cl_quesnaire_result_line c1 WHERE quesTypeForCB IN (10,20,30,40) GROUP BY quesnaireResultHeaderId) c  ON b.id=c.quesnaireResultHeaderId
@@ -3567,20 +3418,20 @@
                     AND cbq.quesnaireState = 1
             where cb.applyState != -1 and cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
             ORDER BY cbq.createTime desc
-	        ) a
-	        INNER JOIN (
-				SELECT 
-	                cb.projectId, MAX(cbq.createTime) createTime
-				FROM
-		            pm_cl_callback cb 
-	                LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
-	                    ON cb.id = cbq.callBackId 
-		                AND cbq.quesnaireState = 1
-			    WHERE cb.applyState != -1 AND cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
-	            GROUP BY cb.`projectId`
-	        ) ma ON ma.createTime = a.createTime AND ma.projectId = a.projectId
-	        left join (select ach.* from (select max(id) as maxId from `fnd_act_hi_comment` ahc left join `act_hi_taskinst` aht on ahc.taskId = aht.ID_ where procdefKey = 'CallBack' and aht.TASK_DEF_KEY_ = 'usertask2' group by objId, procdefKey, instId) t left join fnd_act_hi_comment ach on ach.id = t.maxId) ahc on a.instId = ahc.instId 
-	        left join pm_cl_quesnaire_result_header b on a.quesnaireId=b.id and b.status=1
+            ) a
+            INNER JOIN (
+                SELECT 
+                    cb.projectId, MAX(cbq.createTime) createTime
+                FROM
+                    pm_cl_callback cb 
+                    LEFT JOIN (SELECT * FROM pm_cl_callback_quesnaire WHERE quesnaireState = 1 AND id IN (SELECT MAX(id)  FROM `pm_cl_callback_quesnaire` GROUP BY callBackId)) cbq 
+                        ON cb.id = cbq.callBackId 
+                        AND cbq.quesnaireState = 1
+                WHERE cb.applyState != -1 AND cbq.quesnaireId IS NOT NULL AND cb.projectId NOT IN (SELECT DISTINCT projectId  FROM `pm_cl_evaluation_header`)
+                GROUP BY cb.`projectId`
+            ) ma ON ma.createTime = a.createTime AND ma.projectId = a.projectId
+            left join (select ach.* from (select max(id) as maxId from `fnd_act_hi_comment` ahc left join `act_hi_taskinst` aht on ahc.taskId = aht.ID_ where procdefKey = 'CallBack' and aht.TASK_DEF_KEY_ = 'usertask2' group by objId, procdefKey, instId) t left join fnd_act_hi_comment ach on ach.id = t.maxId) ahc on a.instId = ahc.instId 
+            left join pm_cl_quesnaire_result_header b on a.quesnaireId=b.id and b.status=1
     ]]>
             LEFT JOIN (SELECT quesnaireTemplateHeaderId,quesnaireResultHeaderId,quesTypeForCB,SUM(IF(c1.quesTypeForCB=10, questionScore, NULL)) AS questionScore10,SUM(IF(c1.quesTypeForCB=20, questionScore, NULL)) AS questionScore20,SUM(IF(c1.quesTypeForCB=30, questionScore, NULL)) AS questionScore30,SUM(IF(c1.quesTypeForCB=40, questionScore, NULL)) AS questionScore40  FROM pm_cl_quesnaire_result_line c1 WHERE quesTypeForCB IN (10,20,30,40) GROUP BY quesnaireResultHeaderId) c  ON b.id=c.quesnaireResultHeaderId
             <!-- 
@@ -3926,7 +3777,7 @@
             )
         where ISNULL(`ph`.`effectiveTo`) 
         ]]>
-        <isNotEmpty prepend="and" property="projectState"><![CDATA[ ph.projectState in( $projectState$ )]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(ph.projectState, #projectState# )]]></isNotEmpty>
         <isNotEmpty prepend="and" property="column001"><![CDATA[ ph.column001 = #column001#]]></isNotEmpty>
         <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ pm1.`memberCode` = #serviceManagerCode#]]></isNotEmpty>
         <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ (pm2.`memberCode` = #programManagerCode# or pm3.`memberCode` = #programManagerCode#)]]></isNotEmpty>
@@ -4104,7 +3955,7 @@
     </select>
     
     <select id="query_mail_by_userName_from_oa" parameterClass="String" resultClass="String">
-        select salesmanMail from `pm_person_from_oa` where salesManCode = substr('$userName$',2);
+        select salesmanMail from `pm_person_from_oa` where salesManCode = substr(#userName#,2);
     </select>
     
     <select id="query_valid_member_by_projectId" parameterClass="int" resultClass="com.dp.plat.data.bean.ProjectMember">
@@ -4214,56 +4065,56 @@
     <!-- 导出现场验货单 -->
     <select id="querySpotCheckList" parameterClass="map" resultMap="SpotCheckMap" remapResults="true">
         SELECT 
-		    contractNo, itemCode, IF(
-		        itemName = IFNULL(itemName2, itemName), itemName, CONCAT(t.itemName, '\r\n(', itemName2, ')')
-		    ) AS itemName, t.qty, t.barCodes 
-		FROM
-		    (SELECT 
-	            contractNo, IF(t.itemCode2 IS NULL, t.itemCode, CONCAT(t.itemCode, '\r\n(', itemCode2, ')')) AS itemCode, 
-	            CASE WHEN fi.`itemname` IS NULL OR fi.itemname = '' OR fi.itemname = '/' THEN fi.describe_  ELSE fi.itemname END AS itemName, 
-	            CASE WHEN fi2.`itemname` IS NULL OR fi2.itemname = '' OR fi2.itemname = '/' THEN fi2.describe_  ELSE fi2.itemname END AS itemName2, 
-	            COUNT(1) AS qty,
-	            CASE
-	                WHEN igi.itemCode IS NULL 
-	                THEN GROUP_CONCAT(IF(barCode2 IS NULL, barcode, CONCAT(barcode, '(', barCode2, ')')) ORDER BY barCode SEPARATOR '、') 
-	                ELSE '' 
-	            END AS barCodes
-	        FROM
-	            (
-	            SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, -1 AS transferFlag, vsip.barcode2 barCode2, vsip.itemcode2 
-	            FROM view_shipment_info_4_pm vsip 
-	                LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
-	                WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
-	                    and contractNo in ($contractNo$) and projectId = #projectId#
-	                )
+            contractNo, itemCode, IF(
+                itemName = IFNULL(itemName2, itemName), itemName, CONCAT(t.itemName, '\r\n(', itemName2, ')')
+            ) AS itemName, t.qty, t.barCodes 
+        FROM
+            (SELECT 
+                contractNo, IF(t.itemCode2 IS NULL, t.itemCode, CONCAT(t.itemCode, '\r\n(', itemCode2, ')')) AS itemCode, 
+                CASE WHEN fi.`itemname` IS NULL OR fi.itemname = '' OR fi.itemname = '/' THEN fi.describe_  ELSE fi.itemname END AS itemName, 
+                CASE WHEN fi2.`itemname` IS NULL OR fi2.itemname = '' OR fi2.itemname = '/' THEN fi2.describe_  ELSE fi2.itemname END AS itemName2, 
+                COUNT(1) AS qty,
+                CASE
+                    WHEN igi.itemCode IS NULL 
+                    THEN GROUP_CONCAT(IF(barCode2 IS NULL, barcode, CONCAT(barcode, '(', barCode2, ')')) ORDER BY barCode SEPARATOR '、') 
+                    ELSE '' 
+                END AS barCodes
+            FROM
+                (
+                SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, -1 AS transferFlag, vsip.barcode2 barCode2, vsip.itemcode2 
+                FROM view_shipment_info_4_pm vsip 
+                    LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+                    WHERE vsip.contract_code in ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+                        and contractNo in ($contractNo$) and projectId = #projectId#
+                    )
                 <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
-	            UNION ALL 
-	            SELECT DISTINCT pps.`contractNo`, pps.`barcode`, pps.`itemCode`, pps.transferFlag, sbr.sn2 as barCode2, sbr.item2 
-	            FROM pm_project_shipment pps 
-		            LEFT JOIN `fb_shipment_barcode_relation` sbr 
-				        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
-				        AND pps.barcode = sbr.sn1 
-	            WHERE contractNo in ($contractNo$) and projectId = #projectId#
-	                 AND EXISTS 
-	                (SELECT 
-	                    1 
-	                FROM
-	                    view_shipment_info_4_pm vsip 
-	                    LEFT JOIN view_shipment_ems_4_pm vsep 
-	                        ON vsep.contract_code = vsip.contract_code 
-	                        AND vsep.packId = vsip.packId 
-	                WHERE vsip.contract_code in ($sourceContractNo$)
-	                   <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
-	                    AND vsip.barcode = pps.barcode)
-	            ORDER BY transferFlag asc) t
-	            LEFT JOIN `fb_items` fi
-	                ON fi.`item` = t.itemCode
-	            LEFT JOIN `fb_items` fi2 
+                UNION ALL 
+                SELECT DISTINCT pps.`contractNo`, pps.`barcode`, pps.`itemCode`, pps.transferFlag, sbr.sn2 as barCode2, sbr.item2 
+                FROM pm_project_shipment pps 
+                    LEFT JOIN `fb_shipment_barcode_relation` sbr 
+                        ON sbr.contract = REPLACE(pps.contractNo, '-C', '')
+                        AND pps.barcode = sbr.sn1 
+                WHERE contractNo in ($contractNo$) and projectId = #projectId#
+                     AND EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        view_shipment_info_4_pm vsip 
+                        LEFT JOIN view_shipment_ems_4_pm vsep 
+                            ON vsep.contract_code = vsip.contract_code 
+                            AND vsep.packId = vsip.packId 
+                    WHERE vsip.contract_code in ($sourceContractNo$)
+                       <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
+                        AND vsip.barcode = pps.barcode)
+                ORDER BY transferFlag asc) t
+                LEFT JOIN `fb_items` fi
+                    ON fi.`item` = t.itemCode
+                LEFT JOIN `fb_items` fi2 
                     ON fi2.`item` = t.itemCode2 
-	            LEFT JOIN `pm_project_spot_check_ignore_item` igi 
-	                ON igi.itemCode = t.itemCode 
-	        WHERE t.transferFlag != 1
-	        GROUP BY t.itemCode) t
+                LEFT JOIN `pm_project_spot_check_ignore_item` igi 
+                    ON igi.itemCode = t.itemCode 
+            WHERE t.transferFlag != 1
+            GROUP BY t.itemCode) t
         ORDER BY t.contractNo, barCodes DESC, t.itemCode ASC;
     </select>
     
@@ -4478,9 +4329,9 @@
                             AND planState.`effectiveTo` IS NULL 
                             AND planState.`basicDataId` = ps.`projectPlanState` 
                         LEFT JOIN fnd_basic_data execState 
-	                        ON execState.`dataTypeCode` = 'projectExecutionState' 
-	                        AND execState.`effectiveTo` IS NULL 
-	                        AND execState.`basicDataId` = ps.`executionState` 
+                            ON execState.`dataTypeCode` = 'projectExecutionState' 
+                            AND execState.`effectiveTo` IS NULL 
+                            AND execState.`basicDataId` = ps.`executionState` 
                         LEFT JOIN pm_project_task pt 
                             ON ph.`projectId` = pt.`projectId` 
                             AND pt.`effectiveTo` IS NULL 
@@ -5797,74 +5648,74 @@
   <!-- 创建有新订单的项目临时表 -->
   <insert id="createTempNewOrderContractInfoTable">
     <![CDATA[
-	    CREATE TEMPORARY TABLE IF NOT EXISTS newOrderContractInfoTable (KEY projectId(projectId))
-		SELECT DISTINCT 
-		    ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, IFNULL(
-		        pods.`orderExecNumber`, ppfs.orderExecNumber
-		    ) orderExecNumber, pods2.`contractNo`, pods2.`salesType` 
-		FROM
-		    soleAgentProjectTable sph 
-		    LEFT JOIN `pm_project_header` ph 
-		        ON sph.projectId = ph.`projectId` 
-		    LEFT JOIN `pm_project_group_relationship` pgr 
-		        ON ph.`projectCode` = REPLACE(`pgr`.`projectCode`, "-his", "") 
-		    LEFT JOIN `pm_project_contract` pc 
-		        ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
-		    LEFT JOIN `pm_order_data_from_sap` pods 
-		        ON pods.`contractNo` = pc.`contractNo` 
-		        AND pods.`orderType` = 0 
-		    LEFT JOIN `pm_project_property_from_sms` ppfs 
-		        ON ppfs.`projectCode` = pgr.`smsProjectCode` 
-		    LEFT JOIN `pm_order_data_from_sap` pods2 
-		        ON (
-		            (
-		                pods.`contractNo` IS NOT NULL 
-		                AND (pods.`orderExecNumber` = pods2.`orderExecNumber` 
-		                      OR pods2.`orderExecNumber` = ppfs.`orderExecNumber`)
-		                AND pods2.`contractNo` != pods.`contractNo` 
-		                AND pods2.`orderCreateTime` >= pods.`orderCreateTime`
-		            ) 
-		            OR (
-		                pods.`contractNo` IS NULL 
-		                AND pods2.`orderExecNumber` = ppfs.`orderExecNumber`
-		            )
-		        ) 
-		        AND pods2.`orderType` = 0 
-		WHERE (
-		        (
-		            pods2.`contractNo` IS NOT NULL 
+        CREATE TEMPORARY TABLE IF NOT EXISTS newOrderContractInfoTable (KEY projectId(projectId))
+        SELECT DISTINCT 
+            ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, IFNULL(
+                pods.`orderExecNumber`, ppfs.orderExecNumber
+            ) orderExecNumber, pods2.`contractNo`, pods2.`salesType` 
+        FROM
+            soleAgentProjectTable sph 
+            LEFT JOIN `pm_project_header` ph 
+                ON sph.projectId = ph.`projectId` 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON ph.`projectCode` = REPLACE(`pgr`.`projectCode`, "-his", "") 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
+            LEFT JOIN `pm_order_data_from_sap` pods 
+                ON pods.`contractNo` = pc.`contractNo` 
+                AND pods.`orderType` = 0 
+            LEFT JOIN `pm_project_property_from_sms` ppfs 
+                ON ppfs.`projectCode` = pgr.`smsProjectCode` 
+            LEFT JOIN `pm_order_data_from_sap` pods2 
+                ON (
+                    (
+                        pods.`contractNo` IS NOT NULL 
+                        AND (pods.`orderExecNumber` = pods2.`orderExecNumber` 
+                              OR pods2.`orderExecNumber` = ppfs.`orderExecNumber`)
+                        AND pods2.`contractNo` != pods.`contractNo` 
+                        AND pods2.`orderCreateTime` >= pods.`orderCreateTime`
+                    ) 
+                    OR (
+                        pods.`contractNo` IS NULL 
+                        AND pods2.`orderExecNumber` = ppfs.`orderExecNumber`
+                    )
+                ) 
+                AND pods2.`orderType` = 0 
+        WHERE (
+                (
+                    pods2.`contractNo` IS NOT NULL 
     ]]>
-		            <!-- AND EXISTS 
-		            (SELECT 
-		                1 
-		            FROM
-		                `pm_order_line_from_sap` ol 
-		            WHERE ol.`orderNumber` = pods2.`orderNumber` 
-		                AND pods2.`orderType` = ol.`lineType`)  -->
+                    <!-- AND EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        `pm_order_line_from_sap` ol 
+                    WHERE ol.`orderNumber` = pods2.`orderNumber` 
+                        AND pods2.`orderType` = ol.`lineType`)  -->
     <![CDATA[
-		            AND NOT EXISTS 
-		            (SELECT 
-		                1 
-		            FROM
-		                `pm_project_contract` `t1` 
-		                JOIN `pm_project_group_relationship` `t2` 
-		                    ON `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-		                JOIN `pm_project_header` `t3` 
-	]]>
+                    AND NOT EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        `pm_project_contract` `t1` 
+                        JOIN `pm_project_group_relationship` `t2` 
+                            ON `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+                        JOIN `pm_project_header` `t3` 
+    ]]>
                            ON (
 <!--                            `t2`.`projectCode` = `t3`.`projectCode` -->
 <!--                                 OR  -->
                                 `t3`.`projectCode` = REPLACE(`t2`.`projectCode`, "-his", "")
                             )
     <![CDATA[
-		                    AND `t3`.`effectiveFrom` <= NOW() 
-		                    AND (
-		                        `t3`.`effectiveTo` > NOW() 
-		                        OR ISNULL(`t3`.`effectiveTo`)
-		                    ) 
-		            WHERE `pods2`.`contractNo` = `t1`.`contractNo`)
-		        )
-		    )
+                            AND `t3`.`effectiveFrom` <= NOW() 
+                            AND (
+                                `t3`.`effectiveTo` > NOW() 
+                                OR ISNULL(`t3`.`effectiveTo`)
+                            ) 
+                    WHERE `pods2`.`contractNo` = `t1`.`contractNo`)
+                )
+            )
     ]]>
   </insert>
   
@@ -5873,66 +5724,66 @@
     <![CDATA[
         CREATE TEMPORARY TABLE IF NOT EXISTS oldOrderContractInfoTable (KEY projectId(projectId))
         SELECT DISTINCT 
-		    ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, pods.`orderExecNumber`, pods2.`contractNo`, pods2.`salesType` 
-		FROM
-		    soleAgentProjectTable sph 
-		    LEFT JOIN `pm_project_header` ph 
-		        ON sph.projectId = ph.`projectId` 
-		    LEFT JOIN `pm_project_group_relationship` pgr 
-		        ON ph.`projectCode` = REPLACE(`pgr`.`projectCode`, "-his", "") 
-		    LEFT JOIN `pm_project_contract` pc 
-		        ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
-		    LEFT JOIN `pm_order_data_from_sap` pods 
-		        ON pods.`contractNo` = pc.`contractNo` 
-		        AND pods.`orderType` = 0
-		    LEFT JOIN `pm_project_property_from_sms` ppfs 
+            ph.projectId, ph.`projectCode`, ph.`projectName`, ph.projectType, pods.`orderExecNumber`, pods2.`contractNo`, pods2.`salesType` 
+        FROM
+            soleAgentProjectTable sph 
+            LEFT JOIN `pm_project_header` ph 
+                ON sph.projectId = ph.`projectId` 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON ph.`projectCode` = REPLACE(`pgr`.`projectCode`, "-his", "") 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
+            LEFT JOIN `pm_order_data_from_sap` pods 
+                ON pods.`contractNo` = pc.`contractNo` 
+                AND pods.`orderType` = 0
+            LEFT JOIN `pm_project_property_from_sms` ppfs 
                 ON ppfs.`projectCode` = pgr.`smsProjectCode`  
-		    LEFT JOIN `pm_order_data_from_sap` pods2 
-		        ON (
-		            (
-		                pods.`contractNo` IS NOT NULL 
-		                AND (pods.`orderExecNumber` = pods2.`orderExecNumber` 
+            LEFT JOIN `pm_order_data_from_sap` pods2 
+                ON (
+                    (
+                        pods.`contractNo` IS NOT NULL 
+                        AND (pods.`orderExecNumber` = pods2.`orderExecNumber` 
                               OR pods2.`orderExecNumber` = ppfs.`orderExecNumber`)
-		                AND pods2.`contractNo` != pods.`contractNo` 
-		                AND pods2.`orderCreateTime` <= pods.`orderCreateTime`
-		            )
-		        ) 
-		        AND pods2.`orderType` = 0 
-		WHERE (
-		        (
-		            pods2.`contractNo` IS NOT NULL 
-	 ]]>
-		            <!-- AND EXISTS 
-		            (SELECT 
-		                1 
-		            FROM
-		                `pm_order_line_from_sap` ol 
-		            WHERE ol.`orderNumber` = pods2.`orderNumber` 
-		                AND pods2.`orderType` = ol.`lineType`)  -->
+                        AND pods2.`contractNo` != pods.`contractNo` 
+                        AND pods2.`orderCreateTime` <= pods.`orderCreateTime`
+                    )
+                ) 
+                AND pods2.`orderType` = 0 
+        WHERE (
+                (
+                    pods2.`contractNo` IS NOT NULL 
+     ]]>
+                    <!-- AND EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        `pm_order_line_from_sap` ol 
+                    WHERE ol.`orderNumber` = pods2.`orderNumber` 
+                        AND pods2.`orderType` = ol.`lineType`)  -->
         <![CDATA[
-		            AND NOT EXISTS 
-		            (SELECT 
-		                1 
-		            FROM
-		                `pm_project_contract` `t1` 
-		                JOIN `pm_project_group_relationship` `t2` 
-		                    ON `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
-		                JOIN `pm_project_header` `t3` 
-	]]>
+                    AND NOT EXISTS 
+                    (SELECT 
+                        1 
+                    FROM
+                        `pm_project_contract` `t1` 
+                        JOIN `pm_project_group_relationship` `t2` 
+                            ON `t1`.`projectGroupCode` = `t2`.`projectGroupCode` 
+                        JOIN `pm_project_header` `t3` 
+    ]]>
                            ON (
 <!--                            `t2`.`projectCode` = `t3`.`projectCode` -->
 <!--                                 OR  -->
                                 `t3`.`projectCode` = REPLACE(`t2`.`projectCode`, "-his", "")
                             )
     <![CDATA[
-		                    AND `t3`.`effectiveFrom` <= NOW() 
-		                    AND (
-		                        `t3`.`effectiveTo` > NOW() 
-		                        OR ISNULL(`t3`.`effectiveTo`)
-		                    ) 
-		            WHERE `pods2`.`contractNo` = `t1`.`contractNo`)
-		        )
-		    )
+                            AND `t3`.`effectiveFrom` <= NOW() 
+                            AND (
+                                `t3`.`effectiveTo` > NOW() 
+                                OR ISNULL(`t3`.`effectiveTo`)
+                            ) 
+                    WHERE `pods2`.`contractNo` = `t1`.`contractNo`)
+                )
+            )
     ]]>
   </insert>
   
@@ -5948,21 +5799,21 @@
   
   <select id="querySoleAgentProject" resultClass="com.dp.plat.data.bean.Project">
     <!-- SELECT DISTINCT 
-	    ph.projectId, ph.projectCode, ph.projectName
-	FROM
-	    `pm_project_header` ph 
-	    LEFT JOIN `pm_project_property_from_sms` ppfs 
-	        ON ppfs.`projectCode` = LEFT(ph.`projectCode`, 15) 
-	    INNER JOIN 
-	        (SELECT DISTINCT 
-	            orderExecNumber 
-	        FROM
-	            `pm_order_data_from_sap` ps 
-	        WHERE ps.`orderType` = 0 
-	            AND ps.`salesType` = "14") t 
-	        ON ppfs.`orderExecNumber` = t.orderExecNumber 
-	WHERE ph.`effectiveTo` IS NULL -->
-	SELECT DISTINCT
+        ph.projectId, ph.projectCode, ph.projectName
+    FROM
+        `pm_project_header` ph 
+        LEFT JOIN `pm_project_property_from_sms` ppfs 
+            ON ppfs.`projectCode` = LEFT(ph.`projectCode`, 15) 
+        INNER JOIN 
+            (SELECT DISTINCT 
+                orderExecNumber 
+            FROM
+                `pm_order_data_from_sap` ps 
+            WHERE ps.`orderType` = 0 
+                AND ps.`salesType` = "14") t 
+            ON ppfs.`orderExecNumber` = t.orderExecNumber 
+    WHERE ph.`effectiveTo` IS NULL -->
+    SELECT DISTINCT
         sph.* 
     FROM
         soleAgentProjectTable sph 
@@ -5984,43 +5835,43 @@
   
   <update id="invalidSoleAgentProjectContract" parameterClass="map">
     UPDATE 
-	    pm_project_group_relationship pgr 
-	    LEFT JOIN `pm_project_contract` pc 
-	        ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
-	    LEFT JOIN `pm_project_header` ph 
-	        ON pgr.`projectCode` = ph.`projectCode` 
-	SET pgr.`projectCode` = CONCAT(pgr.`projectCode`, "-his"),
-	   pgr.updateTime = now(),
-	   pgr.updateBy = #updateBy#
-	WHERE ph.`projectId` = #projectId# 
-	    AND (
-	        NOT EXISTS 
-	        (SELECT 
-	            1 
-	        FROM
-	            `pm_order_data_from_sap` pods 
-	         <!--    LEFT JOIN `pm_order_line_from_sap` plds 
-	                ON pods.`orderNumber` = plds.`orderNumber` 
-	                AND pods.`orderType` = plds.`lineType` 
-	                AND pods.`compCode` = plds.`compCode`  -->
-	        WHERE pods.`contractNo` = pc.`contractNo` 
-	            AND pods.`orderType` = 0 
-	           <!--  AND plds.id IS NOT NULL -->
-	            ) 
-	        OR EXISTS 
-	        (SELECT 
-	            1 
-	        FROM
-	            `pm_order_data_from_sap` pods 
-	        WHERE pc.`contractNo` = pods.`contractNo` 
-	            AND pods.`orderType` = 0 
-	       <isNotEmpty prepend="AND" property="orderExecNumbers">
-	            pods.`orderExecNumber` IN 
-	            <iterate open="(" close=")" conjunction="," property="orderExecNumbers">
-	               #orderExecNumbers[]#
-	            </iterate>
-	       </isNotEmpty>
-	       <isNotEmpty prepend="AND" property="contractNos">
+        pm_project_group_relationship pgr 
+        LEFT JOIN `pm_project_contract` pc 
+            ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+        LEFT JOIN `pm_project_header` ph 
+            ON pgr.`projectCode` = ph.`projectCode` 
+    SET pgr.`projectCode` = CONCAT(pgr.`projectCode`, "-his"),
+       pgr.updateTime = now(),
+       pgr.updateBy = #updateBy#
+    WHERE ph.`projectId` = #projectId# 
+        AND (
+            NOT EXISTS 
+            (SELECT 
+                1 
+            FROM
+                `pm_order_data_from_sap` pods 
+             <!--    LEFT JOIN `pm_order_line_from_sap` plds 
+                    ON pods.`orderNumber` = plds.`orderNumber` 
+                    AND pods.`orderType` = plds.`lineType` 
+                    AND pods.`compCode` = plds.`compCode`  -->
+            WHERE pods.`contractNo` = pc.`contractNo` 
+                AND pods.`orderType` = 0 
+               <!--  AND plds.id IS NOT NULL -->
+                ) 
+            OR EXISTS 
+            (SELECT 
+                1 
+            FROM
+                `pm_order_data_from_sap` pods 
+            WHERE pc.`contractNo` = pods.`contractNo` 
+                AND pods.`orderType` = 0 
+           <isNotEmpty prepend="AND" property="orderExecNumbers">
+                pods.`orderExecNumber` IN 
+                <iterate open="(" close=")" conjunction="," property="orderExecNumbers">
+                   #orderExecNumbers[]#
+                </iterate>
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="contractNos">
                 pods.`contractNo` NOT IN 
                 <iterate open="(" close=")" conjunction="," property="contractNos">
                    #contractNos[]#
@@ -6033,86 +5884,86 @@
                 </iterate>
            </isNotEmpty>
            )
-	    )
+        )
   </update>
   
   <update id="updateProjectSalesType" parameterClass="map">
     UPDATE 
-	    pm_project_header ph 
-	<isNotEmpty property="salesType">
-	   SET ph.`salesType` = #salesType#
-	</isNotEmpty>
-	<isEmpty property="salesType">
-	    LEFT JOIN 
-	        (SELECT 
-	            ph.`projectId`, ph.`projectCode`, ph.`projectName`, IFNULL(IFNULL(MAX(pods.`salesType`), ph.`salesType`), #defaultSalesType#) salesType 
-	        FROM
-	            `pm_project_header` ph 
-	            LEFT JOIN `pm_project_group_relationship` pgr 
-	                ON ph.`projectCode` = pgr.`projectCode` 
-	            LEFT JOIN `pm_project_contract` pc 
-	                ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
-	            LEFT JOIN `pm_order_data_from_sap` pods 
-	                ON pc.`contractNo` = pods.`contractNo` 
-	                AND pods.`orderType` = 0 
-	        WHERE ph.`projectId` = #projectId#
-	        GROUP BY ph.`projectId`) t 
-	        ON ph.`projectId` = t.projectId 
-	   SET ph.`salesType` = IFNULL(t.salesType, #defaultSalesType#)
-	</isEmpty>
-	WHERE ph.`projectId` = #projectId#
+        pm_project_header ph 
+    <isNotEmpty property="salesType">
+       SET ph.`salesType` = #salesType#
+    </isNotEmpty>
+    <isEmpty property="salesType">
+        LEFT JOIN 
+            (SELECT 
+                ph.`projectId`, ph.`projectCode`, ph.`projectName`, IFNULL(IFNULL(MAX(pods.`salesType`), ph.`salesType`), #defaultSalesType#) salesType 
+            FROM
+                `pm_project_header` ph 
+                LEFT JOIN `pm_project_group_relationship` pgr 
+                    ON ph.`projectCode` = pgr.`projectCode` 
+                LEFT JOIN `pm_project_contract` pc 
+                    ON pgr.`projectGroupCode` = pc.`projectGroupCode` 
+                LEFT JOIN `pm_order_data_from_sap` pods 
+                    ON pc.`contractNo` = pods.`contractNo` 
+                    AND pods.`orderType` = 0 
+            WHERE ph.`projectId` = #projectId#
+            GROUP BY ph.`projectId`) t 
+            ON ph.`projectId` = t.projectId 
+       SET ph.`salesType` = IFNULL(t.salesType, #defaultSalesType#)
+    </isEmpty>
+    WHERE ph.`projectId` = #projectId#
   </update>
   
-  	<resultMap class="java.util.HashMap" id="MarketWithSub" groupBy="marketCode">
-	  <result column="marketCode" jdbcType="VARCHAR" property="marketCode" />
-	  <result column="marketName" jdbcType="VARCHAR" property="marketName" />
-	  <result property="children" javaType="java.util.ArrayList" column="marketCode" resultMap="business.SystemWithSub"/>
-	</resultMap>
-	<resultMap class="java.util.HashMap" id="SystemWithSub" groupBy="systemCode">
-	  <result column="systemCode" jdbcType="VARCHAR" property="systemCode" />
-	  <result column="systemName" jdbcType="VARCHAR" property="systemName" />
-	  <result property="children" javaType="java.util.ArrayList" column="systemCode" resultMap="business.ExpendWithSub"/>
-	</resultMap>
-	<resultMap class="java.util.HashMap" id="ExpendWithSub" groupBy="expendCode">
-	  <result column="expendCode" jdbcType="VARCHAR" property="expendCode" />
-	  <result column="expendName" jdbcType="VARCHAR" property="expendName" />
-	  <result property="children" javaType="java.util.ArrayList" column="expendCode" resultMap="business.IndustryWithSub"/>
-	</resultMap>
-	<resultMap class="java.util.HashMap" id="IndustryWithSub">
-  	 	<result column="industryCode" jdbcType="VARCHAR" property="industryCode" />
-	  	<result column="industryName" jdbcType="VARCHAR" property="industryName" />
-  	</resultMap>
-	<select id="queryMarketRelations" resultMap="MarketWithSub" >
-		<![CDATA[
-			select * from pm_project_market_relations_from_sms
-		]]>
-	</select>
+    <resultMap class="java.util.HashMap" id="MarketWithSub" groupBy="marketCode">
+      <result column="marketCode" jdbcType="VARCHAR" property="marketCode" />
+      <result column="marketName" jdbcType="VARCHAR" property="marketName" />
+      <result property="children" javaType="java.util.ArrayList" column="marketCode" resultMap="business.SystemWithSub"/>
+    </resultMap>
+    <resultMap class="java.util.HashMap" id="SystemWithSub" groupBy="systemCode">
+      <result column="systemCode" jdbcType="VARCHAR" property="systemCode" />
+      <result column="systemName" jdbcType="VARCHAR" property="systemName" />
+      <result property="children" javaType="java.util.ArrayList" column="systemCode" resultMap="business.ExpendWithSub"/>
+    </resultMap>
+    <resultMap class="java.util.HashMap" id="ExpendWithSub" groupBy="expendCode">
+      <result column="expendCode" jdbcType="VARCHAR" property="expendCode" />
+      <result column="expendName" jdbcType="VARCHAR" property="expendName" />
+      <result property="children" javaType="java.util.ArrayList" column="expendCode" resultMap="business.IndustryWithSub"/>
+    </resultMap>
+    <resultMap class="java.util.HashMap" id="IndustryWithSub">
+        <result column="industryCode" jdbcType="VARCHAR" property="industryCode" />
+        <result column="industryName" jdbcType="VARCHAR" property="industryName" />
+    </resultMap>
+    <select id="queryMarketRelations" resultMap="MarketWithSub" >
+        <![CDATA[
+            select * from pm_project_market_relations_from_sms
+        ]]>
+    </select>
   
     <!-- 查询合同验收交付件信息 -->
-	<select id="selectContractAcceptanceDeliveryInfo" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
-	    SELECT a.contractNo, bd.basicDataId AS smsDeliverType, bd.`basicDataName` AS deliverablesReq
-	        , MAX(IF(bd.`basicDataId` = d.basicDataName, uploadTime, NULL)) AS actualDate
-	        , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverableName, NULL)) AS deliverableNames
-	        , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverablePath, NULL)) AS deliverablePaths
-	        , fc.account AS dataAreaId
-	    FROM `pm_basic_deliver_detail` `a`
-	        LEFT JOIN `pm_basic_prj_deliver` `b` ON `a`.`deliverId` = `b`.`id`
-	        LEFT JOIN `fnd_basic_data` `c`
-	        ON `b`.`dataTypeCodeSon` = `c`.`dataTypeCode`
-	            AND `b`.`basicDataIdSon` = `c`.`basicDataId`
-	        JOIN `fnd_basic_data` `d`
-	        ON `d`.`dataTypeCode` = '19'
-	            AND `b`.`basicDataIdSon` = `d`.`basicDataId`
-	        LEFT JOIN fnd_basic_data bd ON bd.dataTypeCode = 'd365DeliverablesReq'
-	        LEFT JOIN pm_order_data_from_sap pod ON pod.contractNo = a.contractNo
-	        LEFT JOIN fnd_company fc ON fc.code = pod.compCode
-	    WHERE `a`.`contractNo` IS NOT NULL
-	        AND a.`effectiveTo` IS NULL
-	        AND a.contractNo IN (
-	            SELECT DISTINCT contractNo
-	            FROM `pm_basic_deliver_detail`
-	            WHERE #dateDiff# >= DATEDIFF(NOW(), IFNULL(effectiveTo, uploadTime))
-	        )
-	    GROUP BY contractNo, smsDeliverType
-	</select>
+    <select id="selectContractAcceptanceDeliveryInfo" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+        SELECT a.contractNo, bd.basicDataId AS smsDeliverType, bd.`basicDataName` AS deliverablesReq
+            , MAX(IF(bd.`basicDataId` = d.basicDataName, uploadTime, NULL)) AS actualDate
+            , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverableName, NULL)) AS deliverableNames
+            , GROUP_CONCAT(IF(bd.`basicDataId` = d.basicDataName, deliverablePath, NULL)) AS deliverablePaths
+            , fc.account AS dataAreaId
+        FROM `pm_basic_deliver_detail` `a`
+            LEFT JOIN `pm_basic_prj_deliver` `b` ON `a`.`deliverId` = `b`.`id`
+            LEFT JOIN `fnd_basic_data` `c`
+            ON `b`.`dataTypeCodeSon` = `c`.`dataTypeCode`
+                AND `b`.`basicDataIdSon` = `c`.`basicDataId`
+            JOIN `fnd_basic_data` `d`
+            ON `d`.`dataTypeCode` = '19'
+                AND `b`.`basicDataIdSon` = `d`.`basicDataId`
+            LEFT JOIN fnd_basic_data bd ON bd.dataTypeCode = 'd365DeliverablesReq'
+            LEFT JOIN pm_order_data_from_sap pod ON pod.contractNo = a.contractNo
+            LEFT JOIN fnd_company fc ON fc.code = pod.compCode
+        WHERE `a`.`contractNo` IS NOT NULL
+            AND a.`effectiveTo` IS NULL
+            AND a.contractNo IN (
+                SELECT DISTINCT contractNo
+                FROM `pm_basic_deliver_detail`
+                WHERE #dateDiff# >= DATEDIFF(NOW(), IFNULL(effectiveTo, uploadTime))
+            )
+        GROUP BY contractNo, smsDeliverType
+    </select>
 </sqlMap>

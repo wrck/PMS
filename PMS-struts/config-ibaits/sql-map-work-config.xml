@@ -85,7 +85,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			AND ( t2.`eventPlanHappenDateENG` IS NULL OR ( DATEDIFF( t2.`eventPlanHappenDateENG` , NOW()) < 7))
 			AND t1.`projectPlanState` != 48 AND t6.memberCode IS NOT NULL
 		]]>
-		<isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t0.projectName like '%$taskQueryParam.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t0.projectName like CONCAT('%', #taskQueryParam.projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="taskQueryParam.officeCode"><![CDATA[ t0.column001 = #taskQueryParam.officeCode#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="taskQueryParam.programManager"><![CDATA[ t6.memberCode = #taskQueryParam.programManager#]]> </isNotEmpty>
 		<isNotEmpty prepend="and" property="taskQueryParam.serviceManager"><![CDATA[ (t7.memberCode = #taskQueryParam.serviceManager# or t6.memberCode = #taskQueryParam.serviceManager# )]]></isNotEmpty>
@@ -111,7 +111,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			AND ( t2.`eventPlanHappenDateENG` IS NULL OR ( DATEDIFF( t2.`eventPlanHappenDateENG` , NOW()) < 7))
 			AND t1.`projectPlanState` != 48 AND t6.memberCode IS NOT NULL
 		]]>
-		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t0.projectName like '%$projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t0.projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ t0.column001 = #officeCode#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="programManager"><![CDATA[ t6.memberCode = #programManager#]]> </isNotEmpty>
 		<isNotEmpty prepend="and" property="serviceManager"><![CDATA[ (t7.memberCode = #serviceManager# or t6.memberCode = #serviceManager#)]]></isNotEmpty>
@@ -126,7 +126,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			LEFT JOIN pm_project_member t4 ON t2.`projectId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
 			LEFT JOIN fnd_department t5 ON t2.`column001` = t5.`departmentNum` AND t5.`status` = 1 where 1 = 1 and t2.projectId is not null
 		]]>
-		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t2.projectName like '%$projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t2.projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ t2.column001 = #officeCode#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="programManager"><![CDATA[ t4.memberCode = #programManager#]]> </isNotEmpty>
 		<isNotEmpty prepend="and" property="serviceManager"><![CDATA[ (t3.memberCode = #serviceManager# or t4.memberCode = #serviceManager#)]]></isNotEmpty>
@@ -151,7 +151,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			LEFT JOIN fnd_department t5 ON t2.`column001` = t5.`departmentNum` AND t5.`status` = 1
 			WHERE 1 = 1 and t2.projectId is not null
 		]]>
-		<isNotEmpty prepend="and" property="notifyQueryParam.projectName"><![CDATA[ t2.projectName like '%$notifyQueryParam.projectName$%']]></isNotEmpty>
+		<isNotEmpty prepend="and" property="notifyQueryParam.projectName"><![CDATA[ t2.projectName like CONCAT('%', #notifyQueryParam.projectName#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="notifyQueryParam.officeCode"><![CDATA[ t2.column001 = #notifyQueryParam.officeCode#]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="notifyQueryParam.programManager"><![CDATA[ t4.memberCode = #notifyQueryParam.programManager#]]> </isNotEmpty>
 		<isNotEmpty prepend="and" property="notifyQueryParam.serviceManager"><![CDATA[( t3.memberCode = #notifyQueryParam.serviceManager# or t4.memberCode = #notifyQueryParam.serviceManager# )]]></isNotEmpty>

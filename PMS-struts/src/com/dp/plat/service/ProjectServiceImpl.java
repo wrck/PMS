@@ -154,6 +154,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			}
 			project.setIsback(MessageUtil.PROJECT_CREATE_STATE30);
 		}
+		project.setProjectCode(this.queryProjectCode(project));
 		Integer pid = projectDao.insertProject(project);// 插入到表pm_project_header
 														// - 项目表
 		
@@ -453,7 +454,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 				params.put("oldNextAcceptPerson", project.getOldServiceManagerCode());
 				params.put("nextAcceptPerson", project.getServiceManagerCode());
 				params.put("nextAcceptPersonName", project.getServiceManagerCodeforjson().split("-")[1]);
-				params.put("projectIds", "'" + project.getProjectId() + "'");
+				params.put("projectIds", project.getProjectId() + "");
 				pmClosedLoopService.updateEvaluationHeaderNextAcceptPerson(params);
 				taskService.setAssignee(taskId, project.getServiceManagerCode());
 			}
@@ -616,6 +617,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public Project queryProjectById(int projectId) {
 		return projectDao.queryProjectById(projectId);
 	}
+	
+	@Override
+    public Project queryProjectByPowerId(Project project) {
+        return projectDao.queryProjectByPowerId(project);
+    }
 	
     @Override
     public Project queryProjectSimplifyByProjectId(Integer projectId) {
@@ -2490,7 +2496,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
 	@Override
 	public String queryProjectCode(Project project) {
-		String projectCode = project.getProjectCode();
+		String projectCode = StringUtils.defaultIfBlank(project.getSmsProjectCode(), project.getProjectCode());
+		projectCode = StringUtils.split(projectCode, "-")[0];
         project.setSmsProjectCode(projectCode);
 		int lastCode = projectDao.queryProjectGroupSize(projectCode);
 		return dealWith(lastCode, projectCode);

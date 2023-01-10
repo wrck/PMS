@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="dp" uri="/dp"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
 <head>
@@ -250,6 +251,27 @@ function checkallsub(){
 		$("#submitButton").removeAttr("disabled");
 	}
 };
+function restPassword() {
+	$("#restPasswordButton").attr("disabled", true);
+	var userId = $("#userId").val();
+	$.ajax({
+        url:"resetPassword.action",
+        type:"post",
+        dataType:"json",
+        data:{'user.id':userId},
+        success:function(data){
+            var result = data.result;
+            if(result){
+            	alert("密码重置成功，请查收邮箱！");
+            }else{
+                alert("密码重置失败！");
+            }
+        },
+        complete:function() {
+        	$("#restPasswordButton").removeAttr("disabled");
+        }
+    })
+}
 $("#submitButton").click(function(){
 	checkallsub();
 });
@@ -379,11 +401,16 @@ $("#submitButton").click(function(){
      <div class="form-group">
         <label  class="col-sm-1 control-label">&nbsp;</label>
 	    <div class="col-sm-1">
-	      <button type="button" id="submitButton" onclick="checkallsub()" class="btn btn-default  btn-block btn-sm form-control"><s:text name='sys.confirm' /></button>
+	       <button type="button" id="submitButton" onclick="checkallsub()" class="btn btn-default  btn-block btn-sm form-control"><s:text name='sys.confirm' /></button>
 	    </div>
-	     <div class="col-sm-1">
-	      <button type="button" onclick="javascript:history.go(-1)"  class="btn btn-default  btn-block btn-sm form-control"><s:text name='sys.back' /></button>
+	    <div class="col-sm-1">
+	       <button type="button" onclick="javascript:history.go(-1)"  class="btn btn-default  btn-block btn-sm form-control"><s:text name='sys.back' /></button>
 	    </div>
+        <c:if test="${currentDisplayUser.isHasAnyRole(1,10,13) && !currentIsCas}">
+        <div class="col-sm-1">
+            <button type="button" id="restPasswordButton" onclick="restPassword()" class="btn btn-danger btn-block btn-sm form-control">重置密码</button>
+        </div>
+        </c:if>
     </div>
 	
 </s:form>

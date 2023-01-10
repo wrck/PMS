@@ -8,9 +8,11 @@
 <head>
 </head>
 <body>
-<div style="text-align: right;">
+    <div style="text-align: right;">
+    <s:if test="%{user.isHasAnyRole(1,11,12,13)}">
 		<a onclick="softversion(this)" class="btn btn-default" href="javascript:void(0)">编辑</a>
 		<a id="updateSoftVersion" class="btn btn-default" href="javascript:void(0)" onclick="updateSoftVersion()" style="display: none">保存</a>
+    </s:if>
 		<a onclick="checkhistsoftversion()" class="btn btn-default" href="javascript:void(0)">查看历史版本</a>
 		<!-- <a onclick="checkShipmentInfo1()" class="btn btn-default" href="javascript:void(0)">查看发货序列号</a> -->
 	</div>	

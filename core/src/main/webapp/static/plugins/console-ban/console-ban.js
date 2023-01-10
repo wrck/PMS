@@ -2,9 +2,9 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.ConsoleBan = {}));
-}(this, (function (exports) { 'use strict';
+})(this, (function (exports) { 'use strict';
 
-    /*! *****************************************************************************
+    /******************************************************************************
     Copyright (c) Microsoft Corporation.
 
     Permission to use, copy, modify, and/or distribute this software for any
@@ -37,25 +37,128 @@
     };
 
     /**
+     * not use enum. it will increase the output size
+     */
+    var EBrowser = {
+      Chrome: 0,
+      Firefox: 1,
+      Safari: 2
+    };
+
+    /**
      * 处理 URL 补全
      * @example '' -> /
      * @example path -> /path
      * @example /path -> /path
      * @param url
      */
-    function completion(url) {
-      if (!url) return '/';
-      return url[0] !== '/' ? "/" + url : url;
-    }
+
+    var completion = function completion(url) {
+      if (!url) {
+        return '/';
+      }
+
+      return url[0] !== '/' ? "/".concat(url) : url;
+    };
     /**
      * 判断浏览器
      */
 
-    function isUserAgentContains(text) {
+    var isUserAgentContains = function isUserAgentContains(text) {
       return ~navigator.userAgent.toLowerCase().indexOf(text);
-    }
+    };
+    /**
+     * 判断字符串
+     */
 
-    var RETURN_MESSAGE = '[WARNING] fire in the hole';
+    var isString = function isString(v) {
+      return typeof v === 'string';
+    };
+    /**
+     * 跳转策略：改变 location
+     */
+
+    var locationChange = function locationChange(target, env) {
+      // Safari 15 has bfcache. prevent click history back button
+      if (env === EBrowser.Safari) {
+        location.replace(target);
+        return;
+      }
+
+      location.href = target;
+    };
+
+    var counts = 0;
+    var triggered = 0;
+    var getChromeRerenderTestFunc = function getChromeRerenderTestFunc(fire) {
+      var mark = 0;
+      var seq = 1 << counts++;
+      return function () {
+        if (triggered && !(triggered & seq)) {
+          return;
+        }
+
+        mark++;
+
+        if (mark === 2) {
+          triggered |= seq;
+          fire();
+          mark = 1;
+        }
+      };
+    };
+    /**
+     * @refer https://stackoverflow.com/a/71794156
+     *
+     * Other alternatives
+     * https://github.com/david-fong/detect-devtools-via-debugger-heartstop
+     */
+
+    var errorDetector = function errorDetector(trigger) {
+      var e = new Error();
+      Object.defineProperty(e, 'message', {
+        get: function get() {
+          trigger();
+        }
+      });
+      console.log(e);
+    };
+
+    var getChromeTest = function getChromeTest(fire) {
+      var re = /./;
+      re.toString = getChromeRerenderTestFunc(fire);
+
+      var func = function func() {
+        return re;
+      };
+
+      func.toString = getChromeRerenderTestFunc(fire);
+      var date = new Date();
+      date.toString = getChromeRerenderTestFunc(fire);
+      console.log('%c', // < 92
+      func, // 92
+      func(), // >= 93, <= 101
+      date); // >= 102
+
+      var errorFire = getChromeRerenderTestFunc(fire);
+      errorDetector(errorFire);
+    };
+
+    var getFirefoxTest = function getFirefoxTest(fire) {
+      var re = /./;
+      re.toString = fire;
+      console.log(re);
+    };
+
+    var getSafariTest = function getSafariTest(fire) {
+      var img = new Image();
+      Object.defineProperty(img, 'id', {
+        get: function get() {
+          fire(EBrowser.Safari);
+        }
+      });
+      console.log(img);
+    };
 
     var ConsoleBan =
     /** @class */
@@ -75,8 +178,6 @@
         this._callback = callback;
         this._redirect = redirect;
         this._write = write;
-        this._evalCounts = 0;
-        this._isOpenedEver = false;
       }
 
       ConsoleBan.prototype.clear = function () {
@@ -92,106 +193,79 @@
         }
       };
 
-      ConsoleBan.prototype.redirect = function () {
-        if (!this._redirect) {
+      ConsoleBan.prototype.redirect = function (env) {
+        var target = this._redirect;
+
+        if (!target) {
           return;
-        } // 绝对地址
+        } // absolute path
 
 
-        if (!!~this._redirect.indexOf('http')) {
-          location.href !== this._redirect ? location.href = this._redirect : null;
+        if (target.indexOf('http') === 0) {
+          location.href !== target && locationChange(target, env);
           return;
-        } // 相对地址
+        } // relative path
 
 
         var path = location.pathname + location.search;
 
-        if (completion(this._redirect) === path) {
+        if (completion(target) === path) {
           return;
         }
 
-        location.href = this._redirect;
+        locationChange(target, env);
       };
 
       ConsoleBan.prototype.callback = function () {
-        var _this = this;
-
         if (!this._callback && !this._redirect && !this._write) {
           return;
         }
 
         if (!window) {
           return;
-        } // @ts-ignore
+        }
 
-
+        var fireCallback = this.fire.bind(this);
         var isChrome = window.chrome || isUserAgentContains('chrome');
         var isFirefox = isUserAgentContains('firefox');
 
         if (isChrome) {
-          var isOpen_1 = function isOpen_1() {
-            return _this._evalCounts === (_this._isOpenedEver ? 1 : 2);
-          };
-
-          var watchElement = new Function();
-
-          watchElement.toString = function () {
-            _this._evalCounts++;
-
-            if (isOpen_1()) {
-              _this._isOpenedEver = true;
-              _this._evalCounts = 0;
-
-              _this.fire();
-            }
-
-            return RETURN_MESSAGE;
-          };
-
-          console.log('%c', watchElement);
+          getChromeTest(fireCallback);
           return;
         }
 
         if (isFirefox) {
-          var re = /./;
-
-          re.toString = function () {
-            _this.fire();
-
-            return RETURN_MESSAGE;
-          };
-
-          console.log(re);
+          getFirefoxTest(fireCallback);
           return;
-        }
+        } // other like safari
 
-        var img = new Image();
-        Object.defineProperty(img, 'id', {
-          get: function get() {
-            _this.fire();
-          }
-        });
-        console.log(img);
+
+        getSafariTest(fireCallback);
       };
 
       ConsoleBan.prototype.write = function () {
-        if (this._write) {
-          document.body.innerHTML = typeof this._write === 'string' ? this._write : this._write.innerHTML;
+        var content = this._write;
+
+        if (content) {
+          document.body.innerHTML = isString(content) ? content : content.innerHTML;
         }
       };
 
-      ConsoleBan.prototype.fire = function () {
+      ConsoleBan.prototype.fire = function (env) {
+        // first callback
         if (this._callback) {
           this._callback.call(null);
 
           return;
-        }
+        } // check redirect
 
-        this.redirect();
+
+        this.redirect(env);
 
         if (this._redirect) {
           return;
-        }
+        } // finally write html
+
 
         this.write();
       };
@@ -208,14 +282,13 @@
       return ConsoleBan;
     }();
 
-    function init(option) {
+    var init = function init(option) {
       var instance = new ConsoleBan(option);
       instance.ban();
-    }
+    };
 
-    exports.default = init;
     exports.init = init;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));

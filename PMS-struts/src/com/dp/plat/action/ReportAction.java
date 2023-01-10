@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +18,14 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
 import com.alibaba.fastjson.JSON;
+import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.QualityParam;
@@ -85,6 +90,18 @@ public class ReportAction extends BaseAction implements Preparable{
 			queryParam.setStartTime(DateUtil.getFirstDay());
 			queryParam.setQuarterStartTime(DateUtil.getQuarterFirstDay(new Date()));
 		}
+		
+		UserContext userContext = UserContext.getUserContext();
+		// 权限范围，非管理员重定向至项目状态统计页面
+        if (!userContext.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER,
+                MessageUtil.ROLE_ENGINEEMANAGER_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF,
+                MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_CALLBACKPER)) {
+            HttpServletRequest request = getServletRequest();
+            ActionMapping actionMapping = (ActionMapping) request.getAttribute("struts.actionMapping");
+            if (!"report_projectSummaryStatus".equals(actionMapping.getName())) {
+                getServletResponse().sendRedirect("./report_projectSummaryStatus.action");
+            }
+        }
 	}
 
 	/**
@@ -516,6 +533,7 @@ public class ReportAction extends BaseAction implements Preparable{
 	}
 	
 	public String projectSummaryStatus() {
+	    UserContext userContext = UserContext.getUserContext();
 		boolean isSub = getServletRequest().getRequestURI().contains("/sub/");
 		// 选项卡
 		navTabList = basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_NAV_DATA_TAB);
@@ -529,6 +547,21 @@ public class ReportAction extends BaseAction implements Preparable{
 		queryParamMap.put("projectState", "30,31,32");
 		// 已发货项目
 		queryParamMap.put("shipmentState", "-1");
+		
+		// 权限范围
+		String totalSummaryTitle = "全国";
+        if (!userContext.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER,
+                MessageUtil.ROLE_ENGINEEMANAGER_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF,
+                MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_CALLBACKPER)) {
+            totalSummaryTitle = "总计";
+            queryParamMap.put("areaPowers", StringUtils.split(userContext.getUser().getAreapower(), ","));
+            for (Iterator<BasicDataBean> iterator = navTabList.iterator(); iterator.hasNext();) {
+                BasicDataBean navTab = (BasicDataBean) iterator.next();
+                if (!navTab.getBasicDataAttri1().contains("projectSummaryStatus")) {
+                    iterator.remove();
+                }
+            }
+        }
 		
 		List<Map<String, Object>> list = reportService.queryProjectSummaryStatus(queryParamMap);
 		// 明细信息，这直接返回列表
@@ -564,7 +597,7 @@ public class ReportAction extends BaseAction implements Preparable{
 			String summaryStr = basicDataService.querySysArg("pm.report.project.summary.status");
 			List<LinkedHashMap> summaryOptions = JSON.parseArray(summaryStr, LinkedHashMap.class);
 			Map<String, Object> summary = new LinkedHashMap<String, Object>();
-			Map<String, Object> totalSummary = (Map<String, Object>) summary.getOrDefault("全国", new LinkedHashMap<>());
+			Map<String, Object> totalSummary = (Map<String, Object>) summary.getOrDefault(totalSummaryTitle, new LinkedHashMap<>());
 			for (Map<String, Object> map : list) {
 				String column001 = (String) map.get("column001");
 				String officeName = (String) map.get("officeName");
@@ -584,7 +617,7 @@ public class ReportAction extends BaseAction implements Preparable{
 				}
 				summary.put(officeName, officeSummary);
 			}
-			summary.put("全国", totalSummary);
+			summary.put(totalSummaryTitle, totalSummary);
 //			System.out.println(JSON.toJSONString(summary));
 			
 			// 转化为List
@@ -722,6 +755,12 @@ public class ReportAction extends BaseAction implements Preparable{
 					Boolean isReverse =  (Boolean) condition.getOrDefault("isReverse", false);
 					Boolean result =  (Boolean) condition.getOrDefault("result", true);
 					
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcher = pattern.matcher(expressionV);
+					if (!result.equals(matcher.find())) {
+					    isMatch = false;
+					}
+					
 					// 如果没有解析查询参数，则进行解析，将regex解析成查询参数
 					if (!Boolean.TRUE.equals(isQueryParsed) ) {
 						String queryStr = "{'" + regex.replaceAll("=", "':'")
@@ -738,13 +777,8 @@ public class ReportAction extends BaseAction implements Preparable{
 						if (StringUtils.isNotBlank(queryResultName)) {
 							query.put(queryResultName, isReverse ^ result);
 						}
-					}
-					
-					Pattern pattern = Pattern.compile(regex);
-					Matcher matcher = pattern.matcher(expressionV);
-					if (!result.equals(matcher.find())) {
-						isMatch = false;
-						break;
+					} else if (!isMatch) {// 已经解析查询参数，并且匹配结果不满足，可跳出条件判断
+					    break;
 					}
 				}
 				dimensionMap.put("isQueryParsed", true); 

@@ -5,10 +5,13 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
@@ -223,6 +226,25 @@ public class Util {
             sb.append(c).append(str).append(c);
         }
         return sb.toString();
+    }
+    
+    /**
+     * 将字符串按regex拆分成List，并去除replaces的字符
+     * @param str
+     * @param regex
+     * @param replaces
+     * @return
+     */
+    public static List<String> splitToList(String str, String regex, String... replaces) {
+        if (str == null) {
+            return new ArrayList<String>(0);
+        }
+        if (replaces != null && str != null) {
+            for (String replace : replaces) {
+                str = str.replaceAll(replace, "");
+            }
+        }
+        return new ArrayList<String>(Arrays.asList(str.split(regex)));
     }
 
     public static String methodToProperty(String name) {

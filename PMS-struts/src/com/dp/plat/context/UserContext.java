@@ -1,9 +1,12 @@
 package com.dp.plat.context;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.dp.plat.data.bean.User;
 import com.dp.plat.util.UserGroupUtil;
@@ -33,6 +36,7 @@ public class UserContext
 	private Map<Integer, Map<String, Integer>>roleMenuPowerMap;	//角色各菜单功能增删改权限
 	private boolean cas=false; //是否使用cas登录
 	private String url="";
+	private Map<String, Object> extData;
 	public String getOption()
 	{
 		return option;
@@ -98,15 +102,28 @@ public class UserContext
 	
 	public boolean isHasRole(int roleId){
 	    try {
-    		String role = ";" + roleId +  ";";
-    		String roleIds = getUser().getRoleids();
-    		if(roleIds.indexOf(role) != -1){
-    			return true;
-    		}
+    		return getUser().isHasRole(roleId);
 	    } catch(Exception e) {
 	    }
 		return false;
 	}
+	
+	public boolean isHasAnyRole(Object... roleIds){
+        try {
+            return getUser().isHasAnyRole(roleIds);
+        } catch(Exception e) {
+        }
+        return false;
+    }
+	
+	public boolean isHasAnyRole(String roleIds){
+	    try {
+            return getUser().isHasAnyRole(roleIds);
+        } catch(Exception e) {
+        }
+        return false;
+    }
+	
 	public void loginFail(String username, String ip, Long logintime)
 	{
 		this.login = false;
@@ -127,6 +144,7 @@ public class UserContext
         this.lastoptime = new Date().getTime();
         this.defaultPage = null;
         this.roleMenuPowerMap = null;
+        this.extData = null;
 		
 		UserContext.ListDel(this);
 	}
@@ -178,6 +196,35 @@ public class UserContext
 	public void setPermissionMap(Map<String, Integer> permissionMap) {
 		this.permissionMap = permissionMap;
 	}
+	
+	public boolean isHasPermission(String... names) {
+	    if (permissionMap == null || permissionMap.isEmpty()) {
+	        return false;
+	    }
+	    if (extData != null) {
+	        Map<String, List<String>> permissionNameMap = (Map<String, List<String>>) extData.getOrDefault("permissionNameMap", Collections.emptyMap());
+	        // 初始根据名称集合来，如果为空则false,如果非空为true。便于后面鉴权
+	        boolean isAllPermit = !permissionNameMap.isEmpty();
+	        for (String name : names) {
+	            name = StringUtils.trim(name);
+	            List<String> permissionKeys = permissionNameMap.getOrDefault(name, Collections.emptyList());
+	            boolean isPermit = false;
+	            for (String key : permissionKeys) {
+	                key = StringUtils.trim(key);
+	                isPermit = isPermit || Integer.valueOf(1).equals(permissionMap.get(key));
+	                if (isPermit) {
+	                    break;
+	                }
+                }
+	            isAllPermit = isAllPermit && isPermit;
+	            if (!isAllPermit) {
+	                break;
+	            }
+            }
+	        return isAllPermit;
+	    } 
+	    return false;
+	}
 
 	public void setDefaultPage(String defaultPage) {
 		this.defaultPage = defaultPage;
@@ -211,5 +258,12 @@ public class UserContext
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	
+
+    public Map<String, Object> getExtData() {
+        return extData;
+    }
+
+    public void setExtData(Map<String, Object> extData) {
+        this.extData = extData;
+    }
 }

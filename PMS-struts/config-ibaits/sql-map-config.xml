@@ -7,7 +7,11 @@ PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
 		lazyLoadingEnabled="true" errorTracingEnabled="true" maxRequests="32" 
 		maxSessions="10" maxTransactions="5" useStatementNamespaces="false" />
 	<typeAlias type="com.dp.plat.util.DateTimeTypeHandler" alias="DateTimeHandler" />
+	<typeAlias type="com.dp.plat.ibatis.cache.LRUCacheController" alias="CopyLRU" />
 	<typeHandler javaType="com.dp.plat.type.DateTime" callback="DateTimeHandler" jdbcType="int" />
+	
+	
+	
 	<typeHandler jdbcType="JSON" javaType="com.dp.plat.subcontract.entity.JsonCustomInfo" callback="com.dp.plat.ibatis.handler.FastjsonTypeHandler"/>
 	<typeHandler jdbcType="OTHER" javaType="com.dp.plat.subcontract.entity.JsonCustomInfo" callback="com.dp.plat.ibatis.handler.FastjsonTypeHandler"/>
 	<typeHandler javaType="com.dp.plat.subcontract.entity.JsonCustomInfo" callback="com.dp.plat.ibatis.handler.FastjsonTypeHandler"/>

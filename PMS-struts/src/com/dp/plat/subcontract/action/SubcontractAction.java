@@ -26,7 +26,6 @@ import org.apache.struts2.json.annotations.JSON;
 import org.springframework.beans.BeanUtils;
 
 import com.dp.plat.action.BaseAction;
-import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Company;
@@ -74,8 +73,6 @@ import com.dp.plat.util.PmClosedLoopMarkFactory;
 import com.dp.plat.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.Preparable;
-
-import cn.hutool.core.map.MapUtil;
 
 /**
  * @author w02611

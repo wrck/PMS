@@ -198,7 +198,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </select>
     <update id="update_project_member" parameterClass="string">
         <![CDATA[
-            UPDATE pm_project_member SET effectiveTo = NOW() WHERE memberCode LIKE '%$jobNo$' AND memberRole = '10' AND effectiveTo IS NULL
+            UPDATE pm_project_member SET effectiveTo = NOW() WHERE memberCode LIKE CONCAT('%', #jobNo#) AND memberRole = '10' AND effectiveTo IS NULL
         ]]>
     </update>
     <insert id="update_pm_salesmember_info">
@@ -296,9 +296,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <!-- 判断表中字段是否存在 -->
     <select id="describe_table_field" parameterClass="java.util.Map" resultClass="int">
         <![CDATA[
-            SELECT COUNT(*) FROM information_schema.columns WHERE table_schema= '$dbname$'
-                AND table_name= '$tablename$'
-                AND column_name= '$fieldname$' 
+            SELECT COUNT(*) FROM information_schema.columns WHERE table_schema= #dbname#
+                AND table_name= #tablename#
+                AND column_name= #fieldname#
         ]]>
     </select>
     <update id="add_field" parameterClass="java.util.Map">
@@ -449,10 +449,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             truncate table pm_project_product_line_real
         ]]>
     </delete>
-    <insert id="insert_pm_project_product_line_real">
+    <insert id="insert_pm_project_product_line_real_bak">
         <![CDATA[
-            INSERT INTO pm_project_product_line_real SELECT 
-             NULL AS id, pph.`projectId`,podfs.`contractNo`, vrp.*  
+            INSERT INTO pm_project_product_line_real 
+            SELECT 
+              NULL AS id, pph.`projectId`,podfs.`contractNo`, vrp.*  
             FROM
               pm_project_real_product_line_from_sms vrp 
               INNER JOIN pm_order_data_from_sap podfs 
@@ -464,6 +465,121 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
               INNER JOIN pm_project_header pph 
                 ON pph.`projectCode` = ppgr.`projectCode`
         ]]>
+    </insert>
+    
+    <insert id="insert_pm_project_product_line_real">
+        <!-- 创建临时表，增加不带版本和忽略X|J|Y类型的执行单号 -->
+        DROP TEMPORARY TABLE IF EXISTS temp_pm_project_real_product_line_from_sms;
+        CREATE TEMPORARY TABLE IF NOT EXISTS temp_pm_project_real_product_line_from_sms (
+		    KEY orderExecNumber(orderExecNumber),
+		    KEY orderExecSubNum(orderExecSubNum),
+            KEY orderExecSubNum2(orderExecSubNum2)
+		)
+		SELECT 
+		    rl.*
+		    , CAST(CONCAT(LEFT(rl.`orderExecNumber`, 12), SUBSTR(rl.`orderExecNumber`, 14)) AS CHAR(255)) AS orderExecSubNum
+		    , CAST(CONCAT(LEFT(rl.`orderExecNumber`, 12), SUBSTR(rl.`orderExecNumber`, 15)) AS CHAR(255)) AS orderExecSubNum2
+		FROM
+		    pm_project_real_product_line_from_sms rl
+		    INNER JOIN 
+	        (SELECT 
+	            projectCode, MAX(orderExecNumber) AS orderExecNumber, SUBSTR(`orderExecNumber`, 14, 1) AS orderType 
+	        FROM
+	            pm_project_real_product_line_from_sms 
+	        GROUP BY projectCode, orderType) mrl 
+	        ON rl.`projectCode` = mrl.projectCode 
+	        AND rl.`orderExecNumber` = mrl.orderExecNumber;
+		    
+		<!-- 创建临时表，增加不带版本的执行单号，并进行执行单和合同号的去重，避免重复关联 -->
+		DROP TEMPORARY TABLE IF EXISTS temp_pm_order_data_from_sap;
+		CREATE TEMPORARY TABLE IF NOT EXISTS temp_pm_order_data_from_sap(
+		    KEY contractNo(contractNo),
+		    KEY orderExecNumber(orderExecNumber),
+		    KEY orderExecSubNum(orderExecSubNum)
+		)
+		SELECT DISTINCT
+		    contractNo, orderExecNumber, CONCAT(
+		        LEFT(podfs.`orderExecNumber`, 12), SUBSTR(podfs.`orderExecNumber`, 14)
+		    ) AS orderExecSubNum 
+		FROM
+		    pm_order_data_from_sap podfs;
+		
+		<!-- 创建临时表，增加不带版本，并且忽略X|J|Y类型的执行单号，并进行执行单和合同号的去重，避免重复关联 -->
+	    DROP TEMPORARY TABLE IF EXISTS temp_pm_order_data_from_sap_ignoreType;
+		CREATE TEMPORARY TABLE IF NOT EXISTS temp_pm_order_data_from_sap_ignoreType (
+		    KEY contractNo (contractNo), 
+		    KEY orderExecSubNum (orderExecSubNum), 
+		    KEY orderExecSubNum2 (orderExecSubNum2)
+		) 
+		SELECT DISTINCT 
+		    contractNo, orderExecSubNum, CONCAT(
+		        LEFT(podfs.`orderExecNumber`, 12), SUBSTR(podfs.`orderExecNumber`, 15)
+		    ) AS orderExecSubNum2
+		FROM
+		    temp_pm_order_data_from_sap podfs ;
+    
+        <!-- 插入执行单号一一对应的记录 -->
+	    INSERT INTO pm_project_product_line_real 
+	    SELECT 
+		    NULL AS id, pph.`projectId`, podfs.`contractNo`, vrp.projectCode, vrp.orderExecNumber, vrp.productFirstName, vrp.productName, vrp.productSubCode, vrp.productSubModel, vrp.productSubName, vrp.num, vrp.memo 
+		FROM
+		    temp_pm_project_real_product_line_from_sms vrp 
+		    INNER JOIN temp_pm_order_data_from_sap podfs 
+		        ON vrp.orderExecNumber = podfs.orderExecNumber 
+		    INNER JOIN pm_project_contract ppc 
+		        ON ppc.`contractNo` = podfs.`contractNo` 
+		    INNER JOIN pm_project_group_relationship ppgr 
+		        ON ppc.`projectGroupCode` = ppgr.`projectGroupCode` 
+		    INNER JOIN pm_project_header pph 
+		        ON pph.`projectCode` = ppgr.`projectCode` 
+		;
+        
+        <!-- 再插入执行单号没法一一对应，忽略版本号相等的记录 -->
+        INSERT INTO pm_project_product_line_real 
+        SELECT 
+		    NULL AS id, pph.`projectId`, podfs.`contractNo`, vrp.projectCode, vrp.orderExecNumber, vrp.productFirstName, vrp.productName, vrp.productSubCode, vrp.productSubModel, vrp.productSubName, vrp.num, vrp.memo 
+		FROM
+		    temp_pm_project_real_product_line_from_sms vrp 
+		    INNER JOIN temp_pm_order_data_from_sap_ignoreType podfs 
+		        ON vrp.`orderExecSubNum` = podfs.orderExecSubNum 
+		    INNER JOIN pm_project_contract ppc 
+		        ON ppc.`contractNo` = podfs.`contractNo` 
+		    INNER JOIN pm_project_group_relationship ppgr 
+		        ON ppc.`projectGroupCode` = ppgr.`projectGroupCode` 
+		    INNER JOIN pm_project_header pph 
+		        ON pph.`projectCode` = ppgr.`projectCode` 
+		WHERE NOT EXISTS 
+		    (SELECT 
+		        1 
+		    FROM
+		        pm_order_data_from_sap po 
+		    WHERE vrp.orderExecNumber = po.orderExecNumber) ;
+		    
+		<!-- 再插入忽略版本号执行单号没法一一对应，忽略X|J|Y类型的记录 -->
+        INSERT INTO pm_project_product_line_real 
+        SELECT 
+		    NULL AS id, pph.`projectId`, podfs.`contractNo`, vrp.projectCode, vrp.orderExecNumber, vrp.productFirstName, vrp.productName, vrp.productSubCode, vrp.productSubModel, vrp.productSubName, vrp.num, vrp.memo 
+		FROM
+		    temp_pm_project_real_product_line_from_sms vrp 
+		    INNER JOIN (SELECT DISTINCT contractNo, orderExecSubNum2 FROM temp_pm_order_data_from_sap_ignoreType) podfs 
+		        ON vrp.`orderExecSubNum2` = podfs.orderExecSubNum2 
+		    INNER JOIN pm_project_contract ppc 
+		        ON ppc.`contractNo` = podfs.`contractNo` 
+		    INNER JOIN pm_project_group_relationship ppgr 
+		        ON ppc.`projectGroupCode` = ppgr.`projectGroupCode` 
+		    INNER JOIN pm_project_header pph 
+		        ON pph.`projectCode` = ppgr.`projectCode` 
+		WHERE NOT EXISTS 
+		    (SELECT 
+		        1 
+		    FROM
+		        temp_pm_order_data_from_sap po 
+		    WHERE vrp.orderExecSubNum = po.orderExecSubNum);
+		    
+		<!-- 删除临时表 -->
+		DROP TEMPORARY TABLE IF EXISTS temp_pm_project_real_product_line_from_sms;
+        DROP TEMPORARY TABLE IF EXISTS temp_pm_order_data_from_sap;
+        DROP TEMPORARY TABLE IF EXISTS temp_pm_order_data_from_sap_ignoreType;
     </insert>
     
     <select id="query_pm_self_service_project" resultClass="com.dp.plat.data.bean.Project">

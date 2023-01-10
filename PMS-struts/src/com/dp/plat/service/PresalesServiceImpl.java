@@ -90,8 +90,12 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
     @Override
     public Presales queryPresalesById(int presalesId) {
         Presales presales = presalesDao.queryPresalesById(presalesId);
-        if (!(UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ADMIN)
-                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PRESALES_STAFF) || getLoginName().equals(presales.getApplyBy()) || getLoginName().equals(presales.getProjectManager())
+        if (!(UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) 
+                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ADMIN)
+                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PRESALES_STAFF)
+                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PROJECT_VIEWER) 
+                || getLoginName().equals(presales.getApplyBy()) 
+                || getLoginName().equals(presales.getProjectManager())
                 || getLoginName().equals(presales.getServiceManager()))) {
             return null;
         }

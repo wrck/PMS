@@ -10,7 +10,10 @@
 <dp:base />
 <meta name="menu" content="SysMenuGroupUserManage">
 <meta name="module" content="<s:text name='module.plat' />">
-<meta name="group" content="<s:text name='sys.changepass' />">
+<meta name="group" content="<s:text name='sys.leftmenu.basemanage' />">
+<meta name="supfunction" content="<s:text name='sys.leftmenu.usermanage' />">
+<meta name="function" content="<s:text name='sys.changepass' />">
+
 <script type="text/javascript" src="js/jquery.js"></script>
 <script type="text/javascript" src="js/jquery-ui.js"></script>
 <script type="text/javascript" src="js/dp-ui.js"></script>
@@ -27,9 +30,9 @@ window.onload = function() {
 };
 
 function changelogin() {//11
-	$("#loginold").val(hex_md5($("#loginold").val()));
-	$("#loginnew").val(hex_md5($("#loginnew").val()));
-	$("#loginconform").val(hex_md5($("#loginconform").val()));
+	$("#loginold").val(hex_md5('${currentDisplayUser.username}'+$("#loginold").val().trim()));
+	$("#loginnew").val(hex_md5('${currentDisplayUser.username}'+$("#loginnew").val().trim()));
+	$("#loginconform").val(hex_md5('${currentDisplayUser.username}'+$("#loginconform").val().trim()));
 }
 
 
@@ -85,7 +88,7 @@ function checklogincon(item){
 
 function cl(){
 	if(lold == 1 && lnew == 1 && lcon == 1){
-		$("#logsub").attr("disabled", "");
+		$("#logsub").removeAttr("disabled");
 	} else {
 		$("#logsub").attr("disabled", "disabled");
 	}

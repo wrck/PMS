@@ -8,7 +8,7 @@
 <dp:base />
 <meta name="menu" content="SysLeftMenu">
 <meta name="module" content="<s:text name='module.plat' />">
-<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="group" content="<s:text name='sys.leftmenu.basemanage' />">
 <meta name="function" content="<s:text name='sys.subcontract.facilitator.management' />">
 <style type="text/css">
 #mainForm div lable{
