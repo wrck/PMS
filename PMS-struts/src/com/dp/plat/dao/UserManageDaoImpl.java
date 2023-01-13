@@ -75,7 +75,7 @@ public class UserManageDaoImpl extends BaseDao implements UserManageDao {
 		for (Iterator<Role> iterator = roleList.iterator(); iterator.hasNext();) {
 			Role role = (Role) iterator.next();
 			if (!UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ADMIN)
-					&& (role.getId() == MessageUtil.ROLE_ADMIN || role.getId() == MessageUtil.ROLE_PROB_ADMIN)) {
+					&& (role.getId() == MessageUtil.ROLE_ADMIN)) {
 				iterator.remove();
 			}
 		}
