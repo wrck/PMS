@@ -45,7 +45,7 @@ public class CsrfFilter implements Filter {
                 return;
             }
         }
-        String contextPath = httpRequest.getContextPath();
+        String contextPath = StringUtils.defaultIfBlank(httpRequest.getContextPath(), "/");
         
         if (isValid(httpRequest, httpResponse)) {
             String token = CSRFTokenManager.getTokenForSession(httpRequest.getSession());

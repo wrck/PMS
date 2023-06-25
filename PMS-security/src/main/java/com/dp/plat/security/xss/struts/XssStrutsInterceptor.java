@@ -3,6 +3,7 @@ package com.dp.plat.security.xss.struts;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,19 +15,20 @@ import com.dp.plat.security.util.JsoupUtil;
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
+import com.opensymphony.xwork2.util.TextParseUtil;
 
 public class XssStrutsInterceptor extends AbstractInterceptor {
 
     private static final long serialVersionUID = 8642204240305659814L;
 
     private String excludes;
-    private LinkedHashSet<String> excludeUrls;
+    private Set<String> excludeUrls;
     
     private String encodes;
-    private LinkedHashSet<String> encodeUrls;
+    private Set<String> encodeUrls;
     
     private String cleans;
-    private LinkedHashSet<String> cleanUrls;
+    private Set<String> cleanUrls;
     private String enable;
     private boolean enabled;
 
@@ -145,7 +147,7 @@ public class XssStrutsInterceptor extends AbstractInterceptor {
 //        return false;
     }
     
-    private boolean isMatch(String urlPath, LinkedHashSet<String> paths) {
+    private boolean isMatch(String urlPath, Set<String> paths) {
         if (!enabled) {
             return true;
         }
@@ -171,7 +173,7 @@ public class XssStrutsInterceptor extends AbstractInterceptor {
         this.excludes = excludes;
     }
 
-    public LinkedHashSet<String> getExcludeUrls() {
+    public Set<String> getExcludeUrls() {
         return excludeUrls;
     }
     
@@ -182,19 +184,20 @@ public class XssStrutsInterceptor extends AbstractInterceptor {
     public void setExcludeUrls(String excludeUrls) {
         // 将转义的接口添加到列表
         if (StringUtils.hasText(excludeUrls)) {
-            String[] urls = excludeUrls.split(",");
-            this.excludeUrls = new LinkedHashSet<String>();
-            for (String url : urls) {
-                this.excludeUrls.add(url);
-            }
+            this.excludeUrls = TextParseUtil.commaDelimitedStringToSet(excludeUrls);
+//            String[] urls = excludeUrls.split(",");
+//            this.excludeUrls = new LinkedHashSet<String>();
+//            for (String url : urls) {
+//                this.excludeUrls.add(url);
+//            }
         }
     }
 
-    public void setExcludeUrls(LinkedHashSet<String> excludeUrls) {
-        this.excludeUrls = excludeUrls;
-    }
+//    public void setExcludeUrls(Set<String> excludeUrls) {
+//        this.excludeUrls = excludeUrls;
+//    }
     
-    public LinkedHashSet<String> getEncodeUrls() {
+    public Set<String> getEncodeUrls() {
         return encodeUrls;
     }
     
@@ -205,19 +208,20 @@ public class XssStrutsInterceptor extends AbstractInterceptor {
     public void setEncodeUrls(String encodeUrls) {
         // 将转义的接口添加到列表
         if (StringUtils.hasText(encodeUrls)) {
-            String[] urls = encodeUrls.split(",");
-            this.encodeUrls = new LinkedHashSet<String>();
-            for (String url : urls) {
-                this.encodeUrls.add(url);
-            }
+            this.encodeUrls = TextParseUtil.commaDelimitedStringToSet(encodeUrls);
+//            String[] urls = encodeUrls.split(",");
+//            this.encodeUrls = new LinkedHashSet<String>();
+//            for (String url : urls) {
+//                this.encodeUrls.add(url);
+//            }
         }
     }
 
-    public void setEncodeUrls(LinkedHashSet<String> encodeUrls) {
-        this.encodeUrls = encodeUrls;
-    }
+//    public void setEncodeUrls(Set<String> encodeUrls) {
+//        this.encodeUrls = encodeUrls;
+//    }
 
-    public LinkedHashSet<String> getCleanUrls() {
+    public Set<String> getCleanUrls() {
         return cleanUrls;
     }
 
@@ -228,17 +232,18 @@ public class XssStrutsInterceptor extends AbstractInterceptor {
     public void setCleanUrls(String cleanUrls) {
         // 将转义的接口添加到列表
         if (StringUtils.hasText(cleanUrls)) {
-            String[] urls = cleanUrls.split(",");
-            this.cleanUrls = new LinkedHashSet<String>();
-            for (String url : urls) {
-                this.cleanUrls.add(url);
-            }
+            this.cleanUrls = TextParseUtil.commaDelimitedStringToSet(cleanUrls);
+//            String[] urls = cleanUrls.split(",");
+//            this.cleanUrls = new LinkedHashSet<String>();
+//            for (String url : urls) {
+//                this.cleanUrls.add(url);
+//            }
         }
     }
     
-    public void setCleanUrls(LinkedHashSet<String> cleanUrls) {
-        this.cleanUrls = cleanUrls;
-    }
+//    public void setCleanUrls(Set<String> cleanUrls) {
+//        this.cleanUrls = cleanUrls;
+//    }
 
     public String getEnable() {
         return enable;
