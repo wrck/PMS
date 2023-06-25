@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -703,7 +704,16 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		try {
 		    taxList = basicDataService.queryBasicDataBeanAll(SubcontractConstant.SUBCONTRACT_TAX_KEY);
 			if (subcontract != null && subcontract.getId() != null) {
-			    subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
+//			    subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
+			    subcontract = subcontractService.selectSubcontractProjectVOById(subcontract.getId());
+			    // 多维度信息为空，则查询默认的多维度信息
+	            if (subcontract.getCustomInfoByKey("multiDimInfo") == null) {
+	                Map<String, String> multiDimInfo = subcontractService.selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
+	                subcontract.setCustomInfoByKey("multiDimInfo", multiDimInfo);
+	            }
+	            commonMap = commonMap != null ? commonMap : new HashMap<String, Object>();
+	            commonMap.put("multiDimInfo", subcontract.getCustomInfoByKey("multiDimInfo", Collections.emptyMap()));
+	            
 				SubcontractPayment payment = new SubcontractPayment();
 				payment.setSubcontractId(subcontract.getId());
 				subcontractPaymentList = subcontractService.selectSubcontractPaymentList(payment);

@@ -129,4 +129,9 @@ public interface BasicDataService{
      * @return
      */
     List<Map<String, Object>> queryBasicDataBeanMapWithSub(String dataTypeCode, String subDataTypeCode, Map extra);
+    
+    /**
+     * 刷新缓存
+     */
+    boolean refreshCacheData();
 }

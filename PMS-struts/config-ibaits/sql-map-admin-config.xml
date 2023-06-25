@@ -19,8 +19,16 @@
 	    <flushOnExecute statement="update_user_power"/>
 	    <flushOnExecute statement="insert_user_power"/>
 	    
+	    <flushOnExecute statement="refreshCacheData"/>
+	    
         <property name="size" value="50"/>
     </cacheModel>
+    
+    <!-- 最近一次手动清理缓存时间 -->
+    <update id="refreshCacheData">
+        update fnd_sys_arg set var = now() where code = 'sys.cache.latest.refreshTime'
+    </update>
+    
 	<!-- 查询用户权限 -->
 	<resultMap class="java.util.HashMap" id="user_permissions">
 		<result property="menuCode" column="menuCode" javaType="java.lang.String"/>
@@ -90,11 +98,12 @@
 		<result property="dpNo" column="dpNo"/>
 		<result property="areapower" column="areapower"/>
 		<result property="roleids" column="roleIds"/>
+		<result property="customInfo" column="customInfo"/>
 	</resultMap>
 	<select id="query_user_by_id" parameterClass="int" resultMap="user_All" cacheModel="userCache">
 		<![CDATA[
 			select a.id,a.username,a.password,a.email,a.realName,a.status,a.pwdoverdue,a.roleIds,
-			b.id as defaultPage , a.dpNo,c.`areapower`
+			b.id as defaultPage , a.dpNo,c.`areapower`, a.customInfo
 			from fnd_user_info a
 			left join fnd_menus b on  a.defaultPage=b.path
 			LEFT JOIN fnd_user_power c ON a.`id` = c.`fndUserId`  AND c.`effectiveFrom` < NOW() AND (c.`effectiveTo` IS NULL OR c.`effectiveTo`> NOW())
@@ -123,6 +132,7 @@
 		<result property="dpNo" column="dpNo"/>
 		<result property="areapower" column="areapower"/>
 		<result property="pwdoverdue" column="pwdoverdue"/>
+		<result property="customInfo" column="customInfo"/>
 	</resultMap>
 	<resultMap class="com.dp.plat.data.bean.User" id="userRole">
 		<result property="id" column="id"/>
@@ -133,6 +143,7 @@
 		<result property="roleids" column="roleIds"/>
 		<result property="status" column="status" nullValue="0"/>
 		<result property="pwdoverdue" column="pwdoverdue"/>
+		<result property="customInfo" column="customInfo"/>
 	</resultMap>
 	<resultMap class="com.dp.plat.data.bean.User" id="user">
 		<result property="id" column="id" />
@@ -161,10 +172,17 @@
 	<!-- 查询所有的用户 -->
 	<select id="query-user-count" parameterClass="com.dp.plat.data.bean.User" resultClass="int" cacheModel="userCache">
 		<![CDATA[
-		select count(1) from fnd_user_info user where 1 = 1
+		select count(1) from fnd_user_info ui
 		]]>
-		<isNotEmpty prepend="AND" property="username"> (username like CONCAT('%', #username#, '%') or realName like CONCAT('%', #username#, '%'))</isNotEmpty>
-		<isNotEmpty prepend="and" property="roleids"> roleIds like CONCAT('%', #roleids#, '%') </isNotEmpty>
+		<isNotEmpty property="dpNo">
+                LEFT JOIN fnd_user_power up 
+                    ON up.`fndUserId` = ui.`id` 
+        </isNotEmpty>
+        <dynamic prepend="where">
+			<isNotEmpty prepend="AND" property="username"> (ui.username like CONCAT('%', #username#, '%') or ui.realName like CONCAT('%', #username#, '%'))</isNotEmpty>
+			<isNotEmpty prepend="AND" property="roleids"> ui.roleIds like CONCAT('%', #roleids#, '%') </isNotEmpty>
+			<isNotEmpty prepend="and" property="dpNo"><![CDATA[ (ui.dpNo = #dpNo# or FIND_IN_SET(#dpNo#, up.areapower) ) ]]></isNotEmpty>
+	    </dynamic>
 	</select>
 	<!-- 配置缓存模型  -->
 <!-- 	<cacheModel type="OSCache" id="user_cache" readOnly="true" serialize="true">
@@ -174,12 +192,21 @@
 	</cacheModel> -->
 	<select id="query-userlist" parameterClass="com.dp.plat.param.UserParam" resultMap="userRole" cacheModel="userCache"><!-- cacheModel="user_cache" -->
 		<![CDATA[
-			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user
- 			  where 1 = 1
+			SELECT 
+			    ui.id, ui.username, ui.realName, ui.email, ui.password, ui.roleIds, ui.status, ui.pwdoverdue, ui.customInfo 
+			FROM
+			    fnd_user_info ui 
 		]]>
-		<isNotEmpty prepend="AND" property="user.username"><![CDATA[  ( user.username like CONCAT('%', #user.username#, '%') or realName like CONCAT('%', user.username, '%') )]]></isNotEmpty>
-		<isNotEmpty prepend="and" property="user.roleids"><![CDATA[ user.roleIds like CONCAT('%', #user.roleids#, '%')]]></isNotEmpty>
-		<isNotEmpty prepend=" order by " property="displayParam.sort">
+		<isNotEmpty property="user.dpNo">
+			    LEFT JOIN fnd_user_power up 
+			        ON up.`fndUserId` = ui.`id` 
+		</isNotEmpty>
+		<dynamic prepend="where">
+			<isNotEmpty prepend="AND" property="user.username"><![CDATA[  ( ui.username like CONCAT('%', #user.username#, '%') or ui.realName like CONCAT('%', #user.username#, '%') )]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="user.roleids"><![CDATA[ ui.roleIds like CONCAT('%', #user.roleids#, '%')]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="user.dpNo"><![CDATA[ (ui.dpNo = #user.dpNo# or FIND_IN_SET(#user.dpNo#, up.areapower) ) ]]></isNotEmpty>
+		</dynamic>
+        <isNotEmpty prepend=" order by " property="displayParam.sort">
 			#displayParam.sort#
 			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
 				desc
@@ -195,11 +222,11 @@
 	
 	<select id="query-userlist-all" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
 		<![CDATA[
-			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user
+			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user
 		]]>
 		<dynamic prepend="where">
 			<isNotEqual prepend="and" property="status" compareValue="0"><![CDATA[ status=#status# ]]></isNotEqual>
-			<isNotEmpty prepend="and" property="username"><![CDATA[  user.username like =#username# ]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="username"><![CDATA[  user.username like CONCAT('%', #username#, '%') ]]></isNotEmpty>
 			<isNotEmpty prepend="and" property="roleids"><![CDATA[ user.roleIds like CONCAT('%', #roleids#, '%')]]></isNotEmpty>
 		</dynamic>
 	</select>
@@ -241,10 +268,12 @@
 	<insert id="insert-user-object" parameterClass="com.dp.plat.data.bean.User">
 		insert into fnd_user_info(username
 		<isNotEmpty prepend="," property="password">password</isNotEmpty>
-		,email,realName,status,roleIds,isemail,pwdoverdue,defaultPage,dpNo,createBy,createTime, effectiveFrom)
+		,email,realName,status,roleIds,isemail,pwdoverdue,defaultPage,dpNo,createBy,createTime, effectiveFrom
+		, customInfo)
 		values(#username#
 		<isNotEmpty prepend="," property="password">#password#</isNotEmpty>
-		,#email#,#realName#,1,#roleids#,1,now(),#defaultPage#,#dpNo#,#createBy# ,now(),now())
+		,#email#,#realName#,1,#roleids#,1,now(),#defaultPage#,#dpNo#,#createBy# ,now(),now()
+		, #customInfo#)
 		<selectKey resultClass="int"  keyProperty="id">    
              SELECT last_insert_id() as id ;   
         </selectKey>
@@ -253,8 +282,9 @@
 		<![CDATA[
 		update fnd_user_info set username=#username#,email=#email#,realName=#realName#,
 		status=#status#,roleIds = #roleids#,isemail=1,effectiveTo=#effectiveTo#,updateTime=now(),defaultPage=#defaultPage#,dpNo = #dpNo#
-		where id=#id#
 		]]>
+		<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
+		where id=#id#
 	</update>
 	<insert id="insert-menuForUser-object" parameterClass="com.dp.plat.data.bean.MenuForUser">
 		<![CDATA[
@@ -275,7 +305,7 @@
 	</update>
 	<select id="select-user" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
 		<![CDATA[
-		select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue
+		select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo
 		from fnd_user_info user 
 		where user.id = #id#
 		]]>
@@ -283,8 +313,9 @@
 	<update id="update-user" parameterClass="com.dp.plat.data.bean.User">
 		<![CDATA[
 		update fnd_user_info set email = #email#, realName = #realName#, roleIds = #roleids#, status = #status#
-		where username = #username#
 		]]>
+		<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
+		where username = #username#
 	</update>
 	
 	<resultMap class="com.dp.plat.data.bean.User" id="userAllMap">
@@ -483,13 +514,13 @@
 	
 	<select id="select-user-byusername" parameterClass="string" resultMap="userRole">
 		<![CDATA[
-			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user 
+			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user 
 			where user.username = #username# ORDER BY user.`status` DESC LIMIT 1
 		]]>
 	</select>
 	<select id="select-users-byusernames" parameterClass="string" resultMap="userRole">
         <![CDATA[
-            select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue from fnd_user_info user 
+            select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user 
             where FIND_IN_SET(user.username, #username#) ORDER BY user.`status` DESC
         ]]>
     </select>
@@ -651,7 +682,7 @@
 	
 	
 	<!-- 邮件程序 -->
-	<insert id="insert_into_sys_mails" parameterClass="com.dp.plat.data.bean.MailSenderInfo">
+	<insert id="insert_into_sys_mails_bak" parameterClass="com.dp.plat.data.bean.MailSenderInfo">
 		<![CDATA[
 			INSERT INTO fnd_mails(mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc , mailAttachFiles,mailServerPort ,mailServerHost,
 				mailUsername ,mailPassword,mailFromaddress,createBy,createTime,effectiveFrom,mailExpectSendTime)
@@ -659,6 +690,14 @@
 				#createBy# , #createTime# ,#effectiveFrom# , #mailExpectSendTime#) 
 		]]>
 	</insert>
+	<insert id="insert_into_sys_mails" parameterClass="com.dp.plat.data.bean.MailSenderInfo">
+        <![CDATA[
+            INSERT INTO fnd_mails(mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc , mailAttachFiles,mailServerPort ,mailServerHost,
+                mailUsername, mailFromaddress,createBy,createTime,effectiveFrom,mailExpectSendTime, mailSendTime, sendFlag)
+            VALUES(#subject# ,#content# ,#tos# ,#ccs# , #bcc# , #attachFileNames#,#mailServerPort# , #mailServerHost#,#userName# ,#fromAddress#,
+                #createBy# , #createTime# ,#effectiveFrom# , #mailExpectSendTime#, #mailSendTime#, #sendFlag#) 
+        ]]>
+    </insert>
 	<resultMap class="com.dp.plat.data.bean.MailSenderInfo" id="MailSenderInfoBean">
 		<result property="id" column="id"/>
 		<result property="subject" column="mailSubject"/>
@@ -725,6 +764,8 @@
         <flushInterval hours="24"/>
         <flushOnExecute statement="update_basic_data"/>
         <flushOnExecute statement="insert_basic_data"/>
+        
+        <flushOnExecute statement="refreshCacheData"/>
         
         <property name="size" value="50"/>
     </cacheModel>
@@ -863,7 +904,7 @@
         ]]>
         <dynamic>
             <isNotEmpty prepend="and" property="dpNo"><![CDATA[ u.dpNo=#dpNo#]]></isNotEmpty>
-            <!-- 反向查询，确定areaPower中时候有该部门权限 -->
+            <!-- 反向查询，确定areaPower中是否有该部门权限 -->
             <isNotEmpty prepend="and" property="areaPower"><![CDATA[ (u.dpNo = #areaPower# or FIND_IN_SET(#areaPower#, up.areaPower))]]></isNotEmpty>
         </dynamic>
     </select>

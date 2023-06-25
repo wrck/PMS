@@ -254,23 +254,28 @@ function checkallsub(){
 function restPassword() {
 	$("#restPasswordButton").attr("disabled", true);
 	var userId = $("#userId").val();
-	$.ajax({
-        url:"resetPassword.action",
-        type:"post",
-        dataType:"json",
-        data:{'user.id':userId},
-        success:function(data){
-            var result = data.result;
-            if(result){
-            	alert("密码重置成功，请查收邮箱！");
-            }else{
-                alert("密码重置失败！");
+	var userName = $("#username").val() + "-" + $("#name").val();
+	if (confirm("确认重置【" + (userName.length > 1 ? userName : "该用户") + "】的密码?")) {
+    	$.ajax({
+            url:"resetPassword.action",
+            type:"post",
+            dataType:"json",
+            data:{'user.id':userId},
+            success:function(data){
+                var result = data.result;
+                if(result){
+                	alert("密码重置成功，请查收邮箱！");
+                }else{
+                    alert("密码重置失败！");
+                }
+            },
+            complete:function() {
+            	$("#restPasswordButton").removeAttr("disabled");
             }
-        },
-        complete:function() {
-        	$("#restPasswordButton").removeAttr("disabled");
-        }
-    })
+        })
+	} else {
+		$("#restPasswordButton").removeAttr("disabled");
+	}
 }
 $("#submitButton").click(function(){
 	checkallsub();
@@ -327,6 +332,11 @@ $("#submitButton").click(function(){
 	    <div class="col-sm-4">
 	      <s:textfield name="user.email" id="mail" cssClass="form-control" />
 	    </div>
+        <c:if test="${currentDisplayUser.isHasAnyRole(1,10,13) && !currentIsCas}">
+        <div class="col-sm-1">
+            <button type="button" id="restPasswordButton" onclick="restPassword()" class="btn btn-danger btn-block btn-sm form-control">重置密码</button>
+        </div>
+        </c:if>
     </div>
    </div>
 </div>
@@ -384,6 +394,20 @@ $("#submitButton").click(function(){
 		      <select name="user.defaultPage" id="defaultPage" class="form-control"></select>
 		    </div>
 	    </div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label"><span class="redmark">*</span>序列号查项目<span>:</span></label>
+            <div class="col-sm-4">
+              <s:radio list="#{true: '禁用', false : '启用'}" value="%{user.customStrInfo.disableQueryProjectByBarcode != null ? user.customStrInfo.disableQueryProjectByBarcode : false}"  name="user.customStrInfo.disableQueryProjectByBarcode" id="disableQueryProjectByBarcode">
+              </s:radio>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label"><span class="redmark">*</span>项目名称模糊查项目<span>:</span></label>
+            <div class="col-sm-4">
+              <s:radio list="#{true: '禁用', false : '启用'}" value="%{user.customStrInfo.disableFuzzyQueryProjectByProjectName != null ? user.customStrInfo.disableFuzzyQueryProjectByProjectName : false}"  name="user.customStrInfo.disableFuzzyQueryProjectByProjectName" id="disableFuzzyQueryProjectByProjectName">
+              </s:radio>
+            </div>
+        </div>
    </div>
 </div>  
     
@@ -406,11 +430,6 @@ $("#submitButton").click(function(){
 	    <div class="col-sm-1">
 	       <button type="button" onclick="javascript:history.go(-1)"  class="btn btn-default  btn-block btn-sm form-control"><s:text name='sys.back' /></button>
 	    </div>
-        <c:if test="${currentDisplayUser.isHasAnyRole(1,10,13) && !currentIsCas}">
-        <div class="col-sm-1">
-            <button type="button" id="restPasswordButton" onclick="restPassword()" class="btn btn-danger btn-block btn-sm form-control">重置密码</button>
-        </div>
-        </c:if>
     </div>
 	
 </s:form>

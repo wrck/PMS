@@ -28,7 +28,7 @@ public class MailSenderInfo {
 	private String tos;//主送
 	private String ccs;//抄送
 	private String bcc;//密送
-	private Date mailsendTime;//邮件发送时间
+	private Date mailSendTime;//邮件发送时间
 	private int sendFlag;//邮件发送状态
 	private String createBy;
 	private Date createTime;
@@ -141,12 +141,12 @@ public class MailSenderInfo {
 		this.id = id;
 	}
 
-	public Date getMailsendTime() {
-		return mailsendTime;
+	public Date getMailSendTime() {
+		return mailSendTime;
 	}
 
-	public void setMailsendTime(Date mailsendTime) {
-		this.mailsendTime = mailsendTime;
+	public void setMailSendTime(Date mailSendTime) {
+		this.mailSendTime = mailSendTime;
 	}
 
 	public int getSendFlag() {

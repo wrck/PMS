@@ -3,9 +3,10 @@ package com.dp.plat.data.bean;
 import java.util.Date;
 
 
-public class User {
-
-	private int id;
+public class User extends CustomInfoEntity {
+	private static final long serialVersionUID = 5957838272099664736L;
+	
+    private int id;
 	private String username;
 	private String password;
 	private String email;

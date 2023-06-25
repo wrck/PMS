@@ -20,7 +20,14 @@ public abstract class AbstractJsonTypeHandler<T> extends BaseTypeHandler<T> impl
 
 	@Override
 	public void setParameter(PreparedStatement ps, int i, Object parameter, String jdbcType) throws SQLException {
-		JdbcType jdbcTypeEnum = JdbcType.valueOf(jdbcType);
+		JdbcType jdbcTypeEnum = null;  
+		try {
+		    jdbcTypeEnum = JdbcType.valueOf(jdbcType);
+		} catch (Exception e) {
+//		    if (StringUtils.isBlank(jdbcType) || "null".equalsIgnoreCase(jdbcType)) {
+//		        jdbcType = "JSON";
+//		    }
+        }
 		if (parameter == null) {
 			if (jdbcType == null) {
 				throw new TypeException(

@@ -522,7 +522,6 @@
 		<dependency>
 		    <groupId>javax.mail</groupId>
 		    <artifactId>javax.mail-api</artifactId>
-		    <version>1.6.2</version>
 		</dependency>
 		
 		<dependency>
@@ -534,7 +533,39 @@
 	</dependencies>
 	
 	<profiles>
-	    <profile>
+		<profile>
+			<!-- 本地开发环境 -->
+			<id>dev</id>
+			<properties>
+				<env>dev</env>
+				<webpath>dev</webpath>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<!-- 发布环境 -->
+			<id>release</id>
+			<properties>
+				<env>release</env>
+				<webpath>release</webpath>
+			</properties>
+			<activation>
+				<!-- 设置默认激活这个配置 -->
+				<!-- <activeByDefault>true</activeByDefault> -->
+			</activation>
+		</profile>
+		<profile>
+			<!-- 测试环境 -->
+			<id>test</id>
+			<properties>
+				<env>test</env>
+				<webpath>test</webpath>
+			</properties>
+		</profile>
+		<profile>
             <!-- PMS -->
             <id>pms</id>
             <properties>
@@ -552,45 +583,42 @@
             <properties>
                 <profile.build.id>yfpms</profile.build.id>
                 <profile.build.name>YFPMS</profile.build.name>
+                <webpath>yfpms</webpath>
             </properties>
             <activation>
                 <!-- 设置默认激活这个配置 -->
                 <!-- <activeByDefault>true</activeByDefault> -->
             </activation>
         </profile>
-		<profile>
-			<!-- 本地开发环境 -->
-			<id>dev</id>
-			<properties>
-				<env>dev</env>
-			</properties>
-			<activation>
-				<!-- 设置默认激活这个配置 -->
-				<activeByDefault>true</activeByDefault>
-			</activation>
-		</profile>
-		<profile>
-			<!-- 发布环境 -->
-			<id>release</id>
-			<properties>
-				<env>release</env>
-			</properties>
-			<activation>
-				<!-- 设置默认激活这个配置 -->
-				<!-- <activeByDefault>true</activeByDefault> -->
-			</activation>
-		</profile>
-		<profile>
-			<!-- 测试环境 -->
-			<id>test</id>
-			<properties>
-				<env>test</env>
-			</properties>
-		</profile>
+        <profile>
+            <!-- PMS2打包时的上下文 -->
+            <id>pms2</id>
+            <properties>
+                <profile.build.id>pms</profile.build.id>
+                <profile.build.name>${project.name}</profile.build.name>
+            </properties>
+            <activation>
+                <!-- 设置默认激活这个配置 -->
+                <!-- <activeByDefault>true</activeByDefault> -->
+            </activation>
+        </profile>
+        <profile>
+            <!-- PMS3打包时的上下文 -->
+            <id>pms3</id>
+            <properties>
+                <profile.build.id>pms</profile.build.id>
+                <profile.build.name>${project.name}</profile.build.name>
+            </properties>
+            <activation>
+                <!-- 设置默认激活这个配置 -->
+                <!-- <activeByDefault>true</activeByDefault> -->
+            </activation>
+        </profile>
 	</profiles> 
 	
 	<build>
-		<finalName>${profile.build.name}</finalName>
+		<!-- <finalName>${profile.build.name}</finalName> -->
+		<finalName>${project.name}</finalName>
 		<sourceDirectory>src</sourceDirectory>
 	    <resources>
 	      <resource>
@@ -642,8 +670,9 @@
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
+				    <warName>${profile.build.name}</warName>
 					<warSourceDirectory>WebContent</warSourceDirectory>
-					<webXml>config/profiles/${env}/web.xml</webXml>
+					<webXml>config/profiles/${webpath}/web.xml</webXml>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<archiveClasses>false</archiveClasses>
 					<attachClasses>true</attachClasses>

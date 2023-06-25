@@ -352,7 +352,15 @@ function updateProject(obj){
 	//window.location = "module/ProjectModify.action?project.paramId="+obj;
 	var barCode = $.trim($("#barCode").val());
 	var projectName = $.trim($("#projectName").val());
-	window.open("module/ProjectModify.action?project.paramId="+obj + "&project.barCode=" + barCode + "&project.projectName=" + projectName);
+	var search = "project.paramId=" + obj;
+	if (barCode != '') {
+		search += "&project.barCode=" + encodeURIComponent(barCode);
+	}
+	
+	if (projectName != '') {
+        search += "&project.projectName=" + encodeURIComponent(projectName);
+    }
+	window.open("module/ProjectModify.action?" + search);
 }
 
 function submit(){

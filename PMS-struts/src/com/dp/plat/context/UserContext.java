@@ -190,7 +190,7 @@ public class UserContext
 	}
 
 	public Map<String, Integer> getPermissionMap() {
-		return permissionMap;
+		return permissionMap != null ? permissionMap : Collections.emptyMap();
 	}
 
 	public void setPermissionMap(Map<String, Integer> permissionMap) {

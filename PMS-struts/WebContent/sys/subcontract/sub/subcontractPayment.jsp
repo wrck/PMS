@@ -19,6 +19,12 @@
             /* width: 30vw; */
             max-width: 20vw;
         }
+        #subcontractMultiDimInfoTable {
+            margin-top: 20px;
+        }
+        #subcontractMultiDimInfoTable tr {
+            height: 3rem;
+        }
     </style>
     <div style="text-align: left;">
         <s:form enctype="multipart/form-data" id="subcontractPaymentForm" action="%{namespace}/subcontract_savePayment.action">
@@ -60,6 +66,29 @@
                     </td>
                 </tr>
             </table>
+            <table id="subcontractMultiDimInfoTable" class="table table-bordered table-hover table-striped ">
+                <tr>
+                    <td>受益部门</td>
+                    <td>受益产品线</td>
+                    <td>受益BU</td>
+                    <td>受益区域</td>
+                    <td>受益行业</td>
+                </tr>
+                <tr>
+                    <%-- <td><span class="hidden">${subcontract.customInfo.multiDimInfo.depNum}</span>${subcontract.customInfo.multiDimInfo.depName}</td>
+                    <td><span class="hidden">${subcontract.customInfo.multiDimInfo.buCode}</span>${subcontract.customInfo.multiDimInfo.buName}</td>
+                    <td><span class="hidden">${subcontract.customInfo.multiDimInfo.productLineCode}</span>${subcontract.customInfo.multiDimInfo.productLineName}</td>
+                    <td><span class="hidden">${subcontract.customInfo.multiDimInfo.officeCode}</span>${subcontract.customInfo.multiDimInfo.officeName}</td>
+                    <td><span class="hidden">${subcontract.customInfo.multiDimInfo.industryCode}</span>${subcontract.customInfo.multiDimInfo.industryName}</td> --%>
+                    
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimDepartment != null ? commonMap.multiDimInfo.dimDepartment : subcontract.profitDepCode}</span>${commonMap.multiDimInfo.dimDepartmentName != null ? commonMap.multiDimInfo.dimDepartmentName : subcontract.profitDepName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimProductLine}</span>${commonMap.multiDimInfo.dimProductLineName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimBU}</span>${commonMap.multiDimInfo.dimBUName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimTerritory}</span>${commonMap.multiDimInfo.dimTerritoryName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimIndustry}</span>${commonMap.multiDimInfo.dimIndustryName}</td>
+                </tr>
+            </table>
+            
             <display:table style="text-align: left;"
                 name="subcontractPaymentList" export="false" id="subcontractPaymentTable"
                 size="${subcontractPaymentList.size()}" sort="external" requestURI="module/sub/querySubcontractPayment.action"

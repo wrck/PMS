@@ -44,8 +44,9 @@ public class PasswordServiceImpl extends BaseServiceImpl implements PasswordServ
         loginParam.setUsername(user.getUsername());
         loginParam.setPassword(passwordEditParam.getNewPassword());
         loginParam.setValidation(captcha);
+        session.setAttribute("rand", captcha);
         loginService.login(loginParam, HttpContext.getCurrentIp());
-		
+        
         // 强制下线
         forcedOffline(user.getUsername());
 		return true;

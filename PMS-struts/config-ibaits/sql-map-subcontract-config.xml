@@ -2554,4 +2554,30 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     WHERE spp.`paymentTime` IS NULL
   </update>
   
+  <!-- 根据部门查询默认的多维度信息 -->
+  <cacheModel type="CopyLRU" id="MultiDimCache" readOnly="true">
+      <flushInterval minutes="30"/>
+      <flushOnExecute statement="update_basic_data"/>
+      <flushOnExecute statement="insert_basic_data"/>
+      
+      <flushOnExecute statement="refreshCacheData"/>
+      
+      <property name="size" value="50"/>
+  </cacheModel>
+  <sql id="sqlSelectDefaultMultiDimByDep">
+      SELECT depNum AS dimDepartment, depName AS dimDepartmentName,
+             buCode AS dimBU, buName AS dimBUName,
+             productLineCode AS dimProductLine, productLineName AS dimProductLineName, 
+             officeCode AS dimTerritory, officeName AS dimTerritoryName,
+             industryCode AS dimIndustry,industryName AS dimIndustryName
+      FROM offer_dimension_default_mapping 
+      WHERE depNum = #depNum# AND `status` = 1
+      LIMIT 1
+  </sql>
+  <select id="selectDefaultMultiDimByDep" parameterClass="string" resultClass="java.util.HashMap" cacheModel="MultiDimCache">
+      <include refid="sqlSelectDefaultMultiDimByDep"/>
+  </select>
+  <select id="selectDefaultMultiDimByDepDirect" parameterClass="string" resultClass="java.util.HashMap">
+      <include refid="sqlSelectDefaultMultiDimByDep"/>
+  </select>
 </sqlMap>

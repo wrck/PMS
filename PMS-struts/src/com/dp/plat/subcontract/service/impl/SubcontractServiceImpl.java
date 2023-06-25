@@ -1578,7 +1578,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
         vars.put("paymentApplicant", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
         this.submitSelfTask(taskParam, vars);
 
-        if (subcontract.getType() != null && subcontract.getType().equals(SubcontractType.MAINTENANCE)) {
+        if (subcontract.getType() != null && needCallback) {
             SubcontractCallback callback = new SubcontractCallback();
             callback.setSubcontractId(subcontract.getId());
             int version = dao.queryCallBackQuesnaireVersion(subcontract.getId());
@@ -1603,7 +1603,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 
         // 邮件
         Map<String, Object> mailMap = new HashMap<String, Object>();
-        if (subcontract.getType() != null && subcontract.getType().equals(SubcontractType.MAINTENANCE)) {
+        if (subcontract.getType() != null && needCallback) {
 //          String tos = userManageService.queryMailsByRoleAndOfficeCodes("", MessageUtil.ROLE_CALLBACKPER);
             String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_CALLBACKPER, null);
             String tos = nextAssignPer[2];
@@ -2775,4 +2775,25 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		return projectDetailHtml.toString();
 	}
+	
+	/**
+	 * 根据部门查询默认多维度信息
+	 * @param depNum
+	 * @return
+	 */
+	@Override
+	public Map<String, String> selectDefaultMultiDimByDep(String depNum) {
+        return dao.selectDefaultMultiDimByDep(depNum);
+    }
+	
+	/**
+     * 根据部门查询默认多维度信息
+     * @param depNum
+	 * @param directWithoutCache 直接查询数据库，不查询缓存
+	 * @return
+	 */
+    @Override
+    public Map<String, String> selectDefaultMultiDimByDep(String depNum, boolean directWithoutCache) {
+        return dao.selectDefaultMultiDimByDep(depNum, directWithoutCache);
+    }
 }

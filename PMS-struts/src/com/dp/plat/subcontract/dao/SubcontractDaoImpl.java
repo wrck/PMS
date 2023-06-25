@@ -11,6 +11,7 @@ import java.util.Map;
 import org.activiti.engine.task.Task;
 import org.apache.commons.lang.StringUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.dao.BaseDao;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -366,6 +367,22 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
     @Override
     public void updateSSESubcontractPaymentTime() {
         getSqlMapClientTemplate().update("updateSSESubcontractPaymentTime");
+    }
+
+    @Override
+    public Map<String, String> selectDefaultMultiDimByDep(String depNum) {
+        return (Map<String, String>) getSqlMapClientTemplateSSE().queryForObject("selectDefaultMultiDimByDep", depNum);
+    }
+
+    @Override
+    public Map<String, String> selectDefaultMultiDimByDep(String depNum, boolean directWithoutCache) {
+//        if ("319000".equals(depNum)) {
+//            return JSON.parseObject("{\"dimDepartment\":\"319000\",\"dimTerritoryName\":\"\",\"dimIndustry\":\"\",\"dimBUName\":\"安全检测与服务产品BU\",\"dimBU\":\"14\",\"dimProductLine\":\"1022\",\"dimProductLineName\":\"安全服务\",\"dimIndustryName\":\"\",\"dimDepartmentName\":\"安全咨询服务部（用服）\",\"dimTerritory\":\"\"}", HashMap.class);
+//        }
+        if (directWithoutCache) {
+            return (Map<String, String>) getSqlMapClientTemplateSSE().queryForObject("selectDefaultMultiDimByDepDirect", depNum);
+        }
+        return (Map<String, String>) getSqlMapClientTemplateSSE().queryForObject("selectDefaultMultiDimByDep", depNum);
     }
 
 }

@@ -41,6 +41,10 @@ $(function(){
 		<label for="roleName" class="form-text-label"><span class="redmark">*</span><s:text name="sys.user.rolename" /></label>
     	<s:select name="user.roleids" id="roleName" list="rolelist" listKey="id" listValue="roleName" headerKey="" headerValue="请选择" cssClass="form-control"> </s:select>
 	</div>
+    <div class="form-group form-group-query" >
+        <label for="dpNo" class="form-text-label"><span class="redmark">*</span><s:text name="sys.user.department" /></label>
+        <s:select name="user.dpNo" id="dpNo" list="departments" listKey="departmentNum" listValue="departmentName" headerKey="" headerValue="请选择" cssClass="form-control"> </s:select>
+    </div>
 	<div class="form-group form-group-query" >
 		<button type="button" onclick="checkSubmit()" class="btn btn-default btn-block"><s:text name="sys.confirm"></s:text></button>
 	</div>
@@ -66,6 +70,5 @@ $(function(){
 				<display:column property="userWriteWrapper" titleKey="sys.write"></display:column>
 			</display:table>
 </div>
-<dp:errormsg />
 </body>
 </html>

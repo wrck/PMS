@@ -57,4 +57,10 @@ public interface BasicDataDao {
      */
     List<Map<String, Object>> queryBasicDataBeanMapWithSub(String dataTypeCode, String subDataTypeCode, Map extra);
 
+    /**
+     * 刷新缓存
+     * @return
+     */
+    boolean refreshCacheData();
+
 }

@@ -120,5 +120,9 @@ public class BasicDataDaoImpl extends BaseDao implements BasicDataDao{
         return getSqlMapClientTemplate().queryForList("query_basic_data_for_map_with_sub", paramMap);
     }
 
+    @Override
+    public boolean refreshCacheData() {
+        return getSqlMapClientTemplate().update("refreshCacheData") != 0;
+    }
 	
 }

@@ -2,7 +2,7 @@ package com.dp.plat.service;
 
 import com.dp.plat.param.PasswordEditParam;
 
-public interface PasswordService {
+public interface PasswordService extends BaseService {
 	boolean changelogin(PasswordEditParam passwordEditParam);
 
     /**

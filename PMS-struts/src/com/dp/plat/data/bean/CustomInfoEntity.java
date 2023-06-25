@@ -104,7 +104,8 @@ public class CustomInfoEntity implements Serializable {
 //            }
             // 直接使用JSON转化，可能会导致部分对象转换为字符串
             String custonInfoStr = JSON.toJSONString(this.customInfo);
-            this.customStrInfo = new JsonCustomInfo<String, String>(this.customInfo, JSON.parseObject(custonInfoStr, new TypeReference<Map<String, String>> () {}));
+            this.setCustomStrInfo(new JsonCustomInfo<String, String>(this.customInfo, JSON.parseObject(custonInfoStr, new TypeReference<Map<String, String>> () {})));;
+//            this.customStrInfo = new JsonCustomInfo<String, String>(this.customInfo, JSON.parseObject(custonInfoStr, new TypeReference<Map<String, String>> () {}));
         } 
 //        else {
 //            this.setCustomStrInfo(customStrInfo);

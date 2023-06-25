@@ -15,6 +15,7 @@ public class BaseDao {
 	private SqlMapClientTemplate sqlMapClientTemplate;
 	private SqlMapClientTemplate sqlMapClientTemplateSAP;
 	private SqlMapClientTemplate sqlMapClientTemplateERP;
+	private SqlMapClientTemplate sqlMapClientTemplateSSE;
 
 	public SqlMapClientTemplate getSqlMapClientTemplateSAP() {
 		return sqlMapClientTemplateSAP;
@@ -31,8 +32,16 @@ public class BaseDao {
     public void setSqlMapClientTemplateERP(SqlMapClientTemplate sqlMapClientTemplateERP) {
         this.sqlMapClientTemplateERP = sqlMapClientTemplateERP;
     }
+    
+	public SqlMapClientTemplate getSqlMapClientTemplateSSE() {
+        return sqlMapClientTemplateSSE;
+    }
 
-	public void setSqlMapClientTemplate(SqlMapClientTemplate sqlMapClientTemplate) {
+    public void setSqlMapClientTemplateSSE(SqlMapClientTemplate sqlMapClientTemplateSSE) {
+        this.sqlMapClientTemplateSSE = sqlMapClientTemplateSSE;
+    }
+
+    public void setSqlMapClientTemplate(SqlMapClientTemplate sqlMapClientTemplate) {
 		this.sqlMapClientTemplate = sqlMapClientTemplate;
 	}
 

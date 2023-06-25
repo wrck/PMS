@@ -7,8 +7,12 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.dp.plat.context.HttpContext;
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
+import com.dp.plat.dao.LoginDao;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.param.PasswordEditParam;
 import com.dp.plat.service.PasswordService;
@@ -35,8 +39,16 @@ public class PasswordGetinfo extends BaseAction{
 		if(passwordService.changelogin(passwordEditParam)){
 		    HttpServletRequest request = getServletRequest();
 		    request.getSession().setAttribute("Pwdoverdue", "0");
+		    UserContext userContext = UserContext.getUserContext();
+		    String defaultPage = userContext.getDefaultPage();
+		    if (!userContext.isLogin()) {
+                defaultPage = "Login.action";
+            } else if (StringUtils.isBlank(defaultPage)) {
+		        LoginDao loginDao = SpringContext.getBean("loginDao", LoginDao.class);
+		        defaultPage = loginDao.queryUserDefaultPage(userContext.getUser().getId());
+		    }
 			try {
-                getServletResponse().sendRedirect(request.getContextPath() + "/" + UserContext.getUserContext().getDefaultPage());
+                getServletResponse().sendRedirect(request.getContextPath() + "/" + defaultPage);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -73,6 +85,10 @@ public class PasswordGetinfo extends BaseAction{
         context.put("beforeSplit", "${");
         context.put("afterSplit", "}");
         MailUtil.keepMailWithTemplate(context, true);
+        
+        
+        PasswordService passwordService = SpringContext.getBean("passwordService", PasswordService.class);
+        passwordService.forcedOffline(user.getUsername());
         
         result = new HashMap<String, Object>();
         result.put("success", true);

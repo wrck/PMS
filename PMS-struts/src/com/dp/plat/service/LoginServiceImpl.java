@@ -44,7 +44,7 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 			}
 			if(user != null && user.getPassword().equalsIgnoreCase(pwd)){
 				Map<String,Integer> permissionMap =  loginDao.queryUserMenuMap(user.getId());
-				if ("-1".equals(user.getAreapower())) {
+				if ("-1".equals(user.getAreapower()) && StringUtils.isNotBlank(user.getDpNo())) {
 					user.setAreapower(user.getDpNo());
 				} else if (!user.getAreapower().contains(user.getDpNo())) {
 					user.setAreapower(user.getAreapower() + "," + user.getDpNo());
@@ -122,7 +122,7 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 			if(user==null){
 				return false;				
 			}else{
-				if ("-1".equals(user.getAreapower())) {
+				if ("-1".equals(user.getAreapower()) && StringUtils.isNotBlank(user.getDpNo())) {
 					user.setAreapower(user.getDpNo());
 				} else if (!user.getAreapower().contains(user.getDpNo())) {
 					user.setAreapower(user.getAreapower() + "," + user.getDpNo());

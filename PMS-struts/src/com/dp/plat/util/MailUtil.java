@@ -39,7 +39,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -60,11 +60,14 @@ import com.dp.plat.util.test.MyAuthenticator;
 /**
  * 邮件发送器
  */
+//@Component
+//@Scope(scopeName = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class MailUtil {
 
 	private static final String DEFAULT_AFTER_SPLIT = "$";
 	private static final String DEFAULT_BEFORE_SPLIT = "$";
-	private static final String DEFAULT_REGEX = ";";
+    private static final String DEFAULT_REGEX = "[;|,|\\s]+";
+    private static final String DEFAULT_SEPARATOR = ";";
 	// 外部邮箱地址域名
 	// private static final String OUTMAIL_DOMAIN = "@dptech.com";
 	// 内部邮箱地址域名
@@ -75,18 +78,18 @@ public class MailUtil {
 	private static final String IMGSRC_REG = "(https|http):\"?(.*?)(>|\"|\\s+)";
 
 	@Autowired
-	private SendMailService mailInfoService;
+	private SendMailService sendMailService;
 
 	private static MailUtil mailUtil;
 
 	@PostConstruct
 	public void init() {
 		mailUtil = this;
-		mailUtil.mailInfoService = this.mailInfoService;
+		mailUtil.sendMailService = this.sendMailService;
 	}
 
-	public void setMailSenderInfoService(SendMailService mailInfoService) {
-		this.mailInfoService = mailInfoService;
+	public void setSendMailService(SendMailService sendMailService) {
+		this.sendMailService = sendMailService;
 	}
 
 	/**
@@ -251,8 +254,8 @@ public class MailUtil {
 				sendMailWithAttachments(senderInfo);
 				info = senderInfo;
 			}
-			if (mailUtil != null && mailUtil.mailInfoService != null) {
-			    mailUtil.mailInfoService.keepMailInfo(info);			    
+			if (mailUtil != null && mailUtil.sendMailService != null) {
+			    mailUtil.sendMailService.keepMailInfo(info);			    
 			}
 		}
 	}
@@ -350,7 +353,7 @@ public class MailUtil {
 					Transport.send(message);
 				}
 			}
-			mailInfo.setMailsendTime(new Date());
+			mailInfo.setMailSendTime(new Date());
 			mailInfo.setSendFlag(1);
 			return true;
 		} catch (SendFailedException e) {
@@ -492,12 +495,27 @@ public class MailUtil {
 	 * 
 	 * @param str
 	 *            原始邮件地址拼接字符串
+     * @return InternetAddress[] 处理后的邮件地址
+     * @throws AddressException
+     */
+    private static InternetAddress[] filterEmailAddress(String str) {
+        return filterEmailAddress(str, DEFAULT_REGEX);
+    }
+
+    /**
+     * 处理邮件地址，过滤掉不合法的邮件地址
+     * 
+     * @param str
+     *            原始邮件地址拼接字符串
 	 * @param regex
 	 *            分割标识符
 	 * @return InternetAddress[] 处理后的邮件地址
 	 * @throws AddressException
 	 */
 	private static InternetAddress[] filterEmailAddress(String str, String regex) {
+        if (StringUtils.isBlank(regex)) {
+            regex = DEFAULT_REGEX;
+        }
 		if (StringUtils.isBlank(str) || StringUtils.isBlank(regex))
 			return null;
 		String[] s = str.split(regex);
@@ -723,40 +741,40 @@ public class MailUtil {
 		// 1:正式环境，2：正式试运行，0：测试环境
 		if ("1".equals(envirmentArgu) || "2".equals(envirmentArgu)) {
 			// 主送
-			String toRecipients = StringUtils.join(Arrays.asList(mailInfo.getToAddress(), mailInfo.getTos()), ";");
-			InternetAddress[] tos = filterEmailAddress(toRecipients, ";");
+			String toRecipients = StringUtils.join(Arrays.asList(mailInfo.getToAddress(), mailInfo.getTos()), DEFAULT_SEPARATOR);
+			InternetAddress[] tos = filterEmailAddress(toRecipients);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 			// 抄送
-			InternetAddress[] ccs = filterEmailAddress(mailInfo.getCcs(), ";");
+			InternetAddress[] ccs = filterEmailAddress(mailInfo.getCcs());
 			mimeMessage.setRecipients(MimeMessage.RecipientType.CC, ccs);
 			// 密送
-			InternetAddress[] bccs = filterEmailAddress(mailInfo.getBcc(), ";");
+			InternetAddress[] bccs = filterEmailAddress(mailInfo.getBcc());
 			mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, bccs);
 
 			// 正式试运行，密送邮件给特定邮箱
 			if ("2".equals(envirmentArgu)) {
 //				String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
 				String devTos = StringEscUtil.getText("plat.develop.mail.tos");
-				InternetAddress[] devBccs = filterEmailAddress(devTos, ";");
+				InternetAddress[] devBccs = filterEmailAddress(devTos);
 				mimeMessage.addRecipients(MimeMessage.RecipientType.BCC, devBccs);
 			}
 		} else {
 //			String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
 			String devTos = StringEscUtil.getText("plat.develop.mail.tos");
-			InternetAddress[] tos = filterEmailAddress(devTos, ";");
+			InternetAddress[] tos = filterEmailAddress(devTos);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 		}
 		// 邮件没有接收人，发送给系统维护人员
 		if (mimeMessage.getAllRecipients() == null || mimeMessage.getAllRecipients().length == 0) {
 //			String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
 			String devTos = StringEscUtil.getText("plat.develop.mail.tos");
-			InternetAddress[] tos = filterEmailAddress(devTos, ";");
+			InternetAddress[] tos = filterEmailAddress(devTos);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 			mimeMessage.setSubject(mailInfo.getSubject() + "----邮件无接收人提醒", "utf-8");
 		}
 		// String actualSendAddress =
 		// ArrayUtils.toString(mimeMessage.getAllRecipients(), null);
-//		String actualSendAddress = StringUtils.join(mimeMessage.getAllRecipients(), ";");
+//		String actualSendAddress = StringUtils.join(mimeMessage.getAllRecipients(), DEFAULT_SEPARATOR);
 //		mailInfo.set(actualSendAddress);
 	}
 
@@ -916,9 +934,9 @@ public class MailUtil {
 			return mailInfos;
 		}
 
-		String[] tos = splitMailStr(info.getTos(), ";");
-		String[] ccs = splitMailStr(info.getCcs(), ";");
-		String[] bccs = splitMailStr(info.getBcc(), ";");
+		String[] tos = splitMailStr(info.getTos());
+		String[] ccs = splitMailStr(info.getCcs());
+		String[] bccs = splitMailStr(info.getBcc());
 
 		StringBuilder innerTos = new StringBuilder();
 		StringBuilder innerCcs = new StringBuilder();
@@ -957,9 +975,9 @@ public class MailUtil {
 		String[] ccs = new String[0];
 		String[] bccs = new String[0];
 		try {
-			tos = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.TO), ";"), ";");
-			ccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.CC), ";"), ";");
-			bccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.BCC), ";"), ";");
+			tos = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.TO), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
+			ccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.CC), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
+			bccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.BCC), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
 		} catch (Exception e) {
 //			ExceptionHandler.insertException(e);
 			e.printStackTrace();
@@ -1009,7 +1027,7 @@ public class MailUtil {
 		// 重构
 		List<String> mailStrList = new ArrayList<>();
 		for (Address[] mailStrAddr : mailAddrs) {
-			String mailStr = StringUtils.join(mailStrAddr, ";");
+			String mailStr = StringUtils.join(mailStrAddr, DEFAULT_SEPARATOR);
 			if (StringUtils.isNotBlank(mailStr)) {
 				mailStrList.add(mailStr);
 			}
@@ -1069,6 +1087,17 @@ public class MailUtil {
 	 * @param regex
 	 * @return
 	 */
+    private static String[] splitMailStr(String mailStr) {
+        return splitMailStr(mailStr, DEFAULT_REGEX);
+    }
+
+    /**
+     * 切割邮箱地址字符串，返回邮箱地址数组
+     * 
+     * @param mailStr
+     * @param regex
+     * @return
+     */
 	private static String[] splitMailStr(String mailStr, String regex) {
 		if (StringUtils.isBlank(mailStr)) {
 			return new String[0];
@@ -1092,13 +1121,13 @@ public class MailUtil {
 				continue;
 			}
 			if (mailStr.toLowerCase().contains(INNERMAIL_DOMAIN)) {
-				inner.append(mailStr).append(";");
+				inner.append(mailStr).append(DEFAULT_SEPARATOR);
 			} else {
-				outer.append(mailStr).append(";");
+				outer.append(mailStr).append(DEFAULT_SEPARATOR);
 			}
 			// TODO 其他外网邮箱，非公司邮箱
 			// if (mailStr.contains(OUTMAIL_DOMAIN)) {
-			// outer.append(mailStr).append(";");
+			// outer.append(mailStr).append(DEFAULT_SEPARATOR);
 			// }
 		}
 	}
@@ -1144,9 +1173,9 @@ public class MailUtil {
 			String ccsStr = ccs.toString();
 			String bccsStr = bccs.toString();
 			if (StringUtils.isNotBlank(tosStr) || StringUtils.isNotBlank(ccsStr) || StringUtils.isNotBlank(bccsStr)) {
-				InternetAddress[] tosAddr = filterEmailAddress(tos.toString(), ";");
-				InternetAddress[] ccsAddr = filterEmailAddress(ccs.toString(), ";");
-				InternetAddress[] bccsAddr = filterEmailAddress(bccs.toString(), ";");
+				InternetAddress[] tosAddr = filterEmailAddress(tos.toString());
+				InternetAddress[] ccsAddr = filterEmailAddress(ccs.toString());
+				InternetAddress[] bccsAddr = filterEmailAddress(bccs.toString());
 				mimeMessage = createMimeMessage(info, isInner);
 				mimeMessage.setRecipients(RecipientType.TO, tosAddr);
 				mimeMessage.setRecipients(RecipientType.CC, ccsAddr);
@@ -1193,25 +1222,19 @@ public class MailUtil {
 //        
         Set<String> tos = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getToAddress())) {
-            tos.add(mailInfo.getToAddress());
+            tos.addAll(Arrays.asList(splitMailStr(mailInfo.getToAddress())));
             mailInfo.setToAddress(null);
         }
         if (StringUtils.isNotEmpty(mailInfo.getTos())) {
-            tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+            tos = new LinkedHashSet<String>(Arrays.asList(mailInfo.getTos().split(DEFAULT_REGEX)));
         }
         Set<String> ccs = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getCcs())) {
-            ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+            ccs = new LinkedHashSet<String>(Arrays.asList(mailInfo.getCcs().split(DEFAULT_REGEX)));
         }
         Set<String> bccs = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getBcc())) {
-            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBcc(), ";,")));
-        }
-        for (Address invalid : invalidAddresses) {
-            String invalidAddress = invalid.toString();
-            tos.remove(invalidAddress);
-            ccs.remove(invalidAddress);
-            bccs.remove(invalidAddress);
+            bccs = new LinkedHashSet<String>(Arrays.asList(mailInfo.getBcc().split(DEFAULT_REGEX)));
         }
         
         for (Address invalidAddress : invalidAddresses) {
@@ -1226,9 +1249,9 @@ public class MailUtil {
             return false;
         }
         
-        mailInfo.setTos(StringUtils.join(tos, ";"));
-        mailInfo.setCcs(StringUtils.join(ccs, ";"));
-        mailInfo.setBcc(StringUtils.join(bccs, ";"));
+        mailInfo.setTos(StringUtils.join(tos, DEFAULT_SEPARATOR));
+        mailInfo.setCcs(StringUtils.join(ccs, DEFAULT_SEPARATOR));
+        mailInfo.setBcc(StringUtils.join(bccs, DEFAULT_SEPARATOR));
         return sendMailWithAttachments(mailInfo);
         
 //		boolean needResend = invalidAddresses != null && invalidAddresses.length > 0;
@@ -1238,28 +1261,28 @@ public class MailUtil {
 //		if (StringUtils.isNotBlank(mailInfo.getToAddress())) {
 //            String to = mailInfo.getToAddress();
 //            for (Address invalid : invalidAddresses) {
-//                to = to.replaceAll(";?" + invalid.toString() + ";?", ";");
+//                to = to.replaceAll(";?" + invalid.toString() + ";?", DEFAULT_SEPARATOR);
 //            }
 //            mailInfo.setToAddress(to);
 //        }
 //		if (StringUtils.isNotBlank(mailInfo.getTos())) {
 //			String tos = mailInfo.getTos();
 //			for (Address invalid : invalidAddresses) {
-//				tos = tos.replaceAll(";?" + invalid.toString() + ";?", ";");
+//				tos = tos.replaceAll(";?" + invalid.toString() + ";?", DEFAULT_SEPARATOR);
 //			}
 //			mailInfo.setTos(tos);
 //		}
 //		if (StringUtils.isNotBlank(mailInfo.getCcs())) {
 //			String ccs = mailInfo.getCcs();
 //			for (Address invalid : invalidAddresses) {
-//				ccs = ccs.replaceAll(";?" + invalid.toString() + ";?", ";");
+//				ccs = ccs.replaceAll(";?" + invalid.toString() + ";?", DEFAULT_SEPARATOR);
 //			}
 //			mailInfo.setCcs(ccs);
 //		}
 //		if (StringUtils.isNotBlank(mailInfo.getBcc())) {
 //			String bcc = mailInfo.getBcc();
 //			for (Address invalid : invalidAddresses) {
-//				bcc = bcc.replaceAll(";?" + invalid.toString() + ";?", ";");
+//				bcc = bcc.replaceAll(";?" + invalid.toString() + ";?", DEFAULT_SEPARATOR);
 //			}
 //			mailInfo.setBcc(bcc);
 //		}
@@ -1287,8 +1310,15 @@ public class MailUtil {
 		MailSenderInfo mailInfo = new MailSenderInfo();
 		mailInfo.setSubject("TEST 587");
 		mailInfo.setContent("TEST 587");
-		mailInfo.setToAddress("wenrencaike@dptech.com");
-		mailInfo.setMailServerPort("111");
+		mailInfo.setToAddress("wenrencaike@dptech.com; wenrencaike@dptech.com, wenerncaike@dptech.com;;\twenrencaike@dptech.com;\r\nwenrencake@dptech.com");
+		mailInfo.setMailServerPort("587");
 		MailUtil.sendMailWithAttachments(mailInfo);
+		
+	    String emails = "liuhuanb@dptech.com; wenrencaike@dptech.com, wenerncaike@dptech.com2; chenmeng@dptech.com;\twenrencaike@dptech.com; baixue@dptech.com; xuyongliang@dptech.com; wangjinfeng@dptech.com; wangyanjieb@dptech.com; xiaojinpeng@dptech.com; shaotianyi@dptech.com; weiweia@dptech.com; peixihao@dptech.com;lubang@dptech.com;\r\nwenrencake@dptech.com";
+	    System.out.println(StringUtils.join(MailUtil.splitMailStr(emails), DEFAULT_SEPARATOR)); 
+	    System.out.println(StringUtils.join(MailUtil.filterEmailAddress(emails), DEFAULT_SEPARATOR)); 
+	    System.out.println(StringUtils.join(emails.split(DEFAULT_REGEX), DEFAULT_SEPARATOR)); 
+	    emails = StringUtils.replaceAll(emails, "\\s+", "");
+	    System.out.println(StringUtils.join(StringUtils.split(emails, ";,"), DEFAULT_SEPARATOR)); 
 	}
 }

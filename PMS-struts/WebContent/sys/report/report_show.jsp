@@ -319,7 +319,7 @@
 			<div id="assignedRate" style="height: 300px; width: 900px;"></div>
 		</div>
 		<div class="panel-body hideMark tablebody">
-			<div style="height: 400px; width: 1100px;">
+			<div style="width: 1100px;">
 				<p class="redMark">条件值指办事处指定项目经理的项目数量，总值指办事处所有待跟踪状态的项目数量</p>
 				<table class="table">
 					${assignedTableHtml }
@@ -350,7 +350,7 @@
 			<div id="traceRate" style="height: 300px; width: 900px;"></div>
 		</div>
 		<div class="panel-body hideMark tablebody">
-			<div style="height: 400px; width: 1100px;">
+			<div style="width: 1100px;">
 				<p class="redMark">条件值指办事处已制定工程计划的项目数量,总值指办事处所有指定项目经理的项目数量</p>
 				<table class="table">
 					${traceTableHtml }
@@ -383,7 +383,7 @@
 		<div class="panel-body hideMark tablebody">
 			<!-- <p class="redMark">条件值指办事处当前季度不予跟踪或闭环的项目数量,总值指办事处当前季度新创建的项目数量</p> -->
 			<p class="redMark">条件值指办事处当前季度闭环的项目数量,总值指办事处当前季度新创建的项目数量</p>
-            <div style="height: 400px; width: 1100px;">
+            <div style="width: 1100px;">
 				<table class="table">
 					${closeTableHtml}
 				</table>

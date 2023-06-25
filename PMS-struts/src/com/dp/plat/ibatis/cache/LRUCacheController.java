@@ -34,4 +34,9 @@ public class LRUCacheController extends LruCacheController {
         return value;
     }
 
+    @Override
+    public void flush(CacheModel cacheModel) {
+        super.flush(cacheModel);
+    }
+
 }

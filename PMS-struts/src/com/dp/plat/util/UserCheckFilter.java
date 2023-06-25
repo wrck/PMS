@@ -27,6 +27,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jasig.cas.client.authentication.AuthenticationFilter;
+import org.jasig.cas.client.session.SingleSignOutHttpSessionListener;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
 import com.dp.plat.context.SpringContext;
@@ -71,7 +72,12 @@ public class UserCheckFilter implements Filter{
 //		}
 		int pos = url.indexOf("/", 0);
 		if(!userContext.isLogin()){
-			String casStr=loginService.querySysArg("sys.cas");
+//		    String serverName = StringEscUtil.getText("sys.server.name");
+//            String casStr = loginService.querySysArg("sys." + serverName + ".cas");
+//            if (StringUtils.isBlank(casStr)) {
+//                casStr = loginService.querySysArg("sys.cas");
+//            }
+		    String casStr = StringEscUtil.getText("sys.cas");
 			if(casStr.equals("0")){
 				userContext.setCas(false);			
 			}else if(casStr.equals("1")){
@@ -81,6 +87,10 @@ public class UserCheckFilter implements Filter{
         // 未登录
         if (!userContext.isLogin() && !(url.contains("index.jsp")||url.contains("login.jsp")||url.contains("Login.action") ||url.contains("Login!start.action"))) {
             userContext.setDefaultPage(userContext.getUrl());
+            resp.sendRedirect(req.getContextPath() + "/Login.action");
+            return;
+        } else if (userContext.isCas() && (url.contains("index.jsp") || url.contains("login.jsp") || url.contains("Login!start.action"))) {
+            // CAS登录
             resp.sendRedirect(req.getContextPath() + "/Login.action");
             return;
         }
@@ -145,11 +155,17 @@ public class UserCheckFilter implements Filter{
         pwdoverdue = pwdoverdue != null ? pwdoverdue : currentDate;
         needChangePwd = !currentDate.before(pwdoverdue);
         boolean isCas = userContext.isCas();
-        AuthenticationFilter casFilter = null;
-        try {
-            casFilter = SpringContext.getBean(AuthenticationFilter.class);
-            isCas = casFilter != null;
-        } catch (NoSuchBeanDefinitionException e) {
+//        AuthenticationFilter casFilter = null;
+//        try {
+//            casFilter = SpringContext.getBean(AuthenticationFilter.class);
+//            isCas = casFilter != null;
+//        } catch (NoSuchBeanDefinitionException e) {
+//            isCas = false;
+//        }
+        String casStr = StringEscUtil.getText("sys.cas");
+        if ("1".equals(casStr)) {
+            isCas = true;
+        } else {
             isCas = false;
         }
         Boolean isNeed = Boolean.TRUE.equals(needChangePwd) && !isCas;

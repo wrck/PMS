@@ -17,7 +17,7 @@
 			</td>
 		</tr>
 		<tr>
-			<td width=210 height=40 align=center><dp:errormsg /></td>
+			<td id="error"><dp:errormsg /></td>
 		</tr>
 	</tbody>
 </table>

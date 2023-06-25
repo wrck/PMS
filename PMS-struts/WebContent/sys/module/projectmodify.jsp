@@ -1484,10 +1484,11 @@ td a:VISITED {
 		oldSoftVersion = $("#oldSoftVersion").val().trim();
 		newSoftVersion = $("#newSoftVersion").val().trim();
 		newSoftVersion = newSoftVersion.replace(".bin", "");
+		/* // 去除版本型号
 		var temp = newSoftVersion.split("-");
 		if (temp.length > 1) {
 			newSoftVersion = temp[temp.length - 1];
-		}
+		} */
 		if(newSoftVersion!= '' &&  oldSoftVersion != newSoftVersion){
 			var $softs = $("input[name$='." + softType + "'].software", softItemCode ? (".itemCode_" + softItemCode) : undefined);
 			$softs.each(function() {

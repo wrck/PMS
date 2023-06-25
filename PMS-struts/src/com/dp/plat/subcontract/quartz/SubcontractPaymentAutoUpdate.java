@@ -130,7 +130,7 @@ public class SubcontractPaymentAutoUpdate implements Job {
             user = loginDao.querUser(username);
             if (user != null) {
                 String areaPower = StringUtils.trimToEmpty(user.getAreapower());
-                if ("-1".equals(areaPower)) {
+                if ("-1".equals(areaPower) && StringUtils.isNotBlank(user.getDpNo())) {
                     user.setAreapower(user.getDpNo());
                 } else if (!areaPower.contains(user.getDpNo())) {
                     user.setAreapower(areaPower + "," + user.getDpNo());

@@ -1,9 +1,9 @@
 #if(!$accesskey)
     #set($allerrors = $fieldErrors.values())
     #foreach($errors in $allerrors)
-        #if($velocityCount != 1)msg+="\n";#end
+        #if($velocityCount != 1)#end
         #foreach($error in $errors)
-            #if($velocityCount != 1)msg+="\n";#end
+            #if($velocityCount != 1)#end
             <pre>$error</pre>
             #if($onlyone)#stop#end
         #end
@@ -12,10 +12,13 @@
 #else
     #set($errors = $fieldErrors.get($accesskey))
     #foreach($error in $errors)
-        #if($velocityCount != 1)msg+="\n";#end
+        #if($velocityCount != 1)#end
         <pre>$error</pre>
         #if($onlyone)#stop#end
     #end
+#end
+#if($globalException)
+    <pre>$globalException</pre>
 #end
 <script>
 function showErrorMsgInInit()

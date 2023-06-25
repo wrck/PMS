@@ -281,14 +281,28 @@ function checkUsername(){
 					</select>
 		    	</div>
 		    </div>
-	      <div class="form-group">
-		    <label  class="col-sm-1 control-label"><span class="redmark">*</span><s:text name="sys.user.defaultPage"></s:text><span>:</span></label>
+	        <div class="form-group">
+		        <label  class="col-sm-1 control-label"><span class="redmark">*</span><s:text name="sys.user.defaultPage"></s:text><span>:</span></label>
 			    <div class="col-sm-4">
 			      <select name="user.defaultPage" id="defaultPage" class="form-control">
 			      	<option>请选择</option>
 			      </select>
 			    </div>
 		    </div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label"><span class="redmark">*</span>序列号查项目<span>:</span></label>
+                <div class="col-sm-4">
+                  <s:radio list="#{true: '禁用', false : '启用'}" value="%{user.customStrInfo.disableQueryProjectByBarcode != null ? user.customStrInfo.disableQueryProjectByBarcode : false}"  name="user.customStrInfo.disableQueryProjectByBarcode" id="disableQueryProjectByBarcode">
+                  </s:radio>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label"><span class="redmark">*</span>项目名称模糊查项目<span>:</span></label>
+                <div class="col-sm-4">
+                  <s:radio list="#{true: '禁用', false : '启用'}" value="%{user.customStrInfo.disableFuzzyQueryProjectByProjectName != null ? user.customStrInfo.disableFuzzyQueryProjectByProjectName : false}"  name="user.customStrInfo.disableFuzzyQueryProjectByProjectName" id="disableFuzzyQueryProjectByProjectName">
+                  </s:radio>
+                </div>
+            </div>
    		</div>
    	</div>
    	 <div class="form-group">

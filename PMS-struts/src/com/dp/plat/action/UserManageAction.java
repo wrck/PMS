@@ -64,6 +64,9 @@ public class UserManageAction extends BaseAction implements Preparable {
 		}
 		//查询
 		rolelist = userManageService.queryRolelist();
+		Department department = new Department();
+		department.setStatus(1);
+        departments = departmentManageService.queryAllDepartments(department);
 		Map<String, String> roleMap = dealWith(rolelist);
 		displayParam.getParam();
 		userlist = userManageService.queryUserList(displayParam, user);

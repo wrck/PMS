@@ -21,8 +21,19 @@ public class LoginAction extends BaseAction{
 	UserManageService  userManageService;
 	
 	String redirecturl;
+	
 
 	@Override
+    public String start() {
+	    UserContext userContext = UserContext.getUserContext();
+	    if (userContext.isLogin() && StringUtils.isNotBlank(userContext.getDefaultPage())) {
+	        this.setRedirecturl(userContext.getDefaultPage());
+	        return SUCCESS;
+	    }
+        return super.start();
+    }
+
+    @Override
 	public String execute()throws Exception{
 		if(UserContext.getUserContext().isCas()){
 			return this.casLogin();

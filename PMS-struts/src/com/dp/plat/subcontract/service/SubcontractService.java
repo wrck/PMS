@@ -544,4 +544,19 @@ public interface SubcontractService extends BaseService {
      */
     List<SubcontractPayment> querySSESubcontractPaymentList();
 
+    /**
+     * 根据部门查询默认多维度信息
+     * @param depNum
+     * @return
+     */
+    Map<String, String> selectDefaultMultiDimByDep(String depNum);
+
+    /**
+     * 根据部门查询默认多维度信息
+     * @param depNum
+     * @param directWithoutChace 直接查询数据库，不查询缓存
+     * @return
+     */
+    Map<String, String> selectDefaultMultiDimByDep(String depNum, boolean directWithoutChace);
+
 }

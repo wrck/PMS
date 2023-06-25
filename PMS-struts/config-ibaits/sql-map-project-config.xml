@@ -62,6 +62,7 @@
                     `pm`.`memberCode` AS `salesManCode`, `pm`.`memberName` AS `salesManName`,
                     `pm2`.`memberCode` AS `serviceManager`, `pm2`.`memberName` AS `serviceManagerName`, 
                     `pm3`.`memberCode` AS `projectManager`, `pm3`.`memberName` AS `projectManagerName`, 
+                    `gm`.`memberCode` AS `groupMember`, `gm`.`memberName` AS `groupMemberName`, 
                      shipmentState.`basicDataName` AS shipmentStateName, state.`shipmentState`, 
                      planState.`basicDataName` AS planStateName, state.`projectPlanState`, 
                      executionState.`basicDataName` AS executionStateName, state.executionState, 
@@ -83,7 +84,8 @@
                         THEN ssfs1.basicDataName 
                         ELSE ssfs2.basicDataName 
                     END AS ssfsName, 
-                    CASE
+             ]]>
+                    <!-- CASE
                         WHEN 
                         CASE
                             WHEN ph.column012 IS NULL 
@@ -108,10 +110,13 @@
                             THEN prp2.partyName 
                             ELSE NULL 
                         END 
-                    END AS partnerChannel,
+                    END AS partnerChannel, -->
+                    CONCAT_WS(",", 
+                        IF(prp1.partyName = '', NULL, prp1.partyName), 
+                        IF(prp2.partyName = '', NULL, prp2.partyName)
+                    ) partnerChannel,
                     prp1.partyName as serviceChannel, 
                     prp2.partyName as agentChannel,
-             ]]>
              <isEqual property="checkWarranty" compareValue="true">
                     wcs.warrantyStatus, wcs.warrantyStatusName,
                     wcs.warrantyGrade, wcs.warrantyGradeName,
@@ -207,6 +212,14 @@
                             `pm3`.`effectiveTo` > NOW() 
                             OR ISNULL(`pm3`.`effectiveTo`)
                         ) 
+                    LEFT JOIN `pm_project_member` `gm` 
+                        ON `gm`.`memberRole` in ('10', '20', '30', '40')
+                        AND `ph`.`projectId` = `gm`.`projectId` 
+                        AND `gm`.`effectiveFrom` < NOW()
+                        AND (
+                            `gm`.`effectiveTo` > NOW() 
+                            OR ISNULL(`gm`.`effectiveTo`)
+                        ) 
                     LEFT JOIN pm_project_state state 
                         ON state.`projectId` = ph.projectId 
                     LEFT JOIN pm_project_related_party prp1 
@@ -244,12 +257,10 @@
                 WHERE ISNULL(`ph`.`effectiveTo`) 
             ]]>
             <isNotEqual prepend="AND" property="projectId" compareValue="0"> ph.projectId = #projectId# </isNotEqual>
-            <isNotEmpty prepend="and" property="serviceManagerCode">
-                <![CDATA[ 
-                (
-                    (pm2.memberCode  = #serviceManagerCode# or pm3.`memberCode` = #serviceManagerCode#)
-                ]]>
-                <isNotEmpty property="officeCodes">
+            <isNotEmpty prepend="AND" property="memberCode" open="(" close=")"> 
+                gm.memberCode = #memberCode# 
+	           <isNotEmpty property="serviceManagerCode">
+	                <isNotEmpty property="officeCodes">
                         OR (
                             ph.column001 IN ($officeCodes$) 
                             AND (
@@ -257,14 +268,9 @@
                                 OR ph.projectState = 100
                             )
                         )
-                </isNotEmpty>
-                )
-            </isNotEmpty>
-            <isNotEmpty prepend="and" property="programManagerCode">
-                <![CDATA[ 
-                    (
-                        pm3.`memberCode` = #programManagerCode# 
-                ]]>
+	                </isNotEmpty>
+	            </isNotEmpty>
+	            <isNotEmpty property="programManagerCode">
                     <isNotEmpty property="officeCodes">
                         OR (
                             ph.column001 IN ($officeCodes$) 
@@ -274,14 +280,56 @@
                             )
                         )
                     </isNotEmpty>
-                    )
+	            </isNotEmpty>
             </isNotEmpty>
-            <isEmpty property="serviceManagerCode">
+            <isEmpty property="memberCode"> 
+	            <isNotEmpty prepend="and" property="serviceManagerCode">
+	                <![CDATA[ 
+	                (
+	                    (pm2.memberCode  = #serviceManagerCode# or pm3.`memberCode` = #serviceManagerCode#)
+	                ]]>
+	                <isNotEmpty property="officeCodes">
+	                        OR (
+	                            ph.column001 IN ($officeCodes$) 
+	                            AND (
+	                                ph.projectState = 20 
+	                                OR ph.projectState = 100
+	                            )
+	                        )
+	                </isNotEmpty>
+	                )
+	            </isNotEmpty>
+	            <isNotEmpty prepend="and" property="programManagerCode">
+	                <![CDATA[ 
+	                    (
+	                        pm3.`memberCode` = #programManagerCode# 
+	                ]]>
+	                    <isNotEmpty property="officeCodes">
+	                        OR (
+	                            ph.column001 IN ($officeCodes$) 
+	                            AND (
+	                                ph.projectState = 20 
+	                                OR ph.projectState = 100
+	                            )
+	                        )
+	                    </isNotEmpty>
+	                    )
+	            </isNotEmpty>
+            </isEmpty>
+            <!-- <isEmpty property="serviceManagerCode">
                 <isEmpty property="programManagerCode">
                     <isNotEmpty prepend="and" property="officeCodes"> ph.column001 IN ($officeCodes$) </isNotEmpty>
                 </isEmpty>
-            </isEmpty>
+            </isEmpty> -->
+            <isNotNull property="customInfo.isProjectViewer">
+	            <isNotEmpty prepend="and" property="officeCodes"> ph.column001 IN ($officeCodes$) </isNotEmpty>
+	        </isNotNull>
             
+            <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
+	        <isNotEmpty prepend="and" property="oldServiceManagerCode">
+	            (pm2.memberCode = #oldServiceManagerCode# or pm3.memberCode = #oldServiceManagerCode#)
+	        </isNotEmpty>
+	        <isNotEmpty prepend="and" property="oldProgramManagerCode"> pm3.memberCode = #oldProgramManagerCode# </isNotEmpty>
             <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(ph.projectState, #projectState# )]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ state.projectPlanState = #projectPlanState# ]]></isNotEmpty>
             <isNotEqual compareValue="0" prepend="and" property="shipmentState"><![CDATA[ state.shipmentState = #shipmentState#]]></isNotEqual>
@@ -302,7 +350,7 @@
         </isNotEqual>
         <isEqual compareValue="10" property="projectState">
             <![CDATA[
-                SELECT DISTINCT
+            SELECT DISTINCT
               NULL                    AS `projectId`,
               NULL                    AS `projectCode`,
               NULL                    AS `rank`,
@@ -323,6 +371,8 @@
               NULL                    AS `serviceManagerName`,
               NULL                    AS `projectManager`,
               NULL                    AS `projectManagerName`,
+              NULL                    AS `groupMember`,
+              NULL                    AS `groupMemberName`,
               NULL  as shipmentStateName,
               NULL  as shipmentState,
               NULL as planStateName,
@@ -375,9 +425,9 @@
             ]]>
         </isEqual>
         <isEmpty prepend="UNION ALL" property="projectState">
-        <isEqual prepend="AND" property="projectId" compareValue="0">
+        <isEqual property="projectId" compareValue="0">
                 <![CDATA[
-                SELECT DISTINCT
+            SELECT DISTINCT
               NULL                    AS `projectId`,
               NULL                    AS `projectCode`,
               NULL                    AS `rank`,
@@ -398,6 +448,8 @@
               NULL                    AS `serviceManagerName`,
               NULL                    AS `projectManager`,
               NULL                    AS `projectManagerName`,
+              NULL                    AS `groupMember`,
+              NULL                    AS `groupMemberName`,
               NULL  as shipmentStateName,
               NULL  as shipmentState,
               NULL as planStateName,
@@ -456,6 +508,7 @@
         <![CDATA[
             where projectId > 0 
         ]]>
+        <isNotEmpty prepend="and" property="customInfo.fullProjectName"><![CDATA[ projectName = #projectName# ]]></isNotEmpty>
         <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
         <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(projectState, #projectState#) ]]></isNotEmpty>
         <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ projectPlanState = #projectPlanState# ]]></isNotEmpty>
@@ -463,30 +516,9 @@
         <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like CONCAT('%', #contractNo#, '%') or projectCode like CONCAT('%', #contractNo#, '%'))]]></isNotEmpty>
         <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like CONCAT('%', #salesManCode#)]]></isNotEmpty>
         <!-- <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ (serviceManager = #serviceManagerCode# or projectManager = #serviceManagerCode#)]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="serviceManagerCode">
-            <![CDATA[ 
-                (
-                    (serviceManager = #serviceManagerCode# 
-                        or 
-                        projectManager = #serviceManagerCode#)
-            ]]>
-                    <isNotEmpty property="officeCodes">
-                        OR (
-                            officeCode IN ($officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                or projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                )
-        </isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="programManagerCode">
-            <![CDATA[ 
-                (
-                    projectManager = #programManagerCode# 
-            ]]>
+        <isNotEmpty prepend="AND" property="memberCode" open="(" close=")"> 
+            groupMember = #memberCode# 
+            <isNotEmpty property="serviceManagerCode">
                 <isNotEmpty property="officeCodes">
                     OR (
                         officeCode IN ($officeCodes$) 
@@ -496,13 +528,65 @@
                         )
                     )
                 </isNotEmpty>
-                )
+            </isNotEmpty>
+            <isNotEmpty property="programManagerCode">
+                <isNotEmpty property="officeCodes">
+                    OR (
+                        officeCode IN ($officeCodes$) 
+                        AND (
+                            projectState = 20 
+                            or projectState = 100
+                        )
+                    )
+                </isNotEmpty>
+            </isNotEmpty>
         </isNotEmpty>
-        <isEmpty property="serviceManagerCode">
+        <isEmpty property="memberCode"> 
+	        <isNotEmpty prepend="and" property="serviceManagerCode">
+	            <![CDATA[ 
+	                (
+	                    (serviceManager = #serviceManagerCode# 
+	                        or 
+	                        projectManager = #serviceManagerCode#)
+	            ]]>
+	                    <isNotEmpty property="officeCodes">
+	                        OR (
+	                            officeCode IN ($officeCodes$) 
+	                            AND (
+	                                projectState = 20 
+	                                or projectState = 100
+	                            )
+	                        )
+	                    </isNotEmpty>
+	                )
+	        </isNotEmpty>
+	        <!-- <isNotEmpty prepend="and" property="programManagerCode"><![CDATA[ projectManager = #programManagerCode#]]></isNotEmpty> -->
+	        <isNotEmpty prepend="and" property="programManagerCode">
+	            <![CDATA[ 
+	                (
+	                    projectManager = #programManagerCode# 
+	            ]]>
+	                <isNotEmpty property="officeCodes">
+	                    OR (
+	                        officeCode IN ($officeCodes$) 
+	                        AND (
+	                            projectState = 20 
+	                            or projectState = 100
+	                        )
+	                    )
+	                </isNotEmpty>
+	                )
+	        </isNotEmpty>
+        </isEmpty>
+        <!-- <isEmpty property="serviceManagerCode">
             <isEmpty property="programManagerCode">
                 <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty>
             </isEmpty>
-        </isEmpty>
+        </isEmpty> -->
+        <isNotNull property="customInfo.isProjectViewer">
+            <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty>
+        </isNotNull>
+        
         <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
         <isNotEmpty prepend="and" property="oldServiceManagerCode">
             (serviceManager = #oldServiceManagerCode# or projectManager = #oldServiceManagerCode#)
@@ -537,6 +621,7 @@
         <![CDATA[
             where projectId > 0 
         ]]>
+        <isNotEmpty prepend="and" property="project.customInfo.fullProjectName"><![CDATA[ projectName = #project.projectName# ]]></isNotEmpty>
         <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like CONCAT('%', #project.projectName#, '%')]]></isNotEmpty>
         <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ FIND_IN_SET(projectState, #project.projectState# )]]></isNotEmpty>
         <isNotEmpty prepend="and" property="project.projectPlanState"><![CDATA[ projectPlanState = #project.projectPlanState# ]]></isNotEmpty>
@@ -544,45 +629,76 @@
         <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like CONCAT('%', #project.contractNo#, '%') or projectCode like CONCAT('%', #project.contractNo#, '%'))]]></isNotEmpty>
         <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like CONCAT('%', #project.salesManCode#)]]></isNotEmpty>
         <!-- <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ (serviceManager = #project.serviceManagerCode# or projectManager = #project.serviceManagerCode# )]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="project.serviceManagerCode">
-            <![CDATA[ 
-                (
-                    (serviceManager = #project.serviceManagerCode# 
-                        or projectManager = #project.serviceManagerCode#)
-            ]]>
-                    <isNotEmpty property="project.officeCodes">
-                        OR (
-                            officeCode IN ($project.officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                or projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                )
+        <isNotEmpty prepend="AND" property="project.memberCode" open="(" close=")"> 
+            groupMember = #project.memberCode# 
+            <isNotEmpty property="project.serviceManagerCode">
+                 <isNotEmpty property="project.officeCodes">
+                     OR (
+                         officeCode IN ($project.officeCodes$) 
+                         AND (
+                             projectState = 20 
+                             or projectState = 100
+                         )
+                     )
+                 </isNotEmpty>
+	        </isNotEmpty>
+	        <isNotEmpty property="project.programManagerCode">
+                 <isNotEmpty property="project.officeCodes">
+                     OR (
+                         officeCode IN ($project.officeCodes$) 
+                         AND (
+                             projectState = 20 
+                             OR projectState = 100
+                         )
+                     )
+                 </isNotEmpty>
+	        </isNotEmpty>
         </isNotEmpty>
-        <!-- <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty> -->
-        <isNotEmpty prepend="and" property="project.programManagerCode">
-                <![CDATA[ 
-                    (
-                        projectManager = #project.programManagerCode# 
-                ]]>
-                    <isNotEmpty property="project.officeCodes">
-                        OR (
-                            officeCode IN ($project.officeCodes$) 
-                            AND (
-                                projectState = 20 
-                                OR projectState = 100
-                            )
-                        )
-                    </isNotEmpty>
-                    )
-        </isNotEmpty>
-        <isEmpty property="project.serviceManagerCode">
+        <isEmpty property="project.memberCode"> 
+	        <isNotEmpty prepend="and" property="project.serviceManagerCode">
+	            <![CDATA[ 
+	                (
+	                    (serviceManager = #project.serviceManagerCode# 
+	                        or projectManager = #project.serviceManagerCode#)
+	            ]]>
+	                    <isNotEmpty property="project.officeCodes">
+	                        OR (
+	                            officeCode IN ($project.officeCodes$) 
+	                            AND (
+	                                projectState = 20 
+	                                or projectState = 100
+	                            )
+	                        )
+	                    </isNotEmpty>
+	                )
+	        </isNotEmpty>
+	        <!-- <isNotEmpty prepend="and" property="project.programManagerCode"><![CDATA[ projectManager = #project.programManagerCode#]]></isNotEmpty> -->
+	        <isNotEmpty prepend="and" property="project.programManagerCode">
+	                <![CDATA[ 
+	                    (
+	                        projectManager = #project.programManagerCode# 
+	                ]]>
+	                    <isNotEmpty property="project.officeCodes">
+	                        OR (
+	                            officeCode IN ($project.officeCodes$) 
+	                            AND (
+	                                projectState = 20 
+	                                OR projectState = 100
+	                            )
+	                        )
+	                    </isNotEmpty>
+	                    )
+	        </isNotEmpty>
+        </isEmpty>
+        <!-- <isEmpty property="project.serviceManagerCode">
             <isEmpty property="project.programManagerCode">
                 <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty>
             </isEmpty>
-        </isEmpty>
+        </isEmpty> -->
+        <isNotEmpty property="project.customInfo.isProjectViewer">
+            <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty>
+        </isNotEmpty>
+        
         <!-- old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目经理和服务经理 -->
         <isNotEmpty prepend="and" property="project.oldServiceManagerCode">
             (serviceManager = #project.oldServiceManagerCode# or projectManager = #project.oldServiceManagerCode#)
@@ -812,11 +928,12 @@
                     on filteredProjectId = t1.projectId
         </isNotEmpty> -->
         <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="customInfo.fullProjectName"><![CDATA[ projectName = #projectName# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectName"><![CDATA[ projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectState"><![CDATA[ FIND_IN_SET(projectState, #projectState# )]]></isNotEmpty>
             <isNotEmpty prepend="and" property="projectPlanState"><![CDATA[ projectPlanState = #projectPlanState# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="column001"><![CDATA[ officeCode = #column001#]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty>
+            <!-- <isNotEmpty prepend="and" property="officeCodes"> t1.officeCode IN ($officeCodes$) </isNotEmpty> -->
             <isNotEmpty prepend="and" property="contractNo"><![CDATA[ (contractNo like CONCAT('%', #contractNo#, '%') or projectCode like CONCAT('%', #contractNo#, '%'))]]></isNotEmpty>
             <isNotEmpty prepend="and" property="salesManCode"><![CDATA[ salesManCode like CONCAT('%', #salesManCode#)]]></isNotEmpty>
             <isNotEmpty prepend="and" property="serviceManagerCode"><![CDATA[ serviceManager = #serviceManagerCode#]]></isNotEmpty>
@@ -855,11 +972,12 @@
             left join fnd_company c
                 on c.id = t1.compId
         <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="project.customInfo.fullProjectName"><![CDATA[ projectName = #project.projectName# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.projectName"><![CDATA[ projectName like CONCAT('%', #project.projectName#, '%')]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.projectState"><![CDATA[ FIND_IN_SET(projectState, #project.projectState# ) ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.projectPlanState"><![CDATA[ projectPlanState = #project.projectPlanState# ]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.column001"><![CDATA[ officeCode = #project.column001#]]></isNotEmpty>
-            <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty>
+            <!-- <isNotEmpty prepend="and" property="project.officeCodes"> t1.officeCode IN ($project.officeCodes$) </isNotEmpty> -->
             <isNotEmpty prepend="and" property="project.contractNo"><![CDATA[ (contractNo like CONCAT('%', #project.contractNo#, '%') or projectCode like CONCAT('%', #project.contractNo#, '%'))]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.salesManCode"><![CDATA[ salesManCode like CONCAT('%', #project.salesManCode#)]]></isNotEmpty>
             <isNotEmpty prepend="and" property="project.serviceManagerCode"><![CDATA[ serviceManager = #project.serviceManagerCode#]]></isNotEmpty>

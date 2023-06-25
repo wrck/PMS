@@ -13,12 +13,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -638,23 +642,37 @@ public class ProjectAction extends BaseAction implements Preparable{
                 MessageUtil.ROLE_ENGINEEMANAGER_LEADER, MessageUtil.ROLE_FINANCIAL_STAFF, MessageUtil.ROLE_CALLBACKPER,
                 MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_WARRANTY_CALLBACKER))
         ) {
-            Project temp = new Project(project.getProjectId());
-            temp.setBarCode(project.getBarCode()); // 按序列号搜索查看项目
-            temp.setProjectName(project.getProjectName()); // 按项目名称搜索查看项目
-            List<Project> list = Collections.singletonList(projectService.queryProjectByPowerId(project));
+            // 为了防止重复查询以及一些重定向跳转操作，单个项目Session有效期内只判断一次权限
+            HttpSession session = getServletRequest().getSession();
+            Map<String, Object> cacheProjectPowerMap = (Map<String, Object>) session.getAttribute("cacheProjectPowerMap");
+            if (cacheProjectPowerMap == null) {
+                cacheProjectPowerMap = new ConcurrentHashMap<String, Object>();
+                session.setAttribute("cacheProjectPowerMap", cacheProjectPowerMap);
+            }
+            String cacheProjectKey = String.valueOf(project.getProjectId());
+            // 如果没有缓存，则进行权限判断
+            if (!cacheProjectPowerMap.containsKey(cacheProjectKey)) {
+                Project temp = new Project(project.getProjectId());
+                temp.setBarCode(project.getBarCode()); // 按序列号搜索查看项目
+                temp.setProjectName(project.getProjectName()); // 按项目名称搜索查看项目
+                List<Project> list = Collections.singletonList(projectService.queryProjectByPowerId(temp));
 //            List<Project> list = projectService.queryProjectListByPower(temp, displayParam);
-            boolean hasPower = false;
-            if (!list.isEmpty()) {
-                for (Project project : list) {
-                    if (project != null && temp.getProjectId().equals(project.getProjectId())) {
-                        hasPower = true;
-                        break;
+                boolean hasPower = false;
+                if (!list.isEmpty()) {
+                    for (Project project : list) {
+                        if (project != null && temp.getProjectId().equals(project.getProjectId())) {
+                            hasPower = true;
+                            break;
+                        }
                     }
                 }
-            }
-            if (!hasPower) {
-                setErrmsg("没有权限访问！");
-                return ERROR;
+//            boolean hasPower = true;
+                if (!hasPower) {
+                    setErrmsg("没有权限访问！");
+                    return ERROR;
+                } else {
+                    cacheProjectPowerMap.put(cacheProjectKey, hasPower);
+                }
             }
         }
 
@@ -1682,6 +1700,33 @@ public class ProjectAction extends BaseAction implements Preparable{
 	 */
 	public String queryperson(){
 		personList = projectService.queryPersonList();
+		
+		User temp = new User();
+		temp.setStatus(1);
+		List<User> userList = userManageService.queryAllUserList(temp);
+		
+		ArrayList<Person> allList = new ArrayList<Person>(personList.size() + userList.size());
+		allList.addAll(personList);
+		
+		Set<String> uniqueSet = new HashSet<String>(allList.size() * 2);
+		for (Person person : personList) {
+	        if (StringUtils.isNotBlank(person.getSalesmanCode())) {
+	            uniqueSet.add(person.getSalesmanCode());
+	            if (StringUtils.isNotBlank(person.getSalesmanMail())) {
+	                uniqueSet.add(person.getSalesmanMail().substring(0, 1) + person.getSalesmanCode());
+	            }
+            }
+        }
+		for (User user : userList) {
+		    if (!uniqueSet.contains(user.getUsername())) {
+		        Person person = new Person();
+		        person.setSalesmanCode(user.getUsername());
+		        person.setSalesmanMail(user.getEmail());
+		        person.setSalesmanName(user.getRealName());
+		        allList.add(person);
+		    }
+        }
+		personList = allList;
 		return SUCCESS;
 	}
 	/**

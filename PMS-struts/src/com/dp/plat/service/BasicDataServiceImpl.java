@@ -164,4 +164,9 @@ public class BasicDataServiceImpl extends BaseServiceImpl implements BasicDataSe
             String dataTypeCode, String subDataTypeCode, Map extra) {
         return basicDataDao.queryBasicDataBeanMapWithSub(dataTypeCode, subDataTypeCode, extra);
     }
+
+    @Override
+    public boolean refreshCacheData() {
+        return basicDataDao.refreshCacheData();
+    }
 }

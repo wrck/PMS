@@ -303,6 +303,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         }
         
         UserContext context = UserContext.getUserContext();
+        boolean isProjectViewer = false;
         if (context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN)) {
             // 搜索权限条件不变
         } else if (context.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
@@ -326,22 +327,37 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         } else if (context.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)) {
             // 只能搜指定区域的项目
             project.setOfficeCodes(Util.appendChar(context.getUser().getAreapower(), "'"));
+            // 用来限定项目查阅者的区域权限
+            project.setCustomInfoByKey("isProjectViewer", isProjectViewer);
         } else {
             return null;
         }
+        
+        // 搜索项目成员，主要是服务经理、项目经理、团队成员
+        // old*Code 传递页面查询框的数据，避免无法筛选已闭环和不予跟踪的项目成员
+        project.setOldMemberCode(project.getMemberCode());
+        project.setMemberCode(getCurrUsername());
         
         // 项目经理或者服务经理搜索时，不限制以下特殊情况权限特殊处理
         Project tempProject = project;
         if (!(context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || context.isHasRole(MessageUtil.ROLE_ADMIN))) {
             // 序列号查询，不限制权限
             if (StringUtils.isNotBlank(project.getBarCode()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
-                project = new Project();
-                BeanUtils.copyProperties(tempProject, project, new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
+                boolean disableQueryProjectByBarcode = Boolean.parseBoolean(String.valueOf(context.getUser().getCustomInfoByKey("disableQueryProjectByBarcode")));
+                if (!disableQueryProjectByBarcode) {
+                    project = new Project();
+                    BeanUtils.copyProperties(tempProject, project, new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" });
+                }
             }
             // 项目名搜索，只限制办事处，不限制是否指派
             if (StringUtils.isNotBlank(project.getProjectName()) && (context.isHasAnyRole(MessageUtil.ROLE_SERVICEMANAGER, MessageUtil.ROLE_PROGRAMMANAGER, MessageUtil.ROLE_PROJECT_VIEWER))) {
+                boolean disableFuzzyQueryProjectByProjectName = Boolean.parseBoolean(String.valueOf(context.getUser().getCustomInfoByKey("disableFuzzyQueryProjectByProjectName")));
+                // 用来限定项目名称的模糊查询
+                if (disableFuzzyQueryProjectByProjectName) {
+                    project.setCustomInfoByKey("fullProjectName", project.getProjectName());
+                }
                 project = new Project();
-                BeanUtils.copyProperties(tempProject, project, new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode" });
+                BeanUtils.copyProperties(tempProject, project, new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" });
             }
         }
         // 判断是否有产品类型这个搜索条件

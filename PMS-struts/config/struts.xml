@@ -33,7 +33,7 @@
             <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
                 <param name="enable">true</param>
                 <param name="excludeUrls">/base/executeSql.*</param>
-                <param name="cleanUrls">/module/prob_*</param>
+                <param name="cleanUrls">/module/prob_*,/probAudit.*,/probAjax_*.*</param>
                 <param name="encodeUrls">/*</param>
             </interceptor>
 			
@@ -88,7 +88,7 @@
             <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
                 <param name="enable">true</param>
                 <param name="excludeUrls">/base/executeSql.*</param>
-                <param name="cleanUrls">/module/prob_*</param>
+                <param name="cleanUrls">/module/prob_*,/probAudit.*,/probAjax_*.*</param>
                 <param name="encodeUrls">/*</param>
             </interceptor>
             

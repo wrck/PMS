@@ -6,13 +6,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.jasig.cas.client.authentication.AuthenticationFilter;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.util.StringUtils;
 
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.service.LoginService;
+import com.dp.plat.util.StringEscUtil;
 
 
 public class PasswordInterceptor extends com.dp.plat.security.interceptor.PasswordInterceptor {
@@ -41,13 +41,19 @@ public class PasswordInterceptor extends com.dp.plat.security.interceptor.Passwo
         needChangePwd = !currentDate.before(pwdoverdue);
         boolean isCas = userContext.isCas();
         AuthenticationFilter casFilter = null;
-        try {
-            casFilter = SpringContext.getBean(AuthenticationFilter.class);
-            isCas = casFilter != null;
-        } catch (NoSuchBeanDefinitionException e) {
+//        try {
+//            casFilter = SpringContext.getBean(AuthenticationFilter.class);
+//            isCas = casFilter != null;
+//        } catch (NoSuchBeanDefinitionException e) {
+//            isCas = false;
+//        }
+        String casStr = StringEscUtil.getText("sys.cas");
+        if ("1".equals(casStr)) {
+            isCas = true;
+        } else {
             isCas = false;
         }
-        Boolean isNeed = Boolean.TRUE.equals(needChangePwd) && isCas;
+        Boolean isNeed = Boolean.TRUE.equals(needChangePwd) && !isCas;
         session.setAttribute("needChangePwd", isNeed && redirect != null && redirect.length() > 0);
         return isNeed;
     }
