@@ -39,7 +39,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -64,7 +63,8 @@ public class MailUtil {
 
 	private static final String DEFAULT_AFTER_SPLIT = "$";
 	private static final String DEFAULT_BEFORE_SPLIT = "$";
-	private static final String DEFAULT_REGEX = ";";
+	private static final String DEFAULT_REGEX = "[;|,|\\s]+";
+	private static final String DEFAULT_SEPARATOR = ";";
 	// 外部邮箱地址域名
 	// private static final String OUTMAIL_DOMAIN = "@dptech.com";
 	// 内部邮箱地址域名
@@ -459,6 +459,18 @@ public class MailUtil {
 		mailMessage.setSentDate(new Date());
 		return mailMessage;
 	}
+	
+	/**
+     * 处理邮件地址，过滤掉不合法的邮件地址
+     * 
+     * @param str
+     *            原始邮件地址拼接字符串
+     * @return InternetAddress[] 处理后的邮件地址
+     * @throws AddressException
+     */
+    private static InternetAddress[] filterEmailAddress(String str) {
+        return filterEmailAddress(str, DEFAULT_REGEX);
+    }
 
 	/**
 	 * 处理邮件地址，过滤掉不合法的邮件地址
@@ -471,6 +483,9 @@ public class MailUtil {
 	 * @throws AddressException
 	 */
 	private static InternetAddress[] filterEmailAddress(String str, String regex) {
+	    if (StringUtils.isBlank(regex)) {
+	        regex = DEFAULT_REGEX;
+	    }
 		if (StringUtils.isBlank(str) || StringUtils.isBlank(regex))
 			return null;
 		String[] s = str.split(regex);
@@ -682,37 +697,37 @@ public class MailUtil {
 		// 1:正式环境，2：正式试运行，0：测试环境
 		if ("1".equals(envirmentArgu) || "2".equals(envirmentArgu)) {
 			// 主送
-			String toRecipients = StringUtils.join(Arrays.asList(mailInfo.getToAddress(), mailInfo.getTos()), ";");
-			InternetAddress[] tos = filterEmailAddress(toRecipients, ";");
+			String toRecipients = StringUtils.join(Arrays.asList(mailInfo.getToAddress(), mailInfo.getTos()), DEFAULT_SEPARATOR);
+			InternetAddress[] tos = filterEmailAddress(toRecipients, DEFAULT_SEPARATOR);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 			// 抄送
-			InternetAddress[] ccs = filterEmailAddress(mailInfo.getCcs(), ";");
+			InternetAddress[] ccs = filterEmailAddress(mailInfo.getCcs(), DEFAULT_SEPARATOR);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.CC, ccs);
 			// 密送
-			InternetAddress[] bccs = filterEmailAddress(mailInfo.getBccs(), ";");
+			InternetAddress[] bccs = filterEmailAddress(mailInfo.getBccs(), DEFAULT_SEPARATOR);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, bccs);
 
 			// 正式试运行，密送邮件给特定邮箱
 			if ("2".equals(envirmentArgu)) {
 				String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
-				InternetAddress[] devBccs = filterEmailAddress(devTos, ";");
+				InternetAddress[] devBccs = filterEmailAddress(devTos);
 				mimeMessage.addRecipients(MimeMessage.RecipientType.BCC, devBccs);
 			}
 		} else {
 			String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
-			InternetAddress[] tos = filterEmailAddress(devTos, ";");
+			InternetAddress[] tos = filterEmailAddress(devTos);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 		}
 		// 邮件没有接收人，发送给系统维护人员
 		if (mimeMessage.getAllRecipients() == null || mimeMessage.getAllRecipients().length == 0) {
 			String devTos = systemVariables.get("sys.mail.develop.receiveAddress");
-			InternetAddress[] tos = filterEmailAddress(devTos, ";");
+			InternetAddress[] tos = filterEmailAddress(devTos);
 			mimeMessage.setRecipients(MimeMessage.RecipientType.TO, tos);
 			mimeMessage.setSubject(mailInfo.getSubject() + "----邮件无接收人提醒", "utf-8");
 		}
 		// String actualSendAddress =
 		// ArrayUtils.toString(mimeMessage.getAllRecipients(), null);
-		String actualSendAddress = StringUtils.join(mimeMessage.getAllRecipients(), ";");
+		String actualSendAddress = StringUtils.join(mimeMessage.getAllRecipients(), DEFAULT_SEPARATOR);
 
 		mailInfo.setActualSendAddress(actualSendAddress);
 	}
@@ -754,34 +769,43 @@ public class MailUtil {
 	 * @return
 	 */
 	private static String getImgRealPath(String src) {
-		ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
-		int idxEnd = src.lastIndexOf(":");
-		int idxStart = src.indexOf(":");
-		String contextPath = servletContext.getContextPath();
-		String uri = null;
-		if (idxEnd != idxStart && idxEnd > 0) {
-			uri = src.substring(idxEnd);
-			uri = uri.replace(contextPath, "");
-			int idxTemp = uri.indexOf("/");
-			uri = uri.substring(idxTemp);
-		} else {
-			int indexOf = src.indexOf("static");
-			if (indexOf > 0) {
-				uri = src.substring(indexOf);
-			} else if (idxEnd > 0) {
-				uri = src.substring(idxEnd + 3);
-				int idxTemp = uri.indexOf("/");
-				uri = uri.substring(idxTemp);
-				uri = uri.replace(contextPath, "");
-				idxTemp = uri.indexOf("/");
-				uri = uri.substring(idxTemp);
-			} else {
-				uri = src.replace(contextPath, "");;
-			}
-		}
-		String filePath = servletContext.getRealPath(uri);
-		return filePath;
-	}
+        try {
+            ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
+            int idxEnd = src.lastIndexOf(":");
+            int idxStart = src.indexOf(":");
+            String contextPath = servletContext.getContextPath();
+            String uri = null;
+            if (idxEnd != idxStart && idxEnd > 0) {
+                uri = src.substring(idxEnd);
+                uri = uri.replace(contextPath, "");
+                int idxTemp = uri.indexOf("/");
+                uri = uri.substring(idxTemp);
+            } else {
+                int indexOf = src.indexOf("static");
+                if (indexOf > 0) {
+                    uri = src.substring(indexOf);
+                } else if (idxEnd > 0) {
+                    uri = src.substring(idxEnd + 3);
+                    int idxTemp = uri.indexOf("/");
+                    uri = uri.substring(idxTemp);
+                    uri = uri.replace(contextPath, "");
+                    idxTemp = uri.indexOf("/");
+                    uri = uri.substring(idxTemp);
+                } else {
+                    uri = src.replace(contextPath, "");;
+                }
+            }
+            String filePath = servletContext.getRealPath(uri);
+            File file = new File(filePath);
+            if (!file.exists()) {
+                filePath = src;
+            }
+            return filePath;
+        } catch(Exception e) {
+            ExceptionHandler.insertException(e);
+        }
+        return src;
+    }
 
 	/**
 	 * 向邮件中添加附件
@@ -864,9 +888,9 @@ public class MailUtil {
 			return mailInfos;
 		}
 
-		String[] tos = splitMailStr(info.getTos(), ";");
-		String[] ccs = splitMailStr(info.getCcs(), ";");
-		String[] bccs = splitMailStr(info.getBccs(), ";");
+		String[] tos = splitMailStr(info.getTos());
+		String[] ccs = splitMailStr(info.getCcs());
+		String[] bccs = splitMailStr(info.getBccs());
 
 		StringBuilder innerTos = new StringBuilder();
 		StringBuilder innerCcs = new StringBuilder();
@@ -905,9 +929,9 @@ public class MailUtil {
 		String[] ccs = new String[0];
 		String[] bccs = new String[0];
 		try {
-			tos = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.TO), ";"), ";");
-			ccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.CC), ";"), ";");
-			bccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.BCC), ";"), ";");
+			tos = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.TO), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
+			ccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.CC), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
+			bccs = splitMailStr(StringUtils.join(mimeMessage.getRecipients(RecipientType.BCC), DEFAULT_SEPARATOR), DEFAULT_SEPARATOR);
 		} catch (Exception e) {
 			ExceptionHandler.insertException(e);
 		}
@@ -956,7 +980,7 @@ public class MailUtil {
 		// 重构
 		List<String> mailStrList = new ArrayList<>();
 		for (Address[] mailStrAddr : mailAddrs) {
-			String mailStr = StringUtils.join(mailStrAddr, ";");
+			String mailStr = StringUtils.join(mailStrAddr, DEFAULT_SEPARATOR);
 			if (StringUtils.isNotBlank(mailStr)) {
 				mailStrList.add(mailStr);
 			}
@@ -1006,6 +1030,17 @@ public class MailUtil {
 		}
 		return -1;
 	}
+	
+	/**
+     * 切割邮箱地址字符串，返回邮箱地址数组
+     * 
+     * @param mailStr
+     * @param regex
+     * @return
+     */
+    private static String[] splitMailStr(String mailStr) {
+        return splitMailStr(mailStr, DEFAULT_REGEX);
+    }
 
 	/**
 	 * 切割邮箱地址字符串，返回邮箱地址数组
@@ -1037,13 +1072,13 @@ public class MailUtil {
 				continue;
 			}
 			if (mailStr.toLowerCase().contains(INNERMAIL_DOMAIN)) {
-				inner.append(mailStr).append(";");
+				inner.append(mailStr).append(DEFAULT_SEPARATOR);
 			} else {
-				outer.append(mailStr).append(";");
+				outer.append(mailStr).append(DEFAULT_SEPARATOR);
 			}
 			// TODO 其他外网邮箱，非公司邮箱
 			// if (mailStr.contains(OUTMAIL_DOMAIN)) {
-			// outer.append(mailStr).append(";");
+			// outer.append(mailStr).append(DEFAULT_SEPARATOR);
 			// }
 		}
 	}
@@ -1089,9 +1124,9 @@ public class MailUtil {
 			String ccsStr = ccs.toString();
 			String bccsStr = bccs.toString();
 			if (StringUtils.isNotBlank(tosStr) || StringUtils.isNotBlank(ccsStr) || StringUtils.isNotBlank(bccsStr)) {
-				InternetAddress[] tosAddr = filterEmailAddress(tos.toString(), ";");
-				InternetAddress[] ccsAddr = filterEmailAddress(ccs.toString(), ";");
-				InternetAddress[] bccsAddr = filterEmailAddress(bccs.toString(), ";");
+				InternetAddress[] tosAddr = filterEmailAddress(tos.toString());
+				InternetAddress[] ccsAddr = filterEmailAddress(ccs.toString());
+				InternetAddress[] bccsAddr = filterEmailAddress(bccs.toString());
 				mimeMessage = createMimeMessage(info, isInner);
 				mimeMessage.setRecipients(RecipientType.TO, tosAddr);
 				mimeMessage.setRecipients(RecipientType.CC, ccsAddr);
@@ -1138,25 +1173,22 @@ public class MailUtil {
 //        
         Set<String> tos = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getToAddress())) {
-            tos.add(mailInfo.getToAddress());
+            tos.addAll(Arrays.asList(splitMailStr(mailInfo.getToAddress())));
             mailInfo.setToAddress(null);
         }
         if (StringUtils.isNotEmpty(mailInfo.getTos())) {
-            tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
+//            tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";, ")));
+            tos = new LinkedHashSet<String>(Arrays.asList(mailInfo.getTos().split(DEFAULT_REGEX)));
         }
         Set<String> ccs = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getCcs())) {
-            ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
+//            ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";, ")));
+            ccs = new LinkedHashSet<String>(Arrays.asList(mailInfo.getCcs().split(DEFAULT_REGEX)));
         }
         Set<String> bccs = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getBccs())) {
-            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";,")));
-        }
-        for (Address invalid : invalidAddresses) {
-            String invalidAddress = invalid.toString();
-            tos.remove(invalidAddress);
-            ccs.remove(invalidAddress);
-            bccs.remove(invalidAddress);
+//            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";, ")));
+            bccs = new LinkedHashSet<String>(Arrays.asList(mailInfo.getBccs().split(DEFAULT_REGEX)));
         }
         
         for (Address invalidAddress : invalidAddresses) {
@@ -1171,9 +1203,9 @@ public class MailUtil {
             return false;
         }
         
-        mailInfo.setTos(StringUtils.join(tos, ";"));
-        mailInfo.setCcs(StringUtils.join(ccs, ";"));
-        mailInfo.setBccs(StringUtils.join(bccs, ";"));
+        mailInfo.setTos(StringUtils.join(tos, DEFAULT_SEPARATOR));
+        mailInfo.setCcs(StringUtils.join(ccs, DEFAULT_SEPARATOR));
+        mailInfo.setBccs(StringUtils.join(bccs, DEFAULT_SEPARATOR));
         return sendMailWithAttachments(mailInfo);
     }
 	
