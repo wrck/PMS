@@ -53,6 +53,7 @@ import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
 import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.subcontract.service.SubcontractService;
 
 /**
  *
@@ -78,6 +79,9 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
     
     @Autowired
     private IPurchaseLineService purchaseLineService;
+    
+    @Autowired
+    private SubcontractService subcontractService;
     
     @Override
     public List<DispatchVO> selectDispatchProjectVOList(DispatchVO dispatch) {
@@ -136,7 +140,12 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
         // 派单执行中
         temp.setState(50);
         temp.setDispatched(true);
+        // 多维度信息保存
+        Map<String, String> multiDimInfos = subcontractService.selectDefaultMultiDimByDep(dispatch.getProfitDepCode(), true);
+        temp.setCustomInfoByKey("multiDimInfos", multiDimInfos);
+        temp.getCustomInfo().putAll(multiDimInfos);
         this.updateByPrimaryKeySelective(temp);
+        
         
         DispatchVO dispatchVO = this.selectVOByPrimaryKey(id);
         // 推D365的采购订单
@@ -240,7 +249,8 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
                 .deliveryDate((String) dispatch.getCustomInfoByKey("deliveryDate", DateUtil.getTodayDateTime())) // 交货日期
                 .dlvMode((String) dispatch.getCustomInfoByKey("dlvMode")) // 交货模式
                 .dlvTerm((String) dispatch.getCustomInfoByKey("dlvTerm")) // 交货条款
-                .payment(dispatch.getPrepaidRule()) // 付款条款
+//                .payment(dispatch.getPrepaidRule()) // 付款期限
+                .payment((String) dispatch.getCustomInfoByKey("paymTermId")) // 付款期限
                 .paymMode((String) dispatch.getCustomInfoByKey("paymMode")) // 付款方式
                 .remark(remark) // 备注，解析remarkFormat
                 .otherSysNum(String.valueOf(config.getOrDefault("sysTag", "PMS2#")) + dispatch.getId()) // 外部系统编号

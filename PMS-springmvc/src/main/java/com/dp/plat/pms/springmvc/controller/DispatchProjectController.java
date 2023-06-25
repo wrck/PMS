@@ -51,6 +51,7 @@ import com.dp.plat.pms.springmvc.util.PermissionUtils;
 import com.dp.plat.pms.springmvc.vo.CommonRelatedDataVO;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
+import com.dp.plat.subcontract.service.SubcontractService;
 
 @Controller
 @RequestMapping(ProjectConstant.URLPath.PROJECT_MANAGER + "dispatch")
@@ -68,6 +69,9 @@ public class DispatchProjectController
 	
 	@Autowired
 	private IProjectManageUserService projectManageUserService;
+	
+	@Autowired
+	private SubcontractService subcontractService;
 	
 
 	@PostConstruct
@@ -267,7 +271,7 @@ public class DispatchProjectController
 		model.addAttribute("message", message);
 		return getRealViewNameSpace() + "detail";
 	}
-
+	
 	@RequestMapping(value = "{id}", method = RequestMethod.DELETE)
 	@SystemControllerLog(description = "删除【$targetValue.dispatchName$】转包记录")
 	public void delete(@PathVariable("id") Integer id, Model model) {
@@ -406,6 +410,34 @@ public class DispatchProjectController
 		model.addAttribute("dispatchSeq", dispatchSeq);
 		model.addAttribute("dispatchNo", dispatchNo);
 	}
+	
+	@RequestMapping(value = "/{id}/multiDimInfos")
+    public void multiDimsInfo(@PathVariable("id") Integer id, Model model) {
+        DispatchProject dispatch = dispatchProjectService.selectByPrimaryKey(id);
+        if (dispatch != null) {
+            DispatchVO vo = new DispatchVO();
+            BeanUtils.copyProperties(dispatch, vo);
+            if (!checkPermission(vo, model, getDataName() + ":detail")) {
+                model.addAttribute("status", false);
+                model.addAttribute("message", "没有权限进行该操作！");
+                return;
+            }
+            
+            Map<String, String> multiDimInfos = null;
+            if (vo.getDispatched()) {
+                multiDimInfos = (Map<String, String>) vo.getCustomInfoByKey("multiDimInfos");
+            }
+            if (multiDimInfos == null || multiDimInfos.isEmpty()) {
+                multiDimInfos = subcontractService.selectDefaultMultiDimByDep(vo.getProfitDepCode(), true);
+            }
+            String multiDimsInfoTable = getDataName() + "_multiDimInfosList";
+            List<?> columns = this.findColumnList(multiDimsInfoTable);
+            
+            model.addAttribute("columns", columns);
+            model.addAttribute("data", multiDimInfos != null ? Collections.singleton(multiDimInfos) : Collections.emptyList());
+            model.addAttribute("permissions", new String[] {"multiDimInfos:list"});
+        }
+    }
 	
 	/**
 	 * 用于结算时查询已派单记录的回款、结算情况

@@ -263,7 +263,8 @@ pm.dispatch = function() {
 		api:((namespace) => {
 			return {
 				submit:() => namespace + "/submit.json",
-				generateDispatchSeq:()=> namespace + "/generateDispatchSeq.json"
+				generateDispatchSeq:()=> namespace + "/generateDispatchSeq.json",
+				multiDimInfos:(dispatchId) => namespace + "/" + dispatchId + "/multiDimInfos.json",
 			};
 		})(namespace),
 		html: ((namespace) => {

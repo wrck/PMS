@@ -254,7 +254,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @return title - 字段标题
      */
     public String getTitle() {
-    	if(this.title == null) {
+    	if(this.title == null || this.title.isEmpty()) {
     		return this.getName();
     	}
         return title;

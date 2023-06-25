@@ -60,7 +60,7 @@
 	      receiveMen, reveiveContactWay, receiveAddress, 
 	      projectType, projectMoney, afProjectMoney, submitTime, 
 	      serviceTypeName, customerProjectName, agentName, 
-	      lendCause, predBidDate)
+	      lendCause, predBidDate, customInfo)
 	    values
 	    <foreach collection="list" item="item" index="index" separator=",">  
 	     (#{item.id,jdbcType=INTEGER}, #{item.orderExecNumber,jdbcType=VARCHAR}, #{item.projectCode,jdbcType=VARCHAR}, 
@@ -75,7 +75,7 @@
 	      #{item.receiveMen,jdbcType=VARCHAR}, #{item.reveiveContactWay,jdbcType=VARCHAR}, #{item.receiveAddress,jdbcType=VARCHAR}, 
 	      #{item.projectType,jdbcType=VARCHAR}, #{item.projectMoney,jdbcType=DECIMAL}, #{item.afProjectMoney,jdbcType=DECIMAL}, #{item.submitTime,jdbcType=TIMESTAMP}, 
 	      #{item.serviceTypeName,jdbcType=VARCHAR}, #{item.customerProjectName,jdbcType=VARCHAR}, #{item.agentName,jdbcType=VARCHAR}, 
-	      #{item.lendCause,jdbcType=LONGVARCHAR}, #{item.predBidDate,jdbcType=TIMESTAMP})
+	      #{item.lendCause,jdbcType=LONGVARCHAR}, #{item.predBidDate,jdbcType=TIMESTAMP}, #{item.customInfo,jdbcType=JSON})
         </foreach>
         ON DUPLICATE KEY UPDATE id = VALUES(id), orderExecNumber = VALUES(orderExecNumber), projectName = VALUES(projectName), 
 			marketCode = VALUES(marketCode), officeCode = VALUES(officeCode), expendId = VALUES(expendId), 
@@ -89,7 +89,7 @@
 			reveiveContactWay = VALUES(reveiveContactWay), receiveAddress = VALUES(receiveAddress), projectType = VALUES(projectType), 
 			projectCode = VALUES(projectCode), serviceTypeName = VALUES(serviceTypeName), customerProjectName = VALUES(customerProjectName), 
 			agentName = VALUES(agentName), lendCause = VALUES(lendCause), projectMoney = VALUES(projectMoney), afProjectMoney = VALUES(afProjectMoney), 
-			submitTime = VALUES(submitTime), predBidDate = VALUES(predBidDate)
+			submitTime = VALUES(submitTime), predBidDate = VALUES(predBidDate), customInfo = VALUES(customInfo)
     </insert>
     
     <insert id="insertProjectProduct" parameterType="java.util.List">

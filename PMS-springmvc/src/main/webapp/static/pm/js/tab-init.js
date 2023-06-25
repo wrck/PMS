@@ -37,6 +37,7 @@ $(function(){
  * config: {
  * 	url, // 数据源
  * 	type, // 数据类型
+ *  model, // 附加数据模型
  * 	drawType, // 渲染类型，默认json,绘制表格
  * 	params,// 参数
  * 	tableConfig,// dataTableConfig配置
@@ -50,18 +51,20 @@ function initTabData(config, refresh, navTab, callback) {
 	if (!config) {
 		return;
 	}
+	navTab = navTab || {};
 	var type = config.type;
+	var cssId = config.cssId || navTab.cssId || type;
 	var drawType =  config.drawType || "json";
 	var url = (navTab || {}).url || config.url;
 	var params = config.params || {};
 	var timestamp = config.timestamp || "";
-	var navTabId = type + "Tab" + timestamp;
+	var navTabId = cssId + "Tab" + timestamp;
 	var $container = config.container || $(navTabId).parents(".tab-content:first");
 	var $navTab = $("#" + navTabId, $container);
 	var vm = $navTab.data("vm") || $container.data("vm") || this;
-	var searchDiv = type + "SearchDiv" + timestamp;
-	var tableId = type + "Table" + timestamp;
-	var calloutId = type + "Callout" + timestamp;
+	var searchDiv = cssId + "SearchDiv" + timestamp;
+	var tableId = cssId + "Table" + timestamp;
+	var calloutId = cssId + "Callout" + timestamp;
 	var tableConfig = config.tableConfig || {};
 	var operations  = config.operations || [];
 	var defaultConfig = {

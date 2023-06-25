@@ -12,12 +12,12 @@ var NavTab = {
 			<ul :id="tabWrapperId" class="nav nav-tabs">
 				<template v-for="navTab in navTabList">
 					<li v-if="navTab.isPermit">
-						<a :href="'#' + navTab.type + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
+						<a :href="'#' + (navTab.cssId || navTab.type) + 'Tab' + timestamp" data-toggle="tab" class="tab-bg-primary" aria-expanded="true" @click.once="refreshNavTab($event, navTab)">{{navTab.title}}<span class="tab-operation fa fa-refresh ml-05" @click.self.stop.prevent="refreshNavTab($event, navTab)"></span></a>
 					</li>
 				</template>
 			</ul>
 			<template v-for="navTab in navTabList">
-				<tab-pane :ref="'#' + navTab.type + 'Tab' + timestamp" v-if="navTab.isPermit" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
+				<tab-pane :ref="'#' + (navTab.cssId || navTab.type) + 'Tab' + timestamp" v-if="navTab.isPermit" :css-id="navTab.cssId" :nav-tab="navTab" :timestamp="timestamp" :target-value="targetValue" :model="model"></tab-pane>
 			</template>
 		</div>`,
 		props: {
@@ -120,6 +120,7 @@ var NavTab = {
 					var tab = tabList[i];
 					var navTab = this.parseValue(tab, 'extData') || {};
 					navTab.id = tab.id;
+					navTab.cssId = tab.cssId;
 					navTab.src = navTab.src || navTab.url;
 					navTab.url = this.parseUrl(navTab);
 					navTab.type = navTab.type || tab.field;

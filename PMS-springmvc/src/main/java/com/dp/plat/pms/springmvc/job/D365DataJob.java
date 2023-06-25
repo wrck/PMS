@@ -4,11 +4,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.alibaba.fastjson.JSON;
 import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.pojo.SyncLog;
 import com.dp.plat.core.schedule.SyncType;
 import com.dp.plat.core.schedule.SynchronizeJob;
 import com.dp.plat.core.service.ISynchronizeService;
@@ -54,10 +56,20 @@ public class D365DataJob extends SynchronizeJob {
         
         super.execute(params);
         
-        // 插入/更新供应商信息
-        pmSynchronizeService.insertOrUpdateFacilitatorFromD365();
-        // 更新项目转包的付款信息
-        pmSynchronizeService.updateDispatchAndSubcontractPaymentFromD365(params);
+        SyncLog syncLog = new SyncLog(getClass().getName() + ".execute.after", getSyncType().getCode(), getSyncType().getType());
+        syncLog.setDataFrom("OuterDataSource");
+        syncLog.setDataTo("Local");
+        try {
+            // 插入/更新供应商信息
+            pmSynchronizeService.insertOrUpdateFacilitatorFromD365();
+            // 更新项目转包的付款信息
+            pmSynchronizeService.updateDispatchAndSubcontractPaymentFromD365(params);
+            syncLog.setIsSuccess(true);
+        } catch (Exception e) {
+            syncLog.setException(ExceptionUtils.getStackTrace(e));
+        } finally {
+            synchronizeService.insertSyncLog(syncLog);
+        }
     }
 
     public static void main(String[] args) {

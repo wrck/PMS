@@ -3,7 +3,7 @@ var TabPane = {
 		data: function() {
 			return {
 				isUpdated: false,
-				tabId: this.cssId || (this.navTab.type + 'Tab' + this.timestamp),
+				tabId: (this.cssId || this.navTab.cssId || this.navTab.type) + 'Tab' + this.timestamp,
 				permissionType: "",
 				permissions: [],
 				roles: []
@@ -18,7 +18,7 @@ var TabPane = {
 			<!-- <div class="box box-primary mb-0"> -->
 				<div class="box-body">
 					<div class="overlay"><i class="fa fa-refresh fa-spin"></i></div>
-					<div :id="navTab.type + 'SearchDiv' + timestamp" v-if="(navTab.operations || []).length > 0" class="searchDiv">
+					<div :id="(cssId || navTab.cssId || navTab.type) + 'SearchDiv' + timestamp" v-if="(navTab.operations || []).length > 0" class="searchDiv">
 						<div class="btn-group operate-btn-group">
 	                         <button type="button" class="btn btn-default" v-for="btn in navTab.operations" v-if="isPermit && checkPermit(btn)" :data-btn-type="btn.id" @click="btn.events['click']($event, navTab)">{{btn.text}}</button>
 	                     </div>

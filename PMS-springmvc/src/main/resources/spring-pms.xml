@@ -113,6 +113,26 @@
 		<property name="password" value="${sms.database.password}"/>
 	</bean>
 	
+	<!-- SSE数据源 -->
+    <bean id="dataSourceSSE"
+        class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${sse.database.driverClassName}" />
+        <property name="url" value="${sse.database.url}" />
+        <property name="username" value="${sse.database.username}" />
+        <property name="password" value="${sse.database.password}"/>
+    </bean>
+    <bean id="sqlMapClientSSE" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="configLocation">
+            <value>classpath:pms-sql-map-config.xml</value>
+        </property>
+        <property name="dataSource" ref="dataSourceSSE"></property>
+    </bean>
+    <bean id="sqlMapClientTemplateSSE" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+        <property name="sqlMapClient">
+            <ref bean="sqlMapClientSSE" />
+        </property>
+    </bean>
+	
 	<!-- <tx:annotation-driven transaction-manager="transactionManager" /> -->
 	<!-- 事务管理 -->
 	<!-- <bean id="transactionManager"
