@@ -4,39 +4,15 @@
 package code;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Base64;
 
 import javax.persistence.Id;
 
-import org.apache.xalan.xsltc.compiler.util.TestGenerator;
-
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson2.JSONReader;
-import com.alibaba.fastjson2.JSONWriter;
-import com.dp.plat.core.aop.SystemLogAspect;
 import com.dp.plat.core.entity.DataOperation;
-import com.dp.plat.core.exception.ExcelImportException;
-import com.dp.plat.core.pojo.User;
-import com.dp.plat.core.vo.PageParam;
-import com.dp.plat.pms.springmvc.entity.Facilitator;
-import com.dp.plat.pms.springmvc.vo.AfPrjProperty;
-import com.dp.plat.pms.springmvc.vo.ProjectProduct;
 import com.dp.plat.pms.springmvc.vo.ProjectVO;
-import com.dp.plat.pms.springmvc.vo.PurchaseReceiptSettlement;
 
 /**
  * @author w02611
@@ -45,7 +21,8 @@ import com.dp.plat.pms.springmvc.vo.PurchaseReceiptSettlement;
 public class Test {
 
     public static void main(String[] args) {
-        generatorUpdateDuplicateStr(PurchaseReceiptSettlement.class);
+        System.out.println(Base64.getDecoder().decode("obW4uJgZmRo="));
+//        generatorUpdateDuplicateStr(PurchaseReceiptSettlement.class);
     }
     
 	public static void main2(String[] args) {
@@ -74,27 +51,23 @@ public class Test {
 		
 
 		
-		com.alibaba.fastjson2.JSON.isValid(json);
-		parseObject = com.alibaba.fastjson2.JSON.parseObject(json, type);
-		jsonStr = com.alibaba.fastjson2.JSON.toJSONString(parseObject,
-				JSONWriter.Feature.WriteNulls,
-				JSONWriter.Feature.NotWriteDefaultValue);
+		com.alibaba.fastjson.JSON.isValid(json);
+		parseObject = com.alibaba.fastjson.JSON.parseObject(json, type);
+		jsonStr = com.alibaba.fastjson.JSON.toJSONString(parseObject);
 		for (int i = 0; i < diffs[1].length; i++) {
 			t1 = System.nanoTime();
-			com.alibaba.fastjson2.JSON.isValid(json);
+			com.alibaba.fastjson.JSON.isValid(json);
 //			System.out.println(System.nanoTime() - t1);
 			diffs[1][i][0] = System.nanoTime() - t1;
 			
 			t1 = System.nanoTime();
-			parseObject = com.alibaba.fastjson2.JSON.parseObject(json, type);
+			parseObject = com.alibaba.fastjson.JSON.parseObject(json, type);
 	//		System.out.println(parseObject);
 //			System.out.println(System.nanoTime() - t1);
 			diffs[1][i][1] = System.nanoTime() - t1;
 			
 			t1 = System.nanoTime();
-			jsonStr = com.alibaba.fastjson2.JSON.toJSONString(parseObject,
-					JSONWriter.Feature.WriteNulls,
-					JSONWriter.Feature.NotWriteDefaultValue);
+			jsonStr = com.alibaba.fastjson.JSON.toJSONString(parseObject);
 	//		System.out.println(jsonStr);
 //			System.out.println(System.nanoTime() - t1);
 			diffs[1][i][2] = System.nanoTime() - t1;

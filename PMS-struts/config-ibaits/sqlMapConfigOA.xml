@@ -22,4 +22,5 @@ PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"
     </transactionManager> 
     <!-- <sqlMap resource="sql-map-refresh-data-config.xml"/>   -->
     <sqlMap resource="sql-map-refresh-data-common-config.xml"/>
+    <sqlMap resource="sql-map-refresh-data-oa-config.xml"/>
 </sqlMapConfig>  

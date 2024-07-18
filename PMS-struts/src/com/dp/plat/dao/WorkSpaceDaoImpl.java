@@ -100,6 +100,21 @@ public class WorkSpaceDaoImpl extends BaseDao implements WorkSpaceDao {
 		params.put("displayParam", displayParam);
 		return getSqlMapClientTemplate().queryForList("query_pm_task_list", params);
 	}
+	
+	@SuppressWarnings("unchecked")
+    @Override
+    public List<DpActProcDesc> querySelfHistoryTaskList(TaskQueryParam taskQueryParam, DisplayParam displayParam) {
+	    Map<String, Object> params = new HashMap<String, Object>();
+	    params.put("taskQueryParam", taskQueryParam);
+	    params.put("displayParam", displayParam);
+	    params.put("assignee", getCurrUsername());
+        int total = (Integer) getSqlMapClientTemplate().queryForObject("countSelfHistoryTaskList", params);
+        
+        displayParam.setOffset((displayParam.getCurrentpage() - 1)
+                * displayParam.getPagesize());
+        displayParam.setTotalcount(total);
+        return getSqlMapClientTemplate().queryForList("querySelfHistoryTaskList", params);
+    }
 
 
 	@SuppressWarnings("unchecked")
@@ -110,14 +125,12 @@ public class WorkSpaceDaoImpl extends BaseDao implements WorkSpaceDao {
 		List<DpActProcDesc> procDescs = new ArrayList<>();
 		if(user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)){//如果是工程管理部
 			params.put("backstate", MessageUtil.PROJECT_CREATE_STATE36);
-			procDescs = getSqlMapClientTemplate().queryForList("query_project_back_task_list", params);
+			procDescs.addAll(getSqlMapClientTemplate().queryForList("query_project_back_task_list", params));
 		}
 		if(user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)){//如果是服务经理
 			params.put("assignee", user.getUsername());
 			params.put("backstate", MessageUtil.PROJECT_CREATE_STATE38);
 			procDescs.addAll(getSqlMapClientTemplate().queryForList("query_project_back_task_list", params));
-		}else{
-			return null;
 		}
 		return procDescs;
 	}

@@ -869,15 +869,15 @@ public class MailUtil {
 			fileNames = mailInfo.getAttachFileNames().split("&&");
 		}
 		if (fileNames != null && fileNames.length > 0) {
-//			ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
+			ServletContext servletContext = ContextLoader.getCurrentWebApplicationContext().getServletContext();
 			for (int i = 0; i < fileNames.length; i++) {
 				MimeBodyPart fileAttaches = new MimeBodyPart();
 				// 选择出每一个附件名
 				String filePath = fileNames[i].split(",")[0];
 				File file = new File(filePath);
-//				if (!file.exists()) {
-//					filePath = servletContext.getRealPath(filePath);
-//				}
+				if (!file.exists()) {
+					filePath = servletContext.getRealPath(filePath);
+				}
 				String displayname = fileNames[i].split(",")[1];
 				// 得到数据源
 				FileDataSource fds = new FileDataSource(filePath);

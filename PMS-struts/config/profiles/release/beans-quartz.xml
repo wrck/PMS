@@ -112,6 +112,28 @@
             <value>0 25 3,13 * * ?</value>
         </property>
     </bean>
+    
+    <!-- 自动开始售前测试项目 -->
+    <bean id="AutoStartPresalesProject" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.job.AutoStartPresalesProjectJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置任务执行时间 触发器 -->
+    <bean id="AutoStartPresalesProjectTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="AutoStartPresalesProject" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <value>0 30 8,13 * * ?</value>
+        </property>
+    </bean>
 
     <!-- 刷新OA人员信息 -->
 	<bean id="GainPersonByOA" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
@@ -356,6 +378,28 @@
         </property>
     </bean>
     
+    <!-- 项目维护服务交付季度中间月初邮件提醒 -->
+    <bean id="GainDataFromITR" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.job.GainDataFromITR" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="GainDataFromITRTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="GainDataFromITR" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- 每天8点到21点的10分，每小时同步一次 -->
+            <value>00 10 08-21 * * ?</value>
+        </property>
+    </bean>
+    
     <!-- 总调配中心 -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
@@ -374,6 +418,8 @@
                 <ref bean="MaintenanceServiceQuarterMailerTrigger" />
                 <ref bean="CloseNotTrackProjectTrigger" />
                 <ref bean="PushContractAcceptanceDeliveryJobTrigger" />
+                <ref bean="AutoStartPresalesProjectTrigger" />
+                <ref bean="GainDataFromITRTrigger" />
 
                 <!-- <ref bean="PrjArrivalReceiptMailerTrigger" /> -->
                 <!-- <ref bean="PrjPreAndFinalInspectionMailerTrigger" />  -->

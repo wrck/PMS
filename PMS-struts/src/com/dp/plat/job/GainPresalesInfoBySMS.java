@@ -78,7 +78,7 @@ public class GainPresalesInfoBySMS {
             }
             
             // 去除已存在的借货信息
-            List<Integer> lendInfoIds = sqlMap.queryForList("query_lend_info_ids");
+            List<String> lendInfoIds = sqlMap.queryForList("query_lend_info_ids", "SMS");
             Iterator<LendInfoParam> iterator = lendinfoList.iterator();
             while (iterator.hasNext()) {
                 LendInfoParam lendInfo = iterator.next();

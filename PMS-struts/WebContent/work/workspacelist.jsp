@@ -263,6 +263,30 @@ function fillpm2(){
 	</div>
 	<!-- 流程业务处理 -->
 	<div class="navDiv hideDiv task">
+        <!-- 搜索栏： 项目名称，办事处，项目经理-->
+        <s:form id="dapdTask" name="dapdTask" cssClass="form-inline" action="module/Workspace!task.action">
+            <div class="form-group form-group-query form-group-width-1">
+                <label for="procKey"><s:text name="workflow.name" /></label>
+                <s:select name="queryParams.procKey" id="procKey"
+                    cssClass="form-control" headerKey=""
+                    headerValue="所有流程" cssStyle="width:163px"
+                    list="#{
+                        'PmClosedLoop':'项目闭环/回访', 
+                        'ProjectBack': '项目回退',
+                        'ProjectTrack': '项目不予跟踪确认',
+                        'ProjectSupervision': '项目督导',
+                        'Presales': '售前测试'
+                    }" theme="simple" />
+            </div>
+            <div class="form-group form-group-query form-group-width-1">
+                <button class="btn btn-default btn-sm" style="margin-left: 100px;" id="dailyTaskQuery"> <span
+                    class="glyphicon glyphicon-search"></span> <s:text name="sys.query"></s:text>
+                </button>
+            </div>
+            <br/>
+            <br/>
+            <br/>
+        </s:form>
 		<display:table id="dapdlist"
 			name="dapdlist" pagesize="${dapdlist.size()}" 
 			size="${dapdlist.size()}" sort="external" export="false"
@@ -301,20 +325,61 @@ function fillpm2(){
 		</display:table>
 	</div>
 	<div class="navDiv hideDiv hisselftask">
-
-		<display:table id="dpHisList"
+        <!-- 搜索栏： 项目名称，办事处，项目经理-->
+        <s:form id="hisselftask" name="hisselftask" cssClass="form-inline" action="module/Workspace!hisselftask.action">
+            <div class="form-group form-group-query form-group-width-1">
+                <label for="projectName"><s:text
+                        name="pm.project.projectName" /></label>
+                <s:textfield name="taskQueryParam.projectName" id="projectName"
+                    placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
+            </div>
+            <div class="form-group form-group-query form-group-width-1">
+                <label for="officearea"><s:text name="pm.officearea" /></label>
+                <s:select name="taskQueryParam.officeCode" id="officearea"
+                    listKey="departmentNum" cssClass="form-control" headerKey=""
+                    headerValue="--请选择--" cssStyle="width:163px"
+                    listValue="departmentName" list="%{departmentList}" theme="simple" />
+            </div>
+            <div class="form-group form-group-query form-group-width-1">
+                <label for="pm"><s:text name="pm.project.customerName" /></label>
+                <s:textfield id="projectCustomter" name="taskQueryParam.projectCustomer" cssStyle="width:163px" placeholder="支持模糊搜索" cssClass="form-control" />
+            </div>
+            <div class="form-group form-group-query form-group-width-1">
+                <button class="btn btn-default btn-sm" style="margin-left: 100px;" id="dailyTaskQuery"> <span
+                    class="glyphicon glyphicon-search"></span> <s:text name="sys.query"></s:text>
+                </button>
+            </div>
+            <br/>
+            <br/>
+            <br/>
+        </s:form>
+		<%-- <display:table id="dpHisList"
 			name="dpHisList" pagesize="50" 
 			size="${dpHisList.size()}" sort="external" export="true"
 			decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-striped"
 			requestURI="module/Workspace!hisselftask.action"
-			partialList="true">
+			partialList="true"> --%>
+        <display:table id="dpHisList"
+            name="dpHisList" pagesize="${displayParam.pagesize}" 
+            size="${displayParam.totalcount}" sort="external" export="true"
+            decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-striped"
+            requestURI="module/Workspace!hisselftask.action"
+            partialList="true">
 			<display:column property="projectCode" titleKey="pm.project.projectCode"></display:column>
 			<display:column property="projectName" titleKey="pm.project.projectName" style="width:200px;"></display:column>
 			<display:column property="procTypeName" titleKey="pm.cl.evaluHeader.processName"></display:column>
 			<display:column property="name" titleKey="pm.cl.evaluHeader.taskName"></display:column>
 			<display:column property="username" titleKey="pm.cl.evaluHeader.applyPerId"></display:column>
 			<display:column property="realName" titleKey="pm.cl.evaluHeader.applyPerName"></display:column>			
-			<display:column property="assigneeName" titleKey="pm.cl.evaluHeader.hisApprovePer"></display:column>
+			<s:if test="isCbRole == true">
+                <display:column property="projectCustomer" titleKey="pm.project.customerName" style="max-width:92px;" media="excel"></display:column>
+                <display:column titleKey="pm.project.customerName" class="nowrap" style="max-width:92px;" media="html">
+                    ${dpHisList.projectCustomer.replace(",", "<br>")}
+                </display:column>
+                <%-- <display:column property="projectImpl" titleKey="pm.project.implement"></display:column> --%>
+            </s:if>
+            
+            <display:column property="assigneeName" titleKey="pm.cl.evaluHeader.hisApprovePer"></display:column>
 			<display:column property="endTime" titleKey="pm.cl.evaluHeader.approveTime" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
 			<display:column property="workspEvaluaResult" titleKey="pm.cl.evaluHeader.approveResult"></display:column>
 			<display:column property="pmCLWorkSpaceOpe" media="html" titleKey="display.operate"></display:column>

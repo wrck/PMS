@@ -1,21 +1,27 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.ProjectConstant.Common.PROJECT_DISPATCHED_KEY;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_FINANCIAL_AP;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -108,7 +114,7 @@ public class DispatchProjectController
 			
 			// 非子项目管理员，添加允许访问的办事处权限
 			String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-			if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN, ROLE_FINANCIAL_AP)) {
+            if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN, ROLE_FINANCIAL_AP/* , ROLE_PM_DISPATCH_SETTLE_STAFF */)) {
 				temp.setOfficeCodes(officeCodes);
 				dispatch.setOfficeCodes(officeCodes);
 				
@@ -116,6 +122,12 @@ public class DispatchProjectController
 				temp.setMemberCode(user.getUserName());
 				dispatch.setMemberCode(user.getUserName());
 			}
+			
+			// 项目外派结算人员，只能查看已外派的项目
+			if (UserContext.hasAnyRoles(ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+                temp.setDispatched(true);
+                dispatch.setDispatched(true);
+            }
 		}
 		tempParam.setModel(temp);
 		pageParam.setModel(dispatch);
@@ -203,8 +215,9 @@ public class DispatchProjectController
 //					dispatch.setContractNos(project.getContractNo());
 				dispatch.setCustomInfoByKey("project", project);
 				dispatch.setCustomInfoByKey("smsOrderExecNumber", project.getSmsOrderExecNumber());
-				model.addAttribute("targetValue", dispatch);
 //			}
+			model.addAttribute("targetValue", dispatch);
+
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 			
@@ -300,6 +313,27 @@ public class DispatchProjectController
 				dispatch.setDisabled(true);
 				dispatch.setEffectiveTo(new Date());
 				dispatchProjectService.updateByPrimaryKeySelective(dispatch);
+				
+				// 判断转包的项目是否还有已转包的记录，更新已派单标记
+		        Set<String> projectIdSet = new HashSet<>();
+		        List<String> projectIds = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(dispatchProject.getProjectIds()), ","));
+		        projectIdSet.addAll(projectIds);
+		        for (String projectId : projectIdSet) {
+		            if (NumberUtils.isCreatable(projectId)) {
+		                Integer dispatchedProjectId = Integer.valueOf(projectId);
+		                // 查询该项目有多少派单记录
+		                DispatchVO temp = new DispatchVO();
+		                temp.setDispatched(true);
+		                temp.setDisabled(false);
+		                temp.setProjectId(dispatchedProjectId);
+		                long dispatchedCount = dispatchProjectService.countDispatchProjectVOList(temp);
+		                
+		                ProjectHeader tempProject = new ProjectHeader();
+		                tempProject.setProjectId(Integer.valueOf(projectId));
+		                tempProject.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.toString(dispatchedCount > 0));
+		                projectHeaderService.updateByPrimaryKeySelective(tempProject);
+		            }
+		        }
 			}
 		} catch (Exception e) {
 			status = false;
@@ -481,8 +515,18 @@ public class DispatchProjectController
 			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }, projectPermit.getRoles());
 			PermissionResult checkPermit = new PermissionUtils(getDataName() + ":", allPermitRoles)
 					.checkPermit(projectPermit.getPermissionMap(), permissions);
+			
+//			// 项目转包结算人员，如果有权限查看，则允许进行编辑
+//			if (checkPermit.isPermit() && UserContext.hasAnyRoles(RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+////			    checkPermit.setPermissionType("edit");
+//			    Collection<String> roles = new HashSet<String>(checkPermit.getRoles() != null ? checkPermit.getRoles() : Collections.emptyList());
+//			    roles.add(RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF);
+//			    checkPermit.setRoles(roles);
+//			}
+			
 			isPermit = checkPermit.isPermit();
 			permissionType = checkPermit.getPermissionType();
+			
 //			model.addAttribute("permissions", checkPermit.getMap().getOrDefault("permissions", model.getAttribute("permissions")));
 			model.addAllAttributes(checkPermit.getMap());
 		} else {

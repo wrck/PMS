@@ -8,7 +8,7 @@ package com.dp.plat.exception;
  * @author w02611
  *
  */
-public class UploadException extends RuntimeException {
+public class UploadException extends CustomRuntimeException {
 
 	private static final long serialVersionUID = -7682210354187194940L;
 

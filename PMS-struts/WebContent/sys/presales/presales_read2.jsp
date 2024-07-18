@@ -230,6 +230,11 @@ $(function(){
                                 <s:property value="#f.fileName"/>
                             </a>
                         </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
                         <s:else>
                             <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
                         </s:else>
@@ -238,6 +243,9 @@ $(function(){
                         <s:if test="#f.path == 1">
                             <s:property value="#f.fileType" default="SMS附件"/>
                         </s:if>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
+                        </s:elseif>
                         <s:else>
                             <s:property value="#f.fileType" default="历史附件"/>
                         </s:else>

@@ -264,6 +264,10 @@ public class MessageUtil {
 	 */
 	public static final int ROLE_WARRANTY_CALLBACKER = 21;
 	/**
+	 * 角色为22，表示产品组件管理人员
+	 */
+    public static final int ROLE_COMPONENT_ADMIN = 22;
+	/**
 	 * 批示类型 0批示 1 回复 
 	 */
 	public static final int INSTRUSTION = 0;

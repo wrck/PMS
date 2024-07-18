@@ -306,6 +306,7 @@ public class SubcontractInspectionListener {
 			                newCandidates.add(candidate);
 			            }
                     }
+			        candidates = newCandidates;
                 }
             } else if (!members.isEmpty() && members.size() == 1) {
 				assignee = members.get(0).getMemberCode();

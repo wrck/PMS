@@ -104,7 +104,7 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 	public void pushUnifyTask(UnifyDelegateTask unifyDelegateTask, List<User> receiverUsers, String type, String state,
 			String subState) {
 		DelegateTask task = unifyDelegateTask.getDelegateTask();
-		Map<String, Object> extParams = task .getVariablesLocal();
+		Map<String, Object> extParams = task.getVariablesLocal();
 		if (extParams.isEmpty()) {
 			extParams = task.getVariables();
 		}
@@ -243,6 +243,7 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 				activiUser.setPassword(user.getUsername());
 			}
 		}
+
 		return activiUser;
 	}
 	
@@ -441,6 +442,7 @@ public class UnifyTaskListener extends AbstractUnifyTaskListener {
 		map.put("role_" + MessageUtil.ROLE_ENGINEEMANAGER_LEADER, MessageUtil.ROLE_ENGINEEMANAGER_LEADER);
 		map.put("smRole", MessageUtil.ROLE_SERVICEMANAGER);
 		map.put("profitSmRole", MessageUtil.ROLE_SERVICEMANAGER);
+		map.put("parentSmRole", MessageUtil.ROLE_SERVICEMANAGER);
 		map.put("pmRole", MessageUtil.ROLE_PROGRAMMANAGER);
 		map.put("zrRole", MessageUtil.ROLE_AREA_LEADER);
 		map.put("role_" + MessageUtil.ROLE_AREA_LEADER, MessageUtil.ROLE_AREA_LEADER);

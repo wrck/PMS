@@ -309,4 +309,7 @@ public class Wrapper extends TableDecorator {
         return maxDate;
     }
 	
+	public String get() {
+	    return null;
+	}
 }

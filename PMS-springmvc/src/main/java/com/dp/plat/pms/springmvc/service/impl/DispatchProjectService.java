@@ -1,6 +1,7 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
 import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.ProjectConstant.Common.PROJECT_DISPATCHED_KEY;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
@@ -11,11 +12,15 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +52,7 @@ import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.dao.DispatchProjectMapper;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
 import com.dp.plat.pms.springmvc.entity.Facilitator;
+import com.dp.plat.pms.springmvc.entity.ProjectHeader;
 import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IFacilitatorService;
 import com.dp.plat.pms.springmvc.service.IProjectHeaderService;
@@ -146,6 +152,19 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
         temp.getCustomInfo().putAll(multiDimInfos);
         this.updateByPrimaryKeySelective(temp);
         
+        // 将转包的项目标记为已转包的
+        Set<String> projectIdSet = new HashSet<>();
+        List<String> projectIds = Arrays.asList(StringUtils.split(StringUtils.trimToEmpty(dispatch.getProjectIds()), ","));
+        projectIdSet.addAll(projectIds);
+        projectIdSet.add(String.valueOf(dispatch.getProjectId()));
+        for (String projectId : projectIdSet) {
+            if (NumberUtils.isCreatable(projectId)) {
+                ProjectHeader tempProject = new ProjectHeader();
+                tempProject.setProjectId(Integer.valueOf(projectId));
+                tempProject.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.TRUE.toString());
+                projectHeaderService.updateByPrimaryKeySelective(tempProject);
+            }
+        }
         
         DispatchVO dispatchVO = this.selectVOByPrimaryKey(id);
         // 推D365的采购订单
@@ -175,7 +194,10 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
         }
                
         // 设置账套
-        Company company = companyService.selectByPrimaryKey(UserContext.getOrgId());
+        Object orgId = dispatch.getOrgId();
+        orgId = dispatch.getCustomInfoByKey("orgId", orgId);
+        orgId = ObjectUtils.defaultIfNull(orgId, UserContext.getOrgId());
+        Company company = companyService.selectByPrimaryKey(Integer.parseInt(String.valueOf(orgId)));
         String dataAreaId = company.getCompAccount();
         config.put("dataAreaId", dataAreaId);
         
@@ -452,7 +474,7 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
 //            PermissionResult checkPermit = new PermissionUtils("dispatch:", new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }).checkPermit(permission, permissions);
             PermissionResult projectPermit = projectHeaderService.checkPermission(project, permissions);
 			String[] allPermitRoles = PermissionUtils.getRetainAllRoles(new String[] { ROLE_ADMIN, ROLE_PM_ADMIN, ROLE_PM_SUB_ADMIN }, projectPermit.getRoles());
-			PermissionResult checkPermit = new PermissionUtils("dispatch:" , allPermitRoles)
+			PermissionResult checkPermit = new PermissionUtils("dispatch:", allPermitRoles)
 					.checkPermit(projectPermit.getPermissionMap(), permissions);
             isPermit = checkPermit.isPermit();
             permissionType = checkPermit.getPermissionType();

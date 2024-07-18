@@ -278,6 +278,11 @@ public class PresalesDaoImpl extends BaseDao implements PresalesDao {
         return getSqlMapClientTemplate().queryForList("query_presale_lend_2_rma", projectCode);
     
     }
+    
+    @Override
+    public List<Map<String, Object>> selectPresalesTempAuthInfo(Map<String, Object> params) {
+        return getSqlMapClientTemplate().queryForList("selectPresalesTempAuthInfo", params);
+    }
 
     @Override
 	public List<PresalesExportVO> queryPresalesExportData(Presales presales) {

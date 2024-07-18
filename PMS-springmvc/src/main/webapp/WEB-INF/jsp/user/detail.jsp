@@ -251,12 +251,11 @@
 									<button type="button" class="btn btn-success"
 										data-btn-type="modify">修改密码</button>
 								</c:if>
-								<shiro:hasRole name="admin">
-									<c:if test='${isCas == "0"}'>
-										<button type="button" class="btn btn-danger"
-											data-btn-type="rest">重置密码</button>
-									</c:if>
-								</shiro:hasRole>
+                                <shiro:hasAnyRoles name="admin,userManager">
+                                    <c:if test='${isCas == "0"}'>
+                                        <button type="button" class="btn btn-danger" data-btn-type="rest">重置密码</button>
+                                    </c:if>
+                                </shiro:hasAnyRoles>
 							</div>
 							<div class="pull-right">
 								<button type="button" class="btn btn-default"
@@ -555,7 +554,7 @@
 			
 			$("#modRestForm button[data-btn-type='submit']").click(function(){
 				var params = $("#modRestForm").form().getFormSimpleData();
-				ajaxPost(basePath + "/admin/resetPassword.json", params, function(data,status){
+				ajaxPost(basePath + "/pm/user/resetPassword.json", params, function(data,status){
 					if(data.successMsg) {
 						modals.hideWin("resetPasswordWin");
 						modals.info(data.successMsg);

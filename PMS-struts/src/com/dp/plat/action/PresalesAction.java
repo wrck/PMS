@@ -30,6 +30,7 @@ import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.vo.PresalesExportVO;
+import com.dp.plat.job.GainPresalesInfoFromOA;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.ProjectTypeParam;
 import com.dp.plat.service.BasicDataService;
@@ -42,6 +43,8 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.PmClosedLoopMark;
 import com.dp.plat.util.PmClosedLoopMarkFactory;
+import com.opensymphony.xwork2.ActionContext;
+import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.Preparable;
 
 /**
@@ -140,6 +143,8 @@ public class PresalesAction extends BaseAction implements Preparable {
 	private List<PresalesExportVO> presalesExportVOList;
 
     private List<ProjectDeliver> projectDeliverList;
+    
+    private String queryPath;
 
 	public void prepareList() {
 		officeList = departmentManageService.queryDepartments();
@@ -192,8 +197,10 @@ public class PresalesAction extends BaseAction implements Preparable {
 	}
 
 	@Override
-	public void prepare() {
-		// System.out.println(0);
+	public void prepare() throws Exception {
+	    ActionInvocation invocation = ActionContext.getContext().getActionInvocation();
+        queryPath = invocation.getProxy().getMethod();
+        user = UserContext.getUserContext().getUser();
 	}
 
 	/**
@@ -428,7 +435,7 @@ public class PresalesAction extends BaseAction implements Preparable {
 		redirect = "module/presales_list.action";
 		return SUCCESS;
 	}
-
+	
 	/**
 	 * 回访问卷
 	 * 
@@ -484,6 +491,21 @@ public class PresalesAction extends BaseAction implements Preparable {
         commonList = presalesService.queryPresaleLend2RmaInfo(presalesCode);
         return "lend2RmaInfo";
     }
+    
+    /**
+     * 查询核销信息
+     * 
+     * @return
+     */
+    public String tempAuthInfo() {
+        Map<String, Object> params = new HashMap<>();
+        if (presales != null && presales.getPresalesId() != 0) {
+            presales = presalesService.queryPresalesById(presales.getPresalesId());
+        }
+        params.put("lendInfoId", presales.getLendInfoId());
+        commonList = presalesService.selectPresalesTempAuthInfo(params);
+        return "tempAuthInfo";
+    }
 
 	public String terminate2Close() {
 		try {
@@ -496,6 +518,17 @@ public class PresalesAction extends BaseAction implements Preparable {
 			//return ERROR;
 		}
 		return SUCCESS;
+	}
+	
+	public String syncOaData() {
+	    try {
+            new GainPresalesInfoFromOA().execute(null);
+            message = "删除成功!";
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = "删除失败!";
+        }
+        return SUCCESS;
 	}
 	
 //	//附件上传
@@ -1149,6 +1182,14 @@ public class PresalesAction extends BaseAction implements Preparable {
 
     public void setCommonList(List<Map<String, Object>> commonList) {
         this.commonList = commonList;
+    }
+
+    public String getQueryPath() {
+        return queryPath;
+    }
+
+    public void setQueryPath(String queryPath) {
+        this.queryPath = queryPath;
     }
 
 }

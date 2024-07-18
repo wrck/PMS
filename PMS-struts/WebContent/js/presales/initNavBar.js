@@ -43,6 +43,20 @@ var ajaxNavBar = window.ajaxNavBar || {
             "projectMaintenance.hideQuesnaire": true,
             "redirect": encodeURIComponent(window.location.pathname + window.location.search + "#maintenanceInfo")
         },
+    },
+    tempAuthInfo: {
+    	name: "临时授权",
+    	data: {
+    		"presales.presalesId": window.presalesId,
+    		"presales.lendInfoId": window.lendInfoId,
+    	},
+    	enable: function() {
+    		var dataSource = window.presalesSource || "";
+    		if (dataSource == 'OA') {
+    			return true;
+    		}
+    		return false;
+    	}
     }
 };
 /**
@@ -132,8 +146,16 @@ if (enabelNavBar) {
     function initNavBar(prevSelector) {
         ajaxNavBar = ajaxNavBar || {};
         for (var type in ajaxNavBar) {
+        	var navBar = ajaxNavBar[type] || {};
+        	var enable = navBar.enable || true;
+        	if (typeof enable == 'function') {
+        		enable = enable.call(navBar);
+        	}
+        	if (!enable) {
+        		continue;
+        	}
             var navCode = type + "ListDiv";
-            var navName = ajaxNavBar[type] || {};
+            var navName = navBar;
             navName = navName.name || navName;
             var selector = "#" + type + ",#" + navCode +",." + navCode;
             if ($(selector).length == 0) {

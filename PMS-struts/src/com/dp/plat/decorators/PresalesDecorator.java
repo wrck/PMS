@@ -33,7 +33,7 @@ public class PresalesDecorator extends TableDecorator {
         if( presales.getApplyState() == ActivityMessage.FLOW_RUNING || presales.getApplyState() == ActivityMessage.FLOW_UNSTART
                 ){//任务ID不为空，且为当前办理人
             boolean canCreate = context.isHasAnyRole(MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_PRESALES_STAFF);
-            if("usertask2".equals(taskDefKey) && username.equals(presales.getTaskAssignee())){
+            if(("usertask2".equals(taskDefKey) || "serviceApprove".equals(taskDefKey)) && username.equals(presales.getTaskAssignee())){
                 return "<a href='module/presales_smaduit.action?presales.presalesId="+presales.getPresalesId()+"'>办理</a>";
             } else if("usertask3".equals(taskDefKey) && username.equals(presales.getTaskAssignee())){
                 return "<a href='module/presales_pmaduit.action?presales.presalesId="+presales.getPresalesId()+"'>办理</a>";

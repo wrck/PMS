@@ -34,10 +34,12 @@ import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.impl.persistence.entity.UserEntity;
 import org.activiti.engine.impl.pvm.PvmActivity;
+import org.activiti.engine.impl.pvm.PvmProcessElement;
 import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -73,6 +75,7 @@ import com.dp.plat.subcontract.entity.SubcontractPayment;
 import com.dp.plat.subcontract.entity.SubcontractProject;
 import com.dp.plat.subcontract.service.SubcontractService;
 import com.dp.plat.subcontract.vo.SubcontractProjectVO;
+import com.dp.plat.util.AviatorUtils;
 import com.dp.plat.util.MailUtil;
 
 import cn.hutool.core.date.DateUtil;
@@ -112,7 +115,7 @@ public class SubcontractInspectionListener implements TaskListener {
     private BasicDataService basicDataService;
     @Autowired
     private DepartmentManageService departmentManageService;
-    
+
     @Autowired
     private IPurchaseService purchaseService;
     @Autowired
@@ -121,7 +124,7 @@ public class SubcontractInspectionListener implements TaskListener {
     private IPurchaseReceiptService purchaseReceiptService;
     @Autowired
     private IPurchaseReceiptLineService purchaseReceiptLineService;
-    
+
     public void onEvent(ActivitiEvent event) {
         if (event instanceof ActivitiEntityEventImpl) {
             ActivitiEntityEventImpl eventImpl = (ActivitiEntityEventImpl) event;
@@ -132,7 +135,7 @@ public class SubcontractInspectionListener implements TaskListener {
             }
         }
     }
-            
+
     public void notify(DelegateTask delegateTask) {
         String eventName = delegateTask.getEventName();
         String processKey = delegateTask.getProcessDefinitionId().split(":")[0];
@@ -143,16 +146,42 @@ public class SubcontractInspectionListener implements TaskListener {
                 Integer result = delegateTask.getVariableLocal("result", Integer.class);
                 if (result != null) {
                     SubcontractProjectVO subcontract = subcontractService.selectSubcontractProjectVOById(subcontractId);
-                    
+
                     // 多维度信息为空，则查询默认的多维度信息
                     if (subcontract.getCustomInfoByKey("multiDimInfo") == null) {
-                        Map<String, String> multiDimInfo = subcontractService.selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
+                        Map<String, String> multiDimInfo = subcontractService
+                                .selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
                         subcontract.setCustomInfoByKey("multiDimInfo", multiDimInfo);
                         subcontract.getCustomInfo().putAll(multiDimInfo);
                     }
-                    
+
                     // 推D365采购订单
                     pushPurchaseOrder(subcontract);
+                }
+            } else if (TaskListener.EVENTNAME_CREATE.equals(eventName)
+                    && (TaskKey.PROFIT_SERVICE_APPROVE.equals(taskKey) || TaskKey.APPLY_PAYMENT.equals(taskKey))) {
+                List<Map<String, Object>> approverList = Collections.emptyList();
+                Map<String, Object> taskDefinedVariables = Collections.emptyMap();
+                if (TaskKey.PROFIT_SERVICE_APPROVE.equals(taskKey) || TaskKey.APPLY_PAYMENT.equals(taskKey)) {
+                    // 受益部门审批节点指派时，查询下一级通用审批节点的办理人
+                    taskDefinedVariables = getTaskDefinedVariable(DATA_TYPE_SUBCONTRACT);
+                    approverList = (List<Map<String, Object>>) taskDefinedVariables.getOrDefault(TaskKey.NORMAL_APPROVE_TASK, Collections.emptyList());
+                } /* else if (TaskKey.APPLY_PAYMENT.equals(taskKey)) {
+                    // 服务经理提交付款节点指派时，查询下一级付款签收审批审批节点的办理人
+                    taskDefinedVariables = getTaskDefinedVariable(DATA_TYPE_PAYMENT);
+                    approverList = (List<Map<String, Object>>) taskDefinedVariables.getOrDefault(TaskKey.ACCEPTANCE_TASK, Collections.emptyList());
+                } */
+                taskDefinedVariables.put("entity", getCurrentEntity(delegateTask));
+                // 查询校验办理人列表，移除不满足条件的办理人
+                approverList = checkAssignee(delegateTask, approverList, taskDefinedVariables);
+                if (!approverList.isEmpty()) {
+                    // 获取第一个办理人
+                    Map<String, Object> approver = approverList.get(0);
+                    Map<String, Object> nextAssigneeConfig = findAssignee(delegateTask, approver);
+                    delegateTask.setVariableLocal("nextAssigneeCode", nextAssigneeConfig.get("assigneeCode"));
+                    delegateTask.setVariableLocal("nextAssigneeName", nextAssigneeConfig.get("assigneeName"));
+                    delegateTask.setVariableLocal("nextAssigneeEmail", nextAssigneeConfig.get("assigneeEmail"));
+                    delegateTask.setVariableLocal("nextAssigneeCount", nextAssigneeConfig.get("assigneeCount"));
                 }
             }
         } else if (SubcontractConstant.PROCESS_INSPECTION_KEY.equals(processKey)) {
@@ -170,42 +199,77 @@ public class SubcontractInspectionListener implements TaskListener {
     public void processStartExecution(DelegateExecution delegateExecution) throws Exception {
         String processInstanceId = delegateExecution.getProcessInstanceId();
         String executionId = delegateExecution.getId();
-        String processKey = delegateExecution.getProcessDefinitionId();
+        String processKey = ((ExecutionEntity) delegateExecution).getProcessDefinitionKey();
 //		PmWorkFlow pmWorkFlow = delegateExecution.getVariable("entity", PmWorkFlow.class);
         Map<String, Object> pmWorkFlow = getCurrentEntity(delegateExecution);
         runtimeService.setVariable(executionId, "entity", pmWorkFlow);
+        
 
         String dataType = String.valueOf(pmWorkFlow.getOrDefault("dataType", defaultDataType));
         Map<String, Object> taskDefinedVariables = getTaskDefinedVariable(dataType);
-        ProcessDefinitionImpl processDefinition = ((ExecutionEntity) delegateExecution).getProcessDefinition();
-        List<ActivityImpl> activityList = processDefinition.getActivities();
+        
+        
         String nextTaskKey = "";
-        for (Iterator<ActivityImpl> iterator = activityList.iterator(); iterator.hasNext();) {
-            ActivityImpl activityVo = iterator.next();
-            if (delegateExecution.getCurrentActivityId().equals(activityVo.getId())) {
-                PvmTransition transition = activityVo.getOutgoingTransitions().get(0);
-                PvmActivity destination = transition.getDestination();
-                nextTaskKey = destination.getId();
-                break;
+        try {
+            // 直接从delegateExecution中获取事件节点，获取其目标任务节点
+            PvmProcessElement eventSource = ((ExecutionEntity) delegateExecution).getEventSource();
+            PvmActivity destination = ((PvmTransition)eventSource).getDestination();
+            nextTaskKey = destination.getId();
+        } catch (Exception e) {
+            // 如果获取失败，则从所有任务中获取
+            ProcessDefinitionImpl processDefinition = ((ExecutionEntity) delegateExecution).getProcessDefinition();
+            List<ActivityImpl> activityList = processDefinition.getActivities();
+            for (Iterator<ActivityImpl> iterator = activityList.iterator(); iterator.hasNext();) {
+                ActivityImpl activityVo = iterator.next();
+                if (delegateExecution.getCurrentActivityId().equals(activityVo.getId())) {
+                    if (activityVo.getProperty("type").equals("userTask")) {
+                        nextTaskKey = activityVo.getId();
+                    } else {
+                        List<PvmTransition> outgoingTransitions = activityVo.getOutgoingTransitions();
+                        PvmTransition transition = outgoingTransitions.get(0);
+                        // 查找第一个目的节点是用户任务的节点
+                        for (PvmTransition pvmTransition : outgoingTransitions) {
+                            if (pvmTransition.getDestination().getProperty("type").equals("userTask")) {
+                                transition = pvmTransition;
+                                break;
+                            }
+                        }
+                        PvmActivity destination = transition.getDestination();
+                        nextTaskKey = destination.getId();
+                    }
+                    break;
+                }
             }
         }
         // 审批节点的候选角色组
         List<Map<String, Object>> approverList = (List<Map<String, Object>>) taskDefinedVariables
                 .getOrDefault(nextTaskKey, Collections.emptyList());
+        approverList = checkAssignee(delegateExecution, approverList, taskDefinedVariables);
+
         if (approverList.isEmpty()) {
 //			PlanObjectiveAppraiserRelationship noAssigenee = new PlanObjectiveAppraiserRelationship();
 //			noAssigenee.setAppraiserName("无");
 //			objectiveAppraiserList.add(noAssigenee);
 //            throw new RuntimeException("验收审批关系不能为空！");
         }
-        // 如果付款信息为空，则跳过流程
-        List<SubcontractPayment> payments = (List<SubcontractPayment>) pmWorkFlow.get("entity");
-        if (payments.isEmpty()) {
-            approverList = Collections.emptyList();
-            runtimeService.setVariable(executionId, "isPass", true);
-        } else {
+        if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
+            SubcontractProject subcontract = (SubcontractProject) pmWorkFlow.get("entity");
+            subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
+
+            //
+
             // 增加流程默认值
             runtimeService.setVariable(executionId, "isPass", false);
+        } else if (DATA_TYPE_PAYMENT.equals(dataType)) {
+            // 如果付款信息为空，则跳过流程
+            List<SubcontractPayment> payments = (List<SubcontractPayment>) pmWorkFlow.get("entity");
+            if (payments.isEmpty()) {
+                approverList = Collections.emptyList();
+                runtimeService.setVariable(executionId, "isPass", true);
+            } else {
+                // 增加流程默认值
+                runtimeService.setVariable(executionId, "isPass", false);
+            }
         }
         runtimeService.setVariable(executionId, "approverList", approverList);
 
@@ -215,7 +279,7 @@ public class SubcontractInspectionListener implements TaskListener {
         }
         runtimeService.setVariable(executionId, "processName", processName);
 
-//        if (DATA_TYPE_SUBCONTRCT.equals(dataType)) {
+//        if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
 //            SubcontractProject subcontract = new SubcontractProject();
 //            subcontract.setId(Integer.valueOf(pmWorkFlow.get("subcontractId")));
 //            subcontract.setCustomInfoByKey("currentProcInstId", delegateExecution.getProcessInstanceId());
@@ -294,17 +358,19 @@ public class SubcontractInspectionListener implements TaskListener {
         Map<String, Object> taskDefinedVariables = (Map<String, Object>) delegateTask.getVariable("approver");
         List<Map<String, Object>> approverList = (List<Map<String, Object>>) delegateTask.getVariable("approverList");
         Integer loopCounter = (Integer) delegateTask.getVariable("loopCounter");
-        Map<String, Object> nextTaskDefinedVariables = (loopCounter + 1) < approverList.size() ? approverList.get(loopCounter + 1) : Collections.emptyMap();
+        Map<String, Object> nextTaskDefinedVariables = (loopCounter + 1) < approverList.size()
+                ? approverList.get(loopCounter + 1)
+                : Collections.emptyMap();
 
         // 更新任务状态,补充流程信息
         if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
-//            SubcontractVO subcontract = new SubcontractVO();
-//            subcontract.setId(pmWorkFlow.getDataId());
+//            SubcontractProject subcontract = new SubcontractProject();
+//            subcontract.setId(Integer.valueOf(String.valueOf(pmWorkFlow.get("objId"))));
 ////			subcontract.setStatus(taskKey);
 //            subcontract.setCustomInfoByKey("currentTaskId", taskId);
 //            subcontract.setCustomInfoByKey("currentTaskKey", taskKey);
 //            subcontract.setCustomInfoByKey("currentProcInstId", procInstId);
-//            subcontractService.updateByPrimaryKeySelective(subcontract);
+//            subcontractService.updateSubcontractProjectByIdSelective(subcontract);
         } else if (DATA_TYPE_PAYMENT.equals(dataType)) {
             List<SubcontractPayment> payments = (List<SubcontractPayment>) pmWorkFlow.get("entity");
             for (SubcontractPayment payment : payments) {
@@ -318,7 +384,7 @@ public class SubcontractInspectionListener implements TaskListener {
                 subcontractService.updateSubcontractPaymentByIdSelective(payment);
             }
         }
-        
+
         // 当前办理人相关参数
         Map<String, Object> currentAssigneeConfig = findAssignee(delegateTask, taskDefinedVariables);
         String assignee = (String) currentAssigneeConfig.get("assignee");
@@ -329,10 +395,10 @@ public class SubcontractInspectionListener implements TaskListener {
         boolean checkDep = (boolean) currentAssigneeConfig.getOrDefault("checkDep", false);
         String areaPower = (String) currentAssigneeConfig.get("areaPower");
         String assigneeName = (String) currentAssigneeConfig.get("assigneeName");
-        
+
         // 下级办理人相关参数
         Map<String, Object> nextAssigneeConfig = findAssignee(delegateTask, nextTaskDefinedVariables);
-        
+
         if (StringUtils.isNotBlank(assignee)) {
             delegateTask.setAssignee(assignee);
         } else if (candidates != null && !candidates.isEmpty()) {
@@ -346,25 +412,41 @@ public class SubcontractInspectionListener implements TaskListener {
         delegateTask.setVariableLocal("checkDep", checkDep);
         delegateTask.setVariableLocal("areaPower", areaPower);
 //        if (!"all".equals(areaPower)) {
-            delegateTask.setVariableLocal("dpNo", areaPower);
+        delegateTask.setVariableLocal("dpNo", areaPower);
 //        }
         delegateTask.setVariableLocal("projectTypes", permissionProjectTypes);
         if (loopCounter == 0) {
             ExecutionEntity execution = ((TaskEntity) delegateTask).getExecution();
             if (execution == null) {
-                execution = (ExecutionEntity) runtimeService.createExecutionQuery().executionId(procInstId).singleResult();
+                execution = (ExecutionEntity) runtimeService.createExecutionQuery().executionId(procInstId)
+                        .singleResult();
             }
             if (execution != null) {
                 // 查找最顶层的流程
                 while (execution.getSuperExecution() != null || execution.getParent() != null) {
-                    execution = execution.getSuperExecution() != null ? execution.getSuperExecution() : execution.getParent();
+                    execution = execution.getSuperExecution() != null ? execution.getSuperExecution()
+                            : execution.getParent();
                 }
                 execution.setVariable("nextAssigneeCode", currentAssigneeConfig.get("assigneeCode"));
                 execution.setVariable("nextAssigneeName", currentAssigneeConfig.get("assigneeName"));
+                execution.setVariable("nextAssigneeEmail", currentAssigneeConfig.get("assigneeEmail"));
+                execution.setVariable("nextAssigneeCount", currentAssigneeConfig.get("assigneeCount"));
             }
         }
+
+        // 办理人相关参数中附加的任务变量
+        Object taskVars = currentAssigneeConfig.get("taskVars");
+        if (taskVars instanceof Map) {
+            for (Entry<String, Object> var : ((Map<String, Object>) taskVars).entrySet()) {
+                delegateTask.setVariableLocal(var.getKey(), var.getValue());
+            }
+        }
+
+        // 为当前任务添加一下任务办理人
         delegateTask.setVariableLocal("nextAssigneeCode", nextAssigneeConfig.get("assigneeCode"));
         delegateTask.setVariableLocal("nextAssigneeName", nextAssigneeConfig.get("assigneeName"));
+        delegateTask.setVariableLocal("nextAssigneeEmail", nextAssigneeConfig.get("assigneeEmail"));
+        delegateTask.setVariableLocal("nextAssigneeCount", nextAssigneeConfig.get("assigneeCount"));
 //		delegateTask.setVariable("assignee", assignee);
 //		delegateTask.setVariable("candidates", candidates);
 //		delegateTask.setVariable("candidateGroup", candidateGroup);
@@ -386,17 +468,27 @@ public class SubcontractInspectionListener implements TaskListener {
             MailUtil.keepMailWithTemplate(context);
         }
     }
+
     
+
     /**
      * 查找任务办理人
-     * @param taskDefinedVariables 
-     * @return 
+     * 
+     * @param taskDefinedVariables
+     * @return
      */
     public Map<String, Object> findAssignee(DelegateTask delegateTask, Map<String, Object> taskDefinedVariables) {
+        if (taskDefinedVariables == null || taskDefinedVariables.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
         String procInstId = delegateTask.getProcessInstanceId();
+        String processKey = delegateTask.getProcessDefinitionId();
         String taskId = delegateTask.getId();
         String taskKey = delegateTask.getTaskDefinitionKey();
-        String processKey = delegateTask.getProcessDefinitionId();
+        // 任务定义变量中存在触发任务Key,则也进行查找，主要为前一级任务获取下级任务办理人
+        // 如果触发任务Key与当前任务的Key相同，则允许进行触发
+        String triggerTaskKey = String.valueOf(taskDefinedVariables.getOrDefault("triggerTaskKey", ""));
 
 //      PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
         Map<String, Object> pmWorkFlow = getCurrentEntity(delegateTask);
@@ -404,7 +496,7 @@ public class SubcontractInspectionListener implements TaskListener {
         String dataType = String.valueOf(pmWorkFlow.getOrDefault("dataType", DATA_TYPE_PAYMENT));
 //      List<Map<String, Object>> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
 //        Map<String, Object> taskDefinedVariables = (Map<String, Object>) delegateTask.getVariable("approver");
-        
+
         String assignee = null;
         Set<String> candidates = null;
         String candidateGroup = null;
@@ -413,25 +505,38 @@ public class SubcontractInspectionListener implements TaskListener {
         String permissionProjectTypes = "all";
         String areaPower = "all";
         String departmentName = "";
-        List<String> assigeeCodes = new ArrayList<String>();
-        List<String> assigeeNames = new ArrayList<String>();
+        List<String> assigneeCodes = new ArrayList<String>();
+        List<String> assigneeNames = new ArrayList<String>();
+        List<String> assigneeEmails = new ArrayList<String>();
         boolean checkArea = Boolean.TRUE.equals(taskDefinedVariables.getOrDefault("checkArea", false));
         assignee = (String) taskDefinedVariables.getOrDefault("assignee", "");
-        candidates = new HashSet(Arrays.asList(StringUtils.split((String) taskDefinedVariables.getOrDefault("candidates", ""), ",")));
+        candidates = new HashSet(
+                Arrays.asList(StringUtils.split((String) taskDefinedVariables.getOrDefault("candidates", ""), ",")));
         memberRole = (String) taskDefinedVariables.getOrDefault("memberRole", "");
         candidateRole = (String) taskDefinedVariables.getOrDefault("candidateRole", "");
-        String candidateRoleName = (String) taskDefinedVariables.getOrDefault("candidateRoleName", taskDefinedVariables.getOrDefault("taskName", ""));
-        if (TaskKey.ACCEPTANCE_TASK.equals(taskKey)) {
+        String candidateRoleName = (String) taskDefinedVariables.getOrDefault("candidateRoleName",
+                taskDefinedVariables.getOrDefault("taskName", ""));
+        // 哪些任务Key需要判断多种条件
+        String[] taskKeys = new String[] { TaskKey.ACCEPTANCE_TASK, TaskKey.NORMAL_APPROVE_TASK, TaskKey.APPROVE };
+        // 如果触发任务Key与当前任务的Key相同，则允许进行触发
+        if (ArrayUtils.contains(taskKeys, taskKey) || taskKey.equals(triggerTaskKey)) {
             if (checkArea) {
-                if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
-                    SubcontractProject entity = (SubcontractProject) pmWorkFlow.get("entity");
-                    areaPower = entity.getProfitDepCode();
-                } else if (DATA_TYPE_PAYMENT.equals(dataType)) {
-//                    SubcontractPayment entity = (SubcontractPayment) pmWorkFlow.get("entity");
-//                    Integer subcontractId = entity.getSubcontractId();
-                    Integer subcontractId = Integer.valueOf(String.valueOf(pmWorkFlow.get("objId")));
-                    SubcontractProject subcontract = subcontractService.selectSubcontractProjectById(subcontractId);
-                    areaPower = subcontract.getProfitDepCode();
+                // 判断是否有指定的areaPwoer，如果是all，则进行获取。否则以这个为准
+                areaPower = (String) taskDefinedVariables.getOrDefault("areaPower", areaPower);
+                if ("all".equals(areaPower)) {
+                    if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
+//                        SubcontractProject entity = (SubcontractProject) pmWorkFlow.get("entity");
+//                        areaPower = entity.getProfitDepCode();
+                        Integer subcontractId = Integer.valueOf(String.valueOf(pmWorkFlow.get("objId")));
+                        SubcontractProject subcontract = subcontractService.selectSubcontractProjectById(subcontractId);
+                        areaPower = subcontract.getProfitDepCode();
+                    } else if (DATA_TYPE_PAYMENT.equals(dataType)) {
+                        // SubcontractPayment entity = (SubcontractPayment) pmWorkFlow.get("entity");
+                        // Integer subcontractId = entity.getSubcontractId();
+                        Integer subcontractId = Integer.valueOf(String.valueOf(pmWorkFlow.get("objId")));
+                        SubcontractProject subcontract = subcontractService.selectSubcontractProjectById(subcontractId);
+                        areaPower = subcontract.getProfitDepCode();
+                    }
                 }
                 Department department = departmentManageService.queryDepartmentByDepartmentNum(areaPower);
                 if (department != null) {
@@ -452,41 +557,46 @@ public class SubcontractInspectionListener implements TaskListener {
             }
             if (StringUtils.isNotBlank(assignee) || (candidates != null && !candidates.isEmpty())) {
                 // 指定了具体的办理人，或者候选人
-                List<String> users = new ArrayList<String>();
-                users.add(assignee);
+                Set<String> users = new HashSet<String>();
+                if (StringUtils.isNotBlank(assignee)) {
+                    users.add(assignee);
+                }
                 if (candidates != null) {
                     users.addAll(candidates);
                 }
                 for (String user : users) {
-                    User temp = userManageService.queryUserByUserName(assignee);
+                    User temp = userManageService.queryUserByUserName(user);
                     if (temp != null) {
-                        assigeeCodes.add(temp.getUsername());
-                        assigeeNames.add(joinStr(temp.getUsername(), temp.getRealName()));
+                        assigneeCodes.add(temp.getUsername());
+                        assigneeNames.add(joinStr(temp.getUsername(), temp.getRealName()));
+                        assigneeEmails.add(temp.getEmail());
                     }
                 }
             } else if (!members.isEmpty() && members.size() == 1) {
                 ProjectMember member = members.get(0);
                 assignee = member.getMemberCode();
-                assigeeCodes.add(assignee);
-                assigeeNames.add(member.getMemberName());
+                assigneeCodes.add(assignee);
+                assigneeNames.add(member.getMemberName());
+                assigneeEmails.add(member.getEmail());
             } else if (!members.isEmpty()) {
                 candidates = new HashSet<String>(members.size());
                 for (ProjectMember member : members) {
                     candidates.add(member.getMemberCode());
-                    assigeeCodes.add(member.getMemberCode());
-                    assigeeNames.add(member.getMemberName());
+                    assigneeCodes.add(member.getMemberCode());
+                    assigneeNames.add(member.getMemberName());
+                    assigneeEmails.add(member.getEmail());
                 }
             } else {
                 candidateGroup = candidateRole;
-                assigeeCodes.add(areaPower+ candidateRole);
-                assigeeNames.add(joinStr(departmentName, candidateRoleName));
+                assigneeCodes.add((checkArea ? areaPower : "") + candidateRole);
+                assigneeNames.add(joinStr(departmentName, candidateRoleName));
             }
         } else {
             candidateGroup = candidateRole;
-            assigeeCodes.add(areaPower + candidateRole);
-            assigeeNames.add(joinStr(departmentName, candidateRoleName));
+            assigneeCodes.add((checkArea ? areaPower : "") + candidateRole);
+            assigneeNames.add(joinStr(departmentName, candidateRoleName));
         }
-        
+
         HashMap<String, Object> config = new HashMap<String, Object>();
         config.put("assignee", assignee);
         config.put("candidates", candidates);
@@ -495,11 +605,75 @@ public class SubcontractInspectionListener implements TaskListener {
         config.put("checkDep", checkArea);
         config.put("areaPower", areaPower);
         config.put("permissionProjectTypes", permissionProjectTypes);
-        config.put("assigneeCode", StringUtils.join(assigeeCodes, ","));
-        config.put("assigneeName", StringUtils.join(assigeeNames, ","));
+        config.put("assigneeCode", StringUtils.join(assigneeCodes, ","));
+        config.put("assigneeName", StringUtils.join(assigneeNames, ","));
+        config.put("assigneeEmail", StringUtils.join(assigneeEmails, ";"));
+        config.put("assigneeCount", String.valueOf(assigneeEmails.size()));
         return config;
     }
 
+    /**
+     * 检查办理人是否存在启用条件，如果存在启用条件，进行校验
+     * 
+     * @param variableScope
+     * @param taskDefinedVariables
+     * @return enableApprovers
+     */
+    public List<Map<String, Object>> checkAssignee(
+            VariableScope variableScope, List<Map<String, Object>> approverList,
+            Map<String, Object> taskDefinedVariables
+    ) {
+        List<Map<String, Object>> approvers = new ArrayList<Map<String, Object>>();
+        for (Iterator iterator = approverList.iterator(); iterator.hasNext();) {
+            Map<String, Object> approver = (Map<String, Object>) iterator.next();
+            // 判断是否满足启用条件，如果不满足进行移除
+            if (!checkAssignee(variableScope, approver, taskDefinedVariables)) {
+                iterator.remove();
+            }
+        }
+        return approverList;
+    }
+
+    /**
+     * 检查办理人是否存在启用条件，如果存在启用条件，进行校验
+     * 
+     * @param variableScope
+     * @param approverConfig
+     * @param taskDefinedVariables
+     * @return
+     */
+    public boolean checkAssignee(
+            VariableScope variableScope, Map<String, Object> approverConfig, Map<String, Object> taskDefinedVariables
+    ) {
+        // 判断是否存在条件，无条件则默认启用
+        boolean enable = !approverConfig.containsKey("condition");
+        if (enable) {
+            return enable;
+        }
+
+        // 存在启用条件，进行校验
+        String condition = (String) approverConfig.get("condition");
+        Object entity = variableScope.getVariable("entity");
+        if (entity == null) {
+            entity = taskDefinedVariables.get("entity");
+        }
+        Map<String, Object> env = new HashMap<String, Object>();
+        env.put("entity", entity);
+        env.put("config", approverConfig);
+        env.put("context", this);
+        env.put("taskVars", variableScope);
+        
+
+        Object result = false;
+        try {
+            result = AviatorUtils.exceute(condition, env);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return Boolean.TRUE.equals(result);
+    }
+    
     /**
      * 任务完成监听器
      */
@@ -507,11 +681,12 @@ public class SubcontractInspectionListener implements TaskListener {
         String taskId = delegateTask.getId();
         String taskKey = delegateTask.getTaskDefinitionKey();
         String processKey = delegateTask.getProcessDefinitionId();
-//		PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
+//      PmWorkFlow pmWorkFlow = delegateTask.getVariable("entity", PmWorkFlow.class);
         Map<String, Object> pmWorkFlow = getCurrentEntity(delegateTask);
 
         String dataType = String.valueOf(pmWorkFlow.getOrDefault("dataType", DATA_TYPE_PAYMENT));
-        List<Map<String, Object>> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
+//        List<Map<String, Object>> taskDefinedVariables = getTaskDefinedVariable(dataType, taskKey);
+        Map<String, Object> taskDefinedVariables = (Map<String, Object>) delegateTask.getVariable("approver");
         Boolean isPass = (Boolean) delegateTask.getVariableLocal("isPass");
         String data = StringUtils.defaultIfBlank((String) delegateTask.getVariableLocal("data"), "{}");
         Map<String, Object> customData = JSON.parseObject(data, HashMap.class);
@@ -534,19 +709,13 @@ public class SubcontractInspectionListener implements TaskListener {
             }
         }
         if (DATA_TYPE_SUBCONTRACT.equals(dataType)) {
-//          SubcontractVO subcontract = new SubcontractVO();
-//          subcontract.setId(pmWorkFlow.getDataId());
             SubcontractProject temp = new SubcontractProject();
             temp.setId(Integer.valueOf(String.valueOf(pmWorkFlow.get("objId"))));
             temp.setCustomInfo(filtedCustomData);
             subcontractService.updateSubcontractProjectByIdSelective(temp);
         } else if (DATA_TYPE_PAYMENT.equals(dataType)) {
-//          SubcontractPayment payment = new SubcontractPayment();
-//          payment.setId((Integer) pmWorkFlow.get("dataId"));
             List<SubcontractPayment> payments = (List<SubcontractPayment>) pmWorkFlow.get("entity");
             for (SubcontractPayment payment : payments) {
-//                SubcontractPayment temp = new SubcontractPayment();
-//                temp.setId(payment.getId());
                 Object customInfo = filtedCustomData.get(String.valueOf(payment.getId()));
                 if (customInfo instanceof Map) {
                     payment.setCustomInfo((Map<String, Object>) customInfo);
@@ -565,6 +734,7 @@ public class SubcontractInspectionListener implements TaskListener {
 
     /**
      * 获取定义的数据类型的流程变量
+     * 
      * @param dataType
      * @return
      */
@@ -579,6 +749,7 @@ public class SubcontractInspectionListener implements TaskListener {
 
     /**
      * 获取定义的数据类型的任务的流程变量
+     * 
      * @param dataType
      * @param taskType
      * @return
@@ -590,15 +761,17 @@ public class SubcontractInspectionListener implements TaskListener {
                 .getOrDefault(taskType, new ArrayList<Map<String, Object>>());
         return taskDefinedVariables;
     }
-    
+
     /**
      * 获取定义的数据类型的任务审批状态
+     * 
      * @param dataType
      * @param taskType
      * @return
      */
     public static Map<String, String> getTaskApprovedStatusList(String dataType, String taskType) {
-        SubcontractInspectionListener listener = SpringContext.getBean("subcontractInspectionListener", SubcontractInspectionListener.class);
+        SubcontractInspectionListener listener = SpringContext.getBean("subcontractInspectionListener",
+                SubcontractInspectionListener.class);
         List<Map<String, Object>> taskDefinedVariable = listener.getTaskDefinedVariable(dataType, taskType);
         Map<String, String> approvedStatusMap = new LinkedHashMap<String, String>(taskDefinedVariable.size());
         approvedStatusMap.put("待审批", "待审批");
@@ -611,8 +784,9 @@ public class SubcontractInspectionListener implements TaskListener {
         return approvedStatusMap;
     }
 
-    private List<String> selectActivitiUserMails(String assignee, Set<String> candidates, String candidateGroup,
-            String areaPower, String projectTypes) {
+    private List<String> selectActivitiUserMails(
+            String assignee, Set<String> candidates, String candidateGroup, String areaPower, String projectTypes
+    ) {
         Set<String> userIds = new HashSet<String>();
         if (assignee != null) {
             userIds.add(assignee);
@@ -660,9 +834,10 @@ public class SubcontractInspectionListener implements TaskListener {
         }
         return;
     }
-    
+
     /**
      * 推D365的采购订单
+     * 
      * @param subcontract
      */
     public void pushPurchaseOrder(SubcontractProject subcontract) {
@@ -671,35 +846,40 @@ public class SubcontractInspectionListener implements TaskListener {
         String configStr = getSysArg("sys.d365.api.config");
         configStr = StringUtils.defaultIfBlank(configStr, "{}");
         Map<String, Object> config = JSON.parseObject(configStr, new TypeReference<HashMap<String, Object>>() {});
-        boolean enablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
+        boolean enablePushPurchaseOrder = Boolean.TRUE
+                .equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
         if (!enablePushPurchaseOrder) {
             return;
         }
-        
+
         // 是否允许已经推过采购订单的项目转包，默认不允许重复推
-        boolean repeatablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("repeatablePushPurchaseOrder"))));
-        if (!repeatablePushPurchaseOrder && StringUtils.isNotBlank((String) subcontract.getCustomInfoByKey("purchId"))) {
+        boolean repeatablePushPurchaseOrder = Boolean.TRUE
+                .equals(Boolean.parseBoolean(String.valueOf(config.get("repeatablePushPurchaseOrder"))));
+        if (!repeatablePushPurchaseOrder
+                && StringUtils.isNotBlank((String) subcontract.getCustomInfoByKey("purchId"))) {
             return;
         }
-               
+
         // 设置账套
         Company company = new Company(subcontract.getOrgId());
         company = departmentManageService.queryCompanyOne(company);
         String dataAreaId = company.getAccount();
         config.put("dataAreaId", dataAreaId);
-        
+
         // 创建采购订单头
         PurchaseHeader purchTable = this.createPurchashHeader(subcontract, config);
         List<PurchaseLine> purchLines = this.createPurchaseLines(subcontract, config);
-        
+
         // 初始化D365接口配置
-        SubcontractProject subcontractProject = D365Api.pushPurchaseOrder(subcontract, dataAreaId, purchTable, purchLines, config);
+        SubcontractProject subcontractProject = D365Api.pushPurchaseOrder(subcontract, dataAreaId, purchTable,
+                purchLines, config);
         subcontractProject.setCustomInfoByKey("subcontractTime", new Date());
         subcontractService.updateSubcontractProjectByIdSelective(subcontractProject);
     }
-    
+
     /**
      * 基于项目转包创建采购订单头
+     * 
      * @param subcontract
      * @param config
      * @return
@@ -711,35 +891,35 @@ public class SubcontractInspectionListener implements TaskListener {
         if (facilitator == null) {
             throw new CustomRuntimeException("该服务商不存在或转包类型与合作类型不匹配！");
         }
-        
+
         SubcontractProjectVO subcontractVO = null;
         if (subcontract instanceof SubcontractProjectVO) {
             subcontractVO = (SubcontractProjectVO) subcontract;
         } else {
             subcontractVO = subcontractService.selectSubcontractProjectVOById(subcontract.getId());
         }
-        
+
         // 判断采购订单池是否指定
         String purchPoolId = (String) config.get("purchPoolId");
         if (StringUtils.isBlank(purchPoolId)) {
             throw new CustomRuntimeException("采购订单池未指定！");
         }
-        
+
         // 获取指定的仓库
         String inventLocationId = (String) config.getOrDefault("inventLocationId", "");
-        
+
         // 获取工号
         String workNo = UserContext.getUserContext().getUsername().substring(1);
         // 处理备注信息
 //        String remark = SystemLogUtil.format((String) config.getOrDefault("remarkFormat", subcontract.getRemark()), subcontract);
         String remark = subcontract.getReason() + "\r\n" + subcontract.getRemark();
-        
+
         // 获取项目进度
         Project minProgressProject = this.queryMinProgressProject(subcontract);
-        
+
         // 填充采购订单基准单位
         D365Api.fillPurchaseUnitBase(subcontract, config);
-        
+
         // 创建采购订单头
         PurchaseHeader purchTable = new PurchaseHeader();
         purchTable.setSourceType(DATA_TYPE_SUBCONTRACT);
@@ -753,7 +933,8 @@ public class SubcontractInspectionListener implements TaskListener {
                 .salesContract(subcontract.getContractNos()) // 销售合同号
                 .contractAmount(RegExUtils.replaceAll(subcontract.getSubcontractAmount(), ",", "")) // 合同金额
                 .inventLocationId(inventLocationId) // 仓库
-                .deliveryDate((String) subcontract.getCustomInfoByKey("deliveryDate", DateUtil.formatDateTime(new Date()))) // 交货日期
+                .deliveryDate(
+                        (String) subcontract.getCustomInfoByKey("deliveryDate", DateUtil.formatDateTime(new Date()))) // 交货日期
                 .dlvMode((String) subcontract.getCustomInfoByKey("dlvMode")) // 交货模式
                 .dlvTerm((String) subcontract.getCustomInfoByKey("dlvTerm")) // 交货条款
                 .payment((String) subcontract.getCustomInfoByKey("prepaidRule")) // 付款条款
@@ -762,7 +943,8 @@ public class SubcontractInspectionListener implements TaskListener {
                 .otherSysNum(String.valueOf(config.getOrDefault("sysTag", "PMS#")) + subcontract.getId()) // 外部系统编号
                 .projectName((String) subcontract.getSubcontractName()) // 项目名称
                 .projectProgress((String) minProgressProject.getCustomInfoByKey("projectProgress", "0")) // 项目进度
-                .subcontractType((String) config.getOrDefault("typeTag", "用服") + subcontract.getCustomInfoByKey("typeName", subcontractVO.getTypeName())) // 转包类型
+                .subcontractType((String) config.getOrDefault("typeTag", "用服")
+                        + subcontract.getCustomInfoByKey("typeName", subcontractVO.getTypeName())) // 转包类型
                 .subcontStartDate(StringUtils.trimToNull((String) subcontract.getCustomInfoByKey("subcontStartDate"))) // 转包周期开始
                 .subcontEndDate(StringUtils.trimToNull((String) subcontract.getCustomInfoByKey("subcontEndDate"))) // 转包周期结束
                 .applicant(workNo) // 申请人
@@ -770,9 +952,10 @@ public class SubcontractInspectionListener implements TaskListener {
         ;
         return purchTable;
     }
-    
+
     /**
      * 基于项目转包创建采购订单行
+     * 
      * @param subcontract
      * @param config
      * @return
@@ -785,14 +968,19 @@ public class SubcontractInspectionListener implements TaskListener {
         }
         // 获取指定的仓库
         String inventLocationId = (String) config.getOrDefault("inventLocationId", "");
-        
+
         // 获取采购订单的基准单位
-        String purchUnitBase = (String) subcontract.getCustomInfoByKey("purchUnitBase", config.getOrDefault("purchUnitBase", "price"));
+        String purchUnitBase = (String) subcontract.getCustomInfoByKey("purchUnitBase",
+                config.getOrDefault("purchUnitBase", "price"));
         // 获取采购订单的基准单价，默认为1
-        BigDecimal purchPriceBase = new BigDecimal(String.valueOf(subcontract.getCustomInfoByKey("purchPriceBase", config.getOrDefault("purchPriceBase", "1.00")))).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal purchPriceBase = new BigDecimal(String.valueOf(
+                subcontract.getCustomInfoByKey("purchPriceBase", config.getOrDefault("purchPriceBase", "1.00"))))
+                        .setScale(2, RoundingMode.HALF_UP);
         // 获取采购订单的基准数量，默认为1,
-        BigDecimal purchQtyBase = new BigDecimal(String.valueOf(subcontract.getCustomInfoByKey("purchQtyBase", config.getOrDefault("purchQtyBase", "1.00")))).setScale(2, RoundingMode.HALF_UP);
-        
+        BigDecimal purchQtyBase = new BigDecimal(String
+                .valueOf(subcontract.getCustomInfoByKey("purchQtyBase", config.getOrDefault("purchQtyBase", "1.00"))))
+                        .setScale(2, RoundingMode.HALF_UP);
+
         BigDecimal subcontractAmount = BigDecimal.ZERO;
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
         decimalFormat.setParseBigDecimal(true);
@@ -817,14 +1005,14 @@ public class SubcontractInspectionListener implements TaskListener {
         // 处理备注信息
 //        String remark = StringUtils.defaultIfBlank(SystemLogUtil.format((String) config.getOrDefault("lineRemarkFormat", config.getOrDefault("remarkFormat", "")), subcontract), subcontract.getRemark());
         String remark = subcontract.getReason() + "\r\n" + subcontract.getRemark();
-        
+
         // 税组，默认为税组，如果没有则税率加碎组前缀组成税组
         String taxRate = (String) subcontract.getCustomInfoByKey("taxRate");
         String taxItemGroup = (String) subcontract.getCustomInfoByKey("taxItemGroup");
         if (StringUtils.isBlank(taxItemGroup) && StringUtils.isNotBlank(taxRate)) {
             taxItemGroup = config.getOrDefault("taxGroupPrefix", "J") + taxRate;
         }
-        
+
         // 创建采购订单行
         List<PurchaseLine> purchLines = new ArrayList<PurchaseLine>();
         PurchaseLine purchaseLine = new PurchaseLine();
@@ -837,7 +1025,8 @@ public class SubcontractInspectionListener implements TaskListener {
                 .taxItemGroup(taxItemGroup)// 税收组
                 .inventSerialId((String) config.get("inventSerialId"))// 厂商型号
                 .officeCode(subcontract.getProfitDepCode())// 办事处
-                .deliveryDate((String) subcontract.getCustomInfoByKey("deliveryDate", DateUtil.formatDateTime(new Date())))// 交货日期
+                .deliveryDate(
+                        (String) subcontract.getCustomInfoByKey("deliveryDate", DateUtil.formatDateTime(new Date())))// 交货日期
                 .remark(remark)// 行备注
                 .multiDimID((String) subcontract.getCustomInfoByKey("multiDimID"))// 行多维度ID
                 .investmentProject((String) subcontract.getCustomInfoByKey("investmentProject"))// 募投项目
@@ -856,9 +1045,10 @@ public class SubcontractInspectionListener implements TaskListener {
         purchLines.add(purchaseLine);
         return purchLines;
     }
-    
+
     /**
      * 获取项目进度最慢的项目
+     * 
      * @param subcontract
      * @return
      */
@@ -877,12 +1067,13 @@ public class SubcontractInspectionListener implements TaskListener {
 //            BeanUtils.copyProperties(p, project);
 //            return project;
 //        })
-        .orElse(new Project(-1));
+                .orElse(new Project(-1));
         return minProgressProject;
     }
-    
+
     /**
      * 推D365的采购订单
+     * 
      * @param payments
      */
     public void pushPurchaseReceipt(List<SubcontractPayment> payments) {
@@ -890,11 +1081,12 @@ public class SubcontractInspectionListener implements TaskListener {
         String configStr = getSysArg("sys.d365.api.config");
         configStr = StringUtils.defaultIfBlank(configStr, "{}");
         Map<String, Object> config = JSON.parseObject(configStr, new TypeReference<HashMap<String, Object>>() {});
-        boolean enablePushPurchaseOrder = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
+        boolean enablePushPurchaseOrder = Boolean.TRUE
+                .equals(Boolean.parseBoolean(String.valueOf(config.get("enablePushPurchaseOrder"))));
         if (!enablePushPurchaseOrder) {
             return;
         }
-        
+
         // 查询项目转包的采购订单号和批次号
         Map<Integer, SubcontractProject> subcontractMap = new HashMap<Integer, SubcontractProject>();
         Map<Integer, List<Map<String, SubcontractPayment>>> paymentMap = new HashMap<>(payments.size());
@@ -912,9 +1104,10 @@ public class SubcontractInspectionListener implements TaskListener {
             payment.setCustomInfoByKey("inventTransId", inventTransId);
             payment.setCustomInfoByKey("deliveryDate", DateUtil.formatDateTime(new Date()));
             payment.setCustomInfoByKey("documentDate", DateUtil.formatDateTime(new Date()));
-            
+
             // 一次收货中同行保证只出现一次，便于后续数据关联的时候不出出现多对多的情况
-            List<Map<String, SubcontractPayment>> subPaymentsMapList = paymentMap.getOrDefault(subcontractId, new ArrayList<>());
+            List<Map<String, SubcontractPayment>> subPaymentsMapList = paymentMap.getOrDefault(subcontractId,
+                    new ArrayList<>());
             // 查找第一个不存在该行的集合
             Map<String, SubcontractPayment> subPaymentsMap = null;
             for (Map<String, SubcontractPayment> subMap : subPaymentsMapList) {
@@ -932,7 +1125,7 @@ public class SubcontractInspectionListener implements TaskListener {
             subPaymentsMap.put(inventTransId, payment);
             paymentMap.put(subcontractId, subPaymentsMapList);
         }
-        
+
         Map<Integer, String> dataAreaIdMap = new HashMap<Integer, String>(subcontractMap.size());
         for (SubcontractProject subcontract : subcontractMap.values()) {
             // 传入项目转包申请
@@ -946,7 +1139,7 @@ public class SubcontractInspectionListener implements TaskListener {
                 dataAreaIdMap.put(subcontract.getOrgId(), dataAreaId);
             }
             config.put("dataAreaId", dataAreaId);
-            
+
             // 创建采购订单头
             List<Map<String, SubcontractPayment>> subPaymentsMapList = paymentMap.get(subcontract.getId());
             for (Map<String, SubcontractPayment> subPaymentsMap : subPaymentsMapList) {
@@ -954,13 +1147,15 @@ public class SubcontractInspectionListener implements TaskListener {
                 SubcontractPayment subPayment = subPayments.get(0);
                 PurchaseReceiptHeader receipt = this.createPurchashReceipt(subPayment, config);
                 List<PurchaseReceiptLine> receiptLines = this.createPurchaseReceiptLines(subPayments, config);
-                
+
                 // 初始化D365接口配置
                 BaseEntity entity = new BaseEntity();
                 entity = D365Api.pushPurchaseReceipt(entity, dataAreaId, receipt, receiptLines, config);
                 for (SubcontractPayment payment : subPayments) {
-                    List<Object> purchIds = (List<Object>) payment.getCustomInfoByKey("purchIds", new ArrayList<Object>());
-                    List<Object> inventTransIds = (List<Object>) payment.getCustomInfoByKey("inventTransIds", new ArrayList<Object>());
+                    List<Object> purchIds = (List<Object>) payment.getCustomInfoByKey("purchIds",
+                            new ArrayList<Object>());
+                    List<Object> inventTransIds = (List<Object>) payment.getCustomInfoByKey("inventTransIds",
+                            new ArrayList<Object>());
                     purchIds.addAll((Collection<? extends Object>) entity.getCustomInfoByKey("purchIds"));
                     inventTransIds.addAll((Collection<? extends Object>) entity.getCustomInfoByKey("inventTransIds"));
 //                    SubcontractPayment temp = new SubcontractPayment();
@@ -975,9 +1170,10 @@ public class SubcontractInspectionListener implements TaskListener {
             }
         }
     }
-    
+
     /**
      * 基于项目转包结算创建采购收货头
+     * 
      * @param payment
      * @param config
      * @return
@@ -991,7 +1187,7 @@ public class SubcontractInspectionListener implements TaskListener {
         String progressDesc = "";
 //        // 验收进度
 //        String acceptanceDesc = settlement.getAcceptanceDesc();
-        
+
         String dataAreaId = (String) config.get("dataAreaId");
         String purchId = (String) payment.getCustomInfoByKey("purchId");
         PurchaseReceipt t = new PurchaseReceipt();
@@ -999,11 +1195,12 @@ public class SubcontractInspectionListener implements TaskListener {
         t.setDataAreaId(dataAreaId);
         long count = purchaseReceiptService.countBySelective(t) + 1;
         String packingSlipId = purchId + "_" + String.format("%02d", count);
-        
+
         // 处理备注信息
-        // String remark = SystemLogUtil.format((String) config.getOrDefault("remarkFormat", memo), settlement);
+        // String remark = SystemLogUtil.format((String)
+        // config.getOrDefault("remarkFormat", memo), settlement);
         String remark = memo;
-        
+
         // 创建采购收货头
         PurchaseReceiptHeader receipt = new PurchaseReceiptHeader();
         receipt.setSourceOrderType(DATA_TYPE_SUBCONTRACT);
@@ -1020,39 +1217,48 @@ public class SubcontractInspectionListener implements TaskListener {
         ;
         return receipt;
     }
-    
+
     /**
      * 基于项目转包结算创建采购收货行
+     * 
      * @param payment
      * @param config
      * @return
      */
-    public List<PurchaseReceiptLine> createPurchaseReceiptLines(List<SubcontractPayment> payments, Map<String, Object> config) {
+    public List<PurchaseReceiptLine> createPurchaseReceiptLines(
+            List<SubcontractPayment> payments, Map<String, Object> config
+    ) {
         // 获取指定的站点
         String inventSiteId = (String) config.getOrDefault("inventSiteId", "");
         // 获取指定的仓库
         String inventLocationId = (String) config.getOrDefault("inventLocationId", "");
         // 获取指定的库位
         String wmsLocationId = (String) config.getOrDefault("wmsLocationId", "");
-        
-        SubcontractProject subcontract = (SubcontractProject) config.getOrDefault("subcontract", new SubcontractProject());
-        
+
+        SubcontractProject subcontract = (SubcontractProject) config.getOrDefault("subcontract",
+                new SubcontractProject());
+
         // 获取采购订单的基准单位
-        String purchUnitBase = (String) subcontract.getCustomInfoByKey("purchUnitBase", config.getOrDefault("purchUnitBase", "price"));
+        String purchUnitBase = (String) subcontract.getCustomInfoByKey("purchUnitBase",
+                config.getOrDefault("purchUnitBase", "price"));
         // 获取采购订单的基准单价，默认为1
-        BigDecimal purchPriceBase = new BigDecimal(String.valueOf(subcontract.getCustomInfoByKey("purchPriceBase", config.getOrDefault("purchPriceBase", "1.00")))).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal purchPriceBase = new BigDecimal(String.valueOf(
+                subcontract.getCustomInfoByKey("purchPriceBase", config.getOrDefault("purchPriceBase", "1.00"))))
+                        .setScale(2, RoundingMode.HALF_UP);
         // 获取采购订单的基准数量，默认为1,
-        BigDecimal purchQtyBase = new BigDecimal(String.valueOf(subcontract.getCustomInfoByKey("purchQtyBase", config.getOrDefault("purchQtyBase", "1.00")))).setScale(2, RoundingMode.HALF_UP);
-        
-        
+        BigDecimal purchQtyBase = new BigDecimal(String
+                .valueOf(subcontract.getCustomInfoByKey("purchQtyBase", config.getOrDefault("purchQtyBase", "1.00"))))
+                        .setScale(2, RoundingMode.HALF_UP);
+
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
         decimalFormat.setParseBigDecimal(true);
-        
+
         // 创建采购订单行
         List<PurchaseReceiptLine> receiptLines = new ArrayList<PurchaseReceiptLine>(payments.size());
         for (SubcontractPayment payment : payments) {
             BigDecimal amount = BigDecimal.ZERO;
-            String amountStr = StringUtils.defaultIfBlank(StringUtils.trimToEmpty(String.valueOf(payment.getCustomInfoByKey("approvedAmount", payment.getAmount()))), "0");
+            String amountStr = StringUtils.defaultIfBlank(StringUtils.trimToEmpty(
+                    String.valueOf(payment.getCustomInfoByKey("approvedAmount", payment.getAmount()))), "0");
             try {
                 amount = (BigDecimal) decimalFormat.parse(amountStr);
             } catch (ParseException e) {
@@ -1066,7 +1272,8 @@ public class SubcontractInspectionListener implements TaskListener {
                 qty = amount.divide(purchPriceBase, 2, RoundingMode.HALF_UP);
             } else {
                 // 根据转包价和基准数量计算采购订单的采购单价
-                qty = purchQtyBase.multiply(new BigDecimal(payment.getRatio()).setScale(2, RoundingMode.HALF_UP).divide(BigDecimal.valueOf(100d))).setScale(2, RoundingMode.HALF_UP);
+                qty = purchQtyBase.multiply(new BigDecimal(payment.getRatio()).setScale(2, RoundingMode.HALF_UP)
+                        .divide(BigDecimal.valueOf(100d))).setScale(2, RoundingMode.HALF_UP);
             }
             // 根据转包价和基准数量计算采购订单的采购单价
             BigDecimal price = amount.divide(qty, 2, RoundingMode.HALF_UP);
@@ -1075,7 +1282,7 @@ public class SubcontractInspectionListener implements TaskListener {
             receiptLine.setAmount(amount); // 采购价
             receiptLine.setPrice(price); // 采购单价
             receiptLine.purchId((String) payment.getCustomInfoByKey("purchId")) // 采购单号
-    //                .lineNum(settlement.getSubcontractId().toString()) // 行号（用系统ID代替）
+                    // .lineNum(settlement.getSubcontractId().toString()) // 行号（用系统ID代替）
                     .inventTransId((String) payment.getCustomInfoByKey("inventTransId")) // 批次号
                     .qty(qty) // 采购数量
                     .inventSiteId(inventSiteId) // 站点
@@ -1098,27 +1305,49 @@ public class SubcontractInspectionListener implements TaskListener {
 
     private Map<String, Object> getCurrentEntity(VariableScope variableScope) {
         Map<String, Object> entity = variableScope.getVariable("entity", HashMap.class);
+        String procInstId = "";
+        String processKey = "";
+        if (variableScope instanceof DelegateTask) {
+            procInstId = ((DelegateTask) variableScope).getProcessInstanceId();
+            processKey = ((DelegateTask) variableScope).getProcessDefinitionId();
+        } else if (variableScope instanceof DelegateExecution) {
+            procInstId = ((DelegateExecution) variableScope).getProcessInstanceId();
+            processKey = ((DelegateExecution) variableScope).getProcessDefinitionId();
+        }
+        processKey = StringUtils.split(StringUtils.defaultIfBlank(processKey, SubcontractConstant.PROCESS_INSPECTION_KEY), ":")[0];
+
         if (entity == null || entity.isEmpty()) {
             entity = new HashMap<>();
             Integer subcontractId = variableScope.getVariable("subcontractId", Integer.class);
+            if (subcontractId == null && variableScope instanceof ExecutionEntity) {
+                ExecutionEntity superExecution = ((ExecutionEntity)variableScope).getSuperExecution();
+                if (superExecution != null) {
+                    subcontractId = superExecution.getVariable("subcontractId", Integer.class);
+                    variableScope.setVariable("subcontractId", subcontractId);
+                }
+            }
             SubcontractProject subcontract = subcontractService.selectSubcontractProjectById(subcontractId);
-            SubcontractPayment payment = new SubcontractPayment();
-            payment.setSubcontractId(subcontractId);
-            payment.setOrgId(subcontract.getOrgId());
-            List<SubcontractPayment> paymentList = subcontractService.selectSubcontractPaymentList(payment);
-//            SubcontractPayment subcontractPayment = paymentList.stream().filter(p -> p.getConfirmTime() == null).findFirst().get();
-            paymentList = paymentList.stream().filter(p -> p.getConfirmTime() == null).collect(Collectors.toList());
-//            entity.put("dataId", subcontractPayment.getId());
+
             entity.put("objId", subcontractId);
             entity.put("objType", DATA_TYPE_SUBCONTRACT);
-            entity.put("dataType", DATA_TYPE_PAYMENT);
-            entity.put("entity", paymentList);
-        }
-        String procInstId = "";
-        if (variableScope instanceof DelegateTask) {
-            procInstId = ((DelegateTask) variableScope).getProcessInstanceId();
-        } else if (variableScope instanceof DelegateExecution) {
-            procInstId = ((DelegateExecution) variableScope).getProcessInstanceId();
+
+            // 判断是否为转包流程，如果是转包流程，则放置subcontract对象，否则认为是转包验收流程，放置paymentList
+            if (SubcontractConstant.PROCESS_SUBCONTRACT_KEY.equals(processKey)) {
+                entity.put("dataType", DATA_TYPE_SUBCONTRACT);
+                entity.put("entity", subcontract);
+            } else {
+                SubcontractPayment payment = new SubcontractPayment();
+                payment.setSubcontractId(subcontractId);
+                payment.setOrgId(subcontract.getOrgId());
+                List<SubcontractPayment> paymentList = subcontractService.selectSubcontractPaymentList(payment);
+                // SubcontractPayment subcontractPayment = paymentList.stream().filter(p ->
+                // p.getConfirmTime() == null).findFirst().get();
+                paymentList = paymentList.stream().filter(p -> p.getConfirmTime() == null).collect(Collectors.toList());
+                // entity.put("dataId", subcontractPayment.getId());
+
+                entity.put("dataType", DATA_TYPE_PAYMENT);
+                entity.put("entity", paymentList);
+            }
         }
         entity.put("procInstId", procInstId);
 //        pmWorkFlow = pmFlowService.decoratorEntity(pmWorkFlow);
@@ -1134,7 +1363,7 @@ public class SubcontractInspectionListener implements TaskListener {
         String args = basicDataService.querySysArg(code);
         return StringUtils.defaultIfBlank(args, defaultValue);
     }
-    
+
     public String joinStr(Object... array) {
         return StringUtils.join(Arrays.asList(array).stream().filter(s -> s != null && s.toString().length() > 0)
                 .toArray(String[]::new), "-");

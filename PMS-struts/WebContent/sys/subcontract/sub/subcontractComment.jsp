@@ -22,7 +22,7 @@
 	                <s:hidden name="workflowCommonParam.flag" value="1"></s:hidden>
 	            </fieldset>
 	            <fieldset class="form-group">
-	                <label>受益部门服务经理审批</label>
+	                <label><s:property value="workflowCommonParam.customInfo.taskDesc" default="受益部门服务经理"/>审批</label>
 	            </fieldset>
 	            <fieldset class="form-group">
 	                <label>审批意见：</label><s:radio id="approveStatus" list="#{'1':'通过','-1':'驳回'}" name="workflowCommonParam.approveStatus"  listCssStyle="margin-right:1rem;"></s:radio>

@@ -194,5 +194,11 @@ public interface PresalesDao {
      * @return
      */
     List<Map<String, Object>> queryPresaleLend2RmaInfo(String projectCode);
+    /**
+     * 临时授权数据
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectPresalesTempAuthInfo(Map<String, Object> params);
 
 }

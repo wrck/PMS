@@ -5,7 +5,7 @@ package com.dp.plat.param;
  *
  */
 public class LendInfoParam {
-	private int lendInfoId;
+	private String lendInfoId;
 	private String projectCode;
 	private String projectName;
 	private String dutyName;
@@ -17,10 +17,10 @@ public class LendInfoParam {
 	private String expendName;
 	private String industryName;
 	private String pspm;
-	public int getLendInfoId() {
+	public String getLendInfoId() {
 		return lendInfoId;
 	}
-	public void setLendInfoId(int lendInfoId) {
+	public void setLendInfoId(String lendInfoId) {
 		this.lendInfoId = lendInfoId;
 	}
 	public String getProjectCode() {

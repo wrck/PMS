@@ -156,11 +156,17 @@ public interface ProjectService extends BaseService{
 	String queryProjectStateByProjectId(Project project);
 
 	/**
-	 * 根据projectid查询产品信息
+	 * 根据projectid查询产品信息汇总
 	 * @param projectId
 	 * @return
 	 */
 	List<OrderDataFromSap> queryOrderDataListByProjectId(int projectId);
+	/**
+     * 根据projectid查询产品信息明细
+     * @param projectId
+     * @return
+     */
+    List<OrderDataFromSap> queryOrderDataDetailListByProjectId(int projectId);
 	/**
 	 * 查询项目周报
 	 * @param projectId
@@ -1019,5 +1025,19 @@ public interface ProjectService extends BaseService{
 	 * @return
 	 */
     List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> paramMap);
+
+    /**
+     * 查询项目的工单信息
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectProblemTicket(Map<String, Object> params);
+
+    /**
+     * 查询项目的工单信息,通过项目的发货列表
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectProblemTicketByProject(Project project);
 
 }

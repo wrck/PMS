@@ -27,4 +27,6 @@ PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"
     <sqlMap resource="sql-map-refresh-data-sms-config.xml"/>
     <sqlMap resource="sql-map-refresh-data-sse-config.xml"/>
     <sqlMap resource="sql-map-refresh-data-d365-config.xml"/>
+    <sqlMap resource="sql-map-refresh-data-itr-config.xml"/>
+    <sqlMap resource="sql-map-refresh-data-oa-config.xml"/>
 </sqlMapConfig>  

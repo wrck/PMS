@@ -2,7 +2,7 @@
 <!DOCTYPE sqlMap  
 PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
 "http://ibatis.apache.org/dtd/sql-map-2.dtd"> 
-<!-- 售前测试项目数据库操作--> 
+<!-- 技术公告数据库操作--> 
 <sqlMap>
 	<typeAlias alias="Prob" type="com.dp.plat.prob.bean.Prob"/>
 	<select id="query_next_val" resultClass="int">
@@ -1634,4 +1634,244 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </dynamic>
         ORDER BY p.visibleRange, p.`id`
     </select>
+    
+    
+    
+    <resultMap id="ProductComponentMap" class="com.dp.plat.prob.bean.ProductComponent">
+		<result column="id" jdbcType="INTEGER" property="id" />
+		<result column="type" jdbcType="VARCHAR" property="type" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="version" jdbcType="VARCHAR" property="version" />
+		<result column="parentId" jdbcType="INTEGER" property="parentId" />
+		<result column="state" jdbcType="BIT" property="state" />
+	    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+	    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+	    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+	    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+	    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+	<sql id="ProductComponentColumnList">
+	    `id`, `type`, `name`, `version`, `parentId`, `state`, `customInfo`, `createBy`, `createTime`, 
+        `updateBy`, `updateTime`
+    </sql>
+    <select id="selectProductComponentById" parameterClass="java.lang.Integer" resultClass="com.dp.plat.prob.bean.ProductComponent">
+	    select 
+	    <include refid="ProductComponentColumnList" />
+	    from prob_product_component
+	    where `id` = #id#
+	</select>
+	<select id="selectProductComponentVOById" parameterClass="java.lang.Integer" resultClass="com.dp.plat.prob.vo.ProductComponentVO">
+        select 
+        <include refid="ProductComponentColumnList" />
+        from prob_product_component
+        where `id` = #id#
+    </select>
+	<delete id="deleteProductComponentById" parameterClass="java.lang.Integer">
+	    delete from prob_product_component
+	    where `id` = #id#
+	</delete>
+	<insert id="insertProductComponent" parameterClass="com.dp.plat.prob.bean.ProductComponent">
+	    <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+	      SELECT LAST_INSERT_ID()
+	    </selectKey>
+	    insert into prob_product_component (`type`, `name`, `version`, 
+	      `parentId`, `state`, `customInfo`, 
+	      `createBy`, `createTime`, `updateBy`, 
+	      `updateTime`)
+	    values (#type#, #name#, #version#, 
+	      #parentId#, #state#, #customInfo#, 
+	      #createBy#, #createTime#, #updateBy#, 
+	      #updateTime#)
+	  </insert>
+	  <insert id="insertProductComponentSelective" parameterClass="com.dp.plat.prob.bean.ProductComponent">
+	    <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+	      SELECT LAST_INSERT_ID()
+	    </selectKey>
+	    insert into prob_product_component
+	    <dynamic prepend=" " open="(" close=")">
+	      <isNotNull prepend="," property="type"> `type` </isNotNull>
+	      <isNotNull prepend="," property="name"> `name` </isNotNull>
+	      <isNotNull prepend="," property="version"> `version` </isNotNull>
+	      <isNotNull prepend="," property="parentId"> `parentId` </isNotNull>
+	      <isNotNull prepend="," property="state"> `state` </isNotNull>
+	      <isNotNull prepend="," property="customInfo"> `customInfo` </isNotNull>
+	      <isNotNull prepend="," property="createBy"> `createBy` </isNotNull>
+	      <isNotNull prepend="," property="createTime"> `createTime` </isNotNull>
+	      <isNotNull prepend="," property="updateBy"> `updateBy` </isNotNull>
+	      <isNotNull prepend="," property="updateTime"> `updateTime` </isNotNull>
+	    </dynamic>
+	    <dynamic prepend="values" open="(" close=")">
+	      <isNotNull prepend="," property="type"> #type# </isNotNull>
+	      <isNotNull prepend="," property="name"> #name# </isNotNull>
+	      <isNotNull prepend="," property="version"> #version# </isNotNull>
+	      <isNotNull prepend="," property="parentId"> #parentId# </isNotNull>
+		  <isNotNull prepend="," property="state"> #state# </isNotNull>
+	      <isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
+	      <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+	      <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+	      <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+	      <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+	    </dynamic>
+	  </insert>
+      <insert id="insertOrUpdateProductComponentSelective" parameterClass="com.dp.plat.prob.bean.ProductComponent">
+        <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+          SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into prob_product_component
+        <dynamic prepend=" " open="(" close=")">
+          <isNotNull prepend="," property="id"> `id` </isNotNull>
+          <isNotNull prepend="," property="type"> `type` </isNotNull>
+          <isNotNull prepend="," property="name"> `name` </isNotNull>
+          <isNotNull prepend="," property="version"> `version` </isNotNull>
+          <isNotNull prepend="," property="parentId"> `parentId` </isNotNull>
+          <isNotNull prepend="," property="state"> `state` </isNotNull>
+          <isNotNull prepend="," property="customInfo"> `customInfo` </isNotNull>
+          <isNotNull prepend="," property="createBy"> `createBy` </isNotNull>
+          <isNotNull prepend="," property="createTime"> `createTime` </isNotNull>
+          <isNotNull prepend="," property="updateBy"> `updateBy` </isNotNull>
+          <isNotNull prepend="," property="updateTime"> `updateTime` </isNotNull>
+        </dynamic>
+        <dynamic prepend="values" open="(" close=")">
+          <isNotNull prepend="," property="id"> #id# </isNotNull>
+          <isNotNull prepend="," property="type"> #type# </isNotNull>
+          <isNotNull prepend="," property="name"> #name# </isNotNull>
+          <isNotNull prepend="," property="version"> #version# </isNotNull>
+          <isNotNull prepend="," property="parentId"> #parentId# </isNotNull>
+          <isNotNull prepend="," property="state"> #state# </isNotNull>
+          <isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
+          <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+          <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+          <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+          <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+        </dynamic>
+        ON DUPLICATE KEY UPDATE 
+        <dynamic prepend=" ">
+	      <isNotNull prepend="," property="type"> `type` = VALUES(`type`) </isNotNull>
+          <isNotNull prepend="," property="name"> `name` = VALUES(`name`) </isNotNull>
+          <isNotNull prepend="," property="version"> `version` = VALUES(`version`) </isNotNull>
+          <isNotNull prepend="," property="parentId"> `parentId` = VALUES(`parentId`) </isNotNull>
+          <isNotNull prepend="," property="state"> `state` = VALUES(`state`) </isNotNull>
+          <isNotNull prepend="," property="customInfo"> 
+            <!-- `customInfo` = VALUES(`customInfo`) -->
+	        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), VALUES(customInfo))
+          </isNotNull>
+          <isNotNull prepend="," property="updateBy"> `updateBy` = VALUES(`updateBy`) </isNotNull>
+          <isNotNull prepend="," property="updateTime"> `updateTime` = VALUES(`updateTime`) </isNotNull>
+        </dynamic>
+      </insert>
+	  <update id="updateProductComponentByIdSelective" parameterClass="com.dp.plat.prob.bean.ProductComponent">
+	    update prob_product_component
+	    <dynamic prepend="SET">
+	      <isNotNull prepend="," property="type"> `type` = #type# </isNotNull>
+	      <isNotNull prepend="," property="name"> `name` = #name# </isNotNull>
+	      <isNotNull prepend="," property="version"> `version` = #version# </isNotNull>
+	      <isNotNull prepend="," property="parentId"> `parentId` = #parentId# </isNotNull>
+		  <isNotNull prepend="," property="state"> `state` = #state# </isNotNull>
+	      <isNotNull prepend="," property="customInfo">
+	        <!-- customInfo = #customInfo:JSON#  -->
+	        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	      </isNotNull>
+	      <isNotNull prepend="," property="createBy"> `createBy` = #createBy# </isNotNull>
+	      <isNotNull prepend="," property="createTime"> `createTime` = #createTime# </isNotNull>
+	      <isNotNull prepend="," property="updateBy"> `updateBy` = #updateBy# </isNotNull>
+	      <isNotNull prepend="," property="updateTime"> `updateTime` = #updateTime# </isNotNull>
+	    </dynamic>
+	    where `id` = #id#
+	  </update>
+	  <update id="updateProductComponentById" parameterClass="com.dp.plat.prob.bean.ProductComponent">
+	    update prob_product_component
+	    set `type` = #type#,
+	      `name` = #name#,
+	      `version` = #version#,
+	      `parentId` = #parentId#,
+	      `state` = #state#,
+	      `createBy` = #createBy#,
+	      `createTime` = #createTime#,
+	      `updateBy` = #updateBy#,
+	      `updateTime` = #updateTime#,
+	      <!-- `customInfo` = #customInfo:JSON# -->
+          customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	    where `id` = #id#
+	  </update>
+	  <sql id="sqlProductComponent_List">
+	    <isNotEmpty prepend="AND" property="id"> pc.`id` = #id# </isNotEmpty>
+	    <!-- <isNotEmpty prepend="AND" property="type"> pc.`type` = #type# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="name"> pc.`name` = #name# </isNotEmpty> -->
+	    <isNotEmpty prepend="AND" property="type"> pc.`type` like CONCAT('%', #type#, '%') </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="name"> pc.`name` like CONCAT('%', #name#, '%') </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="version"> pc.`version` = #version# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="parentId"> pc.`parentId` = #parentId# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="state"> pc.`state` = #state# </isNotEmpty>
+	    <!-- <isNotEmpty prepend="AND" property="customInfo"> pc.`customInfo` = #customInfo# </isNotEmpty> -->
+	    <isNotEmpty prepend="AND" property="createBy"> pc.`createBy` = #createBy# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="createTime"> pc.`createTime` = #createTime# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="updateBy"> pc.`updateBy` = #updateBy# </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="updateTime"> pc.`updateTime` = #updateTime# </isNotEmpty>
+	  </sql>
+	  <sql id="sqlProductComponent_model_List">
+	    <isNotEmpty prepend="AND" property="model != null ">
+	        <isNotEmpty prepend="AND" property="model.id">  pc.`id` = #model.id# </isNotEmpty>
+            <!-- <isNotEmpty prepend="AND" property="model.type"> pc.`type` = #model.type# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="model.name"> pc.`name` = #model.name# </isNotEmpty> -->
+            <isNotEmpty prepend="AND" property="model.type"> pc.`type` like CONCAT('%', #model.type#, '%') </isNotEmpty>
+            <isNotEmpty prepend="AND" property="model.name"> pc.`name` like CONCAT('%', #model.name#, '%') </isNotEmpty>
+            <isNotEmpty prepend="AND" property="model.version"> pc.`version` = #model.version# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="model.parentId"> pc.`parentId` = #model.parentId# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="model.state"> pc.`state` = #model.state# </isNotEmpty>
+	        <!-- <isNotEmpty prepend="AND" property="model.customInfo"> pc.`customInfo` = #model.customInfo# </isNotEmpty> -->
+	        <isNotEmpty prepend="AND" property="model.createBy"> pc.`createBy` = #model.createBy# </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="model.createTime"> pc.`createTime` = #model.createTime# </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="model.updateBy"> pc.`updateBy` = #model.updateBy# </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="model.updateTime"> pc.`updateTime` = #model.updateTime# </isNotEmpty>
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="fuzzySearch">
+            (
+                pc.`type` like CONCAT("%", #fuzzy#, "%") or
+                pc.`name` like CONCAT("%", #fuzzy#, "%") or
+                pc.`version` like CONCAT("%", #fuzzy#, "%")
+            )
+       </isNotEmpty>
+	  </sql>
+	  <sql id="sqlProductComponent_where">
+	    <dynamic prepend="where">
+            <include refid="sqlProductComponent_List" />
+        </dynamic>
+	  </sql>
+	  <sql id="sqlProductComponent_model_where">
+	    <dynamic prepend="where">
+	        <include refid="sql_model_List" />
+	    </dynamic>
+	  </sql>
+	  <sql id="sqlProductComponent_pageable_limit">
+        <isNotEmpty property="displayParam">
+		    <isNotEmpty property="displayParam.sort"> order by $displayParam.sort$ </isNotEmpty>
+		    <!-- <isEmpty property="displayParam.sort"> order by id desc </isEmpty> -->
+		    limit #displayParam.offset#, #displayParam.pagesize#
+        </isNotEmpty>
+	  </sql>
+	  <select id="selectProductComponentList" parameterClass="com.dp.plat.prob.bean.ProductComponent" resultClass="com.dp.plat.prob.vo.ProductComponentVO">
+	    select * from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	  </select>
+	  <select id="countProductComponentList" parameterClass="com.dp.plat.prob.bean.ProductComponent" resultClass="int">
+	    select count(1) from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	  </select>
+	  <select id="selectProductComponentListPageable" parameterClass="com.dp.plat.prob.vo.ProductComponentPageParam" resultClass="com.dp.plat.prob.vo.ProductComponentVO">
+	    select * from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	    <include refid="sqlProductComponent_pageable_limit" />
+	  </select>
+	  <select id="countProductComponentListPageable" parameterClass="com.dp.plat.prob.vo.ProductComponentPageParam" resultClass="int">
+	    select count(1) from prob_product_component AS `pc`
+        <dynamic prepend="where">
+	        <include refid="sqlProductComponent_List" />
+        </dynamic>
+	  </select>
 </sqlMap>

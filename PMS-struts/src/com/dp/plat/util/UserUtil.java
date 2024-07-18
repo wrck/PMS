@@ -4,6 +4,7 @@
 package com.dp.plat.util;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -94,6 +95,10 @@ public class UserUtil {
 	 * @return
 	 */
 	public static String transferDepNo(String area, Map<String, Object> relations, int direction) {
+	    if (StringUtils.isBlank(area)) {
+	        return area;
+	    }
+	    
 		String newArea = area;
 		String prevDep = "";
 		String nextDep = "";
@@ -153,6 +158,10 @@ public class UserUtil {
      * @return
      */
     public static Set<String> transferDepNos(String area, Map<String, Object> relations, int direction) {
+        if (StringUtils.isBlank(area)) {
+            return Collections.emptySet();
+        }
+        
         String prevDep = "";
         String nextDep = "";
         if (relations == null || relations.isEmpty()) {
@@ -206,6 +215,22 @@ public class UserUtil {
             }
         }
         return areaSet;
+    }
+    
+    /**
+     * 查找部门的上级部门
+     * @param area
+     * @return parentArea
+     */
+    public static String findParentDepNo(String area) {
+        BasicDataService basicDataService = SpringContext.getApplicationContext().getBean("basicDataService",
+                BasicDataService.class);
+        String relationsJSON = basicDataService.querySysArg("dep.office2parent.relationsJSON");
+        if (StringUtils.isBlank(relationsJSON)) {
+            relationsJSON = "{}";
+        }
+        Map<String, Object> relations = JSON.parseObject(relationsJSON);
+        return transferDepNo(area, relations);
     }
 	
 	public static void main(String[] args) {

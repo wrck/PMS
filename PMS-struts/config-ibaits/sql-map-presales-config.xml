@@ -47,8 +47,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="programDuration" column="programDuration"/>
 		<result property="testDuration" column="testDuration"/>
 		<result property="callbackDuration" column="callbackDuration"/>
+		<result property="serviceApproveDuration" column="serviceApproveDuration"/>
 		<result property="hasTransfer" column="hasTransfer"/>
 		<result property="hasRma" column="hasRma"/>
+		<result property="customInfo" column="customInfo"/>
+		<result property="source" column="source"/>
 	</resultMap>
 	<select id="query_presales_byid" parameterClass="int" resultMap="PresalesMap">
 		<![CDATA[
@@ -57,7 +60,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			t4.`memberCode` AS projectManager ,t4.`memberName` AS projectManagerName, t5.ASSIGNEE_ as taskAssignee,
 			t5.`ID_` AS taskId , t6.`quesnaireId` , t6.`quesnaireState` ,t5.TASK_DEF_KEY_ AS taskDefKey ,t7.eventActualFinishDate,
 			t8.`basicDataName` as projectTypeName,
-			pppd.applyDuration, pppd.totalDuration, pppd.serviceDuration, pppd.programDuration, pppd.testDuration, pppd.callbackDuration
+			pppd.applyDuration, pppd.totalDuration, pppd.serviceDuration, pppd.programDuration, pppd.testDuration, pppd.callbackDuration, pppd.serviceApproveDuration
+			, t1.customInfo, t1.source
 			FROM pm_presales_project_header t1
 			LEFT JOIN fnd_department t2 ON t1.`officeCode` = t2.`departmentNum`
 			LEFT JOIN pm_project_member t3 ON t3.`projectId` = t1.`presalesId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
@@ -198,6 +202,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="projectTypeName" column="projectTypeName"/>
 		<result property="hasTransfer" column="hasTransfer"/>
 		<result property="hasRma" column="hasRma"/>
+		<result property="customInfo" column="customInfo"/>
+        <result property="source" column="source"/>
 	</resultMap>
 	<select id="query_presales_list" parameterClass="java.util.Map" resultMap="PresalesListMap">
 		<![CDATA[
@@ -207,6 +213,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 				t2.`ID_`  AS taskId,t2.`ASSIGNEE_` ,t2.`NAME_` , CONCAT(t6.`username` , '-',t6.`realName`) AS ASSIGNEE_NAME,
 				t2.TASK_DEF_KEY_ AS taskDefKey ,t7.`basicDataName` AS projectStateName,
 				t8.`basicDataName` AS projectTypeName
+				, t1.customInfo, t1.source
 			FROM pm_presales_project_header t1 LEFT JOIN act_ru_task t2 ON t1.`instId` = t2.`PROC_INST_ID_`
 			LEFT JOIN pm_project_member t3 ON t1.`presalesId` = t3.`projectId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
 			LEFT JOIN pm_project_member t4 ON t1.`presalesId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
@@ -296,6 +303,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    <isNotEmpty prepend="," property="confirmFileIds"> confirmFileIds = #confirmFileIds# </isNotEmpty>
             <isNotEmpty prepend="," property="projectType"> projectType = #projectType# </isNotEmpty>
             <isNotEmpty prepend="," property="closeRemark"> closeRemark = #closeRemark# </isNotEmpty>
+            <isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
             WHERE presalesId = #presalesId#
 	</update>
 	
@@ -539,6 +547,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		WHERE s.ppliCode = #projectCode#
 		ORDER BY createDate, itemcode;
     </select>
+    
+     <select id="selectPresalesTempAuthInfo" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT * FROM pm_presales_lend_detail_from_oa t
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="lendInfoId"> infoId = #lendInfoId# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNo"> contractNum = #contractNo# </isNotEmpty>
+        </dynamic>
+    </select>
 	
 	<select id="queryPresalesExportData" parameterClass="Presales" resultClass="com.dp.plat.data.vo.PresalesExportVO" remapResults="true">
 	    SELECT 
@@ -567,9 +583,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        THEN t1.projectCode 
 		        ELSE t1.presalesCode 
 		    END AS presalesCode, t5.`departmentName` AS officeName, t3.`memberCode` AS serviceManager, t3.`memberName` AS serviceManagerName, t4.`memberCode` AS projectManager, t4.`memberName` AS projectManagerName, t2.`ID_` AS taskId, t2.`ASSIGNEE_` AS taskAssignee, t2.`NAME_` AS taskName, t2.TASK_DEF_KEY_ AS taskDefKey, CONCAT(t6.`username`, '-', t6.`realName`) AS taskAssigneeName, t7.`basicDataName` AS projectStateName, t8.basicDataName AS projectTypeName 
+		    , t1.customInfo, t1.source
 		<!-- exportDetail: 0-基于项目， 1-基于设备， 2-基于回访  -->
 		<isNotEqual prepend="," property="exportDetail" compareValue="1">
-		    pppd.applyDuration, pppd.totalDuration, pppd.serviceDuration, pppd.programDuration, pppd.testDuration, pppd.callbackDuration 
+		    pppd.applyDuration, pppd.totalDuration, pppd.serviceDuration, pppd.programDuration, pppd.testDuration, pppd.callbackDuration, pppd.serviceApproveDuration 
 		</isNotEqual>
 		<isEqual prepend="," property="exportDetail" compareValue="1">
             IFNULL(tl1.`itemCode`, rma.itemcode) AS itemCode, 
@@ -746,7 +763,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	
 	<insert id="updatePresalesDuration" parameterClass="int">
 	     INSERT INTO `pm_presales_project_duration` (
-		    `presalesId`, `instId`, `totalDuration`, `serviceDuration`, `programDuration`, `testDuration`, `callbackDuration`
+		    `presalesId`, `instId`, `totalDuration`, `serviceDuration`, `programDuration`, `testDuration`, `callbackDuration`, serviceApproveDuration
 		 )
 	     SELECT presalesId, instId,
 	        REPLACE(REPLACE(REPLACE(IFNULL(CONCAT(TRUNCATE(totalDuration / 86400000, 0) , "天", 
@@ -772,7 +789,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    REPLACE(REPLACE(REPLACE(CONCAT(TRUNCATE(callbackDuration / 86400000, 0) , "天", 
 		    TRUNCATE((callbackDuration - (TRUNCATE(callbackDuration / 86400000, 0) * 86400000)) / 3600000, 0) , "时", 
 		    TRUNCATE((callbackDuration - (TRUNCATE(callbackDuration / 3600000, 0) * 3600000)) / 60000, 0) , "分", 
-		    TRUNCATE((callbackDuration - (TRUNCATE(callbackDuration / 60000, 0) * 60000)) / 1000, 0) , "秒"), "0天0时0分", ""), "0天0时", ""), "0天", "") AS callbackDuration
+		    TRUNCATE((callbackDuration - (TRUNCATE(callbackDuration / 60000, 0) * 60000)) / 1000, 0) , "秒"), "0天0时0分", ""), "0天0时", ""), "0天", "") AS callbackDuration,
+            REPLACE(REPLACE(REPLACE(CONCAT(TRUNCATE(serviceApproveDuration / 86400000, 0) , "天", 
+            TRUNCATE((serviceApproveDuration - (TRUNCATE(serviceApproveDuration / 86400000, 0) * 86400000)) / 3600000, 0) , "时", 
+            TRUNCATE((serviceApproveDuration - (TRUNCATE(serviceApproveDuration / 3600000, 0) * 3600000)) / 60000, 0) , "分", 
+            TRUNCATE((serviceApproveDuration - (TRUNCATE(serviceApproveDuration / 60000, 0) * 60000)) / 1000, 0) , "秒"), "0天0时0分", ""), "0天0时", ""), "0天", "") AS serviceApproveDuration
 		FROM (
 			SELECT 
 			    presalesId, instId, 
@@ -781,7 +802,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			    SUM(IF(TASK_DEF_KEY_ = 'usertask1', DURATION_, NULL)) AS serviceDuration,
 			    SUM(IF(TASK_DEF_KEY_ = 'usertask2', DURATION_, NULL)) AS programDuration,
 			    SUM(IF(TASK_DEF_KEY_ = 'usertask3', DURATION_, NULL)) AS testDuration,
-			    SUM(IF(TASK_DEF_KEY_ = 'usertask4', DURATION_, NULL)) AS callbackDuration
+			    SUM(IF(TASK_DEF_KEY_ = 'usertask4', DURATION_, NULL)) AS callbackDuration,
+			    SUM(IF(TASK_DEF_KEY_ = 'serviceApprove', DURATION_, NULL)) AS serviceApproveDuration
 			FROM
 			    `pm_presales_project_header` pph
 			    LEFT JOIN `act_hi_taskinst` aht 
@@ -794,7 +816,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    serviceDuration = VALUES(`serviceDuration`),
 		    programDuration = VALUES(`programDuration`),
 		    testDuration = VALUES(`testDuration`),
-		    callbackDuration = VALUES(`callbackDuration`)
+		    callbackDuration = VALUES(`callbackDuration`),
+            serviceApproveDuration = VALUES(`serviceApproveDuration`)
 	</insert>
 	
 	<!-- <update id="updatePresalesTransferState">

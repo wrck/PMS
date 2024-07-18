@@ -1,8 +1,10 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import static com.dp.plat.core.param.RoleConstant.ROLE_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.ProjectConstant.Common.PROJECT_DISPATCHED_KEY;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_FINANCIAL_AP;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_ADMIN;
+import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF;
 import static com.dp.plat.pms.springmvc.constant.RoleConstant.ROLE_PM_SUB_ADMIN;
 
 import java.util.Date;
@@ -108,10 +110,15 @@ public class ProjectMemberController extends AbstractController<IProjectMemberSe
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN, ROLE_FINANCIAL_AP)) {
+                if (!UserContext.hasAnyRoles(ROLE_PM_SUB_ADMIN,
+                        ROLE_FINANCIAL_AP/* , ROLE_PM_DISPATCH_SETTLE_STAFF */)) {
 					project.setOfficeCodes(officeCodes);
-					
 				}
+                
+                // 项目外派结算人员，只能查看已外派的项目
+                if (UserContext.hasAnyRoles(ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+                    project.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.TRUE.toString());
+                }
 				// 添加指派的项目成员
 				project.setMemberCode(user.getUserName());
 			}

@@ -201,10 +201,11 @@ function fillpm(){
 <script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
 </script>
 </head>
 <body>
-	<fieldset>
+	<%-- <fieldset>
 		<legend><b>基本信息</b></legend>
 		<table class="table table-bordered table-hover table-striped ">
 			<tr>
@@ -268,7 +269,8 @@ var officeCode = "${presales.officeCode}";
                 <td></td>
             </tr>
 		</table>
-	</fieldset>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
 	<fieldset>
 		<legend><b>流程办理</b></legend>
 		<s:form cssClass="form-inline" action="module/presales_apply.action" method="post" name="applyForm">
@@ -321,6 +323,11 @@ var officeCode = "${presales.officeCode}";
                             <%-- <a href="http://sms.dptech.com/module/DocumentDownloadForPMS.action?docFileName=<s:property value='#f.filePath'/>&presales.presalesId=<s:property value='presales.presalesId'/>">
                              --%>
                             <a href="http://sms.dptech.com/module/DocumentDownloadForPMS.action?id=<s:property value='presales.lendInfoId'/>&projectCode=<s:property value='presales.projectCode'/>&flag=<s:property value='#s.index'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
                                 <s:property value="#f.fileName"/>
                             </a>
                         </s:elseif>

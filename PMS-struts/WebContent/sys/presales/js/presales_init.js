@@ -14,7 +14,8 @@ var loadingImg =
 var ajaxNavBar = {
     lend2SaleInfo: "借转销信息",
     lend2RmaInfo: "核销信息",
-    shipmentInfo: "发货信息"
+    shipmentInfo: "发货信息",
+    tempAuthInfo: "临时授权"
 };
 
 $(function(){

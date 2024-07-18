@@ -287,8 +287,24 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 		}
 		return workspaceDao.queryPmTaskList(taskQueryParam, displayParam);
 	}
-
+	
 	@Override
+    public List<DpActProcDesc> querySelfHistoryTaskList(TaskQueryParam taskQueryParam, DisplayParam displayParam) {
+	    try {
+    	    if (taskQueryParam == null) {
+                taskQueryParam = new TaskQueryParam();
+            }
+            if (displayParam == null) {
+                displayParam = new DisplayParam();
+            }
+            displayParam.getParam();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return workspaceDao.querySelfHistoryTaskList(taskQueryParam, displayParam);
+    }
+
+    @Override
 	public List<DpActProcDesc> queryProjectBackTaskList() {
 		return workspaceDao.queryProjectBackTaskList();
 	}
@@ -326,7 +342,6 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 
 	@Override
 	public List<DpActProcDesc> queryCallBackTaskList() {
-
 		return workspaceDao.queryCallBackTaskList();
 	}
 
@@ -443,6 +458,11 @@ public class WorkSpaceServiceImpl extends BaseServiceImpl implements WorkSpaceSe
 			roleGroup.put("roleGroup", "profitSmRole");
 			roleGroup.put("checkProfitDep", true);
 			roleGroups.add(roleGroup);
+			
+			roleGroup = new HashMap<>();
+            roleGroup.put("roleGroup", "parentSmRole");
+            roleGroup.put("checkParentOffice", true);
+            roleGroups.add(roleGroup);
 			try {
 				SubcontractService subcontractService = SpringContext.getApplicationContext()
 						.getBean("subcontractService", SubcontractService.class);

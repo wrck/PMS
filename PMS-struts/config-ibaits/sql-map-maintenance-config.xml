@@ -1451,7 +1451,7 @@
         ph.column004 AS marketName, ph.column005 AS systemName, 
 	    ph.column006 AS expendName, ph.column007 AS industryName,
 	    ph.column013 AS finalCustomerName, ph.compId,
-        group_concat(pc.contractNo) as contractNos,
+        group_concat(DISTINCT pc.contractNo) as contractNos,
         IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
         IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
             IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',

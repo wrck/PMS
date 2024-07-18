@@ -30,10 +30,12 @@ import org.jasig.cas.client.authentication.AuthenticationFilter;
 import org.jasig.cas.client.session.SingleSignOutHttpSessionListener;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
+import com.alibaba.fastjson.JSON;
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.UserMenu;
+import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.LoginService;
 import com.dp.plat.service.UserManageService;
 
@@ -201,35 +203,64 @@ public class UserCheckFilter implements Filter{
             return Boolean.valueOf(String.valueOf(cachedUserHandlerMapping.get(url)));
         }
 	    
-	    boolean isValid = true;
-	    UserManageService userManageService = SpringContext.getBean("userManageService", UserManageService.class);
+	    // 是否是排除的校验链接
+	    BasicDataService basicDataService = SpringContext.getBean("basicDataService", BasicDataService.class);
+	    Map<String, Object> excludeHandlerMapping = JSON.parseObject(StringUtils.defaultIfBlank(basicDataService.querySysArg("sys.handler.mapping.check.exclude.mapping"), "{}"), HashMap.class);
+	    boolean isValid = checkHandlerMapping(url, false, null, excludeHandlerMapping);
+	    if (isValid) {
+            cachedUserHandlerMapping.put(url, isValid);
+	        return isValid;
+	    }
+	    
         // 当前用户拥有的菜单ID
+	    UserManageService userManageService = SpringContext.getBean("userManageService", UserManageService.class);
         String menuIds = userManageService.queryUserMenuidsByUserid(userContext.getUser().getId());
         List<String> menuIdList = Arrays.asList(menuIds.split(","));
         // 将系统菜单进行解析
-        Map<String, Object> handlerMapping = handlerMapping();
+        Map<String, Object> menuHandlerMapping = handlerMapping();
         
         try {
-            // handlerMapping匹配url
-            for (Entry<String, Object> handler : handlerMapping.entrySet()) {
-                String path = handler.getKey();
-                UserMenu menu = (UserMenu) handler.getValue();
-                // 匹配到的url，判断用户是否有权限
-                if (FilenameUtils.wildcardMatch(url, path)) {
+            isValid = checkHandlerMapping(url, true, menuIdList, menuHandlerMapping);
+            return isValid;
+        } finally {
+            cachedUserHandlerMapping.put(url, isValid);
+        }
+	}
+
+    /**
+     * 判断是否满足指定HandlerMapping、菜单的条件
+     * @param url 待匹配的url
+     * @param isValid 默认未匹配到时的结果
+     * @param menuIdList 菜单权限判断的
+     * @param handlerMapping 
+     * @return
+     */
+    public boolean checkHandlerMapping(String url, boolean isValid, List<String> menuIdList, Map<String, Object> handlerMapping) {
+        menuIdList = menuIdList != null ? menuIdList : Collections.emptyList();
+        // handlerMapping匹配url
+        for (Entry<String, Object> handler : handlerMapping.entrySet()) {
+            String path = handler.getKey();
+            Object value = handler.getValue();
+            // 匹配到的url，判断用户是否有权限
+            if (FilenameUtils.wildcardMatch(url, path)) {
+                isValid = true;
+                // 如果是菜单则判断是否有该菜单的权限
+                if (value instanceof UserMenu) {
+                    UserMenu menu = (UserMenu) handler.getValue();
                     // 如果有权限则跳转，如果没权限转到404
                     if (menuIdList.contains(String.valueOf(menu.getId()))) {
                         isValid = true;
                     } else {
                         isValid = false;
                     }
-                    return isValid;
                 }
+                return isValid;
             }
-            return isValid;
-        } finally {
-            cachedUserHandlerMapping.put(url, isValid);
         }
-	}
+        return isValid;
+    }
+	
+	
 	
 	/**
      * 判断当前环境变量，如果不存在handlerMapping则解析用户菜单，转换为url通配地址
@@ -239,24 +270,10 @@ public class UserCheckFilter implements Filter{
      * }
      */
     public Map<String, Object> handlerMapping() {
-        UserContext userContext = UserContext.getUserContext();
-        Map<String, Object> extData = userContext.getExtData();
-        if (extData == null) {
-            extData = new ConcurrentHashMap<String, Object>();
-        }
-        userContext.setExtData(extData);
-        Map<String, Object> handlerMapping = (Map<String, Object>) extData.get("handlerMapping");
-        if (handlerMapping != null && !handlerMapping.isEmpty()) {
-            return handlerMapping;
-        }
         UserManageService userManageService = SpringContext.getBean("userManageService", UserManageService.class);
         // 所有系统菜单
         List<UserMenu> menuList = userManageService.queryAllMenuList();
-        Map<String, Object> urlMap = parseUrlHandler(menuList);
-        handlerMapping = new ConcurrentHashMap<String, Object>(urlMap);
-//      handlerMapping.putAll(urlMap);
-        extData.put("handlerMapping", handlerMapping);
-        return handlerMapping;
+        return handlerMapping(menuList);
     }
 	
 	/**

@@ -28,8 +28,59 @@
 				}
 			})
 		}
-		
 	}
+	
+	function autoCompleteComponent() {
+        $.ajax({
+            url:"module/s/probAjax_listComponent.action",
+            type:"post",
+            dataType:"json",
+            data:{"productComponent.state":true, "result": "json"},
+            success:function(data){
+                var list = JSON.parse(data.result || data);
+                $.each(list, function(index, item) {
+                	item.label = item.type + ":" + item.name + ":" + item.version;
+                });
+                $("#componentName").autocomplete({
+                    minLength: 0,
+                    source: list,
+                    change: function( event, ui ) {
+                        var item = ui.item || {};
+                        //$("#componentName").val(item.label);
+                        $("#componentId").val(item.id);
+                        return false;
+                    },
+                    focus: function( event, ui ) {
+                        //var item = ui.item || {};
+                        //$("#componentName").val(item.label);
+                        //$("#componentId").val(item.id);
+                        return false;
+                    },
+                    /* search: function( event, ui ) {
+                        var item = ui.item || {};
+                        //$("#componentName").val(item.label);
+                        //$("#componentId").val(item.id);
+                        $(this).val($.trim($(this).val()));
+                        return true;
+                    }, */
+                    select: function( event, ui ) {
+                        var item = ui.item || {};
+                        $("#componentName").val(item.label);
+                        $("#componentId").val(item.id);
+                        return false;
+                    }
+                })
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                alert("获取产品组件失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            }
+        })
+        $("#componentName").tooltip();
+    }
+    
+    $(function(){
+        autoCompleteComponent();
+    })
 </script>
 </head>
 <body>
@@ -78,6 +129,12 @@
                 <button type="submit" id="submit"  class="btn btn-default  btn-block btn-sm"><s:text name='sys.query' /></button>
             </div>
         </div>
+        <%-- <div class="form-group">
+            <label for="productType" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="component.info.name"></s:text></label>
+            <div class="col-xs-8">
+                <s:textfield id="componentName" cssClass="form-control" placeholder="产品组件快速检索，不作为查询条件"></s:textfield>
+            </div>
+        </div> --%>
 		<%-- <div class="form-group">
 			<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
 			   	<button type="submit" id="submit"  class="btn btn-default  btn-block btn-sm"><s:text name='sys.query' /></button>
@@ -108,6 +165,9 @@
                             <s:text name='prob.manage.statistics' />
                         </a>
 	                </s:if>
+                    <span class="display-inline-flex" style="width: 46rem;">
+                        <s:textfield id="componentName" cssClass="form-control" placeholder="产品组件快速检索" title="仅用于检索公司产品涉及的第三方组件，不作为技术公告的筛选条件"></s:textfield>
+                    </span>
                 </div>
 			</div>
 		</div>

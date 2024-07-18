@@ -246,10 +246,15 @@ public class ProcessService implements IProcessService {
 				continue;
 			}
 			// 获取当前流程下的key为entity的variable
-			BaseVO base = (BaseVO) this.runtimeService.getVariable(task.getProcessInstanceId(), "entity");
-			if (base == null) {
-				base = new BaseVO();
+			Object entity = this.runtimeService.getVariable(task.getProcessInstanceId(), "entity");
+			BaseVO base = null;
+			if (entity instanceof BaseVO) {
+			    base = (BaseVO) entity;
 			}
+			
+            if (base == null) {
+                base = new BaseVO();
+            }
 			base.setTask(task);
 			base.setProcessInstance(processInstance);
 			base.setProcessDefinition(getProcessDefinition(processInstance.getProcessDefinitionId()));

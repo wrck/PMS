@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Company;
@@ -22,6 +24,7 @@ import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.service.WorkFlowService;
 import com.dp.plat.service.WorkSpaceService;
 import com.dp.plat.util.MessageUtil;
+import com.dp.plat.util.PmClosedLoopConstant;
 import com.opensymphony.xwork2.Preparable;
 
 public class WorkSpaceAction extends BaseAction implements Preparable {
@@ -211,36 +214,55 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	 * @return
 	 */
 	public String task() {
-		// 业务流程办理
-		dapdlist = workspaceService.queryPmCLTaskList();
-		// 项目回退确认任务
-		List<DpActProcDesc> list2 = workspaceService.queryProjectBackTaskList();
-		if (list2 != null) {
-			dapdlist.addAll(list2);
-		}
-		// 项目不予跟踪确认任务
-		List<DpActProcDesc> list3 = workspaceService.queryProjectTrackTaskList();
-		if (list3 != null) {
-			dapdlist.addAll(list3);
-		}
-		// 回访申请待办任务
-		List<DpActProcDesc> list = workspaceService.queryCallBackTaskList();
-		if (list != null) {
-			dapdlist.addAll(list);
-		}
-		// 项目督查任务
-		User user = UserContext.getUserContext().getUser();
-        if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
-            List<DpActProcDesc> supervisionTaskList = workspaceService.queryProjectSupervisionTask(new HashMap());
-            if (supervisionTaskList != null) {
-                dapdlist.addAll(supervisionTaskList);
+	    dapdlist = new ArrayList<>();
+	    String procKey = queryParams.get("procKey");
+	    boolean queryAll = StringUtils.isBlank(procKey);
+	    if (queryAll || PmClosedLoopConstant.CL_PROCESS_KEY.equals(procKey)) {
+	        // 业务流程办理
+	        List<DpActProcDesc> pmClList = workspaceService.queryPmCLTaskList();
+	        if (pmClList != null) {
+	            dapdlist.addAll(pmClList);
+	        }
+	        // 回访申请待办任务
+	        List<DpActProcDesc> cbList = workspaceService.queryCallBackTaskList();
+	        if (cbList != null) {
+	            dapdlist.addAll(cbList);
+	        }
+	    }
+	    if (queryAll || "ProjectBack".equals(procKey)) {
+    		// 项目回退确认任务
+    		List<DpActProcDesc> list2 = workspaceService.queryProjectBackTaskList();
+    		if (list2 != null) {
+    			dapdlist.addAll(list2);
+    		}
+    	}
+	    
+	    if (queryAll || "ProjectTrack".equals(procKey)) {
+    		// 项目不予跟踪确认任务
+    		List<DpActProcDesc> list3 = workspaceService.queryProjectTrackTaskList();
+    		if (list3 != null) {
+    			dapdlist.addAll(list3);
+    		}
+	    }
+	    
+	    if (queryAll || "ProjectSupervision".equals(procKey)) {
+    		// 项目督查任务
+    		User user = UserContext.getUserContext().getUser();
+            if (user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+                List<DpActProcDesc> supervisionTaskList = workspaceService.queryProjectSupervisionTask(new HashMap());
+                if (supervisionTaskList != null) {
+                    dapdlist.addAll(supervisionTaskList);
+                }
             }
-        }
-		// 售前流程待办任务
-		List<DpActProcDesc> presalesList = workspaceService.queryPresalesTaskList();
-		if (presalesList != null) {
-			dapdlist.addAll(presalesList);
-		}
+	    }
+	    
+	    if (queryAll || "Presales".equals(procKey)) {
+    		// 售前流程待办任务
+    		List<DpActProcDesc> presalesList = workspaceService.queryPresalesTaskList();
+    		if (presalesList != null) {
+    			dapdlist.addAll(presalesList);
+    		}
+	    }
 		
 		tabIndex = 1;
 		tabName = "task";
@@ -266,9 +288,10 @@ public class WorkSpaceAction extends BaseAction implements Preparable {
 	 * @throws Exception
 	 */
 	public String hisselftask() throws Exception {
-		dpHisList = workspaceService.queryPmCLHisTaskList();
-		List<DpActProcDesc> callbackList = workspaceService.queryCallbackHisList();
-		dpHisList.addAll(callbackList);
+	    dpHisList = workspaceService.querySelfHistoryTaskList(taskQueryParam, displayParam);
+//		dpHisList = workspaceService.queryPmCLHisTaskList();
+//		List<DpActProcDesc> callbackList = workspaceService.queryCallbackHisList();
+//		dpHisList.addAll(callbackList);
 		tabIndex = 3;
 		tabName = "hisselftask";
 		return SUCCESS;

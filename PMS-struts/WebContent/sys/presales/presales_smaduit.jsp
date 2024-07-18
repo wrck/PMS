@@ -59,12 +59,23 @@ $(function(){
 	
 	$("#backBtn").click(function(){
 		$("#result").val(-1);
-		if(confirm("请确认是否返回工程管理部！")){
+        var title = $(this).text();
+		if(confirm(`请确认是否\${title}！`)){
 			$("#applyForm").submit();
 		}else{
 			return false;
 		}
 	});
+	
+	
+	$("#closedBtn").click(function(){
+        $("#result").val(-2);
+        if(confirm("请确认是否闭环项目！")){
+            $("#applyForm").submit();
+        }else{
+            return false;
+        }
+    });
 	
 	$("#changeBtn").click(function(){
         var pm = document.getElementById("pm_hide").value;
@@ -207,10 +218,11 @@ function fillpm(){
 <script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
 </script>
 </head>
 <body>
-	<fieldset>
+	<%-- <fieldset>
 		<legend><b>基本信息</b></legend>
 		<table class="table table-bordered table-hover table-striped ">
 			<tr>
@@ -276,10 +288,10 @@ var officeCode = "${presales.officeCode}";
                     </s:if>
                     <s:else>至今</s:else>（<s:property value="presales.totalDuration"/>）
                 </td>
-                <%-- <td><s:text name="pm.presales.applyTime"/>:</td>
+                <td><s:text name="pm.presales.applyTime"/>:</td>
                 <td><s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/></td>
                 <td><s:text name="pm.presales.endTime"/>:</td>
-                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td> --%>
+                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td>
             </tr>
         </table>
         <table class="table table-no-border" style="margin-top: -20px;margin-bottom: 0;">
@@ -287,11 +299,12 @@ var officeCode = "${presales.officeCode}";
                 <td <s:if test='presales.projectState == 30'>class="text-success current-state"</s:if>><s:text name="pm.presales.serviceDuration"></s:text>:<s:property value="presales.serviceDuration"/><span style="cursor: help;" title="<s:text name='pm.presales.applyDuration'/>">(<s:property value="presales.applyDuration"/>)</span></td>
                 <td <s:if test='presales.projectState == 31'>class="text-success current-state"</s:if>><s:text name="pm.presales.programDuration"></s:text>:<s:property value="presales.programDuration"/></td>
                 <td <s:if test='presales.projectState == 32'>class="text-success current-state"</s:if>><s:text name="pm.presales.testDuration"></s:text>:<s:property value="presales.testDuration"/></td>
-                <%-- <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
-             --%>
+                <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
+            
              </tr>
         </table>
-	</fieldset>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
 	<s:if test="taskList.size() != 0">
 		<fieldset>
 			<legend><b>工程计划</b></legend>
@@ -350,8 +363,17 @@ var officeCode = "${presales.officeCode}";
 			<br/>
 			<br/>
 			<s:if test="%{(user.username == presales.taskAssignee)}">
-				<button type="submit" class="btn btn-success" id="submitBtn">确认提交</button>
-				<button type="submit" class="btn btn-info" id="backBtn">返回工程管理部</button>
+                <s:if test="%{presales.taskDefKey == 'serviceApprove'}">
+                    <button type="submit" class="btn btn-success" id="submitBtn">同意闭环</button>
+                    <button type="submit" class="btn btn-info" id="backBtn">驳回整改</button>
+                </s:if>
+                <s:else>
+    				<button type="submit" class="btn btn-success" id="submitBtn">确认提交</button>
+    				<button type="submit" class="btn btn-info" id="backBtn">返回工程管理部</button>
+                    <s:if test="%{presales.customInfo.pmTaskNextRole == 'sm'}">
+                        <button type="submit" class="btn btn-danger" id="closedBtn">直接闭环</button>
+                    </s:if>
+                </s:else>
 			</s:if>
 			<s:else>
 			    <button type="submit" class="btn btn-success" id="changeBtn">变更项目经理</button>
@@ -393,6 +415,11 @@ var officeCode = "${presales.officeCode}";
                                 <s:property value="#f.fileName"/>
                             </a>
                         </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
                         <s:else>
                             <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
                         </s:else>
@@ -401,6 +428,9 @@ var officeCode = "${presales.officeCode}";
                         <s:if test="#f.path == 1">
                             <s:property value="#f.fileType" default="SMS附件"/>
                         </s:if>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
+                        </s:elseif>
                         <s:else>
                             <s:property value="#f.fileType" default="历史附件"/>
                         </s:else>

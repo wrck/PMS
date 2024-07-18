@@ -199,4 +199,10 @@ public interface PresalesService {
      * @return
      */
     List<Map<String, Object>> queryPresaleLend2RmaInfo(String presalesCode);
+    /**
+     * 查询临时授权数据
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectPresalesTempAuthInfo(Map<String, Object> params);
 }

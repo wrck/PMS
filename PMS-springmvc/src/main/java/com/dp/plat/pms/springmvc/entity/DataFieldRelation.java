@@ -245,6 +245,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param name 字段名
      */
     public void setName(String name) {
+        super.setName(name);
         this.name = name;
     }
 
@@ -255,7 +256,7 @@ public class DataFieldRelation extends DataTableColumn {
      */
     public String getTitle() {
     	if(this.title == null || this.title.isEmpty()) {
-    		return this.getName();
+    		return this.getName() != null ? this.getName() : this.title;
     	}
         return title;
     }
@@ -266,6 +267,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param title 字段标题
      */
     public void setTitle(String title) {
+        super.setTitle(title);
         this.title = title;
     }
 
@@ -357,6 +359,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param type 字段类型
      */
     public void setType(String type) {
+        super.setType(type);
         this.type = type;
     }
 
@@ -375,6 +378,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param render 字段处理
      */
     public void setRender(String render) {
+        super.setRender(render);
         this.render = render;
     }
 
@@ -411,6 +415,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param orderable 允许排序
      */
     public void setOrderable(Boolean orderable) {
+        super.setOrderable(orderable);
         this.orderable = orderable;
     }
 
@@ -429,6 +434,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param searchable 允许搜索
      */
     public void setSearchable(Boolean searchable) {
+        super.setSearchable(searchable);
         this.searchable = searchable;
     }
 
@@ -447,6 +453,7 @@ public class DataFieldRelation extends DataTableColumn {
      * @param visible 允许可见
      */
     public void setVisible(Boolean visible) {
+        super.setVisible(visible);
         this.visible = visible;
     }
 

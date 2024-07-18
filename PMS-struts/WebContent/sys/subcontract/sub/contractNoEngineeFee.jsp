@@ -61,6 +61,18 @@
 		                $(document).on("change", "#engineeFeeTable tbody input[name*='.price']", function() {
 		                	calcPrice();
 	                    })
+	                    
+	                    $("#subcontractAmountForm").submit(function() {
+	                    	var $btn = $(".btn", this);
+	                    	var subcontractAmount = Number($.trim($("#subcontractTotalPrice").val()).replaceAll(",", "") || "0.00");
+	                    	if (subcontractAmount > 0 || subcontractAmount == 0 && confirm("转包价为空，确认需要提交审批吗？")) {
+	                    		return true;
+	                    	}
+	                    	setTimeout(function() {
+	                            $btn.bootstrapBtn("reset");
+	                        }, 10);
+	                    	return false;
+	                    })
 		                //initForm();
 		            })
 		            
@@ -104,11 +116,12 @@
 		                        });
 		                    }
 		                });
-		            	var totalPrice = $("#totalPrice").text();
+		            	var totalPrice = Number($.trim($("#totalPrice").text()).replaceAll(",", "")) || Number($.trim($("#subcontractAmount").text()).replaceAll(",", ""));
 		            	var html = "<input id='subcontractTotalPrice' name='subcontract.subcontractAmount' value='" + totalPrice + "' data-bakValue='" + totalPrice + "' class='form-control'>";
 		                $("#totalPrice").html(html);
-		            	$("input[name*='.price']").maskMoney({defaultZero: true,allowZero:true,precision:2});
-		            	$("#subcontractTotalPrice").maskMoney({defaultZero: true,allowZero:true,precision:2});
+		            	$("input[name*='.price']").maskMoney({defaultZero: true,allowZero:true,precision:2, formatOnBlur:true, reverse:true, selectAllOnFocus:true});
+		            	$("#subcontractTotalPrice").maskMoney({defaultZero: true,allowZero:true,precision:2, formatOnBlur:true, reverse:true, selectAllOnFocus:true});
+		            	$("#subcontractTotalPrice").maskMoney("mask", totalPrice).focus();
 		            }
 	            </script>
             </s:if>

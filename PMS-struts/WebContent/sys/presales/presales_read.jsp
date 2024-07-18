@@ -40,6 +40,7 @@ var prevNarBarSelector = ""; */
 <script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
 </script>
 <%-- <script type="text/javascript">
 function ajaxLoadInfo(type, callback) {
@@ -129,7 +130,7 @@ function initNavBar() {
 </script> --%>
 </head>
 <body>
-	<fieldset>
+	<%-- <fieldset>
 		<legend><b>基本信息</b></legend>
 		<table class="table table-bordered table-hover table-striped ">
 			<tr>
@@ -195,10 +196,10 @@ function initNavBar() {
                     </s:if>
                     <s:else>至今</s:else>（<s:property value="presales.totalDuration"/>）
                 </td>
-                <%-- <td><s:text name="pm.presales.applyTime"/>:</td>
+                <td><s:text name="pm.presales.applyTime"/>:</td>
 				<td><s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/></td>
 				<td><s:text name="pm.presales.endTime"/>:</td>
-                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td> --%>
+                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td>
 			</tr>
 		</table>
         <table class="table table-no-border" style="margin-top: -20px;margin-bottom: 0;">
@@ -206,11 +207,12 @@ function initNavBar() {
                 <td <s:if test='presales.projectState == 30'>class="text-success current-state"</s:if>><s:text name="pm.presales.serviceDuration"></s:text>:<s:property value="presales.serviceDuration"/><span style="cursor: help;" title="<s:text name='pm.presales.applyDuration'/>">(<s:property value="presales.applyDuration"/>)</span></td>
                 <td <s:if test='presales.projectState == 31'>class="text-success current-state"</s:if>><s:text name="pm.presales.programDuration"></s:text>:<s:property value="presales.programDuration"/></td>
                 <td <s:if test='presales.projectState == 32'>class="text-success current-state"</s:if>><s:text name="pm.presales.testDuration"></s:text>:<s:property value="presales.testDuration"/></td>
-                <%-- <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
-             --%>
+                <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
+            
              </tr>
         </table>
-	</fieldset>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
     <nav class="navbar navbar-default" role="navigation" style="margin-top: 20px;">
         <div>
             <ul class="nav navbar-nav">
@@ -290,6 +292,11 @@ function initNavBar() {
                                 <s:property value="#f.fileName"/>
                             </a>
                         </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
                         <s:else>
                             <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
                         </s:else>
@@ -298,6 +305,9 @@ function initNavBar() {
                         <s:if test="#f.path == 1">
                             <s:property value="#f.fileType" default="SMS附件"/>
                         </s:if>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
+                        </s:elseif>
                         <s:else>
                             <s:property value="#f.fileType" default="历史附件"/>
                         </s:else>

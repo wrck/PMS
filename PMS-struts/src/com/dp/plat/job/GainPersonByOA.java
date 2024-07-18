@@ -19,6 +19,14 @@ import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
+/**
+ * 同步员工数据
+ * @deprecated 已不再同步OA6的员工数据
+ * @author w02611
+ *
+ *@see GainPersonByEHR
+ */
+@Deprecated
 public class GainPersonByOA implements Job{
 
 	@Override

@@ -10,16 +10,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
@@ -67,10 +69,12 @@ import com.dp.plat.subcontract.vo.SubcontractPageParam;
 import com.dp.plat.subcontract.vo.SubcontractPaymentVO;
 import com.dp.plat.subcontract.vo.SubcontractProjectVO;
 import com.dp.plat.util.Base64Util;
+import com.dp.plat.util.ExceptionUtils;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.PmClosedLoopConstant;
 import com.dp.plat.util.PmClosedLoopMark;
 import com.dp.plat.util.PmClosedLoopMarkFactory;
+import com.dp.plat.util.UserUtil;
 import com.dp.plat.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.Preparable;
@@ -399,7 +403,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "create";
@@ -414,7 +418,8 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			if (workflowCommonParam != null && workflowCommonParam.getTaskId() != null && subcontract != null
 					&& subcontract.getId() != null) {
 				if (SubcontractConstant.TASK_KEY_APPROVE.equals(workflowCommonParam.getOutcome())) {
-					subcontractService.auditSubcontractFlow(workflowCommonParam, subcontract, subcontractPriceList);
+//					subcontractService.auditSubcontractFlow(workflowCommonParam, subcontract, subcontractPriceList);
+					subcontractService.auditNormalApproveSubcontractFlow(workflowCommonParam, subcontract, subcontractPriceList);
 				} else if (SubcontractConstant.TASK_KEY_ZR_APPROVE.equals(workflowCommonParam.getOutcome())) {
 					subcontractService.approveSubcontractFlow(workflowCommonParam, subcontract);
 				}
@@ -431,7 +436,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "audit";
@@ -459,7 +464,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "redirect";
@@ -512,7 +517,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "callback";
@@ -538,10 +543,52 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
+	}
+	
+	public String refreshSubcontractProject() {
+	    boolean success = false;
+	    String message = null;
+	    try {
+            String result = input();
+            // input是否正确返回
+            if (!ERROR.equals(result)) {
+                // 原来关联的项目列表如果为空，则允许刷新，否则不允许刷新。
+                // 管理员、工程管理部主管、工程管理部可以刷新
+                if (projectList == null || projectList.isEmpty() || user.isHasAnyRole(MessageUtil.ROLE_ADMIN,
+                        MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_ENGINEEMANAGER_LEADER)) {
+                    
+                    List<String> oldProjectIds = Arrays.asList(StringUtils.split(subcontract.getProjectIds(), ",")); 
+                    // 查询合同对应的
+                    Project project = new Project();
+                    project.setContractNo(subcontract.getContractNos());
+                    projectList = subcontractService.queryProjectList(project);
+                    List<String> newProjectIds = projectList.stream().map(p -> String.valueOf(p.getProjectId())).distinct().collect(Collectors.toList());
+                    Set<String> projectIds = new LinkedHashSet<String>(oldProjectIds.size() + newProjectIds.size());
+                    projectIds.addAll(oldProjectIds);
+                    projectIds.addAll(newProjectIds);
+                    SubcontractProject temp = new SubcontractProject();
+                    temp.setId(subcontract.getId());
+                    temp.setProjectIds(StringUtils.join(projectIds, ","));
+                    subcontractService.updateSubcontractProjectByIdSelective(temp);
+                    
+                    success = true;
+                }
+            }
+            
+        } catch (SubcontractException e) {
+            setErrmsg(e.getMessage());
+        } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getMessage(e, true));
+        }
+	    commonMap = new HashMap<String, Object>();
+	    commonMap.put("success", success);
+	    commonMap.put("message", getErrmsg());
+	    result = com.alibaba.fastjson.JSON.toJSONString(commonMap);
+        return SUCCESS;
 	}
 
 	/**
@@ -573,7 +620,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -596,7 +643,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -620,7 +667,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -636,7 +683,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -658,7 +705,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -690,7 +737,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -772,7 +819,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -811,8 +858,10 @@ public class SubcontractAction extends BaseAction implements Preparable {
     					} else if (TaskKey.APPROVE_PAYMENT.equals(workflowCommonParam.getOutcome())) {
     						subcontractService.approvePaymentFlow(workflowCommonParam, subcontract);
     					} else if (TaskKey.PROFIT_SERVICE_APPROVE.equals(workflowCommonParam.getOutcome())) {
-    						subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
-    					} else if (TaskKey.ACCEPTANCE_TASK.equals(workflowCommonParam.getOutcome())) {
+                            subcontractService.profitSerivceManagerFlow(workflowCommonParam, subcontract);
+    					} else if (TaskKey.NORMAL_APPROVE_TASK.equals(workflowCommonParam.getOutcome())) {
+                            subcontractService.normalApproveSubcontractFlow(workflowCommonParam, subcontract);
+                        } else if (TaskKey.ACCEPTANCE_TASK.equals(workflowCommonParam.getOutcome())) {
 //    					    // 审批不通过，则清空审批是上传的自定义信息字段
 //    					    if (workflowCommonParam.getApproveStatus() != AGREE) {
 //    					        for (int index = 0; index < subcontractPaymentList.size(); index++) {
@@ -841,7 +890,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -862,7 +911,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			result = e.getMessage();
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -876,7 +925,10 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		try {
 			if (subcontract != null && subcontract.getId() != null) {
 				subcontractCommentList = subcontractService.querySubcontractCommentList(subcontract.getId());
-
+				
+				subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
+				    
+				// 受益部门服务经理审批
 				if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) && user.getAreapower() != null
 						&& ((subcontract.getProfitDepCode() != null
 								&& user.getAreapower().contains(subcontract.getProfitDepCode()))
@@ -888,7 +940,23 @@ public class SubcontractAction extends BaseAction implements Preparable {
 					params.put("checkProfitDep", "true");
 					workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
 							TaskKey.PROFIT_SERVICE_APPROVE, "profitSmRole", params);
-				}
+                } 
+				// 一级部门服务经理审批通用审批节点审批
+				else if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) && user.getAreapower() != null
+                        && (subcontract.getParentOfficeCode() != null
+                                && (user.getAreapower().contains(subcontract.getParentOfficeCode())
+                                || user.getAreapower().contains(UserUtil.transferDepNo(subcontract.getParentOfficeCode()))))
+                        && subcontract.getState() != null
+                        && subcontract.getState() < SubcontractStatus.ENG_AGREE) {
+                    HashMap<String, Object> params = new HashMap<>();
+                    params.put("checkParentOffice", "true");
+                    workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
+                            TaskKey.NORMAL_APPROVE_TASK, "parentSmRole", params);
+                } else {
+                    HashMap<String, Object> params = new HashMap<>();
+                    workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
+                            TaskKey.NORMAL_APPROVE_TASK, null, params);
+                }
 			} else {
 				subcontractCommentList = new ArrayList<>();
 			}
@@ -897,7 +965,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -918,7 +986,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -943,7 +1011,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -994,7 +1062,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 			return ERROR;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "download";

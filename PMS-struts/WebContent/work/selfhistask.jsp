@@ -128,7 +128,10 @@ function doActionCheck(formid, action)
 						<display:column property="projectName" titleKey="sys.project.name"></display:column>
 						<display:column property="username" titleKey="dpActProcDesc.username"></display:column>
 						<display:column property="realName" titleKey="dpActProcDesc.realName"></display:column>
-						
+						<s:if test="isCbRole == true">
+                            <display:column property="projectCustomer" titleKey="pm.project.customerName" style="max-width:92px;"></display:column>
+                            <display:column property="projectImpl" titleKey="pm.project.implement"></display:column>
+                        </s:if>
 						
 						<display:column property="name" titleKey="workflow.selftask.name"></display:column>
 						<display:column property="startTime" format="{0,date,yyyy-MM-dd HH:mm}" titleKey="workflow.startTime"></display:column>

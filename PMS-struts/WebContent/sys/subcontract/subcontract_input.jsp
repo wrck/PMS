@@ -52,12 +52,14 @@ table#subcontractInfoTable > tbody > tr > td:nth-child(odd) {
     min-height: 160px;
 }
 
-td.col-sm-5 .deliverFileInput {
+td.col-sm-5 .deliverFileInput, .row .td-inline {
+    padding-left: 7.5px;
     padding-right: 0;
 }
 
-td.col-sm-5 .deliverFileInput:first-child {
-     padding-left: 0;
+td.col-sm-5 .deliverFileInput:first-child, .row .td-inline:first-child {
+    padding-left: 0;
+    padding-right: 7.5px;
 }
 </style>
 <script type="text/javascript">
@@ -171,6 +173,9 @@ $(document).ready(function(){
     $(document).on('click', "#applyBtn", function() {
         submitApply();
     });
+    $(document).on('click', "#refreshSubcontractProjectBtn", function() {
+    	refreshSubcontractProject();
+    });
     $(document).on('change', "input[type='file']", function() {
         var file = $(this).val();
         var $newFile = $(this).clone();
@@ -217,6 +222,12 @@ $(document).ready(function(){
         	$("#contractNos").removeClass("canEmpty");
         }
         preType = $(this).val();
+    });
+    
+    $(document).on('change', "select#officeCode", function() {
+    	$("#officeCodeHidden").val(this.value);
+    	// 所属办事处变化，上级办事处进行清空
+    	$("#parentOfficeCode").val("");
     });
     
     $(document).on('show', ".navDiv",function() {
@@ -819,6 +830,31 @@ function submitApply() {
 	}
 }
 
+function refreshSubcontractProject() {
+    $("#refreshSubcontractProjectBtn").bootstrapBtn("loading");
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    $.ajax({
+        url:"module/s/subcontractAjax_refreshSubcontractProject.action",
+        type:"post",
+        dataType:"json",
+        data:{"subcontract.id":subcontractId},
+        success:function(data){
+        	data = JSON.parse(data.result);
+        	if (data.success) {
+            	window.location.reload();
+        	} else {
+        		alert(data.message);
+        	}
+        },
+        error:function(XMLHttpRequest,textStatus,errorThrown) {
+            alert("根据合同号关联项目失败，请检查合同号是否正确！")
+        },
+        complete:function(data){
+        	$("#refreshSubcontractProjectBtn").bootstrapBtn("reset");
+        }
+    })
+}
+
 var remarkRegex = /(客户姓名：)(.+)((.)*\n)+(联系方式：)(.+)/g;
 function checkSubmit(btnId) {
 	var canSubmit = true;
@@ -920,7 +956,16 @@ function updateProject(obj){
                                 </display:column> 
 					            <display:column property="projectNameWithCodeWarrper" class="transferProjectName" titleKey="pm.project.projectName" media="html"></display:column> 
                                 <display:column property="contractNo" titleKey="pm.contract" class="transferContractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>
-					        </display:table>
+					            <s:if test="%{(subcontract.state != 100) && (user.isHasRole(10) || user.isHasRole(11) || user.isHasRole(13))}">
+                                    <display:setProperty name="basic.msg.empty_list_row">
+                                        <tr class="empty">
+                                            <td colspan="{0}">
+                                                <button id="refreshSubcontractProjectBtn" type="button" class="btn btn-warning btn-xs"><span class="glyphicon glyphicon-refresh" style="font-size:12px;"></span> 根据合同号关联项目</button>
+                                            </td>
+                                        </tr>
+                                    </display:setProperty>
+                                </s:if>
+                            </display:table>
 					    </div>
 					</td>
 				</tr>
@@ -948,15 +993,44 @@ function updateProject(obj){
 				<tr>
 					<td><s:text name="pm.subcontract.officeName"></s:text>:</td>
 					<s:if test="%{subcontract == null || subcontract.id == null}">
-						<td>
+						<%-- <td>
                             <s:select list="depList" value="%{user.dpNo}" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
-                            <s:hidden name="subcontract.officeCode" value="%{user.dpNo}" cssClass="ignoreDisabled" readonly="readonly"/>
-						</td>
+                                    <s:hidden name="subcontract.officeCode" value="%{user.dpNo}" cssClass="ignoreDisabled" readonly="readonly"/>
+                        </td> --%>
+                        <td class="row">
+                            <span class="col-sm-5 td-inline">
+                                <%-- <s:text name="pm.subcontract.officeName"></s:text>: --%>
+                                <span>
+                                    <s:select id="officeCode" list="depList" value="%{user.dpNo}" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                    <s:hidden id="officeCodeHidden" name="subcontract.officeCode" value="%{user.dpNo}" cssClass="ignoreDisabled" readonly="readonly"/>
+                                </span>
+                            </span>
+                            <span class="col-sm-7 td-inline"  style="display: inline-flex; align-items: center; justify-content: flex-end;">
+                                <s:text name="pm.subcontract.officeName.parent"></s:text>：
+                                <span>
+                                    <s:select id="parentOfficeCode" list="depList" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--自动关联--"/>
+                                    <s:hidden id="parentOfficeCodeHidden" name="subcontract.parentOfficeCode" cssClass="ignoreDisabled" readonly="readonly"/>
+                                </span>
+                            </span>
+                        </td>
 						<td><s:text name="pm.subcontract.createName"></s:text>:</td>
 		                <td><s:textfield name="subcontract.createName" cssClass="form-control" value="%{user.username}-%{user.realName}"/></td>
                     </s:if>
                     <s:else>
-                        <td><s:select list="depList" name="subcontract.officeCode" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/></td>
+                        <td class="row">
+                            <span class="col-sm-5 td-inline">
+                                <%-- <s:text name="pm.subcontract.officeName"></s:text>: --%>
+                                <span>
+                                    <s:select id="officeCode" list="depList" name="subcontract.officeCode" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                </span>
+                            </span>
+                            <span class="col-sm-7 td-inline"  style="display: inline-flex; align-items: center; justify-content: flex-end;">
+                                <s:text name="pm.subcontract.officeName.parent"></s:text>：
+                                <span>
+                                    <s:select id="parentOfficeCode" list="depList" name="subcontract.parentOfficeCode" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                </span>
+                            </span>
+                        </td>
                         <td><s:text name="pm.subcontract.createName"></s:text>:</td>
                         <td><s:textfield name="subcontract.createName" cssClass="form-control"/></td>
                     </s:else>
@@ -1045,7 +1119,7 @@ function updateProject(obj){
                             <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
 	               </s:iterator> --%>
                     <li name="navli" class="active nav0" onclick="clickNavLi(0, 'subcontractLineDiv')"><a href="javascript:void(0)">转包清单</a></li>
-                    <s:if test="%{user.isHasRole(10) || user.isHasRole(9) || user.isHasRole(16)}">
+                    <s:if test="%{user.isHasRole(10) || user.isHasRole(9) || user.isHasRole(16) || user.isHasRole(1)}">
                         <li name="navli" class="nav1" onclick="clickNavLi(1, 'engineeFeeDiv')"><a href="javascript:void(0)">工程服务费</a></li>
                     </s:if>
                     <li name="navli" class="nav2" onclick="clickNavLi(2, 'subcontractPaymentDiv')"><a href="javascript:void(0)">付款信息</a></li>

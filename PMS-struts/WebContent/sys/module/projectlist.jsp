@@ -654,7 +654,8 @@ $(document).ready(function(){
             <display:column property="majorProjectLevel" titleKey="pm.project.majorProjectLevel"></display:column>
 			<display:column property="salesManName" style="width:70px" titleKey="pm.project.usernamec"></display:column>
 			<s:if test="%{project.projectState != '10'}">
-				<display:column property="serviceManagerCodeforjson" titleKey="pm.project.programManager"></display:column>
+				<display:column property="serviceManagerCodeforjson" titleKey="pm.project.serviceManager" media="excel"></display:column>
+                <display:column property="programManagerCodeforjson" titleKey="pm.project.programManager"></display:column>
 			</s:if>
 			<s:if test="%{project.projectState != '10'}">
 				<display:column property="projectStartTime" format="{0,date,yyyy-MM-dd}" titleKey="pm.order.create.time"></display:column>

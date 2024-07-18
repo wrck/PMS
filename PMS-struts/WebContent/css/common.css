@@ -13,6 +13,9 @@ ul,li {
 	font-size: 12px;;
 	font-family: "Lucida Console", Monaco, monospace;
 }
+.ui-autocomplete {
+    overflow-y: auto;
+}
 .ui-autocomplete.ui-menu .ui-menu-item {
 	list-style-image: initial;
 }

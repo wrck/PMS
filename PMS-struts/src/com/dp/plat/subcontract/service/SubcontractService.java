@@ -559,4 +559,20 @@ public interface SubcontractService extends BaseService {
      */
     Map<String, String> selectDefaultMultiDimByDep(String depNum, boolean directWithoutChace);
 
+    /**
+     * 通用审批节点
+     * @param taskParam
+     * @param subcontract
+     * @return
+     */
+    String normalApproveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract);
+
+    /**
+     * 工程管理部主管通用审批节点
+     * @param taskParam
+     * @param subcontract
+     * @return
+     */
+    String auditNormalApproveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract, List<SubcontractPrice> subcontractPriceList);
+
 }

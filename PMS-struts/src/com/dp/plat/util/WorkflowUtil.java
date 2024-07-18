@@ -9,17 +9,20 @@ import java.util.List;
 import javax.servlet.ServletContext;
 
 import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.bpmn.behavior.MultiInstanceActivityBehavior;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.pvm.PvmTransition;
+import org.activiti.engine.impl.pvm.delegate.ActivityBehavior;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.activiti.engine.impl.pvm.process.TransitionImpl;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.dp.plat.service.WorkFlowService;
+import com.googlecode.aviator.Expression;
 
 /**
  * 流程任务工具类
@@ -100,7 +103,21 @@ public class WorkflowUtil {
                     if (comment != null) {
                         taskService.addComment(taskId, null, comment);
                     }
-                    taskService.complete(taskId, new HashMap<String, Object>());
+                    // 多实例节点判断，获取多实例节点的完成条件，进行赋值，避免缺少变量发生报错
+                    HashMap<String, Object> map = new HashMap<String, Object>();
+                    ActivityBehavior activityBehavior = currActivity.getActivityBehavior();
+                    if (activityBehavior instanceof MultiInstanceActivityBehavior) {
+                        org.activiti.engine.delegate.Expression expression = ((MultiInstanceActivityBehavior) activityBehavior).getCompletionConditionExpression();
+                        String expressionText = expression.getExpressionText();
+                        expressionText = StringUtils.trimToEmpty(expressionText);
+                        expressionText = expressionText.substring(2, expressionText.length() - 1);
+                        Expression expr = AviatorUtils.getInstance().compile(expressionText);
+                        List<String> vars = expr.getVariableNames();
+                        for (String var : vars) {
+                            map.put(var, null);
+                        }
+                    }
+                    taskService.complete(taskId, map);
                     // taskService.deleteTask(taskId, true);
                     // 删除目标节点新流入
                     pointActivity.getIncomingTransitions().remove(newTransition);

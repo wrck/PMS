@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -194,7 +195,10 @@ public class DispatchSettlementService extends AbstractBaseService<DispatchSettl
         config.put("dispatch", dispatch);
         
         // 设置账套
-        Company company = companyService.selectByPrimaryKey(UserContext.getOrgId());
+        Object orgId = settlement.getOrgId();
+        orgId = settlement.getCustomInfoByKey("orgId", dispatch.getCustomInfoByKey("orgId", orgId));
+        orgId = ObjectUtils.defaultIfNull(orgId, UserContext.getOrgId());
+        Company company = companyService.selectByPrimaryKey(Integer.parseInt(String.valueOf(orgId)));
         String dataAreaId = company.getCompAccount();
         config.put("dataAreaId", dataAreaId);
         

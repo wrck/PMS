@@ -1441,7 +1441,7 @@
 		<result column="projectTypes" property="projectTypes" javaType="java.lang.String" />
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
-		<collection column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="selectPermissionByMemberRole" />
+		<collection column="{memberRoles=memberRoles,userInfoId=userInfoId,permissionTypes=permissionTypes}" javaType="java.util.HashSet" property="permissions" select="selectPermissionByMemberRole" />
 		<collection column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet" property="roles" select="selectRoleByMemberRole" />
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
@@ -1505,6 +1505,9 @@
 						OR pm.memberCode like concat("%", #{model.memberCode}, "%")
 					</if>
 				) 
+				<if test="model.customInfo != null and model.customInfo.hasDispatched == 'true'">
+                    AND #{model.customInfo.hasDispatched} = ph.customInfo -> '$.hasDispatched'
+                </if>
 				<!-- <if test="model.projectTypes != null">
 					AND FIND_IN_SET(ph.`projectType`, #{model.projectTypes})
 				</if>
@@ -1517,24 +1520,33 @@
   </select>
   
   <select id="selectPermissionByMemberRole" resultType="String">
-  	select 
+  	SELECT 
 	    p.`permission_name` 
-	from
+	FROM
 	    `t_permission` p 
-	    left join `t_role_permission` rp 
-	        on rp.permission_id = p.permission_id 
-	    left join `t_role` r
-	        on rp.role_id = r.role_id 
-	    left join `fnd_basic_data` db 
-	        on db.dataTypeCode = 'afProjectMember' 
+	    LEFT JOIN `t_role_permission` rp 
+	        ON rp.permission_id = p.permission_id 
+	    LEFT JOIN `t_role` r
+	        ON rp.role_id = r.role_id 
+	    LEFT JOIN `fnd_basic_data` db 
+	        ON db.dataTypeCode = 'afProjectMember' 
+	        AND r.role_name = db.basicDataAttri1 
         <if test="memberRoles != null and memberRoles != ''">
-	        and find_in_set(db.basicDataId, #{memberRoles}) 
+	        AND FIND_IN_SET(db.basicDataId, #{memberRoles}) 
         </if>
         <if test="memberRoles == null or memberRoles == ''">
-        	and p.permission_name regexp ":detail|:list"
+        	AND p.permission_name REGEXP ":detail|:list"
+        LEFT JOIN t_user_role ur ON ur.`role_id` = r.`role_id`
+	    LEFT JOIN t_user_info ui
+            ON ui.`user_id` = ur.`user_id`
+	        AND ur.`comp_id` = ui.`compID`
+	        AND ui.id = #{userInfoId}
         </if>
-	        and r.role_name = db.basicDataAttri1 
-	where r.role_name = db.basicDataAttri1
+	where (r.role_name = db.basicDataAttri1
+	    <if test="memberRoles == null or memberRoles == ''">
+	        OR ui.id = #{userInfoId}
+	    </if>
+	)
 	<if test="permissionTypes != null">
 	    and p.permission_name regexp #{permissionTypes}
 	</if>
@@ -1562,7 +1574,7 @@
 	        r.role_name = db.basicDataAttri1 
 	        or r.`role_name` in ("admin", "projectAdmin") 
 			<if test="hasPower == true">
-		        or r.`role_name` in ("projectSubAdmin", "projectAreaManager")
+		        or r.`role_name` in ("projectSubAdmin", "projectAreaManager", "dispatchSettleStaff")
 			</if>
 	    )
   </select>

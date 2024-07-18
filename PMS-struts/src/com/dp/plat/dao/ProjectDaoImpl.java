@@ -440,6 +440,12 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     public List<OrderDataFromSap> queryOrderDataListByProjectId(int projectId) {
         return getSqlMapClientTemplate().queryForList("query-orderdatalist-byprojectid", projectId);
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<OrderDataFromSap> queryOrderDataDetailListByProjectId(int projectId) {
+        return getSqlMapClientTemplate().queryForList("queryOrderDataDetailListByProjectId", projectId);
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -506,7 +512,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
     
     @SuppressWarnings("unchecked")
-    public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter, Boolean excludeTransferOut) { Map<String, Object> map = new HashMap<String, Object>();
+    public List<ShipmentInfo> queryShipmentInfoByContractNo(String contractNo, int projectId, String profitCenter, Boolean excludeTransferOut) {
+        Map<String, Object> map = new HashMap<String, Object>();
         if (StringUtils.isBlank(contractNo)) {
             contractNo = "EMPTY";
         }
@@ -1778,6 +1785,28 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> params) {
         return getSqlMapClientTemplate().queryForList("selectContractAcceptanceDeliveryInfo", params);
+    }
+
+    @Override
+    public List<Map<String, Object>> selectProblemTicket(Map<String, Object> params) {
+        return getSqlMapClientTemplate().queryForList("selectProblemTicket", params);
+    }
+
+    @Override
+    public List<Map<String, Object>> selectProblemTicketByProjectBarcode(Map<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<String, Object>();
+        }
+        String contractNo = (String) params.get("contractNo");
+        if (StringUtils.isBlank(contractNo)) {
+            contractNo = "EMPTY";
+        }
+        params.put("contractNo", contractNo);
+        params.put("sourceContractNo", contractNo.replaceAll("(-L)|(-C)", ""));
+        params.put("projectId", params.getOrDefault("projectId", 0));
+        params.put("profitCenter", params.getOrDefault("profitCenter", null));
+        params.put("excludeTransferOut", params.getOrDefault("excludeTransferOut", true));
+        return getSqlMapClientTemplate().queryForList("selectProblemTicketByBarcode", params);
     }
     
 }

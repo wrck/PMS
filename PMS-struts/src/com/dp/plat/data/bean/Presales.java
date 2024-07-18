@@ -2,7 +2,6 @@ package com.dp.plat.data.bean;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +12,13 @@ import com.dp.plat.data.activity.ActivityBaseBean;
 import com.dp.plat.param.FileParam;
 
 public class Presales extends ActivityBaseBean {
-	private int presalesId;//业务主键
+	private static final long serialVersionUID = -7959020425102335249L;
+    private int presalesId;//业务主键
 	private String projectState;//项目状态
 	private String projectStates;//项目状态s
 	private String projectStateName;//项目状态名称
 	
-	private int lendInfoId;//SMS借货主键ID
+	private String lendInfoId;//SMS借货主键ID
 	private String presalesCode;//项目编码
 	private String projectCode;//原项目编码
 	private String projectName;//项目名称
@@ -90,6 +90,10 @@ public class Presales extends ActivityBaseBean {
      * 回访的时间耗时
      */
     private String callbackDuration;
+    /**
+     * 服务经理审批的时间耗时
+     */
+    private String serviceApproveDuration;
 	
     /**
      * 导出选项，0-基于项目，1-基于设备，2-基于回访
@@ -103,6 +107,11 @@ public class Presales extends ActivityBaseBean {
      * 问卷结果拼接
      */
     private String questionResults;
+    
+    /**
+     * 数据来源
+     */
+    private String source;
     
 	public Presales() {
 	    super();
@@ -338,10 +347,10 @@ public class Presales extends ActivityBaseBean {
 	public void setLendfiles(String lendfiles) {
 		this.lendfiles = lendfiles;
 	}
-	public int getLendInfoId() {
+	public String getLendInfoId() {
 		return lendInfoId;
 	}
-	public void setLendInfoId(int lendInfoId) {
+	public void setLendInfoId(String lendInfoId) {
 		this.lendInfoId = lendInfoId;
 	}
 	public String getHasTransfer() {
@@ -408,6 +417,14 @@ public class Presales extends ActivityBaseBean {
         this.callbackDuration = callbackDuration;
     }
 
+    public String getServiceApproveDuration() {
+        return serviceApproveDuration;
+    }
+
+    public void setServiceApproveDuration(String serviceApproveDuration) {
+        this.serviceApproveDuration = serviceApproveDuration;
+    }
+
     public String getSearchTimeType() {
         return searchTimeType;
     }
@@ -459,6 +476,18 @@ public class Presales extends ActivityBaseBean {
 
     public void setQuestionResults(String questionResults) {
         this.questionResults = questionResults;
+    }
+
+    /**
+     * 数据来源
+     * @return
+     */
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 	
 }

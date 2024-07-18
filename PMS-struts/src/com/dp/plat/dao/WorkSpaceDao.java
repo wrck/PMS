@@ -43,6 +43,9 @@ public interface WorkSpaceDao {
 
 
 	List<DpActProcDesc> queryPmTaskList(TaskQueryParam taskQueryParam, DisplayParam displayParam);
+	
+
+    List<DpActProcDesc> querySelfHistoryTaskList(TaskQueryParam taskQueryParam, DisplayParam displayParam);
 
 
 	List<DpActProcDesc> queryProjectBackTaskList();
@@ -81,4 +84,5 @@ public interface WorkSpaceDao {
      * @return
      */
     List<DpActProcDesc> queryProjectSupervisionTask(HashMap<String, Object> params);
+
 }

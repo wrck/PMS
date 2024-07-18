@@ -152,6 +152,14 @@
 				</bean>
 				<bean class="com.dp.plat.support.LeftMenuLi">
                     <property name="text">
+                        <value>component.manage</value>
+                    </property>
+                    <property name="url">
+                        <value>module/component_list.action</value>
+                    </property>             
+                </bean>
+				<bean class="com.dp.plat.support.LeftMenuLi">
+                    <property name="text">
                         <value>sys.subcontract.project.management</value>
                     </property>
                     <property name="url">

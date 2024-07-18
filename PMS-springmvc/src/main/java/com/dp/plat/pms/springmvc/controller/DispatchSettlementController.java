@@ -1,6 +1,8 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -211,12 +213,13 @@ public class DispatchSettlementController
 //						settlement.setProgressDesc((String) project.getCustomInfoByKey("projectProgress"));
 //						settlement.setAcceptanceDesc(project.getProjectStateName());
 //					}
-					model.addAttribute("targetValue", settlement);
 				} else {
 					status = false;
 					message = "没有找到满足条件的转包记录";
 				}
 			}
+			model.addAttribute("targetValue", settlement);
+			
 			List<Object> fieldList = this.findFieldList(DATANAME_FORM, DATATYPE_FORM);
 			model.addAttribute("fieldList", fieldList);
 			
@@ -371,6 +374,12 @@ public class DispatchSettlementController
 		Boolean status = true;
 		String message = null;
 		try {
+		    if (Boolean.TRUE.equals(vo.getSettled()) || Boolean.TRUE.equals(vo.hasTask())) {
+		        model.addAttribute("status", false);
+	            model.addAttribute("message", "已结算或者流程中的结算记录不允许删除！");
+	            return;
+		    }
+		    
 			DispatchSettlement settlement = new DispatchSettlement();
 			settlement.setId(id);
 			settlement.setDisabled(true);
@@ -406,7 +415,15 @@ public class DispatchSettlementController
 			DispatchVO dispatchVO = new DispatchVO();
 			dispatchVO.setProjectId(projectId);
 			dispatchVO.setId(v.getDispatchId());
-			PermissionResult permissionResult = dispatchProjectService.checkPermission(dispatchVO, "dispatch:list", "dispatch:detail");
+			PermissionResult permissionResult = dispatchProjectService.checkPermission(dispatchVO, "dispatch:list", "dispatch:detail", "settlement:list", "settlement:detail");
+			
+			// 项目转包结算人员，如果有权限查看，则允许进行编辑
+			if (permissionResult.isPermit() && UserContext.hasAnyRoles(RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+			    permissionResult.setPermissionType("edit");
+//			    Collection<? extends String> currentPermistions = (Collection<? extends String>) model.getAttribute("permissions");
+//			    permissionResult.getPermissions().addAll(currentPermistions != null ? currentPermistions : Collections.emptyList());
+			}
+			
 			model.addAllAttributes(permissionResult.getMap());
 			// 如果开启结算后只允许查询，则调整为view
 			String readOnlyWhenSettled = SystemConfig.systemVariables.getOrDefault("pm.dispatch.settlement.settled.readonly", "1");

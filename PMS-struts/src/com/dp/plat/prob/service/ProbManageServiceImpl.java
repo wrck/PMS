@@ -32,9 +32,12 @@ import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
 import com.dp.plat.prob.bean.ProbStatistic;
+import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.dao.ProbManageDao;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.vo.ProductComponentPageParam;
+import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BaseServiceImpl;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
@@ -823,7 +826,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	}
 
 	@Override
-	public void batchAddSoftVersion(List<Object> softVersions) {
+	public void batchAddSoftVersion(List<SoftVersion> softVersions) {
 		probManageDao.batchAddSoftVersion(softVersions);
 	}
 
@@ -872,5 +875,60 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 		}
 		return probManageDao.queryProbReadLogList(probReadLog, displayParam);
 	}
+
+    @Override
+    public ProductComponent selectProductComponentById(Integer id) {
+        return probManageDao.selectProductComponentById(id);
+    }
+    
+    @Override
+    public ProductComponentVO selectProductComponentVOById(Integer id) {
+        return probManageDao.selectProductComponentVOById(id);
+    }
+
+    @Override
+    public List<ProductComponent> selectProductComponentList(ProductComponent component) {
+        return probManageDao.selectProductComponentList(component);
+    }
+
+    @Override
+    public List<ProductComponentVO> selectProductComponentListPageable(ProductComponentPageParam pageParam) {
+        return probManageDao.selectProductComponentListPageable(pageParam);
+    }
+    
+    @Override
+    public Integer countProductComponentListPageable(ProductComponentPageParam pageParam) {
+        return probManageDao.countProductComponentListPageable(pageParam);
+    }
+
+    @Override
+    public Integer insertProductComponent(ProductComponent component) {
+        return probManageDao.insertProductComponent(component);
+    }
+
+    @Override
+    public Integer insertProductComponentSelective(ProductComponent component) {
+        return probManageDao.insertProductComponentSelective(component);
+    }
+    
+    @Override
+    public Integer insertOrUpdateProductComponentSelective(ProductComponent component) {
+        return probManageDao.insertOrUpdateProductComponentSelective(component);
+    }
+
+    @Override
+    public void updateProductComponentById(ProductComponent component) {
+        probManageDao.updateProductComponentById(component);
+    }
+
+    @Override
+    public void updateProductComponentByIdSelective(ProductComponent component) {
+        probManageDao.updateProductComponentByIdSelective(component);
+    }
+
+    @Override
+    public void deleteProductComponentById(Integer id) {
+        probManageDao.deleteProductComponentById(id);
+    }
 
 }

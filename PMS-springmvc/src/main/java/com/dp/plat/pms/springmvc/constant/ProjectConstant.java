@@ -3,6 +3,15 @@ package com.dp.plat.pms.springmvc.constant;
 import com.dp.plat.core.param.Consts;
 
 public class ProjectConstant {
+    
+    public static class Common {
+        /**
+         * 项目已转包关键字
+         */
+        public final static String PROJECT_DISPATCHED_KEY = "hasDispatched";
+        
+    }
+    
 
 	public static class URLPath extends Consts.URLPath {
 		/**

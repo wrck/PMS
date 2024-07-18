@@ -1,5 +1,7 @@
 package code;
 
+import java.util.Base64;
+
 import javax.mail.internet.AddressException;
 
 import com.dp.plat.MyBatisGenerator.CodeGenerator;
@@ -11,6 +13,7 @@ import com.dp.plat.MyBatisGenerator.CodeGenerator;
 public class CodeInit {
 	
 	public static void main(String[] args) throws AddressException {
-		CodeGenerator.generator(null);
+//		CodeGenerator.generator(null);
+	    System.out.println(Base64.getDecoder().decode("obW4uJgZmRo="));
 	}
 }

@@ -81,11 +81,11 @@
                     <td><span class="hidden">${subcontract.customInfo.multiDimInfo.officeCode}</span>${subcontract.customInfo.multiDimInfo.officeName}</td>
                     <td><span class="hidden">${subcontract.customInfo.multiDimInfo.industryCode}</span>${subcontract.customInfo.multiDimInfo.industryName}</td> --%>
                     
-                    <td><span class="hidden">${commonMap.multiDimInfo.dimDepartment != null ? commonMap.multiDimInfo.dimDepartment : subcontract.profitDepCode}</span>${commonMap.multiDimInfo.dimDepartmentName != null ? commonMap.multiDimInfo.dimDepartmentName : subcontract.profitDepName}</td>
-                    <td><span class="hidden">${commonMap.multiDimInfo.dimProductLine}</span>${commonMap.multiDimInfo.dimProductLineName}</td>
-                    <td><span class="hidden">${commonMap.multiDimInfo.dimBU}</span>${commonMap.multiDimInfo.dimBUName}</td>
-                    <td><span class="hidden">${commonMap.multiDimInfo.dimTerritory}</span>${commonMap.multiDimInfo.dimTerritoryName}</td>
-                    <td><span class="hidden">${commonMap.multiDimInfo.dimIndustry}</span>${commonMap.multiDimInfo.dimIndustryName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimDepartment != null ? commonMap.multiDimInfo.dimDepartment : subcontract.profitDepCode}</span>${commonMap.multiDimInfo.dimDepartment != null ? commonMap.multiDimInfo.dimDepartment : subcontract.profitDepCode}-${commonMap.multiDimInfo.dimDepartmentName != null ? commonMap.multiDimInfo.dimDepartmentName : subcontract.profitDepName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimProductLine}</span>${commonMap.multiDimInfo.dimProductLine}-${commonMap.multiDimInfo.dimProductLineName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimBU}</span>${commonMap.multiDimInfo.dimBU}-${commonMap.multiDimInfo.dimBUName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimTerritory}</span>${commonMap.multiDimInfo.dimTerritory}-${commonMap.multiDimInfo.dimTerritoryName}</td>
+                    <td><span class="hidden">${commonMap.multiDimInfo.dimIndustry}</span>${commonMap.multiDimInfo.dimIndustry}-${commonMap.multiDimInfo.dimIndustryName}</td>
                 </tr>
             </table>
             
@@ -254,13 +254,16 @@
         	<s:if test="%{workflowCommonParam.outcome == 'applyPaymentTask'}">
                 $("#applyPaymentBtn").appendTo($("#subcontractPaymentTable tfoot #delIds"));
                 $("#applyPaymentBtn").click(function(e) {
-                	if (!checkPaymentForm()) {
+                	var resetBtn = function() {
                         var $btn = $(this);
                         setTimeout(function() {
                             $btn.bootstrapBtn("reset");
                         }, 10);
+                    }
+                	if (!checkPaymentForm()) {
                         e.preventDefault();
                         e.stopPropagation();
+                		resetBtn.call(this);
                         return false;
                     }
                     // 有申请付款按钮，则允许编辑付款信息
@@ -274,15 +277,13 @@
                         }
                         e.preventDefault();
                         e.stopPropagation();
+                        resetBtn.call(this);
                     } else if ($(".inputLine:not(.empty-template)").length == 0) {
                         alert("请新增付款行！");
                         e.preventDefault();
                         e.stopPropagation();
+                        resetBtn.call(this);
                     }
-                    var $btn = $(this);
-                    setTimeout(function() {
-                        $btn.bootstrapBtn("reset");
-                    }, 10);
                 })
             </s:if>
             	var taskKey = "<s:property value='workflowCommonParam.outcome'/>" || "";
@@ -513,7 +514,7 @@
                     		// 计算最后一个付款比例之前的总比例
                     		var prevSumRatio = Number((sumRatio - ratio).toFixed("2"));
                     		// 重新计算最后一个付款比例处理尾差
-                    		var newRatio = amountRatio - prevSumRatio;
+                    		var newRatio = Number((amountRatio - prevSumRatio).toFixed("2"));
                     		$prevRatio.find("input").val(newRatio);
                     		sumRatio = amountRatio;
                     	}

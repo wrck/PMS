@@ -975,7 +975,7 @@
 		<result column="view" javaType="java.lang.Boolean" property="view" />
 		<result column="disabled" javaType="java.lang.Boolean" property="disabled" />
 		<result column="memberRoles" javaType="java.lang.String" property="memberRoles" />
-		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
 		<collection property="roles" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectRoleByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
@@ -1057,6 +1057,9 @@
 				    )
 				</if>
 			) AND
+			<if test="model.customInfo != null and model.customInfo.hasDispatched == 'true'">
+                #{model.customInfo.hasDispatched} = ph.customInfo -> '$.hasDispatched' AND
+            </if>
 <!-- 			<if test="model.projectCode != null and '' != model.projectCode">
 				dr.`projectCode` like concat("%", #{model.projectCode, jdbcType=VARCHAR}, "%") AND
 			</if>

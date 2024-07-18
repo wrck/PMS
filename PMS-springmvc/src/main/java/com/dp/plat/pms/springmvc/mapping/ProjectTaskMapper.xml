@@ -667,7 +667,7 @@
 		<result column="disabled" property="disabled" javaType="java.lang.Boolean"/>
 		<result column="maxState" property="maxState" javaType="java.lang.String"/>
 		<result column="memberRoles" property="memberRoles" javaType="java.lang.String"/>
-		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
+		<collection property="permissions" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectPermissionByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,permissionTypes=permissionTypes}" javaType="java.util.HashSet"></collection>
 		<collection property="roles" select="com.dp.plat.pms.springmvc.dao.ProjectHeaderMapper.selectRoleByMemberRole" column="{memberRoles=memberRoles,userInfoId=userInfoId,hasPower=hasPower}" javaType="java.util.HashSet"></collection>
   </resultMap>
   <select id="checkPermission" resultMap="permissionMap">
@@ -733,6 +733,9 @@
 		<if test="model.projectIds != null">
 			AND FIND_IN_SET(ph.projectId, #{model.projectIds})
 		</if>
+		<if test="model.customInfo != null and model.customInfo.hasDispatched == 'true'">
+            AND #{model.customInfo.hasDispatched} = ph.customInfo -> '$.hasDispatched'
+        </if>
 		<!-- <if test="model.projectType != null">
 			AND FIND_IN_SET(ph.projectType, #{model.projectType})
 		</if>

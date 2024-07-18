@@ -2,6 +2,7 @@ package com.dp.plat.pms.springmvc.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,6 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.activiti.engine.impl.persistence.entity.UserEntity;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -527,6 +530,61 @@ public class ProjectManageUserController extends AbstractController<IUserInfoSer
 		}
 		model.addAttribute("valid", isUnique);
 	}
+	
+	@RequestMapping(value = "/resetPassword", method = RequestMethod.POST)
+    @SystemControllerLog(description = "管理员重置密码")
+    // @RequiresRoles("admin")
+    public String resetPassword(@RequestParam(value = "userId", required = true) Integer userId,
+            @RequestParam(value = "userName", required = true) String userName, String email, Model model) {
+	    UserInfoVO vo = new UserInfoVO();
+        vo.setUserId(userId);
+        
+        String extRolesVar = SystemConfig.systemVariables.getOrDefault("sys.user.manager.extRoles", "");
+        String[] extRoles = StringUtils.split(extRolesVar, ",");
+        Set<String> rolesSet = new HashSet<String>(Arrays.asList(RoleConstant.ROLE_ADMIN));
+        rolesSet.addAll(Arrays.asList(extRoles));
+        if (!UserContext.hasAnyRoles(rolesSet)) {
+            return "redirect:/unauthorized.html";
+        }
+        String nickName = "用户";
+        if (StringUtils.isBlank(email)) {
+//          UserInfo userInfo = userInfoService.selectByUserId(userId);
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUserId(userId);
+            userInfo.setCompID(UserContext.getCurrentPrincipal().getCompId());
+            userInfo = userInfoService.selectOneByUserIdAndCompId(userInfo);
+            email = userInfo.getEmail();
+            nickName = userInfo.getRealName();
+        }
+        if (StringUtils.isBlank(email)) {
+            model.addAttribute("errorMsg", "邮箱地址为空，无法重置密码！");
+            return null;
+        }
+        String randomPassword = PasswordUtil.createRandomPassword(8);
+        User user = new User(userId);
+        user.setPassword(PasswordUtil.encryptPassword(userName, randomPassword));
+        user.setNeedChangePwd(true);
+        userService.updateByPrimaryKeySelective(user);
+        
+        // 获取重置用户登录的Session，全部踢下线
+        Collection<Session> activeSessions = UserContext.getActiveSessions(userName);
+        SessionDAO sessionDAO = UserContext.getSessionDAO();
+        for (Session session : activeSessions) {
+            sessionDAO.delete(session);
+        }
+        
+        Map<String, Object> context = new HashMap<String, Object>();
+        context.put("templateCode", "sys.password.reset.mail");
+        context.put("bccs", email);
+        context.put("randomPassword", randomPassword);
+        context.put("beforeSplit", "${");
+        context.put("afterSplit", "}");
+        context.put("nickName", nickName);
+//      context.put("dataSource", new Object[] {Collections.singletonMap("randomPassword", randomPassword)});
+        MailUtil.keepMailWithTemplate(context, true);
+        model.addAttribute("successMsg", "密码重置成功!<br>随机密码已发送至[" + email + "]");
+        return null;
+    }
 	
 	@RequestMapping("/param")
 	public void findUserInfoWithParam(HttpServletRequest request, Model model) {

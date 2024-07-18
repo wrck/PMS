@@ -62,7 +62,9 @@
                     `pm`.`memberCode` AS `salesManCode`, `pm`.`memberName` AS `salesManName`,
                     `pm2`.`memberCode` AS `serviceManager`, `pm2`.`memberName` AS `serviceManagerName`, 
                     `pm3`.`memberCode` AS `projectManager`, `pm3`.`memberName` AS `projectManagerName`, 
-                    `gm`.`memberCode` AS `groupMember`, `gm`.`memberName` AS `groupMemberName`, 
+                    `gm`.`memberCode`  AS `groupMember`, `gm`.`memberName` AS `groupMemberName`, 
+                    GROUP_CONCAT(DISTINCT `gm`.`memberCode`) AS teamMemberCodes,
+                    GROUP_CONCAT(DISTINCT `gm`.`memberName`) AS teamMemberNames,
                      shipmentState.`basicDataName` AS shipmentStateName, state.`shipmentState`, 
                      planState.`basicDataName` AS planStateName, state.`projectPlanState`, 
                      executionState.`basicDataName` AS executionStateName, state.executionState, 
@@ -373,6 +375,8 @@
               NULL                    AS `projectManagerName`,
               NULL                    AS `groupMember`,
               NULL                    AS `groupMemberName`,
+              NULL                    AS teamMemberCodes,
+              NULL                    AS teamMemberNames,
               NULL  as shipmentStateName,
               NULL  as shipmentState,
               NULL as planStateName,
@@ -450,6 +454,8 @@
               NULL                    AS `projectManagerName`,
               NULL                    AS `groupMember`,
               NULL                    AS `groupMemberName`,
+              NULL                    AS teamMemberCodes,
+              NULL                    AS teamMemberNames,
               NULL  as shipmentStateName,
               NULL  as shipmentState,
               NULL as planStateName,
@@ -893,9 +899,13 @@
         <result property="projectStartTime" column="projectStartTime"/>
         <result property="projectCreateTime" column="projectCreateTime"/>
         <result property="projectPlanStateName" column="planStateName"/>
-        <result property="serviceManagerCodeforjson" column="projectManagerName"/>
         <result property="shipmentStateName" column="shipmentStateName"/>
+        <result property="serviceManagerCode" column="serviceManager"/>
+        <result property="serviceManagerCodeforjson" column="serviceManagerName"/>
         <result property="programManagerCode" column="projectManager"/>
+        <result property="programManagerCodeforjson" column="projectManagerName"/>
+        <result property="teamMemberCodes" column="teamMemberCodes"/>
+        <result property="teamMemberNames" column="teamMemberNames"/>
         <result property="projectRefreshTime" column="projectRefreshTime"/>
         <result property="column012Name" column="ssfsName"/>
         <result property="compId" column="compId"/>
@@ -1376,7 +1386,7 @@
     
     <select id="query_project_byId" parameterClass="int" resultMap="pmProjectById">
         <![CDATA[
-            SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
+            SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(DISTINCT ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
              CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`
             ) END AS projectName , pph.projectState,state.`basicDataName` AS projectStateName, pph.isback, pph.isback, pph.column001, fd.departmentName, pph.column002, pph.column003, pph.column004, pph.column005, 
             pph.column006, pph.column007, pph.column008, pph.column009, pph.column010, pph.column011,case when  pph.column012 is null or pph.column012 = '' then pph.columno12_readonly else pph.column012 end as column012, 
@@ -2069,6 +2079,18 @@
         <result property="openQuantity" column="openQuantity"/>
     </resultMap>
     
+    <select id="queryOrderDataDetailListByProjectId" parameterClass="int" resultMap="orderData2">
+        SELECT pppl.id, pppl.projectId AS projectId, pppl.contractNo, pppl.itemCode AS itemCode, pppl.itemName AS itemName
+		    , fi.itemname AS model, pppl.orderQuantity AS orderQuantity, pppl.deliverQuantity AS deliverQuantity, pppl.openQuantity AS openQuantity
+		    , CASE 
+		        WHEN pppl.projectQuantity IS NULL THEN pppl.orderQuantity
+		        ELSE pppl.projectQuantity
+		    END AS projectQuantity
+		FROM pm_project_product_line pppl
+		    LEFT JOIN fb_items fi ON pppl.itemCode = fi.item
+		WHERE pppl.projectId = #projectId#
+    </select>
+    
     <select id="query-orderdatalist-byprojectid" parameterClass="int" resultMap="orderData2">
         <!-- SELECT
             pppl.id,
@@ -2155,9 +2177,8 @@
                 AND vsip.barcode = pps.barcode)
     </select> -->
     
-    <select id="query-shipmentinfo-bycontractno" parameterClass="java.util.Map" resultMap="shipmentinfo">
-       SELECT pps.*, vw.`warrantyStartTime`, vw.`warrantyEndTime`, vw.`warrantyMonth`, vw.`diff` AS warrantyDiff FROM (
-            SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemModel, vsip.itemName itemName, 
+    <sql id="sqlShipmentInfoByContractNo">
+        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemModel, vsip.itemName itemName, 
                 vsep.receiveName receiveName, vsep.emsNum emsNum, vsep.packdate packdate, vsep.emsCompany emsCompany,NULL AS installAddress,
                 NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
                 vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemModel2 AS itemModel2, vsip.itemName2 itemName2
@@ -2192,6 +2213,11 @@
                 WHERE vsip.contract_code IN ($sourceContractNo$)
                 <!-- WHERE FIND_IN_SET(vsip.contract_code, REPLACE(REPLACE(#contractNo#, '-C', ''), "'",'')) -->
                     AND vsip.barcode = pps.barcode)
+    </sql>
+    
+    <select id="query-shipmentinfo-bycontractno" parameterClass="java.util.Map" resultMap="shipmentinfo">
+       SELECT pps.*, vw.`warrantyStartTime`, vw.`warrantyEndTime`, vw.`warrantyMonth`, vw.`diff` AS warrantyDiff FROM (
+            <include refid="sqlShipmentInfoByContractNo"/>
        ) pps
        LEFT JOIN `view_warranty` vw
            ON <!-- vw.`contract_code` = pps.contractNo  -->
@@ -3116,7 +3142,7 @@
     
     <select id="query_contract_info" parameterClass="java.util.Map" resultMap="MergeContract">
         <![CDATA[
-            SELECT  a.`contractNo` , IFNULL(IF(a.salesType = '01', a.`projectName`, b.projectName), a.projectName) as projectName ,a.`customerName` ,a.`orderCreateTime` , b.`marketName` , b.`salesManName` FROM `pm_order_data_from_sap` a 
+            SELECT DISTINCT a.`contractNo` , IFNULL(IF(a.salesType = '01', a.`projectName`, b.projectName), a.projectName) as projectName ,a.`customerName` ,a.`orderCreateTime` , b.`marketName` , b.`salesManName` FROM `pm_order_data_from_sap` a 
             LEFT JOIN  pm_project_property_from_sms b ON a.`orderExecNumber` = b.`orderExecNumber` 
             WHERE contractNo LIKE CONCAT('%', #mergeContractNo#, '%')
         ]]>
@@ -5706,7 +5732,7 @@
   <select id="queryProjectSimplifyByProjectId" parameterClass="int" resultMap="SimpleProjectById" >
     <![CDATA[
         SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, 
-            GROUP_CONCAT(ppc.contractNo) AS contractNo, pph.projectCode, pph.compId,
+            GROUP_CONCAT(DISTINCT ppc.contractNo) AS contractNo, pph.projectCode, pph.compId,
             CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`) END AS projectName, 
             pph.projectState, pph.isback, pph.column001, fd.departmentName AS officeName, pph.column002, pph.column003, pph.column004, pph.column005, 
             pph.column006, pph.column007, pph.column008, pph.column009, pph.column010, pph.column011,
@@ -5718,7 +5744,7 @@
             CASE WHEN ppm2.memberName IS NULL THEN ppm5.memberName ELSE ppm2.memberName END AS programManagerCodeforjson,
             ppm5.memberCode AS programManagerCodeB,
             ppm5.memberName AS programManagerCodeforjsonB,
-            GROUP_CONCAT(ppm6.memberCode) AS teamMemberCodes,
+            GROUP_CONCAT(DISTINCT ppm6.memberCode) AS teamMemberCodes,
             executionState.`basicDataName` AS executionStateName, ps.executionState, 
             closeProcessState.`basicDataName` AS closeProcessStateName, ps.closeProcessState
         FROM pm_project_header pph 
@@ -6083,5 +6109,29 @@
                 WHERE #dateDiff# >= DATEDIFF(NOW(), IFNULL(effectiveTo, uploadTime))
             )
         GROUP BY contractNo, smsDeliverType
+    </select>
+    
+    <!-- 工单记录查询 -->
+    <select id="selectProblemTicket" parameterClass="map" resultClass="java.util.HashMap">
+        select * from pm_project_incident_table_from_itr itr
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="projectCode"> itr.projectCode = #projectCode# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNo"> itr.contractNo = #contractNo# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNoList"> 
+                itr.contractNo in (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
+            </isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="selectProblemTicketByProjectBarcode" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT itr.* FROM (<include refid="sqlShipmentInfoByContractNo"/>) sp
+            INNER JOIN pm_project_incident_table_from_itr itr 
+                ON sp.barCode = itr.barCode AND sp.contractNo = itr.contractNo
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="projectCode"> itr.projectCode = #projectCode# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNoList">
+                itr.contractNo in (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
+            </isNotEmpty>
+        </dynamic>
     </select>
 </sqlMap>

@@ -4,7 +4,7 @@
 package com.dp.plat.exception;
 
 /**
- * 文件上传异常
+ * 自定义运行异常
  * @author w02611
  *
  */

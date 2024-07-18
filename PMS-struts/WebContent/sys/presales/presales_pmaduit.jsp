@@ -363,10 +363,11 @@ function updateDeliverById(fileId, target) {
 <script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
 </script>
 </head>
 <body>
-	<fieldset>
+	<%-- <fieldset>
 		<legend><b>基本信息</b></legend>
 		<table class="table table-bordered table-hover table-striped ">
 			<tr>
@@ -434,10 +435,10 @@ var officeCode = "${presales.officeCode}";
                     </s:if>
                     <s:else>至今</s:else>（<s:property value="presales.totalDuration"/>）
                 </td>
-                <%-- <td><s:text name="pm.presales.applyTime"/>:</td>
+                <td><s:text name="pm.presales.applyTime"/>:</td>
                 <td><s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/></td>
                 <td><s:text name="pm.presales.endTime"/>:</td>
-                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td> --%>
+                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td>
             </tr>
         </table>
         <table class="table table-no-border" style="margin-top: -20px;margin-bottom: 0;">
@@ -445,11 +446,12 @@ var officeCode = "${presales.officeCode}";
                 <td <s:if test='presales.projectState == 30'>class="text-success current-state"</s:if>><s:text name="pm.presales.serviceDuration"></s:text>:<s:property value="presales.serviceDuration"/><span style="cursor: help;" title="<s:text name='pm.presales.applyDuration'/>">(<s:property value="presales.applyDuration"/>)</span></td>
                 <td <s:if test='presales.projectState == 31'>class="text-success current-state"</s:if>><s:text name="pm.presales.programDuration"></s:text>:<s:property value="presales.programDuration"/></td>
                 <td <s:if test='presales.projectState == 32'>class="text-success current-state"</s:if>><s:text name="pm.presales.testDuration"></s:text>:<s:property value="presales.testDuration"/></td>
-                <%-- <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
-             --%>
+                <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
+            
              </tr>
         </table>
-	</fieldset>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
 	<fieldset>
 		<legend><b>工程计划</b></legend>
 		<table class="table table-condensed table-hover table-striped">
@@ -479,10 +481,10 @@ var officeCode = "${presales.officeCode}";
 						<s:hidden value="%{#t.taskId}" id="presalesTaskId_%{#index.index}"></s:hidden>
 					
 						<s:if test="#t.deliverFileIds == null & #index.index == 2">
-							<s:textfield value="%{#t.eventActualFinishDateStr}" cssClass="form-control taskEdit" cssStyle="width:130px;" id="finishTime_%{#index.index}" disabled="true"></s:textfield>
+							<s:textfield value="%{#t.eventActualFinishDateStr}" cssClass="form-control taskEdit" cssStyle="width:130px;" id="finishTime_%{#index.index}" disabled="true" autocomplete="off"></s:textfield>
 						</s:if>
 						<s:else>
-							<s:textfield value="%{#t.eventActualFinishDateStr}" cssClass="form-control taskEdit" cssStyle="width:130px;" id="finishTime_%{#index.index}" disabled="true"></s:textfield>
+							<s:textfield value="%{#t.eventActualFinishDateStr}" cssClass="form-control taskEdit" cssStyle="width:130px;" id="finishTime_%{#index.index}" disabled="true" autocomplete="off"></s:textfield>
 						</s:else> 
 					<!-- </td>
 					<td> -->
@@ -594,6 +596,11 @@ var officeCode = "${presales.officeCode}";
 							 	<s:property value="#f.fileName"/>
 							</a>
 						</s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
                         <s:else>
                             <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
                         </s:else>
@@ -604,6 +611,9 @@ var officeCode = "${presales.officeCode}";
                         </s:if>
                         <s:elseif test="#f.path == 0">
                             <s:property value="#f.fileType" default="历史附件"/>
+                        </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
                         </s:elseif>
                         <s:else>
                             <select>

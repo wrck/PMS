@@ -9,10 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.dp.plat.context.SpringContext;
 import com.dp.plat.data.bean.MailSenderInfo;
 import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.test.SimpleMailSender;

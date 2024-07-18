@@ -121,6 +121,9 @@
 		
 		<!-- HTML Parser -->
 		<jsoup.version>1.14.3</jsoup.version>
+		
+		<!-- 轻量级表达式引擎 -->
+		<aviator.version>5.3.3</aviator.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
@@ -571,6 +574,13 @@
 			  <groupId>org.jsoup</groupId>
 			  <artifactId>jsoup</artifactId>
 			  <version>${jsoup.version}</version>
+			</dependency>
+			
+			<!-- 轻量级规则引擎Aviator -->
+			<dependency>
+			    <groupId>com.googlecode.aviator</groupId>
+			    <artifactId>aviator</artifactId>
+			    <version>${aviator.version}</version>
 			</dependency>
 		
 			<dependency>

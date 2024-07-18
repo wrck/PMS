@@ -2071,7 +2071,21 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </isNotEmpty>
         AND (
             <isNotEmpty property="assignee" prepend="">
-                RES.ASSIGNEE_ = #assignee#
+                (RES.ASSIGNEE_ = #assignee#
+                    OR (RES.ASSIGNEE_ IS NULL
+                        AND EXISTS (
+                            SELECT 1
+                            FROM ACT_RU_IDENTITYLINK I
+                                LEFT JOIN `act_id_group` g
+                                ON g.`ID_` = i.`GROUP_ID_`
+                                    AND i.`TYPE_` = 'candidate'
+                                LEFT JOIN `act_id_membership` im ON im.`GROUP_ID_` = g.`ID_`
+                            WHERE I.TASK_ID_ = RES.ID_
+                                AND I.TYPE_ = 'candidate'
+                                AND (I.USER_ID_ = #assignee# OR im.`USER_ID_` = #assignee#)
+                        )
+                    )
+                )
             </isNotEmpty>
 <!--             <isNotEmpty property="roleGroup" prepend="OR">
                 RES.ASSIGNEE_ = #roleGroup# 
@@ -2089,12 +2103,22 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 <iterate property="roleGroups">
                     <isNotEmpty property="roleGroups[].roleGroup" prepend="OR" open="(" close=")">
                         RES.ASSIGNEE_ = #roleGroups[].roleGroup# 
+                        <isNotEmpty property="roleGroups[].checkAll" prepend="and">
+                        (
+                            FIND_IN_SET(h.`officeCode`, #areaPower#) OR 
+                            FIND_IN_SET(h.`profitDepCode`, #areaPower#) OR
+                            FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+                        )
+                        </isNotEmpty>
                         <isNotEmpty property="roleGroups[].checkOffice" prepend="and">
                             FIND_IN_SET(h.`officeCode`, #areaPower#)
                         </isNotEmpty>
                         <isNotEmpty property="roleGroups[].checkProfitDep" prepend="and">
                             FIND_IN_SET(h.`profitDepCode`, #areaPower#)
                         </isNotEmpty>
+                        <isNotEmpty property="roleGroups[].checkParentOffice" prepend="and">
+		                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+		                </isNotEmpty>
                     </isNotEmpty>
                 </iterate>
             </isNotEmpty>
@@ -2240,28 +2264,62 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 </isEmpty>
             </isEmpty>
             <isNotEmpty property="assignee" prepend="">
-                RES.ASSIGNEE_ = #assignee#
+                (RES.ASSIGNEE_ = #assignee#
+			        OR (RES.ASSIGNEE_ IS NULL
+			            AND EXISTS (
+			                SELECT 1
+			                FROM ACT_RU_IDENTITYLINK I
+			                    LEFT JOIN `act_id_group` g
+			                    ON g.`ID_` = i.`GROUP_ID_`
+			                        AND i.`TYPE_` = 'candidate'
+			                    LEFT JOIN `act_id_membership` im ON im.`GROUP_ID_` = g.`ID_`
+			                WHERE I.TASK_ID_ = RES.ID_
+			                    AND I.TYPE_ = 'candidate'
+			                    AND (I.USER_ID_ = #assignee# OR im.`USER_ID_` = #assignee#)
+			            )
+		            )
+		        )
             </isNotEmpty>
             <isNotEmpty property="roleGroup" prepend="OR" open="(" close=")">
                 <!-- RES.ASSIGNEE_ = #roleGroup#  -->
                 FIND_IN_SET(RES.ASSIGNEE_, #roleGroup# )
+                <isNotEmpty property="checkAll" prepend="and">
+                (
+                    FIND_IN_SET(h.`officeCode`, #areaPower#) OR 
+                    FIND_IN_SET(h.`profitDepCode`, #areaPower#) OR
+                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+                )
+                </isNotEmpty>
                 <isNotEmpty property="checkOffice" prepend="and">
                     FIND_IN_SET(h.`officeCode`, #areaPower#)
                 </isNotEmpty>
                 <isNotEmpty property="checkProfitDep" prepend="and">
                     FIND_IN_SET(h.`profitDepCode`, #areaPower#)
                 </isNotEmpty>
+                <isNotEmpty property="checkParentOffice" prepend="and">
+                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+                </isNotEmpty>
             </isNotEmpty>
             <isNotEmpty property="roleGroups">
                 <iterate property="roleGroups">
                     <isNotEmpty property="roleGroups[].roleGroup" prepend="OR" open="(" close=")">
                         RES.ASSIGNEE_ = #roleGroups[].roleGroup# 
+                        <isNotEmpty property="roleGroups[].checkAll" prepend="and">
+                        (
+                            FIND_IN_SET(h.`officeCode`, #areaPower#) OR 
+                            FIND_IN_SET(h.`profitDepCode`, #areaPower#) OR
+                            FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+                        )
+                        </isNotEmpty>
                         <isNotEmpty property="roleGroups[].checkOffice" prepend="and">
                             FIND_IN_SET(h.`officeCode`, #areaPower#)
                         </isNotEmpty>
                         <isNotEmpty property="roleGroups[].checkProfitDep" prepend="and">
                             FIND_IN_SET(h.`profitDepCode`, #areaPower#)
                         </isNotEmpty>
+                        <isNotEmpty property="roleGroups[].checkParentOffice" prepend="and">
+		                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #areaPower#)
+		                </isNotEmpty>
                     </isNotEmpty>
                 </iterate>
             </isNotEmpty>
@@ -2340,7 +2398,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <select id="querySubcontractExportData" parameterClass="com.dp.plat.subcontract.vo.SubcontractProjectVO" resultClass="com.dp.plat.subcontract.vo.SubcontractProjectVO">
     select 
         h.`contractNos`, h.`subcontractNo`, h.`subcontractName`, bd.`basicDataName` AS typeName, h.`facilitatorName`, h.`subcontractAmount`, 
-        office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, 
+        office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, h.reason,
         h.`createTime`, CONCAT(h.createBy, "-", ui.`realName`) AS createName, h.customInfo
         <isEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> zrTask.zrApproverTime </isEqual>
         <isNotEqual prepend="," property="searchTimeType" compareValue="zrApproverTime"> h.zrApproveTime as zrApproverTime</isNotEqual>,

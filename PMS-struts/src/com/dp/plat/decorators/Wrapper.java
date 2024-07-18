@@ -18,6 +18,7 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.properties.MediaTypeEnum;
+import org.springframework.util.ReflectionUtils;
 
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
@@ -431,7 +432,10 @@ public class Wrapper extends TableDecorator {
 	public String getStateWrapper() {
 		Object obj = getCurrentRowObject();
 		try {
-			Method method = obj.getClass().getDeclaredMethod("getState");
+			Method method = ReflectionUtils.findMethod(obj.getClass(), "getState");
+			if (method == null) {
+			    return "";
+			}
 			Object state = method.invoke(obj);
 			if (state == null) {
 				return "";
@@ -455,7 +459,7 @@ public class Wrapper extends TableDecorator {
 					return "失效";
 				}
 			}
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}
 		return "";

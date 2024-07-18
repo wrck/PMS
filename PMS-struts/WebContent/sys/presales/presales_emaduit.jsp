@@ -299,10 +299,11 @@ function updateDeliverById(fileId, target) {
 <script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
 </script>
 </head>
 <body>
-	<fieldset>
+	<%-- <fieldset>
 		<legend><b>基本信息</b></legend>
 		<table class="table table-bordered table-hover table-striped ">
 			<tr>
@@ -361,7 +362,7 @@ var officeCode = "${presales.officeCode}";
 			<tr>
 				<td><s:text name="pm.presales.projectType"></s:text>:</td>
                 <td>
-                    <%-- <s:property value="presales.projectTypeName"/> --%>
+                    <s:property value="presales.projectTypeName"/>
                     <s:select list="projectTypeList" name="presales.projectType" id="projectType" listKey="basicDataId" listValue="basicDataName"
                       headerValue="--请选择--" headerKey="" cssClass="form-control" cssStyle="width:200px;"></s:select>
                 </td>
@@ -374,10 +375,10 @@ var officeCode = "${presales.officeCode}";
                     </s:if>
                     <s:else>至今</s:else>（<s:property value="presales.totalDuration"/>）
                 </td>
-                <%-- <td><s:text name="pm.presales.applyTime"/>:</td>
+                <td><s:text name="pm.presales.applyTime"/>:</td>
                 <td><s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/></td>
                 <td><s:text name="pm.presales.endTime"/>:</td>
-                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td> --%>
+                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td>
             </tr>
         </table>
         <table class="table table-no-border" style="margin-top: -20px;margin-bottom: 0;">
@@ -388,7 +389,8 @@ var officeCode = "${presales.officeCode}";
                 <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
             </tr>
         </table>
-	</fieldset>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
 	<s:if test="taskList.size() != 0">
 		<fieldset>
 			<legend><b>工程计划</b></legend>
@@ -532,6 +534,11 @@ var officeCode = "${presales.officeCode}";
                                 <s:property value="#f.fileName"/>
                             </a>
                         </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
                         <s:else>
                             <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
                         </s:else>
@@ -542,6 +549,9 @@ var officeCode = "${presales.officeCode}";
                         </s:if>
                         <s:elseif test="#f.path == 0">
                             <s:property value="#f.fileType" default="历史附件"/>
+                        </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
                         </s:elseif>
                         <s:else>
                             <s:hidden value="%{#f.fileType}"></s:hidden>

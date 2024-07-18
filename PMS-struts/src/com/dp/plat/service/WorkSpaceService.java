@@ -94,6 +94,14 @@ public interface WorkSpaceService extends BaseService {
 	 * @return
 	 */
 	List<DpActProcDesc> queryCallbackHisList();
+	
+    /**
+     * 查询个人已办任务（已办理的回访任务、闭环流程已办理任务）
+     * @param displayParam 
+     * @param taskQueryParam 
+     * @return
+     */
+    List<DpActProcDesc> querySelfHistoryTaskList(TaskQueryParam taskQueryParam, DisplayParam displayParam);
 
 
 	/**
@@ -126,7 +134,4 @@ public interface WorkSpaceService extends BaseService {
      * @param hashMap
      */
     List<DpActProcDesc> queryProjectSupervisionTask(HashMap hashMap);
-
-
-
 }

@@ -869,6 +869,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public List<OrderDataFromSap> queryOrderDataListByProjectId(int projectId) {
 		return projectDao.queryOrderDataListByProjectId(projectId);
 	}
+	
+	@Override
+    public List<OrderDataFromSap> queryOrderDataDetailListByProjectId(int projectId) {
+        return projectDao.queryOrderDataDetailListByProjectId(projectId);
+    }
 
 	@Override
 	public List<ProjectWeekly> queryProjectWeeklyList(int projectId, int weeklyState) {
@@ -2338,9 +2343,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                     pdeliver.setDeliverableType(pd.getDeliverableType());
                     pdeliver.setDeliverableName(targetFileName);
                     pdeliver.setDeliverablePath(path + separator + newName);
+                    
+                    attachFiles.append(pdeliver.getDeliverablePath()).append(",").append(targetFileName).append("&&");
+                    
                     pdlist.add(pdeliver);
                     pdeliver = null;
-                    attachFiles.append(target.getAbsolutePath()).append(",").append(targetFileName).append("&&");
                 }
                 flag = this.insertProjectDeliverFiles(pd, pdlist, username);
             }
@@ -2398,10 +2405,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 					pdeliver.setDeliverableType(pd.getDeliverableType());
 					pdeliver.setDeliverableName(targetFileName);
 					pdeliver.setDeliverablePath(path + separator + newName);
+
+					attachFiles.append(pdeliver.getDeliverablePath()).append(",").append(targetFileName).append("&&");
+					
 					pdlist.add(pdeliver);
 					pdeliver = null;
-
-					attachFiles.append(target.getAbsolutePath()).append(",").append(targetFileName).append("&&");
 				}
 				flag = this.insertProjectDeliverFiles(pd, pdlist, username);
 			}
@@ -3769,6 +3777,39 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     @Override
     public List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> params) {
         return projectDao.selectContractAcceptanceDeliveryInfo(params);
+    }
+    
+    @Override
+    public List<Map<String, Object>> selectProblemTicket(Map<String, Object> params) {
+        return projectDao.selectProblemTicket(params);
+    }
+    
+    @Override
+    public List<Map<String, Object>> selectProblemTicketByProject(Project project) {
+        if (project == null) {
+            return Collections.emptyList();
+        }
+        Project temp = this.queryProjectSimplifyByProjectId(project.getProjectId());
+        if (temp == null) {
+            return Collections.emptyList();
+        }
+        String contractNo = Util.appendChar(temp.getContractNo(), "'");
+        Integer projectId = temp.getProjectId();
+        String profitCenter = null;
+        // 如果是总代借货项目
+        if (temp != null && "14".equals(temp.getSalesType())) {
+            profitCenter = temp.getColumn001();
+        }
+        Map<String, Object> params = new HashMap<String, Object>();
+        if (StringUtils.isBlank(contractNo)) {
+            contractNo = "EMPTY";
+        }
+        params.put("contractNo", contractNo);
+        params.put("sourceContractNo", contractNo.replaceAll("(-L)|(-C)", ""));
+        params.put("projectId", projectId);
+        params.put("profitCenter", profitCenter);
+        params.put("excludeTransferOut", true);
+        return projectDao.selectProblemTicketByProjectBarcode(params);
     }
     
 }

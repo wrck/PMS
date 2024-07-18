@@ -9,6 +9,7 @@ public class TaskQueryParam {
 	private String officeCode;
 	private String programManager;
 	private String serviceManager;
+	private String projectCustomer;
 	
 	
 	public String getProjectName() {
@@ -36,4 +37,10 @@ public class TaskQueryParam {
 	public void setServiceManager(String serviceManager) {
 		this.serviceManager = serviceManager;
 	}
+    public String getProjectCustomer() {
+        return projectCustomer;
+    }
+    public void setProjectCustomer(String projectCustomer) {
+        this.projectCustomer = projectCustomer;
+    }
 }

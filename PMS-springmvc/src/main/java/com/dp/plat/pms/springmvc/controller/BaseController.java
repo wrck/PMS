@@ -13,11 +13,13 @@ import org.springframework.ui.Model;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.util.MessageUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.pms.springmvc.entity.DataFieldRelation;
 import com.dp.plat.pms.springmvc.service.IDataFieldRelationService;
 import com.dp.plat.pms.springmvc.vo.DataFieldRelationVO;
+import com.dp.plat.util.MessageUtil;
 
 public class BaseController {
 	public final static String DATATYPE_FORM = "form";
@@ -88,6 +90,7 @@ public class BaseController {
 			DataTableColumn dataTableColumn = dataFieldRelation;
 			String alias = dataFieldRelation.getAlias();
 			dataTableColumn.setTitle(dataFieldRelation.getTitle());
+//			MessageUtils.getLocaleMessage(dataFieldRelation.getTitleKey(), dataFieldRelation.getTitle());
 			dataTableColumn.setName(alias);
 			if (media == null || (isExcel && "excel".equalsIgnoreCase(media))) {
 				columns.add((DataFieldRelation) dataTableColumn);

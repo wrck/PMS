@@ -1,13 +1,13 @@
 package com.dp.plat.prob.dao;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.BaseDao;
@@ -21,12 +21,14 @@ import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
 import com.dp.plat.prob.bean.ProbStatistic;
+import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
 import com.dp.plat.prob.util.SoftVersionUtil;
 import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
+import com.dp.plat.prob.vo.ProductComponentPageParam;
+import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.util.MessageUtil;
-import com.dp.plat.util.StringEscUtil;
 
 public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 
@@ -321,7 +323,7 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	}
 
 	@Override
-	public void batchAddSoftVersion(List<Object> softVersions) {
+	public void batchAddSoftVersion(List<SoftVersion> softVersions) {
 		Map<String, Object> paramMap = new HashMap<String, Object>();
 		paramMap.put("list", softVersions);
 		paramMap.put("createdBy", getCurrUsername());
@@ -424,5 +426,99 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 		List<ProbReadLog> probReadLogs = getSqlMapClientTemplate().queryForList("query_prob_read_log", paramMap);
 		return probReadLogs;
 	}
+	
+	@Override
+    public ProductComponent selectProductComponentById(Integer componentId) {
+        return (ProductComponent) getSqlMapClientTemplate().queryForObject("selectProductComponentById", componentId);
+    }
+
+    @Override
+    public ProductComponentVO selectProductComponentVOById(Integer componentId) {
+        return (ProductComponentVO) getSqlMapClientTemplate().queryForObject("selectProductComponentVOById", componentId);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ProductComponent> selectProductComponentList(ProductComponent ProductComponent) {
+        return getSqlMapClientTemplate().queryForList("selectProductComponentList", ProductComponent);
+    }
+
+    @Override
+    public List<ProductComponentVO> selectProductComponentListPageable(ProductComponentPageParam pageParam) {
+        DisplayParam displayParam = pageParam.getDisplayParam();
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+            pageParam.setDisplayParam(displayParam);
+        }
+        if (!displayParam.getExport()) {
+            Integer total = (Integer) getSqlMapClientTemplate().queryForObject("countProductComponentListPageable", pageParam);
+            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+            displayParam.setTotalcount(total);
+        } else {
+            pageParam.setDisplayParam(null);
+        }
+        
+        List list = getSqlMapClientTemplate().queryForList("selectProductComponentListPageable", pageParam);
+        if (displayParam.getExport()) {
+            displayParam.setPagesize(list.size()); 
+        }
+        return list;
+    }
+
+    @Override
+    public Integer countProductComponentListPageable(ProductComponentPageParam displayParam) {
+        return (Integer) getSqlMapClientTemplate().queryForObject("countProductComponentListPageable", displayParam);
+    }
+    
+    @Override
+    public Integer insertProductComponent(ProductComponent component) {
+        if (component == null) {
+            return 0;
+        }
+        component.setCreateBy(getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("insertProductComponent", component);
+    }
+    
+    @Override
+    public Integer insertProductComponentSelective(ProductComponent component) {
+        if (component == null) {
+            return 0;
+        }
+        component.setCreateBy(getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("insertProductComponentSelective", component);
+    }
+    
+    @Override
+    public Integer insertOrUpdateProductComponentSelective(ProductComponent component) {
+        if (component == null) {
+            return 0;
+        }
+        component.setCreateBy(getCurrUsername());
+        component.setUpdateBy(getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("insertOrUpdateProductComponentSelective", component);
+    }
+    
+    @Override
+    public void updateProductComponentById(ProductComponent component) {
+        if (component == null) {
+            return;
+        }
+        component.setUpdateBy(getCurrUsername());
+        getSqlMapClientTemplate().update("updateProductComponentById", component);
+    }
+
+    @Override
+    public void updateProductComponentByIdSelective(ProductComponent component) {
+        if (component == null) {
+            return;
+        }
+        component.setUpdateBy(getCurrUsername());
+        getSqlMapClientTemplate().update("updateProductComponentByIdSelective", component);
+    }
+
+    @Override
+    public void deleteProductComponentById(Integer id) {
+        getSqlMapClientTemplate().delete("updateProductComponentByIdSelective", id);
+    }
 	
 }

@@ -54,42 +54,44 @@ public class LoginServiceImpl extends BaseServiceImpl implements LoginService {
 				
 				Role role=new Role();
 				Map<Integer, Map<String, Integer>>roleMenuPowerMap=new HashMap<Integer, Map<String,Integer>>();
-				for(String roleId : user.getRoleids().split(",") ){
-					role.setId(Integer.parseInt(roleId.substring(1, roleId.length()-1)));
-					List<RoleMenuPower> roleMenuPowerList=loginDao.queryRoleMenuPowerList(role);
-					for(RoleMenuPower roleMenuPower:roleMenuPowerList){
-						Map<String, Integer>menuPowerMap=new HashMap<String, Integer>();
-						String[] menuPowerArr=roleMenuPower.getMenuPower().split(",");
-						for(String str:menuPowerArr){//8：增加 	1：删除 	4：查找 	2：更新
-							if(str.equals("8")){
-								menuPowerMap.put("insert", 1);
-							}
-							if(str.equals("1")){
-								menuPowerMap.put("delete", 1);
-							}
-							if(str.equals("4")){
-								menuPowerMap.put("select", 1);
-							}
-							if(str.equals("2")){
-								menuPowerMap.put("update", 1);
-							}
-						}
-						
-						if(!menuPowerMap.containsKey("insert")){
-							menuPowerMap.put("insert", 0);
-						}
-						if(!menuPowerMap.containsKey("delete")){
-							menuPowerMap.put("delete", 0);
-						}
-						if(!menuPowerMap.containsKey("select")){
-							menuPowerMap.put("select", 0);
-						}
-						if(!menuPowerMap.containsKey("update")){
-							menuPowerMap.put("update", 0);
-						}
-						roleMenuPowerMap.put(roleMenuPower.getMenuId(), menuPowerMap);
-						
-					}
+				if (StringUtils.isNotBlank(user.getRoleids())) {
+    				for(String roleId : user.getRoleids().split(",") ){
+    					role.setId(Integer.parseInt(roleId.substring(1, roleId.length()-1)));
+    					List<RoleMenuPower> roleMenuPowerList=loginDao.queryRoleMenuPowerList(role);
+    					for(RoleMenuPower roleMenuPower:roleMenuPowerList){
+    						Map<String, Integer>menuPowerMap=new HashMap<String, Integer>();
+    						String[] menuPowerArr=roleMenuPower.getMenuPower().split(",");
+    						for(String str:menuPowerArr){//8：增加 	1：删除 	4：查找 	2：更新
+    							if(str.equals("8")){
+    								menuPowerMap.put("insert", 1);
+    							}
+    							if(str.equals("1")){
+    								menuPowerMap.put("delete", 1);
+    							}
+    							if(str.equals("4")){
+    								menuPowerMap.put("select", 1);
+    							}
+    							if(str.equals("2")){
+    								menuPowerMap.put("update", 1);
+    							}
+    						}
+    						
+    						if(!menuPowerMap.containsKey("insert")){
+    							menuPowerMap.put("insert", 0);
+    						}
+    						if(!menuPowerMap.containsKey("delete")){
+    							menuPowerMap.put("delete", 0);
+    						}
+    						if(!menuPowerMap.containsKey("select")){
+    							menuPowerMap.put("select", 0);
+    						}
+    						if(!menuPowerMap.containsKey("update")){
+    							menuPowerMap.put("update", 0);
+    						}
+    						roleMenuPowerMap.put(roleMenuPower.getMenuId(), menuPowerMap);
+    						
+    					}
+    				}
 				}
 				
 				String defaultPage = loginDao.queryUserDefaultPage(user.getId());

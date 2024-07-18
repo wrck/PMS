@@ -46,5 +46,10 @@ public class RoleConstant extends com.dp.plat.core.param.RoleConstant {
      * 财务AP
      */
     public static final String ROLE_FINANCIAL_AP = "financialAP";
+    
+    /**
+     * 项目外派结算人员
+     */
+    public final static String ROLE_PM_DISPATCH_SETTLE_STAFF = "dispatchSettleStaff";
 
 }

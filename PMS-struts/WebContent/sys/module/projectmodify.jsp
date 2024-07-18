@@ -1853,7 +1853,34 @@ td a:VISITED {
         }
         return false;
     }
-    /* ###########################维护记录######################################## */
+    /* ###########################督查记录######################################## */
+    /* ###########################工单记录######################################## */
+    var flagPT = true;
+    function queryProjectProblemTicket(){
+        var projectId = $("#projectId").val();
+        var redirect = encodeURIComponent("module/ProjectModify.action?project.paramId="+$("#paramId").val() + "&result=315");
+        if(flagSU){
+            flagSU = false;
+            $.ajax({
+                url:"module/sub/projectSub_problemTicket.action",
+                type:"post",
+                dataType:"html",
+                data:{"projectId":projectId, "project.projectId":projectId, "project.officeCode": '${project.column001}', redirect: redirect},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".problemTicketListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".problemTicketListDiv").html("获取项目工单记录数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                    flagSU = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################督查记录######################################## */
 	//定义show、hide事件，显示设备清单、序列号明细、实际发货清单、局点信息的Tab页时触发
 	(function ($) {
 		  $.each(['show', 'hide'], function (i, ev) {
@@ -1902,6 +1929,11 @@ td a:VISITED {
 	$(document).on('show',".supervisionListDiv",function() {
         if($(".supervisionListDiv table").length == 0){
             queryProjectSupervision();
+        }
+    });
+	$(document).on('show',".problemTicketListDiv",function() {
+        if($(".problemTicketListDiv table").length == 0){
+            queryProjectProblemTicket();
         }
     });
 	
@@ -2236,7 +2268,7 @@ td a:VISITED {
 					<th ><s:text name="pm.member.createBy"></s:text></th>
 					<th><s:text name="pm.member.createTime"></s:text></th>
 					<%-- <s:if test="%{project.projectState != '100'}"> --%>
-                    <s:if test="%{(user.isHasRole(13) || user.isHasRole(1) || user.isHasRole(11) || user.isHasRole(12))}"> 
+                    <s:if test="%{(user.isHasRole(13) || user.isHasRole(1) || user.isHasRole(11) || user.isHasRole(12) || user.isHasRole(5))}"> 
 						<th>
 							<a href="javascript:void(0)" title="点击添加项目干系人" class="btn btn-default btn-sm" onclick="memberPlus()"><span class="glyphicon glyphicon-plus"></span></a>	
 						</th>
@@ -2567,7 +2599,7 @@ td a:VISITED {
 			<display:column property="id" titleKey="pm.deliverdetail.id"></display:column>
 			<display:column property="deliverableType" titleKey="pm.deliverdetail.basicDataName"></display:column>
 			<display:column property="deliverableName" titleKey="pm.deliverdetail.deliverableName"></display:column>
-			<s:if test="%{project.projectState != '100'}"><!-- 控制闭环状态不能再做操作 -->
+			<s:if test="%{project.projectState != '100' || user.isHasRole(10) || user.isHasRole(13) || user.isHasRole(5)}"><!-- 控制闭环状态不能再做操作 -->
 				<display:column property="operate" titleKey="pm.deliverdetail.operate"></display:column>
 			</s:if>
 		</display:table>
@@ -2854,6 +2886,12 @@ td a:VISITED {
     </div>
     <!-- 督查记录 -->
     <div class="navDiv hideDiv supervisionListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- 工单记录 -->
+    <div class="navDiv hideDiv problemTicketListDiv" >
         <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
             <img src='./images/loading-circle.gif'/>
         </div>

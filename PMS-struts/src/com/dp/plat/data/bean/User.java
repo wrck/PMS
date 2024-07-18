@@ -54,7 +54,7 @@ public class User extends CustomInfoEntity {
         try {
             if (roleIdsStr != null) {
                 String[] roleIdArr = roleIdsStr.trim().split(",");
-                Integer[] roleIds = new Integer[roleIdArr.length];
+                Object[] roleIds = new Object[roleIdArr.length];
                 int i = 0;
                 for (String roleId : roleIdArr) {
                     try {

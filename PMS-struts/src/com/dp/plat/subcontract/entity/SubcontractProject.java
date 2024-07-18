@@ -335,6 +335,17 @@ public class SubcontractProject extends BaseEntity {
 		return profitDepCode;
 	}
 	
+	public String getParentOfficeCode() {
+        return (String) this.getCustomInfoByKey("parentOfficeCode", UserUtil.findParentDepNo(this.getOfficeCode()));
+	}
+	
+	public void setParentOfficeCode(String parentOfficeCode) {
+        if (parentOfficeCode == null || parentOfficeCode.trim().length() == 0) {
+            parentOfficeCode = UserUtil.findParentDepNo(this.getOfficeCode());
+        }
+	    this.setCustomInfoByKey("parentOfficeCode", parentOfficeCode);
+    }
+	
 	/**
 	 * 设置收益部门
 	 *

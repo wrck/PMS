@@ -86,6 +86,7 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
 import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.QuestionnarieUtil;
+import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.dp.plat.util.parser.ExcelParser;
@@ -260,6 +261,8 @@ public class ProjectAction extends BaseAction implements Preparable{
     private List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList;
 
     private List<BasicDataBean> maintenanceTypeList;
+    
+    private List<?> commonList;
 
 	public void prepareExecute(){
 		//办事处集合
@@ -850,9 +853,17 @@ public class ProjectAction extends BaseAction implements Preparable{
 	 */
 	public String checkOrderData() {
 		try {
-			orderDataList = projectService.queryOrderDataListByProjectId(project.getProjectId());// 查询产品列表
+		    // 查询产品列表汇总
+			orderDataList = projectService.queryOrderDataListByProjectId(project.getProjectId());
 			List<OrderDataFromSap> rmaOrderDataList = projectService.queryRmaOrderDataByContractNo(project.getContractNo());
 			orderDataList.addAll(rmaOrderDataList);
+			
+			if (cbForm == null) {
+			    cbForm = new HashMap<String, Object>();
+			}
+			// 查询产品列表明细
+			List<OrderDataFromSap> orderDataDetailList = projectService.queryOrderDataDetailListByProjectId(project.getProjectId());
+            cbForm.put("orderDataDetailList", orderDataDetailList);
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -994,6 +1005,39 @@ public class ProjectAction extends BaseAction implements Preparable{
 		}
 		return SUCCESS;
 	}
+	
+	/**
+     * 获取项目的工单记录
+     * @return
+     */
+    public String problemTicket(){
+        try {
+            String itrBaseUrl = basicDataService.querySysArg("itr.problemTicket.base.url");
+            cbForm = new HashMap<String, Object>();
+            cbForm.put("itrBaseUrl", itrBaseUrl);
+//            // 按项目条码进行查询
+//            if (project != null) {
+//                commonList = projectService.selectProblemTicketByProject(project);
+//            } else {
+//                commonList = Collections.emptyList();
+//            }
+            project = projectService.queryProjectById(projectId);
+            if (project != null) {
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("projectId", project.getProjectId());
+                params.put("projectCode", StringUtils.split(project.getProjectCode(), "-")[0]);
+//                params.put("contractNoList", Arrays.asList(StringUtils.split(project.getContractNo(), ",")));
+                commonList = projectService.selectProblemTicket(params);
+            } else {
+                commonList = Collections.emptyList();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
 	
 	/**
 	 * 获取项目维护记录
@@ -1510,7 +1554,6 @@ public class ProjectAction extends BaseAction implements Preparable{
 	}
 	//附件上传
 	public String toUploadFile(){
-		
 		return SUCCESS;
 	}
 	//附件上传
@@ -1613,20 +1656,12 @@ public class ProjectAction extends BaseAction implements Preparable{
 	@org.apache.struts2.json.annotations.JSON(serialize = false)
 	public InputStream getFileStream() throws FileNotFoundException,
 			UnsupportedEncodingException {
-	    String uploadPrefix = StringUtils.split(UploadFileUtil.UPLOAD_PATH, "\\/")[0];
-	    String dowloadPrefix = StringUtils.split(downpath, "\\/")[0];
-	    if (downpath != null && !uploadPrefix.startsWith(dowloadPrefix)) {
-	        downpath = uploadPrefix + File.separator + downpath;
+	    // 先在上传目录中查找
+	    InputStream in = findFileStream(downpath, true);
+	    // 再按给定的目录查找
+	    if (null == in) {
+	        in = findFileStream(downpath, false);
 	    }
-		InputStream in = ServletActionContext.getServletContext().getResourceAsStream(downpath);
-		// 不存在时，对中文进行转换，再找一次，如果不一致，按原路径查询
-		if (null == in) {
-			// 对中文进行转换，防止乱码
-			String path = new String(downpath.getBytes(Charset.forName("ISO8859-1")), "UTF-8");
-			if (!downpath.equals(path)) {
-				in = ServletActionContext.getServletContext().getResourceAsStream(path);
-			}
-		}
 		if (null == in) {
 			java.lang.System.out
 					.println("Can not find a java.io.InputStream with the name [inputStream] in the invocation stack. Check the <param name=\"inputName\"> tag specified for this action.检查action中文件下载路径是否正确.");
@@ -1634,7 +1669,26 @@ public class ProjectAction extends BaseAction implements Preparable{
 		return in;
 	}
 	
-
+	private InputStream findFileStream(String downpath, boolean checkUpload) throws FileNotFoundException,
+    UnsupportedEncodingException {
+	    if (checkUpload) {
+    	    String uploadPrefix = StringUtils.split(UploadFileUtil.UPLOAD_PATH, "\\/")[0];
+            String dowloadPrefix = StringUtils.split(downpath, "\\/")[0];
+            if (downpath != null && !uploadPrefix.startsWith(dowloadPrefix)) {
+                downpath = uploadPrefix + File.separator + downpath;
+            }
+	    }
+        InputStream in = ServletActionContext.getServletContext().getResourceAsStream(downpath);
+        // 不存在时，对中文进行转换，再找一次，如果不一致，按原路径查询
+        if (null == in) {
+            // 对中文进行转换，防止乱码
+            String path = new String(downpath.getBytes(Charset.forName("ISO8859-1")), "UTF-8");
+            if (!downpath.equals(path)) {
+                in = ServletActionContext.getServletContext().getResourceAsStream(path);
+            }
+        }
+        return in;
+	}
 	
 	/**
 	 * 删除交付件
@@ -3176,6 +3230,14 @@ public class ProjectAction extends BaseAction implements Preparable{
 
     public void setMaintenanceTypeList(List<BasicDataBean> maintenanceTypeList) {
         this.maintenanceTypeList = maintenanceTypeList;
+    }
+
+    public List<?> getCommonList() {
+        return commonList;
+    }
+
+    public void setCommonMapList(List<?> commonList) {
+        this.commonList = commonList;
     }
     
 }

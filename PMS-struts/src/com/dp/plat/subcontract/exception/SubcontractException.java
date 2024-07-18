@@ -3,12 +3,14 @@
  */
 package com.dp.plat.subcontract.exception;
 
+import com.dp.plat.exception.CustomRuntimeException;
+
 /**
  * 项目转包自定义异常
  * @author w02611
  *
  */
-public class SubcontractException extends RuntimeException {
+public class SubcontractException extends CustomRuntimeException {
 
 	/**
 	 * 

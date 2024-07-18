@@ -1,5 +1,7 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
+import static com.dp.plat.pms.springmvc.constant.ProjectConstant.Common.PROJECT_DISPATCHED_KEY;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -219,10 +221,15 @@ public class ProjectTaskService extends AbstractBaseService<ProjectTaskMapper, P
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_FINANCIAL_AP)) {
+                if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN,
+                        RoleConstant.ROLE_FINANCIAL_AP/* , RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF */)) {
 					task.setOfficeCodes(officeCodes);
-					
 				}
+
+                // 项目外派结算人员，只能查看已外派的项目
+                if (UserContext.hasAnyRoles(RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+				    task.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.TRUE.toString());
+                }
 				// 添加指派的项目成员
 				task.setMemberCode(user.getUserName());
 			}

@@ -13,8 +13,11 @@ import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
 import com.dp.plat.prob.bean.ProbStatistic;
+import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.vo.ProductComponentPageParam;
+import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BaseService;
 
 public interface ProbManageService extends BaseService{
@@ -169,7 +172,7 @@ public interface ProbManageService extends BaseService{
 	 * 批量导入软件版本信息
 	 * @param softVersions
 	 */
-	void batchAddSoftVersion(List<Object> softVersions);
+	void batchAddSoftVersion(List<SoftVersion> softVersions);
 
 	/**
 	 * 查询已维护的项目软件版本统计表
@@ -210,4 +213,68 @@ public interface ProbManageService extends BaseService{
 	 * @return
 	 */
 	List<ProbReadLog> queryProbReadLogList(ProbReadLog probReadLog, DisplayParam displayParam);
+
+	/**
+     * @param id
+     * @return
+     */
+    ProductComponent selectProductComponentById(Integer id);
+    
+    /**
+     * @param id
+     * @return
+     */
+    ProductComponentVO selectProductComponentVOById(Integer id);
+    
+    /**
+     * @param component
+     * @return
+     */
+    List<ProductComponent> selectProductComponentList(ProductComponent component);
+    
+    /**
+     * @param pageParam
+     * @return
+     */
+    List<ProductComponentVO> selectProductComponentListPageable(ProductComponentPageParam pageParam);
+    /**
+     * 
+     * @param pageParam
+     * @return
+     */
+    Integer countProductComponentListPageable(ProductComponentPageParam pageParam);
+    
+    /**
+     * @param component
+     */
+    Integer insertProductComponent(ProductComponent component);
+    /**
+     * 
+     * @param component
+     * @return
+     */
+    Integer insertProductComponentSelective(ProductComponent component);
+    /**
+     * 
+     * @param component
+     * @return
+     */
+    Integer insertOrUpdateProductComponentSelective(ProductComponent component);
+    
+    /**
+     * @param id
+     * @return
+     */
+    void deleteProductComponentById(Integer id);
+
+    /**
+     * @param component
+     */
+    void updateProductComponentById(ProductComponent component);
+    /**
+     * @param component
+     */
+    void updateProductComponentByIdSelective(ProductComponent component);
+    
+    
 }

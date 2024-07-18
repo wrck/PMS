@@ -1,8 +1,8 @@
 package com.dp.plat.data.activity;
 
-import com.dp.plat.data.bean.BaseBean;
+import com.dp.plat.data.bean.BaseCustomInfoBean;
 
-public class ActivityBaseBean extends BaseBean{
+public class ActivityBaseBean extends BaseCustomInfoBean {
 	private String taskAssignee;
 	private String taskAssigneeName;
 	private String taskId;

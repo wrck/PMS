@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+    <select id="selectPresalesInfoFormOA" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT *, NULL AS customInfo FROM V_DP_TEMP_AUTH_INFO t
+		<dynamic prepend="WHERE">
+		    <isNotEmpty prepend="AND" property="processOrderNum"> processOrderNum = #processOrderNum# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="lendInfoId"> lendInfoId = #lendInfoId# </isNotEmpty>
+		</dynamic>
+    </select>
+    
+    <insert id="insertPresalesInfoFormOA" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_presales_lend_info_from_oa (projectCode, processStartTime, lendInfoId, processOrderNum
+                , applyUserCode, applyUserName
+			    , marketName, systemName, expendName, industryName
+			    , applyDeptCode, applyDeptName, applyDate, projectName, applyType
+			    , applyTypeName, salesUserCode, salesUserName, salesUserMobile, productLine, productLineName
+			    , applyCause, followUpPlan, testStartTime, testEndTime, authPlanDate
+			    , authDate, resellSuccessfully, useDays, resaleCertificateFile, provideAuthFile
+			    , infoFile, customInfo)
+		    values
+        ]]>
+        <iterate conjunction="," property="list">
+            (#list[].projectCode#, #list[].processStartTime#, #list[].lendInfoId#, #list[].processOrderNum#, #list[].applyUserCode#, #list[].applyUserName#
+            , #list[].marketName#, #list[].systemName#, #list[].expendName#, #list[].industryName#
+            , #list[].applyDeptCode#, #list[].applyDeptName#, #list[].applyDate#, #list[].projectName#, #list[].applyType#
+            , #list[].applyTypeName#, #list[].salesUserCode#, #list[].salesUserName#, #list[].salesUserMobile#, #list[].productLine#, #list[].productLineName#
+            , #list[].applyCause#, #list[].followUpPlan#, #list[].testStartTime#, #list[].testEndTime#, #list[].authPlanDate#
+            , #list[].authDate#, #list[].resellSuccessfully#, #list[].useDays#, #list[].resaleCertificateFile#, #list[].provideAuthFile#
+            , #list[].infoFile#, #list[].customInfo#
+            )
+        </iterate>
+    </insert>
+    <delete id="deletePresalesInfoFormOA" >
+        truncate table pm_presales_lend_info_from_oa
+    </delete>
+    
+    <select id="selectPresalesDetailFormOA" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT *, NULL AS customInfo FROM V_DP_TEMP_AUTH_DETAIL t
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="lendInfoId"> infoId = #lendInfoId# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNo"> contractNum = #contractNo# </isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <insert id="insertPresalesDetailFormOA" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_presales_lend_detail_from_oa (id,infoId,contractNum,deviceSerialnum,modelNum, applyCount, isSoftware, customInfo)
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (#list[].id#, #list[].infoId#, #list[].contractNum#, #list[].deviceSerialnum#, #list[].modelNum#, #list[].applyCount#, #list[].isSoftware#
+            , #list[].customInfo#
+            )
+        </iterate>
+    </insert>
+    <delete id="deletePresalesDetailFormOA" >
+        truncate table pm_presales_lend_detail_from_oa
+    </delete>
+    
+    <sql id="sqlOAPresalesCutsomInfo">
+        IFNULL(plio.customInfo, '{}'), JSON_OBJECT('processStartTime', DATE_FORMAT(plio.processStartTime, '%Y-%m-%d %H:%i:%s')
+            , 'projectCode', plio.projectCode
+            , 'projectName', plio.projectName
+            , 'processOrderNum', plio.processOrderNum
+            , 'applyUserCode', plio.applyUserCode
+            , 'applyUserName', plio.applyUserName
+            , 'applyDate', DATE_FORMAT(plio.applyDate, '%Y-%m-%d')
+            , 'applyDeptCode', plio.applyDeptCode
+            , 'applyDeptName', plio.applyDeptName
+            , 'applyType', plio.applyType
+            , 'applyTypeName', plio.applyTypeName
+            , 'salesUserCode', plio.salesUserCode
+            , 'salesUserName', plio.salesUserName
+            , 'productLineName', plio.productLineName
+            , 'marketName', plio.marketName
+            , 'systemName', plio.systemName
+            , 'expendName', plio.expendName
+            , 'industryName', plio.industryName
+            , 'applyCause', plio.applyCause
+            , 'followUpPlan', plio.followUpPlan
+            , 'testStartTime', DATE_FORMAT(plio.testStartTime, '%Y-%m-%d')
+            , 'testEndTime', DATE_FORMAT(plio.testEndTime, '%Y-%m-%d')
+            , 'authPlanDate', DATE_FORMAT(plio.authPlanDate, '%Y-%m-%d')
+            , 'authDate', DATE_FORMAT(plio.authDate, '%Y-%m-%d')
+            , 'resellSuccessfully', plio.resellSuccessfully
+            , 'useDays', plio.useDays
+            , 'resaleCertificateFile', plio.resaleCertificateFile
+            , 'provideAuthFile', plio.provideAuthFile
+            , 'source', 'OA'
+        )
+    </sql>
+    <sql id="sqlPresalesHeaderLeftJoinProjectInfo">
+            LEFT JOIN (
+                SELECT pps.projectCode, pps.projectName, pps.dutyName AS salesManName
+                    , IFNULL(p.salesmanTel, pps.dutyContactWay) AS salesManLink, pps.officeCode
+                    , pps.marketName, pps.systemName, pps.expendName, pps.industryName, pps.pspm AS productManager
+                FROM pm_presales_lend_info_from_sms pps
+                    INNER JOIN (
+                        SELECT projectCode, max(lendInfoId) AS lendInfoId
+                        FROM pm_presales_lend_info_from_sms
+                        GROUP BY projectCode
+                    ) mps
+                    ON pps.projectCode = mps.projectCode
+                        AND pps.lendInfoId = mps.lendInfoId
+                    LEFT JOIN pm_person_from_oa p ON p.salesmanCode = RIGHT(LEFT(pps.dutyName, 6), 5)
+                GROUP BY projectCode
+                ORDER BY NULL
+            ) pls
+            ON pls.projectCode = plio.projectCode
+            LEFT JOIN (
+                SELECT pps.projectCode, pps.projectName
+                    , CONCAT_WS('-', pps.salesManCode, pps.salesManName) AS salesManName
+                    , p.salesmanTel AS salesManLink, pps.officeCode, pps.marketName, pps.systemName, pps.expendName
+                    , pps.industryName
+                FROM pm_project_property_from_sms pps
+                    INNER JOIN (
+                        SELECT projectCode, max(orderExecNumber) AS orderExecNumber
+                        FROM pm_project_property_from_sms
+                        GROUP BY projectCode
+                    ) mps
+                    ON pps.projectCode = mps.projectCode
+                        AND pps.orderExecNumber = mps.orderExecNumber
+                    LEFT JOIN pm_person_from_oa p ON p.salesmanCode = RIGHT(pps.salesManCode, 5)
+                GROUP BY projectCode
+                ORDER BY NULL
+            ) pps
+            ON pps.projectCode = plio.projectCode
+    </sql>
+    
+    <insert id="insertPresalesHeaderFormOA" parameterClass="java.util.Map">
+        <!-- 更新已插入单据的附件 -->
+        UPDATE pm_presales_lend_info_from_oa plio
+            INNER JOIN pm_presales_project_header psh ON plio.lendInfoId = psh.lendInfoId
+            <include refid="sqlPresalesHeaderLeftJoinProjectInfo"/>
+        SET psh.projectCode = COALESCE(plio.projectCode, pls.projectCode, pps.projectCode, plio.processOrderNum, psh.projectCode)
+            , psh.projectName = COALESCE(pls.projectName, pps.projectName, plio.projectName, psh.projectName)
+            , psh.marketName = COALESCE(pls.marketName, pps.marketName, plio.marketName, psh.marketName)
+            , psh.systemName = COALESCE(pls.systemName, pps.systemName, plio.systemName, psh.systemName)
+            , psh.expendName = COALESCE(pls.expendName, pps.expendName, plio.expendName, psh.expendName)
+            , psh.industryName = COALESCE(pls.industryName, pps.industryName, plio.industryName, psh.industryName)
+            , psh.salesman = COALESCE(pls.salesManName, pps.salesManName, CONCAT_WS('-', plio.salesUserCode, plio.salesUserName), psh.salesman)
+            , psh.salesmanLink = COALESCE(pls.salesManLink, pps.salesManLink, plio.salesUserMobile, psh.salesmanLink)
+            , psh.productManager = COALESCE(pls.productManager, psh.productManager)
+            , psh.lendfiles = CONCAT_WS(",", plio.infoFile, plio.provideAuthFile, plio.resaleCertificateFile)
+            , psh.customInfo = JSON_MERGE_PATCH(IFNULL(psh.customInfo, '{}'), <include refid="sqlOAPresalesCutsomInfo"/>)
+            , psh.hasTransfer = IF(plio.resellSuccessfully = '是', 1, IFNULL(psh.hasTransfer, 0))
+        WHERE psh.customInfo ->> '$$.authDate' IS NULL;
+    
+        INSERT INTO pm_presales_project_header (projectCode, projectName
+            , marketName, systemName, expendName, industryName, officeCode
+            , salesman, salesmanLink, productManager
+		    , lendInfoId, lendfiles, effectiveFrom, applyBy, applyTime
+		    , projectType, customInfo, source)
+	    SELECT COALESCE(plio.projectCode, pls.projectCode, pps.projectCode, plio.processOrderNum) AS projectCode
+		    , COALESCE(pls.projectName, pps.projectName, plio.projectName) AS projectName
+		    , COALESCE(pls.marketName, pps.marketName, plio.marketName) AS marketName
+		    , COALESCE(pls.systemName, pps.systemName, plio.systemName) AS systemName
+		    , COALESCE(pls.expendName, pps.expendName, plio.expendName) AS expendName
+		    , COALESCE(pls.industryName, pps.industryName, plio.industryName) AS industryName
+		    , COALESCE(pls.officeCode, pps.officeCode, plio.applyDeptCode) AS officeCode
+		    , COALESCE(pls.salesManName, pps.salesManName, CONCAT_WS('-', plio.salesUserCode, plio.salesUserName)) AS salesman
+		    , COALESCE(pls.salesManLink, pps.salesManLink, plio.salesUserMobile) AS salesmanLink
+		    , pls.productManager AS productManager, plio.lendInfoId
+		    , CONCAT_WS(",", plio.infoFile, plio.provideAuthFile, plio.resaleCertificateFile) AS lendfiles
+		    , plio.processStartTime AS effectiveFrom
+		    , plio.applyUserCode AS applyBy, plio.applyDate AS applyTime
+		    , 'oaTempAuthInfo' AS projectType
+		    , JSON_MERGE_PATCH(<include refid="sqlOAPresalesCutsomInfo"/>) AS customInfo
+		    , 'OA' AS source
+		FROM pm_presales_lend_info_from_oa plio
+		    LEFT JOIN pm_presales_project_header psh ON plio.lendInfoId = psh.lendInfoId
+		    <include refid="sqlPresalesHeaderLeftJoinProjectInfo"/>
+		WHERE psh.lendInfoId IS NULL
+		;
+    </insert>
+</sqlMap>

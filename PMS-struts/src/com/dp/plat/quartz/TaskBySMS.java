@@ -6,6 +6,7 @@ import org.quartz.JobExecutionException;
 
 import com.dp.plat.job.GainMarketRelationsBySMS;
 import com.dp.plat.job.GainPresalesInfoBySMS;
+import com.dp.plat.job.GainPresalesInfoFromOA;
 import com.dp.plat.job.GainPrjPropertyBySMS;
 import com.dp.plat.job.GainPrjRealProjectLineBySMS;
 import com.dp.plat.job.PlanGetBySMS;
@@ -27,6 +28,14 @@ public class TaskBySMS implements Job {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		try {
+            /**
+             * 获取OA测试类借货信息
+             */
+            new GainPresalesInfoFromOA().work();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 		try {
 			/**
 			 * 同步项目相关信息和销售信息

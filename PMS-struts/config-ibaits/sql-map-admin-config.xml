@@ -281,7 +281,7 @@
 	<update id="update-user-object" parameterClass="com.dp.plat.data.bean.User">
 		<![CDATA[
 		update fnd_user_info set username=#username#,email=#email#,realName=#realName#,
-		status=#status#,roleIds = #roleids#,isemail=1,effectiveTo=#effectiveTo#,updateTime=now(),defaultPage=#defaultPage#,dpNo = #dpNo#
+		status=#status#,roleIds = #roleids#,isemail=1,effectiveTo=#effectiveTo#, updateBy=#updateBy#,updateTime=now(),defaultPage=#defaultPage#,dpNo = #dpNo#
 		]]>
 		<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
 		where id=#id#

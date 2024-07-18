@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
@@ -17,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.PmClosedLoopDao;
 import com.dp.plat.dao.PresalesDao;
@@ -37,6 +40,7 @@ import com.dp.plat.data.vo.PresalesExportVO;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.FileParam;
 import com.dp.plat.param.ProjectTypeParam;
+import com.dp.plat.plus.unifytask.sender.UnifyTask2SeeyonSender;
 import com.dp.plat.util.ActivityMessage;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
@@ -89,22 +93,47 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
 
     @Override
     public Presales queryPresalesById(int presalesId) {
+        UserContext context = UserContext.getUserContext();
+        String areaPowers = StringUtils.trimToEmpty(context.getUser().getAreapower()); 
         Presales presales = presalesDao.queryPresalesById(presalesId);
-        if (!(UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) 
-                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ADMIN)
-                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PRESALES_STAFF)
-                || UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PROJECT_VIEWER) 
-                || getLoginName().equals(presales.getApplyBy()) 
+        if (!(context.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) 
+                || context.isHasRole(MessageUtil.ROLE_ADMIN)
+                || context.isHasRole(MessageUtil.ROLE_PRESALES_STAFF)
+                || context.isHasRole(MessageUtil.ROLE_FINANCIAL_STAFF)
+                || context.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN) 
+                || (context.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)
+                        && areaPowers.matches(".*\\b" + presales.getOfficeCode() + "\\b.*"))
+                || getLoginName().equals(presales.getApplyBy())
                 || getLoginName().equals(presales.getProjectManager())
-                || getLoginName().equals(presales.getServiceManager()))) {
+                || getLoginName().equals(presales.getServiceManager())
+            )
+        ) {
             return null;
         }
         List<FileParam> fileParams = new ArrayList<FileParam>();
         // 有从SMS系统同步过来的借货交付件
         if (presales.getLendfiles() != null && presales.getLendfiles().length() > 0) {
+            Pattern pattern = Pattern.compile("fileName=(.*?)(&|$)");
+            String oaFileUrl = basicDataService.querySysArg("pm.presales.oa.file.url");
+            UnifyTask2SeeyonSender seeyonSender = new UnifyTask2SeeyonSender();
+            String oaToken = seeyonSender.getToken(true);
             String[] files = presales.getLendfiles().split(",");
             for (String file : files) {
-                FileParam param = new FileParam(file.substring(file.lastIndexOf("/") + 1), file, presales.getSalesman(), 1);
+                String fileNmae = "";
+                String fileType = "SMS附件";
+                int path = 1;
+                if ("OA".equalsIgnoreCase(presales.getSource())) {
+                    Matcher matcher = pattern.matcher(file);
+                    fileNmae = matcher.find() ? matcher.group(1) : "";
+                    fileType = "OA附件";
+                    path = 3;
+                    file = oaFileUrl + file + oaToken;
+                } else {
+                    fileNmae = file.substring(file.lastIndexOf("/") + 1);
+                    path = 1;
+                }
+                FileParam param = new FileParam(fileNmae, file, presales.getSalesman(), path);
+                param.setFileType(fileType);
                 fileParams.add(param);
             }
         }
@@ -139,6 +168,9 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
 
     @Override
     public void startPresalesFlow(Presales presales, PresalesComment param) {
+        // 项目经理结束后的下级办理人
+        String pmTaskNextRole = StringUtils.defaultIfBlank(basicDataService.querySysArg("pm.presales.workflow.pmTaskNextRole"), "em");
+        presales.setCustomInfoByKey("pmTaskNextRole", pmTaskNextRole);
         // 保存售前项目分类
         if (StringUtils.isNotBlank(presales.getProjectType()) || param.getResult() == ActivityMessage.COMMENT_REJECT) {
             if (param.getResult() == ActivityMessage.COMMENT_REJECT) {
@@ -169,11 +201,13 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
                 presalesDao.insertPresaleTasks(presales.getPresalesId(), ProjectTypeParam.TYPE_OF_PRESALES, MessageUtil.BASIC_DATA_PROJECT_TYPE);
             }
         }
+        
 
         // 1.获取流程变量
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("presalesId", presales.getPresalesId());
         vars.put("applyBy", getLoginName());
+        vars.put("pmTaskNextRole", pmTaskNextRole);
         // 2.拼接businessKey
         String key = presales.getClass().getSimpleName();
 
@@ -277,7 +311,9 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         if (!ishasplan) {
             presalesDao.insertPresaleTasks(presales.getPresalesId(), ProjectTypeParam.TYPE_OF_PRESALES, MessageUtil.BASIC_DATA_PROJECT_TYPE);
         }
-        if (!"usertask2".equals(presales.getTaskDefKey())) {
+        String taskDefKey = presales.getTaskDefKey();
+        boolean isServiceApprove = "serviceApprove".equals(taskDefKey);
+        if (!"usertask2".equals(taskDefKey) && !isServiceApprove) {
             Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), presales.getOldProjectManager());
             if (task != null) {
                 workFlowService.assigneeTask(task.getId(), presales.getProjectManager(), "pm");
@@ -290,7 +326,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         // 更新项目状态
         Map<String, Object> paramMap = new HashMap<String, Object>();
         paramMap.put("presalesId", presales.getPresalesId());
-        if (param.getResult() == ActivityMessage.COMMENT_AGREE) {
+        if (param.getResult() == ActivityMessage.COMMENT_AGREE || isServiceApprove) {
             paramMap.put("projectState", MessageUtil.PROJECT_STATE_32);
         } else {
             paramMap.put("projectState", MessageUtil.PROJECT_STATE_30);
@@ -322,9 +358,9 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         // 4.增加通知下一步审批人邮件
         // User user = userManageDao.queryUserByUserName(presales.getProjectManager());
         User user = null;
-        if (param.getResult() == ActivityMessage.COMMENT_AGREE) {
+        if ((!isServiceApprove && param.getResult() == ActivityMessage.COMMENT_AGREE) || (isServiceApprove && param.getResult() == ActivityMessage.COMMENT_REJECT)) {
             user = userManageDao.queryUserByUserName(presales.getProjectManager());
-        } else {
+        } else if (!isServiceApprove) {
             user = new User();
             user.setRealName("工程管理部");
             String mails = basicDataService.querySysArg("gongcheng.mail");
@@ -356,11 +392,17 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         if (presales.getConfirmFileIds() != null && !"".equals(presales.getConfirmFileIds())) {
             presalesDao.updatePresaleHeader(presales);
         }
+        
+        Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), getLoginName());
+        Map<String, Object> processVarMap = workFlowService.queryProcessVarMap(task.getId());
+        // 项目经理结束后的下级办理人
+        String pmTaskNextRole = String.valueOf(processVarMap.getOrDefault("pmTaskNextRole", "em"));
+        boolean nextIsSmRole = "sm".equalsIgnoreCase(pmTaskNextRole);
 
         Map<String, Object> paramMap = new HashMap<String, Object>();
         paramMap.put("presalesId", presales.getPresalesId());
         if (param.getResult() == ActivityMessage.COMMENT_AGREE) {
-            paramMap.put("projectState", MessageUtil.PROJECT_STATE_33);
+            paramMap.put("projectState", nextIsSmRole ? "34" : MessageUtil.PROJECT_STATE_33);
         } else {
             paramMap.put("projectState", MessageUtil.PROJECT_STATE_31);
         }
@@ -371,17 +413,18 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         vars.put("em", "emRole");
 //        vars.put("emRole", MessageUtil.ROLE_ENGINEEMANAGER + "");
         vars.put("emRole", MessageUtil.ROLE_PRESALES_STAFF + "");
+        vars.put("sm", presales.getServiceManager());// 服务经理
         vars.put("result", param.getResult());
+        vars.put("nextRole", pmTaskNextRole);
         // 2.流程走向下一步,因这里涉及到某个角色审批的问题，特殊写好，后续待改进
-        Task task = workFlowService.getTaskIdByProcessInstanceId(param.getInstId(), getLoginName());
-
         workFlowService.doSelfTask(task, param.getInstId(), param.getMessage(), vars);
         // 3.增加自定义的审批意见
         workFlowService.addSelfActComment(presales.getPresalesId(), presales.getClass().getSimpleName(), task.getTaskDefinitionKey(), task.getId(), param.getInstId(), param.getResult(), param.getMessage());
 
+        
         // 4.增加通知下一步审批人邮件
         User nextUser = null;
-        if (param.getResult() == ActivityMessage.COMMENT_AGREE) {
+        if (param.getResult() == ActivityMessage.COMMENT_AGREE && !nextIsSmRole) {
             nextUser = new User();
             nextUser.setRealName("工程管理部");
             String mails = basicDataService.querySysArg("gongcheng.mail");
@@ -399,7 +442,7 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
         mailMap.put("templateCode", "27");
         mailMap.put("username", nextUser.getRealName());
         mailMap.put("projectName", presales.getProjectName());
-        mailMap.put("taskName", param.getResult() == ActivityMessage.COMMENT_AGREE ? "工程管理部回访销售" : "服务经理指定项目经理");
+        mailMap.put("taskName", param.getResult() == ActivityMessage.COMMENT_AGREE ? (nextIsSmRole ? "服务经理审核" : "工程管理部回访销售") : "服务经理指定项目经理");
         NotificationTemplateUtil.keepMail(mailMap);
         
         // 更新各阶段耗时
@@ -646,6 +689,11 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
     public List<Map<String, Object>> queryPresaleLend2RmaInfo(String projectCode) {
         return presalesDao.queryPresaleLend2RmaInfo(projectCode);
     }
+    
+    @Override
+    public List<Map<String, Object>> selectPresalesTempAuthInfo(Map<String, Object> params) {
+        return presalesDao.selectPresalesTempAuthInfo(params);
+    }
 
     @Override
     @Transactional
@@ -718,10 +766,11 @@ public class PresalesServiceImpl extends BaseServiceImpl implements PresalesServ
                     pdeliver.setDeliverableName(targetFileName);
                     pdeliver.setDeliverablePath(path + separator + newName);
                     pdeliver.setDeliverableType(pd.getDeliverableType());
+
+                    attachFiles.append(pdeliver.getDeliverablePath()).append(",").append(targetFileName).append("&&");
+                    
                     pdlist.add(pdeliver);
                     pdeliver = null;
-
-                    attachFiles.append(target.getAbsolutePath()).append(",").append(targetFileName).append("&&");
                 }
                 flag = this.insertProjectDeliverFiles(pd, pdlist, username);
             }

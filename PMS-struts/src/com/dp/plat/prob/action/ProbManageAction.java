@@ -15,10 +15,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.struts2.ServletActionContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.util.HtmlUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -37,6 +37,7 @@ import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
 import com.dp.plat.prob.bean.ProbStatistic;
+import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
 import com.dp.plat.prob.service.ProbManageService;
@@ -44,9 +45,12 @@ import com.dp.plat.prob.util.DisplayParamUtil;
 import com.dp.plat.prob.util.ExportUtils;
 import com.dp.plat.prob.util.SoftVersionUtil;
 import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
+import com.dp.plat.prob.vo.ProductComponentPageParam;
+import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
 import com.dp.plat.util.DateUtil;
+import com.dp.plat.util.ExceptionUtils;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
@@ -118,6 +122,20 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	private List<Project> probProjectList;
 	private ProbReadLog probReadLog;
 	private List<ProbReadLog> readLogList;
+	
+	/**
+	 * 产品组件
+	 */
+	private ProductComponentVO productComponent;
+	
+	/**
+	 * 通用列表
+	 */
+	private List<? extends Object> commonList;
+	/**
+	 * 通用参数
+	 */
+	private Map<String, ? extends Object> commonMap;
 
 	@Override
 	public void prepare() throws Exception {
@@ -158,7 +176,6 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			displayParam.getParam();
 			probList = probManageService.queryProbList(prob, displayParam);
 		} catch (Exception e) {
-			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
 			return ERROR;
 		}
@@ -662,7 +679,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 		try {
 			if (upload != null) {
 				if (user.isHasRole(MessageUtil.ROLE_PROB_SUPPORTER)) {
-					List<Object> softVersions = (List<Object>) ExportUtils.readFromExcel(upload, uploadFileName,
+					List<SoftVersion> softVersions = (List<SoftVersion>) ExportUtils.readFromExcel(upload, uploadFileName,
 							SoftVersion.class);
 					probManageService.batchAddSoftVersion(softVersions);
 					result = "success";
@@ -911,6 +928,98 @@ public class ProbManageAction extends BaseAction implements Preparable {
 		}
 		return SUCCESS;
 	}
+	
+	/**
+	 * 查询产品组件列表
+	 * @return
+	 */
+	public String listComponent() {
+	    if (productComponent == null) {
+	        productComponent = new ProductComponentVO();
+	    }
+	    if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+	    try {
+            displayParam.getParam();
+            
+    	    if ("json".equalsIgnoreCase(result)) {
+    	        displayParam.setExport(true);
+    	    }
+            
+            ProductComponentPageParam pageParam = new ProductComponentPageParam();
+            BeanUtils.copyProperties(productComponent, pageParam);
+            pageParam.setDisplayParam(displayParam);
+            commonList = probManageService.selectProductComponentListPageable(pageParam);
+            
+            if ("json".equalsIgnoreCase(result)) {
+                result = JSON.toJSONString(commonList);
+                return SUCCESS;
+            }
+	    } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getMessage(e));
+        }
+        return "list";
+	}
+	
+	/**
+     * 新建
+     */
+    public String inputComponent() throws Exception {
+        if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_COMPONENT_ADMIN)) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+        if (productComponent != null) {
+            productComponent = probManageService.selectProductComponentVOById(productComponent.getId());
+        }
+        return INPUT;
+    }
+    
+    /**
+     * 保存
+     */
+    public String saveComponent() throws Exception {
+        if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_COMPONENT_ADMIN)) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+        if (productComponent.getId() == null || productComponent.getId() == 0) {
+            probManageService.insertProductComponentSelective(productComponent);
+        } else {
+            probManageService.updateProductComponentByIdSelective(productComponent);
+        }
+        return SUCCESS;
+    }
+    
+    /**
+     * 上传xlx批量导入产品组件
+     * 
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public String importComponent() {
+        try {
+            if (upload != null) {
+                if (user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_COMPONENT_ADMIN)) {
+                    List<ProductComponent> productComponents = ExportUtils.readFromExcel(upload, uploadFileName, ProductComponent.class, "component.info.");
+                    for (ProductComponent component : productComponents) {
+                        probManageService.insertOrUpdateProductComponentSelective(component);
+                    }
+                    result = "success";
+                } else {
+                    result = "authError";
+                }
+            }
+            productComponent = new ProductComponentVO();
+        } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return "import";
+    }
+	
+	
 	public void setProbManageService(ProbManageService probManageService) {
 		this.probManageService = probManageService;
 	}
@@ -1201,5 +1310,29 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	public void setReadLogList(List<ProbReadLog> readLogList) {
 		this.readLogList = readLogList;
 	}
+	
+    public ProductComponentVO getProductComponent() {
+        return productComponent;
+    }
+
+    public void setProductComponent(ProductComponentVO productComponent) {
+        this.productComponent = productComponent;
+    }
+
+    public List<? extends Object> getCommonList() {
+        return commonList;
+    }
+
+    public void setCommonList(List<? extends Object> commonList) {
+        this.commonList = commonList;
+    }
+
+    public Map<String, ? extends Object> getCommonMap() {
+        return commonMap;
+    }
+
+    public void setCommonMap(Map<String, ? extends Object> commonMap) {
+        this.commonMap = commonMap;
+    }
 	
 }

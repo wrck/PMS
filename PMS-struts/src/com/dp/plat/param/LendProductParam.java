@@ -5,7 +5,7 @@ package com.dp.plat.param;
  *
  */
 public class LendProductParam {
-	private int lendInfoId;
+	private String lendInfoId;
 	private String productFirstName;
 	private String productName;
 	private String productSubCode;
@@ -19,10 +19,10 @@ public class LendProductParam {
 	
 	private String memo;
 	
-	public int getLendInfoId() {
+	public String getLendInfoId() {
 		return lendInfoId;
 	}
-	public void setLendInfoId(int lendInfoId) {
+	public void setLendInfoId(String lendInfoId) {
 		this.lendInfoId = lendInfoId;
 	}
 	public String getProductFirstName() {

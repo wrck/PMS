@@ -1229,9 +1229,6 @@
 				<if test="model.projectId != null and '' != model.projectId">
 					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
 				</if>
-				<if test="model.projectId != null and '' != model.projectId">
-					FIND_IN_SET(#{model.projectId}, h.projectIds) AND
-				</if>
 				<if test="model.officeCodes != null">
 					FIND_IN_SET(h.officeCode, #{model.officeCodes}) AND
 				</if>
@@ -1399,6 +1396,9 @@
                 <foreach collection="customInfo" item="value" index="key">
                     h.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
                 </foreach>
+            </if>
+            <if test="projectId != null and '' != projectId">
+                FIND_IN_SET(#{projectId}, h.projectIds) AND
             </if>
 			<if test="officeCodes != null">
 				FIND_IN_SET(h.officeCode, #{officeCodes}) AND

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-    <wb-module deploy-name="pms-struts">
-        <wb-resource deploy-path="/WEB-INF/web.xml" source-path="/config/profiles/dev/web.xml"/>
+    <wb-module deploy-name="YFPMS">
+        <wb-resource deploy-path="/WEB-INF/web.xml" source-path="/config/profiles/yfpms/web.xml"/>
         <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
@@ -8,10 +8,15 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/config-ibaits"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/config-spring"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/target/generated-sources/annotations"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/target/generated-test-sources/test-annotations"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <dependent-module archiveName="pms-ext-d365-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-ext-d365/pms-ext-d365">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="pms-security-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-security/pms-security">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="java-output-path" value="/PMS/build/classes"/>
-        <property name="context-root" value="pms-struts"/>
+        <property name="context-root" value="YFPMS"/>
     </wb-module>
 </project-modules>

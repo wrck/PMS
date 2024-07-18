@@ -1,5 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
+import static com.dp.plat.pms.springmvc.constant.ProjectConstant.Common.PROJECT_DISPATCHED_KEY;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -154,10 +156,18 @@ public class ProjectController
 
 				// 非子项目管理员，添加允许访问的办事处权限
 				String officeCodes = StringUtils.defaultString(user.getUserInfo().getCustom5(), "-1");
-				if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN, RoleConstant.ROLE_FINANCIAL_AP)) {
+                if (!UserContext.hasAnyRoles(RoleConstant.ROLE_PM_SUB_ADMIN,
+                        RoleConstant.ROLE_FINANCIAL_AP/* , RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF */)) {
 					temp.setOfficeCodes(officeCodes);
 					project.setOfficeCodes(officeCodes);
 				}
+                
+                // 项目外派结算人员，只能查看已外派的项目
+                if (UserContext.hasAnyRoles(RoleConstant.ROLE_PM_DISPATCH_SETTLE_STAFF)) {
+				    temp.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.TRUE.toString());
+                    project.setCustomInfoByKey(PROJECT_DISPATCHED_KEY, Boolean.TRUE.toString());
+				}
+
 				// 添加指派的项目成员
 				temp.setMemberCode(user.getUserName());
 				project.setMemberCode(user.getUserName());

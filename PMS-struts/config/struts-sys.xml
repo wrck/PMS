@@ -235,6 +235,27 @@
 			<result name="importSoftVersion">/sys/prob/prob_importSoftVersion.jsp</result>
 			<result name="statistics">/sys/prob/prob_project_statistics.jsp</result>
 		</action>
+		<!-- 产品组件管理 -->
+        <action name="component_*" class="ProbManageAction" method="{1}Component">
+            <result name="{1}">/sys/component/component_{1}.jsp</result>
+            <result name="success" type="redirect">
+                <param name="location">component_list.action</param>
+                <param name="namespace">/module</param>
+            </result>
+            <result name="error">/sys/error.jsp</result>
+            <result name="continue" type="redirect">
+                <param name="location">component_input.action</param>
+                <param name="namespace">/module</param>
+                <param name="productComponent.id">${productComponent.id}</param>
+            </result>
+            <result name="export" type="stream">
+                <param name="contentType">application/octet-stream;charset=ISO8859-1</param>
+                <param name="contentDisposition">attachment;filename="${downloadFileName}"</param>
+                <param name="inputName">inputStream</param>
+                <param name="bufferSize">4096</param>
+            </result>
+            <result name="import">/sys/component/component_import.jsp</result>
+        </action>
 		<!-- 报表统计 -->
 		<action name="report_*" class="ReportAction" method="{1}">
 			<result name="{1}">/sys/report/report_{1}.jsp</result>
@@ -243,9 +264,9 @@
 		<!-- 售前测试项目 -->	
 		<action name="presales_*" class="PresalesAction" method="{1}">
 			<!-- 配置 alwaysInvokePrepare 使当前满足条件的请求不执行prepare方法-->
-			<interceptor-ref name="paramsPrepareParamsStack">
+			<!-- <interceptor-ref name="paramsPrepareParamsStack">
 				<param name="prepare.alwaysInvokePrepare">false</param>
-			</interceptor-ref>
+			</interceptor-ref> -->
 			<result name="{1}">/sys/presales/presales_{1}.jsp</result>
 			<result name="{2}">/sys/presales/presales_{2}.jsp</result>
 			<!-- <result name="success">/sys/sub/addsuccess.jsp</result> -->

@@ -210,6 +210,7 @@ public class Project extends ProjectQueryParam{
 	 * 项目维护用来判断是否是项目的团队成员，进行权限控制
 	 */
 	private String teamMemberCodes;
+    private String teamMemberNames;
 	
 	/**
 	 * 自定义信息
@@ -1126,8 +1127,16 @@ public class Project extends ProjectQueryParam{
     public void setTeamMemberCodes(String teamMemberCodes) {
         this.teamMemberCodes = teamMemberCodes;
     }
+    
+	public String getTeamMemberNames() {
+        return teamMemberNames;
+    }
 
-	public String getWarrantyStatus() {
+    public void setTeamMemberNames(String teamMemberNames) {
+        this.teamMemberNames = teamMemberNames;
+    }
+
+    public String getWarrantyStatus() {
 		return warrantyStatus;
 	}
 

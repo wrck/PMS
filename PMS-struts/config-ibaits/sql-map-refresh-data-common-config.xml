@@ -405,13 +405,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         ]]>
     </update>
     
-    <resultMap class="int" id="lendIdMap">
+    <resultMap class="String" id="lendIdMap">
         <result property="lendInfoId" column="lendInfoId"/>
     </resultMap>
     <select id="query_lend_info_ids" resultMap="lendIdMap">
         <![CDATA[
-            SELECT lendInfoId FROM pm_presales_project_header WHERE effectiveTo IS NULL  AND lendInfoId IS NOT NULL;
+            SELECT lendInfoId FROM pm_presales_project_header WHERE effectiveTo IS NULL  AND lendInfoId IS NOT NULL
         ]]>
+        <isParameterPresent prepend="AND"> source = #source# </isParameterPresent>
     </select>
     <insert id="insert_pm_presales_header" parameterClass="java.util.Map">
         <![CDATA[

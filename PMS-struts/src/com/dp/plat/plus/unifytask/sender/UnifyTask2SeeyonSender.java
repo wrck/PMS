@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONValidator;
 import com.dp.plat.activiti.unifytask.entity.UnifyTask;
 import com.dp.plat.activiti.unifytask.sender.AbstractUnifyTaskSender;
 import com.dp.plat.activiti.unifytask.vo.UnifyDelegateTask;
@@ -89,7 +90,7 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 		Map<String, String> senderConfig = null;
 		if (StringUtils.isNotBlank(pushConfig)) {
 			Map<String, Object> config = JSON.parseObject(pushConfig, Map.class);
-			senderConfig = (Map<String, String>) config.get(this.getClass());
+			senderConfig = (Map<String, String>) config.get(this.getClass().getName());
 		}
 		init(senderConfig);
 	}
@@ -288,18 +289,29 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 		return JSON.parseObject(responseBody, UnifyTaskResult.class);
 	}
 
-	private String getToken() {
-		if (token == null) {
-			String url = String.format("%s/%s", targetUrl, tokenPath);
-			Map<String, Object> paramMap = new HashMap<String, Object>(3);
-			paramMap.put("userName", restUser);
-			paramMap.put("password", restPassword);
-			String responseBody = HttpUtil.post(url, JSON.toJSONString(paramMap), timeout);
-			Map result = JSON.parseObject(responseBody, Map.class);
-			token = (String) result.get("id");
-		}
-		return token; 
+	public String getToken() {
+		return getToken(false); 
 	}
+	
+	public String getToken(boolean bindUser) {
+        if (token == null) {
+            String url = String.format("%s/%s", targetUrl, tokenPath);
+            Map<String, Object> paramMap = new HashMap<String, Object>(3);
+            paramMap.put("userName", restUser);
+            paramMap.put("password", restPassword);
+            if (bindUser) {
+                paramMap.put("loginName", restUser);
+            }
+            String responseBody = HttpUtil.post(url, JSON.toJSONString(paramMap), timeout);
+            if (JSONValidator.from(responseBody).validate()) {
+                Map result = JSON.parseObject(responseBody, Map.class);
+                token = (String) result.get("id");
+            } else {
+                token = null;
+            }
+        }
+        return token; 
+    }
 
 	public static void main(String[] args) {
 		UnifyTask2SeeyonSender unifyTask2SeeyonSender = new UnifyTask2SeeyonSender();

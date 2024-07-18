@@ -156,6 +156,12 @@ public class SubcontractConstant {
 		 * 受益部门服务经理审批任务KEY
 		 */
 		public static final String PROFIT_SERVICE_APPROVE = "profitServiceTask";
+		
+        /**
+         * 通用审批节点
+         */
+        public static final String NORMAL_APPROVE_TASK = "normalApproveTask";
+
 		/**
 		 * 审批任务KEY
 		 */
@@ -195,6 +201,7 @@ public class SubcontractConstant {
 		 * 验收确认Key
 		 */
 		public static final String ACCEPTANCE_TASK = "acceptanceTask";
+		
 	}
 
 	/**
