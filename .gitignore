@@ -12,6 +12,10 @@ ${basePath}/
 */.settings/
 */.project
 */.classpath
+<<<<<<< HEAD
 */logs/
 */*.log
 */.*
+=======
+*/logs/
+>>>>>>> branch 'master' of http://github.com/wrck/PMS.git
