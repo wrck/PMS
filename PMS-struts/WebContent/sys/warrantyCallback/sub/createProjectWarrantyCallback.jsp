@@ -420,6 +420,20 @@ a span {
                         <tr>
                             <td class="tag"><s:text name="pm.remark"></s:text>:</td>
                             <td><s:textarea name="projectWarrantyCallback.remark" cssClass="form-control"/></td>
+                            <td class="tag">可续采软件:</td>
+                            <td>
+                                <div class="display-flex">
+                                    <span class="display-flex-1" style="display:inline-block;">
+                                        <s:if test="projectWarrantyCallback.warrantyState.hasLiscense == 1">
+                                            <%-- 有可续采软件
+                                            <span class="glyphicon glyphicon-question-sign" style="color:#bbb;" title="${projectWarrantyCallback.warrantyState.liscenseDesc}"></span> --%>
+                                            <!-- <br> -->
+                                            <pre style="border:none; background:transparent;"><s:property value="projectWarrantyCallback.warrantyState.liscenseDesc"/></pre>
+                                        </s:if>
+                                        <s:else>无可续采软件</s:else>
+                                    </span>
+                                </div>
+                            </td>
                         </tr>
                         <%-- <tr>
                             <td class="tag tag-must"><s:text name="pm.project.warrantyCallback.state"></s:text>:</td>

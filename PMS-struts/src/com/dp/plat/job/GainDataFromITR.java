@@ -29,10 +29,10 @@ public class GainDataFromITR extends AbstractSynchronizeTask implements Job {
      * 刷新同步ITR问题单数据
      */
     public boolean syncProblemTicketFormITR(Map<String, Object> params) {
-        String tag = "同步ERP订单数据";
+        String tag = "同步ITR问题单数据";
         try {
             log.info("{}-开始", tag);
-            // 刷新ERP同步合同基础数据
+            // 刷新ITR同步问题单数据
             syncData("ProblemTicketFormITR", "ITR", params);
             return true;
         } catch (Exception e) {

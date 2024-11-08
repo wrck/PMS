@@ -225,6 +225,12 @@
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
         </div>
         <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="hasLiscense"><s:text name="pm.project.warrantyCallback.hasLiscense" /></label>
+            <s:select list="#{1: '有', 0: '无'}" name="projectWarrantyCallback.hasLiscense" id="hasLiscense"
+                cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
             <label>维保结束日期</label>
             <s:textfield id="warrantyEndTimeStart" name="projectWarrantyCallback.warrantyEndTimeStart" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="开始时间" autocomplete="off"></s:textfield>
             <s:textfield id="warrantyEndTimeEnd" name="projectWarrantyCallback.warrantyEndTimeEnd" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="结束时间" autocomplete="off"></s:textfield>
@@ -289,12 +295,16 @@
             <display:column title="已续保项目" media="html" headerClass="nowrap">
             	<a href="javascript:void(0)" onclick="showProjectWarranty('${warrantyCallbackList.finalCustomerName}', {'projectWarrantyCallback.hasRenewal': 1})">${warrantyCallbackList.renewalCount}</a>
             </display:column>
+            <display:column title="可续采软件项目" media="html" headerClass="nowrap">
+                <a href="javascript:void(0)" onclick="showProjectWarranty('${warrantyCallbackList.finalCustomerName}', {'projectWarrantyCallback.hasLiscense': 1})">${warrantyCallbackList.liscenseCount}</a>
+            </display:column>
             
             <display:column property="projectCount" title="项目数量" media="excel"></display:column>
             <display:column property="callbackProjectCount" title="已回访项目数量" media="excel">></display:column>
             <display:column property="renewalIntentionCount" title="有续保意向项目" media="excel">></display:column>
             <display:column property="callbackProjectCount" title="已回访次数" media="excel">></display:column>
             <display:column property="renewalCount" title="已续保项目" media="excel">></display:column>
+            <display:column property="liscenseCount" title="可续采软件项目" media="excel">></display:column>
             <display:column property="latestCallbackTime" titleKey="pm.project.warrantyCallback.latestCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
             <display:column property="latestNextCallbackTime" titleKey="pm.project.warrantyCallback.latestNextCallbackTime" format="{0,date,yyyy-MM-dd}"></display:column>
             <display:setProperty name="export.excel.filename" value="${project.projectName}项目维保记录.xls" />

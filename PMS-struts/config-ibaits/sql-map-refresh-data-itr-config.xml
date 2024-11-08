@@ -54,6 +54,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     
     <typeAlias alias="UUIDToStringHandler" type="com.dp.plat.ibatis.handler.UUIDToStringTypeHandler"/>
     <insert id="insertProblemTicketFormITR" parameterClass="java.util.Map">
+        SET NAMES utf8mb4;
         <![CDATA[
             INSERT INTO `pm_project_incident_table_from_itr`(incidentId, ticketNo, status, statusName, caseTopic, memo
                 , principal, principalName, accepter, accepterName, processor, processorName

@@ -1028,6 +1028,12 @@ public class ProjectAction extends BaseAction implements Preparable{
                 params.put("projectCode", StringUtils.split(project.getProjectCode(), "-")[0]);
 //                params.put("contractNoList", Arrays.asList(StringUtils.split(project.getContractNo(), ",")));
                 commonList = projectService.selectProblemTicket(params);
+                // 增加按项目编号查询不到的情况下按合同号查询的处理逻辑
+                if (commonList == null || commonList.isEmpty()) {
+                    params.remove("projectCode");
+                    params.put("contractNoList", Arrays.asList(StringUtils.split(project.getContractNo(), ",")));
+                    commonList = projectService.selectProblemTicket(params);
+                }
             } else {
                 commonList = Collections.emptyList();
             }

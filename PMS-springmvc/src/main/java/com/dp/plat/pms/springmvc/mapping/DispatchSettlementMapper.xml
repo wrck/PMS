@@ -851,7 +851,33 @@
 		</if>
 	</if>
   </sql>
-  <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
+  <sql id="sql_model_dispatch_where">
+    h.disabled = false AND
+    <if test="model != null">
+        <if test="model.dispatched != null"> h.`dispatched` = #{model.dispatched} AND </if>
+        <if test="model.dispatch != null">
+            <if test="model.dispatch.dispatchNo != null and '' != model.dispatch.dispatchNo">
+                h.dispatchNo like concat("%", #{model.dispatch.dispatchNo, jdbcType=VARCHAR}, "%") AND
+            </if>
+            <if test="model.dispatch.dispatchSeq != null and '' != model.dispatch.dispatchSeq">
+                h.dispatchSeq like concat("%", #{model.dispatch.dispatchSeq, jdbcType=VARCHAR}, "%") AND
+            </if>
+            <if test="model.dispatch.dispatchName != null and '' != model.dispatch.dispatchName">
+                h.dispatchName like concat("%", #{model.dispatch.dispatchName, jdbcType=VARCHAR}, "%") AND
+            </if>
+            <if test="model.dispatch.smsProjectCode != null and '' != model.dispatch.smsProjectCode">
+                h.smsProjectCode like concat("%", #{model.dispatch.smsProjectCode, jdbcType=VARCHAR}, "%") AND
+            </if>
+            <if test="model.dispatch.contractNos != null and '' != model.dispatch.contractNos">
+                h.contractNos like concat("%", #{model.dispatch.contractNos, jdbcType=VARCHAR}, "%") AND
+            </if>
+            <if test="model.dispatch.type != null and '' != model.dispatch.type">
+                h.type like concat("%", #{model.dispatch.type, jdbcType=VARCHAR}, "%") AND
+            </if>
+        </if>
+    </if>
+  </sql>
+  <select id="selectSettlementWidthDispatchPageableOld" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
   	select 
 	    h.id as `dispatch.id`, h.`dispatchName` as `dispatch.dispatchName`, h.`dispatchNo` as `dispatch.dispatchNo`, 
 	    h.`dispatchSeq` as `dispatch.dispatchSeq`, h.`contractNos` as `dispatch.contractNos`, 
@@ -969,7 +995,7 @@
     </if>
   </select>
   
-  <select id="countSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  <select id="countSettlementWidthDispatchPageableOld" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
   	select 
 	    count(*) 
 	from
@@ -1026,6 +1052,189 @@
 			</trim>
 		</where>
 		group by h.id, s.`id`) t
+  </select>
+  
+  <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
+    SELECT h.id AS `dispatch.id`, h.`dispatchName` AS `dispatch.dispatchName`, h.`dispatchNo` AS `dispatch.dispatchNo`, h.`dispatchSeq` AS `dispatch.dispatchSeq`, h.`contractNos` AS `dispatch.contractNos`
+	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`, h.`customInfo` AS `dispatch.customInfo`, h.id AS `dispatchId`
+	    , h.dispatchSeq AS `dispatchSeq`, h.smsProjectCode AS `dispatch.smsProjectCode`, h.customInfo ->> '$.smsOrderExecNumber' AS `smsOrderExecNumber`
+	    , h.contractAmount, h.deliveredAmount, h.collectedAmount
+	    , h.dispatchAmount AS `dispatch.dispatchAmount`, ds.settledAmount
+	    , ROUND(IFNULL(ds.settledAmount / h.dispatchAmount, 0), 4) AS settledRatio
+	    , IFNULL(h.collectedRatio, 0) AS collectedRatio
+	    , s.*
+	FROM (
+		    SELECT h.*
+		        , SUM(sc.`collected_money_amount`) AS collectedAmount
+		        , SUM(sc.`delivered_money_amount`) AS deliveredAmount
+		        , SUM(sc.`contract_money_amount`) AS contractAmount
+		        , ROUND(SUM(sc.`collected_money_amount`) / SUM(sc.`contract_money_amount`), 4) AS collectedRatio
+		    FROM (
+		        SELECT h.*
+		            , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(h.`contractNos`, ',', h.`contractNos`), ',', fih.id + 1), ',', -1) AS contractNo
+		        FROM pm_dispatch_project_header h
+		            JOIN <![CDATA[ find_in_set_help fih ON fih.`id` < LENGTH(h.`contractNos`) - LENGTH(REPLACE(h.contractNos, ',', '')) + 1 ]]>
+		        <where>
+                    <trim prefixOverrides="and | or" suffixOverrides="and | or">
+	                   <include refid="sql_model_dispatch_where"></include>
+                    </trim>
+                </where>
+		        GROUP BY h.id, contractNo
+		        ORDER BY NULL
+		    ) h
+		        LEFT JOIN sms_ofst_contract_head_sap sc ON sc.contract_num = contractNo
+		    GROUP BY h.id
+		    ORDER BY NULL
+		) h
+	    LEFT JOIN `pm_dispatch_project_settlement` s
+	    ON h.`id` = s.`dispatchId`
+	        AND s.`disabled` = FALSE
+	    LEFT JOIN (
+	        SELECT dispatchId, SUM(REPLACE(ds.`amount`, ',', '')) AS settledAmount
+	        FROM `pm_dispatch_project_settlement` ds
+	        WHERE ds.`disabled` = FALSE
+	        GROUP BY ds.`dispatchId`
+	    ) ds
+	    ON ds.`dispatchId` = h.`id`
+	    LEFT JOIN fnd_department d ON h.`officeCode` = d.`departmentNum`
+	    LEFT JOIN `fnd_basic_data` bd
+	    ON s.`state` = bd.`basicDataId`
+	        AND bd.`dataTypeCode` = 'settlementState'
+	    LEFT JOIN `fnd_basic_data` bd1
+	    ON h.`state` = bd1.`basicDataId`
+	        AND bd1.`dataTypeCode` = 'dispatchState'
+	    LEFT JOIN `fnd_basic_data` bd2
+	    ON h.`type` = bd2.`basicDataId`
+	        AND bd2.`dataTypeCode` = 'dispatchType'
+	<where>
+        <trim prefixOverrides="and | or" suffixOverrides="and | or">
+            <include refid="sql_model_dispatch_where"></include>
+            <include refid="sql_model_where"></include>
+            <if test="fuzzySearch == true and fuzzy != ''">
+                (
+                    s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+                    s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+                    s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+                    s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+                    s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+                    s.ratio like CONCAT("%", #{fuzzy}, "%") or
+                    s.amount like CONCAT("%", #{fuzzy}, "%") or
+                    s.memo like CONCAT("%", #{fuzzy}, "%") or
+                    s.remark like CONCAT("%", #{fuzzy}, "%") or
+                    s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+                    s.createBy like CONCAT("%", #{fuzzy}, "%") or
+                    s.updateBy like CONCAT("%", #{fuzzy}, "%") or
+                    h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
+                    h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+                    h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
+                    h.contractNos like CONCAT("%", #{fuzzy}, "%")
+                )
+            </if>
+        </trim>
+    </where>
+    group by h.id, s.`id`
+    <if test="model != null">
+        <if test="model.checkCollectAndSettle != null"> 
+            <if test="model.checkCollectAndSettle == 1">
+                having collectedRatio > settledRatio
+            </if>
+            <if test="model.checkCollectAndSettle == 0">
+                having collectedRatio = settledRatio
+            </if>
+            <if test="model.checkCollectAndSettle == -1">
+                having settledRatio > collectedRatio
+            </if>
+        </if>
+    </if>
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by settledRatio, s.`id` desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  
+  <select id="countSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select 
+        count(*) 
+    from (
+        select h.id AS dispatchId, s.`id` AS settleId
+            , IFNULL(h.collectedRatio, 0) AS collectedRatio
+            , ROUND(IFNULL(ds.settledAmount / h.dispatchAmount, 0), 4) AS settledRatio
+        from
+            (
+	            SELECT h.*
+	                , SUM(sc.`collected_money_amount`) AS collectedAmount
+	                , SUM(sc.`delivered_money_amount`) AS deliveredAmount
+	                , SUM(sc.`contract_money_amount`) AS contractAmount
+	                , ROUND(SUM(sc.`collected_money_amount`) / SUM(sc.`contract_money_amount`), 4) AS collectedRatio
+	            FROM (
+	                SELECT h.*
+	                    , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(h.`contractNos`, ',', h.`contractNos`), ',', fih.id + 1), ',', -1) AS contractNo
+	                FROM pm_dispatch_project_header h
+	                    JOIN <![CDATA[ find_in_set_help fih ON fih.`id` < LENGTH(h.`contractNos`) - LENGTH(REPLACE(h.contractNos, ',', '')) + 1 ]]>
+	                <where>
+	                    <trim prefixOverrides="and | or" suffixOverrides="and | or">
+	                       <include refid="sql_model_dispatch_where"></include>
+	                    </trim>
+	                </where>
+	                GROUP BY h.id, contractNo
+	                ORDER BY NULL
+	            ) h
+	                LEFT JOIN sms_ofst_contract_head_sap sc ON sc.contract_num = contractNo
+	            GROUP BY h.id
+	            ORDER BY NULL
+	        ) h
+	        LEFT JOIN `pm_dispatch_project_settlement` s
+	        ON h.`id` = s.`dispatchId`
+	            AND s.`disabled` = FALSE
+	        LEFT JOIN (
+	            SELECT dispatchId, SUM(REPLACE(ds.`amount`, ',', '')) AS settledAmount
+	            FROM `pm_dispatch_project_settlement` ds
+	            WHERE ds.`disabled` = FALSE
+	            GROUP BY ds.`dispatchId`
+	        ) ds
+	        ON ds.`dispatchId` = h.`id`
+        <where>
+            <trim prefixOverrides="and | or" suffixOverrides="and | or">
+                <include refid="sql_model_dispatch_where"></include>
+                <include refid="sql_model_where"></include>
+                <if test="fuzzySearch == true and fuzzy != ''">
+                    (
+                        s.settleSeq like CONCAT("%", #{fuzzy}, "%") or
+                        s.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+                        s.progressDesc like CONCAT("%", #{fuzzy}, "%") or
+                        s.acceptanceDesc like CONCAT("%", #{fuzzy}, "%") or
+                        s.acceptanceRatio like CONCAT("%", #{fuzzy}, "%") or
+                        s.ratio like CONCAT("%", #{fuzzy}, "%") or
+                        s.amount like CONCAT("%", #{fuzzy}, "%") or
+                        s.memo like CONCAT("%", #{fuzzy}, "%") or
+                        s.remark like CONCAT("%", #{fuzzy}, "%") or
+                        s.customInfo like CONCAT("%", #{fuzzy}, "%") or
+                        s.createBy like CONCAT("%", #{fuzzy}, "%") or
+                        s.updateBy like CONCAT("%", #{fuzzy}, "%")
+                    )
+                </if>
+            </trim>
+        </where>
+        group by h.id, s.`id`
+        <if test="model != null">
+	        <if test="model.checkCollectAndSettle != null"> 
+	            <if test="model.checkCollectAndSettle == 1">
+	                having collectedRatio > settledRatio
+	            </if>
+	            <if test="model.checkCollectAndSettle == 0">
+	                having collectedRatio = settledRatio
+	            </if>
+	            <if test="model.checkCollectAndSettle == -1">
+	                having settledRatio > collectedRatio
+	            </if>
+	        </if>
+	    </if>
+    ) t
   </select>
   
   <!-- 查询SSE新增的付款信息 -->

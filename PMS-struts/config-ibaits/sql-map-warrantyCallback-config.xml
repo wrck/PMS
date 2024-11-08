@@ -443,7 +443,9 @@
 	        MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
 	        GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
 	        IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
-	        GROUP_CONCAT(DISTINCT wcs.renewalDesc SEPARATOR "\r\n") AS renewalDesc
+	        GROUP_CONCAT(DISTINCT wcs.renewalDesc SEPARATOR "\r\n") AS renewalDesc,
+	        IFNULL(MAX(wcs.hasLiscense), 0) hasLiscense,
+            GROUP_CONCAT(DISTINCT wcs.liscenseDesc SEPARATOR "\r\n") AS liscenseDesc
 	    </isNotEqual>
     from pm_project_warranty_callback AS `pwc`
     <isNotEqual property="hideQuesnaire" compareValue="true">
@@ -478,6 +480,7 @@
 		<isNotEqual property="hideWarranty" compareValue="true">
 			<isNotEmpty property="model">
 				<isNotEmpty prepend="AND" property="model.hasRenewal"> hasRenewal = #model.hasRenewal# </isNotEmpty>
+				<isNotEmpty prepend="AND" property="model.hasLiscense"> hasLiscense = #model.hasLiscense# </isNotEmpty>
 			</isNotEmpty>
 		</isNotEqual>
 	</dynamic>
@@ -545,7 +548,9 @@
     	IFNULL(mpwc.callbackCount, 0) callbackCount,
     	IFNULL(mpwc.renewalIntentionCount, 0) renewalIntentionCount,
     	IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
-		GROUP_CONCAT(DISTINCT renewalDesc SEPARATOR "\r\n") AS renewalDesc
+		GROUP_CONCAT(DISTINCT renewalDesc SEPARATOR "\r\n") AS renewalDesc,
+		IFNULL(MAX(wcs.hasLiscense), 0) hasLiscense,
+        GROUP_CONCAT(DISTINCT liscenseDesc SEPARATOR "\r\n") AS liscenseDesc
     FROM
         `pm_project_header` ph 
         LEFT JOIN `pm_project_group_relationship` pgr 
@@ -644,6 +649,7 @@
         </isNotEmpty>
         <isNotEmpty prepend="AND" property="hasCallback"> callbackCount > 0 </isNotEmpty>
         <isNotEmpty prepend="AND" property="hasRenewal"> hasRenewal = #hasRenewal# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="hasLiscense"> hasLiscense = #hasLiscense# </isNotEmpty>
     </dynamic>
   </sql>
   
@@ -653,7 +659,8 @@
         KEY warrantyStatus(warrantyStatus),
         KEY warrantyGrade(warrantyGrade),
         KEY callbackCount(callbackCount),
-        KEY hasRenewal(hasRenewal)
+        KEY hasRenewal(hasRenewal),
+        KEY hasLiscense(hasLiscense)
     ) AS
     <include refid="sql_select_projectWarranty"/>
     <include refid="sql_projectWarranty_where"/>
@@ -698,6 +705,7 @@
   	 	IFNULL(sum(callbackCount), 0) callbackCount, 
   	 	count(IF(renewalIntentionCount, 1, null)) renewalIntentionCount, 
   	 	count(IF(hasRenewal = 1, 1, null)) as renewalCount,
+  	 	count(IF(hasLiscense = 1, 1, null)) as liscenseCount,
   	 	max(latestCallbackTime) as latestCallbackTime,
   	 	max(latestNextCallbackTime) as latestNextCallbackTime
   	 from temp_project_warranty_$tempSuffix$ t <!-- (

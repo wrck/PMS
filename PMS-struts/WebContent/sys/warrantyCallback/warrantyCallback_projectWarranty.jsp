@@ -166,6 +166,12 @@
                 cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
         </div>
         <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="hasLiscense"><s:text name="pm.project.warrantyCallback.hasLiscense" /></label>
+            <s:select list="#{1: '有', 0: '无'}" name="projectWarrantyCallback.hasLiscense" id="hasLiscense"
+                cssClass="form-control" headerKey="" headerValue="--请选择--" cssStyle="width:163px;"></s:select>  
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
             <label>维保结束日期</label>
             <s:textfield id="warrantyEndTimeStart" name="projectWarrantyCallback.warrantyEndTimeStart" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="开始时间" autocomplete="off"></s:textfield>
             <s:textfield id="warrantyEndTimeEnd" name="projectWarrantyCallback.warrantyEndTimeEnd" cssClass="form-control" style="width: 100px; display: inline-block;" placeholder="结束时间" autocomplete="off"></s:textfield>
@@ -233,6 +239,9 @@
             <display:column headerClass="nowrap" property="callbackCount" titleKey="pm.project.warrantyCallback.callbackCount"></display:column>
             <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasRenewal">
             	${!empty warrantyCallbackList.hasRenewal ? (warrantyCallbackList.hasRenewal == 1 ? "有" : "无") : "无"}
+            </display:column>
+            <display:column headerClass="nowrap" titleKey="pm.project.warrantyCallback.hasLiscense">
+                ${!empty warrantyCallbackList.hasLiscense ? (warrantyCallbackList.hasLiscense == 1 ? "有" : "无") : "无"}
             </display:column>
             <display:setProperty name="export.excel.filename" value="${project.projectName}项目维保记录.xls" />
         </display:table>

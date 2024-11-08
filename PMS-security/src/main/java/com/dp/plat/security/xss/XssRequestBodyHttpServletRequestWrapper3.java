@@ -24,20 +24,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-import com.alibaba.fastjson.JSONValidator;
-import com.dp.plat.security.util.ByteUtils;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * 对每个post请求的参数过滤一些关键字，替换成安全的，例如：< > ' " \ / # & 防止SQL注入和XSS攻击
  * 
  * @author w02611
  */
-public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestWrapper {
+public class XssRequestBodyHttpServletRequestWrapper3 extends HttpServletRequestWrapper {
     private static final String DEFAULT_CHARSET = "UTF-8";
 
     private CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(this.getServletContext());
@@ -50,7 +51,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
     private final Map<String, ArrayList<String>> paramHashValues = new LinkedHashMap<>();
     protected Map<String, String[]> parameterMap;
 
-    public XssRequestBodyHttpServletRequestWrapper(HttpServletRequest request) {
+    public XssRequestBodyHttpServletRequestWrapper3(HttpServletRequest request) {
         super(request);
         orginRequest = request;
         String contentType = request.getContentType();
@@ -63,14 +64,16 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
                 requestBodyStr = getRequestBody(request);
                 if (null != requestBodyStr && !"".equals(requestBodyStr)) {
                     String temp = escapeHtml(requestBodyStr);
-                    if (JSONValidator.from(temp).validate()) {
-                        requestBody = temp.getBytes(getCharset());
-                    }
+                    JSONObject resultJson = JSON.parseObject(temp);
+                    requestBody = resultJson.toString().getBytes(getCharset());
                 } else {
                     requestBody = new byte[0];
                 }
             } catch (Throwable e) {
-                if ((null == requestBody) && null != requestBodyStr) {
+                if (null == requestBody && null != requestBodyStr) {
+                    if (!isMultipart) {
+                        requestBodyStr = escapeHtml(requestBodyStr);
+                    }
                     requestBody = requestBodyStr.getBytes(getCharset());
                 }
             } finally {
@@ -179,8 +182,7 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
     }
 
     public String getRequestBody(HttpServletRequest request) throws IOException {
-        requestBody = StreamUtils.copyToByteArray(request.getInputStream());
-        return new String(requestBody, getCharset());
+        return StreamUtils.copyToString(request.getInputStream(), getCharset());
     }
 
     @Override
@@ -253,60 +255,12 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
 
     private void processParameters(byte bytes[], int start, int len, Charset charset) {
         if (isMultipart) {
-            if (multipartRequest != null) {
-                return;
-            }
             // 如果是multipart表单，增加multipartRequest解析
             multipartResolver.setDefaultEncoding(DEFAULT_CHARSET);
             multipartRequest = multipartResolver.resolveMultipart(this);
             Map<String, String[]> parameters = multipartRequest.getParameterMap();
             for (Entry<String, String[]> entry : parameters.entrySet()) {
                 paramHashValues.put(entry.getKey(), new ArrayList<String>(Arrays.asList(entry.getValue())));
-            }
-            
-            try {
-////                    StringBuilder builder = new StringBuilder();
-//                ByteArrayOutputStream builder = new ByteArrayOutputStream(8196);
-                ByteBuffer builder = ByteBuffer.allocateDirect(getContentLength());
-                List<FileItem> parseRequest = ((ServletFileUpload) multipartResolver.getFileUpload()).parseRequest(this);
-                int prevOffset = 0;
-                for (int i = 0; i < parseRequest.size(); i++) {
-                    FileItem currentItem = parseRequest.get(i);
-                    String currentHeader = currentItem.getHeaders().getHeader(ServletFileUpload.CONTENT_DISPOSITION);
-//                        int itemOffset = requestBodyStr.indexOf(currentHeader);
-                    int itemOffset = ByteUtils.indexOf(requestBody, currentHeader);
-                    int nextItemOffset = itemOffset;
-                    if (i + 1 < parseRequest.size()) {
-                        FileItem nextItem = parseRequest.get(i + 1);
-                        String nextHeader = nextItem.getHeaders().getHeader(ServletFileUpload.CONTENT_DISPOSITION);
-//                            nextItemOffset = requestBodyStr.indexOf(nextHeader);
-                        nextItemOffset = ByteUtils.indexOf(requestBody, nextHeader);
-                    } else {
-//                            nextItemOffset = requestBodyStr.length();
-                        nextItemOffset = requestBody.length;
-                    }
-//                        String prev = StringUtils.substring(requestBodyStr, prevOffset, itemOffset);
-//                        String itemContent = StringUtils.substring(requestBodyStr, itemOffset, nextItemOffset);
-                    byte[] prev = Arrays.copyOfRange(requestBody, prevOffset, itemOffset);
-                    byte[] itemContent = Arrays.copyOfRange(requestBody, itemOffset, nextItemOffset);
-                    if (currentItem.isFormField()) {
-//                            itemContent = escapeHtml(itemContent); 
-                        itemContent = escapeHtml(new String(itemContent, getCharset())).getBytes();
-                    }
-////                        builder.append(prev);
-////                        builder.append(itemContent);
-//                    builder.write(prev);
-//                    builder.write(itemContent);
-                    builder = ByteUtils.append(builder, prev);
-                    builder = ByteUtils.append(builder, itemContent);
-                    prevOffset = nextItemOffset;
-                }
-////                    requestBodyStr = builder.toString();
-////                    requestBody = requestBodyStr.getBytes(getCharset());
-//                requestBody = builder.toByteArray();
-                requestBody = ByteUtils.readBytes(builder);
-            } catch (Exception e) {
-               e.printStackTrace();
             }
             return;
         }
@@ -480,8 +434,8 @@ public class XssRequestBodyHttpServletRequestWrapper extends HttpServletRequestW
      * @return
      */
     public static HttpServletRequest getOrgRequest(HttpServletRequest req) {
-        if (req instanceof XssRequestBodyHttpServletRequestWrapper) {
-            return ((XssRequestBodyHttpServletRequestWrapper) req).getOrginRequest();
+        if (req instanceof XssRequestBodyHttpServletRequestWrapper3) {
+            return ((XssRequestBodyHttpServletRequestWrapper3) req).getOrginRequest();
         }
         return req;
     }

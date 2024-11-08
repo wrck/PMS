@@ -48,6 +48,10 @@ public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
      * 是否续保
      */
     private Integer hasRenewal;
+    /**
+     * 是否可续采软件
+     */
+    private Integer hasLiscense;
     
     private String serviceManager;
     private String programManager;
@@ -215,8 +219,16 @@ public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
 	public void setHasRenewal(Integer hasRenewal) {
 		this.hasRenewal = hasRenewal;
 	}
+	
+	public Integer getHasLiscense() {
+        return hasLiscense;
+    }
 
-	public Date getProcessStartTime() {
+    public void setHasLiscense(Integer hasLiscense) {
+        this.hasLiscense = hasLiscense;
+    }
+
+    public Date getProcessStartTime() {
         return processStartTime;
     }
 

@@ -42,6 +42,7 @@ public class SettlementVO extends DispatchSettlement {
 	
 	private DispatchProject dispatch;
 	private Boolean dispatched;
+	private Integer checkCollectAndSettle;
 
 	public Integer getProjectId() {
 		return projectId;
@@ -199,7 +200,15 @@ public class SettlementVO extends DispatchSettlement {
 		this.dispatched = dispatched;
 	}
 
-	public Object getCustomInfoByKey(String key) {
+	public Integer getCheckCollectAndSettle() {
+        return checkCollectAndSettle;
+    }
+
+    public void setCheckCollectAndSettle(Integer checkCollectAndSettle) {
+        this.checkCollectAndSettle = checkCollectAndSettle;
+    }
+
+    public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();
 		if (customInfo != null && !customInfo.isEmpty()) {
 			return customInfo.get(key);

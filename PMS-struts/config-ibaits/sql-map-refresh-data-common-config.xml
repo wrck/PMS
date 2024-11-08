@@ -1043,18 +1043,20 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         truncate table pm_order_data_from_erp_source
     </delete>
     <select id="selectOrderLineFromERP" resultClass="java.util.HashMap">
+        SELECT `pol`.`id` AS `id`, `pol`.`orderNumber` AS `orderNumber`, `pol`.`lineNum` AS `lineNum`, `pol`.`itemCode` AS `itemCode`
+            , IF('' = TRIM(IFNULL(pol.`itemDesc`, fi.describe_)), fi.describe_, pol.itemDesc) AS `itemDesc`
+            , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
+            , `fc`.`code` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, `pol`.`realOrderExecNumber` AS `realOrderExecNumber`, `pol`.`customInfo` AS `customInfo`, `pol`.`syncTime` AS `syncTime`
+            , 'D365' AS `source`
+        FROM `pm_order_line_from_erp_d365` `pol`
+            LEFT JOIN `fnd_company` `fc` ON `fc`.`account` = `pol`.`compCode`
+            LEFT JOIN fb_items fi ON pol.itemCode = fi.item
+        UNION ALL
         SELECT `pol`.`id` AS `id`, `pol`.`orderNumber` AS `orderNumber`, `pol`.`lineNum` AS `lineNum`, `pol`.`itemCode` AS `itemCode`, `pol`.`itemDesc` AS `itemDesc`
-		    , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
-		    , `fc`.`code` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, `pol`.`realOrderExecNumber` AS `realOrderExecNumber`, `pol`.`customInfo` AS `customInfo`, `pol`.`syncTime` AS `syncTime`
-		    , 'D365' AS `source`
-		FROM `pm_order_line_from_erp_d365` `pol`
-		    LEFT JOIN `fnd_company` `fc` ON `fc`.`account` = `pol`.`compCode`
-		UNION ALL
-		SELECT `pol`.`id` AS `id`, `pol`.`orderNumber` AS `orderNumber`, `pol`.`lineNum` AS `lineNum`, `pol`.`itemCode` AS `itemCode`, `pol`.`itemDesc` AS `itemDesc`
-		    , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
-		    , `pol`.`compCode` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, NULL AS `realOrderExecNumber`, NULL AS `customInfo`, NULL AS `syncTime`
-		    , 'SAP' AS `source`
-		FROM `pm_order_line_from_erp_sap` `pol`
+            , `pol`.`orderQuantity` AS `orderQuantity`, `pol`.`openQuantity` AS `openQuantity`, `pol`.`bundleCode` AS `bundleCode`, `pol`.`warrantyMonth` AS `warrantyMonth`, `pol`.`lineType` AS `lineType`
+            , `pol`.`compCode` AS `compCode`, `pol`.`profitCenter` AS `profitCenter`, NULL AS `realOrderExecNumber`, NULL AS `customInfo`, NULL AS `syncTime`
+            , 'SAP' AS `source`
+        FROM `pm_order_line_from_erp_sap` `pol`
     </select>
     <insert id="insertOrderLineFromERP" parameterClass="java.util.Map">
         INSERT INTO `pm_order_line_from_erp_source`(orderNumber ,lineNum ,itemCode ,itemDesc ,

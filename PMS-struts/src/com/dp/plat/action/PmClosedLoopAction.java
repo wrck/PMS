@@ -414,8 +414,8 @@ public class PmClosedLoopAction extends BaseAction{
 		powerMap.put("sm", UserContext.getUserContext().isHasRole(MessageUtil.ROLE_SERVICEMANAGER));
 		powerMap.put("prosm",nowUserObj.equals(projectObj.getServiceManagerCode()));
 		powerMap.put("cb", UserContext.getUserContext().isHasRole(MessageUtil.ROLE_CALLBACKPER));
-		powerMap.put("cl", UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ENGINEEMANAGER));
-		powerMap.put("manager", UserContext.getUserContext().isHasRole(MessageUtil.ROLE_ADMIN));
+		powerMap.put("cl", UserContext.getUserContext().isHasAnyRole(MessageUtil.ROLE_ENGINEEMANAGER, MessageUtil.ROLE_ENGINEEMANAGER_LEADER));
+		powerMap.put("manager", UserContext.getUserContext().isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_PROJECT_VIEWER, MessageUtil.ROLE_FINANCIAL_STAFF));
 		if(checkStr.contains(",")){
 			String strArr[]=checkStr.split(",");
 			boolean resultBoolean=powerMap.get(strArr[0]);
