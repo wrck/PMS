@@ -866,6 +866,14 @@
 		]]>
 	</select>
 	
+	<select id="querySysArgList" parameterClass="com.dp.plat.data.bean.Arg" resultClass="com.dp.plat.data.bean.Arg" cacheModel="basicCache">
+        <![CDATA[
+            select code, var from fnd_sys_arg where effectiveFrom <= now() 
+            and (effectiveTo is null or effectiveTo > now()) 
+        ]]>
+        <isNotEmpty prepend="AND" property="code">code = #code#</isNotEmpty>
+    </select>
+	
 	<select id="query_username_size" parameterClass="string" resultClass="int" cacheModel="userCache">
 		<![CDATA[
 			SELECT COUNT(1) FROM fnd_user_info WHERE username = #username# AND effectiveFrom <= NOW() AND (effectiveTo IS NULL OR effectiveTo > NOW())

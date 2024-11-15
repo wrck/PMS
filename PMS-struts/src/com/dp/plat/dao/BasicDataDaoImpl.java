@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.dp.plat.data.bean.Arg;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.param.FileParam;
 
@@ -51,6 +52,11 @@ public class BasicDataDaoImpl extends BaseDao implements BasicDataDao{
 	public String querySysArg(String code) {
 		return (String) getSqlMapClientTemplate().queryForObject("query_sys_arg", code);
 	}
+	
+	@Override
+    public List<Arg> querySysArgList(Arg arg) {
+        return (List<Arg>) getSqlMapClientTemplate().queryForList("querySysArgList", arg);
+    }
 
 	@Override
 	public void executeSql(String executeSql) {

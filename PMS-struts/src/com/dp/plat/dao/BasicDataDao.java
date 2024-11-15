@@ -3,6 +3,7 @@ package com.dp.plat.dao;
 import java.util.List;
 import java.util.Map;
 
+import com.dp.plat.data.bean.Arg;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.param.FileParam;
 
@@ -27,6 +28,8 @@ public interface BasicDataDao {
 
 	int findBasicDataId(Map<String, Object> paramMap);
 
+    List<Arg> querySysArgList(Arg arg);
+    
 	String querySysArg(String code);
 
 	void executeSql(String executeSql);

@@ -48,6 +48,17 @@
 		  <artifactId>pms-ext-d365</artifactId>
 		  <version>${project.version}</version>
 		</dependency>
+		<!-- D365 CRM集成接口 -->
+		<dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>crm-util</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 		<!-- 安全组件  -->
 		<dependency>
           <groupId>com.dp.plat</groupId>

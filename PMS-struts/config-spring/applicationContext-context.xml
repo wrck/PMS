@@ -10,4 +10,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		scope="session">
 		<aop:scoped-proxy />
 	</bean>
+	
+    <bean id="systemContext" class="com.dp.plat.context.SystemContext" init-method="init" lazy-init="true"></bean>
 </beans>
