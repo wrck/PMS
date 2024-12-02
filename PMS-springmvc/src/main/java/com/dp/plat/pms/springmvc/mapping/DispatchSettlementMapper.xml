@@ -874,6 +874,9 @@
             <if test="model.dispatch.type != null and '' != model.dispatch.type">
                 h.type like concat("%", #{model.dispatch.type, jdbcType=VARCHAR}, "%") AND
             </if>
+            <if test="model.dispatch.facilitatorName != null and '' != model.dispatch.facilitatorName">
+                h.facilitatorName like concat("%", #{model.dispatch.facilitatorName, jdbcType=VARCHAR}, "%") AND
+            </if>
         </if>
     </if>
   </sql>
@@ -1056,6 +1059,7 @@
   
   <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
     SELECT h.id AS `dispatch.id`, h.`dispatchName` AS `dispatch.dispatchName`, h.`dispatchNo` AS `dispatch.dispatchNo`, h.`dispatchSeq` AS `dispatch.dispatchSeq`, h.`contractNos` AS `dispatch.contractNos`
+	    , h.facilitatorId AS `dispatch.facilitatorId`, h.facilitatorCode AS `dispatch.facilitatorCode`, h.facilitatorName AS `dispatch.facilitatorName`
 	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`, h.`customInfo` AS `dispatch.customInfo`, h.id AS `dispatchId`
 	    , h.dispatchSeq AS `dispatchSeq`, h.smsProjectCode AS `dispatch.smsProjectCode`, h.customInfo ->> '$.smsOrderExecNumber' AS `smsOrderExecNumber`
 	    , h.contractAmount, h.deliveredAmount, h.collectedAmount
@@ -1127,7 +1131,8 @@
                     h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
                     h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
                     h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
-                    h.contractNos like CONCAT("%", #{fuzzy}, "%")
+                    h.contractNos like CONCAT("%", #{fuzzy}, "%") or
+                    h.facilitatorName like CONCAT("%", #{fuzzy}, "%")
                 )
             </if>
         </trim>
@@ -1215,7 +1220,12 @@
                         s.remark like CONCAT("%", #{fuzzy}, "%") or
                         s.customInfo like CONCAT("%", #{fuzzy}, "%") or
                         s.createBy like CONCAT("%", #{fuzzy}, "%") or
-                        s.updateBy like CONCAT("%", #{fuzzy}, "%")
+                        s.updateBy like CONCAT("%", #{fuzzy}, "%") or
+	                    h.dispatchNo like CONCAT("%", #{fuzzy}, "%") or
+	                    h.dispatchSeq like CONCAT("%", #{fuzzy}, "%") or
+	                    h.dispatchName like CONCAT("%", #{fuzzy}, "%") or
+	                    h.contractNos like CONCAT("%", #{fuzzy}, "%") or
+	                    h.facilitatorName like CONCAT("%", #{fuzzy}, "%")
                     )
                 </if>
             </trim>
