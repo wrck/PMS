@@ -59,6 +59,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- 电子档案 集成接口 -->
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>erms-plugin</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 		<!-- 安全组件  -->
 		<dependency>
           <groupId>com.dp.plat</groupId>

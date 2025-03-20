@@ -127,6 +127,9 @@
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
+		
+		<!-- 请求工具 -->
+        <hutool.version>5.8.34</hutool.version>
 	</properties>
 	<dependencyManagement>
 
@@ -415,7 +418,7 @@
 			<dependency>
 				<groupId>javax.activation</groupId>
 				<artifactId>activation</artifactId>
-				<version>1.1</version>
+				<version>1.1.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.activiti</groupId>
@@ -582,6 +585,13 @@
 			    <artifactId>aviator</artifactId>
 			    <version>${aviator.version}</version>
 			</dependency>
+			
+			<!-- 请求工具 -->
+			<dependency>
+	            <groupId>cn.hutool</groupId>
+	            <artifactId>hutool-http</artifactId>
+	            <version>${hutool.version}</version>
+	        </dependency>
 		
 			<dependency>
 				<groupId>junit</groupId>

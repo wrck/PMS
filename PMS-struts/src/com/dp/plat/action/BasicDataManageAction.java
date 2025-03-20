@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.ServletActionContext;
 
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.service.BasicDataService;
 
@@ -43,6 +44,7 @@ public class BasicDataManageAction extends BaseAction {
 		//更新
 		basicDataService.updateBasicData(basicData);
 		dataTypeCode = basicData.getBasicDataTypeCode();
+		SystemContext.getSystemContext().refresh();
 		return SUCCESS;
 	}
 	

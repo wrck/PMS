@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap namespace="">
+    <!-- 从CRM同步总代借货信息 -->
+    <select id="selectProjectSoleagentLendFormCRM" resultClass="java.util.HashMap">
+       <!-- select *, CONCAT(LEFT(orderExecNumber, 12), SUBSTR(orderExecNumber, 14)) AS orderExecNumberShort from v_soleagent_lend_4_pms -->
+        select * from DPtech_v_soleagent_lend_4_pms
+    </select>
+    
+    <delete id="deleteProjectSoleagentLendFormCRM">
+       DELETE FROM `pm_project_soleagent_lend_from_sms`
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    
+    <insert id="insertProjectSoleagentLendFormCRM" parameterClass="map">
+        <!-- INSERT INTO pm_project_soleagent_lend_from_sms( 
+             `soleAgentLendId`, `orderExecNumber`, `orderExecNumberShort`, `orderCodes`, 
+             `contract`, `projectName`, `soleAgent`, `profitCenter`)
+        SELECT 
+            `soleAgentLendId`, `orderExecNumber`, `orderExecNumberShort`, `orderCodes`, 
+            `contract`, `projectName`, `soleAgent`, `profitCenter`
+        FROM pm_project_soleagent_lend_from_sms_history; -->
+    
+       INSERT INTO `pm_project_soleagent_lend_from_sms` (
+           `soleAgentLendId`, `orderExecNumber`, `orderExecNumberShort`, `orderCodes`, 
+           `contract`, `projectName`, `soleAgent`, `profitCenter`, dataSource) 
+       VALUES 
+       <iterate conjunction="," property="list">
+            (
+             #list[].soleAgentLendId#, #list[].orderExecNumber#, #list[].orderExecNumberShort#, #list[].orderCodes#, 
+             #list[].contract#, #list[].projectName#, #list[].soleAgent#, #list[].profitCenter#, IFNULL(#list[].dataSource#, #sourceDbName#)
+            )
+       </iterate>
+    </insert>
+    
+    <!-- 从CRM刷新项目信息 -->
+    <resultMap class="com.dp.plat.param.PrjProperty" id="prjPropertys">
+        <result property="orderExecNumber" column="orderCodeReal"/>
+        <result property="projectCode" column="projectCode"/>
+        <result property="projectName" column="projectName"/>
+        <result property="salesManCode" column="usernamec"/>
+        <result property="salesManName" column="realName"/>
+        <result property="marketCode" column="marketCode"/>
+        <result property="marketName" column="marketName"/>
+        <result property="systemId" column="systemid" nullValue="-1"/>
+        <result property="systemName" column="systemName"/>
+        <result property="expendId" column="expendId" nullValue="-1"/>
+        <result property="expendName" column="expendName"/>
+        <result property="industryId" column="industryid" nullValue="-1"/>
+        <result property="industryName" column="industryName"/>
+        <result property="officeCode" column="officeCode"/>
+        <result property="officeName" column="officeName"/>
+        <result property="serviceTypeName" column="serviceTypeName"/>
+        <result property="channelName" column="channelName"/>
+        <result property="engineeFee" column="engineeFee"/>
+        <result property="objId" column="objId"/>
+        <result property="applyType" column="applyType"/>
+        <result property="corporationCode" column="corporationCode" nullValue="01"/>
+        <result property="customerProjectName" column="customerProjectName"/>
+        <result property="finalCustomerName" column="finalCustomerName"/>
+        <result property="agentName" column="agentName"/>
+        <result property="majorProjectLevel" column="majorProjectLevel"/>
+        <result property="projectMoney" column="projectMoney"/>
+        <result property="submitTime" column="submitTime"/>
+        <result property="predBidDate" column="predBidDate"/>
+        <result property="linkmanName" column="linkmanName"/>
+        <result property="linkmanTel" column="linkmanTel"/>
+    </resultMap>
+    <select id="selectProjectPropertyFormCRM" resultMap="prjPropertys">
+        <![CDATA[
+            SELECT * FROM DPtech_v_order_ack_header_4_pms 
+        ]]>
+    </select>
+    <delete id="deleteProjectPropertyFormCRM" >
+        <![CDATA[
+            DELETE FROM pm_project_property_from_sms
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insertProjectPropertyFormCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_project_property_from_sms(`orderExecNumber`,projectCode, projectName, `salesManCode`,`salesManName`,`marketCode`,`marketName`,`systemId`,
+                `systemName`,`expendId`,`expendName`,`industryId`,`industryName`, officeCode, officeName, 
+                serviceTypeName , channelName, engineeFee, objId, applyType, `corporationCode`, customerProjectName,
+                finalCustomerName, agentName, majorProjectLevel, projectMoney, submitTime, predBidDate,
+                linkmanName, linkmanTel, dataSource
+                )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+             #list[].orderExecNumber# ,#list[].projectCode#, #list[].projectName#, #list[].salesManCode# ,#list[].salesManName# ,#list[].marketCode# ,#list[].marketName# ,#list[].systemId# ,
+             #list[].systemName# ,#list[].expendId# ,#list[].expendName# ,#list[].industryId# ,#list[].industryName#,#list[].officeCode#,#list[].officeName#,
+             #list[].serviceTypeName# , #list[].channelName#, #list[].engineeFee#, #list[].objId#, #list[].applyType#, #list[].corporationCode#, 
+             #list[].customerProjectName#, #list[].finalCustomerName#, #list[].agentName#, #list[].majorProjectLevel#, #list[].projectMoney#, #list[].submitTime#, #list[].predBidDate#,
+             #list[].linkmanName#, #list[].linkmanTel#, #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    
+    <select id="selectContractCollectionPlanFromCRM" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT * FROM DPtech_v_contract_collection_plan
+        ]]>
+    </select>
+    <delete id="deleteContractCollectionPlanFromCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            DELETE FROM pm_pb_plan_from_sms
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insertContractCollectionPlanFromCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_pb_plan_from_sms(contractNo, batchCode, basicDataName, referenceEventName, eventPlanHappenDate, 
+                    afterDaysNum, eventActualFinishDate, marketingFeedback
+                    , createBy, createTime, updateBy, updateTime, effectiveFrom, effectiveTo
+                    , dataSource
+                )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+                #list[].contract_num#, #list[].batch_code#, #list[].money_item_name#, #list[].reference_event_name#, #list[].event_plan_happen_date#
+                , #list[].after_days_num#, #list[].event_actual_finish_date#, #list[].marketing_feedback#
+	            , #list[].createBy#, #list[].createTime#, #list[].updateBy#, #list[].updateTime#, #list[].effectiveFrom#, #list[].effectiveTo#
+	            , #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    
+    <update id="updatePmProjectTaskEventPlanDate" parameterClass="java.util.Map">
+        <![CDATA[ 
+        UPDATE pm_pb_plan_from_sms pps
+		    INNER JOIN fnd_basic_data fbd
+		    ON fbd.dataTypeCode = '09'
+		        AND fbd.basicDataName = pps.referenceEventName
+		        AND fbd.effectiveFrom <= NOW()
+		        AND (fbd.effectiveTo > NOW()
+		            OR fbd.effectiveTo IS NULL)
+		    INNER JOIN pm_project_task pt
+		    ON pt.taskTypeCode = fbd.dataTypeCode
+		        AND pt.taskTypeId = fbd.basicDataId
+		SET pt.eventPlanHappenDate = pps.eventPlanHappenDate, pt.visibleFlag = '1'
+		WHERE pt.contractNo = pps.contractNo
+            AND pt.effectiveFrom <= NOW() AND (pt.effectiveTo > NOW() OR pt.effectiveTo IS NULL) 
+        ]]>
+        <isNotEmpty prepend="AND" property="sourceDbName"> pps.dataSource = #sourceDbName#</isNotEmpty>
+    </update>
+    
+    
+    <!-- 从CRM同步售前测试类借货项目 -->
+    <resultMap class="com.dp.plat.param.LendInfoParam" id="LendInfoMap">
+        <result property="lendInfoId" column="lendInfoId"/>
+        <result property="projectCode" column="projectCode"/>
+        <result property="projectName" column="projectName"/>
+        <result property="dutyName" column="dutyName"/>
+        <result property="dutyContactWay" column="dutyContactWay"/>
+        <result property="decPath" column="decPath"/>
+        <result property="officeCode" column="officeCode"/>
+        <result property="marketName" column="marketName"/>
+        <result property="systemName" column="systemName"/>
+        <result property="expendName" column="expendName"/>
+        <result property="industryName" column="industryName"/>
+        <result property="pspm" column="pspm"/>
+    </resultMap>
+    <select id="query_pm_presales_lend_info_from_crm" resultMap="LendInfoMap">
+        <![CDATA[ 
+            select *, null AS decPath from DPtech_v_lend_ack_header_4_pms
+        ]]>
+    </select>
+    <resultMap class="com.dp.plat.param.LendProductParam" id="LendProductMap">
+        <result property="lendInfoId" column="lendInfoId"/>
+        <result property="productFirstName" column="productfirstName"/>
+        <result property="productName" column="productName"/>
+        <result property="productSubCode" column="productsubCode"/>
+        <result property="productSubModel" column="productSubModel"/>
+        <result property="productSubName" column="productSubName"/>
+        <result property="lendNum" column="lendNum" nullValue="0"/>
+        <result property="memo" column="memo"/>
+        <result property="orderNum" column="orderQty" nullValue="0"/>
+        <result property="deliverNum" column="dlvQty" nullValue="0"/>
+        <result property="hexiaoNum" column="rmaQty" nullValue="0"/>
+        <result property="transferNum" column="borrowNum" nullValue="0"/>
+    </resultMap>
+    <!-- <select id="query_lend_product_list" resultMap="LendProductMap"> -->
+    <select id="query_pm_presales_lend_product_from_crm" resultClass="com.dp.plat.param.LendProductParam">
+        <![CDATA[ 
+            select * from DPtech_v_lend_ack_line_4_pms where productsubCode is not null
+        ]]>
+    </select>
+    <select id="query_lend_order_list_from_crm" resultClass="java.util.HashMap">
+        <![CDATA[ 
+            select * from v_lend_products_sale_4_pm
+        ]]>
+    </select>
+    <select id="query_lend_2_sale_list_from_crm" resultClass="java.util.HashMap">
+        <![CDATA[ 
+            select * from v_lend_products_tosale_4_pms
+        ]]>
+    </select>
+    <select id="query_lend_2_rma_list_from_crm" resultClass="java.util.HashMap">
+        <![CDATA[ 
+            select * from v_lend_products_torma_4_pms
+        ]]>
+    </select>
+    
+    <delete id="delete_pm_presales_lend_info_from_crm">
+        DELETE FROM pm_presales_lend_info_from_sms
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>;
+    </delete>
+    <delete id="delete_pm_presales_lend_product_from_crm">
+        DELETE FROM pm_presales_lend_product_from_sms
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>;
+    </delete>
+    <delete id="delete_pm_presales_lend_order_from_crm">
+        DELETE FROM pm_presales_lend_order_from_sms
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>;
+    </delete>
+    <delete id="delete_pm_presales_lend_2_sale_from_crm">
+        DELETE FROM pm_presales_lend_2_sale_from_sms
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>;
+    </delete>
+    <delete id="delete_pm_presales_lend_2_rma_from_crm">
+        DELETE FROM pm_presales_lend_2_rma_from_sms
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>;
+    </delete>
+    <insert id="insert_pm_presales_lend_info_from_crm" parameterClass="Map">
+<!--         INSERT INTO pm_presales_lend_info_from_sms( projectCode,  projectName,  marketName,  systemName,  expendName,
+             industryName,  officeCode,  dutyName,  pspm,  dutyContactWay,  lendInfoId,
+             decPath, dataSource)
+        SELECT projectCode,  projectName,  marketName,  systemName,  expendName,
+             industryName,  officeCode,  dutyName,  pspm,  dutyContactWay,  lendInfoId,
+             decPath, 'SMS' dataSource
+        FROM pm_presales_lend_info_from_sms_history; -->
+            
+        
+        <![CDATA[
+            INSERT INTO pm_presales_lend_info_from_sms( projectCode,  projectName,  marketName,  systemName,  expendName,
+             industryName,  officeCode,  dutyName,  pspm,  dutyContactWay,  lendInfoId,
+             decPath, dataSource)
+            VALUES
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+            #list[].projectCode#, #list[].projectName#, #list[].marketName#, #list[].systemName#, #list[].expendName#,
+            #list[].industryName#, #list[].officeCode#, #list[].dutyName#, #list[].pspm#, #list[].dutyContactWay#, #list[].lendInfoId#,
+            #list[].decPath#, #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_product_from_crm" parameterClass="Map">
+<!--         INSERT INTO pm_presales_lend_product_from_sms(lendInfoId, productFirstCode, productFirstName, productCode, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo
+            )
+        SELECT lendInfoId, productFirstCode, productFirstName, productCode, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo
+        FROM pm_presales_lend_product_from_sms_history; -->
+        
+        <![CDATA[
+            INSERT INTO pm_presales_lend_product_from_sms(lendInfoId, productFirstCode, productFirstName, productCode, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo, dataSource
+            ) VALUES
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+                #list[].lendInfoId# ,#list[].productFirstCode# ,#list[].productFirstName# ,#list[].productCode# ,#list[].productName# ,#list[].productSubCode# ,
+                #list[].productSubModel# ,#list[].productSubName# ,#list[].lendNum# ,#list[].memo#, #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_order_from_crm" parameterClass="List">
+<!--         INSERT INTO pm_presales_lend_order_from_sms(lendInfoId, productFirstName, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo
+            )
+        SELECT lendInfoId, productFirstName, productName, productSubCode,
+               productSubModel, productSubName, lendNum, memo
+        FROM pm_presales_lend_order_from_sms_history; -->
+    
+        INSERT INTO `pm_presales_lend_order_from_sms` (`id`, `orderNumber`, `ppliCode`, `orderType`, `contract`, 
+            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
+            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
+            `lineId`, `systemId`, `canceled`, `discountVersion`, `borrowNum`, dataSource) 
+        VALUES 
+        <iterate conjunction=",">
+            (
+                #[].id#, #[].orderNumber#, #[].ppliCode#, #[].orderType#, #[].contract#, 
+                #[].customer#, #[].projectName#, #[].businessunit#, #[].office#, #[].dutyperson#, #[].itemcode#, 
+                #[].description#, #[].orderQty#, #[].dlvQty#, #[].rmaQty#, #[].lineStatus#, #[].createDate#, 
+                #[].lineId#, #[].systemId#, #[].canceled#, #[].discountVersion#, #[].borrowNum#, #[].dataSource#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_2_sale_from_crm" parameterClass="List">
+<!--         INSERT INTO pm_presales_lend_2_sale_from_sms(
+               productfirstName, productName, projectCode, productSubCode,
+               productSubModel, productSubName, 
+               num, borrowNum, contract, memo
+            )
+        SELECT productfirstName, productName, projectCode, productSubCode,
+               productSubModel, productSubName, 
+               num, borrowNum, contract, memo
+        FROM pm_presales_lend_2_sale_from_sms_history; -->
+        
+        <![CDATA[
+            INSERT INTO pm_presales_lend_2_sale_from_sms(
+               productfirstName, productName, projectCode, productSubCode,
+               productSubModel, productSubName, 
+               num, borrowNum, contract, memo, dataSource
+            ) VALUES
+        ]]>
+        <iterate conjunction=",">
+            (
+                #[].productfirstName#, #[].productName#, #[].projectCode#, #[].productSubCode#,
+                #[].productSubModel#, #[].productSubName#, 
+                #[].num#, #[].borrowNum#, #[].contract#, #[].memo#, #[].dataSource#
+            )
+        </iterate>
+    </insert>
+    <insert id="insert_pm_presales_lend_2_rma_from_crm" parameterClass="List">
+<!--         INSERT INTO pm_presales_lend_2_rma_from_sms(
+               `orderNumber`, `ppliCode`, `orderType`, `contract`, 
+	            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
+	            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
+	            `lineId`, `systemId`, `canceled`, `productfirstName`, `productName`
+            )
+        SELECT `orderNumber`, `ppliCode`, `orderType`, `contract`, 
+	            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
+	            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
+	            `lineId`, `systemId`, `canceled`, `productfirstName`, `productName`
+        FROM pm_presales_lend_2_rma_from_sms_history; -->
+        
+        INSERT INTO `pm_presales_lend_2_rma_from_sms` (`id`, `orderNumber`, `ppliCode`, `orderType`, `contract`, 
+            `customer`, `projectName`, `businessunit`, `office`, `dutyperson`, `itemcode`, 
+            `description`, `orderQty`, `dlvQty`, `rmaQty`, `lineStatus`, `createDate`, 
+            `lineId`, `systemId`, `canceled`, `productfirstName`, `productName`, dataSource
+        ) 
+        VALUES 
+        <iterate conjunction=",">
+            (
+                #[].id#, #[].orderNumber#, #[].ppliCode#, #[].orderType#, #[].contract#, 
+                #[].customer#, #[].projectName#, #[].businessunit#, #[].office#, #[].dutyperson#, #[].itemcode#, 
+                #[].description#, #[].orderQty#, #[].dlvQty#, #[].rmaQty#, #[].lineStatus#, #[].createDate#, 
+                #[].lineId#, #[].systemId#, #[].canceled#, #[].productfirstName#, #[].productName#, #[].dataSource#
+            )
+        </iterate>
+    </insert>
+    
+    <!-- 同步项目真实订单设备清单 -->
+    <select id="query_view_refer_product_from_crm" resultClass="com.dp.plat.param.RealProductLineBean" >
+        <![CDATA[
+            SELECT * FROM view_refer_product
+        ]]>
+    </select>
+    <delete id="delete_pm_project_real_product_line_from_crm" >
+        <![CDATA[
+            DELETE FROM pm_project_real_product_line_from_sms
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insert_pm_project_real_product_line_from_crm" parameterClass="java.util.Map">
+<!--         INSERT INTO pm_project_real_product_line_from_sms(
+               projectCode ,orderExecNumber, productFirstName, productName, productSubCode ,productSubModel, productSubName, num, memo)
+            )
+        SELECT projectCode ,orderExecNumber, productFirstName, productName, productSubCode ,productSubModel, productSubName, num, memo)
+        FROM pm_project_real_product_line_from_sms_history; -->
+        
+        <![CDATA[
+            INSERT INTO pm_project_real_product_line_from_sms(
+                projectCode ,orderExecNumber, productFirstName, productName, 
+                productSubCode ,productSubModel, productSubName, num, memo
+                , dataSource
+            )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+             #list[].projectCode# ,#list[].orderExecNumber#,#list[].productFirstName# ,#list[].productName# ,#list[].productSubCode# ,#list[].productSubModel# ,#list[].productSubName# ,
+             #list[].num# ,#list[].memo#, #[].dataSource#
+            )
+        </iterate>
+    </insert>
+    
+    <!-- 同步市场部联动维度信息 -->
+    <select id="query_view_market_system_expend_industry_from_crm" resultClass="java.util.HashMap" >
+        SELECT * FROM view_market_system_expend_industry
+    </select>
+    <delete id="delete_pm_project_market_relations_from_crm" >
+        truncate pm_project_market_relations_from_sms
+    </delete>
+    <insert id="insert_pm_project_market_relations_from_crm" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_project_market_relations_from_sms(
+                marketCode, marketName
+                , systemCode, systemName
+                , expendCode, expendName
+                , industryCode, industryName)
+        ]]>
+        values
+        <iterate conjunction="," property="list">
+            (
+                #list[].marketCode#, #list[].marketName#
+                , #list[].systemCode#, #list[].systemName#
+                , #list[].expendCode#, #list[].expendName#
+                , #list[].industryCode#, #list[].industryName#
+            )
+        </iterate>
+    </insert>
+</sqlMap>

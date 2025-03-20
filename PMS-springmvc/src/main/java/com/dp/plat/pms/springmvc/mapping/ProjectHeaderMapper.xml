@@ -1396,6 +1396,36 @@
     	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
     	 	<if test="productfirstCode != null and productfirstCode != ''"> FIND_IN_SET(ppfs.productfirstCode, #{productfirstCode}) AND </if>
     	 	<if test="productfirstName != null and productfirstName != ''"> FIND_IN_SET(ppfs.productfirstName, #{productfirstName}) AND </if>
+   		    
+   		    <if test="customInfo != null and customInfo.productCodeFilter != null">
+	   		    <if test="customInfo.productCodeFilter.productfirstCodes != null and customInfo.productCodeFilter.productfirstCodes != ''" >
+	                FIND_IN_SET(ppfs.`productfirstCode`, #{customInfo.productCodeFilter.productfirstCodes}) AND
+	            </if>
+	            <if test="customInfo.productCodeFilter.productCodes != null and customInfo.productCodeFilter.productCodes != ''" >
+	                FIND_IN_SET(ppfs.`productCode`, #{customInfo.productCodeFilter.productCodes}) AND
+	            </if>
+	            <if test="customInfo.productCodeFilter.groups != null" >
+	                <foreach collection="customInfo.productCodeFilter.groups" index="key" item="group" separator=" or " open="(" close=")">
+	                    (
+	                    <trim suffixOverrides="and | or">
+	                        <if test="group.productfirstCode != null and group.productfirstCode != ''">
+	                            ppfs.`productfirstCode` = #{group.productfirstCode} AND
+	                        </if>
+	                        <if test="group.productCode != null and group.productCode != ''">
+	                            ppfs.`productCode` = #{group.productCode} AND
+	                        </if>
+	                        <if test="group.productfirstCodes != null and group.productfirstCodes != ''">
+	                            FIND_IN_SET(ppfs.`productfirstCode`, #{group.productfirstCodes}) AND
+	                        </if>
+	                        <if test="group.productCodes != null and group.productCodes != ''" >
+	                            FIND_IN_SET(ppfs.`productCode`, #{group.productCodes}) AND
+	                        </if>
+	                    </trim>
+	                    )
+	                </foreach>
+	                AND 
+	            </if>
+   		    </if>
    		</trim>
     </where>
     UNION ALL
@@ -1427,8 +1457,38 @@
 		<trim prefixOverrides=" AND | OR " suffixOverrides=" AND | OR ">
      		<if test="projectCode != null and projectCode != ''"> ppfs.projectCode = #{projectCode} AND </if>
     	 	<if test="orderExecNumber != null and orderExecNumber != ''"> ppfs.orderExecNumber = #{orderExecNumber} AND </if>
-    	 	<!-- <if test="productfirstCode != null and productfirstCode != ''"> FIND_IN_SET(ppfs.productfirstCode, #{productfirstCode}) AND </if> -->
+    	 	<if test="productfirstCode != null and productfirstCode != ''"> FIND_IN_SET(pplp.productfirstCode, #{productfirstCode}) AND </if>
     	 	<if test="productfirstName != null and productfirstName != ''"> FIND_IN_SET(pplp.productfirstName, #{productfirstName}) AND </if>
+   		    
+   		    <if test="customInfo != null and customInfo.productCodeFilter != null">
+                <if test="customInfo.productCodeFilter.productfirstCodes != null and customInfo.productCodeFilter.productfirstCodes != ''" >
+                    FIND_IN_SET(pplp.`productfirstCode`, #{customInfo.productCodeFilter.productfirstCodes}) AND
+                </if>
+                <if test="customInfo.productCodeFilter.productCodes != null and customInfo.productCodeFilter.productCodes != ''" >
+                    FIND_IN_SET(pplp.`productCode`, #{customInfo.productCodeFilter.productCodes}) AND
+                </if>
+                <if test="customInfo.productCodeFilter.groups != null" >
+                    <foreach collection="customInfo.productCodeFilter.groups" index="key" item="group" separator=" or " open="(" close=")">
+                        (
+                        <trim suffixOverrides="and | or">
+                            <if test="group.productfirstCode != null and group.productfirstCode != ''">
+                                pplp.`productfirstCode` = #{group.productfirstCode} AND
+                            </if>
+                            <if test="group.productCode != null and group.productCode != ''">
+                                pplp.`productCode` = #{group.productCode} AND
+                            </if>
+                            <if test="group.productfirstCodes != null and group.productfirstCodes != ''">
+                                FIND_IN_SET(pplp.`productfirstCode`, #{group.productfirstCodes}) AND
+                            </if>
+                            <if test="group.productCodes != null and group.productCodes != ''" >
+                                FIND_IN_SET(pplp.`productCode`, #{group.productCodes}) AND
+                            </if>
+                        </trim>
+                        )
+                    </foreach>
+                    AND 
+                </if>
+            </if>
    		</trim>
     </where>
   </select>

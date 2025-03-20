@@ -639,6 +639,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 	        project = new Project(-1);
 	    }
 	    if(project.getProjectId() == 0 && project.getParamId() != null){
+	        setErrmsg(Base64Util.decodeBase64(project.getParamId()).toString());
 	        project.setProjectId((Integer.parseInt(Base64Util.decodeBase64(project.getParamId()).toString())));
 	    }
         if (!(userContext.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER,

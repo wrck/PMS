@@ -10,7 +10,7 @@ package com.dp.plat.subcontract.constant;
  *
  */
 public class SubcontractConstant {
-
+    
 	/**
 	 * 项目转包审批测评类别
 	 */
@@ -140,6 +140,11 @@ public class SubcontractConstant {
      * 转包税率KEY
      */
     public static final String SUBCONTRACT_TAX_KEY = "subcontractTax";
+    
+    /**
+     * 项目验收的交付件类型配置KEY
+     */
+    public static final String SUBCONTRACT_INSPECTION_DELIVERY_TYPES_CONFIG_KEY = "subcontract.inspection.delivery.types.config";
 
 	/**
 	 * 流程任务TaskKey

@@ -436,6 +436,18 @@
 			<if test="settled != null">
                 settled = #{settled, jdbcType=BIT} AND
             </if>
+            <if test="dateStartTime != null">
+                <choose>
+                    <when test="dateType = 'confirmTime'"> s.confirmTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                    <when test="dateType = 'paymentTime'"> s.paymentTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                </choose>
+	        </if>
+	        <if test="dateEndTime != null">
+                <choose>
+                    <when test="dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                    <when test="dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                </choose>
+            </if>
 		</trim>
 	</where>
   </select>
@@ -523,6 +535,18 @@
 			</if>
 			<if test="settled != null">
                 settled = #{settled, jdbcType=BIT} AND
+            </if>
+            <if test="dateStartTime != null">
+                <choose>
+                    <when test="dateType = 'confirmTime'"> s.confirmTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                    <when test="dateType = 'paymentTime'"> s.paymentTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                </choose>
+            </if>
+            <if test="dateEndTime != null">
+                <choose>
+                    <when test="dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                    <when test="dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                </choose>
             </if>
 		</trim>
 	</where>
@@ -620,6 +644,18 @@
 				<if test="model.projectId != null">
 					find_in_set(#{model.projectId}, d.projectIds)
 				</if>
+				<if test="model.dateStartTime != null">
+	                <choose>
+	                    <when test="model.dateType = 'confirmTime'"> s.confirmTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+	                    <when test="model.dateType = 'paymentTime'"> s.paymentTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+	                </choose>
+	            </if>
+	            <if test="model.dateEndTime != null">
+	                <choose>
+	                    <when test="model.dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+	                    <when test="model.dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+	                </choose>
+	            </if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -742,6 +778,18 @@
 				<if test="model.projectId != null">
 					find_in_set(#{model.projectId}, d.projectIds)
 				</if>
+				<if test="model.dateStartTime != null">
+                    <choose>
+                        <when test="model.dateType = 'confirmTime'"> s.confirmTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                        <when test="model.dateType = 'paymentTime'"> s.paymentTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                    </choose>
+                </if>
+                <if test="model.dateEndTime != null">
+                    <choose>
+                        <when test="model.dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                        <when test="model.dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                    </choose>
+                </if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
 				(
@@ -849,6 +897,18 @@
 		<if test="model.projectId != null">
 			find_in_set(#{model.projectId}, h.projectIds)
 		</if>
+		<if test="model.dateStartTime != null">
+            <choose>
+                <when test="model.dateType = 'confirmTime'"> s.confirmTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+                <when test="model.dateType = 'paymentTime'"> s.paymentTime >= #{model.dateStartTime, jdbcType=TIMESTAMP} AND </when>
+            </choose>
+        </if>
+        <if test="model.dateEndTime != null">
+            <choose>
+                <when test="model.dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+                <when test="model.dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{model.dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
+            </choose>
+        </if>
 	</if>
   </sql>
   <sql id="sql_model_dispatch_where">
@@ -1060,12 +1120,17 @@
   <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
     SELECT h.id AS `dispatch.id`, h.`dispatchName` AS `dispatch.dispatchName`, h.`dispatchNo` AS `dispatch.dispatchNo`, h.`dispatchSeq` AS `dispatch.dispatchSeq`, h.`contractNos` AS `dispatch.contractNos`
 	    , h.facilitatorId AS `dispatch.facilitatorId`, h.facilitatorCode AS `dispatch.facilitatorCode`, h.facilitatorName AS `dispatch.facilitatorName`
-	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`, h.`customInfo` AS `dispatch.customInfo`, h.id AS `dispatchId`
+	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`
+	    <!-- , h.`customInfo` AS `dispatch.customInfo` -->
+	    , h.`dispatch.customInfo`
+	    , h.id AS `dispatchId`
 	    , h.dispatchSeq AS `dispatchSeq`, h.smsProjectCode AS `dispatch.smsProjectCode`, h.customInfo ->> '$.smsOrderExecNumber' AS `smsOrderExecNumber`
 	    , h.contractAmount, h.deliveredAmount, h.collectedAmount
 	    , h.dispatchAmount AS `dispatch.dispatchAmount`, ds.settledAmount
 	    , ROUND(IFNULL(ds.settledAmount / h.dispatchAmount, 0), 4) AS settledRatio
 	    , IFNULL(h.collectedRatio, 0) AS collectedRatio
+	    , IFNULL(CONCAT(h.projectProgress, '%'), s.progressDesc) AS progressDesc
+	    , IFNULL(h.projectStateName, s.acceptanceDesc) AS acceptanceDesc
 	    , s.*
 	FROM (
 		    SELECT h.*
@@ -1073,6 +1138,9 @@
 		        , SUM(sc.`delivered_money_amount`) AS deliveredAmount
 		        , SUM(sc.`contract_money_amount`) AS contractAmount
 		        , ROUND(SUM(sc.`collected_money_amount`) / SUM(sc.`contract_money_amount`), 4) AS collectedRatio
+		        , ph.customInfo ->> "$.projectProgress" AS projectProgress
+		        , phsd.`basicDataName` AS projectStateName
+		        , JSON_SET(h.customInfo, '$.projectProgress', IFNULL(ph.customInfo ->> "$.projectProgress", 0), '$.projectStateName', IFNULL(phsd.`basicDataName`, "")) AS `dispatch.customInfo`
 		    FROM (
 		        SELECT h.*
 		            , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(h.`contractNos`, ',', h.`contractNos`), ',', fih.id + 1), ',', -1) AS contractNo
@@ -1087,6 +1155,10 @@
 		        ORDER BY NULL
 		    ) h
 		        LEFT JOIN sms_ofst_contract_head_sap sc ON sc.contract_num = contractNo
+		        LEFT JOIN pm_project ph ON ph.projectId = h.projectIds
+		        LEFT JOIN fnd_basic_data phsd 
+		            ON phsd.`dataTypeCode` = concat(ph.`projectType`, "_projectState") 
+		            AND phsd.`basicDataId` = ph.`projectState` 
 		    GROUP BY h.id
 		    ORDER BY NULL
 		) h

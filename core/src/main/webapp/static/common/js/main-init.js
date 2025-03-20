@@ -35,18 +35,24 @@ function menuInit2() {
 		}
 	})
 }
-function menuInit() {
+function menuInit(ignore) {
 	$(".treeview").addClass("active");
 	$(".treeview>.treeview-menu").addClass("active");
 	var href = window.location.href;
 	var menuName = $(".content-header>h1").text();
-//	href = href.split("?")[0];
+	if (ignore) {
+		href = href.split("?")[0];
+	}
+	var isFind = false;
 	$(".treeview-menu a").each(function(){
 		var url = $(this).attr("href");
 		var aName = $(this).text().trim();
-//		url = url.split("?")[0];
-//		url = url.replace(".html","");
+		if (ignore) {
+			url = url.split("?")[0];
+			url = url.replace(".html","");
+		}
 		if(url && (href.indexOf(url)>-1 || href.indexOf(url+"/")>-1) || menuName.indexOf(aName)>-1){
+			isFind = true;
 			// 展开选中的菜单
 			$(this).parents("li").addClass("active");
 			// 导航栏标题
@@ -70,6 +76,9 @@ function menuInit() {
 			}
 		}
 	})
+	if (!isFind) {
+		menuInit(true);
+	}
 }
 menuInit();
 

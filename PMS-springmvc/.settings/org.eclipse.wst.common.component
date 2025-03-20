@@ -8,6 +8,12 @@
         <dependent-module archiveName="pms-ext-d365-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-ext-d365/pms-ext-d365">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="crm-util-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/crm-util/crm-util">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="erms-plugin-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/erms-plugin/erms-plugin">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module archiveName="pms-security-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-security/pms-security">
             <dependency-type>uses</dependency-type>
         </dependent-module>

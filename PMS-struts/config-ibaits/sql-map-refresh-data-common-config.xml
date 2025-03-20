@@ -307,6 +307,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         ]]>
     </update>
     
+    <!-- 重置自增序列 -->
+    <insert id="resetTableAutoId" parameterClass="java.util.Map">
+        ALTER TABLE $targetTable$ AUTO_INCREMENT = 1 
+    </insert>
+    
     <update id="create_shipment_state_tmp">
         <![CDATA[
             CREATE TEMPORARY TABLE IF NOT EXISTS  tmp 
@@ -417,14 +422,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <insert id="insert_pm_presales_header" parameterClass="java.util.Map">
         <![CDATA[
             INSERT INTO pm_presales_project_header(projectCode , projectName , marketName , systemName ,expendName ,industryName ,officeCode ,salesman ,
-            productManager ,salesmanLink ,lendInfoId, lendfiles ,effectiveFrom)
+            productManager ,salesmanLink ,lendInfoId, lendfiles ,effectiveFrom, source)
             VALUES
         ]]>
         <iterate conjunction="," property="list">
             (
             #list[].projectCode#, #list[].projectName#, #list[].marketName#, #list[].systemName#, #list[].expendName#,
             #list[].industryName#, #list[].officeCode#, #list[].dutyName#, #list[].pspm#, #list[].dutyContactWay#, #list[].lendInfoId#,
-            #list[].decPath# ,now()
+            #list[].decPath# ,now(), IFNULL(#dataSource#, "SMS")
             )
         </iterate>
     </insert>
@@ -433,7 +438,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <![CDATA[
             INSERT INTO pm_presales_project_product_line( lendInfoId ,productFirstName ,productTypeName , itemCode ,itemModel ,
                 itemDesc ,productNum ,remark ,effectiveFrom,
-                orderNum, deliverNum, hexiaoNum, transferNum
+                orderNum, deliverNum, hexiaoNum, transferNum, source
             ) VALUES
         ]]>
         <iterate conjunction="," property="plist">
@@ -441,6 +446,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 #plist[].lendInfoId# ,#plist[].productFirstName# ,#plist[].productName# ,#plist[].productSubCode# ,
                 #plist[].productSubModel# ,#plist[].productSubName# ,#plist[].lendNum# ,#plist[].memo# ,now(),
                 #plist[].orderNum#, #plist[].deliverNum#, #plist[].hexiaoNum#, #plist[].transferNum#
+                , IFNULL(#dataSource#, "SMS")
             )
         </iterate>
     </insert>
@@ -1073,4 +1079,129 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <delete id="deleteOrderLineFromERP" >
         truncate table pm_order_line_from_erp_source
     </delete>
+    
+    <select id="selectContractShimpentBarcodeToCRM" parameterClass="map" resultClass="java.util.HashMap">
+        select contract_code, barcode, TRIM(item) AS itemCode, barcode2, TRIM(item2) AS itemCode2 from view_warranty vw
+        where contract_type = 0 
+        <isNotEmpty prepend="AND" property="beginDate" open="(" close=")"> 
+            (   vw.packdate >= #beginDate# 
+                <isNotEmpty prepend="AND" property="endDate"> #endDate# >= vw.packdate </isNotEmpty>
+            ) 
+            OR 
+            (   vw.packdate >= #beginDate# 
+                <isNotEmpty prepend="AND" property="endDate"> #endDate# >= vw.packdate </isNotEmpty>
+            )
+        </isNotEmpty>
+        <isEmpty property="beginDate"> 
+            <isNotEmpty prepend="AND" property="endDate"> (#endDate# >= vw.packdate or #endDate# >= vw.packdate) </isNotEmpty>
+        </isEmpty>
+    </select>
+    
+     <!-- 查询合同回款计划的完成时间 -->
+    <select id="selectContractCollectionPlanToCRM" parameterClass="map" resultClass="java.util.HashMap" remapResults="true">
+        SELECT * FROM view_contract_collection_plan_4_crm vcp
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="beginDate" open="(" close=")"> 
+	            (   vcp.eventActualFinishDate >= #beginDate# 
+	                <isNotEmpty prepend="AND" property="endDate"> #endDate# >= vcp.eventActualFinishDate </isNotEmpty>
+	            ) 
+	            OR 
+	            (   vcp.eventActualFinishDate >= #beginDate# 
+	                <isNotEmpty prepend="AND" property="endDate"> #endDate# >= vcp.eventActualFinishDate </isNotEmpty>
+	            )
+	        </isNotEmpty>
+	        <isEmpty property="beginDate"> 
+	            <isNotEmpty prepend="AND" property="endDate"> (#endDate# >= vcp.eventActualFinishDate or #endDate# >= vcp.eventActualFinishDate) </isNotEmpty>
+	        </isEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="selectSubcontractPaymentToFP" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT h.id AS subcontractId, h.`contractNos`, h.`subcontractNo`, h.`subcontractName`, bd.`basicDataName` AS typeName
+	        , h.facilitatorId, sf.account AS facilitatorAccount, h.facilitatorName
+	        , CONVERT(REPLACE(h.subcontractAmount, ',', ''), DECIMAL(25, 2)) AS `subcontractAmount`
+	        , office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, h.reason, h.`createTime`
+	        , CONCAT(h.createBy, '-', ui.`realName`) AS createName
+	        , h.customInfo, bd1.`basicDataName` AS stateName, bd2.`basicDataName` AS callbackStateName, h.`isAccrued`, h.`isInvoiced`
+	        , ROUND(REPLACE(IFNULL(pp.customInfo ->> '$$.paidAmount', pp.amount), ',', '') / CONVERT(REPLACE(h.subcontractAmount, ',', ''), DECIMAL(25, 2)) * 100, 2) AS paidRatio
+	        , pp.id AS id
+	        , CONVERT(REPLACE(IFNULL(pp.customInfo ->> '$$.paidAmount', pp.amount), ',', ''), DECIMAL(25, 2)) AS paidAmount
+	        , ROUND(REPLACE(pp.ratio, ',', ''), 2) AS applyRatio
+	        , pp.confirmTime, pp.paymentTime, pp.remark, pp.customInfo AS extInfo, h.orgId
+	        , fc.account AS dataAreaId
+	        , pp.createBy AS confirmUser, ui2.`realName` AS confirmUserName
+	    FROM `pm_subcontract_project_header` h
+	        LEFT JOIN `pm_subcontract_project_payment` pp ON h.id = pp.`subcontractId`
+	        LEFT JOIN `fnd_basic_data` bd
+	        ON bd.`basicDataId` = h.`type`
+	            AND bd.`dataTypeCode` = 'SubcontractType'
+	        LEFT JOIN `fnd_basic_data` bd1
+	        ON h.`state` = bd1.`basicDataId`
+	            AND bd1.`dataTypeCode` = 'subcontractState'
+	        LEFT JOIN `fnd_basic_data` bd2
+	        ON h.`callbackState` = bd2.`basicDataId`
+	            AND bd2.`dataTypeCode` = 'subcontractCbState'
+	        LEFT JOIN fnd_department office
+	        ON office.`departmentNum` = h.`officeCode`
+	            AND office.`status` = 1
+	        LEFT JOIN fnd_department profitDep
+	        ON profitDep.`departmentNum` = h.`profitDepCode`
+	            AND profitDep.`status` = 1
+	        LEFT JOIN fnd_user_info ui ON ui.`username` = h.`createBy`
+	        LEFT JOIN fnd_user_info ui2 ON ui2.`username` = pp.`createBy`
+	        LEFT JOIN pm_subcontract_facilitator sf ON h.facilitatorId = sf.id
+	        LEFT JOIN fnd_company fc ON h.orgId = fc.id
+	    WHERE h.effectiveTo IS NULL
+        <isNotEmpty prepend="AND" property="id"> h.id = #id# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subcontractName"> h.subcontractName like concat("%", #subcontractName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="contractNos"> (h.contractNos like concat("%", #contractNos#, "%") or h.subcontractNo like concat("%", #contractNos#, "%")) </isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectIds"> h.projectIds like concat("%", #projectIds#, "%")  </isNotEmpty>
+        <isNotEmpty prepend="AND" property="type"> h.type = #type# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="state"> h.state = #state# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="callbackState"> callbackState = #callbackState#  </isNotEmpty>
+        <isNotEmpty prepend="AND" property="facilitatorId"> h.facilitatorId = #facilitatorId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="facilitatorName"> h.facilitatorName like concat("%", #facilitatorName#, "%") </isNotEmpty>
+        <isNotEmpty prepend="AND" property="bankInfo"> h.bankInfo = #bankInfo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="bankAccount"> h.bankAccount = #bankAccount# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="officeCode"> h.officeCode = #officeCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="profitDepCode"> h.profitDepCode = #profitDepCode# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subcontractNo"> h.subcontractNo = #subcontractNo# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="isAccrued"> h.isAccrued = #isAccrued# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="isInvoiced"> isInvoiced = #isInvoiced# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="subcontractAmount"> subcontractAmount = #subcontractAmount# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="reason"> h.reason = #reason# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="remark"> h.remark = #remark# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveFrom"> h.effectiveFrom >= #effectiveFrom# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </isNotEmpty>
+        <isNotEmpty prepend="AND" property="zrApproveTime"> h.zrApproveTime = #zrApproveTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createBy"> h.createBy = #createBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createTime"> h.createTime = #createTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateBy"> h.updateBy = #updateBy# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="updateTime"> h.updateTime = #updateTime# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgId"> h.orgId = #orgId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="areaPower"> (FIND_IN_SET(h.officeCode, #areaPower#) or FIND_IN_SET(h.profitDepCode, #areaPower#))</isNotEmpty>
+        <isNotEmpty prepend="AND" property="projectId"> FIND_IN_SET(#projectId#, h.projectIds) </isNotEmpty>
+        <isNotEmpty prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </isNotEmpty>
+        <isEqual property="searchTimeType" compareValue="createTime">
+            <isNotNull prepend="AND" property="searchStartTime"> h.createTime >= #searchStartTime# </isNotNull>
+            <isNotNull prepend="AND" property="searchEndTime"> <![CDATA[ h.createTime <= #searchEndTime# ]]> </isNotNull>
+        </isEqual>
+        <isEqual property="searchTimeType" compareValue="zrApproverTime">
+            <isNotNull prepend="AND" property="searchStartTime"> zrTask.zrApproverTime >= #searchStartTime# </isNotNull>
+            <isNotNull prepend="AND" property="searchEndTime"> <![CDATA[ zrTask.zrApproverTime <= #searchEndTime# ]]> </isNotNull>
+        </isEqual>
+        <isEqual property="searchTimeType" compareValue="zrApproveTime">
+            <isNotNull prepend="AND" property="searchStartTime"> h.zrApproveTime >= #searchStartTime# </isNotNull>
+            <isNotNull prepend="AND" property="searchEndTime"> <![CDATA[ h.zrApproveTime <= #searchEndTime# ]]> </isNotNull>
+        </isEqual>
+        <isEqual property="searchTimeType" compareValue="confirmTime">
+            <isNotNull prepend="AND" property="searchStartTime"> pp.confirmTime >= #searchStartTime# </isNotNull>
+            <isNotNull prepend="AND" property="searchEndTime"> <![CDATA[ pp.confirmTime <= #searchEndTime# ]]> </isNotNull>
+        </isEqual>
+        <isEqual property="searchTimeType" compareValue="paymentTime">
+            <isNotNull prepend="AND" property="searchStartTime"> pp.paymentTime >= #searchStartTime# </isNotNull>
+            <isNotNull prepend="AND" property="searchEndTime"> <![CDATA[ pp.paymentTime <= #searchEndTime# ]]> </isNotNull>
+        </isEqual>
+	    ORDER BY h.id DESC
+    </select>
 </sqlMap>

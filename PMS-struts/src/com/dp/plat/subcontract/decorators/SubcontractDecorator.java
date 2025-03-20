@@ -1,20 +1,25 @@
 package com.dp.plat.subcontract.decorators;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WorkflowCommonParam;
 import com.dp.plat.param.FileParam;
+import com.dp.plat.subcontract.constant.SubcontractConstant;
 import com.dp.plat.subcontract.constant.SubcontractConstant.TaskKey;
 import com.dp.plat.subcontract.entity.SubcontractDeliver;
 import com.dp.plat.subcontract.entity.SubcontractPrice;
@@ -132,33 +137,64 @@ public class SubcontractDecorator extends TableDecorator {
     
     public String getDeliverableName(){
         Object object = getCurrentRowObject();
+        Map<String, Object> config = SystemContext.getConfig(SubcontractConstant.SUBCONTRACT_INSPECTION_DELIVERY_TYPES_CONFIG_KEY);
+        if (config.isEmpty()) {
+            config = new LinkedHashMap<String, Object>();
+            config.put("验收材料", "验收材料");
+            config.put("发票原件", "发票原件（务必仅传发票原件，类型错误请在附件列表删除）");
+        }
         StringBuilder fileNames = new StringBuilder("<div>");
+        Map<String, List<String>> fileTypeNamesMap = new HashMap<String, List<String>>(config.size() + 1);
         if (object instanceof SubcontractPaymentVO) {
             SubcontractPaymentVO payment = (SubcontractPaymentVO) object;
             List<SubcontractDeliver> delivers = payment.getDelivers();
             if (delivers != null && !delivers.isEmpty()) {
-                List<String> tags = new ArrayList<String>(delivers.size());
+                //List<String> tags = new ArrayList<String>(delivers.size());
                 for (SubcontractDeliver deliver : delivers) {
+                    String deliverType = deliver.getType();
+                    List<String> tags = fileTypeNamesMap.get(deliverType);
+                    if (tags == null) {
+                        tags = fileTypeNamesMap.getOrDefault(deliverType, new ArrayList<String>(delivers.size()));
+                        fileTypeNamesMap.put(deliverType, tags);
+                    }
                     String viewableFileName = getViewableFileName(deliver, true);
                     
                     if (StringUtils.isNotBlank(viewableFileName)) {
                         tags.add(viewableFileName);
                     }
                 }
-                fileNames.append(StringUtils.join(tags, " | "));
+                if (config.size() > 1) {
+                    for (Entry<String, Object> deliverEntry : config.entrySet()) {
+                        String key = deliverEntry.getKey();
+                        Object value = deliverEntry.getValue();
+                        List<String> tags = fileTypeNamesMap.getOrDefault(key, Collections.emptyList());
+                        if (!tags.isEmpty()) {
+                            fileNames.append("<b>").append(value).append("：</b>").append(StringUtils.join(tags, " | ")).append("<br/>");
+                        }
+                    }
+                } else {
+                    Collection<List<String>> values = fileTypeNamesMap.values();
+                    for (List<String> tags : values) {
+                        fileNames.append(StringUtils.join(tags, " | "));
+                    }
+                }
             }
             // 如果不为只读，则增加上传附件按钮
             if (!Boolean.valueOf(String.valueOf(payment.getCustomInfoByKey("readonly")))) {
                 WorkflowCommonParam workflowCommonParam = (WorkflowCommonParam) this.getPageContext().findAttribute("workflowCommonParam");
                 if (workflowCommonParam != null && TaskKey.APPLY_PAYMENT.equals(workflowCommonParam.getOutcome())) {
                     StringBuilder uploadTag = new StringBuilder();
-                    uploadTag.append("<span class=\"uploadWrapper\">\r\n")
-                    .append("   <!-- <s:text name=\"验收材料\"/> -->\r\n")
-                    .append("   <span class=\"inspection\">\r\n")
-                    .append("       <input type=\"file\" label=\"File\" name=\"paymentDeliverList[0].uploads\" class=\"form-control\" multiple=\"true\"/>\r\n")
-                    .append("       <input type=\"hidden\" class=\"ignore\" name=\"paymentDeliverList[0].type\" value=\"验收材料\"/>\r\n")
-                    .append("   </span>\r\n")
-                    .append("</span>");
+                    for (Entry<String, Object> deliverEntry : config.entrySet()) {
+                        String key = deliverEntry.getKey();
+                        Object value = deliverEntry.getValue();
+                        uploadTag.append("<span class=\"uploadWrapper\">\r\n")
+                        .append("   <span>").append(value).append("</span>\r\n")
+                        .append("   <span class=\"inspection\">\r\n")
+                        .append("       <input type=\"file\" label=\"File\" name=\"paymentDeliverList[0].uploads\" class=\"form-control multipleFileType\" multiple=\"true\"/>\r\n")
+                        .append("       <input type=\"hidden\" class=\"ignore\" name=\"paymentDeliverList[0].type\" value=\"\" data-type=\"").append(key).append("\"/>\r\n")
+                        .append("   </span>\r\n")
+                        .append("</span>");
+                    }
                     fileNames.append(uploadTag.toString());
                 }
             }

@@ -1,11 +1,11 @@
 package com.dp.plat.pms.springmvc.vo;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.dp.plat.core.entity.BaseEntity;
-
-public class ProjectProduct extends BaseEntity {
-    private Integer id;
+public class ProjectProduct {
+    private String id;
 
     private String projectCode;
 
@@ -15,7 +15,7 @@ public class ProjectProduct extends BaseEntity {
     private String corporationCode;
 
     // 安全服务先行核销ID
-    private Integer ssfrId;
+    private String ssfrId;
 
     private String productCode;
 
@@ -42,18 +42,23 @@ public class ProjectProduct extends BaseEntity {
     private BigDecimal purchasePrice;
     
     private String projectType;
+    
+    private Integer orgId;
+    
+    private Map customInfo;
+
 
     /**
      * @return id
      */
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 
     /**
      * @param id
      */
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -108,7 +113,7 @@ public class ProjectProduct extends BaseEntity {
      *
      * @return ssfrId - 安全服务先行核销ID
      */
-    public Integer getSsfrId() {
+    public String getSsfrId() {
         return ssfrId;
     }
 
@@ -117,7 +122,7 @@ public class ProjectProduct extends BaseEntity {
      *
      * @param ssfrId 安全服务先行核销ID
      */
-    public void setSsfrId(Integer ssfrId) {
+    public void setSsfrId(String ssfrId) {
         this.ssfrId = ssfrId;
     }
 
@@ -296,5 +301,45 @@ public class ProjectProduct extends BaseEntity {
 	public void setProjectType(String projectType) {
 		this.projectType = projectType;
 	}
+	
+	public Integer getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(Integer orgId) {
+        this.orgId = orgId;
+    }
+
+    public Map getCustomInfo() {
+        return customInfo;
+    }
+
+    public void setCustomInfo(Map customInfo) {
+        this.customInfo = customInfo;
+    }
+
+    public Object getCustomInfoByKey(String key) {
+        Map<?, ?> customInfo = getCustomInfo();
+        if (customInfo != null && !customInfo.isEmpty()) {
+            return customInfo.get(key);
+        }
+        return null;
+    }
     
+    public Object getCustomInfoByKey(String key, Object defaultValue) {
+        Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+        if (customInfo != null && !customInfo.isEmpty()) {
+            return customInfo.getOrDefault(key, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    public void setCustomInfoByKey(String key, Object value) {
+        Map<String, Object> customInfo = (Map<String, Object>) getCustomInfo();
+        if (customInfo == null) {
+            customInfo = new HashMap<>();
+            this.setCustomInfo(customInfo);
+        }
+        customInfo.put(key, value);
+    }
 }

@@ -3,10 +3,13 @@
  */
 package com.dp.plat.context;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
@@ -148,24 +151,44 @@ public class SystemContext {
      * 获取CRM系统的配置
      * @return
      */
-    public static ConcurrentHashMap<String, Object> getCrmConfig() {
-        return getCrmConfig("sys.crm.api.config");
+    public static Map<String, Object> getConfig(String sysKey) {
+        SystemContext systemContext = getSystemContext();
+        ConcurrentHashMap<String, Object> defaultConfig = new ConcurrentHashMap<String, Object>(0);
+        if (systemContext != null) {
+            Map<String, Object> config = systemContext.getCacheJsonValue(sysKey, LinkedHashMap.class);
+            if (config == null) {
+                systemContext.refresh();
+                config = systemContext.getCacheJsonValue(sysKey, LinkedHashMap.class);
+            }
+            return config != null ? config : defaultConfig;
+        }
+        return defaultConfig;
     }
     
     /**
      * 获取CRM系统的配置
      * @return
      */
-    public static ConcurrentHashMap<String, Object> getCrmConfig(String key) {
-        SystemContext systemContext = getSystemContext();
-        if (systemContext != null) {
-            ConcurrentHashMap<String, Object> config = systemContext.getCacheJsonValue(key, ConcurrentHashMap.class);
-            if (config == null) {
-                systemContext.refresh();
-                config = systemContext.getCacheJsonValue(key, ConcurrentHashMap.class);
-            }
-            return config;
-        }
-        return null;
+    public static ConcurrentHashMap<String, Object> getCrmConfig() {
+        Map<String, Object> routers = getConfig("sys.crm.api.config.routers");
+        ConcurrentHashMap<String, Object> config = getCrmConfig("sys.crm.api.config");
+        config.put("routers", routers);
+        return config;
+    }
+    
+    /**
+     * 是否启用CRM
+     * @return
+     */
+    public static boolean enableCrm() {
+        return Boolean.parseBoolean(String.valueOf(getCrmConfig().getOrDefault("enable", false)));
+    }
+    
+    /**
+     * 获取CRM系统的配置
+     * @return
+     */
+    public static ConcurrentHashMap<String, Object> getCrmConfig(String sysKey) {
+        return new ConcurrentHashMap<String, Object>(getConfig(sysKey));
     }
 }

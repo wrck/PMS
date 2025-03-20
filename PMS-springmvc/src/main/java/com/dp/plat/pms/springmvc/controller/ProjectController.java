@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.alibaba.fastjson.JSON;
+
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
@@ -634,7 +636,10 @@ public class ProjectController
 //			String productName = SystemConfig.systemVariables.getOrDefault("pm_project_af_productName_filter", "");
 //			product.setProductfirstName(productName);
 //		}
-		List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
+		// 安服产品过滤
+        Map<String, Object> productCodeFilter = JSON.parseObject(SystemConfig.systemVariables.getOrDefault("pm_project_af_productcode_filter", "{}"), Map.class);
+        product.setCustomInfoByKey("productCodeFilter", productCodeFilter);
+        List<ProjectProduct> orderDataList = projectHeaderService.queryProductInfoFromSmsByProjectCode(product);
 		data = new ArrayList<Object>(orderDataList.size());
 		data.addAll(orderDataList);
 		columns = findColumnList("productInfoList");

@@ -11,6 +11,10 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import com.dp.plat.context.SystemContext;
+import com.dp.plat.crm.model.ApiMap;
+import com.dp.plat.extend.crm.job.GainDataFromCRM;
+import com.dp.plat.extend.crm.job.PullJobFromCRM;
 import com.dp.plat.param.PrjProperty;
 import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
@@ -23,9 +27,17 @@ import com.ibatis.sqlmap.client.SqlMapClientBuilder;
  *
  */
 public class GainPrjPropertyBySMS {
-
-	@SuppressWarnings("unchecked")
-	public static synchronized void work() throws IOException, SQLException {
+    
+    public static synchronized void work() throws IOException, SQLException {
+        if (SystemContext.enableCrm()) {
+            api();
+        } else {
+            dataSource();
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static void dataSource() throws IOException, SQLException {
 		Reader readerSap = Resources.getResourceAsReader("sqlMapConfigSMS.xml");
 		SqlMapClient sqlMapSap = SqlMapClientBuilder.buildSqlMapClient(readerSap);
 
@@ -164,6 +176,13 @@ public class GainPrjPropertyBySMS {
 			sqlMap.endTransaction();
 		}
 	}
+	
+	public static void api() throws IOException, SQLException {
+        ApiMap params = new ApiMap();
+        params.put("dataSource", "CRM");
+//        new PullJobFromCRM().syncSalesInfo(params);
+        new GainDataFromCRM().syncProjectSalesInfo(params);
+    }
 
 	/**
 	 * test
@@ -173,6 +192,6 @@ public class GainPrjPropertyBySMS {
 	 * @throws SQLException
 	 */
 	public static void main(String[] arg) throws IOException, SQLException {
-		GainPrjPropertyBySMS.work();
+		GainPrjPropertyBySMS.api();
 	}
 }

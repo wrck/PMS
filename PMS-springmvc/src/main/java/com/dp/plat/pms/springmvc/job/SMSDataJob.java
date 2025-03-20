@@ -62,15 +62,14 @@ public class SMSDataJob {
 		SyncLog syncLog = new SyncLog(this.getClass().getName() + ".execute", "full_sync", SYNC_TYPE);
 		syncLog.setDataFrom("OuterDataSource");
 		syncLog.setDataTo("PMS");
-		Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class, OfstContractHeadSAP.class };
-		String[] dataSourceFromKeys = new String[] { "SMS", "SMS", "SMS" };
+        Class<?>[] clazzArrs = new Class[] { ProjectProduct.class, AfPrjProperty.class, OfstContractHeadSAP.class };
+		String[] dataSourceFromKeys = new String[] { "CRM", "CRM", "CRM" };
 		String[] dataSourceToKeys = new String[] { "PMS", "PMS", "PMS" };
 		try {
 //			pmSynchronizeService.clearSyncState();
 			Integer threadPoolSize = 3;
 			try {
-				threadPoolSize = Integer
-						.valueOf(SystemConfig.systemVariables.getOrDefault("sys.sync.threadPool.size", "3"));
+				threadPoolSize = Integer.valueOf(SystemConfig.systemVariables.getOrDefault("sys.sync.threadPool.size", "3"));
 				threadPoolSize = Math.max(threadPoolSize > clazzArrs.length ? clazzArrs.length : threadPoolSize, 1);
 			} catch (NumberFormatException e) {
 				e.printStackTrace();

@@ -395,10 +395,54 @@
         </property>
         <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
         <property name="cronExpression">
-            <!-- 每天8点到21点的10分，每小时同步一次 -->
-            <value>00 10 08-21 * * ?</value>
+            <!-- 每天8点到22点的05分，每10分钟同步一次 -->
+            <value>00 5/10 08-22 * * ?</value>
         </property>
     </bean>
+    
+     <!-- 推送数据到CRM定时任务 -->
+    <bean id="PushDataToCRMTask" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.extend.crm.job.PushJobToCRM" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="PushDataToCRMTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="PushDataToCRMTask" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>00 25 07 * * ?</value> -->
+            <value>00 00 07 * * ?</value>
+        </property>
+    </bean> 
+    
+    <!-- 推送数据到CRM定时任务 -->
+    <bean id="SubcontractInvoiceToFPTask" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.dp.plat.extend.erms.job.SubcontractInvoiceToFP" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="timeout">
+                    <value>work</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean id="SubcontractInvoiceToFPTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="SubcontractInvoiceToFPTask" />
+        </property>
+        <!--秒 分 时 月内日期 月 周内日期 年（可选字段） -->
+        <property name="cronExpression">
+            <!-- <value>00 25 07 * * ?</value> -->
+            <value>00 00 08 * * ?</value>
+        </property>
+    </bean> 
     
     <!-- 总调配中心 -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
@@ -420,6 +464,9 @@
                 <ref bean="PushContractAcceptanceDeliveryJobTrigger" />
                 <ref bean="AutoStartPresalesProjectTrigger" />
                 <ref bean="GainDataFromITRTrigger" />
+                
+                <ref bean="PushDataToCRMTaskTrigger" />
+                <ref bean="SubcontractInvoiceToFPTaskTrigger" />
 
                 <!-- <ref bean="PrjArrivalReceiptMailerTrigger" /> -->
                 <!-- <ref bean="PrjPreAndFinalInspectionMailerTrigger" />  -->

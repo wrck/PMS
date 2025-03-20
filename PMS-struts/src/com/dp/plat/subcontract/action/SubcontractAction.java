@@ -29,6 +29,7 @@ import org.apache.struts2.json.annotations.JSON;
 import org.springframework.beans.BeanUtils;
 
 import com.dp.plat.action.BaseAction;
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Company;
@@ -760,7 +761,8 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	            }
 	            commonMap = commonMap != null ? commonMap : new HashMap<String, Object>();
 	            commonMap.put("multiDimInfo", subcontract.getCustomInfoByKey("multiDimInfo", Collections.emptyMap()));
-	            
+	            commonMap.put("inspectionFileTypes", SystemContext.getConfig(SubcontractConstant.SUBCONTRACT_INSPECTION_DELIVERY_TYPES_CONFIG_KEY));
+ 
 				SubcontractPayment payment = new SubcontractPayment();
 				payment.setSubcontractId(subcontract.getId());
 				subcontractPaymentList = subcontractService.selectSubcontractPaymentList(payment);

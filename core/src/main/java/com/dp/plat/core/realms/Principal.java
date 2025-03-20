@@ -18,7 +18,7 @@ import com.dp.plat.core.vo.UserInfoVO;
  * @author w02611
  *
  */
-public class Principal implements Serializable {
+public class Principal implements Serializable, java.security.Principal {
 
 	private static final long serialVersionUID = 1L;
 
@@ -339,5 +339,10 @@ public class Principal implements Serializable {
 	public void setMaxRole(Role maxRole) {
 		this.maxRole = maxRole;
 	}
+
+    @Override
+    public String getName() {
+        return getUserName();
+    }
 	
 }

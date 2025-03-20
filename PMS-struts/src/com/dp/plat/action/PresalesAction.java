@@ -281,7 +281,7 @@ public class PresalesAction extends BaseAction implements Preparable {
 	public String aduit() {
 		presales = presalesService.queryPresalesById(presales.getPresalesId());
 		String taskDefKey = presales.getTaskDefKey();
-		if ("usertask2".equals(taskDefKey)) {
+		if ("usertask2".equals(taskDefKey) || "serviceApprove".equals(taskDefKey)) {
 			redirect = "module/presales_smaduit.action?presales.presalesId=" + presales.getPresalesId();
 		} else if ("usertask3".equals(taskDefKey)) {
 			redirect = "module/presales_pmaduit.action?presales.presalesId=" + presales.getPresalesId();

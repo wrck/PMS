@@ -1,5 +1,6 @@
 package com.dp.plat.job;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,6 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import com.dp.plat.context.SystemContext;
+import com.dp.plat.crm.model.ApiMap;
+import com.dp.plat.extend.crm.job.GainDataFromCRM;
 import com.dp.plat.util.JDBCPropertiesUtil;
 
 /**
@@ -16,7 +20,22 @@ import com.dp.plat.util.JDBCPropertiesUtil;
  *
  */
 public class PlanGetBySMS{
-	public static synchronized void work(){
+    public static synchronized void work() throws IOException, SQLException {
+        if (SystemContext.enableCrm()) {
+            api();
+        } else {
+            dataSource();
+        }
+    }
+    
+    private static void api() {
+        ApiMap params = new ApiMap();
+        params.put("dataSource", "CRM");
+        new GainDataFromCRM().syncContractCollectionPlan(params);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void dataSource() throws IOException, SQLException {
 		Connection conn = null;
 		Connection smsConn = null;
 		PreparedStatement smsPs = null;

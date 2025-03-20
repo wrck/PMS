@@ -20,6 +20,7 @@ import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -28,7 +29,6 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.dp.plat.core.util.MessageUtils;
@@ -326,29 +326,36 @@ public class ExcelView4XLSX extends AbstractExcelView {
 				
 //				List<String> ks = Arrays.asList(StringUtils.split(column, "."));
 				List<String> ks = Arrays.asList(StringUtils.split(subColumn, "."));
+				Object tempObj = obj;
+				Class<?> tempClazz = clazz;
 				for (Iterator<String> iterator = ks.iterator(); iterator.hasNext();) {
 					String fieldName = iterator.next();
 					try {
-						if (clazz.getGenericSuperclass() != null) {
-							Class<?> supperClazz = clazz.getSuperclass();
-							value = getCellValue(obj, supperClazz, aRow, colCount, fieldName, dynamicColumns, renderColumns);
+						if (tempClazz.getGenericSuperclass() != null) {
+							Class<?> supperClazz = tempClazz.getSuperclass();
+							value = getCellValue(tempObj, supperClazz, aRow, colCount, fieldName, dynamicColumns, renderColumns);
 						}
 						try {
 							if (value == null) {
-								field = clazz.getDeclaredField(fieldName);
+								field = tempClazz.getDeclaredField(fieldName);
 								field.setAccessible(true);
-								value = field.get(obj);
+								value = field.get(tempObj);
 							}
 						} catch (NoSuchFieldException e) {}
 						try {
 							if (value == null) {
-								PropertyDescriptor pd = new PropertyDescriptor(fieldName, clazz);
+								PropertyDescriptor pd = new PropertyDescriptor(fieldName, tempClazz);
 								Method getMethod = pd.getReadMethod();//获得get方法
-								value = getMethod.invoke(obj);//执行get方法返回一个Object
+								value = getMethod.invoke(tempObj);//执行get方法返回一个Object
 							}
 						} catch (IntrospectionException e) {}
 						if (value != null && iterator.hasNext()) {
-							value = getCellValue(value, value.getClass(), aRow, colCount, iterator.next(), dynamicColumns, renderColumns);
+//						    // 如果还有下层，则继续寻找下层
+//						    tempObj = value;
+//						    tempClazz = tempObj.getClass();
+						    // 使用递归，则需要col是当前subColumn之后所有的子属性作为新的key进行递归查找，否则只能查找一级，获取不到多级的最终结果
+						    String newCol = StringUtils.join(iterator, ".");
+							value = getCellValue(value, value.getClass(), aRow, colCount, newCol, dynamicColumns, renderColumns);
 						} else {
 							break;
 						}
@@ -363,7 +370,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			cellValue = value;
 		}
 		try {
-			if (renderColumns.containsKey(col) && obj.getClass().equals(clazz)) {
+            if (renderColumns.containsKey(col) && obj.getClass().equals(clazz)) {
 				Object render = renderColumns.get(col);
 				Invocable invocable = null;
 				if (render instanceof String) {
@@ -376,10 +383,16 @@ public class ExcelView4XLSX extends AbstractExcelView {
 				}
 				if (invocable != null) {
 					Object options = ((ScriptEngine) invocable).get("options");
-					Object renderValue = invocable.invokeFunction("render", cellValue, null, obj, options);
-					if (renderValue != null) {
-						cellValue = renderValue;
-					}
+					Object renderValue = null;
+					try {
+    					renderValue = invocable.invokeFunction("render", null, null, obj, options);
+    					if (renderValue == null) {
+    					    renderValue = invocable.invokeFunction("render", cellValue, null, obj, options);
+    					}
+					} catch (Exception e) {
+					    renderValue = invocable.invokeFunction("render", cellValue, null, obj, options);
+                    }
+					cellValue = ObjectUtils.defaultIfNull(renderValue, cellValue);
 				}
 			}
 		} catch (Exception e) {

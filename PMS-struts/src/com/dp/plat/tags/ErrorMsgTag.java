@@ -1,16 +1,20 @@
 package com.dp.plat.tags;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import com.dp.plat.context.VContext;
-import com.dp.plat.exception.CustomRuntimeException;
-import com.dp.plat.util.ExceptionUtils;
 import com.opensymphony.xwork2.util.ValueStack;
+
+import com.dp.plat.context.VContext;
+import com.dp.plat.security.util.JsoupUtil;
+import com.dp.plat.util.ExceptionUtils;
 
 public class ErrorMsgTag extends TagSupport
 {
@@ -52,6 +56,22 @@ public class ErrorMsgTag extends TagSupport
         	    }
         	}
         	
+        	// 进行html转义，防止XSS攻击
+        	Map<String, List<String>> fieldErrors = (Map<String, List<String>>) map.getOrDefault("fieldErrors", Collections.emptyMap());
+        	for (List<String> errors : fieldErrors.values()) {
+        	    if (errors == null || errors.isEmpty()) {
+        	        continue;
+        	    }
+        	    for (int i = 0; i < errors.size(); i++) {
+                    String error = errors.get(i);
+                    errors.set(0, JsoupUtil.escape(error));
+                }
+            }
+        	map.put("fieldErrors", fieldErrors);
+        	
+        	String globalException = (String) map.getOrDefault("globalException", "");
+        	globalException = JsoupUtil.escape(globalException);
+        	map.put("globalException", globalException);
 
         	VContext.getVM(out, "com/dp/plat/vmpage/ErrorMsgTag.vm", map);
 

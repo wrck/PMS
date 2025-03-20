@@ -465,12 +465,15 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 					String type = deliverVO.getType();
 					File[] uploadFiles = deliverVO.getUploads();
 					String[] fileNames = deliverVO.getUploadsFileName();
+					String[] fileTypes = StringUtils.split(type, ", ");
 					if (uploadFiles == null) {
 						continue;
 					}
+					boolean isMultipleFileType = fileTypes.length == uploadFiles.length;
 					for (int i = 0; i < uploadFiles.length; i++) {
 						File file = uploadFiles[i];
 						String fileName = fileNames[i];
+						String fileType = isMultipleFileType ? fileTypes[i] : type;
 						// 检查文件上传类型
 						if (!UploadFileUtil.checkFileExt(fileName, uploadExtWhiteList)) {
 							return false;
@@ -480,7 +483,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 						deliver.setFileName(fileName);
 						fileName = UploadFileUtil.uploadNoRepeat(file, uploadDir, fileName);
 						deliver.setFilePath(uploadDir + fileName);
-						deliver.setType(type);
+						deliver.setType(fileType);
 						this.insertSubcontractDeliver(deliver);
 						// // 上传服务单，触发回访流程
 						// if ("1".equals(type)) {

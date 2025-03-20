@@ -1,4 +1,7 @@
 package com.dp.plat.param;
+
+import java.math.BigDecimal;
+
 /**
  * 测试类借货产品配置 与SMS v_lend_product_4_pms 一一对应
  * @author admin
@@ -6,7 +9,9 @@ package com.dp.plat.param;
  */
 public class LendProductParam {
 	private String lendInfoId;
+	private String productFirstCode;
 	private String productFirstName;
+	private String productCode;
 	private String productName;
 	private String productSubCode;
 	private String productSubModel;
@@ -25,13 +30,25 @@ public class LendProductParam {
 	public void setLendInfoId(String lendInfoId) {
 		this.lendInfoId = lendInfoId;
 	}
-	public String getProductFirstName() {
+	public String getProductFirstCode() {
+        return productFirstCode;
+    }
+    public void setProductFirstCode(String productFirstCode) {
+        this.productFirstCode = productFirstCode;
+    }
+    public String getProductFirstName() {
 		return productFirstName;
 	}
 	public void setProductFirstName(String productFirstName) {
 		this.productFirstName = productFirstName;
 	}
-	public String getProductName() {
+	public String getProductCode() {
+        return productCode;
+    }
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+    public String getProductName() {
 		return productName;
 	}
 	public void setProductName(String productName) {
@@ -61,6 +78,9 @@ public class LendProductParam {
 	public void setLendNum(int lendNum) {
 		this.lendNum = lendNum;
 	}
+	public void setLendNum(BigDecimal lendNum) {
+        this.lendNum = lendNum.intValue();
+    }
 	public String getMemo() {
 		return memo;
 	}

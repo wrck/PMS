@@ -144,13 +144,33 @@
                             <td class="text-input customStrInfo.invoiceNumber"><input name="subcontractPaymentList[0].customStrInfo.invoiceNumber" class="form-control" placeholder="发票号码"></td>
                             <td class="status"><input name="subcontractPaymentList[0].customStrInfo.status" class="form-control hidden ignore" value="待审批"></td>
                             <td class="deliverList">
-                                <span class="uploadWrapper">
-		                            <%-- <s:text name="验收材料"/> --%>
-		                            <span class="inspection">
-		                                <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control" multiple="true" />
-		                                <s:hidden class="ignore" name="paymentDeliverList[0].type" value="验收材料"/>
-		                            </span>
-		                        </span>
+                                <s:if test="commonMap.inspectionFileTypes.size() > 0">
+                                    <s:iterator value="commonMap.inspectionFileTypes" var="entry">
+                                        <span class="uploadWrapper">
+                                            <s:text name="#entry.value"/>
+                                            <span class="inspection">
+                                                <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control multipleFileType" multiple="true" />
+                                                <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="%{#entry.key}"/>
+                                            </span>
+                                        </span>
+                                    </s:iterator>
+                                </s:if>
+                                <s:else>
+                                    <span class="uploadWrapper">
+                                        <s:text name="验收材料"/>
+                                        <span class="inspection">
+                                            <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control multipleFileType" multiple="true" />
+                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票附件"/>
+                                        </span>
+                                    </span>
+                                    <span class="uploadWrapper">
+                                        <s:text name="发票附件"/>
+                                        <span class="inspection">
+                                            <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control multipleFileType" multiple="true" />
+                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票附件"/>
+                                        </span>
+                                    </span>
+                                </s:else>
                             </td>
                             <td>
                                 <span class="glyphicon glyphicon-plus text-success" ></span>

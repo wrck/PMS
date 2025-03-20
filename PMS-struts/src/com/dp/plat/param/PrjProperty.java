@@ -16,11 +16,11 @@ public class PrjProperty {
 	private String salesManName;
 	private String marketCode;
 	private String marketName;
-	private int systemId;
+	private String systemId;
 	private String systemName;
-	private int expendId;
+	private String expendId;
 	private String expendName;
-	private int industryId;
+	private String industryId;
 	private String industryName;
 	private String officeCode;
 	private String officeName;
@@ -74,10 +74,10 @@ public class PrjProperty {
 	public void setMarketName(String marketName) {
 		this.marketName = marketName;
 	}
-	public int getSystemId() {
+	public String getSystemId() {
 		return systemId;
 	}
-	public void setSystemId(int systemId) {
+	public void setSystemId(String systemId) {
 		this.systemId = systemId;
 	}
 	public String getSystemName() {
@@ -86,10 +86,10 @@ public class PrjProperty {
 	public void setSystemName(String systemName) {
 		this.systemName = systemName;
 	}
-	public int getExpendId() {
+	public String getExpendId() {
 		return expendId;
 	}
-	public void setExpendId(int expendId) {
+	public void setExpendId(String expendId) {
 		this.expendId = expendId;
 	}
 	public String getExpendName() {
@@ -98,10 +98,10 @@ public class PrjProperty {
 	public void setExpendName(String expendName) {
 		this.expendName = expendName;
 	}
-	public int getIndustryId() {
+	public String getIndustryId() {
 		return industryId;
 	}
-	public void setIndustryId(int industryId) {
+	public void setIndustryId(String industryId) {
 		this.industryId = industryId;
 	}
 	public String getIndustryName() {

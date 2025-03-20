@@ -137,6 +137,33 @@
             <value>0 30 8,13 * * ?</value>
         </property>
     </bean>
+    
+    <!-- 要调用的工作类 -->
+    <bean id="dispatchSettlementInvoiceToFPJob" class="com.dp.plat.pms.springmvc.job.DispatchSettlementInvoiceToFPJob"></bean>
+    <!-- 定义调用对象和调用对象的方法 -->
+    <bean id="dispatchSettlementInvoiceToFPTask"
+        class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <!-- 调用的类 -->
+        <property name="targetObject">
+            <ref bean="dispatchSettlementInvoiceToFPJob" />
+        </property>
+        <!-- 调用类中的方法 -->
+        <property name="targetMethod">
+            <value>execute</value>
+        </property>
+        <property name="concurrent" value="false" /><!-- 控制定时任务单线程执行，防止上次同步未执行完，本次又开始执行 -->
+    </bean>
+    <!-- 定义触发时间 -->
+    <bean id="dispatchSettlementInvoiceToFPTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="dispatchSettlementInvoiceToFPTask" />
+        </property>
+        <!-- cron表达式 -->
+        <property name="cronExpression">
+            <!-- <value>0 0/50 * * * ?</value> -->
+            <value>0 10 8,13 * * ?</value>
+        </property>
+    </bean>
 	
 	<!-- 总管理类 如果将lazy-init='false'那么容器启动就会执行调度程序 -->
 	<bean id="startQuartz" lazy-init="false" autowire="no"
@@ -147,6 +174,7 @@
 				<ref bean="sseDispatchPaymentTrigger" />
 				<ref bean="ehrDataTrigger" />
 				<ref bean="d365DataTrigger" />
+				<ref bean="dispatchSettlementInvoiceToFPTrigger" />
 				<ref bean="mailTrigger" />
 			</list>
 		</property>

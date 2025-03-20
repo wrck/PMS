@@ -951,6 +951,12 @@
 		</action>
 	</package>
 	<package name="ajax" extends="defaultJson">
+	    <action name="syncTask" class="OperateLogAction" method="syncTask">
+            <result name="success" type="json">
+                <param name="root">resultMap</param>
+            </result>
+            <result name="error">/error.jsp</result>
+        </action>
 		<action name="updatePresalesTask" class="PresalesAction" method="updateTask">
 			<result name="success" type="json">
 				<param name="includeProperties">message</param>

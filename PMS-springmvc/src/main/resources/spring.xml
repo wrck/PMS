@@ -142,6 +142,7 @@
                 <entry key="${jdbc.key3}" value-ref="dataSourceSMS"/>
                 <entry key="${jdbc.key4}" value-ref="dataSourceEHR"/>
                 <entry key="${jdbc.key5}" value-ref="dataSourceD365"/>
+                <entry key="${jdbc.key6}" value-ref="dataSourceCRM"/>
                 <!-- 
                 <entry key="${jdbc.key4}" value-ref="dataSourcePMS"/>
                 <entry key="${jdbc.key5}" value-ref="dataSourceTMS"/>

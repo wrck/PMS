@@ -178,15 +178,52 @@ $(document).ready(function(){
     });
     $(document).on('change', "input[type='file']", function() {
         var file = $(this).val();
-        var $newFile = $(this).clone();
-        $(this).siblings("input[type='file']").each(function(index) {
-            if (!$(this).val()) {
-                $(this).remove();
-            }
+        var fileCount = (this.files || []).length || 0;
+        var $fileWrapper = $(this).parents("span:first");
+        var fileIdx = $fileWrapper.find("input[type='file']").index(this);
+        var $newWrapper = $fileWrapper.clone();
+        var $newFile = $newWrapper.find("input[type='file']").eq(fileIdx);
+        var multipleFileType = $newFile.hasClass("multipleFileType");
+        // 清空其它的没有上传文件DOM
+        var wrapperFileCount = fileCount;
+        $(this).parents("span:eq(" + (multipleFileType ? 1 : 0) + ")").find("input[type='file']").not(this).each(function(index) {
+        	var $thisFile = $(this);
+            if (!$thisFile.val()) {
+            	var $thisWrapper = $thisFile;
+            	// 如果是多文件类型，则移除file的上级，否则file
+            	if (multipleFileType) {
+            		$thisWrapper = $thisFile.parents("span:first");
+            	}
+            	$thisWrapper.remove();
+            }/*  else if (multipleFileType) {
+            	// 多文件类型，计算当前容器的文件数量
+            	wrapperFileCount += (this.files || []).length || 0;
+            } */
         })
+        // 如果当前已经上传文件，则新增一个文件上传DOM
         if (file) {
+        	// 文件类型去除disabled属性
+        	var $fileType = $(this).siblings("input[type='hidden']");
+        	var fileType = $fileType.data("type") || $fileType.val();
+        	$fileType.data("type", fileType);
+        	$fileType.removeAttr("disabled");
+        	
         	$newFile.val(null);
-            $(this).parent().append($newFile);
+        	var $uploadWrapper = $(this).parents("span:first");
+        	var $uploadItem = $newFile;
+        	// 如果是多文件类型，则添加file的上级，否则file
+            if (multipleFileType) {
+            	// 根据文件数量填充文件数量
+            	var fileTypes = (fileType + ",").repeat(wrapperFileCount).split(/[, ]/g, wrapperFileCount).join(",");
+            	$fileType.val(fileTypes);
+            	$uploadWrapper = $uploadWrapper.parents("span:first");
+            	$uploadItem = $newWrapper;
+            	// 新增的文档没有上传文件，文件类型先置为disabled
+            	$uploadItem.find("input[type='hidden']").attr("disabled", true);
+            } else {
+            	$fileType.val(fileType);
+            }
+            $uploadWrapper.append($uploadItem);
         }
     });
     

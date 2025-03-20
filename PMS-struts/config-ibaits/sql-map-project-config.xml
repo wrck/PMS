@@ -1031,9 +1031,11 @@
         <result property="projectStartTime" column="projectStartTime"/>
         <result property="projectCreateTime" column="projectCreateTime"/>
         <result property="projectPlanStateName" column="planStateName"/>
-        <result property="serviceManagerCodeforjson" column="projectManagerName"/>
         <result property="shipmentStateName" column="shipmentStateName"/>
+        <result property="serviceManagerCode" column="serviceManager"/>
+        <result property="serviceManagerCodeforjson" column="serviceManagerName"/>
         <result property="programManagerCode" column="projectManager"/>
+        <result property="programManagerCodeforjson" column="projectManagerName"/>
         <result property="projectRefreshTime" column="projectRefreshTime"/>
         <result property="column012Name" column="ssfsName"/>
         <result property="compId" column="compId"/>

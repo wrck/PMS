@@ -43,6 +43,10 @@ public class SettlementVO extends DispatchSettlement {
 	private DispatchProject dispatch;
 	private Boolean dispatched;
 	private Integer checkCollectAndSettle;
+	
+	private String dateType;
+	private Date dateStartTime;
+	private Date dateEndTime;
 
 	public Integer getProjectId() {
 		return projectId;
@@ -207,6 +211,30 @@ public class SettlementVO extends DispatchSettlement {
     public void setCheckCollectAndSettle(Integer checkCollectAndSettle) {
         this.checkCollectAndSettle = checkCollectAndSettle;
     }
+    
+    public String getDateType() {
+        return dateType;
+    }
+
+    public void setDateType(String dateType) {
+        this.dateType = dateType;
+    }
+
+    public Date getDateStartTime() {
+        return dateStartTime;
+    }
+
+    public void setDateStartTime(Date dateStartTime) {
+        this.dateStartTime = dateStartTime;
+    }
+
+    public Date getDateEndTime() {
+        return dateEndTime;
+    }
+
+    public void setDateEndTime(Date dateEndTime) {
+        this.dateEndTime = dateEndTime;
+    }
 
     public Object getCustomInfoByKey(String key) {
 		Map<?, ?> customInfo = getCustomInfo();
@@ -225,5 +253,4 @@ public class SettlementVO extends DispatchSettlement {
 		customInfo.put(key, value);
 	}
 
-	
 }

@@ -7,6 +7,7 @@ encoding//config/jdbc.properties=UTF-8
 encoding//config/profiles/dev=UTF-8
 encoding//config/profiles/pms=UTF-8
 encoding//config/profiles/yfpms=UTF-8
+encoding//src/test/java=UTF-8
 encoding/<project>=UTF-8
 encoding/config=UTF-8
 encoding/config-ibaits=UTF-8

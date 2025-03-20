@@ -149,8 +149,7 @@ public class SubcontractInspectionListener implements TaskListener {
 
                     // 多维度信息为空，则查询默认的多维度信息
                     if (subcontract.getCustomInfoByKey("multiDimInfo") == null) {
-                        Map<String, String> multiDimInfo = subcontractService
-                                .selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
+                        Map<String, String> multiDimInfo = subcontractService.selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
                         subcontract.setCustomInfoByKey("multiDimInfo", multiDimInfo);
                         subcontract.getCustomInfo().putAll(multiDimInfo);
                     }

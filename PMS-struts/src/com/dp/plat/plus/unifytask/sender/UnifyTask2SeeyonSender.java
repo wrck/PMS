@@ -16,6 +16,7 @@ import org.springframework.beans.BeanUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONValidator;
+
 import com.dp.plat.activiti.unifytask.entity.UnifyTask;
 import com.dp.plat.activiti.unifytask.sender.AbstractUnifyTaskSender;
 import com.dp.plat.activiti.unifytask.vo.UnifyDelegateTask;
@@ -25,6 +26,7 @@ import com.dp.plat.plus.unifytask.util.MapUtil;
 import com.dp.plat.plus.unifytask.vo.SeeyonTask;
 import com.dp.plat.service.BasicDataService;
 
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.HttpUtil;
 
 /**
@@ -253,6 +255,7 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 			unifyTask.setSubState(subState != null ? subState.toString() : null);
 			unifyTask.setThirdReceiverId(receiverUser.getId());
 			unifyTask.setThirdSenderId(String.valueOf(senderUser.getId()));
+			unifyTask.setPushData(JSON.toJSONString(unifyTask));
 			unifyTaskList.add(unifyTask);
 			
 			uniqueUser.add(receiverUser.getId());
@@ -282,11 +285,14 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 
 	private UnifyTaskResult post(SeeyonTask seeyonTask, String urlPath) {
 		String token = getToken();
-		String url = String.format("%s/%s%s", targetUrl, urlPath, token);
+		String url = URLUtil.normalize(String.format("%s/%s%s", targetUrl, urlPath, token), false, true);
 		String pushData = JSON.toJSONString(seeyonTask);
 		seeyonTask.setPushData(pushData);
 		String responseBody = HttpUtil.post(url, pushData, timeout);
-		return JSON.parseObject(responseBody, UnifyTaskResult.class);
+		if (JSONValidator.from(responseBody).validate()) {
+            return JSON.parseObject(responseBody, UnifyTaskResult.class);
+        }
+		return new UnifyTaskResult(false, responseBody);
 	}
 
 	public String getToken() {
@@ -295,7 +301,7 @@ public class UnifyTask2SeeyonSender extends AbstractUnifyTaskSender {
 	
 	public String getToken(boolean bindUser) {
         if (token == null) {
-            String url = String.format("%s/%s", targetUrl, tokenPath);
+            String url = URLUtil.normalize(String.format("%s/%s", targetUrl, tokenPath), false, true);
             Map<String, Object> paramMap = new HashMap<String, Object>(3);
             paramMap.put("userName", restUser);
             paramMap.put("password", restPassword);

@@ -69,15 +69,21 @@ public class GainPresalesInfoFromOA extends AbstractSynchronizeTask implements J
      */
     public boolean syncPresalesHeaderFormOA(Map<String, Object> params) {
         String tag = "将同步的OA临时授权数据插入到售前测试表";
+        String dataName = "PresalesHeaderFormOA";
+        String dbName = "Local";
         try {
             log.info("{}-开始", tag);
+            syncDataBefore(dataName, dbName, params);
             // 将同步的OA临时授权数据插入到售前测试表
-            sqlMap.insert("insertPresalesHeaderFormOA", params);
+            sqlMap.insert("insert" + dataName, params);
+            syncDataSuccess(dataName, dbName, params);
             return true;
         } catch (Exception e) {
             log.error("{}-发生异常：{}", tag, e);
+            syncDataFail(dataName, dbName, params, e);
         } finally {
             log.info("{}-结束", tag);
+            syncDataAfter(dataName, dbName, params);
         }
         return false;
     }

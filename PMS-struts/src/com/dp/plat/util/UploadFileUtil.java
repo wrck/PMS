@@ -20,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
 
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.exception.UploadException;
 
 /**
@@ -33,13 +34,19 @@ public class UploadFileUtil {
 	/**
 	 * 上传类型白名单
 	 */
-	private final static String UPLOAD_EXT_WHITE_LIST = "doc|docx|xls|xlsx|ppt|pptx|xps|vsd|vsdx|csv|pdf|rar|zip|7z|txt|log|bmp|gif|jpg|jpeg|png";
-
+	private final static String UPLOAD_EXT_WHITE_LIST = "doc|docx|xls|xlsx|ppt|pptx|xps|vsd|vsdx|csv|pdf|ofd|rar|zip|7z|txt|log|bmp|gif|jpg|jpeg|png";
+	/**
+     * 上传类型白名单配置参数
+     */
+	private final static String UPLOAD_EXT_WHITE_LIST_SYS_KEY = "sys.upload.ext.whitelist";
+	
 	private final static String DEFAULT_UPLOAD_PATH = "upload";
 
 	private final static String UPLOAD_PATH_KEY = "sys.upload.path";
 
 	public final static String UPLOAD_PATH;
+	
+	
 
 	static {
 		String uploadPath = DEFAULT_UPLOAD_PATH;
@@ -275,6 +282,19 @@ public class UploadFileUtil {
 		}
 		return name.toString();
 	}
+	
+	/**
+	 * 获取默认的上传文件类型白名单
+	 * @return
+	 */
+	public static String getDefaultUploadExtWhiteList() {
+	    String allowFileType = null;
+        try {
+            allowFileType = SystemContext.getSystemContext().getTextValue(UPLOAD_EXT_WHITE_LIST_SYS_KEY);
+        } catch (Exception e) {
+        }
+        return StringUtils.defaultIfBlank(allowFileType, UPLOAD_EXT_WHITE_LIST);
+	}
 
 	/**
 	 * 检查上传的文件类型
@@ -295,7 +315,7 @@ public class UploadFileUtil {
 	 * @throws UploadException
 	 */
 	public static boolean checkFileExt(File file, String allowFileTypes) throws Exception {
-		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, getDefaultUploadExtWhiteList());
 		return checkFileExt(file.getName(), allowFileTypes);
 	}
 
@@ -319,7 +339,7 @@ public class UploadFileUtil {
 	 */
 	public static boolean checkFileExt(File[] files, String allowFileTypes) {
 		boolean result = true;
-		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, UPLOAD_EXT_WHITE_LIST);
+		allowFileTypes = StringUtils.defaultIfBlank(allowFileTypes, getDefaultUploadExtWhiteList());
 		for (int i = 0; i < files.length; i++) {
 			File file = files[i];
 			result = result && checkFileExt(file.getName(), allowFileTypes);
@@ -340,7 +360,7 @@ public class UploadFileUtil {
 	 * @throws UploadException
 	 */
 	public static boolean checkFileExt(String fileName, String allowFileType) {
-		allowFileType = StringUtils.defaultIfBlank(allowFileType, UPLOAD_EXT_WHITE_LIST);
+		allowFileType = StringUtils.defaultIfBlank(allowFileType, getDefaultUploadExtWhiteList());
 		if (StringUtils.isNotEmpty(allowFileType)) {
 			// 获取文件后缀
 			String suffix = extName(fileName);

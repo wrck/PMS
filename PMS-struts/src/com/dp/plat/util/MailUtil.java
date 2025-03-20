@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -49,6 +50,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.ContextLoader;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.dao.BasicDataDao;
 import com.dp.plat.dao.ProjectDao;
@@ -64,6 +69,7 @@ import com.dp.plat.util.test.MyAuthenticator;
 //@Scope(scopeName = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class MailUtil {
 
+    private static final TypeReference<HashMap<String, Object>> JSON_MAP = new TypeReference<HashMap<String, Object>>() {};
 	private static final String DEFAULT_AFTER_SPLIT = "$";
 	private static final String DEFAULT_BEFORE_SPLIT = "$";
     private static final String DEFAULT_REGEX = "[;|,|\\s]+";
@@ -596,19 +602,31 @@ public class MailUtil {
 				if (obj == null) {
 					continue;
 				}
-				Class<?> c = obj.getClass();
-//				Field[] fields = c.getDeclaredFields();
-				Collection<Field> fields = new HashSet<Field>();
-				ReflectionUtils.doWithFields(c, field -> {
-					fields.add(field);
-				});
-				for (Field field : fields) {
-					field.setAccessible(true);
-					paramNames.add(beforeSplit + field.getName() + afterSplit);
-					Object value = field.get(obj);
-					if (value != null) {
-						context.put(field.getName(), value);
-					}
+				if (obj instanceof Map) {
+				    Map<String, Object> objMap = (Map<String, Object>) obj;
+				    for (Entry<String, Object> entry : objMap.entrySet()) {
+				        String key = entry.getKey();
+				        Object value = entry.getValue();
+	                    paramNames.add(beforeSplit + key + afterSplit);
+	                    if (value != null) {
+	                        context.put(key, value);
+	                    }
+	                }
+				} else {
+    				Class<?> c = obj.getClass();
+    //				Field[] fields = c.getDeclaredFields();
+    				Collection<Field> fields = new HashSet<Field>();
+    				ReflectionUtils.doWithFields(c, field -> {
+    					fields.add(field);
+    				});
+    				for (Field field : fields) {
+    					field.setAccessible(true);
+    					paramNames.add(beforeSplit + field.getName() + afterSplit);
+    					Object value = field.get(obj);
+    					if (value != null) {
+    						context.put(field.getName(), value);
+    					}
+    				}
 				}
 			} catch (Exception e) {
 //				ExceptionHandler.insertException(e);
@@ -617,6 +635,139 @@ public class MailUtil {
 		}
 		return paramNames;
 	}
+	
+	/**
+     * 解析field字段的值，例如，user.username,获取user对象的username属性值
+     * 
+     * @param field
+     * @param newParams
+     * @return
+     */
+    public static Object parseObjectValue(String field, Map<String, Object> newParams, String beforeSplit, String afterSplit) {
+        if (StringUtils.isBlank(field)) {
+            return "";
+        }
+        beforeSplit = StringUtils.defaultIfBlank(beforeSplit, DEFAULT_BEFORE_SPLIT);
+        afterSplit = StringUtils.defaultIfBlank(afterSplit, DEFAULT_AFTER_SPLIT);
+        String beforeSplitQuote = quoteSplit(beforeSplit.toString());
+        String afterSplitQuote = quoteSplit(afterSplit.toString());
+        String key = field.replaceAll(beforeSplitQuote + "|" + afterSplitQuote, "");
+        Object value = "";
+        String[] relations = null;
+        if (key.contains(".") && !newParams.containsKey(key)) {
+            relations = key.split("\\.");
+            StringBuilder prevRelation = new StringBuilder();
+            for (int i = 0; i < relations.length; i++) {
+                String relation = relations[i];
+                value = newParams.getOrDefault(prevRelation + relation, "");
+                try {
+                    if (value instanceof String || value instanceof Integer) {
+                        if (value instanceof String && JSON.isValidObject((String) value)) {
+                            value = parseJson((String) value);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    Map<String, Object> parseMap = new HashMap<>();
+                    if (value instanceof Map) {
+                        parseMap = (Map<String, Object>) value;
+                    } else {
+                        String objStr = toJSONString(value);
+                        parseMap = parseJson(objStr);
+                    }
+                    for (Entry<String, Object> entry : parseMap.entrySet()) {
+                        Object tempValue = entry.getValue();
+                        if (tempValue != null) {
+//                          if (tempValue instanceof Date) {
+//                              tempValue = DateConverter.covert((Date) tempValue);
+//                          }
+                            newParams.put(prevRelation + relation + "." + entry.getKey(), tempValue);
+                        }
+                    }
+                    value = parseMap.getOrDefault(relation, "");
+                    prevRelation.append(relation).append(".");
+                } catch (Exception e) {
+//                    ExceptionHandler.insertException(e);
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            value = newParams.getOrDefault(key, "");
+        }
+        return value;
+    }
+    
+    /**
+     * 解析field字段的值，例如，user.username,获取user对象的username属性值
+     * 
+     * @param field
+     * @param newParams
+     *            已将所有map中的object转换为map后得到的新Map
+     * @return
+     */
+    public static Object parseMapValue(String field, Map<String, Object> newParams, String beforeSplit, String afterSplit) {
+        if (StringUtils.isBlank(field)) {
+            return "";
+        }
+        beforeSplit = StringUtils.defaultIfBlank(beforeSplit, DEFAULT_BEFORE_SPLIT);
+        afterSplit = StringUtils.defaultIfBlank(afterSplit, DEFAULT_AFTER_SPLIT);
+        String beforeSplitQuote = quoteSplit(beforeSplit.toString());
+        String afterSplitQuote = quoteSplit(afterSplit.toString());
+        String key = field.replaceAll(beforeSplitQuote + "|" + afterSplitQuote, "");
+        Object value = "";
+        String[] relations = null;
+        if (key.contains(".") && !newParams.containsKey(key)) {
+            relations = key.split("\\.");
+            Map<String, Object> tempParams = newParams;
+            for (String tempKey : relations) {
+                Object tempValue = tempParams.getOrDefault(tempKey, "");
+                if (tempValue instanceof Map) {
+                    tempParams = (Map<String, Object>) tempValue;
+                    continue;
+                }
+                value = tempValue;
+                break;
+            }
+        } else {
+            value = newParams.getOrDefault(key, "");
+        }
+        return value;
+    }
+    
+    /**
+     * 合并变量中的Map
+     * 
+     * @param params
+     * @return
+     */
+    private static Map<String, Object> mergerSubMap(Map<String, Object> params) {
+        Map<String, Object> mergeredMap = new HashMap<>();
+        mergeredMap.putAll(params);
+        for (Entry<String, Object> entity : params.entrySet()) {
+            String key = entity.getKey();
+            Object value = entity.getValue();
+            if (value != null && value instanceof String) {
+                try {
+                    value = JSON.parseObject((String) value, JSON_MAP);
+                } catch (Exception e) {
+                }
+            }
+            if (value != null && value instanceof Map) {
+                for (Entry<String, Object> subEntity : ((Map<String, Object>) value).entrySet()) {
+                    String subkey = subEntity.getKey();
+                    Object subvalue = subEntity.getValue();
+                    if (mergeredMap.containsKey(subkey)) {
+                        mergeredMap.put(key + "." + subkey, subvalue);
+                    } else {
+                        mergeredMap.putIfAbsent(subkey, subvalue);
+                    }
+                }
+//                mergeredMap.putAll((Map<? extends String, ? extends Object>) value);
+            }
+        }
+        return mergeredMap;
+    }
 
 	/**
 	 * 将模板中的参数，使用真实值替换
@@ -646,35 +797,10 @@ public class MailUtil {
 		// 实体数据源，模板值以实体数据源的值为准，若无实体数据源，则以context中的对应值为准
 		Object[] objects = (Object[]) context.get("dataSource");
 		if (objects != null) {
-//			if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
-//				paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
-//						objects, context);
-//			} else {
-//				paramNames = getTemplateParams(objects, context);
-//			}
-			paramNames = getTemplateParams(beforeSplit, afterSplit, objects, context);
-			for (String name : paramNames) {
-//				String key = name.substring(1, name.length() - 1);
-				String key = name.replace(beforeSplit, "").replace(afterSplit, "");
-				Object value = context.get(key);
-				value = value == null ? "" : value;
-				String regex = "\\Q" + name + "\\E";
-				try {
-				    subject = subject.replaceAll(regex, value.toString());
-				    content = content.replaceAll(regex, value.toString());
-				} catch (Exception e) {
-					try {
-						value = Matcher.quoteReplacement(value.toString());
-						subject = subject.replaceAll(regex, value.toString());
-						content = content.replaceAll(regex, value.toString());
-					} catch (Exception e2) {
-//						ExceptionHandler.insertException(e);
-//						ExceptionHandler.insertException(e2);
-					    e.printStackTrace();
-					    e2.printStackTrace();
-					}
-				}
-			}
+		    for (Object obj : objects) {
+		        subject = format(subject, obj, beforeSplit, afterSplit);
+		        content = format(content, obj, beforeSplit, afterSplit);
+            }
 		}
 		// 处理实体数据源以外的其他模板值
 		for (Entry<String, Object> entry : context.entrySet()) {
@@ -716,6 +842,182 @@ public class MailUtil {
 		processedTemplate.setNotificationContent(content);
 		return processedTemplate;
 	}
+	
+	/**
+     * 将模板中的参数，使用真实值替换
+     * 
+     * @param templete
+     * @param context
+     * @return NotificationTemplate 处理后的邮件模板
+     * @throws ClassNotFoundException
+     */
+    private static NotificationTemplate processTemplate2(NotificationTemplate templete, Map<String, Object> context) {
+        Set<String> paramNames = null;
+        String templateCode = StringUtils.trimToEmpty((String) context.get("templateCode"));
+        String subject = StringUtils.trimToEmpty((String) context.get("subject"));
+        String content = StringUtils.trimToEmpty((String) context.get("content"));
+        if (templete != null) {
+            subject = templete.getNotificationSubject();
+            content = templete.getNotificationContent();
+        }
+        String beforeSplit = DEFAULT_BEFORE_SPLIT;
+        String afterSplit = DEFAULT_AFTER_SPLIT;
+        if (context.get("beforeSplit") != null) {
+            beforeSplit = (String) context.get("beforeSplit");
+        }
+        if (context.get("afterSplit") != null) {
+            afterSplit = (String) context.get("afterSplit");
+        }
+        // 实体数据源，模板值以实体数据源的值为准，若无实体数据源，则以context中的对应值为准
+        Object[] objects = (Object[]) context.get("dataSource");
+        if (objects != null) {
+//          if (context.get("beforeSplit") != null && context.get("afterSplit") != null) {
+//              paramNames = getTemplateParams((String) context.get("beforeSplit"), (String) context.get("afterSplit"),
+//                      objects, context);
+//          } else {
+//              paramNames = getTemplateParams(objects, context);
+//          }
+            paramNames = getTemplateParams(beforeSplit, afterSplit, objects, context);
+            for (String name : paramNames) {
+//              String key = name.substring(1, name.length() - 1);
+                String key = name.replace(beforeSplit, "").replace(afterSplit, "");
+                Object value = context.get(key);
+                value = value == null ? "" : value;
+                String regex = "\\Q" + name + "\\E";
+                try {
+                    subject = subject.replaceAll(regex, value.toString());
+                    content = content.replaceAll(regex, value.toString());
+                } catch (Exception e) {
+                    try {
+                        value = Matcher.quoteReplacement(value.toString());
+                        subject = subject.replaceAll(regex, value.toString());
+                        content = content.replaceAll(regex, value.toString());
+                    } catch (Exception e2) {
+//                      ExceptionHandler.insertException(e);
+//                      ExceptionHandler.insertException(e2);
+                        e.printStackTrace();
+                        e2.printStackTrace();
+                    }
+                }
+            }
+        }
+        // 处理实体数据源以外的其他模板值
+        for (Entry<String, Object> entry : context.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            value = (value == null) ? "" : value;
+            String regex = "\\Q" + key + "\\E";
+            if (key.contains(beforeSplit) && key.contains(afterSplit)) {
+                regex = "\\Q" + key + "\\E";
+            } else if (key.contains(beforeSplit) && !key.contains(afterSplit)) {
+                regex = "\\Q" + key + afterSplit + "\\E";
+            } else if (!key.contains(beforeSplit) && key.contains(afterSplit)) {
+                regex = "\\Q" + beforeSplit + key + "\\E";
+            } else {
+                regex = "\\Q" + beforeSplit + key + afterSplit + "\\E";
+            }
+            try {
+                subject = subject.replaceAll(regex, value.toString());
+                content = content.replaceAll(regex, value.toString());
+            } catch (Exception e) {
+                try {
+                    value = Matcher.quoteReplacement(value.toString());
+                    subject = subject.replaceAll(regex, value.toString());
+                    content = content.replaceAll(regex, value.toString());
+                } catch (Exception e2) {
+//                    ExceptionHandler.insertException(e);
+//                    ExceptionHandler.insertException(e2);
+                    e.printStackTrace();
+                    e2.printStackTrace();
+                }
+            }
+        }
+        String otherPlaceholder = quoteSplit(beforeSplit) + "(\\w+)" + quoteSplit(afterSplit);
+        subject = subject.replaceAll(otherPlaceholder, "");
+        content = content.replaceAll(otherPlaceholder, "");
+        NotificationTemplate processedTemplate = new NotificationTemplate();
+        processedTemplate.setTemplateCode(templateCode);
+        processedTemplate.setNotificationSubject(subject);
+        processedTemplate.setNotificationContent(content);
+        return processedTemplate;
+    }
+	
+	/**
+     * 处理描述静态方法
+     * @param description
+     * @param obj
+     * @param beforeSplit 默认为$
+     * @param afterSplit 默认为$
+     * @return
+     */
+    public static String format(String format, Object obj, String beforeSplit, String afterSplit) {
+        if (StringUtils.isBlank(format)) {
+            return format;
+        }
+        Map<String, Object> params = new HashMap<String, Object>();
+        try {
+            params = parseJson(toJSONString(obj));
+        } catch (Exception e) {
+            getTemplateParams(beforeSplit, afterSplit, new Object[] {obj}, params);
+        }
+        return format(format, params, beforeSplit, afterSplit);
+    }
+	
+	/**
+     * 处理描述静态方法
+     * @param description
+     * @param params
+     * @param beforeSplit 默认为$
+     * @param afterSplit 默认为$
+     * @return
+     */
+    public static String format(String format, Map<String, Object> params, String beforeSplit, String afterSplit) {
+        if (StringUtils.isNotBlank(format)) {
+            // 判断描述中是否有变量替换标识位
+            beforeSplit = StringUtils.defaultIfBlank(beforeSplit, DEFAULT_BEFORE_SPLIT);
+            afterSplit = StringUtils.defaultIfBlank(afterSplit, DEFAULT_AFTER_SPLIT);
+            if (format.contains(beforeSplit) && format.contains(beforeSplit)) {
+                Map<String, Object> newParams = mergerSubMap(params);
+
+                // 将所有变量参数都转化为map
+                String objStr = toJSONString(newParams);
+                newParams = JSON.parseObject(objStr, new TypeReference<HashMap<String, Object>>() {});
+
+                Set<String> fieldSet = new HashSet<String>();
+                String beforeSplitQuote = quoteSplit(beforeSplit.toString());
+                String afterSplitQuote = quoteSplit(afterSplit.toString());
+                String regex = beforeSplitQuote + "([^" + beforeSplitQuote + afterSplitQuote + "]*)" + afterSplitQuote;
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(format);
+                while (matcher.find()) {
+                    fieldSet.add(matcher.group());
+                }
+                for (String field : fieldSet) {
+                    if (StringUtils.isBlank(field)) {
+                        continue;
+                    }
+
+                    Object value = parseObjectValue(field, newParams, beforeSplit, afterSplit);
+                    try {
+                        format = format.replaceAll("\\Q" + field + "\\E", value.toString());
+                    } catch (Exception e) {
+                        try {
+                            value = Matcher.quoteReplacement(value.toString());
+                            format = format.replaceAll("\\Q" + field + "\\E", value.toString());
+                        } catch (Exception e2) {
+//                            ExceptionHandler.insertException(e);
+//                            ExceptionHandler.insertException(e2);
+                            e.printStackTrace();
+                            e2.printStackTrace();
+                        }
+                    }
+                }
+                format = format.replaceAll("[\\[【]( )*[\\]】]", "");
+            }
+        }
+        return format;
+    }
+	
 
 	/**
 	 * 设置邮件接收者。<br>
@@ -873,12 +1175,13 @@ public class MailUtil {
 			for (int i = 0; i < fileNames.length; i++) {
 				MimeBodyPart fileAttaches = new MimeBodyPart();
 				// 选择出每一个附件名
-				String filePath = fileNames[i].split(",")[0];
+				String[] fileNameSplit = fileNames[i].split(",");
+                String filePath = fileNameSplit[0];
 				File file = new File(filePath);
 				if (!file.exists()) {
 					filePath = servletContext.getRealPath(filePath);
 				}
-				String displayname = fileNames[i].split(",")[1];
+				String displayname = fileNameSplit.length > 1 ? fileNameSplit[1] : file.getName();
 				// 得到数据源
 				FileDataSource fds = new FileDataSource(filePath);
 				// 得到附件本身并至入BodyPart
@@ -1304,6 +1607,25 @@ public class MailUtil {
             sb.append(c);
         }
         return sb.toString();
+    }
+	
+	/**
+     * 转化为Json字符串
+     * @param obj
+     * @return
+     */
+    public static String toJSONString(Object obj) {
+//      try {
+//          return Jackson2ObjectMapperBuilder.json().build()
+//                  .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+//                  .writeValueAsString(obj);
+//      } catch (JsonProcessingException e) {
+//      }
+        return JSON.toJSONString(obj, SerializerFeature.WriteDateUseDateFormat);
+    }
+    
+    public static Map<String, Object> parseJson(String objStr) {
+        return JSON.parseObject(objStr, JSON_MAP);
     }
 	
 	public static void main(String[] args) {
