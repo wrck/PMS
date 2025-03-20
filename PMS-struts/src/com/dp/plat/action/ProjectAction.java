@@ -37,6 +37,8 @@ import org.springframework.beans.BeanUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.opensymphony.xwork2.Preparable;
+
 import com.dp.plat.context.HttpContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
@@ -86,11 +88,9 @@ import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.NotificationTemplateUtil;
 import com.dp.plat.util.ProjectUtils;
 import com.dp.plat.util.QuestionnarieUtil;
-import com.dp.plat.util.StringEscUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.dp.plat.util.parser.ExcelParser;
-import com.opensymphony.xwork2.Preparable;
 
 public class ProjectAction extends BaseAction implements Preparable{
 	private static final long serialVersionUID = 1L;
@@ -639,7 +639,6 @@ public class ProjectAction extends BaseAction implements Preparable{
 	        project = new Project(-1);
 	    }
 	    if(project.getProjectId() == 0 && project.getParamId() != null){
-	        setErrmsg(Base64Util.decodeBase64(project.getParamId()).toString());
 	        project.setProjectId((Integer.parseInt(Base64Util.decodeBase64(project.getParamId()).toString())));
 	    }
         if (!(userContext.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_ENGINEEMANAGER,
