@@ -46,6 +46,7 @@
 	    <result column="wafYearCount" jdbcType="INTEGER" property="wafYearCount" />
 	    <result column="warrantyInfo" jdbcType="VARCHAR" property="warrantyInfo" />
 	    <result column="serviceInfo" jdbcType="VARCHAR" property="serviceInfo" />
+	    <result column="customInfo" jdbcType="VARCHAR" property="customInfo" />
     </resultMap>
   <insert id="insertProjectMaintenance" parameterClass="com.dp.plat.maintenance.entity.ProjectMaintenance">
     insert into pm_project_maintenance (id, projectId, projectCode, 
@@ -58,6 +59,7 @@
       createBy, updateTime, updateBy,
       warrantyStatus, industryName, userOffice,
       year, quarter, month, wsCount, wafCount, wsYearCount, wafYearCount, warrantyInfo
+      , customInfo
       )
     values (#id#, #projectId#, #projectCode#, 
       #projectName#, #projectType#, #projectExecutionState#, #contractNo#, #officeCode#, #type#, 
@@ -71,6 +73,7 @@
       #year#, #quarter#, #month#, 
       #wsCount#, #wafCount#, #wsYearCount#, 
       #wafYearCount#, #warrantyInfo#, #serviceInfo#
+      , #customInfo#
       )
     <selectKey resultClass="int" type="post" keyProperty="id">    
          SELECT last_insert_id() as id ;   
@@ -122,6 +125,7 @@
       <isNotNull prepend="," property="wafYearCount"> wafYearCount </isNotNull>
       <isNotNull prepend="," property="warrantyInfo"> warrantyInfo </isNotNull>
       <isNotNull prepend="," property="serviceInfo"> serviceInfo </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic prepend="values" open="(" close=")">
       <isNotNull prepend="," property="id"> #id# </isNotNull>
@@ -167,6 +171,7 @@
       <isNotNull prepend="," property="wafYearCount"> #wafYearCount# </isNotNull>
       <isNotNull prepend="," property="warrantyInfo"> #warrantyInfo# </isNotNull>
       <isNotNull prepend="," property="serviceInfo"> #serviceInfo# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
     </dynamic>
     <selectKey resultClass="int" type="post" keyProperty="id">    
          SELECT last_insert_id() as id ;   
@@ -266,6 +271,13 @@
 	    <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
 	    <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
 	    <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+	    <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
   </select>
   <select id="countProjectMaintenanceList" parameterClass="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultClass="int">
@@ -369,6 +381,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
         
         <isEqual property="hideFiles" compareValue="false">
 	        <isNotEmpty prepend="AND" property="deliverFiles">
@@ -438,6 +457,7 @@
       <isNotNull prepend="," property="wafYearCount"> wafYearCount </isNotNull>
       <isNotNull prepend="," property="warrantyInfo"> warrantyInfo </isNotNull>
       <isNotNull prepend="," property="serviceInfo"> serviceInfo </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic prepend="values" open="(" close=")">
       <isNotNull prepend="," property="id"> #id# </isNotNull>
@@ -483,6 +503,7 @@
       <isNotNull prepend="," property="wafYearCount"> #wafYearCount# </isNotNull>
       <isNotNull prepend="," property="warrantyInfo"> #warrantyInfo# </isNotNull>
       <isNotNull prepend="," property="serviceInfo"> #serviceInfo# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
     </dynamic>
     ON DUPLICATE KEY UPDATE
     <dynamic prepend=" ">
@@ -527,6 +548,7 @@
 	    <isNotNull prepend="," property="wafYearCount"> wafYearCount = VALUES(wafYearCount) </isNotNull>
 	    <isNotNull prepend="," property="warrantyInfo"> warrantyInfo = VALUES(warrantyInfo) </isNotNull>
 	    <isNotNull prepend="," property="serviceInfo"> serviceInfo = VALUES(serviceInfo) </isNotNull>
+        <isNotNull prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), VALUES(customInfo)) </isNotNull>
     </dynamic>
     <selectKey resultClass="int" type="post" keyProperty="id">    
          SELECT last_insert_id() as id ;   
@@ -745,6 +767,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
     ORDER BY m.id desc
   </select>
@@ -963,6 +992,13 @@
         <isNotEmpty prepend="AND" property="projectMaintenance.wafYearCount"> m.wafYearCount = #projectMaintenance.wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.warrantyInfo"> m.warrantyInfo = #projectMaintenance.warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="projectMaintenance.serviceInfo"> m.serviceInfo = #projectMaintenance.serviceInfo# </isNotEmpty>
+        <isNotEmpty property="projectMaintenance.customInfo">
+            <iterate property="projectMaintenance.customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="projectMaintenance.customInfo.iterator[].value">
+                    #projectMaintenance.customInfo.iterator[].value# = m.customInfo ->> '$$.$projectMaintenance.customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
         
         <isNotEqual property="hideFiles" compareValue="true">
             <isNotEmpty prepend="AND" property="projectMaintenance.deliverFiles">
@@ -1058,6 +1094,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
     GROUP BY m.id
   </select>
@@ -1184,6 +1227,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
 	GROUP BY m.id
   </select>
@@ -1251,6 +1301,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
   </select>
   
@@ -1317,6 +1374,13 @@
         <isNotEmpty prepend="AND" property="wafYearCount"> m.wafYearCount = #wafYearCount# </isNotEmpty>
         <isNotEmpty prepend="AND" property="warrantyInfo"> m.warrantyInfo = #warrantyInfo# </isNotEmpty>
         <isNotEmpty prepend="AND" property="serviceInfo"> m.serviceInfo = #serviceInfo# </isNotEmpty>
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
   </select>
   

@@ -1,6 +1,7 @@
 package com.dp.plat.support.mail.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -108,11 +109,12 @@ public class MailInfoController {
 			MailSenderInfo mailSenderInfo = new MailSenderInfo();
 			BeanUtils.copyProperties(mailInfo, mailSenderInfo);
 			boolean sendFlag = MailUtil.sendMailWithAttachments(mailSenderInfo);
-			if (sendFlag) {
-				mailInfoService.updateOneMailInfoWhenSendSuccess(mailSenderInfo);
-			} else {
-				mailInfoService.updateMailFailedCount(String.valueOf(id));
-			}
+			mailInfoService.updateMailInfoWhenSend(Arrays.asList(mailSenderInfo));
+//			if (sendFlag) {
+//				mailInfoService.updateOneMailInfoWhenSendSuccess(mailSenderInfo);
+//			} else {
+//				mailInfoService.updateMailFailedCount(String.valueOf(id));
+//			}
 			model.addAttribute("status", sendFlag);
 		} catch (Exception e) {
 			Integer errorLogId = ExceptionHandler.insertException(e);

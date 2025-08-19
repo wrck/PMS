@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
  *
  */
 public class JsonSerializer extends com.fasterxml.jackson.databind.JsonSerializer<Object> {
-	private final FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd");
-	private final FastDateFormat dateTimeFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
+	private static final FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd");
+	private static final FastDateFormat dateTimeFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
 	// private final DecimalFormat decimalFormat = new
 	// DecimalFormat("##,##0.00");
 	// private final NumberFormat percentFormat =
@@ -75,4 +75,16 @@ public class JsonSerializer extends com.fasterxml.jackson.databind.JsonSerialize
 		}
 	}
 
+	public static String format(Date date) {
+		try {
+			String tempValue = dateFormat.format(date);
+			if(StringUtils.isNotBlank(tempValue) && date.equals(DateTime.parse(tempValue).toDate())){
+				return tempValue;
+			} else if (StringUtils.isBlank(tempValue)){
+				return null;
+			}
+		} catch (Exception e) {
+		}
+		return dateTimeFormat.format(date);
+	}
 }

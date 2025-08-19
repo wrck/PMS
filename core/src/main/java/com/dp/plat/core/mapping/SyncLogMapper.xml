@@ -299,16 +299,8 @@
             <if test="model.exception != null">
               and exception = #{model.exception,jdbcType=LONGVARCHAR}
             </if>
-            <if test="fuzzy != null">
-              and (
-                targetMethod like CONCAT("%", #{fuzzy}, "%") or
-                tableObject like CONCAT("%", #{fuzzy}, "%") or
-                dataFrom like CONCAT("%", #{fuzzy}, "%") or
-                dataTo like CONCAT("%", #{fuzzy}, "%")
-              )
-            </if>
         </if>
-        <if test="fuzzySearch == true">
+        <if test="fuzzySearch == true and fuzzy != ''">
             and (
                 targetMethod like CONCAT("%", #{fuzzy}, "%") or
                 tableObject like CONCAT("%", #{fuzzy}, "%") or

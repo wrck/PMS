@@ -242,11 +242,9 @@ public class DataOperationController {
     }
     
     /**
-     * 导入用服一评得分
-     * @param appraiserExcel
-     * @param response
-     * @param map
-     * @throws IOException
+     * 导入界面
+     * @param operationName
+     * @param model
      */
     @RequestMapping(IMPORT_URL)
     public String importForm(String operationName, Model model) {
@@ -270,14 +268,17 @@ public class DataOperationController {
     }
     
     /**
-     * 导入用服一评得分
+     * 数据导入操作确认导入
+     *
+     * @param operationName
      * @param appraiserExcel
+     * @param request
      * @param response
      * @param map
      * @throws IOException
      */
     @RequestMapping(IMPORT_URL + "/{operationName}")
-    public void importObjectives(@PathVariable("operationName") String operationName, @RequestParam(value = "fileExcel") MultipartFile appraiserExcel, HttpServletRequest request, HttpServletResponse response, Map<String, Object> map) throws IOException {
+    public void importOperation(@PathVariable("operationName") String operationName, @RequestParam(value = "fileExcel") MultipartFile appraiserExcel, HttpServletRequest request, HttpServletResponse response, Map<String, Object> map) throws IOException {
         response.setContentType("text/plain; charset=UTF-8");
         PrintWriter out = response.getWriter();
         String errorMessage = "";
@@ -348,11 +349,11 @@ public class DataOperationController {
     }
     
     /**
-     * 导入用服一评得分
-     * @param appraiserExcel
-     * @param response
-     * @param map
-     * @throws IOException
+     * 数据导出操作表单
+     *
+     * @param operationName
+     * @param model
+     * @return
      */
     @RequestMapping(EXPORT_URL)
     public String exportForm(String operationName, Model model) {
@@ -618,11 +619,12 @@ public class DataOperationController {
     }
     
     /**
-     * 导入用服一评得分
-     * @param appraiserExcel
-     * @param response
-     * @param map
-     * @throws IOException
+     * 数据导出操作数据预览
+     * @param id
+     * @param pageParam
+     * @param objectKV
+     * @param model
+     * @return
      */
     @RequestMapping(EXPORT_URL + "/preview/{id}")
     public String exportPreview(@PathVariable("id") Integer id, PageParam<Map<String, String>> pageParam, String objectKV, Model model) {

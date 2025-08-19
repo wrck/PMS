@@ -368,7 +368,8 @@ public class UploadFileUtil {
 			String[] fileTypes = allowFileType.split("\\|");
 			List<String> list = Arrays.asList(fileTypes);
 			if (StringUtils.isBlank(suffix)) {
-				throw new UploadException("不允许上传类型为空的文件，请上传类型为|" + allowFileType + "|的文件！");
+//				throw new UploadException("不允许上传类型为空的文件，请上传类型为|" + allowFileType + "|的文件！");
+			    throw new UploadException("不允许上传类型为空的文件！");
 			} else if (!list.contains(suffix.toLowerCase())) {
 				String prevExt = extName(fileName.replace("." + suffix, ""));
 				boolean showError = true;
@@ -379,7 +380,8 @@ public class UploadFileUtil {
 					showError = !pattern.matcher(suffix).matches();
 				}
 				if (showError) {
-					throw new UploadException("不允许上传类型为【." + suffix + "】的文件，请上传类型为|" + allowFileType + "|的文件！");
+//					throw new UploadException("不允许上传类型为【." + suffix + "】的文件，请上传类型为|" + allowFileType + "|的文件！");
+				    throw new UploadException("不允许上传类型为【." + suffix + "】的文件！");
 				}
 			}
 		}

@@ -830,21 +830,21 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 	}
 	
 	@Override
-	public Integer addSelfActComment(int callBackId, String procdefKey, String taskId, String instId, int result, String message,
+	public Integer addSelfActComment(int objId, String procdefKey, String taskId, String instId, int result, String message,
 			String nextAssignee, String nextAssigneeName) {
-		return addSelfActComment(callBackId, procdefKey, "", taskId, instId, result, message, nextAssignee, nextAssigneeName);
+		return addSelfActComment(objId, procdefKey, "", taskId, instId, result, message, nextAssignee, nextAssigneeName);
 	}
 	
     @Override
-    public Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId, String instId, int result, String message) {
-        return addSelfActComment(callBackId, procdefKey, taskKey, taskId, instId, result, message, null, null);
+    public Integer addSelfActComment(Integer objId, String procdefKey, String taskKey, String taskId, String instId, int result, String message) {
+        return addSelfActComment(objId, procdefKey, taskKey, taskId, instId, result, message, null, null);
     }
 	
 	@Override
-	public Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId,
+	public Integer addSelfActComment(Integer objId, String procdefKey, String taskKey, String taskId,
 			String instId, int result, String message, String nextAssignee, String nextAssigneeName) {
 		HashMap<String, Object> params = new HashMap<>();
-		params.put("objId", callBackId);
+		params.put("objId", objId);
 		params.put("procdefKey", procdefKey);
 		params.put("taskKey", taskKey);
 		params.put("taskId", taskId);
@@ -858,9 +858,9 @@ public class WorkFlowServiceImpl implements WorkFlowService {
 	}
 
 	@Override
-	public void addSelfActComment(int callBackId, String key, String taskId,
+	public void addSelfActComment(int objId, String key, String taskId,
 			String instId, int result, String message) {
-		workflowDao.insertActComment(callBackId ,key ,taskId , instId ,result , message);
+		workflowDao.insertActComment(objId ,key ,taskId , instId ,result , message);
 	}
 
 	

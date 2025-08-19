@@ -56,6 +56,9 @@ public class FastjsonTypeHandler extends AbstractJsonTypeHandler<Object> {
 
 	@Override
 	public String toJsonString(Object obj) {
+	    if (obj == null) {
+            return null;
+        }
 		if (obj instanceof String) {
 			return obj.toString();
 		}

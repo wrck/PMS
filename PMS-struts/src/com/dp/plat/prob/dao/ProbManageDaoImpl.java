@@ -2,13 +2,14 @@ package com.dp.plat.prob.dao;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.BaseDao;
 import com.dp.plat.data.bean.Project;
@@ -17,6 +18,7 @@ import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.prob.bean.Prob;
 import com.dp.plat.prob.bean.ProbFile;
+import com.dp.plat.prob.bean.ProbProduct;
 import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
@@ -24,8 +26,12 @@ import com.dp.plat.prob.bean.ProbStatistic;
 import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.util.ProductItemExample;
+import com.dp.plat.prob.util.ProductItemExampleBuilder;
 import com.dp.plat.prob.util.SoftVersionUtil;
-import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
+import com.dp.plat.prob.version.SoftVersionParser;
+import com.dp.plat.prob.vo.ProbProductPageParam;
+import com.dp.plat.prob.vo.ProbProductVO;
 import com.dp.plat.prob.vo.ProductComponentPageParam;
 import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.util.MessageUtil;
@@ -119,14 +125,32 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 					softVersion.setMarkStart(parser.getMark());
 					softVersion.setMarkEnd(parser.getMark());
 					softVersion.setSplited(1);
+					softVersion.setCustomInfoByKey("parser", parser);
 				}
+			} else if (StringUtils.isNotBlank(softVersion.getManualEntrySub())) {
+			    List<SoftVersionParser> parserList = Collections.emptyList();
+			    if (!"other".equalsIgnoreCase(softVersion.getPlatformType())) {
+			        Map<String, Map<String, List<SoftVersionParser>>> softVersionParser = SoftVersionUtil.createSoftVersionRangeParsers(softVersion.getManualEntrySub());
+    			    if (!softVersionParser.isEmpty()) {
+                        Map<String, List<SoftVersionParser>> parser = softVersionParser.get(softVersion.getManualEntrySub());
+                        if (parser != null && !parser.isEmpty()) {
+                            parserList = parser.values().iterator().next();
+                        }
+                    }
+			    }
+			    if (parserList == null || parserList.isEmpty()) {
+			        SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(StringUtils.defaultIfBlank(softVersion.getEntryStart(), softVersion.getManualEntrySub()), StringUtils.defaultIfBlank(softVersion.getMarkStart(), softVersion.getManualEntrySub()));
+			        SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(StringUtils.defaultIfBlank(softVersion.getEntryEnd(), softVersion.getManualEntrySub()), StringUtils.defaultIfBlank(softVersion.getMarkEnd(), softVersion.getManualEntrySub()));
+			        parserList = Arrays.asList(parserStart, parserEnd);
+			    }
+			    softVersion.setCustomInfoByKey("parser", parserList);
 			}
 		}
 		Map<String, Object> paramMap = new HashMap<String, Object>();
 		paramMap.put("probId", probId);
 		paramMap.put("list", softVersionList);
 		paramMap.put("createBy", getCurrUsername());
-		getSqlMapClientTemplate().update("insert_into_softversion", paramMap);
+		getSqlMapClientTemplate().insert("insert_into_softversion", paramMap);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -405,8 +429,31 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 		getSqlMapClientTemplate().delete("drop_prob_statistics_projectTempTable");
 		return projects;
 	}
-
+	
 	@Override
+    public List<?> queryContractShipmentSoftList(ProbStatistic probStatistic, DisplayParam displayParam) {
+	    // 创建临时表
+        getSqlMapClientTemplate().insert("create_prob_statistics_projectTempTable", probStatistic);
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("probStatistic", probStatistic);
+        if (probStatistic.getFilterItem()) {
+            ProductItemExample example = ProductItemExampleBuilder.buildFromSearchCriteria(paramMap, SystemContext.getConfig("prob.product.item.filters"));
+            paramMap.put("itemFilters", example.getItemFilters());
+        }
+        Integer total = (int) getSqlMapClientTemplate().queryForObject("query_contract_shipment_soft_count", paramMap);
+        if (displayParam.getExport()) {
+            displayParam.setPagesize(total);
+        }
+        displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+        displayParam.setTotalcount(total);
+        paramMap.put("displayParam", displayParam);
+        List<?> projects = getSqlMapClientTemplate().queryForList("query_contract_shipment_soft_list", paramMap);
+        // 删除临时表
+        getSqlMapClientTemplate().delete("drop_prob_statistics_projectTempTable");
+        return projects;
+    }
+
+    @Override
 	public void insertProbReadLog(ProbReadLog probReadLog) {
 		getSqlMapClientTemplate().insert("insertProbReadLog", probReadLog);
 	}
@@ -518,7 +565,142 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 
     @Override
     public void deleteProductComponentById(Integer id) {
-        getSqlMapClientTemplate().delete("updateProductComponentByIdSelective", id);
+        getSqlMapClientTemplate().delete("deleteProductComponentById", id);
     }
 	
+    @Override
+    public ProbProduct selectProbProductById(Integer probProductId) {
+        return (ProbProduct) getSqlMapClientTemplate().queryForObject("selectProbProductById", probProductId);
+    }
+
+    @Override
+    public ProbProductVO selectProbProductVOById(Integer probProductId) {
+        return (ProbProductVO) getSqlMapClientTemplate().queryForObject("selectProbProductVOById", probProductId);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ProbProduct> selectProbProductList(ProbProduct ProbProduct) {
+        return getSqlMapClientTemplate().queryForList("selectProbProductList", ProbProduct);
+    }
+
+    @Override
+    public List<ProbProductVO> selectProbProductListPageable(ProbProductPageParam pageParam) {
+        DisplayParam displayParam = pageParam.getDisplayParam();
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+            pageParam.setDisplayParam(displayParam);
+        }
+        if (!displayParam.getExport()) {
+            Integer total = (Integer) getSqlMapClientTemplate().queryForObject("countProbProductListPageable", pageParam);
+            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+            displayParam.setTotalcount(total);
+        } else {
+            pageParam.setDisplayParam(null);
+        }
+        
+        List list = getSqlMapClientTemplate().queryForList("selectProbProductListPageable", pageParam);
+        if (displayParam.getExport()) {
+            displayParam.setPagesize(list.size()); 
+        }
+        return list;
+    }
+
+    @Override
+    public Integer countProbProductListPageable(ProbProductPageParam displayParam) {
+        return (Integer) getSqlMapClientTemplate().queryForObject("countProbProductListPageable", displayParam);
+    }
+    
+    @Override
+    public Integer insertProbProduct(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return 0;
+        }
+        probProduct.setCreateBy(getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("insertProbProduct", probProduct);
+    }
+    
+    @Override
+    public Integer insertProbProductSelective(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return 0;
+        }
+        probProduct.setCreateBy(getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("insertProbProductSelective", probProduct);
+    }
+    
+    @Override
+    public Integer bastchInsertProbProduct(List<ProbProduct> list, int probId) {
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("probId", probId);
+        paramMap.put("list", list);
+        paramMap.put("createBy", getCurrUsername());
+        return (Integer) getSqlMapClientTemplate().insert("bastchInsertProbProduct", paramMap);
+    }
+    
+    @Override
+    public Integer insertOrUpdateProbProductSelective(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return 0;
+        }
+        probProduct.setCreateBy(getCurrUsername());
+        probProduct.setUpdateBy(getCurrUsername());
+        if (probProduct.getId() == null || probProduct.getId() == 0) {
+            return this.insertProbProductSelective(probProduct);
+        } else {
+            this.updateProbProductByIdSelective(probProduct);
+            return probProduct.getId();
+        }
+    }
+    
+    @Override
+    public void updateProbProductById(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return;
+        }
+        probProduct.setUpdateBy(getCurrUsername());
+        getSqlMapClientTemplate().update("updateProbProductById", probProduct);
+    }
+
+    @Override
+    public void updateProbProductByIdSelective(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return;
+        }
+        probProduct.setUpdateBy(getCurrUsername());
+        getSqlMapClientTemplate().update("updateProbProductByIdSelective", probProduct);
+    }
+
+    
+    @Override
+    public void updateProbProductByProbIdSelective(ProbProduct probProduct) {
+        if (probProduct == null) {
+            return;
+        }
+        probProduct.setUpdateBy(getCurrUsername());
+        getSqlMapClientTemplate().update("updateProbProductByProbIdSelective", probProduct);
+    }
+
+    @Override
+    public void deleteProbProductById(Integer id) {
+        getSqlMapClientTemplate().delete("deleteProbProductById", id);
+    }
+    
+    @Override
+    public void deleteProbProductByProbId(Integer probId) {
+        getSqlMapClientTemplate().delete("deleteProbProductByProbId", probId);
+    }
+
+    @Override
+    public List<? extends Object> selectProductItemListByParams(Map<String, Object> commonMap) {
+        return getSqlMapClientTemplate().queryForList("selectProductItemListByParams", commonMap);
+    }
+    
+    @Override
+    public List<? extends Object> selectProductItemListByExample(ProductItemExample example) {
+        return getSqlMapClientTemplate().queryForList("selectProductItemListByExample", example);
+    }
 }

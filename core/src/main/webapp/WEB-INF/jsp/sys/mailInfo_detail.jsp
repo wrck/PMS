@@ -91,6 +91,9 @@
 							continue;
 						} */
 						var value = mailInfo[key] != null ? mailInfo[key] : "";
+						if (key == 'failedMessage' && value && typeof renderFailedMessage != 'undefined') {
+							value = renderFailedMessage(value);
+						}
 						$("#mailInfobase").append("<tr><th>" + key +"</th>" + "<td>" + value + "</td></tr>");
 						/* if ($.inArray(key, exclueArray) >= 0) {
 							$("#mailInfobase").append("<tr><th>" + key +"</th>" + "<td>" + value + "</td></tr>");
@@ -135,6 +138,19 @@
 				}
             })
 		});
+
+	    function renderFailedMessage(errorIds) {
+	    	errorIds = errorIds || "";
+	    	var idArr = errorIds.split(",");
+	    	var html = "";
+	    	for(var i in idArr) {
+	    		var id = idArr[i];
+	    		if (id) {
+	    			html += "<a class='btn btn-xs btn-success' href='" + basePath +"/sys/syslog/"+id+".html'><i class='icon-ok'></i>错误日志" + id + "</a>";
+	    		}
+	    	}
+	    	return html;
+	    }
 	</script>
 </jsTag>
 </html>

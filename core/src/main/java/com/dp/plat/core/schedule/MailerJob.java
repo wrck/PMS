@@ -1,6 +1,7 @@
 package com.dp.plat.core.schedule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -37,13 +38,17 @@ public class MailerJob {
 				ExceptionHandler.insertException(e);
 			}
 		}
-		if (!successMails.isEmpty()) {
-//			sendSuccessIds.deleteCharAt(sendSuccessIds.length() - 1);
-//			mailInfoService.updateMailWhenSendSuccess(sendSuccessIds.toString());
-			mailInfoService.updateMailInfoWhenSendSuccess(successMails);
+		// 进行合并
+		if (!senderInfos.isEmpty()) {
+			mailInfoService.updateMailInfoWhenSend(Arrays.asList(senderInfos.toArray(new MailInfo[]{})));
 		}
-		if (!sendFailedIds.isEmpty()) {
-			mailInfoService.updateMailFailedCount(StringUtils.join(sendFailedIds, ","));
-		}
+//		if (!successMails.isEmpty()) {
+////			sendSuccessIds.deleteCharAt(sendSuccessIds.length() - 1);
+////			mailInfoService.updateMailWhenSendSuccess(sendSuccessIds.toString());
+//			mailInfoService.updateMailInfoWhenSendSuccess(successMails);
+//		}
+//		if (!sendFailedIds.isEmpty()) {
+//			mailInfoService.updateMailFailedCount(StringUtils.join(sendFailedIds, ","));
+//		}
 	}
 }

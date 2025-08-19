@@ -4,7 +4,7 @@
 <html>
 <head>
 <title>发生未知错误</title>
-<LINK href="../css/common.css" type=text/css rel=stylesheet>
+<dp:link href="../css/common.css" type="text/css" rel="stylesheet" />
 <!-- 添加css和js的引用在这里 -->
 </head>
 <body style="BACKGROUND-COLOR: #efefef;">
@@ -18,7 +18,7 @@
 				</tr>
 				<tr>
 				  <td id="error">
-		            <pre>${errmsg}</pre>
+		            <dp:errormsg />
 		          </td>
 				</tr>
 			</tbody>

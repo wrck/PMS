@@ -37,11 +37,11 @@ fieldset .table>thead>tr>th {
 };
 var prevNarBarSelector = ""; */
 </script>
-<script type="text/javascript" src="js/presales/initNavBar.js">
+<dp:script type="text/javascript" src="js/presales/initNavBar.js">
 var presalesId = ${presales.presalesId};
 var officeCode = "${presales.officeCode}";
 var presalesSource = "${presales.source}";
-</script>
+</dp:script>
 <%-- <script type="text/javascript">
 function ajaxLoadInfo(type, callback) {
     if (!type) {

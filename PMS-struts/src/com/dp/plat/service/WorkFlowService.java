@@ -399,19 +399,19 @@ public interface WorkFlowService {
 	void doSelfTask(Task task,  String instId , String comment, Map<String, Object> vars) ;
 	/**
 	 * 增加自定义的审批意见表
-	 * @param callBackId
+	 * @param objId
 	 * @param procdefKey
 	 * @param id
 	 * @param instId
 	 * @param result
 	 * @param message
 	 */
-	public void addSelfActComment(int callBackId, String procdefKey, String taskId,
+	public void addSelfActComment(int objId, String procdefKey, String taskId,
 			String instId, int result, String message);
 	
 	/**
      * 增加自定义的审批意见表
-     * @param callBackId
+     * @param objId
      * @param procdefKey
      * @param taskKey
      * @param taskId
@@ -420,12 +420,12 @@ public interface WorkFlowService {
      * @param message
      * @return 
      */
-	Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId,
+	Integer addSelfActComment(Integer objId, String procdefKey, String taskKey, String taskId,
             String instId, int result, String message);
 	
 	/**
 	 * 增加自定义的审批意见表
-	 * @param callBackId
+	 * @param objId
 	 * @param procdefKey
 	 * @param taskId
 	 * @param instId
@@ -435,11 +435,11 @@ public interface WorkFlowService {
 	 * @param nextAssigneeName
 	 * @return 
 	 */
-	Integer addSelfActComment(int callBackId, String procdefKey, String taskId, String instId, int result, String message,
+	Integer addSelfActComment(int objId, String procdefKey, String taskId, String instId, int result, String message,
 			String nextAssignee, String nextAssigneeName);
 	
 	/**
-	 * @param callBackId
+	 * @param objId
 	 * @param procdefKey
 	 * @param taskKey
 	 * @param taskId
@@ -449,7 +449,7 @@ public interface WorkFlowService {
 	 * @param nextAssignee
 	 * @param nextAssigneeName
 	 */
-	Integer addSelfActComment(Integer callBackId, String procdefKey, String taskKey, String taskId,
+	Integer addSelfActComment(Integer objId, String procdefKey, String taskKey, String taskId,
 			String instId, int result, String message, String nextAssignee, String nextAssigneeName);
 	
 	/**

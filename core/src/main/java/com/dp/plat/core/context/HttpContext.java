@@ -189,24 +189,22 @@ public class HttpContext {
     }
     
     public static HttpServletRequest createServletRequest() {
-        return createServletRequest(null);
+        return createServletRequest((User) null);
     }
     
     public static HttpServletRequest createServletRequest(User user) {
+        Principal principal = createServletRequestPrincipal(user);
+        return createServletRequest(principal);
+    }
+
+    public static HttpServletRequest createServletRequest(Principal principal) {
         try {
             // 获取webApplication上下文
             WebApplicationContext webApplicationContext = ContextLoader.getCurrentWebApplicationContext();
             ServletContext servletContext = webApplicationContext.getServletContext();
     
             // 伪造请求，绑定用户，绑定当前线程请求上下文
-            if (user == null) {
-                user = new User();
-                user.setUserName("mock");
-                user.setUserCustom3("mock");
-            } else {
-                user.setUserCustom3(StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(user.getUserCustom3(), user.getUserName()), "mock"));
-            }
-            Principal principal = new Principal(user);
+            principal = createServletRequestPrincipal(principal);
             return HttpContext.createServletRequest(servletContext, principal);
         } catch (Throwable e) {
         }
@@ -231,6 +229,47 @@ public class HttpContext {
         return request;
     }
     
+    /**
+     * 创建请求的绑定用户
+     * @param user
+     * @return
+     */
+    public static Principal createServletRequestPrincipal(String userName) {
+        User user = new User();
+        user.setUserName(userName);
+		return createServletRequestPrincipal(user);
+	}
+
+    /**
+     * 创建请求的绑定用户
+     * @param user
+     * @return
+     */
+    public static Principal createServletRequestPrincipal(User user) {
+        if (user == null) {
+            user = new User();
+            user.setUserName("mock");
+            user.setUserCustom3("mock");
+        } else {
+            user.setUserCustom3(StringUtils.defaultIfBlank(StringUtils.defaultIfBlank(user.getUserCustom3(), user.getUserName()), "mock"));
+        }
+        Principal principal = new Principal(user);
+        principal.setUserInfoId(user.getUserId());
+        return principal;
+    }
+
+    /**
+     * 创建请求的绑定用户
+     * @param principal
+     * @return
+     */
+    public static Principal createServletRequestPrincipal(Principal principal) {
+    	// 创建请求的绑定用户
+        if (principal == null) {
+        	return createServletRequestPrincipal((User) null);
+        }
+        return principal;
+    }
     public static URL getHostAndPort() {
         URL url = null;
         String host = null;

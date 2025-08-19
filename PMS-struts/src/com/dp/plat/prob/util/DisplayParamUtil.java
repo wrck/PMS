@@ -3,6 +3,10 @@ package com.dp.plat.prob.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.dp.plat.data.bean.NotificationTemplate;
+import com.dp.plat.util.NotificationTemplateUtil;
+import com.dp.plat.util.StringEscUtil;
+
 /**
  * 生成displayTag 要进行排序的参数Map
  * @author j01441
@@ -36,6 +40,22 @@ public class DisplayParamUtil {
 		map.put("6", "createTime");
 		map.put("7", "updateTime");
 		return map;
+	}
+	
+	/**
+	 * 查找模版字符串
+	 * @param templateCode
+	 * @return
+	 */
+	public static String getTemplate(String templateCode) {
+	    NotificationTemplate template = NotificationTemplateUtil.getTemplate(templateCode);
+	    String templateString = null;
+	    if (template == null) {
+	        templateString = StringEscUtil.getText(templateCode);
+	    } else {
+	        templateString = template.getNotificationContent();
+	    }
+	    return templateString;
 	}
 	
 }

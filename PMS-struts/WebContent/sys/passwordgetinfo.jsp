@@ -16,12 +16,12 @@
 
 <script type="text/javascript" src="js/jquery.js"></script>
 <script type="text/javascript" src="js/jquery-ui.js"></script>
-<script type="text/javascript" src="js/dp-ui.js"></script>
-<script type="text/javascript" src="js/util.js"></script>
+<dp:script type="text/javascript" src="js/dp-ui.js"></dp:script>
+<dp:script type="text/javascript" src="js/util.js"></dp:script>
 <script type="text/javascript" src="js/zxml.src.js"></script>
 <script type="text/javascript" src="js/zxmlqueue.js"></script>
 <script type="text/javascript" src="js/calendar.js"></script>
-<script type="text/javascript" src="js/common.js"></script>
+<dp:script type="text/javascript" src="js/common.js"></dp:script>
 <script type="text/javascript" src="js/md5.js"></script>
 <script type="text/javascript">
 var lold = 0, lnew = 0, lcon = 0, cold = 0, cnew = 0, ccon = 0;

@@ -14,9 +14,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<insert id="insert_into_prob" parameterClass="Prob">
 		<![CDATA[
 			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
-				duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom)
+				duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom
+				, customInfo
+			)
 			VALUES(#probNum#,#watch#,#theme#,#desc#,#solution#,#status#,#startdate#,#duedate#,
-				#attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now())
+				#attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now()
+			    , #customInfo#
+			)
 		]]>
 		<selectKey resultClass="int" keyProperty="probId">
 			SELECT last_insert_id() as id ;   
@@ -80,7 +84,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<select id="query_prob_list" parameterClass="java.util.Map" resultClass="Prob">
 		<![CDATA[
 			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime
-			, t1.desc, t1.solution, t1.productType, a.affectedVersion 
+			, t1.desc, t1.solution, t1.productType, a.affectedVersion, t1.customInfo
 			FROM prob_main t1 
 			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
 			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
@@ -157,6 +161,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="remark" column="remark"/>
 		<result property="visibleRange" column="visibleRange"/>
 		<result property="readStatus" column="readStatus"/>
+		<result property="customInfo" column="customInfo"/>
 	</resultMap>
 	<select id="query_prob_one" parameterClass="Prob" resultMap="ProbSingleMap">
 		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
@@ -201,6 +206,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="customInfo">
+		    <!-- customInfo = #customInfo:JSON#  -->
+		    customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </isNotEmpty>
 		<![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -219,6 +228,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="attachments"><![CDATA[ attachments = concat(attachments,',',$attachments$)]]></isNotEmpty>
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="customInfo">
+            <!-- customInfo = #customInfo:JSON#  -->
+            customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </isNotEmpty>
 		<![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -1145,6 +1158,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
             </isNotEmpty>
             and (sv.`conpChange` = 1 or sv.`bootChange` = 1 or sv.`cpldChange` = 1 or sv.`pcbChange` = 1)
+            <isNotNull property="version">
+                <isNotEmpty prepend="AND" property="version.conp"> sv.conp = #version.conp# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.boot"> sv.boot = #version.boot# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.cpld"> sv.cpld = #version.cpld# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.pcb"> sv.pcb = #version.pcb# </isNotEmpty>
+            </isNotNull>
 		GROUP BY sv.`projectId`, sv.`barcode`
     </insert>
     

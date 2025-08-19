@@ -9,9 +9,7 @@
 		<!-- <version>${project.parent.version}</version> -->
 	</parent>
 	
-	<groupId>com.dp.plat</groupId>
 	<artifactId>pms-struts</artifactId>
-	<version>0.0.1</version>
 	<name>pms-struts</name>
 	<packaging>war</packaging>
 	
@@ -64,6 +62,12 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>erms-plugin</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <!-- FP集成接口 -->
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>pms-ext-fp</artifactId>
+            <version>${project.version}</version>
         </dependency>
 		<!-- 安全组件  -->
 		<dependency>

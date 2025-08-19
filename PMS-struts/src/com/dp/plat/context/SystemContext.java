@@ -81,19 +81,14 @@ public class SystemContext {
     }
     
     public <T> T getCacheJsonValue(String argName) {
-        Arg arg = this.getArg(argName);
-        if (arg != null) {
-            Object cache = arg.getCache();
-            if (cache == null) {
-                cache = JSON.parseObject(StringUtils.defaultIfEmpty(arg.getBigTextValue(), arg.getTextValue()));
-                arg.setCache(cache);
-            }
-            return (T) cache;
-        }
-        return arg != null ? (T) arg.getCache() : null;
+        return getCacheJsonValue(argName, null, null);
     }
 
     public <T> T getCacheJsonValue(String argName, Class<T> type) {
+        return getCacheJsonValue(argName, type, null);
+    }
+    
+    public <T> T getCacheJsonValue(String argName, Class<T> type, T defaultValue) {
         Arg arg = this.getArg(argName);
         if (arg != null) {
             Object cache = arg.getCache();
@@ -101,9 +96,9 @@ public class SystemContext {
                 cache = JSON.parseObject(StringUtils.defaultIfEmpty(arg.getBigTextValue(), arg.getTextValue()), type);
                 arg.setCache(cache);
             }
-            return (T) cache;
+            return (T) (cache != null ? cache : defaultValue);
         }
-        return arg != null ? (T) arg.getCache() : null;
+        return arg != null ? (T) arg.getCache() : defaultValue;
     }
 
     /**
@@ -148,7 +143,7 @@ public class SystemContext {
     }
     
     /**
-     * 获取CRM系统的配置
+     * 获取系统的配置
      * @return
      */
     public static Map<String, Object> getConfig(String sysKey) {

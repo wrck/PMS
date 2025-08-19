@@ -104,4 +104,10 @@ public interface MailInfoMapper {
 	 */
 	void updateMailFailedCount(String failedMailIds);
 
+	/**
+	 * 更新邮件发送情况，发送成功更新邮件实际发送地址和发送状态, 发送失败更新失败次数和失败信息
+	 * @param mails
+	 */
+	void updateMailInfoWhenSend(List<MailInfo> mails);
+
 }

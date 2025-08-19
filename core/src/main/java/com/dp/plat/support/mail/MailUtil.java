@@ -378,7 +378,11 @@ public class MailUtil {
             Thread.currentThread().setContextClassLoader(Message.class.getClassLoader());
             return sendMailWithAttachments(mailInfo);
         } catch (Exception e) {
-			ExceptionHandler.insertException(e);
+			Integer errorId = ExceptionHandler.insertException(e);
+			if (errorId != null && errorId != 0) {
+//				String failedMessage = StringUtils.trimToEmpty(mailInfo.getFailedMessage());
+				mailInfo.setFailedMessage(String.valueOf(errorId));
+			}
 		}
 		int faliedCount = mailInfo.getFailedCount() != null ? mailInfo.getFailedCount() : 0;
 		mailInfo.setFailedCount(faliedCount + 1);
@@ -942,7 +946,7 @@ public class MailUtil {
         }
         return format(format, params, beforeSplit, afterSplit);
     }
-	
+
 	/**
      * 处理描述静态方法
      * @param description
@@ -997,7 +1001,7 @@ public class MailUtil {
         }
         return format;
     }
-	
+
 
 	/**
 	 * 设置邮件接收者。<br>
@@ -1350,10 +1354,10 @@ public class MailUtil {
 		}
 		return -1;
 	}
-	
+
 	/**
      * 切割邮箱地址字符串，返回邮箱地址数组
-     * 
+     *
      * @param mailStr
      * @param regex
      * @return
@@ -1473,7 +1477,7 @@ public class MailUtil {
 		}
 		return new InternetAddress(nickEncodeText + "<" + address + ">");
 	}
-	
+
 	/**
      * 移除无效的地址并进行重发
      * @param mailInfo
@@ -1485,12 +1489,12 @@ public class MailUtil {
         if (!needResend) {
             return needResend;
         }
-        
+
 //        Set<String> to = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getToAddress(), ";,")));
 //        Set<String> tos = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getTos(), ";,")));
 //        Set<String> ccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getCcs(), ";,")));
 //        Set<String> bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";,")));
-//        
+//
         Set<String> tos = new LinkedHashSet<String>(0);
         if (StringUtils.isNotEmpty(mailInfo.getToAddress())) {
             tos.addAll(Arrays.asList(splitMailStr(mailInfo.getToAddress())));
@@ -1510,25 +1514,25 @@ public class MailUtil {
 //            bccs = new LinkedHashSet<String>(Arrays.asList(StringUtils.split(mailInfo.getBccs(), ";, ")));
             bccs = new LinkedHashSet<String>(Arrays.asList(mailInfo.getBccs().split(DEFAULT_REGEX)));
         }
-        
+
         for (Address invalidAddress : invalidAddresses) {
             String invalid = invalidAddress.toString();
             tos.remove(invalid);
             ccs.remove(invalid);
             bccs.remove(invalid);
         }
-        
+
         // 如果移除无效地址之后所有收件人为空则不重新发送
         if ((tos.size() + ccs.size() + bccs.size()) == 0) {
             return false;
         }
-        
+
         mailInfo.setTos(StringUtils.join(tos, DEFAULT_SEPARATOR));
         mailInfo.setCcs(StringUtils.join(ccs, DEFAULT_SEPARATOR));
         mailInfo.setBccs(StringUtils.join(bccs, DEFAULT_SEPARATOR));
         return sendMailWithAttachments(mailInfo);
     }
-	
+
 	private static String quoteSplit(String split) {
 		if (!split.matches(".*[\\$|\\(|\\)|\\*|\\+|\\.|\\[|\\]|\\?|\\\\|\\/|\\^|\\{|\\}].*")) {
 			return split;

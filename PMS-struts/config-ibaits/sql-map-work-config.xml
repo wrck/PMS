@@ -402,7 +402,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		ORDER BY m.`watch` ASC, m.`priority` DESC, m.`id` DESC --> 
 	<select id="query_probTask_list" parameterClass="map" resultClass="com.dp.plat.prob.param.ProbParam">
 		SELECT 
-			m.id AS probId, m.probNum, m.theme, m.createTime, m.status, t1.`basicDataName` AS watchName, t2.`basicDataName` AS statusName, t3.basicDataName AS priorityName, t4.username as trackingUser, CONCAT(t4.username, '-', t4.realName) AS trackingUsername, d.`departmentName` AS officeName 
+			m.id AS probId, m.probNum, m.theme, m.createTime, m.status, t1.`basicDataName` AS watchName, t2.`basicDataName` AS statusName, t3.basicDataName AS priorityName, t4.username as trackingUser, CONCAT(t4.username, '-', t4.realName) AS trackingUsername, d.`departmentName` AS officeName
+			, m.customInfo 
 		FROM
 		    `prob_main` m 
 		    LEFT JOIN `prob_restore` r 

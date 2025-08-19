@@ -145,6 +145,26 @@ public class SubcontractConstant {
      * 项目验收的交付件类型配置KEY
      */
     public static final String SUBCONTRACT_INSPECTION_DELIVERY_TYPES_CONFIG_KEY = "subcontract.inspection.delivery.types.config";
+    
+    /**
+     * 项目验收的交付件类型发票原件名称
+     */
+    public static final String SUBCONTRACT_INSPECTION_DELIVERY_TYPES_INVOICE = "subcontract.inspection.delivery.types.invoice";
+    
+    /**
+     * 项目验收的交付件类型验收材料名称
+     */
+    public static final String SUBCONTRACT_INSPECTION_DELIVERY_TYPES_INSPECTION = "subcontract.inspection.delivery.types.inspection";
+    
+    /**
+     * 项目验收的交付件类型发票类型检查条件
+     */
+    public static final String SUBCONTRACT_INSPECTION_DELIVERY_CHECK_INVOICE_CONDITION = "subcontract.inspection.delivery.check.invoice.condition";
+    /**
+     * 项目验收的交付件类型发票状态检查条件
+     */
+    public static final String SUBCONTRACT_INSPECTION_DELIVERY_CHECK_INVOICE_STATUS_CONDITION = "subcontract.inspection.delivery.check.invoice.status.condition";
+
 
 	/**
 	 * 流程任务TaskKey

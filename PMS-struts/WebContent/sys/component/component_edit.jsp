@@ -13,7 +13,7 @@
 <link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.css" />
 <script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
 <script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
-<script type="text/javascript" src="js/summernote/summernote-util.js"></script>
+<dp:script type="text/javascript" src="js/summernote/summernote-util.js"></dp:script>
 <style>
 	.probRestoreBoxId{
 		display: none;
@@ -68,7 +68,7 @@
 		padding: 2px 0;
 	}
 </style>
-<script type="text/javascript" src="js/prob/render.js"></script>
+<dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
 <script type="text/javascript">
 	$(function(){
 		//加载日期控件
@@ -660,8 +660,7 @@
                                 </div>
                                 <label for="status" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><span class="redmark">*</span><s:text name="prob.info.status"></s:text></label>
                                 <div class="col-xs-2">
-                                    <s:select id="status" name="prob.status" list="statusList" listKey="basicDataId" listValue="basicDataName"
-                                        cssClass="form-control"></s:select>
+                                    <s:select id="status" name="prob.status" list="statusList" listKey="basicDataId" listValue="basicDataName" cssClass="form-control"></s:select>
                                 </div>
                                 <label for="visibleRange" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><span class="redmark">*</span><s:text name="prob.info.visibleRange"></s:text></label>
                                 <div class="col-xs-1">
@@ -734,7 +733,7 @@
 								</div>
 								<!--old 已确认 状态可以检索版本 -->
 								<!--new 新创建或待确认的技术公告允许修改  -->
-								<％-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --％>
+								<％-- <s:if test="%{prob.status == 0 || prob.status == 1 || prob.status == 8}">  --％>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
 										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
 									</label>
@@ -750,7 +749,7 @@
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
 								<!--old 已确认 状态可以检索版本 -->
 								<!--new 新创建或待确认的技术公告允许修改  -->
-								<%-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --%>
+								<%-- <s:if test="%{prob.status == 0 || prob.status == 1 || prob.status == 8}">  --%>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
 										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
 									</label>

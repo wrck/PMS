@@ -28,6 +28,9 @@ public class MailSenderInfo extends MailInfo {
 	}
 
 	public Properties getProperties(MailSenderInfo mailSenderInfo) {
+		if (mailSenderInfo == null) {
+			mailSenderInfo = this;
+		}
 		Properties p = new Properties();
 		p.put("mail.user", mailSenderInfo.getUserName());
 		p.put("mail.from", mailSenderInfo.getFromAddress());

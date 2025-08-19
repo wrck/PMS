@@ -144,6 +144,15 @@ a span {
                     return false;
                 }
             }
+            
+            var hasSoft = $("#hasSoft1:checked").val();
+            var softLogIds = $.trim($("#softLogIds").val());
+            if (hasSoft == '1' && softLogIds == '') {
+            	alert("涉及软件版本，至少通过弹窗更新一次有效的版本信息。");
+            	return false;
+            }
+            
+            
             var $tagMusts = $(".tag-must:visible,.tag-must-plus:visible").not(".tag-must-ignore")
 			for (var i = 0; i < $tagMusts.length; i++) {
                 var _this = $tagMusts[i];
@@ -151,14 +160,15 @@ a span {
 				var name = $inpt.attr("name");
 				var type = $inpt.attr("type");
                 var $target = $("[name='" + name + "']" + (type == 'radio' || type == 'checkbox' ? ":checked" : ""));
+                var messageText = $.trim($(_this).text());
                 var value = $target.val();
 				if (!value) {
-					alert($(_this).text() + "不能为空！");
+					alert(messageText + "不能为空！");
 					$target.focus();
 					return false;
 				}
 				if (name == "projectMaintenance.processTime" && value > '<s:date name="cbForm.currentDateTime" format="yyyy-MM-dd"/>') {
-					alert($(_this).text() + "不能大于当前时间！");
+					alert(messageText + "不能大于当前时间！");
                     $target.focus();
                     return false;
 				}
@@ -214,6 +224,13 @@ a span {
 		
 		//uploadCallback("${projectMaintenance.deliverFileIds}", "projectDeliver");
 		showUploadFile("${projectMaintenance.deliverFileIds}", globalUploadType);
+		
+		$("#hasSoft1").click(function() {
+			if (!$("#softLogIds").val()) {
+				$("#checkSoftVesionBtn").click();
+			}
+		});
+		updateSoftVersionCallback();
 		
 		var categoryWithSubMap = [];
 		var subCategory = "${projectMaintenance.subCategory}";
@@ -538,6 +555,42 @@ a span {
     		});
         }
 	}
+    function checkSoftVesion(){
+        var projectId = $("#maintenanceProjectId").val();
+        var contractNo = $("#maintenanceContractNo").val();
+        var params = $.param({"project.projectId":projectId,"project.contractNo":contractNo});
+        popWindow("module/sub/checkSoftVersion.action?" + params, "90vw", 650, '版本信息', uploadDialog, true);
+        return false;
+    }
+    
+    function updateSoftVersionCallback(data) {
+    	data = data || {};
+    	var softLogIds = $.trim($("#softLogIds").val());
+    	var softLogInfos = $.trim($("#softLogInfos").val());
+    	if (softLogIds == '') {
+    		softLogIds = [];
+    		softLogInfos = [];
+    	} else {
+    		softLogIds = softLogIds.split(",");
+    		softLogInfos = JSON.parse(softLogInfos);
+    	}
+    	var log = data.softChangeLog || {};
+    	if (log.id) {
+    		softLogIds.push(log.id);
+    		softLogInfos.push({
+    			changeVersion: log.changeVersion,
+    			changeRemark: log.changeRemark,
+    			versionAndCreateTime: log.versionAndCreateTime
+    		})
+    	}
+    	$("#softLogIds").val(softLogIds.join(","));
+    	$("#softLogInfos").val(JSON.stringify(softLogInfos));
+    	var displayHtml = "";
+    	for (let logInfo of softLogInfos) {
+    		displayHtml += `<div class="softLogInfo" style="padding:0 1rem;"><div>\${logInfo.versionAndCreateTime}</div><div>\${logInfo.changeRemark}</div></div>`;
+		}
+    	$("#softLogInfosText").html(displayHtml);
+    }
 </script>
 </head>
 <body>
@@ -781,7 +834,24 @@ a span {
                             </td>
                         </tr>
                         <tr>
-                            <td class="serviceSalesSupportHidden nonBusinessHidden">
+                            <td class="tag tag-must serviceSalesSupportHidden nonBusinessHidden">
+                                <a id="checkSoftVesionBtn" class="btn btn-success btn-xs" href="javascript:void(0)" onclick="checkSoftVesion(<s:property value='project.projectId' />)">
+                                    <span class="glyphicon glyphicon-upload"></span> 软件版本</a>
+                            </td>
+                            <td colspan="3">
+                                <div class="display-flex flex-algin-items-center">
+                                    <div class="display-inline-flex nowrap">
+                                        <s:radio list="#{0:'不涉及', 1:'涉及'}" id="hasSoft" name="projectMaintenance.customStrInfo.hasSoft" cssClass="fillHiddenName" listCssClass="fillHiddenName"/>
+                                        <s:hidden name="projectMaintenance.customInfo.softLogIds" id="softLogIds"/>
+                                        <s:hidden name="projectMaintenance.customInfo.softLogInfos" id="softLogInfos"/>
+                                    </div>
+                                    <div id="softLogInfosText" class="display-inline-flex" style="width: 100%;justify-content: space-around;">
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="tag serviceSalesSupportHidden nonBusinessHidden">
                                 <a class="btn btn-success btn-xs" href="javascript:void(0)" onclick="uploadTaskFile(<s:property value='project.projectId' />)">
                                     <span class="glyphicon glyphicon-upload"></span> 上传附件</a>
                             </td>

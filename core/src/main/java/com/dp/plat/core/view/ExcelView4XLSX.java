@@ -285,7 +285,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			}
 		}
 	}
-	
+
 	protected Object getCellValue(Object obj, Class<?> clazz, Row aRow, Integer colCount,
 			String col, Map<String, Object> renderColumns) throws Exception {
 		return getCellValue(obj, clazz, aRow, colCount, col, Collections.emptyMap(), renderColumns);
@@ -323,7 +323,7 @@ public class ExcelView4XLSX extends AbstractExcelView {
 			List<String> columns = Arrays.asList(StringUtils.split(column, " "));
 			for (Iterator<String> columnIterator = columns.iterator(); columnIterator.hasNext();) {
 				String subColumn = (String) columnIterator.next();
-				
+
 //				List<String> ks = Arrays.asList(StringUtils.split(column, "."));
 				List<String> ks = Arrays.asList(StringUtils.split(subColumn, "."));
 				Object tempObj = obj;

@@ -1050,10 +1050,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="uploadTime" jdbcType="TIMESTAMP" property="uploadTime" />
     <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
     <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
   </resultMap>
   <sql id="SubcontractDeliver_Column_List">
     id, subcontractId, paymentId, fileName, filePath, type, uploadBy, uploadTime, effectiveFrom, 
-    effectiveTo
+    effectiveTo, customInfo
   </sql>
   <select id="selectSubcontractDeliverById" parameterClass="java.lang.Integer" resultMap="SubcontractDeliver">
     select 
@@ -1071,10 +1072,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </selectKey>
     insert into pm_subcontract_deliver_files (subcontractId, paymentId, fileName, filePath, 
       type, uploadBy, uploadTime, 
-      effectiveFrom, effectiveTo)
+      effectiveFrom, effectiveTo, customInfo)
     values (#subcontractId#, #paymentId#, #fileName#, #filePath#, 
       #type#, #uploadBy#, #uploadTime#, 
-      #effectiveFrom#, #effectiveTo#)
+      #effectiveFrom#, #effectiveTo#, #customInfo#)
   </insert>
   <insert id="insertSubcontractDeliverSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractDeliver">
     <selectKey keyProperty="id" type ="post" resultClass="java.lang.Integer">
@@ -1091,6 +1092,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="uploadTime"> uploadTime </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> effectiveFrom </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> #subcontractId# </isNotNull>
@@ -1102,6 +1104,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="uploadTime"> #uploadTime# </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> #effectiveTo# </isNotNull>
+      <isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
     </dynamic>
   </insert>
   <update id="updateSubcontractDeliverByIdSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractDeliver">
@@ -1116,6 +1119,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="uploadTime"> uploadTime = #uploadTime# </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo = #effectiveTo# </isNotNull>
+      <isNotNull prepend="," property="customInfo">
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
     where id = #id#
   </update>
@@ -1129,7 +1136,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       uploadBy = #uploadBy#,
       uploadTime = #uploadTime#,
       effectiveFrom = #effectiveFrom#,
-      effectiveTo = #effectiveTo#
+      effectiveTo = #effectiveTo#,
+      <!-- customInfo = #customInfo:JSON#  -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
     where id = #id#
   </update>
   <select id="selectSubcontractDeliverList" parameterClass="com.dp.plat.subcontract.entity.SubcontractDeliver" resultMap="SubcontractDeliver">
@@ -1345,6 +1354,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
   <resultMap id="SubcontractCallbackResultMap" class="com.dp.plat.subcontract.entity.SubcontractCallback">
     <result column="id" jdbcType="INTEGER" property="id" />
     <result column="subcontractId" jdbcType="INTEGER" property="subcontractId" />
+    <result column="taskKey" jdbcType="VARCHAR" property="taskKey" />
     <result column="taskId" jdbcType="VARCHAR" property="taskId" />
     <result column="quesnaireId" jdbcType="INTEGER" property="quesnaireId" />
     <result column="quesnaireVersion" jdbcType="INTEGER" property="quesnaireVersion" />
@@ -1355,10 +1365,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
     <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
     <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
   </resultMap>
   <sql id="SubcontractCallback_Column_List">
-    id, subcontractId, taskId, quesnaireId, quesnaireVersion, quesnaireState, createBy,
-    createTime, updateBy, updateTime, effectiveFrom, effectiveTo
+    id, subcontractId, taskKey, taskId, quesnaireId, quesnaireVersion, quesnaireState, createBy,
+    createTime, updateBy, updateTime, effectiveFrom, effectiveTo, customInfo
   </sql>
   <select id="selectSubcontractCallbackById" parameterClass="java.lang.Integer" resultMap="SubcontractCallbackResultMap">
     select
@@ -1374,14 +1385,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into pm_subcontract_project_callback (subcontractId, taskId, quesnaireId,
+    insert into pm_subcontract_project_callback (subcontractId, taskKey, taskId, quesnaireId,
       quesnaireVersion, quesnaireState, createBy,
       createTime, updateBy, updateTime,
-      effectiveFrom, effectiveTo)
-    values (#subcontractId#, #taskId#, #quesnaireId#,
+      effectiveFrom, effectiveTo, customInfo)
+    values (#subcontractId#, #taskKey#, #taskId#, #quesnaireId#,
       #quesnaireVersion#, #quesnaireState#, #createBy#,
       #createTime#, #updateBy#, #updateTime#,
-      #effectiveFrom#, #effectiveTo#)
+      #effectiveFrom#, #effectiveTo#, #customInfo#)
   </insert>
   <insert id="insertSubcontractCallbackSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback">
     <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
@@ -1390,6 +1401,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     insert into pm_subcontract_project_callback
     <dynamic open="(" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> subcontractId </isNotNull>
+      <isNotNull prepend="," property="taskKey"> taskKey </isNotNull>
       <isNotNull prepend="," property="taskId"> taskId </isNotNull>
       <isNotNull prepend="," property="quesnaireId"> quesnaireId </isNotNull>
       <isNotNull prepend="," property="quesnaireVersion"> quesnaireVersion </isNotNull>
@@ -1400,9 +1412,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="updateTime"> updateTime </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> effectiveFrom </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo </isNotNull>
+      <isNotNull prepend="," property="customInfo"> customInfo </isNotNull>
     </dynamic>
     <dynamic open="values (" close=")" prepend=" ">
       <isNotNull prepend="," property="subcontractId"> #subcontractId# </isNotNull>
+      <isNotNull prepend="," property="taskKey"> #taskKey# </isNotNull>
       <isNotNull prepend="," property="taskId"> #taskId# </isNotNull>
       <isNotNull prepend="," property="quesnaireId"> #quesnaireId# </isNotNull>
       <isNotNull prepend="," property="quesnaireVersion"> #quesnaireVersion# </isNotNull>
@@ -1413,12 +1427,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> #effectiveTo# </isNotNull>
+      <!-- <isNotNull prepend="," property="customInfo"> customInfo = #customInfo# </isNotNull> -->
+      <isNotNull prepend="," property="customInfo">
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
   </insert>
   <update id="updateSubcontractCallbackByIdSelective" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback">
     update pm_subcontract_project_callback
     <dynamic prepend="SET">
       <isNotNull prepend="," property="subcontractId"> subcontractId = #subcontractId# </isNotNull>
+      <isNotNull prepend="," property="taskKey"> taskKey = #taskKey# </isNotNull>
       <isNotNull prepend="," property="taskId"> taskId = #taskId# </isNotNull>
       <isNotNull prepend="," property="quesnaireId"> quesnaireId = #quesnaireId# </isNotNull>
       <isNotNull prepend="," property="quesnaireVersion"> quesnaireVersion = #quesnaireVersion# </isNotNull>
@@ -1429,12 +1448,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <isNotNull prepend="," property="updateTime"> updateTime = #updateTime# </isNotNull>
       <isNotNull prepend="," property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotNull>
       <isNotNull prepend="," property="effectiveTo"> effectiveTo = #effectiveTo# </isNotNull>
+      <!-- <isNotNull prepend="," property="customInfo"> customInfo = #customInfo# </isNotNull> -->
+      <isNotNull prepend="," property="customInfo">
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </isNotNull>
     </dynamic>
     where id = #id#
   </update>
   <update id="updateSubcontractCallbackById" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback">
     update pm_subcontract_project_callback
     set subcontractId = #subcontractId#,
+      taskKey = #taskKey#,
       taskId = #taskId#,
       quesnaireId = #quesnaireId#,
       quesnaireVersion = #quesnaireVersion#,
@@ -1444,14 +1468,16 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       updateBy = #updateBy#,
       updateTime = #updateTime#,
       effectiveFrom = #effectiveFrom#,
-      effectiveTo = #effectiveTo#
+      effectiveTo = #effectiveTo#,
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON#
     where id = #id#
   </update>
   <select id="selectSubcontractCallbackList" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultMap="SubcontractCallbackResultMap">
-    select * from pm_subcontract_project_callback
+    select * from pm_subcontract_project_callback spc
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
         <isNotEmpty prepend="AND" property="taskId"> taskId = #taskId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireId"> quesnaireId = #quesnaireId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireVersion"> quesnaireVersion = #quesnaireVersion# </isNotEmpty>
@@ -1462,13 +1488,22 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
+        <!-- <isNotEmpty prepend="AND" property="customInfo"> spc.`customInfo` = #customInfo# </isNotEmpty> -->
+	    <isNotEmpty property="customInfo">
+	        <iterate property="customInfo.iterator" >
+	            <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+	                #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+	            </isNotEmpty>
+	        </iterate>
+	    </isNotEmpty>
     </dynamic>
   </select>
   <select id="countSubcontractCallbackList" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultClass="long">
-    select count(1) from pm_subcontract_project_callback
+    select count(1) from pm_subcontract_project_callback spc
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
         <isNotEmpty prepend="AND" property="taskId"> taskId = #taskId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireId"> quesnaireId = #quesnaireId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireVersion"> quesnaireVersion = #quesnaireVersion# </isNotEmpty>
@@ -1479,14 +1514,23 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
+        <!-- <isNotEmpty prepend="AND" property="customInfo"> spc.`customInfo` = #customInfo# </isNotEmpty> -->
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
   </select>
   
   <select id="selectMaxSubcontractCallback" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultMap="SubcontractCallbackResultMap">
-    select * from pm_subcontract_project_callback
+    select * from pm_subcontract_project_callback spc
     <dynamic prepend="where">
         <isNotEmpty prepend="AND" property="id"> id = #id# </isNotEmpty>
         <isNotEmpty prepend="AND" property="subcontractId"> subcontractId = #subcontractId# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
         <isNotEmpty prepend="AND" property="taskId"> taskId = #taskId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireId"> quesnaireId = #quesnaireId# </isNotEmpty>
         <isNotEmpty prepend="AND" property="quesnaireVersion"> quesnaireVersion = #quesnaireVersion# </isNotEmpty>
@@ -1497,6 +1541,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="AND" property="updateTime"> updateTime = #updateTime# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveFrom"> effectiveFrom >= #effectiveFrom# </isNotEmpty>
         <isNotEmpty prepend="AND" property="effectiveTo"> <![CDATA[ #effectiveTo# <= IFNULL(effectiveTo, "9999-12-31") ]]> </isNotEmpty>
+        <!-- <isNotEmpty prepend="AND" property="customInfo"> spc.`customInfo` = #customInfo# </isNotEmpty> -->
+        <isNotEmpty property="customInfo">
+            <iterate property="customInfo.iterator" >
+                <isNotEmpty prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </isNotEmpty>
+            </iterate>
+        </isNotEmpty>
     </dynamic>
     order by createTime desc
     limit 1
@@ -1506,17 +1558,20 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
       <![CDATA[ 
           SELECT id FROM pm_subcontract_project_callback WHERE subcontractId = #subcontractId# AND taskId = #taskId#
       ]]>
+      <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
   </select>
   
   <select id="queryCallBackQuesnaireId" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultClass="int">
       <![CDATA[
           SELECT quesnaireId FROM pm_subcontract_project_callback WHERE subcontractId = #subcontractId# AND taskId = #taskId#
       ]]>
+      <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
   </select>
-  <select id="queryCallBackQuesnaireVersion" parameterClass="int" resultClass="int">
+  <select id="queryCallBackQuesnaireVersion" parameterClass="com.dp.plat.subcontract.entity.SubcontractCallback" resultClass="int">
       <![CDATA[
-          SELECT COUNT(*) FROM pm_subcontract_project_callback WHERE subcontractId = #subcontractId#;
+          SELECT COUNT(*) FROM pm_subcontract_project_callback WHERE subcontractId = #subcontractId#
       ]]>
+      <isNotEmpty prepend="AND" property="taskKey"> taskKey = #taskKey# </isNotEmpty>
   </select>
   
   <resultMap id="SubcontractPriceResultMap" class="com.dp.plat.subcontract.entity.SubcontractPrice">
@@ -1526,7 +1581,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <result column="orderExecNumber" jdbcType="VARCHAR" property="orderExecNumber" />
     <result column="projectCode" jdbcType="VARCHAR" property="projectCode" />
     <result column="engineeFee" jdbcType="VARCHAR" property="engineeFee" />
-    <result column="objId" jdbcType="INTEGER" property="objId" />
+    <result column="objId" jdbcType="VARCHAR" property="objId" />
     <result column="procType" jdbcType="VARCHAR" property="procType" />
     <result column="price" jdbcType="VARCHAR" property="price" />
     <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
@@ -1809,6 +1864,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                     <isEmpty property="contractNos">
                         <isEmpty prepend="AND" property="projectIds"> `ph`.projectId = -1 </isEmpty>
                     </isEmpty>
+                    <isNotEmpty property="projectIdList">
+					    <iterate prepend="AND" open=" ph.projectId in (" close=")" property="projectIdList" conjunction="," > #projectIdList[]# </iterate>
+					</isNotEmpty>
                 <!-- GROUP BY `pc`.`projectGroupCode`, `ph`.`projectCode` -->
                 GROUP BY `ph`.`projectCode`
                 ) t 
@@ -1844,6 +1902,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 contractNo like CONCAT('%', #contractNos[]#, '%')
               </iterate>
           </isNotEmpty>
+          <isNotEmpty property="projectIdList">
+              <iterate prepend="AND" open=" projectId in (" close=")" property="projectIdList" conjunction="," > #projectIdList[]# </iterate>
+          </isNotEmpty>
+          
           <isNotEmpty prepend="AND" property="projectIds"> FIND_IN_SET(projectId, #projectIds#)</isNotEmpty>
           <isEmpty property="contractNos">
               <isEmpty prepend="AND" property="projectIds"> projectId = -1 </isEmpty>
@@ -2350,6 +2412,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         LEFT JOIN `pm_subcontract_project_callback` spc 
             ON ach.`objId` = spc.`id` 
             AND ach.`procdefKey` = 'SubcontractCallback' 
+            <!-- AND ach.`taskKey` = spc.'taskKey'  -->
         LEFT JOIN `fnd_basic_data` bd 
             ON bd.dataTypeCode = 'subcontractWorkFlowState' 
             AND bd.basicDataId = ach.result 

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,8 +17,12 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.struts2.ServletActionContext;
 
+import com.alibaba.fastjson.JSON;
+
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.BasicDataDao;
 import com.dp.plat.dao.UserManageDao;
@@ -28,6 +34,7 @@ import com.dp.plat.data.bean.User;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.prob.bean.Prob;
 import com.dp.plat.prob.bean.ProbFile;
+import com.dp.plat.prob.bean.ProbProduct;
 import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
@@ -36,6 +43,10 @@ import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.dao.ProbManageDao;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.util.ProductItemExample;
+import com.dp.plat.prob.util.ProductItemExampleBuilder;
+import com.dp.plat.prob.vo.ProbProductPageParam;
+import com.dp.plat.prob.vo.ProbProductVO;
 import com.dp.plat.prob.vo.ProductComponentPageParam;
 import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BaseServiceImpl;
@@ -62,14 +73,31 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 
 	@Override
 	public int saveProb(Prob prob, List<SoftVersion> softVersionList, String root) throws IOException {
+	    // 获取产品型号临时传参参数
+        String probProductListJson = (String) ObjectUtils.defaultIfNull(prob.removeCustomInfoByKey("probProductList"), "[]");
+        String probProductItems = (String) ObjectUtils.defaultIfNull(prob.removeCustomInfoByKey("probProductItems"), "");
+        List<ProbProductVO> probProductList = JSON.parseArray(probProductListJson, ProbProductVO.class);
+        Set<String> productTypes = new HashSet<String>(probProductList.size());
+        for (ProbProductVO probProductVO : probProductList) {
+            if (StringUtils.isNotBlank(probProductVO.getItemModel())) {
+                productTypes.add(probProductVO.getItemModel());
+            }
+        }
+        prob.setProductType(StringUtils.join(productTypes, "、"));
+        
 		int probId = probManageDao.saveProb(prob);
-		if (softVersionList != null && softVersionList.size() > 0) {
-			// 失效原有版本信息
-			probManageDao.updateInvalidSoftVersion(probId);
-			// 新增版本
-			probManageDao.saveSoftVersion(softVersionList, probId);
-		}
+		prob.setProbId(probId);
+		prob = probManageDao.queryOneProb(prob);
 
+		// 保存软件版本
+		updateProbSoftVersion(softVersionList, probId);
+		// 保存产品型号信息
+		updateProbProduct(prob, probProductList);
+
+		// 保存草稿
+		if ("0".equals(prob.getStatus())) {
+		    return probId;
+		}
 		/*
 		 * //查询所有服务经理邮件地址 String spmail =
 		 * basicDataDao.querySysArg("prob.release.mail");
@@ -79,8 +107,6 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 		String probAdmin = userManageDao.queryServiceMails(MessageUtil.ROLE_PROB_ADMIN);
 
 		// 发布邮件通知
-		prob.setProbId(probId);
-		prob = probManageDao.queryOneProb(prob);
 		// this.keepRelaseEmail(prob, softVersionList, null, root, null,
 		// probAdmin);
 		this.keepRelaseEmail(prob, root, null, probAdmin, defaultParaMap(prob, softVersionList, 3, null));
@@ -100,21 +126,38 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	@Override
 	public void updateProb(Prob prob, List<SoftVersion> softVersionList) {
 		int isRrobAdmin = 3;
-		// 更新主表信息,技术公告管理员可更新状态，其他人员都将状态改为待确认
-		if (!UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PROB_ADMIN)) {
-			prob.setStatus("8");
-		}
+		
+		// 保存草稿
+        if (!"0".equals(prob.getStatus())) {
+    		// 更新主表信息,技术公告管理员可更新状态，其他人员都将状态改为待确认
+    		if (!UserContext.getUserContext().isHasRole(MessageUtil.ROLE_PROB_ADMIN)) {
+    			prob.setStatus("8");
+    		}
+        }
+        
+        // 获取产品型号临时传参参数
+        String probProductListJson = (String) ObjectUtils.defaultIfNull(prob.removeCustomInfoByKey("probProductList"), "[]");
+        String probProductItems = (String) ObjectUtils.defaultIfNull(prob.removeCustomInfoByKey("probProductItems"), "");
+        List<ProbProductVO> probProductList = JSON.parseArray(probProductListJson, ProbProductVO.class);
+        Set<String> productTypes = new HashSet<String>(probProductList.size());
+        for (ProbProductVO probProductVO : probProductList) {
+            if (StringUtils.isNotBlank(probProductVO.getItemModel())) {
+                productTypes.add(probProductVO.getItemModel());
+            }
+        }
+        prob.setProductType(StringUtils.join(productTypes, "、"));
 		probManageDao.updateProb(prob);
-		// 更新影响版本
-		if (softVersionList != null && softVersionList.size() > 0) {
-			// 失效原有版本信息
-			probManageDao.updateInvalidSoftVersion(prob.getProbId());
-			// 新增版本
-			probManageDao.saveSoftVersion(softVersionList, prob.getProbId());
-		} else {
-			// 失效原有版本信息
-			probManageDao.updateInvalidSoftVersion(prob.getProbId());
+		
+		// 保存软件版本
+        updateProbSoftVersion(softVersionList, prob.getProbId());
+        // 保存产品型号信息
+        updateProbProduct(prob, probProductList);
+		
+		// 保存草稿
+		if ("0".equals(prob.getStatus())) {
+		    return;
 		}
+		
 		String root = ServletActionContext.getServletContext().getRealPath("/");
 
 		prob = probManageDao.queryOneProb(prob);
@@ -161,6 +204,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 		// 发布邮件通知
 		this.keepRelaseEmail(prob, root, null, bccs, defaultParaMap(prob, softVersionList, isRrobAdmin, null));
 	}
+	
 
 	@Override
 	public List<SoftVersion> checkSoftVersionList(SoftVersion softVersion) {
@@ -189,6 +233,34 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 			probManageDao.updateInvalidSoftVersion(probId);
 		}
 	}
+	
+	/**
+     * 更新产品信息，失效原产品型号信息，保存新产品型号信息
+     * @param prob
+     * @param probProductList
+     */
+    public void updateProbProduct(Prob prob, List<? extends ProbProduct> probProductList) {
+        // 更新产品型号
+        if (probProductList != null && probProductList.size() > 0) {
+            ProbProduct temp = new ProbProduct();
+            temp.setProbId(prob.getProbId());
+            temp.setStatus(0);
+            // 失效原有产品型号信息
+            probManageDao.updateProbProductByProbIdSelective(temp);
+            // 新增产品型号
+            for (ProbProduct probProduct : probProductList) {
+                probProduct.setProbId(prob.getProbId());
+                probManageDao.insertProbProductSelective(probProduct);
+            }
+        } else {
+            // 失效原有产品型号信息
+            ProbProduct probProduct = new ProbProduct();
+            probProduct.setProbId(prob.getProbId());
+            probProduct.setStatus(0);
+            // 失效原有产品型号信息
+            probManageDao.updateProbProductByProbIdSelective(probProduct);
+        }
+    }
 
 	@Override
 	public Map<Integer, String> queryProbFileMap(int probId) {
@@ -845,8 +917,13 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	public List<Project> queryProbStatisticProjectList(ProbStatistic probStatistic, DisplayParam displayParam) {
 		return probManageDao.queryProbStatisticProjectList(probStatistic, displayParam);
 	}
-
+	
 	@Override
+    public List<?> queryContractShipmentSoftList(ProbStatistic probStatistic, DisplayParam displayParam) {
+	    return probManageDao.queryContractShipmentSoftList(probStatistic, displayParam);
+    }
+
+    @Override
 	public void readLog(int probId, int status) {
 		final ProbReadLog readLog = new ProbReadLog(probId, getLoginName(), status);
 		Thread thread = new Thread(new Runnable() {
@@ -931,4 +1008,126 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
         probManageDao.deleteProductComponentById(id);
     }
 
+    @Override
+    public ProbProduct selectProbProductById(Integer id) {
+        return probManageDao.selectProbProductById(id);
+    }
+    
+    @Override
+    public ProbProductVO selectProbProductVOById(Integer id) {
+        return probManageDao.selectProbProductVOById(id);
+    }
+    
+    @Override
+    public List<ProbProduct> selectProbProductList(ProbProduct probProduct) {
+        return probManageDao.selectProbProductList(probProduct);
+    }
+
+    @Override
+    public List<ProbProductVO> selectProbProductListPageable(ProbProductPageParam pageParam) {
+        return probManageDao.selectProbProductListPageable(pageParam);
+    }
+    
+    @Override
+    public Integer countProbProductListPageable(ProbProductPageParam pageParam) {
+        return probManageDao.countProbProductListPageable(pageParam);
+    }
+
+    @Override
+    public Integer insertProbProduct(ProbProduct probProduct) {
+        return probManageDao.insertProbProduct(probProduct);
+    }
+
+    @Override
+    public Integer insertProbProductSelective(ProbProduct probProduct) {
+        return probManageDao.insertProbProductSelective(probProduct);
+    }
+    
+    @Override
+    public Integer insertOrUpdateProbProductSelective(ProbProduct probProduct) {
+        return probManageDao.insertOrUpdateProbProductSelective(probProduct);
+    }
+    
+    @Override
+    public void updateProbProductById(ProbProduct probProduct) {
+        probManageDao.updateProbProductById(probProduct);
+    }
+
+    @Override
+    public void updateProbProductByIdSelective(ProbProduct probProduct) {
+        probManageDao.updateProbProductByIdSelective(probProduct);
+    }
+    
+    @Override
+    public void updateProbProductByProbIdSelective(ProbProduct probProduct) {
+        probManageDao.updateProbProductByProbIdSelective(probProduct);
+    }
+
+    @Override
+    public void deleteProbProductById(Integer id) {
+        probManageDao.deleteProbProductById(id);
+    }
+    
+    @Override
+    public void deleteProbProductByProbId(Integer probId) {
+        probManageDao.deleteProbProductByProbId(probId);
+    }
+
+    @Override
+    public List<? extends Object> selectProductItemListByParams(Map<String, Object> commonMap) {
+//        System.out.println(JSON.toJSONString(commonMap));
+//        ProductItemExample example = ProductItemExampleBuilder.appendToExistingExample(ProductItemExampleBuilder.convertMapToExample(commonMap), commonMap, null);
+//        System.out.println(JSON.toJSONString(example));
+//        return probManageDao.selectProductItemListByParams(commonMap);
+        
+        ProductItemExample example = ProductItemExampleBuilder.appendToExistingExample(ProductItemExampleBuilder.convertMapToExample(commonMap), commonMap, null);
+        return this.selectProductItemListByExample(example);
+    }
+    
+    @Override
+    public List<? extends Object> selectProductItemListFilteredByParams(Map<String, Object> commonMap) {
+        if (commonMap == null) {
+            commonMap = new HashMap<String, Object>();
+        }
+        
+        ProductItemExample example = ProductItemExampleBuilder.buildFromSearchCriteria(commonMap, SystemContext.getConfig("prob.product.item.filters"));
+        return this.selectProductItemListByExample(example);
+    }
+    
+    public List<? extends Object> selectProductItemListByItemSearch(String itemSearch, String itemSearchExclude) {
+        Map<String, Object> commonMap = new HashMap<String, Object>();
+        
+        // 当前搜索指定的查询条件组，多个itemGroups用OR链接，满足其中任一条件
+        List<Map<String, Object>> itemGroups = new ArrayList<>();
+        // 查询条件，搜索产品编码/型号/描述，空格分隔可组合
+        String[] searchs = StringUtils.split(StringUtils.trimToEmpty(itemSearch), " ");
+        // 每段条件用OR模糊查询产品编码/型号/描述，多个或条件组合成与条件，即获取同时满足多个的产品
+        // orGroups之间AND连接，满足全部条件
+        List<Map<String, Object>> orGroups = new ArrayList<>();
+        for (String search : searchs) {
+            // group内部用or连接
+            Map<String, Object> group = new HashMap<String, Object>();
+            group.put("itemCodeLike", String.format("%%%s%%", search));
+            group.put("itemModelLike", String.format("%%%s%%", search));
+            group.put("itemDescLike", String.format("%%%s%%", search));
+            orGroups.add(group);
+        }
+        
+        // 添加需要同时排除的条件
+        Map<String, Object> itemSearchExcludes = JSON.parseObject(itemSearchExclude);
+        orGroups.add(itemSearchExcludes);
+        
+        // 多个itemGroups用OR链接
+        itemGroups.add(Collections.singletonMap("orGroups", orGroups));
+        
+        commonMap.put("itemGroups", itemGroups);
+        
+        return this.selectProductItemListFilteredByParams(commonMap);
+    }
+    
+    @Override
+    public List<? extends Object> selectProductItemListByExample(ProductItemExample example) {
+        return probManageDao.selectProductItemListByExample(example);
+    }
+    
 }

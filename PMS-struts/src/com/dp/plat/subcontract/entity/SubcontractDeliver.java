@@ -4,8 +4,12 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class SubcontractDeliver {
-	private Integer id;
+import com.dp.plat.data.bean.CustomInfoEntity;
+
+public class SubcontractDeliver extends CustomInfoEntity {
+    private static final long serialVersionUID = -1284925652255615990L;
+
+    private Integer id;
 
 	// 转包项目ID
 	private Integer subcontractId;

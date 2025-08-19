@@ -64,6 +64,7 @@ public class PullJobFromCRM extends DefaultPullTaskFormCRM<Map<String, Object>> 
     /**
      * 
      * @param params
+     * @see GainDataFromCRM#syncProjectSalesInfo
      * @return
      */
     public boolean syncLendInfo(Map<String, Object> params) {
@@ -293,6 +294,12 @@ public class PullJobFromCRM extends DefaultPullTaskFormCRM<Map<String, Object>> 
         return list;
     }
 
+    /**
+     * 同步CRM的销售数据
+     * @param params
+     * @see GainDataFromCRM#syncProjectSalesInfo(params)
+     * @return
+     */
     public boolean syncSalesInfo(Map<String, Object> params) {
 
         if (params == null) {

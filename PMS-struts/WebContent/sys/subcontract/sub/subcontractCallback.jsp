@@ -8,7 +8,7 @@
 <!-- 新 Bootstrap 核心 CSS 文件 -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
 <!-- 引入对Bootstrap的自扩展文件 -->
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap-ex.css" />
+<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap-ex.css" />
 <!-- 可选的Bootstrap主题文件（一般不用引入mian） -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap-theme.min.css" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-2.1.4.min.js"></script>
@@ -202,7 +202,7 @@ a span {
         </div>
 	    <%-- </s:if>
 	    <s:else> --%>
-	    <div id="quesnairePanel" style="display:none;">
+	    <div id="quesnairePanel" style="display:block;">
 	 		<div class="panel panel-default">
 				<div class="panel-body">
 					<s:form method="POST" action="querySubcontractCallback.action"
@@ -273,6 +273,7 @@ a span {
 									<s:hidden name="subcontract.id"></s:hidden>
 									<s:hidden name="subcontractCallback.id"></s:hidden>
 									<s:hidden name="subcontractCallback.subcontractId"></s:hidden>
+                                    <s:hidden name="subcontractCallback.taskKey"></s:hidden>
 									<s:hidden name="subcontractCallback.taskId"></s:hidden>
 									<s:hidden name="pmClQuesnaireResultHeader.status" value="-1" id="quesnaireState"></s:hidden>
 									<s:hidden name="redirect"></s:hidden>

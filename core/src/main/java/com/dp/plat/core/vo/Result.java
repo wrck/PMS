@@ -40,20 +40,24 @@ public class Result {
 
 	public Result(boolean success) {
 		this.success = success;
+		this.status = success;
 	}
 	
 	public Result(boolean success, Object data) {
+		this(success);
 		this.success = success;
 		this.data = data;
 	}
 
 	public Result(boolean success, Object data, String message) {
+		this(success);
 		this.success = success;
 		this.data = data;
 		this.message = message;
 	}
 
 	public Result(boolean success, Object data, String message, String code) {
+		this(success);
 		this.success = success;
 		this.data = data;
 		this.message = message;
@@ -61,26 +65,33 @@ public class Result {
 	}
 
 	public Result(boolean success, String message) {
+		this(success);
 		this.success = success;
 		this.message = message;
 	}
 	
 	public Result(Object status) {
+		if (status instanceof Boolean) {
+			this.success = (boolean) status;
+		}
 		this.status = status;
 	}
 	
 	public Result(Object status, Object data) {
+		this(status);
 		this.status = status;
 		this.data = data;
 	}
 
 	public Result(Object status, Object data, String message) {
+		this(status);
 		this.status = status;
 		this.data = data;
 		this.message = message;
 	}
 
 	public Result(Object status, Object data, String message, String code) {
+		this(status);
 		this.status = status;
 		this.data = data;
 		this.message = message;
@@ -88,6 +99,7 @@ public class Result {
 	}
 
 	public Result(Object status, String message) {
+		this(status);
 		this.status = status;
 		this.message = message;
 	}
@@ -142,6 +154,31 @@ public class Result {
 		this.message = message;
 	}
 
+	public Result success(boolean success) {
+		this.success = success;
+		return this;
+	}
+
+	public Result status(Object status) {
+		this.status = status;
+		return this;
+	}
+
+	public Result data(Object data) {
+		this.data = data;
+		return this;
+	}
+
+	public Result message(String message) {
+		this.message = message;
+		return this;
+	}
+
+	public Result code(String code) {
+		this.code = code;
+		return this;
+	}
+
 	public Map<String, Object> getMap() {
 	    Map<String, Object> map = new HashMap<>();
 	    map.put("success", this.success);
@@ -159,4 +196,19 @@ public class Result {
     	}
 	    return map;
 	}
+
+
+	public static Result success() {
+		return new Result(true);
+	}
+
+	public static Result success(Object data) {
+		return new Result(true, data);
+	}
+
+	public static Result fail(String message) {
+		return new Result(false, message);
+	}
+
+
 }

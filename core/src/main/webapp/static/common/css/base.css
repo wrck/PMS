@@ -673,7 +673,7 @@ div.dataTables_wrapper div.dataTables_processing {
 	position: relative;
 }
 /* .icon-info:before, .icon-info::before {
-    content: "鍥句緥:";
+    content: "图例:";
     font-style: italic;
     font-weight: bold;
     position: absolute;
@@ -745,7 +745,11 @@ i.glyphicon.glyphicon-ok-sign.icon-unvisited-focused:before {
 	border-width: 0px !important;
 }
 
-/* 閫氱敤CSS锛岀疆浜庡簳閮紝閬垮厤琚鐩� */
+.pull-none, .pull-none-all > * {
+	float: none !important;
+}
+
+/* 通用CSS，置于底部，避免被覆盖 */
 .display-none {
 	display: none !important;
 }
@@ -1194,28 +1198,33 @@ i.glyphicon.glyphicon-ok-sign.icon-unvisited-focused:before {
 .modal-content>.box-footer {
 	border-radius: 0 0 6px 6px !important;
 }
-/* 鑿滃崟澧炲姞block灞炴�э紝浣垮垵娆＄缉璧锋祦鐣� */
+/* 菜单增加block属性，使初次缩起流畅 */
 .treeview>.treeview-menu {
 	display: block;
 }
 
-
-/*婊氬姩鏉�*/
+/*滚动条*/
 html {
 	width: 100vw;
 }
 ::-webkit-scrollbar {
-	transition-property:width,height;
+	transition-property:width,height,opacity;
 	transition-duration:5s;
-	-webkit-transition-property:width,height;
+	-webkit-transition-property:width,height,opacity;
 	-webkit-transition-duration:5s;
-	width: 0px;
-    height: 0px;
+	width: 8px;
+    height: 8px;
+    opacity: 0;
 }
 
 *:hover::-webkit-scrollbar {
+	transition-property:width,height,opacity;
+	transition-duration:5s;
+	-webkit-transition-property:width,height,opacity;
+	-webkit-transition-duration:5s;
     width: 8px;
     height: 8px;
+    opacity: 1;
 }
 
 ::-webkit-scrollbar-track {

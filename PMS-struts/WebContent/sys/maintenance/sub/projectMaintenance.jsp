@@ -18,12 +18,12 @@
                     <span class="glyphicon glyphicon-saved" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;更新项目实施状态</span>
                 </button>
             </span>
-            <button onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);" value="pmAddPrjMaintenanceButton" type="button" class="btn btn-default" style="margin-right:4px;">
+            <button onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');" value="pmAddPrjMaintenanceButton" type="button" class="btn btn-default" style="margin-right:4px;">
                 <span class="glyphicon glyphicon-plus" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;添加维护记录</span>
             </button>
         </s:if>
         <s:elseif test="projectMaintenance.projectType == 20">
-            <button onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);" value="pmAddPrjMaintenanceButton" type="button" class="btn btn-default" style="margin-right:4px;">
+            <button onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');" value="pmAddPrjMaintenanceButton" type="button" class="btn btn-default" style="margin-right:4px;">
                 <span class="glyphicon glyphicon-plus" style="font-size:12px; color:#428bca;"></span><span style="font-size:12px;">&nbsp;&nbsp;添加维护记录</span>
             </button>
         </s:elseif>
@@ -87,12 +87,12 @@
         <s:if test="%{projectMaintenance.hasPower == true}">
             <display:column title="操作" media="html">
                 <s:if test="projectMaintenance.projectType == 10">
-                    <a href="javascript:void(0)" style="margin:2px 0" class='btn btn-${maintenanceList.createBy == user.username ? "info" : "primary"} btn-xs' onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&projectMaintenance.maxId=<s:property value='projectMaintenance.maxId'/>&project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);">${maintenanceList.createBy == user.username ? "修改" : "查看"}</a>
-                    <a href="javascript:void(0)" style="margin:2px 0" class="btn btn-success btn-xs" onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&message=isCopy&project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);">复制</a>
+                    <a href="javascript:void(0)" style="margin:2px 0" class='btn btn-${maintenanceList.createBy == user.username ? "info" : "primary"} btn-xs' onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&projectMaintenance.maxId=<s:property value='projectMaintenance.maxId'/>&project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');">${maintenanceList.createBy == user.username ? "修改" : "查看"}</a>
+                    <a href="javascript:void(0)" style="margin:2px 0" class="btn btn-success btn-xs" onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&message=isCopy&project.projectId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');">复制</a>
                 </s:if>
                 <s:elseif test="projectMaintenance.projectType == 20">
-                    <a href="javascript:void(0)" style="margin:2px 0" class='btn btn-${maintenanceList.createBy == user.username ? "info" : "primary"} btn-xs' onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&projectMaintenance.maxId=<s:property value='projectMaintenance.maxId'/>&presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);">${maintenanceList.createBy == user.username ? "修改" : "查看"}</a>
-                    <a href="javascript:void(0)" style="margin:2px 0" class="btn btn-success btn-xs" onclick="javascript:popWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&message=isCopy&presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>', 1000, 650,'<s:text name="sys.project.maintenance.management"></s:text>', 'BudgetUpload', true);">复制</a>
+                    <a href="javascript:void(0)" style="margin:2px 0" class='btn btn-${maintenanceList.createBy == user.username ? "info" : "primary"} btn-xs' onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&projectMaintenance.maxId=<s:property value='projectMaintenance.maxId'/>&presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');">${maintenanceList.createBy == user.username ? "修改" : "查看"}</a>
+                    <a href="javascript:void(0)" style="margin:2px 0" class="btn btn-success btn-xs" onclick="javascript:popMaintenanceWindow('module/sub/maintenance_createProjectMaintenance.action?projectMaintenance.id=${maintenanceList.id}&message=isCopy&presales.presalesId=<s:property value='projectMaintenance.projectId'/>&redirect=<s:property value='redirect'/>');">复制</a>
                 </s:elseif>
             </display:column>
         </s:if>
@@ -110,5 +110,16 @@
     <div class="rollBottom">
         <i class='glyphicon glyphicon-arrow-down'></i>
     </div>
+    <script>
+        function popMaintenanceWindow(url) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            const popWidthMin = 1300.0;
+            const popWidthRatio = popWidthMin / width * 100;
+            const popWidth = (popWidthRatio > 80 ? popWidthRatio : 80) + "vw";
+        	popWindow(url, popWidth, 750, '<s:text name="sys.project.maintenance.management"></s:text>', 'MaintenanceWindow', true);
+        }
+    </script>
 </body>
 </html>

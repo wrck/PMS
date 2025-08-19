@@ -1,0 +1,84 @@
+#manualSoftVersion {
+    /* padding: 0 15px;
+    margin-left: -15px;
+    width: calc(80% + 24px); */
+    display: flex;
+}
+.softVersion {
+    position: relative;
+    display: block;
+    border-bottom: 1px solid #ddd;
+    padding: 0.5rem 1.5rem 0.5rem 1rem;
+}
+.softVersionSub {
+    position: relative;
+    display: block;
+    border-top: 1px solid #ddd;
+    padding: 0.5rem 0 0.5rem 1.5rem;
+}
+.softVersionContainer {
+    position: relative;
+}
+.softVersionLink {
+    padding-top: 7px;
+}
+.softVersionDel {
+    position: absolute;
+    right: 1.5rem;
+    top: calc(50% - 0.5rem);
+    margin-top: -0.25rem;
+}
+.softVersionContainer .softVersionDel, .softVersionSub .softVersionDel, .groupManualEntry .softVersionDel{
+    right: 0;
+}
+.groupManualEntry {
+    flex-grow: 1;
+    display: flex;
+    font-weight: bold;
+    position: relative;
+}
+.form-control.sofoVersionType, .form-control.affectedType, .form-control.platformType, .form-control.releaseType, .form-control.architectureType, .form-control.branchType {
+    display: inline;
+    width: auto;
+    height: auto;
+    padding: 2px 0;
+}
+.releaseType-label, .architectureType-label, .branchType-label {
+    display: none;
+}
+#softVersionTypes select.form-control {
+    width: auto;
+}
+.probProduct {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 0px 5px 5px 0;
+    line-height: inherit;
+    font-size: 85%;
+}
+.select2-container {
+    display: block;
+}
+.select2-result-repository__title {
+    display: flex;
+    justify-content: space-between;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__selectall {
+    cursor: pointer;
+    font-weight: bold;
+    height: 20px;
+    margin-right: 10px;
+    margin-top: 5px;
+    position: absolute;
+    right: 0;
+    padding: 1px;
+    
+    background-color: transparent;
+    border: none;
+    font-size: 1em;
+}
+.tooltip-inner {
+    padding: 8px;
+    max-width: fit-content;
+}

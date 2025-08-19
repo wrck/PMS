@@ -5,6 +5,8 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +25,8 @@ import org.springframework.web.util.HtmlUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.opensymphony.xwork2.Preparable;
+
 import com.dp.plat.action.BaseAction;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
@@ -33,6 +37,7 @@ import com.dp.plat.data.bean.User;
 import com.dp.plat.data.report.EchartsUtil;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.prob.bean.Prob;
+import com.dp.plat.prob.bean.ProbProduct;
 import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
@@ -44,7 +49,9 @@ import com.dp.plat.prob.service.ProbManageService;
 import com.dp.plat.prob.util.DisplayParamUtil;
 import com.dp.plat.prob.util.ExportUtils;
 import com.dp.plat.prob.util.SoftVersionUtil;
-import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
+import com.dp.plat.prob.version.SoftVersionParser;
+import com.dp.plat.prob.vo.ProbProductPageParam;
+import com.dp.plat.prob.vo.ProbProductVO;
 import com.dp.plat.prob.vo.ProductComponentPageParam;
 import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BasicDataService;
@@ -54,7 +61,6 @@ import com.dp.plat.util.ExceptionUtils;
 import com.dp.plat.util.MessageUtil;
 import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
-import com.opensymphony.xwork2.Preparable;
 
 
 /**
@@ -129,13 +135,23 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	private ProductComponentVO productComponent;
 	
 	/**
+     * 产品组件
+     */
+    private ProbProductVO probProduct;
+	
+	/**
+	 * 产品列表
+	 */
+	private List<ProbProduct> probProductList;
+	
+	/**
 	 * 通用列表
 	 */
 	private List<? extends Object> commonList;
 	/**
 	 * 通用参数
 	 */
-	private Map<String, ? extends Object> commonMap;
+	private Map<String, Object> commonMap;
 
 	@Override
 	public void prepare() throws Exception {
@@ -189,6 +205,12 @@ public class ProbManageAction extends BaseAction implements Preparable {
 		watchList = basicDataService.queryBasicDataBeans("30");
 		statusList = basicDataService.queryBasicDataBeans("31");
 		priorityList = basicDataService.queryBasicDataBeans("32");
+		
+		if (commonMap == null) {
+		    commonMap = new HashMap<>();
+		}
+		commonMap.put("descTemplate", DisplayParamUtil.getTemplate("prob.info.desc.template"));
+		commonMap.put("solutionTemplate", DisplayParamUtil.getTemplate("prob.info.solution.template"));
 
 		if (prob == null || prob.getProbId() == 0) {
 			// 查询公告编码
@@ -206,6 +228,15 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			// .3查询受影响的软件版本信息
 			softVersionList = probManageService.querySoftVersionList(prob.getProbId());
 			prob.setAffectedVersion(JSON.toJSONString(softVersionList));
+			
+			// .3查询受影响的产品型号
+            if (probProduct == null) {
+                probProduct = new ProbProductVO();
+            }
+            probProduct.setProbId(prob.getProbId());
+            probProduct.setStatus(1);
+            probProductList = probManageService.selectProbProductList(probProduct);
+            prob.setCustomInfoByKey("probProductList", JSON.toJSONString(probProductList));
 			// }
 		}
 		return INPUT;
@@ -267,6 +298,15 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				// .3查询受影响的软件版本信息
 				softVersionList = probManageService.querySoftVersionList(prob.getProbId());
 				prob.setAffectedVersion(JSON.toJSONString(softVersionList));
+				// .3查询受影响的产品型号
+				if (probProduct == null) {
+				    probProduct = new ProbProductVO();
+				}
+				probProduct.setProbId(prob.getProbId());
+				probProduct.setStatus(1);
+                probProductList = probManageService.selectProbProductList(probProduct);
+                prob.setCustomInfoByKey("probProductList", JSON.toJSONString(probProductList));
+                
 				// }
 				// .4查询子任务
 				if (probRestore == null)
@@ -547,7 +587,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				fileIds = basicDataService.insertFileInfo(path + seq, uploadFileName);
 			}
 			prob.setAttachments(fileIds);
-			prob.setStatus("1");
+			prob.setStatus("0".equals(prob.getStatus()) ? prob.getStatus() : "1");
 			// 保存信息
 			// .1获取软件版本信息
 			// HttpSession session = getServletRequest().getSession();
@@ -763,8 +803,18 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	 * @return
 	 */
 	public String parserSoftVersion() {
-		if (softVersion != null && StringUtils.isNotBlank(softVersion.getManualEntry())) {
-			Map<String, Map<String, List<SoftVersionParser>>> versionParser = SoftVersionUtil.createSoftVersionRangeParsers(softVersion.getManualEntry());
+        if (softVersion != null && StringUtils.isNotBlank(softVersion.getManualEntry())) {
+            String manualEntry = softVersion.getManualEntry();
+		    Map<String, Map<String, List<SoftVersionParser>>> versionParser = new HashMap<>();
+		    if (!"other".equalsIgnoreCase(softVersion.getPlatformType())) {
+		        versionParser = SoftVersionUtil.createSoftVersionRangeParsers(manualEntry, softVersion.getSoftVersionTypes());
+		    } else {
+		        String entryStart = StringUtils.defaultIfBlank(softVersion.getEntryStart(), manualEntry);
+		        String entryEnd = StringUtils.defaultIfBlank(softVersion.getEntryEnd(), manualEntry);
+		        SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(entryStart);
+                SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(entryEnd);
+		        versionParser.put(manualEntry, Collections.singletonMap(manualEntry, Arrays.asList(parserStart, parserEnd)));
+		    }
 			result = JSON.toJSONString(versionParser, SerializerFeature.DisableCircularReferenceDetect);
 		} else {
 			result = "{}";
@@ -881,10 +931,12 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				probStatisticList = probManageService.queryProbStatisticListWithReport(probStatistic, displayParam,
 						reportLineDatas);
 				result = EchartsUtil.packagingTableHtml(reportLineDatas);
-			} else {
+			} else if (probStatistic.getTabIndex() == 2) {
 				probProjectList = probManageService.queryProbStatisticProjectList(probStatistic, displayParam);
+			} else {
+			    commonList = probManageService.queryContractShipmentSoftList(probStatistic, displayParam);
 			}
-		} catch (UnsupportedEncodingException | ParseException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return "statistics";
@@ -930,22 +982,171 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	}
 	
 	/**
-	 * 查询产品组件列表
-	 * @return
-	 */
-	public String listComponent() {
-	    if (productComponent == null) {
-	        productComponent = new ProductComponentVO();
-	    }
-	    if (displayParam == null) {
+     * 查询产品组件列表
+     * @return
+     */
+    public String listProductItem() {
+        if (commonMap == null) {
+            commonMap = new HashMap<>();
+        }
+        if (displayParam == null) {
             displayParam = new DisplayParam();
         }
-	    try {
+        try {
             displayParam.getParam();
             
-    	    if ("json".equalsIgnoreCase(result)) {
-    	        displayParam.setExport(true);
-    	    }
+            if ("json".equalsIgnoreCase(result)) {
+                displayParam.setExport(true);
+            }
+            
+//            // 预设的过滤参数
+//            Map<String, Object> itemFiltersConfig = SystemContext.getConfig("prob.product.item.filters");
+//            // 当前搜索指定的查询条件组，多个itemGroups用OR链接，满足其中任一条件
+//            List<Map<String, Object>> itemGroups = new ArrayList<>();
+//            // 查询条件，搜索产品编码/型号/描述，空格分隔可组合
+//            List<String> itemSearch = MapUtil.get(commonMap, "itemSearch", List.class, Collections.emptyList());
+//            String[] searchs = StringUtils.split(itemSearch.isEmpty() ? "" : itemSearch.get(0), " ");
+//            // 每段条件用OR模糊查询产品编码/型号/描述，多个或条件组合成与条件，即获取同时满足多个的产品
+//            // orGroups之间AND连接，满足全部条件
+//            List<Map<String, Object>> orGroups = new ArrayList<>();
+//            for (String search : searchs) {
+//                // group内部用or连接
+//                Map<String, Object> group = new HashMap<String, Object>();
+//                group.put("itemCodeLike", String.format("%%%s%%", search));
+//                group.put("itemModelLike", String.format("%%%s%%", search));
+//                group.put("itemDescLike", String.format("%%%s%%", search));
+//                orGroups.add(group);
+//            }
+//            
+//            // 添加需要同时排除的条件
+//            List<String> itemSearchExclude = MapUtil.get(commonMap, "itemSearchExclude", List.class, Collections.emptyList());
+//            String searchExclude = itemSearchExclude.isEmpty() ? "{}" : itemSearchExclude.get(0);
+//            Map<String, Object> itemSearchExcludes = JSON.parseObject(searchExclude);
+//            orGroups.add(itemSearchExcludes);
+//            
+//            // 多个itemGroups用OR链接
+//            itemGroups.add(Collections.singletonMap("orGroups", orGroups));
+//            
+//            commonMap.put("itemGroups", itemGroups);
+//            commonMap.put("itemFilters", itemFiltersConfig.get("itemFilters"));
+//            
+//            commonList = probManageService.selectProductItemListByParams(commonMap);
+            
+            commonList = probManageService.selectProductItemListFilteredByParams(commonMap);
+            
+            if ("json".equalsIgnoreCase(result)) {
+                result = JSON.toJSONString(commonList);
+                return SUCCESS;
+            }
+        } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getMessage(e));
+        }
+        return "list";
+    }
+    
+    /**
+     * 查询产品组件列表
+     * @return
+     */
+    public String listProbProduct() {
+        if (probProduct == null) {
+            probProduct = new ProbProductVO();
+        }
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+        try {
+            displayParam.getParam();
+            
+            if ("json".equalsIgnoreCase(result)) {
+                displayParam.setExport(true);
+            }
+            
+            ProbProductPageParam pageParam = new ProbProductPageParam();
+            BeanUtils.copyProperties(probProduct, pageParam);
+            pageParam.setDisplayParam(displayParam);
+            commonList = probManageService.selectProbProductListPageable(pageParam);
+            
+            if ("json".equalsIgnoreCase(result)) {
+                result = JSON.toJSONString(commonList);
+                return SUCCESS;
+            }
+        } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getMessage(e));
+        }
+        return "list";
+    }
+	
+	/**
+     * 新建
+     */
+    public String inputProbProduct() throws Exception {
+        if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_PROB_ADMIN, MessageUtil.ROLE_PROB_RD)) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+        if (probProduct != null) {
+            probProduct = probManageService.selectProbProductVOById(probProduct.getId());
+        }
+        return INPUT;
+    }
+    
+    /**
+     * 保存
+     */
+    public String saveProbProduct() throws Exception {
+        if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_COMPONENT_ADMIN)) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+        probManageService.insertOrUpdateProbProductSelective(probProduct);
+        return SUCCESS;
+    }
+    
+    /**
+     * 上传xlx批量导入产品组件
+     * 
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public String importProbProduct() {
+        try {
+            if (upload != null) {
+                if (user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_COMPONENT_ADMIN)) {
+                    List<ProbProduct> probProducts = ExportUtils.readFromExcel(upload, uploadFileName, ProbProduct.class, "probProduct.info.");
+                    for (ProbProduct probProduct : probProducts) {
+                        probManageService.insertOrUpdateProbProductSelective(probProduct);
+                    }
+                    result = "success";
+                } else {
+                    result = "authError";
+                }
+            }
+            probProduct = new ProbProductVO();
+        } catch (Exception e) {
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return "import";
+    }
+    
+    /**
+     * 查询产品组件列表
+     * @return
+     */
+    public String listComponent() {
+        if (productComponent == null) {
+            productComponent = new ProductComponentVO();
+        }
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+        try {
+            displayParam.getParam();
+            
+            if ("json".equalsIgnoreCase(result)) {
+                displayParam.setExport(true);
+            }
             
             ProductComponentPageParam pageParam = new ProductComponentPageParam();
             BeanUtils.copyProperties(productComponent, pageParam);
@@ -956,11 +1157,11 @@ public class ProbManageAction extends BaseAction implements Preparable {
                 result = JSON.toJSONString(commonList);
                 return SUCCESS;
             }
-	    } catch (Exception e) {
+        } catch (Exception e) {
             setErrmsg(ExceptionUtils.getMessage(e));
         }
         return "list";
-	}
+    }
 	
 	/**
      * 新建
@@ -1318,6 +1519,22 @@ public class ProbManageAction extends BaseAction implements Preparable {
     public void setProductComponent(ProductComponentVO productComponent) {
         this.productComponent = productComponent;
     }
+    
+    public ProbProductVO getProbProduct() {
+        return probProduct;
+    }
+
+    public void setProbProduct(ProbProductVO probProduct) {
+        this.probProduct = probProduct;
+    }
+
+    public List<ProbProduct> getProbProductList() {
+        return probProductList;
+    }
+
+    public void setProbProductList(List<ProbProduct> probProductList) {
+        this.probProductList = probProductList;
+    }
 
     public List<? extends Object> getCommonList() {
         return commonList;
@@ -1327,11 +1544,11 @@ public class ProbManageAction extends BaseAction implements Preparable {
         this.commonList = commonList;
     }
 
-    public Map<String, ? extends Object> getCommonMap() {
+    public Map<String, Object> getCommonMap() {
         return commonMap;
     }
 
-    public void setCommonMap(Map<String, ? extends Object> commonMap) {
+    public void setCommonMap(Map<String, Object> commonMap) {
         this.commonMap = commonMap;
     }
 	

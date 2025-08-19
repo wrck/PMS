@@ -7,10 +7,12 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dp.plat.core.context.UserContext;
+import com.dp.plat.core.realms.Principal;
 import com.dp.plat.support.mail.MailSenderInfo;
 import com.dp.plat.support.mail.NotificationTemplate;
 import com.dp.plat.support.mail.dao.MailInfoMapper;
@@ -110,15 +112,20 @@ public class MailInfoService implements IMailInfoService {
 		if (record.getExpectSendTime() == null) {
 			record.setExpectSendTime(new Date());
 		}
-		Class<?> objClass = record.getClass();
 		try {
+			Principal principal = (Principal) SecurityUtils.getSubject().getPrincipal();
+			if (principal != null) {
+				record.setCreateBy(principal.getUserName());
+			}
+			// record.setCreateBy(UserContext.getCurrentUser().getUserName());
+		} catch (Exception e) {
+			record.setCreateBy("system");
+		}
+		record.setCreateTime(new Date());
+		try {
+			Class<?> objClass = record.getClass();
 			Method method = objClass.getMethod("setCreateBy", String.class);
 			method.invoke(record, UserContext.getCurrentUser().getUserName());
-		} catch (Exception e) {
-		}
-		try {
-			Method method = objClass.getMethod("setCreateTime", Date.class);
-			method.invoke(record, new Date());
 		} catch (Exception e) {
 		}
 		return dao.insertSelective(record);
@@ -159,5 +166,9 @@ public class MailInfoService implements IMailInfoService {
 		dao.updateMailFailedCount(failedMailIds);
 	}
 
-	
+	@Override
+	public void updateMailInfoWhenSend(List<MailInfo> mails) {
+		dao.updateMailInfoWhenSend(mails);
+	}
+
 }

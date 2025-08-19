@@ -11,9 +11,8 @@
 <meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
 <meta name="function" content="<s:text name='prob.manage' />">
 <link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.css" />
-<script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
-<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
-<script type="text/javascript" src="js/summernote/summernote-util.js"></script>
+<link rel="stylesheet" type="text/css" href="statics/plugins/select2/select2.min.css" />
+<dp:link rel="stylesheet" type="text/css" href="css/prob/prob.css" />
 <style>
 	.probRestoreBoxId{
 		display: none;
@@ -22,53 +21,14 @@
 		margin-right:0;
 		margin-left:0;
 	}
-	#manualSoftVersion {
-	    /* padding: 0 15px;
-	    margin-left: -15px;
-        width: calc(80% + 24px); */
-        display: flex;
-	}
-	.softVersion {
-		position: relative;
-		display: block;
-		border-bottom: 1px solid #ddd;
-		padding: 0.5rem 1.5rem 0.5rem 1rem;
-	}
-	.softVersionSub {
-		position: relative;
-		display: block;
-		border-top: 1px solid #ddd;
-		padding: 0.5rem 0 0.5rem 1.5rem;
-	}
-	.softVersionContainer {
-		position: relative;
-	}
-	.softVersionLink {
-		padding-top: 7px;
-	}
-	.softVersionDel {
-		position: absolute;
-	    right: 1.5rem;
-	    top: calc(50% - 0.5rem);
-		margin-top: -0.25rem;
-	}
-	.softVersionContainer .softVersionDel, .softVersionSub .softVersionDel, .groupManualEntry .softVersionDel{
-		right: 0;
-	}
-	.groupManualEntry {
-		flex-grow: 1;
-		display: flex;
-	    font-weight: bold;
-	    position: relative;
-	}
-	.form-control.affectedType {
-		display: inline;
-		width: auto;
-		height: auto;
-		padding: 2px 0;
-	}
 </style>
-<script type="text/javascript" src="js/prob/render.js"></script>
+<script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
+<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
+<dp:script type="text/javascript" src="js/summernote/summernote-util.js"></dp:script>
+<script type="text/javascript" src="statics/plugins/select2/select2.js"></script>
+<script type="text/javascript" src="statics/plugins/select2/i18n/zh-CN.js"></script>
+<dp:script type="text/javascript" src="js/prob/renderCascade.js"></dp:script>
+<dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
 <script type="text/javascript">
 	$(function(){
 		//加载日期控件
@@ -102,31 +62,6 @@
 		});
 		
 	});
-	/*
-	* 检查要提交的参数
-	*/
-	function checkPost(){
-		fields = new Array('num','theme');
-		for(i = 0 ;i < fields.length ; i++){
-			if(!checkField(fields[i])){
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	function checkField(fieldId){
-		$field = $("#"+fieldId);
-		if($field.val() == ''){
-			$("#"+fieldId+"Msg").text("此字段为必须输入项").addClass("redMark");
-			$field.focus();
-			return false;
-		}else{
-			$("#"+fieldId+"Msg").text("").removeClass("redMark");
-			return true;
-		}
-		return true;
-	}
 	
 	function edit(_this){
 		$editDiv = $(".editDiv");
@@ -145,7 +80,15 @@
 			$("#solution").focus();
 			$("#solution").blur();
 			$("#title").text("编辑技术公告");
+			
+			// 初始化软件版本的输入框
+			initSoftVersionInputs('manualSoftVersion', {
+				typeContainer: 'softVersionTypes', 
+				inputContainer: 'manualEntry',
+				initTypeKey: 'conplat',
+			});
 			renderSoftVersions(softVersionJson, {$container: $("#softVersionList")});
+			initProbProductBySelect2("probProducts", $("#probProductList"));
 		}
 	}
 	//检索版本
@@ -263,21 +206,16 @@
 		$("#softVersionList").find(".softVersion").remove();
     }
 	var softVersionJson = `${prob.affectedVersion}`;
+	var probProductsJson = `${prob.customInfo.probProductList}`;
 	$(document).ready(function(){
 		renderSoftVersions(softVersionJson, {
 			$container: $("#affectedVersionList"), 
 			readOnly: true, 
 			ignoreSub: true
 		});
-		$("#manualSubmit").click(function() {
-			var manualEntry = $.trim($("#manualEntry").val());
-			if (!manualEntry) {
-				$("#manualSoftVersion").hide();
-				return;
-			}
-			var affectedType = $.trim($("#affectedType").val());
-			parserSoftVersion({manualEntry, affectedType}, $("#softVersionList"));
-		});
+        renderProbProducts(probProductsJson, {
+            $container: $("#affectedProbProductList")
+        });
 		$('textarea').bind('input propertychange blur', function() {
 			$(this).css('height','0px');
 			$(this).css('height',this.scrollHeight + 'px');
@@ -414,23 +352,18 @@
 									<s:date name="prob.duedate" format="yyyy-MM-dd"/>	
 								</div>
 							</div>
-							<div class="form-group">
-								<label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.product.type"></s:text></label>
-								<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-									<s:property value="prob.productType"/>	
-								</div>
-								<label for="attachments" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.attachments.down"></s:text></label>
-								<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-									<s:iterator value="fileMap" var="file">
-							 			<a href="module/download.action?fileId=<s:property value='key'/>" title="点击下载"> <s:property value="value"/> </a>  	
-							 			<s:if test="(user.getUsername() == prob.trackingUser) || (user.isHasRole(18) == true )">
-								 			<a href="javascript:void(0)" onclick="deleteFile(<s:property value='key'/>)" title="删除"> 
-								 				<img alt="删除" src="images/delete_profile.gif">
-								 			</a>  	
-							 			</s:if>
-								 	</s:iterator>
-								</div>
-							</div>
+                            <div class="form-group">
+                                <label for="desc" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.desc"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <s:property value="prob.desc"  escapeHtml="false"/> 
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solution" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.solution"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <s:property value="prob.solution" escapeHtml="false"/>  
+                                </div>
+                            </div>
 							<div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
 								<%-- <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
@@ -453,7 +386,8 @@
 										<br/>
 									</s:iterator>
 								</div> --%>
-								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 softVersionList" id="affectedVersionList">
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9" >
+                                    <div id="affectedVersionList" class="softVersionList"></div>
                                 </div>
 								<s:hidden name="prob.status"></s:hidden>
 								<s:if test="%{user.isHasRole(18) && (prob.status == 4 || prob.status == 5) && prob.watch == 14}">
@@ -462,18 +396,24 @@
 									</div>
 								</s:if>
 							</div>
-							<div class="form-group">
-								<label for="desc" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.desc"></s:text></label>
-								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
-									<s:property value="prob.desc"  escapeHtml="false"/>	
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="solution" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.solution"></s:text></label>
-								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
-									<s:property value="prob.solution" escapeHtml="false"/>	
-								</div>
-							</div>
+                            <div class="form-group">
+                                <label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.product.type"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 probProductList" id="affectedProbProductList">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.attachments.down"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <s:iterator value="fileMap" var="file">
+                                        <a href="module/download.action?fileId=<s:property value='key'/>" title="点击下载"> <s:property value="value"/> </a>    
+                                        <s:if test="(user.getUsername() == prob.trackingUser) || (user.isHasRole(18) == true )">
+                                            <a href="javascript:void(0)" onclick="deleteFile(<s:property value='key'/>)" title="删除"> 
+                                                <img alt="删除" src="images/delete_profile.gif">
+                                            </a>    
+                                        </s:if>
+                                    </s:iterator>
+                                </div>
+                            </div>
 							<div class="form-group">
 								<label for="solution" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.tracking.user"></s:text></label>
 								<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -684,7 +624,7 @@
                                         cssClass="form-control"></s:textfield>
                                 </div>
                             </div>
-							<div class="form-group">
+							<%--<div class="form-group">
 								<label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.product.type"></s:text></label>
 								<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
 									<s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield>
@@ -699,7 +639,7 @@
 							 			</a>  	
 								 	</s:iterator>
 								</div>
-							</div>
+							</div> --%>
 							<%-- <div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
 								<div class="col-xs-5 col-sm-5 col-md-5 col-lg-5" id="softversionlist">
@@ -734,7 +674,7 @@
 								</div>
 								<!--old 已确认 状态可以检索版本 -->
 								<!--new 新创建或待确认的技术公告允许修改  -->
-								<％-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --％>
+								<％-- <s:if test="%{prob.status == 0 || prob.status == 1 || prob.status == 8}">  --％>
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
 										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
 									</label>
@@ -750,10 +690,10 @@
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
 								<!--old 已确认 状态可以检索版本 -->
 								<!--new 新创建或待确认的技术公告允许修改  -->
-								<%-- <s:if test="%{prob.status == 1 || prob.status == 8}">  --%>
-									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+								<%-- <s:if test="%{prob.status == 0 || prob.status == 1 || prob.status == 8}">  --%>
+									<!-- <label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
 										<a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
-									</label>
+									</label> -->
 									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
                                         <a href="javascript:void(0)" onclick="manualEntry()">手动输入</a>
                                     </label>
@@ -764,12 +704,40 @@
 							</div>
 							<div class="form-group">
 								<label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"></label>
-								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 softVersionList" id="softVersionList">
-                                    <div id="manualSoftVersion" style="display:none;">
-                                    	<s:select id="affectedType" cssClass="form-control" style="width: 120px" list="#{1:'盒式系列',2:'框式系列'}" headerKey="0" headerValue="所有系列"></s:select>
-                                        <s:textfield id="manualEntry" cssClass="form-control"></s:textfield>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <div id="manualSoftVersion">
+                                    	<s:select id="affectedType" cssClass="form-control" style="width: 120px" list="#{1:'盒式系列',2:'框式系列',-1:'其它系列'}" headerKey="0" headerValue="所有系列"></s:select>
+                                        <div id="softVersionTypes" class="display-flex softVersionTypes"></div>
+                                        <%-- <s:textfield id="manualEntry" cssClass="form-control softVersionInput" placeholder="请填写包含的版本"></s:textfield> --%>
+                                        <s:textfield id="manualEntryStart" cssClass="form-control softVersionInput softVersionInputPart" placeholder="请填写包含的起始版本"></s:textfield>
+                                        <s:textfield id="manualEntryEnd" cssClass="form-control softVersionInput softVersionInputPart" placeholder="请填写包含的结束版本"></s:textfield>
                                         <button type="button" id="manualSubmit" class="btn btn-default">添加</button>
                                     </div>
+                                    <div id="softVersionList" class="softVersionList"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.product.type"></s:text></label>
+                                <div id="probProductList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 probProductList">
+                                    <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
+                                    <s:hidden id="probProducts_hidden" name="prob.customInfo.probProductList" ></s:hidden>
+                                    <%-- <s:select id="probProducts" list="#{}" name="prob.customInfo.probProductItems" data-selected="%{prob.customInfo.probProductItems}" multiple="true" cssClass="form-control select2" ></s:select> --%>
+                                    <s:select id="probProducts" list="#{}" multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.attachments"></s:text></label>
+                                <div class="col-xs-4">
+                                    <input type="file" name="upload" class="form-control"/>
+                                    <s:iterator value="fileMap" var="file">
+                                        <a href="module/download.action?fileId=<s:property value='key'/>" title="点击下载"> <s:property value="value"/> </a>    
+                                        <s:if test="user.isHasRole(20) == true && (user.getUsername() == prob.trackingUser || prob.probId == 0)">
+                                            <a href="javascript:void(0)" onclick="deleteFile(<s:property value='key'/>)" title="删除"> 
+                                                <img alt="删除" src="images/delete_profile.gif">
+                                            </a>
+                                        </s:if>
+                                        &nbsp;  
+                                    </s:iterator>
                                 </div>
                             </div>
 						</div>

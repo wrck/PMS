@@ -1,10 +1,10 @@
 package com.dp.plat.prob.bean;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
+import com.dp.plat.data.bean.CustomInfoEntity;
+import com.dp.plat.prob.version.SoftVersionParser;
 
 /**
  * 技术公告信息
@@ -12,8 +12,9 @@ import com.dp.plat.prob.util.SoftVersionUtil.SoftVersionParser;
  * @author j01441
  *
  */
-public class Prob {
-	private int probId;// 主键
+public class Prob extends CustomInfoEntity {
+	private static final long serialVersionUID = 4265353476481783579L;
+    private int probId;// 主键
 	private String probNum;//
 	private String watch;// 跟踪
 	private String watchName;// 名称
@@ -50,7 +51,7 @@ public class Prob {
 	
 	// 状态查询
 	private List<? extends Object> statusList;
-
+	
 	public int getProbId() {
 		return probId;
 	}

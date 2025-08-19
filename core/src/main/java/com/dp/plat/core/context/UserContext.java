@@ -12,15 +12,27 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
+import org.apache.shiro.util.ThreadContext;
+import org.apache.shiro.mgt.SecurityManager;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.pojo.User;
+import com.dp.plat.core.pojo.UserInfo;
 import com.dp.plat.core.realms.Principal;
 
 /**
@@ -118,6 +130,12 @@ public class UserContext {
 	}
 
 	/**
+	 * 获取当前用户的用户名
+	 */
+	public static String getCurrentUsername() {
+		return getCurrentUser().getUserName();
+	}
+	/**
 	 * 获取当前用户的登录信息
 	 * 
 	 * @return
@@ -178,6 +196,14 @@ public class UserContext {
 
 	/**
 	 * 判断当前用户是否有某些角色中的一个
+	 *
+	 * @return
+	 */
+	public static boolean hasAnyRoles(List<String> roleIdentifiers) {
+		return hasAnyRoles((Collection<String>) roleIdentifiers);
+	}
+	/**
+	 * 判断当前用户是否有某些角色中的一个
 	 * 
 	 * @return
 	 */
@@ -208,6 +234,14 @@ public class UserContext {
 
 	/**
 	 * 判断当前用户是否有所有指定角色
+	 *
+	 * @return
+	 */
+	public static boolean hasAllRoles(List<String> roleIdentifiers) {
+		return hasAllRoles((Collection<String>) roleIdentifiers);
+	}
+	/**
+	 * 判断当前用户是否有所有指定角色
 	 * 
 	 * @return
 	 */
@@ -228,6 +262,14 @@ public class UserContext {
 
 	/**
 	 * 判断当前用户是否有所有指定权限
+	 *
+	 * @return
+	 */
+	public static boolean checkPermission(List<String> permissions) {
+		return checkPermission((Collection<String>) permissions);
+	}
+	/**
+	 * 判断当前用户是否有所有指定权限
 	 * 
 	 * @return
 	 */
@@ -238,6 +280,14 @@ public class UserContext {
 		return checkPermission(permissions.toArray(new String[] {}));
 	}
 
+	/**
+	 * 判断当前用户是否有任一指定权限
+	 *
+	 * @return
+	 */
+	public static boolean checkAnyPermission(List<String> permissions) {
+		return checkAnyPermission((Collection<String>) permissions);
+	}
 	/**
 	 * 判断当前用户是否有任一指定权限
 	 * 
@@ -307,5 +357,58 @@ public class UserContext {
 			e.printStackTrace();
 		}
 		return user;
+	}
+	/**
+	 * 绑定用户，绑定当前线程请求上下文
+	 * @param user
+	 * @param userInfo
+	 * @param securityManager
+	 * @param servletContext
+	 */
+	public static void bindThreadContextUser(User user, UserInfo userInfo, SecurityManager securityManager) {
+		 try {
+            // 获取webApplication上下文
+            WebApplicationContext webApplicationContext = ContextLoader.getCurrentWebApplicationContext();
+            ServletContext servletContext = webApplicationContext.getServletContext();
+            bindThreadContextUser(user, userInfo, securityManager, servletContext);
+        } catch (Throwable e) {
+        }
+	}
+
+	/**
+	 * 绑定用户，绑定当前线程请求上下文
+	 * @param user
+	 * @param userInfo
+	 * @param securityManager
+	 * @param servletContext
+	 */
+	public static void bindThreadContextUser(User user, UserInfo userInfo, SecurityManager securityManager, ServletContext servletContext) {
+		// 伪造请求，绑定用户，绑定当前线程请求上下文
+		Principal principal = new Principal(user);
+		principal.setUserInfo(userInfo);
+		HttpServletRequest request = HttpContext.createServletRequest(servletContext, principal);
+		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
+		// 绑定shrio上下文
+		try {
+		    ThreadContext.bind(securityManager);
+		    ThreadContext.bind(new Subject.Builder().principals(new SimplePrincipalCollection(principal, "jdbcRealm")).authenticated(true).buildSubject());
+		} catch (Exception e) {
+		    ExceptionHandler.insertException(e);
+        }
+	}
+
+	/**
+	 * 解绑用户，解绑当前线程请求上下文
+	 */
+	public static void unbindThreadContextUser() {
+		// 解绑shiro上下文
+		try {
+			ThreadContext.unbindSubject();
+			ThreadContext.unbindSecurityManager();
+			// 清空伪造的请求
+			RequestContextHolder.resetRequestAttributes();
+		} catch (Exception e) {
+		    ExceptionHandler.insertException(e);
+        }
 	}
 }

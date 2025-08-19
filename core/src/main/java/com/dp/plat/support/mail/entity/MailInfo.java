@@ -19,6 +19,8 @@ public class MailInfo {
 	
 	private Integer failedCount;
 
+	private String failedMessage;
+
 	private String createBy;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -84,6 +86,14 @@ public class MailInfo {
 
 	public void setFailedCount(Integer failedCount) {
 		this.failedCount = failedCount;
+	}
+
+	public String getFailedMessage() {
+		return failedMessage;
+	}
+
+	public void setFailedMessage(String failedMessage) {
+		this.failedMessage = failedMessage;
 	}
 
 	public String getCreateBy() {

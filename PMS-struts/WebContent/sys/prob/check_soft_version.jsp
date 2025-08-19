@@ -5,7 +5,7 @@
 <html>
 <dp:base />
 <head>
-<script type="text/javascript" src="js/prob/render.js"></script>
+<dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
 <script type="text/javascript">
 	$(function(){
 		$("#confirm").click(function(){

@@ -5,8 +5,8 @@
 <html>
 <head>
 <title><s:text name="sys.title"/></title>
-<link rel="stylesheet" type="text/css" href="css/login.css">
-<script type="text/javascript" src="js/util.js"></script>
+<dp:link rel="stylesheet" type="text/css" href="css/login.css" />
+<dp:script type="text/javascript" src="js/util.js"></dp:script>
 <script type="text/javascript" src="js/md5.js"></script>
 <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
 <script>

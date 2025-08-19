@@ -99,7 +99,7 @@
 		                   //"lengthChange":false
 		                 });     
 		//init table and fill data
-		unselectedTable = new CommonTable("userRole_unselected_table", basePath+"/sys/userrole/list.json?isSelected=false", "searchDiv_unselected",unselected_config);
+		unselectedTable = new CommonTable("userRole_unselected_table", basePath+"/sys/userrole/list.json?isSelected=false&roleId="+roleId, "searchDiv_unselected",unselected_config);
 		//setTimeout(function(){unselectedTable.table.columns.adjust();},100);
 		//init userrole table  
 		
@@ -109,7 +109,7 @@
 			                   "singleSelect":false,
 			                   "autoWidth":false
 		                   });
-		selectedTable=new CommonTable("userRole_selected_table", basePath+"/sys/userrole/list.json?isSelected=true","searchDiv_selected",selected_config);
+		selectedTable=new CommonTable("userRole_selected_table", basePath+"/sys/userrole/list.json?isSelected=true&roleId="+roleId,"searchDiv_selected",selected_config);
 		//button event  
 		
 		//绑定角色到用户

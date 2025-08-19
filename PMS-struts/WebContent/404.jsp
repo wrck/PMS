@@ -5,7 +5,7 @@
 <head>
 <title>404</title>
 <meta name="group" content="404">
-<LINK href="css/common.css" type=text/css rel=stylesheet>
+<dp:link href="css/common.css" type="text/css" rel="stylesheet" />
 <!-- 添加css和js的引用在这里 -->
 </head>
 

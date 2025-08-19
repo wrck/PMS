@@ -436,7 +436,7 @@
 			<if test="settled != null">
                 settled = #{settled, jdbcType=BIT} AND
             </if>
-            <if test="dateStartTime != null">
+            <!-- <if test="dateStartTime != null">
                 <choose>
                     <when test="dateType = 'confirmTime'"> s.confirmTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
                     <when test="dateType = 'paymentTime'"> s.paymentTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
@@ -447,7 +447,7 @@
                     <when test="dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
                     <when test="dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
                 </choose>
-            </if>
+            </if> -->
 		</trim>
 	</where>
   </select>
@@ -536,7 +536,8 @@
 			<if test="settled != null">
                 settled = #{settled, jdbcType=BIT} AND
             </if>
-            <if test="dateStartTime != null">
+            
+            <!-- <if test="dateStartTime != null">
                 <choose>
                     <when test="dateType = 'confirmTime'"> s.confirmTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
                     <when test="dateType = 'paymentTime'"> s.paymentTime >= #{dateStartTime, jdbcType=TIMESTAMP} AND </when>
@@ -547,7 +548,7 @@
                     <when test="dateType = 'confirmTime'"> <![CDATA[ s.confirmTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
                     <when test="dateType = 'paymentTime'"> <![CDATA[ s.paymentTime <= #{dateEndTime, jdbcType=TIMESTAMP} AND ]]> </when>
                 </choose>
-            </if>
+            </if> -->
 		</trim>
 	</where>
   </select>

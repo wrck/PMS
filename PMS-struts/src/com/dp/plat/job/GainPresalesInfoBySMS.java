@@ -15,10 +15,8 @@ import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
-import com.dp.plat.context.SystemContext;
 import com.dp.plat.crm.model.ApiMap;
 import com.dp.plat.extend.crm.job.GainDataFromCRM;
-import com.dp.plat.extend.crm.job.PullJobFromCRM;
 import com.dp.plat.param.LendInfoParam;
 import com.dp.plat.param.LendProductParam;
 

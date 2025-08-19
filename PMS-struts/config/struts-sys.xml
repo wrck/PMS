@@ -235,6 +235,26 @@
 			<result name="importSoftVersion">/sys/prob/prob_importSoftVersion.jsp</result>
 			<result name="statistics">/sys/prob/prob_project_statistics.jsp</result>
 		</action>
+        <action name="probProduct_*" class="ProbManageAction" method="{1}ProbProduct">
+            <result name="{1}">/sys/prob/product/{1}.jsp</result>
+            <result name="success" type="redirect">
+                <param name="location">probProduct_list.action</param>
+                <param name="namespace">/module</param>
+            </result>
+            <result name="error">/sys/error.jsp</result>
+            <result name="continue" type="redirect">
+                <param name="location">probProduct_input.action</param>
+                <param name="namespace">/module</param>
+                <param name="prob.probId">${prob.probId}</param>
+            </result>
+            <result name="export" type="stream">
+                <param name="contentType">application/octet-stream;charset=ISO8859-1</param>
+                <param name="contentDisposition">attachment;filename="${downloadFileName}"</param>
+                <param name="inputName">inputStream</param>
+                <param name="bufferSize">4096</param>
+            </result>
+            <result name="importProdProduct">/sys/prob/prob_importProdProduct.jsp</result>
+        </action>
 		<!-- 产品组件管理 -->
         <action name="component_*" class="ProbManageAction" method="{1}Component">
             <result name="{1}">/sys/component/component_{1}.jsp</result>
@@ -1119,7 +1139,7 @@
 		<!-- 更新设备软件版本 -->
 		<action name="updateSoftVersion" class="ProjectAction" method="updateSoftVersion">
 			<result name="success" type="json">
-				<param name="includeProperties">errmsg,result</param>
+				<param name="includeProperties">errmsg,result,softChangeLog.*</param>
 			</result>
 		</action>
 		<!-- 确认选择设备软件版本 -->

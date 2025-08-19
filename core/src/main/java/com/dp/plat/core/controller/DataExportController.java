@@ -2,6 +2,7 @@ package com.dp.plat.core.controller;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -65,16 +66,18 @@ public class DataExportController {
 			String fullServiceName,Model model) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException, InstantiationException {
 		PageParam<?> pageParam = ExportUtils.getPageParam(objectName, objectKV, pageParamKV);
 //		String classz = "com.dp.plat.core.service.impl.DataExportService";
+		List<?> dataInfos = Collections.emptyList();
+		try {
 		Class<?> t_class =  Class.forName(fullServiceName);
 		Class<?> o_class = ExportUtils.getClass(objectName);
 		Method m = t_class.getMethod("export" + o_class.getSimpleName(), PageParam.class);
 		
-		List<?> dataInfos = (List<?>)m.invoke(SpringContext.getBean(t_class),pageParam);
+			dataInfos = (List<?>) m.invoke(SpringContext.getBean(t_class), pageParam);
+		} catch (Exception e) {
+			Method method = dataExportService.getClass().getMethod("export" + objectName, PageParam.class);
 		
-//		Method method;
-//		method = dataExportService.getClass().getMethod("export" +objectName, PageParam.class);
-//		
-//		List<?> dataInfos = (List<?>) method.invoke(dataExportService, pageParam);
+			dataInfos = (List<?>) method.invoke(dataExportService, pageParam);
+		}
 		model.addAttribute("data", dataInfos);
 		if(StringUtils.isNotBlank(columns)){
 			model.addAttribute("columns", columns.split(";"));

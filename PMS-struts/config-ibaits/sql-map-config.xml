@@ -24,6 +24,7 @@ PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
 	<typeHandler javaType="java.util.Map" callback="JsonTypeHandler"/>
     
 	<sqlMap resource="sql-map-admin-config.xml" />
+	<sqlMap resource="sql-map-project-common-config.xml" />
 	<sqlMap resource="sql-map-project-config.xml" />
 	<sqlMap resource="sql-map-work-config.xml" />
 	<sqlMap resource="sql-map-activity-config.xml"/>

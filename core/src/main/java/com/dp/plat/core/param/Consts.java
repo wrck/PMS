@@ -99,6 +99,6 @@ public class Consts {
 		/**
 		 * 业务模块
 		 */
-		public final static String MODULE_MANAGER = "/module";
+		public final static String MODULE_MANAGER = "/module/";
 	}
 }

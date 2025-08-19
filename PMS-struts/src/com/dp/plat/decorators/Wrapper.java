@@ -369,10 +369,10 @@ public class Wrapper extends TableDecorator {
 	
 	public String getSmsTargetUrl() {
 		Object object = getCurrentRowObject();
-		Integer objId = null;
+		Object objId = null;
 		String procType = null;
 		if (object instanceof Map) {
-			objId = (Integer) ((Map) object).get("objId");
+			objId = (Object) ((Map) object).get("objId");
 			procType = (String) ((Map) object).get("procType");
 		} else if (object instanceof SubcontractPrice){
 			objId = ((SubcontractPrice) object).getObjId();

@@ -86,7 +86,8 @@
 						} */
 						var value = sysLog[key] ? sysLog[key] : "";
 						if (key == "exceptionDetail" && value) {
-							value = "<pre>" + value + "</pre>";
+							//value = "<pre>" + value + "</pre>";// 如果存在<>会解析为html标签，故改用text进行转义
+							value = $("<pre></pre>").text(value)[0].outerHTML;
 							//$("#exceptionDetail").html(sysLog[key]);
 						} else if (key == "params") {
 							try {
@@ -96,7 +97,8 @@
 							} catch(e) {
 								//$("#params").html(sysLog[key]);
 							}
-							value = "<pre>" + value + "</pre>";
+							//value = "<pre>" + value + "</pre>";// 如果存在<>会解析为html标签，故改用text进行转义
+							value = $("<pre></pre>").text(value)[0].outerHTML;
 						} else {
 							//if (key == "type" && sysLog[key] == 1) {
 							//	$("#exception").show();

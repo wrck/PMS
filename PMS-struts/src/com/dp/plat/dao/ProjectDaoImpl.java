@@ -12,6 +12,8 @@ import org.springframework.beans.BeanUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.CallBack;
 import com.dp.plat.data.bean.Contract;
@@ -38,6 +40,8 @@ import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Person;
 import com.dp.plat.param.ProjectParam;
 import com.dp.plat.param.RealProductLineBean;
+import com.dp.plat.prob.util.ProductItemExample;
+import com.dp.plat.prob.util.ProductItemExampleBuilder;
 import com.dp.plat.supervision.entity.ProjectSupervision;
 import com.dp.plat.supervision.vo.ProjectSupervisionVO;
 import com.dp.plat.util.MessageUtil;
@@ -103,8 +107,8 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
 
     @Override
-    public void updateProjectByProjectId(Project project) {
-        getSqlMapClientTemplate().update("update-project-byprojectid", project);
+    public Integer updateProjectByProjectId(Project project) {
+        return getSqlMapClientTemplate().update("update-project-byprojectid", project);
     }
 
     @SuppressWarnings("unchecked")
@@ -1113,22 +1117,41 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @SuppressWarnings("unchecked")
     @Override
     public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("contractNo", contractNo);
-        map.put("projectId", projectId);
-        return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        map.put("contractNo", contractNo);
+//        map.put("projectId", projectId);
+//        return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
+        return this.querySoftversionList(contractNo, projectId, Collections.emptyMap());
     }
     
     @SuppressWarnings("unchecked")
     @Override
     public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
-        Map<String, Object> map = new HashMap<String, Object>();
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
+//            contractNo = contractNo.replaceAll("-L", "");
+//        }
+//        map.put("contractNo", contractNo);
+//        map.put("profitCenter", profitCenter);
+//        map.put("projectId", projectId);
+//        return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
+        return this.querySoftversionList(contractNo, projectId, Collections.singletonMap("profitCenter", profitCenter));
+    }
+    
+    @Override
+    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
+        Map<String, Object> map = new HashMap<String, Object>(params != null ? params : Collections.emptyMap());
+        String profitCenter = (String) map.get("profitCenter");
         if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
             contractNo = contractNo.replaceAll("-L", "");
         }
+        Boolean filterItem = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(params.get("filterItem"))));
         map.put("contractNo", contractNo);
-        map.put("profitCenter", profitCenter);
         map.put("projectId", projectId);
+        if (filterItem) {
+            ProductItemExample example = ProductItemExampleBuilder.buildFromSearchCriteria(params, SystemContext.getConfig("prob.product.item.filters"));
+            map.put("itemFilters", example.getItemFilters());
+        }
         return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
     }
 

@@ -17,9 +17,10 @@
     <result column="attachFiles" jdbcType="LONGVARCHAR" property="attachFiles" />
     <result column="isInner" jdbcType="BIT" property="isInner" />
     <result column="failedCount" jdbcType="INTEGER" property="failedCount" />
+    <result column="failedMessage" jdbcType="LONGVARCHAR" property="failedMessage" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, subject, sendTime, expectSendTime, sendFlag, createBy, createTime, content, tos, ccs, bccs, actualSendAddress, attachFiles, isInner, failedCount
+    id, subject, sendTime, expectSendTime, sendFlag, createBy, createTime, content, tos, ccs, bccs, actualSendAddress, attachFiles, isInner, failedCount, failedMessage
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -36,12 +37,12 @@
       expectSendTime, sendFlag, createBy, 
       createTime, content, tos, 
       ccs, bccs, actualSendAddress, 
-      attachFiles, isInner, failedCount)
+      attachFiles, isInner, failedCount, failedMessage)
     values (#{id,jdbcType=INTEGER}, #{subject,jdbcType=VARCHAR}, #{sendTime,jdbcType=TIMESTAMP}, 
       #{expectSendTime,jdbcType=TIMESTAMP}, #{sendFlag,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}, #{tos,jdbcType=LONGVARCHAR}, 
       #{ccs,jdbcType=LONGVARCHAR}, #{bccs,jdbcType=LONGVARCHAR}, #{actualSendAddress,jdbcType=LONGVARCHAR}, 
-      #{attachFiles,jdbcType=LONGVARCHAR}, #{isInner,jdbcType=BIT}), #{failedCount,jdbcType=INTEGER}
+      #{attachFiles,jdbcType=LONGVARCHAR}, #{isInner,jdbcType=BIT}), #{failedCount,jdbcType=INTEGER}, #{failedMessage,jdbcType=LONGVARCHAR}
   </insert>
   <insert id="insertSelective" parameterType="com.dp.plat.support.mail.entity.MailInfo">
     insert into t_mails
@@ -91,6 +92,9 @@
       <if test="failedCount != null">
         failedCount,
       </if>
+      <if test="failedMessage != null">
+        failedMessage,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -137,6 +141,9 @@
       </if>
       <if test="failedCount != null">
         #{failedCount,jdbcType=INTEGER},
+      </if>
+      <if test="failedMessage != null">
+        #{failedMessage,jdbcType=LONGVARCHAR},
       </if>
     </trim>
   </insert>
@@ -185,6 +192,9 @@
       <if test="failedCount != null">
         failedCount = #{failedCount,jdbcType=INTEGER},
       </if>
+      <if test="failedMessage != null">
+        failedMessage = #{failedMessage,jdbcType=LONGVARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
@@ -203,7 +213,8 @@
       actualSendAddress = #{actualSendAddress,jdbcType=LONGVARCHAR},
       attachFiles = #{attachFiles,jdbcType=LONGVARCHAR},
       isInner = #{isInner,jdbcType=BIT},
-      failedCount = #{failedCount,jdbcType=INTEGER}
+      failedCount = #{failedCount,jdbcType=INTEGER},
+      failedMessage = #{failedMessage,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
   
@@ -257,6 +268,9 @@
 				</if>
 				<if test="model.failedCount != null and '' != model.failedCount">
 					failedCount = #{model.failedCount, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.failedMessage != null and '' != model.failedMessage">
+					failedMessage = #{model.failedMessage, jdbcType=LONGVARCHAR} AND
                 </if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -332,6 +346,9 @@
 				</if>
 				<if test="model.failedCount != null and '' != model.failedCount">
                     failedCount = #{model.failedCount, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.failedMessage != null and '' != model.failedMessage">
+                    failedMessage = #{model.failedMessage, jdbcType=LONGVARCHAR} AND
                 </if>
 			</if>
 			<if test="fuzzySearch == true and fuzzy != ''">
@@ -410,5 +427,69 @@
      )
     </foreach>
     ON DUPLICATE KEY UPDATE sendFlag = VALUES(sendFlag), actualSendAddress = VALUES(actualSendAddress), sendTime = VALUES(sendTime)
+  </insert>
+
+  <insert id="updateMailInfoWhenSendFail" parameterType="list">
+    insert into t_mails (id, content, failedCount, failedMessage)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+     (
+     	#{item.id}, "", #{item.failedCount},
+     	<choose>
+     		<when test="item.failedMessage != null and item.failedMessage != ''">
+     			#{item.failedMessage}
+     		</when>
+     		<otherwise>NULL</otherwise>
+     	</choose>
+     )
+    </foreach>
+    ON DUPLICATE KEY UPDATE
+    	failedCount = VALUES(failedCount) + 1
+    	<if test="item.failedMessage != null and item.failedMessage != ''">
+    	, failedMessage = CONCAT(IFNULL(failedMessage, ""), IF(failedMessage IS NULL, "", ","), VALUES(failedMessage))
+    	</if>
+  </insert>
+
+  <insert id="updateMailInfoWhenSend" parameterType="list">
+    insert into t_mails (id, content,
+    	sendFlag, actualSendAddress, sendTime,
+    	failedCount, failedMessage
+   	)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+     (
+     	#{item.id}, "",
+     	<if test="item.sendFlag == true">
+	    	#{item.sendFlag}, #{item.actualSendAddress},
+		    <if test="item.sendTime != null">
+		    	#{item.sendTime}
+		    </if>
+		    <if test="item.sendTime == null">
+		    	now()
+		    </if>
+		    , 0, null
+	   	</if>
+	   	<if test="item.sendFlag != true">
+	   		FALSE, NULL, NULL,
+	    	#{item.failedCount},
+	     	<choose>
+	     		<when test="item.failedMessage != null and item.failedMessage != ''">
+	     			#{item.failedMessage}
+	     		</when>
+	     		<otherwise>NULL</otherwise>
+	     	</choose>
+	   	</if>
+     )
+    </foreach>
+    ON DUPLICATE KEY UPDATE
+    	sendFlag = VALUES(sendFlag), actualSendAddress = VALUES(actualSendAddress), sendTime = VALUES(sendTime),
+    	failedCount = IF(VALUES(sendFlag) = true, 0, failedCount + 1),
+    	failedMessage = IF(VALUES(sendFlag) = true,
+    						NULL,
+    						IF(VALUES(failedMessage) IS NULL,
+    							failedMessage,
+    							CONCAT(IFNULL(failedMessage, ""), IF(failedMessage IS NULL, "", ","), VALUES(failedMessage))
+   							)
+ 						)
   </insert>
 </mapper>

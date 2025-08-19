@@ -749,10 +749,12 @@
 	  			</if>
 	  		</foreach>
 	  		<if test="fuzzySearch == true and fuzzy != ''">
-	  			<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
-		  			<if test="item.data != null and item.data != ''">
-		  				`${item.data}` like BINARY CONCAT("%", #{fuzzy}, "%")
-		  			</if>
+	  			<foreach collection="multipleFuzzy" item="fuzzyStr" separator=" and ">
+	  				<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
+		  				<if test="item.data != null and item.data != ''">
+		  					`${item.data}` like BINARY CONCAT("%", #{fuzzyStr}, "%")
+		  				</if>
+		  			</foreach>
 		  		</foreach>
 	  		</if>
   		</trim>
@@ -775,10 +777,12 @@
 	  			</if>
 	  		</foreach>
 	  		<if test="fuzzySearch == true and fuzzy != ''">
-	  			<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
-		  			<if test="item.data != null and item.data != ''">
-		  				`${item.data}` like BINARY CONCAT("%", #{fuzzy}, "%")
-		  			</if>
+	  			<foreach collection="multipleFuzzy" item="fuzzyStr" separator=" and ">
+	  				<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
+		  				<if test="item.data != null and item.data != ''">
+		  					`${item.data}` like BINARY CONCAT("%", #{fuzzyStr}, "%")
+		  				</if>
+		  			</foreach>
 		  		</foreach>
 	  		</if>
   		</trim>

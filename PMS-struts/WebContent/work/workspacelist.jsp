@@ -389,6 +389,15 @@ function fillpm2(){
     <s:if test="%{tabName == 'subcontractTask'}">
         <!-- 搜索栏：项目名称，办事处，项目经理 -->
         <s:form id="subcontractTaskForm" name="subcontractTaskForm" cssClass="form-inline" action="module/Workspace!subcontractTask.action">
+            <label for="procKey"><s:text name="workflow.name" /></label>
+            <s:select name="queryParams.processKey" id="processKey"
+                    cssClass="form-control" headerKey=""
+                    headerValue="所有流程" cssStyle="width:163px"
+                    list="#{
+                        'Subcontract': '项目转包申请', 
+                        'SubcontractCallBack': '项目转包回访', 
+                        'SubcontractInspection': '项目转包验收'
+                    }" theme="simple" />
             <div class="form-group form-group-query form-group-width-1">
                 <dp:fielderror accesskey="errmsg" onlyone="true" />
                 <label for="subcontractName"><s:text name="pm.subcontract.subcontractName" /></label>

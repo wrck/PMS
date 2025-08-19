@@ -16,26 +16,35 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.impl.identity.Authentication;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.struts2.ServletActionContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dp.plat.context.SpringContext;
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.PmClosedLoopDao;
+import com.dp.plat.data.activity.ActComment;
 import com.dp.plat.data.bean.Department;
 import com.dp.plat.data.bean.PmClQuesnaireResultHeader;
 import com.dp.plat.data.bean.PmClQuesnaireResultLine;
@@ -43,8 +52,15 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.data.vo.Result;
 import com.dp.plat.exception.UploadException;
 import com.dp.plat.param.DisplayParam;
+import com.dp.plat.pms.extend.fp.entity.InvoiceProviderInfo;
+import com.dp.plat.pms.extend.fp.model.ElectronicInvoiceModel;
+import com.dp.plat.pms.extend.fp.model.ElectronicInvoiceResponse;
+import com.dp.plat.pms.extend.fp.model.Response;
+import com.dp.plat.pms.extend.fp.util.FPApi;
+import com.dp.plat.pms.extend.fp.util.InvoiceUtil;
 import com.dp.plat.service.BaseServiceImpl;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.CallBackService;
@@ -67,6 +83,7 @@ import com.dp.plat.subcontract.entity.SubcontractPrice;
 import com.dp.plat.subcontract.entity.SubcontractProject;
 import com.dp.plat.subcontract.exception.SubcontractException;
 import com.dp.plat.subcontract.service.SubcontractService;
+import com.dp.plat.subcontract.utils.SubcontractUtil;
 import com.dp.plat.subcontract.vo.SubcontractComment;
 import com.dp.plat.subcontract.vo.SubcontractDeliverVO;
 import com.dp.plat.subcontract.vo.SubcontractEvaluationHeader;
@@ -78,6 +95,8 @@ import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.UserUtil;
 import com.dp.plat.util.Util;
 import com.dp.plat.util.WorkflowUtil;
+
+import cn.hutool.core.map.MapUtil;
 
 public class SubcontractServiceImpl extends BaseServiceImpl implements SubcontractService {
 
@@ -232,6 +251,11 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	public List<SubcontractPayment> selectSubcontractPaymentList(SubcontractPayment payment) {
 		return dao.selectSubcontractPaymentList(payment);
 	}
+	
+	@Override
+    public SubcontractPayment selectSubcontractPaymentById(Integer paymentId) {
+        return dao.selectSubcontractPaymentById(paymentId);
+    }
 
 	@Override
 	public String querySubcontractPaiedAmount(Integer subcontractId) {
@@ -303,6 +327,14 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		deliver.setEffectiveFrom(deliver.getUploadTime());
 		dao.insertSubcontractDeliver(deliver);
 	}
+	
+	/**
+     * @param subcontractDeliver
+     */
+	@Override
+    public void updateSubcontractDeliverByIdSelective(SubcontractDeliver subcontractDeliver) {
+        dao.updateSubcontractDeliverByIdSelective(subcontractDeliver);
+    }
 
 	@Override
 	public void insertSubcontractPayment(SubcontractPayment subcontractPayment) {
@@ -456,7 +488,14 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	public boolean saveDeliverFiles(Integer subcontractId, List<SubcontractDeliverVO> uploadDeliverList) {
 		boolean callBackFlag = false;
 		if (uploadDeliverList != null) {
+		    String targetDirectory = ServletActionContext.getServletContext().getRealPath(uploadDir);
 			String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
+
+			String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+			String inspectionType = SubcontractUtil.getDeliveryInspectionType();
+			
+			Map<Integer, SubcontractPayment> paymentMap = new HashMap<Integer, SubcontractPayment>();
+			Map<Integer, SubcontractPayment> invoicePaymentMap = new HashMap<Integer, SubcontractPayment>();
 			for (SubcontractDeliverVO deliverVO : uploadDeliverList) {
 				try {
 					if (deliverVO == null) {
@@ -469,7 +508,17 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 					if (uploadFiles == null) {
 						continue;
 					}
+					
+					Integer paymentId = deliverVO.getPaymentId();
+                    SubcontractPayment subcontractPayment = paymentMap.get(paymentId);
+					if (subcontractPayment == null) {
+					    subcontractPayment = this.selectSubcontractPaymentById(paymentId);
+					    paymentMap.put(paymentId, subcontractPayment);
+					}
+					
 					boolean isMultipleFileType = fileTypes.length == uploadFiles.length;
+					List<File> invoiceFileList = new ArrayList<>(uploadFiles.length);
+					List<Object> deliverList = new ArrayList<>(uploadFiles.length);
 					for (int i = 0; i < uploadFiles.length; i++) {
 						File file = uploadFiles[i];
 						String fileName = fileNames[i];
@@ -479,7 +528,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 							return false;
 						}
 						SubcontractDeliver deliver = new SubcontractDeliver(subcontractId);
-						deliver.setPaymentId(deliverVO.getPaymentId());
+						deliver.setPaymentId(paymentId);
 						deliver.setFileName(fileName);
 						fileName = UploadFileUtil.uploadNoRepeat(file, uploadDir, fileName);
 						deliver.setFilePath(uploadDir + fileName);
@@ -489,20 +538,218 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 						// if ("1".equals(type)) {
 						// callBackFlag = true;
 						// }
+						if (fileType.equalsIgnoreCase(invoiceType)) {
+						    invoiceFileList.add(new File(targetDirectory + File.separator + fileName));
+						    deliverList.add(ElectronicInvoiceModel.builder().dataType("deliver").dataId(deliver.getId().toString()).build());
+						    invoicePaymentMap.put(paymentId, subcontractPayment);
+						}
 					}
+					
+					// 发票识别
+					verifySubcontractPaymentDeliver(subcontractId, paymentId, invoiceFileList, deliverList);
 				} catch (UploadException e) {
 					throw e;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
+			
+			// 更新付款申请对应的发票编号
+			updateSubcontractPaymentInvoiceNumber(invoicePaymentMap.keySet());
 		}
 		return callBackFlag;
 	}
 	
+	/**
+     * 付款附件查验
+     * @param payment
+	 * @return 
+     */
+	@Override
+    public Result verifySubcontractPaymentDeliver(Integer subcontractId, Integer paymentId) {
+        SubcontractPayment payment = new SubcontractPayment();
+        payment.setId(paymentId);
+        payment.setSubcontractId(subcontractId);
+        return verifySubcontractPaymentDeliver(payment);
+    }
+	
+	/**
+	 * 付款附件查验
+	 * @param payment
+	 * @return 
+	 */
+    @Override
+	public Result verifySubcontractPaymentDeliver(SubcontractPayment payment) {
+	    if (payment == null) {
+	        return Result.success(0);
+	    }
+	    
+	    String webroot = ServletActionContext.getServletContext().getRealPath("/") + File.separator;
+	    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+        String inspectionType = SubcontractUtil.getDeliveryInspectionType();
+	    
+	    Integer subcontractId = payment.getSubcontractId();
+	    Integer paymentId = payment.getId();
+	    
+        SubcontractDeliver delivery = new SubcontractDeliver();
+        delivery.setSubcontractId(subcontractId);
+        delivery.setPaymentId(paymentId);
+        delivery.setType(invoiceType);
+        delivery.setEffectiveTo(new Date());
+        List<SubcontractDeliver> deliverList = this.selectSubcontractDeliverList(delivery);
+        List<File> invoiceFileList = new ArrayList<>();
+        List<Object> deliverInfoList = new ArrayList<>();
+        Map<String, List<Integer>> uniqueFilePathDeliverMap = new HashMap<>();
+        // 按path分组，相同文件只查询一次，查询后更新相同内容
+        for (SubcontractDeliver deliver : deliverList) {
+            // 文件是否重复，发票状态是否已验真
+            Boolean isVerified = SubcontractUtil.checkDeliveryInvoiceStatus(deliver.getCustomInfo());
+            List<Integer> deliverIds = uniqueFilePathDeliverMap.getOrDefault(deliver.getFilePath(), new ArrayList<Integer>());
+            if (uniqueFilePathDeliverMap.containsKey(deliver.getFilePath()) || isVerified) {
+                if (!isVerified) {
+                    deliverIds.add(deliver.getId());
+                }
+                continue;
+            }
+            deliverIds.add(deliver.getId());
+            uniqueFilePathDeliverMap.put(deliver.getFilePath(), deliverIds);
+        }
+        // 相同文件只查询一次，查询后更新相同内容
+        for (Entry<String, List<Integer>> entry : uniqueFilePathDeliverMap.entrySet()) {
+            String filePath = entry.getKey();
+            List<Integer> deliverIds = entry.getValue();
+            invoiceFileList.add(new File(webroot + filePath));
+            deliverInfoList.add(ElectronicInvoiceModel.builder().dataType("deliver").dataId(StringUtils.join(deliverIds, ",")).build());
+        }
+	    
+	    return verifySubcontractPaymentDeliver(subcontractId, paymentId, invoiceFileList, deliverInfoList);
+	}
+
+    /**
+     * 付款附件查验
+     * @param subcontractId
+     * @param paymentId
+     * @param invoiceFileList
+     * @param deliverInfoList
+     * @return
+     */
+    public Result verifySubcontractPaymentDeliver(Integer subcontractId, Integer paymentId, List<File> invoiceFileList, List<Object> deliverInfoList) {
+        String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+        String inspectionType = SubcontractUtil.getDeliveryInspectionType();
+        
+        // 按path分组，相同文件只查询一次，查询后更新相同内容
+        Map<String, ElectronicInvoiceModel> fileInfoMap = new LinkedHashMap<String, ElectronicInvoiceModel>(invoiceFileList.size());
+        for (int i = 0; i < invoiceFileList.size(); i++) {
+            File file = invoiceFileList.get(i);
+            if (file == null || !file.isFile() || !file.exists()) {
+                continue;
+            }
+            String filePath = file.getAbsolutePath();
+            ElectronicInvoiceModel sourceMap = (deliverInfoList.isEmpty() ? ElectronicInvoiceModel.builder().build() : (ElectronicInvoiceModel) deliverInfoList.get(Math.min(i, deliverInfoList.size() - 1)));
+            ElectronicInvoiceModel deliverInfo = fileInfoMap.getOrDefault(filePath, sourceMap);
+            if (fileInfoMap.containsKey(filePath)) {
+                Set<String> dataIds = new LinkedHashSet<String>();
+                dataIds.addAll(Arrays.asList(StringUtils.split(deliverInfo.getDataId(), ",")));
+                dataIds.addAll(Arrays.asList(StringUtils.split(sourceMap.getDataId(), ",")));
+                deliverInfo.setDataId(StringUtils.join(dataIds, ","));
+            }
+            
+            fileInfoMap.put(filePath, deliverInfo);
+        }
+        
+        List<File> uniqueFileList = new ArrayList<>();
+        List<Object> uniqueInfoList = new ArrayList<>();
+        for (Entry<String, ElectronicInvoiceModel> entry : fileInfoMap.entrySet()) {
+            uniqueFileList.add(new File(entry.getKey()));
+            uniqueInfoList.add(entry.getValue());
+        }
+        
+        // 发票识别
+        List<Response<ElectronicInvoiceModel>> responses = FPApi.postElectronicInvoice("payment", paymentId.toString(), uniqueFileList, uniqueInfoList, SystemContext.getConfig("sys.fp.api.config"));
+        Integer successCount = 0;
+        for (Iterator iterator = responses.iterator(); iterator.hasNext();) {
+            ElectronicInvoiceResponse response = (ElectronicInvoiceResponse) iterator.next();
+            List<InvoiceProviderInfo> dataList = response.getData() != null ? response.getData() : Collections.emptyList();
+            for (InvoiceProviderInfo data : dataList) {
+                Map<String, Object> invoice = data.getInfo();
+                SubcontractDeliver deliver = new SubcontractDeliver(subcontractId);
+                String dataIds = data.getQuery().getDataId();
+                // 相同文件只查询一次，查询后更新相同内容
+                List<String> dataIdList = Arrays.asList(StringUtils.split(dataIds, ","));
+                for (String dataId : dataIdList) {
+                    if (NumberUtils.isCreatable(dataId)) {
+                        deliver.setId(Integer.parseInt(dataId));
+                        deliver.setCustomInfo(data.getInfo());
+                        deliver.setCustomInfoByKey("identify", true);
+                        deliver.setCustomInfoByKey("uniqueInvoiceNumber", InvoiceUtil.getUniqueInvoiceNumber(data.getInfo()));
+                        
+                        // 如果不是发票识别不需要验真，说明不是发票，将类型改为验收材料
+                        if (!SubcontractUtil.checkDeliveryInoviceType(invoice)) {
+                            deliver.setType(inspectionType);
+                        } else {
+                            deliver.setType(invoiceType);
+                        }
+                        this.updateSubcontractDeliverByIdSelective(deliver);
+                        successCount++;
+                    }
+                }
+            }
+        }
+        
+        return Result.success(successCount);
+    }
+	
 	@Override
 	public void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO) {
+	    List<Object> ids = subcontractDeliverVO.getIds();
+	    Set<Integer> paymentIds = new LinkedHashSet<>();
+	    if (ids != null && !ids.isEmpty()) {
+    	    for (Object id : ids) {
+    	        try {
+                    SubcontractDeliver deliver = this.selectSubcontractDeliverById(Integer.valueOf(id.toString()));
+                    paymentIds.add(deliver.getPaymentId());
+                } catch(Exception e) {
+                    continue;
+                }
+            }
+	    }
 		dao.deleteSubcontractDeliver(subcontractDeliverVO);
+		updateSubcontractPaymentInvoiceNumber(paymentIds);
+	}
+	
+	/**
+	 * 更新付款申请对应的发票编号
+	 * @param paymentIds
+	 */
+	@Override
+	public Result updateSubcontractPaymentInvoiceNumber(Set<Integer> paymentIds) {
+	    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+	    // 防止执行过快将前面失效的一并查询出来，增加一秒
+	    Calendar date = Calendar.getInstance();
+	    date.add(Calendar.SECOND, 1);
+	    for (Integer paymentId : paymentIds) {
+            SubcontractDeliver deliver = new SubcontractDeliver();
+            deliver.setPaymentId(paymentId);
+            deliver.setType(invoiceType);
+            deliver.setEffectiveTo(date.getTime());
+            List<SubcontractDeliver> invoiceDeliverList = this.selectSubcontractDeliverList(deliver);
+            Set<String> invoiceNumberList = new LinkedHashSet<String>();
+            BigDecimal invoiceAmountSum = new BigDecimal("0.00");
+            for (SubcontractDeliver temp : invoiceDeliverList) {
+                String uniqueInvoiceNumber = InvoiceUtil.getUniqueInvoiceNumber(temp.getCustomInfo());
+                BigDecimal invoiceAmount = MapUtil.get(temp.getCustomInfo(), "total_amount", BigDecimal.class, BigDecimal.ZERO);
+                if (StringUtils.isNotBlank(uniqueInvoiceNumber) && !invoiceNumberList.contains(uniqueInvoiceNumber)) {
+                    invoiceNumberList.add(uniqueInvoiceNumber);
+                    invoiceAmountSum = invoiceAmountSum.add(invoiceAmount);
+                }
+            }
+            SubcontractPayment subcontractPayment = new SubcontractPayment();
+            subcontractPayment.setId(paymentId);
+            subcontractPayment.setCustomInfoByKey("invoiceNumber", StringUtils.join(invoiceNumberList, ","));
+            subcontractPayment.setCustomInfoByKey("invoiceAmount", invoiceAmountSum);
+            this.updateSubcontractPaymentByIdSelective(subcontractPayment);
+        }
+	    return Result.success();
 	}
 
 	/**
@@ -1888,6 +2135,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
             List<Task> callBackList = querySubcontractTaskList(TaskKey.CALLBACK, "cbRole", subcontract.getId());
             if (!callBackList.isEmpty()) {
                 Task callBackTask = callBackList.get(0);
+                callback.setTaskKey(callBackTask.getTaskDefinitionKey());
                 callback.setTaskId(callBackTask.getId());
                 this.updateSubcontractCallbackByIdSelective(callback);
             }
@@ -1968,8 +2216,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		// 更改项目回访状态
 		// SubcontractProject tempSubcontract = new SubcontractProject();
-		SubcontractProjectVO tempSubcontract = this
-				.selectSubcontractProjectVOById(subcontractCallback.getSubcontractId());
+		SubcontractProjectVO tempSubcontract = this.selectSubcontractProjectVOById(subcontractCallback.getSubcontractId());
 		if (tempSubcontract == null) {
 			tempSubcontract = new SubcontractProjectVO();
 		}
@@ -2289,67 +2536,96 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 
     @Override
 	@Transactional
-	public String startCallBackFlow(Integer subcontractId) {
-		log("触发项目转包回访流程");
-		// 更改项目转包状态
-		SubcontractProject tempSubcontract = new SubcontractProject();
-		tempSubcontract.setId(subcontractId);
-		tempSubcontract.setCallbackState(20);// 回访中
-		dao.updateSubcontractProjectByIdSelective(tempSubcontract);
-
-		String nowUser = UserContext.getUserContext().getUser().getUsername();
-		String processKey = SubcontractConstant.PROCESS_CALLBACK_KEY;
-
-		SubcontractCallback callback = new SubcontractCallback();
-		callback.setSubcontractId(subcontractId);
-		int version = dao.queryCallBackQuesnaireVersion(subcontractId);
-		callback.setQuesnaireVersion(version);
-		this.insertSubcontractCallback(callback);
-
-		// 判断是否已经有正在进行的回访流程
-		Task callBackTask = taskService.createTaskQuery().processDefinitionKey(processKey)
-				.processVariableValueEquals("subcontractId", subcontractId).active().singleResult();
-
-		// 回访流程正在进行，本次不再发起回访！
-		if (callBackTask != null) {
-			throw new SubcontractException("回访流程正在进行，本次不再发起回访！");
-		}
-
-		// 1.获取流程变量
-		Map<String, Object> vars = new HashMap<String, Object>();
-		vars.put("applyBy", getLoginName());
-		vars.put("subcontractId", subcontractId);
-		vars.put(SubcontractConstant.TASK_USER_SERVICE, nowUser);
-
-		// 2.拼接businessKey
-		String businessKey = processKey + "." + subcontractId + "." + callback.getId();
-
-		// 3.启动流程
-		ProcessInstance process = workFlowService.startProcess(processKey, businessKey, vars);
-		String instId = process.getId();
-
-		// 将回访任务taskId更新至回访问卷表中
-		Task task = taskService.createTaskQuery().processInstanceId(instId).singleResult();
-		callback.setTaskId(task.getId());
-		this.updateSubcontractCallbackByIdSelective(callback);
-
-		vars.clear();
-		vars.put("cb", "cbRole");
-		vars.put("cbRole", MessageUtil.ROLE_CALLBACKPER + "");
-		workFlowService.doSelfTask(task, instId, "上传服务单触发回访流程", vars);
-
-		String[] nextAssign = new String[2];
-		nextAssign[0] = "回访人员";
-		nextAssign[1] = "回访人员";
-		// 6.增加自定义的审批意见
-		// workFlowService.addSelfActComment(callback.getId(), processKey,
-		// task.getId(), instId, APPLY, "上传服务单触发回访流程");
-		workFlowService.addSelfActComment(callback.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
-				instId, APPLY, "上传服务单触发回访流程", nextAssign[0], nextAssign[1]);
-
-		// 7.增加通知下一步审批人邮件
-		return "";
+	public SubcontractCallback startCallBackFlow(Integer subcontractId) {
+		ActComment comment = new ActComment();
+		comment.setProcdefKey(SubcontractConstant.PROCESS_CALLBACK_KEY);
+		comment.setResult(APPLY);
+		comment.setMessage("上传服务单触发回访流程");
+        return startCallBackFlow(subcontractId, comment);
 	}
+    
+    @Override
+    @Transactional
+    public SubcontractCallback startCallBackFlow(Integer subcontractId, ActComment comment) {
+        log("触发项目转包回访流程");
+        if (subcontractId == null || Integer.valueOf(0).equals(subcontractId)) {
+            throw new SubcontractException("没有指定项目转包记录，不允许发起回访流程！");
+        }
+        
+        String processKey = SubcontractConstant.PROCESS_CALLBACK_KEY;
+        int result = APPLY;
+        String message = "上传服务单触发回访流程";
+        if (comment == null) {
+            comment = new ActComment();
+            comment.setProcdefKey(processKey);
+            comment.setResult(result);
+            comment.setMessage(message);
+        }
+        processKey = StringUtils.defaultIfBlank(comment.getProcdefKey(), processKey);
+        result = comment.getResult();
+        message = StringUtils.defaultIfBlank(comment.getMessage(), message);
+        
+        // 更改项目转包状态
+        SubcontractProject tempSubcontract = new SubcontractProject();
+        tempSubcontract.setId(subcontractId);
+        tempSubcontract.setCallbackState(20);// 回访中
+        dao.updateSubcontractProjectByIdSelective(tempSubcontract);
+
+        String nowUser = UserContext.getUserContext().getUser().getUsername();
+        
+        SubcontractCallback callback = new SubcontractCallback();
+        callback.setSubcontractId(subcontractId);
+        int version = dao.queryCallBackQuesnaireVersion(callback);
+        callback.setQuesnaireVersion(version);
+        this.insertSubcontractCallback(callback);
+
+        // 判断是否已经有正在进行的回访流程
+        Task callBackTask = taskService.createTaskQuery().processDefinitionKey(processKey)
+                .processVariableValueEquals("subcontractId", subcontractId).active().singleResult();
+
+        // 回访流程正在进行，本次不再发起回访！
+        if (callBackTask != null) {
+            throw new SubcontractException("回访流程正在进行，本次不再发起回访！");
+        }
+
+        // 1.获取流程变量
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("applyBy", getLoginName());
+        vars.put("subcontractId", subcontractId);
+        vars.put("subcontractCallbackId", callback.getId());
+        vars.put(SubcontractConstant.TASK_USER_SERVICE, nowUser);
+
+        // 2.拼接businessKey
+        String businessKey = processKey + "." + subcontractId + "." + callback.getId();
+
+        // 3.启动流程
+        ProcessInstance process = workFlowService.startProcess(processKey, businessKey, vars);
+        String instId = process.getId();
+
+        // 将回访任务taskId更新至回访问卷表中
+        Task task = taskService.createTaskQuery().processInstanceId(instId).singleResult();
+        callback.setTaskKey(task.getTaskDefinitionKey());
+        callback.setTaskId(task.getId());
+        this.updateSubcontractCallbackByIdSelective(callback);
+
+        vars.clear();
+        vars.put("cb", "cbRole");
+        vars.put("cbRole", MessageUtil.ROLE_CALLBACKPER + "");
+        workFlowService.doSelfTask(task, instId, message, vars);
+
+        String[] nextAssign = new String[2];
+        nextAssign[0] = "回访人员";
+        nextAssign[1] = "回访人员";
+        
+        // 6.增加自定义的审批意见
+        // workFlowService.addSelfActComment(callback.getId(), processKey,
+        // task.getId(), instId, APPLY, "上传服务单触发回访流程");
+        workFlowService.addSelfActComment(callback.getId(), processKey, task.getTaskDefinitionKey(), task.getId(),
+                instId, result, message, nextAssign[0], nextAssign[1]);
+
+        // 7.增加通知下一步审批人邮件
+        return callback;
+    }
 
 	@Override
 	@Transactional
@@ -2414,7 +2690,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	@Override
 	@Transactional
 	public void terminateWorkFlow(Integer subcontractId) {
-		this.terminateWorkFlow(subcontractId, null);
+		this.terminateWorkFlow(subcontractId, (String) null);
 	}
 
 	@Override
@@ -2484,6 +2760,104 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		}
 		NotificationTemplateUtil.keepMail(mailMap);
 	}
+	
+	@Override
+    @Transactional
+    public void terminateWorkFlow(Integer subcontractId, WorkflowCommonParam taskParam) {
+        log("项目转包闭环");
+        // 更改项目转包状态
+        SubcontractProject tempSubcontract = new SubcontractProject();
+        tempSubcontract.setId(subcontractId);
+        String[] nextAssignee = new String[] { "", "" };
+        int approveStatus = taskParam.getApproveStatus();
+        if (taskParam.getApproveStatus() == CLOSE_ABLE) {
+            tempSubcontract.setState(SubcontractStatus.CLOSED);// 已闭环
+            nextAssignee[0] = "已闭环";
+            nextAssignee[1] = "已闭环";
+        } else if (taskParam.getApproveStatus() == CLOSE_DISABLE) {
+            tempSubcontract.setState(SubcontractStatus.CLOSE_REJECT);// 无法闭环
+            tempSubcontract.setCallbackState(0);// 重置回访状态
+            nextAssignee[0] = "无法闭环";
+            nextAssignee[1] = "无法闭环";
+        } else if (taskParam.getApproveStatus() == REJECT) {
+            tempSubcontract.setState(SubcontractStatus.CLOSE_REJECT);// 闭环驳回
+            tempSubcontract.setCallbackState(0);// 重置回访状态
+            nextAssignee[0] = "闭环驳回";
+            nextAssignee[1] = "闭环驳回";
+        } else if (taskParam.getApproveStatus() == PAYMENT) {
+            String officeCode = tempSubcontract.getOfficeCode();
+            Department department = departmentManageService.queryDepartmentByDepartmentNum(officeCode);
+            if (department != null) {
+                nextAssignee[0] += department.getDepartmentName();
+                nextAssignee[1] += department.getDepartmentName();
+            }
+            nextAssignee[0] += "服务经理";
+            nextAssignee[1] += "服务经理";
+        } else {
+            throw new SubcontractException("请选择终止意见！");
+        }
+        dao.updateSubcontractProjectByIdSelective(tempSubcontract);
+
+        String nowUser = UserContext.getUserContext().getUser().getUsername();
+        String processKey = SubcontractConstant.PROCESS_SUBCONTRACT_KEY;
+        SubcontractProjectVO subcontract = dao.selectSubcontractProjectVOById(subcontractId);
+
+        // 办理任务
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("subcontractId", subcontractId);
+        List<Task> taskList = dao.querySubcontractTaskList(params);
+        // List<Task> taskList = querySubcontractTaskList("", subcontractId);
+        if (taskList.isEmpty()) {
+            throw new SubcontractException("该转包申请没有进行中的流程，终止流程失败！");
+        }
+
+        // 3.增加自定义的审批意见
+        RuntimeService runtimeService = SpringContext.getApplicationContext().getBean("runtimeService",
+                RuntimeService.class);
+        // List<String> instIds = new ArrayList<>(taskList.size());
+        String comment = taskParam.getComment();
+        if (StringUtils.isBlank(comment)) {
+            comment = "终止流程";
+        }
+        while(!taskList.isEmpty()) {
+            for (Task task : taskList) {
+                String tempProcessKey = task.getProcessDefinitionId().split(":")[0];
+                Integer objId = (Integer) ObjectUtils.defaultIfNull(taskService.getVariable(task.getId(),  "subcontractCallbackId"), subcontract.getId());
+                WorkflowUtil.terminateActivities(task.getId(), comment);
+                workFlowService.addSelfActComment(objId, tempProcessKey, task.getTaskDefinitionKey(),
+                                          task.getId(), task.getProcessInstanceId(), approveStatus, comment, nextAssignee[0],
+                                          nextAssignee[1]);
+    //          // instIds.add(task.getProcessInstanceId());
+    //          runtimeService.deleteProcessInstance(task.getProcessInstanceId(), comment);
+    //          workFlowService.addSelfActComment(subcontract.getId(), processKey, task.getTaskDefinitionKey(),
+    //                  task.getId(), task.getProcessInstanceId(), CommentStatus.CLOSE_DISABLE, comment, nextAssignee[0],
+    //                  nextAssignee[1]);
+            }
+            taskList = dao.querySubcontractTaskList(params);
+        }
+
+        Map<String, Object> mailMap = new HashMap<String, Object>();
+        // String tos =
+        // userManageService.queryMailsByRoleAndOfficeCodes(subcontract.getOfficeCode(),
+        // MessageUtil.ROLE_SERVICEMANAGER);
+        String[] nextAssignPer = getNextAssignPer(MessageUtil.ROLE_SERVICEMANAGER, subcontract.getOfficeCode());
+        String tos = nextAssignPer[2];
+        if (StringUtils.isNotBlank(tos)) {
+            mailMap.put("tos", tos);
+            mailMap.put("ccs", basicDataService.querySysArg(SubcontractTemplate.SUBCONTRACT_CCS_MAIL));
+            if (taskParam.getApproveStatus() == CLOSE_ABLE) {
+                mailMap.put("templateCode", SubcontractTemplate.CLOSE_NOTIFY_CODE);
+            } else {
+                mailMap.put("templateCode", SubcontractTemplate.APPROVE_REJECT_NOTIFY_CODE);
+            }
+            // mailMap.put("username", subcontract.getOfficeName() + "服务经理");
+            mailMap.put("username", nextAssignPer[1]);
+            mailMap.put("subcontractName", subcontract.getSubcontractName());
+            mailMap.put("taskAssignee", nowUser + "-" + UserContext.getUserContext().getUser().getRealName());
+            mailMap.put("comment", comment);
+        }
+        NotificationTemplateUtil.keepMail(mailMap);
+    }
 
 	@Override
 	@Deprecated
@@ -2798,7 +3172,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 			this.updateSubcontractCallbackByIdSelective(temp);
 		} else {
 			// 3.1查询问卷版本号
-			int version = dao.queryCallBackQuesnaireVersion(callback.getSubcontractId());
+			int version = dao.queryCallBackQuesnaireVersion(callback);
 			// 3.2保存问卷与回访关联关系表
 			callback.setQuesnaireId(pmClQuesnaireResultHeaderId);
 			callback.setQuesnaireVersion(version);

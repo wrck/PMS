@@ -10,11 +10,26 @@
 <meta name="module" content="<s:text name='module.plat' />">
 <meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
 <meta name="function" content="<s:text name='prob.manage' />">
+<link rel="stylesheet" type="text/css" href="statics/plugins/select2/select2.min.css" />
+<dp:link rel="stylesheet" type="text/css" href="css/prob/prob.css" />
 <style>
 	.btn-link{
 		margin-right:0.5rem;
 	}
+    .form-horizontal .form-group.form-group-query{
+        margin: 0px;
+    }
+    .form-inline .form-group-query {
+        white-space: nowrap;
+    }
+    .form-groups {
+        margin-bottom: 15px;
+    }
 </style>
+<script type="text/javascript" src="statics/plugins/select2/select2.js"></script>
+<script type="text/javascript" src="statics/plugins/select2/i18n/zh-CN.js"></script>
+<dp:script type="text/javascript" src="js/prob/renderCascade.js"></dp:script>
+<dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
 <script type="text/javascript">
 	function deleteProb(probId){
 		if(confirm("确认要删除该技术公告？")){
@@ -77,69 +92,112 @@
         })
         $("#componentName").tooltip();
     }
+	
+	function autoCompleteTrackingUser() {
+        $.ajax({
+            url:'queryalluser.action',
+            type:'post',
+            dataType:'json',
+            data:{roleid :20},
+            success:function(data){
+                var list = data.allusernameList || data.personList || [];
+                $.each(list, function(index, item) {
+                    item.value = item.username;
+                    item.label = item.username + "-" + item.realName;
+                });
+                $("#trackingUserName").autocomplete({
+                    minLength: 0,
+                    source: list,
+                    change: function( event, ui ) {
+                        var item = ui.item || {};
+                        //$("#trackingUserName").val(item.label);
+                        $("#trackingUser").val(item.value);
+                        return false;
+                    },
+                    focus: function( event, ui ) {
+                        //var item = ui.item || {};
+                        //$("#trackingUserName").val(item.label);
+                        //$("#trackingUser").val(item.value);
+                        return false;
+                    },
+                    /* search: function( event, ui ) {
+                        var item = ui.item || {};
+                        //$("#componentName").val(item.label);
+                        //$("#componentId").val(item.id);
+                        $(this).val($.trim($(this).val()));
+                        return true;
+                    }, */
+                    select: function( event, ui ) {
+                        var item = ui.item || {};
+                        $("#trackingUserName").val(item.label);
+                        $("#trackingUser").val(item.value);
+                        return false;
+                    }
+                })
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                alert("获取用户失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            }
+        })
+    }
     
     $(function(){
         autoCompleteComponent();
+        autoCompleteTrackingUser();
+        //initProbProductBySelect2("probProducts", null, {maxSelectedLength: 2});
     })
 </script>
+
 </head>
 <body>
 	<div class="container-flux">
-		<s:form method="post" action="module/prob_list.action" id="mainForm"
-					cssClass="form-horizontal" name="mainForm" enctype="multipart/form-data">
-		<div class="form-group">
-			<label for="probNum" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.num"></s:text></label>
-			<div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-				<s:textfield id="probNum" name="prob.probNum" cssClass="form-control"></s:textfield>
-			</div>
-			<label for="theme" class="pull-left control-label"><s:text name="prob.info.theme"></s:text></label>
-			<div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-				<s:textfield id="theme" name="prob.theme" cssClass="form-control"></s:textfield>
-			</div>
-			<label for="watch" class="pull-left control-label"><s:text name="prob.info.watchType"></s:text></label>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+		<s:form method="post" action="module/prob_list.action" id="mainForm" cssClass="form-horizontal" name="mainForm" enctype="multipart/form-data">
+        <div class="form-groups clearfix">
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="probNum" class="control-label"><s:text name="prob.info.num"></s:text></label>
+    			<s:textfield id="probNum" name="prob.probNum" cssClass="form-control"></s:textfield>
+    		</div>
+    		<div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="theme" class="control-label"><s:text name="prob.info.theme"></s:text></label>
+    			<s:textfield id="theme" name="prob.theme" cssClass="form-control"></s:textfield>
+    		</div>
+    		<div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="watch" class="control-label"><s:text name="prob.info.watchType"></s:text></label>
                 <s:select id="watch" name="prob.watch" list="watchList" listKey="basicDataId" listValue="basicDataName"
                         headerKey="" headerValue="--请选择--"   cssClass="form-control"></s:select>
             </div>
-			<label for="status" class="pull-left control-label"><s:text name="prob.info.status"></s:text></label>
-			<div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-				<s:select id="status" name="prob.status" list="statusList" listKey="basicDataId" listValue="basicDataName"
-						headerKey="" headerValue="--请选择--"	 cssClass="form-control"></s:select>
-			</div>
-		</div>
-		<div class="form-group">
-            <label for="productType" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.product.type"></s:text></label>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+    		<div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="status" class="control-label"><s:text name="prob.info.status"></s:text></label>
+    			<s:select id="status" name="prob.status" list="statusList" listKey="basicDataId" listValue="basicDataName"
+    					headerKey="" headerValue="--请选择--"	 cssClass="form-control"></s:select>
+    		</div>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="status" class="control-label"><s:text name="prob.tracking.user"></s:text></label>
+                <s:textfield id="trackingUserName" name="prob.customInfo.trackingUserName" cssClass="form-control"></s:textfield>
+                <s:hidden id="trackingUser" name="prob.customInfo.trackingUserSearch"></s:hidden>
+    		</div>
+    		<div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="productType" class="control-label"><s:text name="prob.info.product.type"></s:text></label>
                 <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield>
             </div>
-            <label for="desc" class="pull-left control-label"><s:text name="prob.info.desc"></s:text></label>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="desc" class="control-label"><s:text name="prob.info.desc"></s:text></label>
                 <s:textfield id="desc" name="prob.desc" cssClass="form-control"></s:textfield>
             </div>
-            <label for="status" class="pull-left control-label"><s:text name="prob.info.affected.type"></s:text></label>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-                <s:select id="affectedType" name="prob.affectedType" cssClass="form-control" list="#{1:'盒式系列',2:'框式系列'}" headerKey="" headerValue="--请选择--"></s:select>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="status" class="control-label"><s:text name="prob.info.affected.type"></s:text></label>
+                <s:select id="affectedType" name="prob.affectedType" cssClass="form-control" list="#{1:'盒式系列',2:'框式系列',-1:'其它系列'}" headerKey="" headerValue="--请选择--"></s:select>
             </div>
-            <label for="status" class="pull-left control-label"><s:text name="prob.info.affected.version"></s:text></label>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="status" class="control-label"><s:text name="prob.info.affected.version"></s:text></label>
                 <s:textfield id="affectedVersion" name="prob.affectedVersion" cssClass="form-control"></s:textfield>
             </div>
-            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="submit" class="control-label" style="width: 100%;">　</label>
                 <input type="hidden" name="prob.visibleRange" value="-1">
-                <button type="submit" id="submit"  class="btn btn-default  btn-block btn-sm"><s:text name='sys.query' /></button>
+                <button type="submit" id="submit"  class="btn btn-default btn-sm"><s:text name='sys.query' /></button>
             </div>
         </div>
-        <%-- <div class="form-group">
-            <label for="productType" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="component.info.name"></s:text></label>
-            <div class="col-xs-8">
-                <s:textfield id="componentName" cssClass="form-control" placeholder="产品组件快速检索，不作为查询条件"></s:textfield>
-            </div>
-        </div> --%>
-		<%-- <div class="form-group">
-			<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
-			   	<button type="submit" id="submit"  class="btn btn-default  btn-block btn-sm"><s:text name='sys.query' /></button>
-		    </div>
-		</div> --%>
 		<div class="row">
 			<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 				<div class="listView divHeader">
@@ -179,11 +237,12 @@
 					decorator="com.dp.plat.decorators.Wrapper"
 					class="table table-striped" partialList="true" >
 					<s:if test="%{user.isHasRole(20) && !user.isHasRole(19) && !user.isHasRole(18)}">
-						<display:column property="probNum" titleKey="prob.info.num" sortable="true" url="/module/prob_input.action" paramId="prob.probId" paramProperty="probId"></display:column>
+						<display:column property="probNum" titleKey="prob.info.num" sortable="true" url="/module/prob_input.action" paramId="prob.probId" paramProperty="probId" media="html"></display:column>
 					</s:if>
 					<s:else>
-						<display:column property="probEdit" titleKey="prob.info.num" sortable="true"></display:column>
+						<display:column property="probEdit" titleKey="prob.info.num" sortable="true"  media="html"></display:column>
 					</s:else>
+                    <display:column property="probNum" titleKey="prob.info.num" media="excel"></display:column>
 					<display:column property="theme" titleKey="prob.info.theme" sortable="true"></display:column>
 					<display:column property="priority" titleKey="prob.info.level" sortable="true"></display:column>
 					<display:column property="watchName" titleKey="prob.info.watchType" sortable="true"></display:column>
@@ -191,7 +250,7 @@
 					<display:column property="createTime" titleKey="prob.info.createTime" sortable="true" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
 					<display:column property="updateTime" titleKey="prob.info.updateTime"  sortable="true" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
 					<display:column property="trackingUsername" titleKey="prob.tracking.user"></display:column>
-					<display:column property="probOperate" titleKey="display.operate"></display:column>
+					<display:column property="probOperate" titleKey="display.operate" media="html"></display:column>
 				</display:table>
 			</div>
 		</div>

@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +26,6 @@ import java.util.stream.Stream;
 import org.activiti.engine.TaskService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Footer;
@@ -38,11 +37,13 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ibatis.SqlMapClientTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.dao.ProjectDao;
@@ -87,7 +88,14 @@ import com.dp.plat.util.UploadFileUtil;
 import com.dp.plat.util.Util;
 import com.dp.plat.util.WordUtil;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+
 public class ProjectServiceImpl extends BaseServiceImpl implements ProjectService {
+    
+    @Autowired
+    private ProjectService projectService;
+    
 	protected ProjectDao projectDao;
 	protected BasicDataService basicDataService;
 	protected CallBackService callBackService;
@@ -182,7 +190,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		int shipmentState = projectDao.queryProjectShipmentState(project.getProjectId());
 		project.setShipmentState(shipmentState);
 		project.setProjectPlanState(MessageUtil.PROJECT_PLAN_STATE_40);// 尚未制定计划
-		this.insertOrUpdateProjectState(project);// 插入或更新项目状态表
+		projectService.insertOrUpdateProjectState(project);// 插入或更新项目状态表
 
 		project.setProjectId(pid);// 保存的项目表id
 		project.setMemberRole(MessageUtil.DATATYPE_CODE03_20);// 03-20
@@ -505,6 +513,25 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 		this.updateChannel(project);// 更新渠道信息
 		this.updateProjectImplByProjectId(project);// 更新实施方式
 	}
+	
+	@Override
+    public int updateProjectByProjectIdSelective(Project project) {
+        if (project == null) {
+            return 0;
+        }
+        Class<?> objClass = project.getClass();
+        try {
+            Method method = objClass.getMethod("setUpdateBy", String.class);
+            method.invoke(project, getLoginName());
+        } catch (Exception e) {
+        }
+        try {
+            Method method = objClass.getMethod("setUpdateTime", Date.class);
+            method.invoke(project, new Date());
+        } catch (Exception e) {
+        }
+        return projectDao.updateProjectByProjectId(project);
+    }
 
 	/**
 	 * 项目经理更新时，终止在项目经理手中的闭环申请,回访申请
@@ -1621,7 +1648,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
         if (canCloseLoop == 0 && closeProcessState.compareTo(MessageUtil.PROJECT_CLOSE_PROCESS_STATE_15) <= 0) {
             temp.setCloseProcessState(MessageUtil.PROJECT_CLOSE_PROCESS_STATE_10);
         }
-		this.insertOrUpdateProjectState(temp);
+        projectService.insertOrUpdateProjectState(temp);
 		// 如果是运营商直签项目，发起回访申请
 		if (MessageUtil.PROJECT_PLAN_STATE_46.equals(currentPlan)) {
 //			project = projectDao.queryProjectById(pd.getProjectId());
@@ -2553,7 +2580,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                 Project temp = new Project();
                 temp.setProjectId(project.getProjectId());
                 temp.setExecutionState(executionState);
-                this.insertOrUpdateProjectState(temp);
+                temp.setCustomInfoByKey("prevExecutionState", oldExecutionState);
+                projectService.insertOrUpdateProjectState(temp);
             }
         }
     }
@@ -2582,7 +2610,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
                 Project temp = new Project();
                 temp.setProjectId(project.getProjectId());
                 temp.setCloseProcessState(closeProcessState);
-                this.insertOrUpdateProjectState(temp);
+                projectService.insertOrUpdateProjectState(temp);
             }
         }
     }
@@ -2789,6 +2817,11 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
         return projectDao.querySoftversionList(contractNo, projectId, profitCenter);
     }
+	
+	@Override
+    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
+	    return projectDao.querySoftversionList(contractNo, projectId, params);
+    }
 
     @Override
 	public void updateSoftversion(List<ShipmentInfo> softversionList, SoftChangeLog softChangeLog) {
@@ -2812,8 +2845,14 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			}
 			// 0.2 增加新版本变更记录
 			int logId = projectDao.insertSoftVersionLog(softChangeLog);
+			SoftChangeLog changeLog = projectDao.queryOneSoftChangeLog(logId);
+			CopyOptions copyOptions = CopyOptions.create();
+			copyOptions.setIgnoreNullValue(true);
+			copyOptions.setIgnoreError(true);
+            BeanUtil.copyProperties(changeLog, softChangeLog, copyOptions);
+            
 			// 失效原有版本
-			 projectDao.updateInvalidSoftversion(softChangeLog.getProjectId());
+			projectDao.updateInvalidSoftversion(softChangeLog.getProjectId());
 			// 新增软件版本
 			projectDao.insertSoftVersionList(softversionList, logId);
 		}

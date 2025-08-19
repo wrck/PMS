@@ -10,7 +10,8 @@
     <!-- 配置不过滤的资源（静态资源及登录相关） -->  
     <sec:http pattern="/css/**" security="none"></sec:http>
     <sec:http pattern="/images/**" security="none"></sec:http>  
-    <sec:http pattern="/js/**" security="none"></sec:http>  
+    <sec:http pattern="/js/**" security="none"></sec:http> 
+    <sec:http pattern="/static/**" security="none"></sec:http>   
     <sec:http pattern="/plat/**" security="none"></sec:http>  
     <sec:http pattern="/sys/**" security="none"></sec:http>  
     <sec:http pattern="/template/**" security="none"></sec:http>  

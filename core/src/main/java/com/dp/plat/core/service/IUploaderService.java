@@ -53,6 +53,10 @@ public interface IUploaderService {
      */
 	public List<FileInfo> baseUploadFile(String fileType, HttpServletRequest httpRequest) throws Exception;
 	
+	public List<FileInfo> baseUploadFile(String typeCode, List<MultipartFile> multipartFiles, HttpServletRequest httpRequest) throws Exception;
+
+	public FileInfo baseUploadFile(String typeCode, MultipartFile multipartFile, HttpServletRequest httpRequest) throws Exception;
+
 	/**
 	 * 文件下载
 	 * 

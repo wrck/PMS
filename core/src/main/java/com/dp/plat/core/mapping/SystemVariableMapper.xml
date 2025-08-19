@@ -155,7 +155,7 @@
   	<![CDATA[
   		select code, var 
   			from t_sys_variable
-  	 	where effectiveFrom < now() and effectiveTo is null
+  	 	where effectiveFrom < now() and now() < IFNULL(effectiveTo, '9999-12-31 23:59:59')
   	]]>
   </select>
   
@@ -270,7 +270,7 @@
 	              #{model.effectiveTo,jdbcType=TIMESTAMP} AND
 	            </if>
             </if>
-            <if test="fuzzySearch == true">
+            <if test="fuzzySearch == true and fuzzy != ''">
                 (
                     code like CONCAT("%", #{fuzzy}, "%") or
                     var like CONCAT("%", #{fuzzy}, "%") or
@@ -322,7 +322,7 @@
                   #{model.effectiveTo,jdbcType=TIMESTAMP} AND
                 </if>
             </if>
-            <if test="fuzzySearch == true">
+            <if test="fuzzySearch == true and fuzzy != ''">
                 (
                     code like CONCAT("%", #{fuzzy}, "%") or
                     var like CONCAT("%", #{fuzzy}, "%") or

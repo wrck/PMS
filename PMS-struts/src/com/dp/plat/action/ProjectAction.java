@@ -24,6 +24,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -938,11 +939,26 @@ public class ProjectAction extends BaseAction implements Preparable{
 	public String checkSoftVersion(){
 		try {
 		    Project temp = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
+		    String contractNo = project.getContractNo();
+		    Integer projectId = project.getProjectId();
+		    String profitCenter = null;
 		    if (temp != null && "14".equals(temp.getSalesType())) {
-		        softversionList = projectService.querySoftversionList(Util.appendChar(temp.getContractNo(), "'"),temp.getProjectId(), temp.getColumn001());
-		    } else {
-		        softversionList = projectService.querySoftversionList(Util.appendChar(project.getContractNo(), "'"),project.getProjectId());
+		        contractNo = temp.getContractNo();
+		        projectId = temp.getProjectId();
+		        profitCenter = temp.getColumn001();
+//		        softversionList = projectService.querySoftversionList(Util.appendChar(temp.getContractNo(), "'"),temp.getProjectId(), temp.getColumn001());
 		    }
+//		    else {
+//		        softversionList = projectService.querySoftversionList(Util.appendChar(project.getContractNo(), "'"),project.getProjectId());
+//		    }
+		    String splitContractNo = Util.appendChar(StringUtils.defaultIfBlank(contractNo, projectId.toString()), "'");
+//		    softversionList = projectService.querySoftversionList(splitContractNo, projectId, profitCenter);
+		    
+		    cbForm = cbForm != null ? cbForm : new HashMap<>(2);
+		    String filterItem = ((String[]) MapUtils.getObject(cbForm, "filterItem", new String[] {"true"}))[0];
+		    cbForm.put("filterItem", filterItem);
+		    cbForm.put("profitCenter", profitCenter);
+            softversionList = projectService.querySoftversionList(splitContractNo, projectId, cbForm);
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -1024,14 +1040,15 @@ public class ProjectAction extends BaseAction implements Preparable{
             project = projectService.queryProjectById(projectId);
             if (project != null) {
                 Map<String, Object> params = new HashMap<String, Object>();
+                String projectCode = StringUtils.split(project.getProjectCode(), "-")[0];
                 params.put("projectId", project.getProjectId());
-                params.put("projectCode", StringUtils.split(project.getProjectCode(), "-")[0]);
+                params.put("projectCode", projectCode);
 //                params.put("contractNoList", Arrays.asList(StringUtils.split(project.getContractNo(), ",")));
                 commonList = projectService.selectProblemTicket(params);
                 // 增加按项目编号查询不到的情况下按合同号查询的处理逻辑
                 if (commonList == null || commonList.isEmpty()) {
                     params.remove("projectCode");
-                    params.put("contractNoList", Arrays.asList(StringUtils.split(project.getContractNo(), ",")));
+                    params.put("contractNoList", Arrays.asList(StringUtils.split(StringUtils.defaultIfBlank(project.getContractNo(), projectCode), ",")));
                     commonList = projectService.selectProblemTicket(params);
                 }
             } else {

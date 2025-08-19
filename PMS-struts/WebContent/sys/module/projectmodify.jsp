@@ -37,7 +37,6 @@ td a:VISITED {
 .rotate180 {
     transform: rotate(180deg);
 }
-
 </style>
 <script>
 	var realnameArr=new Array();
@@ -348,6 +347,12 @@ td a:VISITED {
 			alert("请选择实施状态！");
 			return false;
 		}
+		// 指定状态必须通过填写维护记录进行更新
+		if (executionState == "7") {
+            var title = $.trim($("#projectExecutionState option:selected").text());
+            alert(title + "必须填写维护记录！");
+            return false;
+        }
         var data = {"project.projectId": projectId, "project.executionState": executionState};
         $.ajax({
             url:'projectAjax_updateProjectExecutionState.action',
@@ -1339,202 +1344,58 @@ td a:VISITED {
 	}
 	
 	/* ###########################软件版本######################################## */
-	function softversion(_this){
-		if($("#softversionSee").is(":visible")){
-			$(_this).text('取消');
-			$("#softversionSee").hide();
-			$("#softversionEdit").show();
-			$("#updateSoftVersion").show();
-		}else{
-			$(_this).text('编辑');
-			$("#softversionSee").show();
-			$("#softversionEdit").hide();
-			$("#updateSoftVersion").hide();
-		}
-	}
 	var loadingHtml = "<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>" + 
 		"	<img src='./images/loading-circle.gif'/>" + 
 		"</div>";
-	function updateSoftVersion(){
-		$changeRemark = $("textarea[name='softChangeLog.changeRemark']");
-		$(".software").each(function(){
-			$(this).val($(this).val().trim());
-		});
-		// 去除.bin后缀，软件版本只保留不带设备类型部分信息
-		$(".clearconp").each(function(){
-			var temp = $(this).val().trim();
-			temp = temp.replace(".bin", "");
-			temp = temp.split("-");
-			if (temp.length > 1) {
-				temp = temp[temp.length - 1];
-			}
-			$(this).val(temp);
-		})
-		
-		if($changeRemark.val().trim() == ''){
-			$("#changeRemarkMsg").text("请填写更新说明").addClass("redMark");
-			$changeRemark.focus();
-			$changeRemark.blur(function(){
-				if($changeRemark.val().trim() != ''){
-					$("#changeRemarkMsg").text("").removeClass("redMark");
-				}
-			});
+	
+	function isPartiallyInViewport(el) {
+		if (!el) {
 			return false;
 		}
-		$changeRemark.val($changeRemark.val().replace(/\n/g,"<br>"));
-		
-		// 解析成json格式
-		var assembly = function(res, name, val) {
-            res = res || {};
-            var sind = name.indexOf('.');
-            var sp_name = sind > -1 ? name.substring(0, sind) : name;
-            var sc_name = sind > -1 ? name.substring(sind + 1) : "";
-            var listMatchs = sp_name.match(/(\w+)\[(\d+)\]/) || [];
-            var spl_name = listMatchs[1];
-            var spl_index = listMatchs[2];
-            // 是否是数组
-            if (spl_name) {
-                res[spl_name] = res[spl_name] || [];
-                res[spl_name][spl_index] = sind > -1 ? assembly(res[spl_name][spl_index], sc_name, val) : val;
-            } else {
-                res[sp_name] = sind > -1 ? assembly(res[sp_name], sc_name, val) : val;
-            }
-            return res;
-        };
-     	// 封装成JSON,避免list数量多时会导致超过请求参数个数限制的问题
-        var softVersionJson = {};
-     	var barCodes = [];
-        $.each($("#softversionForm").serializeArray(), function() {
-            var entity = $(this)[0];
-            //console.log(entity);
-            var key = entity.name;
-            var value = entity.value;
-            /* // 过滤参数为空的情况
-            if (value == '') {
-                return;
-            } */
-            if (key.indexOf("barCode") > -1 && $.inArray(value, barCodes) > -1) {
-            	return;
-            }
-            softVersionJson = assembly(softVersionJson, key, value);
-        })
-        softVersionJson = JSON.stringify(softVersionJson);
-		$.ajax({
-			url :"updateSoftVersion.action",
-			type :"post",
-			dataType :"json",
-			//data : $("#softversionForm").serialize(),
-			data : {softVersionJson: softVersionJson},
-			success:function(data){
-				var result = data.result;
-				if(result == 310){
-					alert('更新成功');
-					$(".softversionDiv").html(loadingHtml);
-					checkSoftVesion();
-					//window.location.href="module/ProjectModify.action?project.paramId="+$("#paramId").val()+"&result="+result;
-				}else{
-					alert('更新失败');
-				}
-			}
-		});
+        const rect = el.getBoundingClientRect();
+        const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+        const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
+        // 是否在可视范围内
+        return (
+            rect.top < windowHeight &&
+            rect.bottom > 0 &&
+            rect.left < windowWidth &&
+            rect.right > 0
+        );
+    };
+    function isPartiallyInAbove(elementA, elementB) {
+    	if (!elementA || !elementB) {
+    		return false;
+    	}
+    	
+        // 获取两个元素的位置信息
+	    const rectA = elementA.getBoundingClientRect();
+	    const rectB = elementB.getBoundingClientRect();
+
+	    // 比较两个元素的 top 值，如果 A 的 top 小于 B 的 top，则 A 在 B 上方
+	    return rectA.top <= rectB.top;
 	}
-	//检索软件版本变更历史版本
-	function checkhistsoftversion(){
-		projectId = $("#projectId").val();
-		popWindow('module/sub/checkhistsoftversion.action?softChangeLog.projectId='+projectId+'&redirect='+window.location.href, 1100, 650,'查询历史软件版本', 'BudgetUpload', true);
-		return false;
-	}
-	function checkShipmentInfo1(){
-		var projectId = $("#projectId").val();
-		var contractNo = $("#contractNo").val();
-		var projectState = "${project.projectState}";
-		var officeCode = "${project.column001}";
-		popWindow('module/sub/checkShipmentInfo.action?project.projectId='+projectId+'&project.contractNo='+contractNo+'&project.projectState='+projectState+'&project.column001='+officeCode+'&redirect='+window.location.href, 1100, 650,'发货清单', 'BudgetUpload', true);
-		return false;
-	}
-	
-	//渲染软件版本更新表单
-	function alterSoftWares(){
-		$(".softUpdateExecuteTime").each(function(){
-			date_picker(this.id);
-		});
-		
-		$("input[name='executeTimeHeader']").change(function(){
-			time = this.value;
-			$(".softUpdateExecuteTime").each(function(){
-				$(this).val(time);
-			});
-		});
-		
-		$(".software").each(function(){
-			$(this).blur(function(){
-				bakvalue = $(this).attr("bakValue").trim();
-				if(bakvalue !=  $(this).val().trim()){
-					$("#"+this.id+"Change").val(1);
-				}else{
-					$("#"+this.id+"Change").val(0);
-				}
-			});
-		});
-	}
-	
-	function bacthUpdate(){
-		var softItemCode = $("#softItemCode").val().trim();
-		softType = $("#softType").val();
-		oldSoftVersion = $("#oldSoftVersion").val().trim();
-		newSoftVersion = $("#newSoftVersion").val().trim();
-		newSoftVersion = newSoftVersion.replace(".bin", "");
-		/* // 去除版本型号
-		var temp = newSoftVersion.split("-");
-		if (temp.length > 1) {
-			newSoftVersion = temp[temp.length - 1];
-		} */
-		if(newSoftVersion!= '' &&  oldSoftVersion != newSoftVersion){
-			var $softs = $("input[name$='." + softType + "'].software", softItemCode ? (".itemCode_" + softItemCode) : undefined);
-			$softs.each(function() {
-				var soft = $(this);
-				if(soft.val() == oldSoftVersion){
-					soft.val(newSoftVersion);
-					bakvalue = soft.attr("bakValue").trim();
-					if(bakvalue !=  newSoftVersion){
-						$("#"+soft[0].id+"Change").val(1);
-					}else{
-						$("#"+soft[0].id+"Change").val(0);
-					}
-				}
-			})
-			/* size = $("#softversionEdit table tr").size() - 3;
-			for(i = 0; i < size ; i ++){
-				if (softItemCode) {
-					soft = $(".itemCode_" + softItemCode + " input[name='softversionList["+i+"]."+softType+"']");
-				} else {
-					soft = $("input[name='softversionList["+i+"]."+softType+"']");
-				}
-				if(soft.val() == oldSoftVersion){
-					soft.val(newSoftVersion);
-					bakvalue = soft.attr("bakValue").trim();
-					if(bakvalue !=  newSoftVersion){
-						$("#"+soft[0].id+"Change").val(1);
-					}else{
-						$("#"+soft[0].id+"Change").val(0);
-					}
-				}
-			}		 */
-		}
-	}
-	
-	function bacthReset(){
-		$(".software").each(function() {
-			var balvalue = $(this).attr("bakvalue").trim() || "";
-			$(this).val(balvalue);
-		});
-		$(".softChangeFlag").val(0);
+    function observerInViewport(el) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    console.log('元素进入可视区域');
+                    $(".fixedHoverOperationTable", $(".navDiv:visible")).fadeOut(500);
+                } else {
+                    $(".fixedHoverOperationTable", $(".navDiv:visible")).fadeIn(500);
+                }
+                //observer.unobserve(entry.target); // 可选：停止观察
+            });
+        }, { threshold: 0.1 });
+        observer.observe(el);
     }
 	
 	$(document).ready(function(){
 		var t1 = 0;
 		var t2 = 0;
-		$(window).scroll(function(){
+		$(window).scroll(throttleAdvanced(function(){
+			console.log('滚动中（带leading/trailing控制）');
 			var st=$(window).scrollTop();
 			var rheight = $(window).height();
 			var height = $("html").height();
@@ -1548,7 +1409,24 @@ td a:VISITED {
             }else{
                 $(".rollBottom").fadeOut(1000);
             }
-		})
+			
+			throttleAdvanced(() => {
+    			var $navDiv = $(".navDiv:visible");
+    			var $targetFadeOut = $(".fixedHoverOperationTableFadeOut", $navDiv);
+    			var $target = $(".fixedHoverOperationTable", $navDiv);
+    			var isAbove = isPartiallyInAbove($targetFadeOut[0], $target[0]);
+    			var isViewFadeOut = isPartiallyInViewport($targetFadeOut[0]);
+    			var isView = isPartiallyInViewport($target[0]);
+    			// if ($targetFadOut.length > 0 && (isAbove && !isView || isAbove)) {
+				if ($targetFadeOut.length > 0 && !isViewFadeOut && isAbove && st > $targetFadeOut[0].offsetTop) {
+    				$target.addClass("active");
+    			} else {
+    				$target.removeClass("active");
+    			}
+			}, 500, { leading: false, trailing: true }).call();
+		}, 500, { leading: true, trailing: true }));
+		
+		
 			 
 		$(document).on('click', ".backTop", function() {
 			/* var mainHeight = $("#mainForm").height();
@@ -1716,7 +1594,7 @@ td a:VISITED {
 	/* ###########################序列号明细######################################## */
     /* ###########################局点信息，软件版本######################################## */
 	var flag3 = true;
-	function checkSoftVesion(){
+	function checkSoftVesion(filteItem){
 		var projectId = $("#projectId").val();
 		var contractNo = $("#contractNo").val();
 		if(flag3){
@@ -1725,7 +1603,7 @@ td a:VISITED {
 				url:"module/sub/checkSoftVersion.action",
 				type:"post",
 				dataType:"html",
-				data:{"project.projectId":projectId,"project.contractNo":contractNo},
+				data:{"project.projectId":projectId,"project.contractNo":contractNo, "cbForm.filteItem": filteItem || true},
 				success:function(data){
 					data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
 					$(".softversionDiv").html(data);

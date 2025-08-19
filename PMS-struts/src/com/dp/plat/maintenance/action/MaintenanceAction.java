@@ -287,6 +287,7 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             if ("isCopy".equals(message)) {
                 projectMaintenance.setId(null);
                 projectMaintenance.setDeliverFileIds(null);
+                projectMaintenance.setCustomInfo(null);
                 quesnaireId = null;
             }
             
@@ -378,15 +379,6 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             projectMaintenance.setProjectType(projectType);
             projectMaintenance.setCompId(compId);
 
-            // 新增和最新记录时更新项目实施状态
-            if (Integer.valueOf(10).equals(projectType) && (maxId.equals(projectMaintenance.getId()) || maxId.equals(0))) {
-                // 避免前端没有及时刷新，导致原来的maxId已经失效的问题，进行重新查询检验
-                Integer nowMaxId = projectService.selectSingleProjectMaintenanceMaxId(projectMaintenance);
-                if(nowMaxId.equals(projectMaintenance.getId()) || nowMaxId.equals(0) || maxId.equals(0)) {
-                    projectService.updateProjectExecutionState(project, projectMaintenance.getProjectExecutionState());
-                }
-            }
-            
             if (project != null) {
 	            // 查询项目维保状态和维保级别、增值服务等
 	            Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
@@ -395,6 +387,15 @@ public class MaintenanceAction extends BaseAction implements Preparable {
             
             projectService.insertOrUpdateProjectMaintenance(projectMaintenance);
             
+            // 新增和最新记录时更新项目实施状态
+            if (project != null && Integer.valueOf(10).equals(projectType) && (maxId.equals(projectMaintenance.getId()) || maxId.equals(0))) {
+                // 避免前端没有及时刷新，导致原来的maxId已经失效的问题，进行重新查询检验
+                Integer nowMaxId = projectService.selectSingleProjectMaintenanceMaxId(projectMaintenance);
+                if(nowMaxId.equals(projectMaintenance.getId()) || nowMaxId.equals(0) || maxId.equals(0)) {
+                    project.setCustomInfoByKey("maintenance", projectMaintenance);
+                    projectService.updateProjectExecutionState(project, projectMaintenance.getProjectExecutionState());
+                }
+            }
             
             if(projectDeliverList != null && projectDeliverList.size() > 0){
                 String[] deliverIds = projectDeliver.getDeliverId().split(",");

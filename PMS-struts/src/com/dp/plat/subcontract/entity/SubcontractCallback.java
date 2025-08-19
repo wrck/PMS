@@ -4,12 +4,19 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class SubcontractCallback {
+import com.dp.plat.data.bean.CustomInfoEntity;
+
+public class SubcontractCallback extends CustomInfoEntity {
+    private static final long serialVersionUID = 286030773173203083L;
+
     // 项目转包回访问卷表
     private Integer id;
 
     // 项目转包ID
     private Integer subcontractId;
+    
+    // 任务Key
+    private String taskKey;
 
     // 任务ID
     private String taskId;
@@ -73,6 +80,24 @@ public class SubcontractCallback {
      */
     public void setSubcontractId(Integer subcontractId) {
         this.subcontractId = subcontractId;
+    }
+    
+    /**
+     * 获取任务Key
+     *
+     * @return taskKey - 任务Key
+     */
+    public String getTaskKey() {
+        return taskKey;
+    }
+
+    /**
+     * 设置任务Key
+     *
+     * @param taskKey 任务Key
+     */
+    public void setTaskKey(String taskKey) {
+        this.taskKey = taskKey;
     }
 
     /**

@@ -15,6 +15,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import org.activiti.engine.delegate.VariableScope;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -27,7 +29,11 @@ import com.dp.plat.subcontract.entity.SubcontractPayment;
 import com.dp.plat.subcontract.entity.SubcontractProject;
 import com.dp.plat.subcontract.listener.SubcontractInspectionListener;
 import com.dp.plat.subcontract.service.SubcontractService;
+import com.dp.plat.subcontract.utils.SubcontractUtil;
 import com.dp.plat.util.AviatorUtils;
+
+import cn.hutool.core.map.MapUtil;
+
 import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.AviatorEvaluatorInstance;
 import com.googlecode.aviator.Expression;
@@ -239,5 +245,48 @@ public class SubcontractTest {
         subcontract.setProfitDepCode("161000");
         enable = checkAssignee(variableScope, taskDefinedVariables, taskDefinedVariables);
         assertEquals(false, enable);
+    }
+    
+    @Test
+    public void needVerify() {
+        String condition = "use com.alibaba.fastjson.JSON;"
+                + "    use java.util.Map;"
+                + "    use java.util.List;"
+                + "    use com.dp.plat.context.SpringContext;"
+                + "    use cn.hutool.core.map.MapUtil;"
+                + "    use org.apache.commons.lang3.StringUtils;"
+                + "    let invoice = entity.entity;\n    p(invoice);"
+                + "    if (invoice == nil || isEmpty(invoice)) {"
+                + "      return false;"
+                + "    }"
+                + "    let needVerify = MapUtil.getBool(invoice, 'needVerify', false);"
+                + "    p(needVerify);"
+                + "    let unNeedVerify = !needVerify && StringUtils.isBlank(MapUtil.getStr(invoice, 'invoice_number'));"
+                + "    p(unNeedVerify);"
+                + "    return !unNeedVerify;";
+        
+        System.out.println(condition);
+        HashMap env = new HashMap();
+        env.put("condition", condition);
+        
+        Map<String, Object> invoice = Collections.singletonMap("needVerify", true);
+        env.put("entity", Collections.singletonMap("entity", invoice));
+        
+        Object needVerify = AviatorUtils.exceute(condition, env);
+        assertEquals(true, Boolean.TRUE.equals(needVerify));
+        assertEquals(true, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", true})));
+        
+        invoice = Collections.singletonMap("needVerify", false);
+        env.put("entity", Collections.singletonMap("entity", invoice));
+        needVerify = AviatorUtils.exceute(condition, env);
+        assertEquals(false, Boolean.TRUE.equals(needVerify));
+        assertEquals(false, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", false})));
+        
+        invoice = Collections.singletonMap("invoice_number", "");
+        env.put("entity", Collections.singletonMap("entity", invoice));
+        needVerify = AviatorUtils.exceute(condition, env);
+        assertEquals(false, Boolean.TRUE.equals(needVerify));
+        assertEquals(false, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "invoice_number", ""})));
+        
     }
 }

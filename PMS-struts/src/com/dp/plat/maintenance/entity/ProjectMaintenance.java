@@ -2,7 +2,11 @@ package com.dp.plat.maintenance.entity;
 
 import java.util.Date;
 
-public class ProjectMaintenance {
+import com.dp.plat.data.bean.CustomInfoEntity;
+
+public class ProjectMaintenance extends CustomInfoEntity {
+    private static final long serialVersionUID = 9196747251829445033L;
+
     private Integer id;
 
     // 项目头信息主键

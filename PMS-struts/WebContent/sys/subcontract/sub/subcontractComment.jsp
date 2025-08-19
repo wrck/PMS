@@ -34,7 +34,7 @@
     </s:if>
     <div style="position: relative;">
         <s:if test="%{(subcontract.state > 0 && subcontract.state < 100 ) && (user.isHasRole(1) || user.isHasRole(10) || user.isHasRole(13))}">
-            <button id="terminateBtn" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-off" style="font-size:12px;"></span> 终止流程</button>
+            <button id="terminateBtn" type="button" class="btn btn-danger terminateBtn"><span class="glyphicon glyphicon-off" style="font-size:12px;"></span> 终止流程</button>
         </s:if>
         <a id="querySubcontractView" class="pull-right" target="_blank" href="" style=" position: relative; right: 0;">
             <span class="glyphicon glyphicon-picture" style="font-size:12px; color:#428bca;"><span class="panel-heading">查看项目转包流程图&nbsp;</span></span>
@@ -55,16 +55,47 @@
             });
             return false;
         });
+        
         $("#terminateBtn").click(function(){
+            $('#terminateDialog').dialog({
+                draggable:false,
+                bgiframe: true,
+                top:'50vh',
+                modal:true,
+                resizable: false,
+                appendTo: "#subcontractCommentListDiv",
+                close: function() {
+                	$(".terminateBtn").bootstrapBtn("reset");
+                }
+            })
+        });
+        $("#terminateSubmitBtn").click(function(){
+        	var $btn = $(this);
+        	$btn.bootstrapBtn("loading");
+        	var resetBtn = function() {
+                setTimeout(function() {
+                    $btn.bootstrapBtn("reset");
+                }, 10);
+            }
         	var subcontractId = $("#subcontractId").val();
         	console.log(subcontractId);
-        	var comment = prompt("终止流程说明", "终止流程");
+        	var approveStatus = $("#terminateDialog [name='workflowCommonParam.approveStatus']:checked").val();
+        	if (approveStatus == '' || approveStatus == undefined) {
+        		alert("请选择终止意见！");
+        		resetBtn.call();
+        		return false;
+        	}
+        	var comment = $.trim($("#terminateDialog #terminateComment").val());
+        	comment = comment || prompt("终止流程说明", "终止流程");
         	if (comment) {
         		$.ajax({
                     url:"module/s/subcontractAjax_terminateWorkFlow.action",
                     type:"post",
                     dataType:"json",
-                    data:{"subcontract.id": subcontractId, "workflowCommonParam.comment": comment},
+                    data:{"subcontract.id": subcontractId, 
+                    	"workflowCommonParam.approveStatus": approveStatus,
+                    	"workflowCommonParam.comment": comment
+                	},
                     success:function(data){
                         if (data.result == "1") {
                             alert('终止流程成功');
@@ -76,8 +107,13 @@
                     },
                     error:function(XMLHttpRequest,textStatus,errorThrown){
                         alert("Error");
+                    },
+                    complete: function() {
+                    	resetBtn.call();
                     }
                 });
+        	} else {
+        		resetBtn.call();
         	}
 			return false;
         });
@@ -97,6 +133,15 @@
             <display:column property="nextAssigneeName" title="下一步办理人"></display:column>
             <display:column property="subcontractSeeQuesnaireLink" titleKey="pm.subcontract.operate"></display:column>
         </display:table>
+        <div id="terminateDialog" style="display: none;">
+            <fieldset class="form-group">
+                <s:hidden name="workflowCommonParam.flag" value="0"></s:hidden>
+                <label>终止意见：</label><s:radio id="terminateApproveStatus" list="#{'2':'可以闭环','-1':'闭环驳回','-2':'无法闭环'}" name="workflowCommonParam.approveStatus"  listCssStyle="margin-right:1rem;"></s:radio>
+                <s:textarea id="terminateComment" name="workflowCommonParam.comment" cssClass="form-control" placeholder="终止流程说明"/>
+            </fieldset>
+            <button id="terminateSubmitBtn" type="button" class="btn btn-danger terminateBtn"><span class="glyphicon glyphicon-off" style="font-size:12px;"></span> 终止流程</button>
+        </div>
+        
 	</div>
 </body>
 </html>

@@ -1,5 +1,17 @@
 package com.dp.plat.core.util;
 
+import com.dp.plat.core.config.SystemConfig;
+import com.dp.plat.core.exception.UploadException;
+import com.dp.plat.core.pojo.FileInfo;
+import com.dp.plat.core.pojo.FileType;
+import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -9,22 +21,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.util.Streams;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-
-import com.dp.plat.core.config.SystemConfig;
-import com.dp.plat.core.exception.UploadException;
-import com.dp.plat.core.pojo.FileInfo;
-import com.dp.plat.core.pojo.FileType;
 
 public class UploadUtils {
 	
@@ -59,11 +55,10 @@ public class UploadUtils {
 	
 	/**
 	 * 文件上传处理
-	 * @param entry
-	 * @param fileAllowType
-	 * @param dirPath
-	 * @param relPath
-	 * @param request
+	 *
+	 * @param fileType
+	 * @param mFile
+	 * @param httpRequest
 	 * @return
 	 * @throws Exception
 	 */
@@ -127,7 +122,7 @@ public class UploadUtils {
 	/**
 	 *	 多文件上传
 	 * @param httpRequest
-	 * @param fileAllowType
+	 * @param fileType
 	 * @return
 	 * @throws Exception
 	 */
@@ -142,15 +137,42 @@ public class UploadUtils {
                 fileSet = temp.getValue();
             }
     		//返回结果
-			List<FileInfo> results = new ArrayList<>();
-            for(MultipartFile temp : fileSet){
-				results.add(simpleUpload(fileType, temp, httpRequest));
-            }
-			return results;
+			return uploadMultipartFile(fileType, fileSet, httpRequest);
 		}else {
 			throw new UploadException("contentType类型错误");
 		}
-	} 
+	}
+
+	/**
+	 *	 多文件上传
+	 *
+	 * @param fileType
+	 * @param multipartFiles
+	 * @param httpRequest
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<FileInfo> uploadMultipartFile(FileType fileType, List<MultipartFile> multipartFiles, HttpServletRequest httpRequest) throws Exception {
+    		//返回结果
+			List<FileInfo> results = new ArrayList<>();
+		for (MultipartFile temp : multipartFiles) {
+				results.add(simpleUpload(fileType, temp, httpRequest));
+            }
+			return results;
+		}
+
+	/**
+	 *	 单文件上传
+	 *
+	 * @param fileType
+	 * @param multipartFile
+	 * @param httpRequest
+	 * @return
+	 * @throws Exception
+	 */
+	public static FileInfo uploadMultipartFile(FileType fileType, MultipartFile multipartFile, HttpServletRequest httpRequest) throws Exception {
+		return simpleUpload(fileType, multipartFile, httpRequest);
+	}
 	
 	/**
 	 * 判断目录是否存在，不存在则创建

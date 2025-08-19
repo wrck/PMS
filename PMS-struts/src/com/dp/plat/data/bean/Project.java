@@ -215,7 +215,7 @@ public class Project extends ProjectQueryParam{
 	/**
 	 * 自定义信息
 	 */
-	private Map<?, ?> customInfo;
+	private JsonCustomInfo<?, ?> customInfo;
 
 	public Project() {
 	    super();
@@ -1203,7 +1203,7 @@ public class Project extends ProjectQueryParam{
 	 * @param customInfo 自定义信息
 	 */
 	public void setCustomInfo(Map<?, ?> customInfo) {
-		this.customInfo = customInfo;
+		this.customInfo = new JsonCustomInfo<>(customInfo);
 	}
 
 	/**
@@ -1238,6 +1238,7 @@ public class Project extends ProjectQueryParam{
 		if (customInfo == null) {
 			customInfo = new HashMap<>();
 			this.setCustomInfo(customInfo);
+            customInfo = (Map<String, Object>) this.getCustomInfo();
 		}
 		customInfo.put(key, value);
 	}

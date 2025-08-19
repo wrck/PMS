@@ -11,14 +11,14 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
-import com.dp.plat.context.SystemContext;
-import com.dp.plat.crm.model.ApiMap;
-import com.dp.plat.extend.crm.job.GainDataFromCRM;
-import com.dp.plat.extend.crm.job.PullJobFromCRM;
-import com.dp.plat.param.PrjProperty;
 import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
+
+import com.dp.plat.context.SystemContext;
+import com.dp.plat.crm.model.ApiMap;
+import com.dp.plat.extend.crm.job.GainDataFromCRM;
+import com.dp.plat.param.PrjProperty;
 
 /**
  * 从销售管理系统同步项目相关信息和销售信息

@@ -82,10 +82,16 @@
         	//var url = uri ? uri : "module/prob_statistics.action";
             if (tabIndex == 0) {
                 params = $("#statisticForm").serializeArray();
-            } else if (tabIndex == 1){
+            } else if (tabIndex == 1) {
                 params = $("#reportForm").serializeArray();
-            } else {
+            } else if (tabIndex == 2) {
             	params = $("#projectForm").serializeArray();
+            } else if (tabIndex == 3) {
+                params = $("#shipmentSoftForm").serializeArray();
+                if (!checkShipmentSoftForm(params)) {
+                	alert("避免数据量过多，请补充查询参数！");
+                	return false;
+                }
             }
             params = data ? data : params;
             var id = $("#myTab a:eq("+tabIndex+")").attr("href").replace("#","");
@@ -100,7 +106,10 @@
                 	if (tabIndex == 2) {
                 		drawSuccessHtml(2, data);
                 		initAutoComplete();
-                	} else {
+                	} else if (tabIndex == 3) {
+                        drawSuccessHtml(3, data);
+                        initAutoComplete();
+                    } else {
                 		drawSuccessHtml(0, data);
                 		drawSuccessHtml(1, data);
                 		initDatePicker();
@@ -161,18 +170,19 @@
     queryRoleUser(12);
     
     function initAutoComplete() {
-        $("#sm").autocomplete({
+        $(".sm").autocomplete({
   	        source: realNameArrObj[11],
   	    });
-        $("#pm").autocomplete({
+        $(".pm").autocomplete({
             source: realNameArrObj[12],
         });
     }
     initAutoComplete();
     function fillsm(){
-        var val = $("#sm").val();
+    	var $sm = $(".sm:visible");
+        var val = $sm.val();
         if(val == ""){
-        	$("#smhide").val("");
+        	$sm.siblings(".smhide").val("");
         } else {
             var i=0;
             var realnameArr2 = realNameArrObj[11];
@@ -185,15 +195,16 @@
             if(i==realnameArr2.length){
                 return false;
             } else{
-            	$("#smhide").val(usernameArr2[i]);
+            	$sm.siblings(".smhide").val(usernameArr2[i]);
             }
         }
     }
 
     function fillpm(){
-        var val = $("#pm").val();
+    	var $pm = $(".pm:visible");
+        var val = $pm.val();
         if(val == ""){
-            $("#pmhide").val("");
+        	$pm.siblings(".pmhide").val("");
         } else {
             var i=0;
             var realnameArr3 = realNameArrObj[12];
@@ -206,11 +217,35 @@
             if(i==realnameArr3.length){
                 return false;
             } else{
-                $("#pmhide").val(usernameArr3[i]);
+            	$pm.siblings(".pmhide").val(usernameArr3[i]);
             }
         }
     }
-    
+
+	function checkShipmentSoftForm(formData) {
+	    // 获取表单所有字段的值
+	    var formData = formData || [];
+	    
+	    // 将 excludeFields 转为 Set，便于快速查找
+	    var excludeSet = new Set(["probStatistic.tabIndex", "probStatistic.filterItem", "probStatistic.version.conp"]);
+
+	    // 遍历 formData，检查除了指定字段外，是否有其他字段具有非空值
+	    for (var i = 0; i < formData.length; i++) {
+	        var field = formData[i];
+	        
+	        // 跳过被排除的字段
+	        if (excludeSet.has(field.name)) {
+	            continue;
+	        }
+	        
+	        // 检查该字段是否有值（非 null、undefined、空字符串）
+	        if (field.value !== null && field.value !== undefined && field.value.trim() !== '') {
+	            return true; // 找到至少一个有效值
+	        }
+	    }
+
+	    return false; // 其他字段都没有值
+	}
 </script>
 </head>
 <body>
@@ -223,6 +258,7 @@
                             <li><a href="#statistic" data-toggle="tab" class="tab-bg-primary"><s:text name='prob.statistic.tab.list' /></a></li>
                             <li><a href="#report" data-toggle="tab" class="tab-bg-primary"><s:text name='prob.statistic.tab.report' /></a></li>
                             <li><a href="#projectList" data-toggle="tab" class="tab-bg-primary"><s:text name='prob.statistic.tab.project' /></a></li>
+                            <li><a href="#shipmentSoftList" data-toggle="tab" class="tab-bg-primary">软件版本记录</a></li>
                         </ul>
                     </nav>
                     <div class="tab-pane fade" id="statistic">
@@ -230,6 +266,10 @@
 	                    cssClass="form-horizontal" name="statisticForm" enctype="multipart/form-data">
 	                        <div class="form-group">
 	                            <s:hidden name="probStatistic.tabIndex" value="0"></s:hidden>
+                                <label for="versionConp" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label">软件版本：</label>
+                                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                                    <s:textfield id="versionConp" placeholder="软件版本"  name="probStatistic.version.conp" cssClass="form-control" />
+                                </div>
 	                            <label for="executeTime" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label">统计日期：</label>
 	                            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
 	                                <s:textfield id="startTime" placeholder="开始时间" name="probStatistic.startTime" cssClass="form-control" >
@@ -341,7 +381,7 @@
 					            <div class="">
 						            <s:textfield id="sm" onfocus="fillsm()" onblur="fillsm()"
 						                placeholder="支持模糊搜索" cssClass="form-control" />
-						            <s:hidden name="probStatistic.serviceManagerCode" value="" id="smhide"></s:hidden>
+						            <s:hidden name="probStatistic.serviceManagerCode" value="" id="smhide" class="smhide"></s:hidden>
 					            </div>
 					        </div>
                             <div class="col-xs-4">
@@ -350,7 +390,7 @@
 						            <div class="form-group col-xs-8" style="margin-right:0px;">
 							            <s:textfield id="pm" onfocus="fillpm()" onblur="fillpm()"
 							                placeholder="支持模糊搜索" cssClass="form-control" />
-							            <s:hidden name="probStatistic.programManagerCode" value="" id="pmhide"></s:hidden>
+							            <s:hidden name="probStatistic.programManagerCode" value="" id="pmhide" class="pmhide"></s:hidden>
 							        </div>
 							        <div class="col-xs-4">
 	                                    <button type="button" id="submit"  class="btn btn-default  btn-block btn-sm" onclick="submitStatistic(2)"><s:text name='sys.query' /></button>
@@ -378,6 +418,103 @@
                             <display:column property="programManagerCodeforjsonB" titleKey="pm.project.programManagerB" class="nowrap"></display:column>
                         </display:table>
                         <hr id="hr2" style="display:none;">
+                    </div>
+                    <div class="tab-pane fade" id="shipmentSoftList">
+                        <s:form method="post" action="module/prob_statistics.action" id="shipmentSoftForm"
+                        cssClass="form-horizontal clearfix" name="projectForm" enctype="multipart/form-data">
+                            <div class="col-xs-2">
+                                <s:hidden name="probStatistic.tabIndex" value="3"/>
+                                <s:hidden name="probStatistic.filterItem" value="true"/>
+                                <label for="projectCode" class="control-label">项目编码：</label>
+                                <div class="">
+                                    <s:textfield id="projectCode" placeholder="项目编码" name="probStatistic.projectCode" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="contractNo" class="control-label">合同号：</label>
+                                <div class="">
+                                    <s:textfield id="contractNo" placeholder="合同号" name="probStatistic.contractNo" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="projectName" class="control-label">项目名称：</label>
+                                <div class="">
+                                    <s:textfield id="projectName" placeholder="项目名称" name="probStatistic.projectName" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="officeName" class=" control-label">办事处：</label>
+                                <div class="">
+                                    <s:select cssClass="form-control" name="probStatistic.officeCode" id="officeCode" list="%{departmentList}" listKey="departmentNum" listValue="departmentName" headerKey="" headerValue="-请选择-" theme="simple"></s:select>
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="sm" class="control-label"><s:text name="pm.project.serviceManager" />：</label>
+                                <div class="">
+                                    <s:textfield id="sm" onfocus="fillsm()" onblur="fillsm()"
+                                        placeholder="支持模糊搜索" cssClass="sm form-control" />
+                                    <s:hidden name="probStatistic.serviceManagerCode" value="" id="smhide" class="smhide"></s:hidden>
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="pm" class="control-label"><s:text name="pm.project.programManager" /></label>
+                                <div class="">
+                                    <s:textfield id="pm" onfocus="fillpm()" onblur="fillpm()"
+                                        placeholder="支持模糊搜索" cssClass="pm form-control" />
+                                    <s:hidden name="probStatistic.programManagerCode" value="" id="pmhide" class="pmhide"></s:hidden>
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="barCode" class="control-label">序列号：</label>
+                                <div class="">
+                                    <s:textfield id="barCode" placeholder="序列号" name="probStatistic.barCode" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="conp" class="control-label">软件版本：</label>
+                                <div class="">
+                                    <s:textfield id="conp" placeholder="软件版本" name="probStatistic.version.conp" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <label for="itemCode" class="control-label">产品编码：</label>
+                                <div class="">
+                                    <s:textfield id="itemCode" placeholder="产品编码" name="probStatistic.itemCode" cssClass="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-xs-1">
+                                <div class="">
+                                    <button type="button" id="submit"  class="btn btn-default  btn-block btn-sm" onclick="submitStatistic(3)"><s:text name='sys.query' /></button>
+                                </div>
+                            </div>
+                            <%-- <div class="form-group col-xs-2">
+                                <div class="col-xs-7">
+                                    <button type="button" id="submit"  class="btn btn-default  btn-block btn-sm" onclick="submitStatistic(3)"><s:text name='sys.query' /></button>
+                                </div>
+                            </div> --%>
+                        </s:form>
+                        <display:table id="shipmentSoftList" name="commonList" pagesize="${displayParam.pagesize}"
+                            export="true" size="${displayParam.totalcount}" sort="external"
+                            requestURI="module/prob_statistics.action"
+                            decorator="com.dp.plat.decorators.Wrapper"
+                            class="table table-striped" partialList="true">
+                            <display:column property="projectCode" titleKey="pm.project.projectCode" ></display:column>
+                            <display:column property="projectName" escapeXml="true" media="html" titleKey="pm.project.projectName" url="/module/ProjectModify.action?result=310" paramId="project.projectId" paramProperty="projectId"></display:column>
+                            <display:column property="projectName"  media="excel" titleKey="pm.project.projectName" ></display:column>
+                            <display:column property="contractNo" decorator="com.dp.plat.decorators.ContractNoList" titleKey="pm.project.contractNo"></display:column>
+                            <display:column property="officeName" titleKey="pm.officearea" class="nowrap"></display:column>
+                            <display:column property="serviceManagerCodeforjson" titleKey="pm.project.serviceManager" class="nowrap"></display:column>
+                            <display:column property="programManagerCodeforjson" titleKey="pm.project.programManagerA" class="nowrap"></display:column>
+                            <display:column property="programManagerCodeforjsonB" titleKey="pm.project.programManagerB" class="nowrap"></display:column>
+                            <display:column property="barCodeRelation" titleKey="pm.shipment.barCode"></display:column>
+                            <display:column property="itemCodeRelation" titleKey="pm.shipment.itemCode"></display:column>
+                            <display:column property="itemNameRelation" titleKey="pm.shipment.itemName"></display:column>
+                            <display:column property="conp" titleKey="prob.info.conp"></display:column> 
+                            <display:column property="cpld" titleKey="prob.info.cpld"></display:column> 
+                            <display:column property="boot" titleKey="prob.info.boot"></display:column> 
+                            <display:column property="pcb" titleKey="prob.info.pcb"></display:column>
+                        </display:table>
+                        <hr id="hr3" style="display:none;">
                     </div>
                 </div>
             </div>

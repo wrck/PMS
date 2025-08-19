@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * @author w02611
@@ -19,6 +21,8 @@ public class CustomInfoEntity implements Serializable {
     private JsonCustomInfo<String, Object> customInfo;
     
     // 自定义信息委派
+    @JsonIgnore
+    @JSONField(serialize = false, deserialize = false)
     private JsonCustomInfo<String, String> customStrInfo;
     
     /**
@@ -173,4 +177,18 @@ public class CustomInfoEntity implements Serializable {
 //        }
 //    }
     
+    /**
+     * 移除自定义信息，指定key
+     *
+     * @return customInfo.remove(Key) - 自定义信息
+     */
+    public Object removeCustomInfoByKey(String key) {
+        Map<String, Object> customInfo = getCustomInfo();
+        if (customInfo != null && !customInfo.isEmpty()) {
+            Object value = customInfo.get(key);
+            customInfo.put(key, null);
+            return value;
+        }
+        return null;
+    }
 }

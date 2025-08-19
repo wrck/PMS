@@ -10,6 +10,7 @@ import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.prob.bean.Prob;
 import com.dp.plat.prob.bean.ProbFile;
+import com.dp.plat.prob.bean.ProbProduct;
 import com.dp.plat.prob.bean.ProbReadLog;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
@@ -17,6 +18,9 @@ import com.dp.plat.prob.bean.ProbStatistic;
 import com.dp.plat.prob.bean.ProductComponent;
 import com.dp.plat.prob.bean.SoftVersion;
 import com.dp.plat.prob.param.ProbParam;
+import com.dp.plat.prob.util.ProductItemExample;
+import com.dp.plat.prob.vo.ProbProductPageParam;
+import com.dp.plat.prob.vo.ProbProductVO;
 import com.dp.plat.prob.vo.ProductComponentPageParam;
 import com.dp.plat.prob.vo.ProductComponentVO;
 
@@ -152,6 +156,14 @@ public interface ProbManageDao {
 	 * @return
 	 */
 	List<Project> queryProbStatisticProjectList(ProbStatistic probStatistic, DisplayParam displayParam);
+	
+	/**
+     * 查询合同发货软件版本
+     * @param probStatistic
+     * @param displayParam
+     * @return
+     */
+    List<?> queryContractShipmentSoftList(ProbStatistic probStatistic, DisplayParam displayParam);
 
 	/**
 	 * @param probReadLog
@@ -226,5 +238,73 @@ public interface ProbManageDao {
      * @param component
      */
     void updateProductComponentByIdSelective(ProductComponent component);
+
+    /**
+     * @param id
+     * @return
+     */
+    ProbProduct selectProbProductById(Integer id);
+    
+    /**
+     * @param id
+     * @return
+     */
+    ProbProductVO selectProbProductVOById(Integer id);
+    
+    /**
+     * @param probProduct
+     * @return
+     */
+    List<ProbProduct> selectProbProductList(ProbProduct probProduct);
+    
+    /**
+     * @param pageParam
+     * @return
+     */
+    List<ProbProductVO> selectProbProductListPageable(ProbProductPageParam pageParam);
+    /**
+     * 
+     * @param pageParam
+     * @return
+     */
+    Integer countProbProductListPageable(ProbProductPageParam pageParam);
+    
+    /**
+     * @param probProduct
+     */
+    Integer insertProbProduct(ProbProduct probProduct);
+    /**
+     * 
+     * @param probProduct
+     * @return
+     */
+    Integer insertProbProductSelective(ProbProduct probProduct);
+    
+    /**
+     * @param id
+     * @return
+     */
+    void deleteProbProductById(Integer id);
+
+    /**
+     * @param probProduct
+     */
+    void updateProbProductById(ProbProduct probProduct);
+    /**
+     * @param probProduct
+     */
+    void updateProbProductByIdSelective(ProbProduct probProduct);
+    
+    void updateProbProductByProbIdSelective(ProbProduct probProduct);
+
+    Integer insertOrUpdateProbProductSelective(ProbProduct probProduct);
+
+    void deleteProbProductByProbId(Integer probId);
+
+    List<? extends Object> selectProductItemListByParams(Map<String, Object> commonMap);
+
+    List<? extends Object> selectProductItemListByExample(ProductItemExample example);
+
+    Integer bastchInsertProbProduct(List<ProbProduct> probProductList, int probId);
 
 }

@@ -52,7 +52,7 @@
         		and u.status = #{model.status}
        		</if>
       	</if>
-      	<if test="fuzzySearch == true">
+      	<if test="fuzzySearch == true and fuzzy != ''">
       		and (
       			u.user_name like CONCAT("%", #{fuzzy}, "%") or
     			ui.email like CONCAT("%", #{fuzzy}, "%") or

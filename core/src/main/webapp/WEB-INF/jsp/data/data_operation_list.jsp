@@ -235,10 +235,11 @@
 	var interval = 100;
 	var flag = true;
 	var trySecond = 2;
-	var tryCount = trySecond * 1000 / interval;
+	var tryTotal = trySecond * 1000 / interval;
+	var tryCount = tryTotal;
 	function showExportProcess(operationName) {
 		flag = true;
-		tryCount = trySecond * 1000 / interval;
+		tryCount = tryTotal;
 		modals.openWin({
 			winId: operationName,
 			width: "600px",
@@ -262,6 +263,8 @@
 			if(progress){
 				flag = false;
 				loadProgress(progress, container);
+			} else if (flag && tryCount > 0) {
+				loadProgress((tryTotal - tryCount) / tryTotal * 100, container);
 			}
 			console.log(tryCount);
 			if ((!flag && !progress) || (flag && tryCount-- < 0)) {
@@ -273,6 +276,11 @@
 	}
 	
 	function loadProgress(progress, container) {
+		progress = parseFloat(progress).toFixed(2);
+		if (isNaN(progress)) {
+			return;
+		}
+		progress = progress + "%"
 		if (container != undefined && $(container).length > 0) {
 			$("div[role='progressbar']", $(container)).css("width", progress);
 			$("div[role='progressbar']", $(container)).text(progress);

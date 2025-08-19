@@ -147,8 +147,12 @@ $(document).ready(function(){
 		$("#closeTime1").show();
 		$("#closeTime2").show();
 		break;
+	default:
+        $("#" + timeType + "1").show();
+        $("#" + timeType + "2").show();
 	}
 	$("#projectTime").change(function(){
+		var timeType = $(this).val();
 		var time1 = "";
 		$(".time1").each(function(){
 			time1 += this.value;
@@ -178,6 +182,9 @@ $(document).ready(function(){
 				$("#closeTime1").val(time1);
 				$("#closeTime2").val(time2);
 				break;
+			default:
+				$("#" + timeType + "1").show().val(time1);
+                $("#" + timeType + "2").show().val(time2);
 		}
 	});
 	
@@ -559,6 +566,12 @@ $(document).ready(function(){
 			
 			<s:textfield id="closeTime1" cssStyle="display:none" name="project.closeStartTime" placeholder="开始时间" cssClass="form-control projectTime time1" />
 			<s:textfield id="closeTime2" cssStyle="display:none" name="project.closeEndTime" placeholder="结束时间" cssClass="form-control projectTime time2" />
+            
+            <s:textfield id="suspendedTime1" cssStyle="display:none" name="project.customInfo.suspendedStateTime" placeholder="开始时间" cssClass="form-control projectTime time1" />
+            <s:textfield id="suspendedTime2" cssStyle="display:none" name="project.customInfo.suspendedStateTime" placeholder="结束时间" cssClass="form-control projectTime time2" />
+            
+            <s:textfield id="resumeTime1" cssStyle="display:none" name="project.customInfo.resumeStateTime" placeholder="开始时间" cssClass="form-control projectTime time1" />
+            <s:textfield id="resumeTime2" cssStyle="display:none" name="project.customInfo.resumeStateTime" placeholder="结束时间" cssClass="form-control projectTime time2" />
 		</div>
 		<div class="form-group form-group-query form-group-width-1">
 			<label for="projectColumn12"><s:text name="pm.project.implement" /></label>
@@ -660,6 +673,8 @@ $(document).ready(function(){
 			<s:if test="%{project.projectState != '10'}">
 				<display:column property="projectStartTime" format="{0,date,yyyy-MM-dd}" titleKey="pm.order.create.time"></display:column>
 				<display:column property="projectRefreshTime" format="{0,date,yyyy-MM-dd}" titleKey="pm.project.refresh.time"></display:column>
+                <display:column property="customInfo.suspendedStateTime" format="{0,date,yyyy-MM-dd}" titleKey="pm.project.suspend.time"></display:column>
+                <display:column property="customInfo.resumedStateTime" format="{0,date,yyyy-MM-dd}" titleKey="pm.project.resume.time" media="excel"></display:column>
 			</s:if>
 			<s:if test="%{project.projectState != '10'}">
 			    <display:column property="executionStateName" titleKey="pm.project.executionState"></display:column>

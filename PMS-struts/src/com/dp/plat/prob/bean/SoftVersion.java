@@ -2,14 +2,17 @@ package com.dp.plat.prob.bean;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.dp.plat.data.bean.CustomInfoEntity;
+
 /**
  * 软件版本属性
  * 
  * @author j01441
  *
  */
-public class SoftVersion {
-	private int id;
+public class SoftVersion extends CustomInfoEntity {
+	private static final long serialVersionUID = 8150879090779424000L;
+    private int id;
 	private Integer probId = 0;
 	private String conp;
 	private Object conp1;
@@ -57,6 +60,18 @@ public class SoftVersion {
 	 */
 	private Integer affectedType;
 	private String affectedTypeName;
+	private String platformType;
+    private String platformTypeName;
+    private String releaseType;
+    private String releaseTypeName;
+    private String architectureType;
+    private String architectureTypeName;
+    private String branchType;
+    private String branchTypeName;
+    /**
+     * releaseType、architectureType、branchType的组合
+     */
+    private String softVersionTypes;
 	/**
 	 * 分组ID
 	 */
@@ -360,5 +375,86 @@ public class SoftVersion {
 	public void setSplited(Integer splited) {
 		this.splited = splited;
 	}
+
+    public String getPlatformType() {
+        return (String) this.getCustomInfoByKey("platformType", this.platformType);
+    }
+
+    public void setPlatformType(String platformType) {
+        this.platformType = platformType;
+        this.setCustomInfoByKey("platformType", platformType);
+    }
+
+    public String getPlatformTypeName() {
+        return (String) this.getCustomInfoByKey("platformTypeName", this.platformTypeName);
+    }
+
+    public void setPlatformTypeName(String platformTypeName) {
+        this.platformTypeName = platformTypeName;
+        this.setCustomInfoByKey("platformType", platformType);
+    }
+
+    public String getReleaseType() {
+        return (String) this.getCustomInfoByKey("releaseType", this.releaseType);
+    }
+
+    public void setReleaseType(String releaseType) {
+        this.releaseType = releaseType;
+        this.setCustomInfoByKey("releaseType", releaseType);
+    }
+
+    public String getReleaseTypeName() {
+        return (String) this.getCustomInfoByKey("releaseTypeName", this.releaseTypeName);
+    }
+
+    public void setReleaseTypeName(String releaseTypeName) {
+        this.releaseTypeName = releaseTypeName;
+        this.setCustomInfoByKey("releaseTypeName", releaseTypeName);
+    }
+
+    public String getArchitectureType() {
+        return (String) this.getCustomInfoByKey("architectureType", this.architectureType);
+    }
+
+    public void setArchitectureType(String architectureType) {
+        this.architectureType = architectureType;
+        this.setCustomInfoByKey("architectureType", architectureType);
+    }
+
+    public String getArchitectureTypeName() {
+        return (String) this.getCustomInfoByKey("architectureTypeName", this.architectureTypeName);
+    }
+
+    public void setArchitectureTypeName(String architectureTypeName) {
+        this.architectureTypeName = architectureTypeName;
+        this.setCustomInfoByKey("architectureTypeName", architectureTypeName);
+    }
+
+    public String getBranchType() {
+        return (String) this.getCustomInfoByKey("branchType", this.branchType);
+    }
+
+    public void setBranchType(String branchType) {
+        this.branchType = branchType;
+        this.setCustomInfoByKey("branchType", branchType);
+    }
+
+    public String getBranchTypeName() {
+        return (String) this.getCustomInfoByKey("branchTypeName", this.branchTypeName);
+    }
+
+    public void setBranchTypeName(String branchTypeName) {
+        this.branchTypeName = branchTypeName;
+        this.setCustomInfoByKey("branchTypeName", branchTypeName);
+    }
+
+    public String getSoftVersionTypes() {
+        return (String) this.getCustomInfoByKey("softVersionTypes", this.softVersionTypes);
+    }
+
+    public void setSoftVersionTypes(String softVersionTypes) {
+        this.softVersionTypes = softVersionTypes;
+        this.setCustomInfoByKey("softVersionTypes", softVersionTypes);
+    }
 
 }

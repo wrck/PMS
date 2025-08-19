@@ -119,6 +119,7 @@
                     ) partnerChannel,
                     prp1.partyName as serviceChannel, 
                     prp2.partyName as agentChannel,
+                    ph.customInfo,
              <isEqual property="checkWarranty" compareValue="true">
                     wcs.warrantyStatus, wcs.warrantyStatusName,
                     wcs.warrantyGrade, wcs.warrantyGradeName,
@@ -389,6 +390,7 @@
               null partnerChannel,
               null serviceChannel,
               null agentChannel,
+              null customInfo,
               null AS warrantyStatus, null AS warrantyStatusName,
               null AS warrantyGrade, null AS warrantyGradeName,
               null AS wafService, null AS wafServiceName
@@ -468,6 +470,7 @@
               null partnerChannel,
               null serviceChannel,
               null agentChannel,
+              null customInfo,
               null AS warrantyStatus, null AS warrantyStatusName,
               null AS warrantyGrade, null AS warrantyGradeName,
               null AS wafService, null AS wafServiceName
@@ -923,6 +926,7 @@
         <result property="warrantyGradeName" column="warrantyGradeName"/>
         <result property="wafService" column="wafService"/>
         <result property="wafServiceName" column="wafServiceName"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     
     <select id="find_project_count" parameterClass="com.dp.plat.data.bean.Project" resultClass="int">
@@ -1050,6 +1054,7 @@
         <result property="warrantyGradeName" column="warrantyGradeName"/>
         <result property="wafService" column="wafService"/>
         <result property="wafServiceName" column="wafServiceName"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     <select id="query_project_bypower_count" parameterClass="com.dp.plat.data.bean.Project" resultClass="int">
         <![CDATA[
@@ -1091,6 +1096,7 @@
             <isNotEmpty prepend="," property="column012"><![CDATA[column012 = #column012#]]></isNotEmpty>
             <isNotEmpty prepend="," property="column013"><![CDATA[column013 = #column013#]]></isNotEmpty>
             <isNotEmpty prepend="," property="salesType"><![CDATA[salesType = #salesType#]]></isNotEmpty>
+            <isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
         </dynamic>
         where projectId = #projectId#
     </update>
@@ -1102,6 +1108,30 @@
         <isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
         where projectId = #projectId#
     </update>
+    
+    <update id="updateProjectByProjectIdSelective" parameterClass="com.dp.plat.data.bean.Project">
+		update pm_project_header
+		<dynamic prepend="SET">
+			<isNotEmpty prepend="," property="isback"> isback = #isback# </isNotEmpty>
+			<isNotEmpty prepend="," property="column010"> column010 = #column010# </isNotEmpty>
+			<isNotEmpty prepend="," property="column011"> column011 = #column011# </isNotEmpty>
+			<isNotEmpty prepend="," property="column012"> column012 = #column012# </isNotEmpty>
+			<isNotEmpty prepend="," property="column013"> column013 = #column013# </isNotEmpty>
+			<isNotEmpty prepend="," property="customerProjectName"> customerProjectName = #customerProjectName# </isNotEmpty>
+			<isNotEmpty prepend="," property="salesType"> salesType = #salesType# </isNotEmpty>
+			<isNotEmpty prepend="," property="compId"> compId = #compId# </isNotEmpty>
+			<isNotEmpty prepend="," property="updateTime"> updateTime = #updateTime# </isNotEmpty>
+			<isNotEmpty prepend="," property="updateBy"> updateBy = #updateBy# </isNotEmpty>
+			<isNotEmpty prepend="," property="effectiveFrom"> effectiveFrom = #effectiveFrom# </isNotEmpty>
+			<isNotEmpty prepend="," property="effectiveTo"> effectiveTo = #effectiveTo# </isNotEmpty>
+			<isNotEmpty prepend="," property="projectStartTime"> projectStartTime = #projectStartTime# </isNotEmpty>
+			<isNotEmpty prepend="," property="projectRefreshTime"> projectRefreshTime = #projectRefreshTime# </isNotEmpty>
+			<isNotEmpty prepend="," property="projectCloseTime"> projectCloseTime = #projectCloseTime# </isNotEmpty>
+			<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#), </isNotEmpty>
+			<isNotEmpty prepend="," property="column014"> column014 = #column014# </isNotEmpty>
+		</dynamic>
+		where projectId = #projectId#
+	</update>
 
     <resultMap class="com.dp.plat.data.bean.PmClosedLoopQuesnaire" id="quesnaireTemplateHeaderBean">
         <result property="id" column="id" nullValue="0" />
@@ -1384,11 +1414,12 @@
         <result property="executionStateName" column="executionStateName"/>
         <result property="closeProcessState" column="closeProcessState"/>
         <result property="closeProcessStateName" column="closeProcessStateName"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     
     <select id="query_project_byId" parameterClass="int" resultMap="pmProjectById">
         <![CDATA[
-            SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(DISTINCT ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
+        SELECT pph.projectId,CASE WHEN pph.effectiveFrom < NOW() AND (pph.effectiveTo >= NOW() OR pph.effectiveTo IS NULL) THEN 0 ELSE 1 END AS projectStatus, GROUP_CONCAT(DISTINCT ppc.contractNo) AS contractNo, pph.projectCode, CASE WHEN ppgr.`mergeBranchMark` IS NULL THEN pph.projectName ELSE 
              CONCAT( pph.projectName, '-',ppgr.`mergeBranchMark`
             ) END AS projectName , pph.projectState,state.`basicDataName` AS projectStateName, pph.isback, pph.isback, pph.column001, fd.departmentName, pph.column002, pph.column003, pph.column004, pph.column005, 
             pph.column006, pph.column007, pph.column008, pph.column009, pph.column010, pph.column011,case when  pph.column012 is null or pph.column012 = '' then pph.columno12_readonly else pph.column012 end as column012, 
@@ -1405,7 +1436,8 @@
             pprp1.partyName partyName1, pprp2.partyName partyName2, pprp3.partyName partyName3,
             executionState.`basicDataName` AS executionStateName, ps.executionState, 
             closeProcessState.`basicDataName` AS closeProcessStateName, ps.closeProcessState
-            FROM pm_project_header pph 
+            , pph.customInfo
+        FROM pm_project_header pph 
             LEFT JOIN pm_project_member ppm1 ON ppm1.projectId = pph.projectId AND ppm1.memberRole = '20' AND ppm1.fromFlag = 1
             AND (ppm1.effectiveFrom <= NOW() AND (ppm1.effectiveTo > NOW() OR ppm1.effectiveTo IS NULL))
             LEFT JOIN pm_project_member ppm4 ON ppm4.projectId = pph.projectId AND ppm4.memberRole = '20' AND ppm4.fromFlag = 2
@@ -1431,7 +1463,7 @@
             LEFT JOIN `pm_project_state` ps ON ps.projectId = pph.projectId
             LEFT JOIN fnd_basic_data executionState ON executionState.`dataTypeCode` = 'projectExecutionState' AND executionState.`basicDataId` = ps.`executionState`
             LEFT JOIN fnd_basic_data closeProcessState ON closeProcessState.`dataTypeCode` = 'projectCloseProcessState' AND closeProcessState.`basicDataId` = ps.`closeProcessState`
-            WHERE pph.projectId = #projectId# LIMIT 1
+        WHERE pph.projectId = #projectId# LIMIT 1
         ]]>
     </select>
     
@@ -2307,8 +2339,16 @@
             LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId    
             LEFT JOIN fb_soft_version t ON vsip.`barcode` = t.`serial_number`    
             LEFT JOIN pm_project_soft_version t3 ON vsip.`barcode` = t3.`barcode` AND t3.`datastate` = 1   
+        <isNotEmpty property="itemFilters">
+            LEFT JOIN fb_items fi ON fi.item = vsip.itemCode
+        </isNotEmpty>
         WHERE vsip.contract_code IN ($contractNo$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment WHERE vsip.barcode = barcode and projectId = #projectId#)    
         <isNotEmpty prepend="and" property="profitCenter"> vsip.profitCenter = #profitCenter# </isNotEmpty>
+        <isNotEmpty prepend="AND" property="itemFilters">
+            <iterate property="itemFilters" conjunction="OR" open="(" close=")">
+                <include refid="sqlItemFilters"/>
+            </iterate>
+        </isNotEmpty>
         UNION ALL     
         SELECT DISTINCT t1.`contractNo`,t1.`barcode`,t1.`itemCode`,t1.`itemName`,    
             CASE WHEN t4.conp IS NULL THEN t2.`conp` ELSE t4.conp END AS conp,  t4.conpBak ,t4.conpChange,
@@ -2322,6 +2362,11 @@
             LEFT JOIN pm_project_soft_version t4 ON t1.`projectId` = t4.`projectId` AND t1.`barcode` = t4.`barcode` AND t4.`datastate` = 1   
             LEFT JOIN `fb_items` fi ON fi.item = sbr.item2 
         WHERE contractNo IN ($contractNo$) AND t1.projectId = #projectId# AND t1.transferFlag != 1
+        <isNotEmpty prepend="AND" property="itemFilters">
+            <iterate property="itemFilters" conjunction="OR" open="(" close=")">
+                <include refid="sqlItemFilters"/>
+            </iterate>
+        </isNotEmpty>
     </select>
     
     <select id="query_hist_soft_version_list_factory" parameterClass="java.util.Map" resultMap="softversion">
@@ -2383,7 +2428,7 @@
             INSERT INTO pm_project_soft_change_logs(projectId ,changeVersion , changeRemark , latest,createBy , createTime)
             values(#softChangeLog.projectId# ,#softChangeLog.changeVersion# , #softChangeLog.changeRemark#,1,#createBy#,now() )
         ]]>
-        <selectKey resultClass="int" keyProperty="id">
+        <selectKey resultClass="int" keyProperty="softChangeLog.id">
             SELECT last_insert_id() as id ;
         </selectKey>
     </insert>
@@ -2449,10 +2494,11 @@
         <result property="createTime" column="createTime"/>
         <result property="updateBy" column="updateBy"/>
         <result property="updateTime" column="updateTime"/>
+        <result property="versionAndCreateTime" column="versionAndCreateTime"/>
     </resultMap>
     <select id="query_one_soft_change_log" parameterClass="int" resultMap="SoftChangeLogOne">
         <![CDATA[
-            SELECT * FROM pm_project_soft_change_logs WHERE id = #id#
+            SELECT *, CONCAT(changeVersion, '(', DATE_FORMAT(createTime,'%Y-%m-%d'), ')') AS `versionAndCreateTime` FROM pm_project_soft_change_logs WHERE id = #id#
         ]]>
     </select>
     
@@ -5729,6 +5775,7 @@
         <result property="executionStateName" column="executionStateName"/>
         <result property="closeProcessState" column="closeProcessState"/>
         <result property="closeProcessStateName" column="closeProcessStateName"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>
     
   <select id="queryProjectSimplifyByProjectId" parameterClass="int" resultMap="SimpleProjectById" >
@@ -5749,6 +5796,7 @@
             GROUP_CONCAT(DISTINCT ppm6.memberCode) AS teamMemberCodes,
             executionState.`basicDataName` AS executionStateName, ps.executionState, 
             closeProcessState.`basicDataName` AS closeProcessStateName, ps.closeProcessState
+            , pph.customInfo
         FROM pm_project_header pph 
             LEFT JOIN pm_project_member ppm1 ON ppm1.projectId = pph.projectId AND ppm1.memberRole = '20' AND ppm1.fromFlag = 1
             AND (ppm1.effectiveFrom <= NOW() AND (ppm1.effectiveTo IS NULL))

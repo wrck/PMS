@@ -25,6 +25,9 @@
         #subcontractMultiDimInfoTable tr {
             height: 3rem;
         }
+        #subcontractPaymentTable thead th {
+            white-space: nowrap;
+        }
     </style>
     <div style="text-align: left;">
         <s:form enctype="multipart/form-data" id="subcontractPaymentForm" action="%{namespace}/subcontract_savePayment.action">
@@ -32,7 +35,9 @@
                 <tr style="display:none"><td><s:hidden name="subcontract.id"/></td></tr>
                 <tr>
                     <td class="nowrap"><s:text name="pm.subcontract.subcontractNo"></s:text>:</td>
-                    <td class="col-sm-3"><s:textfield name="subcontract.subcontractNo" cssClass="form-control taskOnly task-generateContractTask" placeholder='请输入转包合同号'/></td>
+                    <td class="col-sm-2"><s:textfield name="subcontract.subcontractNo" cssClass="form-control taskOnly task-generateContractTask" placeholder='请输入转包合同号'/></td>
+                    <td class="nowrap">采购订单号:</td>
+                    <td class="nowrap"><s:property value="subcontract.customStrInfo.purchId" default="生成合同后产生"/></td>
                     <%-- <td class="nowrap"><s:text name="pm.subcontract.accrued"></s:text>:</td>
                     <td class="nowrap"><s:radio name="subcontract.isAccrued" list="#{true:'是',false:'否'}"/></td>
                     <td class="nowrap"><s:text name="pm.subcontract.invoiced"></s:text>:</td>
@@ -94,7 +99,11 @@
                 size="${subcontractPaymentList.size()}" sort="external" requestURI="module/sub/querySubcontractPayment.action"
                 decorator="com.dp.plat.subcontract.decorators.SubcontractDecorator" class="displayTable table table-condensed table-hover table-striped">
                 <s:set value="%{column.extData}" var="extData"></s:set>
-                
+                <s:if test="user.isHasRole(16) || user.isHasRole(1) || user.isHasRole(13)">
+                <display:column title="<input type='checkbox' id='checkall' class='checkall'>" class="paymentIds hidden" headerClass="paymentIds hidden" media="html">
+                    <input name="paymentIds" value="${subcontractPaymentTable.id}" type="checkbox" class="paymentIds hidden" >
+                </display:column>
+                </s:if>
                 <display:column title="序号" headerClass="text-center nowrap" class="text-center rowNum nowrap">
                     ${subcontractPaymentTable_rowNum}
                 </display:column>
@@ -119,7 +128,7 @@
                 <display:column property="confirmTime" headerClass="nowrap" class="confirmTime nowrap" titleKey="pm.subcontract.confirmTime" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
                 <display:column property="paymentTime" headerClass="nowrap" class="paymentTime nowrap" titleKey="pm.subcontract.paymentTime" format="{0,date,yyyy-MM-dd HH:mm:ss}"></display:column>
                 <display:column property="remark" class="text-input remark" titleKey="pm.subcontract.remark"></display:column>
-                <display:column class="text-input customStrInfo.invoiceNumber" title="发票号码">${subcontractPaymentTable.customStrInfo.invoiceNumber}</display:column>
+                <display:column class="text-input customStrInfo.invoiceNumber word-break-wbr" title="发票号码">${subcontractPaymentTable.customStrInfo.invoiceNumber}</display:column>
                 <display:column class="status nowrap" title="状态">${subcontractPaymentTable.customStrInfo.status}${subcontractPaymentTable.customStrInfo.paystate != null ? '，'.concat(subcontractPaymentTable.customStrInfo.paystate) : ''}</display:column>
                 <display:column property="deliverableName" class="deliverList" title="附件"></display:column>
                 <s:if test="%{workflowCommonParam.outcome == 'applyPaymentTask'}">
@@ -160,14 +169,14 @@
                                         <s:text name="验收材料"/>
                                         <span class="inspection">
                                             <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control multipleFileType" multiple="true" />
-                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票附件"/>
+                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票原件"/>
                                         </span>
                                     </span>
                                     <span class="uploadWrapper">
-                                        <s:text name="发票附件"/>
+                                        <s:text name="发票原件"/>
                                         <span class="inspection">
                                             <s:file label="File" name="paymentDeliverList[0].uploads" cssClass="form-control multipleFileType" multiple="true" />
-                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票附件"/>
+                                            <s:hidden class="ignore" name="paymentDeliverList[0].type" value="" data-type="发票原件"/>
                                         </span>
                                     </span>
                                 </s:else>
@@ -179,9 +188,18 @@
                         </tr>
                     <%-- </s:if> --%>
                     <tr id="sumTr" class='text-danger' style='font-weight: 800;'>
+                        <s:if test="user.isHasRole(16) || user.isHasRole(1) || user.isHasRole(13)">
+                        <td class="paymentIds hidden"><input type="checkbox" id="checkall" class="checkall"></td>
+                        </s:if>
                         <td colspan='1' class='text-right'>合计</td>
-                        <td colspan='1' id="sumRatio"></td>
-                        <td colspan='1' ><div id="sumAmount"></div><div id="paiedAmount"></div></td>
+                        <td colspan='1' id="sumRatio" class="nowrap"></td>
+                        <td colspan='1' class="nowrap">
+                            <div id="sumAmount"></div>
+                            <div id="paiedAmount"></div>
+                            <s:if test="commonMap.sumInvoiceAmount > 0">
+                                <div id="sumInvoiceAmount">发票：<s:property value="commonMap.sumInvoiceAmountFormated"/></div>
+                            </s:if>
+                        </td>
                         <s:if test="%{workflowCommonParam.outcome == 'acceptanceTask'}">
                         <td colspan='1' ><div id="sumApprovedAmount"></div><div id="approvingAmount"></div></td>
                         </s:if>
@@ -191,8 +209,21 @@
                                <button id="paymentSubmitBtn" type="submit" class="btn btn-success"><span class="glyphicon glyphicon-floppy-save" style="font-size:12px;"></span> 保存</button>
                             </s:if>
                         </td>
+                        <td class="mergeTdBorder">
+                            <s:if test="%{(user.isHasRole(16) || user.isHasRole(1) || user.isHasRole(13) || workflowCommonParam.outcome == 'applyPaymentTask') && subcontract.state != 100}">
+                               <button id="printBtn" type="button" class="btn btn-success paymentDeliveryBtn" data-btn-type="print" data-change-title="确认打印付款单">打印付款单</button>
+                            </s:if>
+                        </td>
                         <td class="mergeTdBorder"></td>
                         <td class="mergeTdBorder"></td>
+                        <td class="mergeTdBorder"></td>
+                        <td class="mergeTdBorder">
+                            <s:if test="%{(user.isHasRole(16) || user.isHasRole(1) || user.isHasRole(13) || workflowCommonParam.outcome == 'applyPaymentTask') && subcontract.state != 100}">
+                                <s:if test="%{commonMap.invoiceAllIdentify}">
+                                   <button id="verifyBtn" type="button" class="btn btn-success paymentDeliveryBtn" data-btn-type="verify" data-change-title="确认识别发票">识别发票附件</button>
+                                </s:if>
+                            </s:if>
+                        </td>
                         <td class="mergeTdBorder"></td>
                     </tr>
                 </display:footer>
@@ -267,6 +298,7 @@
             </s:if>
             </div>
         </s:form>
+        <s:include value="./subcontractPaymentPrint.jsp"></s:include>
         <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.maskMoney.min.js"></script>
         <script type="text/javascript">
             $(function(){

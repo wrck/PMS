@@ -29,6 +29,9 @@ table#subcontractInfoTable > tbody > tr > td:nth-child(odd) {
 .mergeTdBorder {
     border-right:none!important;
 }
+.mergeTdBorder:empty {
+    padding: 0;
+}
 .mergeTdBorder + .mergeTdBorder {
     border-left:none!important;
 }
@@ -173,6 +176,9 @@ $(document).ready(function(){
     $(document).on('click', "#applyBtn", function() {
         submitApply();
     });
+    $(document).on('click', "#callbackBtn", function() {
+    	startCallBackFlow();
+    });
     $(document).on('click', "#refreshSubcontractProjectBtn", function() {
     	refreshSubcontractProject();
     });
@@ -239,6 +245,14 @@ $(document).ready(function(){
         		$("#subcontractRemark").val("客户姓名：\n联系方式：");
         	} */
         	$("#subcontractRemark").removeClass("canEmpty");
+        } else if ($(this).val() == "20") {
+        	// 驻场类2025-03-26 增加回访需求，填写客户单回访信息
+            $("#subcontractRemarkLabel").text("客户单位:");
+            $("#subcontractRemark").attr("placeholder", "客户姓名：\n联系方式：");
+            /* if (!$("#subcontractRemark").val().match(remarkRegex)) {
+                $("#subcontractRemark").val("客户姓名：\n联系方式：");
+            } */
+            $("#subcontractRemark").removeClass("canEmpty");
         } else {
         	$("#serviceOrders").hide();
             $("#draftContracts").removeClass("col-sm-6");
@@ -286,7 +300,7 @@ $(document).ready(function(){
         getTargetFunc(sourceName);
     });
     
-    $(document).on('click', "button",function() {
+    $(document).on('click', "button:not('.ui-button')",function() {
         $(this).bootstrapBtn("loading");
     });
 });
@@ -754,6 +768,38 @@ function querySubcontractPayment(){
     return false;
 }
 
+var flagPP = true;
+function querySubcontractPaymentPrint(payment){
+    var contractNos = $("#subcontractForm #contractNos").val();
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    var subcontractNo = $("#subcontractForm #subcontractNo").val();
+    payment = payment || {};
+    
+    if(flagPP){
+        $("#subcontractPaymentPrintDiv").html(loadingHtml);
+        flagPP = false;
+        var params = {"subcontract.id": subcontractId,
+                "selected": payment.ids};
+        $.ajax({
+            url:"module/sub/querySubcontractPaymentPrint.action",
+            type:"post",
+            dataType:"html",
+            data: params,
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractPaymentPrintDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractPaymentPrintDiv").html("获取付款信息失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagPP = true;
+            }
+        });
+    }
+    return false;
+}
+
 var flagD = true;
 function querySubcontractDeliver(){
     var subcontractId = $("#subcontractId").val();
@@ -789,8 +835,10 @@ function querySubcontractCallback(){
     /* if (!subcontractId) {
         return false;
     } */
+    var subcontractType = $("#subcontractForm #subcontractType").val();
     if(flagC){
-    	$("#subcontractCallbackDiv").html(" <iframe id='subcontractCallbackFrame' src='module/sub/querySubcontractCallback.action?pmClosedLoopQuesnaire.id=" + 6 + "&subcontractCallback.subcontractId=" + subcontractId
+    	var defaultQuesnaireId = subcontractType == '20' ? 14 : 6;
+    	$("#subcontractCallbackDiv").html(" <iframe id='subcontractCallbackFrame' src='module/sub/querySubcontractCallback.action?pmClosedLoopQuesnaire.id=" + defaultQuesnaireId + "&subcontractCallback.subcontractId=" + subcontractId
                 + "' style=\"width:100%;height:100%;background-color:transparent;\" frameborder=\"0\" allowtransparency=\"true\"  "
                 + "> </iframe>"); 
         $("#subcontractCallbackFrame").contents().find("body").append("<div style='height:100%;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'><img src='./images/loading-circle.gif'/></div>");
@@ -865,6 +913,34 @@ function submitApply() {
 		$("#subcontractForm").attr("action", namespace + "/subcontract_apply.action");
 	    $("#subcontractForm").submit();
 	}
+}
+
+function startCallBackFlow() {
+	$("#callbakBtn").bootstrapBtn("loading");
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    $.ajax({
+        url:"module/s/subcontractAjax_startCallBackFlow.action",
+        type:"post",
+        dataType:"json",
+        data:{
+        	"subcontract.id":subcontractId,
+        	"subcontractComment.message": "发起回访",
+    	},
+        success:function(data){
+            data = JSON.parse(data.result);
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        },
+        error:function(XMLHttpRequest,textStatus,errorThrown) {
+            alert("发起回访流程失败！");
+        },
+        complete:function(data){
+            $("#callbakBtn").bootstrapBtn("reset");
+        }
+    })
 }
 
 function refreshSubcontractProject() {
@@ -962,6 +1038,7 @@ function updateProject(obj){
     window.open(namespace + "/ProjectModify.action?project.paramId="+obj + isAccSearch);
 }
 </script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/statics/plugins/PrintArea/jquery.PrintArea.js"></script>
 </head>
 <body>
     <s:form enctype="multipart/form-data" id="subcontractForm" action="%{namespace}/subcontract_create.action" method="post" >
@@ -1098,7 +1175,7 @@ function updateProject(obj){
 	                <td><s:textarea name="subcontract.reason" cssClass="form-control smEdit" placeholder='请输入转包原因'/></td>
 	                <td id="subcontractRemarkLabel"><s:text name="pm.subcontract.remark"/>:</td>
                     <td>
-                       <s:textarea id="subcontractRemark" name="subcontract.remark" cssClass="form-control smEdit emWrite" placeholder='备注（选填）'/></td>
+                       <s:textarea id="subcontractRemark" name="subcontract.remark" cssClass="form-control smEdit emWrite ignoreDisabled" placeholder='备注（选填）'/></td>
                     </td>
 				</tr>
 				<tr>
@@ -1129,6 +1206,12 @@ function updateProject(obj){
                         <s:if test='%{subcontract.id == null || ((subcontract.state <= 0) && user.isHasRole(11) &&  user.areapower.indexOf(subcontract.officeCode) >= 0)}'>
                             <button id="applyBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 提交</button>
                         </s:if>
+                        <%-- <s:elseif test='%{subcontract.type==20 && (subcontract.callbackState == null || subcontract.callbackState <= 0) && user.isHasRole(11) && user.areapower.indexOf(subcontract.officeCode) >= 0}'>
+                            <button id="callbackBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 发起回访</button>
+                        </s:elseif> --%>
+                        <s:elseif test='%{subcontract.type==20 && (subcontract.state > 0 && subcontract.state != 100) && (subcontract.callbackState == null || subcontract.callbackState <= 0) && user.isHasRole(13)}'>
+                            <button id="callbackBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 发起回访</button>
+                        </s:elseif>
                     </td>
                 </tr>
                 <tr style="background-color:#fff">
@@ -1137,7 +1220,7 @@ function updateProject(obj){
                     </td>
                     <td class="mergeTdBorder" style="border:none!important">
                         <span><s:property value="subcontract.stateName"/></span>
-                        <s:if test="subcontract.type==30">
+                        <s:if test="subcontract.type==30 || subcontract.type==20">
                             <span style="margin-left: 2rem;">回访状态:</span>
                             <span style="margin-left: 0.5rem;"><s:property value="subcontract.callbackStateName" default="无"/></span>
                         </s:if>

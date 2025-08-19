@@ -31,13 +31,14 @@ public class DownloadUtils {
     private final static Logger logger = LoggerFactory.getLogger(DownloadUtils.class);
 
     private static final int BUFFER_SIZE = 2 * 1024;
+    private static String[] IEBrowserSignals = {"MSIE", "Trident", "Edge"};
 
     /**
      * zip打包文件并提供下载
      * 
      * @param zipPath         压缩文件临时路径 路径最后不要有 /
      * @param zipName         压缩为文件名 **.zip
-     * @param createFilesPath 需要压缩的文件列表
+     * @param filesPath 需要压缩的文件列表
      * @param request
      * @param response
      * @return
@@ -65,7 +66,7 @@ public class DownloadUtils {
      * 
      * @param zipPath         压缩文件临时路径 路径最后不要有 /
      * @param zipName         压缩为文件名 **.zip
-     * @param createFilesPath 需要压缩的文件列表
+     * @param filesPath 需要压缩的文件列表
      * @param request
      * @param response
      * @return
@@ -400,8 +401,6 @@ public class DownloadUtils {
             }
         }
     }
-
-    private static String[] IEBrowserSignals = { "MSIE", "Trident", "Edge" };
 
     /**
      * 使用Trident和Edge关键字来判断是否是微软的浏览器（微软抛弃了IE，开始使用Edge了）

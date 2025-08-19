@@ -45,8 +45,9 @@ public interface ProjectDao {
 	 * 更新项目信息
 	 * 
 	 * @param project
+	 * @return 
 	 */
-	void updateProjectByProjectId(Project project);
+	Integer updateProjectByProjectId(Project project);
 
 	/**
 	 * 查询销售人员信息
@@ -894,6 +895,16 @@ public interface ProjectDao {
      * @return
      */
     List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+    
+    /**
+     * 查询软件版本
+     * 
+     * @param contractNo
+     * @param projectId
+     * @param params 
+     * @return
+     */
+    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
 
 	/**
 	 * 失效现有软件版本

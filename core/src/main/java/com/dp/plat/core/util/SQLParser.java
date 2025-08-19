@@ -69,7 +69,12 @@ public class SQLParser {
 	}
 	
 	public static Set<String> parseTables(String sql, DbType dbType) {
-		List<SchemaStatVisitor> visitors = parseStatementsVisitors(sql, dbType);
+		List<SchemaStatVisitor> visitors = Collections.emptyList();
+		try {
+			visitors = parseStatementsVisitors(sql, dbType);
+		} catch (Exception e) {
+			visitors = parseStatementsVisitors(new StringBuilder("select * from (").append(sql).append(") t ").toString(), dbType);
+		}
 		Set<String> tables = new HashSet<String>();
 		for (SchemaStatVisitor visitor : visitors) {
 			Set<Name> keySet = visitor.getTables().keySet();
@@ -440,6 +445,14 @@ public class SQLParser {
 		}
 		if (Boolean.FALSE.equals(quote) || StringUtils.isBlank((String) quote)) {
 			return value;
+		} else if (value instanceof Collection) {
+			Collection<String> list = new ArrayList<>();
+			for (Object inner : (Collection<?>) value) {
+				StringBuilder builder = new StringBuilder(String.valueOf(inner));
+				builder.insert(0, quote).append(quote);
+				list.add(builder.toString());
+			}
+			return list;
 		} else {
 			StringBuilder builder = new StringBuilder(String.valueOf(value));
 			return builder.insert(0, quote).append(quote).toString();

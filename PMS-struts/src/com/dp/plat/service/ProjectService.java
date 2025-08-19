@@ -747,6 +747,16 @@ public interface ProjectService extends BaseService{
      * @return
      */
     List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+    
+    /**
+     * 查询软件版本
+     * 
+     * @param contractNo
+     * @param projectId
+     * @param params 
+     * @return
+     */
+    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
 
 	/**
 	 * 更新软件版本
@@ -1039,5 +1049,12 @@ public interface ProjectService extends BaseService{
      * @return
      */
     List<Map<String, Object>> selectProblemTicketByProject(Project project);
+
+    /**
+     * 更新项目信息
+     * @param project
+     * @return
+     */
+    int updateProjectByProjectIdSelective(Project project);
 
 }

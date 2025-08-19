@@ -1925,3 +1925,52 @@ table.table-title-nowrap > thead  th {
 .note-dimension-picker > * {
 	font-size: inherit;
 }
+
+.localSearchTable_SearchDiv.table {
+    margin-bottom: 0;
+}
+
+.position-sticky {
+	position: -webkit-sticky; /* Safari兼容性 */
+	position: sticky;
+	top: 0; /* 距离顶部的距离 */
+	z-index: 10; /* 确保表头在其他内容之上 */
+	background: #fff;
+    box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.1);
+}
+
+.select2-dropdown .select2-search__field:focus, .select2-search--inline .select2-search__field:focus {
+    outline: none;
+    border: 1px solid #aaa;
+}
+
+.select2-container--default .select2-selection--multiple.select2-selection--multiple-inline {
+    /* min-height: calc(1.42857143em + 12px + 2px);
+    max-height: calc(1.42857143em + 12px + 2px); */
+    height: 34px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.select2-search--dropdown--selectall {
+	width: 100%;
+    padding: 5px;
+    background: rgb(240, 240, 240);
+    border: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.select2-selection__choice__ellipsis {
+    box-sizing: border-box;
+    display: inline-block;
+    margin-left: 5px;
+    margin-top: 8px;
+    padding: 0;
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    white-space: nowrap;
+}

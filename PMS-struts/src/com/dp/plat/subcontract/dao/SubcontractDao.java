@@ -151,6 +151,11 @@ public interface SubcontractDao {
      * @param subcontractDeliverVO
      */
 	void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO);
+	
+    /**
+     * @param subcontractDeliver
+     */
+    void updateSubcontractDeliverByIdSelective(SubcontractDeliver subcontractDeliver);
 
 	/**
 	 * @param subcontract
@@ -203,6 +208,12 @@ public interface SubcontractDao {
 	 * @return
 	 */
 	List<SubcontractPayment> selectSubcontractPaymentList(SubcontractPayment payment);
+	
+	/**
+	 * @param paymentId
+	 * @return
+	 */
+    SubcontractPayment selectSubcontractPaymentById(Integer paymentId);
 
 	/**
 	 * @param subcontractPayment
@@ -246,6 +257,13 @@ public interface SubcontractDao {
 	 * @return
 	 */
 	int queryCallBackQuesnaireVersion(Integer id);
+	
+	/**
+     * @param id
+     * @return
+     */
+    int queryCallBackQuesnaireVersion(SubcontractCallback callback);
+
 
 	/**
 	 * @param subcontractCallback

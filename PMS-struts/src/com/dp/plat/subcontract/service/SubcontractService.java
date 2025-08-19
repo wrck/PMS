@@ -4,14 +4,17 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.activiti.engine.task.Task;
 
+import com.dp.plat.data.activity.ActComment;
 import com.dp.plat.data.bean.PmClQuesnaireResultHeader;
 import com.dp.plat.data.bean.PmClQuesnaireResultLine;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.data.vo.Result;
 import com.dp.plat.service.BaseService;
 import com.dp.plat.subcontract.entity.SubcontractCallback;
 import com.dp.plat.subcontract.entity.SubcontractDeliver;
@@ -155,6 +158,11 @@ public interface SubcontractService extends BaseService {
 	 * @param deliver
 	 */
 	void insertSubcontractDeliver(SubcontractDeliver deliver);
+	
+    /**
+     * @param subcontractDeliver
+     */
+    void updateSubcontractDeliverByIdSelective(SubcontractDeliver subcontractDeliver);
 	
 	/**
      * 删除转包交付件
@@ -324,7 +332,14 @@ public interface SubcontractService extends BaseService {
 	 * @param subcontractId
 	 * @return
 	 */
-	String startCallBackFlow(Integer subcontractId);
+	SubcontractCallback startCallBackFlow(Integer subcontractId);
+	
+	/**
+	 * @param subcontractId
+	 * @param comment
+	 * @return
+	 */
+	SubcontractCallback startCallBackFlow(Integer subcontractId, ActComment comment);
 
 	/**
 	 * 回访人员回访，单独的回访流程
@@ -347,6 +362,13 @@ public interface SubcontractService extends BaseService {
 	 * @return
 	 */
 	List<SubcontractPayment> selectSubcontractPaymentList(SubcontractPayment payment);
+	
+	/**
+	 * 
+	 * @param paymentId
+	 * @return
+	 */
+    SubcontractPayment selectSubcontractPaymentById(Integer paymentId);
 
 	/**
 	 * @param subcontractPaymentList
@@ -532,6 +554,13 @@ public interface SubcontractService extends BaseService {
 	 * @param comment
 	 */
 	void terminateWorkFlow(Integer subcontractId, String comment);
+	
+	/**
+     * 终止流程
+     * @param subcontractId
+     * @param comment
+     */
+    void terminateWorkFlow(Integer subcontractId, WorkflowCommonParam comment);
 
 	/**
 	 * @return
@@ -574,5 +603,25 @@ public interface SubcontractService extends BaseService {
      * @return
      */
     String auditNormalApproveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract, List<SubcontractPrice> subcontractPriceList);
+
+    /**
+     * 付款附件查验
+     * @param payment
+     * @return 
+     */
+    Result verifySubcontractPaymentDeliver(Integer subcontractId, Integer paymentId);
+
+    /**
+     * 付款附件查验
+     * @param payment
+     * @return 
+     */
+    Result verifySubcontractPaymentDeliver(SubcontractPayment payment);
+
+    /**
+     * 更新付款申请对应的发票编号
+     * @param paymentIds
+     */
+    Result updateSubcontractPaymentInvoiceNumber(Set<Integer> paymentIds);
 
 }

@@ -14,6 +14,7 @@
 		<module>pms-springmvc</module>
 		<module>pms-ext-d365</module>
 		<module>pms-security</module>
+		<module>pms-ext-fp</module>
 	</modules>
 
 	<properties>
@@ -123,13 +124,17 @@
 		<jsoup.version>1.14.3</jsoup.version>
 		
 		<!-- 轻量级表达式引擎 -->
-		<aviator.version>5.3.3</aviator.version>
+		<aviator.version>5.4.3</aviator.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
 		
 		<!-- 请求工具 -->
         <hutool.version>5.8.34</hutool.version>
+        <httpclient.version>4.5.14</httpclient.version>
+        <okhttp5.version>5.1.0</okhttp5.version>
+        <!-- <okhttp.version>4.12.0</okhttp.version> -->
+        <okhttp.version>${okhttp5.version}</okhttp.version>
 	</properties>
 	<dependencyManagement>
 
@@ -592,6 +597,30 @@
 	            <artifactId>hutool-http</artifactId>
 	            <version>${hutool.version}</version>
 	        </dependency>
+	        
+	        <dependency>
+	            <groupId>org.apache.httpcomponents</groupId>
+	            <artifactId>httpclient</artifactId>
+	            <version>${httpclient.version}</version>
+	        </dependency>
+	        
+	        <dependency>
+	            <groupId>org.apache.httpcomponents</groupId>
+	            <artifactId>httpmime</artifactId>
+	            <version>${httpclient.version}</version>
+	        </dependency>
+	        
+	        <dependency>
+	            <groupId>com.squareup.okhttp3</groupId>
+	            <artifactId>okhttp</artifactId>
+	            <version>${okhttp.version}</version>
+	        </dependency>
+	        
+	        <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-jvm</artifactId>
+                <version>${okhttp5.version}</version>
+            </dependency>
 		
 			<dependency>
 				<groupId>junit</groupId>

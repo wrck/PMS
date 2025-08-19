@@ -32,6 +32,22 @@ import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.support.PropertiesUtil;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @Service("uploaderService")
 public class UploaderService implements IUploaderService {
@@ -127,6 +143,32 @@ public class UploaderService implements IUploaderService {
 		return list;
 	}
 	
+	@Override
+	@Transactional
+	public List<FileInfo> baseUploadFile(String typeCode, List<MultipartFile> multipartFiles, HttpServletRequest httpRequest) throws Exception {
+		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
+		// 执行文件上传
+		List<FileInfo> list = UploadUtils.uploadMultipartFile(fileType, multipartFiles, httpRequest);
+		// 文件上传信息插入数据库
+		for (FileInfo fileInfo : list) {
+			// TODO Transfer Upload Path
+			fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
+		}
+		return list;
+	}
+
+	@Override
+	@Transactional
+	public FileInfo baseUploadFile(String typeCode, MultipartFile multipartFile, HttpServletRequest httpRequest) throws Exception {
+		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
+		// 执行文件上传
+		FileInfo fileInfo = UploadUtils.uploadMultipartFile(fileType, multipartFile,httpRequest);
+		// 文件上传信息插入数据库
+		// TODO Transfer Upload Path
+		fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
+		return fileInfo;
+	}
+
 	@Override
 	public List<FileInfo> selectFileInfoByIdsAndType(List<String> ids, Integer typeId) {
 		return fileInfoMapper.selectFileInfoByIdsAndType(ids, typeId);

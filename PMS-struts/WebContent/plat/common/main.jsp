@@ -23,37 +23,37 @@
 <!-- <link rel="icon" href="images/icon/favicon.ico"/> -->
 
 <!--mian 新 Bootstrap 核心 CSS 文件 -->
-<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
 <!-- 引入对Bootstrap的自扩展文件 -->
-<link rel="stylesheet" href="css/bootstrap-ex.css" />
+<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap-ex.css" />
 <!-- 可选的Bootstrap主题文件（一般不用引入） -->
-<link rel="stylesheet" href="bootstrap-3.3.4-dist/css/bootstrap-theme.min.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/css/bootstrap-theme.min.css" />
 
-<link rel="stylesheet" type="text/css" href="css/common.css" />
-<link rel="stylesheet" type="text/css" href="css/displaytag.css" />
-<link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.4.custom.min.css" />
+<dp:link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/common.css" />
+<dp:link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/displaytag.css" />
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/jquery-ui-1.10.4.custom.min.css" />
 
 <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-ui-1.10.4.custom.min.js"></script>
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-<script type="text/javascript" src="bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
 <!-- 解决jQueryUI button 与 bootstrap button 的冲突 -->
 <script type="text/javascript"> $.fn.bootstrapBtn =$.fn.button.noConflict(); </script>
-<script type="text/javascript" src="js/jquery.ui.datepicker-zh-CN.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.ui.datepicker-zh-CN.min.js"></script>
 
 <!-- 引入额外扩展js文件 -->
-<script type="text/javascript" src="js/bootstrap-ex.js"></script>
-<script type="text/javascript" src="js/dp-ui.js"></script>
-<script type="text/javascript" src="js/util.js"></script>
-<script type="text/javascript" src="js/zxml.src.js"></script>
-<script type="text/javascript" src="js/zxmlqueue.js"></script>
-<script type="text/javascript" src="js/calendar.js"></script>
-<script type="text/javascript" src="js/common.js"></script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/js/bootstrap-ex.js"></dp:script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/js/dp-ui.js"></dp:script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/js/util.js"></dp:script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/zxml.src.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/zxmlqueue.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/calendar.js"></script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/js/common.js"></dp:script>
 
 <!-- 下拉多选 -->
-<link rel="stylesheet" type="text/css" href="multiselect/jquery.multiselect.css" />
-<script type="text/javascript" src="multiselect/jquery.multiselect.js"></script>
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/multiselect/jquery.multiselect.css" />
+<script type="text/javascript" src="${pageContext.request.contextPath}/multiselect/jquery.multiselect.js"></script>
 
 <decorator:head />
 </head>

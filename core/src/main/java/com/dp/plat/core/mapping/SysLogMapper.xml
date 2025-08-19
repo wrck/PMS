@@ -155,34 +155,29 @@
 	select <include refid="Base_Column_List" />
 	from t_sys_log
   	<where>
+  	  <trim prefixOverrides="and |or" suffixOverrides="and |or">
   		<if test="model !=null">
-        	<if test="model.description != null">
+        	<if test="model.description != null and model.description != ''">
         		description like CONCAT("%", #{model.description}, "%")
        		</if>
-       		<if test="model.createBy != null">
+       		<if test="model.createBy != null and model.createBy != ''">
         		and create_by like CONCAT("%", #{model.createBy}, "%")
        		</if>
-       		<if test="model.requestIp != null">
+       		<if test="model.requestIp != null and model.requestIp != ''">
         		and request_ip like CONCAT("%", #{model.requestIp}, "%")
        		</if>
-       		<if test="model.type != null">
+       		<if test="model.type != null and model.type != ''">
         		and type = #{model.type}
-       		</if>
-       		<if test="fuzzy != null">
-                and (
-                    description like CONCAT("%", #{fuzzy}, "%") or
-                    create_by like CONCAT("%", #{fuzzy}, "%") or
-                    request_ip like CONCAT("%", #{fuzzy}, "%")
-                )
             </if>
       	</if>
-      	<if test="fuzzySearch == true">
+      	<if test="fuzzySearch == true and fuzzy != ''">
       		and (
       			description like CONCAT("%", #{fuzzy}, "%") or
     			create_by like CONCAT("%", #{fuzzy}, "%") or
       			request_ip like CONCAT("%", #{fuzzy}, "%")
       		)
       	</if>
+   	  </trim>
   	</where>
   	<if test="orderBy != null">
    		order by ${orderBy}
@@ -199,34 +194,29 @@
   <select id="countBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
   	select count(*) from t_sys_log
   	<where>
+  		<trim prefixOverrides="and |or" suffixOverrides="and |or">
   		<if test="model !=null">
-        	<if test="model.description != null">
+        	<if test="model.description != null and model.description != ''">
         		description like CONCAT("%", #{model.description}, "%")
        		</if>
-       		<if test="model.createBy != null">
+       		<if test="model.createBy != null and model.createBy != ''">
         		and create_by like CONCAT("%", #{model.createBy}, "%")
        		</if>
-       		<if test="model.requestIp != null">
+       		<if test="model.requestIp != null and model.requestIp != ''">
         		and request_ip like CONCAT("%", #{model.requestIp}, "%")
        		</if>
-       		<if test="model.type != null">
+       		<if test="model.type != null and model.type != ''">
         		and type = #{model.type}
        		</if>
-       		<if test="fuzzy != null">
-                and (
-	                description like CONCAT("%", #{fuzzy}, "%") or
-	                create_by like CONCAT("%", #{fuzzy}, "%") or
-	                request_ip like CONCAT("%", #{fuzzy}, "%")
-	            )
             </if>
-      	</if>
-      	<if test="fuzzySearch == true">
+      	<if test="fuzzySearch == true and fuzzy != ''">
       		and (
       			description like CONCAT("%", #{fuzzy}, "%") or
     			create_by like CONCAT("%", #{fuzzy}, "%") or
       			request_ip like CONCAT("%", #{fuzzy}, "%")
       		)
       	</if>
+   	  </trim>
   	</where>
   </select>
 </mapper>

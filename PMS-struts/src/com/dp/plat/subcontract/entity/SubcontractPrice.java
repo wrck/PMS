@@ -23,7 +23,7 @@ public class SubcontractPrice {
     private String engineeFee;
 
     // SMS链接参数1
-    private Integer objId;
+    private String objId;
 
     // SMS链接参数2
     private String procType;
@@ -150,7 +150,7 @@ public class SubcontractPrice {
      *
      * @return objId - SMS链接参数1
      */
-    public Integer getObjId() {
+    public String getObjId() {
         return objId;
     }
 
@@ -159,7 +159,7 @@ public class SubcontractPrice {
      *
      * @param objId SMS链接参数1
      */
-    public void setObjId(Integer objId) {
+    public void setObjId(String objId) {
         this.objId = objId;
     }
 

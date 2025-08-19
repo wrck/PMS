@@ -192,12 +192,14 @@
 						//<a href='javascript:void(0);'  class='delete btn btn-default btn-xs'  ><i class='fa fa-times'></i> 查看</a>
 						var html = "<a class='btn btn-xs btn-success' href='${pageContext.request.contextPath}/sys/user/"+data+".html'><i class='icon-ok'></i>查看</a>"
 						//html += "<a class='btn btn-xs btn-warning'  href='${pageContext.request.contextPath}/sys/user/"+data+".html'><i class='icon-pencil'></i>编辑</a>"
-						html += "<a class='btn btn-xs btn-danger' href='${pageContext.request.contextPath}/sys/user/"+data+".html?method=DELETE'><i class='icon-remove'></i>删除</a>"
+						//html += "<a class='btn btn-xs btn-danger' href='${pageContext.request.contextPath}/sys/user/"+data+".html?method=DELETE'><i class='icon-remove'></i>删除</a>"
+						html += "<button class='btn btn-xs btn-danger' href='javascript:void(0)' data-btn-type='delete'><i class='icon-remove'></i>删除</button>"
 						return html;
 					}
 				} ]
 			});
-			$('button[data-btn-type]').click(function() {
+			//$('button[data-btn-type]').click(function() {
+			$(document).on("click", '#userTable_wrapper button[data-btn-type]', function() {
 				var action = $(this).attr('data-btn-type');
 				var rowId = commonTable.getSelectedRowId();
 				var basePath ="${pageContext.request.contextPath}";

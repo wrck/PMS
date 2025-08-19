@@ -60,7 +60,7 @@ public class Principal implements Serializable, java.security.Principal {
 	
 	private String homePage;
 	
-	private UserInfoVO userInfo;
+	private UserInfo userInfo;
 	
 	private List<UserInfoVO> userInfoList;
 	
@@ -96,7 +96,7 @@ public class Principal implements Serializable, java.security.Principal {
 	 * 设置用户详细信息
 	 * @param userInfo
 	 */
-	public void setUserInfo(UserInfoVO userInfo) {
+	public void setUserInfo(UserInfo userInfo) {
 		if (userInfo != null) {
 			this.userInfoId = userInfo.getId();
 			this.realName = userInfo.getRealName();
@@ -107,7 +107,10 @@ public class Principal implements Serializable, java.security.Principal {
 			this.mobile = userInfo.getMobile();
 			this.telphone = userInfo.getTelphone();
 			this.compId = userInfo.getCompID();
-			this.compName = userInfo.getCompName();
+			
+			if (userInfo instanceof UserInfoVO) {
+			    this.compName = ((UserInfoVO) userInfo).getCompName();
+			}
 			this.userInfo = userInfo;
 		}
 	}

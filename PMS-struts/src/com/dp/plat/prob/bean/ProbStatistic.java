@@ -29,10 +29,18 @@ public class ProbStatistic {
 	private Integer probId;
 	private String probTheme;
 	private Date executeTime;
+	
+	private SoftVersion version;
+	private String contractNo;
+	private String itemCode;
+	private String barCode;
+	private boolean filterItem;
 	private String startTime;
 	private String endTime;
 	private boolean autoAdjust;
 	private int tabIndex;
+	
+	
 
 	public Integer getProjectId() {
 		return projectId;
@@ -177,8 +185,48 @@ public class ProbStatistic {
 	public void setExecuteTime(Date executeTime) {
 		this.executeTime = executeTime;
 	}
+	
+    public SoftVersion getVersion() {
+        return version;
+    }
 
-	public String getStartTime() {
+    public void setVersion(SoftVersion version) {
+        this.version = version;
+    }
+    
+	public String getContractNo() {
+        return contractNo;
+    }
+
+    public void setContractNo(String contractNo) {
+        this.contractNo = contractNo;
+    }
+
+    public String getItemCode() {
+        return itemCode;
+    }
+
+    public void setItemCode(String itemCode) {
+        this.itemCode = itemCode;
+    }
+
+    public String getBarCode() {
+        return barCode;
+    }
+
+    public void setBarCode(String barCode) {
+        this.barCode = barCode;
+    }
+    
+    public boolean getFilterItem() {
+        return filterItem;
+    }
+
+    public void setFilterItem(boolean filterItem) {
+        this.filterItem = filterItem;
+    }
+
+    public String getStartTime() {
 		return startTime;
 	}
 
@@ -193,7 +241,7 @@ public class ProbStatistic {
 	public void setEndTime(String endTime) {
 		this.endTime = endTime;
 	}
-
+	
 	public boolean getAutoAdjust() {
 		return autoAdjust;
 	}

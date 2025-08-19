@@ -7,26 +7,37 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.json.annotations.JSON;
 import org.springframework.beans.BeanUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opensymphony.xwork2.Preparable;
 
 import com.dp.plat.action.BaseAction;
 import com.dp.plat.context.SystemContext;
@@ -44,7 +55,9 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.data.bean.WorkflowCommonParam;
+import com.dp.plat.data.vo.Result;
 import com.dp.plat.param.DisplayParam;
+import com.dp.plat.pms.extend.fp.util.InvoiceUtil;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.CallBackService;
 import com.dp.plat.service.DepartmentManageService;
@@ -64,6 +77,7 @@ import com.dp.plat.subcontract.entity.SubcontractProject;
 import com.dp.plat.subcontract.exception.SubcontractException;
 import com.dp.plat.subcontract.listener.SubcontractInspectionListener;
 import com.dp.plat.subcontract.service.SubcontractService;
+import com.dp.plat.subcontract.utils.SubcontractUtil;
 import com.dp.plat.subcontract.vo.SubcontractComment;
 import com.dp.plat.subcontract.vo.SubcontractDeliverVO;
 import com.dp.plat.subcontract.vo.SubcontractPageParam;
@@ -77,8 +91,8 @@ import com.dp.plat.util.PmClosedLoopMark;
 import com.dp.plat.util.PmClosedLoopMarkFactory;
 import com.dp.plat.util.UserUtil;
 import com.dp.plat.util.Util;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensymphony.xwork2.Preparable;
+
+import cn.hutool.core.map.MapUtil;
 
 /**
  * @author w02611
@@ -470,6 +484,26 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		}
 		return "redirect";
 	}
+	
+	/**
+     * 发起回访流程
+     * 
+     */
+    public String startCallBackFlow() {
+        boolean success = true;
+        commonMap = new HashMap<String, Object>();
+        try {
+            SubcontractCallback callBackFlow = subcontractService.startCallBackFlow(subcontract.getId(), subcontractComment);
+            commonMap.put("data", callBackFlow);
+        } catch (Exception e) {
+            success = false;
+            result = e.getMessage();
+        }
+        commonMap.put("success", success);
+        commonMap.put("message", getErrmsg());
+        result = com.alibaba.fastjson.JSON.toJSONString(commonMap);
+        return SUCCESS;
+    }
 
 	/**
 	 * 回访问卷
@@ -493,16 +527,15 @@ public class SubcontractAction extends BaseAction implements Preparable {
 					queryQuesnaireScore();
 				}
 				// 每次保存问卷草稿或提交问卷都会重新生成一份数据保存在数据库
-				subcontractService.insertSubcontractQuesnaire(subcontractCallback, pmClQuesnaireResultHeader,
-						pmClQuesnaireResultLineList);
+				subcontractService.insertSubcontractQuesnaire(subcontractCallback, pmClQuesnaireResultHeader, pmClQuesnaireResultLineList);
 				// return SUCCESS;
 			}
 
-			workflowCommonParam = subcontractService
-					.queryCurrentWorkFlowCommonParam(subcontractCallback.getSubcontractId(), TaskKey.CALLBACK);
+			workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontractCallback.getSubcontractId(), TaskKey.CALLBACK);
 			subcontractCallback = subcontractService.selectMaxSubcontractCallback(subcontractCallback);
 
 			if (workflowCommonParam != null && subcontractCallback != null) {
+			    subcontractCallback.setTaskKey(workflowCommonParam.getOutcome());
 				subcontractCallback.setTaskId(workflowCommonParam.getTaskId());
 			}
 			// 获取生效的问卷分类
@@ -751,9 +784,14 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public String querySubcontractPayment() {
 		try {
 		    taxList = basicDataService.queryBasicDataBeanAll(SubcontractConstant.SUBCONTRACT_TAX_KEY);
+            
+		    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
 			if (subcontract != null && subcontract.getId() != null) {
 //			    subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
 			    subcontract = subcontractService.selectSubcontractProjectVOById(subcontract.getId());
+			    
+			    projectList = subcontractService.queryProjectList(subcontract);
+			    
 			    // 多维度信息为空，则查询默认的多维度信息
 	            if (subcontract.getCustomInfoByKey("multiDimInfo") == null) {
 	                Map<String, String> multiDimInfo = subcontractService.selectDefaultMultiDimByDep(subcontract.getProfitDepCode(), true);
@@ -766,7 +804,25 @@ public class SubcontractAction extends BaseAction implements Preparable {
 				SubcontractPayment payment = new SubcontractPayment();
 				payment.setSubcontractId(subcontract.getId());
 				subcontractPaymentList = subcontractService.selectSubcontractPaymentList(payment);
+				
+				BigDecimal d100 = new BigDecimal("100.00");
+				DecimalFormat amountFormat = new DecimalFormat("##,##0.00");
+				BigDecimal sumApplyRatio = new BigDecimal("0.00");
+				BigDecimal sumPaidRatio = new BigDecimal("0.00");
+				BigDecimal sumInvoiceAmount = new BigDecimal("0.00");
+                AtomicInteger atomicSumAmount = new AtomicInteger(0);
+                AtomicInteger atomicSumApplyRatio = new AtomicInteger(0);
+                AtomicInteger atomicSumPaidRatio = new AtomicInteger(0);
+                AtomicBoolean allIdentify = new AtomicBoolean(true);
+                AtomicInteger identifyInvoiceCount = new AtomicInteger(0);
 				subcontractPaymentList = subcontractPaymentList.parallelStream().map(p-> {
+				    if (NumberUtils.isCreatable(p.getRatio())) {
+				        atomicSumApplyRatio.addAndGet(new BigDecimal(p.getRatio()).multiply(d100).intValue());
+				    }
+				    Boolean isPaid = MapUtil.getBool(p.getCustomInfo(), "paid", false);
+				    if (isPaid) {
+				        atomicSumPaidRatio.addAndGet(new BigDecimal(p.getRatio()).multiply(d100).intValue());
+				    }
 				    SubcontractPaymentVO paymentVO = new SubcontractPaymentVO();
 				    BeanUtils.copyProperties(p, paymentVO);
 				    SubcontractDeliver deliver = new SubcontractDeliver();
@@ -775,8 +831,49 @@ public class SubcontractAction extends BaseAction implements Preparable {
 				    deliver.setEffectiveTo(new Date());
 				    List<SubcontractDeliver> deliverList = subcontractService.selectSubcontractDeliverList(deliver);
 				    paymentVO.setDelivers(deliverList);
+				    paymentVO.setInvoiceDelivers(deliverList.parallelStream().filter(d-> {
+				        // 过滤识别后的发票附件
+				        boolean isInvoice = invoiceType.equalsIgnoreCase(d.getType());
+				        Map<String, Object> invoiceInfo = d.getCustomInfo();
+                        Boolean identify = MapUtil.getBool(invoiceInfo, "identify", false);
+//				        Boolean needVerify = MapUtil.getBool(invoiceInfo, "needVerify", false);
+//				        Boolean verified = MapUtil.getBool(invoiceInfo, "verified_status", false);
+				        if (isInvoice) {
+				            // 是否所有的发票都已经完成发票识别
+//				            allIdentify.compareAndSet(true, identify && (!needVerify || verified));
+				            allIdentify.compareAndSet(true, SubcontractUtil.checkDeliveryInvoiceStatus(invoiceInfo));
+				        }
+				        return isInvoice && identify;
+				    }).collect(Collectors.toMap(
+			            // 根据发票号去重
+			            d -> InvoiceUtil.getUniqueInvoiceNumber(d.getCustomInfo()),  // Key: 发票号
+			            d -> d,                    // Value: 对象本身
+			            (existing, replacement) -> replacement,  // 当重复时，保留最新的（去重）
+			            LinkedHashMap::new      
+			        ))
+			        .values() // 转为 Collection
+			        .parallelStream()
+			        .map(d -> {
+			            // 计算去重后的发票总金额
+			            BigDecimal invoiceAmount = MapUtil.get(d.getCustomInfo(), "total_amount", BigDecimal.class, BigDecimal.ZERO);
+                        identifyInvoiceCount.getAndIncrement();
+                        atomicSumAmount.addAndGet(invoiceAmount.multiply(d100).intValue());
+                        return d;
+			        })
+			        .collect(Collectors.toList()));
 				    return paymentVO;
 				}).collect(Collectors.toList());
+				sumApplyRatio = sumApplyRatio.add(BigDecimal.valueOf(atomicSumApplyRatio.get()).divide(d100));
+				sumPaidRatio = sumPaidRatio.add(BigDecimal.valueOf(atomicSumPaidRatio.get()).divide(d100));
+				sumInvoiceAmount = sumInvoiceAmount.add(BigDecimal.valueOf(atomicSumAmount.get()).divide(d100));
+                commonMap.put("sumApplyRatio", sumApplyRatio);
+                commonMap.put("sumPaidRatio", sumPaidRatio);
+                commonMap.put("AmountFormat", amountFormat);
+                commonMap.put("sumInvoiceAmountFormated", amountFormat.format(sumInvoiceAmount));
+                commonMap.put("sumInvoiceAmount", sumInvoiceAmount);
+                commonMap.put("invoiceAllIdentify", !allIdentify.get());
+                commonMap.put("identifyInvoiceCount", identifyInvoiceCount.get());
+                
 				// workflowCommonParam =
 				// subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
 				// SubcontractConstant.TASK_KEY_CLOSE);
@@ -809,6 +906,13 @@ public class SubcontractAction extends BaseAction implements Preparable {
                     workflowCommonParam = subcontractService.queryCurrentWorkFlowCommonParam(subcontract.getId(),
                             TaskKey.ACCEPTANCE_TASK);
                 }
+				
+				// 当前公司信息
+	            Company company = new Company();
+	            company.setStatus(1);
+	            company.setId(subcontract.getOrgId());
+	            company = departmentManageService.queryCompanyOne(company);
+	            commonMap.put("company", company);
 			} else {
 				subcontractPaymentList = new ArrayList<>();
 			}
@@ -897,6 +1001,110 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		}
 		return SUCCESS;
 	}
+	
+	/**
+     * 打印付款申请
+     * 
+     */
+    public String querySubcontractPaymentPrint() {
+        try {
+            commonMap = commonMap != null ? commonMap : new HashMap<String, Object>();
+            String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+            if (subcontract != null && subcontract.getId() != null) {
+//              subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
+                subcontract = subcontractService.selectSubcontractProjectVOById(subcontract.getId());
+                
+                projectList = subcontractService.queryProjectList(subcontract);
+                
+                selected = selected != null ? selected : new String[] {};
+                Set<String> paymentIds = new LinkedHashSet<>(Arrays.asList(selected));
+                
+                SubcontractPayment payment = new SubcontractPayment();
+                payment.setSubcontractId(subcontract.getId());
+                subcontractPaymentList = subcontractService.selectSubcontractPaymentList(payment);
+                BigDecimal sumApplyRatio = new BigDecimal("0.00");
+                AtomicInteger atomicInteger = new AtomicInteger(0);
+                BigDecimal d100 = new BigDecimal("100.00");
+                subcontractPaymentList = subcontractPaymentList.parallelStream().map(p-> {
+                    atomicInteger.addAndGet(new BigDecimal(p.getRatio()).multiply(d100).intValue());
+                    
+                    SubcontractPaymentVO paymentVO = new SubcontractPaymentVO();
+                    BeanUtils.copyProperties(p, paymentVO);
+                    SubcontractDeliver deliver = new SubcontractDeliver();
+                    deliver.setSubcontractId(p.getSubcontractId());
+                    deliver.setPaymentId(p.getId());
+                    deliver.setEffectiveTo(new Date());
+                    List<SubcontractDeliver> deliverList = subcontractService.selectSubcontractDeliverList(deliver);
+                    paymentVO.setDelivers(deliverList);
+                    paymentVO.setInvoiceDelivers(deliverList.parallelStream().filter(d-> {
+                        return invoiceType.equalsIgnoreCase(d.getType());
+                    }).collect(Collectors.toList()));
+                    return paymentVO;
+                }).filter(p-> {
+                    return !paymentIds.contains(p.getId().toString());
+                }).collect(Collectors.toList());
+                
+                sumApplyRatio = sumApplyRatio.add(BigDecimal.valueOf(atomicInteger.get()).divide(d100));
+                commonMap.put("sumApplyRatio", sumApplyRatio);
+            } else {
+                subcontractPaymentList = new ArrayList<>();
+            }
+            // 公司集合
+            Company company = new Company();
+            company.setStatus(1);
+            company.setId(subcontract.getOrgId());
+            company = departmentManageService.queryCompanyOne(company);
+            commonMap.put("company", company);
+        } catch (SubcontractException e) {
+            setErrmsg(e.getMessage());
+            return ERROR;
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getMessage(e, true));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+    
+    public String verifyPaymentDeliver() {
+        try {
+            if (subcontract != null && subcontract.getId() != null) {
+                selected = selected != null ? selected : new String[] {};
+                Set<String> paymentIds = new LinkedHashSet<>(Arrays.asList(selected));
+                
+                if (paymentIds.isEmpty()) {
+                    result = "请选择付款申请！";
+                    return SUCCESS;
+                }
+                
+                Integer subcontractId = subcontract.getId();
+                Integer successSum = 0;
+                Set<Integer> successPaymentIds = new LinkedHashSet<>(paymentIds.size());
+                for (String paymentIdStr : paymentIds) {
+                    Integer paymentId = Integer.valueOf(paymentIdStr);
+                    Result success = subcontractService.verifySubcontractPaymentDeliver(subcontractId, paymentId);
+                    
+                    if (success.isSuccess()) {
+                        Integer successCount = (Integer) success.getData();
+                        if (successCount != null && successCount > 0) {
+                            successSum += successCount;
+                            successPaymentIds.add(paymentId);
+                        }
+                    }
+                }
+                // 更新付款申请对应的发票编号
+                subcontractService.updateSubcontractPaymentInvoiceNumber(successPaymentIds);
+                result = String.format("%d个附件完成发票识别", successSum);
+            }
+        } catch (SubcontractException e) {
+            result = e.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getMessage(e, true));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
 
 	/**
 	 * 终止流程
@@ -906,7 +1114,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	public String terminateWorkFlow() {
 		try {
 			if (subcontract != null && subcontract.getId() != null) {
-				subcontractService.terminateWorkFlow(subcontract.getId(), workflowCommonParam.getComment());
+				subcontractService.terminateWorkFlow(subcontract.getId(), workflowCommonParam);
 				result = "1";
 			}
 		} catch (SubcontractException e) {
@@ -1112,8 +1320,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 	private void queryPmClosedLoopQuesnaire() {
 		pmClosedLoopQuesnaire = new PmClosedLoopQuesnaire();
 		pmClosedLoopQuesnaire.setId(pmClQuesnaireResultHeader.getQuesnaireTemplateHeaderId());
-		pmClosedLoopQuesnaire = pmClosedLoopQuesnaireService.selectQuesnaireHeaderList(pmClosedLoopQuesnaire, null)
-				.get(0);
+		pmClosedLoopQuesnaire = pmClosedLoopQuesnaireService.selectQuesnaireHeaderList(pmClosedLoopQuesnaire, null).get(0);
 	}
 
 	private int quesMark(PmClosedLoopQuesnaire quesObj, Map<Integer, PmClosedLoopQuesnaireOpt> optMap,
@@ -1239,14 +1446,12 @@ public class SubcontractAction extends BaseAction implements Preparable {
 					pmClQuesnaireResultHeader = new PmClQuesnaireResultHeader();
 				}
 				pmClQuesnaireResultHeader.setId(subcontractCallback.getQuesnaireId());
-				pmClQuesnaireResultHeader = pmClosedLoopService.queryPmClQuesResultHeaderList(pmClQuesnaireResultHeader)
-						.get(0);
+				pmClQuesnaireResultHeader = pmClosedLoopService.queryPmClQuesResultHeaderList(pmClQuesnaireResultHeader).get(0);
 			}
 		}
 
 		// 1.获取问卷模板头信息
-		pmClosedLoopQuesnaire = pmClosedLoopQuesnaireService.selectQuesnaireHeaderList(pmClosedLoopQuesnaire, null)
-				.get(0);
+		pmClosedLoopQuesnaire = pmClosedLoopQuesnaireService.selectQuesnaireHeaderList(pmClosedLoopQuesnaire, null).get(0);
 		// 获取评分规则说明
 		PmClosedLoopMarkFactory factory = new PmClosedLoopMarkFactory();
 		pmClosedLoopQuesnaire.setMarkList(factory.getMarks(pmClosedLoopQuesnaire.getMarkIndexs()));
@@ -1254,15 +1459,13 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		// 2.获取问卷模板行信息
 		PmClosedLoopQuesnaireLine pmClosedLoopQuesnaireLine = new PmClosedLoopQuesnaireLine();
 		pmClosedLoopQuesnaireLine.setQuesnaireTemplateHeaderId(pmClosedLoopQuesnaire.getId());
-		pmClosedLoopQuesnaireLineList = pmClosedLoopQuesnaireService
-				.queryPmClQuesnaireLineList(pmClosedLoopQuesnaireLine, "asc");
+		pmClosedLoopQuesnaireLineList = pmClosedLoopQuesnaireService.queryPmClQuesnaireLineList(pmClosedLoopQuesnaireLine, "asc");
 
 		// 3.获取问卷模板选项信息
 		PmClosedLoopQuesnaireOpt pmClosedLoopQuesnaireOpt = new PmClosedLoopQuesnaireOpt();
 		pmClosedLoopQuesnaireOpt.setQuesnaireTemplateHeaderId(pmClosedLoopQuesnaire.getId());
 		pmClosedLoopQuesnaireOpt.setQuestionId(0);
-		pmClosedLoopQuesnaireOptList = pmClosedLoopQuesnaireService
-				.queryPmClosedLoopQuesnaireOptList(pmClosedLoopQuesnaireOpt, "asc");
+		pmClosedLoopQuesnaireOptList = pmClosedLoopQuesnaireService.queryPmClosedLoopQuesnaireOptList(pmClosedLoopQuesnaireOpt, "asc");
 
 	}
 

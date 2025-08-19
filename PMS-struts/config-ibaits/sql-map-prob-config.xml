@@ -3,7 +3,7 @@
 PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
 "http://ibatis.apache.org/dtd/sql-map-2.dtd"> 
 <!-- 技术公告数据库操作--> 
-<sqlMap>
+<sqlMap namespace="prob">
 	<typeAlias alias="Prob" type="com.dp.plat.prob.bean.Prob"/>
 	<select id="query_next_val" resultClass="int">
 		<![CDATA[
@@ -14,14 +14,76 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<insert id="insert_into_prob" parameterClass="Prob">
 		<![CDATA[
 			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
-				duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom)
+                duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom
+                , customInfo
+            )
 			VALUES(#probNum#,#watch#,#theme#,#desc#,#solution#,#status#,#startdate#,#duedate#,
-				#attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now())
+                #attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now()
+                , #customInfo#
+            )
 		]]>
 		<selectKey resultClass="int" keyProperty="probId">
 			SELECT last_insert_id() as id ;   
 		</selectKey>
 	</insert>
+	
+	<sql id="sqlWhereIterateSoftVersionList">
+	   <!-- <isNotEmpty property="prob.softVersionParserList">
+           <isNotEmpty prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </isNotEmpty>
+           <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
+               #prob.softVersionParserList[].mark# between 
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+               markStart
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+                   , #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+               </iterate>
+               and 
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+               markEnd
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+                   , #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+               </iterate>
+           </iterate>
+       </isNotEmpty> -->
+       <isPropertyAvailable property="prob">
+	       <isNotEmpty property="prob.softVersionParserList">
+	           <isNotEmpty prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </isNotEmpty>
+	           <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
+	               '$prob.softVersionParserList[].mark$' between 
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+	               markStart
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+	                   , '$prob.softVersionParserList[].markAllPartsSet[].key$', '$prob.softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	               and 
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+	               markEnd
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+	                   , '$prob.softVersionParserList[].markAllPartsSet[].key$', '$prob.softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	           </iterate>
+	       </isNotEmpty>
+       </isPropertyAvailable>
+       <isNotPropertyAvailable property="prob">
+           <isNotEmpty property="softVersionParserList">
+	           <isNotEmpty prepend="AND" property="affectedType"> affectedType in (#affectedType#, 0) </isNotEmpty>
+	           <iterate prepend="AND" property="softVersionParserList" open="(" close=")" conjunction="OR" >
+	               '$softVersionParserList[].mark$' between 
+	               <iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+	               markStart
+	               <iterate property="softVersionParserList[].markAllPartsSet">
+	                   , '$softVersionParserList[].markAllPartsSet[].key$', '$softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	               and 
+	               <iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+	               markEnd
+	               <iterate property="softVersionParserList[].markAllPartsSet">
+	                   , '$softVersionParserList[].markAllPartsSet[].key$', '$softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	           </iterate>
+	       </isNotEmpty>
+       </isNotPropertyAvailable>
+	</sql>
 	
 	<!-- 列表查询 -->
 	<select id="query_prob_count" parameterClass="Prob" resultClass="int">
@@ -47,24 +109,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
 				FROM
 				    prob_softwares 
-				where datastate = 1    
-			<isNotEmpty property="softVersionParserList">
-		        <isNotEmpty prepend="AND" property="affectedType"> affectedType in (#affectedType#, 0) </isNotEmpty>
-		        <iterate prepend="AND" property="softVersionParserList" open="(" close=")" conjunction="OR" >
-		        	#softVersionParserList[].mark# between 
-		        	<iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
-		        	markStart
-		        	<iterate property="softVersionParserList[].markAllPartsSet">
-		        		, #softVersionParserList[].markAllPartsSet[].key#, #softVersionParserList[].markAllPartsSet[].value#)
-		        	</iterate>
-		        	and 
-		        	<iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
-		        	markEnd
-		        	<iterate property="softVersionParserList[].markAllPartsSet">
-		        		, #softVersionParserList[].markAllPartsSet[].key#, #softVersionParserList[].markAllPartsSet[].value#)
-	        		</iterate>
-		        </iterate>
-	        </isNotEmpty>
+				where datastate = 1  
+				<include refid="sqlWhereIterateSoftVersionList"/>  
 		        GROUP BY probId
 	        ) sf ON sf.probId = t1.id
 		</isEqual>
@@ -96,6 +142,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 <isNotEmpty prepend="or" property="trackingUser"> t1.trackingUser = #trackingUser# </isNotEmpty>
             </isNotEqual>
         </isNotEmpty>
+        
+        <isNotEmpty property="customInfo">
+            <isNotEmpty prepend="and" property="customInfo.trackingUserSearch"> t1.trackingUser = #customInfo.trackingUserSearch# </isNotEmpty>
+        </isNotEmpty>
 	</select>
 	<resultMap class="Prob" id="ProbMap">
 		<result property="probId" column="id"/>
@@ -110,15 +160,16 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="updateTime" column="updateTime"/>
 	</resultMap>
 	<select id="query_prob_list" parameterClass="java.util.Map" resultClass="Prob">
-		<![CDATA[
-			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
+			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status
+			, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
+			<!-- , t1.desc, t1.solution, t1.productType -->
+			, t1.customInfo
 			FROM prob_main t1 
 			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
 			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
 			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
 			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31'
 			AND t2.`effectiveTo` IS NULL
-		]]>
 		<isEqual prepend=" " property="prob.checkSoft" compareValue="true"> 
 			LEFT JOIN (
 		        SELECT 
@@ -136,23 +187,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		        FROM
 		            prob_softwares 
 		        where datastate = 1
-	        <isNotEmpty property="prob.softVersionParserList">
-		        <isNotEmpty prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </isNotEmpty>
-		        <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
-		        	#prob.softVersionParserList[].mark# between 
-		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
-		        	markStart
-		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">
-		        		, #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
-		        	</iterate>
-		        	and 
-		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
-		        	markEnd
-		        	<iterate property="prob.softVersionParserList[].markAllPartsSet">
-		        		, #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
-	        		</iterate>
-		        </iterate>
-	        </isNotEmpty>
+		        <include refid="sqlWhereIterateSoftVersionList"/>  
 		        GROUP BY probId
 	        ) sf ON sf.probId = t1.id
         </isEqual>
@@ -183,6 +218,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                 t1.visibleRange = #prob.visibleRange# 
                 <isNotEmpty prepend="or" property="prob.trackingUser"> t1.trackingUser = #prob.trackingUser# </isNotEmpty>
             </isNotEqual>
+        </isNotEmpty>
+        
+        <isNotEmpty property="prob.customInfo">
+            <isNotEmpty prepend="and" property="prob.customInfo.trackingUserSearch"> t1.trackingUser = #prob.customInfo.trackingUserSearch# </isNotEmpty>
         </isNotEmpty>
         
 		<isNotEmpty prepend=" order by " property="displayParam.sort">
@@ -224,6 +263,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="remark" column="remark"/>
 		<result property="visibleRange" column="visibleRange"/>
 		<result property="readStatus" column="readStatus"/>
+        <result property="customInfo" column="customInfo"/>
 	</resultMap>
 	<select id="query_prob_one" parameterClass="Prob" resultMap="ProbSingleMap">
 		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
@@ -268,6 +308,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="customInfo">
+            <!-- customInfo = #customInfo:JSON#  -->
+            customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </isNotEmpty>
 		<![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -287,6 +331,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="," property="updateBy"><![CDATA[ updateBy = #updateBy#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="remark"><![CDATA[ remark = #remark#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="visibleRange"><![CDATA[ visibleRange = #visibleRange#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="customInfo">
+            <!-- customInfo = #customInfo:JSON#  -->
+            customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </isNotEmpty>
         <![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -399,13 +447,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb, 
 				manualEntry, manualEntrySub, entryStart, entryEnd, 
 				markStart, markEnd, affectedType, groupId, splited, 
-				datastate,createBy,  createTime) VALUES
+				datastate,createBy,  createTime, customInfo) VALUES
 		]]>
 		<iterate conjunction="," property="list">
 			<![CDATA[ (#probId#, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#, 
 				#list[].manualEntry#, #list[].manualEntrySub#, #list[].entryStart#, #list[].entryEnd#, 
 				#list[].markStart#, #list[].markEnd#, #list[].affectedType#, #list[].groupId#, #list[].splited#, 
-				1, #createBy#, now() )]]>
+				1, #createBy#, now() , #list[].customInfo#)]]>
 		</iterate>
 	</insert>
 
@@ -421,6 +469,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <result property="affectedTypeName" column="affectedTypeName"/>
         <result property="groupId" column="groupId"/>
         <result property="splited" column="splited"/>
+        <result property="customInfo" column="customInfo"/>
     </resultMap>	
 	<select id="query_prob_soft_version" parameterClass="SoftVersion" resultMap="SoftVersionMapWithManual">
 		<![CDATA[
@@ -1254,6 +1303,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
                <![CDATA[ sv.`executeTime` <= CONCAT(#endTime#, ' 23:59:59')]]>
             </isNotEmpty>
             and (sv.`conpChange` = 1 or sv.`bootChange` = 1 or sv.`cpldChange` = 1 or sv.`pcbChange` = 1)
+            <isNotNull property="version">
+                <isNotEmpty prepend="AND" property="version.conp"> sv.conp = #version.conp# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.boot"> sv.boot = #version.boot# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.cpld"> sv.cpld = #version.cpld# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="version.pcb"> sv.pcb = #version.pcb# </isNotEmpty>
+            </isNotNull>
 		GROUP BY sv.`projectId`, sv.`barcode`
     </insert>
     
@@ -1438,7 +1493,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		    ph.column001 as officeCode, fd.departmentName AS officeName, fbd.`basicDataName` AS projectStateName,
 		    sm.`memberCode` AS serviceManagerCode, sm.`memberName` AS serviceManagerCodeforjson, 
 		    pm1.`memberCode` AS programManagerCodeA, pm1.`memberName` AS programManagerCodeforjson,
-		    pm2.`memberCode` AS programManagerCodeB, pm2.`memberName` AS programManagerCodeforjsonB 
+		    pm2.`memberCode` AS programManagerCodeB, pm2.`memberName` AS programManagerCodeforjsonB
+		    , CASE WHEN ph.salesType = '14' THEN ph.column001 ELSE NULL END AS checkProfitCenter
 		FROM
 		    pm_project_header ph 
 		    LEFT JOIN pm_project_group_relationship pgr 
@@ -1504,6 +1560,18 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             <isNotEmpty prepend="and" property="probStatistic.programManagerCode"> (programManagerCodeA = #probStatistic.programManagerCode# or programManagerCodeB = #probStatistic.programManagerCode#) </isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.serviceManagerCode"> serviceManagerCode = #probStatistic.serviceManagerCode#</isNotEmpty>
         </dynamic>
+        <isNotEmpty prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <isEqual prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </isEqual>
+            <isEqual prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </isNotEmpty>
     </select>
     
     <select id="query_prob_statistics_report_total" parameterClass="map" resultClass="com.dp.plat.data.bean.ReportLineData">
@@ -1523,6 +1591,98 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	            LEFT JOIN statistic_tempTable s 
 	                ON s.projectId = t.projectId 
 	        GROUP BY t.column001) t
+    </select>
+    
+    <sql id="sql_contract_shipment_soft_list">
+        SELECT DISTINCT IFNULL(ph.projectId, 0) AS projectId, ph.projectCode, ph.projectName
+            , ph.officeCode AS `officeCode`, ph.officeName AS `officeName`
+            , ph.projectStateName AS `projectStateName`
+            , ph.serviceManagerCode AS `serviceManagerCode`, ph.serviceManagerCodeforjson AS `serviceManagerCodeforjson`
+            , ph.programManagerCodeA AS `programManagerCodeA`, ph.programManagerCodeforjson AS `programManagerCodeforjson`
+            , ph.programManagerCodeB AS `programManagerCodeB`, ph.programManagerCodeforjsonB AS `programManagerCodeforjsonB`
+            
+            , vsip.contract_code AS contractNo, vsip.barcode AS barCode, vsip.itemCode AS itemCode, vsip.itemName AS itemName
+            , CASE WHEN t3.conp IS NULL THEN t.`conp` ELSE t3.conp END AS conp, t3.conpBak, IFNULL(t3.conpChange, 0) conpChange
+            , CASE WHEN t3.boot IS NULL THEN t.`boot` ELSE t3.boot END AS boot, t3.bootBak, IFNULL(t3.bootChange, 0) bootChange
+            , CASE WHEN t3.cpld IS NULL THEN t.`cpld` ELSE t3.cpld END AS cpld, t3.cpldBak, IFNULL(t3.cpldChange, 0) cpldChange
+            , CASE WHEN t3.pcb  IS NULL THEN t.`pcb`  ELSE t3.pcb  END AS pcb,  t3.pcbBak,  IFNULL(t3.pcbChange, 0) pcbChange
+            , vsip.barcode2 AS barCode2, vsip.itemCode2 AS itemCode2
+            , vsip.itemName2 AS itemName2
+        FROM view_shipment_info_4_pm vsip
+            LEFT JOIN view_shipment_ems_4_pm vsep
+            ON vsep.contract_code = vsip.contract_code
+                AND vsep.packId = vsip.packId
+            LEFT JOIN fb_soft_version t ON vsip.`barcode` = t.`serial_number`
+            LEFT JOIN fb_items fi ON fi.item = vsip.itemCode
+            LEFT JOIN pm_project_contract ppc ON ppc.contractno = vsep.contract_code
+            LEFT JOIN pm_project_group_relationship ppgr ON ppgr.projectGroupCode = ppc.projectGroupCode
+            LEFT JOIN projectTempTable ph ON ph.projectCode = ppgr.projectCode
+            LEFT JOIN pm_project_soft_version t3
+            ON vsip.`barcode` = t3.`barcode`
+                AND t3.`datastate` = 1
+                AND ph.`projectId` = t3.`projectId`
+        WHERE (ph.checkProfitCenter IS NULL or ph.officeCode = IFNULL(vsip.profitCenter, ph.officeCode))
+            <isNotEmpty prepend="and" property="probStatistic.projectCode"> (ph.projectCode like CONCAT("%", #probStatistic.projectCode#, "%") or ph.contractNo like CONCAT("%", #probStatistic.projectCode#, "%"))</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.projectName"> ph.projectName like CONCAT("%", #probStatistic.projectName#, "%")</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.officeCode"> ph.officeCode = #probStatistic.officeCode#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.programManagerCode"> (ph.programManagerCodeA = #probStatistic.programManagerCode# or ph.programManagerCodeB = #probStatistic.programManagerCode#) </isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.serviceManagerCode"> ph.serviceManagerCode = #probStatistic.serviceManagerCode#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.contractNo"> vsip.contract_code = #probStatistic.contractNo# </isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.barCode"> (vsip.barCode = #probStatistic.barCode# or vsip.barcode2 = #probStatistic.barCode#) </isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.itemCode"> (vsip.itemCode = #probStatistic.itemCode# or vsip.itemCode2 = #probStatistic.itemCode#) </isNotEmpty>
+            <isNotNull property="probStatistic.version">
+                <isNotEmpty prepend="AND" property="probStatistic.version.conp"> t3.conp = #probStatistic.version.conp# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="probStatistic.version.boot"> t3.boot = #probStatistic.version.boot# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="probStatistic.version.cpld"> t3.cpld = #probStatistic.version.cpld# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="probStatistic.version.pcb"> t3.pcb = #probStatistic.version.pcb# </isNotEmpty>
+            </isNotNull>
+            <isNotEmpty prepend="AND" property="itemFilters">
+                <iterate property="itemFilters" conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </isNotEmpty>
+        <dynamic prepend="Having">
+	        <isNotNull property="probStatistic.version">
+	            <isNotEmpty prepend="AND" property="probStatistic.version.conp"> conp = #probStatistic.version.conp# </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="probStatistic.version.boot"> boot = #probStatistic.version.boot# </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="probStatistic.version.cpld"> cpld = #probStatistic.version.cpld# </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="probStatistic.version.pcb"> pcb = #probStatistic.version.pcb# </isNotEmpty>
+	        </isNotNull>
+        </dynamic>
+    </sql>
+    
+    <select id="query_contract_shipment_soft_count" parameterClass="map" resultClass="int">
+        SELECT COUNT(*) FROM (
+            <include refid="sql_contract_shipment_soft_list"/>
+        ) t
+        <isNotEmpty prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <isEqual prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </isEqual>
+            <isEqual prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </isNotEmpty>
+    </select>
+    
+    <select id="query_contract_shipment_soft_list" parameterClass="map" resultClass="java.util.HashMap">
+        <include refid="sql_contract_shipment_soft_list"/>
+        <isNotEmpty prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <isEqual prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </isEqual>
+            <isEqual prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </isNotEmpty>
     </select>
     
     <insert id="insertProbReadLog" parameterClass="com.dp.plat.prob.bean.ProbReadLog" >
@@ -1839,7 +1999,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	  </sql>
 	  <sql id="sqlProductComponent_model_where">
 	    <dynamic prepend="where">
-	        <include refid="sql_model_List" />
+	        <include refid="sqlProductComponent_model_List" />
 	    </dynamic>
 	  </sql>
 	  <sql id="sqlProductComponent_pageable_limit">
@@ -1874,4 +2034,293 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	        <include refid="sqlProductComponent_List" />
         </dynamic>
 	  </select>
+	  
+	<resultMap id="ProbProductMap" class="com.dp.plat.prob.bean.ProbProduct">
+		<result column="id" jdbcType="INTEGER" property="id" />
+		<result column="probId" jdbcType="VARCHAR" property="probId" />
+		<result column="productCode" jdbcType="VARCHAR" property="productCode" />
+		<result column="productSubCode" jdbcType="VARCHAR" property="productSubCode" />
+		<result column="itemCode" jdbcType="VARCHAR" property="itemCode" />
+		<result column="itemModel" jdbcType="VARCHAR" property="itemModel" />
+		<result column="itemDesc" jdbcType="VARCHAR" property="itemDesc" />
+		<result column="status" jdbcType="INTEGER" property="status" />
+		<result column="customInfo" jdbcType="JSON" property="customInfo" />
+		<result column="createBy" jdbcType="VARCHAR" property="createBy" />
+		<result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+		<result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+	<sql id="ProbProduct_Column_List">
+		`id`, `probId`, `productCode`, `productSubCode`, `itemCode`, `itemModel`, `itemDesc`, 
+		`status`, `customInfo`, `createBy`, `createTime`, `updateBy`, `updateTime`
+	</sql>
+	<select id="selectProbProductById" parameterClass="java.lang.Integer" resultClass="com.dp.plat.prob.bean.ProbProduct">
+		select 
+		<include refid="ProbProduct_Column_List" />
+		from prob_product
+		where `id` = #id#
+	</select>
+	<delete id="deleteProbProductById" parameterClass="java.lang.Integer">
+		delete from prob_product
+		where `id` = #id#
+	</delete>
+	<insert id="insertProbProduct" parameterClass="com.dp.plat.prob.bean.ProbProduct">
+		<selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+		  SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into prob_product (`probId`, `productCode`, `productSubCode`, 
+		  `itemCode`, `itemModel`, `itemDesc`, 
+		  `status`, `customInfo`, `createBy`, 
+		  `createTime`, `updateBy`, `updateTime`
+		)
+		values (#probId#, #productCode#, #productSubCode#, 
+		  #itemCode#, #itemModel#, #itemDesc#, 
+		  #status#, #customInfo#, #createBy#, 
+		  #createTime#, #updateBy#, #updateTime#
+		)
+	</insert>
+	<insert id="insertProbProductSelective" parameterClass="com.dp.plat.prob.bean.ProbProduct">
+		<selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into prob_product
+		<dynamic prepend=" " open="(" close=")">
+			<isNotNull prepend="," property="probId"> `probId` </isNotNull>
+			<isNotNull prepend="," property="productCode"> `productCode` </isNotNull>
+			<isNotNull prepend="," property="productSubCode"> `productSubCode` </isNotNull>
+			<isNotNull prepend="," property="itemCode"> `itemCode` </isNotNull>
+			<isNotNull prepend="," property="itemModel"> `itemModel` </isNotNull>
+			<isNotNull prepend="," property="itemDesc"> `itemDesc` </isNotNull>
+			<isNotNull prepend="," property="status"> `status` </isNotNull>
+			<isNotNull prepend="," property="customInfo"> `customInfo` </isNotNull>
+			<isNotNull prepend="," property="createBy"> `createBy` </isNotNull>
+			<isNotNull prepend="," property="createTime"> `createTime` </isNotNull>
+			<isNotNull prepend="," property="updateBy"> `updateBy` </isNotNull>
+			<isNotNull prepend="," property="updateTime"> `updateTime` </isNotNull>
+		</dynamic>
+		<dynamic prepend="values" open="(" close=")">
+			<isNotNull prepend="," property="probId"> #probId# </isNotNull>
+			<isNotNull prepend="," property="productCode"> #productCode# </isNotNull>
+			<isNotNull prepend="," property="productSubCode"> #productSubCode# </isNotNull>
+			<isNotNull prepend="," property="itemCode"> #itemCode# </isNotNull>
+			<isNotNull prepend="," property="itemModel"> #itemModel# </isNotNull>
+			<isNotNull prepend="," property="itemDesc"> #itemDesc# </isNotNull>
+			<isNotNull prepend="," property="status"> #status# </isNotNull>
+			<isNotNull prepend="," property="customInfo"> #customInfo# </isNotNull>
+			<isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+			<isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+			<isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+			<isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+		</dynamic>
+	</insert>
+	<update id="updateProbProductByIdSelective" parameterClass="com.dp.plat.prob.bean.ProbProduct">
+		update prob_product
+		<dynamic prepend="SET">
+		    <isNotNull prepend="," property="probId"> `probId` = #probId# </isNotNull>
+		    <isNotNull prepend="," property="productCode"> `productCode` = #productCode# </isNotNull>
+		    <isNotNull prepend="," property="productSubCode"> `productSubCode` = #productSubCode# </isNotNull>
+		    <isNotNull prepend="," property="itemCode"> `itemCode` = #itemCode# </isNotNull>
+		    <isNotNull prepend="," property="itemModel"> `itemModel` = #itemModel# </isNotNull>
+		    <isNotNull prepend="," property="itemDesc"> `itemDesc` = #itemDesc# </isNotNull>
+		    <isNotNull prepend="," property="status"> `status` = #status# </isNotNull>
+		    <isNotNull prepend="," property="customInfo">
+	          <!-- customInfo = #customInfo:JSON#  -->
+	          customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	        </isNotNull>
+		    <isNotNull prepend="," property="createBy"> `createBy` = #createBy# </isNotNull>
+		    <isNotNull prepend="," property="createTime"> `createTime` = #createTime# </isNotNull>
+		    <isNotNull prepend="," property="updateBy"> `updateBy` = #updateBy# </isNotNull>
+		    <isNotNull prepend="," property="updateTime"> `updateTime` = #updateTime# </isNotNull>
+		</dynamic>
+		where `id` = #id#
+	</update>
+	<update id="updateProbProductById" parameterClass="com.dp.plat.prob.bean.ProbProduct">
+		update prob_product
+		set `probId` = #probId#,
+			`productCode` = #productCode#,
+			`productSubCode` = #productSubCode#,
+			`itemCode` = #itemCode#,
+			`itemModel` = #itemModel#,
+			`itemDesc` = #itemDesc#,
+			`status` = #status#,
+			<!-- `customInfo` = #customInfo:JSON# -->
+			customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# ),
+			`createBy` = #createBy#,
+			`createTime` = #createTime#,
+			`updateBy` = #updateBy#,
+			`updateTime` = #updateTime#
+		where `id` = #id#
+	</update>
+	<sql id="sqlProbProduct_List">
+		<isNotEmpty prepend="AND" property="id"> pp.`id` = #id# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="probId"> pp.`probId` = #probId# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="productCode"> pp.`productCode` = #productCode# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="productSubCode"> pp.`productSubCode` = #productSubCode# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemCode"> pp.`itemCode` = #itemCode# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemModel"> pp.`itemModel` = #itemModel# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemDesc"> pp.`itemDesc` = #itemDesc# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="status"> pp.`status` = #status# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="customInfo"> pp.`customInfo` = #customInfo# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="createBy"> pp.`createBy` = #createBy# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime"> pp.`createTime` = #createTime# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="updateBy"> pp.`updateBy` = #updateBy# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="updateTime"> pp.`updateTime` = #updateTime# </isNotEmpty>
+	</sql>
+	<sql id="sqlProbProduct_model_List">
+		<isNotEmpty prepend="AND" property="model">
+		    <isNotEmpty prepend="AND" property="model.id"> pp.`id` = #model.id# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.probId"> pp.`probId` = #model.probId# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.productCode"> pp.`productCode` = #model.productCode# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.productSubCode"> pp.`productSubCode` = #model.productSubCode# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.itemCode"> pp.`itemCode` = #model.itemCode# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.itemModel"> pp.`itemModel` = #model.itemModel# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.itemDesc"> pp.`itemDesc` = #model.itemDesc# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.status"> pp.`status` = #model.status# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.customInfo"> pp.`customInfo` = #model.customInfo# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.createBy"> pp.`createBy` = #model.createBy# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.createTime"> pp.`createTime` = #model.createTime# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.updateBy"> pp.`updateBy` = #model.updateBy# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="model.updateTime"> pp.`updateTime` = #model.updateTime# </isNotEmpty>
+		</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="fuzzySearch">
+	        (
+	            pp.`probId` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`productCode` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`productSubCode` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`itemCode` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`itemModel` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`itemDesc` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`createBy` like CONCAT("%", #fuzzy#, "%") or
+	            pp.`updateBy` like CONCAT("%", #fuzzy#, "%")
+	        )
+	    </isNotEmpty>
+    </sql>
+	<sql id="sqlProbProduct_where">
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</sql>
+	<sql id="sqlProbProduct_model_where">
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_model_List" />
+		</dynamic>
+	</sql>
+	<sql id="sqlProbProduct_pageable_limit">
+		<isNotEmpty property="displayParam">
+			<isNotEmpty property="displayParam.sort"> order by $displayParam.sort$
+			</isNotEmpty>
+			<!-- <isEmpty property="displayParam.sort"> order by id desc </isEmpty> -->
+			limit #displayParam.offset#, #displayParam.pagesize#
+		</isNotEmpty>
+	</sql>
+	<select id="selectProbProductList" parameterClass="com.dp.plat.prob.bean.ProbProduct" resultClass="com.dp.plat.prob.vo.ProbProductVO">
+		select * from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	<select id="countProbProductList" parameterClass="com.dp.plat.prob.bean.ProbProduct" resultClass="int">
+		select count(1) from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	<select id="selectProbProductListPageable" parameterClass="com.dp.plat.prob.vo.ProbProductPageParam" resultClass="com.dp.plat.prob.vo.ProbProductVO"> select * from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+		<include refid="sqlProbProduct_pageable_limit" />
+	</select>
+	<select id="countProbProductListPageable" parameterClass="com.dp.plat.prob.vo.ProbProductPageParam" resultClass="int">
+		select count(1) from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	
+	<select id="selectProbProductVOById" parameterClass="java.lang.Integer" resultClass="com.dp.plat.prob.vo.ProbProductVO">
+        select 
+        <include refid="ProbProduct_Column_List" />
+        from prob_product
+        where `id` = #id#
+    </select>
+    <delete id="deleteProbProductByProbId" parameterClass="java.lang.Integer">
+        delete from prob_product
+        where `probId` = #probId#
+    </delete>
+    
+	<update id="updateProbProductByProbIdSelective" parameterClass="com.dp.plat.prob.bean.ProbProduct">
+        update prob_product
+        <dynamic prepend="SET">
+            <isNotNull prepend="," property="probId"> `probId` = #probId# </isNotNull>
+            <isNotNull prepend="," property="productCode"> `productCode` = #productCode# </isNotNull>
+            <isNotNull prepend="," property="productSubCode"> `productSubCode` = #productSubCode# </isNotNull>
+            <isNotNull prepend="," property="itemCode"> `itemCode` = #itemCode# </isNotNull>
+            <isNotNull prepend="," property="itemModel"> `itemModel` = #itemModel# </isNotNull>
+            <isNotNull prepend="," property="itemDesc"> `itemDesc` = #itemDesc# </isNotNull>
+            <isNotNull prepend="," property="status"> `status` = #status# </isNotNull>
+            <isNotNull prepend="," property="customInfo">
+              <!-- customInfo = #customInfo:JSON#  -->
+              customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+            </isNotNull>
+            <isNotNull prepend="," property="createBy"> `createBy` = #createBy# </isNotNull>
+            <isNotNull prepend="," property="createTime"> `createTime` = #createTime# </isNotNull>
+            <isNotNull prepend="," property="updateBy"> `updateBy` = #updateBy# </isNotNull>
+            <isNotNull prepend="," property="updateTime"> `updateTime` = #updateTime# </isNotNull>
+        </dynamic>
+        WHERE probId = #probId#
+    </update>
+    
+    <insert id="bastchInsertProbProduct" parameterClass="map">
+        insert into prob_product (`probId`, `productCode`, `productSubCode`, 
+          `itemCode`, `itemModel`, `itemDesc`, 
+          `status`, `customInfo`, `createBy`, 
+          `createTime`, `updateBy`, `updateTime`
+        )
+        <iterate conjunction="," property="list" prepend="values">
+        (IFNULL(#list[].probId#, #probId#), #list[].productCode#, #list[].productSubCode#, 
+          #list[].itemCode#, #list[].itemModel#, #list[].itemDesc#, 
+          #list[].status#, #list[].customInfo#, #createBy#, 
+          #createTime#, #updateBy#, #updateTime#
+        )
+        </iterate>
+    </insert>
+    
+    <select id="selectProductItemListByParams" parameterClass="map" resultClass="com.dp.plat.prob.vo.ProbProductVO">
+        SELECT
+            item AS itemCode, itemName as itemModel, describe_ AS itemDesc 
+        FROM fb_items fi
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="itemCode"> fi.item LIKE CONCAT(#itemCode#, "%") </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemModel"> fi.item LIKE CONCAT(#itemModel#, "%") </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemGroups">
+                <iterate property="itemGroups" conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemGroups"/>
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters">
+                <iterate property="itemFilters" conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="selectProductItemListByExample" parameterClass="com.dp.plat.prob.util.ProductItemExample" resultClass="com.dp.plat.prob.vo.ProbProductVO">
+        SELECT
+            item AS itemCode, itemName as itemModel, describe_ AS itemDesc 
+        FROM fb_items fi
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="itemGroups">
+                <iterate property="itemGroups" conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemGroups"/>
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters">
+                <iterate property="itemFilters" conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </select>
 </sqlMap>

@@ -6,6 +6,8 @@ import java.util.Map;
 
 public class ShipmentInfo {
 	private int projectId;
+	private String projectCode;
+	private String projectName;
 	private String contractNo;
 	private String barCode;
 	private String itemCode;
@@ -142,7 +144,19 @@ public class ShipmentInfo {
 	public void setProjectId(int projectId) {
 		this.projectId = projectId;
 	}
-	public Date getExecuteTime() {
+	public String getProjectCode() {
+        return projectCode;
+    }
+    public void setProjectCode(String projectCode) {
+        this.projectCode = projectCode;
+    }
+    public String getProjectName() {
+        return projectName;
+    }
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+    public Date getExecuteTime() {
 		return executeTime;
 	}
 	public void setExecuteTime(Date executeTime) {

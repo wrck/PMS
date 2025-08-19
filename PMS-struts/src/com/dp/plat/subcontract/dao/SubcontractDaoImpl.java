@@ -15,6 +15,8 @@ import com.alibaba.fastjson.JSON;
 import com.dp.plat.dao.BaseDao;
 import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ShipmentInfo;
+import com.dp.plat.subcontract.constant.SubcontractConstant.SubcontractType;
+import com.dp.plat.subcontract.constant.SubcontractConstant.TaskKey;
 import com.dp.plat.subcontract.entity.SubcontractCallback;
 import com.dp.plat.subcontract.entity.SubcontractDeliver;
 import com.dp.plat.subcontract.entity.SubcontractFacilitator;
@@ -124,6 +126,7 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 	public List<Project> queryProjectList(SubcontractProject subcontract) {
 		HashMap<String, Object> params = new HashMap<String, Object>();
 		params.put("projectIds", subcontract.getProjectIds());
+		params.put("projectIdList", StringUtils.split(subcontract.getProjectIds(), ","));
 		return getSqlMapClientTemplate().queryForList("queryProjectList", params);
 	}
 
@@ -178,6 +181,10 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 	public List<SubcontractPayment> selectSubcontractPaymentList(SubcontractPayment payment) {
 		return getSqlMapClientTemplate().queryForList("selectSubcontractPaymentList", payment);
 	}
+	@Override
+    public SubcontractPayment selectSubcontractPaymentById(Integer paymentId) {
+        return (SubcontractPayment) getSqlMapClientTemplate().queryForObject("selectSubcontractPaymentById", paymentId);
+    }
 
 	@Override
 	public void insertSubcontractPayment(SubcontractPayment subcontractPayment) {
@@ -203,6 +210,11 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 	public void insertSubcontractDeliver(SubcontractDeliver deliver) {
 		getSqlMapClientTemplate().insert("insertSubcontractDeliver", deliver);
 	}
+	
+	@Override
+    public void updateSubcontractDeliverByIdSelective(SubcontractDeliver deliver) {
+        getSqlMapClientTemplate().update("updateSubcontractDeliverByIdSelective", deliver);
+    }
 	
 	@Override
 	public void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO) {
@@ -300,9 +312,17 @@ public class SubcontractDaoImpl extends BaseDao implements SubcontractDao {
 
 	@Override
 	public int queryCallBackQuesnaireVersion(Integer subcontractId) {
-		Object obj = getSqlMapClientTemplate().queryForObject("queryCallBackQuesnaireVersion", subcontractId);
-		return obj == null ? 1 : (Integer) obj + 1;
+		SubcontractCallback callback = new SubcontractCallback();
+		callback.setSubcontractId(subcontractId);
+		callback.setTaskKey(TaskKey.CALLBACK);
+        return queryCallBackQuesnaireVersion(callback);
 	}
+	
+	@Override
+    public int queryCallBackQuesnaireVersion(SubcontractCallback callback) {
+        Object obj = getSqlMapClientTemplate().queryForObject("queryCallBackQuesnaireVersion", callback);
+        return obj == null ? 1 : (Integer) obj + 1;
+    }
 
 	@Override
 	public List<Map<String, Object>> querySubcontractCommentList(Integer subcontractId) {

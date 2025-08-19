@@ -788,3 +788,151 @@ function initExternalLinks(externalGroups) {
     }
     $("#menu_container br").appendTo($("#menu_container"));
 }
+
+function throttleAdvanced(fn, delay = 100, options = { leading: true, trailing: true }) {
+    let lastCall = 0;
+    let timer = null;
+    let context, args;
+    let isTrailing = false;
+
+    const run = ()=>{
+        if (isTrailing) {
+            fn.apply(context, args);
+            lastCall = Date.now();
+            isTrailing = false;
+            timer = setTimeout(run, delay);
+        } else {
+            clearTimeout(timer);
+        }
+    };
+
+    return function(...fnArgs) {
+        context = this;
+        args = fnArgs;
+        const now = Date.now();
+
+        if (!lastCall && !options.leading) {
+            lastCall = now;
+        }
+
+        const remaining = delay - (now - lastCall);
+
+        isTrailing = options.trailing && remaining > 0;
+
+        if (remaining <= 0 || !timer) {
+            if (timer)
+                clearTimeout(timer);
+            fn.apply(context, args);
+            lastCall = now;
+            timer = setTimeout(run, delay);
+        } else if (isTrailing) {
+            clearTimeout(timer);
+            timer = setTimeout(run, remaining);
+        }
+    };
+}
+
+function initLocalSearchTable($localSearchTable, option) {
+	$localSearchTable = $localSearchTable ? $($localSearchTable) : $(".localSearchTable");
+	var $searchTable = $localSearchTable.is(".localSearchTable_SearchDiv") ? $localSearchTable : $("#" + $localSearchTable.data("searchDivId") || "");
+	var inited = $searchTable.is(".inited");
+	if ($searchTable.length > 0 && inited) {
+		return;
+	}
+	
+	option = option || {};
+	if ($searchTable.length == 0) {
+		var timestamp = new Date().getTime() + parseInt(Math.random() * 1000);
+		var searchTableId = `localSearchTable_SearchDiv_${timestamp}`;
+	    var $searchTable = $(`<table id='${searchTableId}' class='table localSearchTable_SearchDiv'></table>`);
+	    $localSearchTable.data("searchDivId", searchTableId);
+	    
+	    var colsplit = option.cols || 4;
+	    var $tr = null;
+	    $(".search_line:first .search_condition", $localSearchTable).each(function(index, item) {
+	        var title = $("th", $localSearchTable).eq($(this).index()).text();
+	        var name = $(this).data("name") || $(this).attr("data-name");
+	        if (index % colsplit == 0) {
+	            $tr = $("<tr></tr>");
+	            $searchTable.append($tr);
+	        }
+	        $tr.append("<td class='normalText'>" + title + "</td><td><input data-name='" + name + "' class='search_condition form-control'/></td>")
+	    });
+	    if ($tr.children().length % (colsplit * 2) == 0) {
+	        $tr = $("<tr></tr>");
+	        $searchTable.append($tr);
+	    }
+	    $tr.append(`<td valign="bottom"><input type="button" value="查询" id="searchBtn" class="btn btn-default localSearchTable_searchBtn"></td>`)
+	    $tr.append(`<td valign="bottom"><input type="button" value="重置" id="resetBtn" class="btn btn-default localSearchTable_resetBtn"></td>`)
+	    if ($tr.children().length % (colsplit * 2) == 0) {
+	        $tr = $("<tr></tr>");
+	        $searchTable.append($tr);
+	    }
+	    var count = $(".search_line", $localSearchTable).length;
+	    $tr.append('<td id="searchInfo" colspan=' + (colsplit * 2 - $tr.children().length) + ' align="right">当前显示<span>' + count + '</span>/<span>' + count + '</span></td>');
+	    
+	    // 添加表格
+	    var $wrapper = option.$wrapper;
+	    if (!$wrapper) {
+	    	$localSearchTable.before($searchTable);
+	    } else {
+	    	$wrapper.prepend($searchTable);
+	    }
+	}
+	
+	if (!inited) {
+		// 绑定查询条件
+		$(".localSearchTable_searchBtn", $searchTable).click(function() {
+			var $searchLine = $(".search_line", $localSearchTable).hide();
+			$(".search_condition", $searchTable).each(function() {
+				var value = $.trim($(this).val());
+				if (!value) {
+					return;
+				}
+				var name = $(this).data("name") || $(this).attr("data-name");
+				//$searchLine = $searchLine.find("td" + ".search_condition.search_" + name).filter(":contains(" + value + ")").parent();
+				var values = value.split(/\s+/);
+				var $searchTd = null;
+				$.each(values, function() {
+					var tempValue = this;
+					var $tempSearchTd = $searchLine.find("td" + ".search_condition.search_" + name).filter(":contains(" + tempValue + ")");
+					if ($searchTd == null) {
+						$searchTd = $tempSearchTd;
+					} else {
+						$.merge($searchTd, $tempSearchTd);
+					}
+				});
+				$searchLine = $searchTd.parent();
+			});
+			// 查找搜索结果行拥有相同className的行，相同发票号或者上传附件的行会合并显示，搜索时也需要合并显示
+			$searchLine.each(function() {
+				var $line = $(this);
+				var cssClass = $.trim($line.attr("class") || "").replaceAll(/\W+/g, " ").split(" ");
+				var className = "." + cssClass.join(".");
+				var $siblings = $line.siblings(className);
+				$searchLine = $searchLine.add($siblings);
+			});
+			$searchLine.show();
+			
+			$("#searchInfo span:first", $searchTable).text($searchLine.length);
+			$("#searchInfo span:last", $searchTable).text($(".search_line", $localSearchTable).length);
+		});
+		$(".localSearchTable_resetBtn", $searchTable).click(function() {
+			$(".search_condition", $searchTable).val("");
+			$(".localSearchTable_searchBtn", $searchTable).click();
+		});
+		$searchTable.addClass("inited");
+	}
+}
+
+function flattenObject(obj, parentKey = '') {
+	return Object.keys(obj).reduce((acc, key) => {
+		const newKey = parentKey ? `${parentKey}.${key}` : key;
+		if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+			Object.assign(acc, flattenObject(obj[key], newKey));
+		} else {
+			acc[newKey] = obj[key];
+		}
+		return acc;
+	}, {});
+}
