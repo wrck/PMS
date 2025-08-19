@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.dp.plat.pms.extend.d365.dao.AbstractBaseMapper;
-import com.dp.plat.pms.extend.d365.service.IAbstractBaseService;
+import com.dp.plat.extend.mybatis.dao.AbstractBaseMapper;
+import com.dp.plat.extend.mybatis.service.IAbstractBaseService;
 
 /**
  * @author w02611
