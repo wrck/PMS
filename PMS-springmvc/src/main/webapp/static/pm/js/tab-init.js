@@ -59,9 +59,9 @@ function initTabData(config, refresh, navTab, callback) {
 	var params = config.params || {};
 	var timestamp = config.timestamp || "";
 	var navTabId = cssId + "Tab" + timestamp;
-	var $container = config.container || $(navTabId).parents(".tab-content:first");
+	var $container = config.container || $("#" + navTabId).parents(".tab-content:first");
 	var $navTab = $("#" + navTabId, $container);
-	var vm = $navTab.data("vm") || $container.data("vm") || this;
+	var vm = $navTab.data("vm") || $navTab.prop("__vue__") || $container.data("vm")  || $container.prop("__vue__") || this;
 	var searchDiv = cssId + "SearchDiv" + timestamp;
 	var tableId = cssId + "Table" + timestamp;
 	var calloutId = cssId + "Callout" + timestamp;
@@ -107,7 +107,7 @@ function initTabData(config, refresh, navTab, callback) {
     			if (tableConfig.exportData != null) {
     				tableConfig.exportData.url = url.replace(".json", ".xlsx");
     			}
-    			if (!refresh) {
+    			if (!refresh || !localTable) {
     				$(".box-body", $navTab).append("<div class='callout border-1 " +calloutColor[Math.round(Math.random()*colorSize)] +"' id='" + calloutId + "'></div>");
     				$(".box-body #" + calloutId, $navTab).append("<table class='table table-bordered table-striped-vertical table-hover' id='" + tableId + "'></table>");
     			}

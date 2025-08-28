@@ -4,13 +4,14 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
 <%@taglib  prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title><spring:message code="system.title" /></title>
 <cssTag>
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 	
 	<style>
 	   .table#synclogbase>tbody th {
@@ -63,7 +64,7 @@
 	</section>
 </body>
 <jsTag>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    var form = null;

@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <cssTag>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
@@ -69,8 +70,8 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/dist/summernote.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/dist/lang/summernote-zh-CN.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/summernote-util.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
 		//tableId,queryId,conditionContainer
 		var form = null;

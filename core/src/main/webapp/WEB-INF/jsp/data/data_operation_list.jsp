@@ -4,6 +4,7 @@
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -70,9 +71,9 @@
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/select2/select2.min.js"></script>
 
-<script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></script>
-<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 <shiro:lacksRole name="admin">
 <script>
 	var config = {

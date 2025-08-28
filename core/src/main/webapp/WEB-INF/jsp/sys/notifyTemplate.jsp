@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,7 +11,7 @@
 	<!-- DataTables -->
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/media/css/dataTables.bootstrap.min.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 	<style>
 		#searchDiv{
 			display: none;
@@ -56,10 +57,10 @@
 	<!-- DataTables -->
 	<script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></script>
-	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></dp:script>
+	<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
 	    var notifyTemplateTable;
 	    var winId = "notifyTemplateWin";

@@ -1,13 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@taglib  prefix="myTag" uri="/myTag" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
-<myTag:JSDebugger type="redirect" content="${pageContext.request.contextPath}/404.html"></myTag:JSDebugger>
+<dp:JSDebugger type="redirect" content="${pageContext.request.contextPath}/404.html"></dp:JSDebugger>
 <title><sitemesh:write property='title'></sitemesh:write></title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<link rel="icon" href="${pageContext.request.contextPath}/static/common/images/favicon.ico" type="image/x-icon">
+<dp:link rel="icon" href="${pageContext.request.contextPath}/static/common/images/favicon.ico" type="image/x-icon" />
 <!-- Tell the browser to be responsive to screen width -->
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 <!-- Bootstrap 3.3.6 -->
@@ -25,7 +25,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/static/dist/css/AdminLTE.min.css">
 <!-- AdminLTE Skins. Choose a skin from the css/skins folder instead of downloading all of them to reduce the load. -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/static/dist/css/skins/_all-skins.min.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
 <!--[if lt IE 9]>
@@ -310,7 +310,7 @@
 		</aside>
 		<!-- /.control-sidebar -->
 	</div>
-	<myTag:csrftoken></myTag:csrftoken>
+	<dp:csrftoken></dp:csrftoken>
 	<!-- jQuery 2.2.3 -->
 	<script
 		src="${pageContext.request.contextPath}/static/plugins/jQuery/jquery-2.2.3.min.js"></script>
@@ -333,13 +333,13 @@
         var ctx = basePath;
     </script>
     <!-- 菜单展开、导航栏以及滚动条 -->
-    <script src="${pageContext.request.contextPath}/static/common/js/main-init.js"></script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/main-init.js"></dp:script>
     
     <!-- pace -->
     <script src="${pageContext.request.contextPath}/static/plugins/pace/pace.min.js">
         $(document).ajaxStart(function() { Pace.restart(); });
     </script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base.js"></script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script>
 	<!-- autosize textarea 高度自适应 -->
 	<%-- <script src="${pageContext.request.contextPath}/static/plugins/autosize/autosize.min.js"></script> --%>
 	

@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -86,8 +87,8 @@
     <script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/dist/summernote.min.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/dist/lang/summernote-zh-CN.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/summernote-util.js"></script>
-    <script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-    <script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
     <script>
         var form = null;
         var id = "${id!=0 && id!=null?id:0}";

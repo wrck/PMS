@@ -9,7 +9,7 @@ var TabPane = {
 				roles: []
 			};
 		},
-		template: `<div class="tab-pane fade" :id="tabId" 
+		template: `<div class="tab-pane fade" :class="getTabClass(navTab)" :id="tabId" 
 			:data-url="navTab.url" :data-type="navTab.type" :data-title="navTab.title"
 			:data-draw-type="navTab.drawType" :data-timestamp="timestamp" :data-table-config="JSON.stringify(navTab.tableConfig)"
 			>
@@ -129,6 +129,13 @@ var TabPane = {
 			}*/
 		},
 		methods: {
+			getTabClass: function(navTab) {
+	 			if (navTab.cssClass && navTab.tabClass == undefined) {
+		 			var cssClass = this.getDataValue(navTab.cssClass);
+		 			navTab.tabClass =  cssClass['tabClass'];
+	 			}
+	 			return navTab.tabClass;
+	 		},
 			checkPermit: function(btn) {
 	 			var permissionType = this.permissionType || "";
 	 			var permissions = this.permissions || [];
@@ -269,12 +276,16 @@ var TabPane = {
 	 			$tabPane.data("vm", this);
 	 			if($(tabId, $container).hasClass("loaded") == '' && !$(tabId + " .overlay:first", $container).hasClass("loading")){
 	 	            $(tabId + " .overlay", $container).addClass("loading");
-	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+	 	            var tableConfig = (navTab || {}).tableConfig;
+	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || {};
+	 	            config = $.extend(config, {tableConfig});
 	 	            config.container = $container;
 	 				initTabData.call(this, config, false, navTab);
 	 			} else {
 	 				$(tabId + " .overlay", $container).addClass("loading");
-	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || (navTab || {}).tableConfig;
+	 				var tableConfig = (navTab || {}).tableConfig;
+	 	            var config = $(tabId, $container).data("config") || $(tabId, $container).data() || {};
+	 	            config = $.extend(config, {tableConfig});
 	 	            config.container = $container;
 	 				initTabData.call(this, config, true, navTab);
 	 			}

@@ -4,6 +4,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
 <%@taglib  prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,7 +19,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datepicker/datepicker3.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 </c:if>
 	<style>
 		.display-flex {
@@ -114,23 +115,23 @@
 <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
-    <script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></dp:script>
     <script src="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/js/bootstrap-validator.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.full.js"></script>
-	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></script>
+	<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/router.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/tab-init.js"></dp:script>
 	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
 </c:if>
-	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
-	<script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/vue-form-input-component.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/vue-form-component.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/pm/js/vue-tab-component.js"></dp:script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    $(function () {

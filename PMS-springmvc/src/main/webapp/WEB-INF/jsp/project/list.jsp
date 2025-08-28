@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -110,14 +111,14 @@
     <!-- DataTables -->
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/jquery.dataTables.min.js"></script>
     <script src="${pageContext.request.contextPath}/static/plugins/datatables/media/js/dataTables.bootstrap.min.js"></script>
-    <script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/dataTablesExt.js"></dp:script>
 
 	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.min.js"></script>
 	
-    <script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-    <script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
-   	<script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></script>
-   	<script src="${pageContext.request.contextPath}/static/pm/js/router.js"></script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+    <dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
+   	<dp:script src="${pageContext.request.contextPath}/static/pm/js/initComm.js"></dp:script>
+   	<dp:script src="${pageContext.request.contextPath}/static/pm/js/router.js"></dp:script>
   	<script src="${pageContext.request.contextPath}/static/vue/vue.min.js"></script>
     <script>
         //tableId,queryId,conditionContainer

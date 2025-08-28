@@ -34,6 +34,7 @@
         // <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
         var modal = document.createElement('DIV');
         modal.id = config.winId || 'modal-tips-div';
+        modal.winId = modal.id;
         modal.className = 'modal fade';
         modal.tabindex = -1;
         modal.role = 'dialog';
@@ -50,6 +51,11 @@
        	 $(dialog).css('width',config.width+"px");
         } else {
        	 $(dialog).css('width',config.width); 
+        }
+        if(!isNaN(config.height)) {
+       	 $(dialog).css('height',config.height+"px");
+        } else {
+       	 $(dialog).css('height',config.height); 
         }
 
         dialog.role = 'document';
@@ -149,19 +155,22 @@
     }
 
     function _create_modal(config, ok, cancel) {
-        _remove_modal();
+    	var _modal = this;
         
-        var modal = _modal_structure(config, ok, cancel);
+        var modal = _modal_structure.call(this, config, ok, cancel);
 
+        var winId = modal.winId;
+        _remove_modal.call(this, winId);
         document.body.appendChild(modal);
         
         // 增加静态背景配置项设置，确保部分关闭按钮回调函数的执行
-        $('#modal-tips-div').modal({backdrop: config.backdrop || true});
+        $('#' + winId).modal({backdrop: config.backdrop || true});
         
-        $('#modal-tips-div').modal('show');
-
-        $('#modal-tips-div').on("hidden.bs.modal", function() {
-    	   _remove_modal();
+        //$('#' + winId).modal('show');
+        this.showWin(winId);
+        
+        $('#' + winId).on("hidden.bs.modal", function() {
+    	   _remove_modal.call(_modal, winId);
 	   	   $(this).removeData("bs.modal");
 	   	});
 
@@ -169,8 +178,9 @@
         return modal;
     }
 
-    function _remove_modal() {
-    	$("#modal-tips-div").remove();
+    function _remove_modal(winId) {
+    	winId = winId || this.winId || "modal-tips-div";
+    	$("#" + winId).remove();
         $("div.modal-backdrop").remove();   
     }
     
@@ -193,7 +203,7 @@
         var cfg = modal_params.apply(this, args);
         cfg.title = cfg.title||_TITLE[type];
 
-        return _create_modal(cfg, false, true);
+        return _create_modal.call(this, cfg, false, true);
     }
 
     /**
@@ -229,11 +239,11 @@
         cfg.title = cfg.title||'确认提示';
         cfg.cancel_label = cfg.cancel_label==_CONFIG.cancel_label?'取消':cfg.cancel_label;
 
-        return _create_modal(cfg, true, true);
+        return _create_modal.call(this, cfg, true, true);
     };
 
     modals.popup = function(cfg) {
-        return _create_modal(cfg||{}, false, false);
+        return _create_modal.call(this, cfg||{}, false, false);
     };
     
     
@@ -391,7 +401,7 @@
     	$("#"+winId).one('shown.bs.modal', function(events) {
 			modals.adjustWin.call(this, events);
 			if (showCallback) {
-				showCallback.call();
+				showCallback.call(this);
 			}
     	});
     	
@@ -422,9 +432,14 @@
     		_this = $("#" + winId); 
     	}
     	
+    	var $iframe = $(_this).find("iframe");
+    	var isiframe = $iframe.length > 0;
+    	if (isiframe) {
+    		$(this).find(".modal-content,.modal-body").css("height", "100%");
+    	}
     	if($.fn.slimScroll){
     		var contentClass = ".modal-body";
-    		$(this).find(contentClass).css("height", "auto").slimScroll({destroy:true});
+    		$(this).find(contentClass).css("height", isiframe ? "100%" : "auto").slimScroll({destroy:true});
 			var windowHeight = $(window).height();
 			var contentHeight = $(_this).find(contentClass).height();
 			var contentMarginTop = $(_this).find(".modal-dialog").css("marginTop").replace("px",'');

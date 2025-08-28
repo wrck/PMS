@@ -261,8 +261,10 @@ CommonLocalTable.prototype.initLocalTable = function(tableId, data) {
 	
 	this.table = $('#' + tableId).dataTable($.extend(true,{},CONSTANT.DATA_TABLES.LOCAL_DEFAULT_OPTION,{
 		data : that.data,
-		fnInitComplete : $.proxy(that.fnInitComplete,that)
+		fnInitComplete : $.proxy(that.fnInitComplete,that),
+		fnDrawCallback : $.proxy(that.fnDrawCallback,that),
 	}, that.config)).api();
+	
 //	$("#"+this.tableId +"_filter input[type='search']").addClass("fuzzySearch").attr("placeholder","模糊查找").addClass("form-control").removeClass("input-sm");
 //	$("#" + that.tableId + '_wrapper .dataTables_filter input[type="search"]').bind('input', function(e) {
 //        that.table.search(this.value).draw(false);
@@ -385,6 +387,8 @@ CommonLocalTable.prototype.initLocalTable = function(tableId, data) {
     }
 	
 	$("#" + tableId).data("dataTable", this);
+	
+	this.initComponent(this.config);
 }
 
 /**
@@ -667,6 +671,8 @@ CommonTable.prototype.initConfig = function(tableId, url, searchDiv) {
 ////        userManage.currentItem = item;
 ////        userManage.showItemDetail(item);
 //    });
+    
+    this.initComponent(this.config);
 }
 
 /**
@@ -677,6 +683,7 @@ CommonTable.prototype.fnInitComplete = function (oSettings, json) {
 	var _this=this;
 	var $tableContainer;
 	try{
+		 _this.table = _this.table || oSettings.oInstance.api();
 		$tableContainer = this.table.table().container();
 	} catch (e) {
 		$tableContainer = $("#" + this.tableId + "_wrapper")[0];
@@ -986,9 +993,10 @@ var initColumnSelect = function(ele, columns,localColums){
 CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
 	// 移动查询框的位置 与记录/页同行
 	var _this=this;
+	var tableApi = _this.table = _this.table || oSettings.oInstance.api();
 	var $tableContainer;
 	try{
-		$tableContainer = this.table.table().container();
+		$tableContainer = tableApi.table().container();
 	} catch (e) {
 		$tableContainer = $("#" + this.tableId + "_wrapper")[0];
 	}
@@ -1058,7 +1066,7 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
 			$("#" + _this.tableId + "_wrapper .dataTables_scrollBody").css("height","");
 			$("#" + _this.tableId + "_wrapper .slimScrollDiv").css("height","");
 		}
-    	setTimeout(function(){_this.table.columns.adjust();},200); 
+    	setTimeout(function(){tableApi.columns.adjust();},200); 
     }   
     
     if(oSettings.oInit.bFilter==true){
@@ -1171,6 +1179,46 @@ CommonLocalTable.prototype.fnInitComplete = function (oSettings, json) {
     // datatable初始化之后的回调函数
     if (_this.config.initCallback) {
     	_this.config.initCallback.call(_this);
+    }
+}
+
+/**
+ * 重绘的回调函数
+ * 
+ * @param sSource
+ * @param aoData
+ * @param fnCallback
+ * @param oSettings
+ */
+CommonLocalTable.prototype.fnDrawCallback = function(oSettings) {
+	// 复选框iCheck样式
+	var _this = this;
+	var tableApi = _this.table = _this.table || oSettings.oInstance.api();
+	var $tableContainer;
+	try{
+		$tableContainer = tableApi.table().container();
+	} catch (e) {
+		$tableContainer = $("#" + this.tableId + "_wrapper")[0];
+	}
+    if (_this.initCheckbox) {
+    	$("."+ _this.checkbox.actionClass, $tableContainer).removeClass("checked");
+    	if ($.fn.iCheck && _this.checkboxFlag == "iCheck") {
+			$('table input[type="checkbox"]', $tableContainer).iCheck({
+	            checkboxClass: _this.checkbox.styleClass,
+	        });
+		}
+    }
+    setTimeout(tableApi.columns.adjust, 100);
+    // 自定义drawCallback
+    if (oSettings.oInit.customDrawCallback) {
+    	if (typeof oSettings.oInit.customDrawCallback != 'function') {
+    		try {
+        		var func = eval("(" + oSettings.oInit.customDrawCallback + ")");
+        		oSettings.oInit.customDrawCallback = func;
+        	} catch(e) {
+        	}
+    	}
+    	oSettings.oInit.customDrawCallback.call(this, oSettings);
     }
 }
 
@@ -1794,6 +1842,7 @@ CommonTable.prototype.fnServerData = function(aoData, fnCallback, oSettings) {
 CommonTable.prototype.fnDrawCallback = function(oSettings) {
 	// 复选框iCheck样式
 	var _this = this;
+	 _this.table = _this.table || oSettings.oInstance.api();
     if (_this.initCheckbox) {
     	var $tableContainer = _this.table.table().container();
     	$("."+ _this.checkbox.actionClass, $tableContainer).removeClass("checked");
@@ -1968,3 +2017,170 @@ function initCheckboxColumn(checkbox_config) {
  */
 CommonTable.prototype.initCheckboxColumn = initCheckboxColumn;
 CommonLocalTable.prototype.initCheckboxColumn = initCheckboxColumn;
+
+
+/**
+ * 初始化一下常规组件
+ */
+CommonTable.prototype.initComponent = initComponent;
+CommonLocalTable.prototype.initComponent = initComponent;
+
+/**
+ * 初始化组件
+ * @param config
+ * @returns
+ */
+function initComponent(config) {
+    //文件预览组件
+    this.initFileViewer(config);
+}
+
+/**
+ * 初始化组件
+ * @param config
+ * @returns
+ */
+function initFileViewer(config) {
+    //PhotoViewer
+    this.initPhotoViewer(config);
+}
+
+CommonTable.prototype.initFileViewer = initFileViewer;
+CommonLocalTable.prototype.initFileViewer = initFileViewer;
+
+/**
+ * 初始化图片查询组件
+ * @param config
+ * @returns
+ */
+function initPhotoViewer(config) {
+	if (typeof config !== "object") {
+		config = {};
+	} 
+	var _this = this;
+	 _this.table = _this.table || oSettings.oInstance.api();
+	var $tableContainer;
+	try{
+		$tableContainer = $(this.table.table().container());
+	} catch (e) {
+		$tableContainer = $("#" + this.tableId + "_wrapper")[0];
+	}
+	var actionClass = config.actionClass || "image-viewer";
+	
+	var $viewers = $tableContainer.find("." + actionClass);
+	if (($.fn.PhotoViewer || window.PhotoViewer) && $viewers.length > 0) {
+		function triggerPhotoViewer() {
+			var $target = $(e.target || this);
+			e.preventDefault();
+			var index = $target.index("." + actionClass);
+			var items = _this.table.table().data() || [];
+
+			showPhotoViewer(items, index);
+			return items;
+		}
+		function showPhotoViewer(list, index) {
+			list = list || [];
+			var items = [];
+			$.each(list, function(idx, item) {
+				items.push({
+					"src": item.url || item.thumb,
+					"title": item.fileName 
+				});
+			});
+			new PhotoViewer(items, {
+				multiInstances: false,
+				index: index || 0
+			});
+			return items;
+		}
+		
+		// 增加查看图片事件
+        $($tableContainer).off("click", "." + actionClass, triggerPhotoViewer);
+        $($tableContainer).on("click", "." + actionClass, triggerPhotoViewer);
+	}
+}
+
+CommonTable.prototype.initPhotoViewer = initPhotoViewer;
+CommonLocalTable.prototype.initPhotoViewer = initPhotoViewer;
+
+CommonTable.prototype.initSumTotalFooter = initSumTotalFooter;
+CommonLocalTable.prototype.initSumTotalFooter = initSumTotalFooter;
+
+function initSumTotalFooter(oSettings) {
+    const api = this.table;
+    const $table = $(api.table().node());
+    // 获取 table 容
+    const $tfoot = $table.find('tfoot.sumTotal-footer');
+
+    // 移除旧的合计行（如果有）
+    if ($tfoot.length > 0) {
+        $tfoot.remove();
+    }
+
+    // 创建新的 tfoot
+    const $newTfoot = $('<tfoot class="sumTotal-footer"></tfoot>');
+    const $row = $('<tr></tr>');
+
+    // 判断是否有求和列
+    const $header = $(api.table().header());
+    const sumClass = this.config.tfootSumClass || "tfootSum";
+    let hasSumTotal = $header.find("." + sumClass).length > 0 ;
+    if (!hasSumTotal) {
+    	return;
+    }
+    
+    // 获取所有 th 的 class 信息
+    const colClasses = [];
+    $header.find('th').each(function() {
+        const classAttr = $(this).attr('class') || '';
+        const hasSum = classAttr.includes(sumClass);
+        const hasAmount = classAttr.includes('amount');
+        const hasQuantity = classAttr.includes('quantity');
+
+        colClasses.push({
+            sum: hasSum,
+            amount: hasAmount,
+            quantity: hasQuantity
+        });
+    });
+    
+    const colCount = colClasses.length;
+
+    // 前两列合并
+    $row.append('<th colspan="2">合计：</th>');
+
+    // 遍历从第3列开始
+    for (let i = 2; i < colCount; i++) {
+        const colInfo = colClasses[i];
+        let sum = '';
+
+        // 只有标记为 sum 的列才求和
+        if (colInfo.sum) {
+        	// 使用 { page: 'all' } 可改为只统计所有页
+            sum = api.column(i, {
+                page: 'current'
+            })// 当前页数据，也可改为 'all'
+            .data().reduce(function(acc, val) {
+                // 清理数据：移除非数字字符（如 ¥, $, 逗号等）
+                const num = parseFloat(val.replace ? val.replace(/[^\d.-]/g, '') : val) || 0;
+                return acc + num;
+            }, 0);
+
+            // 根据类型格式化
+            if (colInfo.amount) {
+                sum = sum.toFixed(2);
+            } else if (colInfo.quantity) {
+                sum = sum;
+            } else {
+                // 通用 sum：可自定义，比如保留1位小数，或整数
+                sum = sum;
+                // 默认取整，也可改为 sum.toFixed(1)
+            }
+        }
+
+        $row.append(`<th>${sum}</th>`);
+    }
+
+    $newTfoot.append($row);
+    $table.append($newTfoot);
+}

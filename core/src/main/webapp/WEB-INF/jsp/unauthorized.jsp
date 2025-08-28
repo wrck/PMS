@@ -3,6 +3,7 @@
 <%@taglib  prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,7 +12,7 @@
 <cssTag>
     <shiro:guest>
         <link rel="stylesheet" href="http://${header['host']}${pageContext.request.contextPath}/static/bootstrap/css/bootstrap.min.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+        <dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
         <!-- Theme style -->
         <link rel="stylesheet" href="http://${header['host']}${pageContext.request.contextPath}/static/dist/css/AdminLTE.min.css">
         <!-- AdminLTE Skins. Choose a skin from the css/skins folder instead of downloading all of them to reduce the load. -->

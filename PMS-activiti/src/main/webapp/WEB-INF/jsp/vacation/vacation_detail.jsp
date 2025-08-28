@@ -4,6 +4,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
 <%@taglib  prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,7 +14,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css"/>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 </cssTag>
 </head>
 <body>
@@ -93,9 +94,9 @@
 	<script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.min.js"></script>
-	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
 	    //tableId,queryId,conditionContainer
 	    var form = null;

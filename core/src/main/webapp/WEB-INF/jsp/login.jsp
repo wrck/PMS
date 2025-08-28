@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -92,9 +93,9 @@
 <!-- iCheck -->
 <script src="${pageContext.request.contextPath}/static/plugins/iCheck/icheck.min.js"></script>
 
-<script src="${pageContext.request.contextPath}/static/common/js/HashEncrypt.min.js"></script>
-<script src="${pageContext.request.contextPath}/static/common/js/base.js"></script>
-<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/HashEncrypt.min.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 
 <script>
 	var _captcha_id = "#img_captcha";

@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<script type="text/javascript" src="${pageContext.request.contextPath}/static/common/libs/avatar/swfobject.js"></script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/static/common/libs/avatar/fullAvatarEditor.js"></script>
+<%@taglib  prefix="dp" uri="/myTag" %>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/static/common/libs/avatar/swfobject.js"></dp:script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/static/common/libs/avatar/fullAvatarEditor.js"></dp:script>
 <div class="modal-header">
 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true"><li class="fa fa-remove"></li></button>
 	<h5 class="modal-title">新增用户</h5>

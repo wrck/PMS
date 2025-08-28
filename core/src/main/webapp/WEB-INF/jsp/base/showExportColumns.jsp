@@ -1,10 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@taglib  prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <cssTag>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
-		<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
+<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 </cssTag>
 <div class="modal-header">
 	<button type="button" class="close" data-dismiss="modal"
@@ -70,9 +70,9 @@
 <!-- /.box-footer -->
 <jsTag> 
 <script src="${pageContext.request.contextPath}/static/plugins/select2/select2.min.js"></script>
-<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 <script>
 	var objectName = "${objectName}"; //tableId,queryId,conditionContainer
 	var keys = [];

@@ -4,6 +4,7 @@
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %> 
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/plugins/summernote/dist/summernote.css" />
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/select2/select2.min.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
     <style>
         .datepicker {
             z-index: 1500!important;
@@ -157,9 +158,9 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/dist/lang/summernote-zh-CN.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/static/plugins/summernote/summernote-util.js"></script>
 	<script src="${pageContext.request.contextPath}/static/plugins/select2/select2.min.js"></script>
-	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
 		//tableId,queryId,conditionContainer
 		var form = null;

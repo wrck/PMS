@@ -2,6 +2,7 @@
 <%@ page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 <%@ page import="java.util.*,org.apache.commons.lang3.StringUtils,org.apache.commons.lang3.ObjectUtils" %>
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <%@ include file="/WEB-INF/taglibs/taglibs.jsp"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -11,10 +12,10 @@
 <meta http-equiv="cache-control" content="no-cache" />
 <meta http-equiv="expires" content="0" />    
 <title>流程管理</title>
-<link href="${ctx }/css/common/jquery.qtip.min.css" type="text/css" rel="stylesheet" />
+<dp:link href="${ctx }/css/common/jquery.qtip.min.css" type="text/css" rel="stylesheet" / />
 <script src="${ctx }/js/workflow.js" type="text/javascript"></script>
-<script src="${ctx }/js/common/jquery.outerhtml.js" type="text/javascript"></script>
-<script src="${ctx }/js/common/jquery.qtip.min.js" type="text/javascript"></script>
+<dp:script src="${ctx }/js/common/jquery.outerhtml.js" type="text/javascript"></dp:script>
+<dp:script src="${ctx }/js/common/jquery.qtip.min.js" type="text/javascript"></dp:script>
 	<script type="text/javascript">
 		var ctx = "${ctx}";
 		$(function() {

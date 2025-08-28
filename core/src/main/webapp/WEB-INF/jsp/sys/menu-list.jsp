@@ -2,6 +2,7 @@
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -184,11 +185,9 @@
 	src="${pageContext.request.contextPath}/static/plugins/datepicker/bootstrap-datepicker.js"></script>
 <!-- treeview --> <script
 	src="${pageContext.request.contextPath}/static/plugins/bootstrap-treeview/bootstrap-treeview.min.js"></script>
-<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-<script
-	src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-<script
-	src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 <script>
 	       //初始化form表单
 			var form = null;

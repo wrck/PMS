@@ -2,6 +2,7 @@
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="mvc" uri="http://www.springframework.org/tags/form"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,7 +12,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-validator/dist/css/bootstrap-validator.css" />
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/iCheck/all.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/datepicker/datepicker3.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css">
+	<dp:link rel="stylesheet" href="${pageContext.request.contextPath}/static/common/css/base.css" />
 	<!-- treeview -->
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/static/plugins/bootstrap-treeview/bootstrap-treeview.min.css">
 </cssTag>
@@ -179,9 +180,9 @@
 	<!-- treeview -->
 	<script src="${pageContext.request.contextPath}/static/plugins/bootstrap-treeview/bootstrap-treeview.min.js"></script>
 
-	<%-- <script src="${pageContext.request.contextPath}/static/common/js/base.js"></script> --%>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></script>
-	<script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></script>
+	<%-- <dp:script src="${pageContext.request.contextPath}/static/common/js/base.js"></dp:script> --%>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-form.js"></dp:script>
+	<dp:script src="${pageContext.request.contextPath}/static/common/js/base-modal.js"></dp:script>
 	<script>
         //初始化form表单
 		var form = null;

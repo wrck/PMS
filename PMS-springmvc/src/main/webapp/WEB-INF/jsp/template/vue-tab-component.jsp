@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@taglib  prefix="dp" uri="/myTag" %>
 <template v-if="navTabList.length > 0">
 	<div :id="tabContainerId" class="tab-content box box-primary mt-1">
 		<ul :id="tabWrapperId" class="nav nav-tabs">
@@ -28,7 +29,7 @@
 		 --%>
 	</div>
 </template>
-<script type="text/javascript" src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></script>
+<dp:script type="text/javascript" src="${pageContext.request.contextPath}/static/pm/js/vue-tab-pane-component.js"></dp:script>
 <script type="text/javascript">
 	var tabVueConfig = {
 		el: "#app",

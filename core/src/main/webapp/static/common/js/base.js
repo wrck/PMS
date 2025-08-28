@@ -210,6 +210,148 @@ function initStateName (data, type, row){
 		return "失效";
 	}
 }
+const fileTypes = {
+	image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'],
+	video: ['mp4', 'webm', 'ogg', 'mov', 'avi'],
+	audio: ['mp3', 'wav', 'ogg', 'aac'],
+	pdf: ['pdf'],
+	text: ['txt', 'csv', 'json'],
+	office: ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
+};
+function filePreviewRender(data, type, row, options) {
+	try {
+		data = data || row.name || row.path || '';
+		var {  filePath, fileName, fileExt } = getFileExt(row.path || data);
+		if (fileExt == 'unknow' || !filePath) {
+			return data;
+		}
+		fileName = data || fileName;
+		var config = { filePath, fileName: data || fileName, fileExt };
+		var html = `<i class="mr-05 fa fw fa-eye file-previwer" onclick="previewFile(this)" data-file-ext="${fileExt}" data-file-name="${fileName}" data-file-path="${filePath}"></i>` + data;
+		return html;
+	} catch (e) {
+	}
+	return data;
+}
+/**
+ * 从 URL 提取文件名和扩展名
+ * @param url
+ * @returns { filename, ext }
+ */
+function getFileExt(url) {
+	url = url || "";
+	url = url.replaceAll("\\", "/");
+	var pathname = url || "";
+	try {
+		pathname = new URL(pathname).pathname; // 获取路径部分
+	} catch (e) {
+	}
+	
+	const fileName = pathname.split('/').pop(); // 获取最后一部分
+	const fileExt = fileName.split('.').pop().toLowerCase();
+	return { filePath:pathname, fileName, fileExt };
+}
+
+//判断文件类型
+function getFileCategory(filename) {
+	const fileExt = getFileExt(filename);
+	for (const [type, exts] of Object.entries(fileTypes)) {
+	  if (exts.includes(fileExt)) return type;
+	}
+	return 'unknown';
+}
+
+/**
+ * 根据类型生成预览 HTML
+ * @param url
+ * @returns
+ */
+/**
+ * 根据类型生成预览 HTML
+ * @param url
+ * @returns
+ */
+function previewFile(_this, config) {
+    config = config || $(_this).data();
+    if (typeof config == 'string') {
+        config = JSON.parse(config) || $(_this).data();
+    }
+    var {filePath, fileName, fileExt} = getFileExt(config.filePath);
+    fileName = config.fileName || fileName;
+    const preview = {};
+
+    const url = (!filePath.startsWith(basePath) ? basePath : "") + "/" + filePath;
+
+    // 清空预览区
+    preview.innerHTML = '<div class="text-center file-previwer-conatiner">';
+
+    // 判断类型并预览
+    if (fileTypes.image.includes(fileExt)) {
+        preview.innerHTML += `<img src="${url}" alt="${fileName}" style="max-width:100%; height:100%"></div>`;
+    } else if (fileTypes.video.includes(fileExt)) {
+        preview.innerHTML += `
+	      <video controls style="max-width:100%; height:100%">
+	        <source src="${url}" type="video/${ext}">
+	        您的浏览器不支持该视频格式。
+	      </video>`;
+    } else if (fileTypes.audio.includes(fileExt)) {
+        preview.innerHTML += `
+	      <audio controls>
+	        <source src="${url}" type="audio/${ext}">
+	        您的浏览器不支持该音频格式。
+	      </audio>
+	      <p>🎵 ${fileName}</p>`;
+    } else if (fileTypes.pdf.includes(fileExt)) {
+        preview.innerHTML += `<iframe src="${url}" width="100%" height="100%"></iframe>`;
+    } else if (fileTypes.text.includes(fileExt)) {
+        // 动态加载文本内容
+        fetch(url).then(res=>res.text()).then(text=>{
+            preview.innerHTML += `<pre>${text.slice(0, 1000)}${text.length > 1000 ? '...' : ''}</pre>`;
+        }).catch(()=>{
+            preview.innerHTML += `<p>📄 ${fileName}（无法加载内容）</p>`;
+        });
+    } else if (fileTypes.office.includes(fileExt)) {
+        preview.innerHTML += `
+	      <p>📎 ${fileName}</p>
+	      <p>Office 文件无法直接在浏览器中预览，建议下载或使用在线服务（如 Google Docs、Office Online）。</p>
+	      <a href="${url}" target="_blank">点击下载</a>`;
+    } else {
+        preview.innerHTML += `
+	      <p>📦 未知文件类型: ${fileName}</p>
+	      <a href="${url}" target="_blank">点击下载</a>`;
+    }
+    preview.innerHTML += "</div>";
+    var $innerHtml = $(preview.innerHTML);
+    if($innerHtml.find("iframe").length > 0) {
+    	$innerHtml.css("height", "100%");
+    }
+    modals.popup({
+    	winId: 'previewFileWin',
+    	title: fileName,
+        text: $innerHtml[0].outerHTML,
+        width: "75vw",
+        height: "90vh"
+    });
+}
+
+function userNameRender(data, type, row, options) {
+	try {
+		var colIdx = options.col;
+		var rowIdx = options.row;
+		var settings = options.settings;
+		var column = settings.aoColumns[colIdx];
+		var columnBy = column.data;
+		var columnName = columnBy.replace("By", "Name");
+		var columnNameValue = row[columnName] || (row.customInfo || {})[columnName] || "";
+		if (columnNameValue) {
+			return [data, columnNameValue].join("-");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	return data;
+}
+
 /**
  * 表格信息过长处理
  */
