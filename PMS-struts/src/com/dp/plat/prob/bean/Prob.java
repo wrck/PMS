@@ -1,7 +1,11 @@
 package com.dp.plat.prob.bean;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.dp.plat.data.bean.CustomInfoEntity;
 import com.dp.plat.prob.version.SoftVersionParser;
@@ -31,6 +35,9 @@ public class Prob extends CustomInfoEntity {
 	private String priorityName;// 级别名称
 	private String affectedVersion;// 影响的版本
 	private String productType;// 产品类型
+	private String relatedSceneTypes;// 关联场景类型
+	private Long relatedSceneTypesMark;// 关联场景类型的bitMark
+	private String relatedSceneTypesName;
 	private String trackingUser;// 跟踪用户
 	private String trackingUsername;// 跟踪用户名称
 	private String createBy;
@@ -235,8 +242,56 @@ public class Prob extends CustomInfoEntity {
 	public void setProductType(String productType) {
 		this.productType = productType;
 	}
+	
+	public String getRelatedSceneTypes() {
+        return relatedSceneTypes;
+    }
 
-	public String getTrackingUser() {
+    public void setRelatedSceneTypes(String relatedSceneTypes) {
+        this.relatedSceneTypes = relatedSceneTypes;
+        if (StringUtils.isNotBlank(relatedSceneTypes)) {
+            List<String> relatedSceneTypeList = Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(relatedSceneTypes), ", "));
+            if (!relatedSceneTypeList.isEmpty()) {
+                this.setCustomInfoByKey("relatedSceneTypes", relatedSceneTypeList);
+                long bitMark = 0;
+                for (String sceneType : relatedSceneTypeList) {
+                    bitMark |= Integer.parseInt(sceneType);
+                }
+                this.relatedSceneTypesMark = bitMark;
+                this.relatedSceneTypes = StringUtils.join(relatedSceneTypeList, ",");
+            }
+        }
+    }
+    
+    public Long getRelatedSceneTypesMark() {
+        return relatedSceneTypesMark;
+    }
+
+    public void setRelatedSceneTypesMark(Long relatedSceneTypesMark) {
+        this.relatedSceneTypesMark = relatedSceneTypesMark;
+        if (relatedSceneTypesMark != null) {
+            List<Long> relatedSceneTypes = new ArrayList<>();
+            for (int i = 0; i < 64; i++) {
+                long bit = 1L << i;
+                // 匹配对应的bit值
+                if ((relatedSceneTypesMark & bit) != 0) {
+                    relatedSceneTypes.add(bit);
+                }
+            }
+            this.relatedSceneTypes = StringUtils.join(relatedSceneTypes, ",");
+            this.setCustomInfoByKey("relatedSceneTypes", relatedSceneTypes);
+        }
+    }
+
+    public String getRelatedSceneTypesName() {
+        return relatedSceneTypesName;
+    }
+
+    public void setRelatedSceneTypesName(String relatedSceneTypesName) {
+        this.relatedSceneTypesName = relatedSceneTypesName;
+    }
+
+    public String getTrackingUser() {
 		return trackingUser;
 	}
 

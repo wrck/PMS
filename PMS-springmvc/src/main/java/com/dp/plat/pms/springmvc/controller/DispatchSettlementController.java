@@ -1,8 +1,7 @@
 package com.dp.plat.pms.springmvc.controller;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +21,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
+
 import com.dp.plat.core.annotation.SystemControllerLog;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.exceptionHandler.ExceptionHandler;
 import com.dp.plat.core.param.Consts;
+import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.realms.Principal;
+import com.dp.plat.core.service.IFileInfoService;
 import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.vo.DataTableColumn;
 import com.dp.plat.core.vo.PageParam;
 import com.dp.plat.core.vo.PermissionResult;
+import com.dp.plat.core.vo.Result;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant;
 import com.dp.plat.pms.springmvc.constant.RoleConstant;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
@@ -57,6 +61,9 @@ public class DispatchSettlementController
 
 	@Autowired
 	private IDispatchSettlementService dispatchSettlementService;
+	
+	@Autowired
+    private IFileInfoService fileInfoService;
 
 	@PostConstruct
 	public void init() {
@@ -353,9 +360,16 @@ public class DispatchSettlementController
 			temp.setDispatch(dispatch);
 			model.addAttribute("settlementVO", temp);
 			
+			// 发票清单
+			boolean exportWithInvoice = Boolean.parseBoolean(StringUtils.defaultIfBlank(request.getParameter("exportWithInvoice"), "true"));
+			if (exportWithInvoice) {
+			    List<FileInfo> invoiceDetails = dispatchSettlementService.selectDispatchSettlementInvoiceDetails(temp);
+			    temp.setCustomInfoByKey("invoiceList", invoiceDetails);
+			}
+			
 			String templateFileName = SystemConfig.systemVariables.getOrDefault("af.export.settlement.projectInfo", "02项目信息单-%s.doc");
 			String fileName = String.format(templateFileName, dispatch.getDispatchName());
-			File doc = new DocUtil().createDoc((Map<String, Object>) JSON.toJSON(temp), "/template/", "项目信息单.ftl", fileName, request);
+			File doc = new DocUtil().createDoc((Map<String, Object>) JSON.toJSON(temp), "/template/", exportWithInvoice ? "项目信息单带发票.ftl" : "项目信息单.ftl", fileName, request);
 			DownloadUtils.downFile(response, request, doc.getAbsolutePath(), doc.getName());
 		}
 	}
@@ -395,7 +409,93 @@ public class DispatchSettlementController
 		model.addAttribute("message", message);
 	}
 	
-	
+	@RequestMapping(value = { "/{id}/invoice", "/modals/{id}/invoice" })
+	public String settlementInvoiceDetails(@PathVariable("id") Integer id, Model model) {
+	    DispatchSettlement settlement = dispatchSettlementService.selectByPrimaryKey(id);
+        if (settlement != null) {
+            SettlementVO temp = new SettlementVO();
+            BeanUtils.copyProperties(settlement, temp);
+            if (!checkPermission(temp, model, getDataName() + ":detail")) {
+                model.addAttribute("status", false);
+                model.addAttribute("message", "没有权限进行该操作！");
+                return Consts.VIEW_UNAUTHORIZED;
+            }
+            
+            List<FileInfo> invoiceFileInfos = dispatchSettlementService.selectDispatchSettlementInvoiceDetails(temp);
+//            List<String> invoiceFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", "0"), ","));
+//            Integer invoiceType = DispatchSettlementUpdateAspect.getFileInvoiceType();
+//
+//            List<FileInfo> invoiceFileInfos = fileInfoService.selectFileInfoByIdsAndType(invoiceFileIds, invoiceType);
+//            AtomicBoolean allIdentify = new AtomicBoolean(true);
+//            AtomicInteger identifyInvoiceCount = new AtomicInteger(0);
+//            AtomicInteger atomicSumAmount = new AtomicInteger(0);
+//            BigDecimal d100 = new BigDecimal("100.00");
+//            invoiceFileInfos = invoiceFileInfos.parallelStream().filter(d-> {
+//                // 过滤识别后的发票附件
+//                boolean isInvoice = invoiceType.equals(d.getTypeId());
+//                Map<String, Object> invoiceInfo = d.getCustomInfo();
+//                Boolean identify = MapUtil.getBool(invoiceInfo, "identify", false);
+//    //          Boolean needVerify = MapUtil.getBool(invoiceInfo, "needVerify", false);
+//    //          Boolean verified = MapUtil.getBool(invoiceInfo, "verified_status", false);
+//                if (isInvoice) {
+//                    // 是否所有的发票都已经完成发票识别
+//    //              allIdentify.compareAndSet(true, identify && (!needVerify || verified));
+//                    allIdentify.compareAndSet(true, DispatchSettlementUpdateAspect.checkFileInvoiceStatus(invoiceInfo));
+//                }
+//                return isInvoice && identify;
+//            }).collect(Collectors.toMap(
+//                // 根据发票号去重
+//                d -> InvoiceUtil.getUniqueInvoiceNumber(d.getCustomInfo()),  // Key: 发票号
+//                d -> d,                    // Value: 对象本身
+//                (existing, replacement) -> replacement,  // 当重复时，保留最新的（去重）
+//                LinkedHashMap::new      
+//            ))
+//            .values() // 转为 Collection
+//            .parallelStream()
+//            .map(d -> {
+//                // 计算去重后的发票总金额
+//                BigDecimal invoiceAmount = MapUtil.get(d.getCustomInfo(), "total_amount", BigDecimal.class, BigDecimal.ZERO);
+//                identifyInvoiceCount.getAndIncrement();
+//                atomicSumAmount.addAndGet(invoiceAmount.multiply(d100).intValue());
+//                return d;
+//            })
+//            .collect(Collectors.toList());
+//            model.addAttribute("invoiceAmount", BigDecimal.valueOf(atomicSumAmount.get()).divide(d100));
+//            model.addAttribute("invoiceVerified", allIdentify.get());
+//            model.addAttribute("identifyInvoiceCount", identifyInvoiceCount.get());
+            
+            model.addAttribute("targetValue", temp);
+            
+            List<DataTableColumn> columnList = findColumnList("settlementInvoiceList");
+            model.addAttribute("columns", columnList);
+            model.addAttribute("data", invoiceFileInfos);
+        };
+        return getTemplateNamespace() + "list";
+	}
+
+	@RequestMapping(value = { "/{id}/invoice/verify" })
+    public String verifySettlementInvoice(@PathVariable("id") Integer id, DispatchSettlement settlement, Model model) {
+        DispatchSettlement settlementNow = dispatchSettlementService.selectByPrimaryKey(id);
+        if (settlementNow != null) {
+            SettlementVO temp = new SettlementVO();
+            BeanUtils.copyProperties(settlementNow, temp);
+            if (!checkPermission(temp, model, getDataName() + ":detail")) {
+                model.addAttribute("status", false);
+                model.addAttribute("message", "没有权限进行该操作！");
+                return Consts.VIEW_UNAUTHORIZED;
+            }
+            
+            List<String> invoiceFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlementNow.getCustomInfo(), "invoiceFileIds", "0"), ","));
+            List<String> verifyFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", "0"), ","));
+            // 判断传值是否存在
+            //verifyFileIds.retainAll(invoiceFileIds);
+            
+            Result result = dispatchSettlementService.verifySettlementInvoice(settlementNow);
+            model.addAllAttributes(result.getMap());
+            model.addAttribute("targetValue", settlementNow);
+        };
+        return getTemplateNamespace() + "list";
+    }
 	
 	@RequestMapping("/syncPayment")
 	public void syncSettlementPayment(Model model) {

@@ -9,6 +9,8 @@ import org.quartz.Job;
 import com.dp.plat.crm.model.Response;
 import com.dp.plat.crm.util.CrmApi;
 
+import cn.hutool.core.map.MapUtil;
+
 /**
  * CRM默认数据推送
  * @author w02611
@@ -27,6 +29,8 @@ public class DefaultPushTaskFormCRM<T> extends DefaultSyncTaskFormCRM<T> impleme
         super.syncDataBefore(dataName, sourceDbName, targetDbName, params);
         
         Map<String, Object> router = CrmApi.getRouter(getRouterName(dataName));
+        int pageSize = MapUtil.getInt(router, "pageSize", batchSize);
+        params.put("batchSize", pageSize);
         String syncType = (String) router.getOrDefault("syncType", "All");
         if ("dateRange".equalsIgnoreCase(syncType)) {
             Integer dayRange = (Integer) router.getOrDefault("dayRange", 7);

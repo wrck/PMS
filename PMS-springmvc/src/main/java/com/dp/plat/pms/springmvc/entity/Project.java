@@ -109,8 +109,8 @@ public class Project extends com.dp.plat.data.bean.Project {
     @JsonSerialize(using = JsonSerializer.class)
     private Date projectRefreshTime;
 
-    // 自定义数据
-    private Map<?, ?> customInfo;
+//    // 自定义数据
+//    private Map<?, ?> customInfo;
 
     // 自定义配置
     private Map<?, ?> customConfig;
@@ -673,23 +673,23 @@ public class Project extends com.dp.plat.data.bean.Project {
         this.projectRefreshTime = projectRefreshTime;
     }
 
-    /**
-     * 获取自定义数据
-     *
-     * @return customInfo - 自定义数据
-     */
-    public Map<?, ?> getCustomInfo() {
-        return customInfo;
-    }
-
-    /**
-     * 设置自定义数据
-     *
-     * @param customInfo 自定义数据
-     */
-    public void setCustomInfo(Map<?, ?> customInfo) {
-        this.customInfo = customInfo;
-    }
+//    /**
+//     * 获取自定义数据
+//     *
+//     * @return customInfo - 自定义数据
+//     */
+//    public Map<?, ?> getCustomInfo() {
+//        return customInfo;
+//    }
+//
+//    /**
+//     * 设置自定义数据
+//     *
+//     * @param customInfo 自定义数据
+//     */
+//    public void setCustomInfo(Map<?, ?> customInfo) {
+//        this.customInfo = customInfo;
+//    }
 
     /**
      * 获取自定义配置

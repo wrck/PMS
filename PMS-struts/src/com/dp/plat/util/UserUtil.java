@@ -4,6 +4,7 @@
 package com.dp.plat.util;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,6 +15,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 import com.alibaba.fastjson.JSON;
+
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.service.BasicDataService;
 
@@ -112,6 +114,7 @@ public class UserUtil {
 			relations = JSON.parseObject(relationsJSON);
 		}
 		String suffix = "*";
+		Collection<Object> values = relations.values();
         for (Iterator<String> iterator = relations.keySet().iterator(); iterator.hasNext();) {
             String keySuffix = "";
             String valueSuffix = "";
@@ -134,7 +137,12 @@ public class UserUtil {
             } else if (area.startsWith(value) && direction <= 0) {// 双向或反向匹配
                 if (prevDep.length() < value.length()) {
                     prevDep = value + valueSuffix;
-                    nextDep = key;
+                    // 反向匹配是只查找出现一次的
+                    if (Collections.frequency(values, value) == 1) {
+                        nextDep = key;
+                    } else {
+                        nextDep = value;
+                    }
                 }
             }
         }
@@ -175,6 +183,7 @@ public class UserUtil {
         }
         String suffix = "*";
         Set<String> areaSet = new HashSet<>();
+        Collection<Object> values = relations.values();
         for (Iterator<String> iterator = relations.keySet().iterator(); iterator.hasNext();) {
             String keySuffix = "";
             String valueSuffix = "";
@@ -197,7 +206,12 @@ public class UserUtil {
             } else if (area.startsWith(value) && direction <= 0) {// 双向或反向匹配
                 if (prevDep.length() < value.length()) {
                     prevDep = value + valueSuffix;
-                    nextDep = key;
+                    // 反向匹配是只查找出现一次的
+                    if (Collections.frequency(values, value) == 1) {
+                        nextDep = key;
+                    } else {
+                        nextDep = value;
+                    }
                 }
             }
             
@@ -240,7 +254,7 @@ public class UserUtil {
         }
         
         Map<String, Object> relations = JSON.parseObject(relationsJSON);
-        String areaPower = "165000";
+        String areaPower = "310500001001";
         if (StringUtils.isNotBlank(areaPower)) {
             Set<String> newAreaList = new HashSet<>();
             List<String> areaList = Arrays.asList(StringUtils.split(areaPower, ","));

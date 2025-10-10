@@ -491,7 +491,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 		    String targetDirectory = ServletActionContext.getServletContext().getRealPath(uploadDir);
 			String uploadExtWhiteList = basicDataService.querySysArg("sys.upload.ext.whitelist");
 
-			String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+			String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
 			String inspectionType = SubcontractUtil.getDeliveryInspectionType();
 			
 			Map<Integer, SubcontractPayment> paymentMap = new HashMap<Integer, SubcontractPayment>();
@@ -585,7 +585,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	    }
 	    
 	    String webroot = ServletActionContext.getServletContext().getRealPath("/") + File.separator;
-	    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+	    String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
         String inspectionType = SubcontractUtil.getDeliveryInspectionType();
 	    
 	    Integer subcontractId = payment.getSubcontractId();
@@ -634,7 +634,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
      * @return
      */
     public Result verifySubcontractPaymentDeliver(Integer subcontractId, Integer paymentId, List<File> invoiceFileList, List<Object> deliverInfoList) {
-        String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+        String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
         String inspectionType = SubcontractUtil.getDeliveryInspectionType();
         
         // 按path分组，相同文件只查询一次，查询后更新相同内容
@@ -684,7 +684,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
                         deliver.setCustomInfoByKey("uniqueInvoiceNumber", InvoiceUtil.getUniqueInvoiceNumber(data.getInfo()));
                         
                         // 如果不是发票识别不需要验真，说明不是发票，将类型改为验收材料
-                        if (!SubcontractUtil.checkDeliveryInoviceType(invoice)) {
+                        if (!SubcontractUtil.checkDeliveryInvoiceType(invoice)) {
                             deliver.setType(inspectionType);
                         } else {
                             deliver.setType(invoiceType);
@@ -723,7 +723,7 @@ public class SubcontractServiceImpl extends BaseServiceImpl implements Subcontra
 	 */
 	@Override
 	public Result updateSubcontractPaymentInvoiceNumber(Set<Integer> paymentIds) {
-	    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+	    String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
 	    // 防止执行过快将前面失效的一并查询出来，增加一秒
 	    Calendar date = Calendar.getInstance();
 	    date.add(Calendar.SECOND, 1);

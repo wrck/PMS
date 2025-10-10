@@ -2,7 +2,6 @@ package com.dp.plat.prob.action;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +80,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	private List<BasicDataBean> watchList;// 跟踪
 	private List<BasicDataBean> statusList;// 状态
 	private List<BasicDataBean> priorityList;// 严重级别
+	private List<BasicDataBean> relatedSceneTypeList;// 技术公告关联割接场景类型
 	private List<BasicDataBean> navTabList;// 选项卡
 	private int isContinue;// 判断是否继续
 	private Prob prob;
@@ -178,6 +178,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			// priorityList = basicDataService.queryBasicDataBeans("32");
 			watchList = basicDataService.queryBasicDataBeans("30");
 			statusList = basicDataService.queryBasicDataBeans("31");
+			relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
 
 			if (displayParam == null) {
 				displayParam = new DisplayParam();
@@ -192,7 +193,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			displayParam.getParam();
 			probList = probManageService.queryProbList(prob, displayParam);
 		} catch (Exception e) {
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "list";
@@ -205,6 +206,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 		watchList = basicDataService.queryBasicDataBeans("30");
 		statusList = basicDataService.queryBasicDataBeans("31");
 		priorityList = basicDataService.queryBasicDataBeans("32");
+		relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
 		
 		if (commonMap == null) {
 		    commonMap = new HashMap<>();
@@ -277,6 +279,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			watchList = basicDataService.queryBasicDataBeans("30");
 			statusList = basicDataService.queryBasicDataBeans("31");
 			priorityList = basicDataService.queryBasicDataBeans("32");
+			relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
 			// 办事处集合
 			departmentList = departmentManageService.queryDepartments();
 			restoreStatuList = basicDataService.queryBasicDataBeans("33");
@@ -353,7 +356,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			System.out.println(System.currentTimeMillis() - t);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "edit";
@@ -382,7 +385,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -406,7 +409,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			// }
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -430,7 +433,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probManageService.insertBatchProbRestoreTask(probRestore, probRestoreTaskList, root);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -469,7 +472,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			result = JSON.toJSONString(softVersionList);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -487,7 +490,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probManageService.updateProbRestoreTask(probRestore, restoreIds, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -512,7 +515,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -566,7 +569,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probManageService.updateProbRestoreTask(probRestore, restoreIds, 2);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -600,7 +603,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			prob.setProbId(probId);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+		    setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 
@@ -636,7 +639,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			probManageService.updateProb(prob, softVersionList);
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
@@ -704,7 +707,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			return null;
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 		}
 		return ERROR;
 	}
@@ -730,7 +733,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			prob = new Prob();
 		} catch (Exception e) {
 			e.printStackTrace();
-			setErrmsg(ExceptionUtils.getStackTrace(e));
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return "importSoftVersion";
@@ -938,6 +941,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 		}
 		return "statistics";
 	}
@@ -954,6 +958,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 			result = "error";
 		}
 		return SUCCESS;
@@ -977,6 +982,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
+			setErrmsg(ExceptionUtils.getMessage(e, true));
 		}
 		return SUCCESS;
 	}
@@ -1124,7 +1130,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
             }
             probProduct = new ProbProductVO();
         } catch (Exception e) {
-            setErrmsg(ExceptionUtils.getStackTrace(e));
+            setErrmsg(ExceptionUtils.getMessage(e, true));
             return ERROR;
         }
         return "import";
@@ -1214,7 +1220,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
             }
             productComponent = new ProductComponentVO();
         } catch (Exception e) {
-            setErrmsg(ExceptionUtils.getStackTrace(e));
+            setErrmsg(ExceptionUtils.getMessage(e, true));
             return ERROR;
         }
         return "import";
@@ -1400,8 +1406,16 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	public void setRestoreStatuList(List<BasicDataBean> restoreStatuList) {
 		this.restoreStatuList = restoreStatuList;
 	}
+	
+	public List<BasicDataBean> getRelatedSceneTypeList() {
+        return relatedSceneTypeList;
+    }
 
-	public String getRestoreIds() {
+    public void setRelatedSceneTypeList(List<BasicDataBean> relatedSceneTypeList) {
+        this.relatedSceneTypeList = relatedSceneTypeList;
+    }
+
+    public String getRestoreIds() {
 		return restoreIds;
 	}
 

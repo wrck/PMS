@@ -31,7 +31,7 @@ public class PushJobToCRM extends DefaultPushTaskFormCRM<Map<String, Object>> im
 	public void work() throws IOException, SQLException {
 		Map<String, Object> params = new HashMap<String, Object>();
 		// 推送合同发货数据
-//		pushData("ContractShimpentBarcodeToCRM", "合同发货数据", params);
+		pushData("ContractShimpentBarcodeToCRM", "合同发货数据", params);
 		// 推送合同发货数据
         pushData("ContractCollectionPlanToCRM", "合同回款计划完成时间", params);
 	}

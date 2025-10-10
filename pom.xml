@@ -15,6 +15,7 @@
 		<module>pms-ext-d365</module>
 		<module>pms-security</module>
 		<module>pms-ext-fp</module>
+		<module>pms-rules</module>
 	</modules>
 
 	<properties>
@@ -116,6 +117,7 @@
 		<!-- commons-logging -->
 		<commons-logging.version>1.2</commons-logging.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
+		<commons-collections4.version>4.4</commons-collections4.version>
 
 		<!-- Activiti -->
 		<activiti.version>5.23.0</activiti.version>
@@ -125,6 +127,7 @@
 		
 		<!-- 轻量级表达式引擎 -->
 		<aviator.version>5.4.3</aviator.version>
+		<liteflow.version>2.15.0</liteflow.version>
 
 		<!-- junit版本 -->
 		<junit.version>4.11</junit.version>
@@ -401,6 +404,12 @@
 				<artifactId>commons-lang3</artifactId>
 				<version>${commons-lang3.version}</version>
 			</dependency>
+			
+			<dependency>
+			    <groupId>org.apache.commons</groupId>
+			    <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
 
 			<!-- slf4j -->
 			<dependency>
@@ -590,6 +599,13 @@
 			    <artifactId>aviator</artifactId>
 			    <version>${aviator.version}</version>
 			</dependency>
+			
+			<!-- 轻量级规则引擎LiteFlow -->
+	        <dependency>
+	            <groupId>com.yomahub</groupId>
+	            <artifactId>liteflow-spring</artifactId>
+	            <version>${liteflow.version}</version>
+	        </dependency>
 			
 			<!-- 请求工具 -->
 			<dependency>

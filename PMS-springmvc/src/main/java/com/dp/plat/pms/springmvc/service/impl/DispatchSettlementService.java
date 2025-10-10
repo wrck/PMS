@@ -1,16 +1,30 @@
 package com.dp.plat.pms.springmvc.service.impl;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -19,23 +33,36 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.core.config.SystemConfig;
 import com.dp.plat.core.context.UserContext;
 import com.dp.plat.core.exception.CustomRuntimeException;
 import com.dp.plat.core.pojo.Company;
+import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.pojo.NotifyTemplate;
 import com.dp.plat.core.service.ICompanyService;
+import com.dp.plat.core.service.IFileInfoService;
 import com.dp.plat.core.service.INotifyTemplateService;
 import com.dp.plat.core.service.impl.AbstractBaseService;
 import com.dp.plat.core.util.DateUtil;
+import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.util.SystemLogUtil;
 import com.dp.plat.core.vo.PageParam;
+import com.dp.plat.core.vo.Result;
+import com.dp.plat.pms.aop.DispatchSettlementUpdateAspect;
 import com.dp.plat.pms.extend.d365.entity.PurchaseReceipt;
 import com.dp.plat.pms.extend.d365.model.PurchaseReceiptHeader;
 import com.dp.plat.pms.extend.d365.model.PurchaseReceiptLine;
 import com.dp.plat.pms.extend.d365.service.IPurchaseReceiptLineService;
 import com.dp.plat.pms.extend.d365.service.IPurchaseReceiptService;
 import com.dp.plat.pms.extend.d365.util.D365Api;
+import com.dp.plat.pms.extend.fp.entity.InvoiceProviderInfo;
+import com.dp.plat.pms.extend.fp.model.ElectronicInvoiceModel;
+import com.dp.plat.pms.extend.fp.model.ElectronicInvoiceResponse;
+import com.dp.plat.pms.extend.fp.model.Response;
+import com.dp.plat.pms.extend.fp.util.FPApi;
+import com.dp.plat.pms.extend.fp.util.InvoiceUtil;
 import com.dp.plat.pms.springmvc.constant.ProjectConstant.ProcessType.DataType;
 import com.dp.plat.pms.springmvc.dao.DispatchSettlementMapper;
 import com.dp.plat.pms.springmvc.entity.DispatchProject;
@@ -44,6 +71,8 @@ import com.dp.plat.pms.springmvc.service.IDispatchProjectService;
 import com.dp.plat.pms.springmvc.service.IDispatchSettlementService;
 import com.dp.plat.pms.springmvc.vo.DispatchVO;
 import com.dp.plat.pms.springmvc.vo.SettlementVO;
+
+import cn.hutool.core.map.MapUtil;
 
 /**
  *
@@ -67,6 +96,10 @@ public class DispatchSettlementService extends AbstractBaseService<DispatchSettl
     
     @Autowired
     private IPurchaseReceiptLineService purchaseReceiptLineService;
+    
+    @Autowired
+    private IFileInfoService fileInfoService;
+    
     
 	@Override
     public void insertOrUpdateSelective(SettlementVO settlement) {
@@ -355,5 +388,272 @@ public class DispatchSettlementService extends AbstractBaseService<DispatchSettl
 			}
 		}
 	}
+	
+	/**
+     * 付款附件查验
+     * @param dispatchId
+     * @param settlementId
+     * @param invoiceFileList
+     * @param deliverInfoList
+     * @return
+     */
+    public Result verifySettlementInvoice(DispatchSettlement settlement) {
+        if (settlement == null || settlement.getId() == null || settlement.getId() == 0) {
+            return Result.fail("未找到对应的转包结算记录！");
+        }
+        
+        Integer invoiceType = InvoiceUtil.getFileInvoiceType(9);
+//        Integer inspectionType = InvoiceUtil.getFileInspectionType();
+//        
+//        Integer dispatchId = settlement.getDispatchId();
+//        Integer settlementId = settlement.getId();
+        
+        List<String> invoiceFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", ""), ","));
+//        List<String> fileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "fileIds", ""), ","));
+        
+        List<FileInfo> invoiceFileInfos = Collections.emptyList();
+        if (!invoiceFileIds.isEmpty()) {
+            invoiceFileInfos = fileInfoService.selectFileInfoByIdsAndType(invoiceFileIds, invoiceType);
+        }
+        String webroot = FileUtil.getWebRoot() + File.separator;
+        
+        List<File> invoiceFileList = new ArrayList<>(invoiceFileInfos.size());
+        List<Object> deliverInfoList = new ArrayList<>(invoiceFileInfos.size());
+        Map<String, List<Integer>> uniqueFilePathDeliverMap = new HashMap<>(invoiceFileInfos.size());
+        // 按path分组，相同文件只查询一次，查询后更新相同内容
+        for (FileInfo fileInfo : invoiceFileInfos) {
+            // 文件是否重复，发票状态是否已验真
+            Boolean isVerified = InvoiceUtil.checkFileInvoiceStatus(fileInfo.getCustomInfo());
+            List<Integer> deliverIds = uniqueFilePathDeliverMap.getOrDefault(fileInfo.getPath(), new ArrayList<Integer>());
+            if (uniqueFilePathDeliverMap.containsKey(fileInfo.getPath()) || isVerified) {
+                if (!isVerified) {
+                    deliverIds.add(fileInfo.getId());
+                }
+                continue;
+            }
+            deliverIds.add(fileInfo.getId());
+            uniqueFilePathDeliverMap.put(fileInfo.getPath(), deliverIds);
+        }
+        // 相同文件只查询一次，查询后更新相同内容
+        for (Entry<String, List<Integer>> entry : uniqueFilePathDeliverMap.entrySet()) {
+            String filePath = entry.getKey();
+            List<Integer> deliverIds = entry.getValue();
+            invoiceFileList.add(new File(webroot + filePath));
+            deliverInfoList.add(ElectronicInvoiceModel.builder().dataType("fileInfo").dataId(StringUtils.join(deliverIds, ",")).build());
+        }
+        
+        return verifySettlementInvoice(settlement, invoiceFileList, deliverInfoList);
+    }
+    
+    
+    /**
+     * 付款附件查验
+     * @param dispatchId
+     * @param settlementId
+     * @param invoiceFileList
+     * @param deliverInfoList
+     * @return
+     */
+    public Result verifySettlementInvoice(DispatchSettlement settlement, List<File> invoiceFileList, List<Object> deliverInfoList) {
+        if (settlement == null || settlement.getId() == null || settlement.getId() == 0) {
+            return Result.fail("未找到对应的转包结算记录！");
+        }
+        Integer invoiceType = InvoiceUtil.getFileInvoiceType(9);
+        Integer inspectionType = InvoiceUtil.getFileInspectionType(5);
+        
+        // 按path分组，相同文件只查询一次，查询后更新相同内容
+        Map<String, ElectronicInvoiceModel> fileInfoMap = new LinkedHashMap<String, ElectronicInvoiceModel>(invoiceFileList.size());
+        for (int i = 0; i < invoiceFileList.size(); i++) {
+            File file = invoiceFileList.get(i);
+            if (file == null || !file.isFile() || !file.exists()) {
+                continue;
+            }
+            String filePath = file.getAbsolutePath();
+            ElectronicInvoiceModel sourceMap = (deliverInfoList.isEmpty() ? ElectronicInvoiceModel.builder().build() : (ElectronicInvoiceModel) deliverInfoList.get(Math.min(i, deliverInfoList.size() - 1)));
+            ElectronicInvoiceModel deliverInfo = fileInfoMap.getOrDefault(filePath, sourceMap);
+            if (fileInfoMap.containsKey(filePath)) {
+                Set<String> dataIds = new LinkedHashSet<String>();
+                dataIds.addAll(Arrays.asList(StringUtils.split(deliverInfo.getDataId(), ",")));
+                dataIds.addAll(Arrays.asList(StringUtils.split(sourceMap.getDataId(), ",")));
+                deliverInfo.setDataId(StringUtils.join(dataIds, ","));
+            }
+            
+            fileInfoMap.put(filePath, deliverInfo);
+        }
+        
+        List<File> uniqueFileList = new ArrayList<>();
+        List<Object> uniqueInfoList = new ArrayList<>();
+        for (Entry<String, ElectronicInvoiceModel> entry : fileInfoMap.entrySet()) {
+            uniqueFileList.add(new File(entry.getKey()));
+            uniqueInfoList.add(entry.getValue());
+        }
+        
+        // 发票识别
+        Integer settlementId = settlement.getId() != null ? settlement.getId() : 0;
+        Set<String> invoiceFileIds = new LinkedHashSet<>(Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", ""), ",")));
+        Set<String> fileIds = new LinkedHashSet<>(Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "fileIds", ""), ",")));
+        
+        Map<String, Object> config = JSON.parseObject(SystemConfig.systemVariables.getOrDefault("sys.fp.api.config", "{}"), HashMap.class);
+        List<Response<ElectronicInvoiceModel>> responses = FPApi.postElectronicInvoice("settlement", settlementId.toString(), uniqueFileList, uniqueInfoList, config);
+        Integer successCount = 0;
+        for (Iterator iterator = responses.iterator(); iterator.hasNext();) {
+            ElectronicInvoiceResponse response = (ElectronicInvoiceResponse) iterator.next();
+            List<InvoiceProviderInfo> dataList = response.getData() != null ? response.getData() : Collections.emptyList();
+            for (InvoiceProviderInfo data : dataList) {
+                Map<String, Object> invoice = data.getInfo();
+                String dataIds = data.getQuery().getDataId();
+                // 相同文件只查询一次，查询后更新相同内容
+                List<String> dataIdList = Arrays.asList(StringUtils.split(dataIds, ","));
+                for (String dataId : dataIdList) {
+                    if (NumberUtils.isCreatable(dataId)) {
+                        FileInfo fileInfo = new FileInfo();
+                        fileInfo.setId(Integer.parseInt(dataId));
+                        fileInfo.setDataType("settlement");
+                        fileInfo.setDataId(settlementId);
+                        fileInfo.setCustomInfo(invoice);
+                        fileInfo.setCustomInfoByKey("identify", true);
+                        fileInfo.setCustomInfoByKey("uniqueInvoiceNumber", InvoiceUtil.getUniqueInvoiceNumber(invoice));
+                        
+                        // 如果不是发票识别不需要验真，说明不是发票，将类型改为验收材料
+                        if (!InvoiceUtil.checkFileInvoiceType(invoice)) {
+                            invoiceFileIds.remove(dataId);
+                            fileIds.add(dataId);
+                            fileInfo.setTypeId(inspectionType);
+                        }
+                        fileInfoService.updateByPrimaryKeySelective(fileInfo);
+                        successCount++;
+                    }
+                }
+            }
+        }
+        
+        // 更新发票信息
+        settlement.setCustomInfoByKey("fileIds", StringUtils.join(fileIds, ","));
+        settlement.setCustomInfoByKey("invoiceFileIds", StringUtils.join(invoiceFileIds, ","));
+        this.updateSubcontractPaymentInvoiceNumber(settlement);
+//        fillSettlementInvoiceNumber(settlement, fileIds, invoiceFileIds);
+        return Result.success(successCount).message(String.format("发票待查验%s张，已查验%s张！", uniqueFileList.size(), successCount));
+    }
+    
+    /**
+     * 更新付款申请对应的发票编号
+     * @param settlementIds
+     */
+    public void fillSettlementInvoiceNumber(DispatchSettlement settlement, Collection<String> fileIds, Collection<String> invoiceFileIds) {
+        if (settlement == null) {
+            return;
+        }
+        settlement.setCustomInfoByKey("fileIds", StringUtils.join(fileIds, ","));
+        settlement.setCustomInfoByKey("invoiceFileIds", StringUtils.join(invoiceFileIds, ","));
+        
+        Integer invoiceType = InvoiceUtil.getFileInvoiceType(9);
+
+        List<FileInfo> invoiceFileInfos = Collections.emptyList();
+        if (!invoiceFileIds.isEmpty()) {
+            invoiceFileInfos = fileInfoService.selectFileInfoByIdsAndType(invoiceFileIds, invoiceType);
+        }
+        Set<String> invoiceNumberList = new LinkedHashSet<String>();
+        BigDecimal invoiceAmountSum = new BigDecimal("0.00");
+        AtomicBoolean invoiceVerified = new AtomicBoolean(true);
+        for (FileInfo fileInfo : invoiceFileInfos) {
+            Map<String, Object> invoiceInfo = fileInfo.getCustomInfo();
+            String uniqueInvoiceNumber = InvoiceUtil.getUniqueInvoiceNumber(invoiceInfo);
+            BigDecimal invoiceAmount = MapUtil.get(invoiceInfo, "total_amount", BigDecimal.class, BigDecimal.ZERO);
+            if (StringUtils.isNotBlank(uniqueInvoiceNumber) && !invoiceNumberList.contains(uniqueInvoiceNumber)) {
+                invoiceNumberList.add(uniqueInvoiceNumber);
+                invoiceAmountSum = invoiceAmountSum.add(invoiceAmount);
+            }
+            invoiceVerified.compareAndSet(true, InvoiceUtil.checkFileInvoiceStatus(invoiceInfo));
+        }
+        
+        settlement.setCustomInfoByKey("invoiceNumber", StringUtils.join(invoiceNumberList, ","));
+        settlement.setCustomInfoByKey("invoiceAmount", invoiceAmountSum);
+        settlement.setCustomInfoByKey("invoiceVerified", invoiceVerified.get());
+    }
+    
+    @Override
+    public List<FileInfo> selectDispatchSettlementInvoiceDetails(DispatchSettlement settlement) {
+        if (settlement == null) {
+            return Collections.emptyList();
+        }
+        
+        List<String> invoiceFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", "0"), ","));
+
+        Integer invoiceType = InvoiceUtil.getFileInvoiceType(9);
+        List<FileInfo> invoiceFileInfos = Collections.emptyList();
+        if (!invoiceFileIds.isEmpty()) {
+            invoiceFileInfos = fileInfoService.selectFileInfoByIdsAndType(invoiceFileIds, invoiceType);
+        }
+        BigDecimal d100 = new BigDecimal("100.00");
+        BigDecimal invoiceAmountSum = new BigDecimal("0.00");
+        AtomicBoolean invoiceVerified = new AtomicBoolean(true);
+        AtomicInteger atomicSumAmount = new AtomicInteger(0);
+        Map<String, FileInfo> uniqueInvoiceMap = invoiceFileInfos.parallelStream().filter(d-> {
+            // 过滤识别后的发票附件
+            boolean isInvoice = invoiceType.equals(d.getTypeId());
+            Map<String, Object> invoiceInfo = d.getCustomInfo();
+            Boolean identify = MapUtil.getBool(invoiceInfo, "identify", false);
+            if (isInvoice) {
+                // 是否所有的发票都已经完成发票识别
+                invoiceVerified.compareAndSet(true, DispatchSettlementUpdateAspect.checkFileInvoiceStatus(invoiceInfo));
+            }
+            return isInvoice && identify;
+        }).collect(Collectors.toMap(
+            // 根据发票号去重
+            d -> InvoiceUtil.getUniqueInvoiceNumber(d.getCustomInfo()),  // Key: 发票号
+            d -> d,                    // Value: 对象本身
+            (existing, replacement) -> replacement,  // 当重复时，保留最新的（去重）
+            LinkedHashMap::new      
+        ));
+        
+        invoiceFileInfos = new ArrayList<>(uniqueInvoiceMap.values());
+        invoiceFileInfos.parallelStream().map(fileInfo -> {
+            Map<String, Object> invoiceInfo = fileInfo.getCustomInfo();
+            BigDecimal invoiceAmount = MapUtil.get(invoiceInfo, "total_amount", BigDecimal.class, BigDecimal.ZERO);
+            
+            // 计算去重后的发票总金额
+            atomicSumAmount.addAndGet(invoiceAmount.multiply(d100).intValue());
+            return fileInfo;
+        })
+        .collect(Collectors.toList());
+        
+        invoiceAmountSum = BigDecimal.valueOf(atomicSumAmount.get()).divide(d100);
+        settlement.setCustomInfoByKey("identifyInvoiceCount", uniqueInvoiceMap.size());
+        settlement.setCustomInfoByKey("invoiceNumber", StringUtils.join(uniqueInvoiceMap.keySet(), ","));
+        settlement.setCustomInfoByKey("invoiceAmount", invoiceAmountSum);
+        settlement.setCustomInfoByKey("invoiceVerified", invoiceVerified.get());
+        
+        return invoiceFileInfos;
+    }
+    
+    /**
+     * 更新付款申请对应的发票编号
+     * @param settlementIds
+     */
+    public Result updateSubcontractPaymentInvoiceNumber(Integer settlementId, Integer dispatchId, List<String> fileIds, List<String> invoiceFileIds) {
+        DispatchSettlement settlement = new DispatchSettlement();
+        settlement.setId(settlementId);
+        settlement.setDispatchId(dispatchId);
+        settlement.setCustomInfoByKey("fileIds", StringUtils.join(fileIds, ","));
+        settlement.setCustomInfoByKey("invoiceFileIds", StringUtils.join(invoiceFileIds, ","));
+        return updateSubcontractPaymentInvoiceNumber(settlement);
+    }
+    
+    /**
+     * 更新付款申请对应的发票编号
+     * @param settlementIds
+     */
+    public Result updateSubcontractPaymentInvoiceNumber(DispatchSettlement settlement) {
+        if (settlement == null || settlement.getId() == null || settlement.getId() == 0) {
+            return Result.fail("未找到对应的转包结算记录！");
+        }
+        List<String> fileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "fileIds", ""), ","));
+        List<String> invoiceFileIds = Arrays.asList(StringUtils.split(MapUtils.getString(settlement.getCustomInfo(), "invoiceFileIds", ""), ","));
+        
+        fillSettlementInvoiceNumber(settlement, fileIds, invoiceFileIds);
+        
+        this.updateByPrimaryKeySelective(settlement);
+        return Result.success();
+    }
 	
 }

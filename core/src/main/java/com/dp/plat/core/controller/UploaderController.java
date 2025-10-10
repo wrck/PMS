@@ -235,8 +235,8 @@ public class UploaderController {
 			result = new Result(true, fileInfos);
 			
 			List<DataTableColumn> columns = new ArrayList<>();
-			columns.add(new DataTableColumn("文件名", "name"));
-			columns.add(new DataTableColumn("上传人", "createBy"));
+			columns.add(new DataTableColumn("文件名", "name", "filePreviewRender"));
+			columns.add(new DataTableColumn("上传人", "createBy", "userNameRender"));
 			columns.add(new DataTableColumn("上传时间", "createTime"));
 			
 			model.addAttribute("columns", columns);

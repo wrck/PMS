@@ -274,19 +274,19 @@ public class SubcontractTest {
         
         Object needVerify = AviatorUtils.exceute(condition, env);
         assertEquals(true, Boolean.TRUE.equals(needVerify));
-        assertEquals(true, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", true})));
+        assertEquals(true, SubcontractUtil.checkDeliveryInvoiceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", true})));
         
         invoice = Collections.singletonMap("needVerify", false);
         env.put("entity", Collections.singletonMap("entity", invoice));
         needVerify = AviatorUtils.exceute(condition, env);
         assertEquals(false, Boolean.TRUE.equals(needVerify));
-        assertEquals(false, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", false})));
+        assertEquals(false, SubcontractUtil.checkDeliveryInvoiceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "needVerify", false})));
         
         invoice = Collections.singletonMap("invoice_number", "");
         env.put("entity", Collections.singletonMap("entity", invoice));
         needVerify = AviatorUtils.exceute(condition, env);
         assertEquals(false, Boolean.TRUE.equals(needVerify));
-        assertEquals(false, SubcontractUtil.checkDeliveryInoviceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "invoice_number", ""})));
+        assertEquals(false, SubcontractUtil.checkDeliveryInvoiceType(MapUtils.putAll(new HashMap<>(), new Object[] { "condition", condition, "invoice_number", ""})));
         
     }
 }

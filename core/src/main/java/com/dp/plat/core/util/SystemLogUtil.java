@@ -375,7 +375,7 @@ public class SystemLogUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	private static Map<String, Object> getParamsMap(JoinPoint joinPoint) throws Exception {
+	public static Map<String, Object> getParamsMap(JoinPoint joinPoint) throws Exception {
 		Map<String, Object> params = new HashMap<>();
 		MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
 		String[] paramsName = methodSignature.getParameterNames();
@@ -383,7 +383,7 @@ public class SystemLogUtil {
 		String[] ignoreParams = getSystemLogIgnoreParams(joinPoint);
 		for (int i = 0; i < paramsValue.length; i++) {
 			Object value = paramsValue[i];
-			if (paramsName[i] == null || paramsName[i].toLowerCase().indexOf("request") >= 0
+			if (paramsName == null || paramsName[i] == null || paramsName[i].toLowerCase().indexOf("request") >= 0
 					|| paramsName[i].toLowerCase().indexOf("response") >= 0
 					|| ArrayUtils.contains(ignoreParams, paramsName[i])) {
 				continue;

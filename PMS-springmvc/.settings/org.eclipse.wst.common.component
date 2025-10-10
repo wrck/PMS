@@ -14,7 +14,13 @@
         <dependent-module archiveName="erms-plugin-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/erms-plugin/erms-plugin">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="pms-ext-fp-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-ext-fp/pms-ext-fp">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module archiveName="pms-security-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-security/pms-security">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="pms-rules-0.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/pms-rules/pms-rules">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module deploy-path="/" handle="module:/overlay/prj/core?includes=**/**&amp;excludes=WEB-INF/lib/*">

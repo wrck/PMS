@@ -89,6 +89,7 @@
 			});
 			renderSoftVersions(softVersionJson, {$container: $("#softVersionList")});
 			initProbProductBySelect2("probProducts", $("#probProductList"));
+			initProbSelectBySelect2("relatedSceneTypes", $("#relatedSceneTypeList"));
 		}
 	}
 	//检索版本
@@ -207,6 +208,7 @@
     }
 	var softVersionJson = `${prob.affectedVersion}`;
 	var probProductsJson = `${prob.customInfo.probProductList}`;
+	var relatedSceneTypesJson = `${prob.customInfo.relatedSceneTypesJson}`;
 	$(document).ready(function(){
 		renderSoftVersions(softVersionJson, {
 			$container: $("#affectedVersionList"), 
@@ -215,6 +217,12 @@
 		});
         renderProbProducts(probProductsJson, {
             $container: $("#affectedProbProductList")
+        });
+        renderCommonLabel(relatedSceneTypesJson, {
+            $container: $("#affectedRelatedSceneTypeList"),
+            labelClass: 'label-info',
+            key: 'id',
+            text: 'text',
         });
 		$('textarea').bind('input propertychange blur', function() {
 			$(this).css('height','0px');
@@ -399,6 +407,11 @@
                             <div class="form-group">
                                 <label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.product.type"></s:text></label>
                                 <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 probProductList" id="affectedProbProductList">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList" id="affectedRelatedSceneTypeList">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -723,6 +736,16 @@
                                     <s:hidden id="probProducts_hidden" name="prob.customInfo.probProductList" ></s:hidden>
                                     <%-- <s:select id="probProducts" list="#{}" name="prob.customInfo.probProductItems" data-selected="%{prob.customInfo.probProductItems}" multiple="true" cssClass="form-control select2" ></s:select> --%>
                                     <s:select id="probProducts" list="#{}" multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <div id="relatedSceneTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList">
+                                    <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
+                                    <s:hidden id="relatedSceneTypesJson_hidden" name="prob.customInfo.relatedSceneTypesJson" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypes_hidden" name="prob.customInfo.relatedSceneTypes" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypesName_hidden" name="prob.customInfo.relatedSceneTypesName" ></s:hidden>
+                                    <s:select id="relatedSceneTypes" name="prob.relatedSceneTypes" list="relatedSceneTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
                                 </div>
                             </div>
                             <div class="form-group">

@@ -14,8 +14,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.WebServiceContext;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -120,9 +120,10 @@ public class AspectUtil {
         }
         for (int j = 0; j < parameterAnnotations.length; j++) {
             Annotation[] annotations = parameterAnnotations[j];
+            String argName = parameterNames != null ? parameterNames[j] : ("arg" + j);
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(specialAnnotation) || annotation.annotationType().isAnnotationPresent(specialAnnotation)) {
-                    String param = parameterNames[j];
+                    String param = argName;
                     String newParam = null;
                     try {
                         Method valueMethod = annotation.getClass().getDeclaredMethod("value");
@@ -130,12 +131,14 @@ public class AspectUtil {
                     } catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     }
                     if (StringUtils.isBlank(newParam)) {
-                        newParam = parameterNames[j];
+                        newParam = param;
                     }
                     if (StringUtils.isNotBlank(newParam)) {
                         dataParams.add(newParam);
                     }
-                    paramRelations.put(param, newParam);
+                    if (!StringUtils.isAllBlank(param, newParam)) {
+                        paramRelations.put(StringUtils.defaultIfBlank(param, newParam), newParam);
+                    }
                 }
             }
         }
@@ -163,6 +166,7 @@ public class AspectUtil {
         }
         for (int j = 0; j < parameterAnnotations.length; j++) {
             Annotation[] annotations = parameterAnnotations[j];
+            String argName = parameterNames != null ? parameterNames[j] : ("arg" + j);
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(specialAnnotation)) {
                     String param = null;
@@ -172,7 +176,7 @@ public class AspectUtil {
                     } catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     }
                     if (StringUtils.isBlank(param)) {
-                        param = parameterNames[j];
+                        param = argName;
                     }
                     if (StringUtils.isNotBlank(param)) {
                         dataParams.add(param);
@@ -259,7 +263,7 @@ public class AspectUtil {
         String[] ignoreParams = getSystemLogIgnoreParams(joinPoint);
         for (int i = 0; i < paramsValue.length; i++) {
             Object value = paramsValue[i];
-            if (paramsName[i] == null || paramsName[i].toLowerCase().indexOf("request") >= 0 || paramsName[i].toLowerCase().indexOf("response") >= 0
+            if (paramsName == null || paramsName[i] == null || paramsName[i].toLowerCase().indexOf("request") >= 0 || paramsName[i].toLowerCase().indexOf("response") >= 0
                     || ArrayUtils.contains(ignoreParams, paramsName[i])) {
                 continue;
             }

@@ -25,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
 import com.alibaba.fastjson.JSON;
+
+import com.dp.plat.context.SystemContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Department;
@@ -575,12 +577,13 @@ public class ReportAction extends BaseAction implements Preparable{
 			Collection<String> executionStateKeys = Arrays.asList();
 			Map<String, String> executionStateMap = converter2Map(basicDataService.queryBasicDataBeans("projectExecutionState"), executionStateKeys);
 			// 值和名称的映射关系
-			String executionStateRelationStr = "{" + 
-					"	['',null]: '未填写'," + 
-					"	['5','10']: '未实施'," + 
-					"	['20','30','40']: '实施中'," + 
-					"	['50','60','70','80','90']: '实施完成'" + 
-					"}";
+			String executionStateRelationStr = StringUtils.defaultIfBlank(basicDataService.querySysArg("pm.report.project.summary.executionState.relation"), "{" + 
+                    "   ['',null]: '未填写'," + 
+                    "   ['7']: '挂起'," + 
+                    "   ['5','10']: '未实施'," + 
+                    "   ['20','30','40']: '实施中'," + 
+                    "   ['50','60','70','80','90']: '实施完成'" + 
+                    "}");
 			Map<Collection<String>, String> executionStateRelation = JSON.parseObject(executionStateRelationStr, LinkedHashMap.class);
 			// 流程状态
 			Collection<String> closeProcessStateKeys = Arrays.asList(/*"10","15","20","30","40","50"*/);

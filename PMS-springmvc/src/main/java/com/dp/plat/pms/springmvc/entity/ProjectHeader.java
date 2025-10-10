@@ -118,8 +118,8 @@ public class ProjectHeader extends Project {
     @JsonSerialize(using = JsonSerializer.class)
     private Date projectCloseTime;
 
-    // 自定义信息
-    private Map<?, ?> customInfo;
+//    // 自定义信息
+//    private Map<?, ?> customInfo;
 
     // 自定义配置
     private Map<?, ?> customConfig;
@@ -718,23 +718,23 @@ public class ProjectHeader extends Project {
         this.projectCloseTime = projectCloseTime;
     }
 
-    /**
-     * 获取自定义信息
-     *
-     * @return customInfo - 自定义信息
-     */
-    public Map<?, ?> getCustomInfo() {
-        return customInfo;
-    }
-
-    /**
-     * 设置自定义信息
-     *
-     * @param customInfo 自定义信息
-     */
-    public void setCustomInfo(Map<?, ?> customInfo) {
-        this.customInfo = customInfo;
-    }
+//    /**
+//     * 获取自定义信息
+//     *
+//     * @return customInfo - 自定义信息
+//     */
+//    public Map<?, ?> getCustomInfo() {
+//        return customInfo;
+//    }
+//
+//    /**
+//     * 设置自定义信息
+//     *
+//     * @param customInfo 自定义信息
+//     */
+//    public void setCustomInfo(Map<?, ?> customInfo) {
+//        this.customInfo = customInfo;
+//    }
 
     /**
      * 获取自定义配置

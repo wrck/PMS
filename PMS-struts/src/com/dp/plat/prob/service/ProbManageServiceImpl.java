@@ -19,6 +19,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.struts2.ServletActionContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 
@@ -72,6 +73,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	}
 
 	@Override
+	@Transactional
 	public int saveProb(Prob prob, List<SoftVersion> softVersionList, String root) throws IOException {
 	    // 获取产品型号临时传参参数
         String probProductListJson = (String) ObjectUtils.defaultIfNull(prob.removeCustomInfoByKey("probProductList"), "[]");
@@ -124,6 +126,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	}
 
 	@Override
+	@Transactional
 	public void updateProb(Prob prob, List<SoftVersion> softVersionList) {
 		int isRrobAdmin = 3;
 		
@@ -222,6 +225,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	}
 
 	@Override
+	@Transactional
 	public void updateProbSoftVersion(List<SoftVersion> softVersionList, int probId) {
 		if (softVersionList != null && softVersionList.size() > 0) {
 			// 失效原有版本信息
@@ -239,6 +243,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
      * @param prob
      * @param probProductList
      */
+	@Transactional
     public void updateProbProduct(Prob prob, List<? extends ProbProduct> probProductList) {
         // 更新产品型号
         if (probProductList != null && probProductList.size() > 0) {

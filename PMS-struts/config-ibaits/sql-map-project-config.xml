@@ -2355,12 +2355,15 @@
             CASE WHEN t4.boot IS NULL THEN t2.`boot` ELSE t4.boot END AS boot,   t4.bootBak ,t4.bootChange,
             CASE WHEN t4.cpld IS NULL THEN t2.`cpld` ELSE t4.cpld END AS cpld,   t4.cpldBak , t4.cpldChange,
             CASE WHEN t4.pcb IS NULL THEN t2.`pcb` ELSE t4.pcb END AS pcb   , t4.pcbBak ,t4.pcbChange,
-            sbr.sn2 AS barCode2, sbr.item2 AS itemCode2, fi.describe_ AS itemName2
+            sbr.sn2 AS barCode2, sbr.item2 AS itemCode2, f.describe_ AS itemName2
         FROM pm_project_shipment t1    
             LEFT JOIN `fb_shipment_barcode_relation` sbr ON sbr.contract = REPLACE(t1.contractNo, '-C', '') AND t1.barcode = sbr.sn1 
             LEFT JOIN fb_soft_version t2 ON t1.`barcode` = t2.`serial_number`   
             LEFT JOIN pm_project_soft_version t4 ON t1.`projectId` = t4.`projectId` AND t1.`barcode` = t4.`barcode` AND t4.`datastate` = 1   
-            LEFT JOIN `fb_items` fi ON fi.item = sbr.item2 
+            LEFT JOIN `fb_items` f ON f.item = sbr.item2
+        <isNotEmpty property="itemFilters">
+            LEFT JOIN `fb_items` fi ON fi.item = t1.itemCode
+        </isNotEmpty>
         WHERE contractNo IN ($contractNo$) AND t1.projectId = #projectId# AND t1.transferFlag != 1
         <isNotEmpty prepend="AND" property="itemFilters">
             <iterate property="itemFilters" conjunction="OR" open="(" close=")">

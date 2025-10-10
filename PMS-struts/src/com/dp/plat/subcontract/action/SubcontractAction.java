@@ -785,7 +785,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
 		try {
 		    taxList = basicDataService.queryBasicDataBeanAll(SubcontractConstant.SUBCONTRACT_TAX_KEY);
             
-		    String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+		    String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
 			if (subcontract != null && subcontract.getId() != null) {
 //			    subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
 			    subcontract = subcontractService.selectSubcontractProjectVOById(subcontract.getId());
@@ -1009,7 +1009,7 @@ public class SubcontractAction extends BaseAction implements Preparable {
     public String querySubcontractPaymentPrint() {
         try {
             commonMap = commonMap != null ? commonMap : new HashMap<String, Object>();
-            String invoiceType = SubcontractUtil.getDeliveryInoviceType();
+            String invoiceType = SubcontractUtil.getDeliveryInvoiceType();
             if (subcontract != null && subcontract.getId() != null) {
 //              subcontract = subcontractService.selectSubcontractProjectById(subcontract.getId());
                 subcontract = subcontractService.selectSubcontractProjectVOById(subcontract.getId());

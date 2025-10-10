@@ -19,7 +19,7 @@ public class SubcontractUtil {
      * 返回交付件发票原件类型
      * @return
      */
-    public static String getDeliveryInoviceType() {
+    public static String getDeliveryInvoiceType() {
         return SystemContext.getSystemContext().getTextValue(SubcontractConstant.SUBCONTRACT_INSPECTION_DELIVERY_TYPES_INVOICE, "发票原件");
     }
     
@@ -35,7 +35,7 @@ public class SubcontractUtil {
      * 检查是否是发票类型
      * @return
      */
-    public static boolean checkDeliveryInoviceType(Map<String, Object> invoice) {
+    public static boolean checkDeliveryInvoiceType(Map<String, Object> invoice) {
         if (invoice == null) {
             return false;
         }

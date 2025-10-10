@@ -1,15 +1,15 @@
 package com.dp.plat.pms.extend.fp.model;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
-
-import cn.hutool.http.HttpResponse;
 
 /**
  * Response
@@ -247,5 +247,31 @@ public class Response<T> implements Serializable {
             return "null";
         }
         return o.toString().replace("\n", "\n    ");
+    }
+
+    public static <T> Response<T> failure(String message) {
+        return new Response<T>().message(message);
+    }
+    
+    public static <T, R extends Response<T>> R failure(String message, Type responseType) {
+        Response<T> response = null;
+        if (responseType != null && responseType instanceof Class) {
+            return failure(message, (Class<R>) responseType);
+        }
+        return (R) response.message(message);
+    }
+    
+    public static <T, R extends Response<T>> R failure(String message, Class<R> responseClass) {
+        Response<T> response = null;
+        if (responseClass != null && Response.class.isAssignableFrom(responseClass)) {
+            try {
+                response = responseClass.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                response = JSON.parseObject("{}", responseClass);
+            }
+        } else {
+            response = new Response<T>();
+        }
+        return (R) response.message(message);
     }
 }

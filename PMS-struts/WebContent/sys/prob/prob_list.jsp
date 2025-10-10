@@ -145,6 +145,32 @@
         autoCompleteComponent();
         autoCompleteTrackingUser();
         //initProbProductBySelect2("probProducts", null, {maxSelectedLength: 2});
+        setselect("relatedSceneType", "relatedSceneTypes", ",");
+        var projectStates = $("#relatedSceneTypes").val();
+        if (projectStates) {
+            $("#relatedSceneType").val(projectStates.split(","));
+        }
+        $("#relatedSceneType").multiselect({
+            header : true,
+            classes: "",
+            minWidth : 163,
+            selectedList : 2,//预设值最多显示10被选中项
+            hide : [ "explode", 500],
+            checkAllText : "全选",
+            uncheckAllText : '取消',
+            noneSelectedText : '==请选择==',
+            close : function() {
+                var values = $("#relatedSceneType").val();
+                $("#relatedSceneTypes").val(values);
+                var typeNames = [];
+                $("#relatedSceneType").find(":selected").each(function() {
+                	typeNames.push($.trim($(this).text()));
+                })
+                $("#relatedSceneTypesName").val(typeNames.join(","));
+            }
+        });
+        var width = $("button.ui-multiselect").addClass("form-control").css("width");
+        $("button.ui-multiselect").addClass("form-control").css({"width": '100%'});
     })
 </script>
 
@@ -191,6 +217,13 @@
             <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
                 <label for="status" class="control-label"><s:text name="prob.info.affected.version"></s:text></label>
                 <s:textfield id="affectedVersion" name="prob.affectedVersion" cssClass="form-control"></s:textfield>
+            </div>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="relatedSceneType" class="control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                <s:select list="relatedSceneTypeList" multiple="true" id="relatedSceneType"
+                    cssClass="form-control" listKey="basicDataId" listValue="basicDataName" cssStyle="width:100%"></s:select>
+                <s:hidden name="prob.relatedSceneTypes" id="relatedSceneTypes"></s:hidden>
+                <s:hidden name="prob.customInfo.relatedSceneTypesName" id="relatedSceneTypesName"></s:hidden>
             </div>
             <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
                 <label for="submit" class="control-label" style="width: 100%;">　</label>

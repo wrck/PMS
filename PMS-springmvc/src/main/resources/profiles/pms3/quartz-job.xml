@@ -140,7 +140,7 @@
     
     <!-- 总管理类 如果将lazy-init='false'那么容器启动就会执行调度程序 -->
     <bean id="startQuartz" lazy-init="false" autowire="no"
-        class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        class="org.springframework.scheduling.quartz.SchedulerFactoryBean" >
         <property name="triggers">
             <list>
                 <!-- <ref bean="smsDataTrigger" />

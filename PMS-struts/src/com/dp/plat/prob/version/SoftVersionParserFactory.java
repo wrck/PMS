@@ -3,6 +3,8 @@ package com.dp.plat.prob.version;
 import java.util.Arrays;
 import java.util.List;
 
+import com.dp.plat.exception.CustomRuntimeException;
+
 public class SoftVersionParserFactory {
 
     private final List<AbstractSoftVersionStrategy> parsers = Arrays.asList(
@@ -16,6 +18,6 @@ public class SoftVersionParserFactory {
                 return parser;  
             }
         }
-        throw new IllegalArgumentException("No suitable parser found for the given input: " + input);
+        throw new CustomRuntimeException("没有匹配的软件版本格式: " + input);
     }
 }

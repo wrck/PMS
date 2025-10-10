@@ -72,7 +72,7 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 				prob.setStatusList(Arrays.asList(4, 5, 6, 10));
 			}
 		}
-		
+        
 		int total = (int) getSqlMapClientTemplate().queryForObject("query_prob_count", prob);
 		if (displayParam.getExport()) {
 			displayParam.setPagesize(total);

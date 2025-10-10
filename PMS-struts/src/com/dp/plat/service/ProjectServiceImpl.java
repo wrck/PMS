@@ -38,6 +38,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.orm.ibatis.SqlMapClientTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +96,8 @@ import cn.hutool.core.bean.copier.CopyOptions;
 public class ProjectServiceImpl extends BaseServiceImpl implements ProjectService {
     
     @Autowired
+    @Qualifier("projectService")
+    @Lazy
     private ProjectService projectService;
     
 	protected ProjectDao projectDao;
@@ -148,6 +152,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			project.setProjectState(MessageUtil.PROJECT_STATE_DENY);
 			project.setIsback(MessageUtil.PROJECT_CREATE_STATE40);
 		} else {
+		    project.setIsback(MessageUtil.PROJECT_CREATE_STATE30);
 			// 如服务经理为空，则项目状态变更为“待指定服务经理”
 			if ("".equals(project.getServiceManagerCode()) && "".equals(project.getProgramManagerCode())) {
 				project.setProjectState(MessageUtil.PROJECT_STATE_30);// 已创建
@@ -159,8 +164,8 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			// 如均不为空，则项目状态变更为“已指派项目经理”
 			if (!"".equals(project.getServiceManagerCode()) && !"".equals(project.getProgramManagerCode())) {
 				project.setProjectState(MessageUtil.PROJECT_STATE_32);// 已创建
+				project.setIsback(MessageUtil.PROJECT_CREATE_STATE32);
 			}
-			project.setIsback(MessageUtil.PROJECT_CREATE_STATE30);
 		}
 		project.setProjectCode(this.queryProjectCode(project));
 		Integer pid = projectDao.insertProject(project);// 插入到表pm_project_header

@@ -488,6 +488,52 @@ function initProbProductBySelect2(select2Id, $container, customOption) {
     $select.select2(options);
 }
 
+function initProbSelectBySelect2(select2Id, $container, customOption) {
+    $container = $container || $("#mainForm");
+    
+    var $select = $("#" + select2Id, $container);
+    var $selectHidden = $("#" + select2Id + "_hidden", $container);
+    if ($selectHidden.length == 0) {
+    	$selectHidden = $(`<input type='hidden' id='${select2Id}_hidden' name='${select2Id}_hidden' />`);
+    	$select.before($selectHidden);
+    }
+    
+    var processDataFunc = function (data, params) {
+        var list = JSON.parse(data.result || "[]");
+        return {
+            results: list,
+        };
+    }
+    var selectedData = [];
+    try {
+    	selectedData = $selectHidden.val();
+    	selectedData = processDataFunc({result: selectedData}, {selected: true}).results;
+    } catch (e) {
+	}
+    
+    var options = $.extend({
+        allowClear: true,
+        closeOnSelect: false,
+        language: "zh-CN",
+        width: 'auto',
+        multiple: true,
+        dropdownAutoWidth: true,
+        dropdownParent: $select.parent(),
+        placeholder: "请选择"
+    }, customOption || {});
+    
+    var defaultOptions = $.fn.select2.defaults.apply(options);
+    options.dropdownAdapter = defaultOptions.dropdownAdapter;
+    options.selectionAdapter = defaultOptions.selectionAdapter;
+    
+    initDropdownSelectAll(options);
+    
+    initCustomSelection(options);
+    
+    $select.val(selectedData);
+    $select.select2(options);
+}
+
 function initDropdownSelectAll(options) {
 	// 获取 Select2 工具类和默认组件
     const Utils = $.fn.select2.amd.require("select2/utils");
@@ -666,6 +712,54 @@ function renderProbProducts(json, options) {
     }
 }
 
+function renderCommonLabel(json, options) {
+	options = options || {};
+	var $container = options.$container, 
+		readOnly = options.readOnly, 
+		ignoreSub = options.ignoreSub, 
+		onlyAppend = options.onlyAppend;
+	
+	var list = [];
+    if ($.isArray(json)) {
+    	list = json
+    } else if (typeof json == "string"){
+    	try {
+    		list = JSON.parse(json || "[]");
+	    } catch(e) {
+	    	console.error(e);
+	    }
+    } else {
+    	list = [json];
+    }
+    var itemGroupMap = {};
+    var items = [];
+    var key = options.key || "id";
+    var text = options.text || "text";
+    for(var i in list) {
+    	var item = list[i];
+        var groupId = item[key];
+        if (groupId) {
+            if (!itemGroupMap[groupId]) {
+                itemGroupMap[groupId] = item;
+                items.push(item);
+            }
+            var group = itemGroupMap[groupId];
+            var children = group.children || [];
+            children.push($.extend(true, {}, item));
+            group.children = children;
+        } else {
+            items.push(item);
+        }
+    }
+    items.sort(function(a, b) {
+    	return (a[key] || "").localeCompare(b[key]);
+    })
+    var labelClass = options.labelClass || 'label-primary';
+    for(var item of items) {
+        $($container).append(`<span class="prob-label label ${labelClass}">${item[text] || ''}</span>`);
+    }
+}
+
 function initSoftVersionInputs(container, options) {
 	var $container = $(container);
 	$container = $container.length > 0 ? $container  : $(`#${container}`);
@@ -780,6 +874,19 @@ function checkPost(){
 		probProducts.push(objDeepOmit(data.source, ['id', 'status', 'createBy', 'createTime', 'updateBy', 'updateTime']));
 	}
 	$("#probProducts_hidden").val(JSON.stringify(probProducts));
+	
+	var selectedData = $("#relatedSceneTypes").select2("data") || [];
+	var relatedSceneTypes = [];
+	var relatedSceneTypesName = [];
+	for (var data of selectedData) {
+		relatedSceneTypes.push({
+			id: data.id,
+			text: data.text
+		})
+		relatedSceneTypesName.push(data.text);
+	}
+	$("#relatedSceneTypesJson_hidden").val(JSON.stringify(relatedSceneTypes));
+	$("#relatedSceneTypesName_hidden").val(relatedSceneTypesName);
 
     fields = new Array('num','theme', 'probProducts');
     for(i = 0 ;i < fields.length ; i++){

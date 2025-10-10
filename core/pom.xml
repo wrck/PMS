@@ -291,6 +291,12 @@
 		    <artifactId>commons-logging</artifactId>
 		    <version>${commons-logging.version}</version>
 		</dependency>
+		
+		<!-- 轻量级表达式引擎 -->
+        <dependency>
+            <groupId>com.googlecode.aviator</groupId>
+            <artifactId>aviator</artifactId>
+        </dependency>
 	</dependencies>
 	
 

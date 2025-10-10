@@ -537,6 +537,7 @@ public class PmWorkFlow extends BaseVO {
 		if (customInfo == null) {
 			customInfo = new HashMap<>();
 			this.setCustomInfo(customInfo);
+			customInfo =  (Map<String, Object>) this.getCustomInfo();
 		}
 		customInfo.put(key, value);
 	}

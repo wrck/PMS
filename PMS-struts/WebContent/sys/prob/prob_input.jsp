@@ -289,6 +289,7 @@
     $(document).ready(function() {
         var $container = $("#probProductList");
         initProbProductBySelect2("probProducts", $container);
+        initProbSelectBySelect2("relatedSceneTypes", $("#relatedSceneTypeList"));
     });
     
     
@@ -477,6 +478,16 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <div id="relatedSceneTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList">
+                                    <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
+                                    <s:hidden id="relatedSceneTypesJson_hidden" name="prob.customInfo.relatedSceneTypesJson" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypes_hidden" name="prob.customInfo.relatedSceneTypes" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypesName_hidden" name="prob.customInfo.relatedSceneTypesName" ></s:hidden>
+                                    <s:select id="relatedSceneTypes" name="prob.relatedSceneTypes" list="relatedSceneTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.attachments"></s:text></label>
                                 <div class="col-xs-4">
                                     <input type="file" name="upload" class="form-control"/>
@@ -504,8 +515,7 @@
                                 </div>
                             </s:if>
                             <div class="form-group text-center">
-                                
-                                <a href="module/prob_list.action" style="width: 80px;" class="btn btn-default btn-sm" ><s:text name='sys.back' /></a>
+                                <a href="javascript:history.back()" style="width: 80px;" class="btn btn-default btn-sm" ><s:text name='sys.back' /></a>
                                 <span style="width:30px;display:inline-block;"></span>
 
                                 <!-- 研发人员发布任务 -->

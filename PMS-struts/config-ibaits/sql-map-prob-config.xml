@@ -15,11 +15,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<![CDATA[
 			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
                 duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom
-                , customInfo
+                , relatedSceneTypes, relatedSceneTypesMark, customInfo
             )
 			VALUES(#probNum#,#watch#,#theme#,#desc#,#solution#,#status#,#startdate#,#duedate#,
                 #attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now()
-                , #customInfo#
+                , #relatedSceneTypes#, #relatedSceneTypesMark#, #customInfo#
             )
 		]]>
 		<selectKey resultClass="int" keyProperty="probId">
@@ -146,6 +146,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty property="customInfo">
             <isNotEmpty prepend="and" property="customInfo.trackingUserSearch"> t1.trackingUser = #customInfo.trackingUserSearch# </isNotEmpty>
         </isNotEmpty>
+        <!-- 或匹配，包含任意一个 -->
+        <isNotEmpty prepend="and" property="relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #relatedSceneTypesMark# > 0]]></isNotEmpty>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <isNotEmpty prepend="and" property="relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #relatedSceneTypesMark# = #relatedSceneTypesMark# ]]></isNotEmpty> -->
 	</select>
 	<resultMap class="Prob" id="ProbMap">
 		<result property="probId" column="id"/>
@@ -161,15 +165,15 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	</resultMap>
 	<select id="query_prob_list" parameterClass="java.util.Map" resultClass="Prob">
 			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status
-			, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
-			<!-- , t1.desc, t1.solution, t1.productType -->
-			, t1.customInfo
+				, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
+				<!-- , t1.desc, t1.solution, t1.productType -->
+				, t1.customInfo
+                , t1.relatedSceneTypes, t1.relatedSceneTypesMark
 			FROM prob_main t1 
 			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
 			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
 			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
-			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31'
-			AND t2.`effectiveTo` IS NULL
+			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31' AND t2.`effectiveTo` IS NULL
 		<isEqual prepend=" " property="prob.checkSoft" compareValue="true"> 
 			LEFT JOIN (
 		        SELECT 
@@ -223,7 +227,11 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty property="prob.customInfo">
             <isNotEmpty prepend="and" property="prob.customInfo.trackingUserSearch"> t1.trackingUser = #prob.customInfo.trackingUserSearch# </isNotEmpty>
         </isNotEmpty>
-        
+		<!-- 或匹配，包含任意一个 -->
+        <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# > 0]]></isNotEmpty>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# = #prob.relatedSceneTypesMark# ]]></isNotEmpty> -->
+		
 		<isNotEmpty prepend=" order by " property="displayParam.sort">
 			$displayParam.sort$
 			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
@@ -264,6 +272,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="visibleRange" column="visibleRange"/>
 		<result property="readStatus" column="readStatus"/>
         <result property="customInfo" column="customInfo"/>
+		<result property="relatedSceneTypes" column="relatedSceneTypes"/>
+		<result property="relatedSceneTypesMark" column="relatedSceneTypesMark"/>
 	</resultMap>
 	<select id="query_prob_one" parameterClass="Prob" resultMap="ProbSingleMap">
 		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
@@ -312,6 +322,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             <!-- customInfo = #customInfo:JSON#  -->
             customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
         </isNotEmpty>
+        <isNotEmpty prepend="," property="relatedSceneTypes"><![CDATA[ relatedSceneTypes = #relatedSceneTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="relatedSceneTypesMark"><![CDATA[ relatedSceneTypesMark = #relatedSceneTypesMark#]]></isNotEmpty>
 		<![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -335,6 +347,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             <!-- customInfo = #customInfo:JSON#  -->
             customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
         </isNotEmpty>
+        <isNotEmpty prepend="," property="relatedSceneTypes"><![CDATA[ relatedSceneTypes = #relatedSceneTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="relatedSceneTypesMark"><![CDATA[ relatedSceneTypesMark = #relatedSceneTypesMark#]]></isNotEmpty>
         <![CDATA[ where id = #probId#]]>
 	</update>
 	

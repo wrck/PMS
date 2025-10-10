@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -13,18 +14,19 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dp.plat.core.context.HttpContext;
 import com.dp.plat.core.context.UserContext;
-import com.dp.plat.core.dao.FileInfoMapper;
 import com.dp.plat.core.pojo.FileInfo;
 import com.dp.plat.core.pojo.FileType;
 import com.dp.plat.core.pojo.User;
 import com.dp.plat.core.pojo.UserInfo;
+import com.dp.plat.core.service.IFileInfoService;
 import com.dp.plat.core.service.IUploaderService;
 import com.dp.plat.core.service.IUserInfoService;
 import com.dp.plat.core.service.IUserService;
@@ -32,22 +34,6 @@ import com.dp.plat.core.util.DownloadUtils;
 import com.dp.plat.core.util.FileUtil;
 import com.dp.plat.core.util.UploadUtils;
 import com.dp.plat.support.PropertiesUtil;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 @Service("uploaderService")
 public class UploaderService implements IUploaderService {
@@ -59,7 +45,7 @@ public class UploaderService implements IUploaderService {
 	private IUserInfoService userInfoService;
 
 	@Resource
-	private FileInfoMapper fileInfoMapper;
+	private IFileInfoService fileInfoService;
 
 	/**
 	 * 创建文件
@@ -110,8 +96,9 @@ public class UploaderService implements IUploaderService {
 		// 图片替换
 		if (userInfo != null) {
 			File file = new File(dirPath + userInfo.getAvatar());
-			if (file.exists())
-				file.delete();
+			if (file.exists()) {
+			    file.delete();
+			}
 			userInfo.setAvatar(filePath);
 			userInfoService.updateByPrimaryKeySelective(userInfo);
 		}
@@ -132,13 +119,17 @@ public class UploaderService implements IUploaderService {
 	@Override
 	@Transactional
 	public List<FileInfo> baseUploadFile(String typeCode, HttpServletRequest httpRequest) throws Exception {
-		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
+		FileType fileType = fileInfoService.selectFileTypeByCode(typeCode);
 		// 执行文件上传
 		List<FileInfo> list = UploadUtils.uploadMultipartFile(httpRequest, fileType);
+		
 		// 文件上传信息插入数据库
+		String dataType = httpRequest.getParameter("dataType");
+		String dataId = httpRequest.getParameter("dataId");
 		for (FileInfo fileInfo : list) {
-			// TODO Transfer Upload Path
-			fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
+		    fileInfo.setDataType(StringUtils.defaultIfBlank(dataType, fileType.getCode()));
+		    fileInfo.setDataId(NumberUtils.isNumber(dataId) ? NumberUtils.createInteger(dataId) : 0);
+			fileInfoService.insertSelective(fileInfo);
 		}
 		return list;
 	}
@@ -146,13 +137,16 @@ public class UploaderService implements IUploaderService {
 	@Override
 	@Transactional
 	public List<FileInfo> baseUploadFile(String typeCode, List<MultipartFile> multipartFiles, HttpServletRequest httpRequest) throws Exception {
-		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
+		FileType fileType = fileInfoService.selectFileTypeByCode(typeCode);
 		// 执行文件上传
 		List<FileInfo> list = UploadUtils.uploadMultipartFile(fileType, multipartFiles, httpRequest);
 		// 文件上传信息插入数据库
+		String dataType = httpRequest.getParameter("dataType");
+        String dataId = httpRequest.getParameter("dataId");
 		for (FileInfo fileInfo : list) {
-			// TODO Transfer Upload Path
-			fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
+		    fileInfo.setDataType(StringUtils.defaultIfBlank(dataType, fileType.getCode()));
+            fileInfo.setDataId(NumberUtils.isNumber(dataId) ? NumberUtils.createInteger(dataId) : 0);
+            fileInfoService.insertSelective(fileInfo);
 		}
 		return list;
 	}
@@ -160,42 +154,46 @@ public class UploaderService implements IUploaderService {
 	@Override
 	@Transactional
 	public FileInfo baseUploadFile(String typeCode, MultipartFile multipartFile, HttpServletRequest httpRequest) throws Exception {
-		FileType fileType = fileInfoMapper.selectFileTypeByCode(typeCode);
+		FileType fileType = fileInfoService.selectFileTypeByCode(typeCode);
 		// 执行文件上传
 		FileInfo fileInfo = UploadUtils.uploadMultipartFile(fileType, multipartFile,httpRequest);
 		// 文件上传信息插入数据库
-		// TODO Transfer Upload Path
-		fileInfoMapper.insertFileInfo(fileInfo, UserContext.getCurrentUser().getUserName());
+		String dataType = httpRequest.getParameter("dataType");
+        String dataId = httpRequest.getParameter("dataId");
+
+        fileInfo.setDataType(StringUtils.defaultIfBlank(dataType, fileType.getCode()));
+        fileInfo.setDataId(NumberUtils.isNumber(dataId) ? NumberUtils.createInteger(dataId) : 0);
+		fileInfoService.insertSelective(fileInfo);
 		return fileInfo;
 	}
 
 	@Override
-	public List<FileInfo> selectFileInfoByIdsAndType(List<String> ids, Integer typeId) {
-		return fileInfoMapper.selectFileInfoByIdsAndType(ids, typeId);
+	public List<FileInfo> selectFileInfoByIdsAndType(Collection<String> ids, Integer typeId) {
+		return fileInfoService.selectFileInfoByIdsAndType(ids, typeId);
 	}
 
 	@Override
 	public void fileDownload(Integer fileId, HttpServletRequest request, HttpServletResponse response) {
-		FileInfo fileInfo = fileInfoMapper.selectFileInfoById(fileId);
+		FileInfo fileInfo = fileInfoService.selectFileInfoById(fileId);
 		// 项目路径
 		String webPath = request.getSession().getServletContext().getRealPath("/");
 		DownloadUtils.downFile(response, request, webPath + fileInfo.getPath(), fileInfo.getName());
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
+		fileInfoService.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
 	}
 
 	@Override
 	public void zipFileDownload(String fileIds, String zipName, HttpServletRequest request,
 			HttpServletResponse response) {
 		List<String> ids = Arrays.asList(fileIds.split(","));
-		List<FileInfo> fileInfos = fileInfoMapper.selectFileInfoByIds(ids);
+		List<FileInfo> fileInfos = fileInfoService.selectFileInfoByIds(ids);
 		if (StringUtils.isEmpty(zipName)) {
 			zipName = FileUtil.generZipFileName();
 		}
 		//DownloadUtils.downZip("upload/temp", zipName, fileInfos, request, response);
 		DownloadUtils.downZip(UploadUtils.UPLOAD_PATH + "/temp", zipName, fileInfos, request, response);
 		// 记录下载日志，方便统计文件下载次数
-		fileInfoMapper.insertdownlog(fileIds, HttpContext.getCurrentIp(request), UserContext.getUsername());
+		fileInfoService.insertdownlog(fileIds, HttpContext.getCurrentIp(request), UserContext.getUsername());
 	}
 
 	@Override
@@ -206,7 +204,7 @@ public class UploaderService implements IUploaderService {
 		// 记录下载日志，方便统计文件下载次数
 		Integer fileId = fileInfo.getId();
 		if (fileId != null && fileId != 0) {
-			fileInfoMapper.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
+			fileInfoService.insertdownlog(String.valueOf(fileId), HttpContext.getCurrentIp(request), UserContext.getUsername());
 		}
 	}
 
@@ -227,8 +225,7 @@ public class UploaderService implements IUploaderService {
 			}
 		}
 		if (!fileIds.isEmpty()) {
-			fileInfoMapper.insertdownlog(StringUtils.collectionToDelimitedString(fileIds, ","),
-					HttpContext.getCurrentIp(request), UserContext.getUsername());
+			fileInfoService.insertdownlog(StringUtils.join(fileIds, ","), HttpContext.getCurrentIp(request), UserContext.getUsername());
 		}
 	}
 }

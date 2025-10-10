@@ -1081,7 +1081,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     </delete>
     
     <select id="selectContractShimpentBarcodeToCRM" parameterClass="map" resultClass="java.util.HashMap">
-        select contract_code, barcode, TRIM(item) AS itemCode, barcode2, TRIM(item2) AS itemCode2 from view_warranty vw
+        <!-- select contract_code, barcode, TRIM(item) AS itemCode, barcode2, TRIM(item2) AS itemCode2 from view_warranty vw
         where contract_type = 0 
         <isNotEmpty prepend="AND" property="beginDate" open="(" close=")"> 
             (   vw.packdate >= #beginDate# 
@@ -1094,6 +1094,23 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </isNotEmpty>
         <isEmpty property="beginDate"> 
             <isNotEmpty prepend="AND" property="endDate"> (#endDate# >= vw.packdate or #endDate# >= vw.packdate) </isNotEmpty>
+        </isEmpty> -->
+        
+        SELECT TRIM(contract_code) AS contract_code, TRIM(barcode) AS barcode
+		    , TRIM(item) AS itemCode, TRIM(barcode2) AS barcode2
+		    , TRIM(item2) AS itemCode2
+		    , NULLIF(NULLIF(fsb.rma_no, ''), 'null') IS NOT NULL AS rmaState
+		FROM fb_shipment_barcode fsb
+		    LEFT JOIN fb_shipment fs ON fs.packlist_id = fsb.pack_id
+		    LEFT JOIN fb_contract fc ON fc.contract_id = fs.con_id
+		WHERE fc.contract_type IN (0) 
+		<isNotEmpty prepend="AND" property="beginDate" open="(" close=")"> 
+            (   fsb.updateTime >= #beginDate# 
+                <isNotEmpty prepend="AND" property="endDate"> #endDate# >= fsb.updateTime </isNotEmpty>
+            ) 
+        </isNotEmpty>
+        <isEmpty property="beginDate"> 
+            <isNotEmpty prepend="AND" property="endDate"> (#endDate# >= fsb.updateTime) </isNotEmpty>
         </isEmpty>
     </select>
     

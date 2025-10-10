@@ -16,13 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -75,6 +80,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -86,12 +92,14 @@ import okhttp3.RequestBody;
  */
 @Component("fpApi")
 public class FPApi implements DisposableBean {
+    private static final Logger logger = LoggerFactory.getLogger(FPApi.class);//日志
     public static final String SYS_FP_API = "sys.fp.api";
     public static final String MINUTE = "MINUTE";
     public static final String SINGLE = "SINGLE";
+    public static final String MULTIPLE = "MULTIPLE";
     public static final TypeReference<Map<String, Object>> DEFAULT_TYPE = new TypeReference<Map<String, Object>>() {};
     static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CustomizableThreadFactory("FPApi-ScheduledPool-Thread-"));
-    private static final Logger logger = LoggerFactory.getLogger(FPApi.class);//日志
+    static final ExecutorService fixedExecutor = Executors.newFixedThreadPool(4, new CustomizableThreadFactory("FPApi-FixedPool-Thread-"));
     private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     // token获取相关参数
     private static String authType;
@@ -368,6 +376,7 @@ public class FPApi implements DisposableBean {
         config = FPApi.initConfig(config);
         Map<String, Object> options = new HashMap<>();
         options.put("responseType", ElectronicInvoiceResponse.class);
+        options.put("responseClass", ElectronicInvoiceResponse.class);
         options.put("headers", Collections.singletonMap("Content-Type", "multipart/form-data"));
         return (ElectronicInvoiceResponse) pushSingleData(data, archiveUrl, config, options);
     }
@@ -390,8 +399,9 @@ public class FPApi implements DisposableBean {
         config = FPApi.initConfig(config);
         Map<String, Object> options = new HashMap<>();
         options.put("responseType", ElectronicInvoiceResponse.class);
+        options.put("responseClass", ElectronicInvoiceResponse.class);
         options.put("headers", Collections.singletonMap("Content-Type", "multipart/form-data"));
-        return pushSingleData(list, archiveUrl, 30, config, MINUTE, options);
+        return pushSingleData(list, archiveUrl, 30, config, MULTIPLE, options);
     }
 
     /**
@@ -466,6 +476,19 @@ public class FPApi implements DisposableBean {
             }
             // 通过单位时间请求限制的方式，通过调度发送请求
             responseList.addAll(schedulePushData(dataList, syncUrl, config, delay, timeUnit, options));
+            break;
+        }
+        case MULTIPLE: {
+            // 如果是List提交，这默认按1分钟进行处理
+            int delay = 1;
+            TimeUnit timeUnit = TimeUnit.MINUTES;
+            // 如果不是list，需要单个提交，则按秒计算时间
+            if (!splitToList) {
+                delay = 60 / rateLimit;
+                timeUnit = TimeUnit.SECONDS;
+            }
+            // 通过单位时间请求限制的方式，通过调度发送请求
+            responseList.addAll(multiplePushData(dataList, syncUrl, config, delay, timeUnit, options));
             break;
         }
         case SINGLE:
@@ -550,15 +573,15 @@ public class FPApi implements DisposableBean {
      * @return
      */
     private static <T> Response<T> pushData(Object data, String syncUrl, Map<String, Object> config, Map<String, Object> options) {
+        Type responseType = MapUtil.get(options, "responseType", Type.class);
         if (data == null) {
-            return new Response<T>();
+            return JSON.parseObject("{}", responseType);
         }
         
         if (options == null) {
             options = Collections.emptyMap();
         }
         
-        Type responseType = MapUtil.get(options, "responseType", Type.class);
         Map<String, String> headers = MapUtil.get(options, "headers", Map.class);
         Request<Response<T>> request = new Request<Response<T>>();
         request.setResponseType(responseType);
@@ -629,6 +652,83 @@ public class FPApi implements DisposableBean {
             linkedQueue.clear();
             scheduledFuture.cancel(true);
         }
+        return responseList;
+    }
+    
+    /**
+     * 池推送数据
+     *
+     * @param list
+     * @param syncUrl
+     * @param config
+     * @param delay
+     * @param timeUnit
+     * @param <T>
+     *
+     * @return
+     */
+    private static <T> List<Response<T>> multiplePushData(List<Object> list, String syncUrl, Map<String, Object> config, int delay, TimeUnit timeUnit, Map<String, Object> options) {
+        delay = delay == 0 ? 1 : Math.abs(delay);
+        timeUnit = timeUnit == null ? TimeUnit.MINUTES : timeUnit;
+        
+        Type responseType = MapUtil.get(options, "responseType", Type.class);
+        
+        int size = list.size();
+        if (size == 0) {
+            return new ArrayList<>(0);
+        }
+
+        // 存储每个任务的 Future，保持顺序
+        List<Future<Response<T>>> futures = new ArrayList<>(size);
+        
+        // 提交所有任务
+        for (Object data : list) {
+            Future<Response<T>> future = fixedExecutor.submit(new Callable<Response<T>>() {
+                @Override
+                public Response<T> call() throws Exception {
+                    try {
+                        return pushData(data, syncUrl, config, options);
+                    } catch (Exception e) {
+                        // 包装异常为 Response.failure，避免 future.get() 抛出 ExecutionException
+                        return Response.failure(e.getMessage(), responseType);
+                    }
+                }
+            });
+            futures.add(future);
+        }
+
+        // 2. 所有任务提交完毕，现在按顺序获取结果（保证顺序）
+        List<Response<T>> responseList = new ArrayList<>(size);
+        // 延迟时长*请求次数，等于总延迟时长，*放大倍数得出一个超时时长
+        long timeout = delay * 20;
+        // 转化为秒
+        long seconds = timeUnit.toSeconds(timeout);
+        // 如果超时时间至少延迟30秒
+        timeout = timeUnit.convert(Math.max(seconds, 30), timeUnit);
+        try {
+            for (Future<Response<T>> future : futures) {
+                Response<T> response;
+                try {
+                    response = future.get(timeout, timeUnit); // 可选：为每个任务设置超时
+                } catch (TimeoutException e) {
+                    future.cancel(true);
+                    response = Response.failure(e.getMessage(), responseType);
+                } catch (ExecutionException e) {
+                    // pushData 抛出异常时，会被包装成 ExecutionException
+                    response = Response.failure(e.getMessage(), responseType);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    response = Response.failure(e.getMessage(), responseType);
+                    // 可选：中断后续任务
+                    // break;
+                }
+                responseList.add(response);
+            }
+        } finally {
+            // 可选：清理未完成的任务（比如已中断）
+            // 一般不需要 cancel，因为都 get() 过了
+        }
+
         return responseList;
     }
 
@@ -1689,15 +1789,24 @@ public class FPApi implements DisposableBean {
         try {
             FPApi = null;
             scheduler.shutdownNow();
+        } catch (Exception e) {
+            logger.error("回收周期线程池异常", e);
+        }
+        try {
+            fixedExecutor.shutdownNow();
+        } catch (Exception e) {
+            logger.error("回收并发线程池异常", e);
+        }
+        try {
             HttpClientPool.close();
             OkHttpPool.close();
         } catch (Exception e) {
-            logger.error("回收线程池异常", e);
+            logger.error("回收请求线程池异常", e);
         }
     }
     
     /**
-     * HTTP 连接池管理类（单例）
+     * Apache HttpClient 连接池管理类（单例）
      */
     public static class HttpClientPool {
         private static final PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
@@ -1709,16 +1818,46 @@ public class FPApi implements DisposableBean {
             if (httpClient == null) {
                 synchronized (HttpClientPool.class) {
                     if (httpClient == null) {
+                        // 从全局配置中获取配置映射
                         Map<String, Object> config = getConfig();
-                        // 创建连接池
-                        connManager.setMaxTotal(MapUtil.getInt(config, "httpMaxTotal", 100));           // 最大连接数
-                        connManager.setDefaultMaxPerRoute(MapUtil.getInt(config, "httpDefaultMaxPerRoute", 20));  // 每个域名最大连接数
+                        // 提取 "httpClient" 配置节点
+                        Map<String, Object> httpConfig = (Map<String, Object>) config.getOrDefault("httpClient", Collections.emptyMap());
 
-                        // 构建 HttpClient
+                        // ===== 连接池配置 =====
+                        // 从配置中获取连接池最大总连接数，未配置时默认为 100
+                        int maxTotal = MapUtil.getInt(httpConfig, "maxTotal", 100);
+                        // 从配置中获取每个路由（如 https://host）的最大连接数，默认 20
+                        int maxPerRoute = MapUtil.getInt(httpConfig, "maxPerRoute", 20);
+                        connManager.setMaxTotal(maxTotal);           // 设置连接池最大总连接数
+                        connManager.setDefaultMaxPerRoute(maxPerRoute); // 设置每个路由的最大连接数
+
+                        // ===== 超时配置 =====
+                        // 连接建立超时时间（毫秒），默认 10000（10秒）
+                        int connectTimeout = MapUtil.getInt(httpConfig, "connectTimeout", 10_000);
+                        // 读取响应超时时间（毫秒），默认 60000（60秒）
+                        int readTimeout = MapUtil.getInt(httpConfig, "readTimeout", 60_000);
+
+                        // 构建请求级别的默认配置
+                        RequestConfig requestConfig = RequestConfig.custom()
+                            .setConnectTimeout(connectTimeout)        // 设置连接超时
+                            .setSocketTimeout(readTimeout)            // 设置读取超时
+                            .setRedirectsEnabled(MapUtil.getBool(httpConfig, "followRedirects", true)) // 是否自动处理重定向
+                            .build();
+
+                        // ===== 长连接保活配置 =====
+                        // 连接在池中保持存活的时间（分钟），默认 5 分钟
+                        long keepAliveMinutes = MapUtil.getLong(httpConfig, "keepAliveMinutes", 5L);
+
+                        // ===== 构建 HttpClient =====
+                        // 使用自定义构建器创建客户端
                         httpClient = HttpClients.custom()
-                                .setConnectionManager(connManager)
-                                .setConnectionManagerShared(true) // 允许多线程共享
-                                .build();
+                            .setConnectionManager(connManager)                     // 使用共享连接池
+                            .setConnectionManagerShared(true)                      // 允许多线程并发使用连接池
+                            .setDefaultRequestConfig(requestConfig)                // 设置默认请求配置
+                            .setConnectionTimeToLive(keepAliveMinutes, TimeUnit.MINUTES) // 连接最大存活时间
+                            .evictIdleConnections(keepAliveMinutes, TimeUnit.MINUTES)    // 清理空闲连接的间隔
+                            .build(); // 构建并返回客户端实例
+                        // 注意：未显式配置 Cookie、认证、重试等，使用默认行为
                     }
                 }
             }
@@ -1733,30 +1872,61 @@ public class FPApi implements DisposableBean {
                 try {
                     httpClient.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log("回收HttpClientPool发生异常：{}", e);
+                } finally {
+                    httpClient = null; // 允许重新初始化
                 }
             }
         }
     }
-    
+
     /**
      * OkHttp 连接池管理类（单例）
      */
     public static class OkHttpPool {
         private static volatile OkHttpClient httpClient;
 
+        private OkHttpPool() {} // 私有构造函数防止实例化
+
         public static OkHttpClient get() {
             if (httpClient == null) {
-                synchronized (HttpClientPool.class) {
+                synchronized (OkHttpPool.class) {
                     if (httpClient == null) {
                         Map<String, Object> config = getConfig();
-                        // 构建 HttpClient
+                        Map<String, Object> httpConfig = (Map<String, Object>) config.getOrDefault("httpClient", Collections.emptyMap());
+
+                        // ===== 连接池配置 =====
+                        int maxTotal = MapUtil.getInt(httpConfig, "maxTotal", 100);
+                        // OkHttp 的 maxPerRoute 对应于 Dispatcher 的 maxRequestsPerHost
+                        int maxPerRoute = MapUtil.getInt(httpConfig, "maxPerRoute", 20);
+
+                        // ===== 超时配置 =====
+                        int connectTimeout = MapUtil.getInt(httpConfig, "connectTimeout", 10_000);
+                        int readTimeout = MapUtil.getInt(httpConfig, "readTimeout", 60_000);
+
+                        // ===== 保活时间 =====
+                        long keepAliveMinutes = MapUtil.getLong(httpConfig, "keepAliveMinutes", 5L);
+
+                        // ===== 构建连接池 =====
+                        // OkHttp 的 ConnectionPool 控制空闲连接数量和保活时间
+                        // 注意：OkHttp ConnectionPool 的 maxIdleConnections 是池中保持的最大空闲连接数，
+                        // 而不是总的连接数。这里用 maxTotal 作为近似，但实际行为略有不同。
+                        // 如果需要严格限制总连接数，需要结合 Dispatcher 的配置。
+                        ConnectionPool connectionPool = new ConnectionPool(maxTotal, keepAliveMinutes, TimeUnit.MINUTES);
+
+                        // ===== 并发控制 =====
+                        Dispatcher dispatcher = new Dispatcher();
+                        dispatcher.setMaxRequests(maxTotal);           // 总并发请求数上限
+                        dispatcher.setMaxRequestsPerHost(maxPerRoute); // 每个主机并发请求数上限
+
+                        // ===== 构建 OkHttpClient =====
                         httpClient = new OkHttpClient.Builder()
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(20, TimeUnit.SECONDS)
-                        .writeTimeout(15, TimeUnit.SECONDS)
-                        .connectionPool(new ConnectionPool(MapUtil.getInt(config, "httpMaxTotal", 100), 5L, TimeUnit.MINUTES)) // 核心：连接池
-                        .build();
+                            .connectionPool(connectionPool)                            // 使用自定义连接池
+                            .dispatcher(dispatcher)                                    // 使用自定义调度器
+                            .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)     // 连接超时
+                            .readTimeout(readTimeout, TimeUnit.MILLISECONDS)           // 读取超时
+                            .followRedirects(MapUtil.getBool(httpConfig, "followRedirects", true)) // 自动重定向
+                            .build(); // 构建客户端
                     }
                 }
             }
@@ -1766,8 +1936,17 @@ public class FPApi implements DisposableBean {
         // 应用关闭时调用（可选，JVM 会自动清理）
         public static void close() {
             if (httpClient != null) {
-                httpClient.dispatcher().executorService().shutdown();
-                httpClient.connectionPool().evictAll();
+                try {
+                    // OkHttp 的 close 方法会关闭调度器和连接池
+                    httpClient.dispatcher().executorService().shutdown();
+                    httpClient.connectionPool().evictAll();
+                } catch (Exception e) {
+                    log("回收OkHttpPool发生异常：{}", e);
+                } finally {
+                    // 注意：OkHttpClient 本身没有 close 方法，通常不需要置为 null，
+                    // 但如果需要重新配置后获取新实例，可以这样做。
+                    httpClient = null;
+                }
             }
         }
     }

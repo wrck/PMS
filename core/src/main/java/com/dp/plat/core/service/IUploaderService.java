@@ -1,6 +1,7 @@
 package com.dp.plat.core.service;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -100,8 +101,6 @@ public interface IUploaderService {
 	 * @param typeId
 	 * @return
 	 */
-	public List<FileInfo> selectFileInfoByIdsAndType(List<String> ids, Integer typeId);
-
-
+	public List<FileInfo> selectFileInfoByIdsAndType(Collection<String> ids, Integer typeId);
 
 }

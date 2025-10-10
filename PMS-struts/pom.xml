@@ -75,6 +75,12 @@
           <artifactId>pms-security</artifactId>
           <version>${project.version}</version>
         </dependency>
+        <!-- 规则组件  -->
+        <dependency>
+          <groupId>com.dp.plat</groupId>
+          <artifactId>pms-rules</artifactId>
+          <version>${project.version}</version>
+        </dependency>
         <!-- HTML Parser -->
         <dependency>
             <!-- jsoup HTML parser library @ https://jsoup.org/ -->
@@ -82,13 +88,6 @@
             <artifactId>jsoup</artifactId>
         </dependency>
         
-        <!-- 轻量级表达式引擎 -->
-        <dependency>
-            <groupId>com.googlecode.aviator</groupId>
-            <artifactId>aviator</artifactId>
-        </dependency>
-		
-		
 		<!-- <dependency>
 			<groupId>com.dp.plat</groupId>
 			<artifactId>cache-redis-mybatis</artifactId>
