@@ -295,7 +295,8 @@ public class DispatchProjectService extends AbstractBaseService<DispatchProjectM
      */
     public List<PurchaseLine> createPurchaseLines(DispatchProject dispatch, Map<String, Object> config) {
         // 判断采购订单物料是否指定
-        String itemId = (String) config.get("itemId");
+//        String itemId = (String) config.get("itemId");
+        String itemId = (String) dispatch.getCustomInfoByKey("itemId");
         if (StringUtils.isBlank(itemId)) {
             throw new CustomRuntimeException("采购订单物料编码未指定！");
         }
