@@ -87,3 +87,67 @@ export function getProjectMembers(id) {
 export function addProjectMember(data) {
   return request({ url: '/api/project/member', method: 'post', data })
 }
+
+// ===== 售前管理 =====
+export function getPresalesList(params) {
+  return request({ url: '/api/presales/list', method: 'get', params })
+}
+export function getPresalesDetail(id) {
+  return request({ url: `/api/presales/${id}`, method: 'get' })
+}
+export function addPresales(data) {
+  return request({ url: '/api/presales', method: 'post', data })
+}
+export function updatePresales(data) {
+  return request({ url: '/api/presales', method: 'put', data })
+}
+export function deletePresales(id) {
+  return request({ url: `/api/presales/${id}`, method: 'delete' })
+}
+export function startPresalesFlow(id) {
+  return request({ url: `/api/presales/${id}/start-flow`, method: 'post' })
+}
+export function approvePresales(id, comment, approved) {
+  return request({ url: `/api/presales/${id}/approve`, method: 'post', params: { comment, approved } })
+}
+
+// ===== 基础数据 =====
+export function getBasicDataList(dataType) {
+  return request({ url: '/api/system/basic-data/list', method: 'get', params: { dataType } })
+}
+export function addBasicData(data) {
+  return request({ url: '/api/system/basic-data', method: 'post', data })
+}
+export function updateBasicData(data) {
+  return request({ url: '/api/system/basic-data', method: 'put', data })
+}
+export function deleteBasicData(id) {
+  return request({ url: `/api/system/basic-data/${id}`, method: 'delete' })
+}
+
+// ===== 操作日志 =====
+export function getOperateLogList(params) {
+  return request({ url: '/api/system/operate-log/list', method: 'get', params })
+}
+
+// ===== 文件上传 =====
+export function uploadFile(file, module) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('module', module || 'common')
+  return request({ url: '/api/file/upload', method: 'post', data: formData, headers: { 'Content-Type': 'multipart/form-data' } })
+}
+export function deleteFile(id) {
+  return request({ url: `/api/file/${id}`, method: 'delete' })
+}
+
+// ===== 通知 =====
+export function getNotifications(params) {
+  return request({ url: '/api/notification/list', method: 'get', params })
+}
+export function getUnreadCount() {
+  return request({ url: '/api/notification/unread-count', method: 'get' })
+}
+export function markNotificationRead(id) {
+  return request({ url: `/api/notification/${id}/read`, method: 'post' })
+}

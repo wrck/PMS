@@ -44,3 +44,7 @@ logging:
   level:
     com.dp.plat: debug
     com.dp.plat.mapper: debug
+
+pms:
+  upload:
+    base-path: /data/pms/upload

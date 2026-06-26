@@ -47,6 +47,24 @@ const routes = [
         name: 'DeptManage',
         component: () => import('@/views/system/dept.vue'),
         meta: { title: '部门管理' }
+      },
+      {
+        path: 'system/basic-data',
+        name: 'BasicDataManage',
+        component: () => import('@/views/system/basicData.vue'),
+        meta: { title: '基础数据' }
+      },
+      {
+        path: 'system/operate-log',
+        name: 'OperateLog',
+        component: () => import('@/views/system/operateLog.vue'),
+        meta: { title: '操作日志' }
+      },
+      {
+        path: 'presales',
+        name: 'PresalesList',
+        component: () => import('@/views/presales/index.vue'),
+        meta: { title: '售前管理' }
       }
     ]
   }

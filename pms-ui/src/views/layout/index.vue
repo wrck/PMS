@@ -22,6 +22,10 @@
           <el-icon><Folder /></el-icon>
           <template #title>项目管理</template>
         </el-menu-item>
+        <el-menu-item index="/presales">
+          <el-icon><Promotion /></el-icon>
+          <template #title>售前管理</template>
+        </el-menu-item>
         <el-sub-menu index="/system">
           <template #title>
             <el-icon><Setting /></el-icon>
@@ -30,6 +34,8 @@
           <el-menu-item index="/system/user">用户管理</el-menu-item>
           <el-menu-item index="/system/role">角色管理</el-menu-item>
           <el-menu-item index="/system/dept">部门管理</el-menu-item>
+          <el-menu-item index="/system/basic-data">基础数据</el-menu-item>
+          <el-menu-item index="/system/operate-log">操作日志</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
