@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ShipmentInfo {
-	private int projectId;
+public class ShipmentInfo extends CustomInfoEntity {
+	private Integer projectId = 0;
 	private String projectCode;
 	private String projectName;
 	private String contractNo;
@@ -22,11 +22,14 @@ public class ShipmentInfo {
 	private String cpld;//驱动版本
 	private String boot;//boot版本
 	private String conp;//App版本
+	private String conpType;//App版本类型
+	private String conpSeries;//App版本系列
+	private String conpMark;//App版本掩码
 	private Date executeTime;//项目执行更新时间
-	private int conpChange;//记录软件版本是否更新  默认0未做更新升级  1 有做更新升级 
-	private int cpldChange;//记录软件版本是否更新
-	private int bootChange;//记录软件版本是否更新
-	private int pcbChange;//记录软件版本是否更新
+	private Integer conpChange = 0;//记录软件版本是否更新  默认0未做更新升级  1 有做更新升级 
+	private Integer cpldChange = 0;//记录软件版本是否更新
+	private Integer bootChange = 0;//记录软件版本是否更新
+	private Integer pcbChange = 0;//记录软件版本是否更新
 	private String conpBak;//备份变更之前的版本
 	private String cpldBak;
 	private String bootBak;
@@ -54,7 +57,7 @@ public class ShipmentInfo {
     // 额外拓展信息
     private Map<String, Object> extInfo = new HashMap<String, Object>();
     
-	public String getContractNo() {
+    public String getContractNo() {
 		return contractNo;
 	}
 	public void setContractNo(String contractNo) {
@@ -138,10 +141,10 @@ public class ShipmentInfo {
 	public void setConp(String conp) {
 		this.conp = conp;
 	}
-	public int getProjectId() {
+	public Integer getProjectId() {
 		return projectId;
 	}
-	public void setProjectId(int projectId) {
+	public void setProjectId(Integer projectId) {
 		this.projectId = projectId;
 	}
 	public String getProjectCode() {
@@ -288,5 +291,22 @@ public class ShipmentInfo {
     public void setExtInfo(Map<String, Object> extInfo) {
         this.extInfo = extInfo;
     }
-	
+    public String getConpType() {
+        return conpType;
+    }
+    public void setConpType(String conpType) {
+        this.conpType = conpType;
+    }
+    public String getConpSeries() {
+        return conpSeries;
+    }
+    public void setConpSeries(String conpSeries) {
+        this.conpSeries = conpSeries;
+    }
+    public String getConpMark() {
+        return conpMark;
+    }
+    public void setConpMark(String conpMark) {
+        this.conpMark = conpMark;
+    }
 }

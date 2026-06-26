@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- <!DOCTYPE struts PUBLIC   
         "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"   
         "http://struts.apache.org/dtds/struts-2.5.dtd"> -->
@@ -1220,6 +1220,120 @@
                 <param name="includeProperties">message, result</param>
             </result>
         </action>
+	</package>
+	
+	<!-- 项目成员管理 -->
+	<package name="projectMember" extends="basepackage" namespace="/module">
+		<action name="createMember" class="ProjectMemberAction" method="createMember">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="updateMember" class="ProjectMemberAction" method="updateMember">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="SaveInstallAdress" class="ProjectMemberAction" method="saveInstallAdress">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="updateProjectExecutionState" class="ProjectMemberAction" method="updateProjectExecutionState">
+			<result name="success" type="json"></result>
+		</action>
+	</package>
+	
+	<!-- 项目合同管理 -->
+	<package name="projectContract" extends="basepackage" namespace="/module">
+		<action name="MergeOrBranchContract_*" class="ProjectContractAction" method="{1}">
+			<result name="input">/sys/sub/mergeorbranchcontract.jsp</result>
+		</action>
+		<action name="checkMergeContract" class="ProjectContractAction" method="checkMergeContract">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="MergeContract" class="ProjectContractAction" method="mergeContract">
+			<result name="success">/sys/sub/addsuccess.jsp</result>
+		</action>
+		<action name="BranchContract" class="ProjectContractAction" method="branchContract">
+			<result name="success">/sys/sub/addsuccess.jsp</result>
+		</action>
+		<action name="checkOrderData" class="ProjectContractAction" method="checkOrderData">
+			<result name="success">/sys/module/sub/orderData.jsp</result>
+		</action>
+		<action name="checkRealOrderData" class="ProjectContractAction" method="checkRealOrderData">
+			<result name="success">/sys/module/sub/realOrderData.jsp</result>
+		</action>
+	</package>
+	
+	<!-- 项目文件管理 -->
+	<package name="projectFile" extends="basepackage" namespace="/module">
+		<action name="DownloadFile" class="ProjectFileAction" method="downloadFile">
+			<result name="success" type="stream">
+				<param name="contentType">application/octet-stream;charset=ISO8859-1</param>
+				<param name="contentDisposition">attachment;filename="${downloadFile}"</param>
+				<param name="inputName">fileStream</param>
+				<param name="bufferSize">4096</param>
+			</result>
+		</action>
+		<action name="DeleteFile" class="ProjectFileAction" method="deleteFile">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="deleteDeliverById" class="ProjectFileAction" method="deleteDeliverById">
+			<result name="success" type="json"></result>
+		</action>
+	</package>
+	
+	<package name="projectFileSub" extends="basepackage" namespace="/module/sub">
+		<action name="ToUploadFile" class="ProjectFileAction" method="toUploadFile">
+			<result name="success">/sys/sub/uploadFile.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+		<action name="ToUploadDeliverableFile" class="ProjectFileAction" method="toUploadDeliverableFile">
+			<result name="success">/sys/sub/uploadDeliverableFile.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+		<action name="UploadFile" class="ProjectFileAction" method="UploadFile">
+			<result name="success">/sys/sub/addsuccess.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+		<action name="UploadDeliverableFile" class="ProjectFileAction" method="uploadDeliverableFile">
+			<result name="success">/sys/sub/addsuccess.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+	</package>
+	
+	<!-- 项目周报管理 -->
+	<package name="projectWeekly" extends="basepackage" namespace="/module">
+		<action name="CreateWeekly" class="ProjectWeeklyAction" method="createWeekly">
+			<result name="success">/sys/sub/weeklyCreate.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+		<action name="EditWeekly" class="ProjectWeeklyAction" method="updateWeekly">
+			<result name="success">/sys/sub/weeklyEdit.jsp</result>
+			<result name="error">/sys/sub/error.jsp</result>
+		</action>
+		<action name="SaveWeekly" class="ProjectWeeklyAction" method="saveWeekly">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="SubmitWeekly" class="ProjectWeeklyAction" method="submitWeekly">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="Feedback" class="ProjectWeeklyAction" method="feedback">
+			<result name="success" type="json"></result>
+		</action>
+	</package>
+	
+	<!-- 项目通知批示管理 -->
+	<package name="projectNotification" extends="basepackage" namespace="/module">
+		<action name="queryProjectNotification" class="ProjectNotificationAction" method="queryProjectNotification">
+			<result name="success">/sys/module/sub/projectNotify.jsp</result>
+		</action>
+		<action name="instruction" class="ProjectNotificationAction" method="instruction">
+			<result name="success" type="json"></result>
+		</action>
+		<action name="problemTicket" class="ProjectNotificationAction" method="problemTicket">
+			<result name="success">/sys/module/problemTicket.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+		<action name="licenseInfo" class="ProjectNotificationAction" method="licenseInfo">
+			<result name="success">/sys/module/licenseInfo.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
 	</package>
 	
 	<!-- ajax json 请求 -->

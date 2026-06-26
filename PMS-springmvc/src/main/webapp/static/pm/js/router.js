@@ -277,6 +277,20 @@ pm.dispatch = function() {
 		})(namespace),
 		callback: ((namespace) => {
 			return {
+				list: {
+					vueCallback: function(dataTable, $container) {
+						// 添加Excel导出按钮
+						var config = dataTable.config || {};
+						config.exportData = {
+		                	url: router(urlNamespace).api(model).list().replace(".json", ".xlsx"),
+		                	fileName: "项目转包",
+		                	type: ["excel"]
+		                };
+						dataTable.config = config;
+						dataTable.exportData = config.exportData;
+						dataTable.exporting = true;
+					}
+				},
 				detail: {
 					vueCallback: function(data, $container) {
 						var _this = this;

@@ -407,6 +407,86 @@ public class GainDataFromCRM extends DefaultSyncTaskFormCRM<Map<String, Object>>
         }
         return false;
     }
+    
+    /**
+     * 同步产品信息
+     * @param params
+     * @return
+     */
+    public boolean syncProductInfo(Map<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<String, Object>();
+        } else {
+            params = new HashMap<String, Object>(params);
+        }
+        String tag = "同步CRM产品信息";
+        try {
+            log.info("{}-开始", tag);
+            // 获取母公司的产品信息
+            params.put("orgId", 1);
+            params.put("queryBySql", true);
+            params.put("targetTable", "pm_product_info_from_crm");
+            syncData("ProductInfoFromCRM", "CRM", params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+        } finally {
+            log.info("{}-结束", tag);
+        }
+        return false;
+    }
+    
+    /**
+     * 同步产品信息
+     * @param params
+     * @return
+     */
+    public boolean syncProjectLeaseLine(Map<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<String, Object>();
+        } else {
+            params = new HashMap<String, Object>(params);
+        }
+        String tag = "同步CRM项目租赁行";
+        try {
+            log.info("{}-开始", tag);
+            // 获取项目租赁行
+            params.put("targetTable", "pm_project_product_lease_line_from_crm");
+            syncData("ProjectLeaseLineFromCRM", "CRM", params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+        } finally {
+            log.info("{}-结束", tag);
+        }
+        return false;
+    }
+    
+    /**
+     * 同步项目产品配置关系
+     * @param params
+     * @return
+     */
+    public boolean syncProjectProductConfigLevelInfo(Map<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<String, Object>();
+        } else {
+            params = new HashMap<String, Object>(params);
+        }
+        String tag = "同步CRM项目产品配置关系";
+        try {
+            log.info("{}-开始", tag);
+            // 获取项目租赁行
+            params.put("targetTable", "pm_project_product_config_level_info_from_crm");
+            syncData("ProjectProductConfigLevelInfoFromCRM", "CRM", params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+        } finally {
+            log.info("{}-结束", tag);
+        }
+        return false;
+    }
 
 	@Override
     protected void syncDataBefore(String dataName, String dbName, Map<String, Object> params) {
@@ -476,7 +556,10 @@ public class GainDataFromCRM extends DefaultSyncTaskFormCRM<Map<String, Object>>
 
     public static void main(String[] args) {
 		try {
-			new GainDataFromCRM().syncProjectLendProduct(null);
+//			new GainDataFromCRM().syncProjectLendInfo(null);
+//		    new GainDataFromCRM().syncProjectLeaseLine(null);
+//		    new GainDataFromCRM().syncProductInfo(null);
+		    new GainDataFromCRM().syncProjectProductConfigLevelInfo(null); 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

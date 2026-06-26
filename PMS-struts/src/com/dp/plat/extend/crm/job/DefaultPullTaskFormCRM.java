@@ -23,6 +23,9 @@ public class DefaultPullTaskFormCRM<T> extends DefaultSyncTaskFormCRM<T> impleme
 
     @Override
     protected List<T> syncDataQuery(String dataName, String dbName, Map<String, Object> params) {
+        if (Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(params.getOrDefault("queryBySql", "false"))))) {
+            return super.syncDataQuery(dataName, dbName, params);
+        }
         log.info("{}-查询CRM数据开始", getTag(dataName));
         if (params.containsKey("directReturnList")) {
             List<T> directReturnList = (List<T>) params.remove("directReturnList");

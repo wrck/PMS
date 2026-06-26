@@ -48,7 +48,19 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<Prob> queryProbList(Prob prob, DisplayParam displayParam) {
-		if (prob == null) {
+		Map<String, Object> paramMap = fillQueryProbParams(prob, displayParam);
+		// 设置group_contract的最大长度，默认1024
+		getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
+		return getSqlMapClientTemplate().queryForList("query_prob_list", paramMap);
+	}
+
+    /**
+     * @param prob
+     * @param displayParam
+     * @return
+     */
+    public Map<String, Object> fillQueryProbParams(Prob prob, DisplayParam displayParam) {
+        if (prob == null) {
 			prob = new Prob();
 		}
 		// 根据影响版本解析
@@ -82,10 +94,8 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 		Map<String, Object> paramMap = new HashMap<String, Object>();
 		paramMap.put("prob", prob);
 		paramMap.put("displayParam", displayParam);
-		// 设置group_contract的最大长度，默认1024
-		getSqlMapClientTemplate().insert("setMaxGroupContractLength", 1024000);
-		return getSqlMapClientTemplate().queryForList("query_prob_list", paramMap);
-	}
+        return paramMap;
+    }
 
 	@Override
 	public Prob queryOneProb(Prob prob) {
@@ -116,10 +126,15 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	public void saveSoftVersion(List<SoftVersion> softVersionList, int probId) {
 		// 将conp不为空的进行解析
 		for (SoftVersion softVersion : softVersionList) {
+		    String platformType = softVersion.getPlatformType();
+		    softVersion.setEntryType(platformType);
+		    softVersion.setEntrySeries(platformType);
 			if (StringUtils.isNotBlank(softVersion.getConp())) {
 				List<SoftVersionParser> softVersionParser = SoftVersionUtil.createSoftVersionParser(softVersion.getConp());
 				if (!softVersionParser.isEmpty()) {
 					SoftVersionParser parser = softVersionParser.get(0);
+					softVersion.setEntryType(parser.getType());
+					softVersion.setEntrySeries(parser.getSeries());
 					softVersion.setEntryStart(parser.getVersion());
 					softVersion.setEntryEnd(parser.getVersion());
 					softVersion.setMarkStart(parser.getMark());
@@ -129,18 +144,25 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 				}
 			} else if (StringUtils.isNotBlank(softVersion.getManualEntrySub())) {
 			    List<SoftVersionParser> parserList = Collections.emptyList();
-			    if (!"other".equalsIgnoreCase(softVersion.getPlatformType())) {
+			    if (!"other".equalsIgnoreCase(platformType)) {
 			        Map<String, Map<String, List<SoftVersionParser>>> softVersionParser = SoftVersionUtil.createSoftVersionRangeParsers(softVersion.getManualEntrySub());
     			    if (!softVersionParser.isEmpty()) {
                         Map<String, List<SoftVersionParser>> parser = softVersionParser.get(softVersion.getManualEntrySub());
                         if (parser != null && !parser.isEmpty()) {
                             parserList = parser.values().iterator().next();
+                            SoftVersionParser versionParser = parserList.get(0);
+                            softVersion.setEntryType(versionParser.getType());
+                            softVersion.setEntrySeries(versionParser.getSeries());
                         }
                     }
 			    }
 			    if (parserList == null || parserList.isEmpty()) {
-			        SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(StringUtils.defaultIfBlank(softVersion.getEntryStart(), softVersion.getManualEntrySub()), StringUtils.defaultIfBlank(softVersion.getMarkStart(), softVersion.getManualEntrySub()));
-			        SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(StringUtils.defaultIfBlank(softVersion.getEntryEnd(), softVersion.getManualEntrySub()), StringUtils.defaultIfBlank(softVersion.getMarkEnd(), softVersion.getManualEntrySub()));
+			        String versionStart = StringUtils.defaultIfBlank(softVersion.getEntryStart(), softVersion.getManualEntrySub());
+                    String markStart = StringUtils.defaultIfBlank(softVersion.getMarkStart(), softVersion.getManualEntrySub());
+			        String versionEnd = StringUtils.defaultIfBlank(softVersion.getEntryEnd(), softVersion.getManualEntrySub());
+                    String markEnd = StringUtils.defaultIfBlank(softVersion.getMarkEnd(), softVersion.getManualEntrySub());
+                    SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(platformType, versionStart, markStart, platformType);
+                    SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(platformType, versionEnd, markEnd, platformType);
 			        parserList = Arrays.asList(parserStart, parserEnd);
 			    }
 			    softVersion.setCustomInfoByKey("parser", parserList);
@@ -178,11 +200,43 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<ProbRestore> queryProbRestoreList(ProbRestore probRestore, DisplayParam restoreDisplayParam) {
+	public List<ProbRestore> queryProbRestoreList(ProbRestore probRestore, DisplayParam displayParam) {
 		Map<String, Object> paramMap = new HashMap<String, Object>();
 		paramMap.put("probRestore", probRestore);
-		paramMap.put("displayParam", restoreDisplayParam);
-		return getSqlMapClientTemplate().queryForList("query_prob_restore_list", paramMap);
+		paramMap.put("displayParam", displayParam);
+		
+		if (probRestore != null && probRestore.getVersion() != null) {
+		    SoftVersion softVersion = probRestore.getVersion();
+		    if (StringUtils.isNotBlank(softVersion.getConp())) {
+		        List<SoftVersionParser> softVersionParser = SoftVersionUtil.createSoftVersionParser(softVersion.getConp());
+                if (!softVersionParser.isEmpty()) {
+                    SoftVersionParser parser = softVersionParser.get(0);
+                    softVersion.setEntryType(parser.getType());
+                    softVersion.setEntrySeries(parser.getSeries());
+                    softVersion.setEntryStart(parser.getVersion());
+                    softVersion.setEntryEnd(parser.getVersion());
+                    softVersion.setMarkStart(parser.getMark());
+                    softVersion.setMarkEnd(parser.getMark());
+                    softVersion.setConpMark(parser.getMark());
+                    softVersion.setCustomInfoByKey("parser", parser);
+                }
+		    }
+		}
+		
+		Integer total = 0;
+        List<ProbRestore> list = Collections.emptyList();
+        if (!displayParam.getExport()) {
+            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+            total = (Integer) getSqlMapClientTemplate().queryForObject("count_prob_restore_list", paramMap);
+            list = getSqlMapClientTemplate().queryForList("query_prob_restore_list", paramMap);
+        } else {
+            displayParam.setOffset(null);
+            list = getSqlMapClientTemplate().queryForList("query_prob_restore_list", paramMap);
+            total = list.size();
+            displayParam.setPagesize(total);
+        }
+        displayParam.setTotalcount(total);
+		return list;
 	}
 
 	@Override
@@ -225,9 +279,7 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 			paramMap.put("probRestore", probRestore);
 			return getSqlMapClientTemplate().queryForList("query_list_probRestore_task_project", paramMap);
 		}
-		System.out
-				.println(getSqlMapClientTemplate().queryForObject("query_count_probRestore_task_project", probRestore));
-		int total = (int) getSqlMapClientTemplate().queryForObject("query_count_probRestore_task_project", probRestore);
+		int total = (int)  getSqlMapClientTemplate().queryForObject("query_count_probRestore_task_project", probRestore);
 		displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
 		displayParam.setTotalcount(total);
 		if (displayParam.getExport()) {
@@ -343,7 +395,8 @@ public class ProbManageDaoImpl extends BaseDao implements ProbManageDao {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<ProbParam> queryExportProbList(Map<Object, Object> params) {
-		return getSqlMapClientTemplate().queryForList("query_exportProb_list", params);
+	    Map<String, Object> queryProbParams = fillQueryProbParams((Prob) params.getOrDefault("prob", new Prob()), (DisplayParam) params.getOrDefault("displayParam", new DisplayParam()));
+		return getSqlMapClientTemplate().queryForList("query_exportProb_list", queryProbParams);
 	}
 
 	@Override

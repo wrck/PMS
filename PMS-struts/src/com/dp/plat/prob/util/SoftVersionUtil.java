@@ -88,12 +88,31 @@ public class SoftVersionUtil {
         return getParser(softVersion).parseSoftVersionRange(softVersion, defaultMarkAll);
 	}
 	
-	public static SoftVersionParser newSoftVersionParser(String version) {
-        return newSoftVersionParser(version, version);
+	/**
+	 * 版本及系列，mark默认跟版本相同
+	 * @param type
+	 * @param version
+	 * @param series
+	 * @return
+	 */
+	public static SoftVersionParser newSoftVersionParser(String type, String version, String series) {
+        return newSoftVersionParser(type, version, version, series);
     }
 	
-	public static SoftVersionParser newSoftVersionParser(String version, String mark) {
-        SoftVersionParser parserStart = new SoftVersionParser(version);
+	/**
+     * 版本,标准化格式及系列
+	 * 
+	 * @param type
+	 * @param version
+	 * @param mark
+	 * @param series
+	 * @return
+	 */
+	public static SoftVersionParser newSoftVersionParser(String type, String version, String mark, String series) {
+        SoftVersionParser parserStart = new SoftVersionParser();
+        parserStart.setType(type);
+        parserStart.setSeries(series);
+        parserStart.setVersion(version);
         parserStart.setMark(mark);
         return parserStart;
     }

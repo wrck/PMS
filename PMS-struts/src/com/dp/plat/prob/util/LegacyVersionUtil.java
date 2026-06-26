@@ -1,12 +1,20 @@
 package com.dp.plat.prob.util;
 
-import com.dp.plat.prob.version.SoftVersionParser;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.dp.plat.prob.version.SoftVersionParser;
+import com.dp.plat.prob.version.SoftVersionStrategy;
 
 public class LegacyVersionUtil {
 	
@@ -127,7 +135,7 @@ public class LegacyVersionUtil {
 			if ("".equals(version) && matcher.start() > 0) {
 				continue;
 			}
-			SoftVersionParser softVersionParser = new SoftVersionParser(version);
+			SoftVersionParser softVersionParser = new SoftVersionParser(new SoftVersionStrategy(), version);
 			List<String> softVersions = new ArrayList<String>();
 			softVersionMap.put(version, softVersions);
 			StringBuilder marksAll = new StringBuilder();
@@ -152,6 +160,7 @@ public class LegacyVersionUtil {
 			String markVersion = defaultMarkAll ? marksAll.toString() : marksPrev.toString();
 			softVersionParser.setVersion(StringUtils.join(softVersionParser.versionParts.values(), ""));
 			softVersionParser.setMark(markVersion);
+			softVersionParser.fillSeries();
 			softVersionParsers.add(softVersionParser);
 			softVersions.add(markVersion);
 		}
@@ -236,7 +245,8 @@ public class LegacyVersionUtil {
 						}
 						softVersionParser.setVersion(StringUtils.join(softVersionParser.getVersionParts().values(), ""));
 						softVersionParser.setMark(StringUtils.join((isMarkAll ? softVersionParser.getMarkAllParts() : softVersionParser.getMarkPrevParts()).values(), ""));
-					
+						softVersionParser.fillSeries();
+						
 						// 用来修正填入的数据，使输入的内容跟解析的结果保持一致
 						if (StringUtils.isNotBlank(group)) {
 						    full = full.replaceFirst(group, softVersionParser.getVersion());

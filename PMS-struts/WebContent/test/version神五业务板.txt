@@ -1,0 +1,18 @@
+<DPTECH>show version 
+ Software Release S211C012D106P02
+ Conplat Version is V100R005B01D106P02
+ Compiled Fri, 12 Dec 2025 15:21:12 +0800
+ Copyright(c) 2008-2010 Hangzhou DPtech Technologies Co. , Ltd. All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DAC-Blade-AI Uptime is 2 week(s), 6 day(s),  3 hour(s),  3 minute(s)
+
+ CPU type:       XLP532 Rev A1   FPU  @1200 MHz
+ Flash Memory:   4M bytes
+ CF card Memory: 2048M bytes
+
+ PCB Version:            B         
+ CPLD Version:           2.00      
+ BASIC CONBOOT Version:  9.02.17   
+ EXTEND CONBOOT Version: 9.02.17   
+<DPTECH>

@@ -570,6 +570,13 @@
 		    <version>4.11.0</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		<dependency>
+		    <groupId>p6spy</groupId>
+		    <artifactId>p6spy</artifactId>
+		    <version>3.9.1</version>
+		    <optional></optional>
+		</dependency>
 	</dependencies>
 	
 	<profiles>
@@ -584,6 +591,15 @@
 				<!-- 设置默认激活这个配置 -->
 				<activeByDefault>true</activeByDefault>
 			</activation>
+			<dependencies>
+                <!-- 开发环境引入生产级 SQL 日志 -->
+				<dependency>
+					<groupId>p6spy</groupId>
+					<artifactId>p6spy</artifactId>
+					<version>3.9.1</version>
+					<scope>runtime</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		<profile>
 			<!-- 发布环境 -->
@@ -760,6 +776,27 @@
 					   <exclude>test/**</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			
+			<!-- Checkstyle 代码规范检查 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<includeTestSourceRoots>false</includeTestSourceRoots>
+					<violationSeverity>warning</violationSeverity>
+					<failOnViolation>false</failOnViolation>
+					<consoleOutput>true</consoleOutput>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>10.12.5</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 			
 			<!-- 资源文件插件 -->

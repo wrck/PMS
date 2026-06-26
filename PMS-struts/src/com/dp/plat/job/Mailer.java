@@ -18,66 +18,69 @@ import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
 public class Mailer implements Job {
+    private static final JobLogger logger = new JobLogger(Mailer.class);
 
     @SuppressWarnings("unchecked")
     public void work() throws IOException, SQLException {
-//		ApplicationContext applicationContext;
-//		if (SpringContext.getApplicationContext() != null) {
-//			applicationContext = SpringContext.getApplicationContext();
-//		} else {
-//			applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
-//		}
+        logger.logStart();
         Reader reader = null;
-        reader = Resources.getResourceAsReader("sqlMapConfig.xml");
-        SqlMapClient sqlMap = SqlMapClientBuilder.buildSqlMapClient(reader);
-        List<MailSenderInfo> mailInfos = sqlMap.queryForList("query_waiting_mail");
-        StringBuilder sb = new StringBuilder();
-        for (MailSenderInfo mailInfo : mailInfos) {
-            try {
-                if ((StringUtils.isBlank(mailInfo.getTos()) || mailInfo.getTos().length() <= 2) 
-                        && (StringUtils.isBlank(mailInfo.getCcs()) || mailInfo.getCcs().length() <= 2)
-                        && StringUtils.isBlank(mailInfo.getBcc())) {
-                    mailInfo.setSubject(mailInfo.getSubject() + "---邮件无收件人提醒");
-                    mailInfo.setTos(StringEscUtil.getText("plat.develop.mail.tos"));
-                    mailInfo.setCcs(null);
-                    mailInfo.setBcc(null);
-                }
-                if (SimpleMailSender.sendMail(mailInfo)) {
-                    sb.append(mailInfo.getId());
-                    sb.append(",");
-                    sqlMap.update("update_waiting_mail", String.valueOf(mailInfo.getId()));
-                }
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+        int successCount = 0;
+        int failCount = 0;
         try {
+            reader = Resources.getResourceAsReader("sqlMapConfig.xml");
+            SqlMapClient sqlMap = SqlMapClientBuilder.buildSqlMapClient(reader);
+            List<MailSenderInfo> mailInfos = sqlMap.queryForList("query_waiting_mail");
+            logger.logInfo("查询到 {} 封待发送邮件", mailInfos.size());
+            
+            StringBuilder sb = new StringBuilder();
+            for (MailSenderInfo mailInfo : mailInfos) {
+                try {
+                    if ((StringUtils.isBlank(mailInfo.getTos()) || mailInfo.getTos().length() <= 2) 
+                            && (StringUtils.isBlank(mailInfo.getCcs()) || mailInfo.getCcs().length() <= 2)
+                            && StringUtils.isBlank(mailInfo.getBcc())) {
+                        mailInfo.setSubject(mailInfo.getSubject() + "---邮件无收件人提醒");
+                        mailInfo.setTos(StringEscUtil.getText("plat.develop.mail.tos"));
+                        mailInfo.setCcs(null);
+                        mailInfo.setBcc(null);
+                    }
+                    if (SimpleMailSender.sendMail(mailInfo)) {
+                        sb.append(mailInfo.getId());
+                        sb.append(",");
+                        sqlMap.update("update_waiting_mail", String.valueOf(mailInfo.getId()));
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch(Exception e) {
+                    failCount++;
+                    logger.logError("发送邮件 ID=" + mailInfo.getId() + " 失败", e);
+                }
+            }
+
             if (sb.length() > 0) {
                 sb.delete(sb.length() - 1, sb.length());
                 sqlMap.update("update_waiting_mail", sb.toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.logError(e);
         } finally {
             try {
                 if (reader != null) {
                     reader.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.logError("关闭Reader失败", e);
             }
         }
+        logger.logInfo("发送完成，成功: {}, 失败: {}", successCount, failCount);
     }
 
     @Override
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
         try {
             this.work();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.logError(e);
         }
     }
 
@@ -85,8 +88,7 @@ public class Mailer implements Job {
         try {
             new Mailer().execute(null);
         } catch (JobExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.logError(e);
         }
     }
 }

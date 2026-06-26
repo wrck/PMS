@@ -38,6 +38,7 @@ import com.dp.plat.data.bean.Role;
 import com.dp.plat.data.bean.ShipmentInfo;
 import com.dp.plat.data.bean.User;
 import com.dp.plat.init.SpringInit;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.prob.bean.Prob;
 import com.dp.plat.prob.bean.ProbRestore;
 import com.dp.plat.prob.bean.ProbRestoreWeekly;
@@ -87,6 +88,50 @@ public class Wrapper extends TableDecorator {
 			return "<a target='_blank' href='"+getPageContext().getRequest().getServletContext().getContextPath()+"/module/ProjectModify.action?project.paramId="+paramId+"&result=310' >"+projectName+"</a>";
 		}
 	}
+	
+	public String getProjectNameWithURL() {
+        Object obj = getCurrentRowObject();
+        Integer projectId = 0;
+        String projectName = "";
+        String projectCode = "";
+        if (obj instanceof Map) {
+            projectId = (Integer) ((Map<?, ?>) obj). get("projectId  ");
+            projectCode = (String) ((Map<?, ?>) obj).get("projectCode");
+            projectName = (String) ((Map<?, ?>) obj).get("projectName");
+        } else {
+            try {
+                Field field = ReflectionUtils.findField(obj.getClass(), "projectId");
+                field.setAccessible(true);
+                projectId = field.getInt(obj);
+                
+                field = ReflectionUtils.findField(obj.getClass(), "projectCode");
+                field.setAccessible(true);
+                projectCode = (String) field.get(obj);
+                
+                field = ReflectionUtils.findField(obj.getClass(), "projectName");
+                field.setAccessible(true);
+                projectName = (String) field.get(obj);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if(StringUtils.isNotBlank(projectName)){
+            projectName = projectName.replaceAll("&", "＆");
+            projectName = projectName.replaceAll("<", "&lt;");
+            projectName = projectName.replaceAll(">", "&gt;");
+        }
+        if (projectId != null && projectId != 0) {
+            
+        }
+        StringBuilder html = new StringBuilder(projectCode).append("<br>");
+        if(projectId  == 0){//没有项目
+            html.append(projectName).toString();
+        }else{
+            String paramId = Base64Util.EncodeBase64(projectId);
+            html.append("<a target='_blank' href='"+getPageContext().getRequest().getServletContext().getContextPath()+"/module/ProjectModify.action?project.paramId="+paramId+"&result=310' >"+projectName+"</a>");
+        }
+        return html.toString();
+    }
 
 	public String getSoftCheckBox(){
 		SoftVersion softVersion = (SoftVersion) getCurrentRowObject();

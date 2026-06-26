@@ -3,7 +3,7 @@ package com.dp.plat.prob.version;
 import java.util.Arrays;
 import java.util.List;
 
-import com.dp.plat.exception.CustomRuntimeException;
+import com.dp.plat.prob.exception.NoMatchedSoftVersionStrategyExecption;
 
 public class SoftVersionParserFactory {
 
@@ -18,6 +18,6 @@ public class SoftVersionParserFactory {
                 return parser;  
             }
         }
-        throw new CustomRuntimeException("没有匹配的软件版本格式: " + input);
+        throw new NoMatchedSoftVersionStrategyExecption("没有匹配的软件版本格式: " + input);
     }
 }

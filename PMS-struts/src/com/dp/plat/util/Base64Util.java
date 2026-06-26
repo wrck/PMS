@@ -1,9 +1,7 @@
 package com.dp.plat.util;
 
 import java.io.UnsupportedEncodingException;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
+import java.util.Base64;
 
 public class Base64Util {
 	// 加密
@@ -16,7 +14,7 @@ public class Base64Util {
 			e.printStackTrace();
 		}
 		if (b != null) {
-			s = new BASE64Encoder().encode(b);
+			s = Base64.getEncoder().encodeToString(b);
 		}
 		return s;
 	}
@@ -31,9 +29,8 @@ public class Base64Util {
 		byte[] b = null;
 		String result = null;
 		if (s != null) {
-			BASE64Decoder decoder = new BASE64Decoder();
 			try {
-				b = decoder.decodeBuffer(s);
+				b = Base64.getDecoder().decode(s);
 				result = new String(b, "utf-8");
 			} catch (Exception e) {
 				e.printStackTrace();

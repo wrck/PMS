@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+    
+    <!-- 文件最大行数 -->
+    <module name="FileLength">
+        <property name="max" value="1500"/>
+    </module>
+    
+    <!-- 行最大长度 -->
+    <module name="LineLength">
+        <property name="max" value="200"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a]*href|href|http://|https://|ftp://"/>
+    </module>
+    
+    <!-- 禁止使用System.out -->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\s*System\.out\.print"/>
+        <property name="message" value="请使用日志输出代替System.out"/>
+    </module>
+    
+    <!-- 禁止使用System.err -->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\s*System\.err\.print"/>
+        <property name="message" value="请使用日志输出代替System.err"/>
+    </module>
+    
+    <module name="TreeWalker">
+        <!-- 方法最大行数 -->
+        <module name="MethodLength">
+            <property name="max" value="200"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+        
+        <!-- 方法参数最大数量 -->
+        <module name="ParameterNumber">
+            <property name="max" value="7"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+        </module>
+        
+        <!-- 左大括号位置 -->
+        <module name="LeftCurly"/>
+        
+        <!-- 右大括号位置 -->
+        <module name="RightCurly"/>
+        
+        <!-- 圆括号间距 -->
+        <module name="ParenPad"/>
+        
+        <!-- 类名格式：大驼峰 -->
+        <module name="TypeName">
+            <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
+        </module>
+        
+        <!-- 方法名格式：小驼峰 -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        
+        <!-- 常量名格式：全大写下划线 -->
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|^log$|^serialVersionUID$"/>
+        </module>
+        
+        <!-- 局部变量名格式：小驼峰 -->
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        
+        <!-- 成员变量名格式：小驼峰 -->
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        
+        <!-- 缺少 Javadoc 注释 -->
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="public"/>
+            <property name="minLineCount" value="10"/>
+            <property name="allowedAnnotations" value="Override,Test,Before,After"/>
+        </module>
+        
+        <!-- 未使用的导入 -->
+        <module name="UnusedImports"/>
+        
+        <!-- 导入顺序 -->
+        <module name="CustomImportOrder">
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="separateLineBetweenGroups" value="true"/>
+            <property name="customImportOrderRules" value="STATIC###THIRD_PARTY_PACKAGE"/>
+        </module>
+        
+        <!-- 空语句 -->
+        <module name="EmptyStatement"/>
+        
+        <!-- 缩进检查 -->
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+            <property name="caseIndent" value="4"/>
+            <property name="throwsIndent" value="8"/>
+            <property name="lineWrappingIndentation" value="8"/>
+            <property name="arrayInitIndent" value="4"/>
+        </module>
+    </module>
+</module>

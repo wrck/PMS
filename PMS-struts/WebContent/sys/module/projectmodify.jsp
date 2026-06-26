@@ -1011,6 +1011,7 @@ td a:VISITED {
 			});
 		}else{
 			$("#pmCLExecudeA").click(function(){
+				questionType = chooiseQuestionType(pmClosedLoopResultTypeVal);
 				javascript:popWindow('module/sub/PmClosedLoopSub_execute.action?project.projectCode=<s:property value='project.projectCode'/>&pmClosedLoopResultType='+pmClosedLoopResultTypeVal+'&project.projectId=<s:property value='project.projectId'/>'+questionType, 1000, 650,'<%=StringEscUtil.getText("pm.cl.cl") %>', 'BudgetUpload', true);
 			});
 		}
@@ -1444,24 +1445,38 @@ td a:VISITED {
 	/* ###########################软件版本######################################## */
 	
 	/* ###########################问卷选择######################################## */
+	function chooiseQuestionType(pmClosedLoopResultType) {
+		pmClosedLoopResultType = pmClosedLoopResultType || pmClosedLoopResultTypeVal;
+		//回访人员权限
+        var cbRole = "<s:property value = 'user.isHasRole(14)'/>" == "true";
+        // 工程管理部权限
+        var gcbRole = "<s:property value = 'user.isHasRole(13)'/>" == "true";
+        questionType = "&pmClosedLoopQuesnaire.id=";
+        
+        var questionId = "";
+        var bothRole = gcbRole && cbRole;
+        if(gcbRole && !pmClosedLoopResultType || pmClosedLoopResultType == 40){
+            questionId = 2;
+        }
+        if(cbRole && !pmClosedLoopResultType || pmClosedLoopResultType == 30){
+            var column12 = $("#programManagerTxt").val();
+            var column11 = $("#column011").val();
+            if(column11 == 20 && column12 == 1){
+                questionId = 5;
+            }else{
+                questionId = 1;
+            }
+        }
+        questionType += questionId;
+        return questionType;
+	}
 	$(document).ready(function(){
 		//回访人员权限
-		var cbRole = "<s:property value =  'user.isHasRole(14)'/>" == "true";
-		// 工程管理部权限
-		var gcbRole = "<s:property value =  'user.isHasRole(13)'/>" == "true";
-		questionType = "&pmClosedLoopQuesnaire.id=";
-		if(gcbRole){
-			questionType += 2;
-		}
-		if(cbRole){
-			var column12 = $("#programManagerTxt").val();
-			var column11 = $("#column011").val();
-			if(column11 == 20 && column12 == 1){
-				questionType += 5;
-			}else{
-				questionType += 1;
-			}
-		}
+        var cbRole = "<s:property value = 'user.isHasRole(14)'/>" == "true";
+        // 工程管理部权限
+        var gcbRole = "<s:property value = 'user.isHasRole(13)'/>" == "true";
+		questionType = chooiseQuestionType();
+		
 		if($("#callback_question").length>0){
 			var callbackQuestionHref = $("#callback_question").attr("href");
 			var index = callbackQuestionHref.indexOf(",") - 1;
@@ -1553,6 +1568,60 @@ td a:VISITED {
 		return false;
 	}
 	/* ###########################实际发货清单######################################## */
+	
+	/* ###########################租赁清单######################################## */
+    var flagLeaseLine = true;
+    function checkProjectLeaseLine(){
+        var projectCode = $.trim($("#projectCode").val());
+        if(flagLeaseLine){
+        	flagLeaseLine = false;
+            $.ajax({
+                url:"module/sub/projectSub_projectLeaseLine.action",
+                type:"post",
+                dataType:"html",
+                data:{"project.projectCode":projectCode},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".projectLeaseLineListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".projectLeaseLineListDiv").html("获取租赁清单数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                	flagLeaseLine = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################租赁清单######################################## */
+    
+    /* ###########################配置关系清单######################################## */
+    var flagProductConfigLevelInfo = true;
+    function checkProjectProductConfigLevelInfo(){
+        var projectCode = $.trim($("#projectCode").val());
+        if(flagProductConfigLevelInfo){
+        	flagProductConfigLevelInfo = false;
+            $.ajax({
+                url:"module/sub/projectSub_projectProductConfigLevelInfo.action",
+                type:"post",
+                dataType:"html",
+                data:{"project.projectCode":projectCode},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".projectProductConfigLevelInfoListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".projectProductConfigLevelInfoListDiv").html("获取配置关系清单数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                	flagProductConfigLevelInfo = true;
+                }
+            })
+        }
+        return false;
+    }
+    /* ###########################租赁清单######################################## */
 	
 	/* ###########################序列号明细######################################## */
 	var flag = true;
@@ -1758,6 +1827,32 @@ td a:VISITED {
         }
         return false;
     }
+    /* ###########################License授权信息######################################## */
+    var flagLI = true;
+    function queryProjectLicenseInfo(){
+        var projectId = $("#projectId").val();
+        var redirect = encodeURIComponent("module/ProjectModify.action?project.paramId="+$("#paramId").val() + "&result=315");
+        if(flagLI){
+            flagLI = false;
+            $.ajax({
+                url:"module/sub/projectSub_licenseInfo.action",
+                type:"post",
+                dataType:"html",
+                data:{"projectId":projectId, "project.projectId":projectId, "project.officeCode": '${project.column001}', redirect: redirect},
+                success:function(data){
+                    data = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+                    $(".licenseInfoListDiv").html(data);
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown){
+                    $(".licenseInfoListDiv").html("获取License授权信息数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+                },
+                complete:function(data){
+                    flagLI = true;
+                }
+            })
+        }
+        return false;
+    }
     /* ###########################督查记录######################################## */
 	//定义show、hide事件，显示设备清单、序列号明细、实际发货清单、局点信息的Tab页时触发
 	(function ($) {
@@ -1812,6 +1907,21 @@ td a:VISITED {
 	$(document).on('show',".problemTicketListDiv",function() {
         if($(".problemTicketListDiv table").length == 0){
             queryProjectProblemTicket();
+        }
+    });
+	$(document).on('show',".licenseInfoListDiv",function() {
+        if($(".licenseInfoListDiv table").length == 0){
+            queryProjectLicenseInfo();
+        }
+    });
+	$(document).on('show',".projectLeaseLineListDiv",function() {
+        if($(".projectLeaseLineListDiv table").length == 0){
+            checkProjectLeaseLine();
+        }
+    });
+	$(document).on('show',".projectProductConfigLevelInfoListDiv",function() {
+        if($(".projectProductConfigLevelInfoListDiv table").length == 0){
+            checkProjectProductConfigLevelInfo();
         }
     });
 	
@@ -2108,8 +2218,8 @@ td a:VISITED {
 	</s:form>
 	
 	<nav class="navbar navbar-default" role="navigation" style="margin-top: 20px;">
-		<div>
-		    <ul class="nav navbar-nav">
+		<div class="container-fluid">
+		    <ul class="nav navbar-nav" style="margin: 0px -15px;">
 		    	<s:iterator value="navTabList" var="nav" status="index">
 		    		<s:if test="%{#index.index == 0}">
 		    			<li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
@@ -2122,7 +2232,7 @@ td a:VISITED {
 		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge "><s:property value="instructionList.size()"/></span></a></li>
 		    			</s:elseif>
 		    			<s:elseif test="%{#nav.basicDataId == 'weeklyDiv'}">
-		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge pull-right"><s:property value="weeklyList.size()"/></span></a></li>
+		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge"><s:property value="weeklyList.size()"/></span></a></li>
 		    			</s:elseif>
 		    			<s:else>
 		    				<li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
@@ -2517,21 +2627,19 @@ td a:VISITED {
 		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
 			<img src='./images/loading-circle.gif'/>
 		</div>
-		<%-- <span class="redMark">因市场原因，此项目实际发货与订单不一致，现场施工以此清单为准，如有疑问请联系此项目销售确认。</span>
-		<display:table
-			name="realOrderDataList" pagesize="${realOrderDataList.size()}" id="displaytable5"
-			size="${realOrderDataList.size()}" sort="external" export="true"
-			decorator="com.dp.plat.decorators.Wrapper" class="displayTable table"
-			requestURI="module/ProjectModify.action"
-			partialList="true">
-			<display:column property="contractNo" titleKey="pm.orderdata.contractNo"></display:column>
-			<display:column property="productSubCode" titleKey="pm.orderdata.itemCode"></display:column>
-			<display:column property="productSubModel" titleKey="pm.orderdata.model"></display:column>
-			<display:column property="productSubName" titleKey="pm.orderdata.itemName"></display:column>
-			<display:column property="num" titleKey="pm.orderdata.orderQuantity"></display:column>
-			<display:setProperty name="export.excel.filename" value='实际发货清单.xls'/>
-		</display:table> --%>
 	</div>
+    <!-- 租赁清单 -->
+    <div class="navDiv hideDiv projectLeaseLineListDiv">
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- 配置关系清单 -->
+    <div class="navDiv hideDiv projectProductConfigLevelInfoListDiv">
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
 	<!-- 软件设备信息 -->
 	<div class="navDiv hideDiv softversionDiv" >
 		<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
@@ -2770,6 +2878,12 @@ td a:VISITED {
     </div>
     <!-- 工单记录 -->
     <div class="navDiv hideDiv problemTicketListDiv" >
+        <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
+            <img src='./images/loading-circle.gif'/>
+        </div>
+    </div>
+    <!-- License授权信息 -->
+    <div class="navDiv hideDiv licenseInfoListDiv" >
         <div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>
             <img src='./images/loading-circle.gif'/>
         </div>

@@ -438,12 +438,14 @@ public class Project extends ProjectQueryParam{
 	}
 	public void setSalesManCode(String salesManCode) {
 		this.salesManCode = salesManCode;
+		setCustomInfoByKey("salesManCode", salesManCode);
 	}
 	public String getSalesManName() {
 		return salesManName;
 	}
 	public void setSalesManName(String salesManName) {
 		this.salesManName = salesManName;
+		setCustomInfoByKey("salesManName", salesManName);
 	}
 	public Date getCreateTime() {
 		return createTime;
@@ -530,10 +532,12 @@ public class Project extends ProjectQueryParam{
 		this.orderCreateTime = orderCreateTime;
 	}
 	public String getServiceManagerCode() {
-		return serviceManagerCode;
+//		return serviceManagerCode;
+		 return StringUtils.defaultIfBlank(serviceManagerCode, (String) getCustomInfoByKey("serviceManagerCode"));
 	}
 	public void setServiceManagerCode(String serviceManagerCode) {
 		this.serviceManagerCode = serviceManagerCode;
+		setCustomInfoByKey("serviceManagerCode", serviceManagerCode);
 	}
 	/**
 	 * @return the oldServiceManagerCode
@@ -551,9 +555,11 @@ public class Project extends ProjectQueryParam{
 
 	public String getServiceManagerCodeforjson() {
 		return serviceManagerCodeforjson;
+		// return StringUtils.defaultIfBlank(serviceManagerCodeforjson, (String) getCustomInfoByKey("serviceManagerCodeforjson"));
 	}
 	public void setServiceManagerCodeforjson(String serviceManagerCodeforjson) {
 		this.serviceManagerCodeforjson = serviceManagerCodeforjson;
+		setCustomInfoByKey("serviceManagerCodeforjson", serviceManagerCodeforjson);
 	}
 	public String getMemberRole() {
 		return memberRole;
@@ -598,10 +604,12 @@ public class Project extends ProjectQueryParam{
 		this.column011Desc = column011Desc;
 	}
 	public String getProgramManagerCode() {
-		return programManagerCode;
+//		return programManagerCode;
+		 return StringUtils.defaultIfBlank(programManagerCode, (String) getCustomInfoByKey("programManagerCode"));
 	}
 	public void setProgramManagerCode(String programManagerCode) {
 		this.programManagerCode = programManagerCode;
+		setCustomInfoByKey("programManagerCode", programManagerCode);
 	}
 	/**
 	 * @return the oldProgramManagerCode
@@ -618,16 +626,19 @@ public class Project extends ProjectQueryParam{
 	}
 
 	public String getProgramManagerCodeforjson() {
-		return programManagerCodeforjson;
+//		return programManagerCodeforjson;
+		return StringUtils.defaultIfBlank(programManagerCodeforjson, (String) getCustomInfoByKey("programManagerCodeforjson"));
 	}
 	public void setProgramManagerCodeforjson(String programManagerCodeforjson) {
 		this.programManagerCodeforjson = programManagerCodeforjson;
+		setCustomInfoByKey("programManagerCodeforjson", programManagerCodeforjson);
 	}
 	/**
 	 * @return the programManagerCodeB
 	 */
 	public String getProgramManagerCodeB() {
-		return programManagerCodeB;
+//		return programManagerCodeB;
+		return StringUtils.defaultIfBlank(programManagerCodeB, (String) getCustomInfoByKey("programManagerCodeB"));
 	}
 
 	/**
@@ -635,6 +646,7 @@ public class Project extends ProjectQueryParam{
 	 */
 	public void setProgramManagerCodeB(String programManagerCodeB) {
 		this.programManagerCodeB = programManagerCodeB;
+		setCustomInfoByKey("programManagerCodeB", programManagerCodeB);
 	}
 
 	/**
@@ -655,7 +667,8 @@ public class Project extends ProjectQueryParam{
 	 * @return the programManagerCodeforjsonB
 	 */
 	public String getProgramManagerCodeforjsonB() {
-		return programManagerCodeforjsonB;
+//		return programManagerCodeforjsonB;
+		return StringUtils.defaultIfBlank(programManagerCodeforjsonB, (String) getCustomInfoByKey("programManagerCodeforjsonB"));
 	}
 
 	/**
@@ -663,6 +676,7 @@ public class Project extends ProjectQueryParam{
 	 */
 	public void setProgramManagerCodeforjsonB(String programManagerCodeforjsonB) {
 		this.programManagerCodeforjsonB = programManagerCodeforjsonB;
+		setCustomInfoByKey("programManagerCodeforjsonB", programManagerCodeforjsonB);
 	}
 
 	public String getMemberCode() {

@@ -53,6 +53,10 @@ public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
      */
     private Integer hasLiscense;
     
+    private String salerSearch;
+    private String salerCode;
+    private String salerName;
+    private String salerContact;
     private String serviceManager;
     private String programManager;
     private String programManagerA;
@@ -163,8 +167,40 @@ public class ProjectWarrantyCallbackVO extends ProjectWarrantyCallback {
 	public void setCustomerContactSearch(String customerContactSearch) {
 		this.customerContactSearch = customerContactSearch;
 	}
+	
+	public String getSalerSearch() {
+        return salerSearch;
+    }
 
-	public String getServiceManager() {
+    public void setSalerSearch(String salerSearch) {
+        this.salerSearch = salerSearch;
+    }
+
+    public String getSalerCode() {
+        return salerCode;
+    }
+
+    public void setSalerCode(String salerCode) {
+        this.salerCode = salerCode;
+    }
+
+    public String getSalerName() {
+        return salerName;
+    }
+
+    public void setSalerName(String salerName) {
+        this.salerName = salerName;
+    }
+    
+    public String getSalerContact() {
+        return salerContact;
+    }
+
+    public void setSalerContact(String salerContact) {
+        this.salerContact = salerContact;
+    }
+
+    public String getServiceManager() {
         return serviceManager;
     }
 

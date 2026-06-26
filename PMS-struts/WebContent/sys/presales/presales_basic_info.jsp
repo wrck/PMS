@@ -15,9 +15,9 @@
                 </td>
             </tr>
             <tr>
-                <td><s:text name="pm.presales.marketname"></s:text>:</td>
+                <td><s:text name="pm.presales.marketName"></s:text>:</td>
                 <td><s:property value="presales.marketName"/></td>
-                <td><s:text name="pm.presales.systemname"></s:text>:</td>
+                <td><s:text name="pm.presales.systemName"></s:text>:</td>
                 <td><s:property value="presales.systemName"/></td>
             </tr>
             <tr>

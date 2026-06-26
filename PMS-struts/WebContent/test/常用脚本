@@ -1,0 +1,1 @@
+sql.replaceAll('"', '\\"').replaceAll("\'", "\\\'").replaceAll("\\n", "\\\\n").replaceAll("}\\'", "}'").replaceAll("\\'{", "'{");

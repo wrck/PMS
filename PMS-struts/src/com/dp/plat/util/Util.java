@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -245,6 +246,24 @@ public class Util {
             }
         }
         return new ArrayList<String>(Arrays.asList(str.split(regex)));
+    }
+    
+    /**
+     * 将list拆分成多个sublist
+     * @param <T>
+     * @param list
+     * @param size
+     * @return
+     */
+    public static <T> List<List<T>> partition(List<T> list, int size) {
+        if (list == null || list.isEmpty() || size <= 0) {
+            return Collections.emptyList();
+        }
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += size) {
+            partitions.add(list.subList(i, Math.min(i + size, list.size())));
+        }
+        return partitions;
     }
 
     public static String methodToProperty(String name) {

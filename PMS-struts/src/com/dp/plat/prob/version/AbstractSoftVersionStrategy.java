@@ -29,7 +29,7 @@ public abstract class AbstractSoftVersionStrategy {
         }
         return isFind;
     }
-
+    
     protected abstract String getRegex();
 
     // 获取当前解析器使用的正则表达式 Pattern
@@ -85,7 +85,7 @@ public abstract class AbstractSoftVersionStrategy {
             if ("".equals(version) && matcher.start() > 0) {
                 continue;
             }
-            SoftVersionParser softVersionParserResult = new SoftVersionParser(version);
+            SoftVersionParser softVersionParserResult = new SoftVersionParser(this, version);
             List<String> softVersions = new ArrayList<String>();
             softVersionMap.put(version, softVersions);
             StringBuilder marksAll = new StringBuilder();
@@ -110,6 +110,7 @@ public abstract class AbstractSoftVersionStrategy {
             String markVersion = defaultMarkAll ? marksAll.toString() : marksPrev.toString();
             softVersionParserResult.setVersion(StringUtils.join(softVersionParserResult.versionParts.values(), ""));
             softVersionParserResult.setMark(markVersion);
+            softVersionParserResult.fillSeries();
             softVersionParserResults.add(softVersionParserResult);
             softVersions.add(markVersion);
         }
@@ -187,7 +188,8 @@ public abstract class AbstractSoftVersionStrategy {
                         }
                         softVersionParserResult.setVersion(StringUtils.join(softVersionParserResult.getVersionParts().values(), ""));
                         softVersionParserResult.setMark(StringUtils.join((isMarkAll ? softVersionParserResult.getMarkAllParts() : softVersionParserResult.getMarkPrevParts()).values(), ""));
-                    
+                        softVersionParserResult.fillSeries();
+                        
                         // 用来修正填入的数据，使输入的内容跟解析的结果保持一致
                         if (StringUtils.isNotBlank(group)) {
                             full = full.replaceFirst(group, softVersionParserResult.getVersion());
@@ -386,5 +388,24 @@ public abstract class AbstractSoftVersionStrategy {
     
     public void putMarkParts(Map<String, String> markParts, String part, String mark) {
         markParts.put(part, processMark(part, mark));
+    }
+    
+    /**
+     * 填充系列
+     * @param part
+     * @param mark
+     * @return
+     */
+    public String fillSeries(SoftVersionParser softVersionParser) {
+        List<String> rangeInheritParts = getRangeInheritParts();
+        Map<String, String> versionParts = softVersionParser.getVersionParts();
+        List<String> series = new ArrayList<String>(rangeInheritParts.size());
+        for (String part : rangeInheritParts) {
+            String partValue = versionParts.getOrDefault(part, part);
+            series.add(partValue);
+            softVersionParser.putSeriesParts(part, partValue);
+        }
+        softVersionParser.setSeries(StringUtils.join(series, ""));
+        return softVersionParser.getSeries();
     }
 }

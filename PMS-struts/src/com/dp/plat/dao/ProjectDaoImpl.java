@@ -28,6 +28,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectSoftVersion;
 import com.dp.plat.data.bean.ProjectTask;
 import com.dp.plat.data.bean.ProjectWeekly;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -350,7 +351,14 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
                 boolean disableQueryProjectByBarcode = Boolean.parseBoolean(String.valueOf(context.getUser().getCustomInfoByKey("disableQueryProjectByBarcode")));
                 if (!disableQueryProjectByBarcode) {
                     project = new Project();
-                    BeanUtils.copyProperties(tempProject, project, new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" });
+                    String[] ignoreProperties = new String[] { "officeCodes", "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" };
+                    BeanUtils.copyProperties(tempProject, project, ignoreProperties);
+                    Map<?, ?> customInfo = project.getCustomInfo();
+                    if (customInfo != null) {
+                        for (String ignore : ignoreProperties) {
+                            customInfo.remove(ignore);
+                        }
+                    }
                 }
             }
             // 项目名搜索，只限制办事处，不限制是否指派
@@ -361,7 +369,14 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
                     project.setCustomInfoByKey("fullProjectName", project.getProjectName());
                 }
                 project = new Project();
-                BeanUtils.copyProperties(tempProject, project, new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" });
+                String[] ignoreProperties = new String[] { "oldServiceManagerCode", "oldProgramManagerCode", "programManagerCode", "serviceManagerCode", "oldMemberCode", "memberCode" };
+                BeanUtils.copyProperties(tempProject, project, ignoreProperties);
+                Map<?, ?> customInfo = project.getCustomInfo();
+                if (customInfo != null) {
+                    for (String ignore : ignoreProperties) {
+                        customInfo.remove(ignore);
+                    }
+                }
             }
         }
         // 判断是否有产品类型这个搜索条件
@@ -612,6 +627,16 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public void deleteShipmentInstallInfoByProjectId(int projectId) {
         getSqlMapClientTemplate().insert("deleteShipmentInstallInfoByProjectId", projectId);
+    }
+    
+    @Override
+    public void deleteShipmentInstallInfoByList(List<? extends ShipmentInfo> shipmentInfos) {
+//        if (shipmentInfos == null || shipmentInfos.isEmpty()) {
+//            return;
+//        }
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("list", shipmentInfos);
+        getSqlMapClientTemplate().delete("deleteShipmentInstallInfoByList", map);
     }
 
     @Override
@@ -1113,10 +1138,48 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
         Object obj = getSqlMapClientTemplate().queryForObject("query_real_orderdatasize_by_projectid", projectId);
         return obj == null ? 0 : (int) obj;
     }
+    
+    @Override
+    public List<Map<String, Object>> queryProjectLeaseLineByProjectCode(String projectCode) {
+        if (StringUtils.isBlank(projectCode)) {
+            return Collections.emptyList();
+        }
+        projectCode = StringUtils.split(projectCode, "-")[0];
+        return getSqlMapClientTemplate().queryForList("queryProjectLeaseLineByProjectCode", projectCode);
+    }
+    
+    @Override
+    public int queryProjectLeaseLineSizeByProjectCode(String projectCode) {
+        if (StringUtils.isBlank(projectCode)) {
+            return 0;
+        }
+        projectCode = StringUtils.split(projectCode, "-")[0];
+        Object obj = getSqlMapClientTemplate().queryForObject("queryProjectLeaseLineSizeByProjectCode", projectCode);
+        return obj == null ? 0 : (int) obj;
+    }
+    
+    @Override
+    public List<?> queryProjectProductConfigLevelInfoByProjectCode(String projectCode) {
+        if (StringUtils.isBlank(projectCode)) {
+            return Collections.emptyList();
+        }
+        projectCode = StringUtils.split(projectCode, "-")[0];
+        return getSqlMapClientTemplate().queryForList("queryProjectProductConfigLevelInfoByProjectCode", projectCode);
+    }
+    
+    @Override
+    public int queryProjectProductConfigLevelInfoSizeByProjectCode(String projectCode) {
+        if (StringUtils.isBlank(projectCode)) {
+            return 0;
+        }
+        projectCode = StringUtils.split(projectCode, "-")[0];
+        Object obj = getSqlMapClientTemplate().queryForObject("queryProjectProductConfigLevelInfoSizeByProjectCode", projectCode);
+        return obj == null ? 0 : (int) obj;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId) {
+    public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId) {
 //        Map<String, Object> map = new HashMap<String, Object>();
 //        map.put("contractNo", contractNo);
 //        map.put("projectId", projectId);
@@ -1126,7 +1189,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     
     @SuppressWarnings("unchecked")
     @Override
-    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
+    public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, String profitCenter) {
 //        Map<String, Object> map = new HashMap<String, Object>();
 //        if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
 //            contractNo = contractNo.replaceAll("-L", "");
@@ -1139,20 +1202,56 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
     
     @Override
-    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
+    public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<String, Object>(params != null ? params : Collections.emptyMap());
         String profitCenter = (String) map.get("profitCenter");
         if (StringUtils.isNotBlank(contractNo) && StringUtils.isNotBlank(profitCenter)) {
             contractNo = contractNo.replaceAll("-L", "");
         }
+        
         Boolean filterItem = Boolean.TRUE.equals(Boolean.parseBoolean(String.valueOf(params.get("filterItem"))));
         map.put("contractNo", contractNo);
         map.put("projectId", projectId);
+        map.put("sourceContractNo", StringUtils.trimToEmpty(contractNo).replaceAll("(-L)|(-C)", ""));
+        Map<String, Object> probFilters = SystemContext.getConfig("project.prob.filters");
+        if (probFilters != null && !probFilters.isEmpty()) {
+            map.putAll(probFilters);
+        }
         if (filterItem) {
-            ProductItemExample example = ProductItemExampleBuilder.buildFromSearchCriteria(params, SystemContext.getConfig("prob.product.item.filters"));
+            Map<String, Object> config = SystemContext.getConfig("project.product.item.filters");
+            if (config == null || config.isEmpty()) {
+                config = SystemContext.getConfig("prob.product.item.filters");
+            }
+            ProductItemExample example = ProductItemExampleBuilder.buildFromSearchCriteria(params, config);
             map.put("itemFilters", example.getItemFilters());
         }
         return getSqlMapClientTemplate().queryForList("query_soft_version_list", map);
+    }
+    
+    @Override
+    public List<ProjectSoftVersion> selectProjectSoftVersionList(ProjectSoftVersion projectSoftVersion, DisplayParam displayParam) {
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+        if (projectSoftVersion == null) {
+            projectSoftVersion = new ProjectSoftVersion();
+        }
+        projectSoftVersion.setDisplayParam(displayParam);
+        
+        Integer total = 0;
+        List list = Collections.emptyList();
+        if (!displayParam.getExport()) {
+            displayParam.setOffset((displayParam.getCurrentpage() - 1) * displayParam.getPagesize());
+            total = (Integer) getSqlMapClientTemplate().queryForObject("countProjectSoftVersionList", projectSoftVersion);
+            list = getSqlMapClientTemplate().queryForList("selectProjectSoftVersionList", projectSoftVersion);
+        } else {
+            displayParam.setOffset(null);
+            list = getSqlMapClientTemplate().queryForList("selectProjectSoftVersionList", projectSoftVersion);
+            total = list.size();
+            displayParam.setPagesize(total);
+        }
+        displayParam.setTotalcount(total);
+        return list;
     }
 
     @Override
@@ -1164,7 +1263,7 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     }
 
     @Override
-    public void insertSoftVersionList(List<ShipmentInfo> softversionList, int logId) {
+    public void insertSoftVersionList(List<? extends ShipmentInfo> softversionList, int logId) {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("softversionList", softversionList);
         map.put("createBy", getCurrUsername());
@@ -1202,13 +1301,13 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog) {
+    public List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog) {
         return getSqlMapClientTemplate().queryForList("query_hist_soft_version_list", softChangeLog);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog, String contractNo) {
+    public List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog, String contractNo) {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("softChangeLog", softChangeLog);
         map.put("contractNo", Util.appendChar(contractNo, "'"));
@@ -1813,6 +1912,11 @@ public class ProjectDaoImpl extends BaseDao implements ProjectDao {
     @Override
     public List<Map<String, Object>> selectProblemTicket(Map<String, Object> params) {
         return getSqlMapClientTemplate().queryForList("selectProblemTicket", params);
+    }
+
+    @Override
+    public List<Map<String, Object>> selectLicenseInfo(Map<String, Object> params) {
+        return getSqlMapClientTemplate().queryForList("selectLicenseInfo", params);
     }
 
     @Override

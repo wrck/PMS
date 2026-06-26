@@ -44,7 +44,7 @@ public class PullJobFromCRM extends DefaultPullTaskFormCRM<Map<String, Object>> 
 //        syncMarketRelations(params);
         params.put("dataSource", sourceDbName);
 //        syncLendInfo(params);
-        syncSalesInfo(params);
+//        syncSalesInfo(params);
     }
     
     /**
@@ -428,7 +428,7 @@ public class PullJobFromCRM extends DefaultPullTaskFormCRM<Map<String, Object>> 
         // 同步订单信息
         return sync(dataName, "正常订单信息", params);
     }
-
+    
     /**
      * 同步数据
      */

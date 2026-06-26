@@ -13,13 +13,18 @@
 		<display:column property="projectCheckBox" titleKey="prob.info.checkbox"></display:column>
 		<display:column property="serialNum" titleKey="prob.info.serial.num"></display:column>
 		<display:column property="itemModel" titleKey="prob.info.product.type"></display:column>
-		<display:column property="conp" titleKey="prob.info.conp"></display:column>	
-		<display:column property="cpld" titleKey="prob.info.cpld"></display:column>	
-		<display:column property="boot" titleKey="prob.info.boot"></display:column>	
+		<display:column property="conp" titleKey="prob.info.conp"></display:column>
+		<display:column property="cpld" titleKey="prob.info.cpld"></display:column>
+		<display:column property="boot" titleKey="prob.info.boot"></display:column>
 		<display:column property="pcb" titleKey="prob.info.pcb"></display:column>
-		<display:column property="projectNamea" titleKey="pm.project.projectName"></display:column>	
-		<display:column property="contractNo" titleKey="pm.contract"></display:column>	
+		<display:column property="projectNamea" titleKey="pm.project.projectName"></display:column>
+        <display:column property="projectCode" titleKey="pm.project.projectCode"></display:column>
+		<display:column property="contractNo" titleKey="pm.contract"></display:column>
 		<display:column property="officeName" titleKey="pm.officearea"></display:column>
+        <display:column property="marketName" titleKey="pm.presales.marketName"></display:column>
+        <display:column property="systemName" titleKey="pm.presales.systemName"></display:column>
+        <display:column property="expendName" titleKey="pm.presales.expendName"></display:column>
+        <display:column property="industryName" titleKey="pm.presales.industryName"></display:column>
 	</display:table>
 	<%-- <table class="table table-striped">
 		<s:if test="probRestoreList == null">

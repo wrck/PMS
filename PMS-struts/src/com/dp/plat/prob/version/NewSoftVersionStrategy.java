@@ -39,7 +39,7 @@ public class NewSoftVersionStrategy extends AbstractSoftVersionStrategy {
     public static final Map<Integer, String> indexMarkMap = new LinkedHashMap<Integer, String>();
     public static final Map<Integer, String> indexMarkMapStart = new LinkedHashMap<Integer, String>();
     public static final Map<Integer, String> indexMarkMapEnd = new LinkedHashMap<Integer, String>();
-    public static final List<String> rangeInheritParts = new ArrayList<String>(Arrays.asList(new String[] {"Hvvv", "HSxxx", "Hx", "Sxxx", "VRxxx", "Bxxx", "Dxxx"}));
+    public static final List<String> rangeInheritParts = new ArrayList<String>(Arrays.asList(new String[] { "Hvvv", "HSxxx", "Hx", "Sxxx"/* , "VRxxx", "Bxxx", "Dxxx" */}));
     static {
         partIndexMap.put("Hvvv", 1);            //  产品类型。如：LSW3000、FW1000、UAG3000等
         partIndexMap.put("HSxxx", 2);           //  产品版本信息 HxSx.x.x

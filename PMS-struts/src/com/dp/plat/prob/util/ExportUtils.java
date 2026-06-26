@@ -73,7 +73,7 @@ public class ExportUtils {
 			Integer colCount = 0;
 			setHeader(obj.getClass(), header, style, colCount, colValue);
 		} else {
-			return null;
+			return workbook;
 		}
 		// create data rows
 		createRow(list, sheet, colValue);

@@ -20,6 +20,7 @@ public class Prob extends CustomInfoEntity {
 	private static final long serialVersionUID = 4265353476481783579L;
     private int probId;// 主键
 	private String probNum;//
+	private String probTicketNo;// 工单号
 	private String watch;// 跟踪
 	private String watchName;// 名称
 	private String theme;// 主题
@@ -38,6 +39,12 @@ public class Prob extends CustomInfoEntity {
 	private String relatedSceneTypes;// 关联场景类型
 	private Long relatedSceneTypesMark;// 关联场景类型的bitMark
 	private String relatedSceneTypesName;
+	private String mitigationActionTypes;// 规避方案操作类型
+	private Long mitigationActionTypesMark;// 规避方案操作类型的bitMark
+	private String mitigationActionTypesName;
+	private String solutionActionTypes;// 解决方案操作类型
+	private Long solutionActionTypesMark;// 解决方案操作类型的bitMark
+	private String solutionActionTypesName;
 	private String trackingUser;// 跟踪用户
 	private String trackingUsername;// 跟踪用户名称
 	private String createBy;
@@ -73,6 +80,14 @@ public class Prob extends CustomInfoEntity {
 
 	public void setProbNum(String probNum) {
 		this.probNum = probNum;
+	}
+
+	public String getProbTicketNo() {
+		return probTicketNo;
+	}
+
+	public void setProbTicketNo(String probTicketNo) {
+		this.probTicketNo = probTicketNo;
 	}
 
 	public String getWatch() {
@@ -289,6 +304,100 @@ public class Prob extends CustomInfoEntity {
 
     public void setRelatedSceneTypesName(String relatedSceneTypesName) {
         this.relatedSceneTypesName = relatedSceneTypesName;
+    }
+
+    public String getMitigationActionTypes() {
+        return mitigationActionTypes;
+    }
+
+    public void setMitigationActionTypes(String mitigationActionTypes) {
+        this.mitigationActionTypes = mitigationActionTypes;
+        if (StringUtils.isNotBlank(mitigationActionTypes)) {
+            List<String> mitigationActionTypeList = Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(mitigationActionTypes), ", "));
+            if (!mitigationActionTypeList.isEmpty()) {
+                this.setCustomInfoByKey("mitigationActionTypes", mitigationActionTypeList);
+                long bitMark = 0;
+                for (String actionType : mitigationActionTypeList) {
+                    bitMark |= Integer.parseInt(actionType);
+                }
+                this.mitigationActionTypesMark = bitMark;
+                this.mitigationActionTypes = StringUtils.join(mitigationActionTypeList, ",");
+            }
+        }
+    }
+
+    public Long getMitigationActionTypesMark() {
+        return mitigationActionTypesMark;
+    }
+
+    public void setMitigationActionTypesMark(Long mitigationActionTypesMark) {
+        this.mitigationActionTypesMark = mitigationActionTypesMark;
+        if (mitigationActionTypesMark != null) {
+            List<Long> mitigationActionTypes = new ArrayList<>();
+            for (int i = 0; i < 64; i++) {
+                long bit = 1L << i;
+                if ((mitigationActionTypesMark & bit) != 0) {
+                    mitigationActionTypes.add(bit);
+                }
+            }
+            this.mitigationActionTypes = StringUtils.join(mitigationActionTypes, ",");
+            this.setCustomInfoByKey("mitigationActionTypes", mitigationActionTypes);
+        }
+    }
+
+    public String getMitigationActionTypesName() {
+        return mitigationActionTypesName;
+    }
+
+    public void setMitigationActionTypesName(String mitigationActionTypesName) {
+        this.mitigationActionTypesName = mitigationActionTypesName;
+    }
+
+    public String getSolutionActionTypes() {
+        return solutionActionTypes;
+    }
+
+    public void setSolutionActionTypes(String solutionActionTypes) {
+        this.solutionActionTypes = solutionActionTypes;
+        if (StringUtils.isNotBlank(solutionActionTypes)) {
+            List<String> solutionActionTypeList = Arrays.asList(StringUtils.split(StringUtils.stripToEmpty(solutionActionTypes), ", "));
+            if (!solutionActionTypeList.isEmpty()) {
+                this.setCustomInfoByKey("solutionActionTypes", solutionActionTypeList);
+                long bitMark = 0;
+                for (String actionType : solutionActionTypeList) {
+                    bitMark |= Integer.parseInt(actionType);
+                }
+                this.solutionActionTypesMark = bitMark;
+                this.solutionActionTypes = StringUtils.join(solutionActionTypeList, ",");
+            }
+        }
+    }
+
+    public Long getSolutionActionTypesMark() {
+        return solutionActionTypesMark;
+    }
+
+    public void setSolutionActionTypesMark(Long solutionActionTypesMark) {
+        this.solutionActionTypesMark = solutionActionTypesMark;
+        if (solutionActionTypesMark != null) {
+            List<Long> solutionActionTypes = new ArrayList<>();
+            for (int i = 0; i < 64; i++) {
+                long bit = 1L << i;
+                if ((solutionActionTypesMark & bit) != 0) {
+                    solutionActionTypes.add(bit);
+                }
+            }
+            this.solutionActionTypes = StringUtils.join(solutionActionTypes, ",");
+            this.setCustomInfoByKey("solutionActionTypes", solutionActionTypes);
+        }
+    }
+
+    public String getSolutionActionTypesName() {
+        return solutionActionTypesName;
+    }
+
+    public void setSolutionActionTypesName(String solutionActionTypesName) {
+        this.solutionActionTypesName = solutionActionTypesName;
     }
 
     public String getTrackingUser() {

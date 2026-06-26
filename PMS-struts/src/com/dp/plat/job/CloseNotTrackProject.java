@@ -36,13 +36,16 @@ import com.ibatis.sqlmap.client.SqlMapClient;
 import com.ibatis.sqlmap.client.SqlMapClientBuilder;
 
 public class CloseNotTrackProject implements Job{
-//	private static ApplicationContext ctx;
+    private static final JobLogger logger = new JobLogger(CloseNotTrackProject.class);
+    
     @Override
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
+        logger.logStart();
         try {
             work();
+            logger.logComplete();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.logError(e);
         }
     }
 	

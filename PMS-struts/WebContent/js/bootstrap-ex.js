@@ -135,6 +135,9 @@ function date_picker(inputId){
 function date_picker2(inputId){
 	try {
 		input = document.getElementById(inputId);
+		if (!input) {
+			return;
+		}
 		var v = input.value;
 		$(input).datepicker({
 			changeMonth: true,
@@ -152,6 +155,9 @@ function date_picker2(inputId){
 function date_picker3(inputId){
 	try {
 		input = document.getElementById(inputId);
+		if (!input) {
+			return;
+		}
 		var v = input.value;
 		$(input).datepicker({
 		      changeMonth: true,

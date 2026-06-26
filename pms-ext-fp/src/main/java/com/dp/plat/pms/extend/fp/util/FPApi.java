@@ -24,8 +24,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -99,7 +102,7 @@ public class FPApi implements DisposableBean {
     public static final String MULTIPLE = "MULTIPLE";
     public static final TypeReference<Map<String, Object>> DEFAULT_TYPE = new TypeReference<Map<String, Object>>() {};
     static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CustomizableThreadFactory("FPApi-ScheduledPool-Thread-"));
-    static final ExecutorService fixedExecutor = Executors.newFixedThreadPool(4, new CustomizableThreadFactory("FPApi-FixedPool-Thread-"));
+    static final ExecutorService fixedExecutor = Executors.newFixedThreadPool(10, new CustomizableThreadFactory("FPApi-FixedPool-Thread-"));
     private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     // token获取相关参数
     private static String authType;
@@ -325,14 +328,27 @@ public class FPApi implements DisposableBean {
     }
     
     /**
-     * 批量推送电子档案
+     * 批量发票查验
      *
      * @return
      */
     public static List<Response<ElectronicInvoiceModel>> postElectronicInvoice(String dataType, String dataId, List<File> files, List<Object> sourceList, Map<String, Object> config) {
-       if (files == null || files.isEmpty()) {
-           return Collections.emptyList();
-       }
+        return postElectronicInvoice(dataType, dataId, files, sourceList, config, null);
+    }
+    
+    /**
+     * 批量发票查验
+     *
+     * @return
+     */
+    public static List<Response<ElectronicInvoiceModel>> postElectronicInvoice(String dataType, String dataId, List<File> files, List<Object> sourceList, Map<String, Object> config, Map<String, Object> options) {
+        if (files == null || files.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (options == null) {
+            options = Collections.emptyMap();
+        }
+        
         List<ElectronicInvoiceModel> list = new ArrayList<>(files.size());
         for (int i = 0; i < files.size(); i++) {
             File file = files.get(i);
@@ -347,20 +363,23 @@ public class FPApi implements DisposableBean {
             
             ElectronicInvoiceModel model = ElectronicInvoiceModel
                     .builder()
-                    .async(false)
+                    .async(MapUtil.getBool(options, "async", false))
                     .files(new File[] { file })
                     .dataType(dataType)
                     .dataId(dataId)
                     .sourceList(Arrays.asList(source))
                     .build();
-            model.setJsonData(toJSONString(model));
+            model.setOpenId(MapUtil.getStr(options, "openId"));
+            Map<String, Object> jsonData = new HashMap<>(options);
+            jsonData.putAll(JSON.parseObject(toJSONString(model)));
+            model.setJsonData(toJSONString(jsonData));
             list.add(model);
         }
-        return postElectronicInvoice(list, config);
+        return postElectronicInvoice(list, config, options);
     }
 
     /**
-     * 批量推送电子档案
+     * 批量发票查验
      *
      * @return
      */
@@ -369,20 +388,34 @@ public class FPApi implements DisposableBean {
     }
 
     /**
-     * 批量推送电子档案
+     * 批量发票查验
      * @return
      */
     public static <T> ElectronicInvoiceResponse postElectronicInvoice(T data, Map<String, Object> config) {
+        return postElectronicInvoice(data, config, null);
+    }
+    
+    /**
+     * 批量发票查验
+     * @return
+     */
+    public static <T> ElectronicInvoiceResponse postElectronicInvoice(T data, Map<String, Object> config, Map<String, Object> options) {
         config = FPApi.initConfig(config);
-        Map<String, Object> options = new HashMap<>();
-        options.put("responseType", ElectronicInvoiceResponse.class);
-        options.put("responseClass", ElectronicInvoiceResponse.class);
+        if (options == null) {
+            options = new HashMap<>();
+        } else {
+            options = new HashMap<>(options);
+        }
+        options.put("responseType", options.getOrDefault("responseType", ElectronicInvoiceResponse.class));
+        options.put("responseClass", options.getOrDefault("responseClass", ElectronicInvoiceResponse.class));
+        Map<String, String> headers = MapUtil.get(options, "headers", HashMap.class, new HashMap<>());
+        headers.putIfAbsent("Content-Type", "multipart/form-data");
         options.put("headers", Collections.singletonMap("Content-Type", "multipart/form-data"));
         return (ElectronicInvoiceResponse) pushSingleData(data, archiveUrl, config, options);
     }
 
     /**
-     * 批量推送电子档案
+     * 批量发票查验
      *
      * @return
      */
@@ -391,21 +424,36 @@ public class FPApi implements DisposableBean {
     }
 
     /**
-     * 批量推送电子档案
+     * 批量发票查验
      *
      * @return
      */
     public static <T> List<Response<T>> postElectronicInvoice(List<T> list, Map<String, Object> config) {
+        return postElectronicInvoice(list, config, null);
+    }
+    
+    /**
+     * 批量发票查验
+     *
+     * @return
+     */
+    public static <T> List<Response<T>> postElectronicInvoice(List<T> list, Map<String, Object> config, Map<String, Object> options) {
         config = FPApi.initConfig(config);
-        Map<String, Object> options = new HashMap<>();
-        options.put("responseType", ElectronicInvoiceResponse.class);
-        options.put("responseClass", ElectronicInvoiceResponse.class);
+        if (options == null) {
+            options = new HashMap<>();
+        } else {
+            options = new HashMap<>(options);
+        }
+        options.put("responseType", options.getOrDefault("responseType", ElectronicInvoiceResponse.class));
+        options.put("responseClass", options.getOrDefault("responseClass", ElectronicInvoiceResponse.class));
+        Map<String, String> headers = MapUtil.get(options, "headers", HashMap.class, new HashMap<>());
+        headers.putIfAbsent("Content-Type", "multipart/form-data");
         options.put("headers", Collections.singletonMap("Content-Type", "multipart/form-data"));
-        return pushSingleData(list, archiveUrl, 30, config, MULTIPLE, options);
+        return pushSingleData(list, archiveUrl, MapUtil.getInt(options, "rateLimit", MapUtil.getInt(config, "rateLimit", 30)), config, MULTIPLE, options);
     }
 
     /**
-     * 推送在途列表数据，请求参数为List
+     * 推送列表数据，请求参数为List
      *
      * @return
      */
@@ -414,7 +462,7 @@ public class FPApi implements DisposableBean {
     }
 
     /**
-     * 推送在途列表数据，请求参数为List
+     * 推送列表数据，请求参数为List
      *
      * @return
      */
@@ -423,7 +471,7 @@ public class FPApi implements DisposableBean {
     }
 
     /**
-     * 推送在途数据，请求参数为单个Data
+     * 推送数据，请求参数为单个Data
      *
      * @return
      */
@@ -432,7 +480,7 @@ public class FPApi implements DisposableBean {
     }
 
     /**
-     * 推送在途数据，请求参数为单个Data
+     * 推送数据，请求参数为单个Data
      *
      * @return
      */
@@ -688,6 +736,9 @@ public class FPApi implements DisposableBean {
                 public Response<T> call() throws Exception {
                     try {
                         return pushData(data, syncUrl, config, options);
+                    } catch (RejectedExecutionException e) {
+                        // 队列已满
+                        return Response.failure("当前系统繁忙，请稍候再试！", responseType);
                     } catch (Exception e) {
                         // 包装异常为 Response.failure，避免 future.get() 抛出 ExecutionException
                         return Response.failure(e.getMessage(), responseType);
@@ -712,7 +763,7 @@ public class FPApi implements DisposableBean {
                     response = future.get(timeout, timeUnit); // 可选：为每个任务设置超时
                 } catch (TimeoutException e) {
                     future.cancel(true);
-                    response = Response.failure(e.getMessage(), responseType);
+                    response = Response.failure("请求超时", responseType);
                 } catch (ExecutionException e) {
                     // pushData 抛出异常时，会被包装成 ExecutionException
                     response = Response.failure(e.getMessage(), responseType);
@@ -1192,6 +1243,7 @@ public class FPApi implements DisposableBean {
         T response;
 
         // 处理空 URL
+        url = MapUtil.getStr(options, "url", url);
         if (url == null || url.length() == 0) {
             response = JSON.parseObject("{}", responseType);
             response.setMessage("没有指定URL！");
@@ -1307,6 +1359,7 @@ public class FPApi implements DisposableBean {
         T response;
 
         // 处理空 URL
+        url = MapUtil.getStr(options, "url", url);
         if (url == null || url.length() == 0) {
             response = JSON.parseObject("{}", responseType);
             response.setMessage("没有指定URL！");
@@ -1465,6 +1518,7 @@ public class FPApi implements DisposableBean {
         T response;
 
         // 处理空 URL
+        url = MapUtil.getStr(options, "url", url);
         if (url == null || url.length() == 0) {
             response = JSON.parseObject("{}", responseType);
             response.setMessage("没有指定URL！");

@@ -62,14 +62,17 @@ import com.ibatis.sqlmap.client.SqlMapClientBuilder;
  */
 @SuppressWarnings({ "unused", "unchecked" })
 public class AutoStartPresalesProjectJob implements Job {
+    private static final JobLogger logger = new JobLogger(AutoStartPresalesProjectJob.class);
     private final static TypeReference<HashMap<String, Object>> TYPE_MAP = new TypeReference<HashMap<String, Object>>() {};
-//	private static ApplicationContext ctx;
+    
     @Override
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
+        logger.logStart();
         try {
             work();
+            logger.logComplete();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.logError(e);
         }
     }
 

@@ -3,7 +3,9 @@ package com.dp.plat.pms.extend.fp.model;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,7 +19,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 public class Response<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static final Integer SUCCESS_CODE = 0;
+    private static final Integer[] SUCCESS_CODE = new Integer[] {0, 200};
 
     /**
      * 原始请求
@@ -28,11 +30,14 @@ public class Response<T> implements Serializable {
     @JSONField(name = "code")
     private Integer code;
 
-    @JSONField(name = "msg")
+    @JSONField(name = "msg", alternateNames = "message")
     private String message;
 
     @JSONField(name = "data")
     private List<T> data = new ArrayList<T>();
+    
+    @JSONField(name = "extend")
+    private Map<String, Object> extend = new HashMap<String, Object>();
 
     @JSONField(name = "status")
     private Boolean isSuccess;
@@ -178,6 +183,19 @@ public class Response<T> implements Serializable {
     public void setHeaders(Map<String, List<String>> headers) {
         this.headers = headers;
     }
+    
+    public Response extend(Map<String, Object> extend) {
+        this.extend = extend;
+        return this;
+    }
+    
+    public Map<String, Object> getExtend() {
+        return extend;
+    }
+
+    public void setExtend(Map<String, Object> extend) {
+        this.extend = extend;
+    }
 
     /**
      * 是否成功
@@ -185,7 +203,7 @@ public class Response<T> implements Serializable {
      * @return
      */
     public boolean isSuccess() {
-        return Boolean.TRUE.equals(getIsSuccess()) || SUCCESS_CODE.equals(this.code);
+        return Boolean.TRUE.equals(getIsSuccess()) || this.code != null && Arrays.asList(SUCCESS_CODE).contains(this.code);
     }
 
     public Boolean getIsSuccess() {

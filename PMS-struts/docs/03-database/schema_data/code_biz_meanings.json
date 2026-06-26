@@ -1,0 +1,782 @@
+{
+  "act_ru_task": {
+    "fields": {
+      "task_def_key": "标记当前流程走到哪一步"
+    }
+  },
+  "dp_act_comment": {
+    "fields": {
+      "ID_": "activity自定义实现的意见表",
+      "cause": "任务委派原因",
+      "fileId": "activity自定义实现的意见表",
+      "id": "activity自定义实现的意见表",
+      "owner": "任务拥有者",
+      "result": "-1 驳回 1同意 0发起申请",
+      "result_name": "非数据库字段",
+      "user_id": "任务办理者"
+    }
+  },
+  "dp_act_proc_desc": {
+    "fields": {
+      "CREATE_TIME_": "创建时间",
+      "KEY_": "流程类型名称",
+      "NAME_": "任务名称",
+      "USER_NAME": "申请人",
+      "applyBy": "申请人",
+      "applyName": "申请人姓名",
+      "applyTime": "创建时间",
+      "apply_num": "来自业务表单ID",
+      "assignee": "办理人",
+      "assigneeTime": "结束时间",
+      "cause": "委派任务",
+      "create_time": "创建时间",
+      "departmentName": "办事处",
+      "diff": "计划偏离时间",
+      "end_time": "结束时间",
+      "evalua_result": "审核结果",
+      "fileName": "任务名称",
+      "id_": "任务ID",
+      "implType": "项目实施方式",
+      "is_candidate_user": "候选用户 @ 1 = 是",
+      "memberName": "客户名称",
+      "name": "任务名称",
+      "office_name": "办事处",
+      "planStateName": "项目阶段",
+      "plan_diff_time": "计划偏离时间",
+      "presalesId": "来自业务表单ID",
+      "proc_inst_id": "流程实例ID",
+      "proc_type": "流程类型",
+      "proc_type_desc": "流程类型描述",
+      "proc_type_name": "流程类型名称",
+      "procdef_key": "流程定义key",
+      "programManager": "申请人姓名",
+      "projectId": "来自业务表单ID",
+      "projectStateName": "项目阶段",
+      "project_code": "项目编码",
+      "project_customer": "客户名称",
+      "project_impl": "项目实施方式",
+      "project_name": "项目名称",
+      "project_plan_state_name": "项目阶段",
+      "questionContent": "任务名称",
+      "real_name": "申请人姓名",
+      "result": "审核结果",
+      "showflag": "显示产品配置商务信息等按钮",
+      "start_time": "开始时间",
+      "taskName": "任务名称",
+      "task_id": "任务ID",
+      "username": "申请人"
+    }
+  },
+  "dp_act_proc_type": {
+    "fields": {
+      "desc": "流程描述",
+      "proc_def_key": "流程定义key"
+    }
+  },
+  "fnd_basic_data": {
+    "fields": {
+      "avg_close_score": "项目质量管理报表参数",
+      "basic_data_attri1": "属性1"
+    }
+  },
+  "fnd_notification_template": {
+    "fields": {
+      "template_code": "邮件或消息通知模板"
+    }
+  },
+  "fnd_procdef_delegate": {
+    "fields": {
+      "assignee": "任务接收人",
+      "cause": "委派原因",
+      "end_time": "结束时间",
+      "handle_time": "设置时间",
+      "handle_username": "设置人",
+      "owner": "任务所属人",
+      "procdef_id": "流程定义",
+      "start_time": "开始时间",
+      "status": "状态"
+    }
+  },
+  "fnd_role_menu_power": {
+    "fields": {
+      "menu_power": "各功能菜单增删改权限（8：增加 1：删除 4：查找 2：更新）"
+    }
+  },
+  "fnd_user_info": {
+    "fields": {
+      "job_desc": "岗位审核描述"
+    }
+  },
+  "fnd_user_menus": {
+    "fields": {
+      "filePath": "访问路径，提供用户的defaultPage",
+      "path": "访问路径，提供用户的defaultPage",
+      "user_menu_list": "如果本身是父菜单，此为子菜单集合"
+    }
+  },
+  "pm_certificate": {
+    "fields": {
+      "certificate_service": "合格证查询"
+    }
+  },
+  "pm_cl_callback": {
+    "fields": {
+      "applyByName": "申请人名称",
+      "apply_by": "申请人",
+      "apply_byname": "申请人名称",
+      "apply_state": "申请状态 -1 草稿 1 审批中 2审批通过",
+      "apply_state_name": "审批状态名称",
+      "apply_time": "申请时间",
+      "call_back_id": "流程申请ID",
+      "callbackId": "流程申请ID",
+      "id": "流程申请ID",
+      "inst_id": "流程ID",
+      "project_id": "项目ID",
+      "quesnaire_id": "回访问卷ID",
+      "remark": "申请备注信息"
+    }
+  },
+  "pm_cl_callback_comment": {
+    "fields": {
+      "quesnaire_id": "问卷ID"
+    }
+  },
+  "pm_cl_callback_quesnaire": {
+    "fields": {
+      "id": "回访问卷信息",
+      "ques_result_mark_list": "非数据库字段",
+      "task_id": "某个activity任务中的taskId"
+    }
+  },
+  "pm_cl_quesnaire_result_header": {
+    "fields": {
+      "ques_anw": "问卷答案，用于规则评分，(格式：题目类型:题号-答案,题号-答案;)+ 如：10:1-A,2-B,3-C;20:4-A,5-R;",
+      "ques_mark_result": "评分结果",
+      "quesnaire_temp": "问卷模板"
+    }
+  },
+  "pm_cl_quesnaire_template_header": {
+    "fields": {
+      "questionnaire_pass_score": "问卷达标分数",
+      "questionnaire_score": "问卷总分数",
+      "questionnaire_status": "问卷状态",
+      "questionnaire_template_name": "问卷模板名称",
+      "questionnaire_template_num": "问卷模板编号"
+    }
+  },
+  "pm_instruction": {
+    "fields": {
+      "feedback_list": "反馈信息",
+      "id": "针对项目的总部批示"
+    }
+  },
+  "pm_order_change_state": {
+    "fields": {
+      "change_type": "交付日期类型 1 客户交付日期 0计划交付日期",
+      "id": "订单交付日期变更实例"
+    }
+  },
+  "pm_order_data_from_erp_source": {
+    "fields": {
+      "bundle_code": "bundle父编码",
+      "bundle_parent_item_code": "bundle父编码",
+      "contract_no": "合同号",
+      "cust_deliver_date": "要货日期（交付日期）",
+      "cust_deliver_quantity": "客户要求交付数量",
+      "customer_name": "客户名称",
+      "deliver_date": "实际交付日期",
+      "deliver_quantity": "实际交付数量",
+      "delivered_quantity": "已交货数量",
+      "have_order_quantity": "已订购",
+      "have_promise_quantity": "已承诺",
+      "id": "表主键",
+      "inventories": "存货量",
+      "item_code": "产品编码",
+      "item_name": "产品描述",
+      "model": "型号",
+      "order_create_date": "订单创建日期",
+      "order_date": "过账日期（即下单日期）",
+      "order_date_start": "数据导出筛选条件",
+      "order_exc_code": "SMS执行单号",
+      "order_line_id": "SAP订单行号",
+      "order_number": "SAP订单号",
+      "order_quantity": "此订单下单数量",
+      "order_type": "订单类型",
+      "plan_remark": "计划备注说明",
+      "planned_date": "计划承诺日期",
+      "planned_quantity": "计划交付数量",
+      "project_name": "项目名称",
+      "remark": "SAP注释",
+      "rma_contract_no": "退货合同号",
+      "un_deliver_quantity": "未清数量",
+      "update_version": "划分变更记录",
+      "warranty_months": "维保期-月"
+    }
+  },
+  "pm_order_line_from_erp_source": {
+    "fields": {
+      "order_number": "从ERP刷新订单行信息"
+    }
+  },
+  "pm_order_todo": {
+    "fields": {
+      "contract_no": "合同号",
+      "cust_deliver_date": "客户要求日期",
+      "cust_deliver_remark": "客户要求日期变更说明",
+      "customer_name": "客户名称",
+      "order_create_date": "订单创建日期",
+      "order_date": "过账日期即下单日期",
+      "order_number": "SAP订单号",
+      "order_plan_remark": "订单计划制定或变更说明",
+      "order_plan_state": "订单是否关闭状态",
+      "order_type": "订单类型",
+      "plantype": "计划状态类型",
+      "project_name": "项目名称",
+      "remark": "SAP 订单注释"
+    }
+  },
+  "pm_presales_project_header": {
+    "fields": {
+      "apply_duration": "项目同步到项目开始的时间间隔",
+      "apply_state": "申请状态 -1草稿 1 审批中 2审批通过",
+      "callback_duration": "回访的时间耗时",
+      "confirm_file_ids": "现场测试确认单",
+      "eventActualFinishDate": "项目完成测试时间",
+      "expend_name": "拓展部",
+      "export_detail": "导出选项，0-基于项目，1-基于设备，2-基于回访",
+      "file_params": "对应confirmFileIds下的文件具体信息",
+      "finshed_time": "项目完成测试时间",
+      "has_rma": "是否存在未核销数据",
+      "has_transfer": "是否存在借转销数据",
+      "industry_name": "行业",
+      "inst_id": "流程ID",
+      "lend_info_id": "SMS借货主键ID",
+      "lendfiles": "借货交付件",
+      "market_name": "市场部",
+      "office_code": "办事处编码",
+      "office_codes": "办事处权限",
+      "office_name": "办事处名称",
+      "old_project_manager": "原项目经理编码",
+      "opcode": "原项目编码",
+      "pcode": "项目编码",
+      "presales_code": "项目编码",
+      "presales_id": "业务主键",
+      "product_manager": "产品经理",
+      "program_duration": "指派项目经理的时间耗时",
+      "project_code": "原项目编码",
+      "project_manager": "项目经理编码",
+      "project_manager_name": "项目经理名称",
+      "project_name": "项目名称",
+      "project_state": "项目状态",
+      "project_state_name": "项目状态名称",
+      "project_states": "项目状态s",
+      "project_type": "项目类型",
+      "project_type_name": "项目类型名称",
+      "quesnaire_id": "回访问卷ID",
+      "quesnaire_state": "问卷状态",
+      "question_results": "问卷结果拼接",
+      "salesman": "销售人员",
+      "salesman_link": "联系方式",
+      "service_approve_duration": "服务经理审批的时间耗时",
+      "service_duration": "指派服务经理的时间耗时",
+      "service_manager": "服务经理编码",
+      "service_manager_name": "服务经理名称",
+      "source": "数据来源",
+      "system_name": "系统部",
+      "test_duration": "跟踪测试的时间耗时",
+      "total_duration": "项目开始到结束的时间间隔"
+    }
+  },
+  "pm_presales_project_product_line": {
+    "fields": {
+      "borrowNum": "转销数",
+      "hexiao_num": "核销数",
+      "item_code": "编码",
+      "item_desc": "描述",
+      "item_description": "描述",
+      "item_model": "型号",
+      "presales_id": "售前项目主表主键",
+      "price": "目录价",
+      "product_first_name": "产品一级",
+      "product_line_id": "明细表主键",
+      "product_num": "数量",
+      "product_type_name": "产品类型",
+      "productfirstName": "产品一级",
+      "remark": "备注",
+      "rmaQty": "核销数",
+      "transfer_num": "转销数"
+    }
+  },
+  "pm_presales_project_task": {
+    "fields": {
+      "file_params": "对应confirmFileIds下的文件具体信息",
+      "task_id": "售前测试项目计划"
+    }
+  },
+  "pm_project_contract": {
+    "fields": {
+      "contract_no": "合同相关信息",
+      "contract_number": "合同相关信息"
+    }
+  },
+  "pm_project_header": {
+    "fields": {
+      "bar_code": "根据序列号查询项目",
+      "barcode": "根据序列号查询项目",
+      "column001_desc": "字段的实际描述",
+      "column001_name": "字段对应的编码实际意义",
+      "column002_desc": "字段的实际描述",
+      "column002_name": "字段对应的编码实际意义",
+      "column003_desc": "字段的实际描述",
+      "column003_name": "字段对应的编码实际意义",
+      "column004_desc": "字段的实际描述",
+      "column004_name": "字段对应的编码实际意义",
+      "column005_desc": "字段的实际描述",
+      "column005_name": "字段对应的编码实际意义",
+      "column006_desc": "字段的实际描述",
+      "column006_name": "字段对应的编码实际意义",
+      "column007_desc": "字段的实际描述",
+      "column007_name": "字段对应的编码实际意义",
+      "column008_desc": "字段的实际描述",
+      "column008_name": "字段对应的编码实际意义",
+      "column009_desc": "字段的实际描述",
+      "column009_name": "字段对应的编码实际意义",
+      "column010_desc": "字段的实际描述",
+      "column010_name": "字段对应的编码实际意义",
+      "column011_desc": "字段的实际描述",
+      "column011_name": "字段对应的编码实际意义",
+      "column012_desc": "字段的实际描述",
+      "column012_name": "字段对应的编码实际意义",
+      "column012_readonly": "控制实施方式是否可以修改 从SMS系统刷过来的不可修改 表现为-1表示可以修改 其他值不可以修改",
+      "column013_desc": "字段的实际描述",
+      "column013_name": "字段对应的编码实际意义",
+      "column014_desc": "字段的实际描述",
+      "column014_name": "字段对应的编码实际意义",
+      "columno12_readonly": "控制实施方式是否可以修改 从SMS系统刷过来的不可修改 表现为-1表示可以修改 其他值不可以修改",
+      "comp_abbr": "公司简称",
+      "comp_code": "公司编码",
+      "comp_id": "公司主表Id",
+      "comp_name": "公司名称",
+      "company_code": "公司编码",
+      "create_by": "创建人",
+      "create_time": "创建时间",
+      "data_type_code": "基础数据类型",
+      "effective_from": "生效时间_起",
+      "effective_to": "生效时间_止",
+      "err_code": "错误编码（统一为1表示不报错，2表示报错）",
+      "err_mess": "错误信息",
+      "isback": "30表示创建项目，32表示指定项目经理，34表示填写渠道信息",
+      "major_project_level": "重大项目级别",
+      "market_name": "销售人员 pm_project_member",
+      "officeName": "字段对应的编码实际意义",
+      "office_codes": "项目查询权限",
+      "order_create_time": "订单创建时间-字符串",
+      "order_creation_date": "订单创建时间-字符串",
+      "partner_channel": "合作伙伴渠道，代理商/服务商",
+      "project_close_time": "项目闭环时间",
+      "project_create_time": "项目创建时间，指定服务经理时间",
+      "project_id": "项目主信息，对应 pm_project_header",
+      "project_plan_state": "项目状态表字段 projectPlanState 工程计划状态 shipmentState 发货状态 projectExecutionState 项目实施状态 closeProcessState 闭环流程状态",
+      "project_refresh_time": "项目相关数据最后编辑时间",
+      "project_start_time": "项目开始时间，指定项目经理时间",
+      "project_state": "项目状态",
+      "project_time_type": "项目时间类型",
+      "rank": "字段对应的编码实际意义",
+      "sales_type": "项目订单类型，01：正常，02：借转销，14：销售类借货",
+      "service_type": "从SMS过来的辅助字段",
+      "shipment_state_name": "订单出货状态",
+      "ssfsName": "字段对应的编码实际意义",
+      "task_id": "工作流字段",
+      "team_member_codes": "项目维护用来判断是否是项目的团队成员，进行权限控制",
+      "u_sordertype": "项目订单类型，01：正常，02：借转销，14：销售类借货",
+      "update_by": "修改人",
+      "update_time": "修改时间",
+      "validate_flag": "安全标识（值为md5(\"success\")是操作项目的必要条件）",
+      "waf_service": "waf服务",
+      "warranty_grade": "维保级别",
+      "warranty_status": "维保状态"
+    }
+  },
+  "pm_project_log": {
+    "fields": {
+      "hand_end_time": "操作结束时间",
+      "hand_start_time": "操作开始时间",
+      "handle_desc": "操作描述",
+      "handle_name": "操作名称",
+      "handle_state": "操作状态",
+      "handle_user": "操作用户",
+      "id": "对具体项目的操作日志",
+      "project_id": "项目ID"
+    }
+  },
+  "pm_project_maintenance": {
+    "fields": {
+      "category": "任务分类",
+      "comp_id": "所属公司",
+      "contract_no": "合同号",
+      "create_by": "创建用户",
+      "create_time": "创建时间",
+      "custom_ccs": "自定义抄送",
+      "custom_tos": "自定义主送",
+      "deliver_file_ids": "交付件，fnd_files id",
+      "enabled_features": "启用功能",
+      "has_report": "是否有巡检报告",
+      "industry_name": "行业",
+      "item_model": "产品型号",
+      "month": "所属月份",
+      "office_code": "办事处编码",
+      "process_desc": "事项描述",
+      "process_hour": "处理耗时(h)",
+      "process_step": "解决进展",
+      "process_time": "处理时间",
+      "project_code": "项目名称",
+      "project_execution_state": "项目实施状态",
+      "project_id": "项目头信息主键",
+      "project_name": "项目名称",
+      "project_type": "项目类型，售前:20/售后:10",
+      "quarter": "所属季度",
+      "quesnaire_id": "问卷ID",
+      "remain_problem": "遗留问题",
+      "remark": "备注",
+      "service_info": "其他服务信息",
+      "soft_version": "在网版本",
+      "sub_category": "任务小类",
+      "transit_hour": "在途耗时(h)",
+      "type": "任务性质",
+      "update_by": "最新更新用户",
+      "update_time": "最新更新时间",
+      "user_office": "用户办事处",
+      "waf_count": "当前其他服务次数",
+      "waf_year_count": "其他服务年次数",
+      "warranty_info": "维保信息",
+      "warranty_status": "维保状态",
+      "ws_count": "当前维保服务次数",
+      "ws_year_count": "维保服务年次数",
+      "year": "所属年度"
+    }
+  },
+  "pm_project_member": {
+    "fields": {
+      "id": "项目成员"
+    }
+  },
+  "pm_project_plan": {
+    "fields": {
+      "id": "SMS系统财务收款计划"
+    }
+  },
+  "pm_project_plan_event": {
+    "fields": {
+      "event_key": "dataTypeCode-basicDataId"
+    }
+  },
+  "pm_project_product_line": {
+    "fields": {
+      "d_i_pa": "当月在SPD接收的产品订单项数量",
+      "d_i_pd": "SPD日期发生在当月的产品订单项数量",
+      "d_ia": "当月在CRD接收的产品订单项数量",
+      "d_id": "CRD日期发生在当月的产品订单项数量",
+      "id": "订单产品项"
+    }
+  },
+  "pm_project_shipment_info": {
+    "fields": {
+      "bar_code2": "母子公司发货存在一物双码，barCode2为系统发货记录序列号对应的条形码",
+      "boot": "boot版本",
+      "ch_contract_no": "发生串货的项目contractNo",
+      "ch_project_id": "发生串货的项目projectId",
+      "conp": "App版本",
+      "conp_bak": "备份变更之前的版本",
+      "conp_mark": "App版本掩码",
+      "conp_series": "App版本系列",
+      "conp_type": "App版本类型",
+      "cpld": "驱动版本",
+      "execute_time": "项目执行更新时间",
+      "pcb": "硬件版本",
+      "rma_no": "退换货标识",
+      "transfer_contract_no": "转出后的项目contractNo",
+      "transfer_flag": "转移标识，默认:-1,转出:1，转入:0",
+      "transfer_project_id": "转出后的项目projectId"
+    }
+  },
+  "pm_project_soft_version": {
+    "fields": {
+      "affected_probs": "受影响软件版本技术公告技术公告",
+      "bar_code": "设备序列号",
+      "bar_code2": "母子公司发货存在一物双码，barCode2为系统发货记录序列号对应的条形码",
+      "check_has_conp": "检查conp是否有值",
+      "check_null_conp_mark": "检查conpMark为空的内容",
+      "check_shipment": "检查发货",
+      "conp_bak": "备份变更之前的版本",
+      "conp_change": "0无更新 1有更新",
+      "conp_mark": "软件版本掩码",
+      "conp_series": "版本系列",
+      "conp_type": "版本类型",
+      "datastate": "数据状态 0 失效 1 有效",
+      "execute_time": "若有更新的情况下为执行更新时间，否则没有实际意义",
+      "id": "项目软件版本表",
+      "item_code": "产品编码",
+      "log_id": "软件版本变更记录",
+      "office_code": "辅助字段",
+      "project_code": "辅助字段",
+      "project_id": "项目ID",
+      "query_affected_probs": "查询软件版本受影响技术公告",
+      "update_invalid_shipment": "检查无效发货记录"
+    }
+  },
+  "pm_project_supervision": {
+    "fields": {
+      "channel": "代理商/服务商",
+      "create_by": "创建用户",
+      "create_time": "创建时间",
+      "deliver_file_ids": "交付件，fnd_files id",
+      "is_delete": "是否删除",
+      "office_code": "办事处编码",
+      "process_time": "处理时间",
+      "project_code": "项目名称",
+      "project_id": "项目头信息主键",
+      "project_name": "项目名称",
+      "quesnaire_id": "问卷ID",
+      "remark": "备注",
+      "state": "是否完成",
+      "type": "任务性质",
+      "update_by": "最新更新用户",
+      "update_time": "最新更新时间"
+    }
+  },
+  "pm_project_warranty_callback": {
+    "fields": {
+      "agent_channel": "下单代理商",
+      "callback_time": "回访时间",
+      "channelName": "下单代理商",
+      "comp_id": "所属公司",
+      "contract_nos": "合同号",
+      "customer1": "客户联系人1",
+      "customer2": "客户联系人2",
+      "customer_contact1": "客户联系方式1",
+      "customer_contact2": "客户联系方式2",
+      "final_customer_name": "最终客户单位",
+      "id": "项目维保回访问卷表",
+      "industry_name": "行业",
+      "is_delete": "删除标记",
+      "next_callback_time": "下次回访时间",
+      "office_code": "办事处",
+      "partyName3": "下单代理商",
+      "project_code": "项目编码",
+      "project_id": "项目ID",
+      "project_ids": "关联的项目",
+      "project_name": "项目名称",
+      "quesnaire_id": "问卷ID",
+      "quesnaire_state": "状态 -1 草稿 1已提交",
+      "quesnaire_version": "问卷版本",
+      "remark": "备注",
+      "renewal_intention": "续保意向,0:否,1:有,2:待定",
+      "service_impl": "实施方式",
+      "task_id": "任务ID",
+      "warranty_end_time": "维保结束日期",
+      "warranty_start_time": "维保开始日期"
+    }
+  },
+  "pm_project_weekly_feedback": {
+    "fields": {
+      "id": "项目周报回复内容"
+    }
+  },
+  "pm_subcontract_callback": {
+    "fields": {
+      "id": "项目转包回访问卷表",
+      "quesnaire_id": "问卷ID",
+      "quesnaire_state": "状态 -1 草稿 1已提交",
+      "quesnaire_version": "问卷版本",
+      "subcontract_id": "项目转包ID",
+      "task_id": "任务ID",
+      "task_key": "任务Key"
+    }
+  },
+  "pm_subcontract_deliver": {
+    "fields": {
+      "file_name": "交付件名称",
+      "file_path": "交付件路径",
+      "payment_id": "转包付款ID",
+      "subcontract_id": "转包项目ID",
+      "type": "交付件类型,0:用服交付合同，1：用服服务单，2：工程合同",
+      "upload_by": "上传者",
+      "upload_time": "上传时间",
+      "uploader": "上传者"
+    }
+  },
+  "pm_subcontract_facilitator": {
+    "fields": {
+      "account": "服务商账户",
+      "bank_account": "收款账户",
+      "bank_info": "开户行信息",
+      "code": "服务商编号",
+      "email": "邮箱地址",
+      "name": "服务商名",
+      "receiver": "邮箱收件人",
+      "state": "状态"
+    }
+  },
+  "pm_subcontract_price": {
+    "fields": {
+      "contract_no": "合同号",
+      "enginee_fee": "工程服务价",
+      "obj_id": "SMS链接参数1",
+      "order_exec_number": "执行单号",
+      "price": "合同转包价",
+      "proc_type": "SMS链接参数2",
+      "project_code": "项目编码",
+      "subcontract_id": "转包项目Id"
+    }
+  },
+  "pm_subcontract_project_header": {
+    "fields": {
+      "bank_account": "服务商收款账户",
+      "bank_info": "服务商开户地址",
+      "callback_state": "回访状态",
+      "contract_nos": "合同号",
+      "effective_from": "有效开始时间",
+      "effective_to": "有效结束时间",
+      "facilitator_id": "服务商表ID",
+      "facilitator_name": "服务商名",
+      "is_accrued": "是否计提",
+      "is_invoiced": "是否提供发票",
+      "office_code": "办事处部门",
+      "profit_dep_code": "收益部门",
+      "project_ids": "项目projectIds",
+      "reason": "转包原因",
+      "remark": "备注",
+      "state": "转包状态",
+      "subcontract_amount": "转包价",
+      "subcontract_name": "转包名称",
+      "subcontract_no": "转包合同号",
+      "type": "转包类型",
+      "zr_approve_time": "有效结束时间"
+    }
+  },
+  "pm_subcontract_project_line": {
+    "fields": {
+      "bar_code": "设备序列号",
+      "contract_no": "合同号",
+      "item_code": "设备编码",
+      "item_model": "设备型号",
+      "item_name": "设备名称",
+      "project_id": "原项目Id",
+      "subcontract_id": "转包项目Id"
+    }
+  },
+  "pm_subcontract_project_payment": {
+    "fields": {
+      "amount": "付款金额",
+      "confirm_time": "提交时间",
+      "payment_time": "付款时间",
+      "ratio": "比例",
+      "remark": "备注",
+      "sse_id": "sse报销单审批行ID",
+      "subcontract_id": "转包项目Id"
+    }
+  },
+  "prob_main": {
+    "fields": {
+      "affected_type": "影响版本类型，1：盒式系列，2：框式系列",
+      "affected_version": "影响的版本",
+      "attachment_names": "文件名称",
+      "attachments": "文件",
+      "desc": "技术公告描述",
+      "duedate": "计划完成日期",
+      "id": "主键",
+      "mitigation_action_types": "规避方案操作类型",
+      "mitigation_action_types_mark": "规避方案操作类型的bitMark",
+      "priority": "严重级别",
+      "priority_name": "级别名称",
+      "prob_id": "主键",
+      "prob_ticket_no": "工单号",
+      "product_type": "产品类型",
+      "related_scene_types": "关联场景类型",
+      "related_scene_types_mark": "关联场景类型的bitMark",
+      "soft_version_parser_list": "影响版本解析结果",
+      "solution": "解决方案",
+      "solution_action_types": "解决方案操作类型",
+      "solution_action_types_mark": "解决方案操作类型的bitMark",
+      "startdate": "开始日期",
+      "status": "状态",
+      "status_name": "状态名称",
+      "theme": "主题",
+      "tracking_user": "跟踪用户",
+      "tracking_username": "跟踪用户名称",
+      "visible_range": "可见范围",
+      "watch": "跟踪",
+      "watch_name": "名称"
+    }
+  },
+  "prob_product": {
+    "fields": {
+      "item_code": "item编码",
+      "item_desc": "item描述",
+      "item_model": "item类型",
+      "prob_id": "ProbId",
+      "product_code": "产品大类",
+      "product_sub_code": "产品小类",
+      "productsubCode": "产品小类",
+      "status": "0 失效 1 有效"
+    }
+  },
+  "prob_product_component": {
+    "fields": {
+      "name": "名称",
+      "parent_id": "父节点",
+      "state": "状态",
+      "type": "分组",
+      "version": "版本"
+    }
+  },
+  "prob_read_log": {
+    "fields": {
+      "id": "技术公告查看记录"
+    }
+  },
+  "prob_restore": {
+    "fields": {
+      "areapower": "权限区域",
+      "assignee": "办理人 or 办理角色",
+      "assigneeName": "办理人 or 办理角色",
+      "conp": "软件版本 设置为技术公告发布时的软件版本",
+      "contract_no": "合同号",
+      "create_by": "记录产生、更新时间",
+      "execute_time": "执行更新时间",
+      "id": "技术公告修复任务对象",
+      "ischecked": "ischecked 用于前台判断，没有业务意义",
+      "item_model": "设备型号",
+      "latest_conp": "软件版本 为最新版本数据",
+      "office_code": "办事处编码",
+      "office_name": "办事处名称",
+      "prob": "辅助字段",
+      "prob_id": "技术公告ID",
+      "process_id": "流转过程ID",
+      "project_id": "项目ID",
+      "project_name": "项目名称",
+      "restore_remark": "流转备注说明",
+      "restore_status": "修复状态",
+      "restore_status_name": "修复状态名称",
+      "serial_num": "设备序列号",
+      "serial_number": "设备序列号"
+    }
+  },
+  "prob_soft_version": {
+    "fields": {
+      "affected_type": "影响版本类型，0：所有系列，1：盒式系列，2：框式系列",
+      "conp_condition": "查询条件",
+      "entry_end": "版本范围结束",
+      "entry_series": "版本范围系列",
+      "entry_start": "版本范围开始",
+      "entry_type": "版本类型",
+      "group_id": "分组ID",
+      "manual_entry": "手工录入",
+      "manual_entry_sub": "手工录入拆解",
+      "mark_end": "缺省补充版本范围结束",
+      "mark_start": "缺省补充版本范围开始",
+      "soft_version_types": "releaseType、architectureType、branchType的组合",
+      "splited": "是否拆解"
+    }
+  }
+}

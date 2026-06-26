@@ -19,6 +19,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectSoftVersion;
 import com.dp.plat.data.bean.ProjectTask;
 import com.dp.plat.data.bean.ProjectWeekly;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -737,7 +738,7 @@ public interface ProjectService extends BaseService{
 	 * @param projectId
 	 * @return
 	 */
-	List<ShipmentInfo> querySoftversionList(String contractNo, int projectId);
+	List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId);
 
 	/**
      * 查询软件版本
@@ -746,7 +747,7 @@ public interface ProjectService extends BaseService{
      * @param profitCenter 
      * @return
      */
-    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+    List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, String profitCenter);
     
     /**
      * 查询软件版本
@@ -756,14 +757,23 @@ public interface ProjectService extends BaseService{
      * @param params 
      * @return
      */
-    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
+    List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
+    
+
+    /**
+     * 查询项目已保存的设备软件版本
+     * @param projectSoftVersion
+     * @param displayParam
+     * @return
+     */
+    List<ProjectSoftVersion> selectProjectSoftVersionList(ProjectSoftVersion projectSoftVersion, DisplayParam displayParam);
 
 	/**
 	 * 更新软件版本
 	 * @param softversionList
 	 * @param softChangeLog 
 	 */
-	void updateSoftversion(List<ShipmentInfo> softversionList, SoftChangeLog softChangeLog);
+	void updateSoftversion(List<? extends ShipmentInfo> softversionList, SoftChangeLog softChangeLog);
 	/**
 	 * 查询软件版本历史变更
 	 * @param projectId
@@ -775,7 +785,7 @@ public interface ProjectService extends BaseService{
 	 * @param softChangeLog
 	 * @return
 	 */
-	List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog);
+	List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog);
 	/**
 	 * 查询单个版本更新日志
 	 * @param id
@@ -1044,6 +1054,13 @@ public interface ProjectService extends BaseService{
     List<Map<String, Object>> selectProblemTicket(Map<String, Object> params);
 
     /**
+     * 查询项目的License授权信息
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectLicenseInfo(Map<String, Object> params);
+
+    /**
      * 查询项目的工单信息,通过项目的发货列表
      * @param params
      * @return
@@ -1057,4 +1074,21 @@ public interface ProjectService extends BaseService{
      */
     int updateProjectByProjectIdSelective(Project project);
 
+    /**
+     * 查询租赁配置
+     * @param projectCode
+     * @return
+     */
+    List<?> queryProjectLeaseLineByProjectCode(String smsProjectCode);
+
+    /**
+     * 查询租赁配置数量
+     * @param projectCode
+     * @return
+     */
+    int queryProjectLeaseLineSizeByProjectCode(String smsProjectCode);
+
+    List<?> queryProjectProductConfigLevelInfoByProjectCode(String smsProjectCode);
+    
+    int queryProjectProductConfigLevelInfoSizeByProjectCode(String smsProjectCode);
 }

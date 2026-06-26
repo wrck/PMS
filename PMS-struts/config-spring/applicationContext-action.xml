@@ -139,6 +139,42 @@
 		<property name="projectPlanService" ref="projectPlanServiceAgent"></property>
 		<property name="sendMailService" ref="sendMailServiceAgent"></property>
 	</bean>
+	
+	<!-- 项目成员管理 -->
+	<bean id="ProjectMemberAction" class="com.dp.plat.action.ProjectMemberAction" scope="prototype">
+		<property name="projectService" ref="projectServiceAgent"></property>
+		<property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+		<property name="basicDataService" ref="basicDataServiceAgent"></property>
+	</bean>
+	
+	<!-- 项目合同管理 -->
+	<bean id="ProjectContractAction" class="com.dp.plat.action.ProjectContractAction" scope="prototype">
+		<property name="projectService" ref="projectServiceAgent"></property>
+		<property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+		<property name="basicDataService" ref="basicDataServiceAgent"></property>
+	</bean>
+	
+	<!-- 项目文件管理 -->
+	<bean id="ProjectFileAction" class="com.dp.plat.action.ProjectFileAction" scope="prototype">
+		<property name="projectService" ref="projectServiceAgent"></property>
+		<property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+		<property name="basicDataService" ref="basicDataServiceAgent"></property>
+		<property name="sendMailService" ref="sendMailServiceAgent"></property>
+	</bean>
+	
+	<!-- 项目周报管理 -->
+	<bean id="ProjectWeeklyAction" class="com.dp.plat.action.ProjectWeeklyAction" scope="prototype">
+		<property name="projectService" ref="projectServiceAgent"></property>
+		<property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+		<property name="basicDataService" ref="basicDataServiceAgent"></property>
+	</bean>
+	
+	<!-- 项目通知批示管理 -->
+	<bean id="ProjectNotificationAction" class="com.dp.plat.action.ProjectNotificationAction" scope="prototype">
+		<property name="projectService" ref="projectServiceAgent"></property>
+		<property name="departmentManageService" ref="departmentManageServiceAgent"></property>
+		<property name="basicDataService" ref="basicDataServiceAgent"></property>
+	</bean>
 	<!-- 基础数据管理 -->
 	<bean id="BasicDataManageAction" class="com.dp.plat.action.BasicDataManageAction" scope="prototype">
 		<property name="basicDataService" ref="basicDataServiceAgent"></property>

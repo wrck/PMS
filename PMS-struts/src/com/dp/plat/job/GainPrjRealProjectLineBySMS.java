@@ -11,6 +11,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import com.dp.plat.context.SystemContext;
+import com.dp.plat.crm.model.ApiMap;
+import com.dp.plat.extend.crm.job.GainDataFromCRM;
 import com.dp.plat.param.RealProductLineBean;
 import com.ibatis.common.resources.Resources;
 import com.ibatis.sqlmap.client.SqlMapClient;
@@ -23,9 +26,17 @@ import com.ibatis.sqlmap.client.SqlMapClientBuilder;
  *
  */
 public class GainPrjRealProjectLineBySMS {
+    
+    public static synchronized void work() throws IOException, SQLException {
+        if (SystemContext.enableCrm()) {
+            api();
+        } else {
+            dataSource();
+        }
+    }
 
 	@SuppressWarnings("unchecked")
-	public static synchronized void work() throws IOException, SQLException {
+	public static synchronized void dataSource() throws IOException, SQLException {
 		Reader readerSms = Resources.getResourceAsReader("sqlMapConfigSMS.xml");
 		SqlMapClient sqlMapSms = SqlMapClientBuilder.buildSqlMapClient(readerSms);
 
@@ -92,6 +103,15 @@ public class GainPrjRealProjectLineBySMS {
 			sqlMap.endTransaction();
 		}
 	}
+	
+	public static void api() throws IOException, SQLException {
+        ApiMap params = new ApiMap();
+        params.put("dataSource", "CRM");
+        GainDataFromCRM dataFromCRM = new GainDataFromCRM();
+        dataFromCRM.syncProductInfo(params);
+        dataFromCRM.syncProjectLeaseLine(params);
+        dataFromCRM.syncProjectProductConfigLevelInfo(params);
+    }
 
 	/**
 	 * test
@@ -101,6 +121,6 @@ public class GainPrjRealProjectLineBySMS {
 	 * @throws SQLException
 	 */
 	public static void main(String[] arg) throws IOException, SQLException {
-		work();
+	    api();
 	}
 }

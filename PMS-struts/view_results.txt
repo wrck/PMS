@@ -1,0 +1,650 @@
+﻿
+### view_contract_collection_plan_4_crm
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contractNo | varchar(45) | YES |  | NULL |  |
+| referenceEventName | varchar(255) | YES |  | NULL |  |
+| referenceEvent | varchar(255) | YES |  | NULL |  |
+| eventPlanHappenDate | datetime | YES |  | NULL |  |
+| eventPlanHappenDateENG | datetime | YES |  | NULL |  |
+| eventActualFinishDate | datetime | YES |  | NULL |  |
+
+### view_current_task
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| taskTypeId | varchar(25) | YES |  | NULL |  |
+| projectId | int(11) | YES |  | NULL |  |
+| taskTypeCode | varchar(45) | YES |  | NULL |  |
+
+### view_distinct_contract
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contractNo | varchar(50) | YES |  | NULL |  |
+| orderCreateTime | datetime | YES |  | NULL |  |
+| id | int(11) | YES |  | NULL |  |
+
+### view_ehr_department
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| depID | int(11) | NO |  | NULL |  |
+| depCode | varchar(20) | YES |  | NULL |  |
+| depName | varchar(100) | YES |  | NULL |  |
+| depAbbr | varchar(100) | YES |  | NULL |  |
+| compID | int(11) | YES |  | NULL |  |
+| adminID | int(11) | YES |  | NULL |  |
+| depGrade | int(11) | YES |  | NULL |  |
+| depType | int(11) | YES |  | NULL |  |
+| depProperty | int(11) | YES |  | NULL |  |
+| depCost | int(11) | YES |  | NULL |  |
+| director | int(11) | YES |  | NULL |  |
+| director2 | int(11) | YES |  | NULL |  |
+| depEmp | int(11) | YES |  | NULL |  |
+| depNum | int(11) | YES |  | NULL |  |
+| effectDate | datetime | YES |  | NULL |  |
+| xOrder | varchar(20) | YES |  | NULL |  |
+| isDisabled | bit(1) | YES |  | NULL |  |
+| disabledDate | datetime | YES |  | NULL |  |
+| remark | varchar(500) | YES |  | NULL |  |
+| depCustom1 | int(11) | YES |  | NULL |  |
+| depCustom2 | int(11) | YES |  | NULL |  |
+| depCustom3 | int(11) | YES |  | NULL |  |
+| depCustom4 | int(11) | YES |  | NULL |  |
+| depCustom5 | int(11) | YES |  | NULL |  |
+| directorWorkNo | varchar(100) | YES |  | NULL |  |
+| directorName | varchar(200) | YES |  | NULL |  |
+| directorJobID | int(11) | YES |  | NULL |  |
+| directorWorkNo2 | varchar(100) | YES |  | NULL |  |
+| directorName2 | varchar(200) | YES |  | NULL |  |
+| directorJobID2 | int(11) | YES |  | NULL |  |
+| depLV1ID | bigint(11) | YES |  | NULL |  |
+| depLV1Code | varchar(20) | YES |  | NULL |  |
+| depLV1Name | varchar(100) | YES |  | NULL |  |
+| depLV2ID | bigint(11) | YES |  | NULL |  |
+| depLV2Code | varchar(20) | YES |  | NULL |  |
+| depLV2Name | varchar(100) | YES |  | NULL |  |
+| depLV3ID | bigint(11) | YES |  | NULL |  |
+| depLV3Code | varchar(20) | YES |  | NULL |  |
+| depLV3Name | varchar(100) | YES |  | NULL |  |
+| depAllName | varchar(304) | YES |  | NULL |  |
+| compName | varchar(100) | YES |  | NULL |  |
+
+### view_ehr_department_struct
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| depID | int(11) | NO |  | NULL |  |
+| depGrade | int(11) | YES |  | NULL |  |
+| depLV1ID | bigint(11) | YES |  | NULL |  |
+| depLV1Code | varchar(20) | YES |  | NULL |  |
+| depLV1Name | varchar(100) | YES |  | NULL |  |
+| depLV2ID | bigint(11) | YES |  | NULL |  |
+| depLV2Code | varchar(20) | YES |  | NULL |  |
+| depLV2Name | varchar(100) | YES |  | NULL |  |
+| depLV3ID | bigint(11) | YES |  | NULL |  |
+| depLV3Code | varchar(20) | YES |  | NULL |  |
+| depLV3Name | varchar(100) | YES |  | NULL |  |
+| depLV4ID | bigint(11) | YES |  | NULL |  |
+| depLV4Code | varchar(20) | YES |  | NULL |  |
+| depLV4Name | varchar(100) | YES |  | NULL |  |
+| depAllName | varchar(406) | YES |  | NULL |  |
+
+### view_ehr_employee
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| empID | int(11) | NO |  | NULL |  |
+| workNo | varchar(100) | NO |  | NULL |  |
+| name | varchar(200) | YES |  | NULL |  |
+| eName | varchar(200) | YES |  | NULL |  |
+| compID | int(11) | NO |  | NULL |  |
+| depID | int(11) | NO |  | NULL |  |
+| jobID | int(11) | NO |  | NULL |  |
+| reportTo | int(11) | YES |  | NULL |  |
+| wfreportTo | int(11) | YES |  | NULL |  |
+| empStatus | int(11) | NO |  | NULL |  |
+| jobStatus | int(11) | YES |  | NULL |  |
+| empType | int(11) | YES |  | NULL |  |
+| joinDate | datetime | YES |  | NULL |  |
+| workBeginDate | datetime | YES |  | NULL |  |
+| jobBeginDate | datetime | YES |  | NULL |  |
+| pracBeginDate | datetime | YES |  | NULL |  |
+| pracEndDate | datetime | YES |  | NULL |  |
+| probBeginDate | datetime | YES |  | NULL |  |
+| probEndDate | datetime | YES |  | NULL |  |
+| leaveDate | datetime | YES |  | NULL |  |
+| gender | int(11) | YES |  | NULL |  |
+| email | varchar(500) | YES |  | NULL |  |
+| mobile | varchar(50) | YES |  | NULL |  |
+| officePhone | varchar(50) | YES |  | NULL |  |
+| remark | varchar(100) | YES |  | NULL |  |
+| disabled | int(11) | YES |  | 0 |  |
+| empCustom1 | int(11) | YES |  | NULL |  |
+| empCustom2 | int(11) | YES |  | NULL |  |
+| empCustom3 | int(11) | YES |  | NULL |  |
+| empCustom4 | varchar(50) | YES |  | NULL |  |
+| empCustom5 | int(11) | YES |  | NULL |  |
+| reportToWorkNo | varchar(100) | YES |  | NULL |  |
+| reportToName | varchar(200) | YES |  | NULL |  |
+| wfreportToWorkNo | varchar(100) | YES |  | NULL |  |
+| wfreportToName | varchar(200) | YES |  | NULL |  |
+| depGrade | int(11) | YES |  | NULL |  |
+| depCode | varchar(20) | YES |  | NULL |  |
+| depName | varchar(100) | YES |  | NULL |  |
+| jobCode | varchar(10) | YES |  | NULL |  |
+| jobName | varchar(100) | YES |  | NULL |  |
+| depLV1ID | bigint(11) | YES |  | NULL |  |
+| depLV1Code | varchar(20) | YES |  | NULL |  |
+| depLV1Name | varchar(100) | YES |  | NULL |  |
+| depLV2ID | bigint(11) | YES |  | NULL |  |
+| depLV2Code | varchar(20) | YES |  | NULL |  |
+| depLV2Name | varchar(100) | YES |  | NULL |  |
+| depLV3ID | bigint(11) | YES |  | NULL |  |
+| depLV3Code | varchar(20) | YES |  | NULL |  |
+| depLV3Name | varchar(100) | YES |  | NULL |  |
+| depAllName | varchar(304) | YES |  | NULL |  |
+| compName | varchar(100) | YES |  | NULL |  |
+
+### view_ems_info_4_pm
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contract_code | varchar(25) | YES |  | NULL |  |
+| emsNum | mediumtext | YES |  | NULL |  |
+| receiveName | mediumtext | YES |  | NULL |  |
+| emsCompany | mediumtext | YES |  | NULL |  |
+
+### view_pm_deliverable_4_sms
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contractNo | varchar(25) | YES |  | NULL |  |
+| deliverableName | varchar(255) | YES |  | NULL |  |
+| deliverablePath | varchar(255) | YES |  | NULL |  |
+| smsDeliverType | varchar(255) | YES |  | NULL |  |
+| uploadUser | varchar(174) | YES |  | NULL |  |
+| uploadTime | datetime | YES |  | NULL |  |
+
+### view_presales_project_duration
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| presalesId | int(11) | NO |  | 0 |  |
+| instId | varchar(64) | YES |  | NULL |  |
+| applyDuration | varchar(128) | YES |  | NULL |  |
+| totalDuration | varchar(216) | YES |  | NULL |  |
+| serviceDuration | varchar(216) | YES |  | NULL |  |
+| programDuration | varchar(216) | YES |  | NULL |  |
+| testDuration | varchar(216) | YES |  | NULL |  |
+| callbackDuration | varchar(216) | YES |  | NULL |  |
+| serviceApproveDuration | varchar(216) | YES |  | NULL |  |
+
+### view_presales_project_duration_temp
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| presalesId | int(11) | NO |  | 0 |  |
+| instId | varchar(64) | YES |  | NULL |  |
+| applyDuration | bigint(25) | YES |  | NULL |  |
+| totalDuration | bigint(26) | YES |  | NULL |  |
+| allDuration | decimal(46,0) | YES |  | NULL |  |
+| serviceDuration | decimal(46,0) | YES |  | NULL |  |
+| programDuration | decimal(46,0) | YES |  | NULL |  |
+| testDuration | decimal(46,0) | YES |  | NULL |  |
+| callbackDuration | decimal(46,0) | YES |  | NULL |  |
+| serviceApproveDuration | decimal(46,0) | YES |  | NULL |  |
+
+### view_prj_is_has_plan
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| projectId | int(11) | YES |  | NULL |  |
+
+### view_project_created_list
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| projectId | int(11) | NO |  | 0 |  |
+| projectCode | varchar(45) | NO |  | NULL |  |
+| rank | varchar(255) | YES |  | NULL |  |
+| projectName | varchar(246) | YES |  | NULL |  |
+| projectStateName | varchar(255) | YES |  | NULL |  |
+| projectState | varchar(11) | YES |  | NULL |  |
+| contractNo | text | YES |  | NULL |  |
+| officeCode | varchar(255) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| salesManCode | varchar(45) | YES |  | NULL |  |
+| salesManName | varchar(45) | YES |  | NULL |  |
+| orderCreateTime | datetime | YES |  | NULL |  |
+| serviceManager | varchar(45) | YES |  | NULL |  |
+| serviceManagerName | varchar(45) | YES |  | NULL |  |
+| projectManager | varchar(45) | YES |  | NULL |  |
+| projectManagerName | varchar(45) | YES |  | NULL |  |
+| currentTask | varchar(255) | YES |  | NULL |  |
+
+### view_project_info_4_ts
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| projectCode | varchar(64) | YES |  | NULL |  |
+| projectName | varchar(255) | YES |  | NULL |  |
+| contractNo | varchar(341) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| customerName | varchar(255) | YES |  | NULL |  |
+| marketName | varchar(255) | YES |  | NULL |  |
+| systemName | varchar(255) | YES |  | NULL |  |
+| expendName | varchar(255) | YES |  | NULL |  |
+| industryName | varchar(255) | YES |  | NULL |  |
+| salesManCode | varchar(45) | YES |  | NULL |  |
+| salesManName | varchar(68) | YES |  | NULL |  |
+| salesManTel | varchar(45) | YES |  | NULL |  |
+| salesManMail | varchar(100) | YES |  | NULL |  |
+| smCode | varchar(45) | YES |  | NULL |  |
+| smName | varchar(45) | YES |  | NULL |  |
+| pmCode1 | varchar(45) | YES |  | NULL |  |
+| pmName1 | varchar(45) | YES |  | NULL |  |
+| pmCode2 | varchar(45) | YES |  | NULL |  |
+| pmName2 | varchar(45) | YES |  | NULL |  |
+| compId | int(11) | YES |  | NULL |  |
+| compName | varchar(128) | YES |  | NULL |  |
+| ssfsName | varchar(255) | YES |  | NULL |  |
+| partnerChannel | varchar(45) | YES |  | NULL |  |
+| projectType | varchar(4) | NO |  |  |  |
+| finalCustomerName | varchar(255) | YES |  | NULL |  |
+| customerProjectName | varchar(255) | YES |  | NULL |  |
+
+### view_project_info_list
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| projectId | int(11) | YES |  | NULL |  |
+| projectCode | varchar(45) | YES |  | NULL |  |
+| rank | varchar(255) | YES |  | NULL |  |
+| projectName | varchar(255) | YES |  | NULL |  |
+| projectStateName | varchar(255) | YES |  | NULL |  |
+| projectState | varchar(255) | YES |  | NULL |  |
+| contractNo | varchar(341) | YES |  | NULL |  |
+| officeCode | varchar(255) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| salesManCode | varchar(45) | YES |  | NULL |  |
+| salesManName | varchar(45) | YES |  | NULL |  |
+| orderCreateTime | datetime | YES |  | NULL |  |
+| systemName | varchar(255) | YES |  | NULL |  |
+| serviceManager | varchar(45) | YES |  | NULL |  |
+| serviceManagerName | varchar(45) | YES |  | NULL |  |
+| projectManager | varchar(45) | YES |  | NULL |  |
+| projectManagerName | varchar(45) | YES |  | NULL |  |
+| currentTask | varchar(255) | YES |  | NULL |  |
+
+### view_project_maintenance_4_ts
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| id | int(11) | NO |  | 0 |  |
+| projectId | int(11) | NO |  | NULL |  |
+| projectCode | varchar(45) | NO |  |  |  |
+| projectName | varchar(200) | YES |  |  |  |
+| projectType | int(11) | NO |  | 10 |  |
+| projectExecutionState | varchar(45) | YES |  |  |  |
+| contractNo | varchar(255) | YES |  |  |  |
+| officeCode | varchar(25) | YES |  | NULL |  |
+| type | varchar(45) | YES |  | NULL |  |
+| category | varchar(45) | YES |  | NULL |  |
+| subCategory | varchar(45) | YES |  | NULL |  |
+| processTime | datetime | YES |  | NULL |  |
+| processDesc | varchar(1024) | YES |  | NULL |  |
+| processStep | varchar(1024) | YES |  | NULL |  |
+| remainProblem | varchar(1024) | YES |  | NULL |  |
+| transitHour | float | YES |  | 0 |  |
+| processHour | float | YES |  | 0 |  |
+| itemModel | varchar(255) | YES |  | NULL |  |
+| softVersion | varchar(255) | YES |  | NULL |  |
+| enabledFeatures | varchar(255) | YES |  | NULL |  |
+| customTos | varchar(512) | YES |  | NULL |  |
+| customCcs | varchar(512) | YES |  | NULL |  |
+| hasReport | bit(1) | NO |  | b'0' |  |
+| quesnaireId | int(11) | YES |  | NULL |  |
+| deliverFileIds | varchar(255) | YES |  |  |  |
+| warrantyStatus | varchar(25) | YES |  | NULL |  |
+| industryName | varchar(25) | YES |  | NULL |  |
+| userOffice | varchar(25) | YES |  | NULL |  |
+| remark | varchar(2048) | YES |  | NULL |  |
+| createTime | datetime | YES |  | NULL |  |
+| createBy | varchar(45) | YES |  | NULL |  |
+| updateTime | datetime | YES |  | NULL |  |
+| updateBy | varchar(45) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| userOfficeName | varchar(20) | YES |  | NULL |  |
+| serviceManager | varchar(45) | YES |  | NULL |  |
+| programManagerA | varchar(45) | YES |  | NULL |  |
+| programManagerB | varchar(45) | YES |  | NULL |  |
+| createUser | varchar(174) | YES |  | NULL |  |
+| typeName | varchar(255) | YES |  | NULL |  |
+| projectExecutionStateName | varchar(255) | YES |  | NULL |  |
+| categoryName | varchar(258) | YES |  | NULL |  |
+| subCategoryName | varchar(255) | YES |  | NULL |  |
+| marketName | varchar(255) | YES |  | NULL |  |
+| systemName | varchar(255) | YES |  | NULL |  |
+| expendName | varchar(255) | YES |  | NULL |  |
+| industryNameN | varchar(255) | YES |  | NULL |  |
+| finalCustomerName | varchar(255) | YES |  | NULL |  |
+| salerName | varchar(91) | YES |  | NULL |  |
+| quesnaireResultHeaderId | int(11) | YES |  | NULL |  |
+| 工程师技术能力 | longtext | YES |  | NULL |  |
+| 服务水平及规范性 | longtext | YES |  | NULL |  |
+| 服务及时性 | longtext | YES |  | NULL |  |
+| warrantyStatusName | varchar(4) | YES |  | NULL |  |
+| syncTime | datetime | NO |  | NULL |  |
+
+### view_project_shipment_4_license
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| barcode | varchar(50) | YES |  | NULL |  |
+| contract_code | varchar(25) | YES |  | NULL |  |
+| contract_type | varchar(25) | YES |  | NULL |  |
+| project_num | varchar(25) | YES |  | NULL |  |
+| project_name | varchar(512) | YES |  | NULL |  |
+| custom_name | varchar(512) | YES |  | NULL |  |
+| final_customer | varchar(512) | YES |  | NULL |  |
+| office_name | varchar(25) | YES |  | NULL |  |
+| delivery_time | bigint(11) | YES |  | NULL |  |
+| order_num | varchar(32) | YES |  | NULL |  |
+
+### view_project_task_4_oss
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| taskId | int(11) | NO |  | 0 |  |
+| projectCode | varchar(45) | YES |  | NULL |  |
+| executeId | binary(0) | YES |  | NULL |  |
+| contractId | varchar(45) | YES |  | NULL |  |
+| nodeTypeCode | varchar(25) | YES |  | NULL |  |
+| nodeBeginTime | datetime | YES |  | NULL |  |
+| nodeEndTime | datetime | YES |  | NULL |  |
+| dataUpdateTime | binary(0) | YES |  | NULL |  |
+| nodeAttached | varchar(11) | YES |  | NULL |  |
+| nodeRemark | varchar(255) | YES |  | NULL |  |
+| updateTime | datetime | YES |  | NULL |  |
+| effectiveTo | datetime | YES |  | NULL |  |
+
+### view_project_task_default_4_oss
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| taskId | binary(0) | YES |  | NULL |  |
+| projectCode | varchar(45) | YES |  | NULL |  |
+| executeId | binary(0) | YES |  | NULL |  |
+| contractId | varchar(45) | NO |  | NULL |  |
+| nodeTypeCode | varchar(11) | YES |  | NULL |  |
+| nodeBeginTime | binary(0) | YES |  | NULL |  |
+| nodeEndTime | binary(0) | YES |  | NULL |  |
+| dataUpdateTime | binary(0) | YES |  | NULL |  |
+| nodeAttached | varchar(11) | YES |  | NULL |  |
+| nodeRemark | varchar(255) | YES |  | NULL |  |
+| updateTime | binary(0) | YES |  | NULL |  |
+| effectiveTo | binary(0) | YES |  | NULL |  |
+
+### view_project_waiting_list
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| projectName | varchar(255) | YES |  | NULL |  |
+| projectStateName | varchar(255) | YES |  | NULL |  |
+| projectState | varchar(255) | YES |  | NULL |  |
+| contractNo | varchar(50) | YES |  | NULL |  |
+| officeCode | varchar(15) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| salesManCode | varchar(45) | YES |  | NULL |  |
+| salesManName | varchar(45) | YES |  | NULL |  |
+| orderCreateTime | datetime | YES |  | NULL |  |
+| systemName | varchar(255) | YES |  | NULL |  |
+
+### view_relation4contractno_marketcode
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contractNo | varchar(50) | YES |  | NULL |  |
+| marketCode | varchar(64) | YES |  | NULL |  |
+| marketName | varchar(255) | YES |  | NULL |  |
+| systemId | varchar(64) | YES |  | NULL |  |
+| systemName | varchar(255) | YES |  | NULL |  |
+
+### view_rma_txinfo
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| sheetID | varchar(25) | NO |  | NULL |  |
+| spare_serialNum | varchar(50) | YES |  | NULL |  |
+| instead_of_num | varchar(25) | YES |  | NULL |  |
+| item_code | varchar(15) | YES |  | NULL |  |
+| item_name | varchar(255) | YES |  | NULL |  |
+| customer_name | varchar(255) | YES |  | NULL |  |
+| contractNo | varchar(25) | YES |  | NULL |  |
+| contractRemark | varchar(4096) | YES |  | NULL |  |
+| project_name | varchar(255) | YES |  | NULL |  |
+| back | varchar(10) | YES |  | NULL |  |
+| serve | varchar(10) | YES |  | NULL |  |
+| tain | varchar(10) | YES |  | NULL |  |
+| data_state | char(1) | YES |  | 0 |  |
+| department | varchar(50) | YES |  | NULL |  |
+| application_time | datetime | YES |  | NULL |  |
+| approve_time | datetime | YES |  | NULL |  |
+| is_pass | varchar(2) | YES |  | NULL |  |
+| applicant | varchar(10) | YES |  | NULL |  |
+| EMS_num | varchar(255) | YES |  | NULL |  |
+| EMS_company | varchar(255) | YES |  | NULL |  |
+| addressee | varchar(25) | YES |  | NULL |  |
+| send_time | datetime | YES |  | NULL |  |
+| isBack | char(1) | YES |  | 0 |  |
+| back_time | datetime | YES |  | NULL |  |
+| doa_path | varchar(100) | YES |  | NULL |  |
+| check_path | varchar(100) | YES |  | NULL |  |
+| duty_person | varchar(10) | YES |  | NULL |  |
+| isOK | char(1) | YES |  | 0 |  |
+| hexiao_time | datetime | YES |  | NULL |  |
+| problem_desc | text | YES |  | NULL |  |
+| tx_id | int(11) | NO |  | 0 |  |
+
+### view_service
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| id | varchar(64) | YES |  | NULL |  |
+| barcode | varchar(50) | YES |  | NULL |  |
+| end_date | datetime | YES |  | NULL |  |
+
+### view_service_max
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| barcode | varchar(50) | YES |  | NULL |  |
+| maxEndDate | datetime | YES |  | NULL |  |
+
+### view_shipment_4_sms
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contract_code | varchar(25) | YES |  | NULL |  |
+| itemCode | varchar(16) | YES |  | NULL |  |
+| barcode | varchar(50) | YES |  | NULL |  |
+| itemCode2 | varchar(16) | YES |  | NULL |  |
+| barcode2 | varchar(50) | YES |  | NULL |  |
+
+### view_shipment_ems_4_pm
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contract_code | varchar(25) | YES |  | NULL |  |
+| receiveName | text | YES |  | NULL |  |
+| emsNum | text | YES |  | NULL |  |
+| packdate | datetime | YES |  | NULL |  |
+| emsCompany | mediumtext | YES |  | NULL |  |
+| packId | varchar(64) | YES |  | NULL |  |
+
+### view_shipment_info_4_pm
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| contract_code | varchar(25) | YES |  | NULL |  |
+| itemCode | varchar(16) | YES |  | NULL |  |
+| itemModel | varchar(255) | YES |  | NULL |  |
+| itemName | varchar(255) | YES |  | NULL |  |
+| barcode | varchar(50) | YES |  | NULL |  |
+| comBarcode | varchar(50) | YES |  | NULL |  |
+| packId | varchar(64) | YES |  | NULL |  |
+| itemCode2 | varchar(16) | YES |  | NULL |  |
+| itemModel2 | varchar(255) | YES |  | NULL |  |
+| itemName2 | varchar(255) | YES |  | NULL |  |
+| barcode2 | varchar(50) | YES |  | NULL |  |
+| profitCenter | varchar(32) | YES |  | NULL |  |
+
+### view_soft_version
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| serial_number | varchar(100) | YES |  | NULL |  |
+| conp | mediumtext | YES |  | NULL |  |
+| cpld | mediumtext | YES |  | NULL |  |
+| boot | mediumtext | YES |  | NULL |  |
+| pcb | mediumtext | YES |  | NULL |  |
+
+### view_subcontract_project_4_sse
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| id | int(11) | NO |  | 0 |  |
+| subcontractName | varchar(512) | YES |  |  |  |
+| subcontractNo | varchar(64) | YES |  |  |  |
+| contractNos | varchar(2048) | YES |  |  |  |
+| projectIds | varchar(1024) | YES |  |  |  |
+| type | int(11) | YES |  | NULL |  |
+| state | int(11) | NO |  | 0 |  |
+| callbackState | int(11) | YES |  | NULL |  |
+| facilitatorId | int(11) | YES |  | NULL |  |
+| facilitatorName | varchar(64) | YES |  |  |  |
+| bankInfo | varchar(255) | YES |  |  |  |
+| bankAccount | varchar(64) | YES |  |  |  |
+| officeCode | varchar(25) | YES |  |  |  |
+| profitDepCode | varchar(25) | YES |  |  |  |
+| isAccrued | bit(1) | YES |  | NULL |  |
+| isInvoiced | bit(1) | YES |  | NULL |  |
+| subcontractAmount | varchar(25) | YES |  |  |  |
+| reason | varchar(512) | YES |  |  |  |
+| remark | varchar(512) | YES |  |  |  |
+| effectiveForm | datetime | YES |  | NULL |  |
+| effectiveTo | datetime | YES |  | NULL |  |
+| zrApproveTime | datetime | YES |  | NULL |  |
+| createBy | varchar(25) | YES |  |  |  |
+| createTime | datetime | YES |  | NULL |  |
+| updateBy | varchar(25) | YES |  |  |  |
+| updateTime | datetime | YES |  | NULL |  |
+| stateName | varchar(255) | YES |  | NULL |  |
+| callbackStateName | varchar(255) | NO |  |  |  |
+| createName | varchar(154) | YES |  | NULL |  |
+| officeName | varchar(20) | YES |  | NULL |  |
+| profitDepName | varchar(20) | YES |  | NULL |  |
+| typeName | varchar(255) | YES |  | NULL |  |
+
+### view_txinfo
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| sheetID | varchar(15) | YES |  | NULL |  |
+| beforeChange_sheetID | varchar(15) | YES |  | NULL |  |
+| applicant | varchar(25) | YES |  | NULL |  |
+| app_time | datetime | YES |  | NULL |  |
+| app_dptNo | varchar(10) | YES |  | NULL |  |
+| prt_name | varchar(255) | YES |  | NULL |  |
+| app_reason | text | YES |  | NULL |  |
+| promise_returntime | datetime | YES |  | NULL |  |
+| trade_classify | varchar(100) | YES |  | NULL |  |
+| signing_state | char(1) | YES |  | NULL |  |
+| kept_place | varchar(10) | YES |  | NULL |  |
+| demand_type | varchar(8) | YES |  | NULL |  |
+| his_zipCode | varchar(25) | YES |  | NULL |  |
+| his_addr | varchar(1024) | YES |  | NULL |  |
+| addre_id | int(11) | YES |  | NULL |  |
+| duty_person | varchar(10) | YES |  | NULL |  |
+| spare_serialNum | varchar(50) | YES |  | NULL |  |
+| start_use_time | datetime | YES |  | NULL |  |
+| send_time | datetime | YES |  | NULL |  |
+| EMS_num | varchar(255) | YES |  | NULL |  |
+| EMS_company | varchar(255) | YES |  | NULL |  |
+| item_code | varchar(25) | YES |  | NULL |  |
+| item_name | varchar(255) | YES |  | NULL |  |
+| isOK | char(1) | YES |  | NULL |  |
+| remark | text | YES |  | NULL |  |
+| tx_id | int(11) | NO |  | 0 |  |
+| action_time | datetime | YES |  | NULL |  |
+| shiftimes | int(11) | YES |  | NULL |  |
+| turnovertimes | int(11) | YES |  | NULL |  |
+| allottimes | int(11) | YES |  | NULL |  |
+| take_place | varchar(15) | YES |  | 0 |  |
+| approve_time | datetime | YES |  | NULL |  |
+| receive_time | datetime | YES |  | NULL |  |
+| sendout_whsCode | varchar(10) | YES |  | NULL |  |
+| isNew | char(1) | YES |  | NULL |  |
+| extend_returntime | datetime | YES |  | NULL |  |
+| hexiao_time | datetime | YES |  | NULL |  |
+| isUnion | int(11) | YES |  | NULL |  |
+
+### view_warranty_info_4_ts
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| id | bigint(20) | YES |  | NULL |  |
+| projectName | varchar(512) | YES |  | NULL |  |
+| contractNo | varchar(25) | YES |  | NULL |  |
+| barcode | varchar(50) | YES |  | NULL |  |
+| item | varchar(16) | YES |  | NULL |  |
+| itemName | varchar(255) | YES |  | NULL |  |
+| itemDesc | varchar(255) | YES |  | NULL |  |
+| barcode2 | varchar(50) | YES |  | NULL |  |
+| item2 | varchar(16) | YES |  | NULL |  |
+| itemName2 | varchar(255) | YES |  | NULL |  |
+| itemDesc2 | varchar(255) | YES |  | NULL |  |
+| gradeName | varchar(125) | YES |  | NULL |  |
+| warranty | varchar(2) | YES |  | NULL |  |
+| warrantyStartTime | datetime | YES |  | NULL |  |
+| warrantyEndTime | datetime | YES |  | NULL |  |
+| diff | int(7) | YES |  | NULL |  |
+
+### view_warranty_source
+VIEW字段列表：
+| Field | Type | Null | Key | Default | Extra |
+|-------|------|------|-----|---------|-------|
+| id | bigint(20) | YES |  | 0 |  |
+| barcode | varchar(50) | YES |  | NULL |  |
+| comBarCode | varchar(50) | YES |  | NULL |  |
+| old_warrantyEndTime | datetime | YES |  | NULL |  |
+| warrantyEndTime | datetime | YES |  | NULL |  |
+| old_diff | int(7) | YES |  | NULL |  |
+| diff | int(7) | YES |  | NULL |  |
+| warrantyStartTime | datetime | YES |  | NULL |  |
+| old_warrantyStartTime | datetime | YES |  | NULL |  |
+| item | varchar(16) | YES |  | NULL |  |
+| describe_ | varchar(255) | YES |  | NULL |  |
+| itemName | varchar(255) | YES |  | NULL |  |
+| gradeName | varchar(125) | YES |  | NULL |  |
+| gradeCode | varchar(25) | YES |  | NULL |  |
+| packdate | datetime | YES |  | NULL |  |
+| contract_code | varchar(25) | YES |  | NULL |  |
+| contract_type | int(11) | YES |  | NULL |  |
+| contract_type_name | varchar(25) | YES |  | NULL |  |
+| project_name | varchar(512) | YES |  | NULL |  |
+| customer_name | varchar(512) | YES |  | NULL |  |
+| office_code | varchar(25) | YES |  | NULL |  |
+| office_name | varchar(25) | YES |  | NULL |  |
+| marketCode | varchar(10) | YES |  | NULL |  |
+| marketName | varchar(15) | YES |  | NULL |  |
+| systemId | int(11) | YES |  | NULL |  |
+| systemName | varchar(15) | YES |  | NULL |  |
+| warranty | varchar(2) | YES |  | NULL |  |
+| warrantyMonth | double | YES |  | NULL |  |
+| barcode2 | varchar(50) | YES |  | NULL |  |
+| item2 | varchar(16) | YES |  | NULL |  |
+| syncTime | datetime | YES |  | NULL |  |

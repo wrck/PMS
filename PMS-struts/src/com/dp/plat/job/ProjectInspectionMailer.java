@@ -39,6 +39,7 @@ import com.dp.plat.util.NotificationTemplateUtil;
  *
  */
 public class ProjectInspectionMailer implements Job {
+	private static final JobLogger logger = new JobLogger(ProjectInspectionMailer.class);
 	private final static String OFFICE_INFO_TABLE_TEMPLATE = "officeInspectTable";
 	private final static String OFFICE_INFO_TEMPLATE = "officeInspectInfo";
 	private final static String TOTAL_INFO_TABLE_TEMPLATE = "totalInspectTable";
@@ -64,6 +65,8 @@ public class ProjectInspectionMailer implements Job {
 	}
 
 	public void execute(JobExecutionContext arg0) throws JobExecutionException {
+		logger.logStart();
+		try {
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		if (SpringContext.getApplicationContext() != null) {
 			applicationContext = SpringContext.getApplicationContext();
@@ -216,6 +219,10 @@ public class ProjectInspectionMailer implements Job {
 		}
 		infoTotal();
 		infoArrivalDelay(arrivalDelayProjects);
+		logger.logComplete();
+		} catch (Exception e) {
+			logger.logError(e);
+		}
 	}
 
     @SuppressWarnings("unchecked")

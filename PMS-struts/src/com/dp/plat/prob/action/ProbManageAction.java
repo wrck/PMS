@@ -2,6 +2,7 @@ package com.dp.plat.prob.action;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,9 +17,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.util.HtmlUtils;
 
@@ -27,6 +31,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.opensymphony.xwork2.Preparable;
 
 import com.dp.plat.action.BaseAction;
+import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
 import com.dp.plat.data.bean.BasicDataBean;
 import com.dp.plat.data.bean.Department;
@@ -55,6 +60,7 @@ import com.dp.plat.prob.vo.ProductComponentPageParam;
 import com.dp.plat.prob.vo.ProductComponentVO;
 import com.dp.plat.service.BasicDataService;
 import com.dp.plat.service.DepartmentManageService;
+import com.dp.plat.service.ProjectService;
 import com.dp.plat.util.DateUtil;
 import com.dp.plat.util.ExceptionUtils;
 import com.dp.plat.util.MessageUtil;
@@ -81,6 +87,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	private List<BasicDataBean> statusList;// 状态
 	private List<BasicDataBean> priorityList;// 严重级别
 	private List<BasicDataBean> relatedSceneTypeList;// 技术公告关联割接场景类型
+	private List<BasicDataBean> mitigationActionTypeList;// 技术公告规避方案操作类型
+	private List<BasicDataBean> solutionActionTypeList;// 技术公告解决方案操作类型
 	private List<BasicDataBean> navTabList;// 选项卡
 	private int isContinue;// 判断是否继续
 	private Prob prob;
@@ -144,6 +152,9 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	 */
 	private List<ProbProduct> probProductList;
 	
+	private String namespace;
+	private String view;
+	
 	/**
 	 * 通用列表
 	 */
@@ -155,6 +166,25 @@ public class ProbManageAction extends BaseAction implements Preparable {
 
 	@Override
 	public void prepare() throws Exception {
+	    HttpServletRequest request = getServletRequest();
+        String referer = request.getHeader("Referer");
+        if (StringUtils.isNotBlank(referer)) {
+            URL refererUrl = new URL(referer);
+//          if (refererUrl.getHost().equals(request.getRemoteHost())) {
+                referer = refererUrl.getPath().replace(request.getContextPath(), "");
+                namespace = referer.substring(0, referer.lastIndexOf("/"));
+//          }
+        }
+        if (namespace == null) {
+            ActionMapping actionMapping = (ActionMapping) request.getAttribute("struts.actionMapping");
+            namespace = actionMapping.getNamespace();
+        }
+        if (namespace.startsWith("/")) {
+            namespace = namespace.substring(1, namespace.length());
+        }
+        if (!namespace.startsWith("module")) {
+            namespace = "module";
+        }
 		user = UserContext.getUserContext().getUser();
 		/*
 		 * if(currectUser.isHasRole(MessageUtil.ROLE_PROB_ADMIN)){ isProbAdmin =
@@ -179,6 +209,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			watchList = basicDataService.queryBasicDataBeans("30");
 			statusList = basicDataService.queryBasicDataBeans("31");
 			relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
+			mitigationActionTypeList = basicDataService.queryBasicDataBeans("mitigationActionType");
+			solutionActionTypeList = basicDataService.queryBasicDataBeans("solutionActionType");
 
 			if (displayParam == null) {
 				displayParam = new DisplayParam();
@@ -207,7 +239,9 @@ public class ProbManageAction extends BaseAction implements Preparable {
 		statusList = basicDataService.queryBasicDataBeans("31");
 		priorityList = basicDataService.queryBasicDataBeans("32");
 		relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
-		
+		mitigationActionTypeList = basicDataService.queryBasicDataBeans("mitigationActionType");
+		solutionActionTypeList = basicDataService.queryBasicDataBeans("solutionActionType");
+
 		if (commonMap == null) {
 		    commonMap = new HashMap<>();
 		}
@@ -280,6 +314,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 			statusList = basicDataService.queryBasicDataBeans("31");
 			priorityList = basicDataService.queryBasicDataBeans("32");
 			relatedSceneTypeList = basicDataService.queryBasicDataBeans("relatedSceneType");
+			mitigationActionTypeList = basicDataService.queryBasicDataBeans("mitigationActionType");
+			solutionActionTypeList = basicDataService.queryBasicDataBeans("solutionActionType");
 			// 办事处集合
 			departmentList = departmentManageService.queryDepartments();
 			restoreStatuList = basicDataService.queryBasicDataBeans("33");
@@ -353,6 +389,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				
 				probManageService.readLog(prob.getProbId(), 0);
 			}
+			commonMap = new HashMap<String, Object>();
+            fillMarketRelations(commonMap);
 			System.out.println(System.currentTimeMillis() - t);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -383,12 +421,29 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				probRestoreList = probManageService.queryProbRestoreList(probRestore, restoreDisplayParam);
 				probRestoreTaskList = null;
 			}
+			commonMap = new HashMap<String, Object>();
+            fillMarketRelations(commonMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getMessage(e, true));
 			return ERROR;
 		}
 		return SUCCESS;
+	}
+	
+	/**
+	 * 获取市场部对应关系
+	 * @return
+	 */
+	private List<Map<String, Object>> fillMarketRelations(Map<String, Object> fillInMap) {
+        ProjectService projectService = SpringContext.getBean("projectService", ProjectService.class);
+        List<Map<String, Object>> marketRelations = projectService.queryMarketRelations();
+////      String marketRelationsJson = JSON.toJSONString(marketRelations);
+        if (fillInMap == null) {
+            fillInMap = new HashMap<String, Object>();
+        }
+        fillInMap.put("marketRelationsWithSubMap", marketRelations);
+        return marketRelations;
 	}
 
 	public String checkSubProject() {
@@ -669,7 +724,18 @@ public class ProbManageAction extends BaseAction implements Preparable {
 	 */
 	public String export() {
 		try {
-			List<ProbParam> probParams = probManageService.queryExportProbList(new HashMap<>());
+		    if (displayParam == null) {
+		        displayParam = new DisplayParam();
+		    }
+		    if (prob == null) {
+		        prob = new Prob();
+		    }
+		    displayParam.setExport(true);
+		    Map<Object, Object> params = new HashMap<>();
+		    params.put("prob", prob);
+		    params.put("displayParam", displayParam);
+			List<ProbParam> probParams = probManageService.queryExportProbList(params);
+//			List<Prob> probParams  = probManageService.queryProbList(prob, displayParam);
 			for (Prob probParam : probParams) {
 				String desc = probParam.getDesc();
 				if (StringUtils.isNotBlank(desc)) {
@@ -809,16 +875,22 @@ public class ProbManageAction extends BaseAction implements Preparable {
         if (softVersion != null && StringUtils.isNotBlank(softVersion.getManualEntry())) {
             String manualEntry = softVersion.getManualEntry();
 		    Map<String, Map<String, List<SoftVersionParser>>> versionParser = new HashMap<>();
-		    if (!"other".equalsIgnoreCase(softVersion.getPlatformType())) {
+		    String platformType = softVersion.getPlatformType();
+            if (!"other".equalsIgnoreCase(platformType)) {
 		        versionParser = SoftVersionUtil.createSoftVersionRangeParsers(manualEntry, softVersion.getSoftVersionTypes());
 		    } else {
 		        String entryStart = StringUtils.defaultIfBlank(softVersion.getEntryStart(), manualEntry);
 		        String entryEnd = StringUtils.defaultIfBlank(softVersion.getEntryEnd(), manualEntry);
-		        SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(entryStart);
-                SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(entryEnd);
+		        SoftVersionParser parserStart = SoftVersionUtil.newSoftVersionParser(platformType, entryStart, platformType);
+                SoftVersionParser parserEnd = SoftVersionUtil.newSoftVersionParser(platformType, entryEnd, platformType);
 		        versionParser.put(manualEntry, Collections.singletonMap(manualEntry, Arrays.asList(parserStart, parserEnd)));
 		    }
 			result = JSON.toJSONString(versionParser, SerializerFeature.DisableCircularReferenceDetect);
+			String sortResult = JSON.toJSONString(versionParser, SerializerFeature.MapSortField, SerializerFeature.SortField, SerializerFeature.DisableCircularReferenceDetect);
+			if (!result.equals(sortResult)) {
+			    System.out.println(result);
+			    System.out.println(sortResult);
+			}
 		} else {
 			result = "{}";
 		}
@@ -858,6 +930,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 						parsedVersion.setProbId(probId);
 						parsedVersion.setManualEntry(manualEntry);
 						parsedVersion.setManualEntrySub("");
+						parsedVersion.setEntryType("");
+						parsedVersion.setEntrySeries("");
 						parsedVersion.setEntryStart("");
 						parsedVersion.setEntryEnd("");
 						parsedVersion.setMarkStart("");
@@ -875,6 +949,8 @@ public class ProbManageAction extends BaseAction implements Preparable {
 							parsedVersion.setProbId(probId);
 							parsedVersion.setManualEntry(manualEntry);
 							parsedVersion.setManualEntrySub(manualEntrySub);
+							parsedVersion.setEntryType(start.getType());
+							parsedVersion.setEntrySeries(start.getSeries());
 							parsedVersion.setEntryStart(start.getVersion());
 							parsedVersion.setEntryEnd(end.getVersion());
 							parsedVersion.setMarkStart(start.getMark());
@@ -901,9 +977,7 @@ public class ProbManageAction extends BaseAction implements Preparable {
 
 	public String statistics() {
 		try {
-			if (probStatistic == null) {
-				probStatistic = new ProbStatistic();
-			}
+		    view = "statistics";
 			departmentList = departmentManageService.queryDepartments();
 			if (probStatisticList == null) {
 				probStatisticList = new ArrayList<>();
@@ -912,6 +986,13 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				displayParam = new DisplayParam();
 			}
 			displayParam.getParam();
+			
+			commonMap = new HashMap<String, Object>();
+            fillMarketRelations(commonMap);
+			if (probStatistic == null) {
+			    probStatistic = new ProbStatistic();
+			    return "statistics";
+			}
 			
 			if (probStatistic.getTabIndex() < 2) {
 				if (StringUtils.isBlank(probStatistic.getStartTime())) {
@@ -936,14 +1017,58 @@ public class ProbManageAction extends BaseAction implements Preparable {
 				result = EchartsUtil.packagingTableHtml(reportLineDatas);
 			} else if (probStatistic.getTabIndex() == 2) {
 				probProjectList = probManageService.queryProbStatisticProjectList(probStatistic, displayParam);
-			} else {
+			} else if (probStatistic.getTabIndex() == 3) {
 			    commonList = probManageService.queryContractShipmentSoftList(probStatistic, displayParam);
-			}
+			} else {
+			    // 查看权限
+			    if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_PROB_ADMIN, MessageUtil.ROLE_PROB_SUPPORTER)) {//1:管理员、 18：技术公告员、19:技术公告技术支持人员
+                    probRestore.setAreapower(Util.appendChar(UserContext.getUserContext().getUser().getAreapower(), "'"));
+			    }
+			    probRestoreList = probManageService.queryProbRestoreList(probRestore, displayParam);
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getMessage(e, true));
 		}
 		return "statistics";
+	}
+	
+	public String affectedProjectSoftVersion() {
+	    view = "affectedProjectSoftVersion";
+	    String result = SUCCESS;
+	    if (!namespace.startsWith("module/sub") && namespace.startsWith("module")) {
+            result = "affectedProjectSoftVersion";
+        }
+	    try {
+    	    if (commonMap == null) {
+    	        commonMap = new HashMap<String, Object>();
+    	    }
+    	    if (displayParam == null) {
+                displayParam = new DisplayParam();
+            }
+            displayParam.getParam();
+            
+    	    fillMarketRelations(commonMap);
+    
+    	    if (departmentList == null) {
+                departmentList = departmentManageService.queryDepartments();
+            }
+    	    probRestoreList = Collections.emptyList();
+            if (probStatistic == null) {
+                probStatistic = new ProbStatistic();
+                return result;
+            }
+            
+            // 查看权限
+            if (!user.isHasAnyRole(MessageUtil.ROLE_ADMIN, MessageUtil.ROLE_PROB_ADMIN, MessageUtil.ROLE_PROB_SUPPORTER)) {//1:管理员、 18：技术公告员、19:技术公告技术支持人员
+                probRestore.setAreapower(Util.appendChar(UserContext.getUserContext().getUser().getAreapower(), "'"));
+            }
+            probRestoreList = probManageService.queryProbRestoreList(probRestore, displayParam);
+	    } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getMessage(e, true));
+        }
+        return result;
 	}
 
 	/**
@@ -1414,6 +1539,22 @@ public class ProbManageAction extends BaseAction implements Preparable {
     public void setRelatedSceneTypeList(List<BasicDataBean> relatedSceneTypeList) {
         this.relatedSceneTypeList = relatedSceneTypeList;
     }
+	
+    public List<BasicDataBean> getMitigationActionTypeList() {
+        return mitigationActionTypeList;
+    }
+
+    public void setMitigationActionTypeList(List<BasicDataBean> mitigationActionTypeList) {
+        this.mitigationActionTypeList = mitigationActionTypeList;
+    }
+
+    public List<BasicDataBean> getSolutionActionTypeList() {
+        return solutionActionTypeList;
+    }
+
+    public void setSolutionActionTypeList(List<BasicDataBean> solutionActionTypeList) {
+        this.solutionActionTypeList = solutionActionTypeList;
+    }
 
     public String getRestoreIds() {
 		return restoreIds;
@@ -1564,6 +1705,22 @@ public class ProbManageAction extends BaseAction implements Preparable {
 
     public void setCommonMap(Map<String, Object> commonMap) {
         this.commonMap = commonMap;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getView() {
+        return view;
+    }
+
+    public void setView(String view) {
+        this.view = view;
     }
 	
 }

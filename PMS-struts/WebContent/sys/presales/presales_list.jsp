@@ -329,8 +329,8 @@
                 ${presalesTable.hasRma == 1 ? '是' : '否'}
             </display:column>
 			<!-- excel导出字段Start -->
-			<display:column property="marketName" titleKey="pm.presales.marketname" media="excel" ></display:column>
-			<display:column property="systemName" titleKey="pm.presales.systemname" media="excel"></display:column>
+			<display:column property="marketName" titleKey="pm.presales.marketName" media="excel" ></display:column>
+			<display:column property="systemName" titleKey="pm.presales.systemName" media="excel"></display:column>
 			<display:column property="expendName" titleKey="pm.presales.expendName" media="excel"></display:column>
 			<display:column property="industryName" titleKey="pm.presales.industryName" media="excel"></display:column>
 			<!-- excel导出字段End -->
