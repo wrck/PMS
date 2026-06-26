@@ -11,7 +11,10 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.dp.plat.prob.version.NewSoftVersionStrategy;
 import com.dp.plat.prob.version.SoftVersionParser;
+import com.dp.plat.prob.version.SoftVersionStrategy;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -132,7 +135,7 @@ public class SoftNewVersionUtil {
 			if ("".equals(version) && matcher.start() > 0) {
 				continue;
 			}
-			SoftVersionParser softVersionParserResult = new SoftVersionParser(version);
+			SoftVersionParser softVersionParserResult = new SoftVersionParser(new NewSoftVersionStrategy(), version);
 			List<String> softVersions = new ArrayList<String>();
 			softVersionMap.put(version, softVersions);
 			StringBuilder marksAll = new StringBuilder();
@@ -157,6 +160,7 @@ public class SoftNewVersionUtil {
 			String markVersion = defaultMarkAll ? marksAll.toString() : marksPrev.toString();
 			softVersionParserResult.setVersion(StringUtils.join(softVersionParserResult.versionParts.values(), ""));
 			softVersionParserResult.setMark(markVersion);
+			softVersionParserResult.fillSeries();
 			softVersionParserResults.add(softVersionParserResult);
 			softVersions.add(markVersion);
 		}
@@ -241,7 +245,8 @@ public class SoftNewVersionUtil {
 						}
 						softVersionParserResult.setVersion(StringUtils.join(softVersionParserResult.getVersionParts().values(), ""));
 						softVersionParserResult.setMark(StringUtils.join((isMarkAll ? softVersionParserResult.getMarkAllParts() : softVersionParserResult.getMarkPrevParts()).values(), ""));
-					
+						softVersionParserResult.fillSeries();
+						
 						// 用来修正填入的数据，使输入的内容跟解析的结果保持一致
 						if (StringUtils.isNotBlank(group)) {
 						    full = full.replaceFirst(group, softVersionParserResult.getVersion());

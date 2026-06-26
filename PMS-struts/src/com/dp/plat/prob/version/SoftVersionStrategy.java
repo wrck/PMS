@@ -10,11 +10,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SoftVersionStrategy extends AbstractSoftVersionStrategy {
+    public static final String strategy = "SoftVersionStrategy";
     
 //  public static final String regex = "(?<Hvvv>[A-z0-9]{1,}[0-9]*(?:-.*)*-)?(?<Evvv>[S|B|A]\\d{3})?(?<Fxxx>[C|S]M?\\d{3})?(?<Dxxx>D\\d{3})?(?<Pxx>P\\d{2})?(?<PATCHxx>PATCH\\d{2})?(?<Lxx>L\\d{2})?(?<LPATCHxx>PATCH\\d{2})?(?<Txx>T\\d{2})?";
 //  public static final String regex = "(?<Hvvv>[A-z0-9]{1,}[0-9]*(?:-.*)*-)?(?<Evvv>[S|B|A|L|M]\\d{3})?(?<Fxxx>[C|S]M?\\d{3})?(?<Dxxx>D\\d{3})?(?<Pxx>P\\d{2})?(?<PATCHxx>PATCH\\d{2})?(?<Txx>T\\d{2})?(?<Lxx>L\\d{2})?(?<LATCHxx>PATCH\\d{2})?";
 //  public static final String regex = "(?<Hvvv>[A-z0-9]{1,}(?:[-|—][A-z0-9]*)*[-|—])?(?<Evvv>[S|B|A|L|M]\\d{3})?(?<Fxxx>[C|S]M?\\d{3})?(?<Dxxx>D\\d{3})?(?<Pxx>P\\d{2})?(?<PATCHxx>PATCH\\d{2})?(?<Txx>T\\d{2})?(?<Lxx>L\\d{2})?(?<LATCHxx>PATCH\\d{2})?";
-    public static final String regex = "(?<Hvvv>[A-z0-9]{1,}(?:[-|—][A-z0-9]*)*[-|—])?(?<Evvv>[S|B|A|L|M]\\d{3})?(?<Fxxx>[C|S]M?\\d{3})?(?<Dxxx>D\\d{3})?(?<Pxx>P\\d{2,3})?(?<PATCHxx>PATCH\\d{2,3})?(?<Txx>T\\d{2,3})?(?<Lxx>L\\d{2,3})?(?<LATCHxx>PATCH\\d{2,3})?(?<BinExt>\\.[A-z]{1,})?";
+    public static final String regex = "(?<Hvvv>[A-z0-9]{1,}(?:[-|—][A-z0-9]*)*[-|—])?(?<Evvv>[S|B|A|L|M]\\d{3})?(?<Fxxx>[C|S]M?\\d{3})?(?<Dxxx>D\\d{3})?(?<Pxx>P\\d{2,3})?(?<PATCHxx>PATCH\\d{2,3})?(?<Txx>T\\d{2,3})?(?<Lxx>L\\d{2,3})?(?<LATCHxx>PATCH\\d{2,3})?(?<MATCHxx>(?:PATCH\\d{2,3})+)?(?<BinExt>\\.[A-z]{1,})?";
 
     // 匹配非单词部分和（）()包裹部分
     public static final String bracketsRegex = "(?:\\s|(?:[(|（][^(|（|）|)]*[）|)])?)";
@@ -71,7 +72,10 @@ public class SoftVersionStrategy extends AbstractSoftVersionStrategy {
         partIndexMap.put("LATCHxx", 9);         //  定制版本补丁信息
                                                 //      LATCH ：补丁版本标识
                                                 //      xx：两位流水号
-//      partIndexMap.put("BinExt", 10);         //  版本文件扩展名
+        partIndexMap.put("MATCHxx", 10);         //  多版本补丁信息匹配
+        //      MATCHxx ：补丁版本标识
+        //      xx：两位流水号
+//      partIndexMap.put("BinExt", 11);         //  版本文件扩展名
 //                                              //      BinExt ：版本文件扩展名
         // 各部分掩码处理
         for (Entry<String, Integer> part : partIndexMap.entrySet()) {
@@ -91,6 +95,7 @@ public class SoftVersionStrategy extends AbstractSoftVersionStrategy {
         indexMarkMapStart.put(7, "");
         indexMarkMapStart.put(8, "");
         indexMarkMapStart.put(9, "");
+        indexMarkMapStart.put(10, "");
         
         indexMarkMapEnd.put(1, "");
         indexMarkMapEnd.put(2, "Z999");
@@ -104,9 +109,10 @@ public class SoftVersionStrategy extends AbstractSoftVersionStrategy {
         indexMarkMapEnd.put(7, "");
         indexMarkMapEnd.put(8, "");
         indexMarkMapEnd.put(9, "");
+        indexMarkMapEnd.put(10, "");
         
         
-        rangeInheritParts.addAll(Arrays.asList("Hvvv", "Evvv", "Fxxx"));
+//        rangeInheritParts.addAll(Arrays.asList("Hvvv", "Evvv", "Fxxx"));
     }
     
     @Override

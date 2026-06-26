@@ -455,37 +455,7 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>我司</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>收款</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
-                                                w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>情况</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>：</w:t>
+                                        <w:t>采购订单号：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -514,7 +484,7 @@
                                             <w:szCs w:val="28" />
                                             <w:lang w:val="en-US" w:eastAsia="zh-CN" />
                                         </w:rPr>
-                                        <w:t>${dispatch.collectedRatio!"0.00"}%</w:t>
+                                        <w:t>${dispatch.customInfo.purchId!}</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -562,9 +532,90 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>项目</w:t>
+                                        <w:t>我司收款情况：</w:t>
                                     </w:r>
+                                </w:p>
+                            </w:tc>
+<#-- 
+  宏：smartPercent
+  功能：
+    - 接收任意值（数字或字符串）
+    - 安全解析为数字（失败则用 0）
+    - 若解析后的数字 > 150，则认为它已经是百分比数值（如 180 表示 180%）
+    - 否则认为是小数（如 0.85 表示 85%），需乘以 100
+    - 格式化为干净的百分比字符串（去掉无意义尾零）
+-->
+<#macro smartPercent rawValue>
+  <#-- 安全解析 -->
+  <#if rawValue?is_number><#assign n=rawValue>
+  <#elseif rawValue?is_string>
+    <#attempt><#assign n=rawValue?number><#recover><#assign n=0></#attempt>
+  <#else><#assign n=0></#if>
+
+  <#-- 关键判断 -->
+  <#assign pct = (n > 1.5)?then(n, n * 100)>
+  ${pct?string("0.##")}%
+</#macro>
+                            <w:tc>
+                                <w:tcPr>
+                                    <w:tcW w:w="3415" w:type="pct" />
+                                    <w:vAlign w:val="top" />
+                                </w:tcPr>
+                                <w:p>
+                                    <w:pPr>
+                                        <w:ind w:left="34" w:leftChars="16" w:right="174"
+                                            w:rightChars="83" />
+                                        <w:rPr>
+                                            <w:rFonts w:hint="default" w:ascii="微软雅黑" w:hAnsi="微软雅黑"
+                                                w:eastAsia="微软雅黑" />
+                                            <w:sz w:val="28" />
+                                            <w:szCs w:val="28" />
+                                            <w:lang w:val="en-US" w:eastAsia="zh-CN" />
+                                        </w:rPr>
+                                    </w:pPr>
                                     <w:r>
+                                        <w:rPr>
+                                            <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
+                                                w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
+                                            <w:sz w:val="28" />
+                                            <w:szCs w:val="28" />
+                                            <w:lang w:val="en-US" w:eastAsia="zh-CN" />
+                                        </w:rPr>
+                                        <w:t><#compress><@smartPercent rawValue=(dispatch.collectedRatio!0) /></#compress></w:t>
+                                        <#-- 
+                                        <w:t>${((dispatch.collectedRatio!0)*100)?string("0.##")}%</w:t>
+                                        -->
+                                    </w:r>
+                                </w:p>
+                            </w:tc>
+                        </w:tr>
+                        <w:tr>
+                            <w:tblPrEx>
+                                <w:tblBorders>
+                                    <w:top w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                    <w:left w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                    <w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                    <w:right w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                    <w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                    <w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0" />
+                                </w:tblBorders>
+                                <w:tblCellMar>
+                                    <w:top w:w="0" w:type="dxa" />
+                                    <w:left w:w="108" w:type="dxa" />
+                                    <w:bottom w:w="0" w:type="dxa" />
+                                    <w:right w:w="108" w:type="dxa" />
+                                </w:tblCellMar>
+                            </w:tblPrEx>
+                            <w:tc>
+                                <w:tcPr>
+                                    <w:tcW w:w="1584" w:type="pct" />
+                                    <w:vAlign w:val="top" />
+                                </w:tcPr>
+                                <w:p>
+                                    <w:pPr>
+                                        <w:ind w:left="34" w:leftChars="16" w:right="168"
+                                            w:rightChars="80" />
+                                        <w:jc w:val="left" />
                                         <w:rPr>
                                             <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
                                                 w:eastAsia="微软雅黑" />
@@ -572,7 +623,16 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>实施进展：</w:t>
+                                    </w:pPr>
+                                    <w:r>
+                                        <w:rPr>
+                                            <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
+                                                w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
+                                            <w:b />
+                                            <w:sz w:val="28" />
+                                            <w:szCs w:val="28" />
+                                        </w:rPr>
+                                        <w:t>项目实施进展：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -651,17 +711,7 @@
                                                 <w:sz w:val="28" />
                                                 <w:szCs w:val="28" />
                                             </w:rPr>
-                                            <w:t>框架协议约定</w:t>
-                                        </w:r>
-                                        <w:r>
-                                            <w:rPr>
-                                                <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
-                                                    w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                                <w:b />
-                                                <w:sz w:val="28" />
-                                                <w:szCs w:val="28" />
-                                            </w:rPr>
-                                            <w:t>说明：</w:t>
+                                            <w:t>框架协议约定说明：</w:t>
                                         </w:r>
                                     </w:p>
                                 </w:tc>
@@ -744,17 +794,7 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>此次</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>付款说明：</w:t>
+                                        <w:t>此次付款说明：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -790,29 +830,26 @@
                             </w:tc>
                         </w:tr>
                     </w:tbl>
-                    <w:p>
-                        <w:pPr>
-                            <w:rPr>
-                                <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                <w:b />
-                                <w:sz w:val="36" />
-                            </w:rPr>
-                        </w:pPr>
-                        <w:r>
-                            <w:rPr>
-                                <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                <w:b />
-                                <w:sz w:val="36" />
-                            </w:rPr>
-                            <w:br w:type="page" />
-                        </w:r>
+                <#assign invoiceList = (customInfo.invoiceList)?default([]) />
+                <#if (invoiceList?size== 0)>
+                	<w:p>
+                        <w:bookmarkStart w:id="0" w:name="_GoBack" />
+                        <w:bookmarkEnd w:id="0" />
                     </w:p>
-                    <w:p>
+                    <w:sectPr>
+                        <w:pgSz w:w="11906" w:h="16838" />
+                        <w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567"
+                            w:header="720" w:footer="720" w:gutter="0" />
+                        <w:cols w:space="720" w:num="1" />
+                        <w:docGrid w:type="lines" w:linePitch="312" w:charSpace="0" />
+                    </w:sectPr>
+                <#elseif (invoiceList?size> 0)> 
+                	<w:p>
                         <w:pPr>
-                            <w:pStyle w:val="2" />
                             <w:rPr>
-                                <w:rFonts w:hint="eastAsia" />
-                                <w:lang w:val="en-US" w:eastAsia="zh-CN" />
+                                <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
+                                <w:b />
+                                <w:sz w:val="36" />
                             </w:rPr>
                             <w:sectPr>
                                 <w:pgSz w:w="11906" w:h="16838" />
@@ -822,10 +859,11 @@
                                 <w:docGrid w:type="lines" w:linePitch="312" w:charSpace="0" />
                             </w:sectPr>
                         </w:pPr>
+                        <w:bookmarkStart w:id="0" w:name="_GoBack" />
+                        <w:bookmarkEnd w:id="0" />
                     </w:p>
                     <w:p>
                         <w:pPr>
-                            <w:pStyle w:val="2" />
                             <w:rPr>
                                 <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
                                 <w:b />
@@ -837,17 +875,9 @@
                                 <w:rFonts w:hint="eastAsia" />
                                 <w:lang w:val="en-US" w:eastAsia="zh-CN" />
                             </w:rPr>
-                            <w:t>发票清单</w:t>
-                        </w:r>
-                        <w:r>
-                            <w:rPr>
-                                <w:rFonts w:hint="eastAsia" />
-                            </w:rPr>
-                            <w:t>：</w:t>
+                            <w:t>发票清单：</w:t>
                         </w:r>
                     </w:p>
-                <#assign invoiceList = (customInfo.invoiceList)?default([]) />
-                <#if (invoiceList?size> 0)> 
                     <w:tbl>
                         <w:tblPr>
                             <w:tblStyle w:val="7" />
@@ -2886,7 +2916,6 @@
                             </w:tc>
                         </w:tr>
                     </w:tbl>
-                </#if>
                     <w:p>
                         <w:pPr>
                             <w:ind w:left="-424" w:leftChars="-202" w:right="-764"
@@ -2907,6 +2936,7 @@
                         <w:cols w:space="0" w:num="1" />
                         <w:docGrid w:type="lines" w:linePitch="312" w:charSpace="0" />
                     </w:sectPr>
+                </#if>
                 </w:body>
             </w:document>
         </pkg:xmlData>
@@ -2927,7 +2957,9 @@
                 xmlns:s="http://www.wps.cn/officeDocument/2013/wpsCustomData">
                 <customSectProps>
                     <customSectPr />
+                    <#if (invoiceList?size> 0)>
                     <customSectPr />
+                    </#if>
                 </customSectProps>
             </s:customData>
         </pkg:xmlData>

@@ -1121,7 +1121,7 @@
   <select id="selectSettlementWidthDispatchPageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.SettlementVO">
     SELECT h.id AS `dispatch.id`, h.`dispatchName` AS `dispatch.dispatchName`, h.`dispatchNo` AS `dispatch.dispatchNo`, h.`dispatchSeq` AS `dispatch.dispatchSeq`, h.`contractNos` AS `dispatch.contractNos`
 	    , h.facilitatorId AS `dispatch.facilitatorId`, h.facilitatorCode AS `dispatch.facilitatorCode`, h.facilitatorName AS `dispatch.facilitatorName`
-	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`
+	    , h.`projectIds` AS `dispatch.projectIds`, h.`type` AS `dispatch.type`, h.`state` AS `dispatch.state`, h.`reason` AS `dispatch.reason`, h.`remark` AS `dispatch.remark`
 	    <!-- , h.`customInfo` AS `dispatch.customInfo` -->
 	    , h.`dispatch.customInfo`
 	    , h.id AS `dispatchId`

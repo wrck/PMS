@@ -27,6 +27,16 @@
 <dp:script type="text/javascript" src="js/summernote/summernote-util.js"></dp:script>
 <script type="text/javascript" src="statics/plugins/select2/select2.js"></script>
 <script type="text/javascript" src="statics/plugins/select2/i18n/zh-CN.js"></script>
+<%-- <dp:script type="text/javascript" src="js/prob/common.js">
+    var marketRelationsWithSubMap = [];
+    try {
+        marketRelationsWithSubMap = "${commonMap.marketRelationsWithSubMap}".replace(/=/g, "':'").replace(/\{/g, "{'").replace(/, /g, "', '").replace(/\}/g, "'}").replace(/\}', '\{/g, "}, {").replace(/\]', /g, "], ").replace(/':'\[/g, "':[").replace(/\]'\}/g, "]}").replace(/\}\]'/g, "}]").replace(/'/g,'"');
+        marketRelationsWithSubMap = JSON.parse(marketRelationsWithSubMap);
+    } catch (e) {
+        marketRelationsWithSubMap = [];
+    }
+    var selectedRelationsMap = {};
+</dp:script> --%>
 <dp:script type="text/javascript" src="js/prob/renderCascade.js"></dp:script>
 <dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
 <script type="text/javascript">
@@ -90,6 +100,8 @@
 			renderSoftVersions(softVersionJson, {$container: $("#softVersionList")});
 			initProbProductBySelect2("probProducts", $("#probProductList"));
 			initProbSelectBySelect2("relatedSceneTypes", $("#relatedSceneTypeList"));
+			initProbSelectBySelect2("mitigationActionTypes", $("#mitigationActionTypeList"));
+			initProbSelectBySelect2("solutionActionTypes", $("#solutionActionTypeList"));
 		}
 	}
 	//检索版本
@@ -100,7 +112,7 @@
 	//检索设备
 	function checkProject(){
 		probId = $("#probId").val();
-		popWindow('module/sub/checkProject.action?probRestore.probId='+probId+'&firstCheck=true&redirect='+window.location.href, 1300, 650,'设备清单', 'BudgetUpload', true);
+		popWindow('module/sub/checkProject.action?probRestore.probId='+probId+'&firstCheck=true&redirect='+window.location.href, '90vw', 650,'设备清单', 'BudgetUpload', true);
 		return false;
 	}
 	
@@ -209,6 +221,8 @@
 	var softVersionJson = `${prob.affectedVersion}`;
 	var probProductsJson = `${prob.customInfo.probProductList}`;
 	var relatedSceneTypesJson = `${prob.customInfo.relatedSceneTypesJson}`;
+	var mitigationActionTypesJson = `${prob.customInfo.mitigationActionTypesJson}`;
+	var solutionActionTypesJson = `${prob.customInfo.solutionActionTypesJson}`;
 	$(document).ready(function(){
 		renderSoftVersions(softVersionJson, {
 			$container: $("#affectedVersionList"), 
@@ -221,6 +235,18 @@
         renderCommonLabel(relatedSceneTypesJson, {
             $container: $("#affectedRelatedSceneTypeList"),
             labelClass: 'label-info',
+            key: 'id',
+            text: 'text',
+        });
+        renderCommonLabel(mitigationActionTypesJson, {
+            $container: $("#affectedMitigationActionTypeList"),
+            labelClass: 'label-warning',
+            key: 'id',
+            text: 'text',
+        });
+        renderCommonLabel(solutionActionTypesJson, {
+            $container: $("#affectedSolutionActionTypeList"),
+            labelClass: 'label-success',
             key: 'id',
             text: 'text',
         });
@@ -327,7 +353,7 @@
 							<div class="form-group">
 								<label for="num" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.num"></s:text></label>
 								<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-									<s:property value="prob.probNum"/>	
+									<s:property value="prob.probNum"/>
 								</div>
 								<label for="watch" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><span class="redmark">*</span><s:text name="prob.info.watch"></s:text></label>
 								<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -410,10 +436,26 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.related.scene.types"></s:text></label>
                                 <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList" id="affectedRelatedSceneTypeList">
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="mitigationActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.mitigation.action.types"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 mitigationActionTypeList" id="affectedMitigationActionTypeList">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solutionActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.solution.action.types"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 solutionActionTypeList" id="affectedSolutionActionTypeList">
+                                </div>
+                            </div>
+							<div class="form-group">
+								<label for="probTicketNo" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><span class="redmark">*</span><s:text name="prob.info.prob.ticket.no"></s:text></label>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+									<s:property value="prob.probTicketNo"/>
+								</div>
+							</div>
                             <div class="form-group">
                                 <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 form-control-label"><s:text name="prob.info.attachments.down"></s:text></label>
                                 <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
@@ -486,7 +528,30 @@
 									<s:select name="probRestore.restoreStatus" list="restoreStatuList" listKey="basicDataId" listValue="basicDataName"
 										cssClass="form-control" headerKey="" headerValue="--请选择--" ></s:select>		
 								</div>
-								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+                                <%-- <label for="marketCode" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label form-control-label"><s:text name="pm.project.market" /></label>
+                                <div class="col-xs-7 col-sm-7 col-md-7 col-lg-7 display-flex select-group">
+                                    <s:select id="marketCode" name="probRestore.marketCode" data-selected="%{probRestore.marketCode}"
+                                        data-parent-code="" data-child-code="systemCode"
+                                        list="commonMap.marketRelationsWithSubMap" listKey="marketName" listValue="marketName" 
+                                        cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+                                    <s:select id="systemCode" name="probRestore.systemCode" data-selected="%{probRestore.systemCode}"
+                                        data-parent-code="marketCode" data-child-code="expendCode"
+                                        list="#{}" listKey="systemName" listValue="systemName" 
+                                        cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+                                    <s:select id="expendCode" name="probRestore.expendCode" data-selected="%{probRestore.expendCode}"
+                                        data-parent-code="systemCode" data-child-code="industryCode"
+                                        list="#{}" listKey="expendName" listValue="expendName" 
+                                        cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" /> 
+                                    <s:select id="industryCode" name="probRestore.industryCode" data-selected="%{probRestore.industryCode}"
+                                        data-parent-code="expendCode" data-child-code=""
+                                        list="#{}" listKey="industryName" listValue="industryName" 
+                                        cssClass="form-control marketRelation" headerValue="--请选择--" headerKey="" />
+                                </div> --%>
+                                <jsp:include page="./sub/form_fields_project_marketRelation.jsp" />
+                            </div>
+                            <div class="form-group">
+                                <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 "></div>
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 ">
 							   		<button type="submit" id="confirm" class="btn btn-default  btn-block btn-sm"><s:text name='sys.query' /></button>
 						    	</div>	
 					    	<s:if test="user.isHasRole(18)">	
@@ -516,6 +581,10 @@
 								<display:column property="projectName"  media="excel" titleKey="pm.project.projectName" ></display:column>
 								<display:column property="restoreStatusName" titleKey="prob.info.restore.status" sortable="true"></display:column>
 								<display:column property="officeName" titleKey="pm.officearea"></display:column>
+                                <display:column property="marketName" titleKey="pm.presales.marketName"></display:column>
+                                <display:column property="systemName" titleKey="pm.presales.systemName"></display:column>
+                                <display:column property="expendName" titleKey="pm.presales.expendName"></display:column>
+                                <display:column property="industryName" titleKey="pm.presales.industryName"></display:column>
 								<display:column property="createTime" titleKey="prob.info.createTime" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
 								<display:column property="updateTime" titleKey="prob.info.updateTime" format="{0,date,yyyy-MM-dd HH:mm}"></display:column>
 								<display:column property="restoreRemark" titleKey="prob.info.remark"></display:column>
@@ -739,7 +808,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.related.scene.types"></s:text></label>
                                 <div id="relatedSceneTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList">
                                     <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
                                     <s:hidden id="relatedSceneTypesJson_hidden" name="prob.customInfo.relatedSceneTypesJson" ></s:hidden>
@@ -748,6 +817,30 @@
                                     <s:select id="relatedSceneTypes" name="prob.relatedSceneTypes" list="relatedSceneTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="mitigationActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.mitigation.action.types"></s:text></label>
+                                <div id="mitigationActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 mitigationActionTypeList">
+                                    <s:hidden id="mitigationActionTypesJson_hidden" name="prob.customInfo.mitigationActionTypesJson" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypes_hidden" name="prob.customInfo.mitigationActionTypes" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypesName_hidden" name="prob.customInfo.mitigationActionTypesName" ></s:hidden>
+                                    <s:select id="mitigationActionTypes" name="prob.mitigationActionTypes" list="mitigationActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solutionActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.solution.action.types"></s:text></label>
+                                <div id="solutionActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 solutionActionTypeList">
+                                    <s:hidden id="solutionActionTypesJson_hidden" name="prob.customInfo.solutionActionTypesJson" ></s:hidden>
+                                    <s:hidden id="solutionActionTypes_hidden" name="prob.customInfo.solutionActionTypes" ></s:hidden>
+                                    <s:hidden id="solutionActionTypesName_hidden" name="prob.customInfo.solutionActionTypesName" ></s:hidden>
+                                    <s:select id="solutionActionTypes" name="prob.solutionActionTypes" list="solutionActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+							<div class="form-group">
+								<label for="probTicketNo" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.prob.ticket.no"></s:text></label>
+								<div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+									<s:textfield id="probTicketNo" name="prob.probTicketNo" cssClass="form-control" placeholder="若有相关网上问题则填对应问题工单号，若是内部测试发现的问题，则可填对应BUG单号"></s:textfield>
+								</div>
+							</div>
                             <div class="form-group">
                                 <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.attachments"></s:text></label>
                                 <div class="col-xs-4">

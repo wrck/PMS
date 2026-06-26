@@ -108,6 +108,7 @@ const cascadeData = {
     }
   }
 };
+window.cascadeData = cascadeData;
 
 // 工具函数：解析 $ref 路径
 //工具函数：解析 $ref 路径

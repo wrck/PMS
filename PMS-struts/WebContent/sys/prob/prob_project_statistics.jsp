@@ -92,6 +92,8 @@
                 	alert("避免数据量过多，请补充查询参数！");
                 	return false;
                 }
+            } else if (tabIndex == 4) {
+                params = $("#probAffectedProjectSoftForm").serializeArray();
             }
             params = data ? data : params;
             var id = $("#myTab a:eq("+tabIndex+")").attr("href").replace("#","");
@@ -108,6 +110,9 @@
                 		initAutoComplete();
                 	} else if (tabIndex == 3) {
                         drawSuccessHtml(3, data);
+                        initAutoComplete();
+                    } else if (tabIndex == 4) {
+                        drawSuccessHtml(4, data);
                         initAutoComplete();
                     } else {
                 		drawSuccessHtml(0, data);
@@ -137,6 +142,10 @@
         var id = $("#myTab a:eq("+ tempIndex +")").attr("href").replace("#","");
         var prefix = "id=\"" + id + "\">";
         var tempdata = data.substring(data.indexOf(prefix) + prefix.length, data.indexOf("<hr id=\"hr" + tempIndex +"\""));
+        tempdata = $.trim(tempdata);
+        if (!tempdata) {
+        	tempdata = data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>"));
+        }
         $("#" + id).html(tempdata);
     }
     
@@ -259,6 +268,7 @@
                             <li><a href="#report" data-toggle="tab" class="tab-bg-primary"><s:text name='prob.statistic.tab.report' /></a></li>
                             <li><a href="#projectList" data-toggle="tab" class="tab-bg-primary"><s:text name='prob.statistic.tab.project' /></a></li>
                             <li><a href="#shipmentSoftList" data-toggle="tab" class="tab-bg-primary">软件版本记录</a></li>
+                            <li><a href="#probAffectedProjectSoftList" data-toggle="tab" class="tab-bg-primary">受影响软件版本记录</a></li>
                         </ul>
                     </nav>
                     <div class="tab-pane fade" id="statistic">
@@ -483,6 +493,7 @@
                                 </div>
                             </div>
                             <div class="col-xs-1">
+                                <label for="" class="control-label"></label>
                                 <div class="">
                                     <button type="button" id="submit"  class="btn btn-default  btn-block btn-sm" onclick="submitStatistic(3)"><s:text name='sys.query' /></button>
                                 </div>
@@ -515,6 +526,11 @@
                             <display:column property="pcb" titleKey="prob.info.pcb"></display:column>
                         </display:table>
                         <hr id="hr3" style="display:none;">
+                    </div>
+                    <div class="tab-pane fade" id="probAffectedProjectSoftList">
+                        <%-- <jsp:include page="./sub/prob_affectedProjectSoftVersion.jsp"></jsp:include> --%>
+                        <%@include file="./sub/prob_affectedProjectSoftVersion.jsp" %>
+                        <hr id="hr4" style="display:none;">
                     </div>
                 </div>
             </div>

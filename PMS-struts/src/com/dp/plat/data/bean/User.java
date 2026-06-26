@@ -45,6 +45,11 @@ public class User extends CustomInfoEntity {
             String roles = getRoleids();
             if(roles.indexOf(role) != -1){
                 return true;
+            } else if (roleId instanceof String) {
+                boolean hasAnyRole = this.isHasAnyRole((String) roleId);
+                if (hasAnyRole) {
+                    return true;
+                }
             }
         }
         return false;

@@ -65,6 +65,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectSoftVersion;
 import com.dp.plat.data.bean.ProjectTask;
 import com.dp.plat.data.bean.ProjectWeekly;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -77,6 +78,8 @@ import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
 import com.dp.plat.param.DisplayParam;
 import com.dp.plat.param.Person;
 import com.dp.plat.param.RealProductLineBean;
+import com.dp.plat.prob.util.SoftVersionUtil;
+import com.dp.plat.prob.version.SoftVersionParser;
 import com.dp.plat.supervision.entity.ProjectSupervision;
 import com.dp.plat.supervision.vo.ProjectSupervisionVO;
 import com.dp.plat.util.ActivityMessage;
@@ -2790,8 +2793,28 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	public int queryRealOrderDataSizeByProjectId(int projectId) {
 		return projectDao.queryRealOrderDataSizeByProjectId(projectId);
 	}
+	
+	@Override
+    public List<?> queryProjectLeaseLineByProjectCode(String smsProjectCode) {
+        return projectDao.queryProjectLeaseLineByProjectCode(smsProjectCode);
+    }
+	
+	@Override
+    public int queryProjectLeaseLineSizeByProjectCode(String smsProjectCode) {
+        return projectDao.queryProjectLeaseLineSizeByProjectCode(smsProjectCode);
+    }
+	
+	@Override
+    public List<?> queryProjectProductConfigLevelInfoByProjectCode(String smsProjectCode) {
+        return projectDao.queryProjectProductConfigLevelInfoByProjectCode(smsProjectCode);
+    }
+    
+    @Override
+    public int queryProjectProductConfigLevelInfoSizeByProjectCode(String smsProjectCode) {
+        return projectDao.queryProjectProductConfigLevelInfoSizeByProjectCode(smsProjectCode);
+    }
 
-	/**
+    /**
 	 * 确认不予跟踪时，根据项目project，终止正在进行的审批流程
 	 * 
 	 * @param project
@@ -2814,28 +2837,48 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 	}
 
 	@Override
-	public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId) {
+	public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId) {
 		return projectDao.querySoftversionList(contractNo, projectId);
 	}
 	
 	@Override
-    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter) {
+    public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, String profitCenter) {
         return projectDao.querySoftversionList(contractNo, projectId, profitCenter);
     }
 	
 	@Override
-    public List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
+    public List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, Map<String, Object> params) {
 	    return projectDao.querySoftversionList(contractNo, projectId, params);
     }
+	
+	@Override
+    public List<ProjectSoftVersion> selectProjectSoftVersionList(ProjectSoftVersion projectSoftVersion, DisplayParam displayParam) {
+        return projectDao.selectProjectSoftVersionList(projectSoftVersion, displayParam);
+    }
 
-    @Override
-	public void updateSoftversion(List<ShipmentInfo> softversionList, SoftChangeLog softChangeLog) {
+    public void updateSoftversion(List<? extends ShipmentInfo> softversionList, SoftChangeLog softChangeLog) {
 		int sameCount = 0;
-		for (Iterator<ShipmentInfo> iterator = softversionList.iterator(); iterator.hasNext();) {
+		for (Iterator<? extends ShipmentInfo> iterator = softversionList.iterator(); iterator.hasNext();) {
 			ShipmentInfo shipmentInfo = (ShipmentInfo) iterator.next();
+			shipmentInfo.setItemCode(StringUtils.defaultIfBlank(StringUtils.trimToEmpty(shipmentInfo.getItemCode()), StringUtils.left(shipmentInfo.getBarCode(), 8)));
+			shipmentInfo.setConpType("");
+			shipmentInfo.setConpSeries("");
+			shipmentInfo.setConpMark("");
+			if (StringUtils.isNotBlank(shipmentInfo.getConp())) {
+			    List<SoftVersionParser> parserList = SoftVersionUtil.createSoftVersionParser(shipmentInfo.getConp());
+			    if (parserList == null || parserList.isEmpty()) {
+			        continue;
+			    }
+			    SoftVersionParser versionParser = parserList.get(0);
+			    shipmentInfo.setConpType(versionParser.getType());
+	            shipmentInfo.setConpSeries(versionParser.getSeries());
+			    shipmentInfo.setConpMark(versionParser.getMark());
+			    shipmentInfo.setCustomInfoByKey("parser", parserList);
+			}
 			if (shipmentInfo.getConpChange() + shipmentInfo.getBootChange()+shipmentInfo.getCpldChange()+shipmentInfo.getPcbChange() == 0) {
 				//iterator.remove();
 				sameCount++;
+				continue;
 			}
 		}
 		if (softversionList != null && softversionList.size() > 0 && sameCount != softversionList.size()) {
@@ -2862,14 +2905,14 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 			projectDao.insertSoftVersionList(softversionList, logId);
 		}
 	}
-
+    
 	@Override
 	public List<SoftChangeLog> queryHistSoftChangeLog(int projectId) {
 		return projectDao.queryHistSoftChangeLog(projectId);
 	}
 
 	@Override
-	public List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog) {
+	public List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog) {
 		if (softChangeLog.getId() == -1) {// 查询出厂版本
 			Project project = projectDao.queryProjectById(softChangeLog.getProjectId());
 
@@ -3827,7 +3870,12 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
     public List<Map<String, Object>> selectProblemTicket(Map<String, Object> params) {
         return projectDao.selectProblemTicket(params);
     }
-    
+
+    @Override
+    public List<Map<String, Object>> selectLicenseInfo(Map<String, Object> params) {
+        return projectDao.selectLicenseInfo(params);
+    }
+
     @Override
     public List<Map<String, Object>> selectProblemTicketByProject(Project project) {
         if (project == null) {

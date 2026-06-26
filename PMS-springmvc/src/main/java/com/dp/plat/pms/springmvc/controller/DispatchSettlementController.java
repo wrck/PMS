@@ -356,7 +356,6 @@ public class DispatchSettlementController
 			} else {
 				dispatch = dispatchProjectService.selectByPrimaryKey(settlement.getDispatchId());
 			}
-				
 			temp.setDispatch(dispatch);
 			model.addAttribute("settlementVO", temp);
 			

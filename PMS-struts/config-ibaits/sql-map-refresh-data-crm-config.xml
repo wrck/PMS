@@ -425,4 +425,105 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
             )
         </iterate>
     </insert>
+    
+    <!-- CRM 产品信息 -->
+    <select id="selectProductInfoFromCRM" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT * FROM DPtech_v_product_info
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="orgId"> orgId = #orgId#</isNotEmpty>
+        </dynamic>
+    </select>
+    <delete id="deleteProductInfoFromCRM" >
+        <![CDATA[
+            DELETE FROM pm_product_info_from_crm
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insertProductInfoFromCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_product_info_from_crm(itemCode, productCode, productSubCode, itemModel
+                , itemDesc, remark, status, BU, productLine, orgId, createTime, updateTime
+                , statecode, statuscode, productStage
+                , endOfSaleDate, endOfSupportDate, endOfLifeDate, lastRenewalDate
+                , dataSource
+            )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+                #list[].itemCode#, #list[].productCode#, #list[].productSubCode#, #list[].itemModel#
+	            , #list[].itemDesc#, #list[].remark#, #list[].status#, #list[].BU#, #list[].productLine#, #list[].orgId#, #list[].createTime#, #list[].updateTime#
+	            , #list[].statecode#, #list[].statuscode#, #list[].productStage#
+	            , #list[].endOfSaleDate#, #list[].endOfSupportDate#, #list[].endOfLifeDate#, #list[].lastRenewalDate#
+	            , #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    
+    <!-- CRM 项目租赁配置信息 -->
+    <select id="selectProjectLeaseLineFromCRM" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT * FROM DPtech_v_order_ack_lease_line_4_pms
+        ]]>
+    </select>
+    <delete id="deleteProjectLeaseLineFromCRM" >
+        <![CDATA[
+            DELETE FROM pm_project_product_lease_line_from_crm
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insertProjectLeaseLineFromCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_project_product_lease_line_from_crm(
+                projectCode ,orderExecNumber, productFirstName, productName, 
+                productSubCode ,productSubModel, productSubName, num, memo, leaseDuration
+                , dataSource
+            )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+             #list[].projectCode# ,#list[].orderExecNumber#,#list[].productfirstName# ,#list[].productName# ,#list[].productsubCode# ,#list[].productSubModel# ,#list[].productSubName# ,
+             #list[].num# ,#list[].memo#, #list[].leaseDuration#, #sourceDbName#
+            )
+        </iterate>
+    </insert>
+    
+    <!-- CRM 项目租赁配置信息 -->
+    <select id="selectProjectProductConfigLevelInfoFromCRM" resultClass="java.util.HashMap">
+        <![CDATA[
+            SELECT * FROM DPtech_v_project_product_config_level_info
+        ]]>
+    </select>
+    <delete id="deleteProjectProductConfigLevelInfoFromCRM" >
+        <![CDATA[
+            DELETE FROM pm_project_product_config_level_info_from_crm
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="AND" property="sourceDbName"> dataSource = #sourceDbName#</isNotEmpty>
+        </dynamic>
+    </delete>
+    <insert id="insertProjectProductConfigLevelInfoFromCRM" parameterClass="java.util.Map">
+        <![CDATA[
+            INSERT INTO pm_project_product_config_level_info_from_crm(
+                projectCode,orderExecNumber,itemGroup,parentCode,itemCode
+                ,quantity,itemModel,itemDesc,bomPaths,level
+                ,dataSource
+            )
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            (
+             #list[].projectCode#, #list[].orderExecNumber#, #list[].itemGroup#, #list[].parentCode#, #list[].itemCode#
+             , #list[].quantity#, #list[].itemModel#, #list[].itemDesc#, #list[].bomPaths#, #list[].level#
+             , #sourceDbName#
+            )
+        </iterate>
+    </insert>
 </sqlMap>

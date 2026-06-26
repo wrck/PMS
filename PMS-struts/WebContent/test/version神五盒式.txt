@@ -1,0 +1,22 @@
+<DPTECH>show version 
+ Software Release S211C012D105
+ Conplat Version is V100R005B01D105
+ Compiled Wed, 26 Nov 2025 11:44:20 +0800
+ Copyright (c) 2008-2025 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DAC-S Uptime is 1 week(s), 6 day(s),  7 hour(s), 43 minute(s)
+
+ CPU type:       Netlogic XLP316 Rev B2
+
+ SDRAM:          4096M bytes
+ Flash Memory:   4M bytes
+ CF card Memory: 2048M bytes
+
+ PCB Version:            D         
+ CPLD Version:           2.02      
+ BASIC CONBOOT Version:  4.10.20   
+ EXTEND CONBOOT Version: 4.10.20   
+ Serial Number:          02050513D178000005
+ [SLOT  0]  DP1GAEM         (PCB)D,   (CPLD)2.02,   (FPGA)NONE
+<DPTECH>

@@ -1,0 +1,18 @@
+<DPTECH>show ver
+ Software Release H6C7.1.156
+ Conplat Version is V100R007B01D156
+ Compiled Thu, 08 Jan 2026 00:27:02 +0800
+ Copyright(c) 2008-2026 Hangzhou DPtech Technologies Co. , Ltd. All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ FW1000-BLade-8KXA Uptime is 0 week(s), 2 day(s), 20 hour(s), 58 minute(s)
+
+ CPU type:       Intel(R) Atom(TM) CPU C3758 @ 2.20GHz
+ Flash Memory:   16M 
+ EMMC card Memory: 4G 
+
+ PCB Version:            D         
+ CPLD Version:           5.00      
+ BASIC CONBOOT Version:  17.08.10  
+ EXTEND CONBOOT Version: 17.08.10  
+<DPTECH> 

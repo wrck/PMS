@@ -1,0 +1,191 @@
+[
+  {
+    "CONSTRAINT_NAME": "ACT_FK_BYTEARR_DEPL",
+    "TABLE_NAME": "act_ge_bytearray",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_deployment",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_MEMB_GROUP",
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "GROUP_ID_",
+    "REFERENCED_TABLE_NAME": "act_id_group",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_MEMB_USER",
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "USER_ID_",
+    "REFERENCED_TABLE_NAME": "act_id_user",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_INFO_JSON_BA",
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "INFO_JSON_ID_",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_INFO_PROCDEF",
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_DEPLOYMENT",
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_deployment",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_SOURCE",
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "EDITOR_SOURCE_VALUE_ID_",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_SOURCE_EXTRA",
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "EDITOR_SOURCE_EXTRA_VALUE_ID_",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_EVENT_EXEC",
+    "TABLE_NAME": "act_ru_event_subscr",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PARENT",
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PARENT_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PROCDEF",
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PROCINST",
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_EXE_SUPER",
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "SUPER_EXEC_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_ATHRZ_PROCEDEF",
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_IDL_PROCINST",
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_TSKASS_TASK",
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "TASK_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_task",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_JOB_EXCEPTION",
+    "TABLE_NAME": "act_ru_job",
+    "COLUMN_NAME": "EXCEPTION_STACK_ID_",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_TASK_EXE",
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_TASK_PROCDEF",
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_TASK_PROCINST",
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_VAR_BYTEARRAY",
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "BYTEARRAY_ID_",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_VAR_EXE",
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "ACT_FK_VAR_PROCINST",
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "CONSTRAINT_NAME": "pm_presales_project_duration_ibfk_1",
+    "TABLE_NAME": "pm_presales_project_duration",
+    "COLUMN_NAME": "presalesId",
+    "REFERENCED_TABLE_NAME": "pm_presales_project_header",
+    "REFERENCED_COLUMN_NAME": "presalesId"
+  },
+  {
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "user_id",
+    "REFERENCED_TABLE_NAME": "t_user",
+    "REFERENCED_COLUMN_NAME": "user_id"
+  },
+  {
+    "CONSTRAINT_NAME": "t_user_role_ibfk_1",
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "user_id",
+    "REFERENCED_TABLE_NAME": "t_user",
+    "REFERENCED_COLUMN_NAME": "user_id"
+  },
+  {
+    "CONSTRAINT_NAME": "t_user_role_ibfk_2",
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "role_id",
+    "REFERENCED_TABLE_NAME": "t_role",
+    "REFERENCED_COLUMN_NAME": "role_id"
+  }
+]

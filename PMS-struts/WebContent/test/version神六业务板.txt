@@ -1,0 +1,19 @@
+<DPTECH>show version 
+ Software Release S311C013D091P02
+ Conplat Version is V100R006B01D091P02
+ Compiled Tue, 06 Jan 2026 16:31:12 +0800
+ Copyright(c) 2008-2026 Hangzhou DPtech Technologies Co. , Ltd. All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DAC-Blade-H Uptime is 1 week(s), 5 day(s),  2 hour(s), 21 minute(s)
+
+ CPU type:       Intel(R) Xeon(R) D-2177
+ Flash Memory:   4M bytes
+ CF card Memory: 7168M bytes
+ Harddisk:           7168M bytes
+
+ PCB Version:            B         
+ CPLD Version:           3.00      
+ BASIC CONBOOT Version:  21.03.02  
+ EXTEND CONBOOT Version: 21.03.02  
+<DPTECH>

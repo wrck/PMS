@@ -228,6 +228,7 @@ public class ProbManageServiceImpl extends BaseServiceImpl implements ProbManage
 	@Transactional
 	public void updateProbSoftVersion(List<SoftVersion> softVersionList, int probId) {
 		if (softVersionList != null && softVersionList.size() > 0) {
+		    softVersionList.removeAll(Collections.singletonList(null));
 			// 失效原有版本信息
 			probManageDao.updateInvalidSoftVersion(probId);
 			// 新增版本

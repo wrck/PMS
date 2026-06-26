@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd"> 
+<sqlMap>
+  <resultMap id="UnifyTaskMap" class="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="taskId" jdbcType="VARCHAR" property="taskId" />
+    <result column="originTaskId" jdbcType="VARCHAR" property="originTaskId" />
+    <result column="procInstId" jdbcType="VARCHAR" property="procInstId" />
+    <result column="processKey" jdbcType="VARCHAR" property="processKey" />
+    <result column="taskKey" jdbcType="VARCHAR" property="taskKey" />
+    <result column="taskName" jdbcType="VARCHAR" property="taskName" />
+    <result column="eventType" jdbcType="VARCHAR" property="eventType" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="assignee" jdbcType="VARCHAR" property="assignee" />
+    <result column="formUrl" jdbcType="VARCHAR" property="formUrl" />
+    <result column="beginTime" jdbcType="TIMESTAMP" property="beginTime" />
+    <result column="endTime" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="dueTime" jdbcType="TIMESTAMP" property="dueTime" />
+    <result column="state" jdbcType="VARCHAR" property="state" />
+    <result column="subState" jdbcType="VARCHAR" property="subState" />
+    <result column="success" jdbcType="BIT" property="success" />
+    <result column="message" jdbcType="VARCHAR" property="message" />
+    <result column="latest" jdbcType="BIT" property="latest" />
+    <result column="pushSender" jdbcType="VARCHAR" property="pushSender" />
+    <result column="pushData" jdbcType="VARCHAR" property="pushData" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, taskId, originTaskId, procInstId, processKey, taskKey, taskName, eventType, title, 
+    assignee, formUrl, beginTime, endTime, dueTime, success, message, latest, pushSender, 
+    pushData, createBy, createTime, updateBy, updateTime, state, subState
+  </sql>
+  <select id="selectUnifyTaskByPrimaryKey" parameterClass="java.lang.Integer" resultMap="UnifyTaskMap">
+    select 
+    <include refid="Base_Column_List" />
+    from dp_act_unify_task
+    where id = #id#
+  </select>
+  <delete id="deleteUnifyTaskByPrimaryKey" parameterClass="java.lang.Integer">
+    delete from dp_act_unify_task
+    where id = #id#
+  </delete>
+  <insert id="insertUnifyTask" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_act_unify_task (taskId, originTaskId, procInstId, 
+      processKey, taskKey, taskName, 
+      eventType, title, assignee, 
+      formUrl, beginTime, endTime, 
+      dueTime, success, message, 
+      latest, pushSender, pushData, 
+      createBy, createTime, updateBy, 
+      updateTime, state, subState)
+    values (#taskId#, #originTaskId#, #procInstId#, 
+      #processKey#, #taskKey#, #taskName#, 
+      #eventType#, #title#, #assignee#, 
+      #formUrl#, #beginTime#, #endTime#, 
+      #dueTime#, #success#, #message#, 
+      #latest#, #pushSender#, #pushData#, 
+      #createBy#, #createTime#, #updateBy#, 
+      #updateTime#, #state#, #subState#)
+  </insert>
+  <insert id="insertUnifyTaskSelective" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    <selectKey keyProperty="id" type="post" resultClass="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_act_unify_task
+    <dynamic open="(" close=")" prepend=" ">
+      <isNotNull prepend="," property="taskId"> taskId </isNotNull>
+      <isNotNull prepend="," property="originTaskId"> originTaskId </isNotNull>
+      <isNotNull prepend="," property="procInstId"> procInstId </isNotNull>
+      <isNotNull prepend="," property="processKey"> processKey </isNotNull>
+      <isNotNull prepend="," property="taskKey"> taskKey </isNotNull>
+      <isNotNull prepend="," property="taskName"> taskName </isNotNull>
+      <isNotNull prepend="," property="eventType"> eventType </isNotNull>
+      <isNotNull prepend="," property="title"> title </isNotNull>
+      <isNotNull prepend="," property="assignee"> assignee </isNotNull>
+      <isNotNull prepend="," property="formUrl"> formUrl </isNotNull>
+      <isNotNull prepend="," property="beginTime"> beginTime </isNotNull>
+      <isNotNull prepend="," property="endTime"> endTime </isNotNull>
+      <isNotNull prepend="," property="dueTime"> dueTime </isNotNull>
+      <isNotNull prepend="," property="state"> state </isNotNull>
+      <isNotNull prepend="," property="subState"> subState </isNotNull>
+      <isNotNull prepend="," property="success"> success </isNotNull>
+      <isNotNull prepend="," property="message"> message </isNotNull>
+      <isNotNull prepend="," property="latest"> latest </isNotNull>
+      <isNotNull prepend="," property="pushSender"> pushSender </isNotNull>
+      <isNotNull prepend="," property="pushData"> pushData </isNotNull>
+      <isNotNull prepend="," property="createBy"> createBy </isNotNull>
+      <isNotNull prepend="," property="createTime"> createTime </isNotNull>
+      <isNotNull prepend="," property="updateBy"> updateBy </isNotNull>
+      <isNotNull prepend="," property="updateTime"> updateTime </isNotNull>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <isNotNull prepend="," property="taskId"> #taskId# </isNotNull>
+      <isNotNull prepend="," property="originTaskId"> #originTaskId# </isNotNull>
+      <isNotNull prepend="," property="procInstId"> #procInstId# </isNotNull>
+      <isNotNull prepend="," property="processKey"> #processKey# </isNotNull>
+      <isNotNull prepend="," property="taskKey"> #taskKey# </isNotNull>
+      <isNotNull prepend="," property="taskName"> #taskName# </isNotNull>
+      <isNotNull prepend="," property="eventType"> #eventType# </isNotNull>
+      <isNotNull prepend="," property="title"> #title# </isNotNull>
+      <isNotNull prepend="," property="assignee"> #assignee# </isNotNull>
+      <isNotNull prepend="," property="formUrl"> #formUrl# </isNotNull>
+      <isNotNull prepend="," property="beginTime"> #beginTime# </isNotNull>
+      <isNotNull prepend="," property="endTime"> #endTime# </isNotNull>
+      <isNotNull prepend="," property="dueTime"> #dueTime# </isNotNull>
+      <isNotNull prepend="," property="state"> #state# </isNotNull>
+      <isNotNull prepend="," property="subState"> #subState# </isNotNull>
+      <isNotNull prepend="," property="success"> #success# </isNotNull>
+      <isNotNull prepend="," property="message"> #message# </isNotNull>
+      <isNotNull prepend="," property="latest"> #latest# </isNotNull>
+      <isNotNull prepend="," property="pushSender"> #pushSender# </isNotNull>
+      <isNotNull prepend="," property="pushData"> #pushData# </isNotNull>
+      <isNotNull prepend="," property="createBy"> #createBy# </isNotNull>
+      <isNotNull prepend="," property="createTime"> #createTime# </isNotNull>
+      <isNotNull prepend="," property="updateBy"> #updateBy# </isNotNull>
+      <isNotNull prepend="," property="updateTime"> #updateTime# </isNotNull>
+    </dynamic>
+  </insert>
+  <update id="updateUnifyTaskByPrimaryKeySelective" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    update dp_act_unify_task
+    <dynamic prepend="set">
+      <isNotNull prepend="," property="taskId"> taskId = #taskId# </isNotNull>
+      <isNotNull prepend="," property="originTaskId"> originTaskId = #originTaskId# </isNotNull>
+      <isNotNull prepend="," property="procInstId"> procInstId = #procInstId# </isNotNull>
+      <isNotNull prepend="," property="processKey"> processKey = #processKey# </isNotNull>
+      <isNotNull prepend="," property="taskKey"> taskKey = #taskKey# </isNotNull>
+      <isNotNull prepend="," property="taskName"> taskName = #taskName# </isNotNull>
+      <isNotNull prepend="," property="eventType"> eventType = #eventType# </isNotNull>
+      <isNotNull prepend="," property="title"> title = #title# </isNotNull>
+      <isNotNull prepend="," property="assignee"> assignee = #assignee# </isNotNull>
+      <isNotNull prepend="," property="formUrl"> formUrl = #formUrl# </isNotNull>
+      <isNotNull prepend="," property="beginTime"> beginTime = #beginTime# </isNotNull>
+      <isNotNull prepend="," property="endTime"> endTime = #endTime# </isNotNull>
+      <isNotNull prepend="," property="dueTime"> dueTime = #dueTime# </isNotNull>
+      <isNotNull prepend="," property="state"> state = #state# </isNotNull>
+      <isNotNull prepend="," property="subState"> subState = #subState# </isNotNull>
+      <isNotNull prepend="," property="success"> success = #success# </isNotNull>
+      <isNotNull prepend="," property="message"> message = #message# </isNotNull>
+      <isNotNull prepend="," property="latest"> latest = #latest# </isNotNull>
+      <isNotNull prepend="," property="pushSender"> pushSender = #pushSender# </isNotNull>
+      <isNotNull prepend="," property="pushData"> pushData = #pushData# </isNotNull>
+      <isNotNull prepend="," property="createBy"> createBy = #createBy# </isNotNull>
+      <isNotNull prepend="," property="createTime"> createTime = #createTime# </isNotNull>
+      <isNotNull prepend="," property="updateBy"> updateBy = #updateBy# </isNotNull>
+      <isNotNull prepend="," property="updateTime"> updateTime = #updateTime# </isNotNull>
+    </dynamic>
+    where id = #id#
+  </update>
+  <update id="updateUnifyTaskByPrimaryKey" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    update dp_act_unify_task
+    set taskId = #taskId#,
+      originTaskId = #originTaskId#,
+      procInstId = #procInstId#,
+      processKey = #processKey#,
+      taskKey = #taskKey#,
+      taskName = #taskName#,
+      eventType = #eventType#,
+      title = #title#,
+      assignee = #assignee#,
+      formUrl = #formUrl#,
+      beginTime = #beginTime#,
+      endTime = #endTime#,
+      dueTime = #dueTime#,
+      state = #state#,
+      subState = #subState#,
+      success = #success#,
+      message = #message#,
+      latest = #latest#,
+      pushSender = #pushSender#,
+      pushData = #pushData#,
+      createBy = #createBy#,
+      createTime = #createTime#,
+      updateBy = #updateBy#,
+      updateTime = #updateTime#
+    where id = #id#
+  </update>
+  <sql id="sql_where_selective">
+    <isNotEmpty prepend="AND" property="id"> a.id = #id# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskId"> a.taskId = #taskId# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="originTaskId"> a.originTaskId = #originTaskId# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="procInstId"> a.procInstId = #procInstId# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="processKey"> a.processKey = #processKey# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskKey"> a.taskKey = #taskKey# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskName"> a.taskName = #taskName# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="eventType"> a.eventType = #eventType# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="title"> a.title = #title# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="assignee"> a.assignee = #assignee# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="formUrl"> a.formUrl = #formUrl# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="beginTime"> a.beginTime = #beginTime# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="endTime"> a.endTime = #endTime# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="dueTime"> a.dueTime = #dueTime# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="state"> a.state = #state# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="subState"> a.subState = #subState# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="success"> a.success = #success# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="message"> a.message = #message# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="latest"> a.latest = #latest# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="pushSender"> a.pushSender = #pushSender# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="pushData"> a.pushData = #pushData# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="createBy"> a.createBy = #createBy# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime"> a.createTime = #createTime# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="updateBy"> a.updateBy = #updateBy# </isNotEmpty>
+	<isNotEmpty prepend="AND" property="updateTime"> a.updateTime = #updateTime# </isNotEmpty>
+  </sql>
+  <sql id="sql_where">
+    <dynamic prepend="where">
+    	<include refid="sql_where_selective" />
+	</dynamic>
+  </sql>
+  <sql id="sql_model_where">
+    <dynamic prepend="where">
+    	<include refid="sql_model_where_selective" />
+	</dynamic>
+  </sql>
+  <select id="selectUnifyTaskBySelective" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask" resultMap="UnifyTaskMap">
+    select * from dp_act_unify_task AS `a`
+	<dynamic prepend="where">
+		<include refid="sql_where_selective" />
+	</dynamic>
+  </select>
+  <select id="countUnifyTaskBySelective" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask" resultClass="long">
+    select count(1) from dp_act_unify_task AS `a`
+	<dynamic prepend="where">
+		<include refid="sql_where_selective" />
+	</dynamic>
+  </select>
+  
+  
+  <update id="updateUnifyTaskBySelective" parameterClass="com.dp.plat.activiti.unifytask.entity.UnifyTask">
+    update dp_act_unify_task a
+    <dynamic prepend="set">
+      <isNotNull prepend="," property="taskId"> taskId = #taskId# </isNotNull>
+      <isNotNull prepend="," property="originTaskId"> originTaskId = #originTaskId# </isNotNull>
+      <isNotNull prepend="," property="procInstId"> procInstId = #procInstId# </isNotNull>
+      <isNotNull prepend="," property="processKey"> processKey = #processKey# </isNotNull>
+      <isNotNull prepend="," property="taskKey"> taskKey = #taskKey# </isNotNull>
+      <isNotNull prepend="," property="taskName"> taskName = #taskName# </isNotNull>
+      <isNotNull prepend="," property="eventType"> eventType = #eventType# </isNotNull>
+      <isNotNull prepend="," property="title"> title = #title# </isNotNull>
+      <isNotNull prepend="," property="assignee"> assignee = #assignee# </isNotNull>
+      <isNotNull prepend="," property="formUrl"> formUrl = #formUrl# </isNotNull>
+      <isNotNull prepend="," property="beginTime"> beginTime = #beginTime# </isNotNull>
+      <isNotNull prepend="," property="endTime"> endTime = #endTime# </isNotNull>
+      <isNotNull prepend="," property="dueTime"> dueTime = #dueTime# </isNotNull>
+      <isNotNull prepend="," property="state"> state = #state# </isNotNull>
+      <isNotNull prepend="," property="subState"> subState = #subState# </isNotNull>
+      <isNotNull prepend="," property="pushData"> pushData = #pushData# </isNotNull>
+      <isNotNull prepend="," property="success"> success = #success# </isNotNull>
+      <isNotNull prepend="," property="message"> message = #message# </isNotNull>
+      <isNotNull prepend="," property="latest"> latest = #latest# </isNotNull>
+      <isNotNull prepend="," property="updateBy"> updateBy = #updateBy# </isNotNull>
+      <isNotNull prepend="," property="updateTime"> updateTime = #updateTime# </isNotNull>
+    </dynamic>
+    <dynamic prepend="where">
+   		a.latest = true AND
+   		<isNotEmpty prepend="AND" property="id"> a.id = #id# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskId"> a.taskId = #taskId# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="originTaskId"> a.originTaskId = #originTaskId# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="procInstId"> a.procInstId = #procInstId# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="processKey"> a.processKey = #processKey# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskKey"> a.taskKey = #taskKey# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="eventType"> a.eventType = #eventType# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="assignee"> a.assignee = #assignee# </isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime"> <![CDATA[ a.createTime < #createTime# ]]> </isNotEmpty>
+    </dynamic>
+  </update>
+</sqlMap>

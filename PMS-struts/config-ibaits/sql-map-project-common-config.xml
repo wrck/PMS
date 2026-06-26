@@ -156,4 +156,22 @@
             </isNotEmpty>
         </dynamic>
     </sql>
+    
+    <!-- 查询语句的子查询，关联外部表pm_project_soft_version sv -->
+    <sql id="sqlSubSelectProjectSoftVersionAffectedProbs">
+        <![CDATA[
+		SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT('probId', pm.id, 'theme', pm.theme, 'probNum', pm.probNum)), JSON_ARRAY()) AS affectedProbs
+		FROM prob_softwares sw
+		    INNER JOIN prob_main pm ON pm.id = sw.probId
+		    INNER JOIN prob_product pp ON pp.probId = sw.probId AND pp.status = 1
+		WHERE sv.datastate = sw.datastate
+		    AND sv.conpType <=> sw.entryType
+		    AND sv.conpSeries <=> sw.entrySeries
+		    AND sv.conpMark BETWEEN sw.markStart AND sw.markEnd
+		    AND sv.itemCode = pp.itemCode
+	    ]]>
+	    <isNotEmpty prepend="AND" property="probStatusList">
+            pm.status in <iterate open="(" close=")" conjunction="," property="probStatusList"> #probStatusList[]# </iterate>
+        </isNotEmpty>
+    </sql>
 </sqlMap>

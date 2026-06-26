@@ -29,6 +29,10 @@
         }); */
         
         showNextCallbackTips();
+        
+        $("button:not([type]),button[type='submit']").click(function() {
+            $(this).bootstrapBtn("loading");
+        })
     });
     function updateProject(obj){
         window.open("${namespace}/ProjectModify.action?project.paramId="+obj + "&result=315");
@@ -186,6 +190,12 @@
             <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="industryName"><s:text name="pm.project.maintenance.industryName" /></label>
             <s:textfield name="projectWarrantyCallback.industryName" id="industryName"
+                placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="salerSearch"><s:text name="销售人员" /></label>
+            <s:textfield name="projectWarrantyCallback.salerSearch" id="salerSearch"
                 placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
         </div>
         <div class="form-group form-group-query form-group-width-1">

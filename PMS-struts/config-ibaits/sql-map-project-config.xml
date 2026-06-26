@@ -2283,7 +2283,7 @@
         ) t
     </select>
     
-    <resultMap class="com.dp.plat.data.bean.ShipmentInfo" id="softversion">
+    <resultMap class="com.dp.plat.data.bean.ProjectSoftVersion" id="softversion">
         <result property="contractNo" column="contractNo"/>
         <result property="barCode" column="barCode"/>
         <result property="itemCode" column="itemCode"/>
@@ -2303,6 +2303,7 @@
         <result property="pcb" column="pcb"/>
         <result property="pcbBak" column="pcbBak"/>
         <result property="pcbChange" column="pcbChange" nullValue="0"/>
+        <result property="affectedProbsJson" column="affectedProbs"/>
     </resultMap>
     <select id="query_soft_version_list" parameterClass="java.util.Map" resultMap="softversion">
         <!-- <![CDATA[
@@ -2330,15 +2331,19 @@
             
         ]]> -->
         SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName,  
-            CASE WHEN t3.conp IS NULL THEN t.`conp` ELSE t3.conp END AS conp,t3.conpBak,t3.conpChange,
-            CASE WHEN t3.boot IS NULL THEN t.`boot` ELSE t3.boot END AS boot,t3.bootBak ,t3.bootChange, 
-            CASE WHEN t3.cpld IS NULL THEN t.`cpld` ELSE t3.cpld END AS cpld,t3.cpldBak , t3.cpldChange,   
-            CASE WHEN t3.pcb IS NULL THEN t.`pcb` ELSE t3.pcb END AS pcb ,t3.pcbBak ,t3.pcbChange,
+            CASE WHEN sv.conp IS NULL THEN t.`conp` ELSE sv.conp END AS conp,sv.conpBak,sv.conpChange,
+            CASE WHEN sv.boot IS NULL THEN t.`boot` ELSE sv.boot END AS boot,sv.bootBak ,sv.bootChange, 
+            CASE WHEN sv.cpld IS NULL THEN t.`cpld` ELSE sv.cpld END AS cpld,sv.cpldBak , sv.cpldChange,   
+            CASE WHEN sv.pcb IS NULL THEN t.`pcb` ELSE sv.pcb END AS pcb ,sv.pcbBak ,sv.pcbChange,
             vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemName2 itemName2
+        <isEqual property="queryAffectedProbs" compareValue="true" prepend="," >
+            (<include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>) AS affectedProbs
+        </isEqual>
+        <isNotEqual property="queryAffectedProbs" compareValue="true" prepend="," > NULL AS affectedProbs </isNotEqual> 
         FROM view_shipment_info_4_pm vsip   
             LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId    
             LEFT JOIN fb_soft_version t ON vsip.`barcode` = t.`serial_number`    
-            LEFT JOIN pm_project_soft_version t3 ON vsip.`barcode` = t3.`barcode` AND t3.`datastate` = 1   
+            LEFT JOIN pm_project_soft_version sv ON vsip.`barcode` = sv.`barcode` AND sv.`datastate` = 1   
         <isNotEmpty property="itemFilters">
             LEFT JOIN fb_items fi ON fi.item = vsip.itemCode
         </isNotEmpty>
@@ -2351,20 +2356,33 @@
         </isNotEmpty>
         UNION ALL     
         SELECT DISTINCT t1.`contractNo`,t1.`barcode`,t1.`itemCode`,t1.`itemName`,    
-            CASE WHEN t4.conp IS NULL THEN t2.`conp` ELSE t4.conp END AS conp,  t4.conpBak ,t4.conpChange,
-            CASE WHEN t4.boot IS NULL THEN t2.`boot` ELSE t4.boot END AS boot,   t4.bootBak ,t4.bootChange,
-            CASE WHEN t4.cpld IS NULL THEN t2.`cpld` ELSE t4.cpld END AS cpld,   t4.cpldBak , t4.cpldChange,
-            CASE WHEN t4.pcb IS NULL THEN t2.`pcb` ELSE t4.pcb END AS pcb   , t4.pcbBak ,t4.pcbChange,
+            CASE WHEN sv.conp IS NULL THEN t2.`conp` ELSE sv.conp END AS conp,  sv.conpBak ,sv.conpChange,
+            CASE WHEN sv.boot IS NULL THEN t2.`boot` ELSE sv.boot END AS boot,   sv.bootBak ,sv.bootChange,
+            CASE WHEN sv.cpld IS NULL THEN t2.`cpld` ELSE sv.cpld END AS cpld,   sv.cpldBak , sv.cpldChange,
+            CASE WHEN sv.pcb IS NULL THEN t2.`pcb` ELSE sv.pcb END AS pcb   , sv.pcbBak ,sv.pcbChange,
             sbr.sn2 AS barCode2, sbr.item2 AS itemCode2, f.describe_ AS itemName2
+        <isEqual property="queryAffectedProbs" compareValue="true" prepend="," >
+            (<include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>) AS affectedProbs
+        </isEqual>
+        <isNotEqual property="queryAffectedProbs" compareValue="true" prepend="," > NULL AS affectedProbs </isNotEqual> 
         FROM pm_project_shipment t1    
             LEFT JOIN `fb_shipment_barcode_relation` sbr ON sbr.contract = REPLACE(t1.contractNo, '-C', '') AND t1.barcode = sbr.sn1 
             LEFT JOIN fb_soft_version t2 ON t1.`barcode` = t2.`serial_number`   
-            LEFT JOIN pm_project_soft_version t4 ON t1.`projectId` = t4.`projectId` AND t1.`barcode` = t4.`barcode` AND t4.`datastate` = 1   
+            LEFT JOIN pm_project_soft_version sv ON t1.`projectId` = sv.`projectId` AND t1.`barcode` = sv.`barcode` AND sv.`datastate` = 1   
             LEFT JOIN `fb_items` f ON f.item = sbr.item2
         <isNotEmpty property="itemFilters">
             LEFT JOIN `fb_items` fi ON fi.item = t1.itemCode
         </isNotEmpty>
-        WHERE contractNo IN ($contractNo$) AND t1.projectId = #projectId# AND t1.transferFlag != 1
+        WHERE t1.contractNo IN ($contractNo$) AND t1.projectId = #projectId# AND t1.transferFlag != 1 
+        AND EXISTS (SELECT 1 
+            FROM
+                view_shipment_info_4_pm vsip 
+                LEFT JOIN view_shipment_ems_4_pm vsep 
+                    ON vsep.contract_code = vsip.contract_code 
+                    AND vsep.packId = vsip.packId 
+            WHERE vsip.contract_code IN ($sourceContractNo$)
+                AND vsip.barcode = t1.barcode
+        )
         <isNotEmpty prepend="AND" property="itemFilters">
             <iterate property="itemFilters" conjunction="OR" open="(" close=")">
                 <include refid="sqlItemFilters"/>
@@ -2378,6 +2396,7 @@
                t.`conp`, null as conpBak, null as conpChange ,t.`boot` , null as bootBak , null as bootChange,
                t.`cpld`, null as cpldBak, null as cpldChange, t.`pcb` , null as pcbBak , null as pcbChange,
                vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemName2 itemName2
+               , NULL AS affectedProbs
             FROM view_shipment_info_4_pm vsip 
             LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
             LEFT JOIN fb_soft_version t ON vsip.`barcode` = t.`serial_number`
@@ -2393,26 +2412,37 @@
     </update>
     <insert id="insert_project_soft_version" parameterClass="java.util.Map">
         <![CDATA[
-            INSERT INTO pm_project_soft_version(projectId ,logId,barcode ,conp,conpBak ,conpChange ,
+            INSERT INTO pm_project_soft_version(id, projectId ,logId, barcode ,conp,conpBak ,conpChange ,
                 cpld, cpldBak,cpldChange,boot , bootBak,bootChange,pcb , pcbBak, pcbChange,
-                executeTime,datastate ,createTime,createBy) VALUES
+                executeTime,datastate ,createTime,createBy
+                , contractNo, itemCode, conpType, conpSeries, conpMark, customInfo) 
+            VALUES
         ]]>
         <iterate conjunction="," property="softversionList" >
-            <![CDATA[ (#softversionList[].projectId#,#logId#,#softversionList[].barCode# , #softversionList[].conp#,
-             #softversionList[].conpBak#,#softversionList[].conpChange#,
+            (#softversionList[].id#, #softversionList[].projectId#,#logId#, #softversionList[].barCode#,
+             #softversionList[].conp#, #softversionList[].conpBak#,#softversionList[].conpChange#,
              #softversionList[].cpld# , #softversionList[].cpldBak# , #softversionList[].cpldChange# , 
              #softversionList[].boot#, #softversionList[].bootBak#,#softversionList[].bootChange# ,
-             #softversionList[].pcb#,#softversionList[].pcbBak#, #softversionList[].pcbChange#, ]]>
-            <isNotEmpty property="softversionList[].executeTime">
+             #softversionList[].pcb#,#softversionList[].pcbBak#, #softversionList[].pcbChange#
+            <isNotEmpty prepend="," property="softversionList[].executeTime">
                 #softversionList[].executeTime#
             </isNotEmpty>
-            <isEmpty property="softversionList[].executeTime">
+            <isEmpty prepend="," property="softversionList[].executeTime">
                 now()
             </isEmpty>
-            <![CDATA[
-             ,1,now(),#createBy#)
-            ]]> 
+            <isNotEmpty prepend="," property="softversionList[].datastate">
+                #softversionList[].datastate#
+            </isNotEmpty>
+            <isEmpty prepend="," property="softversionList[].datastate">
+                1
+            </isEmpty>
+             , now(), #createBy#
+             , #softversionList[].contractNo#, #softversionList[].itemCode#, #softversionList[].conpType#, #softversionList[].conpSeries#, #softversionList[].conpMark#, #softversionList[].customInfo#
+            )
         </iterate>
+        ON DUPLICATE KEY UPDATE
+            contractNo = VALUES(contractNo), itemCode = VALUES(itemCode), datastate = VALUES(datastate),
+	        conpType = VALUES(conpType), conpSeries = VALUES(conpSeries), conpMark = VALUES(conpMark), customInfo = VALUES(customInfo)
     </insert>
     <select id="query_hist_soft_version" parameterClass="int" resultClass="int">
         <![CDATA[
@@ -2446,7 +2476,7 @@
                 WHERE projectId = #projectId# ORDER BY createTime DESC;
         ]]>
     </select>
-    <resultMap class="com.dp.plat.data.bean.ShipmentInfo" id="softVersionChangeList">
+    <resultMap class="com.dp.plat.data.bean.ProjectSoftVersion" id="softVersionChangeList">
         <result property="projectId" column="projectId"/>
         <result property="barCode" column="barcode"/>
         <result property="barCode2" column="barCode2"/>
@@ -2465,6 +2495,116 @@
         <result property="executeTime" column="executeTime"/>
         <result property="createTime" column="createTime"/>
     </resultMap>
+    <sql id="sqlProjectSoftVersionList">
+        SELECT 
+            sv.id, sv.projectId, sv.logId
+        <isNotEqual property="checkShipment" compareValue="true">
+            , sv.contractNo, sv.itemCode, sv.datastate
+        </isNotEqual>
+        <isEqual property="checkShipment" compareValue="true">
+            , IFNULL(sv.contractNo, fc.contract_code) AS contractNo
+            , TRIM(IFNULL(sv.itemCode, fsb.item)) AS itemCode
+            , COUNT(fc.contract_code) > 0 AS datastate
+        </isEqual>
+            , sv.barCode, sv.conp, sv.conpType, sv.conpSeries, sv.conpMark
+            , sv.conpBak, sv.conpChange, sv.cpld, sv.cpldBak, sv.cpldChange
+            , sv.boot, sv.bootBak, sv.bootChange, sv.pcb, sv.pcbBak
+            , sv.pcbChange, sv.executeTime, sv.createTime, sv.createBy
+            , sv.updateTime, sv.updateBy, sv.customInfo
+            
+            , fi.itemname as itemModel
+            , fi.describe_ as itemDesc
+            
+            , ph.column001 as officeCode, fdp.departmentName as officeName
+            , ph.column004 as marketCode, ph.column004 as marketName
+            , ph.column005 as systemCode, ph.column005 as systemName
+            , ph.column006 as expendCode, ph.column006 as expendName
+            , ph.column007 as industryCode, ph.column007 as industryName
+       
+            
+            , MAX(sbr.`item2`) AS itemCode2, MAX(sbr.`sn2`) AS barCode2 
+        FROM
+            pm_project_soft_version sv
+            LEFT JOIN `pm_project_header` ph 
+                ON sv.`projectId` = ph.`projectId` 
+            LEFT JOIN `pm_project_group_relationship` pgr 
+                ON pgr.`projectCode` = ph.`projectCode` 
+            LEFT JOIN `pm_project_contract` pc 
+                ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+            LEFT JOIN `fb_shipment_barcode_relation` sbr 
+                ON sbr.contract = REPLACE(pc.contractNo, '-C', '')
+                AND sv.barcode = sbr.sn1 
+            LEFT JOIN fnd_department fdp ON ph.`column001` = fdp.`departmentNum`
+            LEFT JOIN fb_items fi ON fi.item = sv.itemCode
+            
+        <!-- <isEqual property="checkShipment" compareValue="true">
+            INNER JOIN fb_contract fc ON fc.contract_code = pc.contractNo 
+            INNER JOIN fb_shipment fs ON fc.`contract_id` = fs.`con_id` 
+            LEFT JOIN fb_shipment_barcode fsb ## FORCE key(barcode_pack_rma_IDX)
+                ON   fsb.`barcode` = sv.barcode 
+                AND fs.`packlist_id` = fsb.`pack_id` AND(
+                    ISNULL(`fsb`.`rma_no`) 
+                    OR (`fsb`.`rma_no` = '') 
+                    OR (`fsb`.`rma_no` = 'null')
+                ) 
+        </isEqual> -->
+        <isEqual property="checkShipment" compareValue="true">
+	        LEFT JOIN fb_shipment_barcode fsb <!-- ## FORCE key(barcode_pack_rma_IDX) -->
+		        ON   fsb.`barcode` = sv.barcode 
+		        AND (
+		            ISNULL(`fsb`.`rma_no`) 
+		            OR (`fsb`.`rma_no` = '') 
+		            OR (`fsb`.`rma_no` = 'null')
+		        ) 
+		    LEFT JOIN fb_shipment fs ON  fs.`packlist_id` = fsb.`pack_id` 
+		    LEFT JOIN fb_contract fc ON fc.`contract_id` = fs.`con_id` AND fc.contract_code = pc.contractNo 
+	    </isEqual>
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="and" property="projectId"><![CDATA[ ph.projectId = #projectId#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="logId"><![CDATA[ sv.logId = #logId#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="contractNo"><![CDATA[ sv.contractNo = #contractNo#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="itemCode"><![CDATA[ sv.itemCode = #itemCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="barCode"><![CDATA[ sv.barCode like concat(#barCode#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="datastate"><![CDATA[ sv.datastate = #datastate#]]></isNotEmpty>
+            
+            <isNotEmpty prepend="and" property="itemModel"><![CDATA[ fi.itemname like concat(#itemModel#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="projectName"><![CDATA[ ph.projectName like concat('%', #projectName#, '%')]]></isNotEmpty>
+            <!-- <isNotEmpty prepend="and" property="contractNo"><![CDATA[ pc.contractNo = #contractNo#]]></isNotEmpty> -->
+            <isNotEmpty prepend="and" property="officeCode"><![CDATA[ ph.column001 = #officeCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="marketCode"><![CDATA[ ph.column004 = #marketCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="systemCode"><![CDATA[ ph.column005 = #systemCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="expendCode"><![CDATA[ ph.column006 = #expendCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="industryCode"><![CDATA[ ph.column007 = #industryCode#]]></isNotEmpty>
+            
+            <isEqual prepend="AND" property="checkHasConp" compareValue="true"> sv.conp > '' </isEqual>
+            <isEqual prepend="AND" property="checkNullConpMark" compareValue="true"> 
+                sv.conpType IS NULL
+				AND sv.conpSeries IS null
+				AND sv.conpMark IS NULL
+            </isEqual>
+        </dynamic>
+        GROUP BY sv.`id`
+        <isEqual property="updateInvalidShipment" compareValue="true"> 
+        HAVING datastate = 0
+        </isEqual>
+        <isEmpty property="logId">
+        ORDER BY NULL
+        </isEmpty>
+    </sql>
+    <select id="countProjectSoftVersionList" parameterClass="com.dp.plat.data.bean.ProjectSoftVersion" resultClass="com.dp.plat.data.bean.ProjectSoftVersion">
+        SELECT COUNT(*) FROM (
+        <include refid="sqlProjectSoftVersionList"/>
+        ) sv
+    </select>
+    <select id="selectProjectSoftVersionList" parameterClass="com.dp.plat.data.bean.ProjectSoftVersion" resultClass="com.dp.plat.data.bean.ProjectSoftVersion">
+        <include refid="sqlProjectSoftVersionList"/>
+        <isNotEmpty property="logId">
+        ORDER BY sv.conpChange DESC, sv.bootChange DESC, sv.cpldChange DESC, sv.pcbChange DESC 
+        </isNotEmpty>
+        <isNotEmpty property="displayParam.offset">
+        LIMIT #displayParam.offset#, #displayParam.pagesize# 
+	    </isNotEmpty>
+    </select>
     <select id="query_hist_soft_version_list" parameterClass="com.dp.plat.data.bean.SoftChangeLog" resultMap="softVersionChangeList">
         <!-- <![CDATA[
             SELECT * FROM pm_project_soft_version WHERE projectId = #projectId#  AND logId = #id#
@@ -2689,6 +2829,23 @@
     </insert>
     <delete id="deleteShipmentInstallInfoByProjectId" parameterClass="int">
         delete from pm_project_shipment where projectId = #projectId#
+    </delete>
+    <delete id="deleteShipmentInstallInfoByList" parameterClass="java.util.Map">
+        delete pps from pm_project_shipment pps
+        <isNotEmpty property="list">
+	        <!-- <iterate prepend="LEFT JOIN" property="list" open="(" close=") t ON pps.projectId = t.projectId AND pps.barCode = t.barCode" conjunction=" UNION ALL ">
+	        SELECT #list[].projectId# AS projectId, #list[].barCode# AS barCode
+	        </iterate> -->
+	        <iterate prepend="LEFT JOIN" property="list" open="(" close=") t ON pps.contractNo = t.contractNo AND pps.barCode = t.barCode" conjunction=" UNION ALL ">
+            SELECT #list[].contractNo# AS contractNo, #list[].barCode# AS barCode
+            </iterate>
+        </isNotEmpty>
+        <dynamic prepend="WHERE">
+	        <isEmpty property="list"> 1 = 0 </isEmpty>
+	        <isNotEmpty property="list">
+	           t.barCode IS NOT NULL
+	        </isNotEmpty>
+        </dynamic>
     </delete>
     <!-- 安装地址  e-->
     
@@ -3994,6 +4151,62 @@
         <![CDATA[
             select count(*) from pm_project_product_line_real where projectId = #projectId# 
         ]]>
+    </select>
+    
+    <select id="queryProjectLeaseLineByProjectCode" parameterClass="String" resultClass="java.util.HashMap">
+        SELECT c.*
+		FROM pm_project_product_lease_line_from_crm c
+		INNER JOIN (
+		    SELECT projectCode, MAX(orderExecNumber) AS max_order
+		    FROM pm_project_product_lease_line_from_crm c
+		    WHERE c.projectCode = #projectCode#
+		    GROUP BY projectCode
+		) m ON c.projectCode = m.projectCode 
+		   AND c.orderExecNumber = m.max_order
+	    WHERE c.projectCode = #projectCode#;
+    </select>
+    
+    <select id="queryProjectLeaseLineSizeByProjectCode" parameterClass="String" resultClass="int">
+        SELECT count(*)
+        FROM pm_project_product_lease_line_from_crm c
+        INNER JOIN (
+            SELECT projectCode, MAX(orderExecNumber) AS max_order
+            FROM pm_project_product_lease_line_from_crm c
+            WHERE c.projectCode = #projectCode#
+            GROUP BY projectCode
+        ) m ON c.projectCode = m.projectCode 
+            AND c.orderExecNumber = m.max_order
+        WHERE c.projectCode = #projectCode#;
+    </select>
+    
+    <select id="queryProjectProductConfigLevelInfoByProjectCode" parameterClass="String" resultClass="java.util.HashMap">
+        SELECT c.*
+            , SUBSTRING_INDEX(bomPaths, ',', level -1) AS parentBomPaths
+		    , concat(c.itemGroup, "_", SUBSTRING_INDEX(bomPaths, ',', level -1)) parentGroupPaths
+		    , concat(c.itemGroup, "_", bomPaths) groupPaths
+        FROM pm_project_product_config_level_info_from_crm c
+        INNER JOIN (
+            SELECT projectCode, MAX(orderExecNumber) AS max_order
+            FROM pm_project_product_config_level_info_from_crm c
+            WHERE c.projectCode = #projectCode#
+            GROUP BY projectCode
+        ) m ON c.projectCode = m.projectCode 
+           AND c.orderExecNumber = m.max_order
+        WHERE c.projectCode = #projectCode#
+        ORDER BY c.projectCode, itemGroup, bomPaths;
+    </select>
+    
+    <select id="queryProjectProductConfigLevelInfoSizeByProjectCode" parameterClass="String" resultClass="int">
+        SELECT count(*)
+        FROM pm_project_product_config_level_info_from_crm c
+        INNER JOIN (
+            SELECT projectCode, MAX(orderExecNumber) AS max_order
+            FROM pm_project_product_config_level_info_from_crm c
+            WHERE c.projectCode = #projectCode#
+            GROUP BY projectCode
+        ) m ON c.projectCode = m.projectCode 
+            AND c.orderExecNumber = m.max_order
+        WHERE c.projectCode = #projectCode#;
     </select>
     
     <!-- 查询初验/终验财务计划到期前1个月提醒的项目 -->
@@ -6184,6 +6397,17 @@
             <isNotEmpty prepend="AND" property="projectCode"> itr.projectCode = #projectCode# </isNotEmpty>
             <isNotEmpty prepend="AND" property="contractNoList">
                 itr.contractNo in (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- License授权信息查询 -->
+    <select id="selectLicenseInfo" parameterClass="map" resultClass="java.util.HashMap">
+        select * from pm_project_license_info_from_license lic
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="contract"> lic.contract = #contract# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNoList">
+                lic.contract IN (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
             </isNotEmpty>
         </dynamic>
     </select>

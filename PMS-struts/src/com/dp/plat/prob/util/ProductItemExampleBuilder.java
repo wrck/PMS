@@ -1,4 +1,5 @@
 package com.dp.plat.prob.util;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +140,7 @@ public class ProductItemExampleBuilder {
         
         boolean isStartWith = term.startsWith("^");
         boolean isEndWith = term.endsWith("$");
+        boolean isIn = term.matches(".*[,，、].*");
         
         term = isStartWith ? StringUtils.substringAfter(term, "^") : term;
         term = isEndWith ? StringUtils.substringBeforeLast(term, "$") : term;
@@ -148,11 +150,20 @@ public class ProductItemExampleBuilder {
         
         String fuzzy = fuzzyBuidler.toString();
         
+        List<String> inList = isIn ? Arrays.asList(StringUtils.split(term, ",，、")) : Collections.emptyList();
+        if (isIn) {
+            fuzzy = null;
+        }
+        
         ProductItemConditionGroup group = ProductItemConditionGroup.builder()
                 .itemCodeLike(fuzzy)
                 .itemModelLike(fuzzy)
                 .itemDescLike(fuzzy)
                 .build();
+        
+        if (isIn) {
+            group.setItemCodeIn(inList);
+        }
         
         if (example.getItemGroups().isEmpty()) {
             example.addItemGroup(ProductItemConditionGroup.builder().build());

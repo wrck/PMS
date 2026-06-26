@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -63,6 +64,7 @@ import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlan;
 import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectSoftVersion;
 import com.dp.plat.data.bean.ProjectTask;
 import com.dp.plat.data.bean.ProjectWeekly;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -130,8 +132,10 @@ public class ProjectAction extends BaseAction implements Preparable{
 	private List<OrderDataFromSap> orderDataList;
 	private List<RealProductLineBean> realOrderDataList;
 	private int realOrderDataSize;
+	private int leaseLineSize;//租赁清单数量
+	private int productConfigLevelInfoSize;//配置关系数量
 	private List<ShipmentInfo> shipmentInfoList;//序列号列表
-	private List<ShipmentInfo> softversionList;//设备发货软件版本
+	private List<? extends ShipmentInfo> softversionList;//设备发货软件版本
 	private List<ProjectPlanEvent> projectPlanEventList;//事件节点
 	private List<ProjectMember> projectMemberList;//项目成员集合
 	private ProjectMember member;
@@ -699,6 +703,8 @@ public class ProjectAction extends BaseAction implements Preparable{
 			
 			//realOrderDataList = projectService.queryRealOrderDataListByProjectId(project.getProjectId());
 			realOrderDataSize = projectService.queryRealOrderDataSizeByProjectId(project.getProjectId());
+			leaseLineSize = projectService.queryProjectLeaseLineSizeByProjectCode(project.getProjectCode());
+			productConfigLevelInfoSize = projectService.queryProjectProductConfigLevelInfoSizeByProjectCode(project.getProjectCode());
 			//shipmentInfoList = projectService.queryShipmentInfoByContractNo(Util.appendChar(project.getContractNo(), "'"),project.getProjectId());
 			//根据projectid查询项目计划列表
 			projectTaskList = projectService.queryProjectTaskByProjectId(project.getProjectId());
@@ -887,6 +893,35 @@ public class ProjectAction extends BaseAction implements Preparable{
 		return SUCCESS;
 	}
 	/**
+     * 查询租赁配置清单
+     * @return
+     */
+    public String projectLeaseLine() {
+        try {
+            commonList = projectService.queryProjectLeaseLineByProjectCode(project.getProjectCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+    
+    /**
+     * 查询配置关系清单
+     * @return
+     */
+    public String projectProductConfigLevelInfo() {
+        try {
+            commonList = projectService.queryProjectProductConfigLevelInfoByProjectCode(project.getProjectCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+	/**
 	 * 查询发货序列号
 	 * @return
 	 */
@@ -958,7 +993,9 @@ public class ProjectAction extends BaseAction implements Preparable{
 		    String filterItem = ((String[]) MapUtils.getObject(cbForm, "filterItem", new String[] {"true"}))[0];
 		    cbForm.put("filterItem", filterItem);
 		    cbForm.put("profitCenter", profitCenter);
+		    cbForm.put("queryAffectedProbs", true);
             softversionList = projectService.querySoftversionList(splitContractNo, projectId, cbForm);
+            project = temp;
 		} catch (Exception e) {
 			e.printStackTrace();
 			setErrmsg(ExceptionUtils.getStackTrace(e));
@@ -980,7 +1017,7 @@ public class ProjectAction extends BaseAction implements Preparable{
 	        	JSONObject json = JSONObject.parseObject(softVersionJson);
 	        	JSONArray listArray = json.getJSONArray("softversionList");
 	        	JSONObject logMap = json.getJSONObject("softChangeLog");
-	        	softversionList = listArray.toJavaList(ShipmentInfo.class);
+	        	softversionList = listArray.toJavaList(ProjectSoftVersion.class);
 	        	softChangeLog = logMap.toJavaObject(SoftChangeLog.class);
 	        }
             //从 json 对象中获取参数进行后续操作
@@ -1061,7 +1098,37 @@ public class ProjectAction extends BaseAction implements Preparable{
         }
         return SUCCESS;
     }
-	
+
+    /**
+     * 获取项目的License授权信息
+     * @return
+     */
+    public String licenseInfo(){
+        try {
+            project = projectService.queryProjectById(projectId);
+            if (project != null) {
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("projectId", project.getProjectId());
+                String contractNo = StringUtils.defaultIfBlank(project.getContractNo(), "");
+                List<String> contractNoList = new ArrayList<>();
+				if (StringUtils.isNotBlank(contractNo)) {
+                    contractNoList.addAll(Arrays.asList(StringUtils.split(contractNo, ",")));
+                }
+				String projectCode = StringUtils.split(project.getProjectCode(), "-")[0];
+                contractNoList.add(projectCode);
+				params.put("contractNoList", contractNoList);
+                commonList = projectService.selectLicenseInfo(params);
+            } else {
+                commonList = Collections.emptyList();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+
 	/**
 	 * 获取项目维护记录
 	 * @return
@@ -1155,19 +1222,57 @@ public class ProjectAction extends BaseAction implements Preparable{
 //		if(!"运营商市场部".equals(project2.getColumn004()) || !"10".equals(project2.getColumn011())){//运营商直签项目
 //			navTabList.remove(6);
 //		}
-		HashMap<String, Integer> navTabWithIndex = new HashMap<>(); 
-		for (int i = 0;i<navTabList.size();i++) {
-			BasicDataBean navTab = navTabList.get(i);
-			navTabWithIndex.put(navTab.getBasicDataId(), i);
-		}
-		if(!"运营商市场部".equals(project2.getColumn004()) || !"10".equals(project2.getColumn011())){//运营商直签项目
-			//navTabList.remove(7);
-			navTabList.remove(navTabWithIndex.get("callbackFlowDiv").intValue());
-		}
-		if(realOrderDataSize == 0){
-//			navTabList.remove(5);
-			navTabList.remove(navTabWithIndex.get("realOrderListDiv").intValue());
-		}
+//		HashMap<String, Integer> navTabWithIndex = new HashMap<>(); 
+//		for (int i = 0;i<navTabList.size();i++) {
+//			BasicDataBean navTab = navTabList.get(i);
+//			navTabWithIndex.put(navTab.getBasicDataId(), i);
+//		}
+//		// 必须先移除序列大的，防止移除后序号迁移出现移除以上的问题
+//		if(!"运营商市场部".equals(project2.getColumn004()) || !"10".equals(project2.getColumn011())){//运营商直签项目
+//			//navTabList.remove(7);
+//			navTabList.remove(navTabWithIndex.get("callbackFlowDiv").intValue());
+//		}
+//		if(realOrderDataSize == 0){
+////			navTabList.remove(5);
+//			navTabList.remove(navTabWithIndex.get("realOrderListDiv").intValue());
+//		}
+//		if(leaseLineSize == 0){
+//            navTabList.remove(navTabWithIndex.get("projectLeaseLineListDiv").intValue());
+//		}
+//        if(productConfigLevelInfoSize == 0){
+//            navTabList.remove(navTabWithIndex.get("projectProductConfigLevelInfoListDiv").intValue());
+//        }
+//		// FIXME 修改为不依赖于排序
+		
+		// 使用 Stream 过滤，避免索引问题
+        // 判断是否为“运营商直签项目”
+		boolean isOperatorDirectProject = "运营商市场部".equals(project2.getColumn004()) && "10".equals(project2.getColumn011());//运营商直签项目
+		navTabList = navTabList.stream().filter(navTab -> {
+	        String id = navTab.getBasicDataId();
+
+	        // 移除 callbackFlowDiv：非运营商直签项目时
+	        if ("callbackFlowDiv".equals(id)) {
+	            return isOperatorDirectProject; // 只有运营商直签项目时才保留
+	        }
+
+	        // 移除 realOrderListDiv：当 realOrderDataSize == 0
+	        if ("realOrderListDiv".equals(id)) {
+	            return realOrderDataSize > 0;
+	        }
+
+	        // 移除 projectLeaseLineListDiv：当 leaseLineSize == 0
+	        if ("projectLeaseLineListDiv".equals(id)) {
+	            return leaseLineSize > 0;
+	        }
+
+	        // 移除 projectProductConfigLevelInfoListDiv：当 productConfigLevelInfoSize == 0
+	        if ("projectProductConfigLevelInfoListDiv".equals(id)) {
+	            return productConfigLevelInfoSize > 0;
+	        }
+
+	        // 其他 tab 默认保留
+	        return true;
+	    }).collect(Collectors.toList());
 			
 		return navTabList;
 	}
@@ -3076,10 +3181,10 @@ public class ProjectAction extends BaseAction implements Preparable{
 		this.contractNo = contractNo;
 	}
 	
-	public List<ShipmentInfo> getSoftversionList() {
+	public List<? extends ShipmentInfo> getSoftversionList() {
 		return softversionList;
 	}
-	public void setSoftversionList(List<ShipmentInfo> softversionList) {
+	public void setSoftversionList(List<? extends ShipmentInfo> softversionList) {
 		this.softversionList = softversionList;
 	}
 	public SoftChangeLog getSoftChangeLog() {

@@ -15,6 +15,7 @@ public class ProbStatistic {
 	private String projectCode;
 	private String projectName;
 	private String itemName;
+	private String itemModel;
 	private String softInfo;
 	private String serviceManagerCode;
 	private String serviceManagerName;
@@ -25,6 +26,14 @@ public class ProbStatistic {
 	private String programManagerNameB;
 	private String officeCode;
 	private String officeName;
+	private String marketCode;
+    private String systemCode;
+    private String expendCode;
+    private String industryCode;
+    private String marketName;
+    private String systemName;
+    private String expendName;
+    private String industryName;
 	private String updateCount;
 	private Integer probId;
 	private String probTheme;
@@ -73,8 +82,16 @@ public class ProbStatistic {
 	public void setItemName(String itemName) {
 		this.itemName = itemName;
 	}
+	
+	public String getItemModel() {
+        return itemModel;
+    }
 
-	public String getSoftInfo() {
+    public void setItemModel(String itemModel) {
+        this.itemModel = itemModel;
+    }
+
+    public String getSoftInfo() {
 		return softInfo;
 	}
 
@@ -153,8 +170,72 @@ public class ProbStatistic {
 	public void setOfficeName(String officeName) {
 		this.officeName = officeName;
 	}
+	
+	public String getMarketCode() {
+        return marketCode;
+    }
 
-	public String getUpdateCount() {
+    public void setMarketCode(String marketCode) {
+        this.marketCode = marketCode;
+    }
+
+    public String getSystemCode() {
+        return systemCode;
+    }
+
+    public void setSystemCode(String systemCode) {
+        this.systemCode = systemCode;
+    }
+
+    public String getExpendCode() {
+        return expendCode;
+    }
+
+    public void setExpendCode(String expendCode) {
+        this.expendCode = expendCode;
+    }
+
+    public String getIndustryCode() {
+        return industryCode;
+    }
+
+    public void setIndustryCode(String industryCode) {
+        this.industryCode = industryCode;
+    }
+
+    public String getMarketName() {
+        return marketName;
+    }
+
+    public void setMarketName(String marketName) {
+        this.marketName = marketName;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public void setSystemName(String systemName) {
+        this.systemName = systemName;
+    }
+
+    public String getExpendName() {
+        return expendName;
+    }
+
+    public void setExpendName(String expendName) {
+        this.expendName = expendName;
+    }
+
+    public String getIndustryName() {
+        return industryName;
+    }
+
+    public void setIndustryName(String industryName) {
+        this.industryName = industryName;
+    }
+
+    public String getUpdateCount() {
 		return updateCount;
 	}
 

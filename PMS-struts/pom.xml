@@ -570,6 +570,13 @@
 		    <version>4.11.0</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		<dependency>
+		    <groupId>p6spy</groupId>
+		    <artifactId>p6spy</artifactId>
+		    <version>3.9.1</version>
+		    <optional></optional>
+		</dependency>
 	</dependencies>
 	
 	<profiles>
@@ -584,6 +591,15 @@
 				<!-- 设置默认激活这个配置 -->
 				<activeByDefault>true</activeByDefault>
 			</activation>
+			<dependencies>
+                <!-- 开发环境引入生产级 SQL 日志 -->
+				<dependency>
+					<groupId>p6spy</groupId>
+					<artifactId>p6spy</artifactId>
+					<version>3.9.1</version>
+					<scope>runtime</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		<profile>
 			<!-- 发布环境 -->

@@ -30,4 +30,5 @@ PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"
     <sqlMap resource="sql-map-refresh-data-itr-config.xml"/>
     <sqlMap resource="sql-map-refresh-data-oa-config.xml"/>
     <sqlMap resource="sql-map-refresh-data-crm-config.xml"/>
+    <sqlMap resource="sql-map-refresh-data-license-config.xml"/>
 </sqlMapConfig>  

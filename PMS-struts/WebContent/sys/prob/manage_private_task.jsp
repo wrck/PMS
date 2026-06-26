@@ -181,14 +181,16 @@ $(function(){
 	function checkSoftwares(){
 		var softWares = ${result};
 		$(".probRestoreTask").each(function(){
-			var latestConp = $(this).find(".latestConp").text().trim();
-			var latestCpld = $(this).find(".latestCpld").text().trim();
-			var latestBoot = $(this).find(".latestBoot").text().trim();
-			var latestPcb = $(this).find(".latestPcb").text().trim();
-			var flag = true;
+			var $latestConp = $(this).find(".latestConp");
+	        var latestAffectedProbId = $latestConp.data("affectedProbId") || 0;
+	        var latestConp = $latestConp.text().trim();
+	        var latestCpld = $(this).find(".latestCpld").text().trim();
+	        var latestBoot = $(this).find(".latestBoot").text().trim();
+	        var latestPcb = $(this).find(".latestPcb").text().trim();
+	        var flag = true;
 			for(var i in softWares){
 				var softWare = softWares[i];
-				if((softWare.conp && softWare.conp == latestConp)){
+	            if((softWare.conp && softWare.conp == latestConp) || latestAffectedProbId != 0){
 					flag = false;
 					break;
 				}
@@ -412,7 +414,7 @@ function changeRestoreStatus(_this){
 									<td><s:property value="#restore.serialNum"/></td>
 									<%-- <td><s:property value="#restore.restoreStatusName"/></td> --%>
 									<td><s:property value="#restore.itemModel"/></td>
-									<td class="latestConp"><s:property value="#restore.latestConp"/></td>
+									<td class="latestConp" data-affected-prob-id="${restore.prob.probId}"><s:property value="#restore.latestConp"/></td>
 									<td class="latestBoot"><s:property value="#restore.latestBoot"/></td>
 									<td class="latestCpld"><s:property value="#restore.latestCpld"/></td>
 									<td class="latestPcb"><s:property value="#restore.latestPcb"/></td>

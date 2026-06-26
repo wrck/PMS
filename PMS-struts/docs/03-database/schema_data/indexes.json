@@ -1,0 +1,6258 @@
+[
+  {
+    "TABLE_NAME": "act_evt_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "LOG_NR_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ge_bytearray",
+    "INDEX_NAME": "ACT_FK_BYTEARR_DEPL",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ge_bytearray",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ge_property",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "NAME_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "INDEX_NAME": "ACT_IDX_HI_ACT_INST_EXEC",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "INDEX_NAME": "ACT_IDX_HI_ACT_INST_EXEC",
+    "COLUMN_NAME": "ACT_ID_",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "INDEX_NAME": "ACT_IDX_HI_ACT_INST_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "INDEX_NAME": "ACT_IDX_HI_ACT_INST_PROCINST",
+    "COLUMN_NAME": "ACT_ID_",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_attachment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_comment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "INDEX_NAME": "ACT_IDX_HI_DETAIL_ACT_INST",
+    "COLUMN_NAME": "ACT_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "INDEX_NAME": "ACT_IDX_HI_DETAIL_NAME",
+    "COLUMN_NAME": "NAME_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "INDEX_NAME": "ACT_IDX_HI_DETAIL_PROC_INST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "INDEX_NAME": "ACT_IDX_HI_DETAIL_TASK_ID",
+    "COLUMN_NAME": "TASK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_identitylink",
+    "INDEX_NAME": "ACT_IDX_HI_IDENT_LNK_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_identitylink",
+    "INDEX_NAME": "ACT_IDX_HI_IDENT_LNK_TASK",
+    "COLUMN_NAME": "TASK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_identitylink",
+    "INDEX_NAME": "ACT_IDX_HI_IDENT_LNK_USER",
+    "COLUMN_NAME": "USER_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_identitylink",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_procinst",
+    "INDEX_NAME": "ACT_IDX_HI_PRO_I_BUSKEY",
+    "COLUMN_NAME": "BUSINESS_KEY_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_procinst",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_procinst",
+    "INDEX_NAME": "PROC_INST_ID_",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_taskinst",
+    "INDEX_NAME": "ACT_IDX_HI_TASK_INST_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_taskinst",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "INDEX_NAME": "ACT_IDX_HI_PROCVAR_NAME_TYPE",
+    "COLUMN_NAME": "NAME_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "INDEX_NAME": "ACT_IDX_HI_PROCVAR_NAME_TYPE",
+    "COLUMN_NAME": "VAR_TYPE_",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "INDEX_NAME": "ACT_IDX_HI_PROCVAR_PROC_INST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "INDEX_NAME": "ACT_IDX_HI_PROCVAR_TASK_ID",
+    "COLUMN_NAME": "TASK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_group",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "INDEX_NAME": "ACT_FK_MEMB_GROUP",
+    "COLUMN_NAME": "GROUP_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "USER_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "GROUP_ID_",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_id_user",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "INDEX_NAME": "ACT_FK_INFO_JSON_BA",
+    "COLUMN_NAME": "INFO_JSON_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "INDEX_NAME": "ACT_IDX_INFO_PROCDEF",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "INDEX_NAME": "ACT_UNIQ_INFO_PROCDEF",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_deployment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "INDEX_NAME": "ACT_FK_MODEL_DEPLOYMENT",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "INDEX_NAME": "ACT_FK_MODEL_SOURCE",
+    "COLUMN_NAME": "EDITOR_SOURCE_VALUE_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "INDEX_NAME": "ACT_FK_MODEL_SOURCE_EXTRA",
+    "COLUMN_NAME": "EDITOR_SOURCE_EXTRA_VALUE_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "INDEX_NAME": "ACT_UNIQ_PROCDEF",
+    "COLUMN_NAME": "KEY_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "INDEX_NAME": "ACT_UNIQ_PROCDEF",
+    "COLUMN_NAME": "VERSION_",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "INDEX_NAME": "ACT_UNIQ_PROCDEF",
+    "COLUMN_NAME": "TENANT_ID_",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_event_subscr",
+    "INDEX_NAME": "ACT_FK_EVENT_EXEC",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_event_subscr",
+    "INDEX_NAME": "ACT_IDX_EVENT_SUBSCR_CONFIG_",
+    "COLUMN_NAME": "CONFIGURATION_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_event_subscr",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "ACT_FK_EXE_PARENT",
+    "COLUMN_NAME": "PARENT_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "ACT_FK_EXE_PROCDEF",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "ACT_FK_EXE_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "ACT_FK_EXE_SUPER",
+    "COLUMN_NAME": "SUPER_EXEC_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "ACT_IDX_EXEC_BUSKEY",
+    "COLUMN_NAME": "BUSINESS_KEY_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "ACT_FK_IDL_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "ACT_FK_TSKASS_TASK",
+    "COLUMN_NAME": "TASK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "ACT_IDX_ATHRZ_PROCEDEF",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "ACT_IDX_IDENT_LNK_GROUP",
+    "COLUMN_NAME": "GROUP_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "ACT_IDX_IDENT_LNK_USER",
+    "COLUMN_NAME": "USER_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_job",
+    "INDEX_NAME": "ACT_FK_JOB_EXCEPTION",
+    "COLUMN_NAME": "EXCEPTION_STACK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_job",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "INDEX_NAME": "ACT_FK_TASK_EXE",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "INDEX_NAME": "ACT_FK_TASK_PROCDEF",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "INDEX_NAME": "ACT_FK_TASK_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "INDEX_NAME": "ACT_IDX_ASSIGNEE",
+    "COLUMN_NAME": "ASSIGNEE_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "INDEX_NAME": "ACT_FK_VAR_BYTEARRAY",
+    "COLUMN_NAME": "BYTEARRAY_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "INDEX_NAME": "ACT_FK_VAR_EXE",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "INDEX_NAME": "ACT_FK_VAR_PROCINST",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "INDEX_NAME": "ACT_IDX_VARIABLE_TASK_ID",
+    "COLUMN_NAME": "TASK_ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID_",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "addressee_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "addre_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_leak_relation",
+    "INDEX_NAME": "assetId",
+    "COLUMN_NAME": "assetId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_leak_relation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_leak_relation",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_project_relation",
+    "INDEX_NAME": "assetId",
+    "COLUMN_NAME": "assetId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_project_relation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_project_relation",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_leak",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "af_industry_leak_warning",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "agent_info",
+    "INDEX_NAME": "index_id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "agent_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "agent_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "app_accessory_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "app_comment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "app_comment",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "app_spare_part",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "app_spare_part",
+    "INDEX_NAME": "tx_id",
+    "COLUMN_NAME": "tx_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "back_type",
+    "INDEX_NAME": "back_where_index",
+    "COLUMN_NAME": "back",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "back_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "bar",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "bar",
+    "INDEX_NAME": "spare_id",
+    "COLUMN_NAME": "spare_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "brw_app_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "brw_app_info",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "brw_spare_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "brw_spare_info",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "data_field_relation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "department",
+    "INDEX_NAME": "ocrCode",
+    "COLUMN_NAME": "ocrCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "department",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dptech_v_project_product_config_level_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_act_unify_task",
+    "INDEX_NAME": "originTaskId",
+    "COLUMN_NAME": "originTaskId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_act_unify_task",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_act_unify_task",
+    "INDEX_NAME": "procInstId",
+    "COLUMN_NAME": "procInstId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_act_unify_task",
+    "INDEX_NAME": "taskId",
+    "COLUMN_NAME": "taskId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_order_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_order_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_receipt_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_receipt_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_company",
+    "INDEX_NAME": "adminID",
+    "COLUMN_NAME": "adminID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_company",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "compID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "INDEX_NAME": "adminID",
+    "COLUMN_NAME": "adminID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "INDEX_NAME": "compID",
+    "COLUMN_NAME": "compID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "INDEX_NAME": "director",
+    "COLUMN_NAME": "director",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "INDEX_NAME": "director2",
+    "COLUMN_NAME": "director2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "depID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "compID",
+    "COLUMN_NAME": "compID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "depID",
+    "COLUMN_NAME": "depID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "jobID",
+    "COLUMN_NAME": "jobID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "empID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "reportTo",
+    "COLUMN_NAME": "reportTo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "wfreportTo",
+    "COLUMN_NAME": "wfreportTo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "INDEX_NAME": "workNo",
+    "COLUMN_NAME": "workNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_emp_power",
+    "INDEX_NAME": "empID",
+    "COLUMN_NAME": "empID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_emp_power",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_emp_power",
+    "INDEX_NAME": "workNo",
+    "COLUMN_NAME": "workNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_job",
+    "INDEX_NAME": "adminID",
+    "COLUMN_NAME": "adminID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_job",
+    "INDEX_NAME": "depID",
+    "COLUMN_NAME": "depID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_job",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "jobID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "ehr_login",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "contract_code",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "contract_type",
+    "COLUMN_NAME": "contract_type",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "fb_contract_contract_id_IDX",
+    "COLUMN_NAME": "contract_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "fb_contract_contract_id_IDX",
+    "COLUMN_NAME": "office_code",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "office_code_IDX",
+    "COLUMN_NAME": "office_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_contract",
+    "INDEX_NAME": "office_code_IDX",
+    "COLUMN_NAME": "contract_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_ft_result1",
+    "INDEX_NAME": "item_id",
+    "COLUMN_NAME": "item_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_ft_result2",
+    "INDEX_NAME": "result1_id",
+    "COLUMN_NAME": "result1_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_items",
+    "INDEX_NAME": "cover_index",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_items",
+    "INDEX_NAME": "cover_index",
+    "COLUMN_NAME": "itemname",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_items",
+    "INDEX_NAME": "cover_index",
+    "COLUMN_NAME": "describe_",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_items",
+    "INDEX_NAME": "itemname",
+    "COLUMN_NAME": "itemname",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_office_relationship",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_office_relationship",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_service",
+    "INDEX_NAME": "barcode_",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_service",
+    "INDEX_NAME": "con_xb",
+    "COLUMN_NAME": "con_xb",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_service",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_con_id_IDX",
+    "COLUMN_NAME": "con_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_con_id_IDX",
+    "COLUMN_NAME": "packlist_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_packdate_IDX",
+    "COLUMN_NAME": "packdate",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_packdate_IDX",
+    "COLUMN_NAME": "con_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_packdate_IDX",
+    "COLUMN_NAME": "packlist_id",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_packlist_id_IDX",
+    "COLUMN_NAME": "packlist_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment",
+    "INDEX_NAME": "fb_shipment_packlist_id_IDX",
+    "COLUMN_NAME": "con_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode2",
+    "COLUMN_NAME": "barcode2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_pack_rma_IDX",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_pack_rma_IDX",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_pack_rma_IDX",
+    "COLUMN_NAME": "rma_no",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_rma_pack_IDX",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_rma_pack_IDX",
+    "COLUMN_NAME": "rma_no",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "barcode_rma_pack_IDX",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "item",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "item2",
+    "COLUMN_NAME": "item2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_barcode_IDX",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_barcode_IDX",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_barcode_IDX",
+    "COLUMN_NAME": "rma_no",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_item_IDX",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_item_IDX",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "pack_item_IDX",
+    "COLUMN_NAME": "rma_no",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "INDEX_NAME": "uuid",
+    "COLUMN_NAME": "uuid",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_dataid_lasted_logid",
+    "COLUMN_NAME": "dataId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_dataid_lasted_logid",
+    "COLUMN_NAME": "lasted",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_dataid_lasted_logid",
+    "COLUMN_NAME": "logID",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_lasted_dataid_logid",
+    "COLUMN_NAME": "lasted",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_lasted_dataid_logid",
+    "COLUMN_NAME": "dataId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_lasted_dataid_logid",
+    "COLUMN_NAME": "logID",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_syncFlag_lasted",
+    "COLUMN_NAME": "syncFlag",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "idx_syncFlag_lasted",
+    "COLUMN_NAME": "lasted",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "logID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_order_line",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_order_line",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_order_line",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineNum",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_order_line",
+    "INDEX_NAME": "pack_id",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_order_line",
+    "INDEX_NAME": "pack_id",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "contract_sn1_IDX",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "contract_sn1_IDX",
+    "COLUMN_NAME": "sn1",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "item1",
+    "COLUMN_NAME": "item1",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "item2",
+    "COLUMN_NAME": "item2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "sn1",
+    "COLUMN_NAME": "sn1",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "INDEX_NAME": "sn2",
+    "COLUMN_NAME": "sn2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_soft_version",
+    "INDEX_NAME": "boot",
+    "COLUMN_NAME": "boot",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_soft_version",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "conp",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_soft_version",
+    "INDEX_NAME": "cpld",
+    "COLUMN_NAME": "cpld",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_soft_version",
+    "INDEX_NAME": "pcb",
+    "COLUMN_NAME": "pcb",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_soft_version",
+    "INDEX_NAME": "serial_number",
+    "COLUMN_NAME": "serial_number",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_warranty_grade",
+    "INDEX_NAME": "gradecode",
+    "COLUMN_NAME": "gradecode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fb_warranty_grade",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "find_in_set_help",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "INDEX_NAME": "barCode",
+    "COLUMN_NAME": "barCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "INDEX_NAME": "insteadOfNum",
+    "COLUMN_NAME": "insteadOfNum",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "INDEX_NAME": "sheetId",
+    "COLUMN_NAME": "sheetId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "assignee",
+    "COLUMN_NAME": "assignee",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "assignee",
+    "COLUMN_NAME": "procdefKey",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "instId",
+    "COLUMN_NAME": "instId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "objId",
+    "COLUMN_NAME": "objId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "objId",
+    "COLUMN_NAME": "procdefKey",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "INDEX_NAME": "taskId",
+    "COLUMN_NAME": "taskId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data",
+    "INDEX_NAME": "basicDataId",
+    "COLUMN_NAME": "basicDataId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data",
+    "INDEX_NAME": "basicDataId_dataTypeCode",
+    "COLUMN_NAME": "dataTypeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data",
+    "INDEX_NAME": "basicDataId_dataTypeCode",
+    "COLUMN_NAME": "basicDataId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_prjstate",
+    "INDEX_NAME": "dataTypeCode",
+    "COLUMN_NAME": "dataTypeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_prjstate",
+    "INDEX_NAME": "dataTypeCode",
+    "COLUMN_NAME": "basicDataId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_basic_prjstate",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_company",
+    "INDEX_NAME": "code",
+    "COLUMN_NAME": "code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_company",
+    "INDEX_NAME": "pid",
+    "COLUMN_NAME": "pid",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_company",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_data_refresh_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_department",
+    "INDEX_NAME": "deparmentNum",
+    "COLUMN_NAME": "departmentNum",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_department",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_files",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_mails",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_menus",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_roles",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_roles",
+    "INDEX_NAME": "roleName",
+    "COLUMN_NAME": "roleName",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_role_menus",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_spms_arg",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_sys_arg",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_user_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_user_info",
+    "INDEX_NAME": "username",
+    "COLUMN_NAME": "username",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_user_menus",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "fnd_user_power",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "mes_oqc_info",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "mes_oqc_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "mes_seal_info",
+    "INDEX_NAME": "user",
+    "COLUMN_NAME": "user",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "deliverId",
+    "COLUMN_NAME": "deliverId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "projectType_projectId_deliverType",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "projectType_projectId_deliverType",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "INDEX_NAME": "projectType_projectId_deliverType",
+    "COLUMN_NAME": "deliverableType",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "INDEX_NAME": "dataTypeCode",
+    "COLUMN_NAME": "dataTypeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "INDEX_NAME": "dataTypeCode",
+    "COLUMN_NAME": "basicDataId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "INDEX_NAME": "dataTypeCodeSon",
+    "COLUMN_NAME": "dataTypeCodeSon",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "INDEX_NAME": "dataTypeCodeSon",
+    "COLUMN_NAME": "basicDataIdSon",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback",
+    "INDEX_NAME": "instId",
+    "COLUMN_NAME": "instId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback_quesnaire",
+    "INDEX_NAME": "callBackId",
+    "COLUMN_NAME": "callBackId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback_quesnaire",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback_quesnaire",
+    "INDEX_NAME": "quesnaireId",
+    "COLUMN_NAME": "quesnaireId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_evaluation_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_evaluation_header",
+    "INDEX_NAME": "projectCode_index",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_evaluation_header",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_header",
+    "INDEX_NAME": "index_evaluationHeaderId",
+    "COLUMN_NAME": "evaluationHeaderId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireResultHeaderId",
+    "COLUMN_NAME": "quesnaireResultHeaderId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireResultHeaderId",
+    "COLUMN_NAME": "quesTypeForCB",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireTemplateHeaderId",
+    "COLUMN_NAME": "quesnaireTemplateHeaderId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireTemplateHeaderId",
+    "COLUMN_NAME": "quesnaireTemplateLineId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireTemplateLineId",
+    "COLUMN_NAME": "quesnaireTemplateLineId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "INDEX_NAME": "quesnaireTemplateLineId",
+    "COLUMN_NAME": "questionTemplateOptId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_header",
+    "INDEX_NAME": "quesType",
+    "COLUMN_NAME": "quesType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_line",
+    "INDEX_NAME": "id_UNIQUE",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_line",
+    "INDEX_NAME": "quesnaireTemplateHeaderId",
+    "COLUMN_NAME": "quesnaireTemplateHeaderId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_options",
+    "INDEX_NAME": "id_UNIQUE",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_options",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_column_of_relationship",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_common_related_data",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_common_related_data",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "type",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_common_related_data",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "objType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_common_related_data",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "objId",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "category",
+    "COLUMN_NAME": "category",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "category",
+    "COLUMN_NAME": "subCategory",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "createBy",
+    "COLUMN_NAME": "createBy",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "createTime",
+    "COLUMN_NAME": "createTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "officeCode",
+    "COLUMN_NAME": "officeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "projectType",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "subCategory",
+    "COLUMN_NAME": "subCategory",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "type",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "facilitatorId",
+    "COLUMN_NAME": "facilitatorCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "officeCode",
+    "COLUMN_NAME": "officeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "profitDepCode",
+    "COLUMN_NAME": "profitDepCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "smsProjectCode",
+    "COLUMN_NAME": "smsProjectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "subcontractNo",
+    "COLUMN_NAME": "dispatchNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "INDEX_NAME": "UNIQUE_dispatchSeq",
+    "COLUMN_NAME": "dispatchSeq",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement",
+    "INDEX_NAME": "dispatchId",
+    "COLUMN_NAME": "dispatchId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement",
+    "INDEX_NAME": "dispatchSeq",
+    "COLUMN_NAME": "dispatchSeq",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement_from_d365",
+    "INDEX_NAME": "packingSlipId",
+    "COLUMN_NAME": "packingSlipId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement_from_d365",
+    "INDEX_NAME": "purchId",
+    "COLUMN_NAME": "purchId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement_from_d365",
+    "INDEX_NAME": "slipId",
+    "COLUMN_NAME": "slipId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "INDEX_NAME": "account",
+    "COLUMN_NAME": "account",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "INDEX_NAME": "account",
+    "COLUMN_NAME": "state",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "INDEX_NAME": "code",
+    "COLUMN_NAME": "code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "INDEX_NAME": "account",
+    "COLUMN_NAME": "account",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "INDEX_NAME": "account",
+    "COLUMN_NAME": "code",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "INDEX_NAME": "code",
+    "COLUMN_NAME": "code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_notification_template",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "orderExecNumber",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "orderType",
+    "COLUMN_NAME": "orderType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "orderType",
+    "COLUMN_NAME": "salesType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_d365",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_d365",
+    "INDEX_NAME": "orderExecNumber",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_d365",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_d365",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_sap",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_sap",
+    "INDEX_NAME": "orderExecNumber",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_sap",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_sap",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "orderExecNumber",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "orderType",
+    "COLUMN_NAME": "orderType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "orderType",
+    "COLUMN_NAME": "salesType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_d365",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_d365",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_d365",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineNum",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_d365",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_sap",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_sap",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_sap",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineNum",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_sap",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_source",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_source",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_source",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineNum",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_source",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms",
+    "INDEX_NAME": "contractNo_IDX",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms_history",
+    "INDEX_NAME": "contractNo_IDX",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_person_from_oa",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_person_from_oa",
+    "INDEX_NAME": "salesmanCode1",
+    "COLUMN_NAME": "salesmanCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "INDEX_NAME": "ppliCode",
+    "COLUMN_NAME": "ppliCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "itemcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "ppliCode",
+    "COLUMN_NAME": "ppliCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms",
+    "INDEX_NAME": "ppliCode",
+    "COLUMN_NAME": "itemcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "itemcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "orderNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "orderNumber",
+    "COLUMN_NAME": "lineId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "ppliCode",
+    "COLUMN_NAME": "ppliCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_rma_from_sms_history",
+    "INDEX_NAME": "ppliCode",
+    "COLUMN_NAME": "itemcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_sale_from_sms",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_sale_from_sms_history",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_crm",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_oa",
+    "INDEX_NAME": "lendInfoId",
+    "COLUMN_NAME": "lendInfoId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_oa",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_sms_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_product_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_product_from_sms_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_callback",
+    "INDEX_NAME": "presalesId",
+    "COLUMN_NAME": "presalesId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_callback",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_callback",
+    "INDEX_NAME": "quesnaireId",
+    "COLUMN_NAME": "quesnaireId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_callback",
+    "INDEX_NAME": "taskId",
+    "COLUMN_NAME": "taskId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_duration",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "presalesId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_header",
+    "INDEX_NAME": "instId",
+    "COLUMN_NAME": "instId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_header",
+    "INDEX_NAME": "lendInfoId",
+    "COLUMN_NAME": "lendInfoId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "presalesId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_header",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_product_line",
+    "INDEX_NAME": "lendInfoId",
+    "COLUMN_NAME": "lendInfoId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_product_line",
+    "INDEX_NAME": "presalesId",
+    "COLUMN_NAME": "presalesId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_product_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "productLineId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_rma_info",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_rma_info",
+    "INDEX_NAME": "itemcode",
+    "COLUMN_NAME": "itemcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "department",
+    "COLUMN_NAME": "column001",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "projectCode_index",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "projectCode_index",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "projectType_projectId_IDX",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "INDEX_NAME": "projectType_projectId_IDX",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "INDEX_NAME": "contract_projectGroupCode_IDX",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "INDEX_NAME": "contract_projectGroupCode_IDX",
+    "COLUMN_NAME": "projectGroupCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "INDEX_NAME": "projectGroupCode_contract_IDX",
+    "COLUMN_NAME": "projectGroupCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "INDEX_NAME": "projectGroupCode_contract_IDX",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group",
+    "INDEX_NAME": "projectGroupCode_UNIQUE",
+    "COLUMN_NAME": "projectGroupCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group_relationship",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group_relationship",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group_relationship",
+    "INDEX_NAME": "projectGroupCode",
+    "COLUMN_NAME": "projectGroupCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_group_relationship",
+    "INDEX_NAME": "smsProjectCode",
+    "COLUMN_NAME": "smsProjectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_header_view_cache",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_header_view_cache",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_header_view_cache",
+    "INDEX_NAME": "projectType",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_incident_table_from_itr",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_instruction",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_instruction",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_license_info_from_license",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_log",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "category",
+    "COLUMN_NAME": "category",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "category",
+    "COLUMN_NAME": "subCategory",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "createBy",
+    "COLUMN_NAME": "createBy",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "createTime",
+    "COLUMN_NAME": "createTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "officeCode",
+    "COLUMN_NAME": "officeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "processTime_IDX",
+    "COLUMN_NAME": "processTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "projectType",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "subCategory",
+    "COLUMN_NAME": "subCategory",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "type",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_sectary_from_sse",
+    "INDEX_NAME": "depNum",
+    "COLUMN_NAME": "depNum",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_sectary_from_sse",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_sectary_from_sse",
+    "INDEX_NAME": "sectary",
+    "COLUMN_NAME": "sectary",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "INDEX_NAME": "maintenanceId",
+    "COLUMN_NAME": "maintenanceId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "INDEX_NAME": "serviceType",
+    "COLUMN_NAME": "serviceType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_market_relations_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "memberCode_IDX",
+    "COLUMN_NAME": "memberCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "memberCode_IDX",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "memberCode_IDX",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "projectId_role",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "projectId_role",
+    "COLUMN_NAME": "memberRole",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "projectId_type",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "INDEX_NAME": "projectId_type",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_notification",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_notification",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_notification_state",
+    "INDEX_NAME": "notifyId",
+    "COLUMN_NAME": "notifyId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_notification_state",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_lease_line_from_crm",
+    "INDEX_NAME": "projectCode_IDX",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_lease_line_from_crm",
+    "INDEX_NAME": "projectCode_IDX",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line_real",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line_real",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms",
+    "INDEX_NAME": "orderExecNum",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history",
+    "INDEX_NAME": "orderExecNum",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history_bak",
+    "INDEX_NAME": "orderExecNum",
+    "COLUMN_NAME": "orderExecNumber",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history_bak",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history_bak",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_related_party",
+    "INDEX_NAME": "partyRole_parojectId",
+    "COLUMN_NAME": "partyRole",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_related_party",
+    "INDEX_NAME": "partyRole_parojectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_related_party",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_related_party",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_change_logs",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_change_logs",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpSeries",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpMark",
+    "SEQ_IN_INDEX": 4,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 5,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 6,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "pm_project_soft_version_conp_IDX",
+    "COLUMN_NAME": "conp",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "barCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpSeries",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "conpMark",
+    "SEQ_IN_INDEX": 4,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 5,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "idx_conp_item_query",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 6,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "pm_project_soft_version_conp_IDX",
+    "COLUMN_NAME": "conp",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "barCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "INDEX_NAME": "projectBarcodeValid",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "profitCenter",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms_history",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "contract",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms_history",
+    "INDEX_NAME": "contract",
+    "COLUMN_NAME": "profitCenter",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_spot_check_ignore_item",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_state",
+    "INDEX_NAME": "index_projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_state",
+    "INDEX_NAME": "projectPlanState",
+    "COLUMN_NAME": "projectPlanState",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_state",
+    "INDEX_NAME": "shipmentState",
+    "COLUMN_NAME": "shipmentState",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_supervision",
+    "INDEX_NAME": "department",
+    "COLUMN_NAME": "officeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_supervision",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_supervision",
+    "INDEX_NAME": "projectCode_index",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "taskId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "projectType",
+    "COLUMN_NAME": "projectType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "projectType",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "taskTypeCode_Id",
+    "COLUMN_NAME": "taskTypeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "INDEX_NAME": "taskTypeCode_Id",
+    "COLUMN_NAME": "taskTypeId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_warranty_callback",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_warranty_callback",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_warranty_callback",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "weeklyId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_content",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_content",
+    "INDEX_NAME": "weeklyId",
+    "COLUMN_NAME": "weeklyId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_feedback",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_feedback",
+    "INDEX_NAME": "weeklyId",
+    "COLUMN_NAME": "weeklyId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_report_line_data",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_deliver_files",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_deliver_files",
+    "INDEX_NAME": "subcontractId",
+    "COLUMN_NAME": "subcontractId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_facilitator",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_callback",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "INDEX_NAME": "facilitatorId",
+    "COLUMN_NAME": "facilitatorId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "INDEX_NAME": "officeCode",
+    "COLUMN_NAME": "officeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "INDEX_NAME": "profitDepCode",
+    "COLUMN_NAME": "profitDepCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "INDEX_NAME": "subcontractNo",
+    "COLUMN_NAME": "subcontractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "itemCode",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "unique_index",
+    "COLUMN_NAME": "subcontractId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "INDEX_NAME": "unique_index",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment",
+    "INDEX_NAME": "subcontractId",
+    "COLUMN_NAME": "subcontractId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment_sse",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment_sse",
+    "INDEX_NAME": "subcontractNo",
+    "COLUMN_NAME": "subcontractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment_sse",
+    "INDEX_NAME": "workNo",
+    "COLUMN_NAME": "workNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_price",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "objDataKey",
+    "COLUMN_NAME": "objType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "objDataKey",
+    "COLUMN_NAME": "objId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "objDataKey",
+    "COLUMN_NAME": "dataType",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "objDataKey",
+    "COLUMN_NAME": "dataId",
+    "SEQ_IN_INDEX": 4,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "procInstId",
+    "COLUMN_NAME": "procInstId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "INDEX_NAME": "worfFlow_objId",
+    "COLUMN_NAME": "objId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_main",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_main",
+    "INDEX_NAME": "probNum_IDX",
+    "COLUMN_NAME": "probNum",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_main",
+    "INDEX_NAME": "probNum_IDX",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "probId_Status_IDX",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "probId_Status_IDX",
+    "COLUMN_NAME": "status",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "probId_status_item_IDX",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "probId_status_item_IDX",
+    "COLUMN_NAME": "status",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "INDEX_NAME": "probId_status_item_IDX",
+    "COLUMN_NAME": "itemCode",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_product_component",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_read_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "itemModel",
+    "COLUMN_NAME": "itemModel",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "probId_serialNum_IDX",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "probId_serialNum_IDX",
+    "COLUMN_NAME": "serialNum",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "processId",
+    "COLUMN_NAME": "processId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "projectId",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "INDEX_NAME": "serialNum",
+    "COLUMN_NAME": "serialNum",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore_process",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore_process",
+    "INDEX_NAME": "probId",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore_process",
+    "INDEX_NAME": "probId",
+    "COLUMN_NAME": "restoreStatus",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore_weekly",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_restore_weekly",
+    "INDEX_NAME": "probId",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "affectedType",
+    "COLUMN_NAME": "affectedType",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "boot",
+    "COLUMN_NAME": "boot",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "conp",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "cpld",
+    "COLUMN_NAME": "cpld",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "datastate_entry_probId_IDX",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "datastate_entry_probId_IDX",
+    "COLUMN_NAME": "entryType",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "datastate_entry_probId_IDX",
+    "COLUMN_NAME": "entrySeries",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "datastate_entry_probId_IDX",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 4,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "pcb",
+    "COLUMN_NAME": "pcb",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "probId_datastate_IDX",
+    "COLUMN_NAME": "probId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "INDEX_NAME": "probId_datastate_IDX",
+    "COLUMN_NAME": "datastate",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "conp",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "cpld",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "boot",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "INDEX_NAME": "conp",
+    "COLUMN_NAME": "pcb",
+    "SEQ_IN_INDEX": 4,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "project_info_from_sms",
+    "INDEX_NAME": "orderCode",
+    "COLUMN_NAME": "orderCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "project_info_from_sms",
+    "INDEX_NAME": "orderCode",
+    "COLUMN_NAME": "org_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "project_info_from_sms",
+    "INDEX_NAME": "org_id",
+    "COLUMN_NAME": "org_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "INDEX_NAME": "spare_code",
+    "COLUMN_NAME": "spare_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_app_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_app_info",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_bar",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_bar",
+    "INDEX_NAME": "rma_id",
+    "COLUMN_NAME": "rma_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_info2mes_result",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_info2mes_result",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_repair_report_from_mes",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_repair_report_from_mes",
+    "INDEX_NAME": "sheetId_where_index",
+    "COLUMN_NAME": "sheetId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_spare_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "rma_spare_info",
+    "INDEX_NAME": "tx_id",
+    "COLUMN_NAME": "tx_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "role",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "serve_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "serve_type",
+    "INDEX_NAME": "serve_where_index",
+    "COLUMN_NAME": "serve",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap",
+    "INDEX_NAME": "index_contract_num",
+    "COLUMN_NAME": "contract_num",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap_history",
+    "INDEX_NAME": "index_contract_num",
+    "COLUMN_NAME": "contract_num",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap_history",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "spare_parts",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "spare_parts",
+    "INDEX_NAME": "spare_code",
+    "COLUMN_NAME": "spare_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "spare_parts_applicant",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "spare_parts_applicant",
+    "INDEX_NAME": "spare_code",
+    "COLUMN_NAME": "spare_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sys_state_or_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sys_state_or_type",
+    "INDEX_NAME": "st",
+    "COLUMN_NAME": "resolveCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "sys_state_or_type",
+    "INDEX_NAME": "stCode",
+    "COLUMN_NAME": "stCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tain_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tain_type",
+    "INDEX_NAME": "tain_where_index",
+    "COLUMN_NAME": "tain",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tb_sys_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "ID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tb_sys_log",
+    "INDEX_NAME": "USER_NAME",
+    "COLUMN_NAME": "USER_NAME",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_contract_market_system",
+    "INDEX_NAME": "contract_code",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_max_ppfs",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_max_ppfs",
+    "INDEX_NAME": "projectCode",
+    "COLUMN_NAME": "projectCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period",
+    "COLUMN_NAME": "period",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period",
+    "COLUMN_NAME": "con_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period",
+    "COLUMN_NAME": "packlist_id",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period2",
+    "COLUMN_NAME": "con_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period2",
+    "COLUMN_NAME": "packlist_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment",
+    "INDEX_NAME": "period2",
+    "COLUMN_NAME": "period",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment_barcode",
+    "INDEX_NAME": "packItem",
+    "COLUMN_NAME": "pack_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment_barcode",
+    "INDEX_NAME": "packItem",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "temp_query_shipment_barcode",
+    "INDEX_NAME": "packItem",
+    "COLUMN_NAME": "count",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_contract_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_contract_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_contract",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_contract",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_contract",
+    "INDEX_NAME": "sourceContractNo",
+    "COLUMN_NAME": "sourceContractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_contract",
+    "INDEX_NAME": "sourceContractNo",
+    "COLUMN_NAME": "projectId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "发货合同号",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_project_shipment",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "序列号",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_view_shipment_ems_4_pm",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_view_shipment_ems_4_pm",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "packId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_view_shipment_info_4_pm",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tmp_tb_view_shipment_info_4_pm",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "packId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tx_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "tx_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "tx_info",
+    "INDEX_NAME": "sheetID",
+    "COLUMN_NAME": "sheetID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_company",
+    "INDEX_NAME": "adminID",
+    "COLUMN_NAME": "adminID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_company",
+    "INDEX_NAME": "compCode",
+    "COLUMN_NAME": "compCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_company",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_data_field_relation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_data_operation",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_dictionary",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_down_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_file",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_file_type",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_mails",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_menu",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_notify_template",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_notify_template",
+    "INDEX_NAME": "templateCode",
+    "COLUMN_NAME": "templateCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_permission",
+    "INDEX_NAME": "permission_name",
+    "COLUMN_NAME": "permission_name",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_permission",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "permission_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_resource",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "role_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role",
+    "INDEX_NAME": "role_name",
+    "COLUMN_NAME": "role_name",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role_menu",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "INDEX_NAME": "permission_id",
+    "COLUMN_NAME": "permission_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "INDEX_NAME": "role_id",
+    "COLUMN_NAME": "role_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "INDEX_NAME": "role_id",
+    "COLUMN_NAME": "permission_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sync_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sync_state",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sync_state",
+    "INDEX_NAME": "tableObject",
+    "COLUMN_NAME": "tableObject",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "create_by",
+    "COLUMN_NAME": "create_by",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "create_date",
+    "COLUMN_NAME": "create_date",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "create_date",
+    "COLUMN_NAME": "description",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "description",
+    "COLUMN_NAME": "description",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "type",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "INDEX_NAME": "type",
+    "COLUMN_NAME": "create_by",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_variable",
+    "INDEX_NAME": "id",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_sys_variable",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "user_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user",
+    "INDEX_NAME": "unique_username",
+    "COLUMN_NAME": "user_name",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "compID",
+    "COLUMN_NAME": "compID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "depID",
+    "COLUMN_NAME": "depID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "fk_userInfo_userId",
+    "COLUMN_NAME": "user_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "fk_userInfo_userId",
+    "COLUMN_NAME": "compID",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "jobID",
+    "COLUMN_NAME": "jobID",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "reportTo",
+    "COLUMN_NAME": "reportTo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "wfreportTo",
+    "COLUMN_NAME": "wfreportTo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "INDEX_NAME": "workNo",
+    "COLUMN_NAME": "workNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_login_record",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "t_user_role_ibfk_2",
+    "COLUMN_NAME": "role_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "unique_userId_roleId",
+    "COLUMN_NAME": "user_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "unique_userId_roleId",
+    "COLUMN_NAME": "role_id",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "unique_userId_roleId",
+    "COLUMN_NAME": "comp_id",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "INDEX_NAME": "user_id",
+    "COLUMN_NAME": "user_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user",
+    "INDEX_NAME": "username",
+    "COLUMN_NAME": "username",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user_info",
+    "INDEX_NAME": "username",
+    "COLUMN_NAME": "username",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user_modules",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "user_permissions",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "barcode2",
+    "COLUMN_NAME": "barcode2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "comBarCode",
+    "COLUMN_NAME": "comBarCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "contract_barcode_IDX",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "contract_barcode_IDX",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "contract_code",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "diff",
+    "COLUMN_NAME": "diff",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "gradeCode",
+    "COLUMN_NAME": "gradeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "item",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "office_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "newId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "INDEX_NAME": "warrantyEndTime",
+    "COLUMN_NAME": "warrantyEndTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_contract_state",
+    "INDEX_NAME": "contractNo",
+    "COLUMN_NAME": "contractNo",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "barcode2",
+    "COLUMN_NAME": "barcode2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "comBarCode",
+    "COLUMN_NAME": "comBarCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "contract_code",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "diff",
+    "COLUMN_NAME": "diff",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "gradeCode",
+    "COLUMN_NAME": "gradeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "item",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "office_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "newId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "INDEX_NAME": "warrantyEndTime",
+    "COLUMN_NAME": "warrantyEndTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "barcode",
+    "COLUMN_NAME": "barcode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "barcode2",
+    "COLUMN_NAME": "barcode2",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "comBarCode",
+    "COLUMN_NAME": "comBarCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "contract_code",
+    "COLUMN_NAME": "contract_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "diff",
+    "COLUMN_NAME": "diff",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "gradeCode",
+    "COLUMN_NAME": "gradeCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "item",
+    "COLUMN_NAME": "item",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "office_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "marketCode",
+    "SEQ_IN_INDEX": 2,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "office_code_marketCode_systemId",
+    "COLUMN_NAME": "systemId",
+    "SEQ_IN_INDEX": 3,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "newId",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "INDEX_NAME": "warrantyEndTime",
+    "COLUMN_NAME": "warrantyEndTime",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warehouse",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "whs_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warehouse",
+    "INDEX_NAME": "whs_code",
+    "COLUMN_NAME": "whs_code",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warehouse_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "info_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warehouse_info_detail",
+    "INDEX_NAME": "info_id",
+    "COLUMN_NAME": "info_id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 1,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warehouse_info_detail",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warranty_change_logs",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "warranty_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  },
+  {
+    "TABLE_NAME": "workflow_info",
+    "INDEX_NAME": "PRIMARY",
+    "COLUMN_NAME": "id",
+    "SEQ_IN_INDEX": 1,
+    "NON_UNIQUE": 0,
+    "INDEX_TYPE": "BTREE"
+  }
+]

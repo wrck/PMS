@@ -358,6 +358,7 @@
     
     <!-- 总调配中心 -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="waitForJobsToCompleteOnShutdown" value="true"/>
         <property name="triggers">
             <list>
                 <!-- <ref bean="ReportTaskTrigger" />

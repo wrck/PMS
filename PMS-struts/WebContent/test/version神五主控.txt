@@ -1,0 +1,25 @@
+<DPTECH>show version 
+ Software Release S211C012D106P02
+ Conplat Version is V100R005B01D106P02
+ Compiled Fri, 12 Dec 2025 15:22:06 +0800
+ Copyright (c) 2008-2025 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DPX8000-A5 Uptime is 2 week(s), 6 day(s),  3 hour(s),  4 minute(s)
+
+ CPU type:       Netlogic XLP316 Rev B2
+
+ SDRAM:          8192M bytes
+ Flash Memory:   4M bytes
+ CF card Memory: 2048M bytes
+
+ PCB Version:            C         
+ CPLD Version:           4.02      
+ BASIC CONBOOT Version:  4.10.02   
+ EXTEND CONBOOT Version: 4.10.02   
+ Serial Number:                    
+ [CHASSIS 0 SLOT  1]  MPUA2XGES-E     (PCB)B,   (CPLD)4.02,   (FPGA)NONE
+ [CHASSIS 0 SLOT  2]  DAC-Blade-AI    (PCB)B,   (CPLD)2.00,   (FPGA)9
+ [CHASSIS 1 SLOT  1]  MPUA2XGES-E     (PCB)B,   (CPLD)5.02,   (FPGA)NONE
+ [CHASSIS 1 SLOT  2]  DAC-Blade-AI    (PCB)B,   (CPLD)2.00,   (FPGA)4
+<DPTECH>

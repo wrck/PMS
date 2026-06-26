@@ -15,7 +15,8 @@ $(document).ready(function() {
        	} else {
            	$sourceTr.remove();
        	}
-        $(".rowNum", $container).each(function(index){
+        /** 正序调整
+         * $(".rowNum", $container).each(function(index){
         	var $tr = $(this).parents(".softVersionSub:first,.softVersion:first").first();
         	var groupIndex = $(".softVersion", $container).index($tr);
         	var rowNum = groupIndex;
@@ -30,6 +31,35 @@ $(document).ready(function() {
             $(this).parent().attr("index", newIndex).find("input[name],select[name]").each(function () {
                 var name = $(this).attr("name");
                 $(this).attr("name", name.replace(/\[\d+\]/, "[" + newIndex + "]"));
+            });
+        });*/
+       	/**
+       	 * 逆序调整
+       	 */
+       	var groupCount = $(".softVersion", $container).length || 0;
+    	var rowCount = $(".rowNum", $container).not($(".softVersion", $container).has(".softVersionSub").find(".rowNum:first")).length;
+        $(".rowNum", $container).each(function(index){
+        	var $tr = $(this).parents(".softVersionSub:first,.softVersion:first").first();
+    		var $groupTr = $(this).parents(".softVersion:first").first();
+    		var $groupSubTrs = $groupTr.find(".softVersionSub");
+    		var $firstSubTr = $groupSubTrs.first();
+        	var groupIndex = (groupCount - 1) - $(".softVersion", $container).index($groupTr);
+        	var rowNum = groupIndex;
+        	var $subRowNums = $(".rowNum", $container).not($(".softVersion", $container).has(".softVersionSub").find(".rowNum:first"));
+        	var newIndex = $subRowNums.index($firstSubTr.find(".rowNum:first"));
+        	var subRowCount = $groupSubTrs.length;
+        	newIndex = rowCount - subRowCount - newIndex;
+        	if ($tr.hasClass("softVersionSub")) {
+        		rowNum = $groupSubTrs.index($tr);
+                newIndex = newIndex + rowNum;
+        	} else {
+            	$tr.attr("groupIndex", groupIndex);
+        	}
+        	$tr.find(".softVersionSub").attr("groupIndex", groupIndex);
+            $(this).text(rowNum + 1);
+            $(this).parent().attr("index", newIndex).find("input[name],select[name]").each(function () {
+            	var name = $(this).attr("name");
+            	$(this).attr("name", name.replace(/\[\d+\]/, "[" + newIndex + "]"));
             });
         });
 	});
@@ -46,6 +76,13 @@ function parserSoftVersion(softVersion, $container) {
 			var affectedType = softVersion.affectedType;
 			var versionMap = JSON.parse(data.result);
 			console.log(versionMap);
+			var checkResult = checkSoftVersionRanges(softVersion, versionMap);
+			if (checkResult.status == false) {
+				alert(checkResult.message || "输入格式不正确，请核对！");
+//				return false;
+			}
+			var hasError = !checkResult.status;
+			var options = {$container, readOnly: hasError, allowDel: hasError, labelClassRangePart: hasError ? 'label-warning' : '', labelClassRange : hasError ? 'label-danger' : ''};
 			for (var entryKey in versionMap) {
 				var timestamp = new Date().getTime();
 				var prevGroupCount = $(".softVersion", $container).length;
@@ -56,8 +93,9 @@ function parserSoftVersion(softVersion, $container) {
 					manualEntry: entryKey, 
 					entryMap, 
 					affectedType,
-					groupId: timestamp
-				}), {$container});
+					groupId: timestamp,
+					readOnly: !checkResult.status
+				}), options);
 				/*var isNotGroup = $.isEmptyObject(entryMap);
 				var	html =`<div class="softVersion">
 					${isNotGroup ? "" : `<div class="groupManualEntry">`}
@@ -77,7 +115,7 @@ function parserSoftVersion(softVersion, $container) {
 						manualEntry: entryKey, 
 						manualEntrySub: subKey, 
 						affectedType, ranges, groupId
-					});
+					}, options);
 				}
 				html += "</div>";*/
 				appendSoftVersion($container, html);
@@ -88,6 +126,129 @@ function parserSoftVersion(softVersion, $container) {
 		}
 	});
 };
+
+function checkSoftVersionRanges(softVersion, versionMap) {
+	var affectedType = softVersion.affectedType;
+	var platformType = softVersion.platformType;
+	var manualEntry = softVersion.manualEntry || "";
+	console.log(versionMap);
+	if (platformType == 'other') {
+		return {
+			status: true,
+			message: "其它平台无需校验！"
+		}
+	}
+	for (var entryKey in versionMap) {
+		if (manualEntry != entryKey) {
+			return {
+				status: false,
+				message: "输入的软件版本格式与解析结果不一致，请规范输入！"
+			};
+		}
+		var entryMap = versionMap[entryKey] || {};
+		var vserionRanges = Object.keys(entryMap);
+		if ($.inArray(manualEntry, vserionRanges) == -1) {
+			return {
+				status: false,
+				message: "输入的软件版本格式与解析结果不一致，请规范输入！"
+			};
+		}
+		console.log(vserionRanges);
+		
+		for (var softRange in entryMap) {
+			var entrySofts = entryMap[softRange] || [];
+			var softKeys = softRange.split("~");
+			for (var idx = 0; idx < softKeys.length; idx++) {
+				// 输入的软件版本范围开始和节数分别进行格式校验
+				var softKey = softKeys[idx] || '';
+		        var soft = entrySofts[idx] || {};
+		        
+				//  软件版本辅助校验字段
+				var mergerdVersionParts = {};
+				var partCounts = {};
+				var originVersionParts = [];
+				var isSeriesValid = true; 
+				
+		       
+		        // 软件系列信息是否完整
+		        var seriesParts = soft.seriesParts || {};
+		        var seriesPartKeys = Object.keys(seriesParts);
+		        if (seriesPartKeys.length < 2) {
+		            isSeriesValid = false;
+		            return {
+			        	status: false,
+			        	message: "选择的软件版本系列不完整，请核对！"
+			        }
+		        }
+		        
+		        // 软件版本信息处理
+		        var versionParts = soft.versionParts || {};
+		        var versionPartsKeys = Object.keys(soft.markAllParts || versionParts);
+		        for (const partKey of versionPartsKeys) {
+		        	var part = $.trim(versionParts[partKey]);
+		        	// 初始化
+		        	partCounts[partKey] = (partCounts[partKey] || 0);
+		        	mergerdVersionParts[partKey] = mergerdVersionParts[partKey] || [];
+		        	// 如果有值进行赋值
+		        	if (part != '') {
+		            	partCounts[partKey] = (partCounts[partKey] || 0) + 1;
+		            	mergerdVersionParts[partKey].push(part);
+		            	originVersionParts.push(part);
+		        	}
+		        }
+		        
+		        // 检查各软件版本部分是否有重复，特殊部位允许重复
+				var ignorePartKeys = ['PATCHxx', 'LATCHxx', 'MATCHxx'];
+				var isPartRepeat = false;
+				for (var partKey in partCounts) {
+					if ($.inArray(partKey, ignorePartKeys) == -1 && partCounts[partKey] > 1) {
+			            isPartRepeat = true;
+			            break;
+			        }
+				}
+				
+				// 如果软件系列完整、软件版本重复则添加错误计数
+				if (!isSeriesValid || isPartRepeat) {
+			        return {
+			        	status: false,
+			        	message: !isSeriesValid ? "选择的软件版本系列不完整，请核对！" : "输入的软件版本范围存在重复内容，请规范输入！"
+			        }
+			    } else {
+			        // 将检查后的各部分进行重新拼合，判断是否与输入版本保持一致
+			        let versionJoinParts = [];
+			        let orderedVersionParts = [].concat(originVersionParts);
+			        for (let partKey in mergerdVersionParts) {
+			        	// 判断是否是非重复字段，如果不重复则从order中取值
+			        	if ($.inArray(partKey, ignorePartKeys) == -1) {
+			                let partValues = mergerdVersionParts[partKey] || [];
+			                versionJoinParts = versionJoinParts.concat(partValues);
+			                // 将已拼接的字段从原始顺序值中移除
+			                const index = orderedVersionParts.indexOf(partValues[0]);
+			                if (index !== -1) {
+			                	orderedVersionParts.splice(index, 1); // 原地修改数组
+			                }
+			        	} else {
+			        		// 如果是重复字段，为了保证维持原始顺序后续直接用原始顺序链接，因为'PATCHxx', 'LATCHxx'在拆分成多段之后后面的Patch会提前
+			                // 例如PATHC01PATHC02PATHC03，会被解析成2段，第一段PATCH01LATCH02，第二段PATCH03.在解析后会认为PATCH重复导致最终PATCH01PATCH03LATCH02
+			        		break;
+			        	}
+			        }
+			        
+			        // 将剩余部分全部加入
+			        versionJoinParts = versionJoinParts.concat(orderedVersionParts);
+			        var versionJoin = versionJoinParts.join("");
+			        if (versionJoin != softKey) {
+			        	return {
+				        	status: false,
+				        	message: "输入的版本号格式有误，请规范输入!"
+				        }
+			        }
+			    }
+			}
+		}
+	}
+	return {status: true};
+}
 		
 function renderSoftVersions(json, options) {
 	options = options || {};
@@ -253,6 +414,7 @@ function renderSoftVersion(softVersion, options) {
 	options = options || {};
 	var $container = options.$container, 
 		readOnly = options.readOnly, 
+		allowDel = options.allowDel, 
 		ignoreSub = options.ignoreSub, 
 		groupId = options.groupId || softVersion.groupId, 
 		groupIndex = options.groupIndex, 
@@ -262,11 +424,14 @@ function renderSoftVersion(softVersion, options) {
 	rowNum = rowNum != undefined ? rowNum : $(".rowNum", $container).not($(".softVersion", $container).has(".softVersionSub").find(".rowNum:first")).length;
 	readOnly = readOnly == true ? true : false;
 	ignoreSub = ignoreSub == true ? true : false;
+	allowDel = allowDel == true ? true : false;
 	var isSub = offset != undefined;
 	var isNotGroup = !(groupId || softVersion.groupId) || isSub || ignoreSub;
 	var isGroup = !isNotGroup;
 	var index = (rowNum || 0) + (offset || 0);
 	var cssClass = "softVersion" + (isSub ? "Sub" : "");
+	var labelClassRangePart = options.labelClassRangePart || "label-info";
+	var labelClassRange = options.labelClassRange || "label-primary";
 	var isNotGroupEdit = isNotGroup && !readOnly;
 	var isSubEdit = isSub && !readOnly;
 	if (ignoreSub && isSub) {
@@ -301,16 +466,16 @@ function renderSoftVersion(softVersion, options) {
 			${isNotGroupEdit && softVersion.manualEntry ? `<input type="hidden" name="softVersionList[${index}].manualEntry" value="${softVersion.manualEntry}">` : ""}
 			${!isSub && softVersion.manualEntry ? `${softVersion.manualEntry}` : ""}
 			${isSubEdit && softVersion.manualEntrySub ? `<input type="hidden" name="softVersionList[${index}].manualEntrySub" value="${softVersion.manualEntrySub}">` : ""}
-			${isSub && softVersion.manualEntrySub ? `<span class="softVersionRangePart label label-info">${softVersion.manualEntrySub}</span> -> ` : ""}
+			${isSub && softVersion.manualEntrySub ? `<span class="softVersionRangePart label ${labelClassRangePart}">${softVersion.manualEntrySub}</span> -> ` : ""}
 			${isSubEdit && softVersion.entryStart ? `<input type="hidden" name="softVersionList[${index}].entryStart" value="${softVersion.entryStart}">` : ""}
 			${isSubEdit && softVersion.entryEnd ? `<input type="hidden" name="softVersionList[${index}].entryEnd" value="${softVersion.entryEnd}">` : ""}` +
-			`${isSub ? `<span class="softVersionRange label label-primary">${softVersion.entryStart}</span> ~ <span class="softVersionRange label label-primary">${softVersion.entryEnd}</span>` : ""}` +
+			`${isSub ? `<span class="softVersionRange label ${labelClassRange}">${softVersion.entryStart}</span> ~ <span class="softVersionRange label ${labelClassRange}">${softVersion.entryEnd}</span>` : ""}` +
 			`${isSubEdit && softVersion.markStart ? `<input type="hidden" name="softVersionList[${index}].markStart" value="${softVersion.markStart}">` : ""}
 			${isSubEdit && softVersion.markEnd ? `<input type="hidden" name="softVersionList[${index}].markEnd" value="${softVersion.markEnd}">` : ""}` +
-			//`${isSub ? `<span class="softVersionRange label label-primary">${softVersion.markStart}</span> ~ <span class="softVersionRange label label-primary">${softVersion.markEnd}</span>` : ""}` +
+			//`${isSub ? `<span class="softVersionRange label ${labelClassRange}">${softVersion.markStart}</span> ~ <span class="softVersionRange label ${labelClassRange}">${softVersion.markEnd}</span>` : ""}` +
 			`${isSubEdit && softVersion.groupId ? `<input type="hidden" name="softVersionList[${index}].groupId" value="${softVersion.groupId}">` : ""}
 		</div>
-		${!readOnly ? `<span class="glyphicon glyphicon-minus text-danger pull-right flex-algin-self-center softVersionDel"></span>` : ""}
+		${!readOnly || allowDel ? `<span class="glyphicon glyphicon-minus text-danger pull-right flex-algin-self-center softVersionDel"></span>` : ""}
 		${isNotGroup ? "" : `</div>`}`;
 	if (softVersion.children) {
 		var i = 0;
@@ -319,7 +484,33 @@ function renderSoftVersion(softVersion, options) {
 			html += renderSoftVersion(children[childIndex], $.extend({}, softVersion, {
 				$container,
 				//affectedType: softVersion.affectedType || options.affectedType,
-				readOnly, ignoreSub, groupId, groupIndex, 
+				readOnly, ignoreSub, groupId, groupIndex, allowDel, labelClassRangePart, labelClassRange,
+				rowNum: index, 
+				offset: i++
+			}));
+		}
+	} else if (softVersion.entryMap && readOnly) {
+		var i = 0;
+		var entryMap = softVersion.entryMap;
+		var children = [];
+		for(var subKey in entryMap) {
+			var ranges = entryMap[subKey] || [];
+			var sub = JSON.parse(JSON.stringify(softVersion));
+			sub.manualEntrySub = subKey;
+			sub.entrySeries = ranges[0].series;
+			sub.entryType = ranges[0].type;
+			sub.entryStart = ranges[0].version;
+			sub.entryEnd = ranges[1].version;
+			sub.markStart = ranges[0].mark;
+			sub.markEnd = ranges[1].mark;
+			sub.entryMap = null;
+			children.push(sub);
+		}
+		for ( var childIndex in children) {
+			html += renderSoftVersion(children[childIndex], $.extend({}, softVersion, {
+				$container,
+				//affectedType: softVersion.affectedType || options.affectedType,
+				readOnly, ignoreSub, groupId, groupIndex, allowDel, labelClassRangePart, labelClassRange,
 				rowNum: index, 
 				offset: i++
 			}));
@@ -334,14 +525,14 @@ function renderSoftVersion(softVersion, options) {
 				manualEntry: softVersion.manualEntry, 
 				manualEntrySub :subKey, 
 				ranges, groupId
-			}));
+			}), options);
 		}
 	}
 	html += `</div>`;
 	return html.replace(/(\n[\s\t]*\r*\n)/g, '\n').replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, '');
 }
 
-function renderSoftVersionSub(groupIndex, rowNum, offset, softVersion) {
+function renderSoftVersionSub(groupIndex, rowNum, offset, softVersion, options) {
 	var manualEntry = softVersion.manualEntry || "",
 		manualEntrySub = softVersion.manualEntrySub || "", 
 		affectedType = softVersion.affectedType || "",
@@ -351,6 +542,8 @@ function renderSoftVersionSub(groupIndex, rowNum, offset, softVersion) {
 	var index = (rowNum || 0) + (offset || 0);
 	var renderOptions = {groupId, rowNum, offset, readOnly : false, isSub : true, isNotGroupEdit:true, index};
 	var renderSoftVersionTypeOptions = $.extend(true, {}, renderOptions, {readOnly: false});
+	var labelClassRangePart = options.labelClassRangePart || "label-info";
+	var labelClassRange = options.labelClassRange || "label-primary";
 	var html = `<div class="softVersionSub" groupId="${groupId}" groupIndex="${groupIndex}">
 		<div class="softVersionContainer" index="${index}">
 			<span class="rowNum">${offset + 1}</span>.&nbsp;` +
@@ -364,13 +557,13 @@ function renderSoftVersionSub(groupIndex, rowNum, offset, softVersion) {
 			`${softVersionTypeRender(softVersion, 'branchType', renderSoftVersionTypeOptions)}` +
 			`<input type="hidden" name="softVersionList[${index}].manualEntry" value="${manualEntry}">
 			<input type="hidden" name="softVersionList[${index}].manualEntrySub" value="${manualEntrySub}">
-			<span class="softVersionRangePart label label-info">${manualEntrySub}</span> -> 
+			<span class="softVersionRangePart label ${labelClassRangePart}">${manualEntrySub}</span> -> 
 			<input type="hidden" name="softVersionList[${index}].entryStart" value="${ranges[0].version}">
 			<input type="hidden" name="softVersionList[${index}].entryEnd" value="${ranges[1].version}">` +
-			`<span class="softVersionRange label label-primary">${ranges[0].version}</span> ~ <span class="softVersionRange label label-primary">${ranges[1].version}</span>` +
+			`<span class="softVersionRange label ${labelClassRange}">${ranges[0].version}</span> ~ <span class="softVersionRange label ${labelClassRange}">${ranges[1].version}</span>` +
 			`<input type="hidden" name="softVersionList[${index}].markStart" value="${ranges[0].mark}">
 			<input type="hidden" name="softVersionList[${index}].markEnd" value="${ranges[1].mark}">` +
-			//`<span class="softVersionRange label label-primary">${ranges[0].mark}</span> ~ <span class="softVersionRange label label-primary">${ranges[1].mark}</span>` +
+			//`<span class="softVersionRange label ${labelClassRange}">${ranges[0].mark}</span> ~ <span class="softVersionRange label ${labelClassRange}">${ranges[1].mark}</span>` +
 			`<input type="hidden" name="softVersionList[${index}].groupId" value="${groupId}">
 		</div>
 		<span class="glyphicon glyphicon-minus text-danger pull-right softVersionDel"></span>
@@ -446,7 +639,7 @@ function initProbProductBySelect2(select2Id, $container, customOption) {
             processResults: processDataFunc,
             cache: true
         },
-        placeholder: '搜索产品编码/型号/描述，空格分隔可组合。（前缀匹配每段以^开头，后缀匹配每段以$结尾）',
+        placeholder: '搜索产品编码/型号/描述，空格分隔可组合。（前缀匹配每段以^开头，后缀匹配每段以$结尾，多个产品编码之间用英文,分隔）',
         minimumInputLength: 4,
         templateResult: function(repo) {
             if (repo.loading) {
@@ -707,8 +900,9 @@ function renderProbProducts(json, options) {
     probProducts.sort(function(a, b) {
     	return (a.itemModel || "").localeCompare(b.itemModel);
     })
+    var labelClass = options.labelClass || 'label-primary';
     for(var probProduct of probProducts) {
-        $($container).append(`<span class="probProduct label label-primary">${probProduct.itemModel || probProduct.itemDesc || ''}</span>`);
+        $($container).append(`<span class="probProduct label ${labelClass}">${probProduct.itemModel || probProduct.itemDesc || ''}</span>`);
     }
 }
 
@@ -874,7 +1068,7 @@ function checkPost(){
 		probProducts.push(objDeepOmit(data.source, ['id', 'status', 'createBy', 'createTime', 'updateBy', 'updateTime']));
 	}
 	$("#probProducts_hidden").val(JSON.stringify(probProducts));
-	
+
 	var selectedData = $("#relatedSceneTypes").select2("data") || [];
 	var relatedSceneTypes = [];
 	var relatedSceneTypesName = [];
@@ -888,7 +1082,33 @@ function checkPost(){
 	$("#relatedSceneTypesJson_hidden").val(JSON.stringify(relatedSceneTypes));
 	$("#relatedSceneTypesName_hidden").val(relatedSceneTypesName);
 
-    fields = new Array('num','theme', 'probProducts');
+	var selectedData = $("#mitigationActionTypes").select2("data") || [];
+	var mitigationActionTypes = [];
+	var mitigationActionTypesName = [];
+	for (var data of selectedData) {
+		mitigationActionTypes.push({
+			id: data.id,
+			text: data.text
+		})
+		mitigationActionTypesName.push(data.text);
+	}
+	$("#mitigationActionTypesJson_hidden").val(JSON.stringify(mitigationActionTypes));
+	$("#mitigationActionTypesName_hidden").val(mitigationActionTypesName);
+
+	var selectedData = $("#solutionActionTypes").select2("data") || [];
+	var solutionActionTypes = [];
+	var solutionActionTypesName = [];
+	for (var data of selectedData) {
+		solutionActionTypes.push({
+			id: data.id,
+			text: data.text
+		})
+		solutionActionTypesName.push(data.text);
+	}
+	$("#solutionActionTypesJson_hidden").val(JSON.stringify(solutionActionTypes));
+	$("#solutionActionTypesName_hidden").val(solutionActionTypesName);
+
+    fields = new Array('num','theme', 'probProducts','probTicketNo','relatedSceneTypes','mitigationActionTypes','solutionActionTypes');
     for(i = 0 ;i < fields.length ; i++){
         if(!checkField(fields[i])){
             return false;

@@ -18,6 +18,7 @@ public class SoftVersion extends CustomInfoEntity {
 	private Object conp1;
 	private Object conp2;
 	private String conpCondition;// 查询条件
+    private String conpMark;
 	private String cpld;
 	private Object cpld1;
 	private Object cpld2;
@@ -39,6 +40,14 @@ public class SoftVersion extends CustomInfoEntity {
 	 * 手工录入拆解
 	 */
 	private String manualEntrySub;
+	/**
+     * 版本类型
+     */
+    private String entryType;
+	/**
+	 * 版本范围系列
+	 */
+	private String entrySeries;
 	/**
 	 * 版本范围开始
 	 */
@@ -165,8 +174,16 @@ public class SoftVersion extends CustomInfoEntity {
 			}
 		}
 	}
+	
+	public String getConpMark() {
+        return conpMark;
+    }
 
-	public String getCpldCondition() {
+    public void setConpMark(String conpMark) {
+        this.conpMark = conpMark;
+    }
+
+    public String getCpldCondition() {
 		return cpldCondition;
 	}
 
@@ -312,7 +329,23 @@ public class SoftVersion extends CustomInfoEntity {
 		this.manualEntrySub = manualEntrySub;
 	}
 
-	public String getEntryStart() {
+	public String getEntryType() {
+        return entryType;
+    }
+
+    public void setEntryType(String entryType) {
+        this.entryType = entryType;
+    }
+
+    public String getEntrySeries() {
+        return entrySeries;
+    }
+
+    public void setEntrySeries(String entrySeries) {
+        this.entrySeries = entrySeries;
+    }
+
+    public String getEntryStart() {
 		return entryStart;
 	}
 

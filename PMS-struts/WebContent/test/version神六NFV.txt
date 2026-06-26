@@ -1,0 +1,16 @@
+ <DPTECH>show ver
+  Software Release S311C013D008T01
+  Conplat Version is V100R006B01D008T01
+  Compiled Tue, 28 Mar 2023 01:31:09 +0800
+  Signature base, Version , AV 1.4.421 APP 2.1.261 IPS 3.1.103 
+  Copyright (c) 2008-2023 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+  Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+  DACNFV Uptime is 65 week(s), 5 day(s),  1 hour(s),  0 minute(s)
+ 
+  CPU type:       QEMU Virtual CPU version 2.5+
+
+  SDRAM:          4G
+  Harddisk:       50G
+ 
+  Serial Number:          00000000D2303181A9
+ <DPTECH>

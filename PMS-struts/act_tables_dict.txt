@@ -1,0 +1,975 @@
+### 1 act_evt_log -- Activiti事件日志表，记录流程引擎产生的事件日志
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti事件日志表，记录流程引擎产生的事件日志 |
+| 数据量 | ~6398 行 |
+| 数据大小 | 17.52 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| LOG_NR_ | bigint(20) | NO | - | PRI, auto_increment |  | 日志编号（自增主键） |
+| TYPE_ | varchar(64) | YES | NULL | - |  | 事件类型（如process-start, task-create等） |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | - |  | 流程定义ID，关联act_re_procdef |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID，关联act_ru_execution |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| TASK_ID_ | varchar(64) | YES | NULL | - |  | 任务ID，关联act_ru_task |
+| TIME_STAMP_ | timestamp(3) | NO | CURRENT_TIMESTAMP(3) | - |  | 事件时间戳 |
+| USER_ID_ | varchar(255) | YES | NULL | - |  | 用户ID |
+| DATA_ | longblob | YES | NULL | - |  | 事件数据（二进制序列化） |
+| LOCK_OWNER_ | varchar(255) | YES | NULL | - |  | 事件处理锁拥有者 |
+| LOCK_TIME_ | timestamp(3) | YES | NULL | - |  | 事件处理锁获取时间 |
+| IS_PROCESSED_ | tinyint(4) | YES | 0 | - |  | 是否已处理（0:未处理 1:已处理） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | LOG_NR_ |
+
+---
+
+### 2 act_ge_bytearray -- Activiti通用字节数组表，存储流程定义资源文件、序列化数据等二进制内容
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti通用字节数组表，存储流程定义资源文件、序列化数据等二进制内容 |
+| 数据量 | ~1210 行 |
+| 数据大小 | 6.55 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| DEPLOYMENT_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 部署ID，关联act_re_deployment |
+| BYTES_ | longblob | YES | NULL | - |  | 二进制数据内容 |
+| GENERATED_ | tinyint(4) | YES | NULL | - |  | 是否自动生成（0:否 1:是） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_FK_BYTEARR_DEPL | BTREE | NON-UNIQUE | DEPLOYMENT_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_BYTEARR_DEPL | DEPLOYMENT_ID_ | act_re_deployment | ID_ |
+
+---
+
+### 3 act_ge_property -- Activiti通用属性表，存储引擎级别的属性键值对（如版本号等）
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti通用属性表，存储引擎级别的属性键值对（如版本号等） |
+| 数据量 | ~3 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| NAME_ | varchar(64) | NO | '' | PRI |  | 名称 |
+| VALUE_ | varchar(300) | YES | NULL | - |  | 值 |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | NAME_ |
+
+---
+
+### 4 act_hi_actinst -- Activiti历史活动实例表，记录流程中每个活动（节点）的执行历史
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史活动实例表，记录流程中每个活动（节点）的执行历史 |
+| 数据量 | ~155861 行 |
+| 数据大小 | 39.64 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| PROC_DEF_ID_ | varchar(64) | NO | - | - |  | 流程定义ID，关联act_re_procdef |
+| PROC_INST_ID_ | varchar(64) | NO | - | MUL |  | 流程实例ID，关联act_ru_execution |
+| EXECUTION_ID_ | varchar(64) | NO | - | MUL |  | 执行实例ID，关联act_ru_execution |
+| ACT_ID_ | varchar(255) | NO | - | - |  | 活动节点ID（BPMN中的节点标识） |
+| TASK_ID_ | varchar(64) | YES | NULL | - |  | 任务ID，关联act_ru_task |
+| CALL_PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 调用子流程实例ID |
+| ACT_NAME_ | varchar(255) | YES | NULL | - |  | 活动节点名称 |
+| ACT_TYPE_ | varchar(255) | NO | - | - |  | 活动节点类型（如userTask, startEvent等） |
+| ASSIGNEE_ | varchar(255) | YES | NULL | - |  | 任务受理人/办理人 |
+| DURATION_ | bigint(20) | YES | NULL | - |  | 持续时间（毫秒） |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| START_TIME_ | datetime(3) | NO | - | - |  | 开始时间 |
+| END_TIME_ | datetime(3) | YES | NULL | - |  | 结束时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_HI_ACT_INST_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_, ACT_ID_ |
+| ACT_IDX_HI_ACT_INST_EXEC | BTREE | NON-UNIQUE | EXECUTION_ID_, ACT_ID_ |
+
+---
+
+### 5 act_hi_attachment -- Activiti历史附件表，记录流程实例或任务的附件信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史附件表，记录流程实例或任务的附件信息 |
+| 数据量 | ~0 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| USER_ID_ | varchar(255) | YES | NULL | - |  | 用户ID |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| DESCRIPTION_ | varchar(4000) | YES | NULL | - |  | 描述 |
+| TYPE_ | varchar(255) | YES | NULL | - |  | 附件类型 |
+| TASK_ID_ | varchar(64) | YES | NULL | - |  | 任务ID，关联act_ru_task |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID，关联act_ru_execution |
+| URL_ | varchar(4000) | YES | NULL | - |  | 附件URL地址 |
+| CONTENT_ID_ | varchar(64) | YES | NULL | - |  | 内容ID，关联act_ge_bytearray |
+| TIME_ | datetime(3) | YES | NULL | - |  | 附件创建时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 6 act_hi_comment -- Activiti历史评论表，记录流程实例或任务的审批意见/评论
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史评论表，记录流程实例或任务的审批意见/评论 |
+| 数据量 | ~66552 行 |
+| 数据大小 | 7.52 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| TYPE_ | varchar(255) | YES | NULL | - |  | 评论类型（如comment, event等） |
+| USER_ID_ | varchar(255) | YES | NULL | - |  | 用户ID |
+| TASK_ID_ | varchar(64) | YES | NULL | - |  | 任务ID，关联act_ru_task |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID，关联act_ru_execution |
+| ACTION_ | varchar(255) | YES | NULL | - |  | 评论动作（如AddComment, AddAttachment等） |
+| MESSAGE_ | varchar(4000) | YES | NULL | - |  | 评论内容 |
+| FULL_MSG_ | longblob | YES | NULL | - |  | 完整消息内容（二进制） |
+| TIME_ | datetime(3) | NO | - | - |  | 评论时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 7 act_hi_detail -- Activiti历史详情表，记录流程变量的变更历史详情
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史详情表，记录流程变量的变更历史详情 |
+| 数据量 | ~0 行 |
+| 数据大小 | 80.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| TYPE_ | varchar(255) | NO | - | - |  | 详情类型（如VariableUpdate, FormProperty等） |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL |  | 流程实例ID，关联act_ru_execution |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| TASK_ID_ | varchar(64) | YES | NULL | MUL |  | 任务ID，关联act_ru_task |
+| ACT_INST_ID_ | varchar(64) | YES | NULL | MUL |  | 活动实例ID，关联act_hi_actinst |
+| NAME_ | varchar(255) | NO | - | MUL |  | 名称 |
+| VAR_TYPE_ | varchar(255) | YES | NULL | - |  | 变量类型 |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| BYTEARRAY_ID_ | varchar(64) | YES | NULL | - |  | 字节数组ID，关联act_ge_bytearray |
+| DOUBLE_ | double | YES | NULL | - |  | 双精度浮点值 |
+| LONG_ | bigint(20) | YES | NULL | - |  | 长整型值 |
+| TEXT_ | varchar(4000) | YES | NULL | - |  | 文本值 |
+| TEXT2_ | varchar(4000) | YES | NULL | - |  | 文本值2（存储长文本的第二部分） |
+| TIME_ | datetime(3) | NO | - | - |  | 变量变更时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_HI_DETAIL_PROC_INST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+| ACT_IDX_HI_DETAIL_ACT_INST | BTREE | NON-UNIQUE | ACT_INST_ID_ |
+| ACT_IDX_HI_DETAIL_NAME | BTREE | NON-UNIQUE | NAME_ |
+| ACT_IDX_HI_DETAIL_TASK_ID | BTREE | NON-UNIQUE | TASK_ID_ |
+
+---
+
+### 8 act_hi_identitylink -- Activiti历史参与者关系表，记录流程实例或任务的历史参与者信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史参与者关系表，记录流程实例或任务的历史参与者信息 |
+| 数据量 | ~143081 行 |
+| 数据大小 | 21.06 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| GROUP_ID_ | varchar(255) | YES | NULL | - |  | 组ID |
+| TYPE_ | varchar(255) | YES | NULL | - |  | 参与者关系类型（如candidate, participant, assignee等） |
+| USER_ID_ | varchar(255) | YES | NULL | MUL |  | 用户ID |
+| TASK_ID_ | varchar(64) | YES | NULL | MUL |  | 任务ID，关联act_ru_task |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL |  | 流程实例ID，关联act_ru_execution |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_HI_IDENT_LNK_USER | BTREE | NON-UNIQUE | USER_ID_ |
+| ACT_IDX_HI_IDENT_LNK_TASK | BTREE | NON-UNIQUE | TASK_ID_ |
+| ACT_IDX_HI_IDENT_LNK_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+
+---
+
+### 9 act_hi_procinst -- Activiti历史流程实例表，记录已完成的流程实例信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史流程实例表，记录已完成的流程实例信息 |
+| 数据量 | ~18833 行 |
+| 数据大小 | 4.41 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| PROC_INST_ID_ | varchar(64) | NO | - | UNI |  | 流程实例ID，关联act_ru_execution |
+| BUSINESS_KEY_ | varchar(255) | YES | NULL | MUL |  | 业务主键 |
+| PROC_DEF_ID_ | varchar(64) | NO | - | - |  | 流程定义ID，关联act_re_procdef |
+| DURATION_ | bigint(20) | YES | NULL | - |  | 持续时间（毫秒） |
+| START_USER_ID_ | varchar(255) | YES | NULL | - |  | 流程发起人ID |
+| START_ACT_ID_ | varchar(255) | YES | NULL | - |  | 开始活动节点ID |
+| END_ACT_ID_ | varchar(255) | YES | NULL | - |  | 结束活动节点ID |
+| SUPER_PROCESS_INSTANCE_ID_ | varchar(64) | YES | NULL | - |  | 父流程实例ID |
+| DELETE_REASON_ | varchar(4000) | YES | NULL | - |  | 删除原因 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| START_TIME_ | datetime(3) | NO | - | - |  | 开始时间 |
+| END_TIME_ | datetime(3) | YES | NULL | - |  | 结束时间 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| PROC_INST_ID_ | BTREE | UNIQUE | PROC_INST_ID_ |
+| ACT_IDX_HI_PRO_I_BUSKEY | BTREE | NON-UNIQUE | BUSINESS_KEY_ |
+
+---
+
+### 10 act_hi_taskinst -- Activiti历史任务实例表，记录已完成/已删除的任务实例信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史任务实例表，记录已完成/已删除的任务实例信息 |
+| 数据量 | ~67984 行 |
+| 数据大小 | 13.03 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | - |  | 流程定义ID，关联act_re_procdef |
+| TASK_DEF_KEY_ | varchar(255) | YES | NULL | - |  | 任务定义Key（BPMN中的任务标识） |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL |  | 流程实例ID，关联act_ru_execution |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| PARENT_TASK_ID_ | varchar(64) | YES | NULL | - |  | 父任务ID |
+| DESCRIPTION_ | varchar(4000) | YES | NULL | - |  | 描述 |
+| OWNER_ | varchar(255) | YES | NULL | - |  | 任务拥有者（委托前的原受理人） |
+| ASSIGNEE_ | varchar(255) | YES | NULL | - |  | 任务受理人/办理人 |
+| DURATION_ | bigint(20) | YES | NULL | - |  | 持续时间（毫秒） |
+| DELETE_REASON_ | varchar(4000) | YES | NULL | - |  | 删除原因 |
+| PRIORITY_ | int(11) | YES | NULL | - |  | 优先级 |
+| FORM_KEY_ | varchar(255) | YES | NULL | - |  | 表单Key，关联表单标识 |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| START_TIME_ | datetime(3) | NO | - | - |  | 开始时间 |
+| CLAIM_TIME_ | datetime(3) | YES | NULL | - |  | 任务签收/认领时间 |
+| END_TIME_ | datetime(3) | YES | NULL | - |  | 结束时间 |
+| DUE_DATE_ | datetime(3) | YES | NULL | - |  | 到期日期 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_HI_TASK_INST_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+
+---
+
+### 11 act_hi_varinst -- Activiti历史变量实例表，记录流程变量的历史值
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti历史变量实例表，记录流程变量的历史值 |
+| 数据量 | ~204674 行 |
+| 数据大小 | 41.12 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL |  | 流程实例ID，关联act_ru_execution |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| TASK_ID_ | varchar(64) | YES | NULL | MUL |  | 任务ID，关联act_ru_task |
+| NAME_ | varchar(255) | NO | - | MUL |  | 名称 |
+| VAR_TYPE_ | varchar(100) | YES | NULL | - |  | 变量类型 |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| BYTEARRAY_ID_ | varchar(64) | YES | NULL | - |  | 字节数组ID，关联act_ge_bytearray |
+| DOUBLE_ | double | YES | NULL | - |  | 双精度浮点值 |
+| LONG_ | bigint(20) | YES | NULL | - |  | 长整型值 |
+| TEXT_ | varchar(4000) | YES | NULL | - |  | 文本值 |
+| TEXT2_ | varchar(4000) | YES | NULL | - |  | 文本值2（存储长文本的第二部分） |
+| CREATE_TIME_ | datetime(3) | YES | NULL | - |  | 创建时间 |
+| LAST_UPDATED_TIME_ | datetime(3) | YES | NULL | - |  | 最后更新时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_HI_PROCVAR_PROC_INST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+| ACT_IDX_HI_PROCVAR_NAME_TYPE | BTREE | NON-UNIQUE | NAME_, VAR_TYPE_ |
+| ACT_IDX_HI_PROCVAR_TASK_ID | BTREE | NON-UNIQUE | TASK_ID_ |
+
+---
+
+### 12 act_id_group -- Activiti身份-组表，存储用户组（角色）信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti身份-组表，存储用户组（角色）信息 |
+| 数据量 | ~12 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| TYPE_ | varchar(255) | YES | NULL | - |  | 组类型（如assignment, security-role等） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 13 act_id_info -- Activiti身份-信息表，存储用户的扩展信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti身份-信息表，存储用户的扩展信息 |
+| 数据量 | ~0 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| USER_ID_ | varchar(64) | YES | NULL | - |  | 用户ID |
+| TYPE_ | varchar(64) | YES | NULL | - |  | 信息类型（如account, userinfo等） |
+| KEY_ | varchar(255) | YES | NULL | - |  | 信息键名 |
+| VALUE_ | varchar(255) | YES | NULL | - |  | 值 |
+| PASSWORD_ | longblob | YES | NULL | - |  | 密码 |
+| PARENT_ID_ | varchar(255) | YES | NULL | - |  | 父信息ID |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 14 act_id_membership -- Activiti身份-成员关系表，存储用户与组的关联关系
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti身份-成员关系表，存储用户与组的关联关系 |
+| 数据量 | ~548 行 |
+| 数据大小 | 64.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| USER_ID_ | varchar(64) | NO | '' | PRI, FK |  | 用户ID |
+| GROUP_ID_ | varchar(64) | NO | '' | PRI, FK |  | 组ID |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | USER_ID_, GROUP_ID_ |
+| ACT_FK_MEMB_GROUP | BTREE | NON-UNIQUE | GROUP_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_MEMB_GROUP | GROUP_ID_ | act_id_group | ID_ |
+| ACT_FK_MEMB_USER | USER_ID_ | act_id_user | ID_ |
+
+---
+
+### 15 act_id_user -- Activiti身份-用户表，存储用户基本信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti身份-用户表，存储用户基本信息 |
+| 数据量 | ~201 行 |
+| 数据大小 | 48.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| FIRST_ | varchar(255) | YES | NULL | - |  | 名 |
+| LAST_ | varchar(255) | YES | NULL | - |  | 姓 |
+| EMAIL_ | varchar(255) | YES | NULL | - |  | 邮箱 |
+| PWD_ | varchar(255) | YES | NULL | - |  | 用户密码 |
+| PICTURE_ID_ | varchar(64) | YES | NULL | - |  | 头像资源ID，关联act_ge_bytearray |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 16 act_procdef_info -- Activiti流程定义信息表，存储流程定义的动态信息（如版本更新状态）
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti流程定义信息表，存储流程定义的动态信息（如版本更新状态） |
+| 数据量 | ~0 行 |
+| 数据大小 | 64.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| PROC_DEF_ID_ | varchar(64) | NO | - | UNI, FK |  | 流程定义ID，关联act_re_procdef |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| INFO_JSON_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 信息JSON数据ID，关联act_ge_bytearray |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_UNIQ_INFO_PROCDEF | BTREE | UNIQUE | PROC_DEF_ID_ |
+| ACT_IDX_INFO_PROCDEF | BTREE | NON-UNIQUE | PROC_DEF_ID_ |
+| ACT_FK_INFO_JSON_BA | BTREE | NON-UNIQUE | INFO_JSON_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_INFO_JSON_BA | INFO_JSON_ID_ | act_ge_bytearray | ID_ |
+| ACT_FK_INFO_PROCDEF | PROC_DEF_ID_ | act_re_procdef | ID_ |
+
+---
+
+### 17 act_re_deployment -- Activiti仓库-部署表，记录流程部署操作信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti仓库-部署表，记录流程部署操作信息 |
+| 数据量 | ~27 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| DEPLOY_TIME_ | timestamp(3) | YES | NULL | - |  | 部署时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+
+---
+
+### 18 act_re_model -- Activiti仓库-模型表，存储流程模型设计器中创建的模型信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti仓库-模型表，存储流程模型设计器中创建的模型信息 |
+| 数据量 | ~6 行 |
+| 数据大小 | 64.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| KEY_ | varchar(255) | YES | NULL | - |  | 模型标识Key |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| VERSION_ | int(11) | YES | NULL | - |  | 版本号 |
+| META_INFO_ | varchar(4000) | YES | NULL | - |  | 元信息（JSON格式） |
+| DEPLOYMENT_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 部署ID，关联act_re_deployment |
+| EDITOR_SOURCE_VALUE_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 编辑器源数据ID，关联act_ge_bytearray |
+| EDITOR_SOURCE_EXTRA_VALUE_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 编辑器扩展源数据ID，关联act_ge_bytearray |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| CREATE_TIME_ | timestamp(3) | YES | NULL | - |  | 创建时间 |
+| LAST_UPDATE_TIME_ | timestamp(3) | YES | NULL | - |  | 最后更新时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_FK_MODEL_SOURCE | BTREE | NON-UNIQUE | EDITOR_SOURCE_VALUE_ID_ |
+| ACT_FK_MODEL_SOURCE_EXTRA | BTREE | NON-UNIQUE | EDITOR_SOURCE_EXTRA_VALUE_ID_ |
+| ACT_FK_MODEL_DEPLOYMENT | BTREE | NON-UNIQUE | DEPLOYMENT_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_MODEL_DEPLOYMENT | DEPLOYMENT_ID_ | act_re_deployment | ID_ |
+| ACT_FK_MODEL_SOURCE | EDITOR_SOURCE_VALUE_ID_ | act_ge_bytearray | ID_ |
+| ACT_FK_MODEL_SOURCE_EXTRA | EDITOR_SOURCE_EXTRA_VALUE_ID_ | act_ge_bytearray | ID_ |
+
+---
+
+### 19 act_re_procdef -- Activiti仓库-流程定义表，存储已部署的流程定义信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti仓库-流程定义表，存储已部署的流程定义信息 |
+| 数据量 | ~27 行 |
+| 数据大小 | 32.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| KEY_ | varchar(255) | NO | - | MUL |  | 流程定义Key（BPMN中的process id） |
+| VERSION_ | int(11) | NO | - | - |  | 版本号 |
+| DEPLOYMENT_ID_ | varchar(64) | YES | NULL | - |  | 部署ID，关联act_re_deployment |
+| RESOURCE_NAME_ | varchar(4000) | YES | NULL | - |  | 资源文件名 |
+| DGRM_RESOURCE_NAME_ | varchar(4000) | YES | NULL | - |  | 流程图资源文件名 |
+| DESCRIPTION_ | varchar(4000) | YES | NULL | - |  | 描述 |
+| HAS_START_FORM_KEY_ | tinyint(4) | YES | NULL | - |  | 是否有开始表单Key（0:否 1:是） |
+| SUSPENSION_STATE_ | int(11) | YES | NULL | - |  | 挂起状态（1:激活 2:挂起） |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| HAS_GRAPHICAL_NOTATION_ | tinyint(4) | YES | NULL | - |  | 是否有图形化标记（0:否 1:是） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_UNIQ_PROCDEF | BTREE | UNIQUE | KEY_, VERSION_, TENANT_ID_ |
+
+---
+
+### 20 act_ru_event_subscr -- Activiti运行时-事件订阅表，记录运行时的事件订阅（如信号/消息事件）
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-事件订阅表，记录运行时的事件订阅（如信号/消息事件） |
+| 数据量 | ~0 行 |
+| 数据大小 | 48.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| EVENT_TYPE_ | varchar(255) | NO | - | - |  | 事件类型（如message, signal等） |
+| EVENT_NAME_ | varchar(255) | YES | NULL | - |  | 事件名称 |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 执行实例ID，关联act_ru_execution |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID，关联act_ru_execution |
+| ACTIVITY_ID_ | varchar(64) | YES | NULL | - |  | 关联活动节点ID |
+| CONFIGURATION_ | varchar(255) | YES | NULL | MUL |  | 配置信息 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | - |  | 流程定义ID，关联act_re_procdef |
+| CREATED_ | timestamp(3) | NO | CURRENT_TIMESTAMP(3) | - |  | 订阅创建时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_EVENT_SUBSCR_CONFIG_ | BTREE | NON-UNIQUE | CONFIGURATION_ |
+| ACT_FK_EVENT_EXEC | BTREE | NON-UNIQUE | EXECUTION_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_EVENT_EXEC | EXECUTION_ID_ | act_ru_execution | ID_ |
+
+---
+
+### 21 act_ru_execution -- Activiti运行时-执行实例表，记录流程执行路径信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-执行实例表，记录流程执行路径信息 |
+| 数据量 | ~3554 行 |
+| 数据大小 | 1.09 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程实例ID，关联act_ru_execution |
+| BUSINESS_KEY_ | varchar(255) | YES | NULL | MUL |  | 业务主键 |
+| PARENT_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 父执行实例ID |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程定义ID，关联act_re_procdef |
+| SUPER_EXEC_ | varchar(64) | YES | NULL | MUL, FK |  | 父流程执行实例ID |
+| ACT_ID_ | varchar(255) | YES | NULL | - |  | 当前活动节点ID |
+| IS_ACTIVE_ | tinyint(4) | YES | NULL | - |  | 是否激活（0:否 1:是） |
+| IS_CONCURRENT_ | tinyint(4) | YES | NULL | - |  | 是否并发（0:否 1:是） |
+| IS_SCOPE_ | tinyint(4) | YES | NULL | - |  | 是否作用域（0:否 1:是） |
+| IS_EVENT_SCOPE_ | tinyint(4) | YES | NULL | - |  | 是否事件作用域（0:否 1:是） |
+| SUSPENSION_STATE_ | int(11) | YES | NULL | - |  | 挂起状态（1:激活 2:挂起） |
+| CACHED_ENT_STATE_ | int(11) | YES | NULL | - |  | 缓存实体状态位掩码 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| LOCK_TIME_ | timestamp(3) | YES | NULL | - |  | 流程实例锁定时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_EXEC_BUSKEY | BTREE | NON-UNIQUE | BUSINESS_KEY_ |
+| ACT_FK_EXE_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+| ACT_FK_EXE_PARENT | BTREE | NON-UNIQUE | PARENT_ID_ |
+| ACT_FK_EXE_SUPER | BTREE | NON-UNIQUE | SUPER_EXEC_ |
+| ACT_FK_EXE_PROCDEF | BTREE | NON-UNIQUE | PROC_DEF_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_EXE_PARENT | PARENT_ID_ | act_ru_execution | ID_ |
+| ACT_FK_EXE_PROCDEF | PROC_DEF_ID_ | act_re_procdef | ID_ |
+| ACT_FK_EXE_PROCINST | PROC_INST_ID_ | act_ru_execution | ID_ |
+| ACT_FK_EXE_SUPER | SUPER_EXEC_ | act_ru_execution | ID_ |
+
+---
+
+### 22 act_ru_identitylink -- Activiti运行时-参与者关系表，记录当前运行流程/任务的参与者
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-参与者关系表，记录当前运行流程/任务的参与者 |
+| 数据量 | ~23219 行 |
+| 数据大小 | 5.62 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| GROUP_ID_ | varchar(255) | YES | NULL | MUL |  | 组ID |
+| TYPE_ | varchar(255) | YES | NULL | - |  | 参与者关系类型（如candidate, participant, assignee等） |
+| USER_ID_ | varchar(255) | YES | NULL | MUL |  | 用户ID |
+| TASK_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 任务ID，关联act_ru_task |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程实例ID，关联act_ru_execution |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程定义ID，关联act_re_procdef |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_IDENT_LNK_USER | BTREE | NON-UNIQUE | USER_ID_ |
+| ACT_IDX_IDENT_LNK_GROUP | BTREE | NON-UNIQUE | GROUP_ID_ |
+| ACT_IDX_ATHRZ_PROCEDEF | BTREE | NON-UNIQUE | PROC_DEF_ID_ |
+| ACT_FK_TSKASS_TASK | BTREE | NON-UNIQUE | TASK_ID_ |
+| ACT_FK_IDL_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_ATHRZ_PROCEDEF | PROC_DEF_ID_ | act_re_procdef | ID_ |
+| ACT_FK_IDL_PROCINST | PROC_INST_ID_ | act_ru_execution | ID_ |
+| ACT_FK_TSKASS_TASK | TASK_ID_ | act_ru_task | ID_ |
+
+---
+
+### 23 act_ru_job -- Activiti运行时-作业表，记录定时器、异步操作等作业信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-作业表，记录定时器、异步操作等作业信息 |
+| 数据量 | ~0 行 |
+| 数据大小 | 32.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| TYPE_ | varchar(255) | NO | - | - |  | 作业类型（如timer, message等） |
+| LOCK_OWNER_ | varchar(255) | YES | NULL | - |  | 锁拥有者 |
+| EXCLUSIVE_ | tinyint(1) | YES | NULL | - |  | 是否独占执行（0:否 1:是） |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| PROCESS_INSTANCE_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | - |  | 流程定义ID，关联act_re_procdef |
+| RETRIES_ | int(11) | YES | NULL | - |  | 重试次数 |
+| EXCEPTION_STACK_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 异常堆栈ID，关联act_ge_bytearray |
+| EXCEPTION_MSG_ | varchar(4000) | YES | NULL | - |  | 异常消息 |
+| REPEAT_ | varchar(255) | YES | NULL | - |  | 重复执行表达式（如定时器的cron表达式） |
+| HANDLER_TYPE_ | varchar(255) | YES | NULL | - |  | 处理器类型 |
+| HANDLER_CFG_ | varchar(4000) | YES | NULL | - |  | 处理器配置 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| LOCK_EXP_TIME_ | timestamp(3) | YES | NULL | - |  | 锁过期时间 |
+| DUEDATE_ | timestamp(3) | YES | NULL | - |  | 到期执行时间 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_FK_JOB_EXCEPTION | BTREE | NON-UNIQUE | EXCEPTION_STACK_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_JOB_EXCEPTION | EXCEPTION_STACK_ID_ | act_ge_bytearray | ID_ |
+
+---
+
+### 24 act_ru_task -- Activiti运行时-任务表，记录当前待办任务信息
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-任务表，记录当前待办任务信息 |
+| 数据量 | ~3400 行 |
+| 数据大小 | 1.00 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 执行实例ID，关联act_ru_execution |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程实例ID，关联act_ru_execution |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程定义ID，关联act_re_procdef |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| PARENT_TASK_ID_ | varchar(64) | YES | NULL | - |  | 父任务ID |
+| DESCRIPTION_ | varchar(4000) | YES | NULL | - |  | 描述 |
+| TASK_DEF_KEY_ | varchar(255) | YES | NULL | - |  | 任务定义Key（BPMN中的任务标识） |
+| OWNER_ | varchar(255) | YES | NULL | - |  | 任务拥有者（委托前的原受理人） |
+| ASSIGNEE_ | varchar(255) | YES | NULL | MUL |  | 任务受理人/办理人 |
+| DELEGATION_ | varchar(64) | YES | NULL | - |  | 委托状态（PENDING:待委托 RESOLVED:已委托） |
+| PRIORITY_ | int(11) | YES | NULL | - |  | 优先级 |
+| SUSPENSION_STATE_ | int(11) | YES | NULL | - |  | 挂起状态（1:激活 2:挂起） |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| CREATE_TIME_ | timestamp(3) | YES | NULL | - |  | 创建时间 |
+| DUE_DATE_ | datetime(3) | YES | NULL | - |  | 到期日期 |
+| FORM_KEY_ | varchar(255) | YES | NULL | - |  | 表单Key，关联表单标识 |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_FK_TASK_EXE | BTREE | NON-UNIQUE | EXECUTION_ID_ |
+| ACT_FK_TASK_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+| ACT_FK_TASK_PROCDEF | BTREE | NON-UNIQUE | PROC_DEF_ID_ |
+| ACT_IDX_ASSIGNEE | BTREE | NON-UNIQUE | ASSIGNEE_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_TASK_EXE | EXECUTION_ID_ | act_ru_execution | ID_ |
+| ACT_FK_TASK_PROCDEF | PROC_DEF_ID_ | act_re_procdef | ID_ |
+| ACT_FK_TASK_PROCINST | PROC_INST_ID_ | act_ru_execution | ID_ |
+
+---
+
+### 25 act_ru_task_callback_task_w04649 -- Activiti运行时-任务回调扩展表，自定义扩展的任务回调信息表（业务定制）
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-任务回调扩展表，自定义扩展的任务回调信息表（业务定制） |
+| 数据量 | ~0 行 |
+| 数据大小 | 16.00 KB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | '' | - |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | - |  | 执行实例ID，关联act_ru_execution |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | - |  | 流程实例ID，关联act_ru_execution |
+| PROC_DEF_ID_ | varchar(64) | YES | NULL | - |  | 流程定义ID，关联act_re_procdef |
+| NAME_ | varchar(255) | YES | NULL | - |  | 名称 |
+| PARENT_TASK_ID_ | varchar(64) | YES | NULL | - |  | 父任务ID |
+| DESCRIPTION_ | varchar(4000) | YES | NULL | - |  | 描述 |
+| TASK_DEF_KEY_ | varchar(255) | YES | NULL | - |  | 任务定义Key（BPMN中的任务标识） |
+| OWNER_ | varchar(255) | YES | NULL | - |  | 任务拥有者（委托前的原受理人） |
+| ASSIGNEE_ | varchar(255) | YES | NULL | - |  | 任务受理人/办理人 |
+| DELEGATION_ | varchar(64) | YES | NULL | - |  | 委托状态（PENDING:待委托 RESOLVED:已委托） |
+| PRIORITY_ | int(11) | YES | NULL | - |  | 优先级 |
+| SUSPENSION_STATE_ | int(11) | YES | NULL | - |  | 挂起状态（1:激活 2:挂起） |
+| CATEGORY_ | varchar(255) | YES | NULL | - |  | 分类 |
+| TENANT_ID_ | varchar(255) | YES | '' | - |  | 租户ID，多租户隔离 |
+| CREATE_TIME_ | timestamp(3) | YES | NULL | - |  | 创建时间 |
+| DUE_DATE_ | datetime(3) | YES | NULL | - |  | 到期日期 |
+| FORM_KEY_ | varchar(255) | YES | NULL | - |  | 表单Key，关联表单标识 |
+| varId | varchar(64) | YES | NULL | - |  | 变量ID（自定义扩展字段） |
+| linkId | varchar(64) | YES | '' | - |  | 关联ID（自定义扩展字段） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| - | - | - | - |
+
+---
+
+### 26 act_ru_variable -- Activiti运行时-变量表，记录当前运行流程实例的变量值
+
+| 属性 | 值 |
+|------|-----|
+| 对象类型 | BASE TABLE |
+| 业务含义 | Activiti运行时-变量表，记录当前运行流程实例的变量值 |
+| 数据量 | ~42152 行 |
+| 数据大小 | 12.53 MB |
+
+**字段列表**
+
+| 字段名 | 数据类型 | 可空 | 默认值 | 约束 | 字段描述 | 业务含义 |
+|--------|----------|------|--------|------|----------|----------|
+| ID_ | varchar(64) | NO | - | PRI |  | 主键ID |
+| REV_ | int(11) | YES | NULL | - |  | 乐观锁版本号，用于并发控制 |
+| TYPE_ | varchar(255) | NO | - | - |  | 变量类型（如string, integer, boolean等） |
+| NAME_ | varchar(255) | NO | - | - |  | 名称 |
+| EXECUTION_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 执行实例ID，关联act_ru_execution |
+| PROC_INST_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 流程实例ID，关联act_ru_execution |
+| TASK_ID_ | varchar(64) | YES | NULL | MUL |  | 任务ID，关联act_ru_task |
+| BYTEARRAY_ID_ | varchar(64) | YES | NULL | MUL, FK |  | 字节数组ID，关联act_ge_bytearray |
+| DOUBLE_ | double | YES | NULL | - |  | 双精度浮点值 |
+| LONG_ | bigint(20) | YES | NULL | - |  | 长整型值 |
+| TEXT_ | varchar(4000) | YES | NULL | - |  | 文本值 |
+| TEXT2_ | varchar(4000) | YES | NULL | - |  | 文本值2（存储长文本的第二部分） |
+
+**索引列表**
+
+| 索引名 | 索引类型 | 唯一性 | 索引字段 |
+|--------|----------|--------|----------|
+| PRIMARY | BTREE | UNIQUE | ID_ |
+| ACT_IDX_VARIABLE_TASK_ID | BTREE | NON-UNIQUE | TASK_ID_ |
+| ACT_FK_VAR_EXE | BTREE | NON-UNIQUE | EXECUTION_ID_ |
+| ACT_FK_VAR_PROCINST | BTREE | NON-UNIQUE | PROC_INST_ID_ |
+| ACT_FK_VAR_BYTEARRAY | BTREE | NON-UNIQUE | BYTEARRAY_ID_ |
+
+**外键列表**
+
+| 外键名 | 本表字段 | 引用表 | 引用字段 |
+|--------|----------|--------|----------|
+| ACT_FK_VAR_BYTEARRAY | BYTEARRAY_ID_ | act_ge_bytearray | ID_ |
+| ACT_FK_VAR_EXE | EXECUTION_ID_ | act_ru_execution | ID_ |
+| ACT_FK_VAR_PROCINST | PROC_INST_ID_ | act_ru_execution | ID_ |
+
+---

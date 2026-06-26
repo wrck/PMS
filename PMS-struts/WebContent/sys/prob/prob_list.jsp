@@ -145,30 +145,42 @@
         autoCompleteComponent();
         autoCompleteTrackingUser();
         //initProbProductBySelect2("probProducts", null, {maxSelectedLength: 2});
-        setselect("relatedSceneType", "relatedSceneTypes", ",");
-        var projectStates = $("#relatedSceneTypes").val();
-        if (projectStates) {
-            $("#relatedSceneType").val(projectStates.split(","));
-        }
-        $("#relatedSceneType").multiselect({
-            header : true,
-            classes: "",
-            minWidth : 163,
-            selectedList : 2,//预设值最多显示10被选中项
-            hide : [ "explode", 500],
-            checkAllText : "全选",
-            uncheckAllText : '取消',
-            noneSelectedText : '==请选择==',
-            close : function() {
-                var values = $("#relatedSceneType").val();
-                $("#relatedSceneTypes").val(values);
-                var typeNames = [];
-                $("#relatedSceneType").find(":selected").each(function() {
-                	typeNames.push($.trim($(this).text()));
-                })
-                $("#relatedSceneTypesName").val(typeNames.join(","));
+        // 初始化多选下拉框公共方法
+        function initMultiselect(selectId, hiddenId, hiddenNameId, separator) {
+            setselect(selectId, hiddenId, separator);
+            var hiddenValue = $("#" + hiddenId).val() || "";
+            if (hiddenValue) {
+                $("#" + selectId).val(hiddenValue.split(separator));
             }
-        });
+            $("#" + selectId).multiselect({
+                header : true,
+                classes: "",
+                minWidth : 163,
+                selectedList : 2,//预设值最多显示10被选中项
+                hide : [ "explode", 500],
+                checkAllText : "全选",
+                uncheckAllText : '取消',
+                noneSelectedText : '==请选择==',
+                close : function() {
+                    var values = $("#" + selectId).val();
+                    $("#" + hiddenId).val(values);
+                    var typeNames = [];
+                    $("#" + selectId).find(":selected").each(function() {
+                        typeNames.push($.trim($(this).text()));
+                    })
+                    if (hiddenNameId) {
+                        $("#" + hiddenNameId).val(typeNames.join(separator));
+                    }
+                }
+            });
+        }
+        
+        // 初始化相关场景类型
+        initMultiselect("relatedSceneType", "relatedSceneTypes", "relatedSceneTypesName", ",");
+        // 初始化缓解措施类型
+        initMultiselect("mitigationActionType", "mitigationActionTypes", "mitigationActionTypesName", ",");
+        // 初始化解決措施类型
+        initMultiselect("solutionActionType", "solutionActionTypes", "solutionActionTypesName", ",");
         var width = $("button.ui-multiselect").addClass("form-control").css("width");
         $("button.ui-multiselect").addClass("form-control").css({"width": '100%'});
     })
@@ -226,9 +238,27 @@
                 <s:hidden name="prob.customInfo.relatedSceneTypesName" id="relatedSceneTypesName"></s:hidden>
             </div>
             <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
-                <label for="submit" class="control-label" style="width: 100%;">　</label>
+                <label for="mitigationActionType" class="control-label"><s:text name="prob.info.mitigation.action.types"></s:text></label>
+                <s:select list="mitigationActionTypeList" multiple="true" id="mitigationActionType"
+                    cssClass="form-control" listKey="basicDataId" listValue="basicDataName" cssStyle="width:100%"></s:select>
+                <s:hidden name="prob.mitigationActionTypes" id="mitigationActionTypes"></s:hidden>
+                <s:hidden name="prob.customInfo.mitigationActionTypesName" id="mitigationActionTypesName"></s:hidden>
+            </div>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="solutionActionType" class="control-label"><s:text name="prob.info.solution.action.types"></s:text></label>
+                <s:select list="solutionActionTypeList" multiple="true" id="solutionActionType"
+                    cssClass="form-control" listKey="basicDataId" listValue="basicDataName" cssStyle="width:100%"></s:select>
+                <s:hidden name="prob.solutionActionTypes" id="solutionActionTypes"></s:hidden>
+                <s:hidden name="prob.customInfo.solutionActionTypesName" id="solutionActionTypesName"></s:hidden>
+            </div>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="probTicketNo" class="control-label"><s:text name="prob.info.prob.ticket.no"></s:text></label>
+    			<s:textfield id="probTicketNo" name="prob.probTicketNo" cssClass="form-control"></s:textfield>
+    		</div>
+            <div class="form-group form-group-query col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                <label for="submitBtn" class="control-label" style="width: 100%;">　</label>
                 <input type="hidden" name="prob.visibleRange" value="-1">
-                <button type="submit" id="submit"  class="btn btn-default btn-sm"><s:text name='sys.query' /></button>
+                <button type="submit" id="submitBtn"  class="btn btn-default btn-sm"><s:text name='sys.query' /></button>
             </div>
         </div>
 		<div class="row">
@@ -244,9 +274,24 @@
 						</a>
 					</s:if>
 					<s:if test="%{user.isHasRole(18) || user.isHasRole(1)}">
-						<a href="module/prob_export.action" class="btn btn-default">
+						<a href="javascript:void(0)" onclick="exportWithQueryParams()" class="btn btn-default">
 							<s:text name='prob.manage.export' />
 						</a>
+						<script type="text/javascript">
+							function exportWithQueryParams() {
+								var form = document.getElementById('mainForm');
+								// 使用 jQuery 动态创建并提交表单
+                                var $tempForm = $('<form>', {
+                                    'action': 'module/prob_export.action',
+                                    'method': 'POST',
+                                    'target': '_self', // 或者 '_blank'
+                                    'id': 'tempExportForm'
+                                }).append($(form).find(':input').clone()) // 克隆原表单的所有输入字段
+                                .appendTo('body')
+                                .submit()
+                                .remove(); // 提交后立即移除
+							}
+						</script>
 					</s:if>
 					<s:if test="%{user.isHasRole(19) || user.isHasRole(1)}">
                         <a href="module/prob_importSoftVersion.action" class="btn btn-default">
@@ -256,6 +301,9 @@
                             <s:text name='prob.manage.statistics' />
                         </a>
 	                </s:if>
+                    <s:if test="%{user.isHasAnyRole('1,5,6,9,10,11,12,13,18,19')}">
+                        <a href="module/prob_affectedProjectSoftVersion.action" class="btn btn-default">受影响软件版本记录</a>
+                    </s:if>
                     <span class="display-inline-flex" style="width: 46rem;">
                         <s:textfield id="componentName" cssClass="form-control" placeholder="产品组件快速检索" title="仅用于检索公司产品涉及的第三方组件，不作为技术公告的筛选条件"></s:textfield>
                     </span>

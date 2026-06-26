@@ -1,4 +1,4 @@
-activeProfiles=yfpms, dev
+activeProfiles=dev, yfpms
 eclipse.preferences.version=1
 resolveWorkspaceProjects=true
 version=1

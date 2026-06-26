@@ -446,37 +446,7 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>我司</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>收款</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
-                                                w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>情况</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>：</w:t>
+                                        <w:t>我司收款情况：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -504,7 +474,7 @@
                                             <w:szCs w:val="28" />
                                             <w:lang w:val="en-US" w:eastAsia="zh-CN" />
                                         </w:rPr>
-                                        <w:t>${dispatch.collectedRatio!"0.00"}%</w:t>
+                                        <w:t>${dispatch.collectedRatio!0?string.percent}%</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -551,17 +521,7 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>项目</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>实施进展：</w:t>
+                                        <w:t>项目实施进展：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>
@@ -640,17 +600,7 @@
                                                 <w:sz w:val="28" />
                                                 <w:szCs w:val="28" />
                                             </w:rPr>
-                                            <w:t>框架协议约定</w:t>
-                                        </w:r>
-                                        <w:r>
-                                            <w:rPr>
-                                                <w:rFonts w:hint="eastAsia" w:ascii="微软雅黑"
-                                                    w:hAnsi="微软雅黑" w:eastAsia="微软雅黑" />
-                                                <w:b />
-                                                <w:sz w:val="28" />
-                                                <w:szCs w:val="28" />
-                                            </w:rPr>
-                                            <w:t>说明：</w:t>
+                                            <w:t>框架协议约定说明：</w:t>
                                         </w:r>
                                     </w:p>
                                 </w:tc>
@@ -731,17 +681,7 @@
                                             <w:sz w:val="28" />
                                             <w:szCs w:val="28" />
                                         </w:rPr>
-                                        <w:t>此次</w:t>
-                                    </w:r>
-                                    <w:r>
-                                        <w:rPr>
-                                            <w:rFonts w:ascii="微软雅黑" w:hAnsi="微软雅黑"
-                                                w:eastAsia="微软雅黑" />
-                                            <w:b />
-                                            <w:sz w:val="28" />
-                                            <w:szCs w:val="28" />
-                                        </w:rPr>
-                                        <w:t>付款说明：</w:t>
+                                        <w:t>此次付款说明：</w:t>
                                     </w:r>
                                 </w:p>
                             </w:tc>

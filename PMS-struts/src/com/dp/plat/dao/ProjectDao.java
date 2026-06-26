@@ -16,6 +16,7 @@ import com.dp.plat.data.bean.Project;
 import com.dp.plat.data.bean.ProjectDeliver;
 import com.dp.plat.data.bean.ProjectMember;
 import com.dp.plat.data.bean.ProjectPlanEvent;
+import com.dp.plat.data.bean.ProjectSoftVersion;
 import com.dp.plat.data.bean.ProjectTask;
 import com.dp.plat.data.bean.ProjectWeekly;
 import com.dp.plat.data.bean.ShipmentInfo;
@@ -884,7 +885,7 @@ public interface ProjectDao {
 	 * @param projectId
 	 * @return
 	 */
-	List<ShipmentInfo> querySoftversionList(String contractNo, int projectId);
+	List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId);
 
 	/**
      * 查询软件版本
@@ -894,7 +895,7 @@ public interface ProjectDao {
      * @param profitCenter 
      * @return
      */
-    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, String profitCenter);
+    List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, String profitCenter);
     
     /**
      * 查询软件版本
@@ -904,7 +905,15 @@ public interface ProjectDao {
      * @param params 
      * @return
      */
-    List<ShipmentInfo> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
+    List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId, Map<String, Object> params);
+    
+    /**
+     * 查询项目已保存的设备软件版本
+     * @param projectSoftVersion
+     * @param displayParam
+     * @return
+     */
+    List<ProjectSoftVersion> selectProjectSoftVersionList(ProjectSoftVersion projectSoftVersion, DisplayParam displayParam);
 
 	/**
 	 * 失效现有软件版本
@@ -919,7 +928,7 @@ public interface ProjectDao {
 	 * @param softversionList
 	 * @param logId
 	 */
-	void insertSoftVersionList(List<ShipmentInfo> softversionList, int logId);
+	void insertSoftVersionList(List<? extends ShipmentInfo> softversionList, int logId);
 
 	/**
 	 * 查询已经有了几个版本
@@ -958,7 +967,7 @@ public interface ProjectDao {
 	 * @param softChangeLog
 	 * @return
 	 */
-	List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog);
+	List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog);
 
 	/**
 	 * 查询设备出厂版本具体信息
@@ -967,7 +976,7 @@ public interface ProjectDao {
 	 * @param contractNo
 	 * @return
 	 */
-	List<ShipmentInfo> queryHistSoftVersionList(SoftChangeLog softChangeLog, String contractNo);
+	List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog, String contractNo);
 
 	/**
 	 * 查询单个版本更新日志
@@ -1392,6 +1401,12 @@ public interface ProjectDao {
      * @param projectId
      */
     void deleteShipmentInstallInfoByProjectId(int projectId);
+    
+    /**
+     * 删除项目的发货安装信息
+     * @param list
+     */
+    void deleteShipmentInstallInfoByList(List<? extends ShipmentInfo> list);
 
     /**
      * 查询项目的维保状态，维保级别，增值服务
@@ -1473,10 +1488,44 @@ public interface ProjectDao {
     List<Map<String, Object>> selectProblemTicket(Map<String, Object> params);
 
     /**
+     * 查询项目的License授权信息
+     * @param params
+     * @return
+     */
+    List<Map<String, Object>> selectLicenseInfo(Map<String, Object> params);
+
+    /**
      * 查询项目的工单信息,通过项目的发货列表
      * @param params
      * @return
      */
     List<Map<String, Object>> selectProblemTicketByProjectBarcode(Map<String, Object> params);
 
+    /**
+     * 查询租赁配置
+     * @param projectCode
+     * @return
+     */
+    List<Map<String, Object>> queryProjectLeaseLineByProjectCode(String projectCode);
+
+    /**
+     * 查询租赁配置数量
+     * @param projectCode
+     * @return
+     */
+    int queryProjectLeaseLineSizeByProjectCode(String projectCode);
+    
+    /**
+     * 查询配置关系
+     * @param projectCode
+     * @return
+     */
+    List<?> queryProjectProductConfigLevelInfoByProjectCode(String smsProjectCode);
+    
+    /**
+     * 查询配置关系数量
+     * @param projectCode
+     * @return
+     */
+    int queryProjectProductConfigLevelInfoSizeByProjectCode(String smsProjectCode);
 }

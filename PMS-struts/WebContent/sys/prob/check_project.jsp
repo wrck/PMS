@@ -146,6 +146,55 @@
 			$(this).css('height',this.scrollHeight + 'px');
 		});
 	});
+	
+	var marketRelationsWithSubMap = [];
+	try {
+	    marketRelationsWithSubMap = "${commonMap.marketRelationsWithSubMap}".replace(/=/g, "':'").replace(/\{/g, "{'").replace(/, /g, "', '").replace(/\}/g, "'}").replace(/\}', '\{/g, "}, {").replace(/\]', /g, "], ").replace(/':'\[/g, "':[").replace(/\]'\}/g, "]}").replace(/\}\]'/g, "}]").replace(/'/g,'"');
+	    marketRelationsWithSubMap = JSON.parse(marketRelationsWithSubMap);
+	} catch (e) {
+	    marketRelationsWithSubMap = [];
+	}
+	var selectedRelationsMap = {};
+	function changeMarketRelations(){
+	    var $this = $(this);
+	    var $selected = $("option:selected", $this);
+	    //var value = $selected.val() || $selected.data("selected");
+	    var index = $selected.index();
+	    var parentCode = $this.data("parentCode");
+	    var childCode = $this.data("childCode");
+	    var currentCode = $this.attr("id");
+	    // 获取上级的所选值
+	    var relations = selectedRelationsMap[parentCode] || {children: marketRelationsWithSubMap};
+	    // 获取当前属性的所选值
+	    relations = (relations.children || [])[index - 1] || {};
+	    // 缓存当前属性的所选值，便于下级属性联动时获取所有可选值
+	    selectedRelationsMap[currentCode] = currentCode ? relations : null;
+	    // 清除下级属性的所选值缓存
+	    selectedRelationsMap[childCode] = null;
+	    // 获取下级属性的所有可选值
+	    var children = relations.children || [];
+	    // 移除子属性的所有动态值
+	    $("#" + childCode).find(".dynamic-option").remove();
+	    $("#" + childCode).nextAll(".marketRelation").find(".dynamic-option").remove();
+	    // 添加子属性新的动态选项
+	    var $child = $("#" + childCode);
+	    var childName = childCode.replace("Code", "Name");
+	    $(children).each(function(){
+	        $child.append("<option class='dynamic-option' value='"+this[childName]+"'>"+this[childName]+"</option>");
+	    });
+	    // 赋子属性的初始值
+	    var childSelected = $child.data("selected");
+	    if (childSelected) {
+	        // 获取初始值后进行清空，避免上级属性发生变更后，下级仍然赋值的问题
+	        $child.data("selected", null);
+	        // 赋值后触发change事件，进行下级属性的联动
+	        $child.val(childSelected).trigger("change");
+	    }
+	}
+	$(document).ready(function(){
+	    $(".marketRelation").on("change", changeMarketRelations);
+	    $("#marketCode").trigger("change");
+	});
 </script>
 </head>
 <body>
@@ -162,14 +211,15 @@
 						class="form-horizontal" name="QueryForm">
 						<s:hidden name="firstCheck"/>
 						<s:hidden name="probRestore.probId"></s:hidden>
+                        <s:hidden name="restoreDisplayParam.export" value="true"></s:hidden>
 						<div class="panel-body">
 							<div class="panel panel-default">
 								<div class="panel-body">
 									<div class="form-group">
-										<label for="serialNum" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.serial.num"></s:text></label>
-										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-											<s:textfield id="serialNum" name="probRestore.serialNum" cssClass="form-control"></s:textfield>
-										</div>
+                                        <label for="projectCode" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="pm.project.projectCode"></s:text></label>
+                                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                                            <s:textfield id="projectCode" name="probRestore.projectCode" cssClass="form-control"></s:textfield>
+                                        </div>
 										<label for="projectName" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="pm.project.projectName"></s:text></label>
 										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
 											<s:textfield id="projectName" name="probRestore.projectName" cssClass="form-control"></s:textfield>
@@ -180,21 +230,35 @@
 										</div>
 									</div>
 									<div class="form-group">
-										<label for="officeCode" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="pm.officearea"></s:text></label>
-										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-											<s:select name="probRestore.officeCode" id="officeCode"
-												listKey="departmentNum" cssClass="form-control" headerKey=""
-												headerValue="--请选择--" 
-												listValue="departmentName" list="%{departmentList}" theme="simple" />
-										</div>
+                                        <label for="officeCode" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="pm.officearea"></s:text></label>
+                                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                                            <s:select name="probRestore.officeCode" id="officeCode"
+                                                listKey="departmentNum" cssClass="form-control" headerKey=""
+                                                headerValue="--请选择--" 
+                                                listValue="departmentName" list="%{departmentList}" theme="simple" />
+                                        </div>
+                                    	<jsp:include page="./sub/form_fields_project_marketRelation.jsp" />
+									</div>
+									<div class="form-group">
+                                        <label for="serialNum" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.serial.num"></s:text></label>
+                                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                                            <s:textfield id="serialNum" name="probRestore.serialNum" cssClass="form-control"></s:textfield>
+                                        </div>
+                                        <label for="conp" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.conp"></s:text></label>
+                                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                                            <s:textfield id="conp" name="probRestore.version.conp" cssClass="form-control"></s:textfield>
+                                        </div>
 										<label for="itemModel" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.product.type"></s:text></label>
 										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
 											<s:textfield id="itemModel" name="probRestore.itemModel" cssClass="form-control"></s:textfield>
 										</div>
-										<div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-										   	<button type="submit" id="checkSubmit"  class="btn btn-default" data-loading-text="正在查询..."><s:text name='sys.query' /></button>
-									    </div>
 									</div>
+                                    <div class="form-group">
+                                        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 col-xs-push-1 ">
+                                            <button type="submit" id="checkSubmit"  class="btn btn-default" data-loading-text="正在查询..."><s:text name='sys.query' /></button>
+                                            <button type="reset" id="resetBtn"  class="btn btn-default" ><s:text name='sys.reset' /></button>
+                                        </div>
+                                    </div>
 								</div>
 							</div>
 						</div>
@@ -244,8 +308,13 @@
 										<th><s:text name="prob.info.cpld"></s:text></th>
 										<th><s:text name="prob.info.pcb"></s:text></th>
 										<th><s:text name="pm.project.projectName"></s:text></th>
+                                        <th><s:text name="pm.project.projectCode"></s:text></th>
 										<th><s:text name="pm.contract"></s:text></th>
 										<th><s:text name="pm.officearea"></s:text></th>
+                                        <th><s:text name="pm.project.marketName"></s:text></th>
+                                        <th><s:text name="pm.project.systemName"></s:text></th>
+                                        <th><s:text name="pm.project.expendName"></s:text></th>
+                                        <th><s:text name="pm.project.industryName"></s:text></th>
 									</tr>
 									<tr><td colspan="10">请选择查询条件进行查询</td></tr>
 								</s:if>
@@ -262,8 +331,13 @@
 										<th><s:text name="prob.info.cpld"></s:text></th>
 										<th><s:text name="prob.info.pcb"></s:text></th>
 										<th><s:text name="pm.project.projectName"></s:text></th>
+                                        <th><s:text name="pm.project.projectCode"></s:text></th>
 										<th><s:text name="pm.contract"></s:text></th>
 										<th><s:text name="pm.officearea"></s:text></th>
+                                        <th><s:text name="pm.project.marketName"></s:text></th>
+                                        <th><s:text name="pm.project.systemName"></s:text></th>
+                                        <th><s:text name="pm.project.expendName"></s:text></th>
+                                        <th><s:text name="pm.project.industryName"></s:text></th>
 									</tr>
 									<s:iterator value="probRestoreList" var="restore" status="index">
 									<tr>
@@ -292,8 +366,13 @@
 												<s:property value="#restore.projectName"/>
 											</a>
 										</td>
+                                        <td><s:property value="#restore.projectCode"/></td>
 										<td><s:property value="#restore.contractNo"/></td>
 										<td><s:property value="#restore.officeName"/></td>
+                                        <td><s:property value="#restore.marketName"/></td>
+                                        <td><s:property value="#restore.systemName"/></td>
+                                        <td><s:property value="#restore.expendName"/></td>
+                                        <td><s:property value="#restore.industryName"/></td>
 									</tr>
 									</s:iterator>
 								</s:else>

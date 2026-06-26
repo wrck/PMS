@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap>
+    <select id="selectLicenseInfoFormLicense" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT
+              licenseCode    AS "licenseCode"
+            , sn             AS "sn"
+            , specModel      AS "specModel"
+            , contract       AS "contract"
+            , contract_type  AS "contractType"
+            , item           AS "item"
+            , status         AS "status"
+        FROM dptech_v_liccode_info
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="AND" property="contract"> contract = #contract# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="contractNoList">
+                contract IN (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <insert id="insertLicenseInfoFormLicense" parameterClass="java.util.Map">
+        SET NAMES utf8mb4;
+        <![CDATA[
+            INSERT INTO `pm_project_license_info_from_license`(licenseCode, sn, specModel, contract, contractType, item, status)
+            values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].licenseCode#, #list[].sn#, #list[].specModel#, #list[].contract#, #list[].contractType#, #list[].item#, #list[].status# )
+        </iterate>
+    </insert>
+
+    <delete id="deleteLicenseInfoFormLicense" >
+        truncate table pm_project_license_info_from_license
+    </delete>
+</sqlMap>

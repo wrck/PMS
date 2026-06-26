@@ -623,7 +623,11 @@ public abstract class AbstractSynchronizeTask implements Job {
         Reader readerOuter = null;
         try {
 		    log.info("{}-初始化{}对应SalMapClient", tag, dbName);
-            readerOuter = Resources.getResourceAsReader("sqlMapConfig" + dbName.toUpperCase() + ".xml");
+		    try {
+		        readerOuter = Resources.getResourceAsReader("sqlMapConfig" + dbName + ".xml");
+		    } catch (Exception e) {
+		        readerOuter = Resources.getResourceAsReader("sqlMapConfig" + dbName.toUpperCase() + ".xml");
+            }
             return SqlMapClientBuilder.buildSqlMapClient(readerOuter);
         } finally {
             if (readerOuter != null) {

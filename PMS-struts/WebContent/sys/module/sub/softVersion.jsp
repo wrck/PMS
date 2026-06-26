@@ -71,7 +71,19 @@
 			<display:column property="cpld" titleKey="prob.info.cpld"></display:column>	
 			<display:column property="boot" titleKey="prob.info.boot"></display:column>	
 			<display:column property="pcb" titleKey="prob.info.pcb"></display:column>
-            <display:setProperty name="export.excel.filename" value="版本信息.xls" />
+            <display:column title="受影响技术公告" media="html">
+                <c:forEach items="${softversionList.affectedProbs}" var="prob">
+                <div class="c affectedProbs">
+                    <a href="module/prob_edit.action?prob.probId=${prob.probId}" target="_blank" title="${prob.theme}">${prob.probNum}</a>
+                </div>
+                </c:forEach>
+            </display:column>
+            <display:column title="受影响技术公告" media="excel" >
+<%-- 为了导出内容能够换行，请保持</c:forEach>前没有空格，不要格式化对齐 --%>
+<c:forEach items="${softversionList.affectedProbs}" var="prob">${prob.probNum}：${prob.theme}
+</c:forEach>
+            </display:column>
+            <display:setProperty name="export.excel.filename" value="${project.projectCode}-${project.projectName}-版本信息.xls" />
 		</display:table>
 	</div>
 	<div id="softversionEdit" style="display: none">
@@ -140,6 +152,7 @@
 					<td class="search_condition search_contractNo" data-name="contractNo">
 						<s:property value="contractNo"/> 
 						<s:hidden name="softversionList[%{#index.index}].projectId" value="%{project.projectId}"></s:hidden>
+                        <s:hidden name="softversionList[%{#index.index}].contractNo" value="%{project.contractNo}"></s:hidden>
 					</td>
 					<td class="search_condition search_barCode" data-name="barCode"><s:property value="barCode"/> 
                         <s:if test="#bar.barCode2 != null">
@@ -238,6 +251,8 @@
 	<div class="rollBottom">
         <i class='glyphicon glyphicon-arrow-down'></i>
     </div>
+    <dp:script type="text/javascript" src="js/prob/renderCascade.js"></dp:script>
+    <dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
     <script type="text/javascript">
         var isIframe = window.parent != window.self;
         $(()=>{
@@ -269,21 +284,236 @@
         var loadingHtml = "<div style='height:180px;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>" + 
             "   <img src='./images/loading-circle.gif'/>" + 
             "</div>";
+        // 全局缓存和等待队列
+        const requestCheckSoftVersionCache = {};
+        const requestCheckSoftVersionQueue = {}; // 用于存储相同请求的多个回调
+        function checkSoftVersion(softVersion, callback) {
+        	softVersion = softVersion || {};
+        	var callbackTrigger = softVersion;
+            
+            // 生成唯一缓存键（基于参数）
+            var cacheKey = JSON.stringify($.extend({}, softVersion));
+
+            // 检查是否已有缓存结果
+            if (requestCheckSoftVersionCache[cacheKey] !== undefined) {
+                // 缓存命中，直接异步回调
+                setTimeout(function () {
+                    callback.call(callbackTrigger, requestCheckSoftVersionCache[cacheKey]);
+                }, 0);
+                return;
+            }
+
+            // 检查是否已有相同请求正在执行（即已在队列中）
+            if (requestCheckSoftVersionQueue[cacheKey]) {
+                // 已有请求在进行中，将当前回调加入队列
+                requestCheckSoftVersionQueue[cacheKey].push(callback);
+                return;
+            }
+
+            // 首次请求，初始化队列并发起 AJAX
+            requestCheckSoftVersionQueue[cacheKey] = [callback];
+            
+            // 显示加载中提示
+            //var layerIndex = layer.load(1);
+            $.ajax({
+                url:"sys/probAjax_parserSoftVersion.action",
+                type:"post",
+                dataType:"json",
+                async : true,
+                data: flattenObject({
+                    softVersion: softVersion
+                }),
+                success:function(data){
+                    var affectedType = softVersion.affectedType;
+                    var versionMap = JSON.parse(data.result);
+                    console.log(versionMap);
+                    
+                    // 保存缓存
+                    requestCheckSoftVersionCache[cacheKey] = versionMap;
+
+                    // 遍历队列，执行所有等待的回调
+                    var callbacks = requestCheckSoftVersionQueue[cacheKey];
+                    if (callbacks && callbacks.length > 0) {
+                        callbacks.forEach(function (cb) {
+                            if (typeof cb === 'function') {
+                                cb.call(callbackTrigger, versionMap);
+                            }
+                        });
+                    }
+                },
+                complete: function(xhr, status) {
+                    // 清理队列（无论成功失败都清理）
+                    //layer.close(layerIndex);
+                    delete requestCheckSoftVersionQueue[cacheKey];
+                }
+            });
+        }
         function updateSoftVersion(){
             $changeRemark = $("textarea[name='softChangeLog.changeRemark']");
             $(".software").each(function(){
                 $(this).val($(this).val().trim());
             });
             // 去除.bin后缀，软件版本只保留不带设备类型部分信息
-            $(".clearconp").each(function(){
-                var temp = $(this).val().trim();
+            var checkConp = true;
+            var errorAlertClass = "alert-danger";
+            var successAlertClass = "alert-success";
+            var checkCount = $(".clearconp").length;
+            var checkedCount = 0;
+            var errorCount = 0;
+            $(".clearconp").removeClass(errorAlertClass).each(function(){
+            	var $conp = $(this);
+                var conp = $conp.val().trim();
+                var temp = conp;
                 temp = temp.replace(".bin", "");
                 temp = temp.split("-");
-                if (temp.length > 1) {
+                if (temp.length >= 1) {
                     temp = temp[temp.length - 1];
                 }
-                $(this).val(temp);
-            })
+                temp = $.trim(temp);
+                $conp.val(temp);
+                
+                // 20251222去掉软件版本校验，强制true
+                var isChecked = $conp.hasClass(successAlertClass) && temp == ($conp.data("checkedConp") || "") || true;
+                if (temp != '' && (conp != temp || !isChecked)) {
+                	conp = temp;
+                	checkConp = false;
+                	checkSoftVersion({manualEntry:conp}, function(versionMap) {
+                		checkedCount++;
+                		var checkResult = checkSoftVersionRanges(this, versionMap);
+                        if (checkResult.status == false) {
+                            $conp.removeClass(successAlertClass).addClass(errorAlertClass);
+                            errorCount++;
+                        } else {
+                            $conp.removeClass(errorAlertClass).addClass(successAlertClass);
+                            // 缓存校验后的值
+                            $conp.data("checkedConp", conp);
+                        }
+                		if (checkCount == checkedCount && errorCount == 0) {
+                            updateSoftVersion();
+                        } else if (checkCount == checkedCount) {
+                            alert("输入的版本号格式有误，请检查确认后再保存!");
+                        }
+                		
+                		if (true) {
+                			return;
+                		}
+                		
+                		var entryMap = versionMap[conp] || {};
+                		var vserionKeys = Object.keys(entryMap);
+                		console.log(vserionKeys);
+                		
+                		var mergerdVersionParts = {};
+                		var partCounts = {};
+                		var originVersionParts = [];
+                		var isSeriesValid = true; 
+                		for (var softKey in entryMap) {
+                			var entrySofts = entryMap[softKey] || [];
+                            var soft = entrySofts[0] || {};
+                           
+                            // 软件系列信息是否完整
+                            var seriesParts = soft.seriesParts || {};
+                            var seriesPartKeys = Object.keys(seriesParts);
+                            if (seriesPartKeys.length < 2) {
+                                isSeriesValid = false;
+                                break;
+                            }
+                            
+                            // 软件版本信息处理
+                            var versionParts = soft.versionParts || {};
+                            var versionPartsKeys = Object.keys(soft.markAllParts || versionParts);
+                            for (const partKey of versionPartsKeys) {
+                            	var part = $.trim(versionParts[partKey]);
+                            	// 初始化
+                            	partCounts[partKey] = (partCounts[partKey] || 0);
+                            	mergerdVersionParts[partKey] = mergerdVersionParts[partKey] || [];
+                            	// 如果有值进行赋值
+                            	if (part != '') {
+                                	partCounts[partKey] = (partCounts[partKey] || 0) + 1;
+                                	mergerdVersionParts[partKey].push(part);
+                                	originVersionParts.push(part);
+                            	}
+                            }
+                		}
+                		
+                		
+                		// 检查各软件版本部分是否有重复，特殊部位允许重复
+                		var ignorePartKeys = ['PATCHxx', 'LATCHxx'];
+                		var isPartRepeat = false;
+                		for (var partKey in partCounts) {
+							if ($.inArray(partKey, ignorePartKeys) == -1 && partCounts[partKey] > 1) {
+                                isPartRepeat = true;
+                                break;
+                            }
+						}
+                		
+                		// 如果软件系列完整、软件版本重复则添加错误计数
+                		if (!isSeriesValid || isPartRepeat) {
+                            $conp.removeClass(successAlertClass).addClass(errorAlertClass);
+                            errorCount++;
+                        } else {
+                            // 将检查后的各部分进行重新拼合，判断是否与输入版本保持一致
+                            let versionJoinParts = [];
+                            let orderedVersionParts = [].concat(originVersionParts);
+                            for (let partKey in mergerdVersionParts) {
+                            	// 判断是否是非重复字段，如果不重复则从order中取值
+                            	if ($.inArray(partKey, ignorePartKeys) == -1) {
+                                    let partValues = mergerdVersionParts[partKey] || [];
+                                    versionJoinParts = versionJoinParts.concat(partValues);
+                                    // 将已拼接的字段从原始顺序值中移除
+                                    const index = orderedVersionParts.indexOf(partValues[0]);
+                                    if (index !== -1) {
+                                    	orderedVersionParts.splice(index, 1); // 原地修改数组
+                                    }
+                            	} else {
+                            		// 如果是重复字段，为了保证维持原始顺序后续直接用原始顺序链接，因为'PATCHxx', 'LATCHxx'在拆分成多段之后后面的Patch会提前
+                                    // 例如PATHC01PATHC02PATHC03，会被解析成2段，第一段PATCH01LATCH02，第二段PATCH03.在解析后会认为PATCH重复导致最终PATCH01PATCH03LATCH02
+                            		break;
+                            	}
+                            }
+                            
+                            // 将剩余部分全部加入
+                            versionJoinParts = versionJoinParts.concat(orderedVersionParts);
+                            var versionJoin = versionJoinParts.join("");
+                            if (versionJoin != conp) {
+                                $conp.removeClass(successAlertClass).addClass(errorAlertClass);
+                                errorCount++;
+                            } else {
+                                $conp.removeClass(errorAlertClass).addClass(successAlertClass);
+                                // 缓存校验后的值
+                                $conp.data("checkedConp", conp);
+                            }
+                        }
+                		
+                		
+                		/* for (var softKey in entryMap) {
+                			if (conp.startsWith(softKey)) {
+                				var entrySofts = entryMap[softKey] || [];
+                				var soft = entrySofts[0] || {};
+                				var seriesParts = soft.seriesParts || {};
+                				var seriesPartKeys = Object.keys(seriesParts);
+                				if (seriesPartKeys.length < 2) {
+                                    $conp.removeClass(successAlertClass).addClass(errorAlertClass);
+                                    errorCount++;
+                                } else {
+                                	$conp.removeClass(errorAlertClass).addClass(successAlertClass);
+                                }
+                			}
+                		} */
+                		
+                		if (checkCount == checkedCount && errorCount == 0) {
+                			updateSoftVersion();
+                		} else if (checkCount == checkedCount) {
+                			alert("输入的版本号格式有误，请检查确认后再保存!");
+                		}
+                	})
+                } else {
+                	checkedCount++;
+                }
+            });
+            
+            if (!checkConp) {
+            	return false;
+            }
             
             if($changeRemark.val().trim() == ''){
                 $("#changeRemarkMsg").text("请填写更新说明").addClass("redMark");

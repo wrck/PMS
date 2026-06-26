@@ -298,6 +298,20 @@
 			or pwc.customerContact2 like concat("%", #customerContactSearch#, "%") 
 		)
 	</isNotEmpty>
+	
+	<isNotEmpty prepend="AND" property="customerContactSearch">
+        (
+            pwc.customerContact1 like concat("%", #customerContactSearch#, "%") 
+            or pwc.customerContact2 like concat("%", #customerContactSearch#, "%") 
+        )
+    </isNotEmpty>
+    <isNotEmpty prepend="AND" property="salerSearch">
+        (
+            slm.memberCode = #salerSearch#
+            or slm.memberName like concat("%", #salerSearch#, "%") 
+            or slm.phoneNum like concat("%", #salerSearch#, "%") 
+        )
+    </isNotEmpty>
   </sql>
   <sql id="sql_projectWarrantyCallback_model_where_selective">
     <isNotEmpty property="model">
@@ -367,6 +381,13 @@
 				or pwc.customerContact2 like concat("%", #model.customerContactSearch#, "%") 
 			)
  		</isNotEmpty>
+ 		<isNotEmpty prepend="AND" property="model.salerSearch">
+	        (
+	            slm.memberCode = #model.salerSearch#
+	            or slm.memberName like concat("%", #model.salerSearch#, "%") 
+	            or slm.phoneNum like concat("%", #model.salerSearch#, "%") 
+	        )
+	    </isNotEmpty>
 	</isNotEmpty>
   </sql>
   <sql id="sql_projectWarrantyCallback_where">
@@ -390,19 +411,44 @@
     </isNotNull>
   </sql>
   <select id="selectProjectWarrantyCallbackList" parameterClass="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" resultClass="com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO">
-    select * from pm_project_warranty_callback AS `pwc`
+    select pwc.* 
+        , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
+    from pm_project_warranty_callback AS `pwc`
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
 	<dynamic prepend="where">
 		<include refid="sql_projectWarrantyCallback_where_selective" />
 	</dynamic>
   </select>
   <select id="countProjectWarrantyCallbackList" parameterClass="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" resultClass="int">
     select count(1) from pm_project_warranty_callback AS `pwc`
+    <isNotEmpty prepend="AND" property="salerSearch">
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+    </isNotEmpty>
 	<dynamic prepend="where">
 		<include refid="sql_projectWarrantyCallback_where_selective" />
 	</dynamic>
   </select>
   <select id="selectProjectWarrantyCallbackVOListPageable" parameterClass="com.dp.plat.warrantyCallback.vo.WarrantyCallbackPageParam" resultClass="com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO">
-    select * from pm_project_warranty_callback AS `pwc`
+    select pwc.*
+        , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
+    from pm_project_warranty_callback AS `pwc`
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
 	<dynamic prepend="where">
 		<!-- <include refid="sql_projectWarrantyCallback_model_where_selective" /> -->
 		<include refid="sql_projectWarrantyCallback_where_selective" />
@@ -411,6 +457,13 @@
   </select>
   <select id="countProjectWarrantyCallbackVOListPageable" parameterClass="com.dp.plat.warrantyCallback.vo.WarrantyCallbackPageParam" resultClass="int">
     select count(1) from pm_project_warranty_callback AS `pwc`
+    <isNotEmpty prepend="AND" property="salerSearch">
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+    </isNotEmpty>
 	<dynamic prepend="where">
 		<!-- <include refid="sql_projectWarrantyCallback_model_where_selective" /> -->
 		<include refid="sql_projectWarrantyCallback_where_selective" />
@@ -447,6 +500,9 @@
 	        IFNULL(MAX(wcs.hasLiscense), 0) hasLiscense,
             GROUP_CONCAT(DISTINCT wcs.liscenseDesc SEPARATOR "\r\n") AS liscenseDesc
 	    </isNotEqual>
+	    , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
     from pm_project_warranty_callback AS `pwc`
     <isNotEqual property="hideQuesnaire" compareValue="true">
 	    LEFT JOIN projectWarrantyCallback_tempQuesnaireResultTable qrt 
@@ -462,6 +518,11 @@
 	    LEFT JOIN `view_warranty_contract_state` wcs 
 	        ON wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
     </isNotEqual>
+    LEFT JOIN pm_project_member slm
+	        ON slm.`projectId` = pwc.`projectId`
+	            AND slm.projectType = "10"
+	            AND slm.`memberRole` = "10"
+	            AND slm.`effectiveTo` is null
     LEFT JOIN fnd_basic_data ssfs1 
             ON ssfs1.dataTypeCode = '15'
                 AND ssfs1.basicDataId = pwc.serviceImpl
@@ -507,6 +568,11 @@
 	    ph.column013 AS finalCustomerName, ph.compId,
         GROUP_CONCAT(DISTINCT pm.`memberName` order by pm.phoneNum) as customer1, GROUP_CONCAT(DISTINCT pm.`phoneNum` order by pm.phoneNum) as customerContact1,
 		GROUP_CONCAT(DISTINCT ppfs.linkmanName order by ppfs.linkmanTel) as customer2, GROUP_CONCAT(DISTINCT ppfs.`linkmanTel` order by ppfs.linkmanTel) as customerContact2,
+		
+		GROUP_CONCAT(DISTINCT slm.`memberCode` order by slm.memberCode) as salerCode, 
+		GROUP_CONCAT(DISTINCT CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) order by slm.memberCode) AS salerName,
+		GROUP_CONCAT(DISTINCT slm.`phoneNum` order by slm.memberCode) as salerContact,
+		
 		prp.`partyName` as agentChannel,
 		IFNULL(ph.column012, ph.columno12_readonly) AS serviceImpl, 
 		IFNULL(IFNULL(ssfs1.basicDataName, ssfs2.basicDataName), '未指定') AS serviceName,
@@ -573,8 +639,14 @@
 	        AND mpwc.id = pwc.id 
         LEFT JOIN pm_project_member pm
 		    ON pm.`projectId` = ph.`projectId`
+		        AND pm.projectType = ph.projectType
 				AND pm.`memberRole` = "60"
 				AND pm.`effectiveTo` is null
+		LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = ph.`projectId`
+                AND slm.projectType = ph.projectType
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
 		LEFT JOIN `pm_project_related_party` prp
 		    ON prp.`projectId` = ph.`projectId`
 				AND prp.`partyRole` = "30"
@@ -630,6 +702,13 @@
     <isNotEmpty prepend="AND" property="callbackTimeEnd"> #callbackTimeEnd# >= pwc.callbackTime </isNotEmpty>
     <isNotEmpty prepend="AND" property="nextCallbackTimeStart"> pwc.nextCallbackTime >= #nextCallbackTimeStart# </isNotEmpty>
     <isNotEmpty prepend="AND" property="nextCallbackTimeEnd"> #nextCallbackTimeEnd# >= pwc.nextCallbackTime </isNotEmpty>
+    <isNotEmpty prepend="AND" property="salerSearch">
+        (
+            slm.memberCode = #salerSearch#
+            or slm.memberName like concat("%", #salerSearch#, "%") 
+            or slm.phoneNum like concat("%", #salerSearch#, "%") 
+        )
+    </isNotEmpty>
     GROUP BY ph.projectCode
     <dynamic prepend="having">
         <isNotEmpty prepend="AND" property="contractNos"> contractNos like concat("%", #contractNos#, "%") </isNotEmpty>

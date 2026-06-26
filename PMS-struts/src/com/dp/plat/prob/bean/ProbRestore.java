@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import com.alibaba.fastjson.JSON;
+
 /**
  * 技术公告修复任务对象
  * @author j01441
@@ -46,6 +48,19 @@ public class ProbRestore {
 	private Date createTime;
 	private String updateBy;
 	private Date updateTime;
+	
+	// 辅助字段
+	private Prob prob;
+	private SoftVersion version;
+	private String projectCode;
+	private String marketCode;
+    private String systemCode;
+    private String expendCode;
+    private String industryCode;
+    private String marketName;
+    private String systemName;
+    private String expendName;
+    private String industryName;
 	
 	public int getId() {
 		return id;
@@ -229,5 +244,75 @@ public class ProbRestore {
 	}
 	public List<String> getAreapowerList() {
 	    return areapower != null ? Arrays.asList(areapower.replaceAll("'\"", "").split(",")) : new ArrayList<String>(0);
+    }
+	
+    public Prob getProb() {
+        return prob;
+    }
+    public void setProb(Prob prob) {
+        this.prob = prob;
+    }
+    public void setProbJson(String prob) {
+        this.prob = JSON.parseObject(prob, Prob.class);
+    }
+    public SoftVersion getVersion() {
+        return version;
+    }
+    public void setVersion(SoftVersion version) {
+        this.version = version;
+    }
+    public String getProjectCode() {
+        return projectCode;
+    }
+    public void setProjectCode(String projectCode) {
+        this.projectCode = projectCode;
+    }
+    public String getMarketCode() {
+        return marketCode;
+    }
+    public void setMarketCode(String marketCode) {
+        this.marketCode = marketCode;
+    }
+    public String getSystemCode() {
+        return systemCode;
+    }
+    public void setSystemCode(String systemCode) {
+        this.systemCode = systemCode;
+    }
+    public String getExpendCode() {
+        return expendCode;
+    }
+    public void setExpendCode(String expendCode) {
+        this.expendCode = expendCode;
+    }
+    public String getIndustryCode() {
+        return industryCode;
+    }
+    public void setIndustryCode(String industryCode) {
+        this.industryCode = industryCode;
+    }
+    public String getMarketName() {
+        return marketName;
+    }
+    public void setMarketName(String marketName) {
+        this.marketName = marketName;
+    }
+    public String getSystemName() {
+        return systemName;
+    }
+    public void setSystemName(String systemName) {
+        this.systemName = systemName;
+    }
+    public String getExpendName() {
+        return expendName;
+    }
+    public void setExpendName(String expendName) {
+        this.expendName = expendName;
+    }
+    public String getIndustryName() {
+        return industryName;
+    }
+    public void setIndustryName(String industryName) {
+        this.industryName = industryName;
     }
 }

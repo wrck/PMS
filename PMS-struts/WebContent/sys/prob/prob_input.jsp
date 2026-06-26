@@ -290,6 +290,8 @@
         var $container = $("#probProductList");
         initProbProductBySelect2("probProducts", $container);
         initProbSelectBySelect2("relatedSceneTypes", $("#relatedSceneTypeList"));
+        initProbSelectBySelect2("mitigationActionTypes", $("#mitigationActionTypeList"));
+        initProbSelectBySelect2("solutionActionTypes", $("#solutionActionTypeList"));
     });
     
     
@@ -478,13 +480,37 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.related.scene.types"></s:text></label>
                                 <div id="relatedSceneTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList">
                                     <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
                                     <s:hidden id="relatedSceneTypesJson_hidden" name="prob.customInfo.relatedSceneTypesJson" ></s:hidden>
                                     <s:hidden id="relatedSceneTypes_hidden" name="prob.customInfo.relatedSceneTypes" ></s:hidden>
                                     <s:hidden id="relatedSceneTypesName_hidden" name="prob.customInfo.relatedSceneTypesName" ></s:hidden>
                                     <s:select id="relatedSceneTypes" name="prob.relatedSceneTypes" list="relatedSceneTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="mitigationActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.mitigation.action.types"></s:text></label>
+                                <div id="mitigationActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 mitigationActionTypeList">
+                                    <s:hidden id="mitigationActionTypesJson_hidden" name="prob.customInfo.mitigationActionTypesJson" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypes_hidden" name="prob.customInfo.mitigationActionTypes" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypesName_hidden" name="prob.customInfo.mitigationActionTypesName" ></s:hidden>
+                                    <s:select id="mitigationActionTypes" name="prob.mitigationActionTypes" list="mitigationActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solutionActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.solution.action.types"></s:text></label>
+                                <div id="solutionActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 solutionActionTypeList">
+                                    <s:hidden id="solutionActionTypesJson_hidden" name="prob.customInfo.solutionActionTypesJson" ></s:hidden>
+                                    <s:hidden id="solutionActionTypes_hidden" name="prob.customInfo.solutionActionTypes" ></s:hidden>
+                                    <s:hidden id="solutionActionTypesName_hidden" name="prob.customInfo.solutionActionTypesName" ></s:hidden>
+                                    <s:select id="solutionActionTypes" name="prob.solutionActionTypes" list="solutionActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="probTicketNo" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.prob.ticket.no"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <s:textfield id="probTicketNo" name="prob.probTicketNo" cssClass="form-control" placeholder="若有相关网上问题则填对应问题工单号，若是内部测试发现的问题，则可填对应BUG单号"></s:textfield>
                                 </div>
                             </div>
                             <div class="form-group">

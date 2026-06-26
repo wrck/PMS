@@ -16,10 +16,12 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
                 duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom
                 , relatedSceneTypes, relatedSceneTypesMark, customInfo
+				, probTicketNo, mitigationActionTypes, mitigationActionTypesMark, solutionActionTypes, solutionActionTypesMark
             )
-			VALUES(#probNum#,#watch#,#theme#,#desc#,#solution#,#status#,#startdate#,#duedate#,
-                #attachments#, #priority#, #productType#, #trackingUser#,#createBy#,now(),now()
+			VALUES(#probNum#,#watch#, #theme#, #desc#, #solution#, #status#, #startdate#, #duedate#,
+                #attachments#, #priority#, #productType#, #trackingUser#, #createBy#, now(), now()
                 , #relatedSceneTypes#, #relatedSceneTypesMark#, #customInfo#
+				, #probTicketNo#, #mitigationActionTypes#, #mitigationActionTypesMark#, #solutionActionTypes#, #solutionActionTypesMark#
             )
 		]]>
 		<selectKey resultClass="int" keyProperty="probId">
@@ -150,6 +152,9 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="and" property="relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #relatedSceneTypesMark# > 0]]></isNotEmpty>
         <!-- 同时包含多个（AND 逻辑） -->
         <!-- <isNotEmpty prepend="and" property="relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #relatedSceneTypesMark# = #relatedSceneTypesMark# ]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="mitigationActionTypesMark"><![CDATA[ t1.`mitigationActionTypesMark` & #mitigationActionTypesMark# > 0]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="solutionActionTypesMark"><![CDATA[ t1.`solutionActionTypesMark` & #solutionActionTypesMark# > 0]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probTicketNo"><![CDATA[ t1.probTicketNo like CONCAT('%', #probTicketNo#, '%')]]></isNotEmpty>
 	</select>
 	<resultMap class="Prob" id="ProbMap">
 		<result property="probId" column="id"/>
@@ -164,11 +169,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="updateTime" column="updateTime"/>
 	</resultMap>
 	<select id="query_prob_list" parameterClass="java.util.Map" resultClass="Prob">
-			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName, t2.`basicDataName` AS priority, t1.status
+			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName<!-- , t1.`priority` AS priority -->, t2.`basicDataName` AS priority, t2.`basicDataName` AS priorityName, t1.status
 				, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
 				<!-- , t1.desc, t1.solution, t1.productType -->
 				, t1.customInfo
                 , t1.relatedSceneTypes, t1.relatedSceneTypesMark
+                , t1.mitigationActionTypes, t1.mitigationActionTypesMark
+                , t1.solutionActionTypes, t1.solutionActionTypesMark
+				, t1.probTicketNo
 			FROM prob_main t1 
 			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
 			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
@@ -231,6 +239,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# > 0]]></isNotEmpty>
         <!-- 同时包含多个（AND 逻辑） -->
         <!-- <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# = #prob.relatedSceneTypesMark# ]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="prob.mitigationActionTypesMark"><![CDATA[ t1.`mitigationActionTypesMark` & #prob.mitigationActionTypesMark# > 0]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.solutionActionTypesMark"><![CDATA[ t1.`solutionActionTypesMark` & #prob.solutionActionTypesMark# > 0]]></isNotEmpty>
+		
+		<isNotEmpty prepend="and" property="prob.probTicketNo"><![CDATA[ t1.probTicketNo like CONCAT('%', #prob.probTicketNo#, '%')]]></isNotEmpty>
 		
 		<isNotEmpty prepend=" order by " property="displayParam.sort">
 			$displayParam.sort$
@@ -251,6 +263,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<resultMap class="Prob" id="ProbSingleMap">
 		<result property="probId" column="id"/>
 		<result property="probNum" column="probNum"/>
+		<result property="probTicketNo" column="probTicketNo"/>
 		<result property="watch" column="watch"/>
 		<result property="watchName" column="watchName"/>
 		<result property="theme" column="theme"/>
@@ -274,6 +287,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         <result property="customInfo" column="customInfo"/>
 		<result property="relatedSceneTypes" column="relatedSceneTypes"/>
 		<result property="relatedSceneTypesMark" column="relatedSceneTypesMark"/>
+		<result property="mitigationActionTypes" column="mitigationActionTypes"/>
+		<result property="mitigationActionTypesMark" column="mitigationActionTypesMark"/>
+		<result property="solutionActionTypes" column="solutionActionTypes"/>
+		<result property="solutionActionTypesMark" column="solutionActionTypesMark"/>
 	</resultMap>
 	<select id="query_prob_one" parameterClass="Prob" resultMap="ProbSingleMap">
 		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
@@ -305,6 +322,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<update id="update_prob" parameterClass="Prob">
 		<![CDATA[ update prob_main set id = #probId#, updateTime = now() ]]>
 		<isNotEmpty prepend="," property="probNum"><![CDATA[ probNum = #probNum#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="probTicketNo"><![CDATA[ probTicketNo = #probTicketNo#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="watch"><![CDATA[ watch = #watch#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="theme"><![CDATA[ theme = #theme#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="desc"><![CDATA[ `desc` = #desc#]]></isNotEmpty>
@@ -324,12 +342,17 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </isNotEmpty>
         <isNotEmpty prepend="," property="relatedSceneTypes"><![CDATA[ relatedSceneTypes = #relatedSceneTypes#]]></isNotEmpty>
         <isNotEmpty prepend="," property="relatedSceneTypesMark"><![CDATA[ relatedSceneTypesMark = #relatedSceneTypesMark#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="mitigationActionTypes"><![CDATA[ mitigationActionTypes = #mitigationActionTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="mitigationActionTypesMark"><![CDATA[ mitigationActionTypesMark = #mitigationActionTypesMark#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="solutionActionTypes"><![CDATA[ solutionActionTypes = #solutionActionTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="solutionActionTypesMark"><![CDATA[ solutionActionTypesMark = #solutionActionTypesMark#]]></isNotEmpty>
 		<![CDATA[ where id = #probId#]]>
 	</update>
 	
 	<update id="update_prob_status" parameterClass="Prob">
 		<![CDATA[ update prob_main set id = #probId#, updateTime = now() ]]>
 		<isNotEmpty prepend="," property="probNum"><![CDATA[ probNum = #probNum#]]></isNotEmpty>
+		<isNotEmpty prepend="," property="probTicketNo"><![CDATA[ probTicketNo = #probTicketNo#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="watch"><![CDATA[ watch = #watch#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="theme"><![CDATA[ theme = #theme#]]></isNotEmpty>
 		<isNotEmpty prepend="," property="desc"><![CDATA[ `desc` = #desc#]]></isNotEmpty>
@@ -349,6 +372,10 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         </isNotEmpty>
         <isNotEmpty prepend="," property="relatedSceneTypes"><![CDATA[ relatedSceneTypes = #relatedSceneTypes#]]></isNotEmpty>
         <isNotEmpty prepend="," property="relatedSceneTypesMark"><![CDATA[ relatedSceneTypesMark = #relatedSceneTypesMark#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="mitigationActionTypes"><![CDATA[ mitigationActionTypes = #mitigationActionTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="mitigationActionTypesMark"><![CDATA[ mitigationActionTypesMark = #mitigationActionTypesMark#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="solutionActionTypes"><![CDATA[ solutionActionTypes = #solutionActionTypes#]]></isNotEmpty>
+        <isNotEmpty prepend="," property="solutionActionTypesMark"><![CDATA[ solutionActionTypesMark = #solutionActionTypesMark#]]></isNotEmpty>
         <![CDATA[ where id = #probId#]]>
 	</update>
 	
@@ -459,13 +486,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<insert id="insert_into_softversion" parameterClass="java.util.Map">
 		<![CDATA[
 			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb, 
-				manualEntry, manualEntrySub, entryStart, entryEnd, 
+				manualEntry, manualEntrySub, entryType, entrySeries, entryStart, entryEnd, 
 				markStart, markEnd, affectedType, groupId, splited, 
-				datastate,createBy,  createTime, customInfo) VALUES
+				datastate, createBy, createTime, customInfo) VALUES
 		]]>
 		<iterate conjunction="," property="list">
 			<![CDATA[ (#probId#, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#, 
-				#list[].manualEntry#, #list[].manualEntrySub#, #list[].entryStart#, #list[].entryEnd#, 
+				#list[].manualEntry#, #list[].manualEntrySub#, #list[].entryType#, #list[].entrySeries#, #list[].entryStart#, #list[].entryEnd#, 
 				#list[].markStart#, #list[].markEnd#, #list[].affectedType#, #list[].groupId#, #list[].splited#, 
 				1, #createBy#, now() , #list[].customInfo#)]]>
 		</iterate>
@@ -475,6 +502,8 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     	<result property="probId" column="probId"/>
         <result property="manualEntry" column="manualEntry"/>
         <result property="manualEntrySub" column="manualEntrySub"/>
+        <result property="entryType" column="entryType"/>
+        <result property="entrySeries" column="entrySeries"/>
         <result property="entryStart" column="entryStart"/>
         <result property="entryEnd" column="entryEnd"/>
         <result property="markStart" column="markStart"/>
@@ -503,7 +532,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<typeAlias alias="Project" type="com.dp.plat.data.bean.Project"/>
 	<typeAlias alias="ProbRestore" type="com.dp.plat.prob.bean.ProbRestore"/>
 	<resultMap class="ProbRestore" id="ProbRestoreMap">
-		<result property="serialNum" column="serial_number"/>
+		<result property="serialNum" column="barCode"/>
 		<result property="itemModel" column="itemModel"/>
 		<result property="probId" column="probId" nullValue="0"/>
 		<result property="projectId" column="projectId" nullValue="0"/>
@@ -514,43 +543,35 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="projectName" column="projectName"/>
 		<result property="officeCode" column="officeCode"/>
 		<result property="officeName" column="officeName"/>
+		<result property="marketCode" column="marketCode"/>
+        <result property="marketName" column="marketName"/>
+        <result property="systemCode" column="systemCode"/>
+        <result property="systemName" column="systemName"/>
+        <result property="expendCode" column="expendCode"/>
+        <result property="expendName" column="expendName"/>
+        <result property="industryCode" column="industryCode"/>
+        <result property="industryName" column="industryName"/>
 		<result property="contractNo" column="contractNo"/>
+		<result property="projectCode" column="projectCode"/>
+		
+		<result property="prob.probId" column="probId" nullValue="0"/>
+		<result property="prob.probNum" column="probNum"/>
+		<result property="prob.theme" column="theme"/>
 	</resultMap>
-	<select id="query_prob_restore_list" parameterClass="java.util.Map" resultMap="ProbRestoreMap">
-		<!-- <![CDATA[
-			SELECT t1.* , b1.`itemname` as itemModel ,t6.`projectName` , t6.`column001`  AS officeCode , t9.`departmentName` AS officeName ,
-			t4.`contractNo` , t2.`probId` , t6.`projectId` FROM 
-			(SELECT a1.serial_number,CASE WHEN a2.conp IS NULL THEN a1.conp ELSE a2.conp END AS conp ,
-				CASE WHEN a2.boot IS NULL THEN a1.boot ELSE a2.boot END AS boot,
-				CASE WHEN a2.cpld IS NULL THEN a1.cpld ELSE a2.cpld END AS cpld,
-				CASE WHEN a2.pcb IS NULL THEN a1.pcb ELSE a2.pcb END AS pcb
-			 FROM fb_soft_version a1 
-			LEFT JOIN pm_project_soft_version a2 ON a1.`serial_number` = a2.`barcode` AND a2.`datastate` = 1 ) t1 
-			
-			LEFT JOIN prob_softwares t2 ON CASE WHEN t2.`conp` IS NOT NULL THEN t1.`conp` = t2.`conp` ELSE 1=1 END 
-			AND CASE WHEN t2.`boot` IS NOT NULL THEN t1.`boot` = t2.`boot` ELSE 1=1 END
-			AND CASE WHEN t2.`cpld` IS NOT NULL THEN t1.`cpld` = t2.`cpld` ELSE 1=1 END
-			AND CASE WHEN t2.`pcb` IS NOT NULL THEN t1.`pcb` = t2.`pcb` ELSE 1 =1 END
-			LEFT JOIN view_shipment_info_4_pm t3 ON t1.`serial_number` = t3.`barcode`
-			LEFT JOIN fb_items b1 ON t3.`itemCode` = b1.`item`
-			LEFT JOIN pm_project_contract t4 ON t3.`contract_code` = t4.`contractNo`
-			LEFT JOIN pm_project_group_relationship t5 ON t4.`projectGroupCode` = t5.`projectGroupCode`
-			LEFT JOIN pm_project_header t6 ON t5.`projectCode` = t6.`projectCode`
-			LEFT JOIN pm_project_member t7 ON t6.`projectId` = t7.`projectId` AND t7.`memberRole` = '30' AND t7.`effectiveTo` IS NULL
-			LEFT JOIN pm_project_member t8 ON t6.`projectId` = t8.`projectId` AND t8.`memberRole` = '20' AND t8.`effectiveTo` IS NULL 
-			LEFT JOIN fnd_department t9 ON t6.`column001` = t9.`departmentNum` 
-			LEFT JOIN fnd_basic_data t10 ON t6.`projectState` = t10.`basicDataId` AND t10.`dataTypeCode` = '02' AND t10.`effectiveTo` IS NULL
-			WHERE t2.`datastate` = 1 AND t2.`probId` =  #probRestore.probId# AND t4.`contractNo` IS NOT NULL
-			AND t5.`projectCode` NOT LIKE '%his'
-			AND NOT EXISTS(SELECT * FROM prob_restore WHERE serialNum = t1.serial_number)  
-		]]> -->
+	<select id="query_prob_restore_list_old" parameterClass="java.util.Map" resultMap="ProbRestoreMap">
 		<![CDATA[
-			SELECT t1.*, fi.`itemname` as itemModel, t6.`projectName`, t6.`column001` AS officeCode, t9.`departmentName` AS officeName, t4.`contractNo`,
-			t2.`probId`, MAX(t6.`projectId`) AS projectId  
+			SELECT t1.*, fi.`itemname` as itemModel, t6.`projectCode`, t6.`projectName`, t6.`column001` AS officeCode, t9.`departmentName` AS officeName, t4.`contractNo`
+	            , t6.column004 as marketCode, t6.column004 as marketName
+	            , t6.column005 as systemCode, t6.column005 as systemName
+	            , t6.column006 as expendCode, t6.column006 as expendName
+	            , t6.column007 as industryCode, t6.column007 as industryName
+	            
+				, t2.`probId`, MAX(t6.`projectId`) AS projectId  
+				, null AS probNum, null AS theme
 			FROM
 			    (SELECT * FROM prob_softwares WHERE datastate = 1 AND manualEntry is null AND probId = #probRestore.probId#) t2 
 			    LEFT JOIN 
-			        (SELECT  a1.serial_number, 
+			        (SELECT  a1.serial_number AS barCode, 
 			            CASE WHEN a2.conp IS NULL THEN a1.conp ELSE a2.conp END AS conp, 
 			            CASE WHEN a2.boot IS NULL THEN a1.boot ELSE a2.boot END AS boot, 
 			            CASE WHEN a2.cpld IS NULL THEN a1.cpld ELSE a2.cpld END AS cpld, 
@@ -605,6 +626,113 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 			GROUP BY t1.serial_number
 		]]>
 	</select>
+	
+	<sql id="sqlColumnProbAffectedProjectSoftVersion">
+        SELECT  sv.id, sv.projectId, sv.logId
+            , sv.contractNo, sv.itemCode, sv.datastate
+            , sv.barCode, sv.conp, sv.conpType, sv.conpSeries, sv.conpMark
+            , sv.conpBak, sv.conpChange, sv.cpld, sv.cpldBak, sv.cpldChange
+            , sv.boot, sv.bootBak, sv.bootChange, sv.pcb, sv.pcbBak
+            , sv.pcbChange, sv.executeTime, sv.createTime, sv.createBy
+            , sv.updateTime, sv.updateBy, sv.customInfo
+            
+            , fi.itemname AS itemModel
+            , fi.describe_ as itemDesc
+            
+            
+            , sw.probId, ph.`projectName`
+            
+            , ph.column001 as officeCode, fdp.departmentName as officeName
+            , ph.column004 as marketCode, ph.column004 as marketName
+            , ph.column005 as systemCode, ph.column005 as systemName
+            , ph.column006 as expendCode, ph.column006 as expendName
+            , ph.column007 as industryCode, ph.column007 as industryName
+            
+            , ph.projectCode
+            
+            , pm.probNum, pm.theme
+            
+           <!-- , GROUP_CONCAT(DISTINCT sw.`probId` ORDER BY sw.probId) AS probIds
+            , GROUP_CONCAT(DISTINCT pm.probNum  ORDER BY sw.probId) AS probNums
+            , GROUP_CONCAT(DISTINCT pm.theme ORDER BY sw.probId) AS themes -->
+	</sql>
+	<sql id="sqlFromProbAffectedProjectSoftVersion">
+        <![CDATA[
+        FROM prob_softwares sw
+                INNER JOIN pm_project_soft_version sv
+                ON sv.datastate = sw.datastate
+                    AND sv.conpType <=> sw.entryType
+                    AND sv.conpSeries <=> sw.entrySeries
+                    AND sv.conpMark BETWEEN sw.markStart AND sw.markEnd
+                INNER JOIN prob_product pp ON pp.probId = sw.probId AND pp.itemCode = sv.itemCode AND pp.status = 1
+                INNER JOIN prob_main pm ON pm.id = sw.probId 
+                INNER JOIN pm_project_header ph
+                ON sv.projectId = ph.projectId
+                    AND ((column012 IS NOT NULL
+                            AND column012 <> 3)
+                        OR (column012 IS NULL
+                            AND `columno12_readonly` <> 3))
+                    AND ph.effectiveTo IS NULL
+                INNER JOIN pm_project_group_relationship pgr ON pgr.`projectCode` = ph.`projectCode`
+                INNER JOIN pm_project_contract pc ON pc.`projectGroupCode` = pgr.`projectGroupCode` AND pc.contractNo = sv.contractNo
+                LEFT JOIN fnd_department fdp ON ph.`column001` = fdp.`departmentNum`
+                LEFT JOIN fb_items fi ON fi.item = sv.itemCode
+            WHERE sv.datastate = 1 AND pc.`contractNo` IS NOT NULL 
+                AND ph.`projectCode` NOT LIKE '%his' 
+        ]]>
+        <isNotEmpty property="probRestore.probId">
+            <isNotEqual prepend="and" property="probRestore.probId" compareValue="0">
+            sw.probId = #probRestore.probId#
+            AND NOT EXISTS (SELECT * FROM prob_restore WHERE serialNum = sv.barcode AND probId = #probRestore.probId#) 
+            </isNotEqual>
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ sv.barcode like concat(#probRestore.serialNum#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%') ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.projectName"><![CDATA[ ph.projectName like concat('%', #probRestore.projectName#, '%') ]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ pc.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.officeCode"><![CDATA[ ph.column001 = #probRestore.officeCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.areapower"><![CDATA[ ph.column001 in ($probRestore.areapower$) ]]></isNotEmpty>
+        
+        <isNotEmpty property="probRestore.prob">
+            <isNotEmpty prepend="and" property="probRestore.prob.probNum"><![CDATA[ pm.probNum = #probRestore.prob.probNum#]]></isNotEmpty>
+        </isNotEmpty>
+        <isNotEmpty property="probRestore.version">
+            <isNotEmpty property="probRestore.version.conp"> 
+	            <!-- <isNotEmpty prepend="AND" property="probRestore.version.entryType"> sv.conpType = #probRestore.version.entryType# </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="probRestore.version.entrySeries"> sv.conpSeries = #probRestore.version.entrySeries# </isNotEmpty> -->
+	            <isNotEmpty prepend="AND" property="probRestore.version.entryType"> sw.entryType = #probRestore.version.entryType# </isNotEmpty>
+                <isNotEmpty prepend="AND" property="probRestore.version.entrySeries"> sw.entrySeries = #probRestore.version.entrySeries# </isNotEmpty>
+                AND ( sv.conp = #probRestore.version.conp# 
+                <isNotEmpty prepend="OR" property="probRestore.version.conpMark"> (#probRestore.version.conpMark# BETWEEN sw.markStart AND sw.markEnd) </isNotEmpty>
+                )
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="probRestore.version.boot"> sv.boot = #probRestore.version.boot# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="probRestore.version.cpld"> sv.cpld = #probRestore.version.cpld# </isNotEmpty>
+            <isNotEmpty prepend="AND" property="probRestore.version.pcb">  sv.pcb  = #probRestore.version.pcb# </isNotEmpty>
+        </isNotEmpty>
+        
+    </sql>
+	<sql id="sqlQueryProbAffectedProjectSoftVersion">
+	    <include refid="sqlColumnProbAffectedProjectSoftVersion"/>
+	    <include refid="sqlFromProbAffectedProjectSoftVersion"/>
+	</sql>
+	<select id="count_prob_restore_list" parameterClass="java.util.Map" resultClass="int">
+        SELECT COUNT(*)
+        <include refid="sqlFromProbAffectedProjectSoftVersion"/>
+    </select>
+	<select id="query_prob_restore_list" parameterClass="java.util.Map" resultMap="ProbRestoreMap">
+        <include refid="sqlQueryProbAffectedProjectSoftVersion"/>
+        <isNotEmpty property="displayParam.offset">
+        LIMIT #displayParam.offset#, #displayParam.pagesize# 
+        </isNotEmpty>
+    </select>
+    
 	<insert id="insert_batch_probRestore_task_list" parameterClass="java.util.Map" >
 		<![CDATA[
 			INSERT INTO prob_restore(probId, serialNum , itemModel, processId, officeCode, conp, boot, cpld, pcb, projectId,projectName,
@@ -712,26 +840,49 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<result property="createBy" column="createBy"/>
 		<result property="updateTime" column="updateTime"/>
 		<result property="updateBy" column="updateBy"/>
-		<result property="latestConp" column="a5.conp"/>
-		<result property="latestCpld" column="a5.cpld"/>
-		<result property="latestBoot" column="a5.boot"/>
-		<result property="latestPcb" column="a5.pcb"/>
+		<result property="latestConp" column="sv.conp"/>
+		<result property="latestCpld" column="sv.cpld"/>
+		<result property="latestBoot" column="sv.boot"/>
+		<result property="latestPcb" column="sv.pcb"/>
 		<result property="executeTime" column="executeTime"/>
 		<result property="assignee" column="assigneeName"/>
+		<result property="probJson" column="prob"/>
+		
+        <result property="marketCode" column="marketCode"/>
+        <result property="marketName" column="marketName"/>
+        <result property="systemCode" column="systemCode"/>
+        <result property="systemName" column="systemName"/>
+        <result property="expendCode" column="expendCode"/>
+        <result property="expendName" column="expendName"/>
+        <result property="industryCode" column="industryCode"/>
+        <result property="industryName" column="industryName"/>
+        <result property="projectCode" column="projectCode"/>
 	</resultMap>
 	<select id="query_list_probRestore_task" parameterClass="java.util.Map" resultMap="ProbRestoreTaskList">
 		<![CDATA[
 			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
-				a4.restoreRemark ,a4.restoreStatus ,a5.`conp` , a5.`boot` ,a5.`cpld` ,a5.`pcb` ,a5.`executeTime` ,
+				a4.restoreRemark ,a4.restoreStatus ,sv.`conp` , sv.`boot` ,sv.`cpld` ,sv.`pcb` ,sv.`executeTime` ,
 				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
-			  FROM prob_restore a1
-			LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
-			LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
-			LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
-			LEFT JOIN pm_project_soft_version a5 ON a1.`serialNum` = a5.`barcode` AND a5.`datastate` = 1 
-			LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
-			WHERE a1.probId = #probRestore.probId# 	
+				
+				, ph.projectCode
+				, ph.column004 as marketCode, ph.column004 as marketName
+                , ph.column005 as systemCode, ph.column005 as systemName
+                , ph.column006 as expendCode, ph.column006 as expendName
+                , ph.column007 as industryCode, ph.column007 as industryName
 		]]>
+                <!-- 查询受影响的技术公告，用来判断是否已经完成更新任务的处理 -->
+                , JSON_EXTRACT((
+                    <include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>
+		            AND sw.probId = #probRestore.probId#
+                ), '$$[0]') AS prob
+			FROM prob_restore a1
+				LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
+				LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
+				LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
+				LEFT JOIN pm_project_soft_version sv ON a1.`serialNum` = sv.`barcode` AND sv.`datastate` = 1 
+				LEFT JOIN pm_project_header ph ON ph.projectId = sv.projectId
+				LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
+			WHERE a1.probId = #probRestore.probId# 	
 		<isNotEmpty prepend="and" property="probRestore.assignee">
 			<![CDATA[
 				(a1.assignee = #probRestore.assignee# 
@@ -753,6 +904,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+		
+		<isNotEmpty prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></isNotEmpty>
+        
 		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
 			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
 		</isNotEqual>
@@ -772,16 +930,28 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	<select id="query_list_probRestore_task_project" parameterClass="java.util.Map" resultMap="ProbRestoreTaskList">
 		<![CDATA[
 			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
-				a4.restoreRemark ,a4.restoreStatus ,a5.`conp` , a5.`boot` ,a5.`cpld` ,a5.`pcb` ,a5.`executeTime` ,
+				a4.restoreRemark ,a4.restoreStatus ,sv.`conp` , sv.`boot` ,sv.`cpld` ,sv.`pcb` ,sv.`executeTime` ,
 				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
-			  FROM prob_restore a1
+				
+				, ph.projectCode
+			    , ph.column004 as marketCode, ph.column004 as marketName
+			    , ph.column005 as systemCode, ph.column005 as systemName
+			    , ph.column006 as expendCode, ph.column006 as expendName
+			    , ph.column007 as industryCode, ph.column007 as industryName
+		]]>
+			    <!-- 查询受影响的技术公告，用来判断是否已经完成更新任务的处理 -->
+			    , JSON_EXTRACT((
+                    <include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>
+                    AND sw.probId = #probRestore.probId#
+                ), '$$[0]') AS prob
+			FROM prob_restore a1
 			LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
 			LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
 			LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
-			LEFT JOIN pm_project_soft_version a5 ON a1.`serialNum` = a5.`barcode` AND a5.`datastate` = 1 
+			LEFT JOIN pm_project_soft_version sv ON a1.`serialNum` = sv.`barcode` AND sv.`datastate` = 1 
+			LEFT JOIN pm_project_header ph ON ph.projectId = sv.projectId
 			LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
 			WHERE a1.probId = #probRestore.probId# 	
-		]]>
 		<isNotEmpty prepend="and" property="probRestore.assignee">
 			<![CDATA[
 				(a1.assignee = #probRestore.assignee# 
@@ -803,6 +973,13 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		<isNotEmpty prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></isNotEmpty>
 		<isNotEmpty prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></isNotEmpty>
+		
+		<isNotEmpty prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></isNotEmpty>
+        
 		<isNotEqual prepend="and" property="probRestore.restoreStatus" compareValue="0">
 			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
 		</isNotEqual>
@@ -902,7 +1079,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		]]>
 	</delete>
 	
-	<resultMap class="com.dp.plat.data.bean.ShipmentInfo" id="softVersionChangeList">
+	<resultMap class="com.dp.plat.data.bean.ProjectSoftVersion" id="softVersionChangeList">
 		<result property="projectId" column="projectId"/>
 		<result property="barCode" column="barcode"/>
 		<result property="itemName" column="itemName"/>
@@ -951,7 +1128,7 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 	
 	<select id="query_exportProb_list" parameterClass="map" resultClass="Prob">
 		SELECT 
-		    t1.*, t2.`basicDataName` AS priorityName, t4.`basicDataName` AS watchName, t3.basicDataName AS statusName, CONCAT(t1.trackingUser, "-", ui.realName) AS trackingUsername, t.affectedVersion 
+		    t1.*, t2.`basicDataName` AS priorityName, t4.`basicDataName` AS watchName, t3.basicDataName AS statusName, CONCAT(t1.trackingUser, "-", ui.realName) AS trackingUsername, sf.affectedVersion 
 		FROM
 		    prob_main t1 
 		    LEFT JOIN fnd_user_info ui 
@@ -979,16 +1156,57 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
 		              DISTINCT CONCAT(bd.`basicDataName`, ":", CONCAT_WS(
 		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("pcb[", pcb, "]"), CONCAT("", manualEntry, "")
 		                )) SEPARATOR ";\r\n"
-		            ) AS affectedVersion
+		            ) AS affectedVersion,
+                    GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
 		        FROM
 		            `prob_softwares` ps 
 			    LEFT JOIN fnd_basic_data bd 
 			        ON bd.`dataTypeCode` = 'sofeVersionAffectedType' 
 			        AND ps.`affectedType` = bd.`basicDataId` 
-		        WHERE datastate = 1 
-		        GROUP BY probId) t 
-		        ON t.probId = t1.`id` 
-		WHERE t1.effectiveTo IS NULL 
+		        WHERE datastate = 1
+                <include refid="sqlWhereIterateSoftVersionList"/>  
+                GROUP BY probId) sf 
+		        ON sf.probId = t1.`id` 
+        WHERE t1.effectiveTo IS NULL
+        <isNotEmpty prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like CONCAT('%', #prob.probNum#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.theme"><![CDATA[ t1.theme like CONCAT('%', #prob.theme#, '%')]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.statusList">
+            t1.status in
+            <iterate open="(" close=")" conjunction="," property="prob.statusList">
+                #prob.statusList[]#
+            </iterate>
+        </isNotEmpty>
+        
+        <isNotEmpty prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.affectedType"> sf.probId is not null <!-- #prob.affectedType# = sf.affectedTypes --> </isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.affectedVersion">
+            (
+            <![CDATA[ sf.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
+            <isNotEmpty prepend="or" property="prob.softVersionParserList"> sf.probId is not null </isNotEmpty>
+            )
+        </isNotEmpty>
+        
+        <isNotEmpty property="prob.visibleRange">
+            <isNotEqual prepend="and" property="prob.visibleRange" compareValue="-1" open="(" close=")">
+                t1.visibleRange = #prob.visibleRange# 
+                <isNotEmpty prepend="or" property="prob.trackingUser"> t1.trackingUser = #prob.trackingUser# </isNotEmpty>
+            </isNotEqual>
+        </isNotEmpty>
+        
+        <isNotEmpty property="prob.customInfo">
+            <isNotEmpty prepend="and" property="prob.customInfo.trackingUserSearch"> t1.trackingUser = #prob.customInfo.trackingUserSearch# </isNotEmpty>
+        </isNotEmpty>
+        <!-- 或匹配，包含任意一个 -->
+        <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# > 0]]></isNotEmpty>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <isNotEmpty prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# = #prob.relatedSceneTypesMark# ]]></isNotEmpty> -->
+        <isNotEmpty prepend="and" property="prob.mitigationActionTypesMark"><![CDATA[ t1.`mitigationActionTypesMark` & #prob.mitigationActionTypesMark# > 0]]></isNotEmpty>
+        <isNotEmpty prepend="and" property="prob.solutionActionTypesMark"><![CDATA[ t1.`solutionActionTypesMark` & #prob.solutionActionTypesMark# > 0]]></isNotEmpty>
+        
+        <isNotEmpty prepend="and" property="prob.probTicketNo"><![CDATA[ t1.probTicketNo like CONCAT('%', #prob.probTicketNo#, '%')]]></isNotEmpty>
 	</select>
 	
 	<insert id="batch_add_softVersion" parameterClass="java.util.Map">
@@ -1504,7 +1722,14 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         CREATE TEMPORARY TABLE IF NOT EXISTS projectTempTable
         SELECT 
 		    ph.*, GROUP_CONCAT(DISTINCT pc.`contractNo`) AS contractNo, 
-		    ph.column001 as officeCode, fd.departmentName AS officeName, fbd.`basicDataName` AS projectStateName,
+		    ph.column001 as officeCode, fd.departmentName AS officeName
+		    
+		    , ph.column004 as marketCode, ph.column004 as marketName
+		    , ph.column005 as systemCode, ph.column005 as systemName
+		    , ph.column006 as expendCode, ph.column006 as expendName
+		    , ph.column007 as industryCode, ph.column007 as industryName
+		    
+		    , fbd.`basicDataName` AS projectStateName,
 		    sm.`memberCode` AS serviceManagerCode, sm.`memberName` AS serviceManagerCodeforjson, 
 		    pm1.`memberCode` AS programManagerCodeA, pm1.`memberName` AS programManagerCodeforjson,
 		    pm2.`memberCode` AS programManagerCodeB, pm2.`memberName` AS programManagerCodeforjsonB
@@ -1610,17 +1835,23 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
     <sql id="sql_contract_shipment_soft_list">
         SELECT DISTINCT IFNULL(ph.projectId, 0) AS projectId, ph.projectCode, ph.projectName
             , ph.officeCode AS `officeCode`, ph.officeName AS `officeName`
+            , ph.marketCode as marketCode, ph.marketName as marketName
+            , ph.systemCode as systemCode, ph.systemName as systemName
+            , ph.expendCode as expendCode, ph.expendName as expendName
+            , ph.industryCode as industryCode, ph.industryName as industryName
+            
             , ph.projectStateName AS `projectStateName`
             , ph.serviceManagerCode AS `serviceManagerCode`, ph.serviceManagerCodeforjson AS `serviceManagerCodeforjson`
             , ph.programManagerCodeA AS `programManagerCodeA`, ph.programManagerCodeforjson AS `programManagerCodeforjson`
             , ph.programManagerCodeB AS `programManagerCodeB`, ph.programManagerCodeforjsonB AS `programManagerCodeforjsonB`
             
-            , vsip.contract_code AS contractNo, vsip.barcode AS barCode, vsip.itemCode AS itemCode, vsip.itemName AS itemName
+            , vsip.contract_code AS contractNo, vsip.barcode AS barCode, vsip.itemCode AS itemCode, vsip.itemModel AS itemModel, vsip.itemName AS itemName
             , CASE WHEN t3.conp IS NULL THEN t.`conp` ELSE t3.conp END AS conp, t3.conpBak, IFNULL(t3.conpChange, 0) conpChange
             , CASE WHEN t3.boot IS NULL THEN t.`boot` ELSE t3.boot END AS boot, t3.bootBak, IFNULL(t3.bootChange, 0) bootChange
             , CASE WHEN t3.cpld IS NULL THEN t.`cpld` ELSE t3.cpld END AS cpld, t3.cpldBak, IFNULL(t3.cpldChange, 0) cpldChange
             , CASE WHEN t3.pcb  IS NULL THEN t.`pcb`  ELSE t3.pcb  END AS pcb,  t3.pcbBak,  IFNULL(t3.pcbChange, 0) pcbChange
             , vsip.barcode2 AS barCode2, vsip.itemCode2 AS itemCode2
+            , vsip.itemModel2 AS itemModel2
             , vsip.itemName2 AS itemName2
         FROM view_shipment_info_4_pm vsip
             LEFT JOIN view_shipment_ems_4_pm vsep
@@ -1638,12 +1869,19 @@ PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"
         WHERE (ph.checkProfitCenter IS NULL or ph.officeCode = IFNULL(vsip.profitCenter, ph.officeCode))
             <isNotEmpty prepend="and" property="probStatistic.projectCode"> (ph.projectCode like CONCAT("%", #probStatistic.projectCode#, "%") or ph.contractNo like CONCAT("%", #probStatistic.projectCode#, "%"))</isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.projectName"> ph.projectName like CONCAT("%", #probStatistic.projectName#, "%")</isNotEmpty>
-            <isNotEmpty prepend="and" property="probStatistic.officeCode"> ph.officeCode = #probStatistic.officeCode#</isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.officeCode"><![CDATA[ ph.officeCode = #probStatistic.officeCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.marketCode"><![CDATA[ ph.marketCode = #probStatistic.marketCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.systemCode"><![CDATA[ ph.systemCode = #probStatistic.systemCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.expendCode"><![CDATA[ ph.expendCode = #probStatistic.expendCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.industryCode"><![CDATA[ ph.industryCode = #probStatistic.industryCode#]]></isNotEmpty>
+            
             <isNotEmpty prepend="and" property="probStatistic.programManagerCode"> (ph.programManagerCodeA = #probStatistic.programManagerCode# or ph.programManagerCodeB = #probStatistic.programManagerCode#) </isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.serviceManagerCode"> ph.serviceManagerCode = #probStatistic.serviceManagerCode#</isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.contractNo"> vsip.contract_code = #probStatistic.contractNo# </isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.barCode"> (vsip.barCode = #probStatistic.barCode# or vsip.barcode2 = #probStatistic.barCode#) </isNotEmpty>
             <isNotEmpty prepend="and" property="probStatistic.itemCode"> (vsip.itemCode = #probStatistic.itemCode# or vsip.itemCode2 = #probStatistic.itemCode#) </isNotEmpty>
+            <isNotEmpty prepend="and" property="probStatistic.itemModel"> (vsip.itemModel like CONCAT(#probStatistic.itemModel#, "%") or vsip.itemModel2 like CONCAT(#probStatistic.itemModel#, "%")) </isNotEmpty>
+            
             <isNotNull property="probStatistic.version">
                 <isNotEmpty prepend="AND" property="probStatistic.version.conp"> t3.conp = #probStatistic.version.conp# </isNotEmpty>
                 <isNotEmpty prepend="AND" property="probStatistic.version.boot"> t3.boot = #probStatistic.version.boot# </isNotEmpty>

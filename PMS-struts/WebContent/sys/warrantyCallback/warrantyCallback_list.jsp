@@ -40,6 +40,10 @@
         	
         	win_popWindow(url, width, height, title, dialogid, modal);
         }
+        
+        $("button:not([type]),button[type='submit']").click(function() {
+        	$(this).bootstrapBtn("loading");
+        })
     });
     function updateProject(obj){
         window.open("${namespace}/ProjectModify.action?project.paramId="+obj + "&result=314");
@@ -149,6 +153,12 @@
         </div>
         <div class="form-group form-group-query form-group-width-1">
             <dp:fielderror accesskey="errmsg" onlyone="true" />
+            <label for="salerSearch"><s:text name="销售人员" /></label>
+            <s:textfield name="projectWarrantyCallback.salerSearch" id="salerSearch"
+                placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
+        </div>
+        <div class="form-group form-group-query form-group-width-1">
+            <dp:fielderror accesskey="errmsg" onlyone="true" />
             <label for="customerSearch"><s:text name="客户联系人" /></label>
             <s:textfield name="projectWarrantyCallback.customerSearch" id="customerSearch"
                 placeholder="支持模糊搜索" cssStyle="width:163px" cssClass="form-control" />
@@ -244,6 +254,8 @@
             <display:column property="agentChannel" headerClass="nowrap" class="longTextTd" titleKey="pm.project.agentChannel"></display:column>
             <display:column property="finalCustomerName" headerClass="nowrap" class="longTextTd" titleKey="pm.project.finalCustomerName"></display:column>
             <display:column property="warrantyEndTime" class="nowrap" title="维保结束日期" format="{0,date,yyyy-MM-dd}"></display:column>
+            <display:column property="salerName" class="nowrap" title="销售人员"></display:column>
+            <display:column property="salerConcat" class="nowrap" title="销售联系方式"></display:column>
             <display:column property="customer1" class="nowrap" title="客户联系人"></display:column>
             <display:column property="customerContact1" title="客户联系方式"></display:column>
             <display:column property="customer2" class="nowrap" title="客户联系人2"></display:column>
