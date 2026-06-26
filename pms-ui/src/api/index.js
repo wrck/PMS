@@ -275,3 +275,60 @@ export function getPendingTasks() {
 export function getRecentNotifications() {
   return request({ url: '/api/workspace/notifications', method: 'get' })
 }
+
+// ===== 周报管理 =====
+export function getWeeklyList(projectId, weeklyState) {
+  return request({ url: '/api/project/weekly/list', method: 'get', params: { projectId, weeklyState } })
+}
+export function getWeeklyDetail(id) {
+  return request({ url: `/api/project/weekly/${id}`, method: 'get' })
+}
+export function addWeekly(data) {
+  return request({ url: '/api/project/weekly', method: 'post', data })
+}
+export function updateWeekly(data) {
+  return request({ url: '/api/project/weekly', method: 'put', data })
+}
+export function submitWeekly(id) {
+  return request({ url: `/api/project/weekly/${id}/submit`, method: 'post' })
+}
+export function deleteWeekly(id) {
+  return request({ url: `/api/project/weekly/${id}`, method: 'delete' })
+}
+export function getWeeklyContents(id, optionType) {
+  return request({ url: `/api/project/weekly/${id}/contents`, method: 'get', params: { optionType } })
+}
+export function saveWeeklyContents(id, contents) {
+  return request({ url: `/api/project/weekly/${id}/contents`, method: 'post', data: contents })
+}
+export function getWeeklyFeedbacks(id) {
+  return request({ url: `/api/project/weekly/${id}/feedbacks`, method: 'get' })
+}
+export function addWeeklyFeedback(data) {
+  return request({ url: '/api/project/weekly/feedback', method: 'post', data })
+}
+
+// ===== 项目计划 =====
+export function getProjectTasks(projectId) {
+  return request({ url: '/api/project/task/list', method: 'get', params: { projectId } })
+}
+export function saveProjectTasks(projectId, tasks) {
+  return request({ url: '/api/project/task', method: 'post', data: tasks, params: { projectId } })
+}
+export function updateProjectTask(data) {
+  return request({ url: '/api/project/task', method: 'put', data })
+}
+
+// ===== 交付件 =====
+export function getProjectDelivers(projectId) {
+  return request({ url: '/api/project/deliver/list', method: 'get', params: { projectId } })
+}
+export function addProjectDeliver(data) {
+  return request({ url: '/api/project/deliver', method: 'post', data })
+}
+export function updateProjectDeliver(data) {
+  return request({ url: '/api/project/deliver', method: 'put', data })
+}
+export function deleteProjectDeliver(id) {
+  return request({ url: `/api/project/deliver/${id}`, method: 'delete' })
+}
