@@ -1,0 +1,23 @@
+# Maven
+target/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.settings/
+.project
+.classpath
+.vscode/
+
+# Node
+pms-ui/node_modules/
+pms-ui/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
