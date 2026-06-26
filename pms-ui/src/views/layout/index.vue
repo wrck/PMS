@@ -26,6 +26,34 @@
           <el-icon><Promotion /></el-icon>
           <template #title>售前管理</template>
         </el-menu-item>
+        <el-menu-item index="/callback">
+          <el-icon><Phone /></el-icon>
+          <template #title>回访管理</template>
+        </el-menu-item>
+        <el-menu-item index="/closed-loop">
+          <el-icon><CircleCheck /></el-icon>
+          <template #title>项目闭环</template>
+        </el-menu-item>
+        <el-menu-item index="/subcontract">
+          <el-icon><Share /></el-icon>
+          <template #title>转包管理</template>
+        </el-menu-item>
+        <el-menu-item index="/prob">
+          <el-icon><Warning /></el-icon>
+          <template #title>技术公告</template>
+        </el-menu-item>
+        <el-menu-item index="/maintenance">
+          <el-icon><Tools /></el-icon>
+          <template #title>维保管理</template>
+        </el-menu-item>
+        <el-menu-item index="/supervision">
+          <el-icon><View /></el-icon>
+          <template #title>项目督查</template>
+        </el-menu-item>
+        <el-menu-item index="/certificate">
+          <el-icon><Stamp /></el-icon>
+          <template #title>合格证</template>
+        </el-menu-item>
         <el-sub-menu index="/system">
           <template #title>
             <el-icon><Setting /></el-icon>

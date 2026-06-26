@@ -65,6 +65,48 @@ const routes = [
         name: 'PresalesList',
         component: () => import('@/views/presales/index.vue'),
         meta: { title: '售前管理' }
+      },
+      {
+        path: 'callback',
+        name: 'CallBackList',
+        component: () => import('@/views/callback/index.vue'),
+        meta: { title: '回访管理' }
+      },
+      {
+        path: 'closed-loop',
+        name: 'ClosedLoopList',
+        component: () => import('@/views/closedloop/index.vue'),
+        meta: { title: '项目闭环' }
+      },
+      {
+        path: 'subcontract',
+        name: 'SubcontractList',
+        component: () => import('@/views/subcontract/index.vue'),
+        meta: { title: '转包管理' }
+      },
+      {
+        path: 'prob',
+        name: 'ProbList',
+        component: () => import('@/views/prob/index.vue'),
+        meta: { title: '技术公告' }
+      },
+      {
+        path: 'maintenance',
+        name: 'MaintenanceList',
+        component: () => import('@/views/maintenance/index.vue'),
+        meta: { title: '维保管理' }
+      },
+      {
+        path: 'supervision',
+        name: 'SupervisionList',
+        component: () => import('@/views/supervision/index.vue'),
+        meta: { title: '项目督查' }
+      },
+      {
+        path: 'certificate',
+        name: 'CertificateList',
+        component: () => import('@/views/certificate/index.vue'),
+        meta: { title: '合格证' }
       }
     ]
   }

@@ -151,3 +151,127 @@ export function getUnreadCount() {
 export function markNotificationRead(id) {
   return request({ url: `/api/notification/${id}/read`, method: 'post' })
 }
+
+// ===== 回访管理 =====
+export function getCallBackList(params) {
+  return request({ url: '/api/callback/list', method: 'get', params })
+}
+export function getCallBackDetail(id) {
+  return request({ url: `/api/callback/${id}`, method: 'get' })
+}
+export function addCallBack(data) {
+  return request({ url: '/api/callback', method: 'post', data })
+}
+export function startCallBackFlow(id) {
+  return request({ url: `/api/callback/${id}/start-flow`, method: 'post' })
+}
+export function approveCallBack(id, comment, approved) {
+  return request({ url: `/api/callback/${id}/approve`, method: 'post', params: { comment, approved } })
+}
+
+// ===== 项目闭环 =====
+export function getClosedLoopList(params) {
+  return request({ url: '/api/closed-loop/list', method: 'get', params })
+}
+export function getClosedLoopDetail(id) {
+  return request({ url: `/api/closed-loop/${id}`, method: 'get' })
+}
+export function applyClosedLoop(data) {
+  return request({ url: '/api/closed-loop', method: 'post', data })
+}
+export function approveClosedLoop(id, comment, approved, role) {
+  return request({ url: `/api/closed-loop/${id}/approve`, method: 'post', params: { comment, approved, role } })
+}
+
+// ===== 转包管理 =====
+export function getSubcontractList(params) {
+  return request({ url: '/api/subcontract/list', method: 'get', params })
+}
+export function getSubcontractDetail(id) {
+  return request({ url: `/api/subcontract/${id}`, method: 'get' })
+}
+export function addSubcontract(data) {
+  return request({ url: '/api/subcontract', method: 'post', data })
+}
+export function updateSubcontract(data) {
+  return request({ url: '/api/subcontract', method: 'put', data })
+}
+export function deleteSubcontract(id) {
+  return request({ url: `/api/subcontract/${id}`, method: 'delete' })
+}
+
+// ===== 技术公告 =====
+export function getProbList(params) {
+  return request({ url: '/api/prob/list', method: 'get', params })
+}
+export function getProbDetail(id) {
+  return request({ url: `/api/prob/${id}`, method: 'get' })
+}
+export function addProb(data) {
+  return request({ url: '/api/prob', method: 'post', data })
+}
+export function updateProb(data) {
+  return request({ url: '/api/prob', method: 'put', data })
+}
+export function deleteProb(id) {
+  return request({ url: `/api/prob/${id}`, method: 'delete' })
+}
+
+// ===== 维保管理 =====
+export function getMaintenanceList(params) {
+  return request({ url: '/api/maintenance/list', method: 'get', params })
+}
+export function getMaintenanceDetail(id) {
+  return request({ url: `/api/maintenance/${id}`, method: 'get' })
+}
+export function addMaintenance(data) {
+  return request({ url: '/api/maintenance', method: 'post', data })
+}
+export function updateMaintenance(data) {
+  return request({ url: '/api/maintenance', method: 'put', data })
+}
+export function deleteMaintenance(id) {
+  return request({ url: `/api/maintenance/${id}`, method: 'delete' })
+}
+
+// ===== 督查管理 =====
+export function getSupervisionList(params) {
+  return request({ url: '/api/supervision/list', method: 'get', params })
+}
+export function getSupervisionDetail(id) {
+  return request({ url: `/api/supervision/${id}`, method: 'get' })
+}
+export function addSupervision(data) {
+  return request({ url: '/api/supervision', method: 'post', data })
+}
+export function updateSupervision(data) {
+  return request({ url: '/api/supervision', method: 'put', data })
+}
+export function deleteSupervision(id) {
+  return request({ url: `/api/supervision/${id}`, method: 'delete' })
+}
+
+// ===== 合格证 =====
+export function getCertificateList(params) {
+  return request({ url: '/api/certificate/list', method: 'get', params })
+}
+export function getCertificateByBarcode(barcode) {
+  return request({ url: `/api/certificate/barcode/${barcode}`, method: 'get' })
+}
+export function addCertificate(data) {
+  return request({ url: '/api/certificate', method: 'post', data })
+}
+export function deleteCertificate(id) {
+  return request({ url: `/api/certificate/${id}`, method: 'delete' })
+}
+
+// ===== 工作台 =====
+export function getDashboardData() {
+  return request({ url: '/api/workspace/dashboard', method: 'get' })
+}
+export function getPendingTasks() {
+  return request({ url: '/api/workspace/pending-tasks', method: 'get' })
+}
+export function getRecentNotifications() {
+  return request({ url: '/api/workspace/notifications', method: 'get' })
+}
