@@ -45,15 +45,62 @@
 
 ### 2.1 技术公告管理流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["创建技术公告<br/>ProbManageAction.input()"] --> B["保存/提交<br/>ProbManageAction.save()"]
+    B --> C["管理员审批<br/>ProbManageAction.audit()"]
+    C --> D["发布修复任务<br/>ProbManageAction.releaseTask()"]
+    D --> E["修复跟踪<br/>ProbManageAction.manageAllTask()"]
+    E --> F["闭环<br/>ProbManageAction.updateRestoreTask()"]
+=======
 ```
 [创建技术公告] ──> [保存/提交] ──> [管理员审批] ──> [发布修复任务] ──> [修复跟踪] ──> [闭环]
       |                |               |                |               |            |
  ProbManageAction  ProbManageAction ProbManageAction ProbManageAction ProbManageAction ProbManageAction
  .input()         .save()         .audit()         .releaseTask()  .manageAllTask() .updateRestoreTask()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 技术公告状态机转换图
 
+<<<<<<< HEAD
+```mermaid
+stateDiagram-v2
+    [*] --> 草稿 : 创建
+    草稿 --> 待确认1 : save() status非0
+    待确认1 --> 已确认 : audit() 审批通过
+    已确认 --> 解决中 : releaseTask() 发布修复任务
+    解决中 --> 已关闭 : audit() 关闭
+
+    待确认1 --> 已拒绝 : audit() 驳回
+    已确认 --> 已拒绝 : audit() 驳回
+    解决中 --> 已拒绝 : audit() 驳回
+    已拒绝 --> 待确认8 : update() 非管理员更新
+    待确认8 --> 待确认1 : update() 管理员修改后重新提交
+
+    state 草稿 {
+        note right of 草稿 : status=0
+    }
+    state 待确认1 {
+        note right of 待确认1 : status=1
+    }
+    state 已确认 {
+        note right of 已确认 : status=4
+    }
+    state 解决中 {
+        note right of 解决中 : status=5
+    }
+    state 已关闭 {
+        note right of 已关闭 : status=10
+    }
+    state 已拒绝 {
+        note right of 已拒绝 : status=6
+    }
+    state 待确认8 {
+        note right of 待确认8 : status=8<br/>非管理员更新时自动设为待确认
+    }
+=======
 ```
 ┌───────────┐
 │     0     │
@@ -94,10 +141,33 @@
 │     8     │  ← update() 非管理员更新时自动设为待确认
 │ (待确认)   │
 └───────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 修复任务状态流转
 
+<<<<<<< HEAD
+```mermaid
+stateDiagram-v2
+    [*] --> 发布接受 : releaseTask() 发布任务
+    发布接受 --> 办事处返回 : managePrivateTask()<br/>updatePrivateTask()
+    办事处返回 --> 闭环申请 : updatePrivateTask()<br/>无需跟踪的子任务返回
+    闭环申请 --> 闭环 : updateRestoreTask()<br/>管理员审批通过
+    发布接受 --> 闭环 : restoreStatus=31<br/>发布时直接闭环
+
+    state 发布接受 {
+        note right of 发布接受 : status=10
+    }
+    state 办事处返回 {
+        note right of 办事处返回 : status=20
+    }
+    state 闭环申请 {
+        note right of 闭环申请 : status=30<br/>办事处已处理，申请闭环
+    }
+    state 闭环 {
+        note right of 闭环 : status=31<br/>管理员审批通过闭环
+    }
+=======
 ```
 ┌───────────┐
 │    10     │
@@ -121,6 +191,7 @@
 │    31     │
 │  (闭环)   │  ← 管理员审批通过闭环 / 发布时直接闭环
 └───────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

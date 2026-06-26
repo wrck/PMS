@@ -58,6 +58,28 @@
 
 ### 2.1 登录认证流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["用户访问系统"] --> B{是否CAS模式?}
+    B -->|是| C["CAS Server重定向"]
+    B -->|否| D["本地登录页面"]
+    C --> E["CAS Assertion"]
+    D --> F["提交用户名/密码<br/>LoginAction.execute()"]
+    E --> G["获取Principal"]
+    F --> H["MD5加密密码"]
+    G --> I["查询用户信息"]
+    H --> J["数据库认证校验"]
+    I --> K["LoginService.loginCas()"]
+    J --> L["LoginService.login()"]
+    K --> M{用户有效?}
+    L --> M
+    M -->|是| N["构建权限映射"]
+    M -->|否| O["错误页面/提示"]
+    N --> P["区域权限处理"]
+    P --> Q["设置UserContext"]
+    Q --> R["进入首页"]
+=======
 ```
 用户访问系统
       |
@@ -84,10 +106,22 @@
 [设置UserContext]
 |
 [进入首页]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 登出流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["用户点击登出"] --> B["LoginAction.logout()"]
+    B --> C{是否CAS模式?}
+    C -->|是| D["重定向CAS登出URL"]
+    C -->|否| E["重定向index.jsp"]
+    D --> F["清除UserContext + Session"]
+    E --> F
+    F --> G["LoginService.logout()"]
+=======
 ```
 用户点击登出 ──> LoginAction.logout()
       |
@@ -98,10 +132,32 @@
 [重定向CAS登出URL]  [重定向index.jsp]
 |                |
 [清除UserContext + Session] ──> LoginService.logout()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 用户管理流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["用户列表"] --> B["UserManageAction.execute()"]
+    B --> C["UserManageService.queryUserList()"]
+    C --> D["新增用户"]
+    C --> E["编辑用户"]
+    C --> F["重置密码"]
+    D --> G["UserManageAction.add()"]
+    G --> H["校验必填字段"]
+    H --> I["生成随机密码 + MD5加密"]
+    I --> J["保存用户+菜单关联<br/>UserManageService.addUserInfo()"]
+    J --> K["发送账号激活邮件"]
+    E --> L["UserManageAction.edit()"]
+    L --> M["校验必填字段"]
+    M --> N["更新用户+菜单+区域权限<br/>UserManageService.updateUserInfo()"]
+    F --> O["UserManageAction.pwdreset()"]
+    O --> P["生成新密码 + MD5加密"]
+    P --> Q["更新密码+强制下线<br/>PasswordService.forcedOffline()"]
+    Q --> R["发送密码重置邮件"]
+=======
 ```
 [用户列表] ──> UserManageAction.execute() ──> UserManageService.queryUserList()
      |
@@ -128,10 +184,25 @@
                [更新密码+强制下线] ──> PasswordService.forcedOffline()
                     |
                [发送密码重置邮件]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 角色权限配置流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["角色列表"] --> B["RoleManageAction.execute()"]
+    B --> C["RoleManageService.queryRoleList()"]
+    C --> D["新增角色"]
+    C --> E["编辑角色"]
+    D --> F["RoleManageAction.addSubmit()"]
+    F --> G["校验角色名+菜单权限"]
+    G --> H["设置默认页面Welcome1.action"]
+    H --> I["保存角色+菜单关联<br/>RoleManageService.addRoleSubmit()"]
+    E --> J["RoleManageAction.editSubmit()"]
+    J --> K["校验后更新<br/>RoleManageService.updateRoleSubmit()"]
+=======
 ```
 [角色列表] ──> RoleManageAction.execute() ──> RoleManageService.queryRoleList()
      |
@@ -146,10 +217,54 @@
   [编辑角色] ──> RoleManageAction.editSubmit()
                     |
                [校验后更新] ──> RoleManageService.updateRoleSubmit()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.5 Role-Menu-Power三级权限模型
 
+<<<<<<< HEAD
+```mermaid
+erDiagram
+    fnd_user_info {
+        string username "用户名"
+        string realName "真实姓名"
+        string password "密码"
+        string roleIds "角色ID列表 格式: ;1;,;2;"
+        string dpNo "部门编号"
+    }
+    fnd_roles {
+        int id "角色ID"
+        string roleName "角色名称"
+        string defaultPage "默认页面"
+        int status "状态"
+    }
+    fnd_menus {
+        int id "菜单ID"
+        string menuCode "菜单编码"
+        string menuName "菜单名称"
+        int superId "上级菜单ID"
+        string path "路径"
+    }
+    fnd_user_menus {
+        int fnd_user_id "用户ID"
+        string menuCode "菜单编码"
+        string menuValue "菜单权限值"
+    }
+    fnd_role_menus {
+        int roleId "角色ID"
+        int menuId "菜单ID"
+        int menuPower "菜单权限"
+    }
+    fnd_user_power {
+        int fndUserId "用户ID"
+        string areapower "区域权限"
+    }
+
+    fnd_user_info ||--o{ fnd_user_menus : "N:M 用户-菜单关联"
+    fnd_roles ||--o{ fnd_role_menus : "N:M 角色-菜单关联"
+    fnd_role_menus }o--|| fnd_menus : "关联菜单"
+    fnd_user_info ||--o| fnd_user_power : "用户-区域权限"
+=======
 ```
 ┌─────────────────────────────────────────────────┐
 │              用户 (fnd_user_info)                │
@@ -183,6 +298,7 @@
            │  (fnd_user_power)     │
            │  fndUserId │ areapower │
            └───────────────────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

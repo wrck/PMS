@@ -54,6 +54,18 @@
 
 ### 2.2 业务流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    subgraph 合格证查询
+        A["合格证查询主页<br/>certificate"] --> B["输入序列号查询<br/>queryCertificate"]
+        B --> C["显示OQC检验信息"]
+    end
+    subgraph 印章登记表上传
+        D["上传印章登记表<br/>uploadSealInfo"] --> E["解析Excel文件<br/>parseExcelFile"]
+        E --> F["保存印章信息"]
+    end
+=======
 ```
 ┌──────────┐    ┌──────────┐
 │  合格证   │───>│  输入序列  │
@@ -71,6 +83,7 @@
 │  登记表   │    │  文件     │    │  信息     │
 │(uploadSealInfo)│(parseExcelFile)│          │
 └──────────┘    └──────────┘    └──────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 接口文档
@@ -181,6 +194,15 @@
 
 ### 3.2 业务流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart LR
+    A["督查列表<br/>execute()"] --> B["创建督查<br/>create()"]
+    B --> C["填写督查问卷"]
+    C --> D["保存督查记录<br/>redirect"]
+    D --> E["督查列表"]
+    E --> F["删除督查<br/>delete()"]
+=======
 ```
 ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
 │  督查列表  │───>│  创建督查  │───>│  填写督查  │───>│  保存督查  │
@@ -193,6 +215,7 @@
 │(delete)  │    │          │
 └──────────┘    └──────────┘
 ```
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 ### 3.3 接口文档
 
@@ -346,11 +369,19 @@
 
 ### 4.2 业务流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["选择文件<br/>browser"] --> B["保存文件到磁盘<br/>disk"]
+    B --> C["记录数据库<br/>fnd_files"]
+    C --> D["返回文件IDs"]
+=======
 ```
 ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
 │  选择文件  │───>│  保存文件  │───>│  记录数据库 │───>│  返回文件  │
 │(browser) │    │(disk)    │    │(fnd_files)│   │  IDs     │
 └──────────┘    └──────────┘    └──────────┘    └──────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 4.3 接口文档
@@ -500,6 +531,14 @@
 
 ### 5.2 业务流程
 
+<<<<<<< HEAD
+```mermaid
+graph TD
+    A["用户登录"] --> B["加载工作台<br/>Workspace"]
+    B --> C["展示待办列表"]
+    B --> D["点击待办任务"]
+    D --> E["打开业务表单"]
+=======
 ```
 ┌──────────┐    ┌──────────┐    ┌──────────┐
 │  用户登录  │───>│  加载工作台 │───>│  展示待办  │
@@ -511,6 +550,7 @@
                 │  点击待办  │───>│  打开业务  │
                 │  任务     │    │  表单     │
                 └──────────┘    └──────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 5.3 接口文档
@@ -640,6 +680,14 @@
 
 ### 6.2 业务流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["项目经理提交闭环申请<br/>PmClosedLoopAction.addPmCLApply()"] --> B["服务经理审核<br/>PmClosedLoopAction.addSmCLApply()"]
+    B --> C["回访人员填写问卷<br/>PmClosedLoopAction.addCbCLApply()"]
+    C --> D["工程人员填写闭环建议<br/>PmClosedLoopAction.addClCLApply()"]
+    D --> E["闭环完成"]
+=======
 ```
 [项目经理提交闭环申请] ──> PmClosedLoopAction.addPmCLApply()
       |
@@ -650,6 +698,7 @@
 [工程人员填写闭环建议] ──> PmClosedLoopAction.addClCLApply()
       |
 [闭环完成]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 6.3 闭环流程状态（pmClosedLoopResultType）
@@ -715,6 +764,15 @@
 
 ## 7. 模块间依赖关系
 
+<<<<<<< HEAD
+```mermaid
+graph TD
+    WS["工作台 WorkSpace<br/>所有模块的待办任务在此汇聚"] --> WF["工作流引擎 Workflow"]
+    CL["项目闭环 PmClosedLoop"] --> WF
+    PS["售前管理 Presales"] --> WF
+    WF --> UP["文件上传 Upload<br/>交付件/合格证/督查附件"]
+```
+=======
 ```
 ┌──────────────┐
 │   工作台      │<──── 所有模块的待办任务在此汇聚
@@ -734,3 +792,4 @@
 │  文件上传     │<──── 交付件/合格证/督查附件
 │(Upload)      │
 └──────────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0

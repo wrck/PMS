@@ -51,6 +51,13 @@
 
 ### 2.1 报表展示流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["报表展示页面<br/>ReportAction.show()"] --> B["加载综述数据<br/>ReportAction.queryStatisticsSummarize()"]
+    B --> C["加载各维度数据<br/>ReportAction.queryReportTableAssignedData()<br/>queryReportTableTraceData()<br/>queryReportTableClosedData()"]
+    C --> D["ECharts图表渲染<br/>前端渲染柱状图/折线图"]
+=======
 ```
 [报表展示页面] ──> [加载综述数据] ──> [加载各维度数据] ──> [ECharts图表渲染]
       |                  |                  |                    |
@@ -61,10 +68,18 @@
                                        TraceData()
                                        .queryReportTable
                                        ClosedData()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 趋势图加载流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["选择办事处/数据类型"] --> B["请求趋势数据<br/>ReportAction.loadLineData()<br/>loadLine_qualityData()<br/>loadLine_implData()"]
+    B --> C["返回JSON data字段"]
+    C --> D["ECharts渲染"]
+=======
 ```
 [选择办事处/数据类型] ──> [请求趋势数据] ──> [返回JSON] ──> [ECharts渲染]
         |                      |                |              |
@@ -72,25 +87,41 @@
                     .loadLineData()    返回data字段
                     .loadLine_qualityData()
                     .loadLine_implData()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 定时趋势数据保存流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["定时任务触发<br/>Spring定时器"] --> B["统计各维度数据<br/>ReportServiceImpl.keepReportLineData()"]
+    B --> C["批量写入趋势表<br/>ReportDao.insertReportLineDataByList()"]
+=======
 ```
 [定时任务触发] ──> [统计各维度数据] ──> [批量写入趋势表]
       |                  |                    |
   Spring定时器     ReportServiceImpl     ReportDao
                   .keepReportLineData() .insertReportLineDataByList()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 回访数据统计流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["设置查询条件"] --> B["执行查询<br/>DataAnalysisAction.execute()"]
+    B --> C["DataAnalysisService.quesyCbDataList()"]
+    C --> D["展示结果"]
+=======
 ```
 [设置查询条件] ──> [执行查询] ──> [展示结果]
       |                |              |
  DataAnalysisAction  DataAnalysis    页面展示
  .execute()         Service
                     .quesyCbDataList()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

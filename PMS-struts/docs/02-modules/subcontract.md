@@ -33,7 +33,11 @@
 | `pm_subcontract_project_price` | 转包项目价格表 |
 | `pm_subcontract_project_callback` | 转包项目回访记录表 |
 | `pm_subcontract_deliver_files` | 转包项目交付件/附件表 |
+<<<<<<< HEAD
+| `pm_subcontract_facilitator` | 服务商信息表 |
+=======
 | `pm_facilitator` | 服务商信息表 |
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 ### 涉及的流程监听器
 
@@ -54,15 +58,59 @@
 
 ### 2.1 转包申请流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A[创建转包] --> B[保存/发起申请]
+    B --> C[受益部门服务经理审批]
+    C --> D[通用审批节点]
+    D --> E[工程管理部审批]
+    E --> F[主任审批]
+    F --> G[合同执行]
+
+    A -.- A1[SubcontractAction.input]
+    B -.- B1[SubcontractAction.create/apply]
+    C -.- C1[SubcontractAction.audit]
+    D -.- D1[SubcontractAction.audit]
+    E -.- E1[SubcontractAction.audit]
+    F -.- F1[SubcontractAction.audit]
+    G -.- G1[SubcontractAction.audit]
+=======
 ```
 [创建转包] ──> [保存/发起申请] ──> [受益部门服务经理审批] ──> [通用审批节点] ──> [工程管理部审批] ──> [主任审批] ──> [合同执行]
       |              |                      |                       |                  |                |              |
  SubcontractAction SubcontractAction  SubcontractAction    SubcontractAction  SubcontractAction SubcontractAction SubcontractAction
  .input()         .create()/.apply() .audit()             .audit()           .audit()          .audit()        .audit()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 转包状态机转换图
 
+<<<<<<< HEAD
+```mermaid
+stateDiagram-v2
+    [*] --> S0
+    S0["0 草稿"] --> S10: apply() 发起申请
+    S10["10 待审批"] --> S15: 受益部门服务经理审批通过
+    S15["15 受益部门服务经理审批"] --> S20: 通用审批节点通过
+    S20["20 工程管理部审批通过"] --> S30: 主任审批通过
+    S30["30 办事处主任审批通过"] --> S40: 生成合同
+    S40["40 合同执行中"] --> S100: 闭环审批通过
+    S100["100 已闭环"]
+    S100 --> [*]
+
+    S10 --> S15R: 受益部门服务经理驳回
+    S15R["-15 受益部门服务经理驳回"] --> S10: 修改后重新提交
+    S20 --> S20R: 工程管理部驳回
+    S20R["-20 工程管理部驳回"] --> S10: 修改后重新提交
+    S30 --> S30R: 办事处主任驳回
+    S30R["-30 办事处主任驳回"] --> S10: 修改后重新提交
+    S40 --> S100R: 闭环驳回
+    S100R["-100 闭环驳回"]
+```
+
+> **状态码速查**：`0`草稿 → `10`待审批 → `15`服务经理审批 → `20`工程管理部审批 → `30`主任审批 → `40`合同执行 → `100`已闭环；驳回态为对应正值的负数（`-15`/`-20`/`-30`/`-100`），修改后重新提交回到 `10`。
+=======
 ```
 ┌───────────┐
 │     0     │
@@ -132,6 +180,7 @@
 │(闭环驳回)   │
 └───────────┘
 ```
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 ### 2.3 付款审批流程
 

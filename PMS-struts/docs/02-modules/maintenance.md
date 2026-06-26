@@ -45,15 +45,42 @@
 
 ### 2.1 维护记录管理流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["维护记录列表<br/>MaintenanceAction.execute()"] --> B["创建维护记录"]
+    B --> C["填写维护问卷"]
+    C --> D["上传交付件"]
+    D --> E["保存<br/>MaintenanceAction.createProjectMaintenance()"]
+=======
 ```
 [维护记录列表] ──> [创建维护记录] ──> [填写维护问卷] ──> [上传交付件] ──> [保存]
       |                  |                  |               |              |
  MaintenanceAction  MaintenanceAction  MaintenanceAction  MaintenanceAction  MaintenanceAction
  .execute()         .createProjectMaintenance()                .createProjectMaintenance()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 维护记录创建流程
 
+<<<<<<< HEAD
+```mermaid
+flowchart TD
+    A["进入创建页面"] --> B["MaintenanceAction.createProjectMaintenance()"]
+    B --> C{判断项目类型}
+    C -->|"售后 projectType=10"| D["查询项目信息"]
+    C -->|"售前 projectType=20"| E["查询售前项目信息"]
+    C -->|"非业务类 projectType=30"| F["无关联项目"]
+    C -->|"自定义 projectType=40"| G["无关联项目"]
+    D --> H["权限校验"]
+    E --> H
+    F --> H
+    G --> H
+    H --> I["加载问卷模板<br/>quesType=projectMaintenance"]
+    I --> J["填写表单+问卷"]
+    J --> K["保存<br/>projectService.insertOrUpdateProjectMaintenance()"]
+    K --> L["更新项目实施状态<br/>projectService.updateProjectExecutionState()"]
+=======
 ```
 [进入创建页面] ──> MaintenanceAction.createProjectMaintenance()
       |
@@ -74,6 +101,7 @@
 [保存] ──> projectService.insertOrUpdateProjectMaintenance()
  |
 [更新项目实施状态] ──> projectService.updateProjectExecutionState()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 项目类型说明
@@ -89,12 +117,20 @@
 
 ### 2.4 服务交付统计流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A["进入服务交付页面"] --> B["MaintenanceAction.serviceDelivery()"]
+    B --> C["按季度/月份筛选"]
+    C --> D["查询维护记录统计<br/>projectService.selectProjectMaintenanceServiceDeliveryList()"]
+=======
 ```
 [进入服务交付页面] ──> MaintenanceAction.serviceDelivery()
       |
 [按季度/月份筛选]
  |
 [查询维护记录统计] ──> projectService.selectProjectMaintenanceServiceDeliveryList()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

@@ -47,6 +47,39 @@
 
 ### 2.1 售前测试全生命周期流程
 
+<<<<<<< HEAD
+```mermaid
+graph LR
+    A[售前申请] --> B[服务经理审批]
+    B --> C[项目经理跟踪]
+    C --> D[工程管理部回访]
+    D --> E[闭环]
+
+    A -.- A1[PresalesAction.apply]
+    B -.- B1[PresalesAction.smaduit]
+    C -.- C1[PresalesAction.pmaduit]
+    D -.- D1[PresalesAction.emaduit]
+    E -.- E1[流程自动闭环]
+```
+
+### 2.2 售前审批流程（Activiti 驱动）
+
+```mermaid
+flowchart TD
+    APPLY[提交售前申请<br/>PresalesAction.apply] --> START[启动Activiti流程<br/>PresalesService.startPresalesFlow]
+    START --> SM[服务经理审批<br/>usertask2/serviceApprove<br/>PresalesAction.smaduit]
+    SM --> Q1{审批通过?}
+    Q1 -->|是| PM[项目经理跟踪<br/>usertask3<br/>PresalesAction.pmaduit]
+    Q1 -->|否| BACK1[退回修改<br/>usertask1<br/>PresalesAction.input]
+    BACK1 --> SM
+    PM --> Q2{审批通过?}
+    Q2 -->|是| EM[工程管理部回访<br/>usertask4<br/>PresalesAction.emaduit]
+    Q2 -->|否| BACK2[退回]
+    BACK2 --> PM
+    EM --> CLOSE[回访通过<br/>闭环 projectState=100]
+
+    style CLOSE fill:#e6ffe6,stroke:#2e8b57
+=======
 ```
 [售前申请] ──> [服务经理审批] ──> [项目经理跟踪] ──> [工程管理部回访] ──> [闭环]
      |              |                   |                   |              |
@@ -80,10 +113,31 @@
 PresalesAction.emaduit()
 |
 [回访通过] ──> 闭环(projectState=100)
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 售前测试状态机转换图
 
+<<<<<<< HEAD
+```mermaid
+stateDiagram-v2
+    [*] --> S10
+    S10["10 待开始"] --> S31: apply()
+    S31["31 待服务经理指定PM"] --> S32: 通过
+    S31 --> S30: 服务经理退回
+    S32["32 已指定PM,待PM跟踪"] --> S33: PM跟踪完成
+    S33["33 PM已跟踪,待工程管理部回访"] --> S100: 回访通过
+    S100["100 已闭环"]
+    S100 --> [*]
+    S10 --> S20: 终止/驳回
+    S31 --> S20: 终止/驳回
+    S32 --> S20: 终止/驳回
+    S20["20 已终止/已驳回"]
+    S20 --> [*]
+```
+
+> **状态码速查**：`10`待开始 → `31`待SM指定PM → `32`已指定PM待PM跟踪 → `33`PM已跟踪待回访 → `100`已闭环；退回态 `30`服务经理退回；终止态 `20`已终止/驳回。
+=======
 ```
 ┌───────────┐
 │    10     │
@@ -127,6 +181,7 @@ PresalesAction.emaduit()
 │ 已驳回)    │
 └───────────┘
 ```
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 状态值说明（projectState字段，存储于`pm_presales_project_header`表）：
 
