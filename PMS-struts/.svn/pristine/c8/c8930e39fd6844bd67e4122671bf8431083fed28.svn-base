@@ -1,2 +1,0 @@
-<TD vAlign="middle" align="center" width="30" height="28" style="padding-left:0px;"><IMG height="8" src="$imgurl" /></TD>
-<TD><A class="menuList"  href="$url" title="$title" #if($target)target="$target"#end>$text</A></TD>

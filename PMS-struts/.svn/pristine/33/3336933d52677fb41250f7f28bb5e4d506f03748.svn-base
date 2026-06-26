@@ -1,9 +1,0 @@
-﻿package com.dp.plat.util;
-
-public class Constant {
-
-	public final static String MODULE_CUSTOMER = "1";
-	public final static String MODULE_SUPPLIER = "2";
-	public final static String MODULE_PROJECT = "3";
-	
-}

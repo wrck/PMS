@@ -1,7 +1,0 @@
-﻿package com.dp.plat.service;
-
-import com.dp.plat.param.PasswordEditParam;
-
-public interface PasswordService {
-	boolean changelogin(PasswordEditParam passwordEditParam);
-}
