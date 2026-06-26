@@ -51,16 +51,25 @@
 
 ### 2.1 流程引擎核心流程
 
+<<<<<<< HEAD
 ```mermaid
 graph LR
     A["流程定义部署<br/>WorkFlowAction.newdeploy()"] --> B["启动流程实例<br/>业务Action.startProcess()"]
     B --> C["任务分配<br/>Activiti自动分配"]
     C --> D["任务完成<br/>业务Action.completeTask()"]
     D --> E["流程结束<br/>Activiti自动结束"]
+=======
+```
+[流程定义部署] ──> [启动流程实例] ──> [任务分配] ──> [任务完成] ──> [流程结束]
+      |                  |              |              |              |
+ WorkFlowAction    业务Action      Activiti       业务Action      Activiti
+ .newdeploy()      .startProcess()  自动分配        .completeTask()  自动结束
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 审批任务处理流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["待办任务列表"] --> B["WorkSpaceAction.task()"]
@@ -75,10 +84,32 @@ flowchart TD
     J --> K{流程结束?}
     K -->|是| L["更新业务状态"]
     K -->|否| M["等待下一审批人"]
+=======
+```
+[待办任务列表] ──> WorkSpaceAction.task()
+      |
+[点击处理] ──> WorkFlowAction.viewTaskForm()
+      |
+[打开任务表单] ──> 根据formKey跳转到业务Action
+      |
+[审批通过?] ──> WorkFlowService.submitTask() / submitSelfTask()
+      |              |
+  /        \         |
+ 是         否       |
+ |          |        |
+[下一节点]  [退回]    |
+ |          |        |
+[流程结束?]  [修改重提] |
+ /    \              |
+是     否             |
+|      |             |
+[更新业务状态] [等待下一审批人]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 统一待办任务推送流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["Activiti任务创建/完成事件"] --> B["UnifyTaskListener.notify()"]
@@ -96,10 +127,37 @@ flowchart TD
     K --> L["调用致远OA REST API<br/>createUnifyTask()<br/>updateUnifyTask()"]
     L --> M["推送后处理<br/>UnifyTaskListener.afterPush()"]
     M --> N["更新dp_act_unify_task表<br/>unifyTaskService.updateByPrimaryKeySelective()"]
+=======
+```
+[Activiti任务创建/完成事件] ──> UnifyTaskListener.notify()
+      |
+[解析任务事件] ──> UnifyTaskListener.createDelegateTask()
+      |               |
+      |         [生成表单URL] ──> generateFormUrl()
+      |               |
+      |         [获取接收人] ──> getReceiverUser() / getProcessTaskFixedAssignees()
+      |               |
+      |         [解析角色映射] ──> getRoleGroupMap()
+      |               |
+[推送前处理] ──> UnifyTaskListener.beforePush()
+      |               |
+      |         [保存到dp_act_unify_task表] ──> unifyTaskService.insertSelective()（来自activiti-api-unifytask-patch JAR）
+      |               |
+[推送任务] ──> UnifyTask2SeeyonSender.pushUnifyTask()
+      |               |
+      |         [初始化SeeyonTask] ──> initUnifyTask()
+      |               |
+      |         [调用致远OA REST API] ──> createUnifyTask() / updateUnifyTask()
+      |               |
+[推送后处理] ──> UnifyTaskListener.afterPush()
+      |               |
+      |         [更新dp_act_unify_task表] ──> unifyTaskService.updateByPrimaryKeySelective()（来自activiti-api-unifytask-patch JAR）
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 致远OA待办同步流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["PMS流程任务创建"] --> B["UnifyTaskListener<br/>TASK_CREATE事件"]
@@ -112,6 +170,26 @@ flowchart TD
     H --> I["任务完成时更新"]
     I --> J["UnifyTaskListener<br/>TASK_COMPLETE事件"]
     J --> K["更新OA待办状态<br/>POST /seeyon/rest/thirdpartyPending/updatePendingState"]
+=======
+```
+[PMS流程任务创建] ──> UnifyTaskListener(TASK_CREATE事件)
+      |
+[解析流程配置] ──> initProcessConfig() 读取sys.unify.task.push.url.config
+      |
+[生成表单URL] ──> 根据processKey和taskKey匹配配置中的URL模板
+      |
+[获取接收人] ──> 根据任务assignee/candidate解析角色和用户
+      |
+[构建SeeyonTask] ──> UnifyTask2SeeyonSender.initUnifyTask()
+      |
+[获取OA Token] ──> getToken() → POST /seeyon/rest/token
+      |
+[推送待办] ──> POST /seeyon/rest/thirdpartyPending/receive
+      |
+[任务完成时更新] ──> UnifyTaskListener(TASK_COMPLETE事件)
+      |
+[更新OA待办状态] ──> POST /seeyon/rest/thirdpartyPending/updatePendingState
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档
@@ -514,3 +592,187 @@ flowchart TD
 | 待办任务ID前缀 | sys.unify.task.push.config → taskPrefix | PMS# | 推送到OA的任务ID前缀 |
 | PMS系统URL | sys.unify.task.push.config → originUrl | http://pms.dptech.com | PMS系统访问地址（用于拼接待办URL） |
 | 默认表单URL | sys.unify.task.push.config → formUrl | /work/Workspace!task.action | 默认待办跳转URL |
+
+---
+
+## 附录 A：UnifyTaskListener 源码分析
+
+> 源码位置：`PMS-struts/src/com/dp/plat/plus/unifytask/listener/UnifyTaskListener.java`
+
+### A.1 类定义
+
+- **包路径**: `com.dp.plat.plus.unifytask.listener`
+- **父类**: `AbstractUnifyTaskListener`（来自 `com.dp.plat.activiti.unifytask.listener`）
+- **职责**: Activiti 任务事件监听器，作为统一待办任务推送的入口，负责将 Activiti 任务事件转换为统一待办任务并推送到致远 OA
+
+### A.2 依赖注入
+
+```java
+@Autowired
+protected UnifyTaskService unifyTaskService;  // 统一待办任务 CRUD
+
+@Autowired
+private UserManageService userManageService;  // 用户查询
+
+@Autowired
+private BasicDataService basicDataService;  // 系统参数查询
+```
+
+### A.3 核心方法
+
+#### `notify(DelegateTask)` — Activiti 事件入口
+- 调用 `super.notify(delegate)`，委托父类处理
+
+#### `createDelegateTask(DelegateTask, ...)` — 创建统一待办任务对象
+- **业务逻辑**:
+  1. 查询流程定义名称（`processDefinition.getName()`）
+  2. 创建 `UnifyDelegateTask`，设置 sender（`UserContext.getUserContext().getUsername()`）
+  3. 初始化流程配置（`initProcessConfig`）
+  4. 生成表单 URL（`generateFormUrl`）
+  5. 解析审批状态：按 `approveStatus`、`isPass`、`result`、`flowState`、`evaluationResult`、`projectProcessStatus` 顺序检查流程变量
+  6. 设置标题：`processDefinitionName + " -- " + task.getName()`
+
+#### `getReceiverUser(DelegateTask, Map)` — 获取任务接收人
+- **业务逻辑**:
+  1. 读取 assignee（指定办理人）
+  2. 读取 candidates（候选用户/候选组）
+  3. 通过 `getUsersByUserId` / `getUsersByGroupId` 解析为 Activiti User 列表
+
+#### `getUsersByGroupId(String, Map)` — 按角色和部门查询用户
+- **业务逻辑**:
+  1. 构造查询参数：`roleid`、`dpNo`
+  2. 调用 `userManageService.queryUserWithRoleIdAndDpNo(params)`
+  3. 若无结果，使用 `areaPower` 参数重试（`queryUserWithRoleIdAndDpNoOrInAreaPower`）
+  4. 若仍无结果，尝试转换后的部门编码（`UserUtil.transferDepNo`）
+
+#### `getRoleGroupMap(...)` — 角色组映射
+- **业务逻辑**: 构造角色变量到系统角色 ID 的映射：
+  - `cbRole` / `callbackRole` → `MessageUtil.ROLE_CALLBACKPER`（回访员）
+  - `emRole` → `MessageUtil.ROLE_ENGINEEMANAGER`（工程管理部）
+  - `emlRole` → `MessageUtil.ROLE_ENGINEEMANAGER_LEADER`（工程管理部负责人）
+  - `smRole` / `profitSmRole` / `parentSmRole` → `MessageUtil.ROLE_SERVICEMANAGER`（服务经理）
+  - `pmRole` → `MessageUtil.ROLE_PROGRAMMANAGER`（项目经理）
+  - `zrRole` → `MessageUtil.ROLE_AREA_LEADER`（区域负责人）
+  - `presalesStaffRole` → `MessageUtil.ROLE_PRESALES_STAFF`（售前人员）
+
+#### `generateFormUrl(UnifyDelegateTask)` — 生成表单 URL
+- **业务逻辑**:
+  1. 从 `sys.unify.task.push.url.config` 系统参数读取配置
+  2. 获取流程级 URL（`processUrl` 或 `defaultUrl`）
+  3. 获取任务级 URL（`taskUrls[taskKey]`，覆盖流程级）
+  4. 若配置了 `needEncodeBase64=true`，对 objectId 进行 Base64 编码
+  5. 格式化 URL：`String.format(taskUrl, objectId)`
+
+#### `getProcessTaskFixedAssignees(...)` — 从流程配置获取固定办理人
+- **业务逻辑**:
+  1. 读取流程配置中的 `effectiveFrom`（生效日期）
+  2. 若任务创建时间早于生效日期，返回空列表（不推送）
+  3. 读取 `taskAssignees[taskKey]` 列表
+  4. 通过 `getUsersByUserId` 解析为 User 列表
+
+### A.4 推送生命周期回调
+
+| 方法 | 触发时机 | 业务逻辑 |
+|------|----------|----------|
+| `beforePush(UnifyTask, UnifyTaskSender, String)` | 推送前 | `unifyTaskService.insertSelective(unifyTask)` — 插入待办记录 |
+| `afterPush(UnifyTask, UnifyTaskSender, String)` | 推送后 | `unifyTaskService.updateByPrimaryKeySelective(unifyTask)` — 更新推送结果 |
+| `beforePush(UnifyDelegateTask, String)` | 旧任务推送前 | `unifyTaskService.updateBySelective(temp)` — 标记旧任务 `latest=false` |
+| `afterPush(UnifyDelegateTask, String)` | 旧任务推送后 | 空实现 |
+
+### A.5 配置项依赖
+
+| 系统参数 | 用途 |
+|----------|------|
+| `sys.unify.task.push.config` | 发送器配置（JSON），包含发送器类名和参数 |
+| `sys.unify.task.push.url.config` | 流程 URL 配置（JSON），配置各流程的表单 URL 和任务分配规则 |
+
+---
+
+## 附录 B：UnifyTask2SeeyonSender 源码分析
+
+> 源码位置：`PMS-struts/src/com/dp/plat/plus/unifytask/sender/UnifyTask2SeeyonSender.java`
+
+### B.1 类定义
+
+- **包路径**: `com.dp.plat.plus.unifytask.sender`
+- **父类**: `AbstractUnifyTaskSender`
+- **职责**: 将统一待办任务推送到致远 OA 系统，通过 REST API 创建/更新待办
+
+### B.2 状态常量
+
+```java
+public static final Integer APPROVE_AGREE = 0;      // 同意已办
+public static final Integer APPROVE_DISAGREE = 1;   // 不同意已办
+public static final Integer APPROVE_CANCEL = 2;     // 取消
+public static final Integer APPROVE_REJECT = 3;     // 驳回
+```
+
+### B.3 配置项
+
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `taskTitlePrefix` | `【PMS】` | 待办标题前缀 |
+| `taskPrefix` | `PMS#` | 任务 ID 前缀 |
+| `originUrl` | `http://pms.dptech.com` | PMS 系统地址 |
+| `targetUrl` | `https://oatest.dptech.com/` | 致远 OA 地址 |
+| `timeout` | `30000` | HTTP 超时（ms）|
+| `restUser` | `rest` | OA REST 用户名 |
+| `restPassword` | `b59e0089-...` | OA REST 密码 |
+| `tokenPath` | `/seeyon/rest/token` | Token 获取路径 |
+| `createPath` | `/seeyon/rest/thirdpartyPending/receive?token=` | 创建待办路径 |
+| `updatePath` | `/seeyon/rest/thirdpartyPending/updatePendingState?token=` | 更新待办路径 |
+| `registerCode` | `3006` | PMS 在 OA 的注册编码 |
+
+### B.4 核心方法
+
+#### `pushUnifyTask(UnifyTask, String)` — 推送单个待办
+- **业务逻辑**:
+  1. 类型转换：`UnifyTask` → `SeeyonTask`
+  2. 设置 `registerCode`
+  3. 构造 URL：`originUrl + formUrl`
+  4. 根据 type 调用：
+     - `CREATE` → `createUnifyTask(seeyonTask)`
+     - `UPDATE` → `updateUnifyTask(seeyonTask)`
+
+#### `initUnifyTask(UnifyDelegateTask, List<User>, Map)` — 初始化 SeeyonTask
+- **业务逻辑**:
+  1. 解析 state（0=未办理，1=已办理）和 subState（0/1/2/3）
+  2. 遍历接收人，去重（`uniqueUser` Set）
+  3. 对每个接收人构造 `SeeyonTask`：
+     - 设置 taskId、title（带前缀 `【PMS】`）
+     - 加工 taskId：`taskPrefix + assignee + "_" + originTaskId`（保证唯一性）
+     - 设置 creationDate、noneBindingReceiver、noneBindingSender
+     - 设置 state、subState、thirdReceiverId、thirdSenderId
+     - 序列化为 JSON 存入 `pushData`
+
+#### `getToken(boolean)` — 获取致远 OA Token
+- **业务逻辑**:
+  1. 若 token 已缓存，直接返回
+  2. POST 请求 `targetUrl + tokenPath`，参数：`userName`、`password`（可选 `loginName`）
+  3. 解析响应 JSON，提取 `id` 字段作为 token
+
+#### `post(SeeyonTask, String)` — HTTP POST 请求
+- **业务逻辑**:
+  1. 获取 token
+  2. 构造 URL：`targetUrl + urlPath + token`
+  3. 序列化 SeeyonTask 为 JSON
+  4. 调用 `HttpUtil.post(url, pushData, timeout)`
+  5. 解析响应：若为 JSON，转换为 `UnifyTaskResult`；否则返回失败结果
+
+### B.5 状态映射
+
+```java
+statusMap.put(DONE, 1);              // 已办理 → 1
+statusMap.put(TODO, 0);              // 未办理 → 0
+statusMap.put(STATUS_AGREE, APPROVE_AGREE);      // 同意 → 0
+statusMap.put(STATUS_DISAGREE, APPROVE_DISAGREE); // 不同意 → 1
+statusMap.put(STATUS_CANCEL, APPROVE_CANCEL);     // 取消 → 2
+statusMap.put(STATUS_REJECT, APPROVE_REJECT);    // 驳回 → 3
+```
+
+### B.6 ⚠️ 注意事项
+
+1. **Token 无过期处理**: token 缓存在内存中，若 OA 端 token 过期，后续请求会失败
+2. **main 方法残留**: 类中包含 `main` 方法用于测试，生产环境应移除
+3. **硬编码密码**: `restPassword` 默认值硬编码在代码中
+4. **taskId 加工策略**: `taskPrefix + assignee + "_" + originTaskId` 保证不同接收人的同一任务有不同 taskId

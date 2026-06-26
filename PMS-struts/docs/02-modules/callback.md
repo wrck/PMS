@@ -40,6 +40,7 @@
 
 ### 2.1 回访管理流程
 
+<<<<<<< HEAD
 ```mermaid
 graph LR
     A[发起回访申请] --> B[回访审批]
@@ -50,10 +51,18 @@ graph LR
     B -.- B1[CallBackAction.aduit]
     C -.- C1[CallBackAction.aduit]
     D -.- D1[CallBackAction.aduit]
+=======
+```
+[发起回访申请] ──> [回访审批] ──> [填写回访问卷] ──> [回访通过/驳回]
+      |                 |               |                |
+ CallBackAction     CallBackAction   CallBackAction    CallBackAction
+ .apply()           .aduit()         .aduit()          .aduit()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 回访审批流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     APPLY[发起回访申请<br/>CallBackAction.apply] --> START[启动Activiti流程<br/>CallBackService.startCallBackFlow]
@@ -65,10 +74,28 @@ flowchart TD
 
     style PASS fill:#e6ffe6,stroke:#2e8b57
     style REJECT fill:#fff0f0,stroke:#d94a4a
+=======
+```
+[发起回访申请] ──> CallBackAction.apply()
+      |
+[启动Activiti流程] ──> CallBackService.startCallBackFlow()
+      |
+[回访审批(callbackRole)] ──> CallBackAction.aduit()
+      |
+  [审批通过?]
+  /        \
+ 是         否
+ |          |
+[回访通过]   [退回修改]
+ |          |
+[项目闭环流程  CallBackAction.resubmit()
+ 状态回到10]   (重新提交)
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 回访与闭环流程状态关联
 
+<<<<<<< HEAD
 回访流程与项目闭环流程状态（`closeProcessState`）紧密关联：
 
 ```mermaid
@@ -95,6 +122,33 @@ flowchart TD
     SUB --> APP[提交审批<br/>CallBackService.submitCallBackFlow]
 
     style SUB fill:#fff4e6,stroke:#d97a00
+=======
+回访流程与项目闭环流程状态(closeProcessState)紧密关联：
+
+| closeProcessState值 | 含义 | 对应MessageUtil常量 |
+|---------------------|------|---------------------|
+| 10 | 项目跟踪 | PROJECT_CLOSE_PROCESS_STATE_10 |
+| 15 | 闭环申请 | PROJECT_CLOSE_PROCESS_STATE_15 |
+| 20 | 服务经理审批 | PROJECT_CLOSE_PROCESS_STATE_20 |
+| 30 | 回访 | PROJECT_CLOSE_PROCESS_STATE_30 |
+| 40 | 工程人员审核 | PROJECT_CLOSE_PROCESS_STATE_40 |
+| 50 | 项目闭环 | PROJECT_CLOSE_PROCESS_STATE_50 |
+
+### 2.4 回访问卷流程
+
+```
+[进入审批页面] ──> CallBackAction.aduit()
+      |
+[选择问卷模板] ──> 获取生效的问卷列表
+      |
+[填写问卷] ──> 问卷草稿保存(pmClQuesnaireResultHeader.status=0)
+      |
+[提交问卷] ──> 问卷提交(pmClQuesnaireResultHeader.status=1)
+      |            计算问卷分数
+      |            保存问卷结果
+      |
+[提交审批] ──> CallBackService.submitCallBackFlow()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

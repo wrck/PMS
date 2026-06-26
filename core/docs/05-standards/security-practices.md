@@ -125,7 +125,7 @@ sequenceDiagram
     DB-->>PS: 旧密码哈希
     PS->>PS: 校验旧密码(encryptMD5Password(oldPwd, username, 1024))
     alt 旧密码错误
-        PS-->>PC: BusinessException("原密码错误")
+        PS-->>PC: CustomRuntimeException("原密码错误")
         PC-->>U: Result.fail
     end
     PS->>PS: 校验新密码复杂度
@@ -320,133 +320,279 @@ private static final Set<String> ALLOWED_TABLES = new HashSet<>(Arrays.asList(
 
 ## 5. XSS 防护
 
-### 5.1 输入过滤
+### 5.1 整体架构
 
-core 通过 Spring MVC 的 `@InitBinder` 进行输入过滤：
+core 通过 Servlet Filter + HttpServletRequestWrapper 模式实现 XSS 防护，组件位于 `com.dp.plat.security.xss` 包：
+
+```
+HTTP 请求
+  ↓
+XssFilter (Filter 接口)
+  ├─ 读取 excludePattern，匹配则跳过
+  └─ 包装 request 为 XssRequestBodyHttpServletRequestWrapper
+        ↓
+Controller 通过 getParameter/getParameterValues/getInputStream
+读取已被 escapeHtml 处理的参数值
+```
+
+### 5.2 XssFilter — 入口过滤器
+
+`XssFilter.java:15` 实现 `javax.servlet.Filter`，核心逻辑：
 
 ```java
-@ControllerAdvice
-public class GlobalBindingInitializer {
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        // 注册 XSS 过滤编辑器
-        binder.registerCustomEditor(String.class, new StringTrimmerEditor(true) {
-            @Override
-            public void setAsText(String text) {
-                super.setAsText(XssUtil.clean(text));  // HTML 清理
-            }
-        });
+public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+        throws IOException, ServletException {
+    String servletPath = ((HttpServletRequest) request).getServletPath();
+    if (filterConfig != null) {
+        String excludePattern = filterConfig.getInitParameter("excludePattern");
+        if (StringUtils.isNotBlank(excludePattern) && servletPath.matches(excludePattern)) {
+            chain.doFilter(request, response);  // 排除路径直通
+            return;
+        }
     }
+    request = new XssRequestBodyHttpServletRequestWrapper((HttpServletRequest) request);
+    chain.doFilter(request, response);
 }
 ```
 
-### 5.2 输出编码
+> **避坑**：旧版本 `XssHttpServletRequestWrapper` 和 `XssPostHttpServletRequestWrapper` 在 `XssFilter.java:37-39` 中已被注释掉，当前生效的是 `XssRequestBodyHttpServletRequestWrapper`。
 
-JSP 页面使用 `<c:out>` 标签进行 HTML 编码：
+### 5.3 escapeHtml 字符替换策略
 
-```jsp
-<!-- 正确：使用 c:out 编码 -->
-<c:out value="${user.userName}"/>
-
-<!-- 错误：直接输出，有 XSS 风险 -->
-${user.userName}
-```
-
-### 5.3 富文本处理
-
-富文本字段（如技术公告内容）使用 HTML Cleaner 清理危险标签：
+四个 Wrapper 类共享相同的 `escapeHtml` 实现（自定义重写，避免 commons-text 的中文问题）：
 
 ```java
-public class XssUtil {
-    private static final Set<String> DANGEROUS_TAGS = new HashSet<>(Arrays.asList(
-        "script", "iframe", "object", "embed", "applet", "meta", "link", "style"
-    ));
-
-    private static final Set<String> DANGEROUS_ATTRS = new HashSet<>(Arrays.asList(
-        "onerror", "onclick", "onload", "onmouseover", "onmouseout", "onfocus", "onblur"
-    ));
-
-    public static String clean(String html) {
-        // 1. 移除危险标签
-        // 2. 移除危险属性
-        // 3. 移除 javascript: 协议
-        // 4. 保留安全 HTML 标签
+// XssHttpServletRequestWrapper.java:55-81
+private String escapeHtml(String s) {
+    if (s == null || s.isEmpty()) {
+        return "";
     }
+    StringBuilder sb = new StringBuilder("");
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+        switch (c) {
+            case '>': sb.append("&gt;"); break;
+            case '<': sb.append("&lt;"); break;
+            case '&': sb.append('＆'); break;   // 全角＆，避免 &amp; 二次转义
+            default:  sb.append(c); break;
+        }
+    }
+    return sb.toString();
 }
 ```
 
-### 5.4 XSS 防护策略表
+| 原字符 | 转义后 | 说明 |
+|--------|--------|------|
+| `>` | `&gt;` | 标准实体 |
+| `<` | `&lt;` | 标准实体 |
+| `&` | `＆`（U+FF06 全角） | **非标准**，避免与已有实体冲突 |
+| 其他 | 不变 | 中文字符不被过滤（关键避坑点） |
 
-| 字段类型 | 防护策略 | 实现方式 |
-|----------|----------|----------|
-| 普通文本 | HTML 编码 | `<c:out>` 或 `HtmlUtils.htmlEscape` |
-| 富文本 | HTML 清理 | `XssUtil.clean` 移除危险标签 |
-| URL | URL 编码 + 白名单协议 | 校验 `http://`、`https://` 开头 |
-| JSON | JSON 编码 | `JsonSerializer` 转义特殊字符 |
-| 数字 | 类型校验 | `Integer.parseInt` / `Double.parseDouble` |
+> **避坑**：`&` 被替换为**全角**字符 `＆`，而非 `&amp;`。这意味着包含 `&` 的合法内容（如 URL 参数）会被破坏。如有富文本或 URL 入参，需在 Controller 层解码或单独处理。
+
+### 5.4 四个 Wrapper 类对比
+
+| Wrapper 类 | 继承 | 状态 | 适用场景 | 关键实现 |
+|-----------|------|------|----------|----------|
+| `XssHttpServletRequestWrapper` | `HttpServletRequestWrapper` | `@deprecated` | 表单 + GET，无法处理 `@RequestBody` JSON | 重写 getParameter/getParameterValues，逐字符 escapeHtml |
+| `XssPostHttpServletRequestWrapper` | `HttpServletRequestWrapper` | 已弃用 | POST 表单 + JSON | 缓存 body 到 `byte[]`，重写 getInputStream 返回缓存 |
+| `XssRequestBodyHttpServletRequestWrapper` | `HttpServletRequestWrapper` | **当前使用** | POST JSON + multipart 表单 | 使用 `CommonsMultipartResolver`，支持 multipart 字段过滤，`JSONValidator` 校验 |
+| `XssRequestBodyHttpServletRequestWrapper1` | `HttpServletRequestWrapper` | 备用版本 | POST JSON（非 multipart） | 使用 `contentType.startsWith("multipart")` 判断，`JSON.parseObject` 重新序列化 |
+
+### 5.5 password 字段豁免
+
+所有 Wrapper 在 `getParameter` / `getParameterValues` 中均对 `password` 参数名豁免，返回原值：
+
+```java
+// XssHttpServletRequestWrapper.java:42-44
+if ("password".equals(parameter)) {
+    return value;  // 密码不转义，避免破坏加密结果
+}
+```
+
+> **避坑**：如新增其他加密字段（如 `oldPwd`、`newPwd`），需同步加入豁免列表，否则 escapeHtml 会破坏加密内容。
+
+### 5.6 multipart 表单处理
+
+`XssRequestBodyHttpServletRequestWrapper.java:258-316` 中处理 multipart 表单：
+
+1. 通过 `CommonsMultipartResolver.resolveMultipart(this)` 解析 multipart
+2. 使用 `ServletFileUpload.parseRequest(this)` 获取 `List<FileItem>`
+3. 通过 `ByteUtils.indexOf(requestBody, currentHeader)` 定位字段在 body 中的偏移
+4. 仅对 `isFormField()=true` 的字段内容执行 escapeHtml
+5. 重新组装 `requestBody` byte 数组
+
+### 5.7 富文本处理
+
+富文本字段（如邮件模板内容）使用 `JsoupUtil` + `org.jsoup.safety.Safelist` 清理：
+
+```java
+// NotifyTemplateController.java:14, 25 引用
+import org.jsoup.safety.Safelist;
+import com.dp.plat.core.util.JsoupUtil;
+```
+
+> 富文本字段不经过 `XssFilter`（通过 excludePattern 排除），由 Jsoup 在 Controller/Service 层按白名单清理。
 
 ---
 
 ## 6. CSRF 防护
 
-### 6.1 Token 机制
+### 6.1 组件架构
 
-core 通过 Shiro 的 CSRF 过滤器或自定义 Token 校验：
+core 通过 `CsrfInterceptor`（Spring MVC 拦截器）+ `CSRFTokenManager`（Token 管理器）实现 CSRF 防护，组件位于 `com.dp.plat.security.csrf` 包：
+
+```
+HTTP 请求
+  ↓
+CsrfInterceptor.preHandle
+  ├─ 从 Shiro Session 读取 CSRF_TOKEN_FOR_SESSION_ATTR_NAME
+  ├─ 若 Session 中无 token，调用 CSRFTokenManager.getTokenForSession 生成
+  └─ POST/PUT/DELETE 请求校验：
+        ├─ 从 request parameter 或 header 读取 __RequestVerificationToken
+        ├─ 与 Session 中 token 比较
+        └─ 不一致抛 CsrfValidateFailedException
+  ↓
+Controller 处理
+  ↓
+CsrfInterceptor.postHandle
+  └─ 将 token 写入 ModelAndView model + response header
+```
+
+### 6.2 CSRFTokenManager — Token 管理器
+
+`CSRFTokenManager.java:16` 是 `public final class`，私有构造器（不可实例化），提供两个静态常量与两个静态方法：
 
 ```java
-@Controller
-public class BaseController {
-    @ModelAttribute
-    public void generateCsrfToken(Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        String token = (String) session.getAttribute("CSRF_TOKEN");
-        if (token == null) {
-            token = UUID.randomUUID().toString();
-            session.setAttribute("CSRF_TOKEN", token);
+public final class CSRFTokenManager {
+
+    /** Token 参数名（前端必须使用此名称） */
+    public static final String CSRF_PARAM_NAME = "__RequestVerificationToken";
+
+    /** Session 中存储 token 的 attribute 名 */
+    public static final String CSRF_TOKEN_FOR_SESSION_ATTR_NAME =
+            CSRFTokenManager.class.getName() + ".tokenval";
+            // 实际值："com.dp.plat.security.csrf.CSRFTokenManager.tokenval"
+
+    /** 从 Shiro Session 获取（或生成）token */
+    public static String getTokenForSession(Session session) {
+        synchronized (session) {  // 并发安全：防止两个请求同时初始化
+            String token = (String) session.getAttribute(CSRF_TOKEN_FOR_SESSION_ATTR_NAME);
+            if (null == token) {
+                token = UUID.randomUUID().toString();
+                session.setAttribute(CSRF_TOKEN_FOR_SESSION_ATTR_NAME, token);
+            }
+            return token;
         }
-        model.addAttribute("csrfToken", token);
     }
 
-    protected void validateCsrfToken(HttpServletRequest request) {
-        String sessionToken = (String) request.getSession().getAttribute("CSRF_TOKEN");
-        String requestToken = request.getParameter("csrfToken");
-        if (sessionToken == null || !sessionToken.equals(requestToken)) {
-            throw new BusinessException("CSRF 校验失败");
+    /** 从 request 中提取 token（先 parameter，后 header） */
+    public static String getTokenFromRequest(HttpServletRequest request) {
+        String csrfToken = request.getParameter(CSRF_PARAM_NAME);
+        if (StringUtils.isEmpty(csrfToken)) {
+            csrfToken = request.getHeader(CSRF_PARAM_NAME);  // 支持 AJAX header
         }
+        return csrfToken;
     }
 }
 ```
 
-### 6.2 表单嵌入
+> **避坑**：
+> - 前端必须使用参数名 `__RequestVerificationToken`（不是 `csrfToken`）
+> - Session attribute 名是动态生成的 `CSRFTokenManager.class.getName() + ".tokenval"`，不能硬编码
+> - Token 使用 `java.util.UUID.randomUUID()`，128 位随机
+
+### 6.3 CsrfInterceptor — 拦截器
+
+`CsrfInterceptor.java:20` 继承 `HandlerInterceptorAdapter`，实现 `preHandle` + `postHandle`：
+
+```java
+// CsrfInterceptor.java:35-54
+public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+        throws Exception {
+    String method = request.getMethod();
+    Session session = SecurityUtils.getSubject().getSession();
+
+    String serverCsrfToken = (String) session.getAttribute(CSRFTokenManager.CSRF_TOKEN_FOR_SESSION_ATTR_NAME);
+
+    if (StringUtils.isEmpty(serverCsrfToken)) {
+        // Session 中无 token，初始化（首次访问）
+        CSRFTokenManager.getTokenForSession(SecurityUtils.getSubject().getSession());
+    } else {
+        if (isNeedValidatorCsrfToken(method)) {  // POST/PUT/DELETE 才校验
+            String clientCsrfToken = CSRFTokenManager.getTokenFromRequest(request);
+            if (StringUtils.isEmpty(clientCsrfToken) || !clientCsrfToken.equals(serverCsrfToken)) {
+                throw new CsrfValidateFailedException("csrf token validate failed");
+            }
+        }
+    }
+    return super.preHandle(request, response, handler);
+}
+
+private boolean isNeedValidatorCsrfToken(String method) {
+    return "POST".equals(method) || "DELETE".equals(method) || "PUT".equals(method);
+}
+```
+
+```java
+// CsrfInterceptor.java:23-32
+public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+        ModelAndView modelAndView) throws Exception {
+    if (modelAndView != null) {
+        Map<String, Object> model = modelAndView.getModel();
+        String token = CSRFTokenManager.getTokenForSession(SecurityUtils.getSubject().getSession());
+        model.put(CSRFTokenManager.CSRF_PARAM_NAME, token);          // 写入 Model（JSP 可用 ${__RequestVerificationToken}）
+        response.addHeader(CSRFTokenManager.CSRF_PARAM_NAME, token); // 写入 response header
+    }
+    super.postHandle(request, response, handler, modelAndView);
+}
+```
+
+### 6.4 CsrfValidateFailedException
+
+`CsrfValidateFailedException.java:3` 继承 `RuntimeException`，字段：
+
+```java
+public class CsrfValidateFailedException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    private String message;
+
+    public CsrfValidateFailedException(String message) {
+        super();
+        this.message = message;
+    }
+    // getter/setter...
+}
+```
+
+> **避坑**：该异常继承 `RuntimeException` 而非 `CustomRuntimeException`，且未调用 `super(message)`，故 `getMessage()` 与 `super.getMessage()` 行为不同。全局异常处理器需显式捕获此类。
+
+### 6.5 表单嵌入
+
+JSP 表单必须使用 `${__RequestVerificationToken}` 隐藏字段：
 
 ```jsp
 <form action="/user/save" method="post">
-    <input type="hidden" name="csrfToken" value="${csrfToken}"/>
+    <input type="hidden" name="__RequestVerificationToken"
+           value="${__RequestVerificationToken}"/>
     <!-- 其他字段 -->
 </form>
 ```
 
-### 6.3 AJAX 请求
+### 6.6 AJAX 请求
+
+前端 JS 通过 response header 读取 token，并在后续请求中通过 header 携带：
 
 ```javascript
-// 在请求头中携带 CSRF Token
+// 首次页面加载后，从 response header 读取 token
+var csrfToken = response.getResponseHeader('__RequestVerificationToken');
+
+// 后续 AJAX 请求在 header 中携带
 $.ajaxSetup({
     beforeSend: function(xhr) {
-        xhr.setRequestHeader('X-CSRF-Token', '${csrfToken}');
+        xhr.setRequestHeader('__RequestVerificationToken', csrfToken);
     }
 });
-```
-
-### 6.4 SameSite Cookie
-
-```java
-// Spring Session 配置 SameSite
-@Bean
-public CookieSerializer cookieSerializer() {
-    DefaultCookieSerializer serializer = new DefaultCookieSerializer();
-    serializer.setSameSite("Lax");  // 或 Strict
-    return serializer;
-}
 ```
 
 ---
@@ -565,12 +711,12 @@ public String storeFile(MultipartFile file, String typeCode) {
 
     // 1. 校验类型
     if (!FileTypeValidator.validate(typeCode, originalName)) {
-        throw new BusinessException("文件类型不支持");
+        throw new CustomRuntimeException("文件类型不支持");
     }
 
     // 2. 校验大小
     if (file.getSize() > getMaxSize(typeCode)) {
-        throw new BusinessException("文件大小超限");
+        throw new CustomRuntimeException("文件大小超限");
     }
 
     // 3. 生成安全文件名（UUID + 扩展名）
@@ -592,13 +738,13 @@ public ResponseEntity<Resource> download(Integer fileId, HttpServletRequest requ
     // 1. 校验文件权限
     FileInfo fileInfo = fileInfoService.selectFileInfoById(fileId);
     if (fileInfo == null) {
-        throw new BusinessException("文件不存在");
+        throw new CustomRuntimeException("文件不存在");
     }
 
     // 2. 防止路径穿越
     String filePath = fileInfo.getPath();
     if (filePath.contains("..") || filePath.contains("%2e%2e")) {
-        throw new BusinessException("非法文件路径");
+        throw new CustomRuntimeException("非法文件路径");
     }
 
     // 3. 记录下载日志
@@ -698,7 +844,7 @@ public String desensitize(String params) {
 ### 10.1 开发阶段检查
 
 - [ ] 所有 SQL 使用 `#{}` 参数化，`${}` 需白名单校验
-- [ ] 用户输入经过 XSS 过滤（`XssUtil.clean`）
+- [ ] 用户输入经过 XSS 过滤（`XssFilter` + `XssRequestBodyHttpServletRequestWrapper.escapeHtml`）
 - [ ] 富文本字段使用 HTML Cleaner 清理危险标签
 - [ ] 表单包含 CSRF Token
 - [ ] 文件上传校验类型、大小、重命名
@@ -794,7 +940,393 @@ flowchart TD
 
 ---
 
-## 12. 相关文档
+## 12. 字段加解密（DAO 层 AOP）
+
+### 12.1 组件架构
+
+core 通过 Spring AOP 在 DAO 层透明加解密敏感字段，组件位于 `com.dp.plat.security` 包：
+
+```
+Service 调用 dao.insert(encryptEntity) / dao.select(...)
+  ↓
+EncryptFieldAOP.around() 拦截
+  ├─ handleEncrypt(args[])：入参中带 @EncryptEntity 的对象，
+  │   遍历字段，对 @EncryptField 字段执行 ASEUtil.encrypt(plaintext, secretKey)
+  └─ handleDecrypt(responseObj)：返回值中带 @EncryptEntity 的对象，
+      遍历字段，对 @EncryptField 字段执行 ASEUtil.decrypt(ciphertext, secretKey)
+  ↓
+MyBatis 执行 SQL（数据库中存储的是密文）
+```
+
+### 12.2 EncryptFieldAOP — 加解密切面
+
+`EncryptFieldAOP.java:31` 是 `@Aspect @Component`，最高优先级：
+
+```java
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Aspect
+@Component
+public class EncryptFieldAOP {
+
+    @Value("${secretkey}")  // 从配置文件读取 AES 密钥
+    private String secretKey;
+
+    // 切点：com.dp.plat 包（含子包）下所有 dao 包（含子包）的所有方法
+    @Pointcut("execution(* com.dp.plat..*.dao..*.*(..)) || within(com.dp.plat..*.dao..*)")
+    public void annotationPointCut() {
+    }
+
+    @Around("annotationPointCut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object[] args = joinPoint.getArgs();
+        for (int i = 0; i < args.length; i++) {
+            args[i] = handleEncrypt(args[i]);  // 加密入参
+        }
+        Object responseObj = joinPoint.proceed();  // 执行原方法
+        handleDecrypt(responseObj);                // 解密返回值
+        return responseObj;
+    }
+}
+```
+
+> **避坑**：切点同时匹配 `execution(...)` 和 `within(...)`，避免代理失效。`@Order(Ordered.HIGHEST_PRECEDENCE)` 确保在其他切面之前执行加解密。
+
+### 12.3 注解体系
+
+| 注解 | 位置 | 作用 |
+|------|------|------|
+| `@EncryptEntity` | 类（TYPE） | 标记实体类包含需加密字段，触发 AOP 处理 |
+| `@EncryptField` | 字段（FIELD） | 标记具体需加密的字段 |
+
+```java
+// EncryptEntity.java:24 — 类级注解
+@Documented
+@Target({ ElementType.TYPE })
+@Inherited                          // 子类继承
+@Retention(RetentionPolicy.RUNTIME)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public @interface EncryptEntity {
+}
+
+// EncryptField.java:24 — 字段级注解
+@Documented
+@Target({ ElementType.FIELD })
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public @interface EncryptField {
+}
+```
+
+### 12.4 加解密流程详解
+
+```java
+// EncryptFieldAOP.java:68-89 — handleEncrypt
+private Object handleEncrypt(Object requestObj) throws IllegalAccessException {
+    if (Objects.isNull(requestObj)) return requestObj;
+
+    if (requestObj instanceof Collection) {
+        // 集合：递归处理每个元素
+        for (Object obj : (Collection) requestObj) {
+            handleEncrypt(obj);
+        }
+    } else if (requestObj.getClass().isAnnotationPresent(EncryptEntity.class)) {
+        // 实体：遍历所有字段（含父类）
+        List<Field> fields = getAllDeclaredFields(requestObj.getClass());
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(EncryptField.class)) {
+                field.setAccessible(true);
+                String plaintextValue = (String) field.get(requestObj);
+                String encryptValue = ASEUtil.encrypt(plaintextValue, secretKey);
+                field.set(requestObj, encryptValue);  // 写入密文
+            }
+        }
+    }
+    return requestObj;
+}
+```
+
+`handleDecrypt` 与 `handleEncrypt` 结构对称，区别仅在调用 `ASEUtil.decrypt` 与字段值方向。
+
+### 12.5 ASEUtil — AES 加密工具
+
+> **注意类名拼写**：源码类名是 `ASEUtil`（非 `AESUtil`），意为 "ASE 加密"（推测作者笔误），实际算法是 AES。
+
+`ASEUtil.java:19` 提供静态方法 `encrypt` / `decrypt`：
+
+```java
+public class ASEUtil {
+    private static final String KEY_ALGORITHM = "AES";
+    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
+    private static final String DEFAULT_SECRET_PASSWORD = "DP_SECRET";  // 默认密钥
+
+    public static String encrypt(String content, String password) {
+        if (content == null) return content;  // null 不加密
+        Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(password));
+        byte[] result = cipher.doFinal(content.getBytes("utf-8"));
+        return Base64Utils.encodeToString(result);  // Base64 输出
+    }
+
+    public static String decrypt(String content, String password) {
+        if (content == null) return content;
+        Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(password));
+        byte[] result = cipher.doFinal(Base64Utils.decodeFromString(content));
+        return new String(result, "utf-8");
+    }
+}
+```
+
+### 12.6 密钥生成与配置
+
+```java
+// ASEUtil.java:81-100 — 使用 SHA1PRNG 派生密钥
+private static SecretKeySpec getSecretKey(final String password) {
+    final String secretKeyPassword = password != null ? password : DEFAULT_SECRET_PASSWORD;
+    KeyGenerator kg = KeyGenerator.getInstance(KEY_ALGORITHM);
+    SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+    secureRandom.setSeed(secretKeyPassword.getBytes());
+    kg.init(128, secureRandom);  // 128 位密钥
+    SecretKey secretKey = kg.generateKey();
+    return new SecretKeySpec(secretKey.getEncoded(), KEY_ALGORITHM);
+}
+```
+
+| 配置项 | 值 | 说明 |
+|--------|-----|------|
+| 算法 | AES/ECB/PKCS5Padding | ECB 模式（**不推荐生产**，无 IV 防重放） |
+| 密钥长度 | 128 位 | 通过 `KeyGenerator.init(128, SecureRandom)` 生成 |
+| 随机数算法 | SHA1PRNG | 平台无关（注释指出 Windows 限制） |
+| 密钥来源 | `${secretkey}` 配置项 | EncryptFieldAOP 通过 `@Value` 注入 |
+| 默认密钥 | `DP_SECRET` | 当 password 为 null 时使用 |
+| 输出编码 | Base64 | 字符串存储友好 |
+
+> **避坑**：
+> - ECB 模式相同明文产生相同密文，易被模式分析。如安全要求高，应迁移到 CBC/GCM。
+> - 不同 JDK 实现的 `SHA1PRNG` 行为可能不一致，导致跨平台解密失败。
+> - `SystemVariableController.java:64` 中调用 `ASEUtil.encrypt(variable.getVar(), "SystemVariable")`，使用业务字符串作为 password — 此处 password 是密钥派生种子，不是用户密码。
+
+### 12.7 典型用法
+
+```java
+@EncryptEntity  // 类级注解
+public class SensitiveData {
+    private String name;
+
+    @EncryptField  // 字段级注解
+    private String idCard;  // 身份证号加密存储
+
+    @EncryptField
+    private String phone;  // 手机号加密存储
+    // getter/setter...
+}
+
+// DAO 自动触发加解密（无需业务代码感知）
+public interface SensitiveDataDao {
+    int insert(SensitiveData data);            // AOP 加密入参
+    List<SensitiveData> selectBySelective(...); // AOP 解密返回值
+}
+```
+
+---
+
+## 13. 验证码（CaptchaServlet）
+
+### 13.1 组件架构
+
+core 通过 `CaptchaServlet` 生成图形验证码，组件位于 `com.dp.plat.support` 包：
+
+```
+浏览器请求 GET /captcha (假设)
+  ↓
+CaptchaServlet.doGet
+  ├─ 生成 BufferedImage（图片）
+  ├─ 将验证码字符串写入 Session（key: SE_KEY_MM_CODE）
+  └─ 将图片以 image/png 输出到 response
+  ↓
+浏览器显示图片
+  ↓
+用户提交登录表单（含验证码）
+  ↓
+ShiroRealm.doGetAuthenticationInfo 校验 Session 中 SE_KEY_MM_CODE 与表单验证码
+```
+
+### 13.2 CaptchaServlet 实现
+
+`CaptchaServlet.java:17` 继承 `HttpServlet`，重写 `doGet`：
+
+```java
+public class CaptchaServlet extends HttpServlet {
+    private static final long serialVersionUID = -124247581620199710L;
+
+    public static final String KEY_CAPTCHA = "SE_KEY_MM_CODE";  // Session attribute 名
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        resp.setContentType("image/png");
+        resp.setHeader("Pragma", "No-cache");        // 不缓存
+        resp.setHeader("Cache-Control", "no-cache");
+        resp.setDateHeader("Expire", 0);
+        try {
+            HttpSession session = req.getSession();
+            CaptchaUtil tool = new CaptchaUtil();
+            StringBuffer code = new StringBuffer();
+            BufferedImage image = tool.genRandomCodeImage(code);  // 生成图片与验证码
+            session.removeAttribute(KEY_CAPTCHA);                  // 先移除旧值
+            session.setAttribute(KEY_CAPTCHA, code.toString());   // 写入新验证码
+            ImageIO.write(image, "png", resp.getOutputStream());  // 输出图片
+            resp.getOutputStream().close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        doGet(req, resp);  // POST 也走 doGet
+    }
+}
+```
+
+### 13.3 关键常量与依赖
+
+| 常量/字段 | 值 | 说明 |
+|----------|-----|------|
+| `KEY_CAPTCHA` | `"SE_KEY_MM_CODE"` | Session attribute 名（业务侧校验时必须使用此名） |
+| Content-Type | `image/png` | PNG 图片 |
+| Pragma / Cache-Control | `No-cache` / `no-cache` | 浏览器不缓存验证码图片 |
+| `CaptchaUtil` | core 内部类 | 生成 `BufferedImage` 与验证码字符串 |
+
+> **避坑**：
+> - Session attribute 名是 `SE_KEY_MM_CODE`（业务侧如 ShiroRealm 需读取此 key）
+> - `genRandomCodeImage(code)` 将验证码字符串写入传入的 StringBuffer，再由 Servlet 写入 Session
+> - 验证码图片**不缓存**，每次请求都生成新图片，并**覆盖** Session 中的旧验证码
+> - `doPost` 直接调用 `doGet`，故 POST 请求也可获取验证码图片
+
+### 13.4 业务侧校验
+
+业务侧（如 ShiroRealm 或 LoginController）校验验证码时读取 Session：
+
+```java
+// 伪代码：业务侧校验验证码
+HttpSession session = request.getSession();
+String expectedCode = (String) session.getAttribute(CaptchaServlet.KEY_CAPTCHA);
+String userInput = request.getParameter("captcha");
+if (expectedCode == null || !expectedCode.equalsIgnoreCase(userInput)) {
+    throw new CustomRuntimeException("验证码错误");
+}
+session.removeAttribute(CaptchaServlet.KEY_CAPTCHA);  // 用后即焚，防止重放
+```
+
+---
+
+## 14. Controller 清单（admin/cluster/support 包）
+
+### 14.1 admin 包 Controller
+
+| Controller | 路径前缀 | 功能 | 关键方法 |
+|-----------|----------|------|----------|
+| `SystemVariableController` | `/system/sysVariable` | 系统变量管理 | `listView` / `findAll(PageParam, SystemVariable)` / `{id}` CRUD |
+| `ResourceController` | `/system/resource` | 资源管理 | `list` / `findOne(id)` / `create(Resource)` / `update(id, Resource)` / `delete(id)` / `reorder(List<Resource>)` |
+| `NotifyTemplateController` | `/system/notifyTemplate` | 通知模板管理 | `listView` / `findAll(PageParam, NotifyTemplate)` / `findOne(id)` / `create` / `/detail POST` |
+| `SubModalController` | `/system/modals` | 系统模态框页面 | `avatar` / `iconSelector` / `userRoleSelect` / `roleDetail` / `resourceDetail` / `modifyPassword` / `sysVariableDetail` / `notifyTemplateDetail` / `dataOperationDetail` |
+| `MailInfoController`（`controller/admin/`） | `/system/mailInfo` | **死代码**（整文件注释，已弃用） | 无（所有代码被注释掉） |
+
+### 14.2 cluster 包 Controller
+
+#### ClusterController — 集群核心功能刷新
+
+`ClusterController.java:17` 路径 `/cluster`：
+
+```java
+@RequestMapping("/cluster")
+@Controller
+public class ClusterController {
+
+    @Autowired
+    private SystemCoreFunctionAspect systemCoreFunctionAspect;
+
+    @PostMapping("/refreshCore")
+    public void refreshSystemCoreFunction(Model model) {
+        if (!UserContext.hasRole(RoleConstant.ROLE_ADMIN)) {
+            model.addAllAttributes(new Result(false, "没有权限访问该功能！").getMap());
+        } else {
+            systemCoreFunctionAspect.updateActiveUserMenu(null);          // 刷新活跃用户菜单
+            systemCoreFunctionAspect.updateFilterChainDefinitionMap();     // 刷新 Shiro 过滤器链
+            systemCoreFunctionAspect.updateSystemVariables(null);         // 刷新系统变量
+            model.addAllAttributes(new Result(true, "刷新成功！").getMap());
+        }
+    }
+}
+```
+
+**用途**：集群部署时，管理员通过 `POST /cluster/refreshCore` 触发本节点重新加载菜单/过滤器链/系统变量，无需重启应用。
+
+### 14.3 SystemVariableController 的特殊加解密
+
+`SystemVariableController.java:64` 中调用 `ASEUtil.encrypt` 加密系统变量值：
+
+```java
+// SystemVariableController.java:60-66
+HttpSession currentSession = HttpContext.getCurrentSession();
+if (!(currentSession != null && Boolean.TRUE.equals(
+        HttpContext.getCurrentSession().getAttribute("isSC")))) {
+    // 非系统配置（isSC）权限用户：返回加密后的 var 值
+    for (Iterator<Object> iterator = dataList.iterator(); iterator.hasNext();) {
+        SystemVariable variable = (SystemVariable) iterator.next();
+        variable.setVar(ASEUtil.encrypt(variable.getVar(), "SystemVariable"));
+    }
+}
+```
+
+> **避坑**：此处 password 参数为字符串 `"SystemVariable"`（业务名称），作为 AES 密钥派生种子。这是与 `EncryptFieldAOP` 不同的手动加解密场景，不走 AOP。
+
+### 14.4 NotifyTemplateController 的富文本处理
+
+`NotifyTemplateController.java:14, 25` 引入 `JsoupUtil` + `Safelist`，用于邮件模板内容的 HTML 清理：
+
+```java
+import org.jsoup.safety.Safelist;
+import com.dp.plat.core.util.JsoupUtil;
+```
+
+模板内容字段（`content`）在保存时通过 Jsoup 白名单过滤，移除 `<script>`、`<iframe>` 等危险标签，保留业务所需的格式化 HTML。
+
+### 14.5 SubModalController — 纯页面跳转
+
+`SubModalController.java:19` 是典型的"瘦 Controller"，仅做页面跳转，无业务逻辑：
+
+```java
+@RequestMapping(Consts.URLPath.SYSTEM_MANAGER + "modals")
+@Controller
+public class SubModalController {
+
+    @RequestMapping("/avatar")
+    public String avatar(User user) {
+        return Consts.URLPath.SYSTEM_MANAGER + "modals/user_avatar";
+    }
+
+    @RequestMapping("/icon_selector")
+    public String iconSelector(String iconName, Model model) {
+        model.addAttribute("iconName", iconName);
+        return Consts.URLPath.SYSTEM_MANAGER + "modals/icon_selector";
+    }
+    // ... 共 9 个跳转方法，每个返回对应的 JSP 路径
+}
+```
+
+### 14.6 MailInfoController（弃用）
+
+`controller/admin/MailInfoController.java` 整文件被注释（line 1-50+ 全为 `//`），是历史死代码。**实际生效的 MailInfoController 在 `support/mail/controller/MailInfoController.java`**，路径前缀相同（`/system/mailInfo`）。
+
+> **避坑**：不要将 `controller/admin/MailInfoController.java` 误认为活动代码。如需修改邮件管理功能，应修改 `support/mail/controller/MailInfoController.java`。
+
+---
+
+## 15. 相关文档
 
 - [Shiro 架构](../01-architecture/shiro-architecture.md) — 认证授权详细原理
 - [Spring 配置](../01-architecture/spring-configuration.md) — Shiro/CAS 配置

@@ -10,6 +10,7 @@ import java.util.Set;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dp.plat.context.SpringContext;
 import com.dp.plat.context.UserContext;
@@ -35,6 +36,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 	private UserManageService userManageService;
 	private ProjectService projectService;		
 
+	@Transactional
 	public String addPmCLApply(WorkflowCommonParam workflowCommonParam,PmClEvaluationHeader pmClEvaluationHeader, Project project){
 		log("发起闭环申请");
 		String nowUser=UserContext.getUserContext().getUser().getUsername();
@@ -169,6 +171,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 		
 	}
 	
+	@Transactional
     public String addSmCLApply(WorkflowCommonParam workflowCommonParam,PmClEvaluationHeader pmClEvaluationHeader, Project project){
 		log("服务经理审核 闭环申请");
 		String nowUser=UserContext.getUserContext().getUser().getUsername();
@@ -359,6 +362,7 @@ public class PmClosedLoopServiceImpl extends BaseServiceImpl implements PmClosed
 	}
 	
 	@Override
+	@Transactional
 	public int addCbCLApply(WorkflowCommonParam workflowCommonParam,
 			PmClEvaluationHeader pmClEvaluationHeader, Project project) {
 		log("项目回访");

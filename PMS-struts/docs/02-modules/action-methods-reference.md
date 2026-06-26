@@ -31,6 +31,7 @@
 23. [SupervisionAction — 项目督查](#23-supervisionaction--项目督查)
 24. [CertificateAction — 合格证查询](#24-certificateaction--合格证查询)
 25. [WarrantyCallbackAction — 维保回访](#25-warrantycallbackaction--维保回访)
+26. [ProjectBaseAction — 项目管理 Action 基类](#26-projectbaseaction--项目管理-action-基类)
 
 ---
 
@@ -1970,6 +1971,149 @@
 - **业务逻辑**: 获取当前 Action 的 namespace，用于页面跳转
 
 > 注：WarrantyCallbackAction 结构与 SupervisionAction/MaintenanceAction 类似，包含维保回访记录的列表查询、创建、问卷填写、交付件上传等功能。
+
+---
+
+## 26. ProjectBaseAction — 项目管理 Action 基类
+
+- **源码**: `PMS-struts/src/com/dp/plat/action/ProjectBaseAction.java`
+- **包路径**: `com.dp.plat.action`
+- **父类**: `BaseAction`
+- **修饰符**: `public abstract`（抽象类，不可直接实例化）
+- **Spring Bean**: 无（作为基类被继承，由子类的 Spring Bean 定义触发注入）
+- **职责**: 为项目管理相关 Action 提供公共的 Service 引用、页面数据 List 和基础初始化方法，消除子类重复代码
+
+### 核心属性
+
+#### Service 引用
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `projectService` | `ProjectService` | 项目业务服务 |
+| `departmentManageService` | `DepartmentManageService` | 部门/公司管理服务 |
+| `basicDataService` | `BasicDataService` | 基础数据服务（下拉列表数据源）|
+
+#### 页面参数
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `displayParam` | `DisplayParam` | 分页/查询参数 |
+| `project` | `Project` | 当前项目对象 |
+| `projectId` | `int` | 项目 ID |
+| `contractNo` | `String` | 合同号 |
+| `result` | `int` | 操作结果码 |
+| `message` | `String` | 操作消息 |
+| `redirect` | `String` | 重定向 URL |
+
+#### 页面数据 List（12 个下拉列表）
+
+| 属性名 | 类型 | 数据来源 |
+|--------|------|----------|
+| `departmentList` | `List<Department>` | `departmentManageService.queryDepartments()` |
+| `companyList` | `List<Company>` | `departmentManageService.queryCompanyList(company)` |
+| `projectTypeList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans("02")` |
+| `projectRankList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_PRORANK)` |
+| `deliverStateList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_DELIVERSTATE)` |
+| `projectPlanStateList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_ENGINEERSTATE)` |
+| `projectExecutionStateList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans("projectExecutionState")` |
+| `projectCloseProcessStateList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans("projectCloseProcessState")` |
+| `projectTimeList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_PORJECT_TIME)` |
+| `ssfsList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans(MessageUtil.BASIC_DATA_SERVICE_TYPE)` |
+| `majorProjectLevelList` | `List<BasicDataBean>` | `basicDataService.queryBasicDataBeans("majorProjectLevel")` |
+| `navTabList` | `List<BasicDataBean>` | 无初始化逻辑（由子类设置）|
+
+### 方法
+
+#### `initProject()` (protected)
+- **签名**: `protected void initProject()`
+- **参数**: 无
+- **返回值**: 无
+- **业务逻辑**:
+  1. 若 `project == null`，创建新 `Project` 实例
+  2. 若 `displayParam == null`，创建新 `DisplayParam` 实例
+- **用途**: 子类在 `execute()` 等方法开头调用，确保 project 和 displayParam 已初始化
+- **异常处理**: 无
+
+#### `prepareCommonData()` (protected)
+- **签名**: `protected void prepareCommonData()`
+- **参数**: 无
+- **返回值**: 无
+- **业务逻辑**:
+  1. 查询部门列表：`departmentManageService.queryDepartments()`
+  2. 查询公司列表（status=1）：`departmentManageService.queryCompanyList(company)`
+  3. 批量查询 10 个基础数据列表（通过 `basicDataService.queryBasicDataBeans(code)`）：
+     - `"02"` → projectTypeList
+     - `MessageUtil.BASIC_DATA_DELIVERSTATE` → deliverStateList
+     - `MessageUtil.BASIC_DATA_ENGINEERSTATE` → projectPlanStateList
+     - `"projectExecutionState"` → projectExecutionStateList
+     - `"projectCloseProcessState"` → projectCloseProcessStateList
+     - `MessageUtil.BASIC_DATA_PRORANK` → projectRankList
+     - `"majorProjectLevel"` → majorProjectLevelList
+     - `MessageUtil.BASIC_DATA_PORJECT_TIME` → projectTimeList
+     - `MessageUtil.BASIC_DATA_SERVICE_TYPE` → ssfsList
+- **用途**: 子类在进入编辑/查看页面前调用，加载所有下拉列表数据
+- **异常处理**: 无
+
+### Setter 方法（Spring 依赖注入）
+
+```java
+public void setProjectService(ProjectService projectService) {
+    this.projectService = projectService;
+}
+
+public void setDepartmentManageService(DepartmentManageService departmentManageService) {
+    this.departmentManageService = departmentManageService;
+}
+
+public void setBasicDataService(BasicDataService basicDataService) {
+    this.basicDataService = basicDataService;
+}
+
+public void setDisplayParam(DisplayParam displayParam) {
+    this.displayParam = displayParam;
+}
+
+public void setProject(Project project) {
+    this.project = project;
+}
+```
+
+### 已知子类
+
+ProjectBaseAction 有 5 个子类，均位于 `com.dp.plat.action` 包下：
+
+| 子类 | 职责 | Spring Bean |
+|------|------|-------------|
+| `ProjectFileAction` | 项目交付件管理 | `ProjectFileAction`（scope=prototype）|
+| `ProjectContractAction` | 项目合同管理 | `ProjectContractAction`（scope=prototype）|
+| `ProjectNotificationAction` | 项目通知管理 | `ProjectNotificationAction`（scope=prototype）|
+| `ProjectWeeklyAction` | 项目周报管理 | `ProjectWeeklyAction`（scope=prototype）|
+| `ProjectMemberAction` | 项目成员管理 | `ProjectMemberAction`（scope=prototype）|
+
+### 子类使用模式
+
+```java
+public class ProjectFileAction extends ProjectBaseAction {
+    
+    // 子类可继承父类的 projectService, departmentManageService, basicDataService
+    
+    public String execute() throws Exception {
+        initProject();           // 调用父类初始化方法
+        prepareCommonData();     // 加载下拉列表
+        // 子类业务逻辑...
+        return SUCCESS;
+    }
+    
+    // 子类可通过 getProject(), getDisplayParam() 等访问父类属性
+}
+```
+
+### ⚠️ 注意事项
+
+1. **navTabList 无初始化**: `navTabList` 在 `prepareCommonData()` 中未被赋值，需子类自行设置
+2. **基础数据编码混合**: 部分编码使用 `MessageUtil` 常量（如 `BASIC_DATA_DELIVERSTATE`），部分使用字符串字面量（如 `"projectExecutionState"`），风格不统一
+3. **公司列表过滤**: `companyList` 仅查询 `status=1` 的公司（有效公司）
+4. **抽象类设计**: ProjectBaseAction 作为抽象类，强制子类继承，避免直接实例化未初始化的基类
 
 ---
 

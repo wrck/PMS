@@ -47,6 +47,7 @@
 
 ### 2.1 售前测试全生命周期流程
 
+<<<<<<< HEAD
 ```mermaid
 graph LR
     A[售前申请] --> B[服务经理审批]
@@ -78,10 +79,46 @@ flowchart TD
     EM --> CLOSE[回访通过<br/>闭环 projectState=100]
 
     style CLOSE fill:#e6ffe6,stroke:#2e8b57
+=======
+```
+[售前申请] ──> [服务经理审批] ──> [项目经理跟踪] ──> [工程管理部回访] ──> [闭环]
+     |              |                   |                   |              |
+ PresalesAction  PresalesAction     PresalesAction      PresalesAction  PresalesAction
+ .apply()       .smaduit()         .pmaduit()          .emaduit()     流程自动闭环
+```
+
+### 2.2 售前审批流程
+
+```
+[提交售前申请] ──> PresalesAction.apply()
+      |
+[启动Activiti流程] ──> PresalesService.startPresalesFlow()
+      |
+[服务经理审批(usertask2/serviceApprove)] ──> PresalesAction.smaduit()
+      |
+  [审批通过?]
+  /        \
+ 是         否
+ |          |
+[项目经理跟踪(usertask3)]  [退回修改(usertask1)]
+ |                          |
+ PresalesAction.pmaduit()   PresalesAction.input()
+ |
+ [审批通过?]
+ /    \
+是     否
+|      |
+[工程管理部回访(usertask4)]  [退回]
+|
+PresalesAction.emaduit()
+|
+[回访通过] ──> 闭环(projectState=100)
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 售前测试状态机转换图
 
+<<<<<<< HEAD
 ```mermaid
 stateDiagram-v2
     [*] --> S10
@@ -100,6 +137,51 @@ stateDiagram-v2
 ```
 
 > **状态码速查**：`10`待开始 → `31`待SM指定PM → `32`已指定PM待PM跟踪 → `33`PM已跟踪待回访 → `100`已闭环；退回态 `30`服务经理退回；终止态 `20`已终止/驳回。
+=======
+```
+┌───────────┐
+│    10     │
+│  (待开始)  │
+└─────┬─────┘
+      │ apply()
+      v
+┌───────────┐
+│    31     │
+│(待服务经理 │
+│  指定PM)   │
+└─────┬─────┘
+     / \
+  通过   退回
+   /      \
+  v        v
+┌───────────┐  ┌───────────┐
+│    32     │  │    30     │
+│(已指定PM, │  │(服务经理  │
+│ 待PM跟踪) │  │  退回)    │
+└─────┬─────┘  └───────────┘
+      │
+      v
+┌───────────┐
+│    33     │
+│(PM已跟踪, │
+│待工程管理部│
+│  回访)     │
+└─────┬─────┘
+      │
+      v
+┌───────────┐
+│   100     │
+│  (已闭环)  │
+└───────────┘
+
+退回/终止:
+┌───────────┐
+│    20     │
+│(已终止/   │
+│ 已驳回)    │
+└───────────┘
+```
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 状态值说明（projectState字段，存储于`pm_presales_project_header`表）：
 

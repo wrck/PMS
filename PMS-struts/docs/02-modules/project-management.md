@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 项目管理功能说明文档
+=======
+﻿# 项目管理功能说明文档
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 
 ## 1. 模块概述
 
@@ -22,12 +26,19 @@
 
 | 表名 | 说明 |
 |------|------|
+<<<<<<< HEAD
 | `pm_project` | 项目信息主表（视图名 pm_project_header） |
+=======
+| `pm_project` | 项目信息主表（代码中注释为pm_project_header） |
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 | `pm_project_state` | 项目状态表 |
 | `pm_project_member` | 项目成员表 |
 | `pm_project_contract` | 项目合同关联表 |
 | `pm_project_product_line` | 项目产品线表 |
+<<<<<<< HEAD
 | `pm_project_product_line_real` | 项目实际产品线表 |
+=======
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 | `pm_project_soft_version` | 项目软件版本表 |
 | `pm_project_weekly` | 项目周报表 |
 | `pm_project_weekly_content` | 项目周报内容表 |
@@ -35,10 +46,13 @@
 | `pm_project_log` | 项目日志表 |
 | `pm_project_task` | 项目工程计划表 |
 | `pm_project_instruction` | 项目批示表 |
+<<<<<<< HEAD
 | `pm_project_related_party` | 项目相关方表（渠道商/代理商/服务商） |
 | `pm_project_notification` | 项目通知表 |
 | `pm_project_notification_state` | 通知状态表 |
 | `pm_project_deliver` | 项目交付件表 |
+=======
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 | `pm_column_of_relationship` | 列关系配置表 |
 | `pm_project_group` | 项目组信息表 |
 | `pm_project_group_relationship` | 项目组与项目关联表 |
@@ -54,6 +68,7 @@
 
 ### 2.1 项目全生命周期流程
 
+<<<<<<< HEAD
 ```mermaid
 graph LR
     A[合同号录入] --> B[项目创建<br/>状态:30]
@@ -67,10 +82,19 @@ graph LR
     D -.- D1[ProjectAction<br/>.updateProject]
     E -.- E1[ProjectAction<br/>.updateProject]
     F -.- F1[PmClosedLoopAction]
+=======
+```
+[合同号录入] ──> [项目创建] ──> [指定服务经理SM] ──> [指定项目经理PM] ──> [实施中] ──> [闭环]
+                     |                |                    |                |           |
+                ProjectAction    ProjectAction         ProjectAction    ProjectAction  PmClosedLoopAction
+                .insertProject() .updateProject()      .updateProject() .updateProject()
+                状态:30          状态:31               状态:32          状态:40        状态:100
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 项目状态转换图
 
+<<<<<<< HEAD
 项目状态使用数字编码（`isback` 字段），定义在 `MessageUtil` 中：
 
 ```mermaid
@@ -104,6 +128,72 @@ flowchart TD
     D -->|38| R2[PM申请回退至服务经理<br/>发送通知给服务经理]
     D -->|30| R3[工程管理部同意回退<br/>项目回退到未创建状态,可重新创建或合并]
     D -->|32| R4[服务经理同意回退<br/>项目回退到已指派PM状态]
+=======
+项目状态使用数字编码，定义在 `MessageUtil` 中：
+
+```
+                    ┌───────────┐
+                    │    30     │
+                    │  已创建    │
+                    └─────┬─────┘
+                          │ 指定服务经理SM
+                          v
+                    ┌───────────┐
+                    │    31     │
+                    │ 待指派SM   │
+                    └─────┬─────┘
+                          │ 指定项目经理PM
+                          v
+                    ┌───────────┐
+                    │    32     │
+                    │ 已指派PM   │
+                    └─────┬─────┘
+                     /          \
+              进入实施          SM回退(36)
+                /                  \
+               v                    v
+        ┌───────────┐        ┌───────────┐
+        │    40     │        │    36     │
+        │  实施中    │        │  SM回退    │
+        └─────┬─────┘        └───────────┘
+              |                     |
+         PM回退(42)           可回退至工程管理部
+              |                     |
+              v                     v
+        ┌───────────┐        ┌───────────┐
+        │    42     │        │    38     │
+        │ PM回退(实施)│       │  PM回退    │
+        └───────────┘        └───────────┘
+                              (回退至服务经理)
+
+        ┌───────────┐
+        │    20     │
+        │ 不予跟踪   │
+        └───────────┘
+
+        ┌───────────┐
+        │   100     │
+        │  已闭环    │
+        └───────────┘
+```
+
+### 2.3 项目回退流程
+
+```
+[SM/PM申请回退] ──> ProjectAction.updateprojectisback()
+      |
+      ├── isback=36: SM/PM申请回退至工程管理部
+      |       发送通知给工程管理部
+      |
+      ├── isback=38: PM申请回退至服务经理
+      |       发送通知给服务经理
+      |
+      ├── isback=30: 工程管理部同意回退
+      |       项目回退到未创建状态，可重新创建或合并
+      |
+      └── isback=32: 服务经理同意回退
+              项目回退到已指派PM状态
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 项目闭环流程
@@ -529,6 +619,7 @@ flowchart TD
 | 功能描述 | 转移设备到其他项目 |
 | 权限要求 | 已登录用户 |
 
+<<<<<<< HEAD
 #### 查询可转移项目
 
 | 项目 | 说明 |
@@ -550,6 +641,8 @@ flowchart TD
 1. 根据合同号查询可转移的项目列表 → `projectService.queryTransferProjectList()`
 2. 若合同号为空则返回空列表
 
+=======
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ### 3.14 软件版本管理
 
 #### 查询软件版本

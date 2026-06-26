@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 activeProfiles=
+=======
+activeProfiles=dev, yfpms
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 eclipse.preferences.version=1
 resolveWorkspaceProjects=true
 version=1

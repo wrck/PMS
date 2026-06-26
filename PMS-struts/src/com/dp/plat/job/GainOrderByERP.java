@@ -116,17 +116,23 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
 	 */
 	public boolean splitSoleAgentLendOrderInfo(Map<String, Object> params) {
 	    String tag = "拆分总代借货项目订单信息";
+	    String dataName = "splitSoleAgentLendOrderInfo";
         try {
             log.info("{}-开始", tag);
+            syncDataBefore(dataName, localDBName, params);
             // 拆分总代借货项目订单信息
             sqlMap.update("callSplitSoleAgentLendOrderInfo");
             ProjectService projectService = ctx.getBean("projectService", ProjectService.class);
             projectService.updateSoleAgentLendProject();
+            // 数据同步成功
+            syncDataSuccess(dataName, localDBName, params);
             return true;
         } catch (Exception e) {
             log.error("{}-发生异常：{}", tag, e);
+            syncDataFail(dataName, localDBName, params, e);
         } finally {
             log.info("{}-结束", tag);
+            syncDataAfter(dataName, localDBName, params);
         }
         return false;
 	}
@@ -138,8 +144,11 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
      */
     public boolean updateProjectProductLine(Map<String, Object> params) {
         String tag = "更新项目设备清单";
+        String dataName = "updateProjectProductLine";
         try {
             log.info("{}-开始", tag);
+            syncDataBefore(dataName, localDBName, params);
+            
             sqlMap.startTransaction();
             
             // 创建需要更新的项目合同号、projectId临时表
@@ -155,6 +164,9 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
             sqlMap.delete("dropTempNeedUpdateProject");
             
             sqlMap.commitTransaction();
+            
+            // 数据同步成功
+            syncDataSuccess(dataName, localDBName, params);
             return true;
         } catch (Exception e) {
             log.error("{}-发生异常：{}", tag, e);
@@ -168,6 +180,8 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
                     log.error("{}-回滚事务失败：{}", tag, ex);
                 }
             }
+            
+            syncDataFail(dataName, localDBName, params, e);
         } finally {
             log.info("{}-结束", tag);
             try {
@@ -175,6 +189,8 @@ public class GainOrderByERP extends AbstractSynchronizeTask implements Job {
             } catch (SQLException e) {
                 log.error("{}-结束事务失败：{}", tag, e);
             }
+            
+            syncDataAfter(dataName, localDBName, params);
         }
         return false;
     }

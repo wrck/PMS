@@ -58,6 +58,7 @@
 
 ### 2.1 登录认证流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["用户访问系统"] --> B{是否CAS模式?}
@@ -78,10 +79,39 @@ flowchart TD
     N --> P["区域权限处理"]
     P --> Q["设置UserContext"]
     Q --> R["进入首页"]
+=======
+```
+用户访问系统
+      |
+ [是否CAS模式?]
+ /             \
+是               否
+|                |
+[CAS Server重定向]  [本地登录页面]
+|                |
+[CAS Assertion]    [提交用户名/密码] ──> LoginAction.execute()
+|                |                        |
+[获取Principal]   [MD5加密密码]           |
+|                |                        |
+[查询用户信息]    [数据库认证校验] ──> LoginService.loginCas() / login()
+|                |
+[用户有效?]
+/        \
+是         否
+|          |
+[构建权限映射] [错误页面/提示]
+|          |
+[区域权限处理] 
+|
+[设置UserContext]
+|
+[进入首页]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 登出流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["用户点击登出"] --> B["LoginAction.logout()"]
@@ -91,10 +121,23 @@ flowchart TD
     D --> F["清除UserContext + Session"]
     E --> F
     F --> G["LoginService.logout()"]
+=======
+```
+用户点击登出 ──> LoginAction.logout()
+      |
+ [是否CAS模式?]
+ /             \
+是               否
+|                |
+[重定向CAS登出URL]  [重定向index.jsp]
+|                |
+[清除UserContext + Session] ──> LoginService.logout()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 用户管理流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["用户列表"] --> B["UserManageAction.execute()"]
@@ -114,10 +157,39 @@ flowchart TD
     O --> P["生成新密码 + MD5加密"]
     P --> Q["更新密码+强制下线<br/>PasswordService.forcedOffline()"]
     Q --> R["发送密码重置邮件"]
+=======
+```
+[用户列表] ──> UserManageAction.execute() ──> UserManageService.queryUserList()
+     |
+  [新增用户] ──> UserManageAction.add()
+     |              |
+     |         [校验必填字段]
+     |              |
+     |         [生成随机密码 + MD5加密]
+     |              |
+     |         [保存用户+菜单关联] ──> UserManageService.addUserInfo()
+     |              |
+     |         [发送账号激活邮件]
+     |
+  [编辑用户] ──> UserManageAction.edit()
+     |              |
+     |         [校验必填字段]
+     |              |
+     |         [更新用户+菜单+区域权限] ──> UserManageService.updateUserInfo()
+     |
+  [重置密码] ──> UserManageAction.pwdreset()
+                    |
+               [生成新密码 + MD5加密]
+                    |
+               [更新密码+强制下线] ──> PasswordService.forcedOffline()
+                    |
+               [发送密码重置邮件]
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 角色权限配置流程
 
+<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["角色列表"] --> B["RoleManageAction.execute()"]
@@ -130,10 +202,27 @@ flowchart TD
     H --> I["保存角色+菜单关联<br/>RoleManageService.addRoleSubmit()"]
     E --> J["RoleManageAction.editSubmit()"]
     J --> K["校验后更新<br/>RoleManageService.updateRoleSubmit()"]
+=======
+```
+[角色列表] ──> RoleManageAction.execute() ──> RoleManageService.queryRoleList()
+     |
+  [新增角色] ──> RoleManageAction.addSubmit()
+     |              |
+     |         [校验角色名+菜单权限]
+     |              |
+     |         [设置默认页面Welcome1.action]
+     |              |
+     |         [保存角色+菜单关联] ──> RoleManageService.addRoleSubmit()
+     |
+  [编辑角色] ──> RoleManageAction.editSubmit()
+                    |
+               [校验后更新] ──> RoleManageService.updateRoleSubmit()
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.5 Role-Menu-Power三级权限模型
 
+<<<<<<< HEAD
 ```mermaid
 erDiagram
     fnd_user_info {
@@ -175,6 +264,41 @@ erDiagram
     fnd_roles ||--o{ fnd_role_menus : "N:M 角色-菜单关联"
     fnd_role_menus }o--|| fnd_menus : "关联菜单"
     fnd_user_info ||--o| fnd_user_power : "用户-区域权限"
+=======
+```
+┌─────────────────────────────────────────────────┐
+│              用户 (fnd_user_info)                │
+│  username │ realName │ password │ roleIds │ dpNo│
+└──────────────────────┬──────────────────────────┘
+                       │ roleIds格式: ;1;,;2;
+           ┌───────────┼───────────┐
+           │  用户-菜单关联表        │
+           │  (fnd_user_menus)     │
+           │  fnd_user_id │ menuCode │ menuValue │
+           └───────────┬───────────┘
+                       │ N:M
+┌──────────────────────▼──────────────────────────┐
+│              角色 (fnd_roles)                     │
+│  id │ roleName │ defaultPage │ status            │
+└──────────────────────┬──────────────────────────┘
+                       │
+           ┌───────────┼───────────┐
+           │  角色-菜单关联表        │
+           │  (fnd_role_menus)     │
+           │  roleId │ menuId │ menuPower │
+           └───────────┬───────────┘
+                       │ N:M
+┌──────────────────────▼──────────────────────────┐
+│              菜单 (fnd_menus)                     │
+│  id │ menuCode │ menuName │ superId │ path       │
+└──────────────────────┬──────────────────────────┘
+                       │
+           ┌───────────┼───────────┐
+           │  用户-区域权限表        │
+           │  (fnd_user_power)     │
+           │  fndUserId │ areapower │
+           └───────────────────────┘
+>>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档
