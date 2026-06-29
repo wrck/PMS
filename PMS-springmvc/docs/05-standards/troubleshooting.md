@@ -68,11 +68,12 @@ org.apache.ibatis.binding.BindingException:
 **解决方案**：
 ```java
 // 确保查询 EHR 数据前切换数据源
-DynamicDataSourceContextHolder.setDataSourceType("ehr");
+// 注意：实际类名为 DataSourceHolder（com.dp.plat.core.config.DataSourceHolder），非 DynamicDataSourceContextHolder
+DataSourceHolder.setDataSourceType("ehr");
 try {
     List<Employee> employees = employeeService.selectBySelective(null);
 } finally {
-    DynamicDataSourceContextHolder.clearDataSourceType();
+    DataSourceHolder.clearDataSourceType();
 }
 ```
 

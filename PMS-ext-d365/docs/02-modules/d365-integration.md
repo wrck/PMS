@@ -65,20 +65,28 @@ PMS-ext-d365 是 PMS 系统的 D365（Dynamics 365）集成扩展模块，提供
 
 **核心方法**：
 
-#### `TokenResponse getToken(String username, String password)`
-- **功能**：获取访问令牌
-- **参数**：`username` - 用户名, `password` - 密码
-- **返回值**：TokenResponse - Token 响应
+> ⚠️ 以下三个方法签名均为虚构，实际源码中不存在或签名不同。真实方法签名详见 [d365-api.md](d365-api.md)。
 
-#### `List<PurchaseHeader> getPurchaseOrders(String token, String filter)`
-- **功能**：查询采购订单
-- **参数**：`token` - 访问令牌, `filter` - 过滤条件
-- **返回值**：List<PurchaseHeader> - 采购订单列表
+#### ~~`TokenResponse getToken(String username, String password)`~~
+- **虚构签名**：`getToken(String username, String password)`
+- **真实签名**：`TokenResponse getToken()`（无参，OAuth2 client_credentials 模式，凭据在配置中读取）
+- **虚构功能**：获取访问令牌
+- **虚构参数**：`username` - 用户名, `password` - 密码
+- **虚构返回值**：TokenResponse - Token 响应
 
-#### `PurchaseHeader createPurchaseOrder(String token, PurchaseHeader order)`
-- **功能**：创建采购订单
-- **参数**：`token` - 访问令牌, `order` - 采购订单
-- **返回值**：PurchaseHeader - 创建结果
+#### ~~`List<PurchaseHeader> getPurchaseOrders(String token, String filter)`~~
+- **虚构签名**：`getPurchaseOrders(String token, String filter)`
+- **实际情况**：**实际源码中不存在此方法**。D365 采购数据通过推送式同步（`pushPurchaseOrder`），非主动拉取。
+- **虚构功能**：查询采购订单
+- **虚构参数**：`token` - 访问令牌, `filter` - 过滤条件
+- **虚构返回值**：List<PurchaseHeader> - 采购订单列表
+
+#### ~~`PurchaseHeader createPurchaseOrder(String token, PurchaseHeader order)`~~
+- **虚构签名**：`createPurchaseOrder(String token, PurchaseHeader order)`
+- **真实签名**：`Response createPurchaseOrder(Request<Response> request)`（参数为包装请求对象）
+- **虚构功能**：创建采购订单
+- **虚构参数**：`token` - 访问令牌, `order` - 采购订单
+- **虚构返回值**：PurchaseHeader - 创建结果
 
 ---
 

@@ -149,9 +149,11 @@ PMS-ext-d365 被 PMS-struts 和 PMS-springmvc 依赖：
 
 ## 6. 数据库表
 
-| 表名 | 说明 |
-|------|------|
-| `purchase_order` | 采购订单表 |
-| `purchase_order_line` | 采购订单行表 |
-| `purchase_receipt` | 采购收货表 |
-| `purchase_receipt_line` | 采购收货行表 |
+> ⚠️ 下表为虚构表名。实际表名带 `dp_erp_` 前缀，且订单头表为 `_header` 而非 `_order`，详见 [ER 图](../03-database/er-diagram.md)。
+
+| 文档虚构表名 | 实际表名 | 说明 |
+|------|------|------|
+| ~~`purchase_order`~~ | `dp_erp_purchase_order_header` | 采购订单头表 |
+| ~~`purchase_order_line`~~ | `dp_erp_purchase_order_line` | 采购订单行表 |
+| ~~`purchase_receipt`~~ | `dp_erp_purchase_receipt_header` | 采购收货头表 |
+| ~~`purchase_receipt_line`~~ | `dp_erp_purchase_receipt_line` | 采购收货行表 |

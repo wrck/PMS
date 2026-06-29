@@ -18,7 +18,7 @@
 1. 将 Token 转为 `UsernamePasswordCaptchaToken`（携带验证码）；
 2. 校验验证码：当 `sys.envirment.argu` 为 `1`/`2` 且 `sys.login.check.captcha=1` 时，比对会话中的验证码，失败抛 `CaptchaException`；
 3. 调 `IShiroService.queryUserByName` 查用户，不存在抛 `UnknownAccountException`，状态 `2` 抛"已锁定"、状态 `0` 抛"已禁用"（`DisabledAccountException`）；
-4. 以**用户名作盐值**，根据 `sys.adAuth`/环境判断是否走 `PasswordUtil.encryptMD5Password(明文,盐,1024次迭代)`；
+4. 以**用户名作盐值**，根据 `sys.adAuth`/环境判断是否走 `PasswordUtil.encryptMD5Password(明文,盐,1024次迭代)`（仅第二段 MD5，对应前端已做 SHA1 预处理；密码修改/重置走 `encryptPassword` 两段式 SHA1+MD5）；
 5. 返回 `SimpleAuthenticationInfo(principal, credentials, salt, realmName)`。
 
 **授权流程 `doGetAuthorizationInfo`**：
@@ -45,7 +45,7 @@
 | 组件 | 职责 |
 |------|------|
 | `UsernamePasswordCaptchaToken` | 扩展 `UsernamePasswordToken`，增加 `captcha` 字段 |
-| `PasswordUtil` | 密码加密：MD5 + 用户名盐 + 1024 次迭代（`encryptMD5Password`） |
+| `PasswordUtil` | 密码加密：SHA1(1 次) + MD5(1024 次) 两段式，用户名作盐（基于 Shiro `SimpleHash`） |
 | `PasswordInterceptor` | 密码强度/过期校验拦截器 |
 | `PasswordController` | 修改密码、密码重置 |
 
@@ -189,13 +189,13 @@ IAbstractBaseService<T>（接口）
 |--------|------|
 | `DateUtil` | 日期格式化/计算 |
 | `DESSecurityUtils` | DES 对称加解密（敏感数据） |
-| `PasswordUtil` | 密码 MD5 加密（盐+1024迭代） |
+| `PasswordUtil` | 密码加密（SHA1+MD5 两段式，基于 Shiro `SimpleHash`） |
 | `UploadUtils` / `FileUtil` | 文件上传/读写 |
 | `DownloadUtils` | 文件下载 |
 | `ExportUtils` | Excel 导出组装 |
-| `IpUtil` | IP 解析（结合 `HostFilter` 做访问控制） |
+| `IpUtil` | IP/CIDR 范围计算（不提取客户端 IP，仅做范围匹配；客户端 IP 由 `HttpContext.getCurrentIp` 提取，`HostFilter` 调用 `IpUtil.isInRange/isInMarkRange` 做访问控制） |
 | `JsoupUtil` | HTML 清洗（XSS 过滤） |
-| `SQLParser` | SQL 解析（防注入/分页改写） |
+| `SQLParser` | SQL 解析（表名提取/白名单匹配/变量填充，基于 Druid） |
 | `UUIDGenerator` | UUID 生成 |
 | `AviatorUtils` | Aviator 表达式引擎封装（动态规则计算，配合 pms-rules） |
 | `MessageUtils` | 国际化消息 |

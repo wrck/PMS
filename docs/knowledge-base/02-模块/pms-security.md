@@ -795,7 +795,7 @@ flowchart TD
 
 3. **`excludeUrls` 使用正则前缀匹配**：`Pattern.compile("^" + pattern)`，配置 `/base/executeSql.*` 匹配以 `/base/executeSql` 开头的所有路径。
 
-4. **Struts2 版本差异**：`XssStrutsInterceptor` 源码中保留了 Struts 2.5（`HttpParameters`）与 Struts 2.3（`Map<String, Object>`）两套分支，当前激活的是 Struts 2.3 分支（注释掉了 2.5 分支）。PMS-struts 使用 Struts2 2.5.30，但参数处理仍走 2.3 分支逻辑，需验证兼容性。
+4. **Struts2 版本差异**：`XssStrutsInterceptor` 源码中保留了 Struts 2.5（`HttpParameters`）与 Struts 2.3（`Map<String, Object>`）两套分支，当前激活的是 Struts 2.3 分支（注释掉了 2.5 分支）。PMS-struts 使用 Struts2 2.3.35，参数处理走 2.3 分支逻辑，与当前版本一致。PMS-springmvc 使用 Struts2 2.5.30，若启用此拦截器需切换至 2.5 分支。
 
 ### 12.4 SQL 解析避坑
 

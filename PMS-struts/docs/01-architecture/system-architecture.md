@@ -387,17 +387,18 @@ ProcessEngineFactoryBean
 │  ├── sqlMapClientTemplateSSE   — SSE数据源                  │
 │  └── opLoggerDao               — 操作日志                   │
 │                                                            │
-│  baseContextLoggerDao (抽象, 继承baseDao)                    │
-│  └── 增加操作日志自动记录能力                                 │
-│                                                            │
-│  具体Dao实现:                                               │
-│  ├── LoginDaoImpl          (extends baseContextLoggerDao)   │
-│  ├── ProjectDaoImpl        (extends baseDao)                │
-│  ├── PresalesDaoImpl       (extends baseDao)                │
-│  ├── CallBackDaoImpl       (extends baseDao)                │
-│  ├── SubcontractDaoImpl    (extends baseDao)                │
-│  ├── ProbManageDaoImpl     (extends baseDao)                │
+│  具体Dao实现（均直接继承 BaseDao）:                          │
+│  ├── LoginDaoImpl          (extends BaseDao)                │
+│  ├── ProjectDaoImpl        (extends BaseDao)                │
+│  ├── PresalesDaoImpl       (extends BaseDao)                │
+│  ├── CallBackDaoImpl       (extends BaseDao)                │
+│  ├── SubcontractDaoImpl    (extends BaseDao)                │
+│  ├── ProbManageDaoImpl     (extends BaseDao)                │
 │  └── ...                                                   │
+│                                                            │
+│  ⚠️ 修正：早期文档虚构了 baseContextLoggerDao 抽象中间层     │
+│      （声称 LoginDaoImpl 继承该层），源码中该类不存在，       │
+│      所有 DAO 实现均直接继承 BaseDao                        │
 │                                                            │
 │  MyBatis扩展模块:                                           │
 │  ├── AbstractBaseMapper     — MyBatis Mapper基类             │

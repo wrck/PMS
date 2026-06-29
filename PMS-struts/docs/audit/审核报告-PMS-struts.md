@@ -58,6 +58,6 @@ PMS-struts 是**最成熟的知识库**（61 文件，含 11k 行功能文档 + 
 ---
 
 ## 相关
-- [审核标准](../../../docs/知识库质量审核标准.md)
+- [审核标准](../../../../docs/知识库质量审核标准.md)
 - [PMS-struts 知识库首页](../README.md)
 - 历史审核：[final-verification-report.md](final-verification-report.md)

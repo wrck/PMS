@@ -203,7 +203,7 @@
       │   ├── QualityApproveTrack: 质量审批跟踪流程
       │   │   ├── PROJECT_TASK: 查询项目任务
       │   │   ├── INDUSTRY_ASSET: 查询行业资产
-      │   │   └── INDUSTRY_LEAK: 查询行业泄露
+      │   │   └── INDUSTRY_LEAK: 查询行业漏洞
       │   │
       │   └── SubcontractInspection: 转包检验流程
       │       ├── PROJECT_DISPATCH: 查询发运项目

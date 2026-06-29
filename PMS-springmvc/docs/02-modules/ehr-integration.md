@@ -53,26 +53,27 @@ EHR 模块使用独立的 SQL Server 数据源（`dataSourceEHR`），通过 `Ro
 public class EHRDataController {
 ```
 
-- **URL 命名空间**：`/ehr/data`（由 `UrlPrefixConstant.EHR_DATA_URL` 定义）
+- **URL 命名空间**：`/ehr/`（由 `UrlPrefixConstant.EHR_DATA_URL = "/ehr/"` 定义，详见 `com.dp.plat.ehr.constants.UrlPrefixConstant:12`）
+- **注意**：方法级 `@RequestMapping` 的路径直接拼接在 `/ehr/` 之后，例如 `/company/list` → 完整 URL 为 `/ehr/company/list`（不是 `/ehr/data/...`，旧版文档描述有误，已修正）
 
 ### 2.2 方法列表
 
 | 方法 | URL | HTTP 方法 | 功能 |
 |------|-----|----------|------|
-| `listView` | `/ehr/data` | GET | EHR 数据首页 |
-| `findCompanies` | `/ehr/data/company/list` | GET | 公司列表查询 |
-| `findCompany` | `/ehr/data/company/{id}` | GET | 公司详情查询 |
-| `findCompaniesTree` | `/ehr/data/company/tree` | GET | 公司树形数据 |
-| `findDepartments` | `/ehr/data/department/list` | GET | 部门列表查询 |
-| `findDepartment` | `/ehr/data/department/{id}` | GET | 部门详情查询 |
-| `findDepartmentTree` | `/ehr/data/department/tree` | GET | 部门树形数据 |
-| `findJobs` | `/ehr/data/job/list` | GET | 岗位列表查询 |
-| `findJob` | `/ehr/data/job/{id}` | GET | 岗位详情查询 |
-| `findEmployees` | `/ehr/data/employee/list` | GET | 员工列表查询 |
-| `findEmployee` | `/ehr/data/employee/{id}` | GET | 员工详情查询 |
-| `listEmployeeSelect2Data` | `/ehr/data/employeeDataList` | GET | 员工 Select2 数据 |
-| `initUser` | `/ehr/data/initUser` | GET | 初始化用户 |
-| `syncData` | `/ehr/data/syncData` | GET | 手动触发同步 |
+| `listView` | `/ehr/` | GET | EHR 数据首页（返回公司列表视图） |
+| `findCompanies` | `/ehr/company/list` | GET | 公司列表查询 |
+| `findCompany` | `/ehr/company/{id}` | GET | 公司详情查询 |
+| `findCompaniesTree` | `/ehr/company/tree` | GET | 公司树形数据 |
+| `findDepartments` | `/ehr/department/list` | GET | 部门列表查询 |
+| `findDepartment` | `/ehr/department/{id}` | GET | 部门详情查询 |
+| `findDepartmentTree` | `/ehr/department/tree` | GET | 部门树形数据 |
+| `findJobs` | `/ehr/job/list` | GET | 岗位列表查询 |
+| `findJob` | `/ehr/job/{id}` | GET | 岗位详情查询 |
+| `findEmployees` | `/ehr/employee/list` | GET | 员工列表查询 |
+| `findEmployee` | `/ehr/employee/{id}` | GET | 员工详情查询 |
+| `listEmployeeSelect2Data` | `/ehr/employeeDataList` | GET | 员工 Select2 数据 |
+| `initUser` | `/ehr/initUser` | GET | 初始化用户 |
+| `syncData` | `/ehr/syncData` | GET | 手动触发同步 |
 
 ### 2.3 核心方法详解
 
@@ -149,23 +150,50 @@ flowchart TD
 
 ## 4. 数据源切换
 
-EHR 模块通过 `RoutingDataSource` 切换到 EHR 数据源：
+EHR 模块通过 `RoutingDataSource`（`com.dp.plat.core.config.RoutingDataSource`）实现多数据源动态切换。数据源路由在 `src/main/resources/spring.xml:137-154` 中配置：
+
+```xml
+<bean id="dataSource" class="com.dp.plat.core.config.RoutingDataSource">
+    <property name="targetDataSources">
+        <map key-type="java.lang.String">
+            <entry key="${jdbc.key1}" value-ref="dataSourceLocal"/>
+            <entry key="${jdbc.key2}" value-ref="dataSourcePMS"/>
+            <entry key="${jdbc.key3}" value-ref="dataSourceSMS"/>
+            <entry key="${jdbc.key4}" value-ref="dataSourceEHR"/>   <!-- EHR 数据源 -->
+            <entry key="${jdbc.key5}" value-ref="dataSourceD365"/>
+            <entry key="${jdbc.key6}" value-ref="dataSourceCRM"/>
+        </map>
+    </property>
+    <property name="defaultTargetDataSource" ref="dataSourceLocal"/>
+</bean>
+```
+
+### 4.1 切换机制（注解驱动 + AOP）
+
+core 模块提供 `@DataSource` 注解（`com.dp.plat.core.annotation.DataSource`）+ `DataSourceAspect` 切面（`com.dp.plat.core.aop.DataSourceAspect`）实现注解驱动的数据源切换：
+
+- 切点：`@within(DataSource) || @annotation(DataSource)` — 类级或方法级注解均可触发
+- 切面逻辑：
+  - `@Before`：读取注解 `value()` → `DataSourceHolder.setDataSourceType(value)` → 路由到对应数据源
+  - `@After`：`DataSourceHolder.setDataSourceType("")` → 清空 ThreadLocal 回到默认数据源
 
 ```java
-// Service 层切换数据源
-@DataSource("ehr")
+// 用法示例（注解可标注在类或方法上；类级注解会被方法级注解覆盖）
+@DataSource("ehr")     // value 应为 spring.xml 中 targetDataSources 的 key
 public List<Employee> selectFromEhr() {
     return employeeMapper.selectAll();
 }
 ```
 
-### 4.1 数据源路由
+> ⚠️ **重要事实校正**：旧版文档示例中 `@DataSource("ehr")` 仅为示意用法。实际 `EmployeeServiceImpl`（`com.dp.plat.ehr.service.impl.EmployeeService`）并未标注 `@DataSource` 注解 — 它依赖默认数据源 `dataSourceLocal`（MySQL/PMS）。EHR 原始数据通过 `view_ehr_employee` 视图（位于 `dataSourceLocal`）暴露，该视图由 `EhrDataJob` 定时从 `dataSourceEHR` 同步而来。如需直接访问 `dataSourceEHR`，需在 Service 方法上显式添加 `@DataSource("ehr")` 注解（`ehr` 为 `${jdbc.key4}` 解析后的字符串值）。
+
+### 4.2 数据源路由
 
 | 操作 | 数据源 | 说明 |
 |------|--------|------|
-| 查询 EHR 原始数据 | `dataSourceEHR` | SQL Server，EHR 系统 |
-| 查询本地同步数据 | `dataSourceLocal` | MySQL，本地缓存 |
-| 同步数据 | 先读 `dataSourceEHR`，再写 `dataSourceLocal` | 跨数据源操作 |
+| 查询 EHR 同步后数据 | `dataSourceLocal`（默认） | MySQL，本地 `view_ehr_employee` 视图 |
+| 查询 EHR 原始数据 | `dataSourceEHR` | SQL Server，需 `@DataSource("ehr")` 注解显式切换 |
+| 同步数据 | `EhrDataJob` 跨数据源操作 | 先读 `dataSourceEHR`，再写 `dataSourceLocal` |
 
 ---
 
@@ -291,8 +319,150 @@ if (employeeDataList.isEmpty()) {
 
 ---
 
+## 9. 绩效考评人关系（AppraiserRelationship + EmployeeAppraiserVO）
+
+> 源码：`com.dp.plat.ehr.entity.AppraiserRelationship`、`com.dp.plat.ehr.vo.EmployeeAppraiserVO`
+> 用途：维护员工与其考评人之间的关系，用于绩效评价流程（考评人选择、权重计算、并行/串行多级审批）
+
+### 9.1 AppraiserRelationship 实体
+
+**类定义**：`com.dp.plat.ehr.entity.AppraiserRelationship extends BaseEntity`（`AppraiserRelationship.java:5`）
+
+```java
+public class AppraiserRelationship extends BaseEntity {
+    private Integer appraiseeId;        // 被评估人 userId
+    private String  appraiseeName;      // 被评估人 username
+    private Integer appraiserId;        // 评估人 userId
+    private String  appraiserName;      // 评估人 username
+    private Boolean isDirectSupervisor; // 是否为直接主管
+    private String  type;              // 评估人类型（上级/同事/下属/自评）
+    private Byte    typeWeight;        // 评估人类型权重，0~100
+    private Byte    personalWeight;    // 评估人类型权重占比，0~100；weight=typeWeight*personalWeight/100
+    private Byte    priority;          // 评估人优先级别，越大优先级越高，越后评估
+    private Boolean state;             // 启用状态
+}
+```
+
+**字段说明**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `appraiseeId` | `Integer` | 被评估人 userId |
+| `appraiseeName` | `String` | 被评估人 username |
+| `appraiserId` | `Integer` | 评估人 userId |
+| `appraiserName` | `String` | 评估人 username |
+| `isDirectSupervisor` | `Boolean` | 是否为直接主管 |
+| `type` | `String` | 评估人类型（上级/同事/下属/自评） |
+| `typeWeight` | `Byte` | 评估人类型权重（0~100） |
+| `personalWeight` | `Byte` | 评估人类型权重占比（0~100）；最终权重 `weight = typeWeight * personalWeight / 100` |
+| `priority` | `Byte` | 评估人优先级别，越大优先级越高，越后评估 |
+| `state` | `Boolean` | 启用状态 |
+
+### 9.2 EmployeeAppraiserVO 视图对象
+
+**类定义**：`com.dp.plat.ehr.vo.EmployeeAppraiserVO extends EmployeeVO`（`EmployeeAppraiserVO.java:8`）
+
+```java
+public class EmployeeAppraiserVO extends EmployeeVO {
+    List<AppraiserRelationship> appraiserRelationshipList;
+    Map<String, AppraiserRelationship> appraiserRelationshipMap;
+}
+```
+
+**字段说明**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `appraiserRelationshipList` | `List<AppraiserRelationship>` | 员工的考评人关系列表 |
+| `appraiserRelationshipMap` | `Map<String, AppraiserRelationship>` | 按类型分组的考评人映射（用于快速查找） |
+
+### 9.3 数据库表
+
+| 表名 | 说明 |
+|------|------|
+| `perf_appraiser_relationship` | 考评人关系表 — 字段映射：`appraiseeId` → `appraiseeId`、`appraiserId` → `appraiserId`、`priority` → `priority`、`state` → `state`（仅 `state=1` 的记录视为启用） |
+| `view_ehr_employee` | EHR 员工视图（`dataSourceLocal` MySQL），与 `perf_appraiser_relationship` 通过 `empID = appraiseeId` 关联 |
+
+### 9.4 Service / DAO 方法
+
+| 层级 | 方法签名 | 说明 |
+|------|----------|------|
+| `IEmployeeService` | `List<EmployeeAppraiserVO> selectEmployeeAppraiserBySelectivePageableVO(PageParam<EmployeeVO> pageParam)` | 接口声明（`IEmployeeService.java:62`） |
+| `EmployeeService` | `List<EmployeeAppraiserVO> selectEmployeeAppraiserBySelectivePageableVO(PageParam<EmployeeVO> pageParam)` | 实现：直接委托 DAO（`EmployeeService.java:221-223`） |
+| `EmployeeMapper` | `List<EmployeeAppraiserVO> selectEmployeeAppraiserBySelectivePageableVO(PageParam<EmployeeVO> pageParam)` | MyBatis Mapper 方法（`EmployeeMapper.java:42`） |
+
+### 9.5 ResultMap 映射
+
+`EmployeeMapper.xml:1226-1238` 定义 `EmployeeAppraiserVOMap`：
+
+```xml
+<resultMap type="com.dp.plat.ehr.vo.EmployeeAppraiserVO" id="EmployeeAppraiserVOMap">
+    <id column="empID" jdbcType="INTEGER" property="empID" />
+    <result column="workNo" jdbcType="VARCHAR" property="workNo" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="compName" jdbcType="VARCHAR" property="compName" />
+    <result column="depAllName" jdbcType="VARCHAR" property="depAllName" />
+    <result column="jobName" jdbcType="VARCHAR" property="jobName" />
+    <collection property="appraiserRelationshipList" ofType="com.dp.plat.ehr.entity.AppraiserRelationship">
+        <result column="appraiser_priority" property="priority"/>
+        <result column="appraiser_name" property="appraiserName"/>
+    </collection>
+</resultMap>
+```
+
+### 9.6 查询 SQL
+
+`EmployeeMapper.xml:1239-1255` 定义 `selectEmployeeAppraiserBySelectivePageableVO`：
+
+```sql
+SELECT
+    e.*,
+    par.priority AS appraiser_priority,
+    CASE
+        WHEN e2.workNo IS NOT NULL
+        THEN GROUP_CONCAT(CONCAT(e2.workNo, '-', par.appraiserName))
+        ELSE par.appraiserName
+    END AS appraiser_name
+FROM
+    view_ehr_employee e
+    LEFT JOIN perf_appraiser_relationship par
+        ON e.empID = par.appraiseeId
+        AND par.state = 1
+    LEFT JOIN view_ehr_employee e2
+        ON par.appraiserId = e2.empID
+<where>
+    <!-- 按 empID / workNo / name / eName / compID / depID / jobID 动态条件 -->
+</where>
+```
+
+**SQL 关键点**：
+- 通过 `view_ehr_employee`（员工视图）LEFT JOIN `perf_appraiser_relationship`（考评人关系）获取关系数据
+- 仅关联 `state=1` 的启用关系
+- 二次 LEFT JOIN `view_ehr_employee`（别名 e2）取评估人工号，用 `GROUP_CONCAT` 拼接为 `"工号-姓名"` 字符串
+- 支持按 `empID / workNo / name / eName / compID / depID / jobID` 等多条件动态过滤
+
+### 9.7 使用现状
+
+⚠️ **死代码警示**：`selectEmployeeAppraiserBySelectivePageableVO` 方法在 Service/DAO 层已声明并实现，但**全代码库中没有任何 Controller 或其他 Service 调用此方法**（Grep 验证：`PMS/PMS-springmvc/src/main/java` 下仅有 3 处出现，全部分布在接口、实现类、Mapper 接口三处声明位置）。
+
+推测此方法为预留接口或已被其他考评流程替代。如需启用，建议：
+- 在 Controller 层（如 `EHRDataController` 或绩效模块 Controller）添加 `/employee/appraiser/list` 端点
+- 或在工作流监听器中调用，替代遗留的 `PlanObjectiveAppraiserRelationship`（已注释，见 `QualityApproveTrackListener.java:494-716` 等）
+
+### 9.8 与遗留代码 PlanObjectiveAppraiserRelationship 的关系
+
+工作流监听器（`SubcontractInspectionListener`、`QualityApproveTrackListener`、`QualityApproveTrackListener2`、`PmWorkFlowService`）中存在大量**已注释**的 `PlanObjectiveAppraiserRelationship` 引用 — 这是早期绩效目标审批模块遗留的代码：
+
+- `PlanObjectiveAppraiserRelationship`：旧版"目标考评人关系"实体（疑似已删除或迁移到其他模块）
+- `AppraiserRelationship`：当前 EHR 模块的"员工考评人关系"实体（本节所述）
+
+两者**不是同一个类**，不应混淆。新代码应使用 `AppraiserRelationship` + `EmployeeAppraiserVO`。
+
+---
+
 ## 附录：相关文档
 
 - [定时任务](quartz-jobs.md)
 - [多数据源架构](../01-architecture/multi-datasource.md)
 - [工作流管理](workflow.md)
+- [SAP 合同实体同步](sap-contract.md)

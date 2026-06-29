@@ -63,10 +63,10 @@ graph BT
 
 ## 跨库知识共享
 
-- 数据库：core 主数据源由 `jdbc.properties` 的 `jdbc.url` 配置（dev=`dppms_d365`，release=`dppms_d365`）；PMS-struts 历史主干使用 `dppms_d365`（见 `pms.url`）。全量业务字典见 [PMS-struts/03-database/database_dict final.md](../PMS-struts/docs/03-database/database_dict%20final.md)
-- EHR 组织表（ehr_*）：[PMS-springmvc 数据字典](../PMS-springmvc/docs/03-database/complete-data-dictionary.md)
-- 安全组件细化（XSS/CSRF）：[PMS-security](../PMS-security/docs/02-modules/security-components.md)
-- 规则/表达式（Aviator）：[pms-rules](../pms-rules/docs/02-modules/rules-engine.md)
+- 数据库：core 主数据源由 `jdbc.properties` 的 `jdbc.url` 配置（dev=`dppms_d365`，release=`dppms_d365`）；PMS-struts 历史主干使用 `dppms_d365`（见 `pms.url`）。全量业务字典见 [PMS-struts/03-database/database_dict final.md](../../PMS-struts/docs/03-database/database_dict%20final.md)
+- EHR 组织表（ehr_*）：[PMS-springmvc 数据字典](../../PMS-springmvc/docs/03-database/complete-data-dictionary.md)
+- 安全组件细化（XSS/CSRF）：[PMS-security](../../PMS-security/docs/02-modules/security-components.md)
+- 规则/表达式（Aviator）：[pms-rules](../../pms-rules/docs/02-modules/rules-engine.md)
 
 ---
 

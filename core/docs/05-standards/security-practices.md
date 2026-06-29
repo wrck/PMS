@@ -15,7 +15,7 @@ core 通过 `ShiroRealm` 实现本地认证，关键安全点：
 |--------|----------|----------|
 | 验证码校验 | `UsernamePasswordCaptchaToken` + Session 比对 | `ShiroRealm.doGetAuthenticationInfo` |
 | 用户状态校验 | status=0(禁用)/2(锁定) 抛对应异常 | `ShiroRealm` L80-95 |
-| 密码加密比对 | MD5 + 用户名盐 + 1024 次迭代 | `PasswordUtil.encryptMD5Password` |
+| 密码加密比对 | SHA1(1 次) + MD5(1024 次) 两段式，用户名作盐 | `PasswordUtil.encryptPassword` / `ShiroRealm` 调 `encryptMD5Password` |
 | 登录失败计数 | `loginErrorCount` 累加，超阈值锁定 | `ShiroRealm` + `t_user` |
 | 会话固定防护 | 登录成功后调用 `subject.getSession().setAttribute` 重置 | `LoginController` |
 
@@ -77,26 +77,37 @@ protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principal
 
 ### 2.1 加密算法
 
-core 使用 `PasswordUtil.encryptMD5Password` 进行密码加密：
+> ⚠️ **避坑提示**：`PasswordUtil` 不使用 `MessageDigest` + 字符串拼接 salt 的手工实现，而是基于 **Shiro `SimpleHash`**。盐以 `ByteSource.Util.bytes(saltSource)` 注入（**非字符串拼接**）。密码修改/重置入口实际调用 `encryptPassword(saltSource, credentials)`，该方法**先做 1 次 SHA1 加盐，再对结果做 1024 次 MD5 加盐**（两段式），而非单纯的「MD5 迭代 1024 次」。
+
+core 使用 `PasswordUtil` 进行密码加密，真实实现基于 Shiro `SimpleHash`：
 
 ```java
-public static String encryptMD5Password(String password, String salt, int iterations) {
-    MessageDigest digest = MessageDigest.getInstance("MD5");
-    String input = salt + password;  // 用户名作盐
-    byte[] hash = digest.digest(input.getBytes("UTF-8"));
-    for (int i = 1; i < iterations; i++) {  // 1024 次迭代
-        hash = digest.digest(hash);
-    }
-    return Hex.encode(hash);
+// 真实入口：密码修改/重置（PasswordController 调用）
+public static String encryptPassword(String saltSource, String credentials) {
+    // 第一段：SHA1 加盐 1 次
+    String sha1Hash = encryptSHA1Password(credentials, saltSource, 1);
+    // 第二段：对 SHA1 结果做 MD5 加盐 1024 次
+    return encryptMD5Password(sha1Hash, saltSource, 1024);
+}
+
+// 通用底层：基于 Shiro SimpleHash
+public static String encrypt(String hashAlgorithmName, String credentials,
+                              String saltSource, int hashIterations) {
+    ByteSource salt = saltSource != null ? ByteSource.Util.bytes(saltSource) : null;
+    SimpleHash simpleHash = new SimpleHash(hashAlgorithmName, credentials, salt, hashIterations);
+    return simpleHash.toString();
 }
 ```
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| 算法 | MD5 | 基础哈希算法 |
-| 盐值 | username | 用户名作盐，防止彩虹表攻击 |
-| 迭代次数 | 1024 | 增加计算成本，抵御暴力破解 |
-| 输出 | 32 位十六进制 | 标准十六进制字符串 |
+| 参数 | 第一段（SHA1） | 第二段（MD5） | 说明 |
+|------|-----------------|----------------|------|
+| 算法 | SHA1 | MD5 | 基于 Shiro `SimpleHash` |
+| 输入 | 用户明文密码 | 第一段 SHA1 输出 | 两段式串联 |
+| 盐值 | username | username（同第一段） | `ByteSource.Util.bytes()` 注入，**非字符串拼接** |
+| 迭代次数 | 1 | 1024 | 增加计算成本，抵御暴力破解 |
+| 输出 | 十六进制字符串 | 十六进制字符串（最终入库） | Shiro 默认十六进制编码 |
+
+> **登录认证路径**：`ShiroRealm.doGetAuthenticationInfo` 调用 `encryptMD5Password(credentials, saltSource, 1024)`（仅第二段），对应前端已做 SHA1 预处理的场景。详见 [common-utils.md §7 PasswordUtil](../02-modules/common-utils.md#7-passwordutil-密码工具)。
 
 ### 2.2 密码安全策略
 
@@ -111,48 +122,84 @@ public static String encryptMD5Password(String password, String salt, int iterat
 
 ### 2.3 密码修改流程
 
+> ⚠️ **避坑提示**：`PasswordController` **不通过 `IPasswordService` 修改密码**（源码中不存在 `IPasswordService` 接口），而是直接调用 `IUserService.selectByUserName` + `IUserService.updateByUsername`。流程中**无密码复杂度校验、无 `t_password_history` 历史密码表操作**。旧密码校验使用 `encryptPassword`（两段式），而非 `encryptMD5Password`。
+
 ```mermaid
 sequenceDiagram
     autonumber
     participant U as 用户
     participant PC as PasswordController
-    participant PS as IPasswordService
+    participant US as IUserService
+    participant SH as Shiro SecurityUtils
     participant DB as t_user
 
-    U->>PC: POST /password/change (oldPwd, newPwd)
-    PC->>PS: changePassword(userId, oldPwd, newPwd)
-    PS->>DB: SELECT password WHERE user_id=?
-    DB-->>PS: 旧密码哈希
-    PS->>PS: 校验旧密码(encryptMD5Password(oldPwd, username, 1024))
+    U->>PC: POST /modifyPassword (oldPwd, newPwd)
+    PC->>US: selectByUserName(userName)
+    US->>DB: SELECT * FROM t_user WHERE userName=?
+    DB-->>US: User (含 password 哈希)
+    PC->>PC: unescape(oldPwd/newPwd)
+    PC->>PC: encryptPassword(userName, oldPwd) 校验旧密码
     alt 旧密码错误
-        PS-->>PC: CustomRuntimeException("原密码错误")
-        PC-->>U: Result.fail
+        PC-->>U: ModelAndView(errorMsg="原密码不正确")
     end
-    PS->>PS: 校验新密码复杂度
-    PS->>PS: 校验历史密码(t_password_history)
-    PS->>PS: encryptMD5Password(newPwd, username, 1024)
-    PS->>DB: UPDATE t_user SET password=?, pwdoverdue=0
-    PS->>DB: INSERT t_password_history(userId, password, updateTime)
-    PS-->>PC: 成功
-    PC-->>U: Result.success
+    PC->>PC: encryptPassword(userName, newPwd) 加密新密码
+    PC->>US: updateByUsername(user)
+    US->>DB: UPDATE t_user SET password=?, needChangePwd=false
+    PC->>SH: subject.logout() + 重新登录(newPassword 的 SHA1)
+    PC->>SH: 踢出该用户其他活跃 Session
+    PC-->>U: ModelAndView(successMsg="修改密码成功")
 ```
+
+**真实代码要点**（`PasswordController.modifyPassword`）：
+- 入口注解：`@SystemControllerLog(description="用户修改密码", ignoreParams={"newPassword","oldPassword"})`（日志不记录密码参数）；
+- 旧密码校验：`userInDB.getPassword().equals(PasswordUtil.encryptPassword(userName, oldPassword))`（两段式 SHA1+MD5）；
+- 新密码加密：`PasswordUtil.encryptPassword(userName, newPassword)`；
+- 重新登录：`subject.logout()` 后用 `encryptSHA1Password(newPassword, userName)` 重建 token（ShiroRealm 再做 MD5 1024 次）；
+- 踢下线：通过 `UserContext.getActiveSessions(userName)` + `SessionDAO.delete()` 踢出该用户其他活跃会话；
+- **无密码复杂度校验**、**无 `t_password_history` 表操作**。
 
 ### 2.4 密码重置安全
 
 ```java
-// 管理员重置密码：生成随机密码 + 强制首次登录修改
-public Result resetPassword(Integer userId) {
-    String tempPassword = generateRandomPassword(12);  // 随机密码
-    String encrypted = PasswordUtil.encryptMD5Password(tempPassword, username, 1024);
-    userMapper.updatePassword(userId, encrypted);
-    userMapper.updateNeedChangePwd(userId, true);  // 标记需修改密码
-    // 记录操作日志
-    sysLogService.insert(new SysLog("重置用户密码", userId));
-    return Result.success(tempPassword);  // 返回临时密码给管理员
+// 管理员重置密码：生成 8 位随机密码 + 邮件送达 + 强制首登改密
+// 源码：PasswordController.resetPassword(userId, userName, email, model)
+public String resetPassword(Integer userId, String userName, String email, Model model) {
+    if (!UserContext.hasRole(RoleConstant.ROLE_ADMIN)) {
+        return "redirect:/unauthorized.html";
+    }
+    // 1. 查邮箱
+    if (StringUtils.isBlank(email)) {
+        UserInfo userInfo = userInfoService.selectOneByUserIdAndCompId(...);
+        email = userInfo.getEmail();
+        nickName = userInfo.getRealName();
+    }
+    // 2. 生成 8 位随机密码 + 两段式加密
+    String randomPassword = PasswordUtil.createRandomPassword(8);  // 默认 8 位
+    User user = new User(userId);
+    user.setPassword(PasswordUtil.encryptPassword(userName, randomPassword));  // 两段式
+    user.setNeedChangePwd(true);
+    userService.updateByPrimaryKeySelective(user);
+    // 3. 踢出该用户全部活跃 Session
+    Collection<Session> activeSessions = UserContext.getActiveSessions(userName);
+    for (Session session : activeSessions) { sessionDAO.delete(session); }
+    // 4. 邮件发送随机密码（不返回给管理员）
+    Map<String, Object> context = new HashMap<>();
+    context.put("templateCode", "sys.password.reset.mail");
+    context.put("bccs", email);
+    context.put("randomPassword", randomPassword);
+    context.put("nickName", nickName);
+    MailUtil.keepMailWithTemplate(context, true);
+    model.addAttribute("successMsg", "密码重置成功!<br>随机密码已发送至[" + email + "]");
+    return null;
 }
 ```
 
-> **避坑**：重置密码后必须设置 `needChangePwd=true`，强制用户首次登录修改，避免管理员知晓用户密码。
+> **避坑**：
+> - 随机密码为 **8 位**（`createRandomPassword(8)`），非 12 位；
+> - 加密调用 `encryptPassword`（两段式 SHA1+MD5），非 `encryptMD5Password`；
+> - **不返回明文密码给管理员**：随机密码通过 `MailUtil.keepMailWithTemplate` **邮件发送**给用户邮箱，管理员仅看到"已发送至[email]"；
+> - 必须设置 `needChangePwd=true`，强制用户首登改密；
+> - 重置后踢出该用户全部活跃 Session。
 
 ---
 
@@ -359,11 +406,11 @@ public void doFilter(ServletRequest request, ServletResponse response, FilterCha
 
 ### 5.3 escapeHtml 字符替换策略
 
-四个 Wrapper 类共享相同的 `escapeHtml` 实现（自定义重写，避免 commons-text 的中文问题）：
+**三个 `XssRequestBodyHttpServletRequestWrapper` 系列 Wrapper** 共享相同的 `escapeHtml` 实现（自定义重写，避免 commons-text 的中文问题）。注意：`XssHttpServletRequestWrapper` 不使用 `escapeHtml`，而是直接调用 `JsoupUtil.clean`。
 
 ```java
-// XssHttpServletRequestWrapper.java:55-81
-private String escapeHtml(String s) {
+// XssRequestBodyHttpServletRequestWrapper.java:226-252
+public static String escapeHtml(String s) {
     if (s == null || s.isEmpty()) {
         return "";
     }
@@ -371,10 +418,21 @@ private String escapeHtml(String s) {
     for (int i = 0; i < s.length(); i++) {
         char c = s.charAt(i);
         switch (c) {
-            case '>': sb.append("&gt;"); break;
-            case '<': sb.append("&lt;"); break;
-            case '&': sb.append('＆'); break;   // 全角＆，避免 &amp; 二次转义
-            default:  sb.append(c); break;
+        case '>':
+            sb.append("&gt;");
+            break;
+        case '<':
+            sb.append("&lt;");
+            break;
+        case '&':
+            sb.append('＆');
+            break;
+//      case ';':
+//          sb.append('；');
+//          break;
+        default:
+            sb.append(c);
+            break;
         }
     }
     return sb.toString();
@@ -386,9 +444,12 @@ private String escapeHtml(String s) {
 | `>` | `&gt;` | 标准实体 |
 | `<` | `&lt;` | 标准实体 |
 | `&` | `＆`（U+FF06 全角） | **非标准**，避免与已有实体冲突 |
+| `;` | `;`（不替换） | 源码中 `case ';'` 已被**注释掉**，`;` 保持原样，HTML 实体（如 `&gt;`）能正常解析 |
 | 其他 | 不变 | 中文字符不被过滤（关键避坑点） |
 
-> **避坑**：`&` 被替换为**全角**字符 `＆`，而非 `&amp;`。这意味着包含 `&` 的合法内容（如 URL 参数）会被破坏。如有富文本或 URL 入参，需在 Controller 层解码或单独处理。
+> **避坑**：
+> - `&` 被替换为**全角**字符 `＆`，而非 `&amp;`。这意味着包含 `&` 的合法内容（如 URL 参数）会被破坏。如有富文本或 URL 入参，需在 Controller 层解码或单独处理。
+> - 源码注释显示 `case ';'` 一度被设计为替换为全角 `；`，但当前已被注释禁用。如未来重新启用，会破坏所有 HTML 实体（`&gt;` → `&gt；`），需谨慎评估。
 
 ### 5.4 四个 Wrapper 类对比
 
@@ -501,6 +562,7 @@ public final class CSRFTokenManager {
 > - 前端必须使用参数名 `__RequestVerificationToken`（不是 `csrfToken`）
 > - Session attribute 名是动态生成的 `CSRFTokenManager.class.getName() + ".tokenval"`，不能硬编码
 > - Token 使用 `java.util.UUID.randomUUID()`，128 位随机
+> - **跨模块签名差异**：`core` 模块的 `CSRFTokenManager.getTokenForSession(Session session)` 接收 Shiro `org.apache.shiro.session.Session`；`PMS-security` 模块的 `CSRFTokenManager.getTokenForSession(HttpSession session)` 接收 `javax.servlet.http.HttpSession`。两者为**不同实现**，不可混用。core 模块通过 `SecurityUtils.getSubject().getSession()` 获取 Shiro Session 后传入；PMS-security 模块通过 `request.getSession()` 获取 Servlet HttpSession 后传入
 
 ### 6.3 CsrfInterceptor — 拦截器
 
@@ -645,7 +707,10 @@ public Result login(UsernamePasswordCaptchaToken token) {
 
 ### 7.4 会话审计
 
+> ⚠️ **避坑提示**：以下 `SessionEventListener` **当前不存在于 core 源码中**，属**建议实现**示例。实际会话审计由 `UserContext.getActiveSessions(userName)` + `SessionDAO.delete()` 在 `PasswordController` 中用于"踢下线"，无独立会话事件监听器。如需补全此能力，应在 `spring-shiro.xml` 的 `sessionManager` 上配置 `<property name="sessionListeners">`。
+
 ```java
+// 【建议实现示例】当前源码中不存在此类
 // 监听会话事件，记录登录/登出日志
 public class SessionEventListener implements SessionListener {
     @Override
@@ -675,7 +740,10 @@ public class SessionEventListener implements SessionListener {
 
 ### 8.1 文件类型白名单
 
+> ⚠️ **避坑提示**：以下 `FileTypeValidator` **当前不存在于 core 源码中**，属**建议实现**示例。实际文件上传类型校验在 `UploadUtils` / `FileUtil` 中通过文件后缀与 MIME 类型结合判断，无独立 `FileTypeValidator` 类。
+
 ```java
+// 【建议实现示例】当前源码中不存在此类
 public class FileTypeValidator {
     private static final Map<String, Set<String>> ALLOWED_EXTENSIONS = new HashMap<>();
 
@@ -875,13 +943,17 @@ public String desensitize(String params) {
 
 ### 10.4 安全响应头配置
 
+> ⚠️ **避坑提示**：以下 `SecurityHeadersFilter` **当前不存在于 core 源码中**，属**建议实现**示例。core 当前未配置统一的安全响应头 Filter；如需补全此能力，可在 `web.xml` 注册以下 Filter，或在 Nginx 反向代理层配置响应头。
+
 ```xml
+<!-- 【建议实现示例】当前源码中不存在此类 -->
 <!-- web.xml 配置安全响应头 -->
 <filter>
     <filter-name>securityHeadersFilter</filter-name>
     <filter-class>com.dp.plat.core.filter.SecurityHeadersFilter</filter-class>
 </filter>
 
+<!-- 【建议实现示例】当前源码中不存在此类 -->
 <!-- SecurityHeadersFilter 实现 -->
 public class SecurityHeadersFilter implements Filter {
     @Override

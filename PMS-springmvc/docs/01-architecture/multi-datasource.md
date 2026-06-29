@@ -77,15 +77,17 @@ graph TB
 public class RoutingDataSource extends AbstractRoutingDataSource {
     @Override
     protected Object determineCurrentLookupKey() {
-        // 从 ThreadLocal 或注解中获取数据源 Key
-        return DataSourceContextHolder.getDataSourceType();
+        // 从 ThreadLocal 中获取数据源 Key（由 DataSourceAspect 切面或编程式调用设置）
+        return DataSourceHolder.getDataSourceType();
     }
 }
 ```
 
+> ⚠️ **类名校正**：旧版文档中误写为 `DataSourceContextHolder`，实际 core 模块提供的类为 `com.dp.plat.core.config.DataSourceHolder`（已被 `DataSourceAspect`、`SMSDataJob`、`ProjectHeaderService` 等使用）。`DataSourceContextHolder` 在源码中不存在。
+
 ### 2.3 数据源切换方式
 
-#### 方式一：注解驱动（@DataSource）
+#### 方式一：注解驱动（@DataSource + DataSourceAspect AOP）
 
 ```java
 @DataSource("ehr")
@@ -94,17 +96,25 @@ public List<Employee> queryEhrEmployees() {
 }
 ```
 
+切面 `com.dp.plat.core.aop.DataSourceAspect` 拦截 `@within(DataSource) || @annotation(DataSource)`：
+- `@Before`：读取注解 `value()` → `DataSourceHolder.setDataSourceType(value)` → 路由到对应数据源
+- `@After`：`DataSourceHolder.setDataSourceType("")` → 清空 ThreadLocal 回到默认数据源
+
 #### 方式二：编程式切换
 
 ```java
-DataSourceContextHolder.setDataSourceType("d365");
+DataSourceHolder.setDataSourceType("d365");
 try {
     // 执行 D365 数据源操作
     List<PurchaseOrder> orders = d365Mapper.selectOrders();
 } finally {
-    DataSourceContextHolder.clearDataSourceType();
+    DataSourceHolder.clearDataSourceType();
 }
 ```
+
+> 实际使用案例：
+> - `SMSDataJob.insert()`（`com.dp.plat.pms.springmvc.job.SMSDataJob:153, 186`）— 同步任务前显式切换数据源
+> - `ProjectHeaderService.transferProject()`（`com.dp.plat.pms.springmvc.service.impl.ProjectHeaderService:738`）— 项目转移时动态获取 `RoutingDataSource` 实例
 
 ---
 
@@ -300,7 +310,7 @@ D365 数据源配置与 EHR 类似，使用 Mini 连接池参数，连接 SQL Se
 sequenceDiagram
     participant C as Controller
     participant S as Service
-    participant DSH as DataSourceContextHolder
+    participant DSH as DataSourceHolder
     participant RD as RoutingDataSource
     participant DS as 目标数据源
     

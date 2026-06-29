@@ -1,5 +1,18 @@
 # PMS-springmvc Action 方法级参考文档
 
+> ⚠️ **本文档存在系统性错误，正在逐步修正中**（2026-06-29 审查发现）
+>
+> **已知问题**：
+> 1. **`save()` 方法虚构**（16 处）：全文档声称各 Controller 存在 `save(T v, Model model)` 方法。实际 `AbstractController` 提供的是 `create()` 和 `update()` 方法，**不存在 `save()` 方法**。
+> 2. **IndustryLeakController URL 错误**：标注为 `/industryLeak`，实际为 `/af/industry/leak`（源码 `@RequestMapping(AF_MANAGER + "/industry/leak")`）。
+> 3. **IndustryLeakWarningController URL 错误**：标注为 `/industryLeakWarning`，实际为 `/af/industry/warning`。
+>
+> **权威替代文档**：[controller-methods-reference.md](controller-methods-reference.md)（已通过源码交叉验证，方法签名和 URL 全部准确）。
+>
+> 下方内容仍可作为业务逻辑概览参考，但所有方法签名和 URL **必须以 controller-methods-reference.md 或实际源码为准**。
+
+---
+
 > 本文档深度分析 PMS-springmvc 所有 Controller 类的完整方法签名、输入参数、返回值、核心业务逻辑和异常处理机制。
 
 ---
@@ -16,10 +29,10 @@
 8. [ProjectMemberController — 项目成员管理](#8-projectmembercontroller--项目成员管理)
 9. [ProjectTaskController — 项目任务管理](#9-projecttaskcontroller--项目任务管理)
 10. [ProjectAssetController — 项目资产管理](#10-projectassetcontroller--项目资产管理)
-11. [ProjectAssetLeakController — 项目资产泄露管理](#11-projectassetleakcontroller--项目资产泄露管理)
+11. [ProjectAssetLeakController — 项目资产漏洞管理](#11-projectassetleakcontroller--项目资产漏洞管理)
 12. [IndustryAssetController — 行业资产管理](#12-industryassetcontroller--行业资产管理)
-13. [IndustryLeakController — 行业泄露管理](#13-industryleakcontroller--行业泄露管理)
-14. [IndustryLeakWarningController — 行业泄露预警](#14-industryleakwarningcontroller--行业泄露预警)
+13. [IndustryLeakController — 行业漏洞管理](#13-industryleakcontroller--行业漏洞管理)
+14. [IndustryLeakWarningController — 行业漏洞预警](#14-industryleakwarningcontroller--行业漏洞预警)
 15. [CommonRelatedDataController — 关联数据管理](#15-commonrelateddatacontroller--关联数据管理)
 16. [FacilitatorController — 协调员管理](#16-facilitatorcontroller--协调员管理)
 17. [WorkBenchController — 工作台](#17-workbenchcontroller--工作台)
@@ -546,7 +559,7 @@
 
 ---
 
-## 11. ProjectAssetLeakController — 项目资产泄露管理
+## 11. ProjectAssetLeakController — 项目资产漏洞管理
 
 - **包路径**: `com.dp.plat.pms.springmvc.controller`
 - **URL 命名空间**: `/projectAssetLeak`
@@ -557,31 +570,31 @@
 #### `home(Model model)`
 - **URL**: `/projectAssetLeak/`
 - **HTTP 方法**: GET
-- **功能**: 项目资产泄露管理首页
+- **功能**: 项目资产漏洞管理首页
 - **返回值**: String - 视图名称
 
 #### `list(PageParam pageParam, IndustryLeakVO v, Model model)`
 - **URL**: `/projectAssetLeak/list`
 - **HTTP 方法**: GET
-- **功能**: 项目资产泄露列表查询
+- **功能**: 项目资产漏洞列表查询
 - **返回值**: String - 视图名称
 
 #### `findOne(Integer id, Model model)`
 - **URL**: `/projectAssetLeak/{id}`
 - **HTTP 方法**: GET
-- **功能**: 项目资产泄露详情查询
+- **功能**: 项目资产漏洞详情查询
 - **返回值**: String - 视图名称
 
 #### `save(IndustryLeak leak, Model model)`
 - **URL**: `/projectAssetLeak/save`
 - **HTTP 方法**: POST
-- **功能**: 保存项目资产泄露
+- **功能**: 保存项目资产漏洞
 - **返回值**: void
 
 #### `delete(Integer id, Model model)`
 - **URL**: `/projectAssetLeak/delete/{id}`
 - **HTTP 方法**: POST
-- **功能**: 删除项目资产泄露
+- **功能**: 删除项目资产漏洞
 - **返回值**: void
 
 #### `bindAsset(Integer leakId, Integer assetId, Model model)`
@@ -632,10 +645,12 @@
 
 ---
 
-## 13. IndustryLeakController — 行业泄露管理
+## 13. IndustryLeakController — 行业漏洞管理
+
+> ⚠️ **URL 全部错误**：本节所有 URL（`/industryLeak*`）均为虚构。实际 URL 命名空间为 `/af/industry/leak`（源码 `@RequestMapping(AF_MANAGER + "/industry/leak")`）。本节 `save()` 方法亦虚构。详见 [controller-methods-reference.md](controller-methods-reference.md)。
 
 - **包路径**: `com.dp.plat.pms.springmvc.controller`
-- **URL 命名空间**: `/industryLeak`
+- **URL 命名空间**: ~~`/industryLeak`~~ → 实际为 `/af/industry/leak`
 - **依赖服务**: `IIndustryLeakService`
 
 ### 方法列表
@@ -643,33 +658,35 @@
 #### `home(Model model)`
 - **URL**: `/industryLeak/`
 - **HTTP 方法**: GET
-- **功能**: 行业泄露管理首页
+- **功能**: 行业漏洞管理首页
 - **返回值**: String - 视图名称
 
 #### `list(PageParam pageParam, IndustryLeak v, Model model)`
 - **URL**: `/industryLeak/list`
 - **HTTP 方法**: GET
-- **功能**: 行业泄露列表查询
+- **功能**: 行业漏洞列表查询
 - **返回值**: String - 视图名称
 
 #### `save(IndustryLeak leak, Model model)`
 - **URL**: `/industryLeak/save`
 - **HTTP 方法**: POST
-- **功能**: 保存行业泄露
+- **功能**: 保存行业漏洞
 - **返回值**: void
 
 #### `delete(Integer id, Model model)`
 - **URL**: `/industryLeak/delete/{id}`
 - **HTTP 方法**: POST
-- **功能**: 删除行业泄露
+- **功能**: 删除行业漏洞
 - **返回值**: void
 
 ---
 
-## 14. IndustryLeakWarningController — 行业泄露预警
+## 14. IndustryLeakWarningController — 行业漏洞预警
+
+> ⚠️ **URL 全部错误**：本节所有 URL（`/industryLeakWarning*`）均为虚构。实际 URL 命名空间为 `/af/industry/warning`（源码 `@RequestMapping(AF_MANAGER + "/industry/warning")`）。本节 `save()` 方法亦虚构。详见 [controller-methods-reference.md](controller-methods-reference.md)。
 
 - **包路径**: `com.dp.plat.pms.springmvc.controller`
-- **URL 命名空间**: `/industryLeakWarning`
+- **URL 命名空间**: ~~`/industryLeakWarning`~~ → 实际为 `/af/industry/warning`
 - **依赖服务**: `IIndustryLeakWarningService`
 
 ### 方法列表
@@ -677,25 +694,25 @@
 #### `home(Model model)`
 - **URL**: `/industryLeakWarning/`
 - **HTTP 方法**: GET
-- **功能**: 行业泄露预警首页
+- **功能**: 行业漏洞预警首页
 - **返回值**: String - 视图名称
 
 #### `list(PageParam pageParam, IndustryLeakWarning v, Model model)`
 - **URL**: `/industryLeakWarning/list`
 - **HTTP 方法**: GET
-- **功能**: 行业泄露预警列表查询
+- **功能**: 行业漏洞预警列表查询
 - **返回值**: String - 视图名称
 
 #### `save(IndustryLeakWarning warning, Model model)`
 - **URL**: `/industryLeakWarning/save`
 - **HTTP 方法**: POST
-- **功能**: 保存行业泄露预警
+- **功能**: 保存行业漏洞预警
 - **返回值**: void
 
 #### `delete(Integer id, Model model)`
 - **URL**: `/industryLeakWarning/delete/{id}`
 - **HTTP 方法**: POST
-- **功能**: 删除行业泄露预警
+- **功能**: 删除行业漏洞预警
 - **返回值**: void
 
 ---

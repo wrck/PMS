@@ -417,7 +417,7 @@ graph LR
 | `getFileInvoiceType` | 安全 | 同上 |
 | `getFileInspectionType` | 安全 | 同上 |
 
-> AviatorUtils 的 `AviatorEvaluatorInstance` 本身是线程安全的，其内部表达式缓存使用并发安全数据结构。详见 [pms-rules Aviator 引擎架构](../../pms-rules/docs/01-architecture/aviator-engine.md)。
+> AviatorUtils 的 `AviatorEvaluatorInstance` 本身是线程安全的，其内部表达式缓存使用并发安全数据结构。详见 [pms-rules Aviator 引擎架构](../../../pms-rules/docs/01-architecture/aviator-engine.md)。
 
 ---
 

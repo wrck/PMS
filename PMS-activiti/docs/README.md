@@ -43,7 +43,7 @@ graph BT
 
 ## 跨库知识共享
 
-- 业务流程发起方：[PMS-struts 工作流](../PMS-struts/docs/02-modules/workflow.md)
-- 工作流调用方：[PMS-springmvc 工作流](../PMS-springmvc/docs/02-modules/workflow.md)
-- 引擎表（act_*）：全量字典见 [PMS-struts/03-database/database_dict final.md](../PMS-struts/docs/03-database/database_dict%20final.md)
-- 基础框架：[core](../core/docs/README.md)
+- 业务流程发起方：[PMS-struts 工作流](../../PMS-struts/docs/02-modules/workflow.md)
+- 工作流调用方：[PMS-springmvc 工作流](../../PMS-springmvc/docs/02-modules/workflow.md)
+- 引擎表（act_*）：全量字典见 [PMS-struts/03-database/database_dict final.md](../../PMS-struts/docs/03-database/database_dict%20final.md)
+- 基础框架：[core](../../core/docs/README.md)

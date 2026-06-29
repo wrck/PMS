@@ -40,6 +40,8 @@ graph BT
 | 发运结算 | (含于项目管理) | DispatchProjectController, DispatchSettlementController | pm_dispatch_project_header, pm_dispatch_project_settlement |
 | 工作流 | [workflow.md](02-modules/workflow.md) | WorkFlowController, WorkBenchController | pm_workflow |
 | 行业资产管理 | (含于项目管理) | IndustryAssetController, IndustryLeakController | af_industry* |
+| EHR 人力资源集成 | [ehr-integration.md](02-modules/ehr-integration.md) | EHRDataController | ehr_*, perf_appraiser_relationship |
+| SAP 合同实体同步 | [sap-contract.md](02-modules/sap-contract.md) | （无 Controller，SMSDataJob 触发） | DPtech_v_order_contract_4_pms, sms_ofst_contract_head_sap |
 | Struts API 桥接 | (含于项目) | StrutsApiController | 复用 Struts 数据 |
 
 ### EHR 组织同步
@@ -76,11 +78,11 @@ graph BT
 
 ## 跨库知识共享
 
-- 共用项目管理表：PMS-struts 的 [database_dict final.md](../PMS-struts/docs/03-database/database_dict%20final.md) 为 pm_project* 等表的权威字典
+- 共用项目管理表：PMS-struts 的 [database_dict final.md](../../PMS-struts/docs/03-database/database_dict%20final.md) 为 pm_project* 等表的权威字典
 - EHR 组织表（ehr_*）：本库 [03-database](03-database/complete-data-dictionary.md)
-- 工作流引擎：[PMS-activiti](../PMS-activiti/docs/README.md)
-- 基础框架：[core](../core/docs/README.md)
-- D365 集成：[PMS-ext-d365](../PMS-ext-d365/docs/README.md)
+- 工作流引擎：[PMS-activiti](../../PMS-activiti/docs/README.md)
+- 基础框架：[core](../../core/docs/README.md)
+- D365 集成：[PMS-ext-d365](../../PMS-ext-d365/docs/README.md)
 
 ---
 
@@ -88,4 +90,4 @@ graph BT
 
 - 业务变更须同步 02-modules 对应文档
 - 表结构变更须同步本库 03-database + PMS-struts 共用表字典
-- 修改后对照 [审核标准](../../../docs/知识库质量审核标准.md) 自检
+- 修改后对照 [审核标准](../../docs/知识库质量审核标准.md) 自检

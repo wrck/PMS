@@ -43,6 +43,6 @@ graph BT
 
 ## 跨库知识共享
 
-- 调用方：[PMS-struts](../PMS-struts/docs/README.md)、[PMS-springmvc](../PMS-springmvc/docs/README.md)
-- 基础框架（多数据源 @DataSource）：[core](../core/docs/README.md)
-- 共用数据库同步表：[PMS-struts 同步表文档](../PMS-struts/docs/03-database/sync-tables.md)
+- 调用方：[PMS-struts](../../PMS-struts/docs/README.md)、[PMS-springmvc](../../PMS-springmvc/docs/README.md)
+- 基础框架（多数据源 @DataSource）：[core](../../core/docs/README.md)
+- 共用数据库同步表：[PMS-struts 同步表文档](../../PMS-struts/docs/03-database/sync-tables.md)

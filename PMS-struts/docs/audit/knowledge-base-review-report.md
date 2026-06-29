@@ -13,7 +13,7 @@
 | 文档结构完整性 | 8 模块 | 8 | 0 | 100% |
 | 表名一致性 | 58 表 | 56 | 2 | 96.6% |
 | URL 命名空间 | 35 URL | 35 | 0 | 100% |
-| 方法签名一致性 | 25 Action | 25 | 0 | 100% |
+| 方法签名一致性 | 25 Action | 23 | 2 | 92% |
 | 错误码定义 | 25 错误码 | 25 | 0 | 100% |
 
 ---
@@ -69,7 +69,18 @@
 
 ## 4. 剩余待改进项
 
-### 4.1 低优先级
+### 4.1 方法签名一致性 — 未通过项（2026-06-29 复核修正）
+
+> ⚠️ 原 2026-06-23 报告声称"方法签名一致性 100%"经复核与事实不符。下列 2 个 Action 在 `action-methods-reference.md` 中存在方法遗漏，本次修正通过率为 92%。
+
+| Action | 文档覆盖方法数 | 源码实际方法数 | 遗漏方法数 | 遗漏方法列表 |
+|--------|---------------|---------------|-----------|--------------|
+| `ProjectAction` | 已描述 | +9 个未描述 | 9 | `transferProject()` / `licenseInfo()` / `toUploadFile()` / `toUploadDeliverableFile()` / `downloadFile()` / `getDownloadFile()` / `getFileStream()` / `deleteFile()` / `prepareUpdateProject()` |
+| `WorkFlowAction` | 3 | 15 | 12 | `viewDeployment()` / `viewimage()` / `selftask()` / `viewTaskForm()` / `submitTask()` / `viewCurrentImage()` / `taskmanager()` / `hisTaskForm()` / `delegatelist()` / `delegateadd()` / `delegateedit()` / `delegateupdate()` |
+
+另 `WorkSpaceAction`、`WarrantyCallbackAction` 仅文档化 `prepare()` 方法，其余方法用注释带过，文档结构不完整（P2）。
+
+### 4.2 低优先级
 
 | 问题 | 说明 | 建议 |
 |------|------|------|

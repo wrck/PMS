@@ -20,10 +20,10 @@
 graph BT
     FP[pms-ext-fp 本模块]
     RULES[pms-rules] --> FP
-    STRUTS[PMS-struts] -.依赖.-> FP
+    STRUTS[PMS-struts] --> FP
 ```
 
-> pms-ext-fp 依赖 pms-rules（规则引擎）进行发票相关业务规则计算；被 PMS-struts 间接依赖。
+> pms-ext-fp 依赖 pms-rules（规则引擎）进行发票相关业务规则计算，并依赖 PMS-struts（共享 `com.dp.plat.util.AviatorUtils`）。PMS-struts 通过 pms-rules 间接关联 pms-ext-fp。
 
 ---
 
@@ -42,6 +42,6 @@ graph BT
 
 ## 跨库知识共享
 
-- 规则引擎：[pms-rules](../pms-rules/docs/README.md)
-- 调用方：[PMS-struts](../PMS-struts/docs/README.md)
-- 转包发票任务：[PMS-struts 转包文档](../PMS-struts/docs/02-modules/subcontract.md)
+- 规则引擎：[pms-rules](../../pms-rules/docs/README.md)
+- 调用方：[PMS-struts](../../PMS-struts/docs/README.md)
+- 转包发票任务：[PMS-struts 转包文档](../../PMS-struts/docs/02-modules/subcontract.md)

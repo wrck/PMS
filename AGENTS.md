@@ -92,7 +92,7 @@ PMS-springmvc 依赖 PMS-activiti（war+jar）和 PMS-struts（classifier 为 `c
 ## 核心技术栈
 
 ### PMS 项目
-- **Web 层**：Struts2 2.5.30（PMS-struts）/ Spring MVC 5.3.19（PMS-springmvc）
+- **Web 层**：Struts2 2.3.35（PMS-struts）/ 2.5.30（PMS-springmvc）/ Spring MVC 5.3.19（PMS-springmvc）
 - **ORM 层**：iBATIS（遗留，PMS-struts）+ MyBatis 3.5.9（PMS-springmvc、core）
 - **数据库**：MySQL 8.0.16、SQL Server（sqljdbc4）、PostgreSQL 42.7.0（PMS-struts）
 - **连接池**：Druid 1.2.8（主）、commons-dbcp2
@@ -107,8 +107,8 @@ PMS-springmvc 依赖 PMS-activiti（war+jar）和 PMS-struts（classifier 为 `c
 - **规则引擎**：Aviator 5.4.3、LiteFlow 2.15.0、Groovy 3.0.19
 
 ### SPMS 项目
-- **Web 层**：Struts2 2.0（传统配置）
-- **ORM 层**：iBATIS 2.3.4（SqlMapClient）
+- **Web 层**：Struts2 2.3.35（传统配置）
+- **ORM 层**：iBATIS 2.3.0.677（SqlMapClient）
 - **数据库**：MySQL（主库 `dppms_d365`，329张表）、SQL Server（MES/SAP/D365 集成）
 - **连接池**：commons-dbcp（BasicDataSource）
 - **事务管理**：Spring JDBC DataSourceTransactionManager

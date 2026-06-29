@@ -61,11 +61,11 @@ graph BT
 | [01-architecture](01-architecture/) | 系统架构、安全过滤器链、CSRF 架构、XSS 架构 | 4 |
 | [02-modules](02-modules/) | 安全组件功能说明（21 个 Java 类全覆盖） | 9 |
 | [03-database](03-database/) | 无数据库表说明 + 概览 | 2 |
-| [04-mapping](04-mapping/) | 过滤器/拦截器部署矩阵 + CRUD 矩阵 | 2 |
+| [04-mapping](04-mapping/) | 过滤器/拦截器部署矩阵 + CRUD 矩阵 + 数据流转 | 3 |
 | [05-standards](05-standards/) | 编码规范、性能优化、安全实践、故障排查 | 4 |
 | [06-reference](06-reference/) | 代码示例、错误码、术语表、接口模板 | 4 |
-| [audit](audit/) | 模块文档审计报告（含虚构内容专项审查） | 1 |
-| **合计** | — | **26** |
+| [audit](audit/) | 模块文档审计报告（含虚构内容专项审查 + 综合审查） | 2 |
+| **合计** | — | **28** |
 
 ### 01-architecture（架构文档）
 
@@ -103,6 +103,7 @@ graph BT
 |------|------|
 | [filter-interceptor-matrix.md](04-mapping/filter-interceptor-matrix.md) | 过滤器/拦截器部署矩阵（各组件在 PMS-struts/springmvc 中的启用情况） |
 | [crud-matrix.md](04-mapping/crud-matrix.md) | CRUD 矩阵（纯工具库，无 CRUD） |
+| [data-flow.md](04-mapping/data-flow.md) | 数据流转（请求/响应处理链中的安全组件数据流） |
 
 ### 05-standards（规范文档）
 
@@ -127,6 +128,7 @@ graph BT
 | 文档 | 说明 |
 |------|------|
 | [audit-modules.md](audit/audit-modules.md) | 模块文档审计报告（含旧文档虚构内容专项审查） |
+| [comprehensive-review.md](audit/comprehensive-review.md) | 综合审查报告（全模块文档质量评估） |
 
 ---
 
@@ -148,8 +150,8 @@ graph BT
 
 ## 跨库知识共享
 
-- Shiro 认证基础：[core 安全架构](../core/docs/01-architecture/system-architecture.md#4-认证授权架构shiro--cas)
-- 安全最佳实践：[core 安全防护](../core/docs/05-standards/coding-standards.md#5-安全防护)
-- 安全组件使用方：[PMS-struts](../PMS-struts/docs/01-architecture/security-architecture.md)
+- Shiro 认证基础：[core 安全架构](../../core/docs/01-architecture/system-architecture.md#4-认证授权架构shiro--cas)
+- 安全最佳实践：[core 安全防护](../../core/docs/05-standards/coding-standards.md#5-安全防护)
+- 安全组件使用方：[PMS-struts](../../PMS-struts/docs/01-architecture/security-architecture.md)
 - PasswordInterceptor 子类：core 模块（`com.dp.plat.core.interceptor.PasswordInterceptor`）
-- 共用数据库：[PMS-struts 数据字典](../PMS-struts/docs/03-database/database_dict%20final.md)（本模块无数据库表）
+- 共用数据库：[PMS-struts 数据字典](../../PMS-struts/docs/03-database/database_dict%20final.md)（本模块无数据库表）

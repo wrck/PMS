@@ -351,7 +351,7 @@ entity.entity.identify == true && entity.entity.verified_status == true
 entity.entity.identify == true && entity.entity.needVerify == false
 ```
 
-> 详见 pms-rules 模块的 [Aviator 引擎架构](../../pms-rules/docs/01-architecture/aviator-engine.md) 了解表达式语法、内置函数和缓存机制。
+> 详见 pms-rules 模块的 [Aviator 引擎架构](../../../pms-rules/docs/01-architecture/aviator-engine.md) 了解表达式语法、内置函数和缓存机制。
 
 ---
 

@@ -23,10 +23,10 @@
 
 | 术语名 | 英文全称 | 中文含义 | 详细说明 |
 |--------|----------|----------|----------|
-| Struts2 | Apache Struts 2 | Struts2 Web 框架 | 基于 MVC 的 Java Web 框架。PMS-struts 使用 2.3.35，PMS-springmvc 使用 2.5.30，SPMS 使用 2.0，版本不一需注意兼容性。 |
+| Struts2 | Apache Struts 2 | Struts2 Web 框架 | 基于 MVC 的 Java Web 框架。PMS-struts 使用 2.3.35，PMS-springmvc 使用 2.5.30，SPMS 使用 2.3.35，版本不一需注意兼容性。 |
 | Spring MVC | Spring Model-View-Controller | Spring MVC 框架 | Spring 提供的 Web MVC 框架，PMS-springmvc 使用 5.3.19 版本。 |
 | MyBatis | MyBatis | MyBatis ORM 框架 | 半自动 ORM 框架，PMS 使用 3.5.9。XML 映射文件与 Java 文件同目录（`com/dp/plat/**/mapping/*.xml`）。 |
-| iBATIS | iBATIS | iBATIS ORM 框架 | MyBatis 前身。SPMS 使用 iBATIS 2.3.4，XML 映射格式为 `<sqlMap>` 而非 `<mapper>`；PMS 中亦有遗留 iBATIS 使用。 |
+| iBATIS | iBATIS | iBATIS ORM 框架 | MyBatis 前身。SPMS 使用 iBATIS 2.3.0.677，XML 映射格式为 `<sqlMap>` 而非 `<mapper>`；PMS 中亦有遗留 iBATIS 使用。 |
 | Shiro | Apache Shiro | Shiro 安全框架 | Java 安全框架，PMS 使用 1.8.0，提供认证、授权、加密、会话管理。 |
 | CAS | Central Authentication Service | 中央认证服务 | 单点登录（SSO）协议与实现，PMS 使用 CAS 3.2.2 与 Shiro 集成实现统一登录。 |
 | Activiti | Activiti Workflow Engine | Activiti 工作流引擎 | 轻量级 BPMN 2.0 工作流引擎，PMS 使用 5.23.0，负责审批、流转等业务流程。 |

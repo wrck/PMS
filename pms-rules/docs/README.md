@@ -43,6 +43,6 @@ graph BT
 
 ## 跨库知识共享
 
-- 表达式工具：[core AviatorUtils](../core/docs/02-modules/common-components.md#8-工具类util19-个)
-- 调用方：[PMS-struts](../PMS-struts/docs/README.md)
-- 下游：[pms-ext-fp](../pms-ext-fp/docs/README.md)
+- 表达式工具：[core AviatorUtils](../../core/docs/02-modules/common-components.md#8-工具类util19-个)
+- 调用方：[PMS-struts](../../PMS-struts/docs/README.md)
+- 下游：[pms-ext-fp](../../pms-ext-fp/docs/README.md)

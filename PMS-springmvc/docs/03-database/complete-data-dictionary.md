@@ -19,10 +19,10 @@
 | 7 | pm_dispatch_project_header | 发运项目表 | 25+ |
 | 8 | pm_dispatch_project_settlement | 发运结算表 | 26 |
 | 9 | af_industry_asset | 行业资产表 | 30 |
-| 10 | af_industry_leak | 行业泄露表 | 19 |
-| 11 | af_industry_leak_warning | 行业泄露预警表 | 18 |
+| 10 | af_industry_leak | 行业漏洞表 | 19 |
+| 11 | af_industry_leak_warning | 行业漏洞预警表 | 18 |
 | 12 | af_industry_asset_project_relation | 资产项目关联表 | 10 |
-| 13 | af_industry_asset_leak_relation | 资产泄露关联表 | 11 |
+| 13 | af_industry_asset_leak_relation | 资产漏洞关联表 | 11 |
 | 14 | facilitator | 协调员/服务商表 | 18 |
 | 15 | common_related_data | 关联数据表 | 7 |
 | 16 | pm_project_manage_user | 项目管理用户表 | 6 |
@@ -398,7 +398,7 @@
 
 ---
 
-## 10. af_industry_leak（行业泄露表）
+## 10. af_industry_leak（行业漏洞表）
 
 > 实体类：`com.dp.plat.pms.springmvc.entity.IndustryLeak`（378行）
 > Mapper：`IndustryLeakMapper.xml`
@@ -427,7 +427,7 @@
 
 ---
 
-## 11. af_industry_leak_warning（行业泄露预警表）
+## 11. af_industry_leak_warning（行业漏洞预警表）
 
 > 实体类：`com.dp.plat.pms.springmvc.entity.IndustryLeakWarning`（475行）
 > Mapper：`IndustryLeakWarningMapper.xml`
@@ -480,7 +480,7 @@
 
 ---
 
-## 13. af_industry_asset_leak_relation（资产泄露关联表）
+## 13. af_industry_asset_leak_relation（资产漏洞关联表）
 
 > 实体类：`com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation`（220行）
 > Mapper：`IndustryAssetLeakRelationMapper.xml`

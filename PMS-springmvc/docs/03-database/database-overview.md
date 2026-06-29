@@ -17,11 +17,11 @@ PMS-springmvc 模块涉及以下数据库表：
 | `pm_daily_report` | 日报数据 | id, projectId, processDesc | DailyReportMapper |
 | `pm_dispatch_project_header` | 发运项目（派单头表） | id, dispatchCode, dispatchState | DispatchProjectMapper |
 | `pm_dispatch_project_settlement` | 发运结算 | id, settleSeq, amount | DispatchSettlementMapper |
-| `af_industry_leak` | 行业泄露 | id, leakCode, leakName | IndustryLeakMapper |
-| `af_industry_leak_warning` | 行业泄露预警 | warningId, leakId | IndustryLeakWarningMapper |
+| `af_industry_leak` | 行业漏洞 | id, leakCode, leakName | IndustryLeakMapper |
+| `af_industry_leak_warning` | 行业漏洞预警 | warningId, leakId | IndustryLeakWarningMapper |
 | `af_industry_asset` | 行业资产 | id, assetNum, assetName | IndustryAssetMapper |
 | `af_industry_asset_project_relation` | 资产项目关联 | assetId, projectId | IndustryAssetProjectRelationMapper |
-| `af_industry_asset_leak_relation` | 资产泄露关联 | assetId, leakId | IndustryAssetLeakRelationMapper |
+| `af_industry_asset_leak_relation` | 资产漏洞关联 | assetId, leakId | IndustryAssetLeakRelationMapper |
 | `pm_facilitator` | 服务商 | id, code, name, tel, bankAccount | FacilitatorMapper |
 | `pm_common_related_data` | 通用关联数据 | id, objType, objId, type | CommonRelatedDataMapper |
 | `pm_project_property_af_from_sms` | SMS 同步暂存表 | id, syncType, syncTime | PmSynchronizeMapper |

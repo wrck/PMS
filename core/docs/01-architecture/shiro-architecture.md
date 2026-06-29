@@ -397,7 +397,8 @@ public class AnyRolesAuthorizationFilter extends RolesAuthorizationFilter {
 #### HostFilter
 
 - 基于 IP/主机名的访问控制；
-- 配合 `IpUtil` 解析客户端 IP；
+- 客户端 IP 由 `HttpContext.getCurrentIp(request)` 提取（**非 `IpUtil`**）；
+- `IpUtil` 仅负责 `isInRange` / `isInMarkRange` 范围匹配；
 - 可限制特定 IP 段访问管理后台。
 
 #### CasFilter
@@ -454,21 +455,36 @@ sequenceDiagram
 
 ### 8.1 密码加密算法
 
-core 使用 **MD5 + 用户名盐 + 1024 次迭代** 加密密码（`PasswordUtil.encryptMD5Password`）：
+> ⚠️ **避坑提示**：`PasswordUtil` 基于 **Shiro `SimpleHash`**，盐以 `ByteSource.Util.bytes(saltSource)` 注入（**非字符串拼接**）。密码修改/重置入口 `encryptPassword` 是 **SHA1(1 次) → MD5(1024 次) 两段式**。`ShiroRealm` 登录认证调用 `encryptMD5Password`（仅第二段 MD5 1024 次），对应前端已做 SHA1 预处理的场景。
+
+core 密码加密采用 **SHA1 + MD5 两段式**，盐为用户名：
 
 ```java
-public static String encryptMD5Password(String plainPassword, String salt, int iterations) {
-    // MD5(plainPassword + salt) 迭代 1024 次
-    // 盐值 = 用户名
+// 密码修改/重置入口（PasswordController 调用）：两段式
+public static String encryptPassword(String saltSource, String credentials) {
+    return encryptMD5Password(encryptSHA1Password(credentials, saltSource, 1), saltSource, 1024);
+}
+
+// ShiroRealm 登录认证：仅第二段 MD5 1024 次（对应前端已做 SHA1）
+credentials = PasswordUtil.encryptMD5Password(new String(token.getPassword()), token.getUsername(), 1024);
+
+// 底层实现：基于 Shiro SimpleHash
+public static String encrypt(String hashAlgorithmName, String credentials,
+                              String saltSource, int hashIterations) {
+    ByteSource salt = saltSource != null ? ByteSource.Util.bytes(saltSource) : null;
+    return new SimpleHash(hashAlgorithmName, credentials, salt, hashIterations).toString();
 }
 ```
 
-| 项 | 值 | 说明 |
-|----|-----|------|
-| 算法 | MD5 | 哈希算法 |
-| 盐值 | 用户名 | 每个用户盐值不同 |
-| 迭代次数 | 1024 | 增加破解成本 |
+| 项 | 第一段（SHA1） | 第二段（MD5） | 说明 |
+|----|-----------------|----------------|------|
+| 算法 | SHA1 | MD5 | 基于 Shiro `SimpleHash` |
+| 输入 | 用户明文密码 | 第一段 SHA1 输出 | 两段式串联 |
+| 盐值 | 用户名 | 用户名（同第一段） | `ByteSource.Util.bytes()` 注入 |
+| 迭代次数 | 1 | 1024 | 增加破解成本 |
 | 匹配器 | `HashedCredentialsMatcher` | Shiro 自动比对 |
+
+> 详见 [common-utils.md §7 PasswordUtil](../02-modules/common-utils.md#7-passwordutil-密码工具) 和 [security-practices.md §2 密码加密安全](../05-standards/security-practices.md#2-密码加密安全)。
 
 ### 8.2 密码生命周期
 

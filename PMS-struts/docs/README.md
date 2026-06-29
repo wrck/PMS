@@ -11,16 +11,16 @@
 | 目录 | `PMS/PMS-struts/` |
 | artifactId | `pms-struts` |
 | 基础包 | `com.dp.plat`（action/service/dao/data/extend 等） |
-| 技术栈 | **Struts2 2.5.30** + Spring + **iBATIS（遗留）+ MyBatis 3.5.9（双栈）** + Shiro |
+| 技术栈 | **Struts2 2.3.35** + Spring + **iBATIS（遗留）+ MyBatis 3.5.9（双栈）** + Shiro |
 | 源码目录 | **非标准**：`src/`（非 `src/main/java`），配置在 `config/`（非 `src/main/resources`） |
 | JDK | 1.8 |
-| 规模 | 25 Action / 38 Service / 37 DAO |
+| 规模 | 25 Action（主 action 包）/ 38 Service / 37 DAO（含子模块包另有 6 Action） |
 | 管辖数据库 | `dppms_d365` 项目管理域（pm_project*/pm_cl*/pm_presales*/pm_subcontract*/prob*/fnd*） |
 
 ### 关键陷阱（构建/维护必读）
 
 - ⚠️ 源码目录是 `src/` 而非 `src/main/java`；资源在 `config/` 而非 `src/main/resources`
-- ⚠️ 本模块用 **Struts2 2.5.30**，而 PMS-springmvc 用 **2.5.30 的 springmvc 等价**——版本体系独立
+- ⚠️ 本模块用 **Struts2 2.3.35**，而 PMS-springmvc 用 **2.5.30**——版本体系独立
 - ⚠️ **iBATIS 与 MyBatis 并存**：遗留业务用 iBATIS（`<sqlMap>`），新业务用 MyBatis（`<mapper>`）
 - ⚠️ `echarts-utils` 为 system 作用域依赖，位于 `WebContent/WEB-INF/lib/Utils-v0.1.jar`
 - ⚠️ MyBatis XML 映射与 Java 同目录：`com/dp/plat/**/mapping/*.xml`
@@ -70,7 +70,7 @@ graph BT
 |------|------|
 | [01-architecture](01-architecture/) | 系统架构、Struts/Spring 配置、多数据源、安全架构、过滤器 |
 | [02-modules](02-modules/) | 各功能模块功能说明文档（标准模板：职责/类映射/流程/接口/Service/数据/异常） |
-| [03-database](03-database/) | **权威全量数据字典** [database_dict final.md](03-database/database_dict%20final.md)（13336行，273表）+ ER图 + 索引分析 + 同步表 |
+| [03-database](03-database/) | **权威全量数据字典** [database_dict final.md](03-database/database_dict%20final.md)（13337行，数据基准 2026-06-13 时点 273 表+39 视图；2026-06-29 实测 286 表+43 视图）+ ER图 + 索引分析 + 同步表。详见 [03-database/README.md](03-database/README.md) |
 | [04-mapping](04-mapping/) | 功能-表 CRUD 矩阵 + 数据流程图 |
 | [05-standards](05-standards/) | 编码规范、性能优化、安全实践、故障排查 |
 | [06-reference](06-reference/) | 代码示例、数据字典、错误码、术语表、接口模板 |
@@ -95,11 +95,11 @@ graph BT
 ## 跨库知识共享
 
 - 共用数据库全量字典即本库 [database_dict final.md](03-database/database_dict%20final.md)，SPMS 共用此库
-- 安全组件：[PMS-security](../PMS-security/docs/02-modules/security-components.md)
-- D365 集成：[PMS-ext-d365](../PMS-ext-d365/docs/02-modules/d365-integration.md)
-- 规则引擎：[pms-rules](../pms-rules/docs/02-modules/rules-engine.md)
-- 基础框架：[core](../core/docs/README.md)
-- EHR 组织：[PMS-springmvc](../PMS-springmvc/docs/03-database/complete-data-dictionary.md)
+- 安全组件：[PMS-security](../../PMS-security/docs/02-modules/security-components.md)
+- D365 集成：[PMS-ext-d365](../../PMS-ext-d365/docs/02-modules/d365-integration.md)
+- 规则引擎：[pms-rules](../../pms-rules/docs/02-modules/rules-engine.md)
+- 基础框架：[core](../../core/docs/README.md)
+- EHR 组织：[PMS-springmvc](../../PMS-springmvc/docs/03-database/complete-data-dictionary.md)
 
 ---
 
@@ -107,4 +107,4 @@ graph BT
 
 - 业务功能变更须同步 [02-modules](02-modules/) 对应文档 + [04-mapping CRUD矩阵](04-mapping/crud-matrix.md)
 - 表结构变更须同步 [database_dict final.md](03-database/database_dict%20final.md)
-- 修改后对照 [审核标准](../../docs/知识库质量审核标准.md) 自检
+- 修改后对照 [审核标准](../../../docs/知识库质量审核标准.md) 自检

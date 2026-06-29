@@ -655,7 +655,7 @@ PMS 系统大量使用了 Struts2 的通配符方法映射（Wildcard Method Sel
 ## 9. 配置注意事项
 
 1. **动态方法调用安全风险**：`struts.enable.DynamicMethodInvocation=true` 存在安全风险，Struts2 2.5+ 默认关闭。建议配合 `global-allowed-methods` 使用正则白名单控制可调用的方法
-2. **global-allowed-methods 处于注释状态**：源码 `struts-sys.xml` 中 login 包已预留 `global-allowed-methods` 配置但处于注释状态（`<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->`）。当前系统使用 Struts2 2.0 DTD，不要求配置此项，通配符方法映射可正常工作。但升级到 Struts2 2.5+ 时必须取消注释或在各包中补充此配置，否则所有通配符方法调用（如 `prob_*`、`maintenance_*` 等）将被框架拒绝
+2. **global-allowed-methods 处于注释状态**：源码 `struts-sys.xml` 中 login 包已预留 `global-allowed-methods` 配置但处于注释状态（`<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->`）。当前系统使用 Struts2 2.3.35 DTD，不要求配置此项，通配符方法映射可正常工作。但升级到 Struts2 2.5+ 时必须取消注释或在各包中补充此配置，否则所有通配符方法调用（如 `prob_*`、`maintenance_*` 等）将被框架拒绝
 3. **XSS 拦截器双重配置**：`XssStrutsInterceptor` 在 `basepackage` 和 `defaultJson` 两个抽象包中分别定义，参数配置一致，修改时需同步更新
 4. **文件上传限制**：`struts.multipart.maxSize` 和 `fileUpload` 拦截器的 `maximumSize` 均设置为 200MB，需保持一致
 5. **login 包独立性**：`login` 包直接继承 `struts-default` 而非 `basepackage`，因此不经过自定义拦截器栈（XSS、权限校验等），这是合理的——登录页面不需要权限校验

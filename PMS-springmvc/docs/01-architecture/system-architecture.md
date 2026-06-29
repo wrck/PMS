@@ -12,26 +12,28 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 |---------------|-------------|------|--------|
 | `AbstractController` | - | 控制器基类 | 13 |
 | `BaseController` | - | 基础控制器 | 0 |
-| `ProjectController` | `/pm/project` | 项目管理 | 21 |
+| `ProjectController` | `/pm/project` | 项目管理 | 16 |
 | `ProjectMemberController` | `/pm/member` | 项目成员管理 | 3 |
 | `ProjectTaskController` | `/pm/project/task` | 项目任务管理 | 7 |
 | `ProjectManageUserController` | `/pm/user` | 项目管理用户 | 12 |
 | `ProjectAssetController` | `/pm/project/asset` | 项目资产管理 | 7 |
-| `ProjectAssetLeakController` | `/pm/asset/leak` | 项目资产泄露管理 | 7 |
+| `ProjectAssetLeakController` | `/pm/asset/leak` | 项目资产漏洞管理 | 7 |
 | `WorkFlowController` | `/workflow` | 工作流管理 | 15 |
 | `WorkBenchController` | `/workflow/workbench` | 工作台 | 5 |
 | `DailyReportController` | `/pm/daily/report` | 日报管理 | 10 |
 | `DispatchProjectController` | `/pm/dispatch` | 发运项目管理 | 13 |
 | `DispatchSettlementController` | `/pm/settlement` | 发运结算管理 | 13 |
 | `IndustryAssetController` | `/af/industry/asset` | 行业资产管理 | 4 |
-| `IndustryLeakController` | `/af/industry/leak` | 行业泄露管理 | 4 |
-| `IndustryLeakWarningController` | `/af/industry/warning` | 行业泄露预警 | 4 |
+| `IndustryLeakController` | `/af/industry/leak` | 行业漏洞管理 | 4 |
+| `IndustryLeakWarningController` | `/af/industry/warning` | 行业漏洞预警 | 4 |
 | `CommonRelatedDataController` | `/pm/common/related` | 关联数据管理 | 6 |
 | `FacilitatorController` | `/pm/facilitator` | 服务商管理 | 2 |
 | `StrutsApiController` | `/api` | Struts API 兼容 | 4 |
-| `EHRDataController` | `/ehr/data` | EHR 数据集成 | 14 |
+| `EHRDataController` | `/ehr/` | EHR 数据集成 | 14 |
 
-### 涉及的 Service 类列表（21个）
+### 涉及的 Service 类列表（28个）
+
+> 含 springmvc 包 20 个 + ehr 包 8 个。EHR 相关 Service 详见 [EHR 集成模块](../02-modules/ehr-integration.md)。
 
 | Service 接口 | 实现类 | 职责 |
 |-------------|--------|------|
@@ -46,15 +48,23 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 | `IDispatchProjectService` | `DispatchProjectService` | 发运项目服务 |
 | `IDispatchSettlementService` | `DispatchSettlementService` | 发运结算服务 |
 | `IIndustryAssetService` | `IndustryAssetService` | 行业资产服务 |
-| `IIndustryLeakService` | `IndustryLeakService` | 行业泄露服务 |
-| `IIndustryLeakWarningService` | `IndustryLeakWarningService` | 行业泄露预警服务 |
+| `IIndustryLeakService` | `IndustryLeakService` | 行业漏洞服务 |
+| `IIndustryLeakWarningService` | `IndustryLeakWarningService` | 行业漏洞预警服务 |
 | `IIndustryAssetProjectRelationService` | `IndustryAssetProjectRelationService` | 资产项目关联服务 |
-| `IIndustryAssetLeakRelationService` | `IndustryAssetLeakRelationService` | 资产泄露关联服务 |
+| `IIndustryAssetLeakRelationService` | `IndustryAssetLeakRelationService` | 资产漏洞关联服务 |
 | `IExcelAnalysisService` | `ExcelAnalysisService` | Excel分析服务 |
 | `ICommonRelatedDataService` | `CommonRelatedDataService` | 关联数据服务 |
 | `IFacilitatorService` | `FacilitatorService` | 协调员服务 |
 | `IPmSynchronizeService` | `PmSynchronizeService` | 数据同步服务 |
 | `IDataFieldRelationService` | `DataFieldRelationService` | 数据字段关联服务 |
+| `IEhrCompanyService` | `EhrCompanyService` | EHR 公司服务 |
+| `IEhrDepartmentService` | `EhrDepartmentService` | EHR 部门服务 |
+| `IEhrEmpPowerService` | `EhrEmpPowerService` | EHR 员工权限服务 |
+| `IEHRLoginAccountService` | `EHRLoginAccountService` | EHR 登录账号服务 |
+| `IEhrSynchronizeService` | `EhrSynchronizeService` | EHR 数据同步服务 |
+| `IEmployeeService` | `EmployeeService` | 员工服务 |
+| `IHolidayService` | `HolidayService` | 节假日服务 |
+| `IJobService` | `JobService` | 岗位服务 |
 
 ### 涉及的数据库表列表（20个）
 
@@ -72,10 +82,10 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 | `pm_dispatch_project_header` | 发运项目（派单头表） |
 | `pm_dispatch_project_settlement` | 发运结算表 |
 | `af_industry_asset` | 行业资产表 |
-| `af_industry_leak` | 行业泄露表 |
-| `af_industry_leak_warning` | 行业泄露预警表 |
+| `af_industry_leak` | 行业漏洞表 |
+| `af_industry_leak_warning` | 行业漏洞预警表 |
 | `af_industry_asset_project_relation` | 资产项目关联表 |
-| `af_industry_asset_leak_relation` | 资产泄露关联表 |
+| `af_industry_asset_leak_relation` | 资产漏洞关联表 |
 | `pm_facilitator` | 服务商表 |
 | `pm_common_related_data` | 关联数据表 |
 | `pm_project_property_af_from_sms` | SMS 同步暂存表 |
@@ -145,7 +155,7 @@ PMS-springmvc/
 ├── src/main/java/com/dp/plat/pms/
 │   ├── springmvc/
 │   │   ├── constant/          # 常量定义
-│   │   ├── controller/        # 控制器（19个）
+│   │   ├── controller/        # 控制器（springmvc 包 19 个 + ehr 包 1 个 = 20）
 │   │   ├── dao/               # 数据访问层（20个Mapper）
 │   │   ├── entity/            # 实体类
 │   │   ├── excel/             # Excel处理

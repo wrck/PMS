@@ -210,12 +210,16 @@ map.name        // 通过属性访问（键为字符串时）
 
 ## 6. 类型判断与转换
 
-| 函数 | 说明 | 示例 |
+> **重要**：以下函数清单基于 Aviator 5.4.3 官方内置函数库。注意 Aviator 与 JavaScript 的差异：Aviator 使用 `type(x)`（非 `typeof`），判断 nil 使用 `x == nil` 比较运算符（无 `is_nil` 函数）。
+
+| 函数/运算符 | 说明 | 示例 |
 |------|------|------|
-| `is_nil(x)` | 是否为 nil | `is_nil(nil)` → true |
+| `x == nil` | 判断是否为 nil（**运算符，非函数**） | `nil == nil` → true |
 | `is_def(x)` | 是否已定义 | `is_def(undefined_var)` → false |
-| `typeof(x)` | 类型名 | `typeof(1)` → "long" |
+| `type(x)` | 类型名 | `type(1)` → "long" |
 | `is_a(x, type)` | 类型判断 | — |
+
+> ⚠️ **避坑**：Aviator 5.4.3 **不存在** `is_nil(x)` 和 `typeof(x)` 函数（`typeof` 是 JavaScript 运算符）。如需判断 nil，必须使用 `x == nil`；如需获取类型名，必须使用 `type(x)`。
 
 **类型名对照**：
 

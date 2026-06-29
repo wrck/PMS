@@ -18,7 +18,7 @@
 | `ProjectTaskController` | `/pm/project/task` | `AbstractController` | [项目任务](project-task.md) |
 | `ProjectManageUserController` | `/pm/user` | `AbstractController` | 项目管理用户 |
 | `ProjectAssetController` | `/pm/project/asset` | `AbstractController` | 项目资产管理 |
-| `ProjectAssetLeakController` | `/pm/asset/leak` | `AbstractController` | 项目资产泄露管理 |
+| `ProjectAssetLeakController` | `/pm/asset/leak` | `AbstractController` | 项目资产漏洞管理 |
 | `WorkFlowController` | `/workflow` | `AbstractController` | [工作流管理](workflow.md) |
 | `WorkBenchController` | `/workflow/workbench` | - (无继承) | [工作台](workbench.md) |
 | `DailyReportController` | `/pm/daily/report` | `AbstractController` | [日报管理](daily-report.md) |
@@ -30,7 +30,7 @@
 | `CommonRelatedDataController` | `/pm/common/related` | `AbstractController` | 关联数据管理 |
 | `FacilitatorController` | `/pm/facilitator` | `AbstractController` | [服务商管理](facilitator.md) |
 | `StrutsApiController` | `/api` | - (无继承) | Struts API 兼容 |
-| `EHRDataController` | `/ehr/data` | - (无继承) | [EHR 集成](ehr-integration.md) |
+| `EHRDataController` | `/ehr/` | - (无继承) | [EHR 集成](ehr-integration.md) |
 
 > 共 19 个业务 Controller（不含 AbstractController 与 BaseController）+ 1 个 EHR Controller = 20 个 Controller。
 > 已修正的 URL 错误：ProjectMember `/pm/member`、ProjectTask `/pm/project/task`、ProjectManageUser `/pm/user`、ProjectAsset `/pm/project/asset`、ProjectAssetLeak `/pm/asset/leak`、WorkBench `/workflow/workbench`、IndustryLeakWarning `/af/industry/warning`、CommonRelatedData `/pm/common/related`、StrutsApi `/api`。
@@ -170,9 +170,12 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 | `projectTask` | `/pm/project/{id}/projectTask` | GET | 项目任务列表 | `project:detail` |
 | `projectState` | `/pm/project/{id}/projectState` | GET | 项目状态查询 | `project:detail` |
 | `syncSMSData` | `/pm/project/syncSMSData` | GET/POST | 同步 SMS 数据 | `project:edit` |
-| `checkPermission` | - | - | 权限检查 | - |
+| `checkPermission` | - | - | 权限检查（重写父类） | - |
+| `checkProjectTypeAndAreaPower` | - | - | 校验项目类型与区域权限（内部调用） | - |
 
 > 已删除虚构方法：`save`、`delete/{id}`、`transferProject`、`mergeContract`、`queryProjectState`、`queryProductInfo`、`exportProject`、`importProject`、`queryUncreateProjectList`。
+
+> 补充说明（2026-06-29）：本次根据源码 `ProjectController.java:914` 补充 `checkProjectTypeAndAreaPower` 方法。该方法为内部权限校验辅助方法，校验项目类型与区域权限，无独立 URL 映射。
 
 > 完整方法说明详见 [project-management.md](project-management.md)
 
@@ -260,22 +263,22 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 
 | 方法 | URL | HTTP 方法 | 功能 |
 |------|-----|----------|------|
-| `listView` | `/ehr/data` | GET | EHR 数据首页 |
-| `findCompanies` | `/ehr/data/company/list` | GET | 公司列表 |
-| `findCompany` | `/ehr/data/company/{id}` | GET | 公司详情 |
-| `findCompaniesTree` | `/ehr/data/company/tree` | GET | 公司树形数据 |
-| `findDepartments` | `/ehr/data/department/list` | GET | 部门列表 |
-| `findDepartment` | `/ehr/data/department/{id}` | GET | 部门详情 |
-| `findDepartmentTree` | `/ehr/data/department/tree` | GET | 部门树形数据 |
-| `findJobs` | `/ehr/data/job/list` | GET | 岗位列表 |
-| `findJob` | `/ehr/data/job/{id}` | GET | 岗位详情 |
-| `findEmployees` | `/ehr/data/employee/list` | GET | 员工列表 |
-| `findEmployee` | `/ehr/data/employee/{id}` | GET | 员工详情 |
-| `listEmployeeSelect2Data` | `/ehr/data/employeeDataList` | GET | 员工 Select2 数据 |
-| `initUser` | `/ehr/data/initUser` | GET | 初始化用户 |
-| `syncData` | `/ehr/data/syncData` | GET | 手动同步 |
+| `listView` | `/ehr/` | GET | EHR 数据首页 |
+| `findCompanies` | `/ehr/company/list` | GET | 公司列表 |
+| `findCompany` | `/ehr/company/{id}` | GET | 公司详情 |
+| `findCompaniesTree` | `/ehr/company/tree` | GET | 公司树形数据 |
+| `findDepartments` | `/ehr/department/list` | GET | 部门列表 |
+| `findDepartment` | `/ehr/department/{id}` | GET | 部门详情 |
+| `findDepartmentTree` | `/ehr/department/tree` | GET | 部门树形数据 |
+| `findJobs` | `/ehr/job/list` | GET | 岗位列表 |
+| `findJob` | `/ehr/job/{id}` | GET | 岗位详情 |
+| `findEmployees` | `/ehr/employee/list` | GET | 员工列表 |
+| `findEmployee` | `/ehr/employee/{id}` | GET | 员工详情 |
+| `listEmployeeSelect2Data` | `/ehr/employeeDataList` | GET | 员工 Select2 数据 |
+| `initUser` | `/ehr/initUser` | GET | 初始化用户 |
+| `syncData` | `/ehr/syncData` | GET | 手动同步 |
 
-> 完整方法说明详见 [ehr-integration.md](ehr-integration.md)
+> **URL 命名空间校正**：`UrlPrefixConstant.EHR_DATA_URL = "/ehr/"`（非 `/ehr/data`，详见 `com.dp.plat.ehr.constants.UrlPrefixConstant:12`）。方法级 `@RequestMapping` 路径直接拼接到 `/ehr/` 之后。完整方法说明详见 [ehr-integration.md](ehr-integration.md)
 
 ---
 
@@ -372,13 +375,13 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|
-| `home` | `/pm/asset/leak/` | GET | 项目资产泄露首页 | `projectAssetLeak:list` |
-| `list` | `/pm/asset/leak/list` | GET | 项目资产泄露列表 | `projectAssetLeak:list` |
-| `findOne` | `/pm/asset/leak/{id}` | GET | 项目资产泄露详情 | `projectAssetLeak:detail` |
-| `detail` | `/pm/asset/leak/detail` | GET | 项目资产泄露详情页面 | `projectAssetLeak:detail` |
-| `create` | `/pm/asset/leak/detail` | POST | 新增项目资产泄露 | `projectAssetLeak:add` |
-| `update` | `/pm/asset/leak/{id}` | PUT | 更新项目资产泄露 | `projectAssetLeak:edit` |
-| `delete` | `/pm/asset/leak/{id}` | DELETE | 删除项目资产泄露 | `projectAssetLeak:delete` |
+| `home` | `/pm/asset/leak/` | GET | 项目资产漏洞首页 | `projectAssetLeak:list` |
+| `list` | `/pm/asset/leak/list` | GET | 项目资产漏洞列表 | `projectAssetLeak:list` |
+| `findOne` | `/pm/asset/leak/{id}` | GET | 项目资产漏洞详情 | `projectAssetLeak:detail` |
+| `detail` | `/pm/asset/leak/detail` | GET | 项目资产漏洞详情页面 | `projectAssetLeak:detail` |
+| `create` | `/pm/asset/leak/detail` | POST | 新增项目资产漏洞 | `projectAssetLeak:add` |
+| `update` | `/pm/asset/leak/{id}` | PUT | 更新项目资产漏洞 | `projectAssetLeak:edit` |
+| `delete` | `/pm/asset/leak/{id}` | DELETE | 删除项目资产漏洞 | `projectAssetLeak:delete` |
 
 ---
 

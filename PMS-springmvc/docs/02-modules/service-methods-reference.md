@@ -14,7 +14,7 @@
 6. [IDispatchProjectService — 发运项目服务](#6-idispatchprojectservice--发运项目服务)
 7. [IDispatchSettlementService — 发运结算服务](#7-idispatchsettlementservice--发运结算服务)
 8. [IIndustryAssetService — 行业资产服务](#8-iindustryassetservice--行业资产服务)
-9. [IIndustryLeakService — 行业泄露服务](#9-iindustryleakservice--行业泄露服务)
+9. [IIndustryLeakService — 行业漏洞服务](#9-iindustryleakservice--行业漏洞服务)
 10. [IDailyReportService — 日报服务](#10-idailyreportservice--日报服务)
 11. [IExcelAnalysisService — Excel分析服务](#11-iexcelanalysisservice--excel分析服务)
 
@@ -362,7 +362,7 @@
 
 ---
 
-## 9. IIndustryLeakService — 行业泄露服务
+## 9. IIndustryLeakService — 行业漏洞服务
 
 ### 类概述
 - 接口：`IIndustryLeakService extends IAbstractBaseService<IndustryLeak>`
@@ -386,26 +386,195 @@
 
 ---
 
-## 11. IExcelAnalysisService — Excel分析服务
+## 11. IExcelAnalysisService<T> — Excel 导入分析基础接口
 
 ### 类概述
-- 接口：`IExcelAnalysisService`
-- 实现类：`ExcelAnalysisService`
-- 依赖 DAO：`ExcelAnalysisMapper`
+- 接口：`IExcelAnalysisService<T>` extends `IAbstractBaseService<T>`（`com.dp.plat.pms.springmvc.service.IExcelAnalysisService`）
+- **无独立实现类** — 该接口作为基接口被以下 Service 继承：
+  - `FacilitatorService`（服务商管理）
+  - `IndustryLeakService`（行业漏洞预警）
+  - `CommonRelatedDataService`（关联数据管理）
+  - `IndustryAssetService`（行业资产管理）
+- 依赖 DAO：`ExcelAnalysisMapper`（通过 `getExcelAnalysisDao()` 暴露）
+- 设计模式：接口默认方法（Java 8 default methods）— 提供完整的 Excel 导入流程模板，子类只需实现 `getExcelAnalysisDao()` 和 `getSourceTableName()` 两个抽象方法
 
 ### 方法列表
 
-#### `void importExcel(MultipartFile file, String dataType)`
-- **功能**：导入Excel文件
-- **事务类型**：事务
+#### 抽象方法（子类必须实现）
 
-#### `List<Map<String, Object>> analyzeData(String dataType, String fileId)`
-- **功能**：分析数据
+##### `ExcelAnalysisMapper getExcelAnalysisDao()`
+- **功能**：返回 Excel 分析 Mapper 实例
 - **事务类型**：无事务
 
-#### `void saveAnalysisResult(String fileId, List<Map<String, Object>> results)`
-- **功能**：保存分析结果
-- **事务类型**：事务
+##### `String getSourceTableName()`
+- **功能**：返回导入目标源表名（用于创建临时表、提交数据）
+- **事务类型**：无事务
+
+#### 默认方法（接口已实现，子类可直接使用）
+
+##### `Result importPreview(Map<String, Object> params, String execlPath)`
+- **功能**：Excel 导入预览（不写库），返回解析后的数据列表、临时表名、列对应关系
+- **事务类型**：无事务
+- **流程**：
+  1. 从 `params.columns` 构建表头映射 `headRelationMapping`
+  2. 使用 EasyExcel 读取文件，注册 `ExcelAnalysisEventListener<T>` 监听器
+  3. 监听器解析 Excel 数据并填充临时表（如启用）
+  4. 返回 `Result(true, {data, tempTableName, columns, columnKeys})`
+
+##### `@Transactional Result importSubmit(Map<String, Object> params, String execlPath)`
+- **功能**：Excel 导入提交（写库），用于完整报表行的情况
+- **事务类型**：`@Transactional`
+- **流程**：与 `importPreview` 类似，但 `listener.setSync(true)` 同步写入
+
+##### `void createTempImportTable(String tempTableName)`
+- **功能**：创建导入临时表（默认委托 `createTempTable`）
+- **事务类型**：无事务
+
+##### `void createTempImportTable(String tempTableName, String sourceTableName)`
+- **功能**：创建导入临时表（指定源表结构）
+- **事务类型**：无事务
+
+##### `void createTempTable(String tempTableName)`
+- **功能**：创建临时表（结构来自 `getSourceTableName()`）
+- **调用 DAO**：`excelAnalysisDao.createTempTable(tempTableName, getSourceTableName())`
+
+##### `void createTempTable(String tempTableName, String sourceTableName)`
+- **功能**：创建临时表（显式指定源表）
+- **调用 DAO**：`excelAnalysisDao.createTempTable(tempTableName, sourceTableName)`
+
+##### `void insertTempImportData(String tempTableName, Object vo, Collection<String> columns)`
+- **功能**：插入单条临时数据（封装为 List 后调用 `insertTempData`）
+- **调用 DAO**：`excelAnalysisDao.insertTempData(tempTableName, list, columns)`
+
+##### `void insertTempImportData(String tempTableName, List<Object> list, Collection<String> columns)`
+- **功能**：批量插入临时数据
+- **调用 DAO**：`excelAnalysisDao.insertTempData(tempTableName, list, columns)`
+
+##### `void insertTempData(String tempTableName, List<Object> list, Collection<String> columns)`
+- **功能**：实际执行临时表批量插入（委托 DAO）
+- **调用 DAO**：`excelAnalysisDao.insertTempData(tempTableName, list, columns)`
+
+##### `Result submitTempTable(Map<String, Object> params, String tempTableName, Collection<String> columns)`
+- **功能**：提交临时表数据到源表，然后删除临时表
+- **流程**：`submitImportData` → `dropTempTable`
+
+##### `Result submitImportData(Map<String, Object> params, String tempTableName, Collection<String> columns)`
+- **功能**：将临时表数据提交到源表
+- **调用 DAO**：`excelAnalysisDao.submitImportData(tempTableName, getSourceTableName(), columns, params)`
+
+##### `List<?> selectTempImportData(String tempTableName, PageParam<?> pageParam)`
+- **功能**：分页查询临时表数据（自动设置 total）
+- **流程**：`countTempData` → `selectTempData`
+
+##### `List<?> selectTempData(PageParam<?> pageParam)`
+- **功能**：查询临时表数据（`pageParam.customField` 携带表名）
+- **调用 DAO**：`excelAnalysisDao.selectTempData(pageParam)`
+
+##### `long countTempData(PageParam<?> pageParam)`
+- **功能**：统计临时表数据量
+- **调用 DAO**：`excelAnalysisDao.countTempData(pageParam)`
+
+##### `void dropTempTable(String tempTableName)`
+- **功能**：删除临时表
+- **调用 DAO**：`excelAnalysisDao.dropTempTable(tempTableName)`
+
+##### `Result doImportData(List<?> list, Collection<String> columns, Map<String, Object> params)`
+- **功能**：直接导入数据到源表（不经过临时表）
+- **调用 DAO**：`excelAnalysisDao.doImportData(list, getSourceTableName(), columns, params)`
+
+### 使用模式
+
+子类继承 `IExcelAnalysisService<T>` 后，仅需实现两个抽象方法即可获得完整的 Excel 导入能力：
+
+```java
+@Service
+public class FacilitatorService extends AbstractBaseService<Facilitator> 
+    implements IFacilitatorService {
+    
+    @Autowired
+    private ExcelAnalysisMapper excelAnalysisMapper;
+    
+    @Override
+    public ExcelAnalysisMapper getExcelAnalysisDao() {
+        return excelAnalysisMapper;
+    }
+    
+    @Override
+    public String getSourceTableName() {
+        return "pm_facilitator";
+    }
+    
+    // Controller 调用 importPreview() / importSubmit() 完成导入
+}
+```
+
+> ⚠️ **虚构内容清理记录**：旧版文档列出的 `void importExcel(MultipartFile, String)`、`List<Map<String,Object>> analyzeData(String, String)`、`void saveAnalysisResult(String, List<Map<String,Object>>)` 三个方法在源码中**均不存在**，已替换为上述实际方法列表。
+
+---
+
+## 12. IEmployeeService — EHR 员工服务
+
+### 类概述
+- 接口：`IEmployeeService`（`com.dp.plat.ehr.service.IEmployeeService`）
+- 实现类：`EmployeeService`（`com.dp.plat.ehr.service.impl.EmployeeService`）
+- 依赖 DAO：`EmployeeMapper`
+- 详细方法说明：[ehr-integration.md](ehr-integration.md)
+
+### 方法列表（仅列出关键方法）
+
+#### `List<EmployeeAppraiserVO> selectEmployeeAppraiserBySelectivePageableVO(PageParam<EmployeeVO> pageParam)`
+- **功能**：员工考评人关系分页查询（关联 `perf_appraiser_relationship` 表）
+- **返回**：员工列表，每条记录携带考评人关系列表
+- **数据源**：默认 `dataSourceLocal`（查询 `view_ehr_employee` 视图）
+- **详细 SQL**：见 [ehr-integration.md 第 9.6 节](ehr-integration.md#96-查询-sql)
+- ⚠️ **死代码**：此方法在 Service/DAO 层已声明，但全代码库无 Controller 调用
+
+#### `List<EmployeeVO> selectBySelectivePageableVO(PageParam<EmployeeVO> pageParam)`
+- **功能**：员工分页查询
+
+#### `Integer initUser(List<EmployeeVO> employeeList)`
+- **功能**：初始化用户账号（根据 EHR 员工数据创建 PMS 用户）
+
+#### `List<Select2Data> selectEmployeeSelect2Data(Select2Data select2Data)`
+- **功能**：员工 Select2 数据查询（用于下拉选择）
+
+---
+
+## 13. IPmSynchronizeService — 跨系统数据同步服务
+
+### 类概述
+- 接口：`IPmSynchronizeService` extends `ISynchronizeService`（`com.dp.plat.pms.springmvc.service.IPmSynchronizeService`）
+- 实现类：`PmSynchronizeService`（`com.dp.plat.pms.springmvc.service.impl.PmSynchronizeService`）
+- 依赖 DAO：`PmSynchronizeMapper`
+- 详细方法说明：[sap-contract.md](sap-contract.md)
+
+### 方法列表（仅列出 SAP 合同相关方法）
+
+#### `int insertOfstContractHeadSAP(List<OfstContractHeadSAP> record)`
+- **功能**：批量插入 SAP 合同头数据到本地表 `sms_ofst_contract_head_sap`
+- **入参**：`List<OfstContractHeadSAP>`（子类，含主键 id）
+- **返回**：受影响行数
+- **数据源**：`dataSourceLocal`（PMS MySQL）
+- **SQL 特性**：`INSERT INTO ... ON DUPLICATE KEY UPDATE`
+
+#### `List<OfstContractHead> selectAllOfstContractHeadSAP()`
+- **功能**：从 CRM 数据源查询所有 SAP 合同头数据
+- **返回**：`List<OfstContractHead>`（父类）
+- **数据源**：`dataSourceCRM`（SQL Server，查询视图 `DPtech_v_order_contract_4_pms`）
+- **注意**：调用前必须通过 `DataSourceHolder.setDataSourceType("CRM")` 显式切换数据源
+
+#### `void clearAllOfstContractHeadSAP()`
+- **功能**：清空本地 SAP 合同头表
+- **数据源**：`dataSourceLocal`（PMS MySQL）
+- **SQL**：`TRUNCATE TABLE sms_ofst_contract_head_sap`
+
+#### `void splitAfProjectByProductCode(Map<String, Object> params)`
+- **功能**：按产品编码拆分工程实施项目与安服项目
+- **数据源**：`dataSourceLocal`
+
+#### `void insertSyncLog(SyncLog syncLog)` / `void insertSyncState(SyncState syncState)`
+- **功能**：记录同步日志 / 同步状态
+- **继承自**：`ISynchronizeService`
 
 ---
 

@@ -86,24 +86,27 @@ public class IndustryLeakController
 
 ```java
 @Controller
-@RequestMapping(ProjectConstant.URLPath.AF_MANAGER + "/industry/leakWarning")
+@RequestMapping(ProjectConstant.URLPath.AF_MANAGER + "/industry/warning")
 public class IndustryLeakWarningController 
     extends AbstractController<IIndustryLeakWarningService, IndustryLeakWarning, LeakWarningVO> {
 ```
 
-- **URL 命名空间**：`/af/industry/leakWarning`
+- **URL 命名空间**：`/af/industry/warning`
 
 ### 3.2 方法列表
 
+> ⚠️ 注：实际源码中 `IndustryLeakWarningController` 仅显式定义了 `home`/`list`/`delete`/`warningAsset` 4 个方法。下表中 `findOne`/`detail`/`create`/`update` 4 个方法实际由父类 `AbstractController` 提供通用实现，URL 行为以父类默认映射为准。
+
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|
-| `home` | `/af/industry/leakWarning/` | GET | 预警管理首页 | `industryLeakWarning:list` |
-| `list` | `/af/industry/leakWarning/list` | GET | 预警列表查询 | `industryLeakWarning:list` |
-| `findOne` | `/af/industry/leakWarning/{id}` | GET | 预警详情查询 | `industryLeakWarning:detail` |
-| `detail` | `/af/industry/leakWarning/detail` | GET | 打开预警详情页面 | `industryLeakWarning:detail` |
-| `create` | `/af/industry/leakWarning/detail` | POST | 新增预警 | `industryLeakWarning:add` |
-| `update` | `/af/industry/leakWarning/{id}` | PUT | 更新预警 | `industryLeakWarning:edit` |
-| `delete` | `/af/industry/leakWarning/{id}` | DELETE | 删除预警 | `industryLeakWarning:delete` |
+| `home` | `/af/industry/warning/` | GET | 预警管理首页 | `industryLeakWarning:list` |
+| `list` | `/af/industry/warning/list` | GET | 预警列表查询 | `industryLeakWarning:list` |
+| `findOne` | `/af/industry/warning/{id}` | GET | 预警详情查询 | `industryLeakWarning:detail` |
+| `detail` | `/af/industry/warning/detail` | GET | 打开预警详情页面 | `industryLeakWarning:detail` |
+| `create` | `/af/industry/warning/detail` | POST | 新增预警 | `industryLeakWarning:add` |
+| `update` | `/af/industry/warning/{id}` | PUT | 更新预警 | `industryLeakWarning:edit` |
+| `delete` | `/af/industry/warning/{id}` | DELETE | 删除预警 | `industryLeakWarning:delete` |
+| `warningAsset` | `/af/industry/warning/asset` 或 `/af/industry/warning/asset/list` | GET | 预警关联资产查询 | `industryLeakWarning:list` |
 
 ---
 

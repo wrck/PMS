@@ -915,6 +915,71 @@
 - **业务逻辑**: 批量删除或作废项目
 - **异常处理**: 捕获 Exception 设置错误消息
 
+#### `transferProject()`
+- **签名**: `public String transferProject()`
+- **参数**: `project.contractNo`
+- **返回值**: `INPUT`
+- **业务逻辑**: 查询可转移项目列表。当 contractNo 非空时调用 `projectService.queryTransferProjectList(project)` 查询，否则返回空列表
+- **源码**: `ProjectAction.java:519`
+
+#### `prepareUpdateProject()`
+- **签名**: `public void prepareUpdateProject()`
+- **返回值**: 无（Preparable 接口前置方法）
+- **业务逻辑**: `updateProject()` 前置数据准备。初始化 `projectPlanList`、`orderDataList`、`shipmentInfoList` 等集合字段为空列表，防止空指针
+- **源码**: `ProjectAction.java:614`
+
+#### `licenseInfo()`
+- **签名**: `public String licenseInfo()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: License 信息查询。通过 projectId 查询项目，根据 contractNo 查询合同号列表（含 SAP 合同号拆分逻辑），汇总 License 信息返回 JSP 渲染
+- **源码**: `ProjectAction.java:1106`
+
+#### `toUploadFile()`
+- **签名**: `public String toUploadFile()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 周报附件上传页面导航。仅返回 SUCCESS 跳转到上传页面，无业务逻辑
+- **源码**: `ProjectAction.java:1684`
+
+#### `toUploadDeliverableFile()`
+- **签名**: `public String toUploadDeliverableFile()`
+- **参数**: `projectDeliver.eventKey`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 交付件上传页面导航。解析 eventKey（格式 `dataTypeCode-basicDataId`），设置 `dataTypeCode` 与 `basicDataId` 字段
+- **源码**: `ProjectAction.java:1688`
+
+#### `downloadFile()`
+- **签名**: `public String downloadFile()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 文件下载入口。当前实现为空方法，仅返回 SUCCESS（实际下载逻辑通过 `getDownloadFile()` / `getFileStream()` 配合 Struts2 stream 结果实现）
+- **源码**: `ProjectAction.java:1760`
+
+#### `getDownloadFile()`
+- **签名**: `@JSON(serialize = false) public String getDownloadFile()`
+- **参数**: `downname`、`result`
+- **返回值**: 编码后的下载文件名字符串
+- **业务逻辑**: 下载文件名编码转换。设置响应头 charset 为 ISO8859-1，根据 `result` 标志位返回不同编码的文件名（0 = 原始字节转 ISO8859-1，非 0 = URLEncoder.encode 编码）
+- **注解**: `@org.apache.struts2.json.annotations.JSON(serialize = false)` 避免被 JSON 序列化
+- **源码**: `ProjectAction.java:1766`
+
+#### `getFileStream()`
+- **签名**: `public InputStream getFileStream() throws FileNotFoundException, UnsupportedEncodingException`
+- **参数**: `downpath`
+- **返回值**: `InputStream` 文件输入流
+- **业务逻辑**: 获取下载文件输入流。先在上传目录中查找（`findFileStream(downpath, true)`），若未找到再按给定目录查找（`findFileStream(downpath, false)`）
+- **异常**: 抛出 `FileNotFoundException`、`UnsupportedEncodingException`
+- **源码**: `ProjectAction.java:1785`
+
+#### `deleteFile()`
+- **签名**: `public String deleteFile()`
+- **参数**: `downFlileId`
+- **返回值**: `SUCCESS`（设置 `result` 字段：0=成功，1=失败）
+- **业务逻辑**: 删除附件。调用 `projectService.deleteFileById(downFlileId)` 按 ID 删除文件记录
+- **异常处理**: 捕获 Exception 设置 result=1
+- **源码**: `ProjectAction.java:1825`
+
+> 补充说明（2026-06-29）：上述 9 个方法为前期文档遗漏项，本次根据源码 `ProjectAction.java` 补齐。其中 `transferProject`、`downloadFile`、`deleteFile` 在 `project-management.md` URL 表中已被引用，但本参考文档此前未提供方法级文档。
+
 ---
 
 ## 11. PresalesAction — 售前测试项目
@@ -1382,7 +1447,75 @@
 - **返回值**: `SUCCESS`
 - **业务逻辑**: 删除流程部署信息
 
-> 注：WorkFlowAction 还包含流程图查看、任务办理、流程代理等方法。
+#### `viewDeployment()`
+- **签名**: `public String viewDeployment()`
+- **参数**: `procdefKey`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 根据部署的流程 KEY 查询流程部署信息，回填 `procdef`、`deploymentId`、`imageName` 字段
+
+#### `viewimage()`
+- **签名**: `public String viewimage()`
+- **参数**: `param.deploymentId`、`param.imageName`
+- **返回值**: `null`（直接写响应流）
+- **业务逻辑**: 查看流程图。通过 `workFlowService.getInputStream()` 获取图片输入流，直接写入 `HttpServletResponse` 输出流
+
+#### `selftask()`
+- **签名**: `public String selftask() throws Exception`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查询当前登录用户的私有任务列表（`dapdlist`），assignee 设为当前 UserContext 用户名
+
+#### `viewTaskForm()`
+- **签名**: `public String viewTaskForm()`
+- **参数**: `param.taskId`、`param.canSee`、`dpActProcDesc.procType`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 打开任务表单。通过 `taskId` 获取 `TaskFormData` 的 `formKey` 与业务对象 ID，拼接 formUrl 设置到 `param.formUrl`
+
+#### `submitTask()`
+- **签名**: `public String submitTask()`
+- **参数**: `param`
+- **返回值**: `"redirect"`
+- **业务逻辑**: 提交/办理任务，调用 `workFlowService.submitTask(param)`，并将 `param.formUrl` 重置为空字符串以触发重定向
+
+#### `viewCurrentImage()`
+- **签名**: `public String viewCurrentImage()`
+- **参数**: `param.taskId`
+- **返回值**: `"image"`
+- **业务逻辑**: 查看当前流程图。通过 taskId 获取流程定义和当前活动节点坐标（写入 `processDefinition` 和 `map` 字段）
+
+#### `taskmanager()`
+- **签名**: `public String taskmanager()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 管理员查看所有任务（当前实现为空方法，仅返回 SUCCESS，预留扩展）
+
+#### `hisTaskForm()`
+- **签名**: `public String hisTaskForm()`
+- **参数**: `param.instId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查看已办理任务的历史表单。通过 `instId` 获取历史业务对象 ID 和 formKey，拼接 formUrl（含 `param.flag=1` 与 `param.showflag=1` 标记历史模式）
+
+#### `delegatelist()`
+- **签名**: `public String delegatelist()`
+- **参数**: `procdefDelegate`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 获取流程委派任务列表（`pdlist`），并设置 `displayParam.totalcount` 为列表大小
+
+#### `delegateadd()`
+- **签名**: `public String delegateadd()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 添加委派任务规则。⚠️ 当前方法体被注释，实际未执行任何业务逻辑，仅返回 SUCCESS
+
+#### `delegateedit()`
+- **签名**: `public String delegateedit()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 编辑委派任务规则。⚠️ 当前方法体被注释，实际未执行任何业务逻辑，仅返回 SUCCESS
+
+#### `delegateupdate()`
+- **签名**: `public String delegateupdate()`
+- **参数**: `procdefDelegate`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 修改委派任务规则，调用 `workFlowService.updateProcdefDelegate(procdefDelegate)`
+
+> 补充说明（2026-06-29）：上述 12 个方法为前期文档遗漏项，本次根据源码 `WorkFlowAction.java:101-276` 补齐。其中 `delegateadd` / `delegateedit` 方法体在源码中被注释，实际无业务逻辑。
 
 ---
 

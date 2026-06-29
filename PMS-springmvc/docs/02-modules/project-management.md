@@ -14,11 +14,11 @@
 | Controller 类 | 包路径 | URL 命名空间 | 职责 |
 |---------------|--------|-------------|------|
 | `ProjectController` | `com.dp.plat.pms.springmvc.controller` | `/pm/project` | 项目全生命周期管理 |
-| `ProjectMemberController` | `com.dp.plat.pms.springmvc.controller` | `/pm/projectMember` | 项目成员管理 |
-| `ProjectTaskController` | `com.dp.plat.pms.springmvc.controller` | `/pm/projectTask` | 项目任务管理 |
-| `ProjectManageUserController` | `com.dp.plat.pms.springmvc.controller` | `/pm/projectManageUser` | 项目管理用户 |
-| `ProjectAssetController` | `com.dp.plat.pms.springmvc.controller` | `/pm/projectAsset` | 项目资产管理 |
-| `ProjectAssetLeakController` | `com.dp.plat.pms.springmvc.controller` | `/pm/projectAssetLeak` | 项目资产泄露管理 |
+| `ProjectMemberController` | `com.dp.plat.pms.springmvc.controller` | `/pm/member` | 项目成员管理 |
+| `ProjectTaskController` | `com.dp.plat.pms.springmvc.controller` | `/pm/project/task` | 项目任务管理 |
+| `ProjectManageUserController` | `com.dp.plat.pms.springmvc.controller` | `/pm/user` | 项目管理用户 |
+| `ProjectAssetController` | `com.dp.plat.pms.springmvc.controller` | `/pm/project/asset` | 项目资产管理 |
+| `ProjectAssetLeakController` | `com.dp.plat.pms.springmvc.controller` | `/pm/asset/leak` | 项目资产漏洞管理 |
 
 ### 涉及的 Service 类列表
 
@@ -31,7 +31,7 @@
 | `IProjectManageUserService` | `ProjectManageUserMapper` | 项目管理用户服务 |
 | `IIndustryAssetService` | `IndustryAssetMapper` | 行业资产服务 |
 | `IIndustryAssetProjectRelationService` | `IndustryAssetProjectRelationMapper` | 资产项目关联服务 |
-| `IIndustryLeakService` | `IndustryLeakMapper` | 行业泄露服务 |
+| `IIndustryLeakService` | `IndustryLeakMapper` | 行业漏洞服务 |
 
 ### 涉及的数据库表列表
 
@@ -44,9 +44,9 @@
 | `pm_project_manage_user` | 项目管理用户表 |
 | `af_industry_asset` | 行业资产表 |
 | `af_industry_asset_project_relation` | 资产项目关联表 |
-| `af_industry_leak` | 行业泄露表 |
-| `af_industry_leak_warning` | 行业泄露预警表 |
-| `af_industry_asset_leak_relation` | 资产泄露关联表 |
+| `af_industry_leak` | 行业漏洞表 |
+| `af_industry_leak_warning` | 行业漏洞预警表 |
+| `af_industry_asset_leak_relation` | 资产漏洞关联表 |
 | `pm_workflow` | 工作流数据表 |
 
 ### 依赖的其他模块
@@ -136,16 +136,29 @@
   2. JSON 请求：查询项目详情、成员、任务
   3. 非 JSON 请求：设置视图参数
 
-#### `save(Project project, Model model)`
-- **URL**: `/pm/project/save`
+#### `create(ProjectVO project, Model model)`
+- **URL**: `/pm/project/create`
 - **HTTP 方法**: POST
-- **功能**: 保存项目
-- **权限**: `project:edit`
+- **功能**: 创建项目
+- **权限**: `project:create`
 - **业务逻辑**:
   1. 权限检查
   2. 参数校验
-  3. 调用 projectService.save()
-  4. 返回保存结果
+  3. 调用 projectService.create()
+  4. 返回创建结果
+
+#### `update(ProjectVO project, Model model)`
+- **URL**: `/pm/project/update`
+- **HTTP 方法**: POST
+- **功能**: 更新项目
+- **权限**: `project:update`
+- **业务逻辑**:
+  1. 权限检查
+  2. 参数校验
+  3. 调用 projectService.update()
+  4. 返回更新结果
+
+> ⚠️ **注意**：`ProjectController` 实际方法为 `create(ProjectVO project, Model model)` 和 `update(...)`（参数类型为 `ProjectVO`，非 `Project`）。**不存在** `save(Project project, Model model)` 方法。详见 [controller-methods-reference.md](controller-methods-reference.md)。
 
 #### `delete(Integer id, Model model)`
 - **URL**: `/pm/project/delete/{id}`

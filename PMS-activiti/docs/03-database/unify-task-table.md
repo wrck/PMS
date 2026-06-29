@@ -45,7 +45,14 @@ flowchart LR
 
 ### 2.2 DDL 建表语句（建议）
 
-> **重要说明**：PMS-activiti 源码（`ActUserTaskMapper.xml`）中仅包含对 `dp_act_unify_task` 表的 CRUD SQL，未提供 DDL 建表脚本。下方 DDL 为**建议建表语句**，实际生产环境中表结构以数据库中实际定义为准。源码中未发现为该表创建索引的脚本，因此**当前表实际无业务索引**（除主键外），详见 [index-analysis.md](index-analysis.md) 第 3.5 节与第 4.1.3 节的索引优化建议。
+> **重要说明（源码与数据库表名不一致）**：
+>
+> - **数据库实际表名**：`dp_act_unify_task`（通过 `information_schema.TABLES` 验证，数据库中**不存在** `t_act_user_task` 表）
+> - **源码实际使用的表名**：`ActUserTaskMapper.xml:21,25,29,37` 等 6 处 SQL 均使用旧表名 `t_act_user_task`（如 `from t_act_user_task`、`insert into t_act_user_task`、`update t_act_user_task`）
+> - **不一致原因推测**：源码为早期版本，后续数据库表名重命名为 `dp_act_unify_task`（符合 `dp_` 前缀命名规范），但源码未同步更新；可能通过 MyBatis 拦截器重写表名，或此 Mapper 实际未在生产中被调用（`UserTaskListener` 可能直接通过 `SqlSession` 查询 `dp_act_unify_task`）
+> - **运维建议**：如需调用 `ActUserTaskMapper` 的方法（`selectByPrimaryKey` / `insert` / `update` 等），请先确认运行行为，或修改源码将 `t_act_user_task` 替换为 `dp_act_unify_task`
+>
+> 下方 DDL 为**建议建表语句**（基于数据库实际表名 `dp_act_unify_task`），实际生产环境中表结构以数据库中实际定义为准。源码中未发现为该表创建索引的脚本，因此**当前表实际无业务索引**（除主键外），详见 [index-analysis.md](index-analysis.md) 第 3.5 节与第 4.1.3 节的索引优化建议。
 
 ```sql
 CREATE TABLE `dp_act_unify_task` (
@@ -279,10 +286,14 @@ public class ActUserTask {
 **源码位置**：`d:\常规软件\QoderCode\workspace\PMS\PMS-activiti\src\main\java\com\dp\plat\activiti\dao\ActUserTaskMapper.java`
 
 ```java
-public interface ActUserTaskMapper extends BaseMapper<ActUserTask> {
+import com.dp.plat.core.dao.AbstractBaseMapper;
+
+public interface ActUserTaskMapper extends AbstractBaseMapper<ActUserTask> {
     List<ActUserTask> selectByProcessDefinitionKey(String procDefKey);
 }
 ```
+
+> **注意**：基类为 `com.dp.plat.core.dao.AbstractBaseMapper`（core 模块自定义基类），**不是** MyBatis-Plus 的 `BaseMapper`。两者名称相似但属不同体系，请勿混淆。
 
 ### 5.3 MyBatis 映射
 

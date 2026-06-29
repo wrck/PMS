@@ -34,11 +34,11 @@
 
 | 数据表 | C | R | U | D | 操作频率 | 数据量级 | 说明 |
 |--------|---|---|---|---|----------|----------|------|
-| af_industry_leak | ✓ | ✓ | ✓ | ✓ | R:中 C:低 U:中 D:低 | 中 | 行业泄露 |
-| af_industry_leak_warning | ✓ | ✓ | ✓ | | R:中 C:低 U:高 | 中 | 行业泄露预警 |
+| af_industry_leak | ✓ | ✓ | ✓ | ✓ | R:中 C:低 U:中 D:低 | 中 | 行业漏洞 |
+| af_industry_leak_warning | ✓ | ✓ | ✓ | | R:中 C:低 U:高 | 中 | 行业漏洞预警 |
 | af_industry_asset | ✓ | ✓ | ✓ | ✓ | R:高 C:低 U:中 D:低 | 中 | 行业资产 |
 | af_industry_asset_project_relation | ✓ | ✓ | ✓ | ✓ | R:高 C:中 U:低 D:中 | 中 | 资产项目关联 |
-| af_industry_asset_leak_relation | ✓ | ✓ | ✓ | ✓ | R:中 C:低 U:低 D:低 | 小 | 资产泄露关联 |
+| af_industry_asset_leak_relation | ✓ | ✓ | ✓ | ✓ | R:中 C:低 U:低 D:低 | 小 | 资产漏洞关联 |
 
 ### 1.4 辅助模块
 
