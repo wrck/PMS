@@ -8,11 +8,13 @@ import java.util.List;
 
 public interface SysDeptService extends BaseService<SysDepartment> {
 
-    List<SysDepartment> getDeptTree();
+    List<SysDepartment> queryDeptTree();
 
     void createDept(DeptDTO deptDTO);
 
     void updateDept(DeptDTO deptDTO);
 
     void deleteDept(Long id);
+
+    void refreshDept();
 }

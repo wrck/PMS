@@ -13,9 +13,9 @@ public class ProjectDTO {
     private String contractNo;
     private Long companyId;
     private String officeCode;
-    private Integer projectType;
-    private Integer projectState;
-    private Integer executionState;
+    private String projectType;
+    private String projectState;
+    private String executionState;
     private String smCode;
     private String pmCode;
     private String salesManCode;
@@ -25,4 +25,6 @@ public class ProjectDTO {
     private String partnerChannel;
     private String serviceChannel;
     private String agentChannel;
+    private String salesType;
+    private String customerProjectName;
 }

@@ -8,6 +8,8 @@ import com.dp.plat.service.SysRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/system/role")
 public class SysRoleController {
@@ -21,6 +23,11 @@ public class SysRoleController {
                                   @RequestParam(required = false) String roleName) {
         IPage<SysRole> page = sysRoleService.queryRolePage(pageNum, pageSize, roleName);
         return R.ok(page);
+    }
+
+    @GetMapping("/all")
+    public R<List<SysRole>> all() {
+        return R.ok(sysRoleService.listAllRoles());
     }
 
     @PostMapping

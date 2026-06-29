@@ -7,6 +7,8 @@ import com.dp.plat.service.OperateLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/system/operate-log")
 public class OperateLogController {
@@ -20,5 +22,11 @@ public class OperateLogController {
                                          @RequestParam(required = false) String username,
                                          @RequestParam(required = false) String module) {
         return R.ok(logService.queryLogPage(pageNum, pageSize, username, module));
+    }
+
+    @GetMapping("/export")
+    public R<List<SysOperateLog>> export(@RequestParam(required = false) String username,
+                                          @RequestParam(required = false) String module) {
+        return R.ok(logService.queryAllLogs(username, module));
     }
 }

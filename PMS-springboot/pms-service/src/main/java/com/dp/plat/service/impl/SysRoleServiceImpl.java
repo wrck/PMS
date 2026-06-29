@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 角色管理服务 - 迁移自老系统 RoleManageServiceImpl
@@ -71,5 +72,13 @@ public class SysRoleServiceImpl implements SysRoleService {
     @Transactional
     public void deleteRole(Long id) {
         roleMapper.deleteById(id);
+    }
+
+    @Override
+    public List<SysRole> listAllRoles() {
+        return roleMapper.selectList(
+                new LambdaQueryWrapper<SysRole>()
+                        .eq(SysRole::getStatus, 1)
+                        .orderByAsc(SysRole::getRoleName));
     }
 }

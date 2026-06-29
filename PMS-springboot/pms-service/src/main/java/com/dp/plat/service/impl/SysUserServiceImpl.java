@@ -79,7 +79,8 @@ public class SysUserServiceImpl implements SysUserService {
 
         userMapper.insert(user);
 
-        // TODO: 发送邮件通知用户初始密码
+        // 发送通知(邮件服务集成后可启用)
+        // notificationService.sendEmail(user.getEmail(), "初始密码通知", "您的初始密码为: " + randomPwd);
     }
 
     @Override
@@ -127,8 +128,10 @@ public class SysUserServiceImpl implements SysUserService {
         user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
 
-        // TODO: 发送邮件通知用户新密码
-        // TODO: 强制用户下线（如有在线会话管理）
+        // 发送通知(邮件服务集成后可启用)
+        // notificationService.sendEmail(user.getEmail(), "密码重置通知", "您的新密码为: " + randomPwd);
+        // 强制用户下线(如有在线会话管理)
+        // sessionManager.forceOffline(userId);
     }
 
     /**
@@ -136,5 +139,34 @@ public class SysUserServiceImpl implements SysUserService {
      */
     private String generateRandomPassword() {
         return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    @Override
+    public UserVO getUserById(Long id) {
+        SysUser user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        UserVO vo = new UserVO();
+        BeanUtils.copyProperties(user, vo);
+        return vo;
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        SysUser user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        // 验证旧密码
+        if (!PasswordUtil.md5(oldPassword).equals(user.getPassword())) {
+            throw new BusinessException("旧密码不正确");
+        }
+        // 设置新密码
+        user.setPassword(PasswordUtil.md5(newPassword));
+        user.setPwdOverdue(LocalDateTime.now().plusDays(90));
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.updateById(user);
     }
 }

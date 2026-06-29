@@ -6,9 +6,12 @@ import com.dp.plat.model.vo.UserVO;
 
 public interface AuthService {
 
+    /** 登录 */
     LoginVO login(LoginDTO loginDTO);
 
-    void logout();
+    /** 登出 */
+    void logout(String username);
 
-    UserVO getCurrentUserInfo();
+    /** 获取当前用户信息 */
+    LoginVO getUserInfo(String username);
 }

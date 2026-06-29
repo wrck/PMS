@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 操作日志服务 - 迁移自老系统 OpLogServiceImpl
@@ -42,5 +43,14 @@ public class OperateLogServiceImpl implements OperateLogService {
                .like(StringUtils.hasText(module), SysOperateLog::getModule, module)
                .orderByDesc(SysOperateLog::getCreateTime);
         return logMapper.selectPage(page, wrapper);
+    }
+
+    @Override
+    public List<SysOperateLog> queryAllLogs(String username, String module) {
+        LambdaQueryWrapper<SysOperateLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.hasText(username), SysOperateLog::getUsername, username)
+               .like(StringUtils.hasText(module), SysOperateLog::getModule, module)
+               .orderByDesc(SysOperateLog::getCreateTime);
+        return logMapper.selectList(wrapper);
     }
 }

@@ -1,16 +1,85 @@
 package com.dp.plat.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.dp.plat.model.entity.PmsPresales;
+import com.dp.plat.model.entity.*;
+
+import java.util.List;
 
 public interface PmsPresalesService {
+
+    // ===== 基础CRUD =====
     IPage<PmsPresales> queryPresalesPage(Integer pageNum, Integer pageSize,
                                           String presalesCode, String projectName,
                                           Integer applyState, String officeCode);
+
     PmsPresales getPresalesDetail(Long id);
+
     void createPresales(PmsPresales presales);
+
     void updatePresales(PmsPresales presales);
+
     void deletePresales(Long id);
+
+    // ===== 流程 =====
+
+    /** 发起流程 */
     void startFlow(Long id);
+
+    /** 重新申请 */
+    void reApply(Long id, PmsPresales presales);
+
+    /** 服务经理审批 */
+    void smAudit(Long id, String comment, boolean approved);
+
+    /** 项目经理审批 */
+    void pmAudit(Long id, String comment, boolean approved);
+
+    /** 工程管理部审批 */
+    void emAudit(Long id, String comment, boolean approved);
+
+    /** 通用审批(兼容旧接口) */
     void approve(Long id, String comment, boolean approved);
+
+    /** 终止并关闭 */
+    void terminate2Close(Long id, String closeRemark);
+
+    // ===== 产品 =====
+
+    /** 查询售前产品 */
+    List<PmsPresalesProduct> queryProducts(Long presalesId);
+
+    /** 保存售前产品 */
+    void saveProduct(PmsPresalesProduct product);
+
+    // ===== 任务 =====
+
+    /** 查询售前任务 */
+    List<PmsPresalesTask> queryTasks(Long presalesId);
+
+    /** 更新任务 */
+    void updateTask(PmsPresalesTask task);
+
+    // ===== 审批意见 =====
+
+    /** 查询审批意见 */
+    List<PmsPresalesComment> queryComments(Long presalesId);
+
+    /** 添加审批意见 */
+    void addComment(PmsPresalesComment comment);
+
+    // ===== 交付件 =====
+
+    /** 上传交付件 */
+    void uploadDeliver(Long presalesId, Long taskId, String fileIds);
+
+    /** 删除交付件 */
+    void deleteDeliver(Long deliverId);
+
+    /** 更新确认文件 */
+    void updateConfirmFiles(Long presalesId, String fileIds);
+
+    // ===== 导出 =====
+
+    /** 导出售前项目 */
+    List<PmsPresales> exportPresales(PmsPresales query);
 }

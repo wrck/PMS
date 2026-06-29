@@ -9,4 +9,5 @@ public interface CallBackService {
     void createCallBack(PmsCallBack callBack);
     void startFlow(Long id);
     void approve(Long id, String comment, boolean approved);
+    void resubmit(Long id, PmsCallBack callBack);
 }

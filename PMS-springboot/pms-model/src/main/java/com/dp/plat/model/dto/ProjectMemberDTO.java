@@ -12,6 +12,6 @@ public class ProjectMemberDTO {
     private String memberCode;
     private String memberName;
     private String memberRole;
-    private String phone;
+    private String phoneNum;
     private String email;
 }

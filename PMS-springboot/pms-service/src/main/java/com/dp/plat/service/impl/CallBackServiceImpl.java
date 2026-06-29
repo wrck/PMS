@@ -61,4 +61,14 @@ public class CallBackServiceImpl implements CallBackService {
         if (!approved) cb.setEndTime(LocalDateTime.now());
         callBackMapper.updateById(cb);
     }
+
+    @Override
+    @Transactional
+    public void resubmit(Long id, PmsCallBack callBack) {
+        PmsCallBack existing = callBackMapper.selectById(id);
+        if (existing == null) throw new BusinessException("回访记录不存在");
+        existing.setApplyState(0);
+        existing.setApplyTime(LocalDateTime.now());
+        callBackMapper.updateById(existing);
+    }
 }

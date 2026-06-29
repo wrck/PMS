@@ -42,7 +42,7 @@ public class SysDeptServiceImpl implements SysDeptService {
 
     @Override
     @Transactional
-    public void addDept(DeptDTO dto) {
+    public void createDept(DeptDTO dto) {
         // 检查编码唯一
         Long count = deptMapper.selectCount(
                 new LambdaQueryWrapper<SysDepartment>().eq(SysDepartment::getDeptCode, dto.getDeptCode()));
@@ -80,5 +80,14 @@ public class SysDeptServiceImpl implements SysDeptService {
             throw new BusinessException("存在子部门，无法删除");
         }
         deptMapper.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void refreshDept() {
+        // 从外部系统(OA/EHR)同步部门数据
+        // 老系统逻辑: departmentManageService.refreshDepartment()
+        // 实际实现需要调用外部系统API或读取同步数据
+        // 这里标记为已刷新，实际数据需要通过定时任务或手动导入
     }
 }

@@ -10,7 +10,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 售前项目实体 - 对应老系统 pm_presales_project_header 表
+ * 售前项目实体 - 对应 pm_presales_project_header 表
  */
 @Data
 @TableName("pm_presales_project_header")
@@ -53,11 +53,11 @@ public class PmsPresales extends BaseEntity {
 
     /** 项目状态 */
     @TableField("projectState")
-    private Integer projectState;
+    private String projectState;
 
     /** 项目类型 */
     @TableField("projectType")
-    private Integer projectType;
+    private String projectType;
 
     /** 市场名称 */
     @TableField("marketName")
@@ -95,9 +95,37 @@ public class PmsPresales extends BaseEntity {
     @TableField("confirmFileIds")
     private String confirmFileIds;
 
-    /** 任务ID */
-    @TableField("taskId")
-    private Long taskId;
+    /** 借货文件 */
+    @TableField("lendfiles")
+    private String lendfiles;
+
+    /** 是否有转销售 */
+    @TableField("hasTransfer")
+    private String hasTransfer;
+
+    /** 是否有RMA */
+    @TableField("hasRma")
+    private String hasRma;
+
+    /** 关闭备注 */
+    @TableField("closeRemark")
+    private String closeRemark;
+
+    /** 服务经理 */
+    @TableField("serviceManager")
+    private String serviceManager;
+
+    /** 项目经理 */
+    @TableField("projectManager")
+    private String projectManager;
+
+    /** 旧项目经理 */
+    @TableField("oldProjectManager")
+    private String oldProjectManager;
+
+    /** 完成时间 */
+    @TableField("finshedTime")
+    private LocalDateTime finshedTime;
 
     /** 问卷ID */
     @TableField("quesnaireId")
@@ -106,6 +134,10 @@ public class PmsPresales extends BaseEntity {
     /** 问卷状态 */
     @TableField("quesnaireState")
     private Integer quesnaireState;
+
+    /** 任务ID */
+    @TableField("taskId")
+    private Long taskId;
 
     /** 任务定义Key */
     @TableField("taskDefKey")
@@ -119,16 +151,22 @@ public class PmsPresales extends BaseEntity {
 
     @TableField(exist = false)
     private String officeName;
-    @TableField(exist = false)
-    private String serviceManager;
+
     @TableField(exist = false)
     private String serviceManagerName;
-    @TableField(exist = false)
-    private String projectManager;
+
     @TableField(exist = false)
     private String projectManagerName;
+
     @TableField(exist = false)
     private String projectTypeName;
+
+    @TableField(exist = false)
+    private String applyStateName;
+
+    @TableField(exist = false)
+    private String applyByName;
+
     @TableField(exist = false)
     private String taskAssignee;
 }

@@ -43,4 +43,10 @@ public class CallBackController {
         callBackService.approve(id, comment, approved);
         return R.ok();
     }
+
+    @PostMapping("/{id}/resubmit")
+    public R<Void> resubmit(@PathVariable Long id, @RequestBody PmsCallBack callBack) {
+        callBackService.resubmit(id, callBack);
+        return R.ok();
+    }
 }

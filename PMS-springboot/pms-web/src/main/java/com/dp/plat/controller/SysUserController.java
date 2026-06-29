@@ -9,6 +9,8 @@ import com.dp.plat.service.SysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/system/user")
 public class SysUserController {
@@ -24,6 +26,11 @@ public class SysUserController {
                                  @RequestParam(required = false) Long deptId) {
         IPage<UserVO> page = sysUserService.queryUserPage(pageNum, pageSize, username, realname, deptId);
         return R.ok(page);
+    }
+
+    @GetMapping("/{id}")
+    public R<UserVO> detail(@PathVariable Long id) {
+        return R.ok(sysUserService.getUserById(id));
     }
 
     @PostMapping
@@ -47,6 +54,12 @@ public class SysUserController {
     @PostMapping("/reset-password")
     public R<Void> resetPassword(@RequestParam Long userId) {
         sysUserService.resetPassword(userId);
+        return R.ok();
+    }
+
+    @PostMapping("/{id}/change-password")
+    public R<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
+        sysUserService.changePassword(id, params.get("oldPassword"), params.get("newPassword"));
         return R.ok();
     }
 }

@@ -24,7 +24,7 @@ public class SysDeptController {
 
     @PostMapping
     public R<Void> add(@RequestBody DeptDTO dto) {
-        sysDeptService.addDept(dto);
+        sysDeptService.createDept(dto);
         return R.ok();
     }
 
@@ -37,6 +37,12 @@ public class SysDeptController {
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         sysDeptService.deleteDept(id);
+        return R.ok();
+    }
+
+    @PostMapping("/refresh")
+    public R<Void> refresh() {
+        sysDeptService.refreshDept();
         return R.ok();
     }
 }

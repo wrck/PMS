@@ -23,6 +23,10 @@ public class PmsProjectMember extends BaseEntity {
     @TableField("projectId")
     private Long projectId;
 
+    /** 项目类型 (10=售后 20=售前) */
+    @TableField("projectType")
+    private String projectType;
+
     /** 成员编码（工号） */
     @TableField("memberCode")
     private String memberCode;
@@ -36,8 +40,8 @@ public class PmsProjectMember extends BaseEntity {
     private String memberRole;
 
     /** 电话 */
-    @TableField("phone")
-    private String phone;
+    @TableField("phoneNum")
+    private String phoneNum;
 
     /** 邮箱 */
     @TableField("email")
