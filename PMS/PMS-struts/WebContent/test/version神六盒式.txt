@@ -1,0 +1,23 @@
+<DPTECH>show ver
+ Software Release S311C013D111
+ Conplat Version is V100R006B01D111
+ Compiled Sat, 13 Jul 2024 01:02:14 +0800
+ Signature base, Version , AV 1.4.657 APP 2.1.486 IPS 3.1.359 WAF 3.1.311 
+ Copyright (c) 2008-2024 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ FW1000-TS-GF Uptime is 7 week(s), 1 day(s), 23 hour(s), 32 minute(s)
+
+ CPU type:       Intel(R) Atom(TM) CPU C3508 @ 1.60GHz
+
+ SDRAM:          4096M bytes
+ Flash Memory:   16M 
+ EMMC card Memory: 8G 
+
+ PCB Version:            B         
+ CPLD Version:           128.00    
+ BASIC CONBOOT Version:  17.08.10  
+ EXTEND CONBOOT Version: 17.08.10  
+ Serial Number:          02051245P23C000021
+ [SLOT   0]  DP1GMXM         (PCB)B,   (CPLD)128.00,   (FPGA)NONE,   (CONBOOT)
+<DPTECH>

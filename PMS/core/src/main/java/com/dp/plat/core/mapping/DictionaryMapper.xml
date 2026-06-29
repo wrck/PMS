@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.DictionaryMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.Dictionary">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="dic_type_id" jdbcType="INTEGER" property="dicTypeId" />
+    <result column="dic_type_name" jdbcType="VARCHAR" property="dicTypeName" />
+    <result column="dic_key" jdbcType="VARCHAR" property="dicKey" />
+    <result column="dic_value" jdbcType="VARCHAR" property="dicValue" />
+    <result column="customInfo" jdbcType="VARCHAR" property="custominfo" />
+    <result column="sort" jdbcType="INTEGER" property="sort" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createtime" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updatetime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, dic_type_id, dic_type_name, dic_key, dic_value, customInfo, sort, status, createTime, 
+    updateTime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_dictionary
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_dictionary
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.Dictionary">
+    insert into t_dictionary (id, dic_type_id, dic_type_name, dic_key, 
+      dic_value, customInfo, sort, 
+      status, createTime, updateTime
+      )
+    values (#{id,jdbcType=INTEGER}, #{dicTypeId,jdbcType=INTEGER}, #{dicTypeName,jdbcType=VARCHAR}, #{dicKey,jdbcType=VARCHAR}, 
+      #{dicValue,jdbcType=VARCHAR}, #{custominfo,jdbcType=VARCHAR}, #{sort,jdbcType=INTEGER}, 
+      #{status,jdbcType=INTEGER}, #{createtime,jdbcType=TIMESTAMP}, #{updatetime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.Dictionary">
+    insert into t_dictionary
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="dicTypeId != null">
+        dic_type_id,
+      </if>
+      <if test="dicTypeName != null">
+        dic_type_name,
+      </if>
+      <if test="dicKey != null">
+        dic_key,
+      </if>
+      <if test="dicValue != null">
+        dic_value,
+      </if>
+      <if test="custominfo != null">
+        customInfo,
+      </if>
+      <if test="sort != null">
+        sort,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="createtime != null">
+        createTime,
+      </if>
+      <if test="updatetime != null">
+        updateTime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="dicTypeId != null">
+        #{dicTypeId,jdbcType=INTEGER},
+      </if>
+      <if test="dicTypeName != null">
+        #{dicTypeName,jdbcType=VARCHAR},
+      </if>
+      <if test="dicKey != null">
+        #{dicKey,jdbcType=VARCHAR},
+      </if>
+      <if test="dicValue != null">
+        #{dicValue,jdbcType=VARCHAR},
+      </if>
+      <if test="custominfo != null">
+        #{custominfo,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null">
+        #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null">
+        #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.Dictionary">
+    update t_dictionary
+    <set>
+      <if test="dicTypeId != null">
+        dic_type_id = #{dicTypeId,jdbcType=INTEGER},
+      </if>
+      <if test="dicTypeName != null">
+        dic_type_name = #{dicTypeName,jdbcType=VARCHAR},
+      </if>
+      <if test="dicKey != null">
+        dic_key = #{dicKey,jdbcType=VARCHAR},
+      </if>
+      <if test="dicValue != null">
+        dic_value = #{dicValue,jdbcType=VARCHAR},
+      </if>
+      <if test="custominfo != null">
+        customInfo = #{custominfo,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null">
+        sort = #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.Dictionary">
+    update t_dictionary
+    set dic_type_id = #{dicTypeId,jdbcType=INTEGER},
+      dic_type_name = #{dicTypeName,jdbcType=VARCHAR},
+      dic_key = #{dicKey,jdbcType=VARCHAR},
+      dic_value = #{dicValue,jdbcType=VARCHAR},
+      customInfo = #{custominfo,jdbcType=VARCHAR},
+      sort = #{sort,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectBySelective" resultMap="BaseResultMap">
+	select <include refid="Base_Column_List" />
+	from t_dictionary
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dicTypeId != null and '' != model.dicTypeId">
+					dic_type_id = #{model.dicTypeId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dicTypeName != null">
+        			dic_type_name like CONCAT("%", #{model.dicTypeName}, "%") AND
+       			</if>
+       			<if test="model.dicKey != null and '' != model.dicKey">
+        			dic_key like CONCAT("%", #{model.dicKey}, "%") AND
+				</if>
+       			<if test="model.dicValue != null and '' != model.dicValue">
+        			dic_value like CONCAT("%", #{model.dicValue}, "%") AND
+				</if>
+				<if test="model.custominfo != null and '' != model.custominfo">
+					customInfo = #{model.custominfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.sort != null and '' != model.sort">
+					sort = #{model.sort, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dic_type_name like CONCAT("%", #{fuzzy}, "%") or
+					dic_key like CONCAT("%", #{fuzzy}, "%") or
+					dic_value like CONCAT("%", #{fuzzy}, "%") or
+					customInfo like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  
+  
+  <select id="countBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	select count(*) from t_dictionary
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dicTypeId != null and '' != model.dicTypeId">
+					dic_type_id = #{model.dicTypeId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dicTypeName != null and '' != model.dicTypeName">
+					dic_type_name = #{model.dicTypeName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dicKey != null and '' != model.dicKey">
+					dic_key = #{model.dicKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dicValue != null and '' != model.dicValue">
+					dic_value = #{model.dicValue, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.custominfo != null and '' != model.custominfo">
+					customInfo = #{model.custominfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.sort != null and '' != model.sort">
+					sort = #{model.sort, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.createtime != null">
+					createTime = #{model.createtime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updatetime != null">
+					updateTime = #{model.updatetime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dic_type_name like CONCAT("%", #{fuzzy}, "%") or
+					dic_key like CONCAT("%", #{fuzzy}, "%") or
+					dic_value like CONCAT("%", #{fuzzy}, "%") or
+					customInfo like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectDicTypeIdByDicTypeName" parameterType="java.lang.String" resultType="java.lang.Integer">
+  	select dic_type_id from t_dictionary
+  	<where>
+  		<if test="dicTypeName != null">
+        	dic_type_name = #{dicTypeName,jdbcType=VARCHAR}
+      	</if>
+  	</where>
+  	limit 1
+  </select>
+  
+  <select id="selectMaxDicTypeId"  resultType="java.lang.Integer">
+  	select max(dic_type_id) from t_dictionary
+  </select>
+  
+  <select id="selectByDicTypeId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+  	select <include refid="Base_Column_List" />
+	from t_dictionary where dic_type_id = #{dicTypeId,jdbcType=INTEGER} order by dic_key
+  </select>
+</mapper>

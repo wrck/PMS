@@ -1,0 +1,33 @@
+package com.dp.plat.param;
+
+public class PasswordEditParam {
+	private int id;
+	private String oldPassword;
+	private String newPassword;
+	private String conformPassword;
+	
+	public void setId(int id) {
+		this.id = id;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setOldPassword(String oldPassword) {
+		this.oldPassword = oldPassword;
+	}
+	public String getOldPassword() {
+		return oldPassword;
+	}
+	public void setNewPassword(String newPassword) {
+		this.newPassword = newPassword;
+	}
+	public String getNewPassword() {
+		return newPassword;
+	}
+	public void setConformPassword(String conformPassword) {
+		this.conformPassword = conformPassword;
+	}
+	public String getConformPassword() {
+		return conformPassword;
+	}
+}

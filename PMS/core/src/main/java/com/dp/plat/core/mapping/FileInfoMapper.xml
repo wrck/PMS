@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.FileInfoMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.FileInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="typeId" jdbcType="INTEGER" property="typeId" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="path" jdbcType="VARCHAR" property="path" />
+    <result column="ext" jdbcType="VARCHAR" property="ext" />
+    <result column="size" jdbcType="INTEGER" property="size" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="downloadKey" jdbcType="VARCHAR" property="downloadKey" />
+    <result column="dataType" jdbcType="VARCHAR" property="dataType" />
+    <result column="dataId" jdbcType="INTEGER" property="dataId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `typeId`, `name`, `path`, `ext`, `size`, `createTime`, `createBy`, `downloadKey`, 
+    `dataType`, `dataId`, `customInfo`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_file
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_file
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.FileInfo">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_file (`typeId`, `name`, `path`, 
+      `ext`, `size`, `createTime`, 
+      `createBy`, `downloadKey`, `dataType`, 
+      `dataId`, `customInfo`)
+    values (#{typeId,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, 
+      #{ext,jdbcType=VARCHAR}, #{size,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{createBy,jdbcType=VARCHAR}, #{downloadKey,jdbcType=VARCHAR}, #{dataType,jdbcType=VARCHAR}, 
+      #{dataId,jdbcType=INTEGER}, #{customInfo,jdbcType=JSON})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.FileInfo">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_file
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="typeId != null">
+        `typeId`,
+      </if>
+      <if test="name != null">
+        `name`,
+      </if>
+      <if test="path != null">
+        `path`,
+      </if>
+      <if test="ext != null">
+        `ext`,
+      </if>
+      <if test="size != null">
+        `size`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="downloadKey != null">
+        `downloadKey`,
+      </if>
+      <if test="dataType != null">
+        `dataType`,
+      </if>
+      <if test="dataId != null">
+        `dataId`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="typeId != null">
+        #{typeId,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="size != null">
+        #{size,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="downloadKey != null">
+        #{downloadKey,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null">
+        #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.FileInfo">
+    update t_file
+    <set>
+      <if test="typeId != null">
+        `typeId` = #{typeId,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        `name` = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null">
+        `path` = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        `ext` = #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="size != null">
+        `size` = #{size,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="downloadKey != null">
+        `downloadKey` = #{downloadKey,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null">
+        `dataType` = #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        `dataId` = #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        <!-- `customInfo` = #{customInfo,jdbcType=JSON}, -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.FileInfo">
+    update t_file
+    set `typeId` = #{typeId,jdbcType=INTEGER},
+      `name` = #{name,jdbcType=VARCHAR},
+      `path` = #{path,jdbcType=VARCHAR},
+      `ext` = #{ext,jdbcType=VARCHAR},
+      `size` = #{size,jdbcType=INTEGER},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `downloadKey` = #{downloadKey,jdbcType=VARCHAR},
+      `dataType` = #{dataType,jdbcType=VARCHAR},
+      `dataId` = #{dataId,jdbcType=INTEGER},
+      <!-- `customInfo` = #{customInfo,jdbcType=JSON} -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+        fi.`id` = #{id, jdbcType=INTEGER} AND
+    </if>
+    <if test="typeId != null">
+        fi.`typeId` = #{typeId, jdbcType=INTEGER} AND
+    </if>
+    <if test="name != null and '' != name">
+        fi.`name` = #{name, jdbcType=VARCHAR} AND
+    </if>
+    <if test="path != null and '' != path">
+        fi.`path` = #{path, jdbcType=VARCHAR} AND
+    </if>
+    <if test="ext != null and '' != ext">
+        fi.`ext` = #{ext, jdbcType=VARCHAR} AND
+    </if>
+    <if test="size != null">
+        fi.`size` = #{size, jdbcType=INTEGER} AND
+    </if>
+    <if test="createTime != null">
+        fi.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="createBy != null and '' != createBy">
+        fi.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="downloadKey != null and '' != downloadKey">
+        fi.`downloadKey` = #{downloadKey, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dataType != null and '' != dataType">
+        fi.`dataType` = #{dataType, jdbcType=VARCHAR} AND
+    </if>
+    <if test="dataId != null">
+        fi.`dataId` = #{dataId, jdbcType=INTEGER} AND
+    </if>
+    <if test="customInfo != null">
+        fi.`customInfo` = #{customInfo, jdbcType=JSON} AND
+    </if>
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+        <if test="model.id != null">
+            fi.`id` = #{model.id, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.typeId != null">
+            fi.`typeId` = #{model.typeId, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.name != null and '' != model.name">
+            fi.`name` = #{model.name, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.path != null and '' != model.path">
+            fi.`path` = #{model.path, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.ext != null and '' != model.ext">
+            fi.`ext` = #{model.ext, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.size != null">
+            fi.`size` = #{model.size, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.createTime != null">
+            fi.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+        </if>
+        <if test="model.createBy != null and '' != model.createBy">
+            fi.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.downloadKey != null and '' != model.downloadKey">
+            fi.`downloadKey` = #{model.downloadKey, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.dataType != null and '' != model.dataType">
+            fi.`dataType` = #{model.dataType, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.dataId != null">
+            fi.`dataId` = #{model.dataId, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.customInfo != null">
+            fi.`customInfo` = #{model.customInfo, jdbcType=JSON} AND
+        </if>
+    </if>
+    <if test="fuzzySearch == true and fuzzy != ''">
+        (
+            fi.`name` like CONCAT("%", #{fuzzy}, "%") or
+            fi.`path` like CONCAT("%", #{fuzzy}, "%") or
+            fi.`ext` like CONCAT("%", #{fuzzy}, "%") or
+            fi.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+            fi.`downloadKey` like CONCAT("%", #{fuzzy}, "%") or
+            fi.`dataType` like CONCAT("%", #{fuzzy}, "%")
+        )
+    </if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.FileInfo" resultMap="BaseResultMap">
+    select * from t_file AS `fi`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.FileInfo" resultType="long">
+    select count(1) from t_file AS `fi`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_file AS `fi`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+    <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_file AS `fi`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+  </select>
+  
+	<select id="selectFileTypeByCode" parameterType="string" resultType="com.dp.plat.core.pojo.FileType">
+		<![CDATA[
+			SELECT * FROM `t_file_type` WHERE `code` =  #{code}
+		]]>
+	</select>
+	
+	<insert id="insertFileInfo" parameterType="java.util.HashMap">
+		<![CDATA[
+			INSERT INTO t_file(typeId ,`name`,path,ext ,size,dataType, dataId, createBy )
+			VALUES (#{fileInfo.typeId} ,#{fileInfo.name},#{fileInfo.path},
+				#{fileInfo.ext},#{fileInfo.size},#{fileInfo.dataType},#{fileInfo.dataId},#{createBy})
+		]]>
+		<selectKey keyProperty="fileInfo.id" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID() 
+		</selectKey>
+	</insert>
+	
+	<select id="selectFileInfoById" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[
+			SELECT * FROM t_file WHERE id = #{fileId}
+		]]>
+	</select>
+	
+	<select id="selectFileInfoByIds" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[ SELECT * FROM t_file WHERE id in]]>
+		<foreach collection="ids" index="index" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+	
+	<select id="selectFileInfoByIdsAndType" resultType="com.dp.plat.core.pojo.FileInfo">
+		<![CDATA[ SELECT * FROM t_file]]>
+		<where>
+			<trim prefixOverrides="and | or" suffixOverrides="and | or">
+				<foreach collection="ids" index="index" item="id" open="id in(" separator="," close=")">
+					#{id} 
+				</foreach>
+				<if test="typeId != null and typeId != ''">
+					AND typeId = #{typeId}
+				</if>
+			</trim>
+		</where>
+		
+	</select>
+	
+	<insert id="insertdownlog">
+		<![CDATA[
+			INSERT INTO t_down_log(fileIds, ip, timeline, downloadTime, user) 
+			VALUES(#{fileIds}, #{ip}, UNIX_TIMESTAMP(NOW()), NOW(), #{user})
+		]]>
+	</insert>
+	
+</mapper>

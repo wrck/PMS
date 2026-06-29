@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.PmWorkBenchMapper">
+  <select id="countRunTasksByAssigneeAndProcessKeyAndTaskKey" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    SELECT count(DISTINCT RES.`ID_`)
+	FROM
+	    ACT_RU_TASK RES 
+	    LEFT JOIN ACT_RU_IDENTITYLINK I 
+	        ON I.TASK_ID_ = RES.ID_ 
+	    LEFT JOIN `act_id_group` g 
+	        ON g.`ID_` = i.`GROUP_ID_` 
+	        AND i.`TYPE_` = 'candidate' 
+	    LEFT JOIN `act_id_membership` im 
+			ON im.`GROUP_ID_` = g.`ID_`
+	    INNER JOIN ACT_RE_PROCDEF D 
+	        ON RES.PROC_DEF_ID_ = D.ID_ 
+	    INNER JOIN `pm_workflow` pw 
+	        ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	    left join `act_id_user` u
+			ON u.`ID_` = res.`ASSIGNEE_`
+        <if test="model.beginTime != null">
+		LEFT JOIN ACT_RU_VARIABLE A0 
+	        ON RES.ID_ = A0.TASK_ID_ 
+	        AND A0.NAME_ = 'startTime' 
+		    AND A0.TYPE_ = 'date' 
+        </if>
+        <if test="model.areaPower != null">
+        LEFT JOIN ACT_RU_VARIABLE A1 
+	        ON RES.ID_ = A1.TASK_ID_ 
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.TYPE_ = 'string' 
+        </if>
+<!-- 	    LEFT JOIN `ehr_participant` pp 
+	        ON pp.`id` = pw.`participantId` 
+	    LEFT JOIN `perf_plan` p 
+	        ON pp.`planId` = p.`id` 
+	    LEFT JOIN `perf_lookup` lk 
+	        ON p.category = lk.`code` 
+	        AND lk.`codeType` = 'planCategory' 
+	        AND lk.`state` = TRUE 
+	    LEFT JOIN perf_lookup l 
+	        ON l.codeType = 'planParticipantStatus' 
+	        AND l.state = TRUE 
+	        AND l.code = IF(LOCATE('directSummary', RES.`TASK_DEF_KEY_`) > 0, CONCAT(RES.TASK_DEF_KEY_, '_', RES.`PRIORITY_`), RES.TASK_DEF_KEY_)
+	    LEFT JOIN ehr_employee e 
+	        ON e.`empID` = res.`ASSIGNEE_` 
+	    LEFT JOIN view_ehr_department_struct veds 
+	        ON veds.`depID` = pp.`depID`  -->
+	WHERE FIND_IN_SET(
+	        D.KEY_, #{model.processKey, jdbcType=VARCHAR}
+	    ) 
+	    <if test="model.beginTime != null">
+		    AND A0.NAME_ = 'startTime' 
+		    AND A0.TYPE_ = 'date' 
+		    <![CDATA[ AND A0.LONG_ <= UNIX_TIMESTAMP(#{model.beginTime, jdbcType=TIMESTAMP}) * 1000 ]]>
+	    </if>
+	    <if test="model.areaPower != null">
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.TYPE_ = 'string' 
+		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
+        </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
+		<if test="model.status != null">
+			AND pw.status = #{model.status, jdbcType=VARCHAR}
+		</if>
+	    AND RES.SUSPENSION_STATE_ = 1 
+	    AND (
+	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+	        OR (
+	            RES.ASSIGNEE_ IS NULL 
+	            AND I.TYPE_ = 'candidate' 
+	            AND (
+	                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+	                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+	            )
+	        )
+	    ) 
+	    AND (
+	        FIND_IN_SET(
+	            RES.TASK_DEF_KEY_, #{model.taskKey, jdbcType=VARCHAR}
+	        )
+	    ) 
+		<if test="fuzzySearch == true and fuzzy != ''">
+		AND	(
+				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
+				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+                JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
+			)
+		</if>
+  </select>
+  
+  <select id="selectRunTasksByAssigneeAndProcessKeyAndTaskKey" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.PmWorkFlowVO">
+    select DISTINCT 
+	    RES.TASK_DEF_KEY_ as taskKey, res.`NAME_` as taskName, res.`DESCRIPTION_` as taskDesc, RES.`ID_` AS taskId, RES.`CREATE_TIME_` as beginTime, RES.`DUE_DATE_` AS dueTime, pw.*, RES.`ASSIGNEE_` AS assignee, IF (
+        	RES.`ASSIGNEE_` IS NOT NULL 
+        	AND RES.`ASSIGNEE_` != '', CONCAT(u.`LAST_`, "-", u.`FIRST_`), g.NAME_
+    	) AS assigneeName, RES.`FORM_KEY_` AS formUrl 
+    FROM
+	    ACT_RU_TASK RES 
+	    LEFT JOIN ACT_RU_IDENTITYLINK I 
+	        ON I.TASK_ID_ = RES.ID_ 
+	    LEFT JOIN `act_id_group` g 
+	        ON g.`ID_` = i.`GROUP_ID_` 
+	        AND i.`TYPE_` = 'candidate' 
+	    LEFT JOIN `act_id_membership` im 
+			ON im.`GROUP_ID_` = g.`ID_`
+	    INNER JOIN ACT_RE_PROCDEF D 
+	        ON RES.PROC_DEF_ID_ = D.ID_ 
+	    INNER JOIN `pm_workflow` pw 
+	        ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	    left join `act_id_user` u 
+        	ON u.`ID_` = res.`ASSIGNEE_` 
+      	<if test="model.beginTime != null">
+        left JOIN ACT_RU_VARIABLE A0 
+	        ON RES.ID_ = A0.TASK_ID_ 
+	        AND A0.NAME_ = 'startTime' 
+		    AND A0.TYPE_ = 'date' 
+        </if>
+        <if test="model.areaPower != null">
+        left JOIN ACT_RU_VARIABLE A1 
+	        ON RES.ID_ = A1.TASK_ID_ 
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.TYPE_ = 'string' 
+        </if>
+	   <!--  LEFT JOIN `ehr_participant` pp 
+	        ON pp.`id` = pw.`participantId` 
+	    LEFT JOIN `perf_plan` p 
+	        ON pp.`planId` = p.`id` 
+	    LEFT JOIN `perf_lookup` lk 
+	        ON p.category = lk.`code` 
+	        AND lk.`codeType` = 'planCategory' 
+	        AND lk.`state` = TRUE 
+	    LEFT JOIN perf_lookup l 
+	        ON l.codeType = 'planParticipantStatus' 
+	        AND l.state = TRUE 
+	        AND l.code = IF(LOCATE('directSummary', RES.`TASK_DEF_KEY_`) > 0, CONCAT(RES.TASK_DEF_KEY_, '_', RES.`PRIORITY_`), RES.TASK_DEF_KEY_)
+	    LEFT JOIN ehr_employee e 
+	        ON e.`empID` = res.`ASSIGNEE_` 
+	    LEFT JOIN view_ehr_department_struct veds 
+	        ON veds.`depID` = pp.`depID`  -->
+	WHERE FIND_IN_SET(
+	        D.KEY_, #{model.processKey, jdbcType=VARCHAR}
+	    ) 
+	    <if test="model.beginTime != null">
+		    AND A0.NAME_ = 'startTime' 
+		    AND A0.TYPE_ = 'date' 
+		    <![CDATA[ AND A0.LONG_ <= UNIX_TIMESTAMP(#{model.beginTime, jdbcType=TIMESTAMP}) * 1000 ]]>
+	    </if>
+	    <if test="model.areaPower != null">
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.TYPE_ = 'string' 
+		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
+        </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
+		<if test="model.status != null">
+			AND pw.status = #{model.status, jdbcType=VARCHAR}
+		</if>
+	    AND RES.SUSPENSION_STATE_ = 1 
+	    AND (
+	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+	        OR (
+	            RES.ASSIGNEE_ IS NULL 
+	            AND I.TYPE_ = 'candidate' 
+	            AND (
+	                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+	                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+	            )
+	        )
+	    ) 
+	    AND (
+	        FIND_IN_SET(
+	            RES.TASK_DEF_KEY_, #{model.taskKey, jdbcType=VARCHAR}
+	        )
+	    ) 
+		<if test="fuzzySearch == true and fuzzy != ''">
+		AND	(
+				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
+				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
+			)
+		</if>
+	<if test="orderBy != null and orderBy != ''">
+		ORDER BY ${orderBy}
+	</if>
+	<if test="orderBy == null or orderBy == ''">
+		ORDER BY pw.`objType`, pw.`objId`, pw.`dataType`, pw.`dataId`
+	</if>
+	<if test="start != null and pageSize > -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  
+  <select id="countFinishedTasksByAssignee" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	SELECT 
+	    count(DISTINCT RES.ID_)
+	FROM
+	    ACT_HI_TASKINST RES 
+	    INNER JOIN 
+	        (SELECT DISTINCT 
+	            MAX(CAST(RES.ID_ AS UNSIGNED)) AS maxID, pw.`objType`, pw.`objId`, pw.`dataType`, pw.`dataId`
+	        FROM
+	            ACT_HI_TASKINST RES 
+	            LEFT JOIN ACT_HI_IDENTITYLINK i 
+	                ON i.TASK_ID_ = RES.ID_ 
+	            LEFT JOIN act_id_group g 
+	                ON g.`ID_` = i.`GROUP_ID_` 
+	                AND i.`TYPE_` = 'candidate' 
+	            LEFT JOIN `act_id_membership` im 
+	                ON im.`GROUP_ID_` = g.`ID_` 
+	            INNER JOIN pm_workflow pw 
+	                ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	        WHERE RES.END_TIME_ IS NOT NULL 
+	            AND (
+	                RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+			        OR (
+			            RES.ASSIGNEE_ IS NULL 
+			            AND I.TYPE_ = 'candidate' 
+			            AND (
+			                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+			                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+			            )
+			        )
+	            ) 
+	        GROUP BY pw.`objType`, pw.`objId`, pw.`dataType`, pw.`dataId`) t 
+	        ON RES.`ID_` = t.maxID 
+	    INNER JOIN `pm_workflow` pw 
+	        ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	    LEFT JOIN ACT_HI_IDENTITYLINK I 
+	        ON I.TASK_ID_ = RES.ID_ 
+	    LEFT JOIN `act_id_group` g 
+	        ON g.`ID_` = i.`GROUP_ID_` 
+	        AND i.`TYPE_` = 'candidate' 
+	    LEFT JOIN `act_id_membership` im 
+	        ON im.`GROUP_ID_` = g.`ID_` 
+	    LEFT JOIN `act_id_user` u
+			ON u.`ID_` = res.`ASSIGNEE_`
+		<if test="model.areaPower != null">
+        LEFT JOIN act_hi_varinst A1 
+	        ON RES.ID_ = A1.TASK_ID_ 
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.VAR_TYPE_ = 'string' 
+        </if>
+	    <!-- LEFT JOIN `ehr_participant` pp 
+	        ON pp.`id` = pw.`participantId` 
+	    LEFT JOIN `perf_plan` p 
+	        ON p.`id` = pw.`planId` 
+	    LEFT JOIN `perf_lookup` lk 
+	        ON p.category = lk.`code` 
+	        AND lk.`codeType` = 'planCategory' 
+	        AND lk.`state` = TRUE 
+	    LEFT JOIN `perf_lookup` l 
+	        ON l.codeType = 'planParticipantStatus' 
+	        AND l.state = TRUE 
+	        AND l.code = pp.`status`
+	    LEFT JOIN ehr_employee e 
+	        ON e.`empID` = res.`ASSIGNEE_` 
+	    LEFT JOIN view_ehr_department_struct veds 
+	        ON veds.`depID` = pp.`depID`  -->
+	WHERE RES.END_TIME_ IS NOT NULL 
+		<if test="model.areaPower != null">
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.VAR_TYPE_ = 'string' 
+		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
+        </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
+	    AND (
+	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+	        OR (
+	            RES.ASSIGNEE_ IS NULL 
+	            AND I.TYPE_ = 'candidate' 
+	            AND (
+	                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+	                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+	            )
+	        )
+	    ) 
+	    <if test="fuzzySearch == true and fuzzy != ''">
+		AND	(
+				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
+				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
+			)
+		</if>
+  </select>
+  <select id="selectFinishedTasksByAssignee" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.PmWorkFlowVO">
+  	SELECT DISTINCT
+	    RES.TASK_DEF_KEY_ AS taskKey, res.`NAME_` as taskName, res.`DESCRIPTION_` as taskDesc, RES.`ID_` AS taskId, RES.`PROC_INST_ID_` AS procInstId, RES.`ASSIGNEE_` AS assignee, IF (
+	        RES.`ASSIGNEE_` IS NOT NULL 
+	        AND RES.`ASSIGNEE_` != '', CONCAT(u.`LAST_`, "-", u.`FIRST_`), g.NAME_
+	    ) AS assigneeName, RES.`FORM_KEY_` AS formUrl, RES.`START_TIME_` as beginTime, res.`END_TIME_` AS endTime, RES.`DUE_DATE_` AS dueTime, pw.* 
+	FROM
+	    ACT_HI_TASKINST RES 
+	    INNER JOIN 
+	        (SELECT DISTINCT 
+	            MAX(CAST(RES.ID_ AS UNSIGNED)) AS maxID, pw.`objType`, pw.`objId`, pw.`dataType`, pw.`dataId` 
+	        FROM
+	            ACT_HI_TASKINST RES 
+	            LEFT JOIN ACT_HI_IDENTITYLINK i 
+	                ON i.TASK_ID_ = RES.ID_ 
+	            LEFT JOIN act_id_group g 
+	                ON g.`ID_` = i.`GROUP_ID_` 
+	                AND i.`TYPE_` = 'candidate' 
+	            LEFT JOIN `act_id_membership` im 
+	                ON im.`GROUP_ID_` = g.`ID_` 
+	            INNER JOIN pm_workflow pw 
+	                ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	        WHERE RES.END_TIME_ IS NOT NULL 
+	            AND (
+	                RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+			        OR (
+			            RES.ASSIGNEE_ IS NULL 
+			            AND I.TYPE_ = 'candidate' 
+			            AND (
+			                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+			                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+			            )
+			        )
+	            ) 
+	        GROUP BY pw.`objType`, pw.`objId`, pw.`dataType`, pw.`dataId`) t 
+	        ON RES.`ID_` = t.maxID 
+	    INNER JOIN `pm_workflow` pw 
+	        ON pw.`procInstId` = RES.`PROC_INST_ID_` 
+	    LEFT JOIN ACT_HI_IDENTITYLINK I 
+	        ON I.TASK_ID_ = RES.ID_ 
+	    LEFT JOIN `act_id_group` g 
+	        ON g.`ID_` = i.`GROUP_ID_` 
+	        AND i.`TYPE_` = 'candidate' 
+	    LEFT JOIN `act_id_membership` im 
+	        ON im.`GROUP_ID_` = g.`ID_` 
+	    left join `act_id_user` u 
+        	ON u.`ID_` = res.`ASSIGNEE_` 
+        <if test="model.areaPower != null">
+        LEFT JOIN act_hi_varinst A1 
+	        ON RES.ID_ = A1.TASK_ID_ 
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.VAR_TYPE_ = 'string' 
+        </if>
+	    <!--LEFT JOIN `ehr_participant` pp 
+	        ON pp.`id` = pw.`participantId` 
+	    LEFT JOIN `perf_plan` p 
+	        ON p.`id` = pw.`planId` 
+	     LEFT JOIN `perf_lookup` lk 
+	        ON p.category = lk.`code` 
+	        AND lk.`codeType` = 'planCategory' 
+	        AND lk.`state` = TRUE 
+	    LEFT JOIN `perf_lookup` l 
+	        ON l.codeType = 'planParticipantStatus' 
+	        AND l.state = TRUE 
+	        AND l.code = pp.`status`
+	    LEFT JOIN ehr_employee e 
+	        ON e.`empID` = res.`ASSIGNEE_` 
+	    LEFT JOIN view_ehr_department_struct veds 
+	        ON veds.`depID` = pp.`depID`  -->
+	WHERE RES.END_TIME_ IS NOT NULL 
+		<if test="model.areaPower != null">
+	        AND A1.NAME_ = 'areaPower' 
+		    AND A1.VAR_TYPE_ = 'string' 
+		    AND FIND_IN_SET(A1.TEXT_, #{model.areaPower})
+        </if>
+        <if test="model.objType != null and '' != model.objType">
+			AND pw.objType = #{model.objType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.objId != null">
+			AND pw.objId = #{model.objId, jdbcType=INTEGER}
+		</if>
+		<if test="model.dataType != null and '' != model.dataType">
+			AND pw.dataType = #{model.dataType, jdbcType=VARCHAR}
+		</if>
+		<if test="model.dataId != null">
+			AND pw.dataId = #{model.dataId, jdbcType=INTEGER}
+		</if>
+	    AND (
+	        RES.ASSIGNEE_ = #{model.assignee, jdbcType=VARCHAR} 
+	        OR (
+	            RES.ASSIGNEE_ IS NULL 
+	            AND I.TYPE_ = 'candidate' 
+	            AND (
+	                I.USER_ID_ = #{model.assignee, jdbcType=VARCHAR}
+	                OR im.`USER_ID_` = #{model.assignee, jdbcType=VARCHAR}
+	            )
+	        )
+	    ) 
+	    <if test="fuzzySearch == true and fuzzy != ''">
+		AND	(
+				u.LAST_ like CONCAT("%", #{fuzzy}, "%") or
+				u.FIRST_ like CONCAT("%", #{fuzzy}, "%") or
+				g.NAME_ like CONCAT("%", #{fuzzy}, "%") or
+				JSON_SEARCH(pw.`customInfo`, 'one', CONCAT("%", #{fuzzy}, "%")) IS NOT NULL
+			)
+		</if>
+	<if test="orderBy != null and orderBy != ''">
+		ORDER BY ${orderBy}
+	</if>
+	<if test="orderBy == null or orderBy == ''">
+		ORDER BY RES.END_TIME_ DESC
+	</if>
+	<if test="start != null and pageSize > -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+</mapper>

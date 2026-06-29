@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.DataOperationMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.entity.DataOperation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="clazz" jdbcType="VARCHAR" property="clazz" />
+    <result column="method" jdbcType="VARCHAR" property="method" />
+    <result column="parameterTypes" jdbcType="VARCHAR" property="parameterTypes" />
+    <result column="columns" jdbcType="VARCHAR" property="columns" />
+    <result column="empPower" jdbcType="VARCHAR" property="empPower" />
+    <result column="depPower" jdbcType="VARCHAR" property="depPower" />
+    <result column="state" jdbcType="BIT" property="state" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="formHtml" jdbcType="LONGVARCHAR" property="formHtml" />
+    <result column="script" jdbcType="LONGVARCHAR" property="script" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, description, type, clazz, method, parameterTypes, columns, empPower, depPower, 
+    state, effectiveFrom, effectiveTo, createBy, createTime, updateBy, updateTime, 
+    formHtml, script
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_data_operation
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_data_operation
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.entity.DataOperation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_data_operation (name, description, type, 
+      clazz, method, parameterTypes, 
+      columns, empPower, depPower, 
+      state, effectiveFrom, effectiveTo, 
+      createBy, createTime, updateBy, 
+      updateTime, formHtml, script
+      )
+    values (#{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
+      #{clazz,jdbcType=VARCHAR}, #{method,jdbcType=VARCHAR}, #{parameterTypes,jdbcType=VARCHAR}, 
+      #{columns,jdbcType=VARCHAR}, #{empPower,jdbcType=VARCHAR}, #{depPower,jdbcType=VARCHAR}, 
+      #{state,jdbcType=BIT}, #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{formHtml,jdbcType=LONGVARCHAR}, #{script,jdbcType=LONGVARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.entity.DataOperation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_data_operation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="name != null">
+        name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="clazz != null">
+        clazz,
+      </if>
+      <if test="method != null">
+        method,
+      </if>
+      <if test="parameterTypes != null">
+        parameterTypes,
+      </if>
+      <if test="columns != null">
+        columns,
+      </if>
+      <if test="empPower != null">
+        empPower,
+      </if>
+      <if test="depPower != null">
+        depPower,
+      </if>
+      <if test="state != null">
+        state,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="formHtml != null">
+        formHtml,
+      </if>
+      <if test="script != null">
+        script,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="clazz != null">
+        #{clazz,jdbcType=VARCHAR},
+      </if>
+      <if test="method != null">
+        #{method,jdbcType=VARCHAR},
+      </if>
+      <if test="parameterTypes != null">
+        #{parameterTypes,jdbcType=VARCHAR},
+      </if>
+      <if test="columns != null">
+        #{columns,jdbcType=VARCHAR},
+      </if>
+      <if test="empPower != null">
+        #{empPower,jdbcType=VARCHAR},
+      </if>
+      <if test="depPower != null">
+        #{depPower,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="formHtml != null">
+        #{formHtml,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="script != null">
+        #{script,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.entity.DataOperation">
+    update t_data_operation
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="clazz != null">
+        clazz = #{clazz,jdbcType=VARCHAR},
+      </if>
+      <if test="method != null">
+        method = #{method,jdbcType=VARCHAR},
+      </if>
+      <if test="parameterTypes != null">
+        parameterTypes = #{parameterTypes,jdbcType=VARCHAR},
+      </if>
+      <if test="columns != null">
+        columns = #{columns,jdbcType=VARCHAR},
+      </if>
+      <if test="empPower != null">
+        empPower = #{empPower,jdbcType=VARCHAR},
+      </if>
+      <if test="depPower != null">
+        depPower = #{depPower,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        state = #{state,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="formHtml != null">
+        formHtml = #{formHtml,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="script != null">
+        script = #{script,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.entity.DataOperation">
+    update t_data_operation
+    set name = #{name,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      type = #{type,jdbcType=INTEGER},
+      clazz = #{clazz,jdbcType=VARCHAR},
+      method = #{method,jdbcType=VARCHAR},
+      parameterTypes = #{parameterTypes,jdbcType=VARCHAR},
+      columns = #{columns,jdbcType=VARCHAR},
+      empPower = #{empPower,jdbcType=VARCHAR},
+      depPower = #{depPower,jdbcType=VARCHAR},
+      state = #{state,jdbcType=BIT},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      formHtml = #{formHtml,jdbcType=LONGVARCHAR},
+      script = #{script,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.entity.DataOperation" resultMap="BaseResultMap">
+    select * from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="description != null and '' != description">
+				description = #{description, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=INTEGER} AND
+			</if>
+			<if test="clazz != null and '' != clazz">
+				clazz = #{clazz, jdbcType=VARCHAR} AND
+			</if>
+			<if test="method != null and '' != method">
+				method = #{method, jdbcType=VARCHAR} AND
+			</if>
+			<if test="parameterTypes != null and '' != parameterTypes">
+				parameterTypes = #{parameterTypes, jdbcType=VARCHAR} AND
+			</if>
+			<if test="columns != null and '' != columns">
+				columns = #{columns, jdbcType=VARCHAR} AND
+			</if>
+			<if test="empPower != null and '' != empPower">
+				empPower = #{empPower, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depPower != null and '' != depPower">
+				depPower = #{depPower, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null">
+				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="formHtml != null and '' != formHtml">
+				formHtml = #{formHtml, jdbcType=LONGVARCHAR} AND
+			</if>
+			<if test="script != null and '' != script">
+				script = #{script, jdbcType=LONGVARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.entity.DataOperation" resultType="long">
+    select count(1) from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="description != null and '' != description">
+				description = #{description, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=INTEGER} AND
+			</if>
+			<if test="clazz != null and '' != clazz">
+				clazz = #{clazz, jdbcType=VARCHAR} AND
+			</if>
+			<if test="method != null and '' != method">
+				method = #{method, jdbcType=VARCHAR} AND
+			</if>
+			<if test="parameterTypes != null and '' != parameterTypes">
+				parameterTypes = #{parameterTypes, jdbcType=VARCHAR} AND
+			</if>
+			<if test="columns != null and '' != columns">
+				columns = #{columns, jdbcType=VARCHAR} AND
+			</if>
+			<if test="empPower != null and '' != empPower">
+				empPower = #{empPower, jdbcType=VARCHAR} AND
+			</if>
+			<if test="depPower != null and '' != depPower">
+				depPower = #{depPower, jdbcType=VARCHAR} AND
+			</if>
+			<if test="state != null and '' != state">
+				state = #{state, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null">
+				effectiveFrom = #{effectiveFrom, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null">
+				effectiveTo = #{effectiveTo, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="formHtml != null and '' != formHtml">
+				formHtml = #{formHtml, jdbcType=LONGVARCHAR} AND
+			</if>
+			<if test="script != null and '' != script">
+				script = #{script, jdbcType=LONGVARCHAR} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.description != null and '' != model.description">
+					description = #{model.description, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.clazz != null and '' != model.clazz">
+					clazz = #{model.clazz, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.method != null and '' != model.method">
+					method = #{model.method, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.parameterTypes != null and '' != model.parameterTypes">
+					parameterTypes = #{model.parameterTypes, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.columns != null and '' != model.columns">
+					columns = #{model.columns, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empPower != null and '' != model.empPower">
+					FIND_IN_SET(#{model.empPower, jdbcType=VARCHAR}, empPower) AND
+				</if>
+				<if test="model.depPower != null and '' != model.depPower">
+					FIND_IN_SET(#{model.empPower, jdbcType=VARCHAR}, depPower) AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.formHtml != null and '' != model.formHtml">
+					formHtml = #{model.formHtml, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.script != null and '' != model.script">
+					script = #{model.script, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					name like CONCAT("%", #{fuzzy}, "%") or
+					description like CONCAT("%", #{fuzzy}, "%") or
+					clazz like CONCAT("%", #{fuzzy}, "%") or
+					method like CONCAT("%", #{fuzzy}, "%") or
+					parameterTypes like CONCAT("%", #{fuzzy}, "%") or
+					columns like CONCAT("%", #{fuzzy}, "%") or
+					empPower like CONCAT("%", #{fuzzy}, "%") or
+					depPower like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					formHtml like CONCAT("%", #{fuzzy}, "%") or
+					script like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.description != null and '' != model.description">
+					description = #{model.description, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.clazz != null and '' != model.clazz">
+					clazz = #{model.clazz, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.method != null and '' != model.method">
+					method = #{model.method, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.parameterTypes != null and '' != model.parameterTypes">
+					parameterTypes = #{model.parameterTypes, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.columns != null and '' != model.columns">
+					columns = #{model.columns, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empPower != null and '' != model.empPower">
+					FIND_IN_SET(#{model.empPower, jdbcType=VARCHAR}, empPower) AND
+				</if>
+				<if test="model.depPower != null and '' != model.depPower">
+					FIND_IN_SET(#{model.empPower, jdbcType=VARCHAR}, depPower) AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.formHtml != null and '' != model.formHtml">
+					formHtml = #{model.formHtml, jdbcType=LONGVARCHAR} AND
+				</if>
+				<if test="model.script != null and '' != model.script">
+					script = #{model.script, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					name like CONCAT("%", #{fuzzy}, "%") or
+					description like CONCAT("%", #{fuzzy}, "%") or
+					clazz like CONCAT("%", #{fuzzy}, "%") or
+					method like CONCAT("%", #{fuzzy}, "%") or
+					parameterTypes like CONCAT("%", #{fuzzy}, "%") or
+					columns like CONCAT("%", #{fuzzy}, "%") or
+					empPower like CONCAT("%", #{fuzzy}, "%") or
+					depPower like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					formHtml like CONCAT("%", #{fuzzy}, "%") or
+					script like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageableVO" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.description != null and '' != model.description">
+					description = #{model.description, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.clazz != null and '' != model.clazz">
+					clazz = #{model.clazz, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.method != null and '' != model.method">
+					method = #{model.method, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.parameterTypes != null and '' != model.parameterTypes">
+					parameterTypes = #{model.parameterTypes, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empPower != null and '' != model.empPower">
+					FIND_IN_SET(empPower, #{model.empPower, jdbcType=VARCHAR}) AND
+				</if>
+				<if test="model.depPower != null and '' != model.depPower">
+					FIND_IN_SET(depPower, #{model.depPower, jdbcType=VARCHAR}) AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.formHtml != null and '' != model.formHtml">
+					formHtml = #{model.formHtml, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					name like CONCAT("%", #{fuzzy}, "%") or
+					description like CONCAT("%", #{fuzzy}, "%") or
+					clazz like CONCAT("%", #{fuzzy}, "%") or
+					method like CONCAT("%", #{fuzzy}, "%") or
+					parameterTypes like CONCAT("%", #{fuzzy}, "%") or
+					empPower like CONCAT("%", #{fuzzy}, "%") or
+					depPower like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					formHtml like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageableVO" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_data_operation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.description != null and '' != model.description">
+					description = #{model.description, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.clazz != null and '' != model.clazz">
+					clazz = #{model.clazz, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.method != null and '' != model.method">
+					method = #{model.method, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.parameterTypes != null and '' != model.parameterTypes">
+					parameterTypes = #{model.parameterTypes, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empPower != null and '' != model.empPower">
+					empPower = #{model.empPower, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.depPower != null and '' != model.depPower">
+					depPower = #{model.depPower, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.state != null and '' != model.state">
+					state = #{model.state, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					effectiveFrom = #{model.effectiveFrom, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.effectiveTo != null">
+					effectiveTo = #{model.effectiveTo, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.formHtml != null and '' != model.formHtml">
+					formHtml = #{model.formHtml, jdbcType=LONGVARCHAR} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					name like CONCAT("%", #{fuzzy}, "%") or
+					description like CONCAT("%", #{fuzzy}, "%") or
+					clazz like CONCAT("%", #{fuzzy}, "%") or
+					method like CONCAT("%", #{fuzzy}, "%") or
+					parameterTypes like CONCAT("%", #{fuzzy}, "%") or
+					empPower like CONCAT("%", #{fuzzy}, "%") or
+					depPower like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%") or
+					formHtml like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="checkOperationName" parameterType="String" resultType="int">
+  	select count(1) from t_data_operation where name = #{name}
+  </select>
+  <select id="selectByOperationName" parameterType="string" resultType="com.dp.plat.core.entity.DataOperation">
+  	select * from t_data_operation where name = #{name} limit 1
+  </select>
+  
+  <select id="queryExportColumns" parameterType="String" resultType="java.util.LinkedHashMap">
+  	select * from (${_parameter}) t limit 1
+  </select>
+  
+  <select id="queryExportDataByMap" parameterType="map" resultType="java.util.HashMap">
+  	select * from (${sql}) t 
+  	<where>
+  		<trim suffixOverrides="and | or">
+	  		<foreach collection="search" index="key" item="value">
+	  			<if test="value != null and value != ''">
+	  				`${key}` = #{value} AND
+	  			</if>
+	  		</foreach>
+  		</trim>
+  	</where>
+  </select>
+  
+  <select id="queryExportData" parameterType="com.dp.plat.core.vo.PageParam" resultType="java.util.HashMap">
+  	select * from (${customField}) t 
+  	<where>
+  		<trim suffixOverrides="and | or">
+	  		<foreach collection="model" index="key" item="value">
+	  			<if test="value != null and value != ''">
+	  				`${key}` = #{value} AND
+	  			</if>
+	  		</foreach>
+	  		<if test="fuzzySearch == true and fuzzy != ''">
+	  			<foreach collection="multipleFuzzy" item="fuzzyStr" separator=" and ">
+	  				<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
+		  				<if test="item.data != null and item.data != ''">
+		  					`${item.data}` like BINARY CONCAT("%", #{fuzzyStr}, "%")
+		  				</if>
+		  			</foreach>
+		  		</foreach>
+	  		</if>
+  		</trim>
+  	</where>
+  	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  
+  <select id="countExportData" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	select count(1) from (${customField}) t 
+  	<where>
+  		<trim suffixOverrides="and | or">
+	  		<foreach collection="model" index="key" item="value">
+	  			<if test="value != null and value != ''">
+	  				`${key}` = #{value} AND
+	  			</if>
+	  		</foreach>
+	  		<if test="fuzzySearch == true and fuzzy != ''">
+	  			<foreach collection="multipleFuzzy" item="fuzzyStr" separator=" and ">
+	  				<foreach collection="columns" item="item" open="(" close=")" separator=" or ">
+		  				<if test="item.data != null and item.data != ''">
+		  					`${item.data}` like BINARY CONCAT("%", #{fuzzyStr}, "%")
+		  				</if>
+		  			</foreach>
+		  		</foreach>
+	  		</if>
+  		</trim>
+  	</where>
+  </select>
+</mapper>

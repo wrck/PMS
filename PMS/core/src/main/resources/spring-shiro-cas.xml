@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- 配置SessionManager -->
+	<bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.MemorySessionDAO" />
+	<bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg name="name" value="dp.session.id"/>
+    </bean>
+	<bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<property name="globalSessionTimeout" value="7200000"/>
+		<property name="sessionDAO" ref="sessionDAO" />
+		<property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+	</bean>
+	<!-- <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.ServletContainerSessionManager">
+    </bean> -->
+	
+	<!--1.配置SecurityManager -->
+	 <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="cacheManager" ref="cacheManager"/>
+        <property name="sessionManager" ref="sessionManager" />
+        <property name="subjectFactory" ref="casSubjectFactory"></property>
+        <property name="authenticator" ref="authenticator"></property>
+        <property name="realms">
+        	<list>
+        	    <ref bean="casRealm"/>
+    			<ref bean="jdbcRealm"/>
+    		</list>
+        </property>
+	 </bean>
+     <!--  
+    2. 配置 CacheManager. 
+    2.1 需要加入 ehcache 的 jar 包及配置文件. 
+    -->     
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/> 
+    </bean>
+    <bean id="authenticator" 
+    	class="org.apache.shiro.authc.pam.ModularRealmAuthenticator">
+    	<property name="authenticationStrategy">
+    		<bean class="org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy"></bean>
+    	</property>
+    	<property name="authenticationListeners">
+    		<list>
+    			<bean class="com.dp.plat.core.listener.DpFormAuthenticationListener"></bean>
+    		</list>	
+    	</property>
+    </bean>
+     <!--
+    	3. 配置 Realm 
+    	3.1 直接配置实现了 org.apache.shiro.realm.Realm 接口的 bean
+    -->     
+    <bean id="jdbcRealm" class="com.dp.plat.core.realms.ShiroRealm">
+    	<property name="credentialsMatcher">
+    		<bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+    			<property name="hashAlgorithmName" value="MD5"></property>
+    			<property name="hashIterations" value="1024"></property>
+    		</bean>
+    	</property>
+    </bean>
+    
+      <!--  
+    4. 配置 LifecycleBeanPostProcessor. 可以自定的来调用配置在 Spring IOC 容器中 shiro bean 的生命周期方法. 
+    -->       
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+    
+    <!--  
+    5. 启用 IOC 容器中使用 shiro 的注解. 但必须在配置了 LifecycleBeanPostProcessor 之后才可以使用. 
+    -->     
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+    
+    <!-- 
+     6. 配置 ShiroFilter. 
+    6.1 id 必须和 web.xml 文件中配置的 DelegatingFilterProxy 的 <filter-name> 一致.
+                      若不一致, 则会抛出: NoSuchBeanDefinitionException. 因为 Shiro 会来 IOC 容器中查找和 <filter-name> 名字对应的 filter bean.
+    --> 
+    <!-- 验证码bean -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="${shiro.loginUrl}"/>
+        <!-- <property name="successUrl" value="/WEB-INF/jsp/success.jsp"/> -->
+        <property name="unauthorizedUrl" value="/unauthorized.html"/>
+        
+        <!--  
+        	配置哪些页面需要受保护. 
+        	以及访问这些页面需要的权限. 
+        	1). anon 可以被匿名访问
+        	2). authc 必须认证(即登录)后才可能访问的页面. 
+        	3). logout 登出.
+        	4). roles 角色过滤器
+        -->
+        <property name="filterChainDefinitionMap" ref="filterChainDefinitionMap"></property>
+        <property name="filters">  
+            <map>  
+		        <entry key="logout" value-ref="logoutFilter"/>
+                <entry key="casFilter" value-ref="casFilter"/>  
+                <entry key="casLogoutFilter" value-ref="casLogoutFilter"/>  
+                <entry key="anyRoles" value-ref="anyRoles"/>
+                <entry key="hostFilter" value-ref="hostFilter"/>
+            </map>  
+        </property>
+        <!-- <property name="filters" ref="filters"></property> -->
+    </bean>
+    
+    <!-- 配置一个 bean, 该 bean 实际上是一个 Map. 通过实例工厂方法的方式 -->
+    <bean id="filterChainDefinitionMap" factory-bean="filterChainDefinitionMapBuilder" factory-method="buildFilterChainDefinitionMap"></bean>
+    
+   <!--  <bean id="filters" factory-bean="filterChainDefinitionMapBuilder" factory-method="buildFiltersMap"></bean> -->
+    
+    <bean id="filterChainDefinitionMapBuilder" class="com.dp.plat.core.factory.FilterChainDefinitionMapBuilder"></bean>
+    
+   	<!-- 任一角色过滤器 -->
+    <bean id="anyRoles" class="com.dp.plat.core.filter.AnyRolesAuthorizationFilter"></bean>
+    <!-- ip地址过滤拦截器 -->
+    <bean id="hostFilter" class="com.dp.plat.core.filter.HostFilter"></bean>
+    <!-- shiro 1.6起增加了invalidRequestFilter，主要拦截以下url中的符号，如果不需要可以直接进行禁用-->
+    <bean id="invalidRequest" class="org.apache.shiro.web.filter.InvalidRequestFilter">
+        <!-- 如果不需要可以直接进行禁用 -->
+        <property name="enabled" value="false" />
+        <!-- 拦截url中的\\ -->
+        <property name="blockBackslash" value="false" />
+        <!-- 拦截url中的; 如果使用URL rewriting to allow for a jsessionid in the URL, 必须设置blockSemicolon = false. -->
+        <property name="blockSemicolon" value="false" />
+        <!-- 拦截url中的中文 -->
+        <property name="blockNonAscii" value="false" />
+    </bean>
+   	
+   	<bean id="casFilter" class="com.dp.plat.core.filter.CasFilter">
+        <!-- 配置验证错误时的失败页面 -->
+        <property name="failureUrl" value="${shiro.failureUrl}" />
+        <property name="successUrl" value="${shiro.successUrl}" />
+    </bean>
+    
+    <bean id="casLogoutFilter" class="com.dp.plat.core.cas.CasLogoutFilter">
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+    
+    <bean id="logoutFilter" class="org.apache.shiro.web.filter.authc.LogoutFilter">
+        <!-- 配置验证错误时的失败页面 -->
+        <property name="redirectUrl" value="${shiro.logoutUrl}" />
+    </bean>
+    
+    <bean id="casRealm" class="com.dp.plat.core.realms.CasRealm">
+        <!-- 认证通过后的默认角色 -->
+        <!-- <property name="defaultRoles" value="ROLE_USER" /> -->
+        <!-- cas服务端地址前缀 -->
+        <property name="casServerUrlPrefix" value="${shiro.cas.serverUrlPrefix}" />
+        <!-- 应用服务地址，用来接收cas服务端票据 -->
+        <property name="casService" value="${shiro.cas.service}" />
+    </bean>
+    
+    <bean id="casSubjectFactory" class="org.apache.shiro.cas.CasSubjectFactory"></bean>
+   	<!-- Form验证拦截器，对登陆成功和失败进行连接，做自定义操作 -->
+   	<!-- <bean id="formAuthenticationFilter" class="com.dp.plat.core.filter.DpFormAuthenticationFilter"></bean> -->
+</beans>

@@ -1,0 +1,124 @@
+/**
+ * 
+ */
+package com.dp.plat.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.dp.plat.context.UserContext;
+
+/**
+ * @author Administrator
+ * 
+ */
+public class BaseServiceImpl implements BaseService {
+	private List<String> errmsg;
+	private List<String> warnmsg;
+	private UserContext userContext;
+
+	public void setUserContext(UserContext userContext) {
+		this.userContext = userContext;
+	}
+
+	public UserContext getUserContext() {
+		return userContext;
+	}
+
+	public List<String> getWarnmsg() {
+		return warnmsg;
+	}
+
+	public void addWarnmsg(String warnmsg) {
+		warn = true;
+		this.warnmsg.add(warnmsg);
+	}
+
+	private boolean error;
+	private boolean warn;
+
+	/**
+	 * 
+	 */
+	public BaseServiceImpl() {
+		warnmsg = new ArrayList<String>();
+		errmsg = new ArrayList<String>();
+		error = false;
+		warn = false;
+	}
+
+	public List<String> getErrmsg() {
+		return errmsg;
+	}
+
+	public void addErrmsg(String errmsg) {
+		error = true;
+		this.errmsg.add(errmsg);
+	}
+
+	public boolean isError() {
+		return error;
+	}
+
+	public void clearErrMsg() {
+		this.errmsg.clear();
+		this.warn = false;
+		this.error = false;
+		this.warnmsg.clear();
+	}
+
+	public boolean isWarn() {
+		return warn;
+	}
+
+	public void log(String action) {
+		try {
+			userContext.setOption(action);
+		} catch (Exception e) {
+		}
+	}
+
+	public boolean checkPass(String checkpass) {
+		// if(checkpass.equals(getUserContext().getUser().getCheckPass()))
+		return true;
+		// return false;
+	}
+
+	@Override
+	public String getLoginName() {
+		try {
+			return getUserContext().getUsername();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	public Integer checkJobnum(String jobnum) {
+		return 0;
+	}
+
+	@Override
+	public boolean ischecked() {
+		return getUserContext().getChecked();
+	}
+
+	@Override
+	public void checked() {
+		getUserContext().setChecked(true);
+	}
+
+	@Override
+	public void touch() {
+		getUserContext().touch();
+	}
+
+	@Override
+	public String getRealname() {
+		try {
+			return getUserContext().getUser().getRealName();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+}

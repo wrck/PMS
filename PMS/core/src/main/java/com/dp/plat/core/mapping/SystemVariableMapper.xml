@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.SystemVariableMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.SystemVariable">
+    <id column="code" jdbcType="VARCHAR" property="code" />
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="var" jdbcType="VARCHAR" property="var" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    code, id, var, remark, createBy, createTime, updateBy, updateTime, effectiveFrom, 
+    effectiveTo
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_sys_variable
+    where code = #{code,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from t_sys_variable
+    where code = #{code,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.SystemVariable">
+    insert into t_sys_variable (code, id, var, 
+      remark, createBy, createTime, 
+      updateBy, updateTime, effectiveFrom, 
+      effectiveTo)
+    values (#{code,jdbcType=VARCHAR}, #{id,jdbcType=INTEGER}, #{var,jdbcType=VARCHAR}, 
+      #{remark,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{effectiveFrom,jdbcType=TIMESTAMP}, 
+      #{effectiveTo,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.SystemVariable">
+    insert into t_sys_variable
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="code != null">
+        code,
+      </if>
+      <if test="id != null">
+        id,
+      </if>
+      <if test="var != null">
+        var,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="var != null">
+        #{var,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.SystemVariable">
+    update t_sys_variable
+    <set>
+      <if test="id != null">
+        id = #{id,jdbcType=INTEGER},
+      </if>
+      <if test="var != null">
+        var = #{var,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where code = #{code,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.SystemVariable">
+    update t_sys_variable
+    set id = #{id,jdbcType=INTEGER},
+      var = #{var,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP}
+    where code = #{code,jdbcType=VARCHAR}
+  </update>
+  
+  <select id="querySystemVariables" resultType="java.util.HashMap">
+  	<![CDATA[
+  		select code, var 
+  			from t_sys_variable
+  	 	where effectiveFrom < now() and now() < IFNULL(effectiveTo, '9999-12-31 23:59:59')
+  	]]>
+  </select>
+  
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.SystemVariable" resultMap="BaseResultMap">
+    select * from t_sys_variable
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="code != null">
+			  #{code,jdbcType=VARCHAR} AND
+			</if>
+			<if test="id != null">
+			  #{id,jdbcType=INTEGER} AND
+			</if>
+			<if test="var != null">
+			  #{var,jdbcType=VARCHAR} AND
+			</if>
+			<if test="remark != null">
+			  #{remark,jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null">
+			  #{createBy,jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+			  #{createTime,jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null">
+			  #{updateBy,jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+			  #{updateTime,jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveFrom != null">
+			  #{effectiveFrom,jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="effectiveTo != null">
+			  #{effectiveTo,jdbcType=TIMESTAMP} AND
+			</if>
+        </trim>
+    </where>
+    order by priority
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.SystemVariable" resultType="long">
+    select count(*) from t_sys_variable
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="code != null">
+              #{code,jdbcType=VARCHAR} AND
+            </if>
+            <if test="id != null">
+              #{id,jdbcType=INTEGER} AND
+            </if>
+            <if test="var != null">
+              #{var,jdbcType=VARCHAR} AND
+            </if>
+            <if test="remark != null">
+              #{remark,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createBy != null">
+              #{createBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createTime != null">
+              #{createTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="updateBy != null">
+              #{updateBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="updateTime != null">
+              #{updateTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveFrom != null">
+              #{effectiveFrom,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveTo != null">
+              #{effectiveTo,jdbcType=TIMESTAMP} AND
+            </if>
+        </trim>
+    </where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_sys_variable
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model !=null">
+                <if test="model.code != null">
+	              #{model.code,jdbcType=VARCHAR} AND
+	            </if>
+	            <if test="model.id != null">
+	              #{model.id,jdbcType=INTEGER} AND
+	            </if>
+	            <if test="model.var != null">
+	              #{model.var,jdbcType=VARCHAR} AND
+	            </if>
+	            <if test="model.remark != null">
+	              #{model.remark,jdbcType=VARCHAR} AND
+	            </if>
+	            <if test="model.createBy != null">
+	              #{model.createBy,jdbcType=VARCHAR} AND
+	            </if>
+	            <if test="model.createTime != null">
+	              #{model.createTime,jdbcType=TIMESTAMP} AND
+	            </if>
+	            <if test="model.updateBy != null">
+	              #{model.updateBy,jdbcType=VARCHAR} AND
+	            </if>
+	            <if test="model.updateTime != null">
+	              #{model.updateTime,jdbcType=TIMESTAMP} AND
+	            </if>
+	            <if test="model.effectiveFrom != null">
+	              #{model.effectiveFrom,jdbcType=TIMESTAMP} AND
+	            </if>
+	            <if test="model.effectiveTo != null">
+	              #{model.effectiveTo,jdbcType=TIMESTAMP} AND
+	            </if>
+            </if>
+            <if test="fuzzySearch == true and fuzzy != ''">
+                (
+                    code like CONCAT("%", #{fuzzy}, "%") or
+                    var like CONCAT("%", #{fuzzy}, "%") or
+                    remark like CONCAT("%", #{fuzzy}, "%")
+                )
+          </if>
+      </trim>
+    </where>
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(*) from t_sys_variable
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model !=null">
+                <if test="model.code != null">
+                  #{model.code,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.id != null">
+                  #{model.id,jdbcType=INTEGER} AND
+                </if>
+                <if test="model.var != null">
+                  #{model.var,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.remark != null">
+                  #{model.remark,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createBy != null">
+                  #{model.createBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createTime != null">
+                  #{model.createTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.updateBy != null">
+                  #{model.updateBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.updateTime != null">
+                  #{model.updateTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveFrom != null">
+                  #{model.effectiveFrom,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveTo != null">
+                  #{model.effectiveTo,jdbcType=TIMESTAMP} AND
+                </if>
+            </if>
+            <if test="fuzzySearch == true and fuzzy != ''">
+                (
+                    code like CONCAT("%", #{fuzzy}, "%") or
+                    var like CONCAT("%", #{fuzzy}, "%") or
+                    remark like CONCAT("%", #{fuzzy}, "%")
+                )
+            </if>
+        </trim>
+    </where>
+  </select>
+  
+  <select id="selectById" parameterType="int" resultMap="BaseResultMap">
+    select * from t_sys_variable where id = #{id}
+  </select>
+  
+  <delete id="deleteById" parameterType="int">
+    delete from t_sys_variable where id = #{id}
+  </delete>
+</mapper>

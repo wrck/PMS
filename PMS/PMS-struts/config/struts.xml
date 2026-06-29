@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <!DOCTYPE struts PUBLIC   
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"   
+        "http://struts.apache.org/dtds/struts-2.5.dtd"> -->
+<!DOCTYPE struts PUBLIC   
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"   
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 区间字符资源文件 -->
+	<!-- i18n配置 -->
+	<constant name="struts.custom.i18n.resources" value="com.dp.plat.properties.res"></constant>
+	<!-- 自动动态方法的调用，使用后可以action!method -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true" />
+	<!-- struts 标签主题风格 -->
+	<constant name="struts.ui.theme" value="simple"></constant>
+	<!-- string 工厂 -->
+	<constant name="struts.objectFactory" value="spring"></constant>
+	<!-- 上传文件大小限制 -->
+	<constant name="struts.multipart.maxSize" value="209715200" />
+	<!-- 编码格式 -->
+	<constant name="struts.i18n.encoding" value="UTF-8"/>
+	<!-- 定义基础包 -->
+	
+	<!-- XSS拦截器 -->
+    <!-- <bean name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor"></bean> -->
+	
+	<package name="basepackage" extends="struts-default" abstract="true">
+		<!-- 定义拦截栈 -->
+		<interceptors>
+			<interceptor name="MyInterceptor" class="com.dp.plat.interceptor.MyInterceptor"></interceptor>
+			
+			<!-- XSS拦截器 -->
+            <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
+                <param name="enable">true</param>
+                <param name="excludeUrls">/base/executeSql.*</param>
+                <param name="cleanUrls">/module/prob_*,/probAudit.*,/probAjax_*.*</param>
+                <param name="encodeUrls">/*</param>
+            </interceptor>
+			
+			<!--基础拦截栈，不对start方法进行校验 -->
+			<interceptor-stack name="baseStack">
+			    <interceptor-ref name="XssStrutsInterceptor"></interceptor-ref>
+				<interceptor-ref name="MyInterceptor">
+					<!-- <param name="excludeMethods">executepwd,editlogin</param> -->
+				</interceptor-ref>
+				<interceptor-ref name="fileUpload">
+					<param name="maximumSize">
+						209715200
+					</param>
+					<param name="allowedTypes">
+					</param>
+				</interceptor-ref>
+				<interceptor-ref name="defaultStack">
+					<param name="workflow.excludeMethods">start</param>
+					<param name="validation.excludeMethods">
+						start
+					</param>
+				</interceptor-ref>
+				<interceptor-ref name="paramsPrepareParamsStack"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+
+		<!--设置默认拦截栈 -->
+		<default-interceptor-ref name="baseStack"></default-interceptor-ref> 
+		
+		
+		<!-- 全局默认结果 -->
+		<global-results>
+			<result name="redirect1">/redirect.jsp</result>
+			<result name="globalLogin">/index.jsp</result>
+			<result name="globalAdminLogin">/error403.jsp</result>
+			<result name="errorRole">/error403.jsp</result>
+			<result name="error">/error.jsp</result>
+		</global-results>
+		
+		<global-exception-mappings>
+		    <exception-mapping result="error" exception="java.lang.Exception">/error.jsp</exception-mapping>
+		</global-exception-mappings>
+		
+		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
+		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
+	</package>
+	
+	
+	<package name="defaultJson" extends="json-default" abstract="true">
+	    <interceptors>
+	        <!-- XSS拦截器 -->
+            <interceptor name="XssStrutsInterceptor" class="com.dp.plat.security.xss.struts.XssStrutsInterceptor">
+                <param name="enable">true</param>
+                <param name="excludeUrls">/base/executeSql.*</param>
+                <param name="cleanUrls">/module/prob_*,/probAudit.*,/probAjax_*.*</param>
+                <param name="encodeUrls">/*</param>
+            </interceptor>
+            
+            <!--基础拦截栈，不对start方法进行校验 -->
+            <interceptor-stack name="baseStack">
+                <interceptor-ref name="XssStrutsInterceptor"></interceptor-ref>
+                
+                <interceptor-ref name="defaultStack">
+                </interceptor-ref>
+            </interceptor-stack>
+        </interceptors>
+
+        <!--设置默认拦截栈 -->
+        <default-interceptor-ref name="baseStack"></default-interceptor-ref>
+        
+        <global-exception-mappings>
+            <exception-mapping result="error" exception="java.lang.Exception">/error.jsp</exception-mapping>
+        </global-exception-mappings>
+        
+		<!-- struts2.5 为了增加安全性，添加了allowedmethod,动态方法需要明确指定按,分隔，或者正则匹配  -->
+		<!-- <global-allowed-methods>regex:.*</global-allowed-methods> -->
+	</package>
+	
+	<!-- 各模块的配置文件 -->
+	<include file="struts-sys.xml" />
+</struts>

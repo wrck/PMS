@@ -1,0 +1,24 @@
+<DPTECH>show ver
+ Software Conplat based on kylin-kernel-V10
+ Software Release H10C7.1.125R22
+ Conplat Version is V100R007B01D125P22
+ Compiled Mon, 29 Sep 2025 04:22:28 +0800
+ Signature base, Version , AV 1.4.657 APP 2.1.486 IPS 3.1.359 WAF 3.1.109 
+ Copyright (c) 2008-2025 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ FW1000-GA-GF Uptime is 0 week(s), 1 day(s),  0 hour(s), 36 minute(s)
+
+ CPU type:        Phytium D2000/8
+
+ SDRAM:          16384M bytes
+ Flash Memory:   16M 
+ EMMC card Memory: 4G 
+
+ PCB Version:            B         
+ CPLD Version:           4.00      
+ BASIC CONBOOT Version:  27.07.01  
+ EXTEND CONBOOT Version: 27.07.01  
+ Serial Number:          02052300N24C000021
+ [SLOT   0]  DP1TSGFM(2.10)    (PCB)B,   (CPLD)4.00,   (FPGA)NONE,   (CONBOOT),   (SERIAL)02052300N24C000021
+<DPTECH>

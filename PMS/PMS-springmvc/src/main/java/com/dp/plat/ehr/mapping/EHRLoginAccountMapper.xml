@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.ehr.dao.EHRLoginAccountMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.ehr.entity.EHRLoginAccount">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="account" jdbcType="VARCHAR" property="account" />
+    <result column="empID" jdbcType="INTEGER" property="empID" />
+    <result column="workNo" jdbcType="VARCHAR" property="workNo" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="isDisabled" jdbcType="INTEGER" property="isDisabled" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, title, account, empID, workNo, name, isDisabled
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from ehr_login
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from ehr_login
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into ehr_login (title, account, empID, 
+      workNo, name, isDisabled
+      )
+    values (#{title,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{empID,jdbcType=INTEGER}, 
+      #{workNo,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{isDisabled,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into ehr_login
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="title != null">
+        title,
+      </if>
+      <if test="account != null">
+        account,
+      </if>
+      <if test="empID != null">
+        empID,
+      </if>
+      <if test="workNo != null">
+        workNo,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="isDisabled != null">
+        isDisabled,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="account != null">
+        #{account,jdbcType=VARCHAR},
+      </if>
+      <if test="empID != null">
+        #{empID,jdbcType=INTEGER},
+      </if>
+      <if test="workNo != null">
+        #{workNo,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisabled != null">
+        #{isDisabled,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount">
+    update ehr_login
+    <set>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="account != null">
+        account = #{account,jdbcType=VARCHAR},
+      </if>
+      <if test="empID != null">
+        empID = #{empID,jdbcType=INTEGER},
+      </if>
+      <if test="workNo != null">
+        workNo = #{workNo,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisabled != null">
+        isDisabled = #{isDisabled,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount">
+    update ehr_login
+    set title = #{title,jdbcType=VARCHAR},
+      account = #{account,jdbcType=VARCHAR},
+      empID = #{empID,jdbcType=INTEGER},
+      workNo = #{workNo,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      isDisabled = #{isDisabled,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount" resultMap="BaseResultMap">
+    select * from ehr_login
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="title != null and '' != title">
+				title = #{title, jdbcType=VARCHAR} AND
+			</if>
+			<if test="account != null and '' != account">
+				account = #{account, jdbcType=VARCHAR} AND
+			</if>
+			<if test="empID != null and '' != empID">
+				empID = #{empID, jdbcType=INTEGER} AND
+			</if>
+			<if test="workNo != null and '' != workNo">
+				workNo = #{workNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isDisabled != null and '' != isDisabled">
+				isDisabled = #{isDisabled, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.ehr.entity.EHRLoginAccount" resultType="long">
+    select count(1) from ehr_login
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="title != null and '' != title">
+				title = #{title, jdbcType=VARCHAR} AND
+			</if>
+			<if test="account != null and '' != account">
+				account = #{account, jdbcType=VARCHAR} AND
+			</if>
+			<if test="empID != null and '' != empID">
+				empID = #{empID, jdbcType=INTEGER} AND
+			</if>
+			<if test="workNo != null and '' != workNo">
+				workNo = #{workNo, jdbcType=VARCHAR} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="isDisabled != null and '' != isDisabled">
+				isDisabled = #{isDisabled, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from ehr_login
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.title != null and '' != model.title">
+					title = #{model.title, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.account != null and '' != model.account">
+					account = #{model.account, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empID != null and '' != model.empID">
+					empID = #{model.empID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.workNo != null and '' != model.workNo">
+					workNo = #{model.workNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isDisabled != null and '' != model.isDisabled">
+					isDisabled = #{model.isDisabled, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					title like CONCAT("%", #{fuzzy}, "%") or
+					account like CONCAT("%", #{fuzzy}, "%") or
+					workNo like CONCAT("%", #{fuzzy}, "%") or
+					name like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from ehr_login
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.title != null and '' != model.title">
+					title = #{model.title, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.account != null and '' != model.account">
+					account = #{model.account, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.empID != null and '' != model.empID">
+					empID = #{model.empID, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.workNo != null and '' != model.workNo">
+					workNo = #{model.workNo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.isDisabled != null and '' != model.isDisabled">
+					isDisabled = #{model.isDisabled, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					title like CONCAT("%", #{fuzzy}, "%") or
+					account like CONCAT("%", #{fuzzy}, "%") or
+					workNo like CONCAT("%", #{fuzzy}, "%") or
+					name like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

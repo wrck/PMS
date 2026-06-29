@@ -1,0 +1,674 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<%@page import="com.dp.plat.context.UserContext"%>
+<%@page import="com.dp.plat.context.SpringContext"%>
+<%@page import="com.dp.plat.util.StringEscUtil"%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<dp:base />
+<meta name="menu" content="SysLeftMenu">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="function" content="<s:text name='pm.presales.flow' />">
+<style type="text/css">
+legend {
+	font: 12px/24px "微软雅黑";
+}
+.pccSubmitDiv {
+	margin-top: 10px;
+	/* background-color: bisque; */
+	/* background-color: aliceblue; */
+	/* text-align: center; */
+	height: 120px;
+}
+
+.headerSpan {
+	font-size: 14px;
+	font-weight: 700;
+}
+
+a span {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.428571429;
+}
+
+.pmclnotice {
+	line-height: 24px;
+	background: #F7F7F7;
+	border: 1px dashed #CCC;
+	padding: 15px;
+	margin: 15px 0;
+	color: #666;
+	clear: both;
+}
+
+.headerLi {
+	float: left;
+	font-size: 12px;
+	height: 30px;
+	line-height: 30px;
+	margin-right: 20px;
+}
+
+.pmclquescontent {
+	line-height: 1.5;
+	margin: 0 0 14px 10px;
+	font-size: 14px;
+	color: #333;
+}
+
+.content_pm_proplem {
+	width: 820px;
+	padding: 10px;
+	width: 820px;
+	padding-bottom: 15px;
+	border-bottom: #e3ebeb 1px solid;
+	margin-top: 10px;
+}
+
+.content_pm_proplem_type {
+	color: #999;
+	font-size: 12px;
+	margin-left: 10px;
+}
+
+.content_pm_sort {
+	font-weight: bold;
+	color: #1473CB;
+}
+
+.mainDiv {
+	height: auto !important;
+	height: 500px;
+	min-height: 500px;
+	border: 2px solid #88ABDA;
+	color: #999;
+	padding: 26px 33px;
+	text-align: left;
+	border-radius: 10px 10px 10px 10px;
+}
+.current-state:before {
+    content: '▶ ';
+}
+fieldset:not(:first-child) {
+    margin-bottom: 20px;
+}
+fieldset .table-condensed {
+    margin-bottom: 0;
+}
+fieldset .table>thead>tr>th {
+    font-weight: normal;
+    border-bottom: 0;
+}
+</style>
+<script type="text/javascript">
+$(function(){
+	$("#submitBtn").click(function(){
+		$("#result").val(1);
+		
+		if(confirm("请确认是否提交！")){
+			$("#applyForm").submit();
+		}else{
+			return false;
+		}
+		
+	});
+	
+	$("#backBtn").click(function(){
+		$("#result").val(-1);
+		if(confirm("请确认是否驳回整改！")){
+			$("#applyForm").submit();
+		}else{
+			return false;
+		}
+	});
+	
+	$("#projectType").change(function() {
+		$("#projectType_hidden").val($(this).val());
+	});
+	
+	$("span.quesTypeScore").each(function(){
+		if($(this).text().indexOf("|")>-1){
+			var typeValue=$(this).text().split("|")[0];			 
+			
+			if($(this).attr("scoreType")=="3"){
+				if($(this).text().split("|")[1]=="30"){  
+					if($(this).next("span").text()){
+						score30Value=parseInt($(this).next().text());						
+					}
+				}
+				
+				if($(this).text().split("|")[1]=="10"){  
+					if($(this).next("span").text()){
+						score10Value=parseInt($(this).next().text());						
+					}
+				}
+			}
+			$(this).text(typeValue);
+			
+		}
+		
+	});
+	
+	/* ajaxLoadInfo("shipmentInfo");
+    ajaxLoadInfo("lend2RmaInfo", function() {
+        var nth = 0;
+        var trLen = $("#lend2RmaTable tbody tr").removeClass("even odd").not(".even, .odd").length;
+        while($("#lend2RmaTable tbody tr").not(".even, .odd").length > 0) {
+            var prevClass = "." + $("#lend2RmaTable tbody tr").not(".even, .odd").children("td[class^='pc']:first").prop("class");
+            $(prevClass).parent().addClass(nth++ % 2 ? "even" : "odd");
+        }
+    });
+    ajaxLoadInfo("lend2SaleInfo"); */
+});
+function callback(){
+	var href = window.location.href;
+	var presalesId = $("#presalesId").val();
+	popWindow('module/sub/presales_callback.action?pmClosedLoopQuesnaire.id=3&presales.presalesId='+presalesId + '&redirect='+href, 900, 650,'回访问卷', 'BudgetUpload', true);
+	return false;
+}
+/* function ajaxLoadInfo(type, callback) {
+    if (!type) {
+        return false;
+    }
+    if ($("#" + type).length == 0) {
+        $("#product").after("<div id='wrapper-" + type + "'></div>");
+    }
+    var presalesCode = $("input[type='hidden'][name='presales.presalesCode']").val();
+    $.ajax({
+        url:"module/presales_" + type + ".action",
+        type:"post",
+        dataTpe:"html",
+        data:{"presalesCode":presalesCode},
+        success: function(data) {
+            data = data.substring(data.indexOf("<fieldset>"), data.indexOf("</fieldset>"));
+            if ($("#" + type).length > 0) {
+                $("#" + type).replaceWith(data);
+            } else if ($("#wrapper-" + type).length > 0) {
+                $("#wrapper-" + type).replaceWith(data);
+            } else {
+                $("#product").after(data);
+            }
+            if (callback) {
+                callback();
+            }
+        }
+    })
+} */
+function deleteTaskfile(_this,fileId ,index){
+    var fileSize = $(_this).parent().children().size()/2;
+    var taskId = $("#presalesTaskId_"+index).val();
+    if(confirm("确认要删除该附件吗?")){
+        $.ajax({
+            url:"deleteFile.action",
+            type:"post",
+            dataType:"json",
+            data:{fileId:fileId},
+            success:function(data){
+                $(_this).parent().html("");
+                if(fileSize == 1 && index == 2){//ajax删除时间
+                    $.ajax({
+                        url:"updatePresalesTask.action",
+                        type:"post",
+                        dataType:"json",
+                        data:{presalesTaskId:taskId ,taskFinshedTime:''},
+                        success:function(data2){
+                            
+                        }
+                    });
+                }
+                var presalesId =$('#presales_pmaduit_presales_presalesId').val();
+                $.ajax({
+                    url:"updateConfirmFiles.action",
+                    type:"post",
+                    dataType:"json",
+                    data:{'presales.presalesId':presalesId, presalesTaskId:taskId, fileId:fileId},
+                    success:function(data2){
+                        
+                    }
+                });
+                alert(data.message);
+            },
+            error:function(){
+                alert('error!');
+            },
+            complete:function(){
+                window.location.reload();
+            }
+        });
+    }
+    
+}
+function deleteDeliverById(deliverid, e){
+    if(!confirm("是否确认删除？")){
+        return;
+    }
+    $.ajax({
+        url :"presalesAjax_deleteDeliverById.action",
+        type :"post",
+        dataType :"json",
+        data : {fileId : deliverid},
+        success:function(data){
+            if(data.fileId != 0){
+                alert("删除成功！");
+            }else{
+                alert("删除失败！");
+            }
+        },
+        error:function(){
+            alert('error!');
+        },
+        complete:function(){
+            window.location.reload();
+        }
+    });
+}
+
+function updateDeliverById(fileId, target) {
+	if(!confirm("是否确认更新交付件类型？")){
+        return;
+    }
+	var $option = $(target).parents("tr:first").find("option:selected");
+	var deliverId = $option.val();
+	var deliverType = $option.text();
+    $.ajax({
+        url :"presalesAjax_updateDeliverById.action",
+        type :"post",
+        dataType :"json",
+        data : {fileId: fileId, "projectDeliver.id" : fileId, "projectDeliver.deliverId": deliverId, "projectDeliver.deliverableType": deliverType},
+        success:function(data){
+            if(data.fileId != 0){
+                alert("更新成功！");
+            }else{
+                alert("更新失败！");
+            }
+        },
+        error:function(){
+            alert('error!');
+        },
+        complete:function(){
+            window.location.reload();
+        }
+    });
+}
+</script>
+<dp:script type="text/javascript" src="js/presales/initNavBar.js">
+var presalesId = ${presales.presalesId};
+var officeCode = "${presales.officeCode}";
+var presalesSource = "${presales.source}";
+</dp:script>
+</head>
+<body>
+	<%-- <fieldset>
+		<legend><b>基本信息</b></legend>
+		<table class="table table-bordered table-hover table-striped ">
+			<tr>
+				<td><s:text name="pm.presales.projectcode"></s:text>:</td>
+				<td><s:property value="presales.presalesCode"/>
+					<s:hidden name="presales.presalesCode"/>
+				</td>
+				<td><s:text name="pm.presales.projectname"></s:text>:</td>
+				<td>
+                    <s:property value="presales.projectName"/>
+                    <s:if test="presales.hasTransfer == 1">
+                        <span class="text-danger text-unselected">(<s:text name="pm.presales.hasTransfer"/>)</span>
+                    </s:if>
+                </td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.marketName"></s:text>:</td>
+				<td><s:property value="presales.marketName"/></td>
+				<td><s:text name="pm.presales.systemName"></s:text>:</td>
+				<td><s:property value="presales.systemName"/></td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.expendName"></s:text>:</td>
+				<td><s:property value="presales.expendName"/></td>
+				<td><s:text name="pm.presales.industryName"></s:text>:</td>
+				<td><s:property value="presales.industryName"/></td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.officeName"></s:text>:</td>
+				<td><s:property value="presales.officeName"/></td>
+				<td><s:text name="pm.presales.salesman"></s:text>:</td>
+				<td><s:property value="presales.salesman"/></td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.productmanager"></s:text>:</td>
+				<td><s:property value="presales.productManager"/></td>
+				<td><s:text name="pm.presales.salesmanlink"></s:text>:</td>
+				<td><s:property value="presales.salesmanLink"/></td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.sm"></s:text>:</td>
+				<td>
+					<s:textfield name="presales.serviceManagerName" id="serviceManager" 
+						cssClass="form-control" cssStyle="width:200px;"
+						placeholder="支持模糊搜索" onfocus="fillsm()" readonly="true"
+						onblur="fillsm()"></s:textfield>
+				</td>
+				<td><s:text name="pm.presales.pm"></s:text>:</td>
+				<td>
+					<s:textfield name="presales.projectManagerName" id="projectManager" 
+						cssClass="form-control" cssStyle="width:200px;" readonly="true"
+						placeholder="支持模糊搜索" onfocus="fillpm()"
+						onblur="fillpm()"></s:textfield>
+				</td>
+			</tr>
+			<tr>
+				<td><s:text name="pm.presales.projectType"></s:text>:</td>
+                <td>
+                    <s:property value="presales.projectTypeName"/>
+                    <s:select list="projectTypeList" name="presales.projectType" id="projectType" listKey="basicDataId" listValue="basicDataName"
+                      headerValue="--请选择--" headerKey="" cssClass="form-control" cssStyle="width:200px;"></s:select>
+                </td>
+                <td>项目起止时间:</td>
+				<td>
+                    <s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/>
+                    ~
+                    <s:if test="presales.endTime != null">
+                        <s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/>
+                    </s:if>
+                    <s:else>至今</s:else>（<s:property value="presales.totalDuration"/>）
+                </td>
+                <td><s:text name="pm.presales.applyTime"/>:</td>
+                <td><s:date name="presales.applyTime" format="yyyy-MM-dd HH:mm:ss"/></td>
+                <td><s:text name="pm.presales.endTime"/>:</td>
+                <td><s:date name="presales.endTime" format="yyyy-MM-dd HH:mm:ss"/></td>
+            </tr>
+        </table>
+        <table class="table table-no-border" style="margin-top: -20px;margin-bottom: 0;">
+            <tr>
+                <td <s:if test='presales.projectState == 30'>class="text-success current-state"</s:if>><s:text name="pm.presales.serviceDuration"></s:text>:<s:property value="presales.serviceDuration"/><span style="cursor: help;" title="<s:text name='pm.presales.applyDuration'/>">(<s:property value="presales.applyDuration"/>)</span></td>
+                <td <s:if test='presales.projectState == 31'>class="text-success current-state"</s:if>><s:text name="pm.presales.programDuration"></s:text>:<s:property value="presales.programDuration"/></td>
+                <td <s:if test='presales.projectState == 32'>class="text-success current-state"</s:if>><s:text name="pm.presales.testDuration"></s:text>:<s:property value="presales.testDuration"/></td>
+                <td <s:if test='presales.projectState == 33'>class="text-success current-state"</s:if>><s:text name="pm.presales.callbackDuration"></s:text>:<s:property value="presales.callbackDuration"/></td>
+            </tr>
+        </table>
+	</fieldset> --%>
+    <jsp:include page="./presales_basic_info.jsp"></jsp:include>
+	<s:if test="taskList.size() != 0">
+		<fieldset>
+			<legend><b>工程计划</b></legend>
+			<table class="table table-condensed table-hover table-striped">
+				<tr class="warning">
+					<td width="10%"><s:text name="pm.test.stage"></s:text></td>
+					<td width="10%"><s:text name="pm.test.state"></s:text></td>
+					<td width="20%" ><s:text name="pm.test.finshed"></s:text></td>
+					<td width="25%" ><s:text name="pm.test.process"></s:text></td>
+					<td width="35%" ><s:text name="pm.test.deliver"></s:text></td>
+				</tr>
+				<s:iterator value="taskList" var="t" status="index">
+					<tr class="presalesTask">
+						<td>
+							<s:property value="#t.taskName"/>
+						</td>
+						<td>
+							<s:property value="#t.taskStateName"/>
+						</td>
+						<td>
+							<s:date name="#t.eventActualFinishDate" format="yyyy-MM-dd"/>
+						</td>
+						<td>
+                            <s:property value='#t.remark.replaceAll(">", "》").replaceAll("<", "《").replaceAll("(\r)?\n", "<br>")' escapeHtml="false"></s:property>
+                        </td>
+						<td>
+						 	<s:iterator value="#t.fileMap" var="file" status="index">
+					 			<a href="module/download.action?fileId=<s:property value='key'/>" title="点击下载"> <s:property value="value"/> </a>
+					 			<s:if test="#t.fileMap.size != #index.index+1 || #t.fileParams.size > 0">|</s:if>  	
+						 	</s:iterator>
+						 	<s:iterator value="#t.fileParams" var="f" status="index">
+					 			<a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>" title="点击下载"><s:property value="#f.fileName"/> </a>
+					 			<s:if test="#t.fileParams.size != #index.index+1">|</s:if>
+						 	</s:iterator>
+						</td>
+					</tr>
+				</s:iterator>
+			</table>
+		</fieldset>	
+	</s:if>
+	<fieldset>
+		<legend><b>流程办理</b></legend>
+		<s:form cssClass="form-inline" action="module/presales_emaduit.action" method="post" name="aduitForm">
+			<s:hidden name="presales.serviceManager" id="sm_hide"></s:hidden>
+			<s:hidden name="presales.projectManager" id="pm_hide"></s:hidden>
+			<s:hidden name="presales.presalesId" id="presalesId"></s:hidden>
+            <s:hidden name="presales.projectType" id="projectType_hidden"></s:hidden>
+			<s:hidden name="param.taskId" value="%{presales.taskId}"></s:hidden>
+			<s:hidden name="param.instId" value="%{presales.instId}"></s:hidden>
+			<!-- 审批结果 -->
+			<s:hidden name="param.result" id="result"></s:hidden>
+			<!-- 问卷已提交 -->
+			<s:if test="presales.quesnaireState == 1">
+			<div> 
+				<div class="pmclnotice">
+					<b>回访问卷结果:</b>  <a href="javascript:popWindow('module/sub/callback_seeQuesnaire.action?quesnaireId=<s:property value='presales.quesnaireId'/>',880, 600,'查看测评问卷', 'BudgetUpload', true)">查看问卷</a> <br/>
+					<%-- <span><s:text name="pm.cl.markRule"></s:text>：</span><br/>
+					<s:iterator value="pmClosedLoopQuesnaire.markList" id="objmark" status="indexmark">
+						<span class="glyphicon glyphicon-star" style="color:#2aabd2;font-size:8px;"></span><s:property value="%{#objmark.markExplain}"/><br/>
+					</s:iterator><br/> 
+					<ul>
+					<li class="headerLi">本次测评结果：</li>								
+						<li class="headerLi">
+							<span>（<s:text name="pm.cl.testTime"></s:text>：<s:date name="cbQuesnaire.createTime" format="yyyy-MM-dd hh:mm:ss"/></span>
+						</li>
+						<li class="headerLi">
+							<span><s:text name="pm.cl.testPerson"></s:text>：<s:property value="pmClEvaluationHeader.evaluationPeopleName"/>）</span>
+						</li> 						
+					</ul>
+					--%>
+					<%-- <s:iterator value="presales.quesResultMarkList" id="objRMark" status="indexRmark">
+						<s:if test="#indexRmark.odd">
+							<span class="glyphicon glyphicon-star" style="color:red;font-size:8px;"></span><span class="quesTypeScore"><s:property value="%{#objRMark}"/></span>得分：
+						</s:if>
+						<s:else>
+							<s:property value="%{#objRMark}"/><br/>
+						</s:else>						
+					</s:iterator>					
+					<span class="glyphicon glyphicon-star" style="color:red;font-size:8px;"></span><s:text name="pm.cl.testTotalScore"></s:text>：<s:property value="pmClQuesnaireResultHeader.quesMarkScore"/><br/>
+					<span class="glyphicon glyphicon-star" style="color:red;font-size:8px;"></span><s:text name="pm.cl.testTotalResult"></s:text>：					
+					<s:if test="pmClQuesnaireResultHeader.quesMarkResult==-1">
+						 测评不通过
+					</s:if><s:else>
+						测评通过
+					</s:else> --%>					
+				</div>
+			</div>
+			</s:if>
+			<s:else>
+				<span class="redMark">请点击回访问卷进行售前测试项目回访，谢谢!</span>
+				<br/>
+				<br/>
+				<a href="javascript:void(0)" onclick="callback()"
+					  class="btn btn-default btn-block" style="width: 100px;height: 30px"  >
+					  <span class="glyphicon glyphicon-upload"></span> 回访问卷
+				</a>
+			</s:else>
+			<br/><br/>
+			备注信息:
+			<s:textarea name="param.message" cssClass="form-control"></s:textarea>
+			<br/>
+			<br/>
+			<br/>
+			<button type="submit" class="btn btn-success" id="submitBtn">同意闭环</button>
+			<button type="submit" class="btn btn-info" id="backBtn">驳回整改</button>
+			<br/>
+			<br/>
+			<br/>
+		</s:form>
+	</fieldset>
+	<fieldset>
+		<legend><b>项目附件</b></legend>
+		<table class="table table-condensed table-hover table-striped">
+			<thead>
+			<tr class="warning">
+				<td><s:text name="file.name"></s:text></td>
+                <td><s:text name="file.type"></s:text></td>
+				<td><s:text name="file.uploadby"></s:text></td>
+				<td><s:text name="file.uploadtime"></s:text></td>
+                <td><s:text name="pm.deliverdetail.operate"></s:text></td>
+			</tr>
+			</thead>
+			<tbody>
+			<s:if test="presales.fileParams.size() == 0">
+				<tr>
+					<td colspan="8">
+						无可以显示的数据
+					</td>
+				</tr>
+			</s:if>
+			<s:iterator value="presales.fileParams" var="f" status="s">
+				<tr>
+					<td>
+						<s:if test="#f.path == 0">
+							<a href="module/download.action?fileId=<s:property value='#f.id'/>"><s:property value="#f.fileName"/></a>
+						</s:if>
+                        <s:elseif test="#f.path == 1">
+                            <%-- <a href="http://sms.dptech.com/module/DocumentDownloadForPMS.action?docFileName=<s:property value='#f.filePath'/>&presales.presalesId=<s:property value='presales.presalesId'/>">
+                             --%>
+                            <a href="http://sms.dptech.com/module/DocumentDownloadForPMS.action?id=<s:property value='presales.lendInfoId'/>&projectCode=<s:property value='presales.projectCode'/>&flag=<s:property value='#s.index'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <a href="<s:property value='#f.filePath'/>">
+                                <s:property value="#f.fileName"/>
+                            </a>
+                        </s:elseif>
+                        <s:else>
+                            <a href="module/DownloadFile.action?downname=<s:property value='#f.fileName'/>&downpath=<s:property value="#f.filePath"/>"><s:property value="#f.fileName"/></a>
+                        </s:else>
+					</td>
+                    <td>
+                        <s:if test="#f.path == 1">
+                            <s:property value="#f.fileType" default="SMS附件"/>
+                        </s:if>
+                        <s:elseif test="#f.path == 0">
+                            <s:property value="#f.fileType" default="历史附件"/>
+                        </s:elseif>
+                        <s:elseif test="#f.path == 3">
+                            <s:property value="#f.fileType" default="OA附件"/>
+                        </s:elseif>
+                        <s:else>
+                            <s:hidden value="%{#f.fileType}"></s:hidden>
+                            <select>
+                            <s:iterator value="projectDeliverList" var="pd" status="ss">
+                                <s:if test="#pd.eventKey == #f.flag">
+                                    <s:if test="#pd.deliverValue == #f.fileType">
+                                        <option value="<s:property value='#pd.id'/>" selected><s:property value='#pd.deliverValue'/></option>
+                                    </s:if>
+                                    <s:else>
+                                        <option value="<s:property value='#pd.id'/>"><s:property value='#pd.deliverValue'/></option>
+                                    </s:else>
+                                </s:if>
+                            </s:iterator>
+                            </select>
+                        </s:else>
+                    </td>
+					<td><s:property value="#f.uploadBy"/></td>
+					<td><s:date name="#f.uploadTime" format="yyyy-MM-dd HH:mm"></s:date></td>
+                    <td>
+                        <s:if test="#f.path == 0">
+                            <a href="javascript:void(0)" onclick="deleteTaskfile(this,<s:property value='id'/>)" title="删除"> 
+                                <img alt="" src="images/delete_profile.gif">
+                            </a>
+                        </s:if>
+                        <s:elseif test="#f.path == 2">
+                            <a style="margin-right: 10px;" href="javascript:void(0)" onclick="updateDeliverById(<s:property value='id'/>, this)" title="更新交付件类型">
+                                <span class="glyphicon glyphicon-ok" style="vertical-align: middle;"></span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="deleteDeliverById(<s:property value='id'/>, this)" title="删除"> 
+                                <img alt="" src="images/delete_profile.gif">
+                            </a>
+                        </s:elseif>
+                    </td>
+				</tr>	
+			</s:iterator>
+			</tbody>
+		</table>
+	</fieldset>
+
+	
+	<fieldset id="product">
+		<legend><b>产品配置</b></legend>
+		<table class="table table-condensed table-hover table-striped">
+			<thead>
+			<tr class="warning">
+				<td><s:text name="pm.ps.pro.fisrtname"></s:text></td>
+				<td><s:text name="pm.ps.pro.typename"></s:text></td>
+				<td><s:text name="pm.ps.pro.itemcode"></s:text></td>
+				<td><s:text name="pm.ps.pro.itemmodel"></s:text></td>
+				<td><s:text name="pm.ps.pro.itemdesc"></s:text></td>
+				<td><s:text name="pm.ps.pro.num"></s:text></td>
+				<%-- <td><s:text name="pm.ps.pro.transferNum"></s:text></td>
+                <td><s:text name="pm.ps.pro.hexiaoNum"></s:text></td>
+                <td><s:text name="pm.ps.pro.weihexiaoNum"></s:text></td> --%>
+				<td><s:text name="pm.ps.pro.remark"></s:text></td>
+			</tr>
+			</thead>
+			<tbody>
+			<s:if test="productList.size()== 0">
+				<tr>
+					<td colspan="8">
+						无可以显示的数据
+					</td>
+				</tr>
+			</s:if>
+			<s:iterator value="productList" var="p">
+				<tr>
+					<td><s:property value="#p.productFirstName"/></td>
+					<td><s:property value="#p.productTypeName"/></td>
+					<td><s:property value="#p.itemCode"/></td>
+					<td><s:property value="#p.itemModel"/></td>
+					<td><s:property value="#p.itemDesc"/></td>
+					<td><s:property value="#p.productNum"/></td>
+					<%-- <td><s:property value="#p.transferNum"/></td>
+                    <td><s:property value="#p.hexiaoNum"/></td>
+                    <td><s:property value="#p.productNum - #p.hexiaoNum"/></td> --%>
+					<td><s:property value="#p.remark"/></td>
+				</tr>	
+			</s:iterator>
+			</tbody>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><b>项目流程记录</b></legend>
+		<table class="table table-condensed table-hover table-striped">
+			<thead>
+			<tr class="warning">
+				<td><s:text name="workflow.transactor"></s:text></td>
+				<td><s:text name="workflow.assign.time"></s:text></td>
+				<td><s:text name="workflow.assign.result"></s:text></td>
+				<td><s:text name="workflow.assign.message"></s:text></td>
+			</tr>
+			</thead>
+			<tbody>
+			<s:if test="commentList.size()== 0">
+				<tr>
+					<td colspan="8">
+						无可以显示的数据
+					</td>
+				</tr>
+			</s:if>
+			<s:iterator value="commentList" var="c">
+				<tr>
+					<td><s:property value="#c.assigneeName"/></td>
+					<td><s:date name="#c.assigneeTime" format="yyyy-MM-dd HH:mm"></s:date></td>
+					<td><s:property value="#c.resultName"/></td>
+					<td>
+						<s:property value="#c.message"/><br/>
+						<s:if test="#c.quesnaireId !=0">
+							<a href="javascript:popWindow('module/sub/callback_seeQuesnaire.action?quesnaireId=<s:property value='#c.quesnaireId'/>',880, 600,'查看测评问卷', 'BudgetUpload', true)">查看问卷</a> 
+						</s:if>
+					</td>
+				</tr>	
+			</s:iterator>
+			</tbody>
+		</table>
+	</fieldset>
+</body>
+</html>

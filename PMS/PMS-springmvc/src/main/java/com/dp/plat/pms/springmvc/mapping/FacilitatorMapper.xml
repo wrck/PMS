@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.FacilitatorMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.Facilitator">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="code" jdbcType="VARCHAR" property="code" />
+    <result column="account" jdbcType="VARCHAR" property="account" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="bankInfo" jdbcType="VARCHAR" property="bankInfo" />
+    <result column="bankAccount" jdbcType="VARCHAR" property="bankAccount" />
+    <result column="cnapsCode" jdbcType="VARCHAR" property="cnapsCode" />
+    <result column="contacts" jdbcType="VARCHAR" property="contacts" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="state" jdbcType="BIT" property="state" />
+    <result column="needApprove" jdbcType="BIT" property="needApprove" />
+    <result column="approveStatus" jdbcType="INTEGER" property="approveStatus" />
+    <result column="deliveryIds" jdbcType="VARCHAR" property="deliveryIds" />
+    <result column="relateType" jdbcType="VARCHAR" property="relateType" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `code`, `account`, `name`, `type`, `bankInfo`, `bankAccount`, `cnapsCode`, 
+    `contacts`, `tel`, `email`, `state`, `needApprove`, `approveStatus`, `deliveryIds`, 
+    `relateType`, `effectiveFrom`, `effectiveTo`, `createBy`, `createTime`, `updateBy`, 
+    `updateTime`, `customInfo`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_facilitator
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_facilitator
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_facilitator (`code`, `account`, `name`, 
+      `type`, `bankInfo`, `bankAccount`, 
+      `cnapsCode`, `contacts`, `tel`, 
+      `email`, `state`, `needApprove`, 
+      `approveStatus`, `deliveryIds`, `relateType`, 
+      `effectiveFrom`, `effectiveTo`, `createBy`, 
+      `createTime`, `updateBy`, `updateTime`, 
+      `customInfo`)
+    values (#{code,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{type,jdbcType=VARCHAR}, #{bankInfo,jdbcType=VARCHAR}, #{bankAccount,jdbcType=VARCHAR}, 
+      #{cnapsCode,jdbcType=VARCHAR}, #{contacts,jdbcType=VARCHAR}, #{tel,jdbcType=VARCHAR}, 
+      #{email,jdbcType=VARCHAR}, #{state,jdbcType=BIT}, #{needApprove,jdbcType=BIT}, 
+      #{approveStatus,jdbcType=INTEGER}, #{deliveryIds,jdbcType=VARCHAR}, #{relateType,jdbcType=VARCHAR}, 
+      #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{customInfo,jdbcType=JSON})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_facilitator
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="code != null">
+        `code`,
+      </if>
+      <if test="account != null">
+        `account`,
+      </if>
+      <if test="name != null">
+        `name`,
+      </if>
+      <if test="type != null">
+        `type`,
+      </if>
+      <if test="bankInfo != null">
+        `bankInfo`,
+      </if>
+      <if test="bankAccount != null">
+        `bankAccount`,
+      </if>
+      <if test="cnapsCode != null">
+        `cnapsCode`,
+      </if>
+      <if test="contacts != null">
+        `contacts`,
+      </if>
+      <if test="tel != null">
+        `tel`,
+      </if>
+      <if test="email != null">
+        `email`,
+      </if>
+      <if test="state != null">
+        `state`,
+      </if>
+      <if test="needApprove != null">
+        `needApprove`,
+      </if>
+      <if test="approveStatus != null">
+        `approveStatus`,
+      </if>
+      <if test="deliveryIds != null">
+        `deliveryIds`,
+      </if>
+      <if test="relateType != null">
+        `relateType`,
+      </if>
+      <if test="effectiveFrom != null">
+        `effectiveFrom`,
+      </if>
+      <if test="effectiveTo != null">
+        `effectiveTo`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="account != null">
+        #{account,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="bankInfo != null">
+        #{bankInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null">
+        #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="cnapsCode != null">
+        #{cnapsCode,jdbcType=VARCHAR},
+      </if>
+      <if test="contacts != null">
+        #{contacts,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=BIT},
+      </if>
+      <if test="needApprove != null">
+        #{needApprove,jdbcType=BIT},
+      </if>
+      <if test="approveStatus != null">
+        #{approveStatus,jdbcType=INTEGER},
+      </if>
+      <if test="deliveryIds != null">
+        #{deliveryIds,jdbcType=VARCHAR},
+      </if>
+      <if test="relateType != null">
+        #{relateType,jdbcType=VARCHAR},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator">
+    update pm_facilitator
+    <set>
+      <if test="code != null">
+        `code` = #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="account != null">
+        `account` = #{account,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        `name` = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        `type` = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="bankInfo != null">
+        `bankInfo` = #{bankInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null">
+        `bankAccount` = #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="cnapsCode != null">
+        `cnapsCode` = #{cnapsCode,jdbcType=VARCHAR},
+      </if>
+      <if test="contacts != null">
+        `contacts` = #{contacts,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        `tel` = #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        `email` = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null">
+        `state` = #{state,jdbcType=BIT},
+      </if>
+      <if test="needApprove != null">
+        `needApprove` = #{needApprove,jdbcType=BIT},
+      </if>
+      <if test="approveStatus != null">
+        `approveStatus` = #{approveStatus,jdbcType=INTEGER},
+      </if>
+      <if test="deliveryIds != null">
+        `deliveryIds` = #{deliveryIds,jdbcType=VARCHAR},
+      </if>
+      <if test="relateType != null">
+        `relateType` = #{relateType,jdbcType=VARCHAR},
+      </if>
+      <if test="effectiveFrom != null">
+        `effectiveFrom` = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        `effectiveTo` = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        `customInfo` = #{customInfo,jdbcType=JSON},
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator">
+    update pm_facilitator
+    set `code` = #{code,jdbcType=VARCHAR},
+      `account` = #{account,jdbcType=VARCHAR},
+      `name` = #{name,jdbcType=VARCHAR},
+      `type` = #{type,jdbcType=VARCHAR},
+      `bankInfo` = #{bankInfo,jdbcType=VARCHAR},
+      `bankAccount` = #{bankAccount,jdbcType=VARCHAR},
+      `cnapsCode` = #{cnapsCode,jdbcType=VARCHAR},
+      `contacts` = #{contacts,jdbcType=VARCHAR},
+      `tel` = #{tel,jdbcType=VARCHAR},
+      `email` = #{email,jdbcType=VARCHAR},
+      `state` = #{state,jdbcType=BIT},
+      `needApprove` = #{needApprove,jdbcType=BIT},
+      `approveStatus` = #{approveStatus,jdbcType=INTEGER},
+      `deliveryIds` = #{deliveryIds,jdbcType=VARCHAR},
+      `relateType` = #{relateType,jdbcType=VARCHAR},
+      `effectiveFrom` = #{effectiveFrom,jdbcType=TIMESTAMP},
+      `effectiveTo` = #{effectiveTo,jdbcType=TIMESTAMP},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      `customInfo` = #{customInfo,jdbcType=JSON}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+        f.`id` = #{id, jdbcType=INTEGER} AND
+    </if>
+    <if test="code != null and '' != code">
+        f.`code` = #{code, jdbcType=VARCHAR} AND
+    </if>
+    <if test="account != null and '' != account">
+        f.`account` = #{account, jdbcType=VARCHAR} AND
+    </if>
+    <if test="name != null and '' != name">
+        f.`name` = #{name, jdbcType=VARCHAR} AND
+    </if>
+    <if test="type != null and '' != type">
+        f.`type` = #{type, jdbcType=VARCHAR} AND
+    </if>
+    <if test="bankInfo != null and '' != bankInfo">
+        f.`bankInfo` = #{bankInfo, jdbcType=VARCHAR} AND
+    </if>
+    <if test="bankAccount != null and '' != bankAccount">
+        f.`bankAccount` = #{bankAccount, jdbcType=VARCHAR} AND
+    </if>
+    <if test="cnapsCode != null and '' != cnapsCode">
+        f.`cnapsCode` = #{cnapsCode, jdbcType=VARCHAR} AND
+    </if>
+    <if test="contacts != null and '' != contacts">
+        f.`contacts` = #{contacts, jdbcType=VARCHAR} AND
+    </if>
+    <if test="tel != null and '' != tel">
+        f.`tel` = #{tel, jdbcType=VARCHAR} AND
+    </if>
+    <if test="email != null and '' != email">
+        f.`email` = #{email, jdbcType=VARCHAR} AND
+    </if>
+    <if test="state != null">
+        f.`state` = #{state, jdbcType=BIT} AND
+    </if>
+    <if test="needApprove != null">
+        f.`needApprove` = #{needApprove, jdbcType=BIT} AND
+    </if>
+    <if test="approveStatus != null">
+        f.`approveStatus` = #{approveStatus, jdbcType=INTEGER} AND
+    </if>
+    <if test="deliveryIds != null and '' != deliveryIds">
+        f.`deliveryIds` = #{deliveryIds, jdbcType=VARCHAR} AND
+    </if>
+    <if test="relateType != null and '' != relateType">
+        f.`relateType` = #{relateType, jdbcType=VARCHAR} AND
+    </if>
+    <if test="effectiveFrom != null">
+        <![CDATA[ f.`effectiveFrom` <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+    </if>
+    <if test="effectiveTo != null">
+        <![CDATA[ (f.`effectiveTo` is null or f.`effectiveTo` >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+    </if>
+    <if test="createBy != null and '' != createBy">
+        f.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="createTime != null">
+        f.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="updateBy != null and '' != updateBy">
+        f.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+    </if>
+    <if test="updateTime != null">
+        f.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+    </if>
+    <if test="customInfo != null">
+        f.`customInfo` = #{customInfo, jdbcType=JSON} AND
+    </if>
+    
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+        <if test="model.id != null">
+            f.`id` = #{model.id, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.code != null and '' != model.code">
+            f.`code` = #{model.code, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.account != null and '' != model.account">
+            f.`account` = #{model.account, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.name != null and '' != model.name">
+            f.`name` = #{model.name, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.type != null and '' != model.type">
+            f.`type` = #{model.type, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.bankInfo != null and '' != model.bankInfo">
+            f.`bankInfo` = #{model.bankInfo, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.bankAccount != null and '' != model.bankAccount">
+            f.`bankAccount` = #{model.bankAccount, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.cnapsCode != null and '' != model.cnapsCode">
+            f.`cnapsCode` = #{model.cnapsCode, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.contacts != null and '' != model.contacts">
+            f.`contacts` = #{model.contacts, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.tel != null and '' != model.tel">
+            f.`tel` = #{model.tel, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.email != null and '' != model.email">
+            f.`email` = #{model.email, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.state != null">
+            f.`state` = #{model.state, jdbcType=BIT} AND
+        </if>
+        <if test="model.needApprove != null">
+            f.`needApprove` = #{model.needApprove, jdbcType=BIT} AND
+        </if>
+        <if test="model.approveStatus != null">
+            f.`approveStatus` = #{model.approveStatus, jdbcType=INTEGER} AND
+        </if>
+        <if test="model.deliveryIds != null and '' != model.deliveryIds">
+            f.`deliveryIds` = #{model.deliveryIds, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.relateType != null and '' != model.relateType">
+            f.`relateType` = #{model.relateType, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.effectiveFrom != null">
+            <![CDATA[ f.`effectiveFrom` <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+        </if>
+        <if test="model.effectiveTo != null">
+            <![CDATA[ (f.`effectiveTo` is null or f.`effectiveTo` >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+        </if>
+        <if test="model.createBy != null and '' != model.createBy">
+            f.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.createTime != null">
+            f.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+        </if>
+        <if test="model.updateBy != null and '' != model.updateBy">
+            f.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+        </if>
+        <if test="model.updateTime != null">
+            f.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+        </if>
+        <if test="model.customInfo != null">
+            f.`customInfo` = #{model.customInfo, jdbcType=JSON} AND
+        </if>
+    </if>
+    <if test="fuzzySearch == true and fuzzy != ''">
+        (
+            f.`code` like CONCAT("%", #{fuzzy}, "%") or
+            f.`account` like CONCAT("%", #{fuzzy}, "%") or
+            f.`name` like CONCAT("%", #{fuzzy}, "%") or
+            f.`type` like CONCAT("%", #{fuzzy}, "%") or
+            f.`bankInfo` like CONCAT("%", #{fuzzy}, "%") or
+            f.`bankAccount` like CONCAT("%", #{fuzzy}, "%") or
+            f.`cnapsCode` like CONCAT("%", #{fuzzy}, "%") or
+            f.`contacts` like CONCAT("%", #{fuzzy}, "%") or
+            f.`tel` like CONCAT("%", #{fuzzy}, "%") or
+            f.`email` like CONCAT("%", #{fuzzy}, "%") or
+            f.`deliveryIds` like CONCAT("%", #{fuzzy}, "%") or
+            f.`relateType` like CONCAT("%", #{fuzzy}, "%") or
+            f.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+            f.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+        )
+    </if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator" resultMap="BaseResultMap">
+    select * from pm_facilitator AS `f`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.Facilitator" resultType="long">
+    select count(1) from pm_facilitator AS `f`
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_where_selective" />
+        </trim>
+    </where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.FacilitatorVO">
+    select f.*, bd2.basicDataName as typeName from pm_facilitator AS `f`
+    left join `fnd_basic_data` bd2 
+	        on f.`type` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'dispatchType' 
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+    <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_facilitator AS `f`
+    left join `fnd_basic_data` bd2 
+	        on f.`type` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'dispatchType' 
+    <where>
+        <trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+            <include refid="sql_model_where_selective" />
+        </trim>
+    </where>
+  </select>
+</mapper>

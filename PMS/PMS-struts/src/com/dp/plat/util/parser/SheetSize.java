@@ -1,0 +1,33 @@
+package com.dp.plat.util.parser;
+
+/**
+ * @author Administrator
+ * 
+ */
+public class SheetSize {
+	private int rowMin;
+	private int rowMax;
+
+	public int getRowMax() {
+		return rowMax;
+	}
+
+	public void setRowMax(int rowMax) {
+		this.rowMax = rowMax;
+	}
+
+	public int getRowMin() {
+		return rowMin;
+	}
+
+	public void setRowMin(int rowMin) {
+		this.rowMin = rowMin;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getRowNum() {
+		return rowMax - rowMin + 1;
+	}
+}

@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.extend.d365.dao.PurchaseReceiptMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="sourceOrderType" jdbcType="VARCHAR" property="sourceOrderType" />
+    <result column="sourceOrderId" jdbcType="INTEGER" property="sourceOrderId" />
+    <result column="sourceReceiptType" jdbcType="VARCHAR" property="sourceReceiptType" />
+    <result column="sourceReceiptId" jdbcType="INTEGER" property="sourceReceiptId" />
+    <result column="purchId" jdbcType="VARCHAR" property="purchId" />
+    <result column="deliveryDate" jdbcType="DATE" property="deliveryDate" />
+    <result column="documentDate" jdbcType="DATE" property="documentDate" />
+    <result column="packingSlipId" jdbcType="VARCHAR" property="packingSlipId" />
+    <result column="packingSlipRemark" jdbcType="VARCHAR" property="packingSlipRemark" />
+    <result column="projectProgress" jdbcType="VARCHAR" property="projectProgress" />
+    <result column="dataAreaId" jdbcType="VARCHAR" property="dataAreaId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `sourceOrderType`, `sourceOrderId`, `sourceReceiptType`, `sourceReceiptId`, 
+    `purchId`, `deliveryDate`, `documentDate`, `packingSlipId`, `packingSlipRemark`, 
+    `projectProgress`, `dataAreaId`, `customInfo`, `createBy`, `createTime`, `updateBy`, 
+    `updateTime`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from dp_erp_purchase_receipt_header
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from dp_erp_purchase_receipt_header
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_receipt_header (`sourceOrderType`, `sourceOrderId`, `sourceReceiptType`, 
+      `sourceReceiptId`, `purchId`, `deliveryDate`, 
+      `documentDate`, `packingSlipId`, `packingSlipRemark`, 
+      `projectProgress`, `dataAreaId`, `customInfo`, 
+      `createBy`, `createTime`, `updateBy`, 
+      `updateTime`)
+    values (#{sourceOrderType,jdbcType=VARCHAR}, #{sourceOrderId,jdbcType=INTEGER}, #{sourceReceiptType,jdbcType=VARCHAR}, 
+      #{sourceReceiptId,jdbcType=INTEGER}, #{purchId,jdbcType=VARCHAR}, #{deliveryDate,jdbcType=DATE}, 
+      #{documentDate,jdbcType=DATE}, #{packingSlipId,jdbcType=VARCHAR}, #{packingSlipRemark,jdbcType=VARCHAR}, 
+      #{projectProgress,jdbcType=VARCHAR}, #{dataAreaId,jdbcType=VARCHAR}, #{customInfo,jdbcType=JSON}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into dp_erp_purchase_receipt_header
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sourceOrderType != null">
+        `sourceOrderType`,
+      </if>
+      <if test="sourceOrderId != null">
+        `sourceOrderId`,
+      </if>
+      <if test="sourceReceiptType != null">
+        `sourceReceiptType`,
+      </if>
+      <if test="sourceReceiptId != null">
+        `sourceReceiptId`,
+      </if>
+      <if test="purchId != null">
+        `purchId`,
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate`,
+      </if>
+      <if test="documentDate != null">
+        `documentDate`,
+      </if>
+      <if test="packingSlipId != null">
+        `packingSlipId`,
+      </if>
+      <if test="packingSlipRemark != null">
+        `packingSlipRemark`,
+      </if>
+      <if test="projectProgress != null">
+        `projectProgress`,
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sourceOrderType != null">
+        #{sourceOrderType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceOrderId != null">
+        #{sourceOrderId,jdbcType=INTEGER},
+      </if>
+      <if test="sourceReceiptType != null">
+        #{sourceReceiptType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceReceiptId != null">
+        #{sourceReceiptId,jdbcType=INTEGER},
+      </if>
+      <if test="purchId != null">
+        #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="documentDate != null">
+        #{documentDate,jdbcType=DATE},
+      </if>
+      <if test="packingSlipId != null">
+        #{packingSlipId,jdbcType=VARCHAR},
+      </if>
+      <if test="packingSlipRemark != null">
+        #{packingSlipRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="projectProgress != null">
+        #{projectProgress,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAreaId != null">
+        #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt">
+    update dp_erp_purchase_receipt_header
+    <set>
+      <if test="sourceOrderType != null">
+        `sourceOrderType` = #{sourceOrderType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceOrderId != null">
+        `sourceOrderId` = #{sourceOrderId,jdbcType=INTEGER},
+      </if>
+      <if test="sourceReceiptType != null">
+        `sourceReceiptType` = #{sourceReceiptType,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceReceiptId != null">
+        `sourceReceiptId` = #{sourceReceiptId,jdbcType=INTEGER},
+      </if>
+      <if test="purchId != null">
+        `purchId` = #{purchId,jdbcType=VARCHAR},
+      </if>
+      <if test="deliveryDate != null">
+        `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      </if>
+      <if test="documentDate != null">
+        `documentDate` = #{documentDate,jdbcType=DATE},
+      </if>
+      <if test="packingSlipId != null">
+        `packingSlipId` = #{packingSlipId,jdbcType=VARCHAR},
+      </if>
+      <if test="packingSlipRemark != null">
+        `packingSlipRemark` = #{packingSlipRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="projectProgress != null">
+        `projectProgress` = #{projectProgress,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAreaId != null">
+        `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        `customInfo` = #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt">
+    update dp_erp_purchase_receipt_header
+    set `sourceOrderType` = #{sourceOrderType,jdbcType=VARCHAR},
+      `sourceOrderId` = #{sourceOrderId,jdbcType=INTEGER},
+      `sourceReceiptType` = #{sourceReceiptType,jdbcType=VARCHAR},
+      `sourceReceiptId` = #{sourceReceiptId,jdbcType=INTEGER},
+      `purchId` = #{purchId,jdbcType=VARCHAR},
+      `deliveryDate` = #{deliveryDate,jdbcType=DATE},
+      `documentDate` = #{documentDate,jdbcType=DATE},
+      `packingSlipId` = #{packingSlipId,jdbcType=VARCHAR},
+      `packingSlipRemark` = #{packingSlipRemark,jdbcType=VARCHAR},
+      `projectProgress` = #{projectProgress,jdbcType=VARCHAR},
+      `dataAreaId` = #{dataAreaId,jdbcType=VARCHAR},
+      `customInfo` = #{customInfo,jdbcType=JSON},
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+		prh.`id` = #{id, jdbcType=INTEGER} AND
+	</if>
+	<if test="sourceOrderType != null and '' != sourceOrderType">
+		prh.`sourceOrderType` = #{sourceOrderType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="sourceOrderId != null">
+		prh.`sourceOrderId` = #{sourceOrderId, jdbcType=INTEGER} AND
+	</if>
+	<if test="sourceReceiptType != null and '' != sourceReceiptType">
+		prh.`sourceReceiptType` = #{sourceReceiptType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="sourceReceiptId != null">
+		prh.`sourceReceiptId` = #{sourceReceiptId, jdbcType=INTEGER} AND
+	</if>
+	<if test="purchId != null">
+		prh.`purchId` = #{purchId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="deliveryDate != null">
+		prh.`deliveryDate` = #{deliveryDate, jdbcType=DATE} AND
+	</if>
+	<if test="documentDate != null">
+		prh.`documentDate` = #{documentDate, jdbcType=DATE} AND
+	</if>
+	<if test="packingSlipId != null and '' != packingSlipId">
+		prh.`packingSlipId` = #{packingSlipId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="packingSlipRemark != null and '' != packingSlipRemark">
+		prh.`packingSlipRemark` = #{packingSlipRemark, jdbcType=VARCHAR} AND
+	</if>
+	<if test="projectProgress != null and '' != projectProgress">
+		prh.`projectProgress` = #{projectProgress, jdbcType=VARCHAR} AND
+	</if>
+	<if test="dataAreaId != null and '' != dataAreaId">
+		prh.`dataAreaId` = #{dataAreaId, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customInfo != null">
+		prh.`customInfo` = #{customInfo, jdbcType=JSON} AND
+	</if>
+	<if test="createBy != null and '' != createBy">
+		prh.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="createTime != null">
+		prh.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		prh.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		prh.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+	
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.id != null">
+			prh.`id` = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.sourceOrderType != null and '' != model.sourceOrderType">
+			prh.`sourceOrderType` = #{model.sourceOrderType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.sourceOrderId != null">
+			prh.`sourceOrderId` = #{model.sourceOrderId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.sourceReceiptType != null and '' != model.sourceReceiptType">
+			prh.`sourceReceiptType` = #{model.sourceReceiptType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.sourceReceiptId != null">
+			prh.`sourceReceiptId` = #{model.sourceReceiptId, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.purchId != null">
+			prh.`purchId` = #{model.purchId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.deliveryDate != null">
+			prh.`deliveryDate` = #{model.deliveryDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.documentDate != null">
+			prh.`documentDate` = #{model.documentDate, jdbcType=DATE} AND
+		</if>
+		<if test="model.packingSlipId != null and '' != model.packingSlipId">
+			prh.`packingSlipId` = #{model.packingSlipId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.packingSlipRemark != null and '' != model.packingSlipRemark">
+			prh.`packingSlipRemark` = #{model.packingSlipRemark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.projectProgress != null and '' != model.projectProgress">
+			prh.`projectProgress` = #{model.projectProgress, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.dataAreaId != null and '' != model.dataAreaId">
+			prh.`dataAreaId` = #{model.dataAreaId, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customInfo != null">
+			prh.`customInfo` = #{model.customInfo, jdbcType=JSON} AND
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			prh.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.createTime != null">
+			prh.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			prh.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			prh.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			prh.`sourceOrderType` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`sourceReceiptType` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`packingSlipId` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`packingSlipRemark` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`projectProgress` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`dataAreaId` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+			prh.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_receipt_header AS `prh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.extend.d365.entity.PurchaseReceipt" resultType="long">
+    select count(1) from dp_erp_purchase_receipt_header AS `prh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <!-- <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from dp_erp_purchase_receipt_header AS `prh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from dp_erp_purchase_receipt_header AS `prh`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </select> -->
+</mapper>

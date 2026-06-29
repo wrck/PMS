@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+    <!-- 查询SSE的付款信息 -->
+    <select id="querySSESubcontractPaymentList" resultClass="java.util.HashMap">
+        SELECT * FROM `v_service_offer_4_pms`
+    </select>
+    
+    <insert id="insertSSESubcontractPayment" parameterClass="list">
+      INSERT INTO `pm_subcontract_project_payment_sse` (
+          `id`, `workNo`, `name`, `offerNum`, `applyAmount`, `receiver`, `bank`, `bankAccount`, `useage`, `paystate`, `confirmTime`, `paymentTime`, `approveState`, `type`, `approveAmount`, `remark`, `subcontractNo`
+      ) 
+      VALUES
+      <iterate conjunction=",">
+         (
+            #[].id#, #[].workNo#, #[].name#, #[].offerNum#, #[].applyAmount#, 
+            #[].receiver#, #[].bank#, #[].bankAccount#, #[].useage#, 
+            #[].paystate#, #[].confirmTime#, #[].paymentTime#, #[].approveState#, 
+            #[].type#, #[].approveAmount#, #[].remark#, #[].subcontractNo#
+          )
+      </iterate>
+    </insert>
+    
+    <delete id="deleteSSESubcontractPayment">
+      truncate pm_subcontract_project_payment_sse
+    </delete>
+    
+    <!-- 查询SSE的办事处秘书信息 -->
+    <select id="querySSEDepartmentSectaryList" resultClass="java.util.HashMap">
+        SELECT * FROM dp_department_sse
+    </select>
+    
+    <insert id="insertSSEDepartmentSectary" parameterClass="list">
+      INSERT INTO `pm_project_maintenance_sectary_from_sse` (
+          `depNum`, `depName`, `pDepNum`, `pDepName`, `sectary`, `status`, `updateTime`
+      ) 
+      VALUES
+      <iterate conjunction=",">
+         (
+            #[].depnum#, #[].depname#, #[].pDepnum#, #[].pDepname#, #[].sectary_jobnum#, #[].status#, #[].updateTime#
+          )
+      </iterate>
+      ;
+      
+      UPDATE 
+		  pm_project_maintenance_sectary_from_sse ms 
+		  INNER JOIN ehr_employee e 
+		      ON ms.`sectary` = e.`workNo` 
+	  SET ms.`sectaryEmail` = e.`email`, 
+		  ms.`sectaryName` = e.`name`, 
+		  ms.`sectaryPhone` = e.`mobile`;
+    </insert>
+    
+    <delete id="deleteSSEDepartmentSectary">
+      truncate pm_project_maintenance_sectary_from_sse
+    </delete>
+</sqlMap>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dp.plat.core.dao.RoleMenuMapper" >
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.RoleMenu" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="role_id" property="roleId" jdbcType="INTEGER" />
+    <result column="menu_id" property="menuId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="create_by" property="createBy" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, role_id, menu_id, create_time, create_by
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_role_menu
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_role_menu
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.RoleMenu" >
+    insert into t_role_menu (id, role_id, menu_id, 
+      create_time, create_by)
+    values (#{id,jdbcType=INTEGER}, #{roleId,jdbcType=INTEGER}, #{menuId,jdbcType=INTEGER}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.RoleMenu" >
+    insert into t_role_menu
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="roleId != null" >
+        role_id,
+      </if>
+      <if test="menuId != null" >
+        menu_id,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="createBy != null" >
+        create_by,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="roleId != null" >
+        #{roleId,jdbcType=INTEGER},
+      </if>
+      <if test="menuId != null" >
+        #{menuId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null" >
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.RoleMenu" >
+    update t_role_menu
+    <set >
+      <if test="roleId != null" >
+        role_id = #{roleId,jdbcType=INTEGER},
+      </if>
+      <if test="menuId != null" >
+        menu_id = #{menuId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null" >
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.RoleMenu" >
+    update t_role_menu
+    set role_id = #{roleId,jdbcType=INTEGER},
+      menu_id = #{menuId,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_by = #{createBy,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <insert id="batchInsertRoleMenu" parameterType="map">
+  	insert into t_role_menu(role_id, menu_id, create_time, create_by)
+    values
+    <foreach collection="menuIds" item="menuId" index="index" separator="," >  
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	        #{roleId,jdbcType=INTEGER}, #{menuId,jdbcType=INTEGER}, NOW(), #{createBy,jdbcType=VARCHAR}
+        </trim>
+    </foreach>
+  </insert>
+  
+  <select id="selectByRoleId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+  	select <include refid="Base_Column_List" /> 
+  		from t_role_menu 
+  	where role_id = #{role_id,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByMenuId" parameterType="java.lang.Integer" >
+    delete from t_role_menu
+    where menu_id = #{menu_id,jdbcType=INTEGER}
+  </delete>
+  
+  <delete id="deleteByRoleId" parameterType="java.lang.Integer" >
+    delete from t_role_menu
+    where role_id = #{role_id,jdbcType=INTEGER}
+  </delete>
+  
+  <select id="queryMenuWithCheckStateByRoleId" parameterType="java.lang.Integer">
+	SELECT 
+	    m.*, TRUE AS checked 
+	FROM
+	    t_role_menu rm 
+	    LEFT JOIN t_menu m 
+	        ON rm.`menu_id` = m.`id` 
+	WHERE m.id IS NOT NULL 
+	    AND rm.`role_id` = #{role_id,jdbcType=INTEGER} 
+	UNION
+	SELECT 
+	    m.*, FALSE AS checked 
+	FROM
+	    t_menu m 
+	WHERE NOT EXISTS 
+	    (SELECT 
+	        1 
+	    FROM
+	        t_role_menu rm 
+	    WHERE m.`id` = rm.`menu_id` 
+	        AND rm.`role_id` = #{role_id,jdbcType=INTEGER}) 
+  </select>
+  
+</mapper>

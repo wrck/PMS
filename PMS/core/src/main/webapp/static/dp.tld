@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN"
+                        "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+<taglib>
+	<tlib-version>1.0</tlib-version>
+	<jsp-version>1.2</jsp-version>
+	<short-name>dp</short-name>
+	<uri>http://www.dp.com/dp</uri>
+	<display-name>Dp tag library</display-name>
+	<description>Dp tag library</description>
+	<tag>
+		<name>leftmenu</name>
+		<tag-class>com.dp.plat.core.tags.LeftMenuTag</tag-class>
+	</tag>
+	<tag>
+		<name>JSDebugger</name>
+		<tag-class>com.dp.plat.core.tags.JSDebuggerTag</tag-class>
+		<attribute><name>type</name></attribute>
+		<attribute><name>clear</name></attribute>
+		<attribute><name>debug</name></attribute>
+		<attribute><name>debugTime</name></attribute>
+		<attribute><name>content</name></attribute>
+		<attribute><name>options</name></attribute>
+	</tag>
+</taglib>

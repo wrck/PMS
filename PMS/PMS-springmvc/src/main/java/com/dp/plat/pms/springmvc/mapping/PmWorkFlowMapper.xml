@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.PmWorkFlowMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="processKey" jdbcType="VARCHAR" property="processKey" />
+    <result column="taskKey" jdbcType="VARCHAR" property="taskKey" />
+    <result column="applyTime" jdbcType="TIMESTAMP" property="applyTime" />
+    <result column="beginTime" jdbcType="TIMESTAMP" property="beginTime" />
+    <result column="endTime" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="dueTime" jdbcType="TIMESTAMP" property="dueTime" />
+    <result column="procInstId" jdbcType="VARCHAR" property="procInstId" />
+    <result column="message" jdbcType="VARCHAR" property="message" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="userId" jdbcType="INTEGER" property="userId" />
+    <result column="objType" jdbcType="VARCHAR" property="objType" />
+    <result column="objId" jdbcType="INTEGER" property="objId" />
+    <result column="dataType" jdbcType="VARCHAR" property="dataType" />
+    <result column="dataId" jdbcType="INTEGER" property="dataId" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="orgId" jdbcType="INTEGER" property="orgId" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, processKey, taskKey, applyTime, beginTime, endTime, dueTime, procInstId, message, 
+    status, userId, objType, objId, dataType, dataId, createBy, createTime, updateBy, 
+    updateTime, orgId, customInfo
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_workflow
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_workflow
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_workflow (processKey, taskKey, applyTime, 
+      beginTime, endTime, dueTime, 
+      procInstId, message, status, 
+      userId, objType, objId, 
+      dataType, dataId, createBy, 
+      createTime, updateBy, updateTime, 
+      orgId, customInfo)
+    values (#{processKey,jdbcType=VARCHAR}, #{taskKey,jdbcType=VARCHAR}, #{applyTime,jdbcType=TIMESTAMP}, 
+      #{beginTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{dueTime,jdbcType=TIMESTAMP}, 
+      #{procInstId,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, 
+      #{userId,jdbcType=INTEGER}, #{objType,jdbcType=VARCHAR}, #{objId,jdbcType=INTEGER}, 
+      #{dataType,jdbcType=VARCHAR}, #{dataId,jdbcType=INTEGER}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{orgId,jdbcType=INTEGER}, #{customInfo,jdbcType=JSON})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_workflow
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="processKey != null">
+        processKey,
+      </if>
+      <if test="taskKey != null">
+        taskKey,
+      </if>
+      <if test="applyTime != null">
+        applyTime,
+      </if>
+      <if test="beginTime != null">
+        beginTime,
+      </if>
+      <if test="endTime != null">
+        endTime,
+      </if>
+      <if test="dueTime != null">
+        dueTime,
+      </if>
+      <if test="procInstId != null">
+        procInstId,
+      </if>
+      <if test="message != null">
+        message,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="userId != null">
+        userId,
+      </if>
+      <if test="objType != null">
+        objType,
+      </if>
+      <if test="objId != null">
+        objId,
+      </if>
+      <if test="dataType != null">
+        dataType,
+      </if>
+      <if test="dataId != null">
+        dataId,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="orgId != null">
+        orgId,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="processKey != null">
+        #{processKey,jdbcType=VARCHAR},
+      </if>
+      <if test="taskKey != null">
+        #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="applyTime != null">
+        #{applyTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="beginTime != null">
+        #{beginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null">
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="dueTime != null">
+        #{dueTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="procInstId != null">
+        #{procInstId,jdbcType=VARCHAR},
+      </if>
+      <if test="message != null">
+        #{message,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="objType != null">
+        #{objType,jdbcType=VARCHAR},
+      </if>
+      <if test="objId != null">
+        #{objId,jdbcType=INTEGER},
+      </if>
+      <if test="dataType != null">
+        #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="orgId != null">
+        #{orgId,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
+    update pm_workflow
+    <set>
+      <if test="processKey != null">
+        processKey = #{processKey,jdbcType=VARCHAR},
+      </if>
+      <if test="taskKey != null">
+        taskKey = #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="applyTime != null">
+        applyTime = #{applyTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="beginTime != null">
+        beginTime = #{beginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null">
+        endTime = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="dueTime != null">
+        dueTime = #{dueTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="procInstId != null">
+        procInstId = #{procInstId,jdbcType=VARCHAR},
+      </if>
+      <if test="message != null">
+        message = #{message,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        userId = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="objType != null">
+        objType = #{objType,jdbcType=VARCHAR},
+      </if>
+      <if test="objId != null">
+        objId = #{objId,jdbcType=INTEGER},
+      </if>
+      <if test="dataType != null">
+        dataType = #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        dataId = #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="orgId != null">
+        orgId = #{orgId,jdbcType=INTEGER},
+      </if>
+      <if test="customInfo != null">
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow">
+    update pm_workflow
+    set processKey = #{processKey,jdbcType=VARCHAR},
+      taskKey = #{taskKey,jdbcType=VARCHAR},
+      applyTime = #{applyTime,jdbcType=TIMESTAMP},
+      beginTime = #{beginTime,jdbcType=TIMESTAMP},
+      endTime = #{endTime,jdbcType=TIMESTAMP},
+      dueTime = #{dueTime,jdbcType=TIMESTAMP},
+      procInstId = #{procInstId,jdbcType=VARCHAR},
+      message = #{message,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      userId = #{userId,jdbcType=INTEGER},
+      objType = #{objType,jdbcType=VARCHAR},
+      objId = #{objId,jdbcType=INTEGER},
+      dataType = #{dataType,jdbcType=VARCHAR},
+      dataId = #{dataId,jdbcType=INTEGER},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      orgId = #{orgId,jdbcType=INTEGER},
+      <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+      <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				wf.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="processKey != null and '' != processKey">
+				wf.processKey = #{processKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="taskKey != null and '' != taskKey">
+				wf.taskKey = #{taskKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="applyTime != null">
+				wf.applyTime = #{applyTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="beginTime != null">
+				wf.beginTime = #{beginTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="endTime != null">
+				wf.endTime = #{endTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="dueTime != null">
+				wf.dueTime = #{dueTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="procInstId != null and '' != procInstId">
+				wf.procInstId = #{procInstId, jdbcType=VARCHAR} AND
+			</if>
+			<if test="message != null and '' != message">
+				wf.message = #{message, jdbcType=VARCHAR} AND
+			</if>
+			<if test="status != null and '' != status">
+				wf.status = #{status, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userId != null">
+				wf.userId = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				wf.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				wf.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="dataType != null and '' != dataType">
+				wf.dataType = #{dataType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataId != null">
+				wf.dataId = #{dataId, jdbcType=INTEGER} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				wf.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				wf.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				wf.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				wf.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="orgId != null">
+				wf.orgId = #{orgId, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					wf.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.processKey != null and '' != model.processKey">
+					wf.processKey = #{model.processKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.taskKey != null and '' != model.taskKey">
+					wf.taskKey = #{model.taskKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.applyTime != null">
+					wf.applyTime = #{model.applyTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.beginTime != null">
+					wf.beginTime = #{model.beginTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.endTime != null">
+					wf.endTime = #{model.endTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dueTime != null">
+					wf.dueTime = #{model.dueTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.procInstId != null and '' != model.procInstId">
+					wf.procInstId = #{model.procInstId, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.message != null and '' != model.message">
+					wf.message = #{model.message, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					wf.status = #{model.status, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userId != null">
+					wf.userId = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					wf.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					wf.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dataType != null and '' != model.dataType">
+					wf.dataType = #{model.dataType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataId != null">
+					wf.dataId = #{model.dataId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					wf.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					wf.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					wf.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					wf.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.orgId != null">
+					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					wf.processKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.taskKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.procInstId like CONCAT("%", #{fuzzy}, "%") or
+					wf.message like CONCAT("%", #{fuzzy}, "%") or
+					wf.status like CONCAT("%", #{fuzzy}, "%") or
+					wf.objType like CONCAT("%", #{fuzzy}, "%") or
+					wf.dataType like CONCAT("%", #{fuzzy}, "%") or
+					wf.createBy like CONCAT("%", #{fuzzy}, "%") or
+					wf.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow" resultMap="BaseResultMap">
+    select * from pm_workflow as wf
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				wf.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="processKey != null and '' != processKey">
+				wf.processKey = #{processKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="taskKey != null and '' != taskKey">
+				wf.taskKey = #{taskKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="applyTime != null">
+				wf.applyTime = #{applyTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="beginTime != null">
+				wf.beginTime = #{beginTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="endTime != null">
+				wf.endTime = #{endTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="dueTime != null">
+				wf.dueTime = #{dueTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="procInstId != null and '' != procInstId">
+				wf.procInstId = #{procInstId, jdbcType=VARCHAR} AND
+			</if>
+			<if test="message != null and '' != message">
+				wf.message = #{message, jdbcType=VARCHAR} AND
+			</if>
+			<if test="status != null and '' != status">
+				wf.status = #{status, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userId != null">
+				wf.userId = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				wf.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				wf.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="dataType != null and '' != dataType">
+				wf.dataType = #{dataType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataId != null">
+				wf.dataId = #{dataId, jdbcType=INTEGER} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				wf.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				wf.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				wf.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				wf.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="orgId != null">
+				wf.orgId = #{orgId, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.PmWorkFlow" resultType="long">
+    select count(1) from pm_workflow as wf
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				wf.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="processKey != null and '' != processKey">
+				wf.processKey = #{processKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="taskKey != null and '' != taskKey">
+				wf.taskKey = #{taskKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="applyTime != null">
+				wf.applyTime = #{applyTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="beginTime != null">
+				wf.beginTime = #{beginTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="endTime != null">
+				wf.endTime = #{endTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="dueTime != null">
+				wf.dueTime = #{dueTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="procInstId != null and '' != procInstId">
+				wf.procInstId = #{procInstId, jdbcType=VARCHAR} AND
+			</if>
+			<if test="message != null and '' != message">
+				wf.message = #{message, jdbcType=VARCHAR} AND
+			</if>
+			<if test="status != null and '' != status">
+				wf.status = #{status, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userId != null">
+				wf.userId = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				wf.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				wf.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="dataType != null and '' != dataType">
+				wf.dataType = #{dataType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataId != null">
+				wf.dataId = #{dataId, jdbcType=INTEGER} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				wf.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				wf.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				wf.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				wf.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="orgId != null">
+				wf.orgId = #{orgId, jdbcType=INTEGER} AND
+			</if>
+			<if test="customInfo != null">
+				<!-- wf.customInfo = #{customInfo, jdbcType=JSON} AND -->
+				<foreach collection="customInfo" item="value" index="key">
+				   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+			    </foreach>
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from pm_workflow as wf
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					wf.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.processKey != null and '' != model.processKey">
+					wf.processKey = #{model.processKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.taskKey != null and '' != model.taskKey">
+					wf.taskKey = #{model.taskKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.applyTime != null">
+					wf.applyTime = #{model.applyTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.beginTime != null">
+					wf.beginTime = #{model.beginTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.endTime != null">
+					wf.endTime = #{model.endTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dueTime != null">
+					wf.dueTime = #{model.dueTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.procInstId != null and '' != model.procInstId">
+					wf.procInstId = #{model.procInstId, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.message != null and '' != model.message">
+					wf.message = #{model.message, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					wf.status = #{model.status, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userId != null">
+					wf.userId = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					wf.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					wf.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dataType != null and '' != model.dataType">
+					wf.dataType = #{model.dataType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataId != null">
+					wf.dataId = #{model.dataId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					wf.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					wf.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					wf.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					wf.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.orgId != null">
+					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					wf.processKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.taskKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.procInstId like CONCAT("%", #{fuzzy}, "%") or
+					wf.message like CONCAT("%", #{fuzzy}, "%") or
+					wf.status like CONCAT("%", #{fuzzy}, "%") or
+					wf.objType like CONCAT("%", #{fuzzy}, "%") or
+					wf.dataType like CONCAT("%", #{fuzzy}, "%") or
+					wf.createBy like CONCAT("%", #{fuzzy}, "%") or
+					wf.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_workflow as wf
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					wf.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.processKey != null and '' != model.processKey">
+					wf.processKey = #{model.processKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.taskKey != null and '' != model.taskKey">
+					wf.taskKey = #{model.taskKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.applyTime != null">
+					wf.applyTime = #{model.applyTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.beginTime != null">
+					wf.beginTime = #{model.beginTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.endTime != null">
+					wf.endTime = #{model.endTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dueTime != null">
+					wf.dueTime = #{model.dueTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.procInstId != null and '' != model.procInstId">
+					wf.procInstId = #{model.procInstId, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.message != null and '' != model.message">
+					wf.message = #{model.message, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					wf.status = #{model.status, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userId != null">
+					wf.userId = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					wf.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					wf.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dataType != null and '' != model.dataType">
+					wf.dataType = #{model.dataType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataId != null">
+					wf.dataId = #{model.dataId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					wf.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					wf.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					wf.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					wf.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.orgId != null">
+					wf.orgId = #{model.orgId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.customInfo != null">
+					<!-- wf.customInfo = #{model.customInfo, jdbcType=JSON} AND -->
+					<foreach collection="model.customInfo" item="value" index="key">
+					   wf.customInfo -> '$.${key}' like concat("%", #{value}, "%") AND
+				    </foreach>
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					wf.processKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.taskKey like CONCAT("%", #{fuzzy}, "%") or
+					wf.procInstId like CONCAT("%", #{fuzzy}, "%") or
+					wf.message like CONCAT("%", #{fuzzy}, "%") or
+					wf.status like CONCAT("%", #{fuzzy}, "%") or
+					wf.objType like CONCAT("%", #{fuzzy}, "%") or
+					wf.dataType like CONCAT("%", #{fuzzy}, "%") or
+					wf.createBy like CONCAT("%", #{fuzzy}, "%") or
+					wf.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="selectProcInstIdsBySelective" parameterType="com.dp.plat.pms.springmvc.vo.PmWorkFlowVO" resultType="String">
+    select wf.procInstId from pm_workflow wf
+    <include refid="sql_where" />
+  </select>
+  
+  <delete id="deleteByProcInstId" parameterType="string">
+  	delete from pm_workflow where procInstId = #{_parameter}
+  </delete>
+  
+  <delete id="deleteByProcInstIds" parameterType="string">
+  	delete from pm_workflow where FIND_IN_SET(procInstId, #{_parameter})
+  </delete>
+  
+  <select id="selectActivitiUserMails" parameterType="map" resultType="String">
+  	SELECT 
+	  u.EMAIL_ 
+	FROM
+	  `act_id_group` g 
+	  LEFT JOIN `act_id_membership` m 
+	    ON g.`ID_` = m.`GROUP_ID_` 
+	  LEFT JOIN `act_id_user` u 
+	    ON u.`ID_` = m.`USER_ID_` 
+	  LEFT JOIN `t_user_info` ui 
+	    ON ui.`id` = u.`ID_` 
+	WHERE u.`EMAIL_` > '' 
+	  <if test="groupIds != null">
+	  	<foreach collection="groupIds" open="AND g.`ID_` IN(" close=")" separator="," item="groupId">
+	  		#{groupId}
+	  	</foreach>
+	  </if>
+	  <if test="areaPower != null"> AND FIND_IN_SET(#{areaPower}, ui.`custom5`) </if>
+	  <if test="projectTypes != null"> AND FIND_IN_SET(#{projectTypes}, ui.`custom4`) </if>
+	UNION
+	SELECT 
+	  u.EMAIL_ 
+	FROM
+	  `act_id_user` u 
+	  INNER JOIN `t_user_info` ui 
+	    ON ui.`id` = u.`ID_` 
+	WHERE
+	  u.`EMAIL_` > '' 
+	  <if test="userIds != null">
+	  	<foreach collection="userIds" open="AND u.`ID_` IN(" close=")" separator="," item="userId">
+	  		#{userId}
+	  	</foreach>
+	  </if>
+	  <if test="areaPower != null"> AND FIND_IN_SET(#{areaPower}, ui.`custom5`) </if>
+	  <if test="projectTypes != null"> AND FIND_IN_SET(#{projectTypes}, ui.`custom4`) </if>
+  </select>
+</mapper>

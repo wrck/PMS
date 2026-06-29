@@ -1,0 +1,2370 @@
+[
+  {
+    "TABLE_NAME": "act_ge_bytearray",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_BYTEARR_DEPL",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_deployment",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "GROUP_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_MEMB_GROUP",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_id_group",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "USER_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_MEMB_USER",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_id_user",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "INFO_JSON_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_INFO_JSON_BA",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_INFO_PROCDEF",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "DEPLOYMENT_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_DEPLOYMENT",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_deployment",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "EDITOR_SOURCE_VALUE_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_SOURCE",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "EDITOR_SOURCE_EXTRA_VALUE_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_MODEL_SOURCE_EXTRA",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_event_subscr",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_EVENT_EXEC",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PARENT_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PARENT",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PROCDEF",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_EXE_PROCINST",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "SUPER_EXEC_",
+    "CONSTRAINT_NAME": "ACT_FK_EXE_SUPER",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_ATHRZ_PROCEDEF",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_IDL_PROCINST",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "TASK_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_TSKASS_TASK",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_task",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_job",
+    "COLUMN_NAME": "EXCEPTION_STACK_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_JOB_EXCEPTION",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_TASK_EXE",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_TASK_PROCDEF",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_re_procdef",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_TASK_PROCINST",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "BYTEARRAY_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_VAR_BYTEARRAY",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ge_bytearray",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "EXECUTION_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_VAR_EXE",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_NAME": "ACT_FK_VAR_PROCINST",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "act_ru_execution",
+    "REFERENCED_COLUMN_NAME": "ID_"
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_duration",
+    "COLUMN_NAME": "presalesId",
+    "CONSTRAINT_NAME": "pm_presales_project_duration_ibfk_1",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "pm_presales_project_header",
+    "REFERENCED_COLUMN_NAME": "presalesId"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "t_user",
+    "REFERENCED_COLUMN_NAME": "user_id"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "compID",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "t_user_role_ibfk_1",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "t_user",
+    "REFERENCED_COLUMN_NAME": "user_id"
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "role_id",
+    "CONSTRAINT_NAME": "t_user_role_ibfk_2",
+    "CONSTRAINT_TYPE": "FOREIGN KEY",
+    "REFERENCED_TABLE_NAME": "t_role",
+    "REFERENCED_COLUMN_NAME": "role_id"
+  },
+  {
+    "TABLE_NAME": "act_evt_log",
+    "COLUMN_NAME": "LOG_NR_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ge_bytearray",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ge_property",
+    "COLUMN_NAME": "NAME_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_actinst",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_attachment",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_comment",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_detail",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_identitylink",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_procinst",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_taskinst",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_varinst",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_id_group",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_id_info",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "USER_ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_id_membership",
+    "COLUMN_NAME": "GROUP_ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_id_user",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_deployment",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_model",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_event_subscr",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_execution",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_identitylink",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_job",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_task",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_ru_variable",
+    "COLUMN_NAME": "ID_",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "addressee_info",
+    "COLUMN_NAME": "addre_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "af_industry_asset",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_leak_relation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "af_industry_asset_project_relation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "af_industry_leak",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "af_industry_leak_warning",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "agent_info",
+    "COLUMN_NAME": "agent_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "app_accessory_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "app_comment",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "app_spare_part",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "back_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "bar",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "brw_app_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "brw_spare_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "data_field_relation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "department",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dptech_v_project_product_config_level_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dp_act_unify_task",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_order_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_order_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_receipt_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "dp_erp_purchase_receipt_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_company",
+    "COLUMN_NAME": "compID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_department",
+    "COLUMN_NAME": "depID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_employee",
+    "COLUMN_NAME": "empID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_emp_power",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_job",
+    "COLUMN_NAME": "jobID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_login",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_office_relationship",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_change_log",
+    "COLUMN_NAME": "logID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode_relation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_warranty_grade",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "find_in_set_help",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "firebird_operation_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_act_hi_comment",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_basic_data_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_basic_prjstate",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_company",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_data_refresh_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_department",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_files",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_mails",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_menus",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_roles",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_role_menus",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_spms_arg",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_sys_arg",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_user_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_user_menus",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_user_power",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "mes_oqc_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_basic_deliver_detail",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_basic_prj_deliver",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_callback_quesnaire",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_evaluation_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_result_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_options",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_column_of_relationship",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_common_related_data",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_daily_report",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_settlement",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_notification_template",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_d365",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_sap",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_data_from_erp_source",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_d365",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_sap",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_order_line_from_erp_source",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_pb_plan_from_sms_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_person_from_oa",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_2_delivery_off_from_sap",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_crm",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_oa",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_info_from_sms_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_product_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_lend_product_from_sms_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_callback",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_duration",
+    "COLUMN_NAME": "presalesId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_header",
+    "COLUMN_NAME": "presalesId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_presales_project_product_line",
+    "COLUMN_NAME": "productLineId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project",
+    "COLUMN_NAME": "projectId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_contract",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_group",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_group_relationship",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_incident_table_from_itr",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_instruction",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_license_info_from_license",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_sectary_from_sse",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_service_delivery",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_market_relations_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_member",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_notification",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_notification_state",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_product_line_real",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_property_from_sms_history_bak",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_related_party",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_shipment",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_change_logs",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_soft_version_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_soleagent_lend_from_sms_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_supervision",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_task",
+    "COLUMN_NAME": "taskId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_warranty_callback",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly",
+    "COLUMN_NAME": "weeklyId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_content",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_weekly_feedback",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_report_line_data",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_deliver_files",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_facilitator",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_callback",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_header",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_payment",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_price",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_workflow",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_main",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_product",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_product_component",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_read_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_restore",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_restore_process",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_restore_weekly",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_softwares",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_app_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_bar",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_info2mes_result",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_repair_report_from_mes",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_spare_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "role",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "serve_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "sms_ofst_contract_head_sap_history",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "spare_parts",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "spare_parts_applicant",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "sys_state_or_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "tain_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "tb_sys_log",
+    "COLUMN_NAME": "ID",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "tx_info",
+    "COLUMN_NAME": "tx_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_company",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_data_field_relation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_data_operation",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_dictionary",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_down_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_file",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_file_type",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_mails",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_menu",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_notify_template",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_permission",
+    "COLUMN_NAME": "permission_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_resource",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_role",
+    "COLUMN_NAME": "role_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_role_menu",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_sync_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_sync_state",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_sys_log",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_sys_variable",
+    "COLUMN_NAME": "code",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_login_record",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user_modules",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user_permissions",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "view_warranty",
+    "COLUMN_NAME": "newId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "view_warranty_temp",
+    "COLUMN_NAME": "newId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "view_warranty_with_presales",
+    "COLUMN_NAME": "newId",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "warehouse",
+    "COLUMN_NAME": "whs_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "warehouse_info",
+    "COLUMN_NAME": "info_id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "warehouse_info_detail",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "warranty_change_logs",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "warranty_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "workflow_info",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "PRIMARY",
+    "CONSTRAINT_TYPE": "PRIMARY KEY",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_hi_procinst",
+    "COLUMN_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_NAME": "PROC_INST_ID_",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_procdef_info",
+    "COLUMN_NAME": "PROC_DEF_ID_",
+    "CONSTRAINT_NAME": "ACT_UNIQ_INFO_PROCDEF",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "COLUMN_NAME": "KEY_",
+    "CONSTRAINT_NAME": "ACT_UNIQ_PROCDEF",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "COLUMN_NAME": "VERSION_",
+    "CONSTRAINT_NAME": "ACT_UNIQ_PROCDEF",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "act_re_procdef",
+    "COLUMN_NAME": "TENANT_ID_",
+    "CONSTRAINT_NAME": "ACT_UNIQ_PROCDEF",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "app_spare_part",
+    "COLUMN_NAME": "tx_id",
+    "CONSTRAINT_NAME": "tx_id",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "brw_app_info",
+    "COLUMN_NAME": "sheetID",
+    "CONSTRAINT_NAME": "sheetID",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "ehr_emp_power",
+    "COLUMN_NAME": "empID",
+    "CONSTRAINT_NAME": "empID",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fb_shipment_barcode",
+    "COLUMN_NAME": "uuid",
+    "CONSTRAINT_NAME": "uuid",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_department",
+    "COLUMN_NAME": "departmentNum",
+    "CONSTRAINT_NAME": "deparmentNum",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "fnd_roles",
+    "COLUMN_NAME": "roleName",
+    "CONSTRAINT_NAME": "roleName",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_line",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "id_UNIQUE",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_cl_quesnaire_template_options",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "id_UNIQUE",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_dispatch_project_header",
+    "COLUMN_NAME": "dispatchSeq",
+    "CONSTRAINT_NAME": "UNIQUE_dispatchSeq",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "COLUMN_NAME": "account",
+    "CONSTRAINT_NAME": "account",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "COLUMN_NAME": "state",
+    "CONSTRAINT_NAME": "account",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator",
+    "COLUMN_NAME": "code",
+    "CONSTRAINT_NAME": "code",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "COLUMN_NAME": "account",
+    "CONSTRAINT_NAME": "account",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "COLUMN_NAME": "code",
+    "CONSTRAINT_NAME": "account",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_facilitator_form_d365",
+    "COLUMN_NAME": "code",
+    "CONSTRAINT_NAME": "code",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_group",
+    "COLUMN_NAME": "projectGroupCode",
+    "CONSTRAINT_NAME": "projectGroupCode_UNIQUE",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_maintenance_sectary_from_sse",
+    "COLUMN_NAME": "depNum",
+    "CONSTRAINT_NAME": "depNum",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_project_state",
+    "COLUMN_NAME": "projectId",
+    "CONSTRAINT_NAME": "index_projectId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "COLUMN_NAME": "subcontractId",
+    "CONSTRAINT_NAME": "unique_index",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "pm_subcontract_project_line",
+    "COLUMN_NAME": "barcode",
+    "CONSTRAINT_NAME": "unique_index",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "COLUMN_NAME": "conp",
+    "CONSTRAINT_NAME": "conp",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "COLUMN_NAME": "cpld",
+    "CONSTRAINT_NAME": "conp",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "COLUMN_NAME": "boot",
+    "CONSTRAINT_NAME": "conp",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "prob_soft_version",
+    "COLUMN_NAME": "pcb",
+    "CONSTRAINT_NAME": "conp",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "COLUMN_NAME": "id",
+    "CONSTRAINT_NAME": "id",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_applicant",
+    "COLUMN_NAME": "spare_code",
+    "CONSTRAINT_NAME": "spare_code",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "rma_app_info",
+    "COLUMN_NAME": "sheetID",
+    "CONSTRAINT_NAME": "sheetID",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "spare_parts_applicant",
+    "COLUMN_NAME": "spare_code",
+    "CONSTRAINT_NAME": "spare_code",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_notify_template",
+    "COLUMN_NAME": "templateCode",
+    "CONSTRAINT_NAME": "templateCode",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "COLUMN_NAME": "role_id",
+    "CONSTRAINT_NAME": "role_id",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_role_permission",
+    "COLUMN_NAME": "permission_id",
+    "CONSTRAINT_NAME": "role_id",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_sync_state",
+    "COLUMN_NAME": "tableObject",
+    "CONSTRAINT_NAME": "tableObject",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user",
+    "COLUMN_NAME": "user_name",
+    "CONSTRAINT_NAME": "unique_username",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": "t_user",
+    "REFERENCED_COLUMN_NAME": "user_id"
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_info",
+    "COLUMN_NAME": "compID",
+    "CONSTRAINT_NAME": "fk_userInfo_userId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "user_id",
+    "CONSTRAINT_NAME": "unique_userId_roleId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "role_id",
+    "CONSTRAINT_NAME": "unique_userId_roleId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "t_user_role",
+    "COLUMN_NAME": "comp_id",
+    "CONSTRAINT_NAME": "unique_userId_roleId",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user",
+    "COLUMN_NAME": "username",
+    "CONSTRAINT_NAME": "username",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  },
+  {
+    "TABLE_NAME": "user_info",
+    "COLUMN_NAME": "username",
+    "CONSTRAINT_NAME": "username",
+    "CONSTRAINT_TYPE": "UNIQUE",
+    "REFERENCED_TABLE_NAME": null,
+    "REFERENCED_COLUMN_NAME": null
+  }
+]

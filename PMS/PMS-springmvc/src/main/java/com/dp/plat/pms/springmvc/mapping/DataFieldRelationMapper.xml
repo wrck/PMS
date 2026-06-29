@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.DataFieldRelationMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.DataFieldRelation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="dataName" jdbcType="VARCHAR" property="dataName" />
+    <result column="dataType" jdbcType="VARCHAR" property="dataType" />
+    <result column="dataId" jdbcType="INTEGER" property="dataId" />
+    <result column="field" jdbcType="VARCHAR" property="field" />
+    <result column="alias" jdbcType="VARCHAR" property="alias" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="titleKey" jdbcType="VARCHAR" property="titleKey" />
+    <result column="cssId" jdbcType="VARCHAR" property="cssId" />
+    <result column="cssClass" jdbcType="VARCHAR" property="cssClass" />
+    <result column="cssStyle" jdbcType="VARCHAR" property="cssStyle" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="render" jdbcType="VARCHAR" property="render" />
+    <result column="sort" jdbcType="INTEGER" property="sort" />
+    <result column="orderable" jdbcType="BIT" property="orderable" />
+    <result column="searchable" jdbcType="BIT" property="searchable" />
+    <result column="visible" jdbcType="BIT" property="visible" />
+    <result column="required" jdbcType="BIT" property="required" />
+    <result column="readonly" jdbcType="BIT" property="readonly" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="extData" jdbcType="VARCHAR" property="extData" />
+    <result column="extKey" jdbcType="VARCHAR" property="extKey" />
+    <result column="extValue" jdbcType="VARCHAR" property="extValue" />
+    <result column="media" jdbcType="VARCHAR" property="media" />
+    <result column="clazzName" jdbcType="VARCHAR" property="clazzName" />
+    <result column="superData" jdbcType="INTEGER" property="superData" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="compId" jdbcType="INTEGER" property="compId" />
+    <result column="isSystemField" jdbcType="BIT" property="isSystemField" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, dataName, dataType, dataId, field, alias, name, title, titleKey, cssId, cssClass, 
+    cssStyle, type, render, sort, orderable, searchable, visible, required, readonly, 
+    disabled, extData, extKey, extValue, media, clazzName, superData, status, compId, isSystemField, 
+    createBy, createTime, updateBy, updateTime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from data_field_relation
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from data_field_relation
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into data_field_relation (dataName, dataType, dataId, 
+      field, alias, name, 
+      title, titleKey, cssId, 
+      cssClass, cssStyle, type, 
+      render, sort, orderable, 
+      searchable, visible, required, 
+      readonly, disabled, extData, 
+      extKey, extValue, media, 
+      clazzName, superData, status, 
+      compId, isSystemField, createBy, 
+      createTime, updateBy, updateTime
+      )
+    values (#{dataName,jdbcType=VARCHAR}, #{dataType,jdbcType=VARCHAR}, #{dataId,jdbcType=INTEGER}, 
+      #{field,jdbcType=VARCHAR}, #{alias,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{title,jdbcType=VARCHAR}, #{titleKey,jdbcType=VARCHAR}, #{cssId,jdbcType=VARCHAR}, 
+      #{cssClass,jdbcType=VARCHAR}, #{cssStyle,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, 
+      #{render,jdbcType=VARCHAR}, #{sort,jdbcType=INTEGER}, #{orderable,jdbcType=BIT}, 
+      #{searchable,jdbcType=BIT}, #{visible,jdbcType=BIT}, #{required,jdbcType=BIT}, 
+      #{readonly,jdbcType=BIT}, #{disabled,jdbcType=BIT}, #{extData,jdbcType=VARCHAR}, 
+      #{extKey,jdbcType=VARCHAR}, #{extValue,jdbcType=VARCHAR}, #{media,jdbcType=VARCHAR}, 
+      #{clazzName,jdbcType=VARCHAR}, #{superData,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
+      #{compId,jdbcType=INTEGER}, #{isSystemField,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into data_field_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="dataName != null">
+        dataName,
+      </if>
+      <if test="dataType != null">
+        dataType,
+      </if>
+      <if test="dataId != null">
+        dataId,
+      </if>
+      <if test="field != null">
+        field,
+      </if>
+      <if test="alias != null">
+        alias,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="titleKey != null">
+        titleKey,
+      </if>
+      <if test="cssId != null">
+        cssId,
+      </if>
+      <if test="cssClass != null">
+        cssClass,
+      </if>
+      <if test="cssStyle != null">
+        cssStyle,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="render != null">
+        render,
+      </if>
+      <if test="sort != null">
+        sort,
+      </if>
+      <if test="orderable != null">
+        orderable,
+      </if>
+      <if test="searchable != null">
+        searchable,
+      </if>
+      <if test="visible != null">
+        visible,
+      </if>
+      <if test="required != null">
+        required,
+      </if>
+      <if test="readonly != null">
+        readonly,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="extData != null">
+        extData,
+      </if>
+      <if test="extKey != null">
+        extKey,
+      </if>
+      <if test="extValue != null">
+        extValue,
+      </if>
+      <if test="media != null">
+        media,
+      </if>
+      <if test="clazzName != null">
+        clazzName,
+      </if>
+      <if test="superData != null">
+        superData,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="compId != null">
+        compId,
+      </if>
+      <if test="isSystemField != null">
+        isSystemField,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="dataName != null">
+        #{dataName,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null">
+        #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="field != null">
+        #{field,jdbcType=VARCHAR},
+      </if>
+      <if test="alias != null">
+        #{alias,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="titleKey != null">
+        #{titleKey,jdbcType=VARCHAR},
+      </if>
+      <if test="cssId != null">
+        #{cssId,jdbcType=VARCHAR},
+      </if>
+      <if test="cssClass != null">
+        #{cssClass,jdbcType=VARCHAR},
+      </if>
+      <if test="cssStyle != null">
+        #{cssStyle,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="render != null">
+        #{render,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null">
+        #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="orderable != null">
+        #{orderable,jdbcType=BIT},
+      </if>
+      <if test="searchable != null">
+        #{searchable,jdbcType=BIT},
+      </if>
+      <if test="visible != null">
+        #{visible,jdbcType=BIT},
+      </if>
+      <if test="required != null">
+        #{required,jdbcType=BIT},
+      </if>
+      <if test="readonly != null">
+        #{readonly,jdbcType=BIT},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="extData != null">
+        #{extData,jdbcType=VARCHAR},
+      </if>
+      <if test="extKey != null">
+        #{extKey,jdbcType=VARCHAR},
+      </if>
+      <if test="extValue != null">
+        #{extValue,jdbcType=VARCHAR},
+      </if>
+      <if test="media != null">
+        #{media,jdbcType=VARCHAR},
+      </if>
+      <if test="clazzName != null">
+        #{clazzName,jdbcType=VARCHAR},
+      </if>
+      <if test="superData != null">
+        #{superData,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="compId != null">
+        #{compId,jdbcType=INTEGER},
+      </if>
+      <if test="isSystemField != null">
+        #{isSystemField,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation">
+    update data_field_relation
+    <set>
+      <if test="dataName != null">
+        dataName = #{dataName,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null">
+        dataType = #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataId != null">
+        dataId = #{dataId,jdbcType=INTEGER},
+      </if>
+      <if test="field != null">
+        field = #{field,jdbcType=VARCHAR},
+      </if>
+      <if test="alias != null">
+        alias = #{alias,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="titleKey != null">
+        titleKey = #{titleKey,jdbcType=VARCHAR},
+      </if>
+      <if test="cssId != null">
+        cssId = #{cssId,jdbcType=VARCHAR},
+      </if>
+      <if test="cssClass != null">
+        cssClass = #{cssClass,jdbcType=VARCHAR},
+      </if>
+      <if test="cssStyle != null">
+        cssStyle = #{cssStyle,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="render != null">
+        render = #{render,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null">
+        sort = #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="orderable != null">
+        orderable = #{orderable,jdbcType=BIT},
+      </if>
+      <if test="searchable != null">
+        searchable = #{searchable,jdbcType=BIT},
+      </if>
+      <if test="visible != null">
+        visible = #{visible,jdbcType=BIT},
+      </if>
+      <if test="required != null">
+        required = #{required,jdbcType=BIT},
+      </if>
+      <if test="readonly != null">
+        readonly = #{readonly,jdbcType=BIT},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="extData != null">
+        extData = #{extData,jdbcType=VARCHAR},
+      </if>
+      <if test="extKey != null">
+        extKey = #{extKey,jdbcType=VARCHAR},
+      </if>
+      <if test="extValue != null">
+        extValue = #{extValue,jdbcType=VARCHAR},
+      </if>
+      <if test="media != null">
+        media = #{media,jdbcType=VARCHAR},
+      </if>
+      <if test="clazzName != null">
+        clazzName = #{clazzName,jdbcType=VARCHAR},
+      </if>
+      <if test="superData != null">
+        superData = #{superData,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="compId != null">
+        compId = #{compId,jdbcType=INTEGER},
+      </if>
+      <if test="isSystemField != null">
+        isSystemField = #{isSystemField,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation">
+    update data_field_relation
+    set dataName = #{dataName,jdbcType=VARCHAR},
+      dataType = #{dataType,jdbcType=VARCHAR},
+      dataId = #{dataId,jdbcType=INTEGER},
+      field = #{field,jdbcType=VARCHAR},
+      alias = #{alias,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      title = #{title,jdbcType=VARCHAR},
+      titleKey = #{titleKey,jdbcType=VARCHAR},
+      cssId = #{cssId,jdbcType=VARCHAR},
+      cssClass = #{cssClass,jdbcType=VARCHAR},
+      cssStyle = #{cssStyle,jdbcType=VARCHAR},
+      type = #{type,jdbcType=VARCHAR},
+      render = #{render,jdbcType=VARCHAR},
+      sort = #{sort,jdbcType=INTEGER},
+      orderable = #{orderable,jdbcType=BIT},
+      searchable = #{searchable,jdbcType=BIT},
+      visible = #{visible,jdbcType=BIT},
+      required = #{required,jdbcType=BIT},
+      readonly = #{readonly,jdbcType=BIT},
+      disabled = #{disabled,jdbcType=BIT},
+      extData = #{extData,jdbcType=VARCHAR},
+      extKey = #{extKey,jdbcType=VARCHAR},
+      extValue = #{extValue,jdbcType=VARCHAR},
+      media = #{media,jdbcType=VARCHAR},
+      clazzName = #{clazzName,jdbcType=VARCHAR},
+      superData = #{superData,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      compId = #{compId,jdbcType=INTEGER},
+      isSystemField = #{isSystemField,jdbcType=BIT},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation" resultMap="BaseResultMap">
+    select * from data_field_relation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="dataName != null and '' != dataName">
+				dataName = #{dataName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataType != null and '' != dataType">
+				dataType = #{dataType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataId != null and '' != dataId">
+				dataId = #{dataId, jdbcType=INTEGER} AND
+			</if>
+			<if test="field != null and '' != field">
+				field = #{field, jdbcType=VARCHAR} AND
+			</if>
+			<if test="alias != null and '' != alias">
+				alias = #{alias, jdbcType=VARCHAR} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="title != null and '' != title">
+				title = #{title, jdbcType=VARCHAR} AND
+			</if>
+			<if test="titleKey != null and '' != titleKey">
+				titleKey = #{titleKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssId != null and '' != cssId">
+				cssId = #{cssId, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssClass != null and '' != cssClass">
+				cssClass = #{cssClass, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssStyle != null and '' != cssStyle">
+				cssStyle = #{cssStyle, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="render != null and '' != render">
+				render = #{render, jdbcType=VARCHAR} AND
+			</if>
+			<if test="sort != null and '' != sort">
+				sort = #{sort, jdbcType=INTEGER} AND
+			</if>
+			<if test="orderable != null and '' != orderable">
+				orderable = #{orderable, jdbcType=BIT} AND
+			</if>
+			<if test="searchable != null and '' != searchable">
+				searchable = #{searchable, jdbcType=BIT} AND
+			</if>
+			<if test="visible != null and '' != visible">
+				visible = #{visible, jdbcType=BIT} AND
+			</if>
+			<if test="required != null and '' != required">
+				required = #{required, jdbcType=BIT} AND
+			</if>
+			<if test="readonly != null and '' != readonly">
+				readonly = #{readonly, jdbcType=BIT} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="extData != null and '' != extData">
+				extData = #{extData, jdbcType=VARCHAR} AND
+			</if>
+			<if test="extKey != null and '' != extKey">
+				extKey = #{extKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="extValue != null and '' != extValue">
+				extValue = #{extValue, jdbcType=VARCHAR} AND
+			</if>
+			<if test="media != null and '' != media">
+				media = #{media, jdbcType=VARCHAR} AND
+			</if>
+			<if test="clazzName != null and '' != clazzName">
+				clazzName = #{clazzName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="superData != null and '' != superData">
+				superData = #{superData, jdbcType=VARCHAR} AND
+			</if>
+			<if test="status != null and '' != status">
+				status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="compId != null and '' != compId">
+				compId = #{compId, jdbcType=INTEGER} AND
+			</if>
+			<if test="isSystemField != null and '' != isSystemField">
+				isSystemField = #{isSystemField, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.DataFieldRelation" resultType="long">
+    select count(1) from data_field_relation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="id != null and '' != id">
+				id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="dataName != null and '' != dataName">
+				dataName = #{dataName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataType != null and '' != dataType">
+				dataType = #{dataType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="dataId != null and '' != dataId">
+				dataId = #{dataId, jdbcType=INTEGER} AND
+			</if>
+			<if test="field != null and '' != field">
+				field = #{field, jdbcType=VARCHAR} AND
+			</if>
+			<if test="alias != null and '' != alias">
+				alias = #{alias, jdbcType=VARCHAR} AND
+			</if>
+			<if test="name != null and '' != name">
+				name = #{name, jdbcType=VARCHAR} AND
+			</if>
+			<if test="title != null and '' != title">
+				title = #{title, jdbcType=VARCHAR} AND
+			</if>
+			<if test="titleKey != null and '' != titleKey">
+				titleKey = #{titleKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssId != null and '' != cssId">
+				cssId = #{cssId, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssClass != null and '' != cssClass">
+				cssClass = #{cssClass, jdbcType=VARCHAR} AND
+			</if>
+			<if test="cssStyle != null and '' != cssStyle">
+				cssStyle = #{cssStyle, jdbcType=VARCHAR} AND
+			</if>
+			<if test="type != null and '' != type">
+				type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="render != null and '' != render">
+				render = #{render, jdbcType=VARCHAR} AND
+			</if>
+			<if test="sort != null and '' != sort">
+				sort = #{sort, jdbcType=INTEGER} AND
+			</if>
+			<if test="orderable != null and '' != orderable">
+				orderable = #{orderable, jdbcType=BIT} AND
+			</if>
+			<if test="searchable != null and '' != searchable">
+				searchable = #{searchable, jdbcType=BIT} AND
+			</if>
+			<if test="visible != null and '' != visible">
+				visible = #{visible, jdbcType=BIT} AND
+			</if>
+			<if test="required != null and '' != required">
+				required = #{required, jdbcType=BIT} AND
+			</if>
+			<if test="readonly != null and '' != readonly">
+				readonly = #{readonly, jdbcType=BIT} AND
+			</if>
+			<if test="disabled != null and '' != disabled">
+				disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="extData != null and '' != extData">
+				extData = #{extData, jdbcType=VARCHAR} AND
+			</if>
+			<if test="extKey != null and '' != extKey">
+				extKey = #{extKey, jdbcType=VARCHAR} AND
+			</if>
+			<if test="extValue != null and '' != extValue">
+				extValue = #{extValue, jdbcType=VARCHAR} AND
+			</if>
+			<if test="media != null and '' != media">
+				media = #{media, jdbcType=VARCHAR} AND
+			</if>
+			<if test="clazzName != null and '' != clazzName">
+				clazzName = #{clazzName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="superData != null and '' != superData">
+				superData = #{superData, jdbcType=VARCHAR} AND
+			</if>
+			<if test="status != null and '' != status">
+				status = #{status, jdbcType=INTEGER} AND
+			</if>
+			<if test="compId != null and '' != compId">
+				compId = #{compId, jdbcType=INTEGER} AND
+			</if>
+			<if test="isSystemField != null and '' != isSystemField">
+				isSystemField = #{isSystemField, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from data_field_relation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dataName != null and '' != model.dataName">
+					dataName = #{model.dataName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataType != null and '' != model.dataType">
+					dataType = #{model.dataType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataId != null and '' != model.dataId">
+					dataId = #{model.dataId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.field != null and '' != model.field">
+					field = #{model.field, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.alias != null and '' != model.alias">
+					alias = #{model.alias, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.title != null and '' != model.title">
+					title = #{model.title, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.titleKey != null and '' != model.titleKey">
+					titleKey = #{model.titleKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssId != null and '' != model.cssId">
+					cssId = #{model.cssId, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssClass != null and '' != model.cssClass">
+					cssClass = #{model.cssClass, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssStyle != null and '' != model.cssStyle">
+					cssStyle = #{model.cssStyle, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.render != null and '' != model.render">
+					render = #{model.render, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.sort != null and '' != model.sort">
+					sort = #{model.sort, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.orderable != null and '' != model.orderable">
+					orderable = #{model.orderable, jdbcType=BIT} AND
+				</if>
+				<if test="model.searchable != null and '' != model.searchable">
+					searchable = #{model.searchable, jdbcType=BIT} AND
+				</if>
+				<if test="model.visible != null and '' != model.visible">
+					visible = #{model.visible, jdbcType=BIT} AND
+				</if>
+				<if test="model.required != null and '' != model.required">
+					required = #{model.required, jdbcType=BIT} AND
+				</if>
+				<if test="model.readonly != null and '' != model.readonly">
+					readonly = #{model.readonly, jdbcType=BIT} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.extData != null and '' != model.extData">
+					extData = #{model.extData, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.extKey != null and '' != model.extKey">
+					extKey = #{model.extKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.extValue != null and '' != model.extValue">
+					extValue = #{model.extValue, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.media != null and '' != model.media">
+					media = #{model.media, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.clazzName != null and '' != model.clazzName">
+					clazzName = #{model.clazzName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.superData != null and '' != model.superData">
+					superData = #{model.superData, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compId != null and '' != model.compId">
+					compId = #{model.compId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isSystemField != null and '' != model.isSystemField">
+					isSystemField = #{model.isSystemField, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">
+					find_in_set(
+				        dataName, 
+				        (select 
+				            group_concat(distinct dataName, ",", ifnull(superData, "")) 
+				        from
+				            `data_field_relation` 
+				        where dataName = #{model.dataNameWithSuper})
+				    )
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dataName like CONCAT("%", #{fuzzy}, "%") or
+					dataType like CONCAT("%", #{fuzzy}, "%") or
+					field like CONCAT("%", #{fuzzy}, "%") or
+					alias like CONCAT("%", #{fuzzy}, "%") or
+					name like CONCAT("%", #{fuzzy}, "%") or
+					title like CONCAT("%", #{fuzzy}, "%") or
+					titleKey like CONCAT("%", #{fuzzy}, "%") or
+					cssId like CONCAT("%", #{fuzzy}, "%") or
+					cssClass like CONCAT("%", #{fuzzy}, "%") or
+					cssStyle like CONCAT("%", #{fuzzy}, "%") or
+					type like CONCAT("%", #{fuzzy}, "%") or
+					render like CONCAT("%", #{fuzzy}, "%") or
+					extData like CONCAT("%", #{fuzzy}, "%") or
+					extKey like CONCAT("%", #{fuzzy}, "%") or
+					extValue like CONCAT("%", #{fuzzy}, "%") or
+					media like CONCAT("%", #{fuzzy}, "%") or
+					clazzName like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from data_field_relation
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.id != null and '' != model.id">
+					id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.dataName != null and '' != model.dataName">
+					dataName = #{model.dataName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataType != null and '' != model.dataType">
+					dataType = #{model.dataType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.dataId != null and '' != model.dataId">
+					dataId = #{model.dataId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.field != null and '' != model.field">
+					field = #{model.field, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.alias != null and '' != model.alias">
+					alias = #{model.alias, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.name != null and '' != model.name">
+					name = #{model.name, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.title != null and '' != model.title">
+					title = #{model.title, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.titleKey != null and '' != model.titleKey">
+					titleKey = #{model.titleKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssId != null and '' != model.cssId">
+					cssId = #{model.cssId, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssClass != null and '' != model.cssClass">
+					cssClass = #{model.cssClass, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.cssStyle != null and '' != model.cssStyle">
+					cssStyle = #{model.cssStyle, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.render != null and '' != model.render">
+					render = #{model.render, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.sort != null and '' != model.sort">
+					sort = #{model.sort, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.orderable != null and '' != model.orderable">
+					orderable = #{model.orderable, jdbcType=BIT} AND
+				</if>
+				<if test="model.searchable != null and '' != model.searchable">
+					searchable = #{model.searchable, jdbcType=BIT} AND
+				</if>
+				<if test="model.visible != null and '' != model.visible">
+					visible = #{model.visible, jdbcType=BIT} AND
+				</if>
+				<if test="model.required != null and '' != model.required">
+					required = #{model.required, jdbcType=BIT} AND
+				</if>
+				<if test="model.readonly != null and '' != model.readonly">
+					readonly = #{model.readonly, jdbcType=BIT} AND
+				</if>
+				<if test="model.disabled != null and '' != model.disabled">
+					disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.extData != null and '' != model.extData">
+					extData = #{model.extData, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.extKey != null and '' != model.extKey">
+					extKey = #{model.extKey, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.extValue != null and '' != model.extValue">
+					extValue = #{model.extValue, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.media != null and '' != model.media">
+					media = #{model.media, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.clazzName != null and '' != model.clazzName">
+					clazzName = #{model.clazzName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.superData != null and '' != model.superData">
+					superData = #{model.superData, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null and '' != model.status">
+					status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.compId != null and '' != model.compId">
+					compId = #{model.compId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isSystemField != null and '' != model.isSystemField">
+					isSystemField = #{model.isSystemField, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.dataNameWithSuper != null and '' != model.dataNameWithSuper">
+					find_in_set(
+				        dataName, 
+				        (select 
+				            group_concat(distinct dataName, ",", ifnull(superData, "")) 
+				        from
+				            `data_field_relation` 
+				        where dataName = #{model.dataNameWithSuper})
+				    )
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					dataName like CONCAT("%", #{fuzzy}, "%") or
+					dataType like CONCAT("%", #{fuzzy}, "%") or
+					field like CONCAT("%", #{fuzzy}, "%") or
+					alias like CONCAT("%", #{fuzzy}, "%") or
+					name like CONCAT("%", #{fuzzy}, "%") or
+					title like CONCAT("%", #{fuzzy}, "%") or
+					titleKey like CONCAT("%", #{fuzzy}, "%") or
+					cssId like CONCAT("%", #{fuzzy}, "%") or
+					cssClass like CONCAT("%", #{fuzzy}, "%") or
+					cssStyle like CONCAT("%", #{fuzzy}, "%") or
+					type like CONCAT("%", #{fuzzy}, "%") or
+					render like CONCAT("%", #{fuzzy}, "%") or
+					extData like CONCAT("%", #{fuzzy}, "%") or
+					extKey like CONCAT("%", #{fuzzy}, "%") or
+					extValue like CONCAT("%", #{fuzzy}, "%") or
+					media like CONCAT("%", #{fuzzy}, "%") or
+					clazzName like CONCAT("%", #{fuzzy}, "%") or
+					createBy like CONCAT("%", #{fuzzy}, "%") or
+					updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

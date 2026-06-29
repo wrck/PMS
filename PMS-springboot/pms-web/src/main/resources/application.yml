@@ -1,0 +1,50 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /pms
+
+spring:
+  application:
+    name: pms-springboot
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/pms?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.dp.plat.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: PmsSecretKey2024VeryLongSecretForHMAC256Algorithm
+  expiration: 86400000  # 24小时
+  header: Authorization
+  prefix: "Bearer "
+
+logging:
+  level:
+    com.dp.plat: debug
+    com.dp.plat.mapper: debug
+
+pms:
+  upload:
+    base-path: /data/pms/upload

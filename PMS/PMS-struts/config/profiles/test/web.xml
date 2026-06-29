@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://java.sun.com/xml/ns/javaee" xmlns:jsp="http://java.sun.com/xml/ns/javaee/jsp"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+    version="3.0">
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>
+        /WEB-INF/classes/applicationContext.xml
+        ,/WEB-INF/classes/beans-quartz.xml
+        
+    </param-value>
+    </context-param>
+    
+    <filter>
+        <filter-name>encodingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <async-supported>true</async-supported>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>encodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>com.dp.plat.security.csrf.CsrfFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <!-- <filter>
+        <filter-name>XssFilter</filter-name>
+        <filter-class>com.dp.plat.security.xss.XssFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>XssFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping> -->
+    
+    <filter>
+        <filter-name>UserCheck</filter-name>
+        <filter-class>com.dp.plat.util.UserCheckFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>UserCheck</filter-name>
+        <url-pattern>*.action</url-pattern>
+    </filter-mapping>
+    <filter>
+        <filter-name>struts-prepare</filter-name>
+        <!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareFilter</filter-class> -->
+        <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>sitemesh</filter-name>
+        <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>struts-execute</filter-name>
+        <!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsExecuteFilter</filter-class> -->
+        <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsExecuteFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>struts-prepare</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>sitemesh</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>struts-execute</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter>
+        <filter-name>struts2</filter-name>
+        <!-- 2.5.22版本没有.ng。包名 -->
+        <!-- <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class> -->
+        <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>struts2</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter>
+        <filter-name>ResponseOverrideFilter</filter-name>
+        <filter-class>org.displaytag.filter.ResponseOverrideFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>ResponseOverrideFilter</filter-name>
+        <url-pattern>*.action</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>ResponseOverrideFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+    <listener>
+        <listener-class>com.dp.plat.init.InitLicenser</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>com.dp.plat.init.SpringInit</listener-class>
+    </listener>
+    <servlet>
+        <servlet-name>velocity</servlet-name>
+        <servlet-class>org.apache.velocity.tools.view.servlet.VelocityViewServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>showChart</servlet-name>
+        <servlet-class>org.jfree.chart.servlet.DisplayChart</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>showChart</servlet-name>
+        <url-pattern>/servlet/showChart</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>velocity</servlet-name>
+        <url-pattern>*.vm</url-pattern>
+    </servlet-mapping>
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+    <jsp-config>
+        <taglib>
+            <taglib-uri>/dp</taglib-uri>
+            <taglib-location>/WEB-INF/dp.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+    <login-config>
+        <auth-method>BASIC</auth-method>
+    </login-config>
+    <session-config>
+        <session-timeout>120</session-timeout>
+    </session-config>
+</web-app>

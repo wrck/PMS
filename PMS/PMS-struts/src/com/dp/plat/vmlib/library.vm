@@ -1,0 +1,9 @@
+#macro( r $res)#set($temp_res="getText('"+$res+"')")$vs.findValue($temp_res)#end
+#macro( select_setvalue $id $value)
+<script>
+setSelectValue("$id","$value");
+</script>
+#end
+#macro( html $str)$StringUtil.htmlEscape($str)#end
+#macro( sql $str)$StringUtil.sqlEscape($str)#end
+#macro( text $str)$StringUtil.getText($str)#end

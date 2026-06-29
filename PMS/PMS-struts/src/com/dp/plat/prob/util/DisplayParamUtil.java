@@ -1,0 +1,61 @@
+package com.dp.plat.prob.util;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.dp.plat.data.bean.NotificationTemplate;
+import com.dp.plat.util.NotificationTemplateUtil;
+import com.dp.plat.util.StringEscUtil;
+
+/**
+ * 生成displayTag 要进行排序的参数Map
+ * @author j01441
+ *
+ */
+public class DisplayParamUtil {
+	
+	/**
+	 * 初始化已知技术公告管理列表界面的排序参数
+	 * @return
+	 */
+	public static Map<String , String>  initProbColMap(){
+		Map<String , String> map = new HashMap<String, String>();
+		map.put("0", "probNum");
+		map.put("1", "theme");
+		map.put("2", "priority");
+		map.put("3", "status");
+		map.put("4", "createTime");
+		map.put("5", "updateTime");
+		return map;
+	}
+	
+	public static Map<String, String> initProbRestoreTaskColMap(){
+		Map<String , String> map = new HashMap<String, String>();
+		map.put("0", "serialNum");
+		map.put("1", "itemModel");
+		map.put("2", "restoreStatus");
+		map.put("3", "projectName");
+		map.put("4", "contractNo");
+		map.put("5", "officeCode");
+		map.put("6", "createTime");
+		map.put("7", "updateTime");
+		return map;
+	}
+	
+	/**
+	 * 查找模版字符串
+	 * @param templateCode
+	 * @return
+	 */
+	public static String getTemplate(String templateCode) {
+	    NotificationTemplate template = NotificationTemplateUtil.getTemplate(templateCode);
+	    String templateString = null;
+	    if (template == null) {
+	        templateString = StringEscUtil.getText(templateCode);
+	    } else {
+	        templateString = template.getNotificationContent();
+	    }
+	    return templateString;
+	}
+	
+}

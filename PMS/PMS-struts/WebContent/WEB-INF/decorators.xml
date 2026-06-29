@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/plat/common">
+	<!--
+	所以根目录下的文件不进行框架转换，所有plat目录下的文件不进行页面转换。
+	只转换根url下的xxx目录下的文件，排除目录下的sub目录下的文件。 
+	 -->
+	<decorator name="sub" page="sub.jsp">
+		<pattern>/*/sub/*</pattern>	
+	</decorator>
+	<decorator name="main" page="main.jsp">
+		<pattern>/*/*</pattern>
+		<pattern>/404.action</pattern>
+	</decorator>
+	<excludes>
+		<pattern>/*/sub/ToUploadFile*</pattern>
+		<pattern>/*/sub/presales_callback*</pattern>
+		<pattern>/plat/*</pattern>
+		<pattern>/admin/*</pattern>
+	</excludes>
+	
+</decorators>

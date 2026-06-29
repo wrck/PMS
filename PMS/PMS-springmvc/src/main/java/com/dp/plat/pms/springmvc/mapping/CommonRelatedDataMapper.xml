@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.CommonRelatedDataMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.CommonRelatedData">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="objType" jdbcType="VARCHAR" property="objType" />
+    <result column="objId" jdbcType="INTEGER" property="objId" />
+    <result column="field1" jdbcType="VARCHAR" property="field1" />
+    <result column="field2" jdbcType="VARCHAR" property="field2" />
+    <result column="field3" jdbcType="VARCHAR" property="field3" />
+    <result column="field4" jdbcType="VARCHAR" property="field4" />
+    <result column="field5" jdbcType="VARCHAR" property="field5" />
+    <result column="field6" jdbcType="VARCHAR" property="field6" />
+    <result column="field7" jdbcType="VARCHAR" property="field7" />
+    <result column="field8" jdbcType="VARCHAR" property="field8" />
+    <result column="field9" jdbcType="VARCHAR" property="field9" />
+    <result column="field10" jdbcType="VARCHAR" property="field10" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, type, objType, objId, field1, field2, field3, field4, field5, field6, field7, 
+    field8, field9, field10, disabled, effectiveFrom, effectiveTo, createBy, createTime, 
+    updateBy, updateTime, customInfo
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pm_common_related_data
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pm_common_related_data
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_common_related_data (type, objType, objId, 
+      field1, field2, field3, 
+      field4, field5, field6, 
+      field7, field8, field9, 
+      field10, disabled, effectiveFrom, 
+      effectiveTo, createBy, createTime, 
+      updateBy, updateTime, customInfo
+      )
+    values (#{type,jdbcType=VARCHAR}, #{objType,jdbcType=VARCHAR}, #{objId,jdbcType=INTEGER}, 
+      #{field1,jdbcType=VARCHAR}, #{field2,jdbcType=VARCHAR}, #{field3,jdbcType=VARCHAR}, 
+      #{field4,jdbcType=VARCHAR}, #{field5,jdbcType=VARCHAR}, #{field6,jdbcType=VARCHAR}, 
+      #{field7,jdbcType=VARCHAR}, #{field8,jdbcType=VARCHAR}, #{field9,jdbcType=VARCHAR}, 
+      #{field10,jdbcType=VARCHAR}, #{disabled,jdbcType=BIT}, #{effectiveFrom,jdbcType=TIMESTAMP}, 
+      #{effectiveTo,jdbcType=TIMESTAMP}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=JSON}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_common_related_data
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="type != null">
+        type,
+      </if>
+      <if test="objType != null">
+        objType,
+      </if>
+      <if test="objId != null">
+        objId,
+      </if>
+      <if test="field1 != null">
+        field1,
+      </if>
+      <if test="field2 != null">
+        field2,
+      </if>
+      <if test="field3 != null">
+        field3,
+      </if>
+      <if test="field4 != null">
+        field4,
+      </if>
+      <if test="field5 != null">
+        field5,
+      </if>
+      <if test="field6 != null">
+        field6,
+      </if>
+      <if test="field7 != null">
+        field7,
+      </if>
+      <if test="field8 != null">
+        field8,
+      </if>
+      <if test="field9 != null">
+        field9,
+      </if>
+      <if test="field10 != null">
+        field10,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="customInfo != null">
+        customInfo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="objType != null">
+        #{objType,jdbcType=VARCHAR},
+      </if>
+      <if test="objId != null">
+        #{objId,jdbcType=INTEGER},
+      </if>
+      <if test="field1 != null">
+        #{field1,jdbcType=VARCHAR},
+      </if>
+      <if test="field2 != null">
+        #{field2,jdbcType=VARCHAR},
+      </if>
+      <if test="field3 != null">
+        #{field3,jdbcType=VARCHAR},
+      </if>
+      <if test="field4 != null">
+        #{field4,jdbcType=VARCHAR},
+      </if>
+      <if test="field5 != null">
+        #{field5,jdbcType=VARCHAR},
+      </if>
+      <if test="field6 != null">
+        #{field6,jdbcType=VARCHAR},
+      </if>
+      <if test="field7 != null">
+        #{field7,jdbcType=VARCHAR},
+      </if>
+      <if test="field8 != null">
+        #{field8,jdbcType=VARCHAR},
+      </if>
+      <if test="field9 != null">
+        #{field9,jdbcType=VARCHAR},
+      </if>
+      <if test="field10 != null">
+        #{field10,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData">
+    update pm_common_related_data
+    <set>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="objType != null">
+        objType = #{objType,jdbcType=VARCHAR},
+      </if>
+      <if test="objId != null">
+        objId = #{objId,jdbcType=INTEGER},
+      </if>
+      <if test="field1 != null">
+        field1 = #{field1,jdbcType=VARCHAR},
+      </if>
+      <if test="field2 != null">
+        field2 = #{field2,jdbcType=VARCHAR},
+      </if>
+      <if test="field3 != null">
+        field3 = #{field3,jdbcType=VARCHAR},
+      </if>
+      <if test="field4 != null">
+        field4 = #{field4,jdbcType=VARCHAR},
+      </if>
+      <if test="field5 != null">
+        field5 = #{field5,jdbcType=VARCHAR},
+      </if>
+      <if test="field6 != null">
+        field6 = #{field6,jdbcType=VARCHAR},
+      </if>
+      <if test="field7 != null">
+        field7 = #{field7,jdbcType=VARCHAR},
+      </if>
+      <if test="field8 != null">
+        field8 = #{field8,jdbcType=VARCHAR},
+      </if>
+      <if test="field9 != null">
+        field9 = #{field9,jdbcType=VARCHAR},
+      </if>
+      <if test="field10 != null">
+        field10 = #{field10,jdbcType=VARCHAR},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="customInfo != null">
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		), -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData">
+    update pm_common_related_data
+    set type = #{type,jdbcType=VARCHAR},
+      objType = #{objType,jdbcType=VARCHAR},
+      objId = #{objId,jdbcType=INTEGER},
+      field1 = #{field1,jdbcType=VARCHAR},
+      field2 = #{field2,jdbcType=VARCHAR},
+      field3 = #{field3,jdbcType=VARCHAR},
+      field4 = #{field4,jdbcType=VARCHAR},
+      field5 = #{field5,jdbcType=VARCHAR},
+      field6 = #{field6,jdbcType=VARCHAR},
+      field7 = #{field7,jdbcType=VARCHAR},
+      field8 = #{field8,jdbcType=VARCHAR},
+      field9 = #{field9,jdbcType=VARCHAR},
+      field10 = #{field10,jdbcType=VARCHAR},
+      disabled = #{disabled,jdbcType=BIT},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      <!-- customInfo = #{customInfo,jdbcType=JSON} -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    <foreach collection="customInfo" item="value" index="key" separator=",">
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    </foreach>
+		) -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON})
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				cr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="type != null and '' != type">
+				cr.type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				cr.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				cr.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="field1 != null and '' != field1">
+				cr.field1 = #{field1, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field2 != null and '' != field2">
+				cr.field2 = #{field2, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field3 != null and '' != field3">
+				cr.field3 = #{field3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field4 != null and '' != field4">
+				cr.field4 = #{field4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field5 != null and '' != field5">
+				cr.field5 = #{field5, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field6 != null and '' != field6">
+				cr.field6 = #{field6, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field7 != null and '' != field7">
+				cr.field7 = #{field7, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field8 != null and '' != field8">
+				cr.field8 = #{field8, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field9 != null and '' != field9">
+				cr.field9 = #{field9, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field10 != null and '' != field10">
+				cr.field10 = #{field10, jdbcType=VARCHAR} AND
+			</if>
+			<if test="disabled != null">
+				cr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ cr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				cr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				cr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				cr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				cr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="customInfo != null">
+				cr.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					cr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					cr.type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					cr.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					cr.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.field1 != null and '' != model.field1">
+					cr.field1 = #{model.field1, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field2 != null and '' != model.field2">
+					cr.field2 = #{model.field2, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field3 != null and '' != model.field3">
+					cr.field3 = #{model.field3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field4 != null and '' != model.field4">
+					cr.field4 = #{model.field4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field5 != null and '' != model.field5">
+					cr.field5 = #{model.field5, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field6 != null and '' != model.field6">
+					cr.field6 = #{model.field6, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field7 != null and '' != model.field7">
+					cr.field7 = #{model.field7, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field8 != null and '' != model.field8">
+					cr.field8 = #{model.field8, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field9 != null and '' != model.field9">
+					cr.field9 = #{model.field9, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field10 != null and '' != model.field10">
+					cr.field10 = #{model.field10, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.disabled != null">
+					cr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ cr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					cr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					cr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					cr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					cr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null">
+					cr.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					cr.type like CONCAT("%", #{fuzzy}, "%") or
+					cr.objType like CONCAT("%", #{fuzzy}, "%") or
+					cr.field1 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field2 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field3 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field4 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field5 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field6 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field7 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field8 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field9 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field10 like CONCAT("%", #{fuzzy}, "%") or
+					cr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					cr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData" resultMap="BaseResultMap">
+    select * from pm_common_related_data as cr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				cr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="type != null and '' != type">
+				cr.type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				cr.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				cr.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="field1 != null and '' != field1">
+				cr.field1 = #{field1, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field2 != null and '' != field2">
+				cr.field2 = #{field2, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field3 != null and '' != field3">
+				cr.field3 = #{field3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field4 != null and '' != field4">
+				cr.field4 = #{field4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field5 != null and '' != field5">
+				cr.field5 = #{field5, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field6 != null and '' != field6">
+				cr.field6 = #{field6, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field7 != null and '' != field7">
+				cr.field7 = #{field7, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field8 != null and '' != field8">
+				cr.field8 = #{field8, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field9 != null and '' != field9">
+				cr.field9 = #{field9, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field10 != null and '' != field10">
+				cr.field10 = #{field10, jdbcType=VARCHAR} AND
+			</if>
+			<if test="disabled != null">
+				cr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ cr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				cr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				cr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				cr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				cr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="customInfo != null">
+				cr.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.CommonRelatedData" resultType="long">
+    select count(1) from pm_common_related_data as cr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				cr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="type != null and '' != type">
+				cr.type = #{type, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objType != null and '' != objType">
+				cr.objType = #{objType, jdbcType=VARCHAR} AND
+			</if>
+			<if test="objId != null">
+				cr.objId = #{objId, jdbcType=INTEGER} AND
+			</if>
+			<if test="field1 != null and '' != field1">
+				cr.field1 = #{field1, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field2 != null and '' != field2">
+				cr.field2 = #{field2, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field3 != null and '' != field3">
+				cr.field3 = #{field3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field4 != null and '' != field4">
+				cr.field4 = #{field4, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field5 != null and '' != field5">
+				cr.field5 = #{field5, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field6 != null and '' != field6">
+				cr.field6 = #{field6, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field7 != null and '' != field7">
+				cr.field7 = #{field7, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field8 != null and '' != field8">
+				cr.field8 = #{field8, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field9 != null and '' != field9">
+				cr.field9 = #{field9, jdbcType=VARCHAR} AND
+			</if>
+			<if test="field10 != null and '' != field10">
+				cr.field10 = #{field10, jdbcType=VARCHAR} AND
+			</if>
+			<if test="disabled != null">
+				cr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ cr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				cr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				cr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				cr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				cr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="customInfo != null">
+				cr.customInfo = #{customInfo, jdbcType=JSON} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from pm_common_related_data as cr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					cr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					cr.type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					cr.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					cr.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.field1 != null and '' != model.field1">
+					cr.field1 = #{model.field1, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field2 != null and '' != model.field2">
+					cr.field2 = #{model.field2, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field3 != null and '' != model.field3">
+					cr.field3 = #{model.field3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field4 != null and '' != model.field4">
+					cr.field4 = #{model.field4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field5 != null and '' != model.field5">
+					cr.field5 = #{model.field5, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field6 != null and '' != model.field6">
+					cr.field6 = #{model.field6, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field7 != null and '' != model.field7">
+					cr.field7 = #{model.field7, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field8 != null and '' != model.field8">
+					cr.field8 = #{model.field8, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field9 != null and '' != model.field9">
+					cr.field9 = #{model.field9, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field10 != null and '' != model.field10">
+					cr.field10 = #{model.field10, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.disabled != null">
+					cr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ cr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					cr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					cr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					cr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					cr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null">
+					cr.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					cr.type like CONCAT("%", #{fuzzy}, "%") or
+					cr.objType like CONCAT("%", #{fuzzy}, "%") or
+					cr.field1 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field2 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field3 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field4 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field5 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field6 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field7 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field8 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field9 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field10 like CONCAT("%", #{fuzzy}, "%") or
+					cr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					cr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from pm_common_related_data as cr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					cr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.type != null and '' != model.type">
+					cr.type = #{model.type, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objType != null and '' != model.objType">
+					cr.objType = #{model.objType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.objId != null">
+					cr.objId = #{model.objId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.field1 != null and '' != model.field1">
+					cr.field1 = #{model.field1, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field2 != null and '' != model.field2">
+					cr.field2 = #{model.field2, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field3 != null and '' != model.field3">
+					cr.field3 = #{model.field3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field4 != null and '' != model.field4">
+					cr.field4 = #{model.field4, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field5 != null and '' != model.field5">
+					cr.field5 = #{model.field5, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field6 != null and '' != model.field6">
+					cr.field6 = #{model.field6, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field7 != null and '' != model.field7">
+					cr.field7 = #{model.field7, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field8 != null and '' != model.field8">
+					cr.field8 = #{model.field8, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field9 != null and '' != model.field9">
+					cr.field9 = #{model.field9, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.field10 != null and '' != model.field10">
+					cr.field10 = #{model.field10, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.disabled != null">
+					cr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ cr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (cr.effectiveTo is null or cr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					cr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					cr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					cr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					cr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.customInfo != null">
+					cr.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					cr.type like CONCAT("%", #{fuzzy}, "%") or
+					cr.objType like CONCAT("%", #{fuzzy}, "%") or
+					cr.field1 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field2 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field3 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field4 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field5 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field6 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field7 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field8 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field9 like CONCAT("%", #{fuzzy}, "%") or
+					cr.field10 like CONCAT("%", #{fuzzy}, "%") or
+					cr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					cr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+</mapper>

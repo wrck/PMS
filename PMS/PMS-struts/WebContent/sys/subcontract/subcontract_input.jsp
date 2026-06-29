@@ -1,0 +1,1292 @@
+<%@page import="com.dp.plat.util.Util"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<%@page import="com.dp.plat.context.UserContext"%>
+<%@page import="com.dp.plat.context.SpringContext"%>
+<%@page import="com.dp.plat.util.StringEscUtil"%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<dp:base />
+<meta name="menu" content="SysLeftMenu">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="function" content="<s:text name='pm.subcontract.manage' />">
+<style type="text/css">
+legend {
+	font: 12px/24px "微软雅黑"
+}
+#subcontractInfoTable {
+    margin-bottom: 0;
+}
+
+table#subcontractInfoTable > tbody > tr > td:nth-child(odd) {
+    text-align: right;
+}
+
+.mergeTdBorder {
+    border-right:none!important;
+}
+.mergeTdBorder:empty {
+    padding: 0;
+}
+.mergeTdBorder + .mergeTdBorder {
+    border-left:none!important;
+}
+
+.mergeTdBorder:last-child {
+    border-right: 1px solid #ddd!important;
+}
+
+.mergeTdBorder button {
+    margin-right: 1rem;
+}
+
+.mergeTdBorder button:last-child {
+    margin-right: 0;
+}
+
+.noBorder {
+    border:none!important;
+}
+.navDiv {
+    min-height: 160px;
+}
+
+td.col-sm-5 .deliverFileInput, .row .td-inline {
+    padding-left: 7.5px;
+    padding-right: 0;
+}
+
+td.col-sm-5 .deliverFileInput:first-child, .row .td-inline:first-child {
+    padding-left: 0;
+    padding-right: 7.5px;
+}
+</style>
+<script type="text/javascript">
+//定义show、hide事件，显示Tab页时触发
+(function ($) {
+      $.each(['show', 'hide'], function (i, ev) {
+        var el = $.fn[ev];
+        $.fn[ev] = function () {
+          this.trigger(ev);
+          return el.apply(this, arguments);
+        };
+      });
+})(jQuery);
+
+/**
+ * 事件定义
+ */
+$(document).ready(function(){
+    var t1 = 0;
+    var t2 = 0;
+    $(window).scroll(function(){
+        var st=$(window).scrollTop();
+        var rheight = $(window).height();
+        var height = $("html").height();
+        if(st > rheight){
+            $(".backTop").fadeIn(500);
+        }else{
+            $(".backTop").fadeOut(1000);
+        }
+        if(st > rheight && st < height - 2*rheight){
+            $(".rollBottom").fadeIn(500);
+        }else{
+            $(".rollBottom").fadeOut(1000);
+        }
+    })
+         
+    $(document).on('click', ".backTop", function() {
+        /* var mainHeight = $("#mainForm").height();
+        var mainHeaderHeight = $(".mainframe_head").height();
+        var navHegiht = $(".navibar").height();
+        var st = mainHeight + navHegiht + mainHeaderHeight || 0; */
+        var st = 0;
+        $('body,html').animate({scrollTop: st},500);
+    });
+    $(document).on('click', ".rollBottom", function() {
+        var height = $("html").height();
+        $('body,html').animate({scrollTop: height},500);
+    });
+    
+    $(document).on('change', "#contractNos", function() {
+    	var contractNos = $(this).val() || "";
+    	//contractNos = contractNos.replace(/ | |　|　| |\r|\n|\t/g, "").replace(/，/g, ",").replace(/；/g, ",").replace(/;/g,",").replace(/,+/g,",").replace(/,$/g,"");
+    	contractNos = contractNos.replace(/[^A-Za-z0-9\-]/g, ",").replace(/,+/g,",").replace(/,$/g,"");
+    	var contractArr = contractNos.split(",");
+    	var contractNoSet = [];
+    	for(var i in contractArr) {
+    		var contractNo = contractArr[i]
+    		if ($.inArray(contractNo, contractNoSet) == -1) {
+    			contractNoSet.push(contractNo);
+    		}
+    	}
+    	contractNos = contractNoSet.join(",");
+    	$(this).val(contractNos);
+        chooseSubcontractProject();
+    });
+    
+    $(document).on("submit", "#subcontractForm", function() {
+        checkForm();
+        return true;
+    });
+    
+    //var checking = false;
+    var $preSelectProject;
+    $(document).on('change', "#projectDisplayTable input[name='selected'], #projectDisplayTable input[name='checkall']", function() {
+    	var $selectedProject = $("#projectDisplayTable input[name='selected']:checked");
+        if ($selectedProject.length > 0) {
+            var projectIds = [];
+            $selectedProject.each(function() {
+                projectIds.push(this.value);
+            });
+            $("#projectIds").val(projectIds.join(","));
+        } else {
+            $("#projectIds").val("");
+        }
+        var $firstProject = $($selectedProject[0]);
+        if ($preSelectProject == $firstProject[0]) {
+            return;
+        }
+        $preSelectProject = $firstProject[0];
+        if ($firstProject.length > 0) {
+            var projectName = $($firstProject).parents("tr:first").find(".updateMark").text();
+            if ($.trim(projectName) && !checking) {
+            	checkSubcontractName(projectName);
+            }
+        } else {
+            $("#subcontractName").val("");
+        }
+    });
+    
+    $(document).on('change', "#subcontractName", function() {
+    	console.log(checking);
+    	if (checking) {
+    		return;
+    	}
+    	checkSubcontractName($(this).val());
+    })
+    
+    $(document).on('click', "#saveBtn", function() {
+        submitSave();
+    });
+    $(document).on('click', "#applyBtn", function() {
+        submitApply();
+    });
+    $(document).on('click', "#callbackBtn", function() {
+    	startCallBackFlow();
+    });
+    $(document).on('click', "#refreshSubcontractProjectBtn", function() {
+    	refreshSubcontractProject();
+    });
+    $(document).on('change', "input[type='file']", function() {
+        var file = $(this).val();
+        var fileCount = (this.files || []).length || 0;
+        var $fileWrapper = $(this).parents("span:first");
+        var fileIdx = $fileWrapper.find("input[type='file']").index(this);
+        var $newWrapper = $fileWrapper.clone();
+        var $newFile = $newWrapper.find("input[type='file']").eq(fileIdx);
+        var multipleFileType = $newFile.hasClass("multipleFileType");
+        // 清空其它的没有上传文件DOM
+        var wrapperFileCount = fileCount;
+        $(this).parents("span:eq(" + (multipleFileType ? 1 : 0) + ")").find("input[type='file']").not(this).each(function(index) {
+        	var $thisFile = $(this);
+            if (!$thisFile.val()) {
+            	var $thisWrapper = $thisFile;
+            	// 如果是多文件类型，则移除file的上级，否则file
+            	if (multipleFileType) {
+            		$thisWrapper = $thisFile.parents("span:first");
+            	}
+            	$thisWrapper.remove();
+            }/*  else if (multipleFileType) {
+            	// 多文件类型，计算当前容器的文件数量
+            	wrapperFileCount += (this.files || []).length || 0;
+            } */
+        })
+        // 如果当前已经上传文件，则新增一个文件上传DOM
+        if (file) {
+        	// 文件类型去除disabled属性
+        	var $fileType = $(this).siblings("input[type='hidden']");
+        	var fileType = $fileType.data("type") || $fileType.val();
+        	$fileType.data("type", fileType);
+        	$fileType.removeAttr("disabled");
+        	
+        	$newFile.val(null);
+        	var $uploadWrapper = $(this).parents("span:first");
+        	var $uploadItem = $newFile;
+        	// 如果是多文件类型，则添加file的上级，否则file
+            if (multipleFileType) {
+            	// 根据文件数量填充文件数量
+            	var fileTypes = (fileType + ",").repeat(wrapperFileCount).split(/[, ]/g, wrapperFileCount).join(",");
+            	$fileType.val(fileTypes);
+            	$uploadWrapper = $uploadWrapper.parents("span:first");
+            	$uploadItem = $newWrapper;
+            	// 新增的文档没有上传文件，文件类型先置为disabled
+            	$uploadItem.find("input[type='hidden']").attr("disabled", true);
+            } else {
+            	$fileType.val(fileType);
+            }
+            $uploadWrapper.append($uploadItem);
+        }
+    });
+    
+    var preType = "";
+    $(document).on('change', "select#subcontractType", function() {
+    	// 维护类
+        if ($(this).val() == "30") {
+        	$("#serviceOrders").show();
+        	$("#draftContracts").addClass("col-sm-6");
+        	$("#subcontractRemarkLabel").text("客户单位:");
+        	$("#subcontractRemark").attr("placeholder", "客户姓名：\n联系方式：");
+        	/* if (!$("#subcontractRemark").val().match(remarkRegex)) {
+        		$("#subcontractRemark").val("客户姓名：\n联系方式：");
+        	} */
+        	$("#subcontractRemark").removeClass("canEmpty");
+        } else if ($(this).val() == "20") {
+        	// 驻场类2025-03-26 增加回访需求，填写客户单回访信息
+            $("#subcontractRemarkLabel").text("客户单位:");
+            $("#subcontractRemark").attr("placeholder", "客户姓名：\n联系方式：");
+            /* if (!$("#subcontractRemark").val().match(remarkRegex)) {
+                $("#subcontractRemark").val("客户姓名：\n联系方式：");
+            } */
+            $("#subcontractRemark").removeClass("canEmpty");
+        } else {
+        	$("#serviceOrders").hide();
+            $("#draftContracts").removeClass("col-sm-6");
+            $("#subcontractRemarkLabel").text("备注:");
+            if (preType == "30") {
+                $("#subcontractRemark").val("");
+            }
+            $("#subcontractRemark").attr("placeholder", "备注（选填）");
+            $("#subcontractRemark").addClass("canEmpty");
+        }
+    	/* // 2021-06-28,取消驻场类合同号为空特殊处理，改为驻场类合同号为空
+    	// 驻场类合同号可以为空
+        if ($(this).val() == "20") { */
+    	// 外协类合同号可以为空
+    	if ($(this).val() == "40") {
+        	$("#contractNos").addClass("canEmpty");
+        } else {
+        	$("#contractNos").removeClass("canEmpty");
+        }
+        preType = $(this).val();
+    });
+    
+    $(document).on('change', "select#officeCode", function() {
+    	$("#officeCodeHidden").val(this.value);
+    	// 所属办事处变化，上级办事处进行清空
+    	$("#parentOfficeCode").val("");
+    });
+    
+    $(document).on('show', ".navDiv",function() {
+        if (!($(this).children().length == 0 || $("table", $(this)).length == 0)) {
+            return false;
+        }
+        
+        var sourceName = $(this).attr("id");
+        if (!sourceName) {
+            sourceName = $(this).attr("class");
+            sourceName = $.trim(sourceName.replace(/\bnavDiv\b|\bhideDiv\b/g, ""));
+        }
+        getTargetFunc(sourceName);
+    });
+    
+    $(document).on('dblclick', ".nav li[name='navli']",function() {
+        var sourceName = $(this).attr("onclick");
+        sourceName = sourceName.replace(/(\w+\( *\d+ *, *['|"])|(['|"]\))/g, "")
+        getTargetFunc(sourceName);
+    });
+    
+    $(document).on('click', "button:not('.ui-button')",function() {
+        $(this).bootstrapBtn("loading");
+    });
+});
+
+//Select all the checkbox
+function checkAll() {
+	var _this = this.event.target;
+	if (_this.checked) {
+		$(_this).parents("table:first").find("input[name='selected']").not(":checked").prop("checked", true);
+	} else {
+		$(_this).parents("table:first").find("input[name='selected']:checked").prop("checked", false);
+	}
+}
+var checking = false;
+function checkSubcontractName(subcontractName) {
+	checking = true;
+	subcontractName = $.trim(subcontractName);
+	if (!subcontractName) {
+		checking = false;
+		return;
+	}
+	subcontractName = subcontractName.replace(/( *)—( *)转包(-\d+)?(.*)/, "");
+	subcontractName += " — 转包";
+	var subcontractId = $("#subcontractForm #subcontractId").val();
+    $.ajax({
+        url:"module/s/subcontractAjax_checkSubcontractName.action",
+        type:"post",
+        async: true,
+        dataType:"json",
+        data:{"subcontract.subcontractName": subcontractName, "subcontract.id": subcontractId},
+        success:function(data){
+            var result = data.result;
+            result = Number(result);
+            try {
+                if (result > 0) {
+                    result += 1 
+                    if (result < 10) {
+                        result = "0" + result;
+                    }
+                    result = "-" + result;
+                } else {
+                    result = "";
+                }
+            } catch (e) {
+                //result = "01";
+                result = "";
+            }
+            subcontractName += result;
+            $("#subcontractName").val(subcontractName);
+        },
+        error:function(XMLHttpRequest,textStatus,errorThrown){
+            alert("获取发货数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+        },
+        complete:function(data){
+            checking = false;
+        }
+    })
+}
+/**
+ * 数据初始化
+ */
+//const state = "<s:property value='subcontract.state'/>" || 0;
+var state = "<s:property value='subcontract.state'/>" || 0;
+$(document).ready(function(){
+	autoCompleteFacilitator();
+	/* queryContractNoEngineeFee();
+	querySubcontractPayment();
+	querySubcontractCallback();
+	querySubcontractLine();
+	querySubcontractDeliver();
+	querySubcontractComment(); */
+	var result = "<s:property value='result'/>";
+	if (result) {
+		alert(result);
+	}
+	var tabIndex = "<s:property value='tabIndex'/>";
+    if (tabIndex) {
+        $(".nav" + tabIndex).click();
+    }
+    if ("<s:property value='subcontract.state'/>" == "" && "<s:property value='subcontract.id'/>" == "") {
+    	chooseSubcontractProject(false, function() {
+    		var projectIds = $("#projectIds").val();
+    		if (projectIds) {
+    			var projectId = projectIds.split(",")[0];
+    		    $("#projectDisplayTable input[name='selected'][value='" + projectId +"']").click();
+    		}
+    	});
+    }
+	checkForm();
+	// 交付件和备注的显示
+	$("select#subcontractType").change();
+});
+
+function checkForm() {
+	var state = "<s:property value='subcontract.state'/>" || 0;
+    var isSm = <s:property value='user.isHasRole(11)'/> || false;
+    var isEm = <s:property value='user.isHasRole(13)'/> || false;
+    var isEmLeader = <s:property value='user.isHasRole(10)'/> || false;
+    
+    //$("input,select,textarea", "#subcontractForm").not("[type='file']").not("[type='hidden'][name='subcontract.id']").not(".ignoreDisabled").attr("disabled", true);
+    $("input,select,textarea", "#subcontractForm").attr("disabled", true);
+    
+    if (("<s:property value='subcontract.state'/>" || 0) == 100) {
+    	return false;
+    }
+    
+    if ((<s:property value='user.isHasRole(10)'/> || false) || (<s:property value='user.isHasRole(11)'/> || false) || (<s:property value='user.isHasRole(13)'/> || false)) {
+    	$("#subcontractForm").find("[type='file'],[type='hidden'][name='subcontract.id'],.ignoreDisabled").removeAttr("disabled");
+    }
+    
+    // 状态为草稿，驳回，回访不通过，无法闭环时允许编辑
+    if ((("<s:property value='subcontract.state'/>" || 0) <= 0) && (<s:property value='user.isHasRole(11)'/> || false) && ("<s:property value='user.areapower.indexOf(subcontract.officeCode) >= 0'/>" || "<s:property value='subcontract.id == null' />") == "true") {
+        $(".smEdit, .smEdit input").removeAttr("disabled");
+    }
+    if ((<s:property value='user.isHasRole(13)'/> || false) || (<s:property value='user.isHasRole(10)'/> || false)) {
+    	$(".emWrite, .emWrite input").removeAttr("disabled");
+    }
+}
+
+
+function getTargetFunc(sourceName) {
+	sourceName = sourceName || "";
+	sourceName = $.trim(sourceName.replace(/List|Div/g, ""));
+    sourceName = sourceName.replace(/^\w/, function(c) {return c.toUpperCase()})
+    try {
+        var targetFunction = eval("query" + sourceName);
+        if (typeof targetFunction == "function") {
+            targetFunction();
+        }
+    } catch(e) {
+        if ("chooseShipmentInfo".indexOf(sourceName) > -1) {
+            chooseShipmentInfo();
+        } else if ("chooseSubcontractProject".indexOf(sourceName) > -1) {
+            chooseSubcontractProject();
+        } else if ("queryContractNoEngineeFee".indexOf(sourceName) > -1) {
+            queryContractNoEngineeFee();
+        } else {
+            alert("获取数据方法失败！");
+        }
+    }
+}
+var loadingHtml = "<div id='loading' style='height:180px;display:none;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'>"+
+"<img src='./images/loading-circle.gif'/>" +
+"</div>";
+var flagL = true;
+function querySubcontractLine(){
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    /* if (!subcontractId) {
+        return false;
+    } */
+    if(flagL){
+        $("#shipmentListDiv").html(loadingHtml);
+        flagL = false;
+        $.ajax({
+            url:"module/sub/querySubcontractLine.action",
+            type:"post",
+            dataType:"html",
+            data:{"subcontract.id":subcontractId},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#shipmentListDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#shipmentListDiv").html("获取序列号数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagL = true;
+            }
+        })
+    }
+    return false;
+}
+
+function chooseShipmentInfoPop(){
+	var $btn = $(this.event.target);
+    var projectIds = $("#subcontractForm #projectIds").val();
+    var contractNos = $("#subcontractForm #contractNos").val();
+    if (!contractNos) {
+        alert("请输入项目合同号");
+        $("#contractNos").focus();
+        setTimeout(function() {
+            $btn.bootstrapBtn("reset");
+        }, 10);
+        return false;
+    }
+    if (!projectIds) {
+        alert("请选择需要转包的项目");
+        $("#projectIds").focus();
+        setTimeout(function() {
+            $btn.bootstrapBtn("reset");
+        }, 10);
+        return false;
+    }
+    popWindow('module/sub/chooseShipmentInfo.action?projectIds='+projectIds+'&contractNos='+contractNos + '&result=1&redirect='+window.location.href, 1100, 650, '选择序列号', 'BudgetUpload', true);
+    setTimeout(function() {
+        $btn.bootstrapBtn("reset");
+    }, 10);
+    return false;
+}
+
+var flagS = true;
+function chooseShipmentInfo(){
+	var $btn = $(this.event.target);
+	var projectIds = $("#subcontractForm #projectIds").val();
+	var contractNos = $("#subcontractForm #contractNos").val();
+	if (!contractNos) {
+	    alert("请输入项目合同号");
+	    $("#contractNos").focus();
+	    setTimeout(function() {
+            $btn.bootstrapBtn("reset");
+        }, 10);
+	    return false;
+	}
+	if (!projectIds) {
+	    alert("请选择需要转包的项目");
+	    $("#projectIds").focus();
+	    setTimeout(function() {
+            $btn.bootstrapBtn("reset");
+        }, 10);
+	    return false;
+	}
+	var map = getSubcontractRelationData(contractNos, projectIds);
+	console.log(map);
+	contractNos = (map.selectedContractNos || []).join(",");
+	//var height = $(window).height();
+	$('body,html').animate({scrollTop: 320}, 500);
+    if(flagS){
+    	$("#shipmentListDiv").html(loadingHtml);
+        flagS = false;
+        $.ajax({
+            url:"module/sub/chooseShipmentInfo.action",
+            type:"post",
+            dataType:"html",
+            data:{"projectIds":projectIds,"contractNos":contractNos, selected: JSON.stringify(map.relationsData)},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#shipmentListDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#shipmentListDiv").html("获取序列号数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+                flagS = true;
+                $("#choiceShipemnt").bootstrapBtn("reset");
+                $("#shipmentInfoTable input[name='checkall']").click();
+            }
+        })
+    }
+    return false;
+}
+
+/**
+ * 获取转包项目，合同号、项目ID、项目所属办事处的关系
+ */
+function getSubcontractRelationData(contractNos, projectIds) {
+	var contractNoSet = (contractNos || "").split(",");
+	var projectIdSet = (projectIds || "").split(",");
+	var relationsData = [];
+	// 判断哪些销售类型需要检查各合同发货明细的利润中心
+	var checkProfitCenterType = "14";
+	// 判断是否需要检查各合同发货明细的利润中心
+	var needCheckProfitCenter = false;
+	var selectedContractNos = [];
+	$("#projectDisplayTable tbody tr").filter(function(index, tr) { 
+	    var $selectTr = $(tr);
+	    var $officeCode = $selectTr.find(".transferOfficeCode");
+	    var salesType = $officeCode.data("type") || "";
+	    var officeCode = null;
+	    if (checkProfitCenterType == salesType) {
+	    	needCheckProfitCenter = true; 
+	    	officeCode = $.trim($officeCode.val() || $officeCode.text() || "");
+	    }
+	    var $contractNo = $selectTr.find(".transferContractNo");
+	    var contractNo = $.trim($contractNo.val() || $contractNo.text() || "");
+	    var matchC = false;
+	    var sourceContractNo = contractNo;
+	    for(var i in contractNoSet) {
+	        var tc = contractNoSet[i];
+	        if (tc) {
+	        	var tMatch = !!contractNo.match(tc);
+	            matchC = matchC || tMatch;
+	        }
+            if (matchC) {
+            	//sourceContractNo = tc;
+            	break;
+            }
+	    }
+	    var $projectId = $selectTr.find("input[name='selected']");
+	    var matchP = false;
+	    var projectId = ($projectId.val() || "").toString();
+	    if (projectId) {
+	        for(var i in projectIdSet) {
+	            var tpid = projectIdSet[i];
+	            if (tpid) {
+	                matchP = matchP || !!projectId.match(tpid);
+	            }
+	            if (matchP) {
+                    break;
+                }
+	        }
+	    } else {
+	        matchP = true;
+	    }
+	    if (matchC && matchP) {
+	    	// 处理一个项目多个合同的情况
+	    	var cNos = (sourceContractNo || "").split(",");
+	    	for (var i = 0; i < cNos.length; i++) {
+				var cNo = cNos[i];
+				if ($.inArray(cNo, selectedContractNos) == -1) {
+					selectedContractNos.push(cNo);
+				}
+    	        relationsData.push({
+    	            projectId: projectId,
+    	            contractNo: cNo,
+    	            officeCode: officeCode
+    	        });
+			}
+	    }
+	    return matchC && matchP;
+	});
+	return {
+		relationsData: needCheckProfitCenter ? relationsData : [],
+		selectedContractNos: selectedContractNos
+	}
+}
+
+var flagP = true;
+function chooseSubcontractProject(showAlert, callBack){
+	if (state == "100") {
+		return false;
+	}
+	if ($("#subcontractType").val() == "20" ) {
+        $("#projectIds").val(null);
+        
+    }
+    var contractNos = $("#subcontractForm #contractNos").val();
+    showAlert = $.trim(showAlert + "") == "false" ? false : true;
+    if (!contractNos) {
+    	if ($("#subcontractType").val() == "20") {
+    		$("#projectIds").val(null);
+    	} else {
+    		if (showAlert) {
+                alert("请输入项目合同号");
+            }
+            $("#contractNos").focus();
+            return false;
+    	}
+    }
+    if(flagP){
+        $("#projectListDiv").html(loadingHtml);
+        flagP = false;
+        $.ajax({
+            url:"module/sub/chooseSubcontractProject.action",
+            type:"post",
+            dataType:"html",
+            data:{"contractNos":contractNos},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#projectListDiv").html(data);
+                
+                if (typeof callBack == "function") {
+                	callBack();
+                } else if ("<s:property value='autoCheckProjects'/>" == "true"){
+                	$("#projectDisplayTable input[name='checkall']").click();
+                } else {
+                	$("#projectListDiv .pagebanner").addClass("pull-right");
+                    $("#projectListDiv .onepagelinks").text("请勾选需要转包的项目").addClass("pull-left").css("color", "#46adff");
+                    
+                	$("#projectIds").val("");
+                    $("#subcontractName").val("");
+                }
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#projectListDiv").html("获取转包项目列表失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagP = true;
+            }
+        })
+    }
+    return false;
+}
+
+var flagE = true;
+function queryContractNoEngineeFee(){
+    var contractNos = $("#subcontractForm #contractNos").val();
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    /* if (!subcontractId) {
+    	return false;
+    }
+    if (!contractNos) {
+        alert("请输入项目合同号");
+        $("#contractNos").focus();
+        return false;
+    } */
+    if(flagE){
+        $("#engineeFeeDiv").html(loadingHtml);
+        flagE = false;
+        $.ajax({
+            url:"module/sub/queryContractNoEngineeFee.action",
+            type:"post",
+            dataType:"html",
+            data:{"contractNos":contractNos, "subcontract.id": subcontractId},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#engineeFeeDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#engineeFeeDiv").html("获取工程服务费失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+                flagE = true;
+            }
+        })
+    }
+    return false;
+}
+
+var flagP = true;
+function querySubcontractPayment(){
+    var contractNos = $("#subcontractForm #contractNos").val();
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    var subcontractNo = $("#subcontractForm #subcontractNo").val();
+    var isAccrued = $("#subcontractForm input[name='subcontract.isAccrued']").val();
+    var isInvoiced = $("#subcontractForm input[name='subcontract.isInvoiced']").val();
+    var type = $("#subcontractForm #subcontractType").val();
+    /* if (!subcontractId) {
+        return false;
+    }
+    if (!contractNos) {
+        alert("请输入项目合同号");
+        $("#contractNos").focus();
+        return false;
+    } */
+    if(flagP){
+        $("#subcontractPaymentDiv").html(loadingHtml);
+        flagP = false;
+        var params = {"subcontract.id": subcontractId,
+        		"subcontract.subcontractNo": subcontractNo,
+        		"subcontract.state": state,
+        		"subcontract.type": type};
+        if (isAccrued != "") {
+        	params["subcontract.isAccrued"] = isAccrued;
+        }
+        if (isInvoiced != "") {
+            params["subcontract.isInvoiced"] = isInvoiced;
+        }
+        $.ajax({
+            url:"module/sub/querySubcontractPayment.action",
+            type:"post",
+            dataType:"html",
+            data: params,
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractPaymentDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractPaymentDiv").html("获取付款信息失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagP = true;
+            }
+        });
+    }
+    return false;
+}
+
+var flagPP = true;
+function querySubcontractPaymentPrint(payment){
+    var contractNos = $("#subcontractForm #contractNos").val();
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    var subcontractNo = $("#subcontractForm #subcontractNo").val();
+    payment = payment || {};
+    
+    if(flagPP){
+        $("#subcontractPaymentPrintDiv").html(loadingHtml);
+        flagPP = false;
+        var params = {"subcontract.id": subcontractId,
+                "selected": payment.ids};
+        $.ajax({
+            url:"module/sub/querySubcontractPaymentPrint.action",
+            type:"post",
+            dataType:"html",
+            data: params,
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractPaymentPrintDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractPaymentPrintDiv").html("获取付款信息失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagPP = true;
+            }
+        });
+    }
+    return false;
+}
+
+var flagD = true;
+function querySubcontractDeliver(){
+    var subcontractId = $("#subcontractId").val();
+    /* if (!subcontractId) {
+        return false;
+    } */
+    if(flagD){
+        $("#subcontractDeliverListDiv").html(loadingHtml);
+        flagD = false;
+        $.ajax({
+            url:"module/sub/querySubcontractDeliver.action",
+            type:"post",
+            dataType:"html",
+            data:{"subcontract.id":subcontractId},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractDeliverListDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractDeliverListDiv").html("获取序列号数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagD = true;
+            }
+        })
+    }
+    return false;
+}
+
+var flagC = true;
+function querySubcontractCallback(){
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    /* if (!subcontractId) {
+        return false;
+    } */
+    var subcontractType = $("#subcontractForm #subcontractType").val();
+    if(flagC){
+    	var defaultQuesnaireId = subcontractType == '20' ? 14 : 6;
+    	$("#subcontractCallbackDiv").html(" <iframe id='subcontractCallbackFrame' src='module/sub/querySubcontractCallback.action?pmClosedLoopQuesnaire.id=" + defaultQuesnaireId + "&subcontractCallback.subcontractId=" + subcontractId
+                + "' style=\"width:100%;height:100%;background-color:transparent;\" frameborder=\"0\" allowtransparency=\"true\"  "
+                + "> </iframe>"); 
+        $("#subcontractCallbackFrame").contents().find("body").append("<div style='height:100%;display:-webkit-flex;display: flex;justify-content:center;align-items:center;'><img src='./images/loading-circle.gif'/></div>");
+
+        /* 
+        $("#subcontractCallbackDiv").html(loadingHtml);
+        flagC = false;
+        $.ajax({
+            url:"module/sub/querySubcontractCallback.action",
+            type:"post",
+            dataType:"html",
+            data:{"subcontract.id": subcontractId, "subcontractCallback.subcontractId": subcontractId},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractCallbackDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractCallbackDiv").html("获取服务回访失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagC = true;
+            }
+        }) */
+    }
+    return false;
+}
+
+var flagM = true;
+function querySubcontractComment(){
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    /* if (!subcontractId) {
+        return false;
+    } */
+    if(flagM){
+    	var profitDepCode = $("#subcontractForm select[name='subcontract.profitDepCode'").val();
+        $("#subcontractCommentListDiv").html(loadingHtml);
+        flagM = false;
+        $.ajax({
+            url:"module/sub/querySubcontractComment.action",
+            type:"post",
+            dataType:"html",
+            data:{"subcontract.id": subcontractId, "subcontract.state": state, "subcontract.profitDepCode": profitDepCode},
+            success:function(data){
+                data = data.substring(data.indexOf("<body"),data.indexOf("</body>")+7);
+                $("#subcontractCommentListDiv").html(data);
+            },
+            error:function(XMLHttpRequest,textStatus,errorThrown){
+                $("#subcontractCommentListDiv").html("获取流程记录失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+            },
+            complete:function(data){
+            	flagM = true;
+            }
+        })
+    }
+    return false;
+}
+
+var namespace = "${namespace}" || "module";
+function submitSave() {
+	$("#saveBtn").bootstrapBtn("loading");
+	var canSubmit = checkSubmit("saveBtn");
+    if (canSubmit) {
+		$("#subcontractForm").attr("action", namespace + "/subcontract_create.action");
+		$("#subcontractForm").submit();
+    }
+}
+
+function submitApply() {
+	$("#applyBtn").bootstrapBtn("loading");
+	var canSubmit = checkSubmit("applyBtn");
+	if (canSubmit) {
+		$("#subcontractForm").attr("action", namespace + "/subcontract_apply.action");
+	    $("#subcontractForm").submit();
+	}
+}
+
+function startCallBackFlow() {
+	$("#callbakBtn").bootstrapBtn("loading");
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    $.ajax({
+        url:"module/s/subcontractAjax_startCallBackFlow.action",
+        type:"post",
+        dataType:"json",
+        data:{
+        	"subcontract.id":subcontractId,
+        	"subcontractComment.message": "发起回访",
+    	},
+        success:function(data){
+            data = JSON.parse(data.result);
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        },
+        error:function(XMLHttpRequest,textStatus,errorThrown) {
+            alert("发起回访流程失败！");
+        },
+        complete:function(data){
+            $("#callbakBtn").bootstrapBtn("reset");
+        }
+    })
+}
+
+function refreshSubcontractProject() {
+    $("#refreshSubcontractProjectBtn").bootstrapBtn("loading");
+    var subcontractId = $("#subcontractForm #subcontractId").val();
+    $.ajax({
+        url:"module/s/subcontractAjax_refreshSubcontractProject.action",
+        type:"post",
+        dataType:"json",
+        data:{"subcontract.id":subcontractId},
+        success:function(data){
+        	data = JSON.parse(data.result);
+        	if (data.success) {
+            	window.location.reload();
+        	} else {
+        		alert(data.message);
+        	}
+        },
+        error:function(XMLHttpRequest,textStatus,errorThrown) {
+            alert("根据合同号关联项目失败，请检查合同号是否正确！")
+        },
+        complete:function(data){
+        	$("#refreshSubcontractProjectBtn").bootstrapBtn("reset");
+        }
+    })
+}
+
+var remarkRegex = /(客户姓名：)(.+)((.)*\n)+(联系方式：)(.+)/g;
+function checkSubmit(btnId) {
+	var canSubmit = true;
+    $(".smEdit, .smEdit input:checked, .smEdit input:text, .smEdit textarea", $("#subcontractForm")).not("td,div").not(".canEmpty").each(function () {
+    	var value = $(this).prop("value");
+    	if (value === undefined) {
+    		return;
+    	}
+    	value = $.trim(value);
+        if (!value) {
+            var label = $.trim($(this).parent().prev().text()).replace(":", '');
+            alert(label + "不允许为空！");
+            canSubmit = false;
+            $(this).focus();
+            setTimeout(function() {
+                $("#" + btnId).bootstrapBtn("reset");
+            }, 10);
+            return false;
+        };
+    });
+    var subcontractType = $("select#subcontractType").val();
+    /* if (subcontractType == "30" && !$("#subcontractRemark").val().match(remarkRegex)) {
+    	var label = $.trim($("#subcontractRemark").parent().prev().text()).replace(":", '');
+        alert(label + "请以如下格式填写，且不能为空。\r\n" + $("#subcontractRemark").attr("placeholder"));
+    	$("#subcontractRemark").focus();
+    	setTimeout(function() {
+            $("#" + btnId).bootstrapBtn("reset");
+        }, 10);
+    	return false;
+    } */
+    return canSubmit;
+}
+
+function autoCompleteFacilitator() {
+	$.ajax({
+	    url:"module/s/subcontractAjax_queryFacilitator.action",
+	    type:"post",
+	    dataType:"json",
+	    data:{"subcontractFacilitator.state":true},
+	    success:function(data){
+	    	data = JSON.parse(data.result);
+	    	$( "#subcontractForm_subcontract_facilitatorName").autocomplete({
+	            minLength: 0,
+	            source: data,
+	            focus: function( event, ui ) {
+	                //$("#subcontractForm_subcontract_facilitatorName").val( ui.item.label);
+	                return false;
+	            },
+	            select: function( event, ui ) {
+	                $("#subcontractForm_subcontract_facilitatorName").val(ui.item.label);
+	                $("#subcontractForm_subcontract_facilitatorId").val(ui.item.id);
+	                $("#subcontractForm_subcontract_bankInfo").val(ui.item.bankInfo);
+	                $("#subcontractForm_subcontract_bankAccount").val(ui.item.bankAccount);
+	                return false;
+	            }
+	        })
+	    },
+	    error:function(XMLHttpRequest,textStatus,errorThrown){
+	        alert("获取服务商数据失败！错误信息如下：<br>"+XMLHttpRequest.responseText);
+	    }
+	})
+}
+
+function updateProject(obj){
+	var namespace = "${namespace}" || "module";
+	// 如果是财务查看，则直接打开交付件页面
+	var isAccSearch = "${user.isHasRole(16)}" == "true" ? "&result=309" : "";
+    window.open(namespace + "/ProjectModify.action?project.paramId="+obj + isAccSearch);
+}
+</script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/statics/plugins/PrintArea/jquery.PrintArea.js"></script>
+</head>
+<body>
+    <s:form enctype="multipart/form-data" id="subcontractForm" action="%{namespace}/subcontract_create.action" method="post" >
+		<fieldset>
+			<legend><b>基本信息</b></legend>
+			<table id="subcontractInfoTable" class="table table-bordered table-hover table-striped noBorder">
+			    <tr style="display:none">
+			        <td>
+			            <s:hidden name="subcontract.id" id="subcontractId" cssClass="ignoreDisabled"/>
+			            <s:hidden name="subcontract.isAccrued"/>
+			            <s:hidden name="subcontract.isInvoiced"/>
+		            </td>
+	            </tr>
+				<tr>
+					<td><s:text name="pm.subcontract.contractNos"></s:text>:</td>
+					<td class="col-sm-5"><s:textfield name="subcontract.contractNos" id="contractNos" cssClass="form-control smEdit" placeholder='请输入合同号（英文逗号分割）'/></td>
+					<td><s:text name="pm.subcontract.project"></s:text>:</td>
+					<td class="col-sm-5"><s:hidden id="projectIds" name="subcontract.projectIds" cssClass="smEdit canEmpty"></s:hidden>
+					    <div id="projectListDiv">
+					       <display:table style="text-align: left;margin-bottom:0;"
+					            name="projectList" pagesize="${projectList.size()}" export="false" id="projectDisplayTable"
+					            size="${projectList.size()}" sort="external"
+					            decorator="com.dp.plat.decorators.Wrapper" class="displayTable table table-condensed table-hover table-striped" >
+					            <%-- <display:column property="projectCheckWrapper" titleKey="pm.shipment.check"></display:column> --%>
+					            <%-- <display:column property="projectCode" titleKey="pm.project.projectCode" class="transferProjectCode"></display:column> --%>
+					            <%-- <display:column property="column001" class="hidden transferOfficeCode" headerClass="hidden" media="html"></display:column>  --%>
+                                <display:column class="hidden " headerClass="hidden" media="html">
+                                    <input class="transferOfficeCode" value="${projectDisplayTable.column001}" data-type="${projectDisplayTable.salesType}" />
+                                </display:column> 
+					            <display:column property="projectNameWithCodeWarrper" class="transferProjectName" titleKey="pm.project.projectName" media="html"></display:column> 
+                                <display:column property="contractNo" titleKey="pm.contract" class="transferContractNo" decorator="com.dp.plat.decorators.ContractNoList"></display:column>
+					            <s:if test="%{(subcontract.state != 100) && (user.isHasRole(10) || user.isHasRole(11) || user.isHasRole(13))}">
+                                    <display:setProperty name="basic.msg.empty_list_row">
+                                        <tr class="empty">
+                                            <td colspan="{0}">
+                                                <button id="refreshSubcontractProjectBtn" type="button" class="btn btn-warning btn-xs"><span class="glyphicon glyphicon-refresh" style="font-size:12px;"></span> 根据合同号关联项目</button>
+                                            </td>
+                                        </tr>
+                                    </display:setProperty>
+                                </s:if>
+                            </display:table>
+					    </div>
+					</td>
+				</tr>
+				<tr>
+				    <td><s:text name="pm.subcontract.subcontractNo"></s:text>:</td>
+	                <td><s:textfield name="subcontract.subcontractNo" id='subcontractNo' cssClass="form-control emWrite" placeholder='转包合同号'/></td>
+				    <td><s:text name="pm.subcontract.subcontractName"></s:text>:</td>
+					<td><s:textfield name="subcontract.subcontractName" id="subcontractName" cssClass="form-control smEdit emWrite" placeholder='转包名称'/></td>
+	            </tr>
+				<tr>
+					<td><s:text name="pm.subcontract.type"></s:text>:</td>
+	                <td><s:select id="subcontractType" list="typeList" name="subcontract.type" cssClass="form-control smEdit emWrite" listKey="basicDataId" listValueKey="basicDataName" headerKey="" headerValue="--请选择--"/></td>
+	                <td><s:text name="pm.subcontract.facilitator"></s:text>:</td>
+					<td>
+					    <s:textfield name="subcontract.facilitatorName" cssClass="form-control smEdit emWrite" placeholder='服务商（模糊查询）'/>
+					    <s:hidden name="subcontract.facilitatorId" cssClass="smEdit emWrite"/>
+				    </td>
+				</tr>
+				<tr>
+	                <td><s:text name="pm.subcontract.facilitator.bankInfo"></s:text>:</td>
+	                <td><s:textfield name="subcontract.bankInfo" cssClass="form-control smEdit emWrite" placeholder='服务商开户行'/></td>
+	                <td><s:text name="pm.subcontract.facilitator.bankAccount"></s:text>:</td>
+	                <td><s:textfield name="subcontract.bankAccount" cssClass="form-control smEdit emWrite" placeholder='服务商收款账号'/></td>
+	            </tr>
+				<tr>
+					<td><s:text name="pm.subcontract.officeName"></s:text>:</td>
+					<s:if test="%{subcontract == null || subcontract.id == null}">
+						<%-- <td>
+                            <s:select list="depList" value="%{user.dpNo}" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                    <s:hidden name="subcontract.officeCode" value="%{user.dpNo}" cssClass="ignoreDisabled" readonly="readonly"/>
+                        </td> --%>
+                        <td class="row">
+                            <span class="col-sm-5 td-inline">
+                                <%-- <s:text name="pm.subcontract.officeName"></s:text>: --%>
+                                <span>
+                                    <s:select id="officeCode" list="depList" value="%{user.dpNo}" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                    <s:hidden id="officeCodeHidden" name="subcontract.officeCode" value="%{user.dpNo}" cssClass="ignoreDisabled" readonly="readonly"/>
+                                </span>
+                            </span>
+                            <span class="col-sm-7 td-inline"  style="display: inline-flex; align-items: center; justify-content: flex-end;">
+                                <s:text name="pm.subcontract.officeName.parent"></s:text>：
+                                <span>
+                                    <s:select id="parentOfficeCode" list="depList" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--自动关联--"/>
+                                    <s:hidden id="parentOfficeCodeHidden" name="subcontract.parentOfficeCode" cssClass="ignoreDisabled" readonly="readonly"/>
+                                </span>
+                            </span>
+                        </td>
+						<td><s:text name="pm.subcontract.createName"></s:text>:</td>
+		                <td><s:textfield name="subcontract.createName" cssClass="form-control" value="%{user.username}-%{user.realName}"/></td>
+                    </s:if>
+                    <s:else>
+                        <td class="row">
+                            <span class="col-sm-5 td-inline">
+                                <%-- <s:text name="pm.subcontract.officeName"></s:text>: --%>
+                                <span>
+                                    <s:select id="officeCode" list="depList" name="subcontract.officeCode" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                </span>
+                            </span>
+                            <span class="col-sm-7 td-inline"  style="display: inline-flex; align-items: center; justify-content: flex-end;">
+                                <s:text name="pm.subcontract.officeName.parent"></s:text>：
+                                <span>
+                                    <s:select id="parentOfficeCode" list="depList" name="subcontract.parentOfficeCode" cssClass="form-control emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/>
+                                </span>
+                            </span>
+                        </td>
+                        <td><s:text name="pm.subcontract.createName"></s:text>:</td>
+                        <td><s:textfield name="subcontract.createName" cssClass="form-control"/></td>
+                    </s:else>
+	            </tr>
+				<tr>
+				    <td><s:text name="pm.subcontract.profitDep"></s:text>:</td>
+	                <td><s:select list="profitDepList" name="subcontract.profitDepCode" cssClass="form-control smEdit emWrite" listKey="departmentNum" listValueKey="departmentName" headerKey="" headerValue="--请选择--"/></td>
+					<td><s:text name="pm.subcontract.deliver"/>:</td>
+					<td class="col-sm-5 row">
+					    <span id="draftContracts" class="col-sm-6 deliverFileInput">
+					        <s:text name="pm.subcontract.deliver.contract.draft"/>
+					        <span class="draftContract">
+					            <s:file label="File" name="uploadDeliverList[0].uploads" cssClass="form-control ignoreDisabled" />
+					            <s:hidden name="uploadDeliverList[0].type" value="0" cssClass="ignoreDisabled"/>
+					        </span>
+				        </span>
+				        <span id="serviceOrders" class="col-sm-6 deliverFileInput">
+				            <s:text name="pm.subcontract.deliver.service"/>
+	                        <span class="serviceOrder">
+	                            <s:file label="File" name="uploadDeliverList[1].uploads" cssClass="form-control ignoreDisabled" />
+                                <s:hidden name="uploadDeliverList[1].type" value="1" cssClass="ignoreDisabled"/>
+	                        </span>
+	                    </span>
+			        </td>
+				</tr>
+				<tr>
+				    <td><s:text name="pm.subcontract.reason"/>:</td>
+	                <td><s:textarea name="subcontract.reason" cssClass="form-control smEdit" placeholder='请输入转包原因'/></td>
+	                <td id="subcontractRemarkLabel"><s:text name="pm.subcontract.remark"/>:</td>
+                    <td>
+                       <s:textarea id="subcontractRemark" name="subcontract.remark" cssClass="form-control smEdit emWrite ignoreDisabled" placeholder='备注（选填）'/></td>
+                    </td>
+				</tr>
+				<tr>
+                    <td><s:text name="pm.subcontract.price"/>:</td>
+                    <td style="padding: 0">
+                        <div id="subcontractAmount" style="padding: 17px 8px;width: calc(100% - 200px);display: inline-block;"><s:property value="subcontract.subcontractAmount"/></div>
+                        <s:if test="%{subcontract.id == null || ((subcontract.state <= 0) && user.isHasRole(11) && (user.areapower.indexOf(subcontract.officeCode) >= 0))}">
+	                        <div style="width: 100px; padding: 8px; line-height: 1.42857143;
+	                                vertical-align: middle; display: inline-block;
+	                                height: 50px; float: right;">
+	                            <button id="choiceShipemnt" type="button" class="btn btn-success pull-right" onclick="chooseShipmentInfo()">序列号选择</button>
+	                        </div>
+		                    <div style="width: 100px; padding: 17px 8px; line-height: 1.42857143;
+	                                vertical-align: middle; border-left: 1px solid #ddd;
+	                                border-right: 1px solid #ddd; display: inline-block;
+	                                /* height: 50px; */ float: right; text-align:right;">
+	                                                                                                    转包清单:
+	                        </div>
+                        </s:if>
+                    </td>
+                    <td class="mergeTdBorder">
+                        <button id="backBtn" type="button" class="btn btn-default" onclick="javaScript:window.location.href='${namespace}/subcontract_list.action'"><span class="glyphicon glyphicon-arrow-left" style="font-size:12px;"></span> 返回</button>
+                    </td>
+                    <td class="mergeTdBorder">
+                        <s:if test="%{(subcontract.state != 100) && (user.isHasRole(10) || user.isHasRole(11) || user.isHasRole(13))}">
+                            <button id="saveBtn" type="button" class="btn btn-success"><span class="glyphicon glyphicon-floppy-save" style="font-size:12px;"></span> 保存</button>
+                        </s:if>
+                        <s:if test='%{subcontract.id == null || ((subcontract.state <= 0) && user.isHasRole(11) &&  user.areapower.indexOf(subcontract.officeCode) >= 0)}'>
+                            <button id="applyBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 提交</button>
+                        </s:if>
+                        <%-- <s:elseif test='%{subcontract.type==20 && (subcontract.callbackState == null || subcontract.callbackState <= 0) && user.isHasRole(11) && user.areapower.indexOf(subcontract.officeCode) >= 0}'>
+                            <button id="callbackBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 发起回访</button>
+                        </s:elseif> --%>
+                        <s:elseif test='%{subcontract.type==20 && (subcontract.state > 0 && subcontract.state != 100) && (subcontract.callbackState == null || subcontract.callbackState <= 0) && user.isHasRole(13)}'>
+                            <button id="callbackBtn" type="button" class="btn btn-info"><span class="glyphicon glyphicon-ok" style="font-size:12px;"></span> 发起回访</button>
+                        </s:elseif>
+                    </td>
+                </tr>
+                <tr style="background-color:#fff">
+                    <td colspan='1' class="mergeTdBorder" style="border:none!important">
+                        <span>转包状态:</span>
+                    </td>
+                    <td class="mergeTdBorder" style="border:none!important">
+                        <span><s:property value="subcontract.stateName"/></span>
+                        <s:if test="subcontract.type==30 || subcontract.type==20">
+                            <span style="margin-left: 2rem;">回访状态:</span>
+                            <span style="margin-left: 0.5rem;"><s:property value="subcontract.callbackStateName" default="无"/></span>
+                        </s:if>
+                    </td>
+                </tr>
+			</table>
+		</fieldset>
+		<nav class="navbar navbar-default" role="navigation" style="margin-top: 20px;">
+	        <div>
+	            <ul class="nav navbar-nav">
+	               <%--  <s:iterator value="navTabList" var="nav" status="index">
+	                        <li name="navli" class="active nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+                            <li id="pmCLHeader" name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+                            <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge "><s:property value="instructionList.size()"/></span></a></li>
+                            <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/><span class="badge pull-right"><s:property value="weeklyList.size()"/></span></a></li>
+                            <li name="navli" class="nav<s:property value='#index.index'/>" onclick="clickNavLi(<s:property value='#index.index'/>,'<s:property value='#nav.basicDataId'/>')"><a href="javascript:void(0)"><s:property value='#nav.basicDataName'/></a></li>
+	               </s:iterator> --%>
+                    <li name="navli" class="active nav0" onclick="clickNavLi(0, 'subcontractLineDiv')"><a href="javascript:void(0)">转包清单</a></li>
+                    <s:if test="%{user.isHasRole(10) || user.isHasRole(9) || user.isHasRole(16) || user.isHasRole(1)}">
+                        <li name="navli" class="nav1" onclick="clickNavLi(1, 'engineeFeeDiv')"><a href="javascript:void(0)">工程服务费</a></li>
+                    </s:if>
+                    <li name="navli" class="nav2" onclick="clickNavLi(2, 'subcontractPaymentDiv')"><a href="javascript:void(0)">付款信息</a></li>
+                    <li name="navli" class="nav3" onclick="clickNavLi(3, 'subcontractDeliverListDiv')"><a href="javascript:void(0)">附件列表</a></li>
+                    <s:if test="%{user.isHasRole(14)}">
+                        <li name="navli" class="nav4" onclick="clickNavLi(4, 'subcontractCallbackDiv')"><a href="javascript:void(0)">服务回访</a></li>
+                    </s:if>
+                    <li name="navli" class="nav5" onclick="clickNavLi(5, 'subcontractCommentListDiv')"><a href="javascript:void(0)">流程记录</a></li>
+                </ul>
+	        </div>
+	    </nav>
+	    
+	    <!-- 序列号清单 -->
+	    <div class="navDiv subcontractLineDiv">
+	        <%-- <s:if test="%{subcontract.id == null || ((subcontract.state <= 0) && user.isHasRole(11) && (user.areapower.indexOf(subcontract.officeCode) >= 0))}">
+		        <div>
+		           <!-- <button id="submitShipemnt" type="button" class="btn btn-xs btn-success pull-right" onclick="submitShipmentInfo()" style="display:none;">确定</button> -->
+		           <button id="choiceShipemnt" type="button" class="btn btn-xs btn-success pull-right" onclick="chooseShipmentInfo()">序列号选择</button>
+		        </div>
+	        </s:if> --%>
+	        <div id="shipmentListDiv">
+	        </div>
+	    </div>
+	</s:form>
+    
+    <!-- 工程服务费清单 -->
+    <div id="engineeFeeDiv" class="navDiv hideDiv">
+    </div>
+    <!-- 付款信息 -->
+    <div id="subcontractPaymentDiv" class="navDiv hideDiv">
+    </div>
+    <!-- 附件列表 -->
+    <div id="subcontractDeliverListDiv" class="navDiv hideDiv">
+    </div>
+    <!-- 服务回访 -->
+    <div id="subcontractCallbackDiv" class="navDiv hideDiv">
+    </div>
+    <!-- 审批记录 -->
+    <div id="subcontractCommentListDiv" class="navDiv hideDiv">
+    </div>
+    
+    <!-- 上下滚动按钮 -->
+    <div class="backTop">
+        <i class='glyphicon glyphicon-arrow-up'></i>
+    </div>
+    <div class="rollBottom">
+        <i class='glyphicon glyphicon-arrow-down'></i>
+    </div>
+</body>
+</html>

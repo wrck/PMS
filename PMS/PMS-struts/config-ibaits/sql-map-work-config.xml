@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+	<resultMap class="com.dp.plat.data.bean.Notification" id="notification_list">
+		<result property="notifySubject" column="notifySubject"/>
+		<result property="notifyContent" column="notifyContent"/>
+		<result property="projectId" column="projectId" nullValue="0"/>
+		<result property="notifyStateId" column="stateId"/>
+		<result property="createTime" column="createTime"/>
+		<result property="checkTime" column="checkTime"/>
+		<result property="notifyState" column="notifyState"/>
+	</resultMap>
+	<select id="check_notification_list" parameterClass="string" resultMap="notification_list">
+		<![CDATA[
+			( select * from ( SELECT 
+			  b.`notifySubject`,
+			  b.`notifyContent`,
+			  b.`projectId`,
+			  a.`id` AS stateId,
+			  b.`createTime`,
+			  a.`checkTime`,
+			  notifyState 
+			FROM
+			  `pm_project_notification_state` a 
+			  LEFT JOIN `pm_project_notification` b 
+			    ON a.`notifyId` = b.`id` 
+			WHERE notifyObject = #username# AND notifyState = 0
+			ORDER BY 
+			  b.`createTime` DESC ) as tmp )
+			UNION ALL 
+			(
+			SELECT 
+			  b.`notifySubject`,
+			  b.`notifyContent`,
+			  b.`projectId`,
+			  a.`id` AS stateId,
+			  b.`createTime`,
+			  a.`checkTime`,
+			  notifyState 
+			FROM
+			  `pm_project_notification_state` a 
+			  LEFT JOIN `pm_project_notification` b 
+			    ON a.`notifyId` = b.`id` 
+			WHERE notifyObject = #username# AND notifyState = 1
+			ORDER BY 
+			  a.`checkTime` DESC,
+			  b.`createTime` DESC 
+			LIMIT 100 )
+		]]>
+	</select>
+	<update id="update_notification_state" parameterClass="int">
+		<![CDATA[
+			UPDATE `pm_project_notification_state` SET notifyState = 1 ,checkTime = now() WHERE id = #id#
+		]]>
+	</update>
+	<resultMap class="com.dp.plat.data.bean.DpActProcDesc" id="pmTaskList">
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="projectPlanStateName" column="projectStateName"/>
+		<result property="officeName" column="officeName"/>
+		<result property="name" column="taskName"/>
+		<result property="applyNum" column="projectId"/>
+		<result property="planDiffTime" column="diff" nullValue="0"/>
+		<result property="assigneeName" column="programManager"/>
+	</resultMap>
+	<select id="query_pm_task_list" parameterClass="java.util.Map" resultMap="pmTaskList">
+		<![CDATA[
+			SELECT  t0.`projectCode`, t0.`projectName` ,t4.`basicDataName` AS  projectStateName,t5.`basicDataName` AS taskName , t0.`projectId` ,
+			 CASE WHEN t1.projectPlanState = 40 THEN  DATEDIFF(NOW() , t6.createTime) WHEN  t1.projectPlanState = 47 THEN  DATEDIFF(NOW() , t1.projectplanTime) ELSE  DATEDIFF( NOW() , t2.`eventPlanHappenDateENG`) END AS diff,
+			 t2.`eventPlanHappenDateENG` , t6.`memberName` AS programManager , t8.departmentName AS officeName
+			FROM 
+			pm_project_header t0 
+			LEFT JOIN pm_project_state t1  ON t0.`projectId` = t1.`projectId`
+			LEFT JOIN fnd_basic_data t4 ON t1.`projectPlanState` = t4.`basicDataId` AND t4.`dataTypeCode` = '22'
+			LEFT JOIN fnd_basic_data t3 ON t4.`basicDataName` = t3.`basicDataName`  AND t3.`dataTypeCode` = '09'
+			LEFT JOIN pm_project_task t2 ON  t2.`taskTypeCode` = t3.`dataTypeCode` AND t2.`taskTypeId` = t3.`basicDataId` 
+			AND t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`visibleFlag` = 1
+			LEFT JOIN fnd_basic_data t5 ON t1.`projectPlanState` = t5.`basicDataId` AND t5.`dataTypeCode` = '23'
+			LEFT JOIN pm_project_member t6 ON t6.`projectId` = t0.`projectId` AND t6.`memberRole` = '30' AND t6.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t7 ON t7.`projectId` = t0.`projectId` AND t7.`memberRole` = '20' AND t7.`effectiveTo` IS NULL
+			LEFT JOIN fnd_department t8 ON t0.column001 = t8.departmentNum AND t8.`status` = 1
+			WHERE t0.`projectState` IN ( 30 ,31,32) AND t0.`effectiveTo` IS NULL 
+			AND ( t2.`eventPlanHappenDateENG` IS NULL OR ( DATEDIFF( t2.`eventPlanHappenDateENG` , NOW()) < 7))
+			AND t1.`projectPlanState` != 48 AND t6.memberCode IS NOT NULL
+		]]>
+		<isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t0.projectName like CONCAT('%', #taskQueryParam.projectName#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="taskQueryParam.officeCode"><![CDATA[ t0.column001 = #taskQueryParam.officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="taskQueryParam.programManager"><![CDATA[ t6.memberCode = #taskQueryParam.programManager#]]> </isNotEmpty>
+		<isNotEmpty prepend="and" property="taskQueryParam.serviceManager"><![CDATA[ (t7.memberCode = #taskQueryParam.serviceManager# or t6.memberCode = #taskQueryParam.serviceManager# )]]></isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset#, #displayParam.pagesize# 
+		</isNotEmpty>
+	</select>
+	
+	<select id="query_pm_task_count" parameterClass="com.dp.plat.param.TaskQueryParam" resultClass="int">
+		<![CDATA[
+			SELECT  COUNT(1)
+			FROM 
+			pm_project_header t0 
+			LEFT JOIN pm_project_state t1  ON t0.`projectId` = t1.`projectId`
+			LEFT JOIN fnd_basic_data t4 ON t1.`projectPlanState` = t4.`basicDataId` AND t4.`dataTypeCode` = '22'
+			LEFT JOIN fnd_basic_data t3 ON t4.`basicDataName` = t3.`basicDataName`  AND t3.`dataTypeCode` = '09'
+			LEFT JOIN pm_project_task t2 ON  t2.`taskTypeCode` = t3.`dataTypeCode` AND t2.`taskTypeId` = t3.`basicDataId` 
+			AND t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`visibleFlag` = 1
+			LEFT JOIN fnd_basic_data t5 ON t1.`projectPlanState` = t5.`basicDataId` AND t5.`dataTypeCode` = '23'
+			LEFT JOIN pm_project_member t6 ON t6.`projectId` = t0.`projectId` AND t6.`memberRole` = '30' AND t6.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t7 ON t7.`projectId` = t0.`projectId` AND t7.`memberRole` = '20' AND t7.`effectiveTo` IS NULL
+			WHERE t0.`projectState` IN ( 30 ,31,32) AND t0.`effectiveTo` IS NULL 
+			AND ( t2.`eventPlanHappenDateENG` IS NULL OR ( DATEDIFF( t2.`eventPlanHappenDateENG` , NOW()) < 7))
+			AND t1.`projectPlanState` != 48 AND t6.memberCode IS NOT NULL
+		]]>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t0.projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ t0.column001 = #officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="programManager"><![CDATA[ t6.memberCode = #programManager#]]> </isNotEmpty>
+		<isNotEmpty prepend="and" property="serviceManager"><![CDATA[ (t7.memberCode = #serviceManager# or t6.memberCode = #serviceManager#)]]></isNotEmpty>
+	</select>
+	
+	<select id="query_notify_count" parameterClass="com.dp.plat.param.TaskQueryParam" resultClass="int">
+		<![CDATA[
+			SELECT COUNT(*)
+			FROM pm_project_notification t1 
+			LEFT JOIN pm_project_header t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t3 ON t2.`projectId` = t3.`projectId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t4 ON t2.`projectId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
+			LEFT JOIN fnd_department t5 ON t2.`column001` = t5.`departmentNum` AND t5.`status` = 1 where 1 = 1 and t2.projectId is not null
+		]]>
+		<isNotEmpty prepend="and" property="projectName"><![CDATA[ t2.projectName like CONCAT('%', #projectName#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="officeCode"><![CDATA[ t2.column001 = #officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="programManager"><![CDATA[ t4.memberCode = #programManager#]]> </isNotEmpty>
+		<isNotEmpty prepend="and" property="serviceManager"><![CDATA[ (t3.memberCode = #serviceManager# or t4.memberCode = #serviceManager#)]]></isNotEmpty>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.Notification" id="NotifyList">
+		<result property="projectId" column="projectId"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeName" column="departmentName"/>
+		<result property="notifyContent" column="notifyContent"/>
+		<result property="createTime" column="createTime"/>
+		<result property="createBy" column="createBy"/>
+		<result property="programManager" column="programManager"/>
+	</resultMap>
+	<select id="query_notify_list" parameterClass="java.util.Map" resultMap="NotifyList" >
+		<![CDATA[
+			SELECT t1.`projectId`,t2.`projectName` , t5.`departmentName` , t1.`notifyContent`, t1.`createTime` ,
+				CONCAT( t1.`createBy` ,'-' ,t6.`realName`) as createBy, t4.`memberName` AS programManager , t3.`memberName` AS serviceManager FROM pm_project_notification t1 
+			LEFT JOIN pm_project_header t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t3 ON t2.`projectId` = t3.`projectId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
+			LEFT JOIN pm_project_member t4 ON t2.`projectId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
+			LEFT JOIN fnd_user_info t6 ON t6.`username` = t1.`createBy`
+			LEFT JOIN fnd_department t5 ON t2.`column001` = t5.`departmentNum` AND t5.`status` = 1
+			WHERE 1 = 1 and t2.projectId is not null
+		]]>
+		<isNotEmpty prepend="and" property="notifyQueryParam.projectName"><![CDATA[ t2.projectName like CONCAT('%', #notifyQueryParam.projectName#, '%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="notifyQueryParam.officeCode"><![CDATA[ t2.column001 = #notifyQueryParam.officeCode#]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="notifyQueryParam.programManager"><![CDATA[ t4.memberCode = #notifyQueryParam.programManager#]]> </isNotEmpty>
+		<isNotEmpty prepend="and" property="notifyQueryParam.serviceManager"><![CDATA[( t3.memberCode = #notifyQueryParam.serviceManager# or t4.memberCode = #notifyQueryParam.serviceManager# )]]></isNotEmpty>
+		<![CDATA[
+			ORDER BY t1.`createTime` DESC
+		]]>
+		<isNotEmpty property="notifyDisplayParam.offset">
+			limit #notifyDisplayParam.offset#, #notifyDisplayParam.pagesize# 
+		</isNotEmpty>
+	</select>
+	
+	<resultMap class="com.dp.plat.data.bean.DpActProcDesc" id="backTaskList">
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeName" column="officeName"/>
+		<result property="realName" column="programManager"/>
+		<result property="name" column="taskName"/>
+		<result property="applyNum" column="projectId"/>
+		<result property="assigneeName" column="ASSIGNEE_"/>
+		<result property="procTypeDesc" column="procTypeDesc"/>
+	</resultMap>
+	<select id="query_project_back_task_list" resultClass="java.util.Map" resultMap="backTaskList">
+		<![CDATA[
+			SELECT  t1.projectCode ,t1.projectName , t4.departmentName AS officeName ,t3.basicDataName AS taskName, 
+			t5.memberName AS programManager,t1.projectId,
+			CASE WHEN t1.isback = '38' THEN t2.memberCode ELSE '工程管理部' END AS ASSIGNEE_ ,
+			'项目回退流程' as procTypeDesc
+			FROM pm_project_header t1 
+			LEFT JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL  AND t2.`memberRole` = '20' 
+			LEFT JOIN pm_project_member t5 ON t1.`projectId` = t5.`projectId` AND t5.`effectiveTo` IS NULL  AND t5.`memberRole` = '30' 
+			LEFT JOIN fnd_basic_data t3 ON t3.dataTypeCode = '23' AND basicDataId = '50'
+			LEFT JOIN fnd_department t4 ON t1.column001 = t4.departmentNum AND t4.`status` = 1
+			WHERE   t1.`projectState` IN (30,31,32) 
+			AND t1.effectiveTo IS NULL
+		]]>
+		<isNotEmpty prepend="and" property="backstate">
+			<![CDATA[ t1.`isback` = #backstate#]]>	
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="assignee">
+			<![CDATA[ t2.memberCode = #assignee#]]>
+		</isNotEmpty>
+	</select>
+	<!-- 不予跟踪任务 -->
+	<select id="query_project_track_task_list" resultClass="java.util.Map" resultMap="backTaskList">
+		<![CDATA[
+			SELECT 
+			    t1.projectCode, t1.projectName, t4.departmentName AS officeName, "不予跟踪确认" AS taskName, t1.isback, t5.memberName AS programManager, t1.projectId, '工程管理部' AS ASSIGNEE_, "不予跟踪确认流程" AS procTypeDesc 
+			FROM
+			    pm_project_header t1 
+			    LEFT JOIN pm_project_member t2 
+			        ON t1.`projectId` = t2.`projectId` 
+			        AND t2.`effectiveTo` IS NULL 
+			        AND t2.`memberRole` = '20' 
+			    LEFT JOIN pm_project_member t5 
+			        ON t1.`projectId` = t5.`projectId` 
+			        AND t5.`effectiveTo` IS NULL 
+			        AND t5.`memberRole` = '30' 
+			    LEFT JOIN fnd_basic_data t3 
+			        ON t3.dataTypeCode = '23' 
+			        AND basicDataId = '50' 
+			    LEFT JOIN fnd_department t4 
+			        ON t1.column001 = t4.departmentNum 
+			        AND t4.`status` = 1 
+			WHERE t1.`projectState` IN (30, 31, 32, 20) 
+			    AND t1.isback IN ('42', '50') 
+			    AND t1.effectiveTo IS NULL ;
+		]]>
+	</select>
+	
+	<resultMap class="com.dp.plat.data.bean.DpActProcDesc" id="CBTaskList">
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeName" column="officeName"/>
+		<result property="realName" column="programManager"/>
+		<result property="name" column="taskName"/>
+		<result property="applyNum" column="projectId"/>
+		<result property="assigneeName" column="ASSIGNEE_"/>
+		<result property="taskId" column="id_"/>
+		<result property="createTime" column="applyTime"/>
+		<result property="procTypeName" column="KEY_"/>
+		<result property="procTypeDesc" column="procTypeDesc"/>
+		<result property="projectCustomer" column="memberName"/>
+		<result property="projectImpl" column="implType"/>
+	</resultMap>
+	
+	<select id="query_call_back_task" parameterClass="java.util.Map" resultMap="CBTaskList">
+		<![CDATA[
+			SELECT t3.`projectCode` , t3.`projectName` , t4.`departmentName` AS officeName,t5.`memberName`  as programManager, t1.`NAME_`  as taskName,t3.`projectId` ,
+			CASE WHEN t6.`realName` IS NULL THEN '回访人员' ELSE CONCAT(t6.username,'-' , t6.realName) END AS ASSIGNEE_ 
+			,t1.id_ , t2.applyTime ,t7.KEY_ ,t7.NAME_ as procTypeDesc , mm.memberName ,
+		    CASE
+		        WHEN t3.column012 IS NULL 
+		        AND t3.columno12_readonly = - 1 
+		        THEN t3.column012 
+		        WHEN t3.column012 IS NOT NULL 
+		        THEN t3.column012 
+		        ELSE t3.columno12_readonly 
+    		END AS implType, mm.memberName 
+			FROM act_ru_task t1 
+			JOIN pm_cl_callback t2 ON t1.`PROC_INST_ID_` = t2.instId AND t2.`instId` IS NOT NULL AND t2.`effectiveTo` IS NULL
+			LEFT JOIN act_re_procdef t7 ON t1.PROC_DEF_ID_ = t7.ID_
+			LEFT JOIN pm_project_header t3 ON t2.`projectId` = t3.`projectId`
+			LEFT JOIN fnd_department t4 ON t3.`column001` = t4.`departmentNum` AND t4.`status`  = 1
+			LEFT JOIN pm_project_member t5 ON t3.`projectId` = t5.`projectId` AND t5.`memberRole` = '30' AND t5.`effectiveTo` IS NULL
+			LEFT JOIN 
+		        (SELECT 
+		            m.projectId, GROUP_CONCAT(m.memberName) AS memberName 
+		        FROM
+		            pm_project_member m 
+		        WHERE m.effectiveTo IS NULL 
+		            AND m.memberRole = '60' 
+		        GROUP BY m.projectId) mm 
+		        ON mm.projectId = t3.projectId 
+			LEFT JOIN fnd_user_info t6 ON t1.`ASSIGNEE_` = t6.`username` AND t6.`status` = 1
+			WHERE t3.projectState != 20 
+		]]>
+		<isEqual compareValue="1" property="callbackRole" prepend="and"><![CDATA[ 
+			(
+			ASSIGNEE_ = 'callbackRole' 
+			or ASSIGNEE_ = #assignee#
+			)]]>
+		</isEqual>
+		<isEqual compareValue="0" property="callbackRole" prepend="and">
+			<![CDATA[ ASSIGNEE_ = #assignee#]]>
+		</isEqual>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.DpActProcDesc" id="PreTaskList">
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="officeName" column="departmentName"/>
+		<result property="realName" column="memberName"/>
+		<result property="name" column="NAME_"/>
+		<result property="applyNum" column="presalesId"/>
+		<result property="assigneeName" column="ASSIGNEE_"/>
+		<result property="taskId" column="id_"/>
+		<result property="createTime" column="createTime"/>
+		<result property="procTypeName" column="KEY_"/>
+		<result property="procTypeDesc" column="procTypeDesc"/>
+	</resultMap>
+	<select id="query_presales_task" parameterClass="java.util.Map" resultMap="PreTaskList">
+		<![CDATA[
+			SELECT t1.`projectCode` ,t1.`projectName` ,t2.`departmentName`, t3.`memberName` ,t0.`NAME_`  ,
+			CASE WHEN t6.`realName` IS NULL THEN '工程管理部' ELSE CONCAT(t6.username,'-' , t6.realName) END AS ASSIGNEE_ ,
+			t0.`CREATE_TIME_` AS createTime ,t7.KEY_ ,t0.ID_,t1.presalesId,t7.NAME_ as procTypeDesc
+			FROM act_ru_task t0 
+			JOIN pm_presales_project_header t1 ON t0.`PROC_INST_ID_` = t1.`instId` 
+			LEFT JOIN fnd_department t2 ON t1.`officeCode` = t2.`departmentNum` AND t2.`status` = 1
+			LEFT JOIN pm_project_member t3 ON t3.`projectId` = t1.`presalesId` AND t3.`memberRole` = '30' AND t3.`effectiveTo` IS NULL
+			LEFT JOIN fnd_user_info t6 ON t0.`ASSIGNEE_` = t6.`username` AND t6.`status` = 1
+			LEFT JOIN act_re_procdef t7 ON t0.PROC_DEF_ID_ = t7.ID_
+			WHERE 1 =1
+		]]>
+		<isEqual compareValue="1" property="emRole" prepend="and"><![CDATA[ 
+			(
+			ASSIGNEE_ = 'emRole' 
+			or ASSIGNEE_ = #assignee#
+			)]]>
+		</isEqual>
+		<isEqual compareValue="0" property="emRole" prepend="and">
+			<![CDATA[ ASSIGNEE_ = #assignee#]]>
+		</isEqual>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.DpActProcDesc" id="hisTaskMap">
+		<result property="projectCode" column="projectCode"/>
+		<result property="projectName" column="projectName"/>
+		<result property="procTypeName" column="NAME_"/>
+		<result property="name" column="taskName"/>
+		<result property="username" column="applyBy"/>
+		<result property="realName" column="applyName"/>
+		<result property="assigneeName" column="assigneeName"/>
+		<result property="endTime" column="assigneeTime"/>
+		<result property="evaluaResult" column="result"/>
+		<result property="applyNum" column="projectId"/>
+		<result property="projectCustomer" column="projectCustomer"/>
+	</resultMap>
+	<select id="query_callback_his_list" parameterClass="string" resultMap="hisTaskMap">
+		<![CDATA[
+			SELECT t3.`projectCode` ,t3.`projectName` ,t4.`NAME_` ,'项目人员回访' AS taskName,t1.`applyBy` , 
+				t5.`realName`  AS applyName, t6.`realName`  AS assigneeName,t2.`assigneeTime` , t2.`result` ,t1.`projectId`
+				, null AS projectCustomer, null AS projectCustomerTel
+			FROM pm_cl_callback t1  LEFT JOIN fnd_act_hi_comment t2 ON t1.`instId` = t2.`instId`
+			LEFT JOIN pm_project_header t3 ON t1.`projectId` = t3.`projectId`
+			LEFT JOIN act_re_procdef t4 ON t2.`procdefKey` = t4.`KEY_` 
+			LEFT JOIN fnd_user_info t5 ON t1.`applyBy` = t5.`username` AND t5.`effectiveTo` IS NULL 
+			LEFT JOIN fnd_user_info t6 ON t2.`assignee` = t6.`username` AND t6.`effectiveTo` IS NULL
+			WHERE t2.`assignee` = #username# and t2.procdefKey = 'CallBack'
+		]]>
+	</select>
+	
+	<!-- SELECT 
+		    m.id AS probId, m.probNum, m.theme, m.createTime, t1.`basicDataName` AS watchName, t2.`basicDataName` AS statusName, t3.basicDataName AS priorityName, CONCAT(t4.username, '-', t4.realName) AS trackingUsername, d.`departmentName` AS officeName 
+		FROM
+		    `prob_main` m 
+		    LEFT JOIN `prob_restore` r 
+		        ON m.`id` = r.`probId` 
+		    LEFT JOIN `prob_restore_process` rp 
+		        ON r.`processId` = rp.`id` 
+		    LEFT JOIN fnd_department d 
+		        ON r.`officeCode` = d.`departmentNum` 
+		    LEFT JOIN fnd_basic_data t1 
+		        ON m.`watch` = t1.`basicDataId` 
+		        AND t1.`dataTypeCode` = '30' 
+		        AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t2 
+		        ON m.`status` = t2.basicDataId 
+		        AND t2.dataTypeCode = '31' 
+		        AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t3 
+		        ON m.`priority` = t3.`basicDataId` 
+		        AND t3.`dataTypeCode` = '32' 
+		        AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_user_info t4 
+		        ON m.trackingUser = t4.username 
+		<dynamic prepend="where">
+			<isEqual property="isProbAdmin" compareValue="0">
+					(
+						<isNotEmpty prepend="and" property="assignee">
+							(<![CDATA[
+								( r.assignee = #assignee# 
+							]]>	
+							<isNotEmpty prepend="OR" property="areapower">
+								<![CDATA[ 
+									r.officeCode in ($areapower$)
+								]]>	
+							</isNotEmpty>
+								)  AND rp.`restoreStatus` = '10'
+							)
+						</isNotEmpty>
+						OR m.watch = 15
+					)
+				<![CDATA[ 
+					AND (
+				        m.`status` <> '10' 
+				        AND m.`status` <> '6'
+		    		) 
+		   		]]>
+		   	</isEqual>
+		   	<isEqual property="isProbAdmin" compareValue="1">
+		   		<![CDATA[ 
+					 (
+				        m.`status` <> '10' 
+				        AND m.`status` <> '6'
+		    		) 
+		   		]]>
+		   	</isEqual>
+		</dynamic>
+		GROUP BY m.`id` 
+		ORDER BY m.`watch` ASC, m.`priority` DESC, m.`id` DESC --> 
+	<select id="query_probTask_list" parameterClass="map" resultClass="com.dp.plat.prob.param.ProbParam">
+		SELECT 
+			m.id AS probId, m.probNum, m.theme, m.createTime, m.status, t1.`basicDataName` AS watchName, t2.`basicDataName` AS statusName, t3.basicDataName AS priorityName, t4.username as trackingUser, CONCAT(t4.username, '-', t4.realName) AS trackingUsername, d.`departmentName` AS officeName
+			, m.customInfo 
+		FROM
+		    `prob_main` m 
+		    LEFT JOIN `prob_restore` r 
+			ON m.`id` = r.`probId`
+		    LEFT JOIN `prob_restore_process` rp 
+			ON r.`processId` = rp.`id` 
+		    LEFT JOIN fnd_department d 
+			ON r.`officeCode` = d.`departmentNum` 
+		    LEFT JOIN fnd_basic_data t1 
+			ON m.`watch` = t1.`basicDataId` 
+			AND t1.`dataTypeCode` = '30' 
+			AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t2 
+			ON m.`status` = t2.basicDataId 
+			AND t2.dataTypeCode = '31' 
+			AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t3 
+			ON m.`priority` = t3.`basicDataId` 
+			AND t3.`dataTypeCode` = '32' 
+			AND t1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_user_info t4 
+			ON m.trackingUser = t4.username 
+		<dynamic prepend="where">
+			<isEqual property="isProbAdmin" compareValue="0">
+					(
+						<isNotEmpty prepend="and" property="assignee">
+							(<![CDATA[
+								( r.assignee = #assignee# 
+							]]>	
+							<isNotEmpty prepend="OR" property="areapower">
+								<![CDATA[ 
+									r.officeCode IN ($areapower$)
+								]]>	
+							</isNotEmpty>
+								)  AND rp.`restoreStatus` = '10'
+							)
+						</isNotEmpty>
+						OR m.watch = 15
+					)
+				<![CDATA[ 
+					AND (
+					m.`status` <> '10' 
+					AND m.`status` <> '6' 
+					AND m.`status` <> '8'
+					AND m.`status` <> '1'
+				) 
+				]]>
+			</isEqual>
+			<isEqual property="isProbAdmin" compareValue="1">
+				<![CDATA[ 
+					 (
+					m.`status` <> '10' 
+					AND m.`status` <> '6'
+				) 
+				]]>
+			</isEqual>
+			<isEqual property="isProbAdmin" compareValue="2">
+				<![CDATA[ 
+					 (
+					m.`status` = '4' 
+					OR m.`status` = '5'
+				) 
+				]]>
+			</isEqual>
+			<isEqual property="isProbAdmin" compareValue="3">
+				<![CDATA[ 
+					 (
+					m.`status` = '6' and m.`trackingUser` = #assignee#
+				) 
+				]]>
+			</isEqual>
+			<![CDATA[ and m.effectiveTo is null]]>
+		</dynamic>
+		GROUP BY m.`id` 
+		ORDER BY m.`watch` ASC, m.`priority` DESC, m.`id` DESC
+	</select>
+	
+	<select id="queryProjectSupervisionTask" parameterClass="map" resultClass="com.dp.plat.data.bean.DpActProcDesc">
+	    SELECT 
+		    ps.`projectId` AS applyNum , ps.`projectCode`, ps.`projectName`, 
+		    d.`departmentName` AS officeName, pm.`memberName` AS realName, 
+		    '工程人员' AS assigneeName, ps.`createTime`, 
+		    "ProjectSupervision" AS procTypeName, "项目督查" AS procTypeDesc, "填写督查问卷" AS name 
+		FROM
+		    `pm_project_supervision` ps 
+		    LEFT JOIN pm_project_member pm 
+		        ON ps.`projectId` = pm.`projectId` 
+		        AND pm.`memberRole` = '30' 
+		        AND pm.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_department d 
+		        ON ps.`officeCode` = d.`departmentNum` 
+		WHERE isdelete = FALSE 
+		    AND state = FALSE
+	</select>
+	
+    <select id="queryTaskByInstIdAndVariable" parameterClass="map" resultClass="string">
+        SELECT 
+		    ID_ 
+		FROM
+		    ACT_RU_VARIABLE A0  
+		WHERE A0.PROC_INST_ID_ = #instId# 
+		    AND A0.NAME_ = #NAME_# 
+		    AND A0.TYPE_ = #TYPE_# 
+		    AND A0.TEXT_ = #TEXT_# ;
+    </select>
+    
+    <update id="updateRunVariableById" parameterClass="map">
+        update ACT_RU_VARIABLE set TEXT_ = #TEXT_# where ID_ = #id#
+    </update>
+    
+    <update id="updateRunVariableByInstIdAndVariable" parameterClass="map">
+        UPDATE 
+		    `act_ru_variable` 
+		SET
+		    TEXT_ = #value#
+		WHERE PROC_INST_ID_ = #instId# 
+		    AND NAME_ = #NAME_# 
+            AND TYPE_ = #TYPE_# 
+            AND TEXT_ = #TEXT_# ;
+    </update>
+    
+    <sql id="sqlFromSelfHistoryTask">
+        FROM (
+            SELECT a.`projectCode`, a.`projectName`, '项目闭环' AS `NAME_`, '项目人员回访' AS taskName, c.evaluationPeopleId AS `applyBy`
+                , c.evaluationPeopleName AS applyName, a.evaluationPeopleName AS assigneeName, a.evaluationTime AS assigneeTime
+                , a.evaluationResult AS RESULT, a.projectId
+                , t1.column001 AS officeCode
+            FROM pm_cl_evaluation_header a
+                LEFT JOIN pm_cl_evaluation_header c ON a.applyHeaderId = c.id
+                LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
+            WHERE a.evaluationPeopleId = #assignee# AND a.status = 1
+            <isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t1.projectName like CONCAT('%', #taskQueryParam.projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="taskQueryParam.officeCode"><![CDATA[ t1.column001 = #taskQueryParam.officeCode#]]></isNotEmpty>
+            UNION ALL
+            <!-- 回访流程已办理任务 -->
+            SELECT t3.`projectCode` ,t3.`projectName` ,t4.`NAME_` ,'项目人员回访' AS taskName,t1.`applyBy` , 
+                t5.`realName` AS applyName, t6.`realName`  AS assigneeName,t2.`assigneeTime` , t2.`result` ,t1.`projectId`
+                , t3.column001 AS officeCode
+            FROM fnd_act_hi_comment t2
+            LEFT JOIN pm_cl_callback t1 ON t1.`instId` = t2.`instId`
+            LEFT JOIN pm_project_header t3 ON t1.`projectId` = t3.`projectId`
+            LEFT JOIN act_re_procdef t4 ON t2.`procdefKey` = t4.`KEY_` 
+            LEFT JOIN fnd_user_info t5 ON t1.`applyBy` = t5.`username` AND t5.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_user_info t6 ON t2.`assignee` = t6.`username` AND t6.`effectiveTo` IS NULL
+            WHERE t2.`assignee` = #assignee# and t2.procdefKey = 'CallBack'
+            <isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t3.projectName like CONCAT('%', #taskQueryParam.projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="taskQueryParam.officeCode"><![CDATA[ t3.column001 = #taskQueryParam.officeCode#]]></isNotEmpty>
+        ) t
+        LEFT JOIN fnd_department t2 ON t.officeCode = t2.departmentNum AND t2.`status` = 1
+        <!-- 最终客户 -->
+        LEFT JOIN ( 
+            SELECT m.projectId
+                , REPLACE(REPLACE(REPLACE(GROUP_CONCAT(CONCAT_WS('-', trim(m.memberName), trim(m.phoneNum)) ORDER BY id), '\t', ''), '\r', ''), '\n', '') memberName
+                <!-- , GROUP_CONCAT(m.memberName ORDER BY id) AS memberName, GROUP_CONCAT(m.phoneNum ORDER BY id) AS memberPhone -->
+            FROM pm_project_member m
+            WHERE m.effectiveTo IS NULL
+                AND m.memberRole = '60'
+            GROUP BY m.projectId
+        ) fc ON t.projectId = fc.projectId
+        <dynamic prepend="WHERE">
+            <isNotEmpty prepend="and" property="taskQueryParam.projectName"><![CDATA[ t.projectName like CONCAT('%', #taskQueryParam.projectName#, '%')]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="taskQueryParam.officeCode"><![CDATA[ t.officeCode = #taskQueryParam.officeCode#]]></isNotEmpty>
+            <isNotEmpty prepend="and" property="taskQueryParam.projectCustomer"><![CDATA[ fc.memberName like CONCAT('%', #taskQueryParam.projectCustomer#, '%') ]]> </isNotEmpty>
+        </dynamic>
+    </sql>
+    
+    <select id="countSelfHistoryTaskList" parameterClass="map" resultClass="int">
+        SELECT count(1)
+        <include refid="sqlFromSelfHistoryTask"/>
+        <isNotEmpty property="displayParam.offset">
+            limit #displayParam.offset#, #displayParam.pagesize# 
+        </isNotEmpty>
+    </select>
+    
+    <select id="querySelfHistoryTaskList" parameterClass="map" resultMap="hisTaskMap">
+        SELECT t.*, fc.memberName AS projectCustomer
+        <include refid="sqlFromSelfHistoryTask"/>
+		<isNotEmpty property="displayParam.offset">
+		    limit #displayParam.offset#, #displayParam.pagesize# 
+		</isNotEmpty>
+    </select>
+</sqlMap>

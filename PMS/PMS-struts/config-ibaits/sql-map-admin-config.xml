@@ -1,0 +1,1060 @@
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
+ "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="business">
+    <cacheModel type="CopyLRU" id="userCache" readOnly="true">
+        <flushInterval hours="1"/>
+        <flushOnExecute statement="insert-user-object"/>
+        <flushOnExecute statement="update-user-object"/>
+	    <flushOnExecute statement="update-user"/>
+	    <flushOnExecute statement="update-user-chageloginpass"/>
+        <flushOnExecute statement="update-pwd-byusername"/>
+        <flushOnExecute statement="update-md5pwd-byusername"/>
+	    <flushOnExecute statement="insert-menuForUser-object"/>
+	    <flushOnExecute statement="delete-menuForUser-byUserId"/>
+	    
+	    <flushOnExecute statement="delete-roleMenuPower-byRoleId"/>
+	    <flushOnExecute statement="insert-roleMenuPower-object"/>
+	    <flushOnExecute statement="insert-roleObject"/>
+	    <flushOnExecute statement="update-roleObject"/>
+	    <flushOnExecute statement="update_user_power"/>
+	    <flushOnExecute statement="insert_user_power"/>
+	    
+	    <flushOnExecute statement="refreshCacheData"/>
+	    
+        <property name="size" value="50"/>
+    </cacheModel>
+    
+    <!-- 最近一次手动清理缓存时间 -->
+    <update id="refreshCacheData">
+        update fnd_sys_arg set var = now() where code = 'sys.cache.latest.refreshTime'
+    </update>
+    
+	<!-- 查询用户权限 -->
+	<resultMap class="java.util.HashMap" id="user_permissions">
+		<result property="menuCode" column="menuCode" javaType="java.lang.String"/>
+		<result property="menuValue" column="menuValue" javaType="java.lang.Integer"/>
+	</resultMap>
+	<select id="query_permissions_by_name" resultMap="user_permissions" parameterClass="int" cacheModel="userCache">
+		<![CDATA[
+			SELECT menuCode,menuValue FROM fnd_user_menus 
+			WHERE  fnd_user_id = #userId# AND effectiveFrom < NOW() 
+			AND( effectiveTo > NOW() OR effectiveTo IS NULL)
+		]]>
+	</select>
+	<select id="query_permissions_name_code_by_userId" parameterClass="int" resultClass="java.util.HashMap" cacheModel="userCache">
+        <![CDATA[
+            SELECT 
+			    m.`menuName`, um.menuCode 
+			FROM
+			    fnd_user_menus um
+			    LEFT JOIN `fnd_menus` m
+			    ON um.`menuCode` = m.`menuCode`
+			WHERE um.fnd_user_id = #userId# 
+			    AND um.effectiveFrom < NOW() 
+			    AND (
+			        um.effectiveTo > NOW() 
+			        OR um.effectiveTo IS NULL
+			    )
+        ]]>
+    </select>
+	<!-- 查询用户角色集合 -->
+	<resultMap class="com.dp.plat.data.bean.Role" id="RoleList">
+		<result property="id" column="id" nullValue="0"/>
+		<result property="roleName" column="roleName"/>
+	</resultMap>
+	<select id="query_sys_roles" resultMap="RoleList" cacheModel="userCache">
+		<![CDATA[
+			select id ,roleName from fnd_roles where status = 1 
+		]]>
+	</select>
+	<!-- 查询系统菜单 -->
+	<resultMap class="com.dp.plat.data.bean.UserMenu" id="UserSuperMenu">
+		<result property="menuCode" column="menuCode"/>
+		<result property="menuName" column="menuName"/>
+		<result property="menuLevel" column="menuLevel"/>
+		<result property="id" column="id"/>
+		<result property="superId" column="superId"/>
+		<result property="path" column="path"/>
+	</resultMap>
+	<select id="query_menu_modules" resultMap="UserSuperMenu" parameterClass="java.util.Map" cacheModel="userCache">
+		<![CDATA[
+			SELECT * FROM fnd_menus WHERE superId = #superId# and effectiveFrom < NOW() AND( effectiveTo > NOW() OR effectiveTo IS NULL);;
+		]]>
+	</select>
+	<select id="query-menu-byId" parameterClass="int" resultMap="UserSuperMenu" cacheModel="userCache">
+		<![CDATA[
+			select * from fnd_menus where id = #id# and effectiveFrom < NOW() AND( effectiveTo > NOW() OR effectiveTo IS NULL);
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.User" id="user_All">
+		<result property="id" column="id"/>
+		<result property="username" column="username"/>
+		<result property="password" column="password"/>
+		<result property="email" column="email"/>
+		<result property="realName" column="realName"/>
+		<result property="status" column="status"/>
+		<result property="pwdoverdue" column="pwdoverdue"/>
+		<result property="defaultPage" column="defaultPage"/>
+		<result property="dpNo" column="dpNo"/>
+		<result property="areapower" column="areapower"/>
+		<result property="roleids" column="roleIds"/>
+		<result property="customInfo" column="customInfo"/>
+	</resultMap>
+	<select id="query_user_by_id" parameterClass="int" resultMap="user_All" cacheModel="userCache">
+		<![CDATA[
+			select a.id,a.username,a.password,a.email,a.realName,a.status,a.pwdoverdue,a.roleIds,
+			b.id as defaultPage , a.dpNo,c.`areapower`, a.customInfo
+			from fnd_user_info a
+			left join fnd_menus b on  a.defaultPage=b.path
+			LEFT JOIN fnd_user_power c ON a.`id` = c.`fndUserId`  AND c.`effectiveFrom` < NOW() AND (c.`effectiveTo` IS NULL OR c.`effectiveTo`> NOW())
+			where a.id = #id# 
+			
+		]]>
+	</select>
+	
+	<select id="query_usermenuids_by_id" parameterClass="int" resultClass="string" cacheModel="userCache">
+		<![CDATA[
+			SELECT GROUP_CONCAT(m.id) FROM fnd_user_menus p, fnd_menus m 
+			WHERE fnd_user_id = #id# AND p.`menuCode` = m.`menuCode`  AND p.`menuValue` = 1;
+		]]>
+	</select>
+	
+	
+	<resultMap class="com.dp.plat.data.bean.User" id="LoginInfo">
+		<result property="id" column="id"/>
+		<result property="username" column="username"/>
+		<result property="password" column="password"/>
+		<result property="email" column="email"/>
+		<result property="realName" column="realName"/>
+		<result property="status" column="status"/>
+		<result property="roleids" column="roleIds"/>
+		<result property="isemail" column="isemail" nullValue="1"/>
+		<result property="dpNo" column="dpNo"/>
+		<result property="areapower" column="areapower"/>
+		<result property="pwdoverdue" column="pwdoverdue"/>
+		<result property="customInfo" column="customInfo"/>
+	</resultMap>
+	<resultMap class="com.dp.plat.data.bean.User" id="userRole">
+		<result property="id" column="id"/>
+		<result property="username" column="username"/>
+		<result property="password" column="password"/>
+		<result property="email" column="email"/>
+		<result property="realName" column="realName"/>
+		<result property="roleids" column="roleIds"/>
+		<result property="status" column="status" nullValue="0"/>
+		<result property="pwdoverdue" column="pwdoverdue"/>
+		<result property="customInfo" column="customInfo"/>
+	</resultMap>
+	<resultMap class="com.dp.plat.data.bean.User" id="user">
+		<result property="id" column="id" />
+		<result property="username" column="username"/>
+		<result property="password" column="password"/>
+		<result property="email" column="email"/>
+		<result property="realName" column="realName"/>
+		<result property="status" column="status"/>
+		<result property="roleids" column="roleIds"/>
+		<result property="isemail" column="isemail"/>
+	</resultMap>
+	
+	<select id="get-id-byname" parameterClass="string" resultClass="int" cacheModel="userCache">
+		<![CDATA[
+		select id from fnd_user_info
+		where username = #username#
+		]]>
+	</select>
+	<!-- 根据用户名查询用户 -->
+	<select id="query-user-by-name" parameterClass="string" resultMap="LoginInfo" cacheModel="userCache">
+		<![CDATA[
+			select u.* , CASE WHEN  (p.`areapower` IS NULL OR p.`areapower` = '' ) THEN '-1' ELSE p.`areapower` END AS areapower from fnd_user_info u LEFT JOIN fnd_user_power p ON u.`id` = p.`fndUserId` 
+			where u.username = #name# and u.status = 1 limit 1
+		]]>
+	</select>
+	<!-- 查询所有的用户 -->
+	<select id="query-user-count" parameterClass="com.dp.plat.data.bean.User" resultClass="int" cacheModel="userCache">
+		<![CDATA[
+		select count(1) from fnd_user_info ui
+		]]>
+		<isNotEmpty property="dpNo">
+                LEFT JOIN fnd_user_power up 
+                    ON up.`fndUserId` = ui.`id` 
+        </isNotEmpty>
+        <dynamic prepend="where">
+			<isNotEmpty prepend="AND" property="username"> (ui.username like CONCAT('%', #username#, '%') or ui.realName like CONCAT('%', #username#, '%'))</isNotEmpty>
+			<isNotEmpty prepend="AND" property="roleids"> ui.roleIds like CONCAT('%', #roleids#, '%') </isNotEmpty>
+			<isNotEmpty prepend="and" property="dpNo"><![CDATA[ (ui.dpNo = #dpNo# or FIND_IN_SET(#dpNo#, up.areapower) ) ]]></isNotEmpty>
+	    </dynamic>
+	</select>
+	<!-- 配置缓存模型  -->
+<!-- 	<cacheModel type="OSCache" id="user_cache" readOnly="true" serialize="true">
+		<flushInterval minutes="5"/>
+		<flushOnExecute statement="insertUser"/>
+		<property name="size" value="500"/>
+	</cacheModel> -->
+	<select id="query-userlist" parameterClass="com.dp.plat.param.UserParam" resultMap="userRole" cacheModel="userCache"><!-- cacheModel="user_cache" -->
+		<![CDATA[
+			SELECT 
+			    ui.id, ui.username, ui.realName, ui.email, ui.password, ui.roleIds, ui.status, ui.pwdoverdue, ui.customInfo 
+			FROM
+			    fnd_user_info ui 
+		]]>
+		<isNotEmpty property="user.dpNo">
+			    LEFT JOIN fnd_user_power up 
+			        ON up.`fndUserId` = ui.`id` 
+		</isNotEmpty>
+		<dynamic prepend="where">
+			<isNotEmpty prepend="AND" property="user.username"><![CDATA[  ( ui.username like CONCAT('%', #user.username#, '%') or ui.realName like CONCAT('%', #user.username#, '%') )]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="user.roleids"><![CDATA[ ui.roleIds like CONCAT('%', #user.roleids#, '%')]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="user.dpNo"><![CDATA[ (ui.dpNo = #user.dpNo# or FIND_IN_SET(#user.dpNo#, up.areapower) ) ]]></isNotEmpty>
+		</dynamic>
+        <isNotEmpty prepend=" order by " property="displayParam.sort">
+			#displayParam.sort#
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		      </isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset#, #displayParam.pagesize# 
+		</isNotEmpty>
+	</select>
+	
+	<select id="query-userlist-all" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
+		<![CDATA[
+			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user
+		]]>
+		<dynamic prepend="where">
+			<isNotEqual prepend="and" property="status" compareValue="0"><![CDATA[ status=#status# ]]></isNotEqual>
+			<isNotEmpty prepend="and" property="username"><![CDATA[  user.username like CONCAT('%', #username#, '%') ]]></isNotEmpty>
+			<isNotEmpty prepend="and" property="roleids"><![CDATA[ user.roleIds like CONCAT('%', #roleids#, '%')]]></isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<resultMap class="com.dp.plat.data.bean.User" id="extendsUserInfo">
+		<result property="username" column="username"/>
+		<result property="realName" column="realName"/>
+	</resultMap>
+	<select id="query-all-user" resultMap="extendsUserInfo" cacheModel="userCache">
+		<![CDATA[
+		select username, realName from fnd_user_info
+		]]>
+	</select>
+	<select id="select-roleName" resultClass="string">
+		<![CDATA[
+		select roleName from role where status = 1
+		]]>
+	</select>
+	<update id="update-user-chageloginpass" parameterClass="com.dp.plat.param.PasswordEditParam">
+		<![CDATA[
+		update fnd_user_info set password = #newPassword#,pwdoverdue = date_add(NOW(), interval 3 MONTH)
+		where id = #id#
+		]]>
+	</update>
+	<update id="update-pwd-byusername" parameterClass="com.dp.plat.data.bean.User">
+		<![CDATA[
+		update fnd_user_info set password = #password#
+		]]>
+		<isNotEmpty prepend="," property="pwdoverdue"> pwdoverdue = #pwdoverdue# </isNotEmpty>
+		where username = #username#
+	</update>
+	<select id="select-roleid-byRoleName" parameterClass="string" resultClass="int" cacheModel="userCache">
+		<![CDATA[
+		select id from role
+		where roleName = #roleName#
+		]]>
+	</select>
+	<!-- 用户管理 -->
+	<insert id="insert-user-object" parameterClass="com.dp.plat.data.bean.User">
+		insert into fnd_user_info(username
+		<isNotEmpty prepend="," property="password">password</isNotEmpty>
+		,email,realName,status,roleIds,isemail,pwdoverdue,defaultPage,dpNo,createBy,createTime, effectiveFrom
+		, customInfo)
+		values(#username#
+		<isNotEmpty prepend="," property="password">#password#</isNotEmpty>
+		,#email#,#realName#,1,#roleids#,1,now(),#defaultPage#,#dpNo#,#createBy# ,now(),now()
+		, #customInfo#)
+		<selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id ;   
+        </selectKey>
+	</insert>
+	<update id="update-user-object" parameterClass="com.dp.plat.data.bean.User">
+		<![CDATA[
+		update fnd_user_info set username=#username#,email=#email#,realName=#realName#,
+		status=#status#,roleIds = #roleids#,isemail=1,effectiveTo=#effectiveTo#, updateBy=#updateBy#,updateTime=now(),defaultPage=#defaultPage#,dpNo = #dpNo#
+		]]>
+		<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
+		where id=#id#
+	</update>
+	<insert id="insert-menuForUser-object" parameterClass="com.dp.plat.data.bean.MenuForUser">
+		<![CDATA[
+		insert into fnd_user_menus(fnd_user_id,username,menuCode,menuValue,createTime,effectiveFrom)
+		values(#sys_user_id#,#username#,#menuCode#,1,now(),now())
+		]]>
+	</insert>
+	<delete id="delete-menuForUser-byUserId" parameterClass="int">
+		<![CDATA[
+			delete from fnd_user_menus where fnd_user_id=#userId#
+			]]>
+	</delete>
+	<update id="update-md5pwd-byusername" parameterClass="com.dp.plat.param.Md5Param">
+		<![CDATA[
+		update user set password = #md5pwd#
+		where username = #username#
+		]]>
+	</update>
+	<select id="select-user" parameterClass="com.dp.plat.data.bean.User" resultMap="userRole" cacheModel="userCache">
+		<![CDATA[
+		select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo
+		from fnd_user_info user 
+		where user.id = #id#
+		]]>
+	</select>
+	<update id="update-user" parameterClass="com.dp.plat.data.bean.User">
+		<![CDATA[
+		update fnd_user_info set email = #email#, realName = #realName#, roleIds = #roleids#, status = #status#
+		]]>
+		<isNotEmpty prepend="," property="customInfo"> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo#) </isNotEmpty>
+		where username = #username#
+	</update>
+	
+	<resultMap class="com.dp.plat.data.bean.User" id="userAllMap">
+		<result property="username" column="username" javaType="java.lang.String"/>
+		<result property="email" column="email" javaType="java.lang.String"/>
+		<result property="realName" column="realName" javaType="java.lang.String"/>
+		<result property="status" column="status" javaType="java.lang.Integer"/>
+		<result property="roleids" column="roleIds" javaType="java.lang.String"/>
+		<result property="isemail" column="isemail" javaType="java.lang.Integer"/>
+	</resultMap>
+	
+	<select id="query_user_allMap" resultMap="userAllMap" cacheModel="userCache">
+		<![CDATA[
+			select * from fnd_user_info
+		]]>
+	</select>
+	
+	<resultMap class="com.dp.plat.data.bean.Role" id="roleMap">
+		<result property="id" column="id" />
+		<result property="roleName" column="roleName"/>
+		<result property="status" column="status"/>
+		<result property="defaultPage" column="defaultPage"/>
+		<result property="roleRemark" column="roleRemark"/>
+		<result property="effectiveFrom" column="effectiveFrom" jdbcType="DATE"/>
+		<result property="effectiveTo" column="effectiveTo" jdbcType="DATE"/>
+	</resultMap>
+	<resultMap class="com.dp.plat.data.bean.RoleMenuPower" id="roleMenuMap">
+		<result property="id" column="id" />
+		<result property="roleId" column="roleId"/>
+		<result property="menuPower" column="menuPower"/>
+		<result property="menuId" column="menuId"/>
+	</resultMap>
+	<!-- 角色管理 -->
+	<select id="query-role-count" parameterClass="com.dp.plat.data.bean.Role"  resultClass="int" cacheModel="userCache">
+		<![CDATA[
+		select count(1) from fnd_roles  
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="roleName">
+			 	roleName like CONCAT('%', #roleName#, '%')
+			 </isNotEmpty>
+			  <isNotEqual prepend="AND" property="id" compareValue="0">
+					id=#id#
+		      </isNotEqual>
+		</dynamic>
+	</select>
+	
+	<select id="query-rolelist" parameterClass="com.dp.plat.param.RoleParam" resultMap="roleMap" cacheModel="userCache">
+		<![CDATA[
+		select * from fnd_roles 
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="role.roleName">
+			 	roleName like CONCAT('%', #role.roleName#, '%')
+			 </isNotEmpty>
+			 <isNotEqual prepend="AND" property="role.id" compareValue="0">
+					id=#role.id#
+		      </isNotEqual>
+		</dynamic>
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+					#displayParam.sort#
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+					desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+					asc
+		      </isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset#, #displayParam.pagesize# 
+		</isNotEmpty>
+	</select>
+	
+	<select id="query-roleMenu-list" parameterClass="com.dp.plat.data.bean.Role" resultMap="roleMenuMap" cacheModel="userCache">
+		<![CDATA[
+			select * from fnd_role_menus where roleId=#id#
+		]]>
+	</select>
+	
+	<delete id="delete-roleMenuPower-byRoleId" parameterClass="com.dp.plat.data.bean.Role">
+		<![CDATA[
+			delete from fnd_role_menus where roleId=#id#
+		]]>
+	</delete>
+	
+	<!-- 角色新增 -->
+	<insert id="insert-roleObject" parameterClass="com.dp.plat.data.bean.Role">
+		<![CDATA[
+		insert into fnd_roles(roleName,defaultPage,status,roleRemark,createTime,effectiveFrom,effectiveTo,updateTime)
+		values(#roleName#,#defaultPage#,#status#,#roleRemark#,now(),now(),#effectiveTo#,null)
+		]]>
+		<selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id ;   
+        </selectKey>
+	</insert>
+	<insert id="insert-roleMenuPower-object" parameterClass="com.dp.plat.data.bean.RoleMenuPower">
+		<![CDATA[
+		insert into fnd_role_menus(roleId,menuPower,menuId,createTime,effectiveFrom)
+		values(#roleId#,#menuPower#,#menuId#,now(),now())
+		]]>
+	</insert>
+	
+	<!-- 角色更新 -->
+	<insert id="update-roleObject" parameterClass="com.dp.plat.data.bean.Role">
+		<![CDATA[
+		update fnd_roles set roleName=#roleName#,defaultPage=#defaultPage#,status=#status#,
+		roleRemark=#roleRemark#,effectiveTo=#effectiveTo#,updateTime=now()
+		where id=#id#
+		]]>
+	</insert>
+	
+	<!-- 部门管理 -->
+	<resultMap class="com.dp.plat.data.bean.Department" id="departmentMap">
+		<result property="id" column="id" />
+		<result property="departmentNum" column="departmentNum"/>
+		<result property="departmentName" column="departmentName"/>
+		<result property="createTime" column="createTime" jdbcType="DATE"/>
+	</resultMap>
+	<resultMap class="com.dp.plat.data.bean.Department" id="departmentMapForSAP">
+		<result property="departmentNum" column="OcrCode"/>
+		<result property="departmentName" column="OcrName"/>
+	</resultMap>
+	<!-- SAP获得部门信息 -->
+	<select id="query-sap-departmentList"  resultMap="departmentMapForSAP">
+		<![CDATA[
+		select * from dp_reports.dp_v_spms_department  
+		]]>
+	</select>
+	<delete id="truncate_department">
+		<![CDATA[
+			truncate fnd_department 
+		]]>
+	</delete>
+	
+	<select id="query-department-count" parameterClass="com.dp.plat.data.bean.Department"  resultClass="int">
+		<![CDATA[
+		select count(1) from fnd_department  
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="departmentNum">
+			 	departmentNum like CONCAT('%', #departmentNum#, '%')
+			 </isNotEmpty>
+			 <isNotEmpty prepend="AND" property="departmentName">
+			 	departmentName like CONCAT('%', #departmentName#, '%')
+			 </isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<select id="query-departmentlist" parameterClass="com.dp.plat.param.DepartmentParam" resultMap="departmentMap">
+		<![CDATA[
+		select * from fnd_department 
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="department.departmentNum">
+			 	departmentNum like CONCAT('%', #department.departmentNum#, '%')
+			 </isNotEmpty>
+			 <isNotEmpty prepend="AND" property="department.departmentName">
+			 	departmentName like CONCAT('%', #department.departmentName#, '%')
+			 </isNotEmpty>
+		</dynamic>
+		<isNotEmpty prepend=" order by " property="displayParam.sort">
+					#displayParam.sort#
+			<isEqual prepend=" " property="displayParam.order" compareValue="desc">
+					desc
+		      </isEqual>
+			<isEqual prepend=" " property="displayParam.order" compareValue="asc">
+					asc
+		      </isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="displayParam.offset">
+			limit #displayParam.offset#, #displayParam.pagesize# 
+		</isNotEmpty>
+	</select>
+	
+	<insert id="insert-departmentObject" parameterClass="com.dp.plat.data.bean.Department">
+		<![CDATA[
+		insert into fnd_department(departmentNum,departmentName,createTime,effectiveFrom)
+		values(#departmentNum#,#departmentName#,now(),now())
+		]]>
+		<!-- <selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id ;   
+        </selectKey> -->
+	</insert>
+	
+	<select id="query_department_map" resultClass="java.util.HashMap">
+		<![CDATA[
+			SELECT departmentNum AS officeCode , departmentName AS officeName FROM fnd_department WHERE isparam = 1 
+		]]>
+	</select>
+	
+	<select id="queryDepartmentByDepartmentNum" resultMap="departmentMap">
+        <![CDATA[
+            SELECT * FROM fnd_department WHERE departmentNum = #officeCode# limit 1
+        ]]>
+    </select>
+	
+	<select id="select-user-byusername" parameterClass="string" resultMap="userRole">
+		<![CDATA[
+			select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user 
+			where user.username = #username# ORDER BY user.`status` DESC LIMIT 1
+		]]>
+	</select>
+	<select id="select-users-byusernames" parameterClass="string" resultMap="userRole">
+        <![CDATA[
+            select user.id,username,realName,email,password,roleIds,user.status,user.pwdoverdue, user.customInfo from fnd_user_info user 
+            where FIND_IN_SET(user.username, #username#) ORDER BY user.`status` DESC
+        ]]>
+    </select>
+	<select id="query_defaultpage_by_username_1" parameterClass="int" resultClass="string">
+		<![CDATA[
+			SELECT defaultPage FROM fnd_user_info WHERE id = #userId#
+		]]>
+	</select>
+	<select id="query_defaultpage_by_username_2" parameterClass="int" resultClass="string">
+		<![CDATA[
+			SELECT r.`defaultPage`
+			FROM fnd_user_info u , fnd_roles r WHERE u.`role_id` = r.`id` AND u.id = #id#
+		]]>
+	</select>
+	
+	
+	<!-- 日志管理 -->
+	<insert id="insert-Operation-Log" parameterClass="com.dp.plat.param.LoginAddParam">
+		<![CDATA[
+		insert into tb_sys_log(USER_NAME, IP, INFO, TIME)
+		values(#username#, #ip#,#info#, #time#)
+		]]>
+	</insert>
+	<resultMap id="OperateLog" class="com.dp.plat.data.OperateLog">
+		<result property="managerid" column="ID" />
+		<result property="username" column="USER_NAME" />
+		<result property="ip" column="IP" />
+		<result property="action" column="ACTION" />
+		<result property="result" column="RESULT" />
+		<result property="info" column="INFO" />
+		<result property="time" jdbcType="int" column="TIME"
+			javaType="com.dp.plat.type.DateTime" />
+		<result property="realName" column="realName"/>
+	</resultMap>
+	
+	<select id="select-all-log" resultMap="OperateLog">
+		<![CDATA[
+		select a.ID,a.USER_NAME, a.IP, a.ACTION, a.RESULT, a.INFO, a.TIME, u.realName
+		from tb_sys_log a
+		left join user u on u.username = a.USER_NAME
+		]]>
+	</select>
+	
+	<select id="select-Operation-Log" parameterClass="com.dp.plat.param.DisplayParam"
+		resultMap="OperateLog">
+		<![CDATA[
+		select a.ID,a.USER_NAME, a.IP, a.ACTION, a.RESULT, a.INFO, a.TIME, u.realName
+		from tb_sys_log a
+		left join user u on u.username = a.USER_NAME
+		]]>
+		<isNotEmpty prepend=" order by " property="sort">
+			#sort#
+			<isEqual prepend=" " property="order" compareValue="desc">
+				desc
+		      </isEqual>
+			<isEqual prepend=" " property="order" compareValue="asc">
+				asc
+		      </isEqual>
+		</isNotEmpty>
+		limit #offset#, #pagesize# 
+	</select>
+
+	<select id="select-Operation-Log-Sum" resultClass="int">
+	<![CDATA[
+	select count(*) from tb_sys_log a
+	left join user u on u.username = a.USER_NAME
+	]]>
+	</select>
+	
+	<delete id="delete-Log-List" parameterClass="String">
+	<![CDATA[
+		delete from tb_sys_log where ID=#value#
+	]]>
+	</delete>
+	
+	<!-- 任务委派规则设置 -->
+	<resultMap class="com.dp.plat.data.bean.ProcdefDelegate" id="ProcdefDelegate">
+		<result property="id" column="id"/>
+		<result property="owner" column="owner"/>
+		<result property="assignee" column="assignee"/>
+		<result property="handleUsername" column="handleUsername"/>
+		<result property="handleTime" column="handleTime"/>
+		<result property="startTime" column="startTime"/>
+		<result property="endTime" column="endTime"/>
+		<result property="procdefId" column="procdefId"/>
+		<result property="status" column="status"/>
+		<result property="cause" column="cause"/>
+	</resultMap>
+	<resultMap class="com.dp.plat.data.bean.ProcdefDelegate" id="ProcdefDelegateBean">
+		<result property="id" column="id"/>
+		<result property="owner" column="owner"/>
+		<result property="ownerName" column="ownerName"/>
+		<result property="assignee" column="assignee"/>
+		<result property="assigneeName" column="assigneeName"/>
+		<result property="handleUsername" column="handleUsername"/>
+		<result property="handleTime" column="handleTime"/>
+		<result property="startTime" column="startTime"/>
+		<result property="endTime" column="endTime"/>
+		<result property="procdefId" column="procdefId"/>
+		<result property="status" column="status"/>
+		<result property="cause" column="cause"/>
+	</resultMap>
+	<select id="select-procdef-Delegate-ownerToAssignee-cause" parameterClass="com.dp.plat.data.bean.ProcdefDelegate" resultMap="ProcdefDelegate">
+		<![CDATA[
+			select * from dp_act_procdef_delegate 
+				where owner = #owner# and assignee = #assignee# and procdefId like concat('%',#procdefId#,'%') limit 1
+		]]>
+	</select>
+	
+	<select id="select-procdef-Delegate-byAssignee" parameterClass="com.dp.plat.data.bean.ProcdefDelegate" resultMap="ProcdefDelegate">
+		<![CDATA[
+			select * from dp_act_procdef_delegate 
+				where assignee = #assignee# and status = 1 and 
+						((startTime is null and endTime is null) or 
+							(startTime is null and endTime is not null and now() <= endTime) or 
+							(startTime is not null and endTime is not null and startTime <= now() and now() <= endTime))
+		]]>
+	</select>
+	<insert id="insert-procdef-Delegate" parameterClass="com.dp.plat.data.bean.ProcdefDelegate">
+		<![CDATA[
+			insert into dp_act_procdef_delegate(owner,assignee,handleUsername,handleTime,startTime,endTime,procdefId,status,cause)
+				values(#owner#,#assignee#,#handleUsername#,now(),#startTime#,#endTime#,#procdefId#,#status#,#cause#)
+		]]>
+	</insert>
+	<select id="select-procdef-delegate-list" parameterClass="com.dp.plat.data.bean.ProcdefDelegate" resultMap="ProcdefDelegateBean">
+		<![CDATA[
+			select e.*,u.realName ownerName,us.realName assigneeName from dp_act_procdef_delegate e
+				left join user u on e.owner = u.username 
+				left join user us on e.assignee = us.username
+					where e.handleUsername = #handleUsername#
+		]]>
+	</select>
+	<select id="select-procdef-delegate-one" parameterClass="int" resultMap="ProcdefDelegateBean">
+		<![CDATA[
+			select d.*,u.realName as ownerName,us.realName as assigneeName from dp_act_procdef_delegate d
+				left join user u on d.owner = u.username
+				left join user us on d.assignee = us.username
+				where d.id = #id#
+		]]>
+	</select>
+	<update id="update-procdef-delegate-one" parameterClass="com.dp.plat.data.bean.ProcdefDelegate">
+		<![CDATA[
+			update dp_act_procdef_delegate set owner = #owner#,assignee = #assignee#,
+				handleTime = now(),startTime = #startTime#,endTime = #endTime#,procdefId = #procdefId#,status = #status#,cause = #cause#
+				where id = #id# and handleUsername = #handleUsername#
+		]]>
+	</update>
+	<!-- 流程类型 -->
+	<resultMap class="com.dp.plat.data.bean.DpActProcType" id="DpActProcType">
+		<result property="id" column="id"/>
+		<result property="desc" column="desc"/>
+		<result property="procDefKey" column="procDefKey"/>
+	</resultMap>
+	<select id="query-dpActProcType-list" resultMap="DpActProcType">
+		<![CDATA[
+			select * from dp_act_proc_type
+		]]>
+	</select>
+	
+	
+	<!-- 邮件程序 -->
+	<insert id="insert_into_sys_mails_bak" parameterClass="com.dp.plat.data.bean.MailSenderInfo">
+		<![CDATA[
+			INSERT INTO fnd_mails(mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc , mailAttachFiles,mailServerPort ,mailServerHost,
+				mailUsername ,mailPassword,mailFromaddress,createBy,createTime,effectiveFrom,mailExpectSendTime)
+			VALUES(#subject# ,#content# ,#tos# ,#ccs# , #bcc# , #attachFileNames#,#mailServerPort# , #mailServerHost#,#userName# ,#password# ,#fromAddress#,
+				#createBy# , #createTime# ,#effectiveFrom# , #mailExpectSendTime#) 
+		]]>
+	</insert>
+	<insert id="insert_into_sys_mails" parameterClass="com.dp.plat.data.bean.MailSenderInfo">
+        <![CDATA[
+            INSERT INTO fnd_mails(mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc , mailAttachFiles,mailServerPort ,mailServerHost,
+                mailUsername, mailFromaddress,createBy,createTime,effectiveFrom,mailExpectSendTime, mailSendTime, sendFlag)
+            VALUES(#subject# ,#content# ,#tos# ,#ccs# , #bcc# , #attachFileNames#,#mailServerPort# , #mailServerHost#,#userName# ,#fromAddress#,
+                #createBy# , #createTime# ,#effectiveFrom# , #mailExpectSendTime#, #mailSendTime#, #sendFlag#) 
+        ]]>
+    </insert>
+	<resultMap class="com.dp.plat.data.bean.MailSenderInfo" id="MailSenderInfoBean">
+		<result property="id" column="id"/>
+		<result property="subject" column="mailSubject"/>
+		<result property="content" column="mailContent"/>
+		<result property="tos" column="mailTos"/>
+		<result property="ccs" column="mailCcs"/>
+		<result property="bcc" column="mailBcc"/>
+		<result property="attachFileNames" column="mailAttachFiles"/>
+		<result property="mailServerPort" column="mailserverPort"/>
+		<result property="userName" column="mailUsername"/>
+		<result property="password" column="mailPassword"/>
+		<result property="fromAddress" column="mailFromaddress"/>
+	</resultMap>
+	<!-- 查询尚未发送的且期望发送时间在当前时间之前 -->
+	<select id="query_sys_mails" resultMap="MailSenderInfoBean">
+		<![CDATA[
+			select id, mailSubject ,mailContent,mailTos ,mailCcs ,mailBcc , mailAttachFiles, mailserverPort ,
+				mailUsername ,mailPassword,mailFromaddress
+			from fnd_mails where sendFlag = 0 and mailExpectSendTime < now()
+		]]>
+	</select>
+	<!-- 更新邮件的发送时间及发送状态 -->
+	<update id="update_sys_mails_state" parameterClass="string">
+		<![CDATA[
+			update fnd_mails set mailSendTime = now(),	sendFlag = 1 where id in ($ids$)
+		]]>
+	</update>
+	<!-- 查询部门集合 -->
+	<resultMap class="com.dp.plat.data.bean.Department" id="department_all">
+		<result property="departmentNum" column="departmentNum"/>
+		<result property="departmentName" column="departmentName"/>
+	</resultMap>
+	<select id="query_all_department" parameterClass="com.dp.plat.data.bean.Department" resultMap="department_all">
+		<![CDATA[
+			select departmentNum,departmentName from fnd_department where 1 = 1 and status = 1
+		]]>
+		<isNotEmpty prepend="AND" property="departmentNum">
+		 	<![CDATA[ departmentNum like CONCAT('%', #departmentNum#, '%')]]> 
+		 </isNotEmpty>
+		 <isNotEmpty prepend="AND" property="departmentName">
+		 	<![CDATA[ departmentName like CONCAT('%', #departmentName#, '%')]]>
+		 </isNotEmpty>
+		 <isNotEqual compareValue="0" prepend="and" property="isparam">
+		 	<![CDATA[
+		 		isparam = #isparam#
+		 	]]>
+		 </isNotEqual>
+		 order by departmentNum
+	</select>
+	<update id="update_user_power" parameterClass="java.util.Map">
+		<![CDATA[
+			update fnd_user_power set areapower = #areapower# ,updateTime = now(),updateBy = #updateBy#
+		]]>
+		where fndUserId = #userId#
+	</update>
+	<insert id="insert_user_power" parameterClass="java.util.Map">
+		<![CDATA[
+			insert into fnd_user_power(fndUserId ,username ,areapower,createTime,createBy,effectiveFrom)
+			values(#userId# , #username# ,#areapower# ,now(),#createBy# ,now())
+		]]>
+	</insert>
+	
+	<cacheModel type="CopyLRU" id="basicCache" readOnly="true">
+        <flushInterval hours="24"/>
+        <flushOnExecute statement="update_basic_data"/>
+        <flushOnExecute statement="insert_basic_data"/>
+        
+        <flushOnExecute statement="refreshCacheData"/>
+        
+        <property name="size" value="50"/>
+    </cacheModel>
+	
+	<!-- 基础数据操作 -->
+	<resultMap class="com.dp.plat.data.bean.BasicDataBean" id="basicData">
+		<result property="id" column="id"/>
+		<result property="basicDataTypeCode" column="dataTypeCode"/>
+		<result property="basicDataId" column="basicDataId"/>
+		<result property="basicDataName" column="basicDataName"/>
+		<result property="basicDataAttri1" column="basicDataAttri1"/>
+		<result property="sortId" column="sortId"/>
+		<result property="createTime" column="createTime"/>
+		<result property="effectiveFrom" column="effectiveFrom"/>
+		<result property="effectiveTo" column="effectiveTo"/>
+	</resultMap>
+	<select id="query_basic_data" parameterClass="string" resultMap="basicData" cacheModel="basicCache">
+		<![CDATA[
+			select * from fnd_basic_data where  effectiveFrom < now()
+			and ( effectiveTo is null or effectiveTo > now() )
+			and dataTypeCode = #basicDataTypeCode#
+			order by sortId
+		]]>
+	</select>
+	<select id="query_basicdata_by_attri" parameterClass="java.util.Map" resultMap="basicData" cacheModel="basicCache">
+		<![CDATA[
+			select * from fnd_basic_data where  effectiveFrom < now()
+			and ( effectiveTo is null or effectiveTo > now() )
+			and dataTypeCode = #dataType#  and basicDataAttri1 = #attri#
+			order by sortId
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.BasicDataBean" id="basicDataALl">
+		<result property="id" column="id"/>
+		<result property="basicDataTypeCode" column="dataTypeCode"/>
+		<result property="basicDataTypeName" column="dataTypeName"/>
+		<result property="basicDataId" column="basicDataId"/>
+		<result property="sortId" column="sortId"/>
+		<result property="basicDataName" column="basicDataName"/>
+		<result property="createTime" column="createTime"/>
+		<result property="effectiveFrom" column="effectiveFrom"/>
+		<result property="effectiveTo" column="effectiveTo"/>
+	</resultMap>
+	<select id="query_basic_data_all" parameterClass="string" resultMap="basicDataALl" cacheModel="basicCache">
+		<![CDATA[
+			select a.* ,b.dataTypeName from fnd_basic_data a LEFT JOIN fnd_basic_data_type b ON a.`dataTypeCode` = b.`dataTypeCode`  
+		]]>
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and"><![CDATA[ a.dataTypeCode = #basicDataTypeCode#]]></isNotEmpty>
+		</dynamic>
+		<![CDATA[ order by dataTypeCode,sortid ]]>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.BasicDataBean" id="baiscDataType">
+		<result property="basicDataTypeCode" column="dataTypeCode"/>
+		<result property="basicDataTypeName" column="dataTypeName"/>
+	</resultMap>
+	<select id="query_basic_data_type" parameterClass="string" resultMap="baiscDataType" cacheModel="basicCache">
+		<![CDATA[
+			SELECT dataTypeCode ,dataTypeName FROM fnd_basic_data_type WHERE STATUS = 1 AND effectiveFrom < NOW() AND (effectiveTo IS NULL OR effectiveTo > NOW())
+		]]>
+	</select>
+	<select id="query_basic_data_one" parameterClass="int" resultMap="basicDataALl" cacheModel="basicCache">
+		<![CDATA[
+			select a.* ,b.dataTypeName from fnd_basic_data a LEFT JOIN fnd_basic_data_type b ON a.`dataTypeCode` = b.`dataTypeCode`  where a.id = #id#
+		]]>
+	</select>
+	<update id="update_basic_data" parameterClass="com.dp.plat.data.bean.BasicDataBean">
+		<![CDATA[
+			update fnd_basic_data set basicDataName = #basicDataName# 
+		]]>
+		<isNotEmpty prepend="," property="sortId">
+			<![CDATA[
+				sortId = #sortId#
+			]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="effectiveTo">
+			<![CDATA[
+				effectiveTo = #effectiveTo#
+			]]>
+		</isNotEmpty>
+		where id = #id#
+	</update>
+	<insert id="insert_basic_data" parameterClass="com.dp.plat.data.bean.BasicDataBean">
+		<![CDATA[
+			INSERT INTO `fnd_basic_data`(`dataTypeCode`,`basicDataId`,`basicDataName`,`sortId`,`createTime`,`createBy`,`effectiveFrom`,`effectiveTo`)
+			VALUES(#basicDataTypeCode# ,#basicDataId# , #basicDataName# , #sortId# , #createTime# ,#createBy# ,#effectiveFrom# ,#effectiveTo#)
+		]]>
+	</insert>
+	<select id="find_basic_data_id" parameterClass="java.util.Map" resultClass="int" cacheModel="basicCache">
+		<![CDATA[
+			SELECT COUNT(1) as size FROM fnd_basic_data WHERE dataTypeCode = #dataTypeCode# AND basicDataId = #basicDataId#
+		]]>
+	</select>
+	<select id="query_sys_arg" parameterClass="string" resultClass="string" cacheModel="basicCache">
+		<![CDATA[
+			select var from fnd_sys_arg where code = #code# and effectiveFrom <= now() 
+			and (effectiveTo is null or effectiveTo > now()) 
+		]]>
+	</select>
+	
+	<select id="querySysArgList" parameterClass="com.dp.plat.data.bean.Arg" resultClass="com.dp.plat.data.bean.Arg" cacheModel="basicCache">
+        <![CDATA[
+            select code, var from fnd_sys_arg where effectiveFrom <= now() 
+            and (effectiveTo is null or effectiveTo > now()) 
+        ]]>
+        <isNotEmpty prepend="AND" property="code">code = #code#</isNotEmpty>
+    </select>
+	
+	<select id="query_username_size" parameterClass="string" resultClass="int" cacheModel="userCache">
+		<![CDATA[
+			SELECT COUNT(1) FROM fnd_user_info WHERE username = #username# AND effectiveFrom <= NOW() AND (effectiveTo IS NULL OR effectiveTo > NOW())
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.User" id="hasRoleUsers">
+		<result property="username" column="username"/>
+		<result property="realName" column="realName"/>
+	</resultMap>
+	<select id="query_user_with_role" parameterClass="int" resultMap="hasRoleUsers" cacheModel="userCache">
+		<![CDATA[
+			SELECT username ,realName FROM fnd_user_info u 
+			WHERE u.`status` = 1 AND roleIds LIKE CONCAT('%;', #roleid#, ';%')
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.data.bean.User" id="dpNoHasRoleUsers">
+		<result property="username" column="username"/>
+		<result property="realName" column="realName"/>
+		<result property="dpNo" column="dpNo"/>
+		<result property="email" column="email"/>
+	</resultMap>
+	<select id="query_user_with_dpNo_role" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers" cacheModel="userCache">
+		<![CDATA[
+			SELECT username ,realName,dpNo, email FROM fnd_user_info u 
+			WHERE u.`status` = 1 and  roleIds LIKE CONCAT('%;', #roleid#, ';%')
+		]]>
+		<dynamic>
+			<isNotEmpty prepend="and" property="dpNo"><![CDATA[ dpNo=#dpNo#]]></isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="query_user_with_dpNo_role_orin_areaPower" parameterClass="java.util.Map" resultMap="dpNoHasRoleUsers" cacheModel="userCache">
+        <![CDATA[
+            SELECT u.username, u.realName, u.dpNo, u.email FROM fnd_user_info u 
+            left join fnd_user_power up on up.fndUserId = u.id
+            WHERE u.`status` = 1 and  u.roleIds LIKE CONCAT('%;', #roleid#, ';%')
+        ]]>
+        <dynamic>
+            <isNotEmpty prepend="and" property="dpNo"><![CDATA[ u.dpNo=#dpNo#]]></isNotEmpty>
+            <!-- 反向查询，确定areaPower中是否有该部门权限 -->
+            <isNotEmpty prepend="and" property="areaPower"><![CDATA[ (u.dpNo = #areaPower# or FIND_IN_SET(#areaPower#, up.areaPower))]]></isNotEmpty>
+        </dynamic>
+    </select>
+	<update id="execute_sql" parameterClass="string" >
+		<![CDATA[
+			$executeSql$
+		]]>
+	</update>
+	
+	<!-- <insert id="insert_file_info" parameterClass="java.util.Map">
+		<![CDATA[ INSERT INTO fnd_files(fileName ,filePath ,uploadBy ,uploadTime) VALUES(#fileName# , #filePath# , #uploadBy# , #uploadTime#)]]>
+		<selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id ;   
+        </selectKey>
+	</insert> -->
+	<insert id="insert_file_info" parameterClass="java.util.Map">
+        INSERT INTO fnd_files(fileName ,filePath , fileType, uploadBy ,uploadTime) VALUES(#fileName# , #filePath# , #fileType#, #uploadBy# , #uploadTime#)
+        <selectKey resultClass="int"  keyProperty="id">    
+             SELECT last_insert_id() as id ;   
+        </selectKey>
+    </insert>
+	<select id="query_flie_info" parameterClass="int" resultClass="com.dp.plat.param.FileParam">
+		<![CDATA[
+			SELECT fileName ,filePath FROM fnd_files WHERE id = #fileId#
+		]]>
+	</select>
+	<select id="query_file_map" parameterClass="String" resultClass="java.util.HashMap">
+		<![CDATA[
+			SELECT id , fileName FROM fnd_files WHERE FIND_IN_SET(id, #fileIds#);
+		]]>
+	</select>
+	<resultMap class="com.dp.plat.param.FileParam" id="FileParamMap">
+		<result property="id" column="id"/>
+		<result property="fileName" column="fileName"/>
+		<result property="filePath" column="filePath"/>
+		<result property="uploadBy" column="uploader"/>
+		<result property="uploadTime" column="uploadTime"/>
+	</resultMap>
+	<select id="query_file_list" parameterClass="String" resultMap="FileParamMap">
+		<![CDATA[
+			SELECT t1.* , CONCAT(t2.`username` , '-' , t2.`realName`) AS uploader FROM fnd_files t1
+				LEFT JOIN fnd_user_info t2 ON t1.`uploadBy` = t2.`username` 
+			WHERE FIND_IN_SET(t1.id, #fileIds#);
+		]]>
+	</select>
+	
+	<select id="query_basic_data_for_map" parameterClass="string" resultClass="java.util.HashMap" cacheModel="basicCache">
+		<![CDATA[
+			SELECT basicDataId ,basicDataName FROM fnd_basic_data 
+			WHERE dataTypeCode = #dataTypeCode# AND effectiveTo IS NULL;
+		]]>
+	</select>
+	
+	<select id="query_basicdataname_byId" parameterClass="string" resultClass="string" cacheModel="basicCache">
+		<![CDATA[
+			SELECT basicDataName FROM fnd_basic_data WHERE basicDataId = #basicDataId#
+		]]>
+	</select>
+	
+	<select id="query_basicdata_bydataId" parameterClass="string" resultClass="com.dp.plat.data.bean.BasicDataBean" cacheModel="basicCache">
+		<![CDATA[
+			select * from fnd_basic_data where basicDataId = #basicDataId#
+		]]>
+	</select>
+	<delete id="delete_file" parameterClass="int">
+		<![CDATA[
+			DELETE FROM fnd_files WHERE id = #fileId#;
+		]]>
+	</delete>
+	
+	<select id="query_mails_with_role" parameterClass="int" resultClass="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info WHERE roleIds LIKE CONCAT('%;', #roleId#, ';%')
+			and `status` = 1 
+		]]>
+	</select>
+	<select id="query_mails_with_role_and_office" parameterClass="java.util.Map" resultClass="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info 
+			WHERE `status` = 1
+		]]>
+		<isNotEmpty prepend="and" property="roleId"><![CDATA[ roleIds LIKE CONCAT('%;', #roleId#, ';%')]]></isNotEmpty>
+		<isNotEmpty prepend="and" property="officeCodes"><![CDATA[ FIND_IN_SET(dpNo, #officeCodes#)]]></isNotEmpty>
+	</select>
+	<select id="query_mails_and_office" parameterClass="java.util.Map" resultClass="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(email SEPARATOR ';') FROM fnd_user_info 
+			WHERE (roleIds LIKE '%;12;%' or roleIds LIKE '%;13;%') and  FIND_IN_SET(dpNo, #officeCodes#) and `status` = 1
+		]]>
+	</select>
+	
+	<select id="queryCompanyList" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company" cacheModel="basicCache">
+        <![CDATA[
+            SELECT * FROM fnd_company
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="id"> id = #id# </isNotEmpty>
+            <isNotEmpty prepend="and" property="name"> name like concat("%", #name#, "%") </isNotEmpty>
+            <isNotEmpty prepend="and" property="code"> code = #code# </isNotEmpty>
+            <isNotEmpty prepend="and" property="status"> status = #status# </isNotEmpty>
+            <isNotEmpty prepend="and" property="pid"> pid = #pid# </isNotEmpty>
+        </dynamic>
+    </select>
+    
+    <select id="queryCompanyOne" parameterClass="com.dp.plat.data.bean.Company" resultClass="com.dp.plat.data.bean.Company" cacheModel="basicCache">
+        <![CDATA[
+            SELECT * FROM fnd_company
+        ]]>
+        <dynamic prepend="where">
+            <isNotEmpty prepend="and" property="id"> id = #id# </isNotEmpty>
+            <isNotEmpty prepend="and" property="name"> name like concat("%", #name#, "%") </isNotEmpty>
+            <isNotEmpty prepend="and" property="code"> code = #code# </isNotEmpty>
+            <isNotEmpty prepend="and" property="status"> status = #status# </isNotEmpty>
+            <isNotEmpty prepend="and" property="pid"> pid = #pid# </isNotEmpty>
+        </dynamic>
+        limit 1
+    </select>
+    
+    <resultMap class="java.util.HashMap" id="BasicDataWithSub" groupBy="category">
+	  <result column="category" jdbcType="VARCHAR" property="category" />
+	  <result column="categoryName" jdbcType="VARCHAR" property="categoryName" />
+	  <result column="categoryAttr" jdbcType="VARCHAR" property="categoryAttr" />
+	  <result property="children" javaType="java.util.ArrayList" column="category" resultMap="basicData.subMap"/>
+	</resultMap>
+	<resultMap class="java.util.HashMap" id="basicData.subMap">
+	  <result property="subCategory" column="subCategory" />
+	  <result property="subCategoryName" column="subCategoryName"/>
+	</resultMap>
+    <select id="query_basic_data_for_map_with_sub" parameterClass="map" resultMap="BasicDataWithSub" cacheModel="basicCache">
+        SELECT 
+		    b1.basicDataId AS category, b1.basicDataName AS categoryName, b1.basicDataAttri1 AS categoryAttr, b2.basicDataId AS subCategory, b2.basicDataName AS subCategoryName 
+		FROM
+		    fnd_basic_data b1 
+		    LEFT JOIN fnd_basic_data b2 
+		        ON b2.`dataTypeCode` = #subDataTypeCode#
+		        AND b1.`basicDataId` = b2.`basicDataAttri1` 
+		        AND b2.`effectiveTo` IS NULL 
+		WHERE b1.dataTypeCode = #dataTypeCode#
+		    <isNotEmpty prepend="AND" property="dataAttr">
+		      FIND_IN_SET(#dataAttr#, b1.basicDataAttri1)
+		    </isNotEmpty>
+		    AND b1.effectiveTo IS NULL 
+	    ORDER BY b1.`sortId`, b2.`sortId`
+    </select>
+</sqlMap>

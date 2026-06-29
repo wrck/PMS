@@ -1,0 +1,177 @@
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0 //EN"
+ "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="project">
+	<sql id="sqlItemGroups">
+        <dynamic prepend=" " open="(" close=")">
+            <isNotEmpty prepend="AND" property="itemGroups[].itemCodeLike">
+                fi.`item` LIKE #itemGroups[].itemCodeLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemGroups[].itemModelLike">
+                fi.`itemName` LIKE #itemGroups[].itemModelLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemGroups[].itemDescLike">
+                fi.`describe_` LIKE #itemGroups[].itemDescLike#
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemGroups[].itemCodeIn">
+                <iterate property="itemGroups[].itemCodeIn" conjunction="," open="fi.item IN (" close=")">
+                    #itemGroups[].itemCodeIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemGroups[].itemModelIn">
+                <iterate property="itemGroups[].itemModelIn" conjunction="," open="fi.itemName IN (" close=")">
+                    #itemGroups[].itemModelIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemGroups[].itemCodeNotIn">
+                <iterate property="itemGroups[].itemCodeNotIn" conjunction="," open="fi.item Not IN (" close=")">
+                    #itemGroups[].itemCodeNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemGroups[].itemModelNotIn">
+                <iterate property="itemGroups[].itemModelNotIn" conjunction="," open="fi.itemName Not IN (" close=")">
+                    #itemGroups[].itemModelNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemGroups[].orGroups">
+                <iterate property="itemGroups[].orGroups" conjunction="AND" open="(" close=")">
+                    <include refid="sqlItemGroupsOrGroups" />
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </sql>
+    
+    <sql id="sqlItemGroupsOrGroups">
+        <dynamic prepend=" " open="(" close=")">
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemCodeLike">
+                fi.`item` LIKE #itemGroups[].orGroups[].itemCodeLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemModelLike">
+                fi.`itemName` LIKE #itemGroups[].orGroups[].itemModelLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemDescLike">
+                fi.`describe_` LIKE #itemGroups[].orGroups[].itemDescLike#
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemCodeIn">
+                <iterate property="itemGroups[].orGroups[].itemCodeIn" conjunction="," open="fi.item IN (" close=")">
+                    #itemGroups[].orGroups[].itemCodeIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemModelIn">
+                <iterate property="itemGroups[].orGroups[].itemModelIn" conjunction="," open="fi.itemName IN (" close=")">
+                    #itemGroups[].orGroups[].itemModelIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemCodeNotIn">
+                <iterate property="itemGroups[].orGroups[].itemCodeNotIn" conjunction="," open="fi.item Not IN (" close=")">
+                    #itemGroups[].orGroups[].itemCodeNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemGroups[].orGroups[].itemModelNotIn">
+                <iterate property="itemGroups[].orGroups[].itemModelNotIn" conjunction="," open="fi.itemName Not IN (" close=")">
+                    #itemGroups[].orGroups[].itemModelNotIn[]#
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </sql>
+    
+    <sql id="sqlItemFilters">
+        <dynamic prepend=" " open="(" close=")">
+            <isNotEmpty prepend="AND" property="itemFilters[].itemCodeLike">
+                fi.`item` LIKE #itemFilters[].itemCodeLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters[].itemModelLike">
+                fi.`itemName` LIKE #itemFilters[].itemModelLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters[].itemDescLike">
+                fi.`describe_` LIKE #itemFilters[].itemDescLike#
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemFilters[].itemCodeIn">
+                <iterate property="itemFilters[].itemCodeIn" conjunction="," open="fi.item IN (" close=")">
+                    #itemFilters[].itemCodeIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters[].itemModelIn">
+                <iterate property="itemFilters[].itemModelIn" conjunction="," open="fi.itemName IN (" close=")">
+                    #itemFilters[].itemModelIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemFilters[].itemCodeNotIn">
+                <iterate property="itemFilters[].itemCodeNotIn" conjunction="," open="fi.item Not IN (" close=")">
+                    #itemFilters[].itemCodeNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="itemFilters[].itemModelNotIn">
+                <iterate property="itemFilters[].itemModelNotIn" conjunction="," open="fi.itemName Not IN (" close=")">
+                    #itemFilters[].itemModelNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="AND" property="itemFilters[].orGroups">
+                <iterate property="itemFilters[].orGroups" conjunction="AND" open="(" close=")">
+                    <include refid="sqlItemGroupsOrGroups" />
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </sql>
+    
+    <sql id="sqlItemFiltersOrGroups">
+        <dynamic prepend=" " open="(" close=")">
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemCodeLike">
+                fi.`item` LIKE #itemFilters[].orGroups[].itemCodeLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemModelLike">
+                fi.`itemName` LIKE #itemFilters[].orGroups[].itemModelLike#
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemDescLike">
+                fi.`describe_` LIKE #itemFilters[].orGroups[].itemDescLike#
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemCodeIn">
+                <iterate property="itemFilters[].orGroups[].itemCodeIn" conjunction="," open="fi.item IN (" close=")">
+                    #itemFilters[].orGroups[].itemCodeIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemModelIn">
+                <iterate property="itemFilters[].orGroups[].itemModelIn" conjunction="," open="fi.itemName IN (" close=")">
+                    #itemFilters[].orGroups[].itemModelIn[]#
+                </iterate>
+            </isNotEmpty>
+            
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemCodeNotIn">
+                <iterate property="itemFilters[].orGroups[].itemCodeNotIn" conjunction="," open="fi.item Not IN (" close=")">
+                    #itemFilters[].orGroups[].itemCodeNotIn[]#
+                </iterate>
+            </isNotEmpty>
+            <isNotEmpty prepend="OR" property="itemFilters[].orGroups[].itemModelNotIn">
+                <iterate property="itemFilters[].orGroups[].itemModelNotIn" conjunction="," open="fi.itemName Not IN (" close=")">
+                    #itemFilters[].orGroups[].itemModelNotIn[]#
+                </iterate>
+            </isNotEmpty>
+        </dynamic>
+    </sql>
+    
+    <!-- 查询语句的子查询，关联外部表pm_project_soft_version sv -->
+    <sql id="sqlSubSelectProjectSoftVersionAffectedProbs">
+        <![CDATA[
+		SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT('probId', pm.id, 'theme', pm.theme, 'probNum', pm.probNum)), JSON_ARRAY()) AS affectedProbs
+		FROM prob_softwares sw
+		    INNER JOIN prob_main pm ON pm.id = sw.probId
+		    INNER JOIN prob_product pp ON pp.probId = sw.probId AND pp.status = 1
+		WHERE sv.datastate = sw.datastate
+		    AND sv.conpType <=> sw.entryType
+		    AND sv.conpSeries <=> sw.entrySeries
+		    AND sv.conpMark BETWEEN sw.markStart AND sw.markEnd
+		    AND sv.itemCode = pp.itemCode
+	    ]]>
+	    <isNotEmpty prepend="AND" property="probStatusList">
+            pm.status in <iterate open="(" close=")" conjunction="," property="probStatusList"> #probStatusList[]# </iterate>
+        </isNotEmpty>
+    </sql>
+</sqlMap>

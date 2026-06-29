@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.SyncLogMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.SyncLog">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="targetMethod" jdbcType="CHAR" property="targetMethod" />
+    <result column="tableObject" jdbcType="CHAR" property="tableObject" />
+    <result column="dataFrom" jdbcType="CHAR" property="dataFrom" />
+    <result column="dataTo" jdbcType="CHAR" property="dataTo" />
+    <result column="syncParams" jdbcType="VARCHAR" property="syncParams" />
+    <result column="syncStartTime" jdbcType="TIMESTAMP" property="syncStartTime" />
+    <result column="syncEndTime" jdbcType="TIMESTAMP" property="syncEndTime" />
+    <result column="isSuccess" jdbcType="BIT" property="isSuccess" />
+    <result column="dataCount" jdbcType="INTEGER" property="dataCount" />
+    <result column="syncType" jdbcType="SMALLINT" property="syncType" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.dp.plat.core.pojo.SyncLog">
+    <result column="exception" jdbcType="LONGVARCHAR" property="exception" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, targetMethod, tableObject, dataFrom, dataTo, syncParams, syncStartTime, syncEndTime, 
+    isSuccess, dataCount, syncType
+  </sql>
+  <sql id="Blob_Column_List">
+    exception
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from t_sync_log
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_sync_log
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.SyncLog">
+    insert into t_sync_log (id, targetMethod, tableObject, 
+      dataFrom, dataTo, syncParams, 
+      syncStartTime, syncEndTime, isSuccess, 
+      dataCount, syncType, exception
+      )
+    values (#{id,jdbcType=INTEGER}, #{targetMethod,jdbcType=CHAR}, #{tableObject,jdbcType=CHAR}, 
+      #{dataFrom,jdbcType=CHAR}, #{dataTo,jdbcType=CHAR}, #{syncParams,jdbcType=VARCHAR}, 
+      #{syncStartTime,jdbcType=TIMESTAMP}, #{syncEndTime,jdbcType=TIMESTAMP}, #{isSuccess,jdbcType=BIT}, 
+      #{dataCount,jdbcType=INTEGER}, #{syncType,jdbcType=SMALLINT}, #{exception,jdbcType=LONGVARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.SyncLog">
+    insert into t_sync_log
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="targetMethod != null">
+        targetMethod,
+      </if>
+      <if test="tableObject != null">
+        tableObject,
+      </if>
+      <if test="dataFrom != null">
+        dataFrom,
+      </if>
+      <if test="dataTo != null">
+        dataTo,
+      </if>
+      <if test="syncParams != null">
+        syncParams,
+      </if>
+      <if test="syncStartTime != null">
+        syncStartTime,
+      </if>
+      <if test="syncEndTime != null">
+        syncEndTime,
+      </if>
+      <if test="isSuccess != null">
+        isSuccess,
+      </if>
+      <if test="dataCount != null">
+        dataCount,
+      </if>
+      <if test="syncType != null">
+        syncType,
+      </if>
+      <if test="exception != null">
+        exception,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="targetMethod != null">
+        #{targetMethod,jdbcType=CHAR},
+      </if>
+      <if test="tableObject != null">
+        #{tableObject,jdbcType=CHAR},
+      </if>
+      <if test="dataFrom != null">
+        #{dataFrom,jdbcType=CHAR},
+      </if>
+      <if test="dataTo != null">
+        #{dataTo,jdbcType=CHAR},
+      </if>
+      <if test="syncParams != null">
+        #{syncParams,jdbcType=VARCHAR},
+      </if>
+      <if test="syncStartTime != null">
+        #{syncStartTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="syncEndTime != null">
+        #{syncEndTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isSuccess != null">
+        #{isSuccess,jdbcType=BIT},
+      </if>
+      <if test="dataCount != null">
+        #{dataCount,jdbcType=INTEGER},
+      </if>
+      <if test="syncType != null">
+        #{syncType,jdbcType=SMALLINT},
+      </if>
+      <if test="exception != null">
+        #{exception,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.SyncLog">
+    update t_sync_log
+    <set>
+      <if test="targetMethod != null">
+        targetMethod = #{targetMethod,jdbcType=CHAR},
+      </if>
+      <if test="tableObject != null">
+        tableObject = #{tableObject,jdbcType=CHAR},
+      </if>
+      <if test="dataFrom != null">
+        dataFrom = #{dataFrom,jdbcType=CHAR},
+      </if>
+      <if test="dataTo != null">
+        dataTo = #{dataTo,jdbcType=CHAR},
+      </if>
+      <if test="syncParams != null">
+        syncParams = #{syncParams,jdbcType=VARCHAR},
+      </if>
+      <if test="syncStartTime != null">
+        syncStartTime = #{syncStartTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="syncEndTime != null">
+        syncEndTime = #{syncEndTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isSuccess != null">
+        isSuccess = #{isSuccess,jdbcType=BIT},
+      </if>
+      <if test="dataCount != null">
+        dataCount = #{dataCount,jdbcType=INTEGER},
+      </if>
+      <if test="syncType != null">
+        syncType = #{syncType,jdbcType=SMALLINT},
+      </if>
+      <if test="exception != null">
+        exception = #{exception,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.dp.plat.core.pojo.SyncLog">
+    update t_sync_log
+    set targetMethod = #{targetMethod,jdbcType=CHAR},
+      tableObject = #{tableObject,jdbcType=CHAR},
+      dataFrom = #{dataFrom,jdbcType=CHAR},
+      dataTo = #{dataTo,jdbcType=CHAR},
+      syncParams = #{syncParams,jdbcType=VARCHAR},
+      syncStartTime = #{syncStartTime,jdbcType=TIMESTAMP},
+      syncEndTime = #{syncEndTime,jdbcType=TIMESTAMP},
+      isSuccess = #{isSuccess,jdbcType=BIT},
+      dataCount = #{dataCount,jdbcType=INTEGER},
+      syncType = #{syncType,jdbcType=SMALLINT},
+      exception = #{exception,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.SyncLog">
+    update t_sync_log
+    set targetMethod = #{targetMethod,jdbcType=CHAR},
+      tableObject = #{tableObject,jdbcType=CHAR},
+      dataFrom = #{dataFrom,jdbcType=CHAR},
+      dataTo = #{dataTo,jdbcType=CHAR},
+      syncParams = #{syncParams,jdbcType=VARCHAR},
+      syncStartTime = #{syncStartTime,jdbcType=TIMESTAMP},
+      syncEndTime = #{syncEndTime,jdbcType=TIMESTAMP},
+      isSuccess = #{isSuccess,jdbcType=BIT},
+      dataCount = #{dataCount,jdbcType=INTEGER},
+      syncType = #{syncType,jdbcType=SMALLINT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  
+  <select id="selectBySelectivePageable" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+    from t_sync_log
+    <where>
+        <if test="model !=null">
+            <if test="model.targetMethod != null">
+			  and targetMethod = #{model.targetMethod,jdbcType=CHAR}
+			</if>
+			<if test="model.tableObject != null">
+			  and tableObject = #{model.tableObject,jdbcType=CHAR}
+			</if>
+			<if test="model.dataFrom != null">
+			  and dataFrom = #{model.dataFrom,jdbcType=CHAR}
+			</if>
+			<if test="model.dataTo != null">
+			  and dataTo = #{model.dataTo,jdbcType=CHAR}
+			</if>
+			<if test="model.syncParams != null">
+			  and syncParams = #{model.syncParams,jdbcType=VARCHAR}
+			</if>
+			<if test="model.syncStartTime != null">
+			  and syncStartTime = #{model.syncStartTime,jdbcType=TIMESTAMP}
+			</if>
+			<if test="model.syncEndTime != null">
+			  and syncEndTime = #{model.syncEndTime,jdbcType=TIMESTAMP}
+			</if>
+			<if test="model.isSuccess != null">
+			  and isSuccess = #{model.isSuccess,jdbcType=BIT}
+			</if>
+			<if test="model.dataCount != null">
+			  and dataCount = #{model.dataCount,jdbcType=INTEGER}
+			</if>
+			<if test="model.syncType != null">
+			  and syncType = #{model.syncType,jdbcType=SMALLINT}
+			</if>
+			<if test="model.exception != null">
+			  and exception = #{model.exception,jdbcType=LONGVARCHAR}
+			</if>
+			<if test="fuzzy != null">
+              and (
+                targetMethod like CONCAT("%", #{fuzzy}, "%") or
+                tableObject like CONCAT("%", #{fuzzy}, "%") or
+                dataFrom like CONCAT("%", #{fuzzy}, "%") or
+                dataTo like CONCAT("%", #{fuzzy}, "%")
+              )
+            </if>
+        </if>
+        <if test="fuzzySearch == true">
+            and (
+                targetMethod like CONCAT("%", #{fuzzy}, "%") or
+                tableObject like CONCAT("%", #{fuzzy}, "%") or
+                dataFrom like CONCAT("%", #{fuzzy}, "%") or
+                dataTo like CONCAT("%", #{fuzzy}, "%")
+            )
+        </if>
+    </where>
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null">
+        limit #{start} ,#{pageSize}
+    </if>
+  </select>
+  
+  
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(*) from t_sync_log
+    <where>
+        <if test="model !=null">
+            <if test="model.targetMethod != null">
+              and targetMethod = #{model.targetMethod,jdbcType=CHAR}
+            </if>
+            <if test="model.tableObject != null">
+              and tableObject = #{model.tableObject,jdbcType=CHAR}
+            </if>
+            <if test="model.dataFrom != null">
+              and dataFrom = #{model.dataFrom,jdbcType=CHAR}
+            </if>
+            <if test="model.dataTo != null">
+              and dataTo = #{model.dataTo,jdbcType=CHAR}
+            </if>
+            <if test="model.syncParams != null">
+              and syncParams = #{model.syncParams,jdbcType=VARCHAR}
+            </if>
+            <if test="model.syncStartTime != null">
+              and syncStartTime = #{model.syncStartTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="model.syncEndTime != null">
+              and syncEndTime = #{model.syncEndTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="model.isSuccess != null">
+              and isSuccess = #{model.isSuccess,jdbcType=BIT}
+            </if>
+            <if test="model.dataCount != null">
+              and dataCount = #{model.dataCount,jdbcType=INTEGER}
+            </if>
+            <if test="model.syncType != null">
+              and syncType = #{model.syncType,jdbcType=SMALLINT}
+            </if>
+            <if test="model.exception != null">
+              and exception = #{model.exception,jdbcType=LONGVARCHAR}
+            </if>
+        </if>
+        <if test="fuzzySearch == true and fuzzy != ''">
+            and (
+                targetMethod like CONCAT("%", #{fuzzy}, "%") or
+                tableObject like CONCAT("%", #{fuzzy}, "%") or
+                dataFrom like CONCAT("%", #{fuzzy}, "%") or
+                dataTo like CONCAT("%", #{fuzzy}, "%")
+            )
+        </if>
+    </where>
+  </select>
+</mapper>

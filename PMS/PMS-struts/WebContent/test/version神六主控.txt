@@ -1,0 +1,34 @@
+<DPTECH>show version 
+ Software Release S211C013D091P02
+ Conplat Version is V100R006B01D091P02
+ Compiled Tue, 06 Jan 2026 15:51:42 +0800
+ Signature base, Version , AV 1.4.657 APP 2.1.391 IPS 3.1.255 WAF 3.1.109 
+ Copyright (c) 2008-2026 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DPX17000-A12 Uptime is 1 week(s), 5 day(s),  2 hour(s), 24 minute(s)
+
+ CPU type:       Netlogic XLP208 Rev B1
+
+ SDRAM:          8192M bytes
+ Flash Memory:   16M 
+ CF card Memory: 2G 
+
+ PCB Version:            B         
+ CPLD Version:           8.00      
+ BASIC CONBOOT Version:  4.10.20   
+ EXTEND CONBOOT Version: 4.10.20   
+ Serial Number:          02050386d16c000133
+ [CHASSIS 0 SLOT  6]  A12-MPU         (PCB)B,   (CPLD)8.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 0 SLOT  7]  A12-MPU         (PCB)B,   (CPLD)5.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 0 SLOT  8]  24GT20GP4XGS-S  (PCB)D,   (CPLD)1.00,   (FPGA)4,   (CONBOOT)
+ [CHASSIS 0 SLOT 11]  DAC-Blade-H     (PCB)B,   (CPLD)3.00,   (FPGA)2,   (CONBOOT)
+ [CHASSIS 0 SLOT 15]  A12-FU-A        (PCB)B,   (CPLD)3.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 0 SLOT 16]  A12-FU-A        (PCB)C,   (CPLD)3.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 1 SLOT  6]  A12-MPU         (PCB)B,   (CPLD)8.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 1 SLOT  7]  A12-MPU         (PCB)C,   (CPLD)8.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 1 SLOT  8]  24GT20GP4XGS-S  (PCB)D,   (CPLD)1.00,   (FPGA)4,   (CONBOOT)
+ [CHASSIS 1 SLOT 11]  DAC-Blade-H     (PCB)B,   (CPLD)3.00,   (FPGA)1,   (CONBOOT)
+ [CHASSIS 1 SLOT 15]  A12-FU-A        (PCB)C,   (CPLD)3.00,   (FPGA)NONE,   (CONBOOT)
+ [CHASSIS 1 SLOT 16]  A12-FU-A        (PCB)C,   (CPLD)3.00,   (FPGA)NONE,   (CONBOOT)
+<DPTECH>

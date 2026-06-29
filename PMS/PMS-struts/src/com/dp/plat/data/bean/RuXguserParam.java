@@ -1,0 +1,47 @@
+package com.dp.plat.data.bean;
+/**
+ * 工作台增加销管查看审批中流程功能
+ * 往act_ru_variable添加数据参数
+ * @author admin
+ */
+public class RuXguserParam {
+	private String id;
+	private String name;
+	private String executionid;
+	private String procinstid;
+	private String text;
+	
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getExecutionid() {
+		return executionid;
+	}
+	public void setExecutionid(String executionid) {
+		this.executionid = executionid;
+	}
+	public String getProcinstid() {
+		return procinstid;
+	}
+	public void setProcinstid(String procinstid) {
+		this.procinstid = procinstid;
+	}
+	public String getText() {
+		return text;
+	}
+	public void setText(String text) {
+		this.text = text;
+	}
+	
+}

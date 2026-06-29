@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.IndustryLeakMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.IndustryLeak">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="leakCode" jdbcType="VARCHAR" property="leakCode" />
+    <result column="leakName" jdbcType="VARCHAR" property="leakName" />
+    <result column="leakType" jdbcType="VARCHAR" property="leakType" />
+    <result column="leakLevel" jdbcType="VARCHAR" property="leakLevel" />
+    <result column="leakDesc" jdbcType="VARCHAR" property="leakDesc" />
+    <result column="industryCode" jdbcType="VARCHAR" property="industryCode" />
+    <result column="leakSourceInfo" jdbcType="VARCHAR" property="leakSourceInfo" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="trackStatus" jdbcType="INTEGER" property="trackStatus" />
+    <result column="trackedTime" jdbcType="TIMESTAMP" property="trackedTime" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="assetIds" jdbcType="VARCHAR" property="assetIds" />
+    <result column="customInfo" jdbcType="JSON" property="customInfo" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    `id`, `leakCode`, `leakName`, `leakType`, `leakLevel`, `leakDesc`, `industryCode`, 
+    `leakSourceInfo`, `remark`, `status`, `trackStatus`, `trackedTime`, `disabled`, `assetIds`, 
+    `customInfo`, `createBy`, `createTime`, `updateBy`, `updateTime`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from af_industry_leak
+    where `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from af_industry_leak
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_leak (`leakCode`, `leakName`, `leakType`, 
+      `leakLevel`, `leakDesc`, `industryCode`, 
+      `leakSourceInfo`, `remark`, `status`, 
+      `trackStatus`, `trackedTime`, `disabled`, 
+      `assetIds`, `createBy`, `createTime`, 
+      `updateBy`, `updateTime`, `customInfo`
+      )
+    values (#{leakCode,jdbcType=VARCHAR}, #{leakName,jdbcType=VARCHAR}, #{leakType,jdbcType=VARCHAR}, 
+      #{leakLevel,jdbcType=VARCHAR}, #{leakDesc,jdbcType=VARCHAR}, #{industryCode,jdbcType=VARCHAR}, 
+      #{leakSourceInfo,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, 
+      #{trackStatus,jdbcType=INTEGER}, #{trackedTime,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, 
+      #{assetIds,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{customInfo,jdbcType=JSON}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_leak
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="leakCode != null">
+        `leakCode`,
+      </if>
+      <if test="leakName != null">
+        `leakName`,
+      </if>
+      <if test="leakType != null">
+        `leakType`,
+      </if>
+      <if test="leakLevel != null">
+        `leakLevel`,
+      </if>
+      <if test="leakDesc != null">
+        `leakDesc`,
+      </if>
+      <if test="industryCode != null">
+        `industryCode`,
+      </if>
+      <if test="leakSourceInfo != null">
+        `leakSourceInfo`,
+      </if>
+      <if test="remark != null">
+        `remark`,
+      </if>
+      <if test="status != null">
+        `status`,
+      </if>
+      <if test="trackStatus != null">
+        `trackStatus`,
+      </if>
+      <if test="trackedTime != null">
+        `trackedTime`,
+      </if>
+      <if test="disabled != null">
+        `disabled`,
+      </if>
+      <if test="assetIds != null">
+        `assetIds`,
+      </if>
+      <if test="customInfo != null">
+        `customInfo`,
+      </if>
+      <if test="createBy != null">
+        `createBy`,
+      </if>
+      <if test="createTime != null">
+        `createTime`,
+      </if>
+      <if test="updateBy != null">
+        `updateBy`,
+      </if>
+      <if test="updateTime != null">
+        `updateTime`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="leakCode != null">
+        #{leakCode,jdbcType=VARCHAR},
+      </if>
+      <if test="leakName != null">
+        #{leakName,jdbcType=VARCHAR},
+      </if>
+      <if test="leakType != null">
+        #{leakType,jdbcType=VARCHAR},
+      </if>
+      <if test="leakLevel != null">
+        #{leakLevel,jdbcType=VARCHAR},
+      </if>
+      <if test="leakDesc != null">
+        #{leakDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="industryCode != null">
+        #{industryCode,jdbcType=VARCHAR},
+      </if>
+      <if test="leakSourceInfo != null">
+        #{leakSourceInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="trackStatus != null">
+        #{trackStatus,jdbcType=INTEGER},
+      </if>
+      <if test="trackedTime != null">
+        #{trackedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="assetIds != null">
+        #{assetIds,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        #{customInfo,jdbcType=JSON},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak">
+    update af_industry_leak
+    <set>
+      <if test="leakCode != null">
+        `leakCode` = #{leakCode,jdbcType=VARCHAR},
+      </if>
+      <if test="leakName != null">
+        `leakName` = #{leakName,jdbcType=VARCHAR},
+      </if>
+      <if test="leakType != null">
+        `leakType` = #{leakType,jdbcType=VARCHAR},
+      </if>
+      <if test="leakLevel != null">
+        `leakLevel` = #{leakLevel,jdbcType=VARCHAR},
+      </if>
+      <if test="leakDesc != null">
+        `leakDesc` = #{leakDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="industryCode != null">
+        `industryCode` = #{industryCode,jdbcType=VARCHAR},
+      </if>
+      <if test="leakSourceInfo != null">
+        `leakSourceInfo` = #{leakSourceInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        `remark` = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        `status` = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="trackStatus != null">
+        `trackStatus` = #{trackStatus,jdbcType=INTEGER},
+      </if>
+      <if test="trackedTime != null">
+        `trackedTime` = #{trackedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        `disabled` = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="assetIds != null">
+        `assetIds` = #{assetIds,jdbcType=VARCHAR},
+      </if>
+      <if test="customInfo != null">
+        <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    &lt;foreach collection="customInfo" item="value" index="key" separator=","&gt;
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    &lt;/foreach&gt;
+		), -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      </if>
+      <if test="createBy != null">
+        `createBy` = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        `updateTime` = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak">
+    update af_industry_leak
+    set `leakCode` = #{leakCode,jdbcType=VARCHAR},
+      `leakName` = #{leakName,jdbcType=VARCHAR},
+      `leakType` = #{leakType,jdbcType=VARCHAR},
+      `leakLevel` = #{leakLevel,jdbcType=VARCHAR},
+      `leakDesc` = #{leakDesc,jdbcType=VARCHAR},
+      `industryCode` = #{industryCode,jdbcType=VARCHAR},
+      `leakSourceInfo` = #{leakSourceInfo,jdbcType=VARCHAR},
+      `remark` = #{remark,jdbcType=VARCHAR},
+      `status` = #{status,jdbcType=VARCHAR},
+      `trackStatus` = #{trackStatus,jdbcType=INTEGER},
+      `trackedTime` = #{trackedTime,jdbcType=TIMESTAMP},
+      `disabled` = #{disabled,jdbcType=BIT},
+      `assetIds` = #{assetIds,jdbcType=VARCHAR},
+      <!-- customInfo = #{customInfo,jdbcType=JSON}, -->
+        <!-- customInfo = JSON_SET (IFNULL(
+		    customInfo, "{}"), 
+		    &lt;foreach collection="customInfo" item="value" index="key" separator=","&gt;
+			    '$.${key}', #{value,typeHandler=com.dp.plat.core.handlers.FastjsonTypeHandler}
+		    &lt;/foreach&gt;
+		), -->
+		customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #{customInfo,jdbcType=JSON}),
+      `createBy` = #{createBy,jdbcType=VARCHAR},
+      `createTime` = #{createTime,jdbcType=TIMESTAMP},
+      `updateBy` = #{updateBy,jdbcType=VARCHAR},
+      `updateTime` = #{updateTime,jdbcType=TIMESTAMP}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where_selective">
+    <if test="id != null">
+		l.`id` = #{id, jdbcType=INTEGER} AND
+	</if>
+	<if test="leakCode != null and '' != leakCode">
+		l.`leakCode` = #{leakCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="leakName != null and '' != leakName">
+		l.`leakName` = #{leakName, jdbcType=VARCHAR} AND
+	</if>
+	<if test="leakType != null and '' != leakType">
+		l.`leakType` = #{leakType, jdbcType=VARCHAR} AND
+	</if>
+	<if test="leakLevel != null and '' != leakLevel">
+		l.`leakLevel` = #{leakLevel, jdbcType=VARCHAR} AND
+	</if>
+	<if test="leakDesc != null and '' != leakDesc">
+		l.`leakDesc` = #{leakDesc, jdbcType=VARCHAR} AND
+	</if>
+	<if test="industryCode != null and '' != industryCode">
+		l.`industryCode` = #{industryCode, jdbcType=VARCHAR} AND
+	</if>
+	<if test="leakSourceInfo != null and '' != leakSourceInfo">
+		l.`leakSourceInfo` = #{leakSourceInfo, jdbcType=VARCHAR} AND
+	</if>
+	<if test="remark != null and '' != remark">
+		l.`remark` = #{remark, jdbcType=VARCHAR} AND
+	</if>
+	<if test="status != null and '' != status">
+		l.`status` = #{status, jdbcType=VARCHAR} AND
+	</if>
+	<if test="trackStatus != null">
+		l.`trackStatus` = #{trackStatus, jdbcType=INTEGER} AND
+	</if>
+	<if test="trackedTime != null">
+		l.`trackedTime` = #{trackedTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="disabled != null">
+		l.`disabled` = #{disabled, jdbcType=BIT} AND
+	</if>
+	<if test="assetIds != null and '' != assetIds">
+		l.`assetIds` = #{assetIds, jdbcType=VARCHAR} AND
+	</if>
+	<if test="customInfo != null">
+		<!-- l.`customInfo` = #{customInfo, jdbcType=JSON} AND -->
+		<foreach collection="customInfo" item="value" index="key">
+		   l.`customInfo` -> '$.${key}' like concat("%", #{value}, "%") AND
+	    </foreach>
+	</if>
+	<if test="createBy != null and '' != createBy">
+		l.`createBy` = #{createBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="createTime != null">
+		l.`createTime` = #{createTime, jdbcType=TIMESTAMP} AND
+	</if>
+	<if test="updateBy != null and '' != updateBy">
+		l.`updateBy` = #{updateBy, jdbcType=VARCHAR} AND
+	</if>
+	<if test="updateTime != null">
+		l.`updateTime` = #{updateTime, jdbcType=TIMESTAMP} AND
+	</if>
+  </sql>
+  <sql id="sql_model_where_selective">
+    <if test="model != null ">
+		<if test="model.id != null">
+			l.`id` = #{model.id, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.leakCode != null and '' != model.leakCode">
+			l.`leakCode` = #{model.leakCode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.leakName != null and '' != model.leakName">
+			l.`leakName` = #{model.leakName, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.leakType != null and '' != model.leakType">
+			l.`leakType` = #{model.leakType, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.leakLevel != null and '' != model.leakLevel">
+			l.`leakLevel` = #{model.leakLevel, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.leakDesc != null and '' != model.leakDesc">
+			l.`leakDesc` = #{model.leakDesc, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.industryCode != null and '' != model.industryCode">
+			l.`industryCode` = #{model.industryCode, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.leakSourceInfo != null and '' != model.leakSourceInfo">
+			l.`leakSourceInfo` = #{model.leakSourceInfo, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.remark != null and '' != model.remark">
+			l.`remark` = #{model.remark, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.status != null and '' != model.status">
+			l.`status` = #{model.status, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.trackStatus != null">
+			l.`trackStatus` = #{model.trackStatus, jdbcType=INTEGER} AND
+		</if>
+		<if test="model.trackedTime != null">
+			l.`trackedTime` = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.disabled != null">
+			l.`disabled` = #{model.disabled, jdbcType=BIT} AND
+		</if>
+		<if test="model.assetIds != null and '' != model.assetIds">
+			l.`assetIds` = #{model.assetIds, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.customInfo != null">
+			<!-- l.`customInfo` = #{model.customInfo, jdbcType=JSON} AND -->
+			<foreach collection="model.customInfo" item="value" index="key">
+			   l.`customInfo` -> '$.${key}' like concat("%", #{value}, "%") AND
+		    </foreach>
+		</if>
+		<if test="model.createBy != null and '' != model.createBy">
+			l.`createBy` = #{model.createBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.createTime != null">
+			l.`createTime` = #{model.createTime, jdbcType=TIMESTAMP} AND
+		</if>
+		<if test="model.updateBy != null and '' != model.updateBy">
+			l.`updateBy` = #{model.updateBy, jdbcType=VARCHAR} AND
+		</if>
+		<if test="model.updateTime != null">
+			l.`updateTime` = #{model.updateTime, jdbcType=TIMESTAMP} AND
+		</if>
+	</if>
+	<if test="fuzzySearch == true and fuzzy != ''">
+		(
+			l.`leakCode` like CONCAT("%", #{fuzzy}, "%") or
+			l.`leakName` like CONCAT("%", #{fuzzy}, "%") or
+			l.`leakType` like CONCAT("%", #{fuzzy}, "%") or
+			l.`leakLevel` like CONCAT("%", #{fuzzy}, "%") or
+			l.`leakDesc` like CONCAT("%", #{fuzzy}, "%") or
+			l.`industryCode` like CONCAT("%", #{fuzzy}, "%") or
+			l.`leakSourceInfo` like CONCAT("%", #{fuzzy}, "%") or
+			l.`remark` like CONCAT("%", #{fuzzy}, "%") or
+			l.`status` like CONCAT("%", #{fuzzy}, "%") or
+			l.`assetIds` like CONCAT("%", #{fuzzy}, "%") or
+			l.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+			l.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+		)
+	</if>
+
+  </sql>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak" resultMap="BaseResultMap">
+    select * from af_industry_leak AS `l`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryLeak" resultType="long">
+    select count(1) from af_industry_leak AS `l`
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<include refid="sql_where_selective" />
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select 
+    	JSON_SET(IFNULL(l.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+	    l.*<!-- , 
+	    bd.basicDataName as `customInfo.statusName`, bd2.basicDataName as `customInfo.trackStatusName`  -->
+	from af_industry_leak as l
+	<if test="model != null and model.checkProject == true">
+    left join `af_industry_asset_leak_relation` lpr 
+        on lpr.leakId = l.id 
+        and lpr.`disabled` = false 
+        and l.`disabled` = false 
+        and IFNULL(lpr.`effectiveTo`, "9999-12-31") > now() 
+    left join `pm_project` ph 
+        on ph.`projectId` = lpr.`projectId` 
+    </if>
+    left join `fnd_basic_data` bd 
+        on l.`status` = bd.`basicDataId` 
+        and bd.`dataTypeCode` = 'processStatus'
+    left join `fnd_basic_data` bd2 
+        on l.`trackStatus` = bd2.`basicDataId` 
+        and bd2.`dataTypeCode` = 'trackStatus' 
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null and model.checkProject == true">
+				(
+					(
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						1 = 1 AND
+						<if test="model.projectTypes != null">
+							FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+						</if>
+						<if test="model.officeCodes != null">
+							FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+						</if>
+					</trim>
+					)
+					<if test="model.memberCode != null and model.memberCode != ''">
+						<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+						OR EXISTS 
+				        (SELECT 
+				            1 
+				        FROM
+				            pm_project_member pm 
+				        WHERE pm.projectId = ph.`projectId` 
+				            AND pm.projectType = ph.`projectType` 
+				            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+				            AND pm.memberCode = #{model.memberCode})
+					</if>
+				) AND
+			</if>
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+	<if test="model != null and model.checkProject == true">
+		group by l.id
+	</if>
+	<include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(distinct l.id) from af_industry_leak AS `l`
+    <if test="model != null and model.checkProject == true">
+    left join `af_industry_asset_leak_relation` lpr 
+        on lpr.leakId = l.id 
+        and lpr.`disabled` = false 
+        and l.`disabled` = false 
+        and IFNULL(lpr.`effectiveTo`, "9999-12-31") > now() 
+    left join `pm_project` ph 
+        on ph.`projectId` = lpr.`projectId` 
+    </if>
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model.checkProject == true">
+				(
+					(
+					<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+						1 = 1 AND
+						<if test="model.projectTypes != null">
+							FIND_IN_SET(ph.`projectType`, #{model.projectTypes}) AND 
+						</if>
+						<if test="model.officeCodes != null">
+							FIND_IN_SET(ph.`column001`, #{model.officeCodes}) AND
+						</if>
+					</trim>
+					)
+					<if test="model.memberCode != null and model.memberCode != ''">
+						<!-- OR pm.memberCode like concat("%", #{model.memberCode}, "%") -->
+						OR EXISTS 
+				        (SELECT 
+				            1 
+				        FROM
+				            pm_project_member pm 
+				        WHERE pm.projectId = ph.`projectId` 
+				            AND pm.projectType = ph.`projectType` 
+				            AND IFNULL(pm.effectiveTo, "9999-12-31") > NOW()
+				            AND pm.memberCode = #{model.memberCode})
+					</if>
+				) AND
+			</if>
+			<include refid="sql_model_where_selective" />
+		</trim>
+	</where>
+  </select>
+</mapper>

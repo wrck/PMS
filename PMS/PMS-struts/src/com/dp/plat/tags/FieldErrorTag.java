@@ -1,0 +1,102 @@
+package com.dp.plat.tags;
+
+import java.util.HashMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.tagext.TagSupport;
+
+import com.dp.plat.context.VContext;
+import com.opensymphony.xwork2.util.ValueStack;
+
+public class FieldErrorTag extends TagSupport
+{
+	private String accesskey;
+	private Boolean onlyone = false;
+	private Boolean warn = false;
+
+	/**
+     * 
+     */
+	private static final long serialVersionUID = 1L;
+
+	public FieldErrorTag()
+	{
+		;
+	}
+	/**
+	 * doStartTag()方法其合法的返回值是EVAL_BODY_INCLUDE,SKIP_BODY前者表示将显示标签间的文字
+	 * 后者表示不显示标签间的文字
+	 */
+	public int doStartTag() throws JspException
+	{
+		return TagSupport.SKIP_BODY;
+	}
+	/**
+	 * doEndTag()方法其合法的返回值是EVAL_PAGE,SKIP_PAGE
+	 * 前者表示处理完标签后继续执行以下的JSP页面，
+	 * 后者表示不处理接下来的JSP网页
+	 */
+	public int doEndTag() throws JspException
+	{
+		try
+		{
+			HttpServletRequest request = (HttpServletRequest) pageContext
+					.getRequest();
+			JspWriter out = pageContext.getOut();
+
+			ValueStack vs = (ValueStack) request
+					.getAttribute("struts.valueStack");
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("fieldErrors", vs.findValue("fieldErrors"));
+			map.put("accesskey", accesskey);
+			map.put("onlyone", onlyone);
+			map.put("warn", warn);
+
+			VContext.getVM(out, "com/dp/plat/vmpage/FieldErrorTag.vm", map);
+
+			// out.flush();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return TagSupport.EVAL_PAGE;
+	}
+
+	public void release()
+	{
+		super.release();
+	}
+
+	public String getAccesskey()
+	{
+		return accesskey;
+	}
+
+	public void setAccesskey(String accesskey)
+	{
+		this.accesskey = accesskey;
+	}
+
+	public Boolean getOnlyone()
+	{
+		return onlyone;
+	}
+
+	public void setOnlyone(Boolean onlyone)
+	{
+		this.onlyone = onlyone;
+	}
+
+	public Boolean getWarn()
+	{
+		return warn;
+	}
+
+	public void setWarn(Boolean warn)
+	{
+		this.warn = warn;
+	}
+}

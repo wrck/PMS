@@ -1,0 +1,140 @@
+package com.dp.plat.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.dp.plat.data.bean.MenuForUser;
+import com.dp.plat.data.bean.Role;
+import com.dp.plat.data.bean.User;
+import com.dp.plat.data.bean.UserMenu;
+import com.dp.plat.param.DisplayParam;
+import com.dp.plat.param.ProjectBatchCgMbParam;
+
+/**
+ * @author wenrencaike
+ *
+ */
+public interface UserManageDao {
+	
+	//获取用户信息
+	List<User> queryUserList(DisplayParam displayParam, User user);
+		
+	//根据用户名（工号）查用户
+	User queryUserByUserName(String username);
+	
+	/**
+	 * 根据用户名（工号）查用户
+	 * @param usernames
+	 * @return
+	 */
+	List<User> queryUsersByUserNames(String usernames);
+	
+	//更新用户基本信息
+	void updateuser(User user);
+	
+	//更新md5密码
+	void updatepwdbyusername(String md5pwd,String username);
+	
+	void updatepwdbyuser(User user);
+
+	List<Role> queryRolelist();
+	
+    List<UserMenu> queryAllMenuList();
+
+	List<UserMenu> queryUserMenuList();
+
+	User queryUserByUserId(int id);
+
+	String queryUserMenuidsByUserid(int id);
+
+	void addUserInfo(User user, String usermenuids);
+	
+	void updateUserInfo(User user, String usermenuids);
+	
+	UserMenu queryUserMenu(int menuId);
+	
+	void updateUser(User user);
+	
+	void deleteUsermenu(int userId);
+	
+	void insertUsermenu(MenuForUser menuForUser);
+
+	void updateUserPower(int userId, String areapower, String username);
+
+	void insertUserpower(int userId, String areapower, String username);
+
+	/**
+	 * 查询所有系统用户
+	 * @return
+	 */
+	List<User> queryAllUser();
+	
+	/**
+	 * 查询所有用户集合,未增加分页，可查询所有用户
+	 * @param user
+	 * @return
+	 */
+	List<User> queryAllUserList(User user);
+	
+	/**
+	 * 查询所有用户，并封装为Map，key为用户名
+	 * @return
+	 */
+	Map<String,User> queryAllUserMap();
+	/**
+	 * 查询存在用户名
+	 * @param username
+	 * @return
+	 */
+	int queryUserSizeByUserName(String username);
+	/**
+	 * 查询用于某个角色的用户
+	 * @param roleid
+	 * @return
+	 */
+	List<User> queryUserWithRoleId(int roleid);
+
+	/**
+	 * 查询某类角色的邮件地址
+	 * @param role  Servicemanager
+	 * @return
+	 */
+	String queryServiceMails(int roleServicemanager);
+	/**
+	 * 查询办事处某类角色的邮件地址
+	 * @param officeCodes
+	 * @param roleServicemanager
+	 * @return
+	 */
+	String queryServiceMails(String officeCodes, Integer roleServicemanager); 
+	/**
+	 * 
+	 * @param user
+	 * @param newMemberCode
+	 * @param changeType
+	 */
+	String updateServiceAndProgramMember(ProjectBatchCgMbParam batchCgMb);
+
+	/**
+	 * 查询某部门有某个角色的用户
+	 * @param params
+	 * @return list<user>
+	 */
+	List<User> queryUserWithRoleIdAndDpNo(Map<String, String> params);
+
+	/**
+	 * 查询某部门有某个角色的用户,或者某角色并且有某部门的权限的用户
+	 * @param params
+	 * @return list<user>
+	 */
+	List<User> queryUserWithRoleIdAndDpNoOrInAreaPower(Map<String, String> params);
+
+	/**
+	 * 查询办事处某类角色的邮件地址
+	 * @param officeCodes
+	 * @param roleId
+	 * @return
+	 */
+	String queryMailsByRoleAndOfficeCodes(String officeCodes, Integer roleId);
+
+}

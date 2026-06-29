@@ -1,0 +1,341 @@
+package com.dp.plat.data.report;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import com.dp.plat.data.bean.ReportLineData;
+import com.dp.plat.echarts.Axis;
+import com.dp.plat.echarts.AxisLabel;
+import com.dp.plat.echarts.Echarts;
+import com.dp.plat.echarts.Feature;
+import com.dp.plat.echarts.ItemStyle;
+import com.dp.plat.echarts.Legend;
+import com.dp.plat.echarts.MagicType;
+import com.dp.plat.echarts.Normal;
+import com.dp.plat.echarts.Restore;
+import com.dp.plat.echarts.SaveAsImage;
+import com.dp.plat.echarts.Series;
+import com.dp.plat.echarts.TextStyle;
+import com.dp.plat.echarts.Title;
+import com.dp.plat.echarts.Toolbox;
+import com.dp.plat.echarts.Tooltip;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class EchartsUtil {
+	/**
+	 * 定义数据透视表每行显示数据列数
+	 */
+	private static int colsize = 11;
+	/**
+	 * 组装报表数据透视表的HTML 数据结构类似于    维度 - 条件值 - 总值 - 比例值
+	 * @param list
+	 * @return
+	 */
+	public static String packagingTableHtml(List<ReportLineData> list){
+		StringBuilder html = new StringBuilder();
+		int size = list.size();
+		for(int i = 0 ; i < size ; i ++){
+			if(i%colsize == 0){
+				html.append("<tr class='success'>");
+				html.append("<td>办事处</td>");
+				int k = i + colsize;
+				if(k > size){
+					k = size;
+				}
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getOfficeName());
+					html.append("</td>" );
+				}
+				
+				html.append("</tr>");
+				html.append("<tr>");
+				html.append("<td>条件值</td>");
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getConditionValue());
+					html.append("</td>" );
+				}
+				html.append("</tr>");
+				html.append("<tr>");
+				html.append("<td>总值</td>");
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getTotalValue());
+					html.append("</td>" );
+				}
+				html.append("</tr>");
+				html.append("<tr>");
+				html.append("<td>比率(%)</td>");
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getSpecificValue());
+					html.append("</td>" );
+				}
+				html.append("</tr>");
+			}
+			
+		}
+		return html.toString();
+	}
+	/**
+	 * 组装报表数据透视表的HTML 数据结构类似于    维度 - 统计指 - 统计值 
+	 * @param list
+	 * @return
+	 */
+	public static String packagingQualityTableHtml(
+			List<ReportLineData> list) {
+		StringBuilder html = new StringBuilder();
+		int size = list.size();
+		for(int i = 0 ; i < size ; i ++){
+			if(i%colsize == 0){
+				html.append("<tr class='success'>");
+				html.append("<td>办事处</td>");
+				int k = i + colsize;
+				if(k > size){
+					k = size;
+				}
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getOfficeName());
+					html.append("</td>" );
+				}
+				
+				html.append("</tr>");
+				html.append("<tr>");
+				html.append("<td>闭环平均分</td>");
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getSpecificValue());
+					html.append("</td>" );
+				}
+				html.append("</tr>");
+				
+				html.append("<tr>");
+				html.append("<td>闭环项目数量</td>");
+				for(int j = i ;j < k ; j ++){
+					html.append("<td>" );
+					html.append(list.get(j).getTotalValue());
+					html.append("</td>" );
+				}
+				html.append("</tr>");
+			}
+			
+		}
+		return html.toString();
+	}
+	
+	/**
+	 * 组装报表数据透视表的HTML,数据结构类似于    维度 - 统计指 - 统计值 
+	 * @param avgScore
+	 * @param remainderProjectSize
+	 * @param totalProjectSize
+	 * @param officeNames 
+	 * @return
+	 */
+	public static String packagingQualityTableHtml(Double[] avgScore, Double[] remainderProjectSize,
+			Double[] totalProjectSize, String[] officeNames) {
+		StringBuilder html = new StringBuilder();
+		int length = officeNames.length;
+		for (int i = 0; i < length; i++) {
+			if (i % colsize == 0) {
+				html.append("<tr class='success'>");
+				html.append("<td>办事处</td>");
+				int k = i + colsize;
+				if (k > length) {
+					k = length;
+				}
+				for (int j = i; j < k; j++) {
+					html.append("<td>");
+					html.append(officeNames[j]);
+					html.append("</td>");
+				}
+
+				html.append("</tr>");
+				html.append("<tr>");
+				html.append("<td>闭环平均分</td>");
+				for (int j = i; j < k; j++) {
+					html.append("<td>");
+					html.append(avgScore[j]);
+					html.append("</td>");
+				}
+				html.append("</tr>");
+
+				html.append("<tr>");
+				html.append("<td>总闭环项目数量</td>");
+				for (int j = i; j < k; j++) {
+					html.append("<td>");
+					html.append(totalProjectSize[j].intValue());
+					html.append("</td>");
+				}
+				html.append("</tr>");
+
+				html.append("<tr>");
+				html.append("<td>原厂交付闭环项目数量</td>");
+				for (int j = i; j < k; j++) {
+					html.append("<td>");
+					html.append(remainderProjectSize[j].intValue());
+					html.append("</td>");
+				}
+				html.append("</tr>");
+
+				html.append("<tr>");
+				html.append("<td>非直签督导闭环项目数量</td>");
+				for (int j = i; j < k; j++) {
+					html.append("<td>");
+					html.append(totalProjectSize[j].intValue() - remainderProjectSize[j].intValue());
+					html.append("</td>");
+				}
+				html.append("</tr>");
+			}
+
+		}
+		return html.toString();
+	}
+	
+	/**
+	 * 组装简单柱状图方法
+	 * @param text
+	 * @param xAxis
+	 * @param yAxixs
+	 * @param tuli
+	 * @param tooltipFormatter
+	 * @param colorName
+	 * @return
+	 * @throws JsonProcessingException 
+	 */
+	public static String packagingOneBarEcharts(String text , String[] xAxi ,Double[] yAxi , String tuli ,String tooltipFormatter, String colorName ) throws JsonProcessingException{
+		//组装
+		TextStyle style = new TextStyle(12, null, null, null);
+		Title title = new Title(text ,null , "center",style);
+		List<String> type = new ArrayList<String>(Arrays.asList(new String[]{}));
+		MagicType magicType = new MagicType(true, type );
+		Restore restore = new Restore(true, "刷新");
+		SaveAsImage saveAsImage = new SaveAsImage(true, "保存为图片","png");
+		Feature feature = new Feature(magicType, restore, saveAsImage);
+		Toolbox toolbox = new Toolbox(true, feature );
+		List<Axis> xAxis = new ArrayList<Axis>();
+		TextStyle textStyle = new TextStyle(12, "bottom", null,null);
+		AxisLabel axisLabel = new AxisLabel(textStyle , 0, -45, 5);
+		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(xAxi)), axisLabel );
+		xAxis.add(axis);
+		List<Axis> yAxis = new ArrayList<Axis>();
+		Axis yAxis0 = new Axis("value");
+		yAxis.add(yAxis0);
+		List<Series> series = new ArrayList<Series>();
+		StringBuilder tip = new StringBuilder();
+		tip.append("{b}:<br/>");
+		
+		Normal normal = new Normal(colorName);
+		ItemStyle itemStyle = new ItemStyle(normal);
+		Series series0 = new Series(tuli, "bar", new ArrayList<Double>(Arrays.asList(yAxi)), itemStyle );
+		series.add(series0);
+		tip.append("{a0}:{c0}");
+		tip.append(tooltipFormatter);
+		tip.append("<br/>");
+		
+		Tooltip tooltip = new Tooltip("axis" ,tip.toString());
+		Legend legend = new Legend("left", new ArrayList<String>(Arrays.asList(new String[]{tuli})));
+		Echarts echarts = new Echarts(title, tooltip, legend, true, true, toolbox, xAxis, yAxis, series);
+		return jsonToString(echarts);
+	}
+	
+	
+	public static Echarts packagingBarEcharts(String text, String subText,
+			String align, String[] officeNames, List<Double[]> rates, String[] tulis , String tooltipFormatter ,String[] colors) {
+		//组装
+		TextStyle style = new TextStyle(12, null, null, null);
+		Title title = new Title(text ,null , "center",style);
+		List<String> type = new ArrayList<String>(Arrays.asList(new String[]{}));
+		MagicType magicType = new MagicType(true, type );
+		Restore restore = new Restore(true, "刷新");
+		SaveAsImage saveAsImage = new SaveAsImage(true, "保存为图片","png");
+		Feature feature = new Feature(magicType, restore, saveAsImage);
+		Toolbox toolbox = new Toolbox(true, feature );
+		List<Axis> xAxis = new ArrayList<Axis>();
+		TextStyle textStyle = new TextStyle(12, "bottom", null,null);
+		AxisLabel axisLabel = new AxisLabel(textStyle , 0, -45, 5);
+		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(officeNames)), axisLabel );
+		xAxis.add(axis);
+		List<Axis> yAxis = new ArrayList<Axis>();
+		Axis yAxis0 = new Axis("value");
+		yAxis.add(yAxis0);
+		List<Series> series = new ArrayList<Series>();
+		int i = 0;
+		StringBuilder tip = new StringBuilder();
+		tip.append("{b}:<br/>");
+		for(Double[] rate : rates){
+			Normal normal = new Normal(colors[i]);
+			ItemStyle itemStyle = new ItemStyle(normal);
+			Series series0 = new Series(tulis[i], "bar", new ArrayList<Double>(Arrays.asList(rate)), itemStyle );
+			series.add(series0);
+			tip.append("{a"+i+"}:{c"+i+"}");
+			tip.append(tooltipFormatter);
+			tip.append("<br/>");
+			i ++;
+		}
+		Tooltip tooltip = new Tooltip("axis" ,tip.toString());
+		Legend legend = new Legend("left", new ArrayList<String>(Arrays.asList(tulis)));
+		return  new Echarts(title,tooltip , legend , true, true , toolbox, xAxis, yAxis, series);
+	}
+	
+	public static Echarts packagingLineEcharts(String text, String subText,
+			String align, String[] officeNames, List<Double[]> rates, String[] tulis , String tooltipFormatter ,String[] colors) {
+		//组装
+		TextStyle style = new TextStyle(12, null, null, null);
+		Title title = new Title(text ,null , "center",style);
+		List<String> type = new ArrayList<String>(Arrays.asList(new String[]{}));
+		MagicType magicType = new MagicType(true, type );
+		Restore restore = new Restore(true, "刷新");
+		SaveAsImage saveAsImage = new SaveAsImage(true, "保存为图片","png");
+		Feature feature = new Feature(magicType, restore, saveAsImage);
+		Toolbox toolbox = new Toolbox(true, feature );
+		List<Axis> xAxis = new ArrayList<Axis>();
+		TextStyle textStyle = new TextStyle(12, "bottom", null ,null);
+		AxisLabel axisLabel = new AxisLabel(textStyle , 0, 45, 5);
+		Axis axis = new Axis("category", true, new ArrayList<String>(Arrays.asList(officeNames)), axisLabel );
+		xAxis.add(axis);
+		List<Axis> yAxis = new ArrayList<Axis>();
+		Axis yAxis0 = new Axis("value");
+		yAxis.add(yAxis0);
+		List<Series> series = new ArrayList<Series>();
+		int i = 0;
+		StringBuilder tip = new StringBuilder();
+		tip.append("{b}:<br/>");
+		for(Double[] rate : rates){
+			Normal normal = new Normal(colors[i]);
+			ItemStyle itemStyle = new ItemStyle(normal);
+			Series series0 = new Series(tulis[i], "line", new ArrayList<Double>(Arrays.asList(rate)), itemStyle );
+			series.add(series0);
+			tip.append("{a"+i+"}:{c"+i+"}");
+			tip.append(tooltipFormatter);
+			tip.append("<br/>");
+			i ++;
+		}
+		Tooltip tooltip = new Tooltip("axis" ,tip.toString());
+		Legend legend = new Legend("left", new ArrayList<String>(Arrays.asList(tulis)));
+		return  new Echarts(title,tooltip , legend , true, true , toolbox, xAxis, yAxis, series);
+	}
+	
+	public static String jsonToString(Echarts echarts) throws JsonProcessingException{
+		ObjectMapper objectMapper=new ObjectMapper();
+    	objectMapper.setSerializationInclusion(Include.NON_NULL);  
+    	return objectMapper.writeValueAsString(echarts);
+	}
+	
+	public static String getColor(){
+		String[] colors = new String[]{"#00EEEE" , "#33ffff" , "#00ffcc","#99ffff" , "#99ff99" , "#ccff66" , "#cccc33"};
+		Random random = new Random();
+		return colors[random.nextInt(colors.length)];
+	}
+	
+	public static String getColor(int index){
+		String[] colors = new String[]{"#8FBC8F" , "#33ffff" , "#00ffcc","#20B2AA" , "#0000FF" , "#ccff66" , "#cccc33" , "#5F9EA0"};
+		return colors[index];
+	}
+	
+}

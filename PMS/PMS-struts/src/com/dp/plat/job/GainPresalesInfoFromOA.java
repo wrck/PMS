@@ -1,0 +1,143 @@
+package com.dp.plat.job;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.quartz.Job;
+import org.quartz.JobExecutionException;
+
+/**
+ * 同步OA临时授权信息
+ * @author w02611
+ */
+public class GainPresalesInfoFromOA extends AbstractSynchronizeTask implements Job {
+
+    public GainPresalesInfoFromOA() {
+		super("applicationContext.xml", "sqlMapConfig.xml");
+	}
+	
+	public void work() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		
+        // 刷新同步OA临时授权数据
+		syncPresalesInfoFormOA(params);
+		// 刷新同步OA临时授权明细行数据
+		syncPresalesDetailFormOA(params);
+		// 将同步的OA临时授权数据插入到售前测试表
+		syncPresalesHeaderFormOA(params);
+	}
+	
+	/**
+     * 刷新同步OA临时授权数据
+     */
+    public boolean syncPresalesInfoFormOA(Map<String, Object> params) {
+        String tag = "同步OA临时授权数据";
+        try {
+            log.info("{}-开始", tag);
+            // 刷新OA临时授权数据
+            syncData("PresalesInfoFormOA", "OA", params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+        } finally {
+            log.info("{}-结束", tag);
+        }
+        return false;
+    }
+    
+    /**
+     * 刷新同步OA临时授权明细行数据
+     */
+    public boolean syncPresalesDetailFormOA(Map<String, Object> params) {
+        String tag = "同步OA临时授权明细行数据";
+        try {
+            log.info("{}-开始", tag);
+            // 刷新OA临时授权明细行数据
+            syncData("PresalesDetailFormOA", "OA", params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+        } finally {
+            log.info("{}-结束", tag);
+        }
+        return false;
+    }
+    
+    /**
+     * 将同步的OA临时授权数据插入到售前测试表"
+     */
+    public boolean syncPresalesHeaderFormOA(Map<String, Object> params) {
+        String tag = "将同步的OA临时授权数据插入到售前测试表";
+        String dataName = "PresalesHeaderFormOA";
+        String dbName = "Local";
+        try {
+            log.info("{}-开始", tag);
+            syncDataBefore(dataName, dbName, params);
+            // 将同步的OA临时授权数据插入到售前测试表
+            sqlMap.insert("insert" + dataName, params);
+            syncDataSuccess(dataName, dbName, params);
+            return true;
+        } catch (Exception e) {
+            log.error("{}-发生异常：{}", tag, e);
+            syncDataFail(dataName, dbName, params, e);
+        } finally {
+            log.info("{}-结束", tag);
+            syncDataAfter(dataName, dbName, params);
+        }
+        return false;
+    }
+
+	@Override
+    protected void syncDataBefore(String dataName, String dbName, Map<String, Object> params) {
+	    super.syncDataBefore(dataName, dbName, params);
+//	    String tag = getTag();
+//        log.info("{}-前置操作", tag);
+//        try {
+//            log.info("{}-填充OrgCode", tag);
+//            if (params != null && !params.containsKey("orgCode") && (params.containsKey("orgId") || params.containsKey("org_id"))) {
+//                Object orgId = params.getOrDefault("orgId", params.getOrDefault("org_id", 1));
+//                String orgCode = (String) sqlMap.queryForObject("selectOrgCodeByOrgId", String.valueOf(orgId));
+//                params.put("orgCode", orgCode);
+//            }
+//        } catch (Exception e) {
+//            log.error("{}-前置操作发生错误", tag, e);
+//        }
+    }
+	
+    @Override
+    protected void syncDataInsertBefore(List<Map<String, Object>> list, Map<String, Object> params) {
+        super.syncDataInsertBefore(list, params);
+//        String tag = getTag();
+//        log.info("{}-Insert前置操作", tag);
+//        try {
+//            log.info("{}-填充OrgId", tag);
+//            Map<String, Integer> orgCodeMap = new HashMap<>();
+//            if (params != null) {
+//                orgCodeMap = (Map<String, Integer>) params.getOrDefault("orgCodeMap", orgCodeMap);
+//                params.put("orgCodeMap", orgCodeMap);
+//            }
+//            for (Map<String, Object> map : list) {
+//                String orgCode = String.valueOf(map.getOrDefault("orgCode", map.get("org_code")));
+//                Integer orgId = orgCodeMap.getOrDefault(orgCode, (Integer) map.getOrDefault("orgId", map.get("org_id")));
+//                if (orgId == null) {
+//                    orgId = (Integer) sqlMap.queryForObject("selectOrgIdByOrgCode", orgCode);
+//                    orgCodeMap.put(orgCode, orgId);
+//                }
+//                map.put("orgId", orgId);
+//                map.put("org_id", orgId);
+//            }
+//        } catch (Exception e) {
+//            log.error("{}-Insert前置操作发生错误", tag, e);
+//        }
+    }
+
+    public static void main(String[] args) {
+		try {
+			new GainPresalesInfoFromOA().execute(null);
+		} catch (JobExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}

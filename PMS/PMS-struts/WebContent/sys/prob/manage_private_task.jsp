@@ -1,0 +1,437 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<html>
+<dp:base />
+<head>
+<style>
+	.chk_style{
+		display: none;
+	}
+	.chk_success + label{
+		background-color:#98DCA6!important;
+	}
+	.chk_error + label{
+		background-color:#F1B8B8!important;
+	}
+	.chk_style + label {
+		background-color: #DEDEDE;
+		border: 1px solid #C1CACA;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+		padding: 5.5px;
+    	border-radius: 3px;
+		display: inline-block;
+		position: relative;
+	    margin-top: 2px;
+	    margin-right: 3px;
+	  	vertical-align: middle;
+	}
+	.chk_style + label:active {
+		box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px 1px 3px rgba(0,0,0,0.1);
+	}
+	
+	.chk_style:checked + label {
+		background-color: #ECF2F7;
+		border: 1px solid #92A1AC;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05), inset 15px 10px -12px rgba(255, 255, 255, 0.1);
+		color: #243441;
+	}
+	
+	.chk_style:checked + label:after {
+		content: '\2714';
+		position: absolute;
+		top: -3px;
+		left: 0px;
+		/* color: #758794; */
+		width: 100%;
+		text-align: center;
+		/* font-size: 1.4em;
+		padding: 1px 0 0 0; */
+		vertical-align: text-top;
+	}
+</style>
+<script type="text/javascript">
+function checkAll(){
+	var ischecked = $("#checkHeader").is(":checked");
+	$("input[type='checkbox']").not(".chk_style").each(function(){
+		if(ischecked){
+			$(this).prop("checked","checked");
+		}else{
+			$(this).removeAttr("checked");
+		}
+	});
+}
+
+function checkAllSuccess(){
+	var ischecked = $("#checkbox_success").is(":checked");
+	$(".success input[type='checkbox']").each(function(){
+		if(ischecked){
+			$(this).prop("checked","checked");
+		}else{
+			$(this).removeAttr("checked");
+		}
+	});
+}
+
+function checkAllError(){
+	var ischecked = $("#checkbox_error").is(":checked");
+	$(".danger input[type='checkbox']").each(function(){
+		if(ischecked){
+			$(this).prop("checked","checked");
+		}else{
+			$(this).removeAttr("checked");
+		}
+	});
+}
+
+var realnameArr=new Array();
+var usernameArr=new Array();
+function queryallsysuser(){
+	$.ajax({
+		url:'${pageContext.request.contextPath }/queryalluser.action',
+		type:'post',
+		dataType:'json',
+		data:{},
+		success:querysysuser2
+	});
+}
+function querysysuser2(json){
+	var userlist = json.allusernameList;
+	for(var i = 0;i < userlist.length;i++){
+		usernameArr[i] = userlist[i].username;
+		realnameArr[i] = userlist[i].username+"-"+userlist[i].realName;
+	}
+}
+$(function(){
+	//增加模糊搜索功能
+	queryallsysuser();
+	$("#assignee").autocomplete({
+		source: realnameArr
+	});
+	
+	$("#retrieve").click(function(){
+		if(!$(".retrieve").is(":visible")){
+			$(".retrieve").show();
+			$("#retrieve").text("取消");
+		}else{
+			$(".retrieve").hide();
+			$("#retrieve").text("检索");
+		}
+		return false;
+	});
+	
+	$("#submit").click(function(){
+		if($("input:checked").not("#checkHeader,.chk_style").length == 0){
+			alert("请至少选择一个数据项进行操作");
+			return false;
+		}
+		if($("#probRestore_restoreStatus").val() == "10"){
+			if($("#assigneeHidden").val() == "<s:property value='probRestore.assignee' />"){
+				alert("请不要重复指派任务给自己！");
+				return false;
+			}
+			if($("#assigneeHidden").val() == ''){
+				alert("请输入需要指派的办理人！");
+				return false;
+			}
+		}
+		if(($("#probRestore_restoreStatus").val() == "30") && ($(".probRestoreTask.success input:checked").length<$("input:checked").not("#checkHeader,.chk_style").length)){
+			if(!confirm("已更新影响版本的设备数量小于勾选的设备数量，确认更新这些子任务为已处理？"))
+				return false;
+		}
+		restoreids = '';
+		$("input:checked").not("#checkHeader,.chk_style").each(function(){
+			restoreids += $(this).val();
+			restoreids += ',';
+		});
+		/* remark = $("textarea[name='probRestore.restoreRemark']").val().trim();
+		if(remark == ''){
+			alert("请填写备注说明!");
+			return false;
+		} */
+		
+		if(restoreids!=''){
+			restoreids += 0;
+			$("#restoreIds").val(restoreids);
+			return true;
+		}else{
+			alert("请至少选择一个数据项进行操作");
+		}
+		return false;
+	});
+	//控制上传任务周报表单显影
+	$("#uploadWeekly").click(function(){
+		if(!$(".weekly").is(":visible")){
+			$(".weekly").show();
+			$("#uploadWeekly").text("取消");
+		}else{
+			$(".weekly").hide();
+			$("#uploadWeekly").text("上传周报");
+		}
+		return false;
+	});
+	//上传周报
+	$("#weekly").click(function(){
+		$("#QueryForm").attr('action' , this.href);
+		$("#QueryForm").submit();
+		return false;
+	});
+	
+	function checkSoftwares(){
+		var softWares = ${result};
+		$(".probRestoreTask").each(function(){
+			var $latestConp = $(this).find(".latestConp");
+	        var latestAffectedProbId = $latestConp.data("affectedProbId") || 0;
+	        var latestConp = $latestConp.text().trim();
+	        var latestCpld = $(this).find(".latestCpld").text().trim();
+	        var latestBoot = $(this).find(".latestBoot").text().trim();
+	        var latestPcb = $(this).find(".latestPcb").text().trim();
+	        var flag = true;
+			for(var i in softWares){
+				var softWare = softWares[i];
+	            if((softWare.conp && softWare.conp == latestConp) || latestAffectedProbId != 0){
+					flag = false;
+					break;
+				}
+				if((softWare.cpld && softWare.cpld == latestCpld)){
+					flag = false;
+					break;
+				}
+				if((softWare.boot && softWare.boot == latestBoot)){
+					flag = false;
+					break;
+				}
+				if((softWare.pcb && softWare.pcb == latestPcb)){
+					flag = false;
+					break;
+				}
+			}
+			if(flag){
+				$(this).addClass("success");
+			}else{
+				$(this).addClass("danger");
+			}
+		});
+	}
+	checkSoftwares();
+	
+	
+});
+
+function fillAssignee(){
+	var obj=document.getElementById("assignee");
+	if(obj.value==""){
+		document.getElementById("assigneeHidden").value="";
+	}
+	if(obj.value!=""){
+		var i=0;
+		for(;i<realnameArr.length;i++){
+			if(realnameArr[i] == obj.value){
+				break;
+			}
+		}
+		if(i==realnameArr.length){
+			return false;
+		} else{
+			document.getElementById("assigneeHidden").value=usernameArr[i];
+		}
+	}
+}
+$(document).ready(function(){
+	$('textarea').bind('input propertychange blur', function() {
+		$(this).css('min-height','48px');
+		$(this).css('height','0px');
+		$(this).css('height',this.scrollHeight + 'px');
+	});
+});
+function changeRestoreStatus(_this){
+	var status = $(_this).val();
+	if(status == '10'){
+		$("#assignee").removeAttr("readonly");
+	}else{
+		$("#assignee").attr("readonly","true");
+		$("#assigneeHidden").val("");
+	}
+}
+</script>
+</head>
+<body>
+	<div>
+		<div class="row">
+			<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+				<div class="panel panel-default">
+						<!-- 请求路径改为绝对路径 ，避免因路径问题产生其他资源加载问题
+					求绝对路径行号
+					${pageContext.request.contextPath}
+					< %=request.getContextPath()%>
+				 -->
+					<form method="post" action="${pageContext.request.contextPath }/module/sub/updatePrivateTask.action" id="updateForm"
+						class="form-horizontal" name="updateForm">
+						<input name="restoreIds" id="restoreIds" type="hidden">
+						<s:hidden name="probRestore.probId"></s:hidden>
+						<div class="panel-body">
+							<div class="form-group">
+								<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.restore.status"></s:text></label>
+								<s:if test="probRestore.assigneeRole == 11">
+									<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+										<s:select name="probRestore.restoreStatus" list="restoreStatuList" listKey="basicDataId" listValue="basicDataName"
+											cssClass="form-control" headerKey="10" headerValue="已发布" onchange="changeRestoreStatus(this)"></s:select>						
+									</div>
+									<label for="assignee" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.assignee"></s:text></label>
+								 	<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+									 	<s:hidden name="probRestore.assignee" id="assigneeHidden"></s:hidden>
+										<s:textfield placeholder="支持模糊搜索，如不填，则默认不变" onfocus="fillAssignee()" onblur="fillAssignee()" id="assignee"  cssClass="form-control"></s:textfield>
+									</div>
+								</s:if>
+								<s:else>
+									<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+										<s:select name="probRestore.restoreStatus" list="restoreStatuList" listKey="basicDataId" listValue="basicDataName"
+											cssClass="form-control"></s:select>						
+									</div>
+									<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.remark"></s:text></label>
+									<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+										<s:textarea name="probRestore.restoreRemark" cssClass="form-control" cssStyle="overflow-y:hidden;"></s:textarea>
+									</div>
+								</s:else>
+							</div>
+						<s:if test="probRestore.assigneeRole == 11">
+							<div class="form-group">
+								<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.remark"></s:text></label>
+								<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+									<s:textarea name="probRestore.restoreRemark" cssClass="form-control" cssStyle="overflow-y:hidden;"></s:textarea>
+								</div>
+							</div>
+						</s:if>
+							<div class="form-group">
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1" style="text-align: right;">备注：</div>
+								<label class="redMark">1.请对列表任务处理后进行闭环申请（ 选择状态为：“已处理”），若无需跟踪请返回管理员处理（选择状态为：“未接受”），最后点击”更新“按钮！</label>
+							</div>
+						<s:if test="probRestore.assigneeRole == 11">
+							<div class="form-group">
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1" ></div>
+								<label class="redMark">2.指派给其他办理人时（请选择状态为：“已发布”）！</label>
+							</div>
+						</s:if>
+							<!-- <div class="form-group">
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1" ></div>
+								<label class="redMark">2.若要反馈任务进展，请点击“上传周报”按钮！</label>
+							</div> -->
+							<div class="form-group">
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+								<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+							   		<button type="submit" id="submit" class="btn btn-default  btn-block btn-sm"><s:text name='prob.info.update' /></button>
+						    	</div>	
+						    	<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+							   		<button type="submit" id="retrieve" class="btn btn-default  btn-block btn-sm"><s:text name='prob.info.retrieve' /></button>
+						    	</div>
+						    	<%-- <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+							   		<button type="submit" id="uploadWeekly" class="btn btn-default  btn-block btn-sm"><s:text name='prob.task.weekly' /></button>
+						    	</div> --%>
+							</div>
+						</div>
+					</form>
+					<form method="post" action="${pageContext.request.contextPath }/module/sub/managePrivateTask.action" id="QueryForm"
+						class="form-horizontal" name="QueryForm" enctype="multipart/form-data">
+						<s:hidden name="probRestore.probId"></s:hidden>
+						<div class="panel-body">
+							<!-- 过滤 -->
+							<div class="panel panel-default retrieve" style="display: none">
+								<div class="panel-body">
+									<div class="form-group">
+										<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.serial.num"></s:text></label>
+										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+											<s:textfield name="probRestore.serialNum" cssClass="form-control"></s:textfield>
+										</div>
+										<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="pm.project.projectName"></s:text></label>
+										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+											<s:textfield name="probRestore.projectName" cssClass="form-control"></s:textfield>
+										</div>
+										<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="pm.contract"></s:text></label>
+										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+											<s:textfield name="probRestore.contractNo" cssClass="form-control"></s:textfield>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="itemModel" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 form-control-label"><s:text name="prob.info.product.type"></s:text></label>
+										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+											<s:textfield id="itemModel" name="probRestore.itemModel" cssClass="form-control"></s:textfield>
+										</div>
+										<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+									   		<button type="submit" id="confirm" class="btn btn-default  btn-block btn-sm"><s:text name='button.confirm' /></button>
+								    	</div>							
+									</div>
+								</div>
+							</div>
+						<!-- 过滤 end-->
+						<!-- 任务进展周报 -->
+							<div class="panel panel-default weekly" style="display: none">
+								<div class="panel-body">
+									<div class="form-group">
+										<label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.task.weekly"></s:text></label>
+										<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+											<input type="file" name="upload" class="form-control">
+										</div>
+										<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+									   		<a href="${pageContext.request.contextPath }/module/sub/weeklyUpload.action" id="weekly" class="btn btn-default  btn-block btn-sm"><s:text name='button.confirm' /></a>
+								    	</div>	
+									</div>
+								</div>
+							</div> 
+						
+						<!-- 任务进展周报  end-->
+							<table class="table table-striped">
+								<thead>
+									<tr><td colspan="8">共查询到<s:property value="probRestoreTaskList.size()"/>条数据记录</td></tr>
+								</thead>
+								<tr>
+									<td style="width:65px;"><s:text name="prob.info.checkboxthree"></s:text></td>
+									<td><s:text name="prob.info.serial.num"></s:text></td>
+									<td><s:text name="prob.info.product.type"></s:text></td>
+									<%-- <td><s:text name="prob.info.restore.status"></s:text></td> --%>
+									<td><s:text name="prob.info.latest.conp"></s:text></td>
+									<td><s:text name="prob.info.latest.boot"></s:text></td>
+									<td><s:text name="prob.info.latest.cpld"></s:text></td>
+									<td><s:text name="prob.info.latest.pcb"></s:text></td>
+									<td><s:text name="prob.info.execute.restore.time"></s:text> </td> 
+									<td width="200px"><s:text name="pm.project.projectName"></s:text></td>
+									<td><s:text name="pm.contract"></s:text></td>
+									<td><s:text name="pm.officearea"></s:text></td>
+									<%-- <td><s:text name="prob.info.createTime"></s:text></td>
+									<td><s:text name="prob.info.updateTime"></s:text></td> --%>
+									
+								</tr>
+								<s:iterator value="probRestoreTaskList" var="restore" status="index">
+								<s:if test="#restore.executeTime != null">
+									<tr class="probRestoreTask">
+								</s:if>
+								<s:else>
+									<tr>
+								</s:else>
+									<td>
+										<input type="checkbox" name="restoreIds" value="<s:property value='#restore.id'/>" >
+									</td>
+									<td><s:property value="#restore.serialNum"/></td>
+									<%-- <td><s:property value="#restore.restoreStatusName"/></td> --%>
+									<td><s:property value="#restore.itemModel"/></td>
+									<td class="latestConp" data-affected-prob-id="${restore.prob.probId}"><s:property value="#restore.latestConp"/></td>
+									<td class="latestBoot"><s:property value="#restore.latestBoot"/></td>
+									<td class="latestCpld"><s:property value="#restore.latestCpld"/></td>
+									<td class="latestPcb"><s:property value="#restore.latestPcb"/></td>
+									<td><s:date name="#restore.executeTime" format="yyyy-MM-dd"/></td>
+									<td><a target="_blank" title="点击查看项目" href="${pageContext.request.contextPath }/module/ProjectModify.action?project.projectId=<s:property value="#restore.projectId" />&result=310"><s:property value="#restore.projectName" /></a></td>
+									<td><s:property value="#restore.contractNo"/></td>
+									<td><s:property value="#restore.officeName"/></td>
+									<%-- <td><s:date name="#restore.createTime" format="yyyy-MM-dd"/></td>
+									<td><s:date name="#restore.updateTime" format="yyyy-MM-dd"/></td> --%>
+								</tr>
+								</s:iterator>
+							</table>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

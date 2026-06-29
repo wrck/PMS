@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd"> 
+<!-- 自定义activity 查询 --> 
+<sqlMap>
+	<typeAlias alias="Procdef" type="com.dp.plat.data.activity.Procdef"/>
+	<resultMap class="Procdef" id="ProcdefOne">
+		<result property="id" column="ID_"/> 
+		<result property="name" column="NAME_"/> 
+		<result property="deploymentId" column="DEPLOYMENT_ID_"/> 
+		<result property="resourceName" column="RESOURCE_NAME_"/> 
+		<result property="dgrmResouceName" column="DGRM_RESOURCE_NAME_"/> 
+	</resultMap>
+	<select id="query_procdef" parameterClass="Procdef" resultMap="ProcdefOne">
+		<![CDATA[
+			SELECT * FROM act_re_procdef WHERE KEY_ = #key#  ORDER BY VERSION_ DESC LIMIT 1
+		]]>
+	</select>
+	<typeAlias alias="Comment" type="com.dp.plat.data.activity.ActComment"/>
+
+	<insert id="insert_fnd_act_comment" parameterClass="Comment">
+		<![CDATA[
+			INSERT INTO `fnd_act_hi_comment`(objId ,procdefKey ,taskId ,instId ,assignee ,assigneeTime ,`result` ,message )
+			VALUES( #objId# , #procdefKey# , #taskId# , #instId# ,#assignee# , #assigneeTime# , #result# , #message#)
+		]]>
+	</insert>
+	<insert id="insert_fnd_act_comment_by_params" parameterClass="map">
+        <![CDATA[
+            INSERT INTO `fnd_act_hi_comment`(objId, procdefKey, taskKey, taskId, instId, assignee, assigneeTime, `result`, message, nextAssignee, nextAssigneeName)
+            VALUES(#objId#, #procdefKey#, #taskKey#, #taskId#, #instId#, #assignee#, #assigneeTime#, #result#, #message#, #nextAssignee#, #nextAssigneeName#)
+        ]]>
+        <selectKey resultClass="int"  keyProperty="id">    
+	         SELECT last_insert_id() as id ;   
+	    </selectKey>
+    </insert>
+    <update id="update_fnd_act_comment_by_params" parameterClass="map">
+        <![CDATA[
+            update fnd_act_hi_comment set taskId = #taskId#, instId = #instId# where id = #commentId#
+        ]]>
+    </update>
+    
+    <typeAlias alias="PresalesComment" type="com.dp.plat.data.bean.PresalesComment"/>
+	<resultMap class="PresalesComment" id="CommentMap">
+		<result property="objId" column="objId"/>
+		<result property="procdefKey" column="procdefKey"/>
+		<result property="taskId" column="taskId"/>
+		<result property="instId" column="instId"/>
+		<result property="assignee" column="assignee"/>
+		<result property="assigneeTime" column="assigneeTime"/>
+		<result property="result" column="result"/>
+		<result property="resultName" column="resultName"/>
+		<result property="message" column="message"/>
+		<result property="assigneeName" column="assigneeName"/>
+		<result property="quesnaireId" column="quesnaireId" nullValue="0"/>
+	</resultMap>
+	<select id="query_act_comment_list" parameterClass="java.util.Map" resultMap="CommentMap">
+		<![CDATA[
+			SELECT t1.* ,t2.`basicDataName` AS resultName , CONCAT(t3.`username`,'-' , t3.`realName`) AS assigneeName,
+			t4.`quesnaireId`
+			FROM fnd_act_hi_comment t1 
+			LEFT JOIN fnd_basic_data t2 ON t1.`result` = t2.`basicDataId` AND t2.`dataTypeCode` = 26
+			LEFT JOIN fnd_user_info t3 ON t1.`assignee` = t3.`username` 
+			LEFT JOIN pm_presales_project_callback t4 ON t1.`objId` = t4.`presalesId` AND t1.`taskId` = t4.`taskId`
+			where objId = #objId# and procdefKey = #procdefKey#
+			order by t1.assigneeTime asc
+		]]>
+	</select>
+	
+	<update id="update_apply_info_byobjid" parameterClass="java.util.Map">
+		<![CDATA[
+			update $tableName$ set instId = #instId#, applyState = 1,applyBy = #applyBy#,applyTime = now()
+			where  $objColumn$ =  #objId#
+		]]>
+	</update>
+</sqlMap>

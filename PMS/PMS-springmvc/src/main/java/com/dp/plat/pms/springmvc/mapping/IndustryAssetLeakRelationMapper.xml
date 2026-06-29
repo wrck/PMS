@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.pms.springmvc.dao.IndustryAssetLeakRelationMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="projectId" jdbcType="INTEGER" property="projectId" />
+    <result column="assetId" jdbcType="INTEGER" property="assetId" />
+    <result column="leakId" jdbcType="INTEGER" property="leakId" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="disabled" jdbcType="BIT" property="disabled" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, projectId, assetId, leakId, effectiveFrom, effectiveTo, disabled, createBy, createTime, 
+    updateBy, updateTime
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from af_industry_asset_leak_relation
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from af_industry_asset_leak_relation
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_asset_leak_relation (projectId, assetId, leakId, 
+      effectiveFrom, effectiveTo, disabled, 
+      createBy, createTime, updateBy, 
+      updateTime)
+    values (#{projectId,jdbcType=INTEGER}, #{assetId,jdbcType=INTEGER}, #{leakId,jdbcType=INTEGER}, 
+      #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, #{disabled,jdbcType=BIT}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into af_industry_asset_leak_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        projectId,
+      </if>
+      <if test="assetId != null">
+        assetId,
+      </if>
+      <if test="leakId != null">
+        leakId,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="disabled != null">
+        disabled,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="assetId != null">
+        #{assetId,jdbcType=INTEGER},
+      </if>
+      <if test="leakId != null">
+        #{leakId,jdbcType=INTEGER},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+    update af_industry_asset_leak_relation
+    <set>
+      <if test="projectId != null">
+        projectId = #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="assetId != null">
+        assetId = #{assetId,jdbcType=INTEGER},
+      </if>
+      <if test="leakId != null">
+        leakId = #{leakId,jdbcType=INTEGER},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="disabled != null">
+        disabled = #{disabled,jdbcType=BIT},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+    update af_industry_asset_leak_relation
+    set projectId = #{projectId,jdbcType=INTEGER},
+      assetId = #{assetId,jdbcType=INTEGER},
+      leakId = #{leakId,jdbcType=INTEGER},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      disabled = #{disabled,jdbcType=BIT},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <sql id="sql_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				alr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectId != null">
+				alr.projectId = #{projectId, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetId != null">
+				alr.assetId = #{assetId, jdbcType=INTEGER} AND
+			</if>
+			<if test="leakId != null">
+				alr.leakId = #{leakId, jdbcType=INTEGER} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ alr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="disabled != null">
+				alr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				alr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				alr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				alr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				alr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_model_where">
+    <where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					alr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectId != null">
+					alr.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetId != null">
+					alr.assetId = #{model.assetId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakId != null">
+					alr.leakId = #{model.leakId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ alr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.disabled != null">
+					alr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					alr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					alr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					alr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					alr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					alr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					alr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </sql>
+  <sql id="sql_pageable_limit">
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </sql>
+  <select id="selectBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation" resultMap="BaseResultMap">
+    select * from af_industry_asset_leak_relation as alr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				alr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectId != null">
+				alr.projectId = #{projectId, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetId != null">
+				alr.assetId = #{assetId, jdbcType=INTEGER} AND
+			</if>
+			<if test="leakId != null">
+				alr.leakId = #{leakId, jdbcType=INTEGER} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ alr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="disabled != null">
+				alr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				alr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				alr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				alr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				alr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation" resultType="long">
+    select count(1) from af_industry_asset_leak_relation as alr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="id != null">
+				alr.id = #{id, jdbcType=INTEGER} AND
+			</if>
+			<if test="projectId != null">
+				alr.projectId = #{projectId, jdbcType=INTEGER} AND
+			</if>
+			<if test="assetId != null">
+				alr.assetId = #{assetId, jdbcType=INTEGER} AND
+			</if>
+			<if test="leakId != null">
+				alr.leakId = #{leakId, jdbcType=INTEGER} AND
+			</if>
+			<if test="effectiveFrom != null">
+				<![CDATA[ alr.effectiveFrom <= #{effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+			</if>
+			<if test="effectiveTo != null">
+				<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+			</if>
+			<if test="disabled != null">
+				alr.disabled = #{disabled, jdbcType=BIT} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				alr.createBy = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				alr.createTime = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				alr.updateBy = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				alr.updateTime = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from af_industry_asset_leak_relation as alr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					alr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectId != null">
+					alr.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetId != null">
+					alr.assetId = #{model.assetId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakId != null">
+					alr.leakId = #{model.leakId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ alr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.disabled != null">
+					alr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					alr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					alr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					alr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					alr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					alr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					alr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where> <include refid="sql_pageable_limit" />
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from af_industry_asset_leak_relation as alr
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.id != null">
+					alr.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectId != null">
+					alr.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetId != null">
+					alr.assetId = #{model.assetId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakId != null">
+					alr.leakId = #{model.leakId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ alr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (alr.effectiveTo is null or alr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.disabled != null">
+					alr.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					alr.createBy = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					alr.createTime = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					alr.updateBy = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					alr.updateTime = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					alr.createBy like CONCAT("%", #{fuzzy}, "%") or
+					alr.updateBy like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <select id="selectProjectAssetLeakBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="com.dp.plat.pms.springmvc.vo.ProjectAssetLeakVO">
+    select 
+	    alr.id, l.id as leakId,
+	    JSON_SET(IFNULL(l.`customInfo`, "{}"), '$.statusName', bd.basicDataName, '$.trackStatusName', bd2.basicDataName ) as customInfo,
+	    l.*, ph.projectId, ia.id as assetId, ia.assetName, ph.projectName<!-- , 
+	    bd.basicDataName as `customInfo.statusName`, bd1.basicDataName as `customInfo.trackStatusName`  -->
+	from
+	    `af_industry_asset_leak_relation` alr 
+	    left join `af_industry_leak` l 
+	        on alr.`leakId` = l.`id` 
+	        and alr.`disabled` = false 
+	        and l.`disabled` = false 
+	    left join af_industry_asset as ia 
+	        on ia.`id` = alr.`assetId` 
+	        and alr.`disabled` = false 
+	        and ia.`disabled` = false 
+	    left join af_industry_asset_project_relation apr 
+	        on apr.assetId = ia.id 
+	        and ia.disabled = false 
+	    left join `pm_project` ph 
+	        on ph.`projectId` = apr.`projectId` 
+	        and ph.`projectId` = alr.`projectId`
+	        and alr.`disabled` = false 
+	        and apr.`disabled` = false 
+	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+	    left join `fnd_basic_data` bd 
+	        on l.`status` = bd.`basicDataId` 
+	        and bd.`dataTypeCode` = 'processStatus'
+	    left join `fnd_basic_data` bd2 
+	        on l.`trackStatus` = bd2.`basicDataId` 
+	        and bd2.`dataTypeCode` = 'trackStatus' 
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.projectId != null">
+					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectName != null">
+					ph.projectName like CONCAT("%", #{model.projectName}, "%") AND
+				</if>
+				<if test="model.projectType != null">
+					ph.projectType = #{model.projectType} AND
+				</if>
+				<if test="model.assetId != null">
+					ia.id = #{model.assetId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetName != null">
+					ia.assetName like #{model.assetName, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+					<![CDATA[ apr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+					<![CDATA[ (apr.effectiveTo is null or apr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.id != null">
+					l.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakCode != null and '' != model.leakCode">
+					l.leakCode = #{model.leakCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakName != null and '' != model.leakName">
+					l.leakName = #{model.leakName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakType != null and '' != model.leakType">
+					l.leakType = #{model.leakType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakLevel != null and '' != model.leakLevel">
+					l.leakLevel = #{model.leakLevel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakDesc != null and '' != model.leakDesc">
+					l.leakDesc = #{model.leakDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakSourceInfo != null and '' != model.leakSourceInfo">
+					l.leakSourceInfo = #{model.leakSourceInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					l.remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null">
+					l.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					l.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					l.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.assetIds != null and '' != model.assetIds">
+					l.assetIds = #{model.assetIds, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					l.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					l.leakCode like CONCAT("%", #{fuzzy}, "%") or
+					l.leakName like CONCAT("%", #{fuzzy}, "%") or
+					l.leakType like CONCAT("%", #{fuzzy}, "%") or
+					l.leakLevel like CONCAT("%", #{fuzzy}, "%") or
+					l.leakDesc like CONCAT("%", #{fuzzy}, "%") or
+					l.leakSourceInfo like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetNum like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetName like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetCategory like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetType like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetHost like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOpenPorts like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDeployInfo like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetUsage like CONCAT("%", #{fuzzy}, "%") or
+					ia.customerName like CONCAT("%", #{fuzzy}, "%") or
+					ia.industryCode like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					ia.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					ia.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectName like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by apr.projectId, ia.id desc
+    </if>
+    <if test="start != null and pageSize != -1">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+	    <!-- `af_industry_leak` l 
+	    left join af_industry_asset as ia 
+	        on 
+	        <![CDATA[
+	        ia.`id` in 
+	        (select 
+	            substring_index(
+	                substring_index(l.`assetIds`, ',', b.id + 1), ',', - 1
+	            ) as assetId 
+	        from
+	            FIND_IN_SET_HELP b 
+	        where b.id < (
+	                length(l.assetIds) - length(replace(l.assetIds, ',', '')) + 1
+	            )) 
+            ]]>
+	        and ia.`disabled` = false  -->
+  <select id="countProjectAssetLeakBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+	select 
+	    count(1)
+	from
+	    `af_industry_asset_leak_relation` alr 
+	    left join `af_industry_leak` l 
+	        on alr.`leakId` = l.`id` 
+	        and alr.`disabled` = false 
+	        and l.`disabled` = false 
+	    left join af_industry_asset as ia 
+	        on ia.`id` = alr.`assetId` 
+	        and alr.`disabled` = false 
+	        and ia.`disabled` = false 
+	    left join af_industry_asset_project_relation apr 
+	        on apr.assetId = ia.id 
+	        and ia.disabled = false 
+	    left join `pm_project` ph 
+	        on ph.`projectId` = apr.`projectId` 
+	        and apr.`disabled` = false 
+	        and IFNULL(apr.`effectiveTo`, "9999-12-31") > now() 
+	<where>
+		<trim prefixOverrides=" and | or " suffixOverrides=" and | or ">
+			<if test="model != null ">
+				<if test="model.projectId != null">
+					ph.projectId = #{model.projectId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.projectName != null">
+					ph.projectName like CONCAT("%", #{model.projectName}, "%") AND
+				</if>
+				<if test="model.projectType != null">
+					ph.projectType = #{model.projectType} AND
+				</if>
+				<if test="model.assetId != null">
+					ia.id = #{model.assetId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.assetName != null">
+					ia.assetName like #{model.assetName, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.effectiveFrom != null">
+					<![CDATA[ ph.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+					<![CDATA[ apr.effectiveFrom <= #{model.effectiveFrom, jdbcType=TIMESTAMP} ]]> AND
+				</if>
+				<if test="model.effectiveTo != null">
+					<![CDATA[ (ph.effectiveTo is null or ph.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+					<![CDATA[ (apr.effectiveTo is null or apr.effectiveTo >= #{model.effectiveTo, jdbcType=TIMESTAMP}) ]]> AND
+				</if>
+				<if test="model.id != null">
+					l.id = #{model.id, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.leakCode != null and '' != model.leakCode">
+					l.leakCode = #{model.leakCode, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakName != null and '' != model.leakName">
+					l.leakName = #{model.leakName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakType != null and '' != model.leakType">
+					l.leakType = #{model.leakType, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakLevel != null and '' != model.leakLevel">
+					l.leakLevel = #{model.leakLevel, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakDesc != null and '' != model.leakDesc">
+					l.leakDesc = #{model.leakDesc, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.leakSourceInfo != null and '' != model.leakSourceInfo">
+					l.leakSourceInfo = #{model.leakSourceInfo, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.remark != null and '' != model.remark">
+					l.remark = #{model.remark, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.status != null">
+					l.status = #{model.status, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackStatus != null">
+					l.trackStatus = #{model.trackStatus, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.trackedTime != null">
+					l.trackedTime = #{model.trackedTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.disabled != null">
+					l.disabled = #{model.disabled, jdbcType=BIT} AND
+				</if>
+				<if test="model.assetIds != null and '' != model.assetIds">
+					l.assetIds = #{model.assetIds, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.customInfo != null">
+					l.customInfo = #{model.customInfo, jdbcType=JSON} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					l.leakCode like CONCAT("%", #{fuzzy}, "%") or
+					l.leakName like CONCAT("%", #{fuzzy}, "%") or
+					l.leakType like CONCAT("%", #{fuzzy}, "%") or
+					l.leakLevel like CONCAT("%", #{fuzzy}, "%") or
+					l.leakDesc like CONCAT("%", #{fuzzy}, "%") or
+					l.leakSourceInfo like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetNum like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetName like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetCategory like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetType like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetHost like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOpenPorts like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDeployInfo like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetUsage like CONCAT("%", #{fuzzy}, "%") or
+					ia.customerName like CONCAT("%", #{fuzzy}, "%") or
+					ia.industryCode like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetAS like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASIdentify like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetASFramework like CONCAT("%", #{fuzzy}, "%") or
+					ia.middlewareName like CONCAT("%", #{fuzzy}, "%") or
+					ia.middlewareVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.developerBrand like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOS like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetOSVersion like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDB like CONCAT("%", #{fuzzy}, "%") or
+					ia.assetDBVersion like CONCAT("%", #{fuzzy}, "%") or
+					ph.projectName like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  	<update id="invalidProjectAssetLeakRelation" parameterType="com.dp.plat.pms.springmvc.entity.IndustryAssetLeakRelation">
+	  	update af_industry_asset_leak_relation
+	    set disabled = true, effectiveTo = now()
+	    where disabled = false
+	    <if test="projectId != null"> and projectId = #{projectId} </if>
+	    <if test="assetId != null"> and assetId = #{assetId} </if>
+	    <if test="leakId != null"> and leakId = #{leakId} </if>
+	    <if test="id != null"> and id = #{id} </if>
+  	</update>
+</mapper>

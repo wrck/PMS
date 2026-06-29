@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.mapper.SysUserMapper">
+
+    <!-- 用户列表查询（关联部门和角色） -->
+    <select id="selectUserPage" resultType="com.dp.plat.model.vo.UserVO">
+        SELECT
+            u.id,
+            u.username,
+            u.realName AS realname,
+            u.email,
+            u.dpNo AS deptCode,
+            d.departmentName AS deptName,
+            u.roleIds,
+            u.status,
+            u.defaultPage,
+            u.createTime,
+            u.updateTime,
+            u.pwdoverdue AS pwdOverdue
+        FROM fnd_user_info u
+        LEFT JOIN fnd_department d ON d.departmentNum = u.dpNo
+        <where>
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="realname != null and realname != ''">
+                AND u.realName LIKE CONCAT('%', #{realname}, '%')
+            </if>
+        </where>
+        ORDER BY u.createTime DESC
+    </select>
+
+    <!-- 根据用户名查询用户（登录用） -->
+    <select id="selectByUsername" resultType="com.dp.plat.model.entity.SysUser">
+        SELECT
+            id, username, password, email,
+            realName AS realname, status, dpNo AS deptCode,
+            roleIds, pwdoverdue AS pwdOverdue,
+            defaultPage, isemail AS isEmail, customInfo
+        FROM fnd_user_info
+        WHERE username = #{username}
+    </select>
+
+    <!-- 查询用户权限菜单 -->
+    <select id="selectUserMenuMap" resultType="java.util.HashMap">
+        SELECT menuCode, menuValue
+        FROM fnd_user_menus
+        WHERE fnd_user_id = #{userId}
+          AND effectiveFrom &lt; NOW()
+          AND (effectiveTo > NOW() OR effectiveTo IS NULL)
+    </select>
+
+    <!-- 查询用户默认首页 -->
+    <select id="selectUserDefaultPage" resultType="java.lang.String">
+        SELECT b.path
+        FROM fnd_user_info a
+        LEFT JOIN fnd_menus b ON a.defaultPage = b.path
+        WHERE a.id = #{userId}
+    </select>
+</mapper>

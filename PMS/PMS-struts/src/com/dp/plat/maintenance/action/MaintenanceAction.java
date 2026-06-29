@@ -1,0 +1,765 @@
+package com.dp.plat.maintenance.action;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.beans.BeanUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.dp.plat.action.BaseAction;
+import com.dp.plat.context.UserContext;
+import com.dp.plat.data.bean.BasicDataBean;
+import com.dp.plat.data.bean.Company;
+import com.dp.plat.data.bean.Department;
+import com.dp.plat.data.bean.PmClQuesnaireResultHeader;
+import com.dp.plat.data.bean.PmClQuesnaireResultLine;
+import com.dp.plat.data.bean.PmClosedLoopQuesnaire;
+import com.dp.plat.data.bean.Presales;
+import com.dp.plat.data.bean.Project;
+import com.dp.plat.data.bean.ProjectDeliver;
+import com.dp.plat.data.bean.User;
+import com.dp.plat.maintenance.vo.ProjectMaintenanceVO;
+import com.dp.plat.param.DisplayParam;
+import com.dp.plat.param.FileParam;
+import com.dp.plat.service.BasicDataService;
+import com.dp.plat.service.DepartmentManageService;
+import com.dp.plat.service.PresalesService;
+import com.dp.plat.service.ProjectService;
+import com.dp.plat.util.MessageUtil;
+import com.dp.plat.util.QuestionnarieUtil;
+import com.opensymphony.xwork2.Preparable;
+
+public class MaintenanceAction extends BaseAction implements Preparable {
+    private static final long serialVersionUID = 1L;
+
+    // 全局变量
+    private User user;
+
+    private ProjectService projectService;
+    private PresalesService presalesService;
+    private DepartmentManageService departmentManageService;
+    private BasicDataService basicDataService;
+
+    private List<Company> companyList;
+    private List<Department> departmentList;
+    private DisplayParam displayParam;
+    private Project project;
+    private Presales presales;
+    private String redirect;
+    private String result;
+    private String message;
+
+    // 附件上传
+    private ProjectDeliver projectDeliver;
+    private List<ProjectDeliver> projectDeliverList;
+    
+    // 项目维护记录
+    private ProjectMaintenanceVO projectMaintenance;
+    private List<ProjectMaintenanceVO> maintenanceList;
+    private List<Map<String, Object>> maintenanceMapList;
+
+    private List<PmClosedLoopQuesnaire> pmClosedLoopQuesnaireList;
+
+    private PmClosedLoopQuesnaire pmClosedLoopQuesnaire;
+
+    private PmClQuesnaireResultHeader pmClQuesnaireResultHeader;
+
+    private Map<String, Object> cbForm;
+
+    private List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList;
+
+    private List<BasicDataBean> maintenanceTypeList;
+    private List<BasicDataBean> projectExecutionStateList;
+
+    @Override
+    public void prepare() throws Exception {
+    }
+    
+    public void prepareExecute() {
+    	// 所属公司
+    	companyList = departmentManageService.queryCompanyList(null);
+    	
+        // 办事处集合
+        departmentList = departmentManageService.queryDepartments();
+
+        // 项目分类
+        maintenanceTypeList = basicDataService.queryBasicDataBeans("maintenanceType");
+        
+        // 项目分类，项目小类
+        cbForm = new HashMap<>();
+        List<Map<String, Object>> categoryWithSubMap = basicDataService.queryBasicDataBeanMapWithSub("maintenanceCategory", "maintenanceSubCategory", null);
+        cbForm.put("categoryWithSubMap", categoryWithSubMap);
+    }
+
+    /**
+     * 项目列表页面
+     */
+    public String execute() throws Exception {
+    	user = UserContext.getUserContext().getUser();
+        if (projectMaintenance == null) {
+            projectMaintenance = new ProjectMaintenanceVO();
+        }
+        if (displayParam == null) {
+            displayParam = new DisplayParam();
+        }
+        displayParam.getParam();
+        if (!displayParam.getExport()) {
+            projectMaintenance.setHideQuesnaire(true);
+            
+            Boolean hasReport = projectMaintenance.getHasReport();
+            Boolean hideFiles = true;
+            if (Boolean.TRUE.equals(hasReport) && user.isHasRole(MessageUtil.ROLE_CALLBACKPER)) {
+            	hideFiles = false;
+            } else if (Boolean.TRUE.equals(hasReport) && StringUtils.isNotBlank(projectMaintenance.getDeliverFiles())) {
+            	hideFiles = false;
+            }
+            projectMaintenance.setHideFiles(hideFiles);
+            
+			Boolean hideWarranty = true;
+			if (StringUtils.isNotBlank(projectMaintenance.getQueryWarrantyStatus())
+					|| StringUtils.isNotBlank(projectMaintenance.getQueryWarrantyGrade())
+					|| StringUtils.isNotBlank(projectMaintenance.getQueryWafService())) {
+				hideWarranty = false;
+			}
+            projectMaintenance.setHideWarranty(hideWarranty);
+        }
+        projectMaintenance();
+        return SUCCESS;
+    }
+
+    /**
+     * 获取项目维护记录
+     * 
+     * @return
+     */
+    public String projectMaintenance() {
+        user = UserContext.getUserContext().getUser();
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER)
+                || user.isHasAnyRole(MessageUtil.ROLE_PROJECT_ADMIN, MessageUtil.ROLE_PROJECT_VIEWER))) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+        if (projectMaintenance != null) {
+            String officeCode = StringUtils.trimToEmpty(projectMaintenance.getOfficeCode());
+            if (Integer.valueOf(10).equals(projectMaintenance.getProjectType())) {
+                if (projectMaintenance.getProjectId() != null) {
+                    project = projectService.queryProjectSimplifyByProjectId(projectMaintenance.getProjectId());
+                }
+                if (project != null) {
+                    officeCode = StringUtils.trimToEmpty(project.getColumn001());
+                    projectMaintenance.setOfficeCode(officeCode);
+                    projectMaintenance.setProjectName(project.getProjectName());
+//                    projectMaintenance.setHideWarranty(false);
+                }
+                if (user.getAreapower().contains(officeCode) && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
+                        || (project != null && (user.getUsername().equals(project.getServiceManagerCode()) || user.getUsername().equals(project.getProgramManagerCode())
+                                || user.getUsername().equals(project.getProgramManagerCodeB())
+                                || StringUtils.contains(project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", ""))))) {
+                    projectMaintenance.setHasPower(true);
+                }
+            } else if (Integer.valueOf(20).equals(projectMaintenance.getProjectType())) {
+                if (projectMaintenance.getProjectId() != null) {
+                    presales = presalesService.queryPresalesById(projectMaintenance.getProjectId());
+                }
+                if (presales != null) {
+                    officeCode = StringUtils.trimToEmpty(presales.getOfficeCode());
+                    projectMaintenance.setOfficeCode(officeCode);
+                    projectMaintenance.setProjectName(presales.getProjectName());
+                }
+                if (user.getAreapower().contains(officeCode) && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER) || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER))
+                        || (presales != null && (user.getUsername().equals(presales.getServiceManager()) 
+                                || user.getUsername().equals(presales.getProjectManager())))) {
+                    projectMaintenance.setHasPower(true);
+                }
+            }
+            // maintenanceList =
+            // projectService.selectProjectMaintenanceVOList(projectMaintenance);
+            if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                    || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))) {
+                projectMaintenance.setAreaPower(user.getAreapower());
+                projectMaintenance.setUserPower(user.getUsername());
+                
+                // 用户为服务经理时判断服务经理的人员权限
+                if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
+                	projectMaintenance.setCheckServicePower(true);
+                }
+            }
+            maintenanceMapList = projectService.selectProjectMaintenanceMapList(projectMaintenance, displayParam);
+            // 设置最新维护记录的id，用于修改时更新项目实施状态
+            if (!maintenanceMapList.isEmpty()) {
+                Map<String, Object> map = maintenanceMapList.get(0);
+                projectMaintenance.setMaxId((Integer) map.get("id"));
+            }
+            // 在售后项目中查询维护记录，设置当前项目实施状态
+            if (project != null && (projectMaintenance.isHasPower()
+                    || (user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                            || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                            || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN)))) {
+                projectExecutionStateList = basicDataService.queryBasicDataBeans("projectExecutionState");
+                projectMaintenance.setProjectExecutionState(project.getExecutionState());
+            }
+        } else {
+            maintenanceList = new ArrayList<>();
+            maintenanceMapList = new ArrayList<>();
+        }
+        return SUCCESS;
+    }
+
+    public String createProjectMaintenance() {
+        user = UserContext.getUserContext().getUser();
+        String category = projectMaintenance != null ? projectMaintenance.getCategory() : "";
+        Integer maxId = projectMaintenance != null ? projectMaintenance.getMaxId() != null ? projectMaintenance.getMaxId() : 0 : 0;
+        Integer projectType = projectMaintenance != null ? projectMaintenance.getProjectType() : null; // 售后：10，售前：20，非业务：30，自定义：40
+        // 非业务类录入，跟项目无关，自定义录入系统没有关联的实际项目
+        if (!("nonBusiness".equals(category) || Integer.valueOf(40).equals(projectType))) {
+            if ((project == null || project.getProjectId() == 0) && (presales == null || presales.getPresalesId() == 0)) {
+                setErrmsg("非法操作！");
+                return ERROR;
+            }
+            if (project != null) {
+                project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
+				if (project == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+						|| user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+						|| user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))
+						|| (user.getAreapower().contains(StringUtils.trimToEmpty(project.getColumn001()))
+								&& (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+										|| user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
+										|| user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)))
+						|| (project != null && (user.getUsername().equals(project.getServiceManagerCode())
+								|| user.getUsername().equals(project.getProgramManagerCode())
+								|| user.getUsername().equals(project.getProgramManagerCodeB()) || StringUtils.contains(
+										project.getTeamMemberCodes(), user.getUsername().replaceFirst("\\w", "")))))) {
+					setErrmsg("没有访问权限！");
+					return ERROR;
+				}
+                projectType = 10;
+            } else if (presales != null) {
+                presales = presalesService.queryPresalesById(presales.getPresalesId());
+                if (presales == null || !((user.isHasRole(MessageUtil.ROLE_ADMIN)
+                        || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                        || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                        || user.isHasRole(MessageUtil.ROLE_PRESALES_STAFF))
+                        || (user.getAreapower().contains(StringUtils.trimToEmpty(presales.getOfficeCode()))
+                                && (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                                        || user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER)
+                                        || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER)))
+                        || (presales != null && (user.getUsername().equals(presales.getServiceManager())
+                                || user.getUsername().equals(presales.getProjectManager()))))) {
+                    setErrmsg("没有访问权限！");
+                    return ERROR;
+                }
+                projectType = 20;
+            }
+        } else {
+            if (project == null) {
+                project = new Project(-1);
+            } else if (project.getProjectId() > 0) {
+                project = projectService.queryProjectSimplifyByProjectId(project.getProjectId());
+            }
+            if (presales == null) {
+                presales = new Presales(-1);
+            } else if (presales.getPresalesId() > 0){
+                presales = presalesService.queryPresalesById(presales.getPresalesId());
+            }
+            if ("nonBusiness".equals(category)) {
+                projectType = 30; // 非业务类
+            }
+        }
+       
+
+        if (projectMaintenance == null || projectMaintenance.getProjectId() == null) {
+            Integer quesnaireId = null;
+            if (projectMaintenance != null && projectMaintenance.getId() != null) {
+                projectMaintenance = projectService.selectProjectMaintenanceById(projectMaintenance.getId());
+                quesnaireId = projectMaintenance.getQuesnaireId();
+            }
+            if ("isCopy".equals(message)) {
+                projectMaintenance.setId(null);
+                projectMaintenance.setDeliverFileIds(null);
+                projectMaintenance.setCustomInfo(null);
+                quesnaireId = null;
+            }
+            
+            if (!"nonBusiness".equals(category)) {
+                // 除非业务类外，其他都需要填维护问卷
+                PmClosedLoopQuesnaire quesObj = new PmClosedLoopQuesnaire();
+                quesObj.setQuesType("projectMaintenance");
+                // 获取生效的问卷分类
+                pmClosedLoopQuesnaireList = QuestionnarieUtil.findPmClosedLoopQuesnaireList(quesObj);
+                if (pmClosedLoopQuesnaireList != null && !pmClosedLoopQuesnaireList.isEmpty() && pmClosedLoopQuesnaire == null) {
+                    pmClosedLoopQuesnaire = pmClosedLoopQuesnaireList.get(0);
+                }
+                // 获取问卷模板的内容或者已填写的问卷内容
+                if ((pmClosedLoopQuesnaire != null && pmClosedLoopQuesnaire.getId() != 0) || (projectMaintenance != null && quesnaireId != null && !Integer.valueOf(0).equals(quesnaireId))) {
+                    int quesnaireState = 0;
+                    cbForm = QuestionnarieUtil.getCbForm(quesnaireId, pmClosedLoopQuesnaire, pmClQuesnaireResultHeader, quesnaireState);
+                }
+            }
+            if (cbForm == null) {
+                cbForm = new HashMap<>();
+            }
+            companyList = departmentManageService.queryCompanyList(null);
+            // 办事处集合
+            departmentList = departmentManageService.queryDepartments();
+            maintenanceTypeList = basicDataService.queryBasicDataBeans("maintenanceType");
+            projectExecutionStateList = basicDataService.queryBasicDataBeans("projectExecutionState");
+            
+            Map<String, Object> extra = new HashMap<>();
+            extra.put("dataAttr", projectType);
+            List<Map<String, Object>> categoryWithSubMap = basicDataService.queryBasicDataBeanMapWithSub("maintenanceCategory", "maintenanceSubCategory", extra);
+            cbForm.put("categoryWithSubMap", categoryWithSubMap);
+            cbForm.put("currentDateTime", new Date());
+            if (projectMaintenance == null) {
+                projectMaintenance = new ProjectMaintenanceVO();
+                projectMaintenance.setProjectType(projectType);
+                projectMaintenance.setHasReport(false);
+                projectMaintenance.setProjectExecutionState(project != null ? project.getExecutionState() : null);
+            } else if (projectMaintenance.getId() == null) {
+                projectMaintenance.setProjectType(projectType);
+                projectMaintenance.setHasReport(false);
+                projectMaintenance.setProjectExecutionState(project != null ? project.getExecutionState() : null);
+            }
+            projectMaintenance.setMaxId(maxId);
+            
+            if (project != null) {
+	            // 查询项目维保状态和维保级别、增值服务等
+	            Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
+	            projectMaintenance.setWarrantyState(warrantyState);
+            }
+        } else {
+            if (projectMaintenance.getId() != null) {
+                // 判断是否本人操作
+                ProjectMaintenanceVO oldPM = projectService.selectProjectMaintenanceById(projectMaintenance.getId());
+                if (oldPM != null && !oldPM.getCreateBy().equals(user.getUsername())) {
+                    return "redirect";
+                }
+            }
+            // 问卷提交
+            if (pmClQuesnaireResultHeader != null && pmClQuesnaireResultHeader.getStatus() != 0) {
+                if (pmClQuesnaireResultHeader.getStatus() == 1) {// 已提交，计算分数
+                    QuestionnarieUtil.queryQuesnaireScore(pmClosedLoopQuesnaire, pmClQuesnaireResultHeader, pmClQuesnaireResultLineList);
+                }
+                // 每次保存问卷草稿或提交问卷都会重新生成一份数据保存在数据库
+                pmClQuesnaireResultHeader.setStatus(1);
+                int quesnaireId = QuestionnarieUtil.addQuestionnaireResult(pmClQuesnaireResultHeader, pmClQuesnaireResultLineList);
+                projectMaintenance.setQuesnaireId(quesnaireId);
+            }
+            Integer projectId = -1;
+            String projectCode = projectMaintenance.getProjectCode(),
+                    projectName = projectMaintenance.getProjectName(),
+                    officeCode = projectMaintenance.getOfficeCode(),
+                    compId = projectMaintenance.getCompId();
+            if (Integer.valueOf(10).equals(projectType) || (project != null && project.getProjectId() > 0)) {
+                projectId = project.getProjectId();
+                projectCode = project.getProjectCode();
+                projectName = project.getProjectName();
+                officeCode = project.getColumn001();
+                compId = StringUtils.defaultIfBlank(project.getCompId(), compId);
+            } else if (Integer.valueOf(20).equals(projectType) || (presales != null && presales.getPresalesId() > 0)) {
+                projectId = presales.getPresalesId();
+                projectCode = presales.getPresalesCode();
+                projectName = presales.getProjectName();
+                officeCode = presales.getOfficeCode();
+            }
+            projectMaintenance.setProjectId(projectId);
+            projectMaintenance.setProjectCode(projectCode);
+            projectMaintenance.setProjectName(projectName);
+            projectMaintenance.setOfficeCode(officeCode);
+            projectMaintenance.setProjectType(projectType);
+            projectMaintenance.setCompId(compId);
+
+            if (project != null) {
+	            // 查询项目维保状态和维保级别、增值服务等
+	            Map<String, Object> warrantyState = projectService.queryProjectWarrantyState(project.getProjectId());
+	            projectMaintenance.setWarrantyState(warrantyState);
+            }
+            
+            projectService.insertOrUpdateProjectMaintenance(projectMaintenance);
+            
+            // 新增和最新记录时更新项目实施状态
+            if (project != null && Integer.valueOf(10).equals(projectType) && (maxId.equals(projectMaintenance.getId()) || maxId.equals(0))) {
+                // 避免前端没有及时刷新，导致原来的maxId已经失效的问题，进行重新查询检验
+                Integer nowMaxId = projectService.selectSingleProjectMaintenanceMaxId(projectMaintenance);
+                if(nowMaxId.equals(projectMaintenance.getId()) || nowMaxId.equals(0) || maxId.equals(0)) {
+                    project.setCustomInfoByKey("maintenance", projectMaintenance);
+                    projectService.updateProjectExecutionState(project, projectMaintenance.getProjectExecutionState());
+                }
+            }
+            
+            if(projectDeliverList != null && projectDeliverList.size() > 0){
+                String[] deliverIds = projectDeliver.getDeliverId().split(",");
+                projectDeliver.setProjectId(projectMaintenance.getId());
+                projectDeliver.setContractNo(String.valueOf(projectMaintenance.getProjectId()));
+//                projectDeliver.setProjectId(projectMaintenance.getProjectId());
+//                projectDeliver.setContractNo(String.valueOf(projectMaintenance.getId()));
+//                projectDeliver.setDataTypeCode(projectMaintenance.getCategory());
+//                projectDeliver.setBasicDataId(projectMaintenance.getSubCategory());
+                
+                projectDeliver.setProjectType(String.valueOf(projectMaintenance.getProjectType() + 1));
+                for(int i = 0;i < projectDeliverList.size();i++){
+                	ProjectDeliver deliverFile = projectDeliverList.get(i);
+    				if(deliverFile == null || deliverFile.getUploaddelivery() == null || deliverFile.getUploaddelivery().length == 0){
+    					continue;
+    				}
+    				ProjectDeliver deliver = new ProjectDeliver();
+                    BeanUtils.copyProperties(projectDeliver, deliver);
+                    String deliverableType = deliverFile.getDeliverableType();
+                    if (StringUtils.isNotBlank(deliverableType)) {
+                        String[] splits = StringUtils.split(deliverableType, ",");
+                        deliverableType = splits[0];
+                    }
+                    deliver.setDeliverableType(deliverableType);
+                    projectService.uploadMaintenanceFile(projectMaintenance, deliver, deliverIds[i], deliverFile);
+                }
+                projectService.insertOrUpdateProjectMaintenance(projectMaintenance);
+            }
+            return "redirect";
+        }
+        return SUCCESS;
+    }
+    
+    public String serviceDelivery() throws Exception {
+    	user = UserContext.getUserContext().getUser();
+        if (!(user.isHasRole(MessageUtil.ROLE_PROGRAMMANAGER) || user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER)
+                || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_AREA_LEADER)
+                || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN) || user.isHasRole(MessageUtil.ROLE_PROJECT_VIEWER))) {
+            setErrmsg("没有访问权限！");
+            return ERROR;
+        }
+    	if (displayParam == null) {
+    		displayParam = new DisplayParam();
+    	}
+    	displayParam.getParam();
+    	companyList = departmentManageService.queryCompanyList(null);
+    	// 办事处集合
+        departmentList = departmentManageService.queryDepartments();
+        
+        if (projectMaintenance == null) {
+        	projectMaintenance = new ProjectMaintenanceVO();
+        }
+        if (projectMaintenance.getServiceDate() == null) {
+        	projectMaintenance.setServiceDate(new Date());
+        }
+        // 默认查询当前服务季度
+        if (projectMaintenance.getServiceQuarter() == null) {
+        	projectMaintenance.setServiceQuarter(true);
+        }
+        
+	    // maintenanceList =
+	    // projectService.selectProjectMaintenanceVOList(projectMaintenance);
+	    if (!(user.isHasRole(MessageUtil.ROLE_ADMIN) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER) || user.isHasRole(MessageUtil.ROLE_ENGINEEMANAGER_LEADER)
+	            || user.isHasRole(MessageUtil.ROLE_CALLBACKPER) || user.isHasRole(MessageUtil.ROLE_PROJECT_ADMIN))) {
+	        projectMaintenance.setAreaPower(user.getAreapower());
+//	        projectMaintenance.setUserPower(user.getUsername());
+//	        
+//	        // 用户为服务经理时判断服务经理的人员权限
+//	        if (user.isHasRole(MessageUtil.ROLE_SERVICEMANAGER)) {
+//	        	projectMaintenance.setCheckServicePower(true);
+//	        }
+	    }
+	    
+    	maintenanceMapList = projectService.selectProjectMaintenanceServiceDeliveryList(projectMaintenance, displayParam);
+//		return "serviceDelivery";
+		return SUCCESS;
+    }
+    
+    public String toUploadFile() {
+        String ek = null;
+        try{
+            ek = projectDeliver.getEventKey();//获取事件节点
+            String[] eksplit = ek.split("-");
+            projectDeliver.setDataTypeCode(eksplit[0]);
+            if (eksplit.length > 1) {
+                projectDeliver.setBasicDataId(eksplit[1]);
+            }
+            String projectTypes = StringUtils.trimToEmpty(projectDeliver.getColumn011());
+            if (StringUtils.isNotBlank(projectTypes)) {
+            	projectDeliverList = new ArrayList<>();
+            	Set<String> deliverKeys = new HashSet<>();
+	            String[] projectTypeArr = StringUtils.split(projectTypes, ",");
+	            for (String projectType : projectTypeArr) {
+	            	projectDeliver.setColumn011(projectType);
+	            	List<ProjectDeliver> list = projectService.queryProjectDeliverList(projectDeliver);
+	            	for (ProjectDeliver projectDeliver : list) {
+	            		String dataTypeCodeSon = projectDeliver.getDataTypeCodeSon();
+	            		String basicDataIdSon = projectDeliver.getBasicDataIdSon();
+	            		String deliverKey = StringUtils.join(new String[]{dataTypeCodeSon, basicDataIdSon}, "-");
+	            		if (!deliverKeys.contains(deliverKey)) {
+	            			projectDeliverList.add(projectDeliver);
+	            		}
+					}
+				}
+            } else {
+            	projectDeliverList = projectService.queryProjectDeliverList(projectDeliver);
+            }
+        }catch(Exception e){
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+//        if(upload == null){
+//            return INPUT;
+//        }
+//        try {
+//            String path = UPLOAD_PATH +seq+ Util.getRandNumber();
+//            UploadFileUtil.upload(upload, path, uploadFileName);
+//            String fileIds =  basicDataService.insertFileInfo(seq + path + seq, uploadFileName);
+//            HttpSession session = getServletRequest().getSession();
+//            session.setAttribute("fileIds", fileIds);
+//            this.fileIds = fileIds;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return SUCCESS;
+    }
+    
+    public String uploadFileList() {
+    	try {
+    		HashMap<String, Object> jsonMap = new HashMap<>();
+    		String deliverFileIds = projectMaintenance.getDeliverFileIds();
+    		Integer id = projectMaintenance.getId();
+    		Integer projectType = projectMaintenance.getProjectType();
+    		if ("commonUpload".equals(message) && StringUtils.isNotBlank(deliverFileIds)) {
+    			List<FileParam> fileList = basicDataService.queryFileList(deliverFileIds);
+//    			projectDeliverList = new ArrayList<ProjectDeliver>();
+//    			for (FileParam fileParam : fileList) {
+//    				ProjectDeliver deliver = new ProjectDeliver();
+//    				deliver.setDeliverableName(fileParam.getFileName());
+//    				deliver.setDeliverablePath(fileParam.getFilePath());
+//    				deliver.setDeliverableType(fileParam.getFileType());
+//    				deliver.setUploadUser(fileParam.getUploadBy());
+//    				deliver.setUploadTime(fileParam.getUploadTime());
+//    				projectDeliverList.add(deliver);
+//				}
+    			jsonMap.put("fileList", fileList);
+    		} else if ("returnForm".equals(message) && id != null && projectType != null) {
+    			projectDeliverList = projectService.queryDeliverDetailByProjectIdAndProjectType(id, String.valueOf(projectType + 1));
+    			jsonMap.put("projectDeliverList", projectDeliverList);
+    		}
+    		jsonMap.put("id", id);
+    		jsonMap.put("type", message);
+    		jsonMap.put("deliverFileIds", deliverFileIds);
+    		jsonMap.put("projectType", projectType);
+    		result = JSON.toJSONString(jsonMap);
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrmsg(ExceptionUtils.getStackTrace(e));
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+
+    public ProjectService getProjectService() {
+        return projectService;
+    }
+
+    public void setProjectService(ProjectService projectService) {
+        this.projectService = projectService;
+    }
+
+    public PresalesService getPresalesService() {
+        return presalesService;
+    }
+
+    public void setPresalesService(PresalesService presalesService) {
+        this.presalesService = presalesService;
+    }
+
+    public List<Company> getCompanyList() {
+		return companyList;
+	}
+
+	public void setCompanyList(List<Company> companyList) {
+		this.companyList = companyList;
+	}
+
+	public DepartmentManageService getDepartmentManageService() {
+        return departmentManageService;
+    }
+
+    public void setDepartmentManageService(DepartmentManageService departmentManageService) {
+        this.departmentManageService = departmentManageService;
+    }
+
+    public BasicDataService getBasicDataService() {
+        return basicDataService;
+    }
+
+    public void setBasicDataService(BasicDataService basicDataService) {
+        this.basicDataService = basicDataService;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public DisplayParam getDisplayParam() {
+        return displayParam;
+    }
+
+    public void setDisplayParam(DisplayParam displayParam) {
+        this.displayParam = displayParam;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    public Presales getPresales() {
+        return presales;
+    }
+
+    public void setPresales(Presales presales) {
+        this.presales = presales;
+    }
+
+    public List<Department> getDepartmentList() {
+        return departmentList;
+    }
+
+    public void setDepartmentList(List<Department> departmentList) {
+        this.departmentList = departmentList;
+    }
+
+    public String getRedirect() {
+        return redirect;
+    }
+
+    public void setRedirect(String redirect) {
+        this.redirect = redirect;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public ProjectDeliver getProjectDeliver() {
+        return projectDeliver;
+    }
+
+    public void setProjectDeliver(ProjectDeliver projectDeliver) {
+        this.projectDeliver = projectDeliver;
+    }
+
+    public List<ProjectDeliver> getProjectDeliverList() {
+        return projectDeliverList;
+    }
+
+    public void setProjectDeliverList(List<ProjectDeliver> projectDeliverList) {
+        this.projectDeliverList = projectDeliverList;
+    }
+
+    public ProjectMaintenanceVO getProjectMaintenance() {
+        return projectMaintenance;
+    }
+
+    public void setProjectMaintenance(ProjectMaintenanceVO projectMaintenance) {
+        this.projectMaintenance = projectMaintenance;
+    }
+
+    public List<ProjectMaintenanceVO> getMaintenanceList() {
+        return maintenanceList;
+    }
+
+    public void setMaintenanceList(List<ProjectMaintenanceVO> maintenanceList) {
+        this.maintenanceList = maintenanceList;
+    }
+
+    public List<Map<String, Object>> getMaintenanceMapList() {
+        return maintenanceMapList;
+    }
+
+    public void setMaintenanceMapList(List<Map<String, Object>> maintenanceMapList) {
+        this.maintenanceMapList = maintenanceMapList;
+    }
+
+    public List<PmClosedLoopQuesnaire> getPmClosedLoopQuesnaireList() {
+        return pmClosedLoopQuesnaireList;
+    }
+
+    public void setPmClosedLoopQuesnaireList(List<PmClosedLoopQuesnaire> pmClosedLoopQuesnaireList) {
+        this.pmClosedLoopQuesnaireList = pmClosedLoopQuesnaireList;
+    }
+
+    public PmClosedLoopQuesnaire getPmClosedLoopQuesnaire() {
+        return pmClosedLoopQuesnaire;
+    }
+
+    public void setPmClosedLoopQuesnaire(PmClosedLoopQuesnaire pmClosedLoopQuesnaire) {
+        this.pmClosedLoopQuesnaire = pmClosedLoopQuesnaire;
+    }
+
+    public PmClQuesnaireResultHeader getPmClQuesnaireResultHeader() {
+        return pmClQuesnaireResultHeader;
+    }
+
+    public void setPmClQuesnaireResultHeader(PmClQuesnaireResultHeader pmClQuesnaireResultHeader) {
+        this.pmClQuesnaireResultHeader = pmClQuesnaireResultHeader;
+    }
+
+    public List<PmClQuesnaireResultLine> getPmClQuesnaireResultLineList() {
+        return pmClQuesnaireResultLineList;
+    }
+
+    public void setPmClQuesnaireResultLineList(List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList) {
+        this.pmClQuesnaireResultLineList = pmClQuesnaireResultLineList;
+    }
+
+    public Map<String, Object> getCbForm() {
+        return cbForm;
+    }
+
+    public void setCbForm(Map<String, Object> cbForm) {
+        this.cbForm = cbForm;
+    }
+
+    public List<BasicDataBean> getMaintenanceTypeList() {
+        return maintenanceTypeList;
+    }
+
+    public void setMaintenanceTypeList(List<BasicDataBean> maintenanceTypeList) {
+        this.maintenanceTypeList = maintenanceTypeList;
+    }
+
+    public List<BasicDataBean> getProjectExecutionStateList() {
+        return projectExecutionStateList;
+    }
+
+    public void setProjectExecutionStateList(List<BasicDataBean> projectExecutionStateList) {
+        this.projectExecutionStateList = projectExecutionStateList;
+    }
+
+}

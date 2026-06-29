@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE sqlMap  
+PUBLIC "-//ibatis.apache.org//DTD SQL MAP 2.0//EN"  
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+<sqlMap>
+    <select id="selectProblemTicketFormITR" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT * FROM (
+	        SELECT 
+			      cast(incidentid AS varchar)   AS "incidentId"      
+			    , ticketnumber                  AS "ticketNo"                   <!-- 问题单号 -->
+			    , statuscode                    AS "status"                     <!-- 工单状态 -->
+			    , statuscodetext                AS "statusName"                 <!-- 工单状态名称 -->
+			    , dptech_casetopic              AS "caseTopic"                  <!-- 问题单主题 -->
+			    , new_memo                      AS "memo"                       <!-- 描述 -->
+			    , ownerid_domainname            AS "principal"                  <!-- 责任人 -->
+			    , createdbyname                 AS "principalName"              <!-- 责任人名称 -->
+			    , accepter_domainname           AS "accepter"                   <!-- 受理人 -->
+			    , new_accepter_idname           AS "accepterName"               <!-- 受理人名称 -->
+			    , processor_domainname          AS "processor"                  <!-- 处理人 -->
+			    , new_processor_idname          AS "processorName"              <!-- 处理人名称 -->
+			    , dptech_supplyornot            AS "supplied"                   <!-- 是否上报 -->
+			    , new_typetext                  AS "questionType"               <!-- 服务类型 -->
+			    , dptech_questionleveltext      AS "questionLevel"              <!-- 问题级别 -->
+			    , title                         AS "title"                      <!-- 工单标题 -->
+			    , new_accepttime                AS "acceptTime"                 <!-- 受理时间 -->
+			    , dptech_productmodelname       AS "productType"                <!-- 设备类型 -->
+			    , dptech_plantmodelname         AS "productModel"               <!-- 设备型号 -->
+			    , dptech_processing             AS "progress"                   <!-- 处理进展 -->
+			    , dptech_questionreason         AS "questionReason"             <!-- 问题根因 -->
+			    , dptech_resolvesolutionstext   AS "solutionType"               <!-- 解决方式 -->
+			    , dptech_solutions              AS "solutions"                  <!-- 解决方案 -->
+			    , new_rma_idname                AS "rmaNo"                      <!-- RMA单号 -->
+			    , dptech_accidentlist_id        AS "accidentNo"                 <!-- 事故单号 -->
+			    , dptech_casetypetext           AS "caseType"                   <!-- Case类型 -->
+			    , dptech_firstreason            AS "reasonFstType"              <!-- 原因大类 -->
+			    , dptech_secondreason           AS "reasonSndType"              <!-- 原因小类 -->
+			    , dptech_projectnumber          AS "projectNo"                  <!-- 项目编码 -->
+			    , dptech_contractno             AS "contractNo"                 <!-- 合同号 -->
+			    , dptech_productsn              AS "barcode"                    <!-- 序列号 -->
+			    , dptech_bulletinno             AS "bulletinNo"                 <!-- 技术公告编号 -->
+			    , dptech_bugorder               AS "bugNo"                      <!-- Bug单 -->
+			    , dptech_productgroupname       AS "productLine"                <!-- 产品线 -->
+			    , concat('/t/dptech/?mainNavName=xrm##/vform/incident/', incidentId) AS url
+			FROM pms_incident
+		) t
+		<dynamic prepend="WHERE">
+		    <isNotEmpty prepend="AND" property="projectCode"> #projectCode# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="contractNo"> #contractNo# </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="contractNoList"> 
+                contractNo in (<iterate property="contractNoList" conjunction=","> #contractNoList[]# </iterate>)
+		    </isNotEmpty>
+		</dynamic>
+    </select>
+    
+    <typeAlias alias="UUIDToStringHandler" type="com.dp.plat.ibatis.handler.UUIDToStringTypeHandler"/>
+    <insert id="insertProblemTicketFormITR" parameterClass="java.util.Map">
+        SET NAMES utf8mb4;
+        <![CDATA[
+            INSERT INTO `pm_project_incident_table_from_itr`(incidentId, ticketNo, status, statusName, caseTopic, memo
+                , principal, principalName, accepter, accepterName, processor, processorName
+			    , supplied, questionType, questionLevel, title, acceptTime, productType
+			    , productModel, progress, questionReason, solutionType, solutions
+			    , rmaNo, accidentNo, caseType, reasonFstType, reasonSndType
+			    , projectCode, contractNo, barcode
+			    , bulletinNo, bugNo, productLine
+			    , url, customInfo
+			)
+		    values
+        ]]>
+        <iterate conjunction="," property="list">
+            ( #list[].incidentId,handler=UUIDToStringHandler#, #list[].ticketNo#, #list[].status#, #list[].statusName#, #list[].caseTopic#, #list[].memo#
+            , #list[].principal#, #list[].principalName#, #list[].accepter#, #list[].accepterName#, #list[].processor#, #list[].processorName#
+            , #list[].supplied#, #list[].questionType#, #list[].questionLevel#, #list[].title#, #list[].acceptTime#, #list[].productType#
+            , #list[].productModel#, #list[].progress#, #list[].questionReason#, #list[].solutionType#, #list[].solutions#
+            , #list[].rmaNo#, #list[].accidentNo,handler=UUIDToStringHandler#, #list[].caseType#, #list[].reasonFstType#, #list[].reasonSndType#
+            , #list[].projectCode#, #list[].contractNo#, #list[].barcode#
+            , #list[].bulletinNo#, #list[].bugNo#, #list[].productLine#
+            , #list[].url#, #list[].customInfo#
+            )
+        </iterate>
+    </insert>
+    <delete id="deleteProblemTicketFormITR" >
+        truncate table pm_project_incident_table_from_itr
+    </delete>
+</sqlMap>

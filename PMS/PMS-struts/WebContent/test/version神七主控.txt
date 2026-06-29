@@ -1,0 +1,30 @@
+<DPTECH>show ver
+ Software Release H6C7.1.156
+ Conplat Version is V100R007B01D156
+ Compiled Thu, 08 Jan 2026 01:56:20 +0800
+ Signature base, Version , AV 1.4.838 APP 2.1.529 IPS 3.1.409 WAF 3.1.109 
+ Copyright (c) 2008-2026 Hangzhou DPtech Technologies Co., Ltd.  All rights reserved.
+ Without the owner's prior written consent, neither decompiling nor reverse-engineering shall be allowed.
+
+ DPX8000-A5-X Uptime is 0 week(s), 2 day(s), 21 hour(s),  0 minute(s)
+
+ CPU type:        Intel(R) Atom(TM) CPU C3758 @ 2.20GHz
+
+ SDRAM:          8192M bytes
+ Flash Memory:   16M 
+ SD card Memory: 2G 
+
+ PCB Version:            B         
+ CPLD Version:           2.00      
+ BASIC CONBOOT Version:  17.08.11  
+ EXTEND CONBOOT Version: 17.08.11  
+ Serial Number:          02051223N216000011
+ [CHASSIS 0 SLOT  1]  MPU-X             (PCB)C,   (CPLD)2.00,   (FPGA)NONE,   (CONBOOT)17.08.11,   (SERIAL)02011083N217000017
+ [CHASSIS 0 SLOT  3]  8XGS-X            (PCB)B,   (CPLD)2.00,   (FPGA)NONE,   (CONBOOT)22.12.01,   (SERIAL)02011106D21B000004
+ [CHASSIS 0 SLOT  4]  FW1000-BLade-8KXA (PCB)D,   (CPLD)5.00,   (FPGA)NONE,   (CONBOOT)22.12.01,   (SERIAL)02011149X253000001
+ [CHASSIS 0 SLOT  7]  DXP-X             (PCB)C,   (CPLD)2.00,   (FPGA)NONE,   (CONBOOT)19.08.00,   (SERIAL)02011082N217000010
+ [CHASSIS 1 SLOT  1]  MPU-X             (PCB)B,   (CPLD)1.00,   (FPGA)NONE,   (CONBOOT)17.08.11,   (SERIAL)02011083D165000152
+ [CHASSIS 1 SLOT  3]  8XGS-X            (PCB)B,   (CPLD)2.00,   (FPGA)NONE,   (CONBOOT)22.12.01,   (SERIAL)02011438D227000001
+ [CHASSIS 1 SLOT  4]  FW1000-BLade-8KXA (PCB)B,   (CPLD)3.00,   (FPGA)NONE,   (CONBOOT)22.12.01,   (SERIAL)02011149X199000006
+ [CHASSIS 1 SLOT  7]  DXP-X             (PCB)C,   (CPLD)2.00,   (FPGA)NONE,   (CONBOOT)19.08.00,   (SERIAL)02011082D211000014
+<DPTECH>     

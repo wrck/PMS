@@ -1,0 +1,1073 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.User">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="status" jdbcType="SMALLINT" property="status" />
+    <result column="needChangePwd" jdbcType="BIT" property="needChangePwd" />
+    <result column="loginErrorCount" jdbcType="INTEGER" property="loginErrorCount" />
+    <result column="isSysUser" jdbcType="SMALLINT" property="isSysUser" />
+    <result column="userCustom1" jdbcType="VARCHAR" property="userCustom1" />
+    <result column="userCustom2" jdbcType="VARCHAR" property="userCustom2" />
+    <result column="userCustom3" jdbcType="VARCHAR" property="userCustom3" />
+    <result column="userCustom4" jdbcType="INTEGER" property="userCustom4" />
+    <result column="userCustom5" jdbcType="INTEGER" property="userCustom5" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    user_id, user_name, password, create_by, create_time, update_by, update_time, status, 
+    needChangePwd, loginErrorCount, isSysUser, userCustom1, userCustom2, userCustom3, userCustom4, 
+    userCustom5
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_user
+    where user_id = #{userId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_user
+    where user_id = #{userId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.User" keyProperty="userId" useGeneratedKeys="true">
+    insert into t_user (user_name, password, create_by, 
+  <!--<insert id="insert" parameterType="com.dp.plat.core.pojo.User" keyProperty="userId" useGeneratedKeys="true">
+    insert into t_user (user_id, user_name, password, create_by, -->
+      create_time, update_by, update_time, 
+      status, needChangePwd, loginErrorCount, isSysUser,
+      userCustom1, userCustom2, userCustom3, 
+      userCustom4, userCustom5)
+    values (<!--#{userId,jdbcType=INTEGER},--> #{userName,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=SMALLINT}, #{needChangePwd,jdbcType=BIT}, #{loginErrorCount,jdbcType=INTEGER}, 
+      #{isSysUser,jdbcType=SMALLINT}, #{userCustom1,jdbcType=VARCHAR}, #{userCustom2,jdbcType=VARCHAR}, 
+      #{userCustom3,jdbcType=VARCHAR}, #{userCustom4,jdbcType=INTEGER}, #{userCustom5,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.User" keyProperty="userId" useGeneratedKeys="true">
+    insert into t_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="createBy != null">
+        create_by,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateBy != null">
+        update_by,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="needChangePwd != null">
+        needChangePwd,
+      </if>
+      <if test="loginErrorCount != null">
+        loginErrorCount,
+      </if>
+      <if test="isSysUser != null">
+        isSysUser,
+      </if>
+      <if test="userCustom1 != null">
+        userCustom1,
+      </if>
+      <if test="userCustom2 != null">
+        userCustom2,
+      </if>
+      <if test="userCustom3 != null">
+        userCustom3,
+      </if>
+      <if test="userCustom4 != null">
+        userCustom4,
+      </if>
+      <if test="userCustom5 != null">
+        userCustom5,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="needChangePwd != null">
+        #{needChangePwd,jdbcType=BIT},
+      </if>
+      <if test="loginErrorCount != null">
+        #{loginErrorCount,jdbcType=INTEGER},
+      </if>
+      <if test="isSysUser != null">
+        #{isSysUser,jdbcType=SMALLINT},
+      </if>
+      <if test="userCustom1 != null">
+        #{userCustom1,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom2 != null">
+        #{userCustom2,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom3 != null">
+        #{userCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom4 != null">
+        #{userCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="userCustom5 != null">
+        #{userCustom5,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.User">
+    update t_user
+    <set>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        update_by = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="needChangePwd != null">
+        needChangePwd = #{needChangePwd,jdbcType=BIT},
+      </if>
+      <if test="loginErrorCount != null">
+        loginErrorCount = #{loginErrorCount,jdbcType=INTEGER},
+      </if>
+      <if test="isSysUser != null">
+        isSysUser = #{isSysUser,jdbcType=SMALLINT},
+      </if>
+      <if test="userCustom1 != null">
+        userCustom1 = #{userCustom1,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom2 != null">
+        userCustom2 = #{userCustom2,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom3 != null">
+        userCustom3 = #{userCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom4 != null">
+        userCustom4 = #{userCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="userCustom5 != null">
+        userCustom5 = #{userCustom5,jdbcType=INTEGER},
+      </if>
+    </set>
+    where user_id = #{userId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.User">
+    update t_user
+    set user_name = #{userName,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      create_by = #{createBy,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_by = #{updateBy,jdbcType=VARCHAR},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=SMALLINT},
+      needChangePwd = #{needChangePwd,jdbcType=BIT},
+      loginErrorCount = #{loginErrorCount,jdbcType=INTEGER},
+      isSysUser = #{isSysUser,jdbcType=SMALLINT},
+      userCustom1 = #{userCustom1,jdbcType=VARCHAR},
+      userCustom2 = #{userCustom2,jdbcType=VARCHAR},
+      userCustom3 = #{userCustom3,jdbcType=VARCHAR},
+      userCustom4 = #{userCustom4,jdbcType=INTEGER},
+      userCustom5 = #{userCustom5,jdbcType=INTEGER}
+    where user_id = #{userId,jdbcType=INTEGER}
+  </update>
+  <!-- <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.User" resultMap="BaseResultMap">
+    select * from t_user
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="userId != null and '' != userId">
+				user_id = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="userName != null and '' != userName">
+				user_name = #{userName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="password != null and '' != password">
+				password = #{password, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				create_by = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				update_by = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				update_time = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="status != null">
+				status = #{status, jdbcType=SMALLINT} AND
+			</if>
+			<if test="needChangePwd != null and '' != needChangePwd">
+				needChangePwd = #{needChangePwd, jdbcType=BIT} AND
+			</if>
+			<if test="loginErrorCount != null and '' != loginErrorCount">
+				loginErrorCount = #{loginErrorCount, jdbcType=INTEGER} AND
+			</if>
+			<if test="userCustom1 != null and '' != userCustom1">
+				userCustom1 = #{userCustom1, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom2 != null and '' != userCustom2">
+				userCustom2 = #{userCustom2, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom3 != null and '' != userCustom3">
+				userCustom3 = #{userCustom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom4 != null and '' != userCustom4">
+				userCustom4 = #{userCustom4, jdbcType=INTEGER} AND
+			</if>
+			<if test="userCustom5 != null and '' != userCustom5">
+				userCustom5 = #{userCustom5, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.User" resultType="long">
+    select count(1) from t_user u left join t_user_info ui
+        on u.user_id = ui.user_id
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="userId != null and '' != userId">
+				u.user_id = #{userId, jdbcType=INTEGER} AND
+			</if>
+			<if test="userName != null and '' != userName">
+				u.user_name = #{userName, jdbcType=VARCHAR} AND
+			</if>
+			<if test="password != null and '' != password">
+				u.password = #{password, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createBy != null and '' != createBy">
+				u.create_by = #{createBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="createTime != null">
+				u.create_time = #{createTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="updateBy != null and '' != updateBy">
+				u.update_by = #{updateBy, jdbcType=VARCHAR} AND
+			</if>
+			<if test="updateTime != null">
+				u.update_time = #{updateTime, jdbcType=TIMESTAMP} AND
+			</if>
+			<if test="status != null">
+				u.status = #{status, jdbcType=SMALLINT} AND
+			</if>
+			<if test="needChangePwd != null and '' != needChangePwd">
+				u.needChangePwd = #{needChangePwd, jdbcType=BIT} AND
+			</if>
+			<if test="loginErrorCount != null and '' != loginErrorCount">
+				u.loginErrorCount = #{loginErrorCount, jdbcType=INTEGER} AND
+			</if>
+			<if test="userCustom1 != null and '' != userCustom1">
+				u.userCustom1 = #{userCustom1, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom2 != null and '' != userCustom2">
+				u.userCustom2 = #{userCustom2, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom3 != null and '' != userCustom3">
+				u.userCustom3 = #{userCustom3, jdbcType=VARCHAR} AND
+			</if>
+			<if test="userCustom4 != null and '' != userCustom4">
+				u.userCustom4 = #{userCustom4, jdbcType=INTEGER} AND
+			</if>
+			<if test="userCustom5 != null and '' != userCustom5">
+				u.userCustom5 = #{userCustom5, jdbcType=INTEGER} AND
+			</if>
+		</trim>
+	</where>
+  </select> -->
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_user
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.userId != null and '' != model.userId">
+					user_id = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userName != null and '' != model.userName">
+					user_name = #{model.userName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.password != null and '' != model.password">
+					password = #{model.password, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					create_by = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					update_by = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.status != null">
+					status = #{model.status, jdbcType=SMALLINT} AND
+				</if>
+				<if test="model.needChangePwd != null and '' != model.needChangePwd">
+					needChangePwd = #{model.needChangePwd, jdbcType=BIT} AND
+				</if>
+				<if test="model.loginErrorCount != null and '' != model.loginErrorCount">
+					loginErrorCount = #{model.loginErrorCount, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isSysUser != null and '' != model.isSysUser">
+                    isSysUser = #{model.isSysUser, jdbcType=SMALLINT} AND
+                </if>
+				<if test="model.userCustom1 != null and '' != model.userCustom1">
+					userCustom1 = #{model.userCustom1, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom2 != null and '' != model.userCustom2">
+					userCustom2 = #{model.userCustom2, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom3 != null and '' != model.userCustom3">
+					userCustom3 = #{model.userCustom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom4 != null and '' != model.userCustom4">
+					userCustom4 = #{model.userCustom4, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userCustom5 != null and '' != model.userCustom5">
+					userCustom5 = #{model.userCustom5, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					user_name like CONCAT("%", #{fuzzy}, "%") or
+					password like CONCAT("%", #{fuzzy}, "%") or
+					create_by like CONCAT("%", #{fuzzy}, "%") or
+					update_by like CONCAT("%", #{fuzzy}, "%") or
+					userCustom1 like CONCAT("%", #{fuzzy}, "%") or
+					userCustom2 like CONCAT("%", #{fuzzy}, "%") or
+					userCustom3 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+	<if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by id desc
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(1) from t_user
+	<where>
+		<trim prefixOverrides="and |or" suffixOverrides="and |or">
+			<if test="model != null ">
+				<if test="model.userId != null and '' != model.userId">
+					user_id = #{model.userId, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userName != null and '' != model.userName">
+					user_name = #{model.userName, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.password != null and '' != model.password">
+					password = #{model.password, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createBy != null and '' != model.createBy">
+					create_by = #{model.createBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.createTime != null">
+					create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.updateBy != null and '' != model.updateBy">
+					update_by = #{model.updateBy, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.updateTime != null">
+					update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
+				</if>
+				<if test="model.status != null">
+					status = #{model.status, jdbcType=SMALLINT} AND
+				</if>
+				<if test="model.needChangePwd != null and '' != model.needChangePwd">
+					needChangePwd = #{model.needChangePwd, jdbcType=BIT} AND
+				</if>
+				<if test="model.loginErrorCount != null and '' != model.loginErrorCount">
+					loginErrorCount = #{model.loginErrorCount, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.isSysUser != null and '' != model.isSysUser">
+                    isSysUser = #{model.isSysUser, jdbcType=SMALLINT} AND
+                </if>
+				<if test="model.userCustom1 != null and '' != model.userCustom1">
+					userCustom1 = #{model.userCustom1, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom2 != null and '' != model.userCustom2">
+					userCustom2 = #{model.userCustom2, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom3 != null and '' != model.userCustom3">
+					userCustom3 = #{model.userCustom3, jdbcType=VARCHAR} AND
+				</if>
+				<if test="model.userCustom4 != null and '' != model.userCustom4">
+					userCustom4 = #{model.userCustom4, jdbcType=INTEGER} AND
+				</if>
+				<if test="model.userCustom5 != null and '' != model.userCustom5">
+					userCustom5 = #{model.userCustom5, jdbcType=INTEGER} AND
+				</if>
+			</if>
+			<if test="fuzzySearch == true and fuzzy != ''">
+				(
+					user_name like CONCAT("%", #{fuzzy}, "%") or
+					password like CONCAT("%", #{fuzzy}, "%") or
+					create_by like CONCAT("%", #{fuzzy}, "%") or
+					update_by like CONCAT("%", #{fuzzy}, "%") or
+					userCustom1 like CONCAT("%", #{fuzzy}, "%") or
+					userCustom2 like CONCAT("%", #{fuzzy}, "%") or
+					userCustom3 like CONCAT("%", #{fuzzy}, "%")
+				)
+			</if>
+		</trim>
+	</where>
+  </select>
+  
+  <!-- 自定义SQL -->
+  <select id="selectByUserName" parameterType="java.lang.String" resultMap="BaseResultMap">
+  	<![CDATA[
+  		select * from t_user where user_name = #{username} limit 1
+  	]]>
+  </select>
+  <select id="selectAllUser" resultMap="BaseResultMap">
+  	<![CDATA[
+  		select * from t_user
+  	]]>
+  </select>
+  <resultMap id="MenuMap" type="com.dp.plat.core.pojo.Menu">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="pid" jdbcType="INTEGER" property="pid" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+    <result column="crate_time" jdbcType="TIMESTAMP" property="crateTime" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="icon" jdbcType="VARCHAR" property="icon" />
+  </resultMap>
+  <select id="queryUserMenuByUsername" parameterType="java.lang.String" resultMap="MenuMap">
+  	<![CDATA[
+  		SELECT DISTINCT t4.* FROM t_user t1
+		INNER JOIN t_user_role t2 ON t1.`user_id` = t2.`user_id`
+		INNER JOIN t_role_menu t3 ON t2.`role_id` = t3.`role_id`
+		INNER JOIN t_menu t4 ON t3.`menu_id` = t4.`id`
+		WHERE t1.`user_name` = #{username} and t4.status = true
+		ORDER BY t4.pid, t4.sort ASC
+  	]]>
+  </select>
+  
+  <select id="queryUserMenuByUserIdAndCompId" parameterType="com.dp.plat.core.pojo.UserInfo" resultMap="MenuMap">
+    <![CDATA[
+        SELECT DISTINCT t4.* FROM t_user t1
+        INNER JOIN t_user_role t2 ON t1.`user_id` = t2.`user_id`
+        INNER JOIN t_role_menu t3 ON t2.`role_id` = t3.`role_id`
+        INNER JOIN t_menu t4 ON t3.`menu_id` = t4.`id`
+        WHERE t1.`user_id` = #{userId} and t4.status = true
+    ]]>
+    <if test="compID != null and compID != -1">
+        and t2.`comp_id` = #{compID}
+    </if>
+    ORDER BY t4.pid, t4.sort ASC
+  </select>
+  
+  <!-- <select id="countBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+  	select count(*) from t_user u left join t_user_info ui
+  		on u.user_id = ui.user_id
+  	<where>
+  		<if test="model !=null">
+        	<if test="model.userName != null">
+        		user_name like CONCAT("%", #{model.userName}, "%")
+       		</if>
+       		<if test="model.email != null">
+        		and email like CONCAT("%", #{model.email}, "%")
+       		</if>
+       		<if test="model.realName != null">
+        		and realName like CONCAT("%", #{model.userName}, "%")
+       		</if>
+       		<if test="model.sex != null">
+        		and sex = #{model.userName}
+       		</if>
+       		<if test="model.status != null">
+        		and status = #{model.status}
+       		</if>
+       		<if test="model.compID != null">
+                and compID = #{model.compID}
+            </if>
+      	</if>
+      	<if test="fuzzySearch == true and fuzzy != ''">
+      		and (
+      			user_name like CONCAT("%", #{fuzzy}, "%") or
+    			email like CONCAT("%", #{fuzzy}, "%") or
+      			realName like CONCAT("%", #{fuzzy}, "%")
+      		)
+      	</if>
+  	</where>
+  </select> -->
+  
+  <sql id="UserInfo_Column_List">
+   id as userInfoId, realName, mobile, telphone, avatar, birthday, email, sex
+  </sql>
+  <resultMap id="UserDetailMap" type="com.dp.plat.core.vo.UserDetail">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="status" jdbcType="SMALLINT" property="status" />
+    <result column="isSysUser" jdbcType="SMALLINT" property="isSysUser" />
+    <result column="compID" jdbcType="INTEGER" property="compID" />
+    <result column="userInfoId" jdbcType="INTEGER" property="userInfoId" />
+    <result column="realName" jdbcType="VARCHAR" property="realName" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="telphone" jdbcType="VARCHAR" property="telphone" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="sex" jdbcType="SMALLINT" property="sex" />
+    <result column="roles" jdbcType="VARCHAR" property="roles" />
+  </resultMap>
+  <select id="selectBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultMap="UserDetailMap">
+  	SELECT 
+	    u.user_id, u.user_name, u.status, ui.id AS userInfoId, ui.compID, ui.realName, ui.mobile, ui.telphone, ui.avatar, ui.birthday, ui.email, ui.sex, GROUP_CONCAT(r.`role_name_zn`) AS roles 
+	FROM
+	    t_user u 
+	    LEFT JOIN t_user_info ui 
+	        ON u.user_id = ui.user_id 
+	    LEFT JOIN t_user_role ur 
+	        ON u.user_id = ur.`user_id` 
+	           AND ui.`compID` = ur.`comp_id` 
+	    LEFT JOIN t_role r 
+	        ON ur.`role_id` = r.`role_id` 
+  	<where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model != null ">
+                <if test="model.userId != null and '' != model.userId">
+                    u.user_id = #{model.userId, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userName != null and '' != model.userName">
+                    u.user_name like CONCAT("%", #{model.userName}, "%") AND
+                </if>
+                <if test="model.password != null and '' != model.password">
+                    u.password = #{model.password, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createBy != null and '' != model.createBy">
+                    u.create_by = #{model.createBy, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createTime != null">
+                    u.create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.updateBy != null and '' != model.updateBy">
+                    u.update_by = #{model.updateBy, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.updateTime != null">
+                    u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.status != null">
+                    u.status = #{model.status, jdbcType=SMALLINT} AND
+                </if>
+                <if test="model.needChangePwd != null and '' != model.needChangePwd">
+                    u.needChangePwd = #{model.needChangePwd, jdbcType=BIT} AND
+                </if>
+                <if test="model.isSysUser != null and '' != model.isSysUser">
+                    u.isSysUser = #{model.isSysUser, jdbcType=SMALLINT} AND
+                </if>
+                <if test="model.loginErrorCount != null and '' != model.loginErrorCount">
+                    u.loginErrorCount = #{model.loginErrorCount, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userCustom1 != null and '' != model.userCustom1">
+                    u.userCustom1 = #{model.userCustom1, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom2 != null and '' != model.userCustom2">
+                    u.userCustom2 = #{model.userCustom2, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom3 != null and '' != model.userCustom3">
+                    u.userCustom3 = #{model.userCustom3, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom4 != null and '' != model.userCustom4">
+                    u.userCustom4 = #{model.userCustom4, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userCustom5 != null and '' != model.userCustom5">
+                    u.userCustom5 = #{model.userCustom5, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.email != null">
+	                ui.email like CONCAT("%", #{model.email}, "%") AND
+	            </if>
+	            <if test="model.realName != null">
+	                ui.realName like CONCAT("%", #{model.realName}, "%") AND
+	            </if>
+	            <if test="model.sex != null">
+	                ui.sex = #{model.sex} AND
+	            </if>
+	            <if test="model.compID != null and model.compID != -1">
+                    ui.compID = #{model.compID} AND
+                </if>
+	            <if test="model.roleId != null">
+	                ur.role_id = #{model.roleId} AND
+	            </if>
+	            <if test="model.roles != null">
+	                FIND_IN_SET(r.role_name, #{model.roles}) AND
+	            </if>
+            </if>
+            <if test="fuzzySearch == true and fuzzy != ''">
+                (
+                    u.user_name like CONCAT("%", #{fuzzy}, "%") or
+                    u.password like CONCAT("%", #{fuzzy}, "%") or
+                    u.create_by like CONCAT("%", #{fuzzy}, "%") or
+                    u.update_by like CONCAT("%", #{fuzzy}, "%") or
+                    u.user_name like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom1 like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom2 like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom3 like CONCAT("%", #{fuzzy}, "%") or
+	                ui.email like CONCAT("%", #{fuzzy}, "%") or
+	                ui.realName like CONCAT("%", #{fuzzy}, "%") or
+	                r.role_name like CONCAT("%", #{fuzzy}, "%") or
+	                r.role_name_zn like CONCAT("%", #{fuzzy}, "%")
+                    
+                )
+            </if>
+        </trim>
+  	</where>
+	GROUP BY u.user_id 
+  	<if test="orderBy != null">
+   		order by ${orderBy}
+    </if>
+  	<if test="start != null">
+   		limit #{start} ,#{pageSize}
+   	</if>
+  </select>
+  
+  <select id="countBySelective" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select 
+        count(*)
+    FROM (Select 1
+    FROM
+        t_user u 
+        LEFT JOIN t_user_info ui 
+            ON u.user_id = ui.user_id 
+        LEFT JOIN t_user_role ur 
+            ON u.user_id = ur.`user_id` 
+               AND ui.`compID` = ur.`comp_id` 
+        LEFT JOIN t_role r 
+            ON ur.`role_id` = r.`role_id` 
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model != null ">
+                <if test="model.userId != null and '' != model.userId">
+                    u.user_id = #{model.userId, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userName != null and '' != model.userName">
+                    u.user_name like CONCAT("%", #{model.userName}, "%") AND
+                </if>
+                <if test="model.password != null and '' != model.password">
+                    u.password = #{model.password, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createBy != null and '' != model.createBy">
+                    u.create_by = #{model.createBy, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createTime != null">
+                    u.create_time = #{model.createTime, jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.updateBy != null and '' != model.updateBy">
+                    u.update_by = #{model.updateBy, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.updateTime != null">
+                    u.update_time = #{model.updateTime, jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.status != null">
+                    u.status = #{model.status, jdbcType=SMALLINT} AND
+                </if>
+                <if test="model.needChangePwd != null and '' != model.needChangePwd">
+                    u.needChangePwd = #{model.needChangePwd, jdbcType=BIT} AND
+                </if>
+                <if test="model.isSysUser != null and '' != model.isSysUser">
+                    u.isSysUser = #{model.isSysUser, jdbcType=SMALLINT} AND
+                </if>
+                <if test="model.loginErrorCount != null and '' != model.loginErrorCount">
+                    u.loginErrorCount = #{model.loginErrorCount, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userCustom1 != null and '' != model.userCustom1">
+                    u.userCustom1 = #{model.userCustom1, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom2 != null and '' != model.userCustom2">
+                    u.userCustom2 = #{model.userCustom2, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom3 != null and '' != model.userCustom3">
+                    u.userCustom3 = #{model.userCustom3, jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.userCustom4 != null and '' != model.userCustom4">
+                    u.userCustom4 = #{model.userCustom4, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.userCustom5 != null and '' != model.userCustom5">
+                    u.userCustom5 = #{model.userCustom5, jdbcType=INTEGER} AND
+                </if>
+                <if test="model.email != null">
+                    ui.email like CONCAT("%", #{model.email}, "%") AND
+                </if>
+                <if test="model.realName != null">
+                    ui.realName like CONCAT("%", #{model.realName}, "%") AND
+                </if>
+                <if test="model.sex != null">
+                    ui.sex = #{model.sex} AND
+                </if>
+                <if test="model.compID != null and model.compID != -1">
+                    ui.compID = #{model.compID} AND
+                </if>
+                <if test="model.roleId != null">
+                    ur.role_id = #{model.roleId} AND
+                </if>
+                <if test="model.roles != null">
+	                FIND_IN_SET(r.role_name, #{model.roles}) AND
+	            </if>
+            </if>
+            <if test="fuzzySearch == true and fuzzy != ''">
+                (
+                    u.user_name like CONCAT("%", #{fuzzy}, "%") or
+                    u.password like CONCAT("%", #{fuzzy}, "%") or
+                    u.create_by like CONCAT("%", #{fuzzy}, "%") or
+                    u.update_by like CONCAT("%", #{fuzzy}, "%") or
+                    u.user_name like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom1 like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom2 like CONCAT("%", #{fuzzy}, "%") or
+                    u.userCustom3 like CONCAT("%", #{fuzzy}, "%") or
+                    ui.email like CONCAT("%", #{fuzzy}, "%") or
+                    ui.realName like CONCAT("%", #{fuzzy}, "%") or
+                    r.role_name like CONCAT("%", #{fuzzy}, "%") or
+                    r.role_name_zn like CONCAT("%", #{fuzzy}, "%")
+                    
+                )
+            </if>
+        </trim>
+    </where>
+    GROUP BY u.user_id
+    ) t
+  </select>
+  
+  <update id="updateByUsername" parameterType="com.dp.plat.core.pojo.User">
+    update t_user
+    <set>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        update_by = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="needChangePwd != null">
+        needChangePwd = #{needChangePwd,jdbcType=BIT},
+      </if>
+      <if test="loginErrorCount != null">
+        loginErrorCount = #{loginErrorCount,jdbcType=INTEGER},
+      </if>
+      <if test="isSysUser != null">
+        isSysUser = #{isSysUser,jdbcType=SMALLINT},
+      </if>
+      <if test="userCustom1 != null">
+        userCustom1 = #{userCustom1,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom2 != null">
+        userCustom2 = #{userCustom2,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom3 != null">
+        userCustom3 = #{userCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom4 != null">
+        userCustom4 = #{userCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="userCustom5 != null">
+        userCustom5 = #{userCustom5,jdbcType=INTEGER},
+      </if>
+    </set>
+    where user_name = #{userName,jdbcType=VARCHAR}
+  </update>
+  
+  <update id="updateUserErrorCount" parameterType="string">
+  	UPDATE 
+	    t_user 
+	SET
+	    loginErrorCount = loginErrorCount + 1, STATUS = 
+	    (CASE
+	        WHEN loginErrorCount = 5 
+	        THEN 2 
+	        ELSE STATUS 
+	    END )
+    where user_name = #{username}
+  </update>
+  
+  <select id="checkUniqueUserName" parameterType="string" resultType="boolean">
+    select count(1) from  t_user where user_name = #{userName}
+  </select>
+  
+  <insert id="insertOrUpdateSelective" parameterType="com.dp.plat.core.pojo.User" keyProperty="userId" useGeneratedKeys="true">
+    insert into t_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="createBy != null">
+        create_by,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateBy != null">
+        update_by,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="needChangePwd != null">
+        needChangePwd,
+      </if>
+      <if test="loginErrorCount != null">
+        loginErrorCount,
+      </if>
+      <if test="isSysUser != null">
+        isSysUser,
+      </if>
+      <if test="userCustom1 != null">
+        userCustom1,
+      </if>
+      <if test="userCustom2 != null">
+        userCustom2,
+      </if>
+      <if test="userCustom3 != null">
+        userCustom3,
+      </if>
+      <if test="userCustom4 != null">
+        userCustom4,
+      </if>
+      <if test="userCustom5 != null">
+        userCustom5,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="needChangePwd != null">
+        #{needChangePwd,jdbcType=BIT},
+      </if>
+      <if test="loginErrorCount != null">
+        #{loginErrorCount,jdbcType=INTEGER},
+      </if>
+      <if test="isSysUser != null">
+        #{isSysUser,jdbcType=SMALLINT},
+      </if>
+      <if test="userCustom1 != null">
+        #{userCustom1,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom2 != null">
+        #{userCustom2,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom3 != null">
+        #{userCustom3,jdbcType=VARCHAR},
+      </if>
+      <if test="userCustom4 != null">
+        #{userCustom4,jdbcType=INTEGER},
+      </if>
+      <if test="userCustom5 != null">
+        #{userCustom5,jdbcType=INTEGER},
+      </if>
+    </trim>
+    ON DUPLICATE KEY UPDATE 
+    <trim suffixOverrides=",">
+      <if test="userId != null">
+        user_id = VALUES(user_id),
+      </if>
+      <if test="userName != null">
+        user_name = VALUES(user_name),
+      </if>
+      <if test="password != null">
+        password = VALUES(password),
+      </if>
+      <if test="createBy != null">
+        create_by = VALUES(create_by),
+      </if>
+      <if test="createTime != null">
+        create_time = VALUES(create_time),
+      </if>
+      <if test="updateBy != null">
+        update_by = VALUES(update_by),
+      </if>
+      <if test="updateTime != null">
+        update_time = VALUES(update_time),
+      </if>
+      <if test="status != null">
+        status = VALUES(status),
+      </if>
+      <if test="needChangePwd != null">
+        needChangePwd = VALUES(needChangePwd),
+      </if>
+      <if test="loginErrorCount != null">
+        loginErrorCount = VALUES(loginErrorCount),
+      </if>
+      <if test="isSysUser != null">
+        isSysUser = VALUES(isSysUser),
+      </if>
+      <if test="userCustom1 != null">
+        userCustom1 = VALUES(userCustom1),
+      </if>
+      <if test="userCustom2 != null">
+        userCustom2 = VALUES(userCustom2),
+      </if>
+      <if test="userCustom3 != null">
+        userCustom3 = VALUES(userCustom3),
+      </if>
+      <if test="userCustom4 != null">
+        userCustom4 = VALUES(userCustom4),
+      </if>
+      <if test="userCustom5 != null">
+        userCustom5 = VALUES(userCustom5),
+      </if>
+    </trim>
+  </insert>
+  
+  <select id="queryMaxRoleHomePageByUserId" parameterType="int" resultType="string">
+    SELECT 
+	    r.home_page
+	FROM
+	    t_user_role ur 
+	    LEFT JOIN t_role r 
+	        ON ur.`role_id` = r.`role_id` 
+	WHERE user_id = #{_parameter}
+	ORDER BY r.`priority` DESC
+	LIMIT 1
+  </select>
+  
+  <select id="queryMaxRoleHomePageByUserIdAndCompId" parameterType="com.dp.plat.core.pojo.UserInfo" resultType="string">
+    SELECT 
+        r.home_page
+    FROM
+        t_user_role ur 
+        LEFT JOIN t_role r 
+            ON ur.`role_id` = r.`role_id` 
+    WHERE user_id = #{userId} and comp_id = #{compID}
+    ORDER BY r.`priority` DESC
+    LIMIT 1
+  </select>
+
+  <select id="findUserByParam" parameterType="map" resultMap="UserDetailMap">
+  	SELECT 
+	    u.user_id, u.user_name, u.status, ui.id AS userInfoId, ui.realName, ui.mobile, ui.telphone, ui.avatar, ui.birthday, ui.email, ui.sex, GROUP_CONCAT(DISTINCT r.`role_name_zn`) AS roles 
+	FROM
+	    t_user_info ui 
+	    LEFT JOIN t_user u 
+	        ON u.`user_id` = ui.`user_id` 
+	    LEFT JOIN t_user_role ru 
+	        ON ui.`user_id` = ru.`user_id` 
+	    LEFT JOIN t_role_menu rm 
+	        ON rm.`role_id` = ru.`role_id` 
+	    LEFT JOIN t_menu m 
+	        ON m.`id` = rm.`menu_id` 
+	    LEFT JOIN t_role r 
+	        ON rm.`role_id` = r.`role_id` 
+	<where>
+		<trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+			<if test="roleName != null and roleName !=''">
+				r.role_name like concat(#{roleName}, '%') AND
+			</if>
+			<if test="menuName != null and menuName !=''">
+				m.name like concat(#{menuName}, '%') AND
+			</if>
+			<if test="compID != null">
+				ui.compID = #{compID} AND
+			</if>
+		</trim>
+	</where>
+	GROUP BY ui.`id`
+  </select>
+</mapper>

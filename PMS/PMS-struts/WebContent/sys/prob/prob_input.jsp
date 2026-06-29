@@ -1,0 +1,572 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"%>
+<%@ taglib prefix="s" uri="/struts-tags"%>
+<%@ taglib prefix="dp" uri="/dp"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<dp:base />
+<meta name="menu" content="SysLeftMenu">
+<meta name="module" content="<s:text name='module.plat' />">
+<meta name="group" content="<s:text name='sys.leftmenu.powermanage' />">
+<meta name="function" content="<s:text name='prob.manage' />">
+<link rel="stylesheet" type="text/css" href="js/summernote/dist/summernote.min.css" />
+<link rel="stylesheet" type="text/css" href="statics/plugins/select2/select2.min.css" />
+<link rel="stylesheet" type="text/css" href="multiselect/jquery.multiselect.css" />
+<link rel="stylesheet" type="text/css" href="multiselect/jquery.multiselect.filter.css" />
+<dp:link rel="stylesheet" type="text/css" href="css/prob/prob.css" />
+<style>
+    .modal-body .form-group{
+        margin-right:0;
+        margin-left:0;
+    }
+    .form-text{
+        display: block;
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 12px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    }
+    
+    .form-text[readonly]{
+        background-color: #eee;
+        opacity: 1;
+    }
+    
+</style>
+<script type="text/javascript" src="js/summernote/dist/summernote.min.js"></script>
+<script type="text/javascript" src="js/summernote/dist/lang/summernote-zh-CN.min.js"></script>
+<dp:script type="text/javascript" src="js/summernote/summernote-util.js"></dp:script>
+<script type="text/javascript" src="multiselect/jquery.multiselect.js"></script>
+<script type="text/javascript" src="multiselect/jquery.multiselect.filter.js"></script>
+<script type="text/javascript" src="statics/plugins/select2/select2.js"></script>
+<script type="text/javascript" src="statics/plugins/select2/i18n/zh-CN.js"></script>
+<dp:script type="text/javascript" src="js/prob/renderCascade.js"></dp:script>
+<dp:script type="text/javascript" src="js/prob/render.js"></dp:script>
+<script type="text/javascript">
+    $(function(){
+        //加载日期控件
+        date_picker3("startdate");
+        date_picker3("duedate");
+        
+    /*  desc = document.getElementById("desc");
+        autoTextarea(desc);// 调用 */
+        
+        /* solution = document.getElementById("solution");
+        autoTextarea(solution); */
+        
+        $("#create").click(function(){
+            $("#status").attr("disabled", true).attr("readonly", true);
+            $("#mainForm").attr("action","module/prob_save.action");
+            //对要必须的数据进行选择
+            if(checkPost()){
+                $("#mainForm").submit();
+                return true;
+            }
+            return false;
+        });
+        $("#update").click(function(){
+            $("#status").attr("disabled", true).attr("readonly", true);
+            $("#mainForm").attr("action","module/prob_update.action");
+            //对要必须的数据进行选择
+            if(checkPost()){
+                $("#mainForm").submit();
+                return true;
+            }
+            return false;
+        });
+        $("#saveDraft").click(function(){
+            var probId = $("#probId").val() || "0";
+            if (probId != "0") {
+                $("#mainForm").attr("action","module/prob_update.action");
+            } else {
+                $("#mainForm").attr("action","module/prob_save.action");
+            }
+            $("#status").val("0").attr("disabled", false).attr("readonly", true);
+            //对要必须的数据进行选择
+            if(checkPost()){
+                $("#mainForm").submit();
+                return true;
+            }
+            return false;
+        });
+        $("#reject").click(function(){
+            var probId = $("#probId").val();
+            var remark = $("#remark").val();
+            //对要必须的数据进行选择
+            if(!checkPost()){
+                return false;
+            }
+            var params = $("#mainForm").serializeArray();
+            params.push({'name':'prob.status','value':6});
+            $.ajax({
+                url:"probAudit.action",
+                type:"post",
+                dataType:"json",
+                //data:{"prob.probId":probId,"prob.status":"6","prob.remark":remark},
+                data: params,
+                success: function(data){
+                    if(data.result == "success"){
+                        window.location.href = "module/Workspace!probTask.action";
+                    }else{
+                        alert(data.result);
+                    }
+                }
+            });
+        }); 
+        
+        $("#pass").click(function(){
+            var probId = $("#probId").val();
+            var remark = $("#remark").val();
+            //对要必须的数据进行选择
+            if(!checkPost()){
+                return false;
+            }
+            var params = $("#mainForm").serializeArray();
+            params.push({'name':'prob.status','value':4});
+            $.ajax({
+                url:"probAudit.action",
+                type:"post",
+                dataType:"json",
+                //data:{"prob.probId":probId,"prob.status":"4","prob.remark":remark},
+                data: params,
+                success: function(data){
+                    if(data.result == "success"){
+                        window.location.href = "module/Workspace!probTask.action";
+                    }else{
+                        alert(data.result);
+                    }
+                }
+            });
+        }); 
+        
+        $(document).on("change","input[type='file'][name='upload']",function(){
+            var path = $(this).val().split("\\");
+            var end = path.length > 1 ? path.length-1 : 0;
+            path = path[end].split("\/");
+            end = path.length > 1 ? path.length-1 : 0;
+            var fileName = path[end];
+            $(this).hide();
+            $(this).before("<input type='file' name='upload' class='form-control'>");
+            $(this).after("<span class='text-primary'>"+fileName+"</span><a href='javascript:void(0)' onclick='deleteUnUploadFile(this)' title='删除'><img alt='删除' src='images/delete_profile.gif'>");
+        });
+        
+    });
+    
+    /*
+    * 删除未上传的文件
+    */
+    function deleteUnUploadFile(_this){
+        $(_this).prev().remove();
+        $(_this).prev().remove();
+        $(_this).remove();
+    }
+    /* 删除已上传的文件 */
+    function deleteFile(fileId){
+        $.ajax({
+            url:"deleteFile.action",
+            type:"post",
+            dataType:"json",
+            data:{fileId:fileId},
+            success:function(data){
+                alert(data.message);        
+            },
+            complete:function(){
+                window.location.reload();
+            }
+        });
+    }
+    
+    function querySoftVersion(){
+        popWindow('module/sub/toCheckSoftVersion.action?redirect='+window.location.href, 900, 650,'查询软件版本', 'BudgetUpload', true);
+        return false;
+    }
+    /* 手动输入软件版本 */
+    function manualEntry() {
+        $("#manualSoftVersion").show();
+    }
+    $(document).ready(function() {
+        var softVersionJson = `${prob.affectedVersion}`;
+        var $container = $("#softVersionList");
+        // 初始化软件版本的输入框
+        initSoftVersionInputs('manualSoftVersion', {
+            typeContainer: 'softVersionTypes', 
+            inputContainer: 'manualEntry',
+            initTypeKey: 'conplat',
+            versionAddBtn: 'manualSubmit',
+            softVersionListContainer: 'softVersionList'
+        });
+        renderSoftVersions(softVersionJson, {$container});
+    });
+    function clearSoftVersion() {
+        $("#softVersionList").find(".softVersion").remove();
+    }
+    $(document).ready(function(){
+        $('#solution').summernote({       
+            focus: true,   
+            lang:'zh-CN',
+            placeholder:'请输入解决方案',
+            minHeight:'100px',
+            // 重写图片上传  
+            callbacks: {
+                onImageUpload: function(files) {  
+                    saveImageUpload(files,this);
+                }
+            }
+        });
+        $('#desc').summernote({       
+            focus: true,   
+            lang:'zh-CN',
+            placeholder:'请输入技术公告描述',
+            minHeight:'100px',
+            // 重写图片上传  
+            callbacks: {
+                onImageUpload: function(files) {  
+                    saveImageUpload(files,this);
+                }
+            }
+        });
+        
+        $('#theme').val($("#theme").val() || '<s:text name="prob.info.theme.default"></s:text>');
+        $('#solution').summernote('code', $("input[name='prob.solution']").val() || `${commonMap.solutionTemplate}` || `<s:text name="prob.info.solution.template"></s:text>`);
+        $('#desc').summernote('code',$("input[name='prob.desc']").val() || `${commonMap.descTemplate}` || `<s:text name="prob.info.desc.template"></s:text>`);
+        
+        var isProbAdmin = $("#isProbAdmin").val();
+        var isRdRole = "<s:property value='user.isHasRole(20)'/>" == "true";
+        var isPadRole = "<s:property value='user.isHasRole(18)'/>" == "true";
+        var currentUser = "<s:property value='user.getUsername()'/>";
+        var trackingUser = "<s:property value='prob.trackingUser'/>";
+        var probId = "<s:property value='prob.probId'/>";
+        var status = "<s:property value='prob.status'/>";
+        
+        //if(isProbAdmin != 3){
+        //if(!isRdRole || (isRdRole && (currentUser == trackingUser))){
+        if((currentUser != trackingUser && probId != 0 && !isPadRole) || (isPadRole && (status != 0 && status != 1 && status != 8))){
+            $("input[type='text']").each(function(){
+                $(this).attr("readonly",true);
+            });
+            $("input[type='file'], input[type='radio']").each(function(){
+                $(this).attr("disabled",true);
+            });
+            $("select").each(function(){
+                $(this).attr("disabled",true);
+            });
+            $('#solution').summernote('destroy');
+            $('#desc').summernote('destroy');
+            
+            $(".form-text").each(function(){
+                $(this).attr("readonly",true);
+            });
+        }
+        
+        if(isRdRole){
+            $("#startdate").val(CurentDate());
+        }
+        //if(isProbAdmin == 1){
+            
+        if(isPadRole && (status == 0 || status == 1 || status == 8)){
+            $('#remark').removeAttr("readonly");
+            if ($('#remark').length > 0) {
+                autoTextarea(document.getElementById("remark"));
+            }
+            $("input[type='file'][name='upload']").each(function(){
+                $(this).removeAttr("disabled");
+            });
+        }
+        
+    });
+    
+    $(document).ready(function() {
+        var $container = $("#probProductList");
+        initProbProductBySelect2("probProducts", $container);
+        initProbSelectBySelect2("relatedSceneTypes", $("#relatedSceneTypeList"));
+        initProbSelectBySelect2("mitigationActionTypes", $("#mitigationActionTypeList"));
+        initProbSelectBySelect2("solutionActionTypes", $("#solutionActionTypeList"));
+    });
+    
+    
+</script>
+</head>
+<body>
+    <div class="container-flux">
+    
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="listView divHeader">
+                    <img src="images/right_zhishi.gif" border="0">
+                    <s:if test="prob.probId != 0">
+                        <s:text name="prob.manage.edit"></s:text>
+                    </s:if>
+                    <s:else>
+                        <s:text name="prob.manage.create"></s:text>
+                    </s:else>
+                </div>
+                <s:form method="post" action="module/prob_save.action" id="mainForm"
+                    cssClass="form-horizontal" name="mainForm" enctype="multipart/form-data">
+                    <s:hidden name="isContinue" value="0" id="isContinue"></s:hidden>
+                    <s:hidden name="isProbAdmin" id="isProbAdmin"></s:hidden>
+                    <s:hidden name="prob.probId" id="probId"></s:hidden>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <!-- <div class="form-group">
+                                <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+                                <label class="redMark col-xs-8 col-sm-8 col-md-8 col-lg-8"> 备注：请先选择受影响的软件版本，再填写技术公告的其他信息。</label>
+                            </div> -->
+                            <div class="form-group">
+                                <label for="num" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.num"></s:text></label>
+                                <div class="col-xs-4">
+                                    <s:textfield id="num" name="prob.probNum" cssClass="form-control"></s:textfield>
+                                </div>
+                                
+                                <label for="watch" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><span class="redmark">*</span><s:text name="prob.info.watch"></s:text></label>
+                                <div class="col-xs-4">
+                                    <s:select id="watch" name="prob.watch" list="watchList" listKey="basicDataId" listValue="basicDataName" cssClass="form-control"></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="theme" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.theme"></s:text></label>
+                                <div class="col-xs-9">
+                                    <s:textfield id="theme" name="prob.theme" placeholder="请输入主题，为必填项" 
+                                        cssClass="form-control"></s:textfield>
+                                    <span id="themeMsg"></span> 
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="desc" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.desc"></s:text></label>
+                                <div class="col-xs-9">
+                                    <s:hidden name="prob.desc"/>
+                                    <div id="desc" class="form-text" name="prob.desc">
+                                    </div>
+                                    <%-- <s:textarea id="desc" name="prob.desc" placeholder="请输入技术公告描述" rows="3"
+                                        cssClass="form-control"></s:textarea> --%>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solution" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.solution"></s:text></label>
+                                <div class="col-xs-9">
+                                    <s:hidden name="prob.solution"/>
+                                    <div id="solution" class="form-text" name="prob.solution">
+                                    </div>
+                                    <%-- <s:textarea id="solution" name="prob.solution" placeholder="请输入解决方案" rows="3"
+                                        cssClass="form-control"></s:textarea> --%>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="priority" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.level"></s:text></label>
+                                <div class="col-xs-4">
+                                    <s:select id="priority" name="prob.priority" list="priorityList" listKey="basicDataId" listValue="basicDataName" cssClass="form-control"></s:select>
+                                </div>
+                                <label for="status" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><span class="redmark">*</span><s:text name="prob.info.status"></s:text></label>
+                                <div class="col-xs-2">
+                                    <s:select id="status" name="prob.status" list="statusList" listKey="basicDataId" listValue="basicDataName" cssClass="form-control" disabled="true"></s:select>
+                                </div>
+                                <label for="status" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><span class="redmark">*</span><s:text name="prob.info.visibleRange"></s:text></label>
+                                <%-- <div class="col-xs-1">
+                                    <s:radio list="#{'0':'全部','1':'仅搜索'}" name="prob.visibleRange" value="prob.visibleRange" />
+                                </div> --%>
+                                <div class="col-xs-1">
+                                    <input type="radio" name="prob.visibleRange" id="mainForm_prob_visibleRange0" value="0" ${prob.visibleRange == 0 ? "checked='checked'" : ""}>
+                                    <label for="mainForm_prob_visibleRange0">全部</label>
+                                    <br>
+                                    <input type="radio" name="prob.visibleRange" id="mainForm_prob_visibleRange1" value="1" ${prob.visibleRange == 1 ? "checked='checked'" : ""}>
+                                    <label for="mainForm_prob_visibleRange1">仅搜索</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="startdate" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.start.date"></s:text></label>
+                                <div class="col-xs-4">
+                                    <s:textfield id="startdate" name="prob.startdate" placeholder="请选择开始日期" cssClass="form-control" ></s:textfield>
+                                </div>
+                                <label for="duedate" class="col-xs-1 col-sm-1 col-md-1 col-lg-1 control-label"><s:text name="prob.info.due.date"></s:text></label>
+                                <div class="col-xs-4">
+                                    <s:textfield id="duedate" placeholder="请选择计划完成日期" name="prob.duedate" cssClass="form-control"></s:textfield>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.affected.version"></s:text></label>
+                                <s:if test="(user.isHasRole(20) == true && (user.getUsername() == prob.trackingUser || prob.probId == 0)) || ((user.isHasRole(18) == true) && (prob.status == 0 || prob.status == 1 || prob.status == 8))">
+                                    <!-- <label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="querySoftVersion()">点击查找</a>
+                                    </label> -->
+                                    <label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="manualEntry()">手动输入</a>
+                                    </label>
+                                    <label class="col-xs-1 col-sm-1 col-md-1 col-lg-1 softVersionLink">
+                                        <a href="javascript:void(0)" onclick="clearSoftVersion()">清除影响版本</a>
+                                    </label>
+                                </s:if>
+                            </div>
+                            <div class="form-group">
+                                <label for="conp" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9" >
+                                    <div id="manualSoftVersion">
+                                        <s:select id="affectedType" cssClass="form-control" style="width: 120px" list="#{1:'盒式系列',2:'框式系列',-1:'其它系列'}" headerKey="0" headerValue="所有系列"></s:select>
+                                        <div id="softVersionTypes" class="display-flex softVersionTypes"></div>
+                                        <%-- <s:textfield id="manualEntry" cssClass="form-control softVersionInput" placeholder="请填写包含的版本"></s:textfield> --%>
+                                        <s:textfield id="manualEntryStart" cssClass="form-control softVersionInput softVersionInputPart" placeholder="请填写包含的起始版本"></s:textfield>
+                                        <s:textfield id="manualEntryEnd" cssClass="form-control softVersionInput softVersionInputPart" placeholder="请填写包含的结束版本"></s:textfield>
+                                        <button type="button" id="manualSubmit" class="btn btn-default">添加</button>
+                                    </div>
+                                    <div class="softVersionList" id="softVersionList">
+                                    <s:iterator value="softVersionList" var="software" status="status">
+                                        <div class='softVersion'>
+                                            <span class="softVersionContainer">
+                                            <span class="rowNum">${status.index+1}</span>.&nbsp;
+                                            <s:if test="#software.conp != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].conp" value="${software.conp}"> 
+                                                conp:<s:property value="#software.conp"/>
+                                            </s:if>
+                                            <s:if test="#software.boot != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].boot" value="${software.boot}"> 
+                                                boot:<s:property value="#software.boot"/>
+                                            </s:if>
+                                            <s:if test="#software.cpld != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].cpld" value="${software.cpld}">
+                                                cpld:<s:property value="#software.cpld"/>
+                                            </s:if>
+                                            <s:if test="#software.pcb != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].pcb" value="${software.pcb}">
+                                                pcb:<s:property value="#software.pcb"/>
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].manualEntry" value="${software.manualEntry}">
+                                                <s:property value="#software.manualEntry"/>
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].manualEntrySub" value="${software.manualEntrySub}">
+                                                <s:property value="#software.manualEntrySub"/>
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].entryStart" value="${software.entryStart}">
+                                                <s:property value="#software.entryStart"/>
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].entryEnd" value="${software.entryEnd}">
+                                                <s:property value="#software.entryEnd"/>
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].markStart" value="${software.markStart}">
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].markEnd" value="${software.markEnd}">
+                                            </s:if>
+                                            <s:if test="#software.manualEntry != null">
+                                                <input type="hidden" name="softVersionList[${status.index}].groupId" value="${software.groupId}">
+                                            </s:if>
+                                            </span>
+                                            <span class="glyphicon glyphicon-minus text-danger pull-right softVersionDel"></span>
+                                        </div>
+                                    </s:iterator>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="productType" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.product.type"></s:text></label>
+                                <div id="probProductList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 probProductList">
+                                    <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
+                                    <s:hidden id="probProducts_hidden" name="prob.customInfo.probProductList" ></s:hidden>
+                                    <%-- <s:select id="probProducts" list="#{}" name="prob.customInfo.probProductItems" data-selected="%{prob.customInfo.probProductItems}" multiple="true" cssClass="form-control select2" ></s:select> --%>
+                                    <s:select id="probProducts" list="#{}" multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="relatedSceneTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.related.scene.types"></s:text></label>
+                                <div id="relatedSceneTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 relatedSceneTypeList">
+                                    <%-- <s:textfield id="productType" name="prob.productType" cssClass="form-control"></s:textfield> --%>
+                                    <s:hidden id="relatedSceneTypesJson_hidden" name="prob.customInfo.relatedSceneTypesJson" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypes_hidden" name="prob.customInfo.relatedSceneTypes" ></s:hidden>
+                                    <s:hidden id="relatedSceneTypesName_hidden" name="prob.customInfo.relatedSceneTypesName" ></s:hidden>
+                                    <s:select id="relatedSceneTypes" name="prob.relatedSceneTypes" list="relatedSceneTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="mitigationActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.mitigation.action.types"></s:text></label>
+                                <div id="mitigationActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 mitigationActionTypeList">
+                                    <s:hidden id="mitigationActionTypesJson_hidden" name="prob.customInfo.mitigationActionTypesJson" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypes_hidden" name="prob.customInfo.mitigationActionTypes" ></s:hidden>
+                                    <s:hidden id="mitigationActionTypesName_hidden" name="prob.customInfo.mitigationActionTypesName" ></s:hidden>
+                                    <s:select id="mitigationActionTypes" name="prob.mitigationActionTypes" list="mitigationActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="solutionActionTypes" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.solution.action.types"></s:text></label>
+                                <div id="solutionActionTypeList" class="col-xs-9 col-sm-9 col-md-9 col-lg-9 solutionActionTypeList">
+                                    <s:hidden id="solutionActionTypesJson_hidden" name="prob.customInfo.solutionActionTypesJson" ></s:hidden>
+                                    <s:hidden id="solutionActionTypes_hidden" name="prob.customInfo.solutionActionTypes" ></s:hidden>
+                                    <s:hidden id="solutionActionTypesName_hidden" name="prob.customInfo.solutionActionTypesName" ></s:hidden>
+                                    <s:select id="solutionActionTypes" name="prob.solutionActionTypes" list="solutionActionTypeList" listKey="basicDataId" listValue="basicDataName"  multiple="true" cssClass="form-control select2" ></s:select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="probTicketNo" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><span class="redmark">*</span><s:text name="prob.info.prob.ticket.no"></s:text></label>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <s:textfield id="probTicketNo" name="prob.probTicketNo" cssClass="form-control" placeholder="若有相关网上问题则填对应问题工单号，若是内部测试发现的问题，则可填对应BUG单号"></s:textfield>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="attachments" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.attachments"></s:text></label>
+                                <div class="col-xs-4">
+                                    <input type="file" name="upload" class="form-control"/>
+                                    <s:iterator value="fileMap" var="file">
+                                        <a href="module/download.action?fileId=<s:property value='key'/>" title="点击下载"> <s:property value="value"/> </a>    
+                                        <s:if test="user.isHasRole(20) == true && (user.getUsername() == prob.trackingUser || prob.probId == 0)">
+                                            <a href="javascript:void(0)" onclick="deleteFile(<s:property value='key'/>)" title="删除"> 
+                                                <img alt="删除" src="images/delete_profile.gif">
+                                            </a>
+                                        </s:if>
+                                        &nbsp;  
+                                    </s:iterator>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <s:if test="prob.probId != 0">
+                                <div class="form-group">
+                                    <label for="remark" class="col-xs-2 col-sm-2 col-md-2 col-lg-2 control-label"><s:text name="prob.info.audit"></s:text></label>
+                                    <div class="col-xs-9">
+                                        <s:textarea id="remark" name="prob.remark" cssClass="form-control" readonly="true"></s:textarea>
+                                    </div>
+                                </div>
+                            </s:if>
+                            <div class="form-group text-center">
+                                <a href="javascript:history.back()" style="width: 80px;" class="btn btn-default btn-sm" ><s:text name='sys.back' /></a>
+                                <span style="width:30px;display:inline-block;"></span>
+
+                                <!-- 研发人员发布任务 -->
+                                <s:if test="user.isHasRole(20)">
+                                    <button type="button" id="saveDraft" style="width: 80px;" class="btn btn-default btn-sm">保存草稿</button>
+                                    <s:if test="prob.probId == 0">
+                                        <button type="button" id="create" style="width: 80px;" class="btn btn-default btn-sm"><s:text name='prob.info.add' /></button>
+                                    </s:if>
+                                    <s:elseif test="user.getUsername() == prob.trackingUser">
+                                        <button type="button" id="update" style="width: 80px;" class="btn btn-default btn-sm"><s:text name='prob.info.update' /></button>
+                                    </s:elseif>
+                                </s:if>
+                                <!-- 技术公告员审批 -->
+                                <s:if test="%{(user.isHasRole(18) == true ) && (prob.status == 0 || prob.status == 1 || prob.status == 8)}">
+                                    <button type="button" id="reject" style="width: 80px;" class="btn btn-default btn-sm"><s:text name='prob.info.reject' /></button>
+                                    <span style="width:30px;display:inline-block;"></span>
+                                    <button type="button" id="pass" style="width: 80px;" class="btn btn-default btn-sm"><s:text name='prob.info.pass' /></button>
+                                </s:if>
+                            </div>
+                        </div>
+                    </div>
+                </s:form>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

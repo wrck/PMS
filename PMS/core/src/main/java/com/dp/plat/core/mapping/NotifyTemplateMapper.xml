@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.NotifyTemplateMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.NotifyTemplate">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="templateCode" jdbcType="VARCHAR" property="templateCode" />
+    <result column="subject" jdbcType="VARCHAR" property="subject" />
+    <result column="createBy" jdbcType="VARCHAR" property="createBy" />
+    <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
+    <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" property="effectiveFrom" />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" property="effectiveTo" />
+    <result column="content" jdbcType="LONGVARCHAR" property="content" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, templateCode, subject, createBy, createTime, updateBy, updateTime, effectiveFrom, 
+    effectiveTo, content
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_notify_template
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_notify_template
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.NotifyTemplate">
+    insert into t_notify_template (id, templateCode, subject, 
+      createBy, createTime, updateBy, 
+      updateTime, effectiveFrom, effectiveTo, 
+      content)
+    values (#{id,jdbcType=INTEGER}, #{templateCode,jdbcType=VARCHAR}, #{subject,jdbcType=VARCHAR}, 
+      #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{effectiveFrom,jdbcType=TIMESTAMP}, #{effectiveTo,jdbcType=TIMESTAMP}, 
+      #{content,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.core.pojo.NotifyTemplate">
+    insert into t_notify_template
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="templateCode != null">
+        templateCode,
+      </if>
+      <if test="subject != null">
+        subject,
+      </if>
+      <if test="createBy != null">
+        createBy,
+      </if>
+      <if test="createTime != null">
+        createTime,
+      </if>
+      <if test="updateBy != null">
+        updateBy,
+      </if>
+      <if test="updateTime != null">
+        updateTime,
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom,
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="templateCode != null">
+        #{templateCode,jdbcType=VARCHAR},
+      </if>
+      <if test="subject != null">
+        #{subject,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveFrom != null">
+        #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.core.pojo.NotifyTemplate">
+    update t_notify_template
+    <set>
+      <if test="templateCode != null">
+        templateCode = #{templateCode,jdbcType=VARCHAR},
+      </if>
+      <if test="subject != null">
+        subject = #{subject,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null">
+        createBy = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null">
+        updateBy = #{updateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveFrom != null">
+        effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      </if>
+      <if test="effectiveTo != null">
+        effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.core.pojo.NotifyTemplate">
+    update t_notify_template
+    set templateCode = #{templateCode,jdbcType=VARCHAR},
+      subject = #{subject,jdbcType=VARCHAR},
+      createBy = #{createBy,jdbcType=VARCHAR},
+      createTime = #{createTime,jdbcType=TIMESTAMP},
+      updateBy = #{updateBy,jdbcType=VARCHAR},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      effectiveFrom = #{effectiveFrom,jdbcType=TIMESTAMP},
+      effectiveTo = #{effectiveTo,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectByTemplateCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_notify_template
+    where templateCode = #{templateCode} 
+    <![CDATA[ and effectiveFrom < now() and (effectiveTo is null or effectiveTo > now())]]>    
+  </select>
+  
+  <delete id="deleteByTemplateCode" parameterType="java.lang.String">
+    delete from t_notify_template
+    where templateCode = #{templateCode}
+  </delete>
+  
+  <select id="selectBySelective" parameterType="com.dp.plat.core.pojo.NotifyTemplate" resultMap="BaseResultMap">
+    select * from t_notify_template
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="templateCode != null">
+              #{templateCode,jdbcType=VARCHAR} AND
+            </if>
+            <if test="id != null">
+              #{id,jdbcType=INTEGER} AND
+            </if>
+            <if test="var != null">
+              #{subject,jdbcType=VARCHAR} AND
+            </if>
+            <if test="remark != null">
+              #{content,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createBy != null">
+              #{createBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createTime != null">
+              #{createTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="updateBy != null">
+              #{updateBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="updateTime != null">
+              #{updateTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveFrom != null">
+              #{effectiveFrom,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveTo != null">
+              #{effectiveTo,jdbcType=TIMESTAMP} AND
+            </if>
+        </trim>
+    </where>
+    order by priority
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.core.pojo.NotifyTemplate" resultType="long">
+    select count(*) from t_notify_template
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="templateCode != null">
+              #{templateCode,jdbcType=VARCHAR} AND
+            </if>
+            <if test="id != null">
+              #{id,jdbcType=INTEGER} AND
+            </if>
+            <if test="var != null">
+              #{subject,jdbcType=VARCHAR} AND
+            </if>
+            <if test="remark != null">
+              #{content,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createBy != null">
+              #{createBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="createTime != null">
+              #{createTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="updateBy != null">
+              #{updateBy,jdbcType=VARCHAR} AND
+            </if>
+            <if test="updateTime != null">
+              #{updateTime,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveFrom != null">
+              #{effectiveFrom,jdbcType=TIMESTAMP} AND
+            </if>
+            <if test="effectiveTo != null">
+              #{effectiveTo,jdbcType=TIMESTAMP} AND
+            </if>
+        </trim>
+    </where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_notify_template
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model !=null">
+                <if test="model.templateCode != null">
+                  #{model.templateCode,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.id != null">
+                  #{model.id,jdbcType=INTEGER} AND
+                </if>
+                <if test="model.subject != null">
+                  #{model.subject,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.content != null">
+                  #{model.content,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createBy != null">
+                  #{model.createBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createTime != null">
+                  #{model.createTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.updateBy != null">
+                  #{model.updateBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.updateTime != null">
+                  #{model.updateTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveFrom != null">
+                  #{model.effectiveFrom,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveTo != null">
+                  #{model.effectiveTo,jdbcType=TIMESTAMP} AND
+                </if>
+            </if>
+            <if test="fuzzySearch == true">
+                (
+                    templateCode like CONCAT("%", #{fuzzy}, "%") or
+                    subject like CONCAT("%", #{fuzzy}, "%") or
+                    content like CONCAT("%", #{fuzzy}, "%")
+                )
+          </if>
+      </trim>
+    </where>
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(*) from t_notify_template
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+            <if test="model !=null">
+                <if test="model.templateCode != null">
+                  #{model.templateCode,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.id != null">
+                  #{model.id,jdbcType=INTEGER} AND
+                </if>
+                <if test="model.subject != null">
+                  #{model.subject,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.content != null">
+                  #{model.content,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createBy != null">
+                  #{model.createBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.createTime != null">
+                  #{model.createTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.updateBy != null">
+                  #{model.updateBy,jdbcType=VARCHAR} AND
+                </if>
+                <if test="model.updateTime != null">
+                  #{model.updateTime,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveFrom != null">
+                  #{model.effectiveFrom,jdbcType=TIMESTAMP} AND
+                </if>
+                <if test="model.effectiveTo != null">
+                  #{model.effectiveTo,jdbcType=TIMESTAMP} AND
+                </if>
+            </if>
+            <if test="fuzzySearch == true">
+                (
+                    templateCode like CONCAT("%", #{fuzzy}, "%") or
+                    subject like CONCAT("%", #{fuzzy}, "%") or
+                    content like CONCAT("%", #{fuzzy}, "%")
+                )
+          </if>
+      </trim>
+    </where>
+  </select>
+  
+</mapper>

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.activiti.dao.VacationMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.activiti.entity.Vacation">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="APPLY_DATE" jdbcType="DATE" property="applyDate" />
+    <result column="BEGIN_DATE" jdbcType="DATE" property="beginDate" />
+    <result column="WORK_DAYS" jdbcType="INTEGER" property="workDays" />
+    <result column="END_DATE" jdbcType="DATE" property="endDate" />
+    <result column="PROC_INST_ID" jdbcType="VARCHAR" property="procInstId" />
+    <result column="REASON" jdbcType="VARCHAR" property="reason" />
+    <result column="STATUS" jdbcType="VARCHAR" property="status" />
+    <result column="USER_ID" jdbcType="INTEGER" property="userId" />
+    <result column="VAC_TYPE" jdbcType="INTEGER" property="vacType" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, APPLY_DATE, BEGIN_DATE, WORK_DAYS, END_DATE, PROC_INST_ID, REASON, STATUS, USER_ID, 
+    VAC_TYPE
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_vacation
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_vacation
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.dp.plat.activiti.entity.Vacation" keyProperty="id" useGeneratedKeys="true">
+    insert into t_vacation (ID, APPLY_DATE, BEGIN_DATE, 
+      WORK_DAYS, END_DATE, PROC_INST_ID, 
+      REASON, STATUS, USER_ID, 
+      VAC_TYPE)
+    values (#{id,jdbcType=INTEGER}, #{applyDate,jdbcType=DATE}, #{beginDate,jdbcType=DATE}, 
+      #{workDays,jdbcType=INTEGER}, #{endDate,jdbcType=DATE}, #{procInstId,jdbcType=VARCHAR}, 
+      #{reason,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{userId,jdbcType=INTEGER}, 
+      #{vacType,jdbcType=INTEGER})
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <insert id="insertSelective" parameterType="com.dp.plat.activiti.entity.Vacation" keyProperty="id" useGeneratedKeys="true">
+    insert into t_vacation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="applyDate != null">
+        APPLY_DATE,
+      </if>
+      <if test="beginDate != null">
+        BEGIN_DATE,
+      </if>
+      <if test="workDays != null">
+        WORK_DAYS,
+      </if>
+      <if test="endDate != null">
+        END_DATE,
+      </if>
+      <if test="procInstId != null">
+        PROC_INST_ID,
+      </if>
+      <if test="reason != null">
+        REASON,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="userId != null">
+        USER_ID,
+      </if>
+      <if test="vacType != null">
+        VAC_TYPE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="applyDate != null">
+        #{applyDate,jdbcType=DATE},
+      </if>
+      <if test="beginDate != null">
+        #{beginDate,jdbcType=DATE},
+      </if>
+      <if test="workDays != null">
+        #{workDays,jdbcType=INTEGER},
+      </if>
+      <if test="endDate != null">
+        #{endDate,jdbcType=DATE},
+      </if>
+      <if test="procInstId != null">
+        #{procInstId,jdbcType=VARCHAR},
+      </if>
+      <if test="reason != null">
+        #{reason,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="vacType != null">
+        #{vacType,jdbcType=INTEGER},
+      </if>
+    </trim>
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dp.plat.activiti.entity.Vacation">
+    update t_vacation
+    <set>
+      <if test="applyDate != null">
+        APPLY_DATE = #{applyDate,jdbcType=DATE},
+      </if>
+      <if test="beginDate != null">
+        BEGIN_DATE = #{beginDate,jdbcType=DATE},
+      </if>
+      <if test="workDays != null">
+        WORK_DAYS = #{workDays,jdbcType=INTEGER},
+      </if>
+      <if test="endDate != null">
+        END_DATE = #{endDate,jdbcType=DATE},
+      </if>
+      <if test="procInstId != null">
+        PROC_INST_ID = #{procInstId,jdbcType=VARCHAR},
+      </if>
+      <if test="reason != null">
+        REASON = #{reason,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="vacType != null">
+        VAC_TYPE = #{vacType,jdbcType=INTEGER},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dp.plat.activiti.entity.Vacation">
+    update t_vacation
+    set APPLY_DATE = #{applyDate,jdbcType=DATE},
+      BEGIN_DATE = #{beginDate,jdbcType=DATE},
+      WORK_DAYS = #{workDays,jdbcType=INTEGER},
+      END_DATE = #{endDate,jdbcType=DATE},
+      PROC_INST_ID = #{procInstId,jdbcType=VARCHAR},
+      REASON = #{reason,jdbcType=VARCHAR},
+      STATUS = #{status,jdbcType=VARCHAR},
+      USER_ID = #{userId,jdbcType=INTEGER},
+      VAC_TYPE = #{vacType,jdbcType=INTEGER}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  
+   <select id="selectBySelective" parameterType="com.dp.plat.activiti.entity.Vacation" resultMap="BaseResultMap">
+    select * from t_vacation
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+          <if test="applyDate != null">
+	        APPLY_DATE = #{applyDate,jdbcType=DATE} AND
+	      </if>
+	      <if test="beginDate != null">
+	        BEGIN_DATE = #{beginDate,jdbcType=DATE} AND
+	      </if>
+	      <if test="workDays != null">
+	        WORK_DAYS = #{workDays,jdbcType=INTEGER} AND
+	      </if>
+	      <if test="endDate != null">
+	        END_DATE = #{endDate,jdbcType=DATE} AND
+	      </if>
+	      <if test="procInstId != null">
+	        PROC_INST_ID = #{procInstId,jdbcType=VARCHAR} AND
+	      </if>
+	      <if test="reason != null">
+	        REASON = #{reason,jdbcType=VARCHAR} AND
+	      </if>
+	      <if test="status != null">
+	        STATUS = #{status,jdbcType=VARCHAR} AND
+	      </if>
+	      <if test="userId != null">
+	        USER_ID = #{userId,jdbcType=INTEGER} AND
+	      </if>
+	      <if test="vacType != null">
+	        VAC_TYPE = #{vacType,jdbcType=INTEGER} AND
+	      </if>
+      </trim>
+    </where>
+    order by priority
+  </select>
+  <select id="countBySelective" parameterType="com.dp.plat.activiti.entity.Vacation" resultType="long">
+    select count(*) from t_vacation
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+          <if test="applyDate != null">
+            APPLY_DATE = #{applyDate,jdbcType=DATE} AND
+          </if>
+          <if test="beginDate != null">
+            BEGIN_DATE = #{beginDate,jdbcType=DATE} AND
+          </if>
+          <if test="workDays != null">
+            WORK_DAYS = #{workDays,jdbcType=INTEGER} AND
+          </if>
+          <if test="endDate != null">
+            END_DATE = #{endDate,jdbcType=DATE} AND
+          </if>
+          <if test="procInstId != null">
+            PROC_INST_ID = #{procInstId,jdbcType=VARCHAR} AND
+          </if>
+          <if test="reason != null">
+            REASON = #{reason,jdbcType=VARCHAR} AND
+          </if>
+          <if test="status != null">
+            STATUS = #{status,jdbcType=VARCHAR} AND
+          </if>
+          <if test="userId != null">
+            USER_ID = #{userId,jdbcType=INTEGER} AND
+          </if>
+          <if test="vacType != null">
+            VAC_TYPE = #{vacType,jdbcType=INTEGER} AND
+          </if>
+      </trim>
+    </where>
+  </select>
+  <select id="selectBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultMap="BaseResultMap">
+    select * from t_vacation
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+          <if test="model !=null">
+              <if test="model.applyDate != null">
+	            APPLY_DATE = #{model.applyDate,jdbcType=DATE} AND
+	          </if>
+	          <if test="model.beginDate != null">
+	            BEGIN_DATE = #{model.beginDate,jdbcType=DATE} AND
+	          </if>
+	          <if test="model.workDays != null">
+	            WORK_DAYS = #{model.workDays,jdbcType=INTEGER} AND
+	          </if>
+	          <if test="model.endDate != null">
+	            END_DATE = #{model.endDate,jdbcType=DATE} AND
+	          </if>
+	          <if test="model.procInstId != null">
+	            PROC_INST_ID = #{model.procInstId,jdbcType=VARCHAR} AND
+	          </if>
+	          <if test="model.reason != null">
+	            REASON = #{model.reason,jdbcType=VARCHAR} AND
+	          </if>
+	          <if test="model.status != null">
+	            STATUS = #{model.status,jdbcType=VARCHAR} AND
+	          </if>
+	          <if test="model.userId != null">
+	            USER_ID = #{model.userId,jdbcType=INTEGER} AND
+	          </if>
+	          <if test="model.vacType != null">
+	            VAC_TYPE = #{model.vacType,jdbcType=INTEGER} AND
+	          </if>
+          </if>
+          <if test="fuzzySearch == true">
+                AND (
+                    status like CONCAT("%", #{fuzzy}, "%") or
+                    userId like CONCAT("%", #{fuzzy}, "%") or
+                    vacType like CONCAT("%", #{fuzzy}, "%")
+                )
+          </if>
+      </trim>
+    </where>
+    <if test="orderBy != null">
+        order by ${orderBy}
+    </if>
+    <if test="orderBy == null">
+        order by priority
+    </if>
+    <if test="start != null">
+        limit #{start}, #{pageSize}
+    </if>
+  </select>
+  <select id="countBySelectivePageable" parameterType="com.dp.plat.core.vo.PageParam" resultType="long">
+    select count(*) from t_vacation
+    <where>
+        <trim prefixOverrides="and |or" suffixOverrides="and |or">
+          <if test="model !=null">
+              <if test="model.applyDate != null">
+                APPLY_DATE = #{model.applyDate,jdbcType=DATE} AND
+              </if>
+              <if test="model.beginDate != null">
+                BEGIN_DATE = #{model.beginDate,jdbcType=DATE} AND
+              </if>
+              <if test="model.workDays != null">
+                WORK_DAYS = #{model.workDays,jdbcType=INTEGER} AND
+              </if>
+              <if test="model.endDate != null">
+                END_DATE = #{model.endDate,jdbcType=DATE} AND
+              </if>
+              <if test="model.procInstId != null">
+                PROC_INST_ID = #{model.procInstId,jdbcType=VARCHAR} AND
+              </if>
+              <if test="model.reason != null">
+                REASON = #{model.reason,jdbcType=VARCHAR} AND
+              </if>
+              <if test="model.status != null">
+                STATUS = #{model.status,jdbcType=VARCHAR} AND
+              </if>
+              <if test="model.userId != null">
+                USER_ID = #{model.userId,jdbcType=INTEGER} AND
+              </if>
+              <if test="model.vacType != null">
+                VAC_TYPE = #{model.vacType,jdbcType=INTEGER} AND
+              </if>
+          </if>
+          <if test="fuzzySearch == true">
+                AND (
+                    status like CONCAT("%", #{fuzzy}, "%") or
+                    userId like CONCAT("%", #{fuzzy}, "%") or
+                    vacType like CONCAT("%", #{fuzzy}, "%")
+                )
+          </if>
+      </trim>
+    </where>
+  </select>
+</mapper>
