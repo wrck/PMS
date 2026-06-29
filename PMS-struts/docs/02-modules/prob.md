@@ -45,7 +45,6 @@
 
 ### 2.1 技术公告管理流程
 
-<<<<<<< HEAD
 ```mermaid
 graph LR
     A["创建技术公告<br/>ProbManageAction.input()"] --> B["保存/提交<br/>ProbManageAction.save()"]
@@ -53,18 +52,10 @@ graph LR
     C --> D["发布修复任务<br/>ProbManageAction.releaseTask()"]
     D --> E["修复跟踪<br/>ProbManageAction.manageAllTask()"]
     E --> F["闭环<br/>ProbManageAction.updateRestoreTask()"]
-=======
-```
-[创建技术公告] ──> [保存/提交] ──> [管理员审批] ──> [发布修复任务] ──> [修复跟踪] ──> [闭环]
-      |                |               |                |               |            |
- ProbManageAction  ProbManageAction ProbManageAction ProbManageAction ProbManageAction ProbManageAction
- .input()         .save()         .audit()         .releaseTask()  .manageAllTask() .updateRestoreTask()
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 技术公告状态机转换图
 
-<<<<<<< HEAD
 ```mermaid
 stateDiagram-v2
     [*] --> 草稿 : 创建
@@ -100,53 +91,10 @@ stateDiagram-v2
     state 待确认8 {
         note right of 待确认8 : status=8<br/>非管理员更新时自动设为待确认
     }
-=======
-```
-┌───────────┐
-│     0     │
-│  (草稿)    │
-└─────┬─────┘
-      │ save() (status非0)
-      v
-┌───────────┐
-│     1     │
-│ (待确认)   │
-└─────┬─────┘
-      │ audit() 审批通过
-      v
-┌───────────┐
-│     4     │
-│ (已确认)   │
-└─────┬─────┘
-      │ releaseTask() 发布修复任务
-      v
-┌───────────┐
-│     5     │
-│ (解决中)   │
-└─────┬─────┘
-      │ audit() 关闭
-      v
-┌───────────┐
-│    10     │
-│ (已关闭)   │
-└───────────┘
-
-特殊状态:
-┌───────────┐
-│     6     │  ← audit() 驳回（从状态1/4/5）
-│ (已拒绝)   │     → update() 修改后重新提交回到1
-└───────────┘
-
-┌───────────┐
-│     8     │  ← update() 非管理员更新时自动设为待确认
-│ (待确认)   │
-└───────────┘
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 修复任务状态流转
 
-<<<<<<< HEAD
 ```mermaid
 stateDiagram-v2
     [*] --> 发布接受 : releaseTask() 发布任务
@@ -167,31 +115,6 @@ stateDiagram-v2
     state 闭环 {
         note right of 闭环 : status=31<br/>管理员审批通过闭环
     }
-=======
-```
-┌───────────┐
-│    10     │
-│(发布接受)  │  ← releaseTask() 发布任务
-└─────┬─────┘
-      │ managePrivateTask() / updatePrivateTask()
-      v
-┌───────────┐
-│    20     │
-│(办事处返回)│  ← 无需跟踪的子任务返回
-└─────┬─────┘
-      │ updatePrivateTask()
-      v
-┌───────────┐
-│    30     │
-│(闭环申请)  │  ← 办事处已处理，申请闭环
-└─────┬─────┘
-      │ updateRestoreTask() 管理员审批
-      v
-┌───────────┐
-│    31     │
-│  (闭环)   │  ← 管理员审批通过闭环 / 发布时直接闭环
-└───────────┘
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档

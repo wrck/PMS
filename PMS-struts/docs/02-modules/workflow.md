@@ -51,25 +51,16 @@
 
 ### 2.1 流程引擎核心流程
 
-<<<<<<< HEAD
 ```mermaid
 graph LR
     A["流程定义部署<br/>WorkFlowAction.newdeploy()"] --> B["启动流程实例<br/>业务Action.startProcess()"]
     B --> C["任务分配<br/>Activiti自动分配"]
     C --> D["任务完成<br/>业务Action.completeTask()"]
     D --> E["流程结束<br/>Activiti自动结束"]
-=======
-```
-[流程定义部署] ──> [启动流程实例] ──> [任务分配] ──> [任务完成] ──> [流程结束]
-      |                  |              |              |              |
- WorkFlowAction    业务Action      Activiti       业务Action      Activiti
- .newdeploy()      .startProcess()  自动分配        .completeTask()  自动结束
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.2 审批任务处理流程
 
-<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["待办任务列表"] --> B["WorkSpaceAction.task()"]
@@ -84,32 +75,10 @@ flowchart TD
     J --> K{流程结束?}
     K -->|是| L["更新业务状态"]
     K -->|否| M["等待下一审批人"]
-=======
-```
-[待办任务列表] ──> WorkSpaceAction.task()
-      |
-[点击处理] ──> WorkFlowAction.viewTaskForm()
-      |
-[打开任务表单] ──> 根据formKey跳转到业务Action
-      |
-[审批通过?] ──> WorkFlowService.submitTask() / submitSelfTask()
-      |              |
-  /        \         |
- 是         否       |
- |          |        |
-[下一节点]  [退回]    |
- |          |        |
-[流程结束?]  [修改重提] |
- /    \              |
-是     否             |
-|      |             |
-[更新业务状态] [等待下一审批人]
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.3 统一待办任务推送流程
 
-<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["Activiti任务创建/完成事件"] --> B["UnifyTaskListener.notify()"]
@@ -127,37 +96,10 @@ flowchart TD
     K --> L["调用致远OA REST API<br/>createUnifyTask()<br/>updateUnifyTask()"]
     L --> M["推送后处理<br/>UnifyTaskListener.afterPush()"]
     M --> N["更新dp_act_unify_task表<br/>unifyTaskService.updateByPrimaryKeySelective()"]
-=======
-```
-[Activiti任务创建/完成事件] ──> UnifyTaskListener.notify()
-      |
-[解析任务事件] ──> UnifyTaskListener.createDelegateTask()
-      |               |
-      |         [生成表单URL] ──> generateFormUrl()
-      |               |
-      |         [获取接收人] ──> getReceiverUser() / getProcessTaskFixedAssignees()
-      |               |
-      |         [解析角色映射] ──> getRoleGroupMap()
-      |               |
-[推送前处理] ──> UnifyTaskListener.beforePush()
-      |               |
-      |         [保存到dp_act_unify_task表] ──> unifyTaskService.insertSelective()（来自activiti-api-unifytask-patch JAR）
-      |               |
-[推送任务] ──> UnifyTask2SeeyonSender.pushUnifyTask()
-      |               |
-      |         [初始化SeeyonTask] ──> initUnifyTask()
-      |               |
-      |         [调用致远OA REST API] ──> createUnifyTask() / updateUnifyTask()
-      |               |
-[推送后处理] ──> UnifyTaskListener.afterPush()
-      |               |
-      |         [更新dp_act_unify_task表] ──> unifyTaskService.updateByPrimaryKeySelective()（来自activiti-api-unifytask-patch JAR）
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ### 2.4 致远OA待办同步流程
 
-<<<<<<< HEAD
 ```mermaid
 flowchart TD
     A["PMS流程任务创建"] --> B["UnifyTaskListener<br/>TASK_CREATE事件"]
@@ -170,26 +112,6 @@ flowchart TD
     H --> I["任务完成时更新"]
     I --> J["UnifyTaskListener<br/>TASK_COMPLETE事件"]
     J --> K["更新OA待办状态<br/>POST /seeyon/rest/thirdpartyPending/updatePendingState"]
-=======
-```
-[PMS流程任务创建] ──> UnifyTaskListener(TASK_CREATE事件)
-      |
-[解析流程配置] ──> initProcessConfig() 读取sys.unify.task.push.url.config
-      |
-[生成表单URL] ──> 根据processKey和taskKey匹配配置中的URL模板
-      |
-[获取接收人] ──> 根据任务assignee/candidate解析角色和用户
-      |
-[构建SeeyonTask] ──> UnifyTask2SeeyonSender.initUnifyTask()
-      |
-[获取OA Token] ──> getToken() → POST /seeyon/rest/token
-      |
-[推送待办] ──> POST /seeyon/rest/thirdpartyPending/receive
-      |
-[任务完成时更新] ──> UnifyTaskListener(TASK_COMPLETE事件)
-      |
-[更新OA待办状态] ──> POST /seeyon/rest/thirdpartyPending/updatePendingState
->>>>>>> cfb09fe3c09bfc11415a492e8001c97b140fddf0
 ```
 
 ## 3. 接口文档
