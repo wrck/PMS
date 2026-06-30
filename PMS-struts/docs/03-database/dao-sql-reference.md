@@ -17,7 +17,8 @@
 | sql-map-activity-config.xml | 工作流审批 | WorkflowDao |
 | sql-map-report-config.xml | 报表 | ReportDao |
 | sql-map-maintenance-config.xml | 维保管理 | ProjectDao（维保相关方法） |
-| sql-map-warrantyCallback-config.xml | 质保回访 | WarrantyCallbackDao（位于 com.dp.plat.warrantyCallback.dao） |
+| sql-map-warrantyCallback-config.xml | 质保回访 | WarrantyCallbackDao, ProjectWarrantyCallbackDao（均位于 com.dp.plat.warrantyCallback.dao） |
+| sql-map-certificate-config.xml | 合格证/印章 | CertificateDao（位于 com.dp.plat.plus.certificate.dao） |
 | sql-map-work-config.xml | 工作流/待办 | WorkflowDao, WorkSpaceDao |
 | sql-map-refresh-data-sap-config.xml | SAP数据同步 | 数据同步服务（无直接DAO） |
 | sql-map-refresh-data-d365-config.xml | D365数据同步 | 数据同步服务（无直接DAO） |
@@ -787,28 +788,32 @@
 
 ### 19.2 PmClosedLoopDao（闭环管理）
 
-**接口路径**: `com.dp.plat.dao.PmClosedLoopDao`  
+**接口路径**: `com.dp.plat.dao.PmClosedLoopDao`
 **SQL映射文件**: `sql-map-project-config.xml`
+
+> ⚠️ 文档修订说明（2026-06-30 第六阶段）：原版本错误地将 PmClosedLoopQuesnaireDao 的 6 个问卷模板方法（select-quesnaire_template_header-list / insert_questionnaire_template_header_oneObj / insert-quesnaire_template_line-obj / insert-quesnaire_template_options-list / query-quesnaire_template_line-list / query-quesnaire_template_options-list）归类于本 DAO。经源码核验（PmClosedLoopDaoImpl.java），这些方法实际属于 PmClosedLoopQuesnaireDao（见 19.5 节）。本节现按 PmClosedLoopDao 接口真实方法重写，并补充 6 个原遗漏的方法（queryEvaluationHeaderMap / queryIsCallBack / updateEvaluationHeaderId / updateEvaluationHeaderNextAcceptPerson 及 2 个临时表 DDL）。
 
 | DAO方法 | SQL ID | SQL类型 | 操作表 | 说明 |
 |---|---|---|---|---|
-| 查询问卷模板头 | select-quesnaire_template_header-list | SELECT | pm_cl_quesnaire_template_header | 查询问卷模板列表 |
-| 插入问卷模板头 | insert_questionnaire_template_header_oneObj | INSERT | pm_cl_quesnaire_template_header | 插入问卷模板 |
-| 插入问卷模板行 | insert-quesnaire_template_line-obj | INSERT | pm_cl_quesnaire_template_line | 插入问卷模板行 |
-| 插入问卷模板选项 | insert-quesnaire_template_options-list | INSERT | pm_cl_quesnaire_template_options | 插入问卷选项 |
-| 查询问卷模板行 | query-quesnaire_template_line-list | SELECT | pm_cl_quesnaire_template_line | 查询问卷模板行 |
-| 查询问卷模板选项 | query-quesnaire_template_options-list | SELECT | pm_cl_quesnaire_template_options | 查询问卷选项 |
-| 插入评价头 | insert-evaluation_header-obj | INSERT | pm_cl_evaluation_header | 插入评价头 |
-| 更新评价头 | update-evaluation_header-obj | UPDATE | pm_cl_evaluation_header | 更新评价头 |
-| 查询评价头列表 | select-evaluation_header-list | SELECT | pm_cl_evaluation_header | 查询评价列表 |
-| 查询评价详情 | select-evaluation_header-objMap | SELECT | pm_cl_evaluation_header | 查询评价详情Map |
-| 插入问卷结果头 | insert-quesnaire_result_header-obj | INSERT | pm_cl_quesnaire_result_header | 插入问卷结果头 |
-| 插入问卷结果行 | insert-quesnaire_result_line-obj | INSERT | pm_cl_quesnaire_result_line | 插入问卷结果行 |
-| 删除评价头 | delete-evaluation_header | DELETE | pm_cl_evaluation_header | 删除评价头 |
-| 删除问卷结果头 | delete-quesnaire_result_header | DELETE | pm_cl_quesnaire_result_header | 删除问卷结果头 |
-| 删除问卷结果行 | delete-quesnaire_result_line | DELETE | pm_cl_quesnaire_result_line | 删除问卷结果行 |
-| 查询问卷结果头 | select-quesnaire_result_header-list | SELECT | pm_cl_quesnaire_result_header | 查询问卷结果头列表 |
-| 查询问卷结果行 | select-quesnaire_result_line-list | SELECT | pm_cl_quesnaire_result_line | 查询问卷结果行列表 |
+| addPmClEvaluationHeaderObj | insert-evaluation_header-obj | INSERT | pm_cl_evaluation_header | 插入评价头 |
+| queryEvaluationHeaderList | select-evaluation_header-list | SELECT | pm_cl_evaluation_header | 查询评价列表 |
+| queryEvaluationHeaderMap | select-evaluation_header-maxDateMap | SELECT | pm_cl_evaluation_header | 查询最新评价 Map（以 projectCode 为 key，id 为 value） |
+| queryEvaluationHeaderObjMap | select-evaluation_header-objMap | SELECT | pm_cl_evaluation_header | 查询评价详情 Map（以 projectCode 为 key），实际通过临时表优化查询 |
+| queryEvaluationHeaderObjMapUserTempTable | create_temp_final_customer_table + select-evaluation_header-objMap + drop_temp_final_customer_table | DDL+SELECT+DDL | pm_cl_evaluation_header + 临时表 | 临时表优化版（2018-07-12 因 mysql 5.17 以下引擎查询慢而引入），先创建最终客户临时表，再查询，最后删除临时表 |
+| addPmClQuesResultHeader | insert-quesnaire_result_header-obj | INSERT | pm_cl_quesnaire_result_header | 插入问卷结果头（自动填充 createdPerson） |
+| addPmClQuesResultLineList(int, int) | select-quesnaire_result_header-list + insert-quesnaire_result_line-obj | SELECT+INSERT | pm_cl_quesnaire_result_header + pm_cl_quesnaire_result_line | 插入问卷结果行列表（按 headerId 先查 header，再委托重载方法插入） |
+| addPmClQuesResultLineList(List, PmClQuesnaireResultHeader) | insert-quesnaire_result_line-obj | INSERT | pm_cl_quesnaire_result_line | 插入问卷结果行列表（按 header 对象） |
+| deleteEvaluationHeader | delete-evaluation_header | DELETE | pm_cl_evaluation_header | 删除评价头 |
+| deletePmClQuesResultHeader | delete-quesnaire_result_header | DELETE | pm_cl_quesnaire_result_header | 删除问卷结果头 |
+| deletePmClQuesResultLine | delete-quesnaire_result_line | DELETE | pm_cl_quesnaire_result_line | 删除问卷结果行 |
+| updateEvaluationHeaderObj | update-evaluation_header-obj | UPDATE | pm_cl_evaluation_header | 更新评价头 |
+| queryPmClQuesResultHeaderList | select-quesnaire_result_header-list | SELECT | pm_cl_quesnaire_result_header | 查询问卷结果头列表 |
+| queryPmClQuesResultLineList | select-quesnaire_result_line-list | SELECT | pm_cl_quesnaire_result_line | 查询问卷结果行列表 |
+| queryIsCallBack | query_is_callback | SELECT | callback_quesnaire（或同名表） | 查询项目是否进行过回访流程 |
+| updateEvaluationHeaderId | update_EvaluationHeaderId_byId | UPDATE | pm_cl_quesnaire_result_header | 根据 quesnaireId 更新 evaluationHeaderId |
+| updateEvaluationHeaderNextAcceptPerson | update_EvaluationHeader_NextAcceptPerson | UPDATE | pm_cl_evaluation_header | 批量更新下一审批人（按 nextAcceptPerson + projectId 条件） |
+
+> 注：addPmClQuesResultHeader / addPmClQuesResultLineList 方法同时存在于 PmClosedLoopQuesnaireDao（19.5 节），属于跨 DAO 接口重复定义，实际实现逻辑一致（均通过 getCurrUsername() 填充 createdPerson）。
 
 ### 19.3 ProjectPlanDao（项目计划）
 
@@ -821,12 +826,78 @@
 
 ### 19.4 DataAnalysisDao（数据分析）
 
-**接口路径**: `com.dp.plat.dao.DataAnalysisDao`  
+**接口路径**: `com.dp.plat.dao.DataAnalysisDao`
 **SQL映射文件**: `sql-map-project-config.xml`
 
 | DAO方法 | SQL ID | SQL类型 | 操作表 | 说明 |
 |---|---|---|---|---|
 | 查询表结构 | query_tableStructure | SELECT | INFORMATION_SCHEMA | 查询表结构信息 |
+
+### 19.5 PmClosedLoopQuesnaireDao（闭环问卷模板管理）
+
+**接口路径**: `com.dp.plat.dao.PmClosedLoopQuesnaireDao`
+**SQL映射文件**: `sql-map-project-config.xml`
+
+> 新增章节（2026-06-30 第六阶段）。原版本错误地将本 DAO 的 6 个问卷模板方法归类于 PmClosedLoopDao（19.2 节）。经源码核验（PmClosedLoopQuesnaireDaoImpl.java），现独立成节。本 DAO 专管闭环问卷**模板**（template）的 CRUD；PmClosedLoopDao 专管闭环**评价/结果**（evaluation/result）的 CRUD。两者通过 `addPmClQuesResultHeader` / `addPmClQuesResultLineList` 存在接口重复定义（实现一致）。
+
+| DAO方法 | SQL ID | SQL类型 | 操作表 | 说明 |
+|---|---|---|---|---|
+| insertQuesnaireHeader | insert_questionnaire_template_header_oneObj | INSERT | pm_cl_quesnaire_template_header | 插入问卷模板头 |
+| selectQuesnaireHeaderList | select-quesnaire_template_header-list | SELECT | pm_cl_quesnaire_template_header | 查询问卷模板列表 |
+| insertQuesnaireLineList | insert-quesnaire_template_line-obj | INSERT | pm_cl_quesnaire_template_line | 插入问卷模板行（问卷问题） |
+| insertQuesnaireOptList | insert-quesnaire_template_options-list | INSERT | pm_cl_quesnaire_template_options | 批量插入问卷选项（参数含 questionId + List） |
+| queryPmClQuesnaireLineList | query-quesnaire_template_line-list | SELECT | pm_cl_quesnaire_template_line | 查询问卷模板行（支持 sqlType 排序参数，默认 desc） |
+| queryPmClQuesnaireOptList | query-quesnaire_template_options-list | SELECT | pm_cl_quesnaire_template_options | 查询问卷选项（支持 sqlType 排序参数，默认 desc） |
+| queryPmClQuesnaireOptMap | query-quesnaire_template_options-list | SELECT | pm_cl_quesnaire_template_options | 查询问卷选项 Map（queryForMap，以 id 为 key，sqlType 固定 "desc"） |
+| updateQuesHeader | update-quesnaire_template_header | UPDATE | pm_cl_quesnaire_template_header | 修改问卷模板头信息 |
+| updateQuesStatus | updateStatus-quesnaire_template_header | UPDATE | pm_cl_quesnaire_template_header | 问卷生效（校验 quesType 非空且 id > 0，否则返回 -1） |
+| deleteQuesLine | delete-quesnaire_template_line | DELETE | pm_cl_quesnaire_template_line | 删除问卷模板行 |
+| deleteQuesOpt | delete-quesnaire_template_options | DELETE | pm_cl_quesnaire_template_options | 删除问卷模板选项 |
+| updateLineQuesnum | update-quesnaire_template_header-questionNum | UPDATE | pm_cl_quesnaire_template_line | 删除问卷行后更新行信息的题号 |
+| deleteQuesHeader | delete-quesnaire_template_header | DELETE | pm_cl_quesnaire_template_header | 删除问卷模板头 |
+| deleteLineAll | delete-quesnaire_template_line-all | DELETE | pm_cl_quesnaire_template_line | 删除问卷下的全部行信息（按 quesnaireTemplateHeaderId） |
+| deleteOptAll | delete-quesnaire_template_options-all | DELETE | pm_cl_quesnaire_template_options | 删除问卷下的全部选项信息（按 quesnaireTemplateHeaderId） |
+| addPmClQuesResultHeader | insert-quesnaire_result_header-obj | INSERT | pm_cl_quesnaire_result_header | 插入问卷结果头（与 PmClosedLoopDao 同名方法重复定义，实现一致） |
+| addPmClQuesResultLineList(List, int) | select-quesnaire_result_header-list + insert-quesnaire_result_line-obj | SELECT+INSERT | pm_cl_quesnaire_result_header + pm_cl_quesnaire_result_line | 插入问卷结果行列表（按 headerId） |
+| addPmClQuesResultLineList(List, PmClQuesnaireResultHeader) | insert-quesnaire_result_line-obj | INSERT | pm_cl_quesnaire_result_line | 插入问卷结果行列表（按 header 对象） |
+
+### 19.6 ProjectWarrantyCallbackDao（项目质保回访）
+
+**接口路径**: `com.dp.plat.warrantyCallback.dao.ProjectWarrantyCallbackDao`
+**SQL映射文件**: `sql-map-warrantyCallback-config.xml`
+**namespace**: `pm_project_warranty_callback`
+**对应表**: `pm_project_warranty_callback`
+
+> 新增章节（2026-06-30 第六阶段）。原版本仅文档化了同包的 WarrantyCallbackDao（第十六章），遗漏了 ProjectWarrantyCallbackDao。本 DAO 专注于项目维度的质保回访记录管理，提供 6 个标准 CRUD 方法。
+
+| DAO方法 | SQL ID | SQL类型 | 操作表 | 说明 |
+|---|---|---|---|---|
+| deleteProjectWarrantyCallbackById | deleteProjectWarrantyCallbackById | DELETE | pm_project_warranty_callback | 按主键删除项目质保回访记录 |
+| insertProjectWarrantyCallback | insertProjectWarrantyCallback | INSERT | pm_project_warranty_callback | 插入项目质保回访记录（返回自增主键） |
+| insertProjectWarrantyCallbackSelective | insertProjectWarrantyCallbackSelective | INSERT | pm_project_warranty_callback | 选择性插入（仅非空字段） |
+| selectProjectWarrantyCallbackById | ⚠️ 见下方说明 | SELECT | pm_project_warranty_callback | 按主键查询项目质保回访记录 |
+| updateProjectWarrantyCallbackByIdSelective | updateProjectWarrantyCallbackByIdSelective | UPDATE | pm_project_warranty_callback | 选择性更新（仅非空字段） |
+| updateProjectWarrantyCallbackById | updateProjectWarrantyCallbackById | UPDATE | pm_project_warranty_callback | 全字段更新 |
+
+> ⚠️ **源码 Bug**（`ProjectWarrantyCallbackDaoImpl.java:28`）：`selectProjectWarrantyCallbackById` 方法实现中调用 `getSqlMapClientTemplate().queryForObject("selectById", _key)`，但实际 SQL 映射文件 `sql-map-warrantyCallback-config.xml` 中**不存在** ID 为 `"selectById"` 的 statement，仅有 `"selectProjectWarrantyCallbackById"`。运行时会抛出 iBATIS 异常 `There is no statement named selectById in this SqlMap`。建议源码修正：将 `"selectById"` 改为 `"selectProjectWarrantyCallbackById"`。本次审查仅记录此 Bug，不修改源码。
+
+### 19.7 CertificateDao（合格证/印章管理）
+
+**接口路径**: `com.dp.plat.plus.certificate.dao.CertificateDao`
+**SQL映射文件**: `sql-map-certificate-config.xml`
+**namespace**: `business`
+**对应表**: `mes_oqc_info`（OQC 检验信息）、`mes_seal_info`（印章信息）
+
+> 新增章节（2026-06-30 第六阶段）。原版本遗漏了 plus 包下的 CertificateDao。本 DAO 提供 OQC 检验员信息查询和印章登记管理功能。
+
+| DAO方法 | SQL ID | SQL类型 | 操作表 | 说明 |
+|---|---|---|---|---|
+| queryOQCInfo | queryOQCInfo | SELECT | mes_oqc_info LEFT JOIN mes_seal_info | 根据条码查询 OQC 检验员及检验时间（LEFT JOIN 关联印章信息，条件包含时间范围匹配且 info 以 "QC PASS" 开头） |
+| insertSealInfo(List<HashMap>) | insertSealInfo | INSERT | mes_seal_info | 批量插入印章登记记录（@Deprecated，因 list<map> 无法批量插入，已弃用） |
+| insertSealInfo(HashMap) | insertSealInfo | INSERT | mes_seal_info | 插入单条印章登记记录（使用 parameterMap sealInfo，含 id/name/info/description/takeTime/backTime/remark/uploadBy 等字段，末尾追加 now()） |
+| deleteSealInfo | truncateSealInfo | DELETE | mes_seal_info | 清空印章登记表（实际 SQL 为 `delete from mes_seal_info`，非 TRUNCATE） |
+
+> 注：本 DAO 的 SQL 涉及 MES 数据源（`mes_oqc_info`、`mes_seal_info`），属于跨库查询场景。
 
 ---
 

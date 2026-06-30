@@ -314,7 +314,7 @@ public List<?> getData() / public void setData(List<?> data)
 public class Response<T> implements Serializable
 ```
 
-**常量**：`SUCCESS_CODE = 0`（单个 Integer 值，非数组）
+**常量**：`SUCCESS_CODE = new Integer[] {0, 200}`（Integer 数组，含 0 与 200 两个成功码，行 22）
 
 **字段**：`request`(Request<T>)、`code`(Integer)、`message`(String)、`data`(List<T>)、`extend`(Map<String,Object>)、`isSuccess`(Boolean)、`headers`(Map<String,List<String>>)
 
@@ -340,6 +340,10 @@ public Response extend(Map<String, Object> extend) / public Map<String, Object> 
 public boolean isSuccess()
 public Boolean getIsSuccess() / public void setIsSuccess(Boolean isSuccess)
 public long getDataSize()
+@Override public boolean equals(java.lang.Object o)   // 行 230，比较 code/message/data/isSuccess
+@Override public int hashCode()                         // 行 243，Objects.hash(code, message, data)
+@Override public String toString()                    // 行 248，输出 class 名 + 各字段缩进格式
+private String toIndentedString(Object o)             // 行 263，toString 辅助（4 空格缩进）
 ```
 
 ### 4.4 TokenRequest
