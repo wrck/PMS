@@ -32,6 +32,11 @@
 24. [CertificateAction — 合格证查询](#24-certificateaction--合格证查询)
 25. [WarrantyCallbackAction — 维保回访](#25-warrantycallbackaction--维保回访)
 26. [ProjectBaseAction — 项目管理 Action 基类](#26-projectbaseaction--项目管理-action-基类)
+27. [ProjectFileAction — 项目文件管理](#27-projectfileaction--项目文件管理)
+28. [ProjectContractAction — 项目合同管理](#28-projectcontractaction--项目合同管理)
+29. [ProjectNotificationAction — 项目通知批示管理](#29-projectnotificationaction--项目通知批示管理)
+30. [ProjectWeeklyAction — 项目周报管理](#30-projectweeklyaction--项目周报管理)
+31. [ProjectMemberAction — 项目成员管理](#31-projectmemberaction--项目成员管理)
 
 ---
 
@@ -1526,15 +1531,136 @@
 - **实现接口**: `Preparable`
 - **Spring Bean**: `WorkSpaceAction`（scope=prototype）
 - **依赖服务**: `WorkSpaceService`, `BasicDataService`, `DepartmentManageService`, `WorkFlowService`
-- **职责**: 用户工作台，展示待办任务、系统通知、日常项目跟踪
+- **职责**: 用户工作台，展示待办任务、系统通知、日常项目跟踪、技术公告任务、转包任务等
+
+### 核心属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `displayParam` | `DisplayParam` | 分页参数 |
+| `notifyDisplayParam` | `DisplayParam` | 通知分页参数 |
+| `taskQueryParam` | `TaskQueryParam` | 任务筛选条件 |
+| `notifyQueryParam` | `TaskQueryParam` | 系统通知筛选条件 |
+| `dapdlist` | `List<DpActProcDesc>` | 业务流程待办任务列表 |
+| `dailyTaskList` | `List<DpActProcDesc>` | 日常项目跟踪列表 |
+| `notificationList` | `List<Notification>` | 系统通知列表 |
+| `dpHisList` | `List<DpActProcDesc>` | 历史办理任务列表 |
+| `probTaskList` | `List<ProbParam>` | 技术公告任务列表 |
+| `subcontractTaskList` | `List<Map<String, Object>>` | 转包任务列表 |
+| `navTabList` | `List<BasicDataBean>` | 选项卡集合 |
+| `departmentList` | `List<Department>` | 办事处列表 |
+| `tabIndex` | `int` | 当前选项卡索引 |
+| `tabName` | `String` | 当前选项卡名称 |
+| `isCbRole` | `Boolean` | 是否拥有回访角色（ROLE_CALLBACKPER） |
+| `queryParams` | `Map<String, String>` | 通用查询条件 |
+| `returnParams` | `Map<String, Object>` | 返回参数（如公司列表） |
 
 ### 方法
 
 #### `prepare()`
 - **签名**: `public void prepare() throws Exception`
-- **业务逻辑**: 初始化用户角色、办事处列表、选项卡，根据角色过滤选项卡
+- **参数**: 无
+- **返回值**: 无
+- **业务逻辑**:
+  1. 获取当前用户，设置 `isCbRole`（是否拥有 `ROLE_CALLBACKPER` 角色）
+  2. 加载办事处集合 `departmentList`
+  3. 加载选项卡列表 `navTabList`（基础数据 `BASIC_DATA_NAV_WORK_TAB`），并构建 `navTabMap`
+  4. 根据角色过滤选项卡：
+     - 非回访角色移除 `hisselftask` 选项卡
+     - 仅含 `ROLE_PROB_ADMIN`/`ROLE_PROB_SUPPORTER`/`ROLE_PROB_RD` 且 roleids 长度为 4 时，只保留 `probTask` 选项卡（tabIndex=4）
+     - 非工程管理部/回访/服务经理角色用户，对 `subcontractTask` 选项卡按角色进一步过滤（区域负责人/财务人员保留，其他移除）
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:63`
 
-> 注：WorkSpaceAction 的 `execute()` 方法根据选项卡加载不同类型的待办任务数据。
+#### `prepareExecute()`
+- **签名**: `public void prepareExecute()`
+- **参数**: 无
+- **返回值**: 无
+- **业务逻辑**: `execute()` 方法的前置准备，初始化 `notificationList` 和 `dapdlist` 为空 ArrayList（防止 NPE）
+- **异常处理**: 无
+- **源码**: `WorkSpaceAction.java:154`
+
+#### `execute()`
+- **签名**: `public String execute() throws Exception`
+- **参数**: `tabIndex`、`taskQueryParam`、`displayParam`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 工作台默认入口，按 `tabIndex` 分发：
+  - `tabIndex == 4` → 调用 `probTask()` 查询技术公告任务
+  - `tabIndex == 5` → 调用 `subcontractTask()` 查询转包任务
+  - 其他 → 调用 `workspaceService.queryPmTaskList()` 查询日常项目跟踪，`tabName="dailyTask"`
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:167`
+
+#### `prepareNotice()`
+- **签名**: `public void prepareNotice()`
+- **业务逻辑**: `notice()` 方法的前置准备，初始化 `dapdlist` 和 `dailyTaskList` 为空 ArrayList
+- **源码**: `WorkSpaceAction.java:180`
+
+#### `notice()`
+- **签名**: `public String notice()`
+- **参数**: `notifyQueryParam`、`notifyDisplayParam`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查询系统通知列表（`workspaceService.queryNotifyList()`），设置 `tabIndex=2`、`tabName="notice"`
+- **源码**: `WorkSpaceAction.java:194`
+
+#### `prepareTask()`
+- **签名**: `public void prepareTask()`
+- **业务逻辑**: `task()` 方法的前置准备，初始化 `dailyTaskList` 和 `notificationList` 为空 ArrayList
+- **源码**: `WorkSpaceAction.java:202`
+
+#### `task()`
+- **签名**: `public String task()`
+- **参数**: `queryParams.procKey`（流程键，可选）
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 业务流程办理入口，按 `procKey` 加载不同类型的待办任务到 `dapdlist`：
+  1. `procKey` 为空或 `PmClosedLoopConstant.CL_PROCESS_KEY` → 加载闭环流程任务 + 回访申请任务
+  2. `procKey` 为空或 `"ProjectBack"` → 加载项目回退确认任务
+  3. `procKey` 为空或 `"ProjectTrack"` → 加载项目不予跟踪确认任务
+  4. `procKey` 为空或 `"ProjectSupervision"` → 工程管理部角色加载项目督查任务
+  5. `procKey` 为空或 `"Presales"` → 加载售前流程待办任务
+  - 最终设置 `tabIndex=1`、`tabName="task"`
+- **源码**: `WorkSpaceAction.java:216`
+
+#### `dailyTask()`
+- **签名**: `public String dailyTask() throws Exception`
+- **返回值**: `execute()` 的返回值（`SUCCESS`）
+- **业务逻辑**: 设置 `tabIndex=0`、`tabName="dailyTask"`，委托给 `execute()` 方法
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:278`
+
+#### `hisselftask()`
+- **签名**: `public String hisselftask() throws Exception`
+- **参数**: `taskQueryParam`、`displayParam`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查询当前用户自己办理过的历史任务（`workspaceService.querySelfHistoryTaskList()`），设置 `tabIndex=3`、`tabName="hisselftask"`
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:290`
+
+#### `probTask()`
+- **签名**: `public String probTask() throws Exception`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查询当前用户的技术公告任务（`workspaceService.queryProbTaskList()`），设置 `tabIndex=4`、`tabName="probTask"`
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:306`
+
+#### `subcontractTask()`
+- **签名**: `public String subcontractTask() throws Exception`
+- **参数**: `queryParams`（查询条件）
+- **返回值**: `SUCCESS`
+- **业务逻辑**:
+  1. 查询公司列表 `compList`（`departmentManageService.queryCompanyList()`，status=1）放入 `returnParams`
+  2. 调用 `workspaceService.querySubcontractTaskList(queryParams)` 查询转包任务
+  3. 设置 `tabIndex=5`、`tabName="subcontractTask"`
+- **异常处理**: 抛出 Exception
+- **源码**: `WorkSpaceAction.java:319`
+
+#### `updateNotifyState()` ⚠️ 已废弃
+- **签名**: `@Deprecated public String updateNotifyState()`
+- **参数**: `notifyStateId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 更新系统消息状态（`workspaceService.updateNotificationState()`）
+- **⚠️ 废弃说明**: 标注为 `@Deprecated`，不再推荐使用
+- **源码**: `WorkSpaceAction.java:339`
 
 ---
 
@@ -2091,19 +2217,148 @@
 ## 25. WarrantyCallbackAction — 维保回访
 
 - **包路径**: `com.dp.plat.warrantyCallback.action`
+- **源码**: `PMS-struts/src/com/dp/plat/warrantyCallback/action/WarrantyCallbackAction.java`
 - **父类**: `BaseAction`
 - **实现接口**: `Preparable`
 - **Spring Bean**: `WarrantyCallbackAction`（scope=prototype）
 - **依赖服务**: `ProjectService`, `UserManageService`, `DepartmentManageService`, `BasicDataService`, `WarrantyCallbackService`
-- **职责**: 项目维保回访记录管理
+- **职责**: 项目维保回访记录管理，包含回访记录查询/创建/删除、维保问卷填写、项目维保统计、客户项目统计、权限用户查询等
+
+### 核心属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `user` | `User` | 当前登录用户 |
+| `project` | `Project` | 当前项目对象 |
+| `displayParam` | `DisplayParam` | 分页参数 |
+| `namespace` | `String` | Action 命名空间（用于页面跳转） |
+| `redirect` | `String` | 重定向 URL |
+| `result` | `String` | 操作结果码（"success"/"error"/"queryCount" 等） |
+| `message` | `String` | 操作消息（含 JSON 序列化的用户列表） |
+| `projectWarrantyCallback` | `ProjectWarrantyCallbackVO` | 维保回访 VO 对象 |
+| `warrantyCallbackList` | `List<ProjectWarrantyCallbackVO>` | 维保回访记录列表 |
+| `warrantyCallbackMapList` | `List<Map<String, Object>>` | 维保回访 Map 列表（统计查询用） |
+| `projectDeliver` | `ProjectDeliver` | 交付件对象 |
+| `projectDeliverList` | `List<ProjectDeliver>` | 交付件列表 |
+| `pmClosedLoopQuesnaireList` | `List<PmClosedLoopQuesnaire>` | 问卷分类列表 |
+| `pmClosedLoopQuesnaire` | `PmClosedLoopQuesnaire` | 当前问卷 |
+| `pmClQuesnaireResultHeader` | `PmClQuesnaireResultHeader` | 问卷结果 Header |
+| `pmClQuesnaireResultLineList` | `List<PmClQuesnaireResultLine>` | 问卷结果明细行 |
+| `cbForm` | `Map<String, Object>` | 表单数据（含 phoneAnswerStates 等） |
+| `warrantyCallbackTypeList` | `List<BasicDataBean>` | 服务类型列表 |
+| `departmentList` | `List<Department>` | 办事处列表 |
+| `powerUserList` | `List<User>` | 有权限的用户列表 |
 
 ### 方法
 
 #### `prepare()`
 - **签名**: `public void prepare() throws Exception`
-- **业务逻辑**: 获取当前 Action 的 namespace，用于页面跳转
+- **参数**: 无
+- **返回值**: 无
+- **业务逻辑**:
+  1. 从 request 的 `struts.actionMapping` 属性获取 `ActionMapping`，提取 `namespace`
+  2. namespace 为空时，从 `Referer` 请求头解析路径作为 namespace
+  3. 规范化 namespace：去掉前导 `/`；若不以 `module` 开头则强制设为 `module`
+  4. 加载当前用户到 `user` 属性
+- **异常处理**: 抛出 Exception
+- **源码**: `WarrantyCallbackAction.java:89`
 
-> 注：WarrantyCallbackAction 结构与 SupervisionAction/MaintenanceAction 类似，包含维保回访记录的列表查询、创建、问卷填写、交付件上传等功能。
+#### `prepareExecute()`
+- **签名**: `public void prepareExecute()`
+- **业务逻辑**: `execute()` 方法的前置准备：加载办事处集合 `departmentList`、服务类型 `warrantyCallbackTypeList`（基础数据 `BASIC_DATA_SERVICE_TYPE`）
+- **源码**: `WarrantyCallbackAction.java:112`
+
+#### `execute()`
+- **签名**: `public String execute() throws Exception`
+- **参数**: `projectWarrantyCallback`、`displayParam`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 项目维保回访列表页面入口，初始化 `projectWarrantyCallback` 和 `displayParam`，调用 `displayParam.getParam()` 解析参数后委托给 `projectWarrantyCallback()` 查询数据
+- **异常处理**: 抛出 Exception
+- **源码**: `WarrantyCallbackAction.java:126`
+
+#### `projectWarrantyCallback()`
+- **签名**: `public String projectWarrantyCallback()`
+- **参数**: `projectWarrantyCallback`、`displayParam`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**:
+  1. **权限校验**：需具备 `ROLE_PROGRAMMANAGER`/`ROLE_SERVICEMANAGER`/`ROLE_ADMIN`/`ROLE_ENGINEEMANAGER`/`ROLE_ENGINEEMANAGER_LEADER`/`ROLE_CALLBACKPER`/`ROLE_WARRANTY_CALLBACKER`/`ROLE_AREA_LEADER` 之一，否则返回 ERROR
+  2. 初始化 `projectWarrantyCallback` 和 `displayParam`，按 `pwc.id desc` 默认排序
+  3. 若 `projectWarrantyCallback.projectId` 非空，查询项目简化信息，回填 officeCode/projectName
+  4. **数据权限**：回访/工程管理部角色设置 `hasPower=true`；非管理员/工程管理部/回访角色设置 `areapower` 和 `userPower` 限制
+  5. 调用 `warrantyCallbackService.selectProjectWarrantyCallbackMapList()` 查询列表
+  6. 加载办事处集合、服务类型、接听状态（`projectWarrantyCallback_phoneAnswerState`）放入 `cbForm`
+- **异常处理**: 无显式异常处理（displayParam.getParam 抛出 UnsupportedEncodingException 被吞掉）
+- **源码**: `WarrantyCallbackAction.java:143`
+
+#### `createProjectWarrantyCallback()`
+- **签名**: `public String createProjectWarrantyCallback()`
+- **参数**: `project.projectId`、`projectWarrantyCallback`、`pmClosedLoopQuesnaire`、`pmClQuesnaireResultHeader`、`pmClQuesnaireResultLineList`
+- **返回值**: `SUCCESS`（进入编辑页面）/ `"redirect"`（保存成功重定向）/ `ERROR`（权限不足）
+- **业务逻辑**:
+  1. **权限校验**：projectId 非法返回 ERROR；查询项目后校验区域权限或角色权限
+  2. **进入编辑页面**（projectWarrantyCallback.id 为空或 quesnaireId 为空）：
+     - 若 id 非空，查询已有回访记录及问卷 ID
+     - `canEdit`（续保意向为未接听等）时调用 `fillProjectWarrantyInfo()` 填充项目及维保基础信息
+     - 查询维保状态 `queryProjectWarrantyState()`
+     - 加载生效的问卷分类（`QuestionnarieUtil.findPmClosedLoopQuesnaireList()`，quesType="projectWarrantyCallback"）
+     - 通过 `QuestionnarieUtil.getCbForm()` 获取问卷表单
+  3. **提交保存**（projectWarrantyCallback.projectId 非空）：
+     - 填充项目维保信息
+     - 若问卷已提交（status=1），调用 `QuestionnarieUtil.queryQuesnaireScore()` 计算分数
+     - 调用 `QuestionnarieUtil.addQuestionnaireResult()` 保存问卷结果，得到 quesnaireId
+     - 设置 projectCode/projectName/officeCode 等字段
+     - 调用 `warrantyCallbackService.insertOrUpdateProjectWarrantyCallback()` 保存
+     - 返回 `"redirect"`
+- **源码**: `WarrantyCallbackAction.java:220`
+
+#### `deleteProjectWarrantyCallback()`
+- **签名**: `public String deleteProjectWarrantyCallback()`
+- **参数**: `projectWarrantyCallback.id`
+- **返回值**: `SUCCESS`（设置 `result`：success/error）
+- **业务逻辑**:
+  1. 初始 `result="error"`
+  2. 查询回访记录
+  3. **权限校验**：仅创建人或工程管理部/工程管理部领导可删除，否则 `message="没有删除权限！"`
+  4. 校验通过：设置 `isDelete=true`（逻辑删除），调用 `insertOrUpdateProjectWarrantyCallback()` 保存，`result="success"`
+- **源码**: `WarrantyCallbackAction.java:305`
+
+#### `projectWarranty()`
+- **签名**: `public String projectWarranty() throws Exception`
+- **参数**: `projectWarrantyCallback`、`displayParam`、`result`（可为 "queryCount" 触发计数模式）
+- **返回值**: `"projectWarranty"` / `ERROR`（权限不足）
+- **业务逻辑**:
+  1. **权限校验**：同 `projectWarrantyCallback()` 的角色校验
+  2. 设置默认排序 `officeCode, customerContact1 desc, customerContact2 desc`
+  3. **计数模式**（result="queryCount"）：设置 `pagesize=0`，查询后返回总数到 `result`，`message="queryCount"`
+  4. **正常查询**：调用 `warrantyCallbackService.selectProjectWarranty()` 查询
+  5. 设置回访/工程管理部角色的 `hasPower=true`
+  6. 加载办事处集合、服务类型、接听状态
+- **异常处理**: 抛出 Exception
+- **源码**: `WarrantyCallbackAction.java:322`
+
+#### `customerProject()`
+- **签名**: `public String customerProject() throws Exception`
+- **参数**: `projectWarrantyCallback`、`displayParam`
+- **返回值**: `"customerProject"` / `ERROR`（权限不足）
+- **业务逻辑**:
+  1. **权限校验**：同 `projectWarrantyCallback()` 的角色校验
+  2. 解析分页参数
+  3. 调用 `warrantyCallbackService.selectCustomerProjectWarrantyCallbackStatistics()` 查询客户项目维保统计
+  4. 设置回访/工程管理部角色的 `hasPower=true`
+  5. 加载办事处集合、服务类型、接听状态
+- **异常处理**: 抛出 Exception
+- **源码**: `WarrantyCallbackAction.java:374`
+
+#### `queryPowerUser()`
+- **签名**: `public String queryPowerUser()`
+- **参数**: 无
+- **返回值**: `SUCCESS`
+- **业务逻辑**:
+  1. 查询所有服务经理（`ROLE_SERVICEMANAGER`）和项目经理（`ROLE_PROGRAMMANAGER`）
+  2. 通过 `HashSet` 按用户名去重合并
+  3. 使用 `ObjectMapper`（`Include.NON_NULL`）序列化为 JSON 字符串存入 `message`
+  4. 序列化失败时 `message=null`
+- **源码**: `WarrantyCallbackAction.java:411`
 
 ---
 
@@ -2247,6 +2502,344 @@ public class ProjectFileAction extends ProjectBaseAction {
 2. **基础数据编码混合**: 部分编码使用 `MessageUtil` 常量（如 `BASIC_DATA_DELIVERSTATE`），部分使用字符串字面量（如 `"projectExecutionState"`），风格不统一
 3. **公司列表过滤**: `companyList` 仅查询 `status=1` 的公司（有效公司）
 4. **抽象类设计**: ProjectBaseAction 作为抽象类，强制子类继承，避免直接实例化未初始化的基类
+
+### 子类文档导航
+
+下方第 27-31 节为 ProjectBaseAction 的 5 个具体子类的详细文档：
+
+- [27. ProjectFileAction — 项目文件管理](#27-projectfileaction--项目文件管理)
+- [28. ProjectContractAction — 项目合同管理](#28-projectcontractaction--项目合同管理)
+- [29. ProjectNotificationAction — 项目通知批示管理](#29-projectnotificationaction--项目通知批示管理)
+- [30. ProjectWeeklyAction — 项目周报管理](#30-projectweeklyaction--项目周报管理)
+- [31. ProjectMemberAction — 项目成员管理](#31-projectmemberaction--项目成员管理)
+
+---
+
+## 27. ProjectFileAction — 项目文件管理
+
+- **包路径**: `com.dp.plat.action`
+- **父类**: `ProjectBaseAction`
+- **Spring Bean**: `ProjectFileAction`（scope=prototype）
+- **依赖服务**: `ProjectService`、`BasicDataService`、`SendMailService`
+- **职责**: 项目文件（周报附件、交付件）的上传、下载、删除管理
+- **源码**: `ProjectFileAction.java`
+
+### 方法
+
+#### `toUploadFile()`
+- **签名**: `public String toUploadFile()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 周报附件上传页面导航。仅返回 SUCCESS 跳转到上传页面，无业务逻辑
+- **源码**: `ProjectFileAction.java:76`
+
+#### `toUploadDeliverableFile()`
+- **签名**: `public String toUploadDeliverableFile()`
+- **参数**: `projectDeliver.eventKey`（格式 `dataTypeCode-basicDataId`）
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 进入交付件上传页面。解析 eventKey，设置 `dataTypeCode` 与 `basicDataId`，查询已有交付件列表 `projectDeliverList`
+- **异常处理**: 捕获 Exception 设置错误消息并返回 ERROR
+- **源码**: `ProjectFileAction.java:84`
+
+#### `UploadFile()`
+- **签名**: `public String UploadFile()`
+- **参数**: `upload`（File[]）、`uploadFileName`、`projectWeekly.weeklyId`、`projectWeekly.projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 周报附件上传。流程：
+  1. 创建上传目录 `/upload/weekly/{timestamp}`
+  2. 查询系统参数 `sys.upload.ext.whitelist` 获取扩展名白名单
+  3. 遍历上传文件，校验扩展名、重命名（调用 `projectService.getUploadFileRename()`）
+  4. 复制文件到目标目录
+  5. 调用 `projectService.insertWeeklyFiles()` 插入周报附件记录
+  6. 设置 redirect 跳转到 ProjectModify 页面（result=200）
+- **异常处理**: 扩展名校验失败返回 ERROR
+- **注**: 方法名首字母大写（非标准命名，与 Struts2 DMI 调用约定 `action!uploadFile` 不同，实际通过 `action!UploadFile` 调用）
+- **源码**: `ProjectFileAction.java:105`
+
+#### `downloadFile()`
+- **签名**: `public String downloadFile()`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 文件下载入口。当前实现为空方法，仅返回 SUCCESS（实际下载逻辑通过 `getDownloadFile()` / `getFileStream()` 配合 Struts2 stream 结果实现）
+- **源码**: `ProjectFileAction.java:153`
+
+#### `getDownloadFile()`
+- **签名**: `@JSON(serialize = false) public String getDownloadFile()`
+- **参数**: `downname`、`result`
+- **返回值**: 编码后的下载文件名字符串（默认 `"orderplan.xlsx"`）
+- **业务逻辑**: 下载文件名编码转换。设置响应头 charset 为 ISO8859-1，根据 `result` 标志位返回不同编码的文件名（0 = 原始字节转 ISO8859-1，非 0 = URLEncoder.encode 编码）
+- **注解**: `@JSON(serialize = false)` 避免被 JSON 序列化
+- **源码**: `ProjectFileAction.java:162`
+
+#### `getFileStream()`
+- **签名**: `@JSON(serialize = false) public InputStream getFileStream() throws FileNotFoundException, UnsupportedEncodingException`
+- **参数**: `downpath`
+- **返回值**: `InputStream` 文件输入流
+- **业务逻辑**: 获取下载文件输入流。先在上传目录中查找（`findFileStream(downpath, true)`），若未找到再按给定目录查找（`findFileStream(downpath, false)`）。查找时尝试 ISO8859-1 到 UTF-8 编码转换
+- **异常**: 抛出 `FileNotFoundException`、`UnsupportedEncodingException`
+- **源码**: `ProjectFileAction.java:186`
+
+#### `deleteFile()`
+- **签名**: `public String deleteFile()`
+- **参数**: `downFlileId`
+- **返回值**: `SUCCESS`（设置 `result` 字段：0=成功，1=失败）
+- **业务逻辑**: 删除附件。调用 `projectService.deleteFileById(downFlileId)` 按 ID 删除文件记录
+- **异常处理**: 捕获 Exception 设置 result=1
+- **源码**: `ProjectFileAction.java:219`
+
+#### `deleteDeliverById()`
+- **签名**: `public String deleteDeliverById()`
+- **参数**: `deliverid`
+- **返回值**: `SUCCESS`（设置 `result` 字段：0=成功，1=失败）
+- **业务逻辑**: 删除交付件。调用 `projectService.deleteDeliverById(deliverid)` 按 ID 删除交付件记录
+- **异常处理**: 捕获 Exception 设置 result=1
+- **源码**: `ProjectFileAction.java:234`
+
+#### `uploadDeliverableFile()`
+- **签名**: `public String uploadDeliverableFile()`
+- **参数**: `upload`（File[]）、`uploadFileName`、`projectDeliver`、`projectId`
+- **返回值**: `SUCCESS`（设置 `result` 字段：0=成功，1=失败）
+- **业务逻辑**: 上传交付件文件。流程：
+  1. 创建上传目录 `/upload/deliver/{timestamp}`
+  2. 查询扩展名白名单 `sys.upload.ext.whitelist`
+  3. 遍历上传文件，校验扩展名、重命名
+  4. 复制文件到目标目录
+  5. 构造 `ProjectDeliver` 对象（含 projectId、deliverableName、deliverablePath）
+  6. 调用 `projectService.insertProjectDeliverFiles()` 插入交付件记录（含当前用户名）
+- **异常处理**: 捕获 Exception 设置 result=1
+- **源码**: `ProjectFileAction.java:249`
+
+---
+
+## 28. ProjectContractAction — 项目合同管理
+
+- **包路径**: `com.dp.plat.action`
+- **父类**: `ProjectBaseAction`
+- **Spring Bean**: `ProjectContractAction`（scope=prototype）
+- **依赖服务**: `ProjectService`、`BasicDataService`
+- **职责**: 项目合同合并、拆分、订单数据检查等操作
+- **源码**: `ProjectContractAction.java`
+
+### 方法
+
+#### `toMergeOrBranch()`
+- **签名**: `public String toMergeOrBranch()`
+- **返回值**: `INPUT`
+- **业务逻辑**: 进入合同拆分合并页面。加载导航 Tab（`basicDataService.queryBasicDataBeans(BASIC_DATA_NAV_MERGE_TAB)`），查询项目订单数据列表 `orderDataList`
+- **源码**: `ProjectContractAction.java:41`
+
+#### `checkMergeContract()`
+- **签名**: `public String checkMergeContract()`
+- **参数**: `mergeContractNo`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 查询要合并的合同信息。通过 `projectService.queryProjectContractCountByContractNo()` 查询合同数量，若 size=1 设置 `result=404`（无需合并），否则查询合同列表 `contractList`
+- **源码**: `ProjectContractAction.java:51`
+
+#### `mergeContract()`
+- **签名**: `public String mergeContract()`
+- **参数**: `selected`（选中的合同 ID 列表）、`projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 合并操作。校验 selected 非空，调用 `projectService.insertMergeContract(selected, projectId)` 执行合并，设置 redirect 跳转到 ProjectModify 页面（result=302）
+- **异常处理**: selected 为空时设置错误消息"请至少选择一条合同数据，谢谢！"并返回 ERROR
+- **源码**: `ProjectContractAction.java:68`
+
+#### `branchContract()`
+- **签名**: `public String branchContract()`
+- **参数**: `projectId`、`project.projectCode`、`productList`、`mergeBranchMark`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 项目拆分。调用 `projectService.insertNewProject()` 创建新项目（传入原项目 ID、项目编码、产品列表、拆分标记），设置 redirect 跳转到 ProjectModify 页面（result=202，含新项目 ID）
+- **源码**: `ProjectContractAction.java:82`
+
+#### `checkOrderData()`
+- **签名**: `public String checkOrderData()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 检查订单数据。调用 `projectService.queryOrderDataListByProjectId(projectId)` 查询订单数据列表 `orderDataList`
+- **源码**: `ProjectContractAction.java:92`
+
+#### `checkRealOrderData()`
+- **签名**: `public String checkRealOrderData()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 检查实际订单数据。调用 `projectService.queryRealOrderDataListByProjectId(projectId)` 查询实际订单数据列表 `realOrderDataList`，并设置 `realOrderDataSize` 列表大小
+- **源码**: `ProjectContractAction.java:101`
+
+---
+
+## 29. ProjectNotificationAction — 项目通知批示管理
+
+- **包路径**: `com.dp.plat.action`
+- **父类**: `ProjectBaseAction`
+- **Spring Bean**: `ProjectNotificationAction`（scope=prototype）
+- **依赖服务**: `ProjectService`、`BasicDataService`
+- **职责**: 项目通知查询、问题工单查询、License 授权信息查询、项目批示保存与查询
+- **源码**: `ProjectNotificationAction.java`
+
+### 方法
+
+#### `queryProjectNotification()`
+- **签名**: `public String queryProjectNotification()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 查询项目通知。调用 `projectService.queryNotifyList(projectId)` 查询通知列表 `notificationList`
+- **异常处理**: 捕获 Exception 设置错误消息并返回 ERROR
+- **源码**: `ProjectNotificationAction.java:43`
+
+#### `problemTicket()`
+- **签名**: `public String problemTicket()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 获取项目的工单记录。流程：
+  1. 查询系统参数 `itr.problemTicket.base.url` 获取 ITR 基础 URL
+  2. 查询项目信息，提取 projectCode（取 `-` 分割前部分）
+  3. 调用 `projectService.selectProblemTicket()` 按项目编号查询工单
+  4. 若查询不到，按合同号（逗号分割）再次查询
+- **异常处理**: 捕获 Exception 设置错误消息并返回 ERROR
+- **源码**: `ProjectNotificationAction.java:58`
+
+#### `licenseInfo()`
+- **签名**: `public String licenseInfo()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS` / `ERROR`
+- **业务逻辑**: 获取项目的 License 授权信息。流程：
+  1. 查询项目信息，提取 contractNo（逗号分割）和 projectCode（取 `-` 分割前部分）
+  2. 构造 contractNoList（合同号 + 项目编码）
+  3. 调用 `projectService.selectLicenseInfo()` 查询 License 信息列表 `commonList`
+- **异常处理**: 捕获 Exception 设置错误消息并返回 ERROR
+- **源码**: `ProjectNotificationAction.java:91`
+
+#### `instruction()`
+- **签名**: `public String instruction()`
+- **参数**: `projectId`、`instructionsInfo`、`instructionId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 保存项目批示。调用 `projectService.saveInstruction(projectId, instructionsInfo, instructionId)`，设置 `result=301`
+- **异常处理**: 捕获 Exception 打印堆栈
+- **源码**: `ProjectNotificationAction.java:121`
+
+#### `getInstructionsInfo()`
+- **签名**: `public String getInstructionsInfo()`
+- **参数**: `projectId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 获取批示信息。调用 `projectService.queryInstructionList(projectId)` 查询批示列表，将所有批示内容拼接为字符串（以换行符分隔）设置到 `instructionsInfo` 字段
+- **注**: 该方法名与字段 `instructionsInfo` 的 setter 同名，会被 Struts2 作为 getter 调用以填充页面
+- **源码**: `ProjectNotificationAction.java:135`
+
+---
+
+## 30. ProjectWeeklyAction — 项目周报管理
+
+- **包路径**: `com.dp.plat.action`
+- **父类**: `ProjectBaseAction`
+- **Spring Bean**: `ProjectWeeklyAction`（scope=prototype）
+- **依赖服务**: `ProjectService`、`BasicDataService`
+- **职责**: 项目周报的创建、保存、提交、回复等全生命周期管理
+- **源码**: `ProjectWeeklyAction.java`
+
+### 方法
+
+#### `createWeekly()`
+- **签名**: `public String createWeekly()`
+- **参数**: `project.projectId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 创建周报。流程：
+  1. 调用 `getWeeklyDateTime(new Date())` 计算本周开始结束时间
+  2. 查询项目任务列表 `projectTaskList`
+  3. 查询上一期周报 ID，若存在则继承上期周报的 taskDeviation、remark 字段
+  4. 复制上期周报的 6 类内容（work/risk/plan/help/progress/mail）到当前周报
+- **异常处理**: 捕获 Exception 打印堆栈
+- **源码**: `ProjectWeeklyAction.java:49`
+
+#### `getWeeklyDateTime(Date)`
+- **签名**: `public static List<Date> getWeeklyDateTime(Date date)`
+- **参数**: `date` 任意日期
+- **返回值**: `List<Date>`，list[0]=周一 00:00:00，list[1]=周日 23:59:59
+- **业务逻辑**: 根据提供日期计算本周开始（周一）和结束（周日）时间。使用 `Calendar.DAY_OF_WEEK` 计算，`day - 2` 为周一偏移量
+- **注**: 静态方法，无 Struts2 映射
+- **源码**: `ProjectWeeklyAction.java:80`
+
+#### `saveWeekly()`
+- **签名**: `public String saveWeekly()`
+- **参数**: `projectWeekly`（含 weeklyId、projectId）、6 类内容列表（work/risk/help/progress/plan/mail）
+- **返回值**: `SUCCESS`（设置 `result`：新周报 ID 或 0）
+- **业务逻辑**: 保存周报（草稿状态 `WEEKLY_STATE_RAFT`）。若 weeklyId=0 调用 `insertPorjectWeekly()` 新增，否则调用 `updatePorjectWeekly()` 更新。最后更新项目最后刷新时间
+- **异常处理**: 捕获 Exception 设置 result=0
+- **源码**: `ProjectWeeklyAction.java:102`
+
+#### `submitWeekly()`
+- **签名**: `public String submitWeekly()`
+- **参数**: `projectWeekly`、6 类内容列表
+- **返回值**: `SUCCESS`（设置 `result`：周报 ID 或 0）
+- **业务逻辑**: 提交周报（已提交状态 `WEEKLY_STATE_SUBMIT`）。流程：
+  1. 新增或更新周报（同 saveWeekly）
+  2. 调用 `projectService.createProjectWeeklyExecl()` 生成周报 Excel 附件
+  3. 处理邮件抄送列表（mailcontentList + 当前用户邮箱 + 系统参数 `weekly.css.address` + 项目成员邮箱）
+  4. 通过 `NotificationTemplateUtil.keepMail()` 发送邮件通知（含模板 `NOTIFICATION_CODE_WEEKLY_SUBMIT`）
+  5. 添加系统通知（`NOTIFICATION_CODE_118`）
+  6. 更新项目最后刷新时间
+- **异常处理**: 捕获 Exception 设置 result=0
+- **源码**: `ProjectWeeklyAction.java:125`
+
+#### `updateWeekly()`
+- **签名**: `public String updateWeekly()`
+- **参数**: `projectWeekly.weeklyId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 更新周报。查询周报信息和 7 类内容（work/risk/help/progress/plan/file/mail），若周报状态为 1（已提交）则查询反馈列表 `feedbackList`。最后更新项目最后刷新时间
+- **源码**: `ProjectWeeklyAction.java:192`
+
+#### `feedback()`
+- **签名**: `public String feedback()`
+- **参数**: `weeklyId`、`feedback`、`projectId`
+- **返回值**: `SUCCESS`
+- **业务逻辑**: 周报回复。调用 `projectService.saveWeeklyFeedback(weeklyId, feedback, projectId)` 保存回复，设置 `result=302`
+- **异常处理**: 捕获 Exception 打印堆栈
+- **源码**: `ProjectWeeklyAction.java:213`
+
+---
+
+## 31. ProjectMemberAction — 项目成员管理
+
+- **包路径**: `com.dp.plat.action`
+- **父类**: `ProjectBaseAction`
+- **Spring Bean**: `ProjectMemberAction`（scope=prototype）
+- **依赖服务**: `ProjectService`、`BasicDataService`
+- **职责**: 项目成员的创建、更新、安装地址保存、项目实施状态更新
+- **源码**: `ProjectMemberAction.java`
+
+### 方法
+
+#### `createMember()`
+- **签名**: `public String createMember()`
+- **参数**: `projectId`、`memberCode`、`memberName`、`memberRole`、`memberRoleName`、`phoneNum`、`email`、`memberEffectiveFrom`
+- **返回值**: `SUCCESS`（设置 `result`：新成员 ID 或 0）
+- **业务逻辑**: 创建项目成员。构造 `ProjectMember` 对象（项目类型固定为 `PROJECT_TYPE_AFTERSALES`，手机号去空格，创建人为当前用户，创建时间为当前时间，生效时间为 memberEffectiveFrom 或当前时间），调用 `projectService.insertProjectMember()` 新增，更新项目最后刷新时间，添加动态通知（`NOTIFICATION_CODE_113`）
+- **异常处理**: 捕获 Exception 设置 result=0
+- **源码**: `ProjectMemberAction.java:43`
+
+#### `updateMember()`
+- **签名**: `public String updateMember()`
+- **参数**: `memberId`、`memberEffectiveTo`、`projectId`
+- **返回值**: `SUCCESS`（设置 `result`：成员 ID 或 0）
+- **业务逻辑**: 更新项目成员信息。构造 `ProjectMember` 对象（仅设置 id 和 effectiveTo），调用 `projectService.updateProjectMember()` 更新，更新项目最后刷新时间，添加固定通知（`NOTIFICATION_CODE_116`）
+- **异常处理**: 捕获 Exception 设置 result=0
+- **源码**: `ProjectMemberAction.java:74`
+
+#### `saveInstallAdress()`
+- **签名**: `public String saveInstallAdress()`
+- **参数**: `projectId`、`selected`、`installAddress`
+- **返回值**: `SUCCESS`（设置 `result=303`）
+- **业务逻辑**: 保存安装地址。查询项目信息，根据 `salesType` 判断：
+  - salesType="14"：调用 5 参数版本 `insertInstallAddress(selected, projectId, installAddress, contractNo, column001)`
+  - 其他：调用 4 参数版本 `insertInstallAddress(selected, projectId, installAddress, contractNo)`
+  
+  最后更新项目最后刷新时间，添加固定通知（`NOTIFICATION_CODE_114`）
+- **注**: ⚠️ 方法名拼写错误：`saveInstallAdress`（应为 `saveInstallAddress`，少一个 `d`），源码已固化，调用方需注意
+- **源码**: `ProjectMemberAction.java:96`
+
+#### `updateProjectExecutionState()`
+- **签名**: `public String updateProjectExecutionState()`
+- **参数**: `project.projectId`、`project.executionState`
+- **返回值**: `SUCCESS`（设置 `result`：313=成功，0=失败）
+- **业务逻辑**: 更新项目实施状态。校验 projectId 和 executionState 非空，调用 `projectService.updateProjectExecutionState(projectId, executionState)` 更新
+- **异常处理**: 捕获 Exception 设置 result=0
+- **源码**: `ProjectMemberAction.java:118`
 
 ---
 
