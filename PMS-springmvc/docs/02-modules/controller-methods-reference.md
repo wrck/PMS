@@ -157,18 +157,18 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 |------|-----|----------|------|------|
 | `home` | `/pm/project/` | GET | 项目管理首页 | `project:list` |
 | `list` | `/pm/project/list` | GET | 项目列表查询 | `project:list` |
-| `findOne` | `/pm/project/{id}`、`/pm/project/modals/{id}` | GET | 项目详情查询 | `project:detail` |
-| `detail` | `/pm/project/detail`、`/pm/project/modals/detail` | GET | 项目详情页面 | `project:detail` |
+| `findOne` | `/pm/project/{id}` | GET | 项目详情查询（注：源码无 `/modals/{id}` 变体） | `project:detail` |
+| `detail` | `/pm/project/detail` | GET | 项目详情页面（注：源码无 `/modals/detail` 变体） | `project:detail` |
 | `create` | `/pm/project/detail` | POST | 新增项目 | `project:add` |
 | `update` | `/pm/project/{id}` | PUT | 更新项目 | `project:edit` |
 | `delete` | `/pm/project/{id}` | DELETE | 删除项目 | `project:delete` |
-| `toMerge` | `/pm/project/modals/merge` | GET | 合同合并弹窗 | `project:edit` |
-| `merge` | `/pm/project/merge` | POST | 合同合并提交 | `project:edit` |
-| `orderDetailByProjectId` | `/pm/project/{id}/orderDetailByProjectId` | GET | 按项目ID查询订单明细 | `project:detail` |
-| `orderDetailByContractNo` | `/pm/project/orderDetailByContractNo` | GET | 按合同号查询订单明细 | `project:detail` |
-| `productInfoByProjectCode` | `/pm/project/productInfoByProjectCode` | GET | 按项目编码查询产品信息 | `project:detail` |
-| `projectTask` | `/pm/project/{id}/projectTask` | GET | 项目任务列表 | `project:detail` |
-| `projectState` | `/pm/project/{id}/projectState` | GET | 项目状态查询 | `project:detail` |
+| `toMerge` | `/pm/project/{id}/transform/{type}` | GET | 项目类型转换弹窗（`type` 取值：`afToJf`/`jfToAf`/`afToYf`/`jfToYf`，原误标为 `modals/merge`） | `project:edit` |
+| `merge` | `/pm/project/{id}/transform/{type}` | POST | 项目类型转换提交（`type` 同上，原误标为 `merge`） | `project:edit` |
+| `orderDetailByProjectId` | `/pm/project/{ids}/orderDetail` | GET | 按项目ID查询订单明细（支持多 ID 逗号分隔） | `project:detail` |
+| `orderDetailByContractNo` | `/pm/project/orderDetail` | GET | 按合同号查询订单明细 | `project:detail` |
+| `productInfoByProjectCode` | `/pm/project/productInfo`、`/pm/project/{id}/productInfo` | GET | 按项目编码/项目ID查询产品信息 | `project:detail` |
+| `projectTask` | `/pm/project/{projectId}/task` | GET | 项目任务列表 | `project:detail` |
+| `projectState` | `/pm/project/{projectId}/state` | GET | 项目状态查询 | `project:detail` |
 | `syncSMSData` | `/pm/project/syncSMSData` | GET/POST | 同步 SMS 数据 | `project:edit` |
 | `checkPermission` | - | - | 权限检查（重写父类） | - |
 | `checkProjectTypeAndAreaPower` | - | - | 校验项目类型与区域权限（内部调用） | - |
@@ -191,16 +191,16 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 | `list` | `/workflow/list` | GET | 工作流列表查询 | `workflow:list` |
 | `info` | `/workflow/info/list` | GET | 工作流信息列表 | `workflow:list` |
 | `findOne` | `/workflow/{id}`、`/workflow/modals/{id}` | GET | 工作流详情查询 | `workflow:detail` |
-| `findOneByTaskId` | `/workflow/findByTaskId/{taskId}` | GET | 按任务ID查询工作流 | `workflow:detail` |
-| `checkTask` | `/workflow/checkTask/{taskId}` | GET | 检查任务权限 | `workflow:detail` |
+| `findOneByTaskId` | `/workflow/task/{taskId}`、`/workflow/task/modals/{taskId}` | GET | 按任务ID查询工作流 | `workflow:detail` |
+| `checkTask` | `/workflow/task/{taskId}/check` | GET | 检查任务权限 | `workflow:detail` |
 | `complete` | `/workflow/complete/{taskId}` | POST | 完成任务 | `workflow:edit` |
-| `batchComplete` | `/workflow/batchComplete` | POST | 批量完成任务（重载1：基于 instanceIds/userId） | `workflow:edit` |
-| `batchComplete` | `/workflow/batchComplete2` | POST | 批量完成任务（重载2：基于 taskIds） | `workflow:edit` |
-| `batchEvaluate` | `/workflow/batchEvaluate` | POST | 批量评价 | `workflow:edit` |
-| `closeProcess` | `/workflow/closeProcess` | POST | 关闭流程 | `workflow:edit` |
+| `batchComplete` | `/workflow/complete/batch` | POST | 批量完成任务（重载1：基于 instanceIds/userId） | `workflow:edit` |
+| `batchComplete` | `/workflow/{id}/revokeProcess` | POST | 批量完成任务（重载2：实为撤销流程 revokeProcess，原误标为 `batchComplete2`） | `workflow:edit` |
+| `batchEvaluate` | `/workflow/evaluate/batch` | POST | 批量评价 | `workflow:edit` |
+| `closeProcess` | `/workflow/test/closeProcess` | POST | 关闭流程（注：源码 URL 前缀含 `/test/`，原误标为 `/workflow/closeProcess`） | `workflow:edit` |
 | `withdrawTask` | `/workflow/withdraw/{instanceId}/{userId}` | POST | 撤回任务 | `workflow:edit` |
 | `startProcess` | `/workflow/startProcess` | POST | 启动流程实例 | `workflow:edit` |
-| `complete` (deprecated) | `/workflow/completeProcess/{taskId}` | POST | 完成流程（已废弃） | `workflow:edit` |
+| `complete` (deprecated) | `/workflow/{processKey}/complete/{taskId}` | POST | 完成流程（已废弃，源码用 `processKey` 路径变量） | `workflow:edit` |
 | `decoratorEntity` | - | - | 装饰实体对象（内部调用） | - |
 | `checkPermission` | - | - | 权限检查 | - |
 
@@ -382,6 +382,154 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 | `create` | `/pm/asset/leak/detail` | POST | 新增项目资产漏洞 | `projectAssetLeak:add` |
 | `update` | `/pm/asset/leak/{id}` | PUT | 更新项目资产漏洞 | `projectAssetLeak:edit` |
 | `delete` | `/pm/asset/leak/{id}` | DELETE | 删除项目资产漏洞 | `projectAssetLeak:delete` |
+
+---
+
+## 13. ProjectMemberController 方法
+
+### 13.1 方法列表
+
+> URL 命名空间：`/pm/member`（类级 `@RequestMapping(PROJECT_MANAGER + "member")`，注意常量末尾已带斜杠）
+> 继承 `AbstractController<ProjectMemberService, ProjectMember, ProjectMemberVO>`，仅重写以下方法。
+
+| 方法 | URL | HTTP 方法 | 功能 | 权限 |
+|------|-----|----------|------|------|
+| `update` | `/pm/member/{id}` | PUT | 更新项目成员（含权限校验） | `projectMember:edit` |
+| `delete` | `/pm/member/{id}` | DELETE | 删除项目成员（软删除，置 `disabled=true`） | `projectMember:delete` |
+
+> 通用方法（`home`/`list`/`findOne`/`detail`/`create`）继承自 `AbstractController`，详见 §2。
+
+---
+
+## 14. ProjectTaskController 方法
+
+### 14.1 方法列表
+
+> URL 命名空间：`/pm/project/task`（类级 `@RequestMapping(PROJECT_MANAGER + "/project/task")`，源码字面拼接产生双斜杠 `/pm//project/task`，Spring 默认归一化）
+> 继承 `AbstractController<ProjectTaskService, ProjectTask, TaskVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 权限 | 源码行号 |
+|------|-----|----------|------|------|---------|
+| `create` | `/pm//project/task/detail` | POST | 新增项目任务（交付件） | `projectTask:add` | 70 |
+| `update` | `/pm//project/task/{id}` | PUT | 更新项目任务 | `projectTask:edit` | 95 |
+| `delete` | `/pm//project/task/{id}` | DELETE | 删除项目任务 | `projectTask:delete` | 148 |
+| `toUpload` | `/pm//project/task/modals/upload` | GET | 上传弹窗页面 | `projectTask:detail` | 181 |
+| `uploadDeliverFile`（重载1） | `/pm//project/task/upload` | POST | 上传交付件文件 | `projectTask:edit` | 209 |
+| `uploadDeliverFile`（重载2） | `/pm//project/task/upload/{deliverId}` | DELETE | 删除已上传交付件 | `projectTask:delete` | 252 |
+| `uploadList` | `/pm//project/task/upload/list` | GET | 已上传交付件列表 | `projectTask:detail` | 264 |
+| `download` | `/pm//project/task/download` | GET/POST | 下载交付件 | `projectTask:detail` | 279 |
+
+> 通用方法（`home`/`list`/`findOne`/`detail`）继承自 `AbstractController`。
+
+---
+
+## 15. DailyReportController 方法
+
+### 15.1 方法列表
+
+> URL 命名空间：`/pm/daily/report`（类级 `@RequestMapping(PROJECT_MANAGER + "/daily/report")`，源码字面拼接产生双斜杠）
+> 继承 `AbstractController<DailyReportService, DailyReport, DailyReportVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 源码行号 |
+|------|-----|----------|------|---------|
+| `home` | `/pm//daily/report/` | GET | 日报首页 | - |
+| `list` | `/pm//daily/report/list` | GET | 日报列表 | - |
+| `findOne` | `/pm//daily/report/{id}` | GET | 日报详情 | - |
+| `detail` | `/pm//daily/report/detail` | GET | 日报详情页 | - |
+| `create` | `/pm//daily/report/detail` | POST | 新增日报 | - |
+| `update` | `/pm//daily/report/{id}` | PUT | 更新日报 | - |
+| `delete` | `/pm//daily/report/{id}` | DELETE | 删除日报 | - |
+| `exportDailyReportDoc` | `/pm//daily/report/export/{exportType}/report` | POST | 导出日报文档（`exportType`：doc/pdf/html） | 361 |
+| `mailSelectList` | `/pm//daily/report/mail/{mailType}/select`、`/modals/mail/{mailType}/select` | GET | 邮件收件人选择列表（`mailType`：to/cc/bcc） | 541 |
+| `mailDailyReport` | `/pm//daily/report/mail/{mailType}/report` | POST | 发送日报邮件 | 574 |
+
+---
+
+## 16. IndustryAssetController 方法
+
+### 16.1 方法列表
+
+> URL 命名空间：`/af/industry/asset`（类级 `@RequestMapping(AF_MANAGER + "/industry/asset")`，源码字面拼接产生双斜杠）
+> 继承 `AbstractController<IndustryAssetService, IndustryAsset, IndustryAssetVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 权限 |
+|------|-----|----------|------|------|
+| `home` | `/af//industry/asset/` | GET | 行业资产首页 | `industryAsset:list` |
+| `list` | `/af//industry/asset/list` | GET | 行业资产列表 | `industryAsset:list` |
+| `update` | `/af//industry/asset/{id}` | PUT | 更新行业资产 | `industryAsset:edit` |
+| `delete` | `/af//industry/asset/{id}` | DELETE | 删除行业资产 | `industryAsset:delete` |
+
+> 通用方法（`findOne`/`detail`/`create`）继承自 `AbstractController`。
+
+---
+
+## 17. IndustryLeakController 方法
+
+### 17.1 方法列表
+
+> URL 命名空间：`/af/industry/leak`（类级 `@RequestMapping(AF_MANAGER + "/industry/leak")`，源码字面拼接产生双斜杠）
+> 继承 `AbstractController<IndustryLeakService, IndustryLeak, IndustryLeakVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 权限 |
+|------|-----|----------|------|------|
+| `home` | `/af//industry/leak/` | GET | 行业漏洞首页 | `industryLeak:list` |
+| `list` | `/af//industry/leak/list` | GET | 行业漏洞列表 | `industryLeak:list` |
+| `update` | `/af//industry/leak/{id}` | PUT | 更新行业漏洞 | `industryLeak:edit` |
+| `delete` | `/af//industry/leak/{id}` | DELETE | 删除行业漏洞 | `industryLeak:delete` |
+
+> 通用方法（`findOne`/`detail`/`create`）继承自 `AbstractController`。
+
+---
+
+## 18. IndustryLeakWarningController 方法
+
+### 18.1 方法列表
+
+> URL 命名空间：`/af/industry/warning`（类级 `@RequestMapping(AF_MANAGER + "/industry/warning")`，源码字面拼接产生双斜杠）
+> 继承 `AbstractController<IndustryLeakWarningService, IndustryLeakWarning, IndustryLeakWarningVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 源码行号 |
+|------|-----|----------|------|---------|
+| `home` | `/af//industry/warning/` | GET | 行业漏洞预警首页 | - |
+| `list` | `/af//industry/warning/list` | GET | 行业漏洞预警列表 | - |
+| `update` | `/af//industry/warning/{id}` | PUT | 更新预警 | - |
+| `delete` | `/af//industry/warning/{id}` | DELETE | 删除预警 | - |
+| `warningAsset` | `/af//industry/warning/asset`、`/asset/list` | GET | 预警关联资产查询（含资产清单） | 113 |
+
+> 通用方法（`findOne`/`detail`/`create`）继承自 `AbstractController`。`warningAsset` 方法为该 Controller 特有的预警资产查询入口。
+
+---
+
+## 19. FacilitatorController 方法
+
+### 19.1 方法列表
+
+> URL 命名空间：`/pm/facilitator`（类级 `@RequestMapping(PROJECT_MANAGER + "facilitator")`）
+> 继承 `AbstractController<FacilitatorService, Facilitator, FacilitatorVO>`。
+
+| 方法 | URL | HTTP 方法 | 功能 | 权限 |
+|------|-----|----------|------|------|
+| `delete` | `/pm/facilitator/{id}` | DELETE | 删除服务商 | `facilitator:delete` |
+
+> 通用方法（`home`/`list`/`findOne`/`detail`/`create`/`update`）继承自 `AbstractController`，仅重写 `delete` 方法。
+
+---
+
+## 20. WorkBenchController 方法
+
+### 20.1 方法列表
+
+> URL 命名空间：`/workflow/workbench`（类级 `@RequestMapping("/workflow/workbench")`）
+> ⚠️ 该控制器**不继承 `AbstractController`**，所有方法均在该类中独立声明。
+
+| 方法 | URL | HTTP 方法 | 功能 | 源码行号 |
+|------|-----|----------|------|---------|
+| `listView` | `/workflow/workbench` | GET/POST | 工作台首页视图 | 35 |
+| `listToDoTask` | `/workflow/workbench/toDoList` | GET/POST | 待办任务列表 | 44 |
+| `listOthersTask` | `/workflow/workbench/listOthersTask` | GET/POST | 他人任务列表 | 77 |
+| `finishedTask` | `/workflow/workbench/finishedTaskList` | GET/POST | 已办任务列表 | 114 |
+
+> 📝 **历史修订记录**：2026-06-30 修订。新增 8 个 Controller 方法表（§13-§20），填补原版本仅出现在总览表但无方法级表格的缺口。方法 URL 与源码 `@RequestMapping` 实际值严格对齐。
 
 ---
 

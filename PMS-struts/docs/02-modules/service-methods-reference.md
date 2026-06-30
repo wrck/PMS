@@ -809,9 +809,11 @@
 - **功能描述**：查询项目最新周报ID
 - **事务类型**：无事务
 
-#### `String createProjectWeeklyExecl(ProjectWeekly, List<WeeklyContent>×6)`
+#### `String createProjectWeeklyExecl(ProjectWeekly projectWeekly, List<WeeklyContent> workcontentList, List<WeeklyContent> riskcontentList, List<WeeklyContent> helpcontentList, List<WeeklyContent> progresscontentList, List<WeeklyContent> plancontentList)`
 - **功能描述**：生成项目周报Excel文件
 - **事务类型**：无事务
+- **源码行号**：`ProjectService.java:403-408`
+- **签名修正**：原误标为 `List<WeeklyContent>×6`（暗示 6 个 WeeklyContent 列表参数），实际为 **5 个** `List<WeeklyContent>` 参数（workcontent/riskcontent/helpcontent/progresscontent/plancontent）+ 1 个 `ProjectWeekly` 参数，共 6 个参数但只有 5 个 List 参数
 
 #### `NotificationTemplate queryNotificationTemplate(String notificationCode)`
 - **功能描述**：查询通知模板
@@ -867,10 +869,12 @@
 - **功能描述**：查询合同关联项目数量
 - **事务类型**：无事务
 
-#### `List<Project> findProjectList(Object... objs)`
+#### `List<Project> findProjectList(Object... objs) throws UnsupportedEncodingException`
 - **功能描述**：查询项目列表（多条件）
 - **事务类型**：无事务
 - **核心算法**：根据传入参数动态构建查询条件
+- **源码行号**：`ProjectService.java:519`
+- **签名修正**：原遗漏 `throws UnsupportedEncodingException` 声明。该方法对参数进行 URL 解码可能抛出 `UnsupportedEncodingException`
 
 #### `void saveInstruction(Object... objs)`
 - **功能描述**：保存留言
@@ -944,6 +948,488 @@
 | `invalidProject()` | 失效 | invalid*不匹配任何事务前缀 |
 | `uploadFile()` | 上传 | upload*不匹配任何事务前缀 |
 | `insertProjectDeliverFiles()` | 插入 | insertProjectDeliver*不匹配insert*前缀 |
+
+### 补充方法文档（遗漏方法补全）
+
+> 以下方法为前期文档遗漏，现按功能类别分组补全。源码行号标注格式：`接口:ProjectService.java:行号` / `实现:ProjectServiceImpl.java:行号`。
+
+**【项目状态/计划相关方法】**
+
+#### `void insertOrUpdateProjectState(Project project)`
+- **功能描述**：插入或更新项目状态（按 projectId 查询，存在则更新，不存在则插入）
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **核心算法**：
+  1. 查询项目状态记录数 `projectDao.queryProjectState(projectId)`
+  2. size=0 则插入 `projectDao.insertProjectState()`
+  3. size>0 则更新 `projectDao.updateProjectState()`
+- **调用的DAO方法**：`projectDao.queryProjectState()`, `projectDao.insertProjectState()`, `projectDao.updateProjectState()`
+- **源码行号**：`ProjectService.java:582` / `ProjectServiceImpl.java:2627`
+
+#### `boolean queryProjectPlanState(int projectId)`
+- **功能描述**：查询项目是否首次制定计划（返回 true 表示需要更新计划状态）
+- **事务类型**：无事务（query*前缀）
+- **核心算法**：查询计划状态，若为 `PROJECT_PLAN_STATE_40` 或 null 则返回 true
+- **调用的DAO方法**：`projectDao.queryPlanState()`
+- **源码行号**：`ProjectService.java:617` / `ProjectServiceImpl.java:2638`
+
+#### `String queryProjectCurrentPlan(int projectId)`
+- **功能描述**：查询项目当前工程计划所处的阶段
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectCurrentPlan()`
+- **源码行号**：`ProjectService.java:623` / `ProjectServiceImpl.java:2647`
+
+#### `void updateProjectCloseTime(int closeObjId)`
+- **功能描述**：根据项目闭环申请主表ID更新项目闭环时间
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`projectDao.updateProjectCloseTime()`
+- **源码行号**：`ProjectService.java:628` / `ProjectServiceImpl.java:2653`
+
+#### `void updateProjectDirectCloseTime(int projectId)`
+- **功能描述**：根据项目ID直接更新项目闭环时间
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`projectDao.updateProjectDirectCloseTime()`
+- **源码行号**：`ProjectService.java:633` / `ProjectServiceImpl.java:2658`
+
+#### `void updateProjectLastRefreshTime(int projectId)`
+- **功能描述**：更新项目数据最新刷新时间
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`projectDao.updateProjectLastRefreshTime()`
+- **源码行号**：`ProjectService.java:638` / `ProjectServiceImpl.java:2663`
+
+#### `void updateProjectPlanStateToClose(int closeObjId)`
+- **功能描述**：根据闭环申请主表ID更新项目计划状态为"项目闭环"
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`projectDao.updateProjectPlanStateToClose()`
+- **源码行号**：`ProjectService.java:643` / `ProjectServiceImpl.java:2668`
+
+#### `void updateProjectCloseProcessState(Project project, String closeProcessState)`
+- **功能描述**：更新项目闭环流程状态（重载方法，接收 Project 对象）。当项目状态为"不予跟踪"或"已闭环"时，闭环流程状态强制改为"闭环结束"
+- **事务类型**：无事务（updateProjectClose*不匹配update*前缀规则）
+- **核心算法**：
+  1. 校验 project 和 projectId
+  2. 若项目状态为 `PROJECT_STATE_DENY` 或 `PROJECT_STATE_CLOSEDLOOP`，将 closeProcessState 改为 `PROJECT_CLOSE_PROCESS_STATE_50`
+  3. 通过自引用 `projectService.insertOrUpdateProjectState()` 更新状态（确保事务）
+- **调用的Service方法**：`projectService.insertOrUpdateProjectState()`（通过自引用调用确保事务）
+- **源码行号**：`ProjectService.java:610` / `ProjectServiceImpl.java:2609`
+- **注意事项**：⚠️ 写操作方法无事务保护，但内部调用 `insertOrUpdateProjectState()` 时该子方法有事务
+
+**【通知相关方法】**
+
+#### `void addFixedNotification(String templateCode, int projectId)`
+- **功能描述**：添加固定内容通知（按模板编码生成通知）
+- **事务类型**：REQUIRED（add*前缀匹配）
+- **核心算法**：构建 params Map（templateCode、projectId），调用 `NotificationTemplateUtil.KeepNotification()` 发送通知
+- **调用的工具类**：`NotificationTemplateUtil.KeepNotification()`
+- **源码行号**：`ProjectService.java:649` / `ProjectServiceImpl.java:2673`
+
+#### `void addDynamicNotification(String templateCode, int projectId, String content)` / `addDynamicNotification(String templateCode, int projectId, HashMap<String, Object> params)`
+- **功能描述**：添加动态内容通知（按模板编码+动态内容生成通知）
+- **事务类型**：REQUIRED（add*前缀匹配）
+- **参数**：
+  - 重载1：`content` 为动态通知文本内容
+  - 重载2：`params` 为动态参数 Map（除 templateCode、projectId 外的其他参数）
+- **核心算法**：将 templateCode、projectId 写入 params，调用 `NotificationTemplateUtil.KeepNotification()` 发送通知
+- **调用的工具类**：`NotificationTemplateUtil.KeepNotification()`
+- **源码行号**：`ProjectService.java:656, 663` / `ProjectServiceImpl.java:2681, 2690`
+
+**【回访/闭环相关方法】**
+
+#### `int queryProjectIdBycloseId(int closeObjId)`
+- **功能描述**：根据项目闭环申请主表ID获取项目ID
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectIdBycloseId()`
+- **源码行号**：`ProjectService.java:669` / `ProjectServiceImpl.java:2697`
+
+#### `List<CallBack> queryCallBackList(int projectId)`
+- **功能描述**：查询项目的回访流程任务列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryCallBackList()`
+- **源码行号**：`ProjectService.java:675` / `ProjectServiceImpl.java:2702`
+
+#### `int queryCallBackingSize(int projectId)`
+- **功能描述**：查询项目正在审批中的回访申请数量
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryCallBackingSize()`
+- **源码行号**：`ProjectService.java:681` / `ProjectServiceImpl.java:2707`
+
+#### `int canCloseLoop(Project project)`
+- **功能描述**：判断项目是否可以闭环
+- **事务类型**：无事务（can*不匹配任何事务前缀；查询判断方法）
+- **核心算法**：源码中前三个判断条件（安装数=发货数、回访完成、服务商/客户不为空）被注释，仅保留第四个判断：未上传必传交付件数量为 0 时返回 1（可闭环）
+- **调用的Service方法**：`this.queryNeededUndelivedCount(project)`
+- **源码行号**：`ProjectService.java:688` / `ProjectServiceImpl.java:2719`
+- **注意事项**：⚠️ 实际逻辑已大幅简化，原设计四条件仅剩交付件判断
+
+#### `List<CallBack> queryCallBackRunList(int projectId, int applyState)`
+- **功能描述**：查询项目正在审批中的回访流程（按审批状态过滤）
+- **事务类型**：无事务（query*前缀）
+- **参数**：`applyState` 回访申请状态
+- **调用的DAO方法**：`projectDao.queryCallBackRunList(params)`
+- **源码行号**：`ProjectService.java:733` / `ProjectServiceImpl.java:2761`
+
+**【订单/出货数据相关方法】**
+
+#### `List<OrderDataFromSap> queryRmaOrderDataByContractNo(String contractNo)`
+- **功能描述**：查询退货订单（RMA）信息，支持多合同号（逗号分隔）
+- **事务类型**：无事务（query*前缀）
+- **核心算法**：按逗号拆分合同号，逐个查询 RMA 订单数据并合并返回
+- **调用的DAO方法**：`projectDao.queryRmaOrderDataByContractNo(contract)`
+- **异常处理**：contractNo 为空时返回 `Collections.emptyList()`
+- **源码行号**：`ProjectService.java:695` / `ProjectServiceImpl.java:2769`
+
+#### `List<Project> queryProjectListByOfficeAndMemberCode(Project project)`
+- **功能描述**：根据办事处和成员编码查询项目列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectListByOfficeAndMemberCode()`
+- **源码行号**：`ProjectService.java:697` / `ProjectServiceImpl.java:2783`
+
+#### `List<RealProductLineBean> queryRealOrderDataListByProjectId(int projectId)` / `int queryRealOrderDataSizeByProjectId(int projectId)`
+- **功能描述**：查询项目真实订单数据列表/数量
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryRealOrderDataListByProjectId()`, `projectDao.queryRealOrderDataSizeByProjectId()`
+- **源码行号**：`ProjectService.java:704, 726` / `ProjectServiceImpl.java:2788, 2793`
+
+**【租赁配置相关方法】**
+
+#### `List<?> queryProjectLeaseLineByProjectCode(String smsProjectCode)` / `int queryProjectLeaseLineSizeByProjectCode(String smsProjectCode)`
+- **功能描述**：根据 SMS 项目编码查询租赁配置列表/数量
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectLeaseLineByProjectCode()`, `projectDao.queryProjectLeaseLineSizeByProjectCode()`
+- **源码行号**：`ProjectService.java:1082, 1089` / `ProjectServiceImpl.java:2798, 2803`
+
+#### `List<?> queryProjectProductConfigLevelInfoByProjectCode(String smsProjectCode)` / `int queryProjectProductConfigLevelInfoSizeByProjectCode(String smsProjectCode)`
+- **功能描述**：根据 SMS 项目编码查询产品配置级别信息列表/数量
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectProductConfigLevelInfoByProjectCode()`, `projectDao.queryProjectProductConfigLevelInfoSizeByProjectCode()`
+- **源码行号**：`ProjectService.java:1091, 1093` / `ProjectServiceImpl.java:2808, 2813`
+
+**【软件版本相关方法】**
+
+#### `List<ProjectSoftVersion> querySoftversionList(String contractNo, int projectId)` / `querySoftversionList(String contractNo, int projectId, String profitCenter)` / `querySoftversionList(String contractNo, int projectId, Map<String, Object> params)`
+- **功能描述**：查询项目软件版本列表（三个重载，分别支持基础查询、按利润中心过滤、按参数 Map 过滤）
+- **事务类型**：无事务（query*前缀）
+- **参数**：
+  - 重载1：合同号 + 项目ID
+  - 重载2：合同号 + 项目ID + 利润中心
+  - 重载3：合同号 + 项目ID + 参数 Map（支持扩展过滤条件）
+- **调用的DAO方法**：`projectDao.querySoftversionList()`（三个对应重载）
+- **源码行号**：`ProjectService.java:741, 750, 760` / `ProjectServiceImpl.java:2840, 2845, 2850`
+
+#### `List<ProjectSoftVersion> selectProjectSoftVersionList(ProjectSoftVersion projectSoftVersion, DisplayParam displayParam)`
+- **功能描述**：查询项目已保存的设备软件版本列表（分页）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectSoftVersionList()`
+- **源码行号**：`ProjectService.java:769` / `ProjectServiceImpl.java:2855`
+
+#### `void updateSoftversion(List<? extends ShipmentInfo> softversionList, SoftChangeLog softChangeLog)`
+- **功能描述**：更新软件版本（含版本变更日志记录、版本失效、新增版本）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：
+  1. 遍历 softversionList，使用 `SoftVersionUtil.createSoftVersionParser()` 解析 CONP 字段，填充 conpType/conpSeries/conpMark
+  2. 统计未变更数量 sameCount（conpChange+bootChange+cpldChange+pcbChange 均为 0）
+  3. 若存在变更且非全部未变更：
+     - 查询当前版本号 `querySoftVersionNum()`，生成新版本号 V(n+1)
+     - 失效现有最新版本记录 `updateInvalidSoftVersionLog()`
+     - 插入新的版本变更日志 `insertSoftVersionLog()`
+     - 回填 softChangeLog 属性（BeanUtil.copyProperties）
+     - 失效现有软件版本 `updateInvalidSoftversion()`
+     - 批量插入新软件版本 `insertSoftVersionList()`
+- **调用的DAO方法**：`projectDao.querySoftVersionNum()`, `projectDao.updateInvalidSoftVersionLog()`, `projectDao.insertSoftVersionLog()`, `projectDao.queryOneSoftChangeLog()`, `projectDao.updateInvalidSoftversion()`, `projectDao.insertSoftVersionList()`
+- **调用的工具类**：`SoftVersionUtil.createSoftVersionParser()`, `BeanUtil.copyProperties()`
+- **源码行号**：`ProjectService.java:776` / `ProjectServiceImpl.java:2859`
+
+#### `List<SoftChangeLog> queryHistSoftChangeLog(int projectId)`
+- **功能描述**：查询项目软件版本历史变更日志
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryHistSoftChangeLog()`
+- **源码行号**：`ProjectService.java:782` / `ProjectServiceImpl.java:2910`
+
+#### `List<ProjectSoftVersion> queryHistSoftVersionList(SoftChangeLog softChangeLog)`
+- **功能描述**：检索具体的版本变更信息（支持查询出厂版本和变更版本）
+- **事务类型**：无事务（query*前缀）
+- **核心算法**：
+  1. 若 `softChangeLog.getId() == -1`，查询出厂版本：先查询项目获取合同号，再调用 `queryHistSoftVersionList(softChangeLog, contractNo)`
+  2. 否则查询变更版本：直接调用 `queryHistSoftVersionList(softChangeLog)`
+- **调用的DAO方法**：`projectDao.queryProjectById()`, `projectDao.queryHistSoftVersionList()`（两个重载）
+- **源码行号**：`ProjectService.java:788` / `ProjectServiceImpl.java:2915`
+
+#### `SoftChangeLog queryOneSoftChangeLog(int id)`
+- **功能描述**：查询单个版本更新日志
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryOneSoftChangeLog()`
+- **源码行号**：`ProjectService.java:794` / `ProjectServiceImpl.java:2926`
+
+**【邮件/成员相关方法】**
+
+#### `String queryMailByUserNameFromOA(String userName)`
+- **功能描述**：从同步的 OA 数据库表中查询邮件地址
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryMailByUserNameFromOA()`
+- **源码行号**：`ProjectService.java:807` / `ProjectServiceImpl.java:2931`
+
+#### `List<ProjectMember> queryValidMemberByProjectId(int projectId)`
+- **功能描述**：查询项目有效的成员，只包括销售、服务经理和项目经理
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryValidMemberByProjectId()`
+- **源码行号**：`ProjectService.java:814` / `ProjectServiceImpl.java:2936`
+
+**【批量操作相关方法】**
+
+#### `int batchDeleteProject(List<Project> projectList)`
+- **功能描述**：批量删除项目（主要用于借货项目的实施）
+- **事务类型**：无事务（batchDelete*不匹配任何事务前缀规则）
+- **核心算法**：
+  1. 拼接合同号字符串
+  2. 查询存在的项目列表 `queryExistsProjectByContractNos()`
+  3. 对每个项目调用 `termainteActivities()` 终止审批流程
+  4. 调用 `projectDao.batchDeleteProject()` 批量删除
+- **调用的DAO方法**：`projectDao.queryExistsProjectByContractNos()`, `projectDao.batchDeleteProject()`
+- **调用的私有方法**：`termainteActivities(project)`
+- **源码行号**：`ProjectService.java:820` / `ProjectServiceImpl.java:2945`
+- **注意事项**：⚠️ 写操作方法无事务保护
+
+#### `int batchInvalidProject(List<Project> projectList)`
+- **功能描述**：批量失效项目（主要用于借货项目的实施）
+- **事务类型**：无事务（batchInvalid*不匹配任何事务前缀规则）
+- **核心算法**：
+  1. 拼接合同号字符串
+  2. 查询存在的项目列表
+  3. 对每个项目调用 `termainteActivities()` 终止审批流程
+  4. 调用 `this.invalidProject()` 失效项目
+  5. 返回失效的项目数量
+- **调用的DAO方法**：`projectDao.queryExistsProjectByContractNos()`
+- **调用的Service方法**：`this.invalidProject(projectId)`
+- **源码行号**：`ProjectService.java:827` / `ProjectServiceImpl.java:2962`
+- **注意事项**：⚠️ 写操作方法无事务保护
+
+#### `List<Project> queryTransferProjectList(Project project)`
+- **功能描述**：转移设备界面查询项目列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryTransferProjectList()`
+- **源码行号**：`ProjectService.java:834` / `ProjectServiceImpl.java:2982`
+
+**【通知/导出导入相关方法】**
+
+#### `List<Notification> queryNotifyList(int projectId)`
+- **功能描述**：查询项目通知列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryNotifyList()`
+- **源码行号**：`ProjectService.java:891` / `ProjectServiceImpl.java:2987`
+
+#### `void importSpotCheckIgnoreItem(List<Item> itemList)`
+- **功能描述**：导入现场验货单需要忽略序列号明细的 item
+- **事务类型**：REQUIRED（@Transactional注解；import*虽不匹配事务前缀但显式声明事务）
+- **核心算法**：
+  1. 校验 itemList 非空
+  2. 清空忽略列表 `truncateSpotCheckIgnoreItem()`
+  3. 批量插入 `batchInsertSpotCheckIgnoreItem()`
+- **调用的DAO方法**：`projectDao.truncateSpotCheckIgnoreItem()`, `projectDao.batchInsertSpotCheckIgnoreItem()`
+- **源码行号**：`ProjectService.java:885` / `ProjectServiceImpl.java:2993`
+
+#### `Map<String, String> exportSpotCheckList(Project project)`
+- **功能描述**：导出现场验货单为 Excel（失败则降级为 Word 文档）
+- **事务类型**：无事务（export*不匹配任何事务前缀；只读导出操作）
+- **核心算法**：
+  1. 根据 salesType 区分查询验货清单（"14"总代借货带 column001，其他不带）
+  2. 加载 Excel 模板 `com/dp/plat/template/spotCheck.xlsx`
+  3. 填充项目名称、合同号
+  4. 遍历明细填充行（合同号、item编码、名称、数量、序列号、备注）
+  5. 写入文件，返回 filePath/fileName
+- **异常处理**：
+  | 异常类型 | 触发条件 | 处理方式 |
+  |----------|----------|----------|
+  | Exception | Excel 生成失败 | 降级为 Word 文档生成（spotCheckDoc.ftl 模板）；Word 失败则返回 null |
+- **调用的DAO方法**：`projectDao.querySpotCheckList()`（两个重载）
+- **调用的工具类**：`WordUtil.createWord()`, POI（XSSFWorkbook）
+- **源码行号**：`ProjectService.java:873` / `ProjectServiceImpl.java:3002`
+
+#### `Map<String, String> exportOverWarrantyRemindList(Project project)`
+- **功能描述**：导出过保提醒函为 Word 文档
+- **事务类型**：无事务（export*不匹配任何事务前缀；只读导出操作）
+- **核心算法**：
+  1. 根据 salesType 区分查询过保提醒清单（"14"总代借货带 column001）
+  2. 并行流查询各合同号的订单创建时间，排序得到服务周期起止时间
+  3. 查询服务经理人员信息 `queryPersonFromOaByCode()`
+  4. 构建数据 Map（客户名称、服务经理、周期起止、维保状态、清单）
+  5. 调用 `WordUtil.createWord()` 生成 Word 文档
+- **调用的DAO方法**：`projectDao.queryOverWarrantyRemindList()`, `projectDao.queryPersonFromOaByCode()`
+- **调用的Service方法**：`this.queryProjectByContractNo()`
+- **调用的工具类**：`WordUtil.createWord()`
+- **异常处理**：Exception 时 e.printStackTrace() 并返回 null
+- **源码行号**：`ProjectService.java:879` / `ProjectServiceImpl.java:3098`
+
+**【维保相关方法】**
+
+#### `ProjectMaintenanceVO selectProjectMaintenanceById(Integer id)`
+- **功能描述**：根据 ID 查询项目维保记录
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectMaintenanceById()`
+- **源码行号**：`ProjectService.java:909` / `ProjectServiceImpl.java:3256`
+
+#### `List<ProjectMaintenanceVO> selectProjectMaintenanceList(ProjectMaintenanceVO projectMaintenance)` / `selectProjectMaintenanceVOList(ProjectMaintenanceVO projectMaintenance)`
+- **功能描述**：查询项目维保列表（两个重载方法，分别返回不同视图对象）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectMaintenanceList()`, `projectDao.selectProjectMaintenanceVOList()`
+- **源码行号**：`ProjectService.java:897, 915` / `ProjectServiceImpl.java:3261, 3266`
+
+#### `List<Map<String, Object>> selectProjectMaintenanceMapList(ProjectMaintenanceVO projectMaintenance)` / `selectProjectMaintenanceMapList(ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam)`
+- **功能描述**：查询项目维保 Map 列表（重载方法，带 DisplayParam 支持分页）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectMaintenanceMapList()`（两个重载）
+- **源码行号**：`ProjectService.java:921, 928` / `ProjectServiceImpl.java:3271, 3276`
+
+#### `Integer insertOrUpdateProjectMaintenance(ProjectMaintenance projectMaintenance)`
+- **功能描述**：插入或更新项目维保记录
+- **事务类型**：REQUIRED（@Transactional注解 + insert*前缀匹配）
+- **核心算法**：
+  1. 记录原 id（更新场景）
+  2. 调用 `projectDao.insertOrUpdateProjectMaintenance()` 执行插入或更新
+  3. 若原 id 不为 null，回填到 projectMaintenance 对象
+- **调用的DAO方法**：`projectDao.insertOrUpdateProjectMaintenance()`
+- **源码行号**：`ProjectService.java:903` / `ProjectServiceImpl.java:3282`
+
+#### `Integer selectSingleProjectMaintenanceMaxId(ProjectMaintenance projectMaintenance)`
+- **功能描述**：查询单个项目中最大的维护记录 ID
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectSingleProjectMaintenanceMaxId()`
+- **源码行号**：`ProjectService.java:1003` / `ProjectServiceImpl.java:3292`
+
+#### `Map<String, Object> queryProjectWarrantyState(Integer projectId)`
+- **功能描述**：查询项目的维保状态、维保级别、增值服务
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectWarrantyState()`
+- **源码行号**：`ProjectService.java:1020` / `ProjectServiceImpl.java:3297`
+
+#### `boolean uploadMaintenanceFile(ProjectMaintenanceVO projectMaintenance, ProjectDeliver projectDeliver, String deliverId, ProjectDeliver deliverFile)`
+- **功能描述**：项目维护上传交付件（含服务交付记录、邮件通知）
+- **事务类型**：REQUIRED（@Transactional注解；upload*虽不匹配事务前缀但显式声明事务）
+- **参数**：
+  - `projectMaintenance`：维保 VO（含 projectId、processTime、warrantyState、officeCode 等）
+  - `projectDeliver`：交付件对象
+  - `deliverId`：交付件 ID
+  - `deliverFile`：上传的交付件文件
+- **核心算法**：
+  1. 调用 `this.uploadFile()` 上传交付件
+  2. 查询交付件名称 `queryDeliverName()`
+  3. 读取服务交付配置 `querySysArg("pm.project.maintenance.serviceDelivery.deliverFile")`
+  4. 调用 `matchServiceDeliveryConfigMap()` 匹配交付件对应的服务配置（服务名、年服务次数、服务编码等）
+  5. 计算最近服务周期 `DateUtil.getNearlyYearDates()`
+  6. 多交付件场景校验是否已上传 `queryProjectMaintenanceServiceDeliveriedByMap()`
+  7. 查询上传次数 `queryProjectMaintenanceDeliverCount()`
+  8. 插入服务交付记录 `insertProjectServiceDeliveryBySelective()`
+  9. 回填年服务次数、当前服务次数到 warrantyState
+  10. 判断是否在服务期限内，期限内发送邮件：
+      - 主送：项目经理、服务经理
+      - 抄送：销售、办事处主任、服务交付验收小组群组邮箱
+      - 调用 `NotificationTemplateUtil.keepMail()` 发送
+- **调用的DAO方法**：`projectDao.queryDeliverName()`, `projectDao.queryProjectMaintenanceServiceDeliveriedByMap()`, `projectDao.insertProjectServiceDeliveryBySelective()`
+- **调用的Service方法**：`this.uploadFile()`, `this.queryValidMemberEmailByProjectIdAndRoles()`, `basicDataService.querySysArg()`
+- **调用的工具类**：`DateUtil.getNearlyYearDates()`, `NotificationTemplateUtil.keepMail()`, `SpringContext.getApplicationContext().getBean()`
+- **异常处理**：服务期限外返回 false（不发送邮件）
+- **源码行号**：`ProjectService.java:1029` / `ProjectServiceImpl.java:3303`
+- **注意事项**：方法名 upload* 不匹配事务前缀，但通过 @Transactional 显式声明事务
+
+#### `List<Map<String, Object>> selectProjectMaintenanceServiceDeliveryList(ProjectMaintenanceVO projectMaintenance, DisplayParam displayParam)`
+- **功能描述**：查询服务交付列表（含服务次数、剩余次数、服务周期等计算字段）
+- **事务类型**：无事务（select*前缀）
+- **核心算法**：
+  1. 查询服务交付配置 Map `queryServiceDeliveryConfigMap()`
+  2. 设置 serviceTypes 过滤条件
+  3. 调用 `projectDao.selectProjectMaintenanceServiceDeliveryList()` 查询列表
+  4. 遍历每条记录：
+     - 匹配服务配置（serviceName、yearCount、deliverId）
+     - 计算最近服务周期 `DateUtil.getNearlyYearDates()`
+     - 查询上传次数 `queryProjectMaintenanceDeliverCount()`
+     - 填充 serviceName、yearCount、serviceCount、quarterCount、remainedCount、serviceStartDate、serviceEndDate 等计算字段
+  5. 移除未匹配配置的记录
+- **调用的DAO方法**：`projectDao.selectProjectMaintenanceServiceDeliveryList()`
+- **调用的Service方法**：`this.queryServiceDeliveryConfigMap()`, `this.queryProjectMaintenanceDeliverCount()`
+- **调用的工具类**：`DateUtil.getNearlyYearDates()`
+- **源码行号**：`ProjectService.java:1037` / `ProjectServiceImpl.java:3466`
+
+**【项目督查相关方法】**
+
+#### `ProjectSupervisionVO selectProjectSupervisionById(Integer id)`
+- **功能描述**：根据 ID 查询项目督查记录
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectSupervisionById()`
+- **源码行号**：`ProjectService.java:965` / `ProjectServiceImpl.java:3592`
+
+#### `List<ProjectSupervisionVO> selectProjectSupervisionList(ProjectSupervisionVO projectSupervision)` / `selectProjectSupervisionVOList(ProjectSupervisionVO projectSupervision)`
+- **功能描述**：查询项目督查列表（两个重载方法，分别返回不同视图对象）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectSupervisionList()`, `projectDao.selectProjectSupervisionVOList()`
+- **源码行号**：`ProjectService.java:971, 977` / `ProjectServiceImpl.java:3597, 3602`
+
+#### `List<Map<String, Object>> selectProjectSupervisionMapList(ProjectSupervisionVO projectSupervision)` / `selectProjectSupervisionMapList(ProjectSupervisionVO projectSupervision, DisplayParam displayParam)`
+- **功能描述**：查询项目督查 Map 列表（重载方法，带 DisplayParam 支持分页）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProjectSupervisionMapList()`（两个重载）
+- **源码行号**：`ProjectService.java:983, 990` / `ProjectServiceImpl.java:3607, 3612`
+
+#### `Integer insertOrUpdateProjectSupervision(ProjectSupervision projectSupervision)`
+- **功能描述**：插入或更新项目督查记录
+- **事务类型**：REQUIRED（@Transactional注解 + insert*前缀匹配）
+- **调用的DAO方法**：`projectDao.insertOrUpdateProjectSupervision()`
+- **源码行号**：`ProjectService.java:996` / `ProjectServiceImpl.java:3618`
+
+**【其他方法】**
+
+#### `void updateSoleAgentLendProject()`
+- **功能描述**：更新总代借货的项目信息（合同号、项目名称）
+- **事务类型**：REQUIRED（@Transactional注解 + update*前缀匹配）
+- **核心算法**：
+  1. 获取当前用户（失败则默认 "sys"）
+  2. 通过 SqlMapClientTemplate 创建临时表（tempSoleAgentProjectTable、tempNewOrderContractInfoTable、tempOldOrderContractInfoTable）
+  3. 查询总代借货项目列表 `querySoleAgentProject()`
+  4. 对每个项目：
+     - `mergeOldSoleAgentLendProjectContract()` 合并历史订单合同
+     - `mergeNewSoleAgentLendProjectContract()` 合并新订单合同
+  5. finally 块清理临时表
+- **调用的DAO方法**：`projectDao.querySoleAgentProject()`，以及 SqlMapClientTemplate 直接调用 createTemp*/dropTemp* 操作
+- **调用的私有方法**：`mergeOldSoleAgentLendProjectContract()`, `mergeNewSoleAgentLendProjectContract()`
+- **异常处理**：Exception 时 e.printStackTrace()，finally 块始终清理临时表
+- **源码行号**：`ProjectService.java:1008` / `ProjectServiceImpl.java:3625`
+
+#### `List<Map<String, Object>> queryMarketRelations()`
+- **功能描述**：查询市场关系列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryMarketRelations()`
+- **源码行号**：`ProjectService.java:1040` / `ProjectServiceImpl.java:3860`
+
+#### `List<Map<String, Object>> selectContractAcceptanceDeliveryInfo(Map<String, Object> params)`
+- **功能描述**：查询合同号的交付件完成情况
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectContractAcceptanceDeliveryInfo()`
+- **源码行号**：`ProjectService.java:1047` / `ProjectServiceImpl.java:3865`
+
+#### `List<Map<String, Object>> selectProblemTicket(Map<String, Object> params)` / `selectLicenseInfo(Map<String, Object> params)`
+- **功能描述**：查询项目的工单信息 / License 授权信息
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`projectDao.selectProblemTicket()`, `projectDao.selectLicenseInfo()`
+- **源码行号**：`ProjectService.java:1054, 1061` / `ProjectServiceImpl.java:3870, 3875`
+
+#### `List<Map<String, Object>> selectProblemTicketByProject(Project project)`
+- **功能描述**：通过项目的发货列表查询项目的工单信息
+- **事务类型**：无事务（select*前缀）
+- **核心算法**：
+  1. 查询项目简化信息 `this.queryProjectSimplifyByProjectId()` 获取合同号
+  2. 若为总代借货项目（salesType="14"），取利润中心 column001
+  3. 构建 params（contractNo、sourceContractNo 去除 -L/-C 后缀、projectId、profitCenter、excludeTransferOut=true）
+  4. 调用 `projectDao.selectProblemTicketByProjectBarcode()` 查询
+- **调用的DAO方法**：`projectDao.selectProblemTicketByProjectBarcode()`
+- **调用的Service方法**：`this.queryProjectSimplifyByProjectId()`
+- **异常处理**：project 为 null 或查询不到项目时返回 `Collections.emptyList()`
+- **源码行号**：`ProjectService.java:1068` / `ProjectServiceImpl.java:3880`
+
+#### `String getUploadFileRename(String targetFileName)`
+- **功能描述**：将上传的文件重命名（生成唯一文件名）
+- **事务类型**：无事务（get*前缀；纯工具方法）
+- **核心算法**：
+  1. 调用私有方法 `getRename(targetFileName)`
+  2. `getRename()` 解析扩展名，调用 `getName()` 生成新文件名
+  3. `getName()` 生成规则：yyyyMMddHHmmss 时间戳 + 10 位随机字符（a-z0-9）
+- **源码行号**：`ProjectService.java:539` / `ProjectServiceImpl.java:2298`
 
 ---
 
@@ -1068,6 +1554,146 @@
 - **功能描述**：异步更新售前项目各阶段耗时
 - **核心算法**：新线程执行 `presalesDao.updatePresalesDuration()`
 - **注意事项**：⚠️ 新线程不在事务上下文中，可能导致数据不一致
+
+### 补充方法文档（遗漏方法补全）
+
+> 以下方法为前期文档遗漏，现按功能类别分组补全。源码行号标注格式：`接口:PresalesService.java:行号` / `实现:PresalesServiceImpl.java:行号`。
+
+**【查询类方法】**
+
+#### `List<PresalesProduct> queryPresalesProductByPresalesId(int presalesId)`
+- **功能描述**：根据售前项目ID查询售前产品明细列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`presalesDao.queryPresalesProductByPresalesId()`
+- **源码行号**：`接口:PresalesService.java:37` / `实现:PresalesServiceImpl.java:165`
+
+#### `List<Presales> queryPresalesList(Presales presales, DisplayParam displayParam) throws UnsupportedEncodingException`
+- **功能描述**：按条件分页查询售前项目列表
+- **事务类型**：无事务（query*前缀）
+- **参数**：
+  - `presales`：查询条件对象
+  - `displayParam`：分页显示参数
+- **调用的DAO方法**：`presalesDao.queryPresalesList()`
+- **源码行号**：`接口:PresalesService.java:50` / `实现:PresalesServiceImpl.java:294`
+
+#### `List<PresalesComment> queryPresalesCommentList(int presalesId)`
+- **功能描述**：查询售前项目流程审批意见列表
+- **事务类型**：无事务（query*前缀）
+- **核心算法**：以 `Presales` 类名为 procdefKey 查询活动审批意见
+- **调用的DAO方法**：`presalesDao.queryActComment(presalesId, "Presales")`
+- **源码行号**：`接口:PresalesService.java:57` / `实现:PresalesServiceImpl.java:299`
+
+#### `int queryPresalesQuesnaireId(Presales presales)`
+- **功能描述**：查询当前售前任务保存的问卷ID
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`presalesDao.queryQuesnaireIdBycallbackId()`
+- **源码行号**：`接口:PresalesService.java:85` / `实现:PresalesServiceImpl.java:484`
+
+#### `List<ShipmentInfo> queryPresaleShipmentInfo(String projectCode)` / `List<ShipmentInfo> queryPresaleShipmentInfo(String projectCode, boolean containRma)`
+- **功能描述**：查询售前测试发货信息
+- **事务类型**：无事务（query*前缀）
+- **参数**：
+  - 重载1：默认不包含退货设备
+  - 重载2：`containRma` 控制是否包含退货设备
+- **调用的DAO方法**：`presalesDao.queryPresaleShipmentInfo()`
+- **源码行号**：`接口:PresalesService.java:142,149` / `实现:PresalesServiceImpl.java:674,679`
+
+#### `List<PresalesExportVO> queryPresalesExportData(Presales presales)`
+- **功能描述**：查询售前项目导出数据
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`presalesDao.queryPresalesExportData()`
+- **源码行号**：`接口:PresalesService.java:168` / `实现:PresalesServiceImpl.java:723`
+
+#### `List<ProjectDeliver> queryProjectDeliverList(ProjectDeliver projectDeliver)`
+- **功能描述**：查询项目交付件列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`projectDao.queryProjectDeliverList()`
+- **源码行号**：`接口:PresalesService.java:181` / `实现:PresalesServiceImpl.java:782`
+
+#### `List<Map<String, Object>> queryPresaleLend2SaleInfo(String presalesCode)`
+- **功能描述**：查询售前项目借货转销售信息
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`presalesDao.queryPresaleLend2SaleInfo()`
+- **源码行号**：`接口:PresalesService.java:196` / `实现:PresalesServiceImpl.java:684`
+
+#### `List<Map<String, Object>> queryPresaleLend2RmaInfo(String presalesCode)`
+- **功能描述**：查询售前项目借货转退货（RMA）信息
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`presalesDao.queryPresaleLend2RmaInfo()`
+- **源码行号**：`接口:PresalesService.java:201` / `实现:PresalesServiceImpl.java:689`
+
+#### `List<Map<String, Object>> selectPresalesTempAuthInfo(Map<String, Object> params)`
+- **功能描述**：查询售前项目临时授权数据
+- **事务类型**：无事务（select*前缀）
+- **参数**：`params` 查询参数 Map
+- **调用的DAO方法**：`presalesDao.selectPresalesTempAuthInfo()`
+- **源码行号**：`接口:PresalesService.java:207` / `实现:PresalesServiceImpl.java:694`
+
+**【状态更新/闭环相关方法】**
+
+#### `void updateEndingPresalesProject(int presalesId)`
+- **功能描述**：结束售前项目（正常闭环）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：构建 paramMap（applyState=流程通过、projectState=已闭环、endTime=当前时间），更新售前项目状态
+- **调用的DAO方法**：`presalesDao.updatePresalesState()`
+- **源码行号**：`接口:PresalesService.java:90` / `实现:PresalesServiceImpl.java:489`
+
+#### `void updateEnding20PresalesProject(int presalesId)`
+- **功能描述**：直接闭环售前项目（状态置为不予跟踪）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：构建 paramMap（applyState=流程通过、projectState=不予跟踪、endTime=当前时间），更新售前项目状态
+- **调用的DAO方法**：`presalesDao.updatePresalesState()`
+- **源码行号**：`接口:PresalesService.java:95` / `实现:PresalesServiceImpl.java:499`
+
+#### `void updatePresalesTaskDeliverFiles(int taskId, String fileIds)`
+- **功能描述**：更新项目计划任务对应的交付件ID
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：校验 fileIds 和 taskId 非空/非0后委托 DAO 更新
+- **调用的DAO方法**：`presalesDao.updatePresalesTaskDeliverFiles()`
+- **源码行号**：`接口:PresalesService.java:120` / `实现:PresalesServiceImpl.java:642`
+
+#### `void updatePresalesTask(Date taskFinshedTime, int presalesTaskId)` / `void updatePresalesTask(Date taskFinshedTime, String remark, int presalesTaskId)`
+- **功能描述**：更新售前任务计划完成时间（含进展情况）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：
+  1. 重载1（仅完成时间）：委托给重载2，传 remark=null
+  2. 重载2（完成时间+备注）：直接调用 DAO 更新
+- **调用的DAO方法**：`presalesDao.updatePresalesTask()`
+- **源码行号**：`接口:PresalesService.java:126,163` / `实现:PresalesServiceImpl.java:649,655`
+
+#### `void updatePresalesConfirmFileIds(int presalesId, String fileIds)`
+- **功能描述**：更新交付件信息到售前项目主表（confirmFileIds 字段）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：校验 fileIds 不为空且 presalesId>0 后委托 DAO 更新
+- **调用的DAO方法**：`presalesDao.updatePresalesConfirmFileIds()`
+- **源码行号**：`接口:PresalesService.java:132` / `实现:PresalesServiceImpl.java:660`
+
+#### `void updatePrealesFileIds(int presalesId, int taskId, int fileId)`
+- **功能描述**：更新售前任务文件ID（注：方法名存在拼写错误 `Preales`）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：校验 fileId、presalesId、taskId 均 >0 后委托 DAO 更新
+- **调用的DAO方法**：`presalesDao.updatePrealesFileIds()`
+- **源码行号**：`接口:PresalesService.java:135` / `实现:PresalesServiceImpl.java:667`
+- **注意事项**：⚠️ 方法名 `updatePrealesFileIds` 存在拼写错误（Preales 应为 Presales），但接口与实现保持一致
+
+#### `int deleteDeliverById(int fileId)`
+- **功能描述**：根据交付件ID删除交付件（置为失效），返回所属项目ID
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **核心算法**：
+  1. 调用 DAO 将交付件置为失效
+  2. 查询该交付件信息
+  3. 更新事件实际完成日期
+  4. 返回 projectId
+- **调用的DAO方法**：`projectDao.deleteDeliverById()`, `projectDao.queryProjectDeliverById()`
+- **调用的Service方法**：`this.updateEventActualFinishDateByTask()`（private）
+- **返回值**：交付件所属的 projectId
+- **源码行号**：`接口:PresalesService.java:186` / `实现:PresalesServiceImpl.java:787`
+
+#### `void updateProjectDeliverById(ProjectDeliver projectDeliver)`
+- **功能描述**：根据ID更新项目交付件信息
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`projectDao.updateProjectDeliverById()`
+- **源码行号**：`接口:PresalesService.java:191` / `实现:PresalesServiceImpl.java:795`
 
 ---
 
@@ -1613,13 +2239,17 @@
 - **功能描述**：更新流程委派规则
 - **事务类型**：无事务（update*前缀匹配事务规则，但Service未配置事务代理）
 
-#### `List<DpActProcDesc> getRunTask(DpActProcDesc, String)`
+#### `List<DpActProcDesc> getRunTask(DpActProcDesc dpActProcDesc, DisplayParam displayParam)`
 - **功能描述**：获取运行中任务（含流程描述）
 - **事务类型**：无事务
+- **源码行号**：`WorkFlowService.java:314`
+- **签名修正**：原误标为 `getRunTask(DpActProcDesc, String)`，第二参数实际为 `DisplayParam` 类型（流程变量展示参数对象）
 
-#### `List<DpActProcDesc> getRunVariable(DpActProcDesc, String)`
+#### `List<DpActProcDesc> getRunVariable(DpActProcDesc dpActProcDesc, DisplayParam displayParam)`
 - **功能描述**：获取运行中流程变量
 - **事务类型**：无事务
+- **源码行号**：`WorkFlowService.java:322`
+- **签名修正**：原误标为 `getRunVariable(DpActProcDesc, String)`，第二参数实际为 `DisplayParam` 类型
 
 #### `List<DpActProcDesc> findRunVariableList(DisplayParam, DpActProcDesc)`
 - **功能描述**：查询运行中流程变量列表
@@ -1778,9 +2408,11 @@
 - **功能描述**：查询运行中的任务（按任务类型）
 - **事务类型**：无事务
 
-#### `List<String> getprojectcodelistbyusername(String)` / `getprojectcodelistfrombeforebyusername(String)`
+#### `List<String> getprojectcodelistbyusername(String usernamenow)` / `List<Integer> getprojectcodelistfrombeforebyusername(String usernamenow)`
 - **功能描述**：根据用户名查询项目编码列表
 - **事务类型**：无事务
+- **源码行号**：`WorkSpaceService.java:15`、`WorkSpaceService.java:18`
+- **签名修正**：原误将 `getprojectcodelistfrombeforebyusername` 返回类型标为 `List<String>`，源码实际返回 `List<Integer>`（项目ID列表，非编码字符串列表）。`getprojectcodelistbyusername` 返回 `List<String>` 正确
 
 #### `String getprojectbyapplyid(int)` / `getprojectbyapplyidorder(int)`
 - **功能描述**：根据申请ID查询项目编码
@@ -1909,6 +2541,339 @@
   4. 添加排除条件
   5. 构建查询并执行
 
+### 补充方法文档（遗漏方法补全）
+
+> 以下方法为前期文档遗漏，现按功能类别分组补全。源码行号标注格式：`接口:ProbManageService.java:行号` / `实现:ProbManageServiceImpl.java:行号`。
+
+**【技术公告查询类方法】**
+
+#### `List<Prob> queryProbList(Prob prob, DisplayParam displayParam)`
+- **功能描述**：查询技术公告列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbList()`
+- **源码行号**：`接口:ProbManageService.java:43` / `实现:ProbManageServiceImpl.java:119`
+
+#### `Prob queryOneProb(Prob prob)`
+- **功能描述**：查询单个技术公告信息
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryOneProb()`
+- **源码行号**：`接口:ProbManageService.java:49` / `实现:ProbManageServiceImpl.java:124`
+
+#### `Map<Integer, String> queryProbFileMap(int probId)`
+- **功能描述**：查询技术公告的附件 Map（附件ID → 路径）
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbFileMap()`
+- **源码行号**：`接口:ProbManageService.java:85` / `实现:ProbManageServiceImpl.java:272`
+
+#### `List<ProbParam> queryExportProbList(Map<Object, Object> params)`
+- **功能描述**：查询导出技术公告数据
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryExportProbList()`
+- **源码行号**：`接口:ProbManageService.java:175` / `实现:ProbManageServiceImpl.java:902`
+
+#### `void deleteProbInfo(int probId)`
+- **功能描述**：删除技术公告
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **调用的DAO方法**：`probManageDao.deleteProbInfo()`
+- **源码行号**：`接口:ProbManageService.java:121` / `实现:ProbManageServiceImpl.java:465`
+
+**【软件版本相关方法】**
+
+#### `List<SoftVersion> checkSoftVersionList(SoftVersion softVersion)`
+- **功能描述**：检索符合条件的软件版本
+- **事务类型**：无事务（check*前缀）
+- **调用的DAO方法**：`probManageDao.checkSoftVersionList()`
+- **源码行号**：`接口:ProbManageService.java:61` / `实现:ProbManageServiceImpl.java:213`
+
+#### `List<SoftVersion> querySoftVersionList(int probId)` / `List<SoftVersion> querySoftVersionList(SoftVersion softVersion)`
+- **功能描述**：查询受技术公告影响的软件版本列表
+- **事务类型**：无事务（query*前缀）
+- **参数**：
+  - 重载1：按技术公告ID查询
+  - 重载2：按 SoftVersion 条件查询
+- **调用的DAO方法**：`probManageDao.querySoftVersionList()`
+- **源码行号**：`接口:ProbManageService.java:67,73` / `实现:ProbManageServiceImpl.java:218,223`
+
+#### `void batchAddSoftVersion(List<SoftVersion> softVersions)`
+- **功能描述**：批量导入软件版本信息
+- **事务类型**：REQUIRED（add*前缀匹配，batchAdd* 含 add 前缀）
+- **调用的DAO方法**：`probManageDao.batchAddSoftVersion()`
+- **源码行号**：`接口:ProbManageService.java:180` / `实现:ProbManageServiceImpl.java:907`
+
+**【技术公告修复任务相关方法】**
+
+#### `List<ProbRestore> queryProbRestoreList(ProbRestore probRestore, DisplayParam restoreDisplayParam)`
+- **功能描述**：查询设备修复情况的数据对象集合
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbRestoreList()`
+- **源码行号**：`接口:ProbManageService.java:92` / `实现:ProbManageServiceImpl.java:277`
+
+#### `List<ProbRestore> queryProbRestoreTaskList(ProbRestore probRestore, DisplayParam restoreDisplayParam) throws UnsupportedEncodingException`
+- **功能描述**：查询技术公告修复子任务列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbRestoreTaskList()`
+- **源码行号**：`接口:ProbManageService.java:108` / `实现:ProbManageServiceImpl.java:372`
+
+#### `List<ProbRestore> queryProbRestoreTaskProjectList(ProbRestore probRestore, DisplayParam restoreDisplayParam) throws UnsupportedEncodingException`
+- **功能描述**：查询子任务涉及的项目列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbRestoreTaskProjectList()`
+- **源码行号**：`接口:ProbManageService.java:170` / `实现:ProbManageServiceImpl.java:378`
+
+#### `void bacthDeleteProbRestores(String probRestoreIds)`
+- **功能描述**：批量删除子任务（注：方法名存在拼写错误 `bacth`）
+- **事务类型**：无事务（bacth*不匹配任何事务前缀；虽然语义为删除，但前缀不匹配）
+- **参数**：`probRestoreIds` 逗号分隔的子任务ID
+- **调用的DAO方法**：`probManageDao.bacthDeleteProbRestores()`
+- **源码行号**：`接口:ProbManageService.java:157` / `实现:ProbManageServiceImpl.java:856`
+- **注意事项**：⚠️ 方法名 `bacthDeleteProbRestores` 存在拼写错误（bacth 应为 batch），且前缀不匹配事务规则导致无事务保护
+
+**【邮件通知相关方法】**
+
+#### `void keepRelaseEmail(Prob prob, List<SoftVersion> softVersionList, String remark, String root, String files, String bccs) throws IOException`
+- **功能描述**：保存发布邮件（无模板版本，手动拼接邮件内容）
+- **事务类型**：REQUIRED（keep*前缀匹配）
+- **参数**：
+  - `prob`：技术公告主信息（必须要有主键）
+  - `softVersionList`：软件版本列表（可为空，为空时查询数据库）
+  - `remark`：邮件备注/主题补充
+  - `root`：根目录（用于附件路径）
+  - `files`：附件路径（为空时查询公告附件）
+  - `bccs`：密送邮件地址
+- **核心算法**：
+  1. 拼接邮件主题：`【工程项目管理系统-技术公告发布】` + 公告编号 + 主题
+  2. 构建邮件内容（含跟踪者、状态、严重级别、影响版本、产品类型、描述、解决方案、签名）
+  3. 加载 signature.properties 签名配置
+  4. 处理附件列表（files 为空时查询公告附件）
+  5. 调用 `NotificationTemplateUtil.keepMailNoTemplate()` 发送
+- **调用的DAO方法**：`probManageDao.querySoftVersionList()`, `probManageDao.queryProbFileList()`
+- **调用的工具类**：`NotificationTemplateUtil.keepMailNoTemplate()`
+- **源码行号**：`接口:ProbManageService.java:136` / `实现:ProbManageServiceImpl.java:753`
+
+**【周报相关方法】**
+
+#### `void insertProbTaskWeekly(int fileId, int probId, String root, String weeklyPath) throws IOException`
+- **功能描述**：保存技术公告进展周报并发送邮件通知
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **参数**：
+  - `fileId`：周报文件ID
+  - `probId`：技术公告ID
+  - `root`：根目录
+  - `weeklyPath`：周报文件路径
+- **核心算法**：
+  1. 保存周报记录到数据库
+  2. 查询技术公告信息
+  3. 获取 tsc 群组邮件地址（prob.execute.mail）
+  4. 调用 `keepRelaseEmail()` 发送邮件（主题为"任务进展周报"）
+- **调用的DAO方法**：`probManageDao.insertProbTaskWeekly()`, `probManageDao.queryOneProb()`
+- **调用的Service方法**：`this.keepRelaseEmail()`
+- **源码行号**：`接口:ProbManageService.java:145` / `实现:ProbManageServiceImpl.java:839`
+
+#### `List<ProbRestoreWeekly> queryProbWeekly(int probId, String username)`
+- **功能描述**：查询技术公告进展附件列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbWeekly()`
+- **源码行号**：`接口:ProbManageService.java:152` / `实现:ProbManageServiceImpl.java:851`
+
+**【统计报表相关方法】**
+
+#### `List<ProbStatistic> queryProbStatisticList(ProbStatistic probStatistic, DisplayParam displayParam)`
+- **功能描述**：查询已维护的项目软件版本统计表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbStatisticList()`
+- **源码行号**：`接口:ProbManageService.java:188` / `实现:ProbManageServiceImpl.java:912`
+
+#### `List<ProbStatistic> queryProbStatisticListWithReport(ProbStatistic probStatistic, DisplayParam displayParam, List<ReportLineData> reportLineDatas)`
+- **功能描述**：查询已维护的项目软件版本统计表（附带报表数据）
+- **事务类型**：无事务（query*前缀）
+- **参数**：`reportLineDatas` 报表行数据列表
+- **调用的DAO方法**：`probManageDao.queryProbStatisticListWithReport()`
+- **源码行号**：`接口:ProbManageService.java:196` / `实现:ProbManageServiceImpl.java:917`
+
+#### `List<Project> queryProbStatisticProjectList(ProbStatistic probStatistic, DisplayParam displayParam)`
+- **功能描述**：查询原厂直服的项目列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryProbStatisticProjectList()`
+- **源码行号**：`接口:ProbManageService.java:204` / `实现:ProbManageServiceImpl.java:923`
+
+#### `List<?> queryContractShipmentSoftList(ProbStatistic probStatistic, DisplayParam displayParam)`
+- **功能描述**：查询合同发货软件版本列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`probManageDao.queryContractShipmentSoftList()`
+- **源码行号**：`接口:ProbManageService.java:211` / `实现:ProbManageServiceImpl.java:928`
+
+**【阅读日志相关方法】**
+
+#### `void insertProbReadLog(ProbReadLog probReadLog)`
+- **功能描述**：插入技术公告阅读日志
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertProbReadLog()`
+- **源码行号**：`接口:ProbManageService.java:220` / `实现:ProbManageServiceImpl.java:945`
+
+#### `List<ProbReadLog> queryProbReadLogList(ProbReadLog probReadLog, DisplayParam displayParam)`
+- **功能描述**：查询技术公告阅读日志列表（含权限过滤）
+- **事务类型**：无事务（query*前缀）
+- **核心算法**：非管理员/技术公告管理员/技术支持人员角色时，强制设置 reader 为当前登录用户（仅查询自己的阅读记录）
+- **调用的DAO方法**：`probManageDao.queryProbReadLogList()`
+- **源码行号**：`接口:ProbManageService.java:227` / `实现:ProbManageServiceImpl.java:950`
+
+**【产品组件 ProductComponent CRUD 方法】**
+
+#### `ProductComponent selectProductComponentById(Integer id)`
+- **功能描述**：根据ID查询产品组件
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProductComponentById()`
+- **源码行号**：`接口:ProbManageService.java:233` / `实现:ProbManageServiceImpl.java:963`
+
+#### `ProductComponentVO selectProductComponentVOById(Integer id)`
+- **功能描述**：根据ID查询产品组件 VO（含关联信息）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProductComponentVOById()`
+- **源码行号**：`接口:ProbManageService.java:239` / `实现:ProbManageServiceImpl.java:968`
+
+#### `List<ProductComponent> selectProductComponentList(ProductComponent component)`
+- **功能描述**：查询产品组件列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProductComponentList()`
+- **源码行号**：`接口:ProbManageService.java:245` / `实现:ProbManageServiceImpl.java:973`
+
+#### `List<ProductComponentVO> selectProductComponentListPageable(ProductComponentPageParam pageParam)`
+- **功能描述**：分页查询产品组件列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProductComponentListPageable()`
+- **源码行号**：`接口:ProbManageService.java:251` / `实现:ProbManageServiceImpl.java:978`
+
+#### `Integer countProductComponentListPageable(ProductComponentPageParam pageParam)`
+- **功能描述**：统计分页查询产品组件列表总数
+- **事务类型**：无事务（count*为查询统计方法）
+- **调用的DAO方法**：`probManageDao.countProductComponentListPageable()`
+- **源码行号**：`接口:ProbManageService.java:257` / `实现:ProbManageServiceImpl.java:983`
+
+#### `Integer insertProductComponent(ProductComponent component)`
+- **功能描述**：插入产品组件
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertProductComponent()`
+- **源码行号**：`接口:ProbManageService.java:262` / `实现:ProbManageServiceImpl.java:988`
+
+#### `Integer insertProductComponentSelective(ProductComponent component)`
+- **功能描述**：选择性插入产品组件（仅插入非空字段）
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertProductComponentSelective()`
+- **源码行号**：`接口:ProbManageService.java:268` / `实现:ProbManageServiceImpl.java:993`
+
+#### `Integer insertOrUpdateProductComponentSelective(ProductComponent component)`
+- **功能描述**：选择性插入或更新产品组件
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertOrUpdateProductComponentSelective()`
+- **源码行号**：`接口:ProbManageService.java:274` / `实现:ProbManageServiceImpl.java:998`
+
+#### `void updateProductComponentById(ProductComponent component)`
+- **功能描述**：根据ID更新产品组件
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`probManageDao.updateProductComponentById()`
+- **源码行号**：`接口:ProbManageService.java:285` / `实现:ProbManageServiceImpl.java:1003`
+
+#### `void updateProductComponentByIdSelective(ProductComponent component)`
+- **功能描述**：根据ID选择性更新产品组件（仅更新非空字段）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`probManageDao.updateProductComponentByIdSelective()`
+- **源码行号**：`接口:ProbManageService.java:289` / `实现:ProbManageServiceImpl.java:1008`
+
+#### `void deleteProductComponentById(Integer id)`
+- **功能描述**：根据ID删除产品组件
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **调用的DAO方法**：`probManageDao.deleteProductComponentById()`
+- **源码行号**：`接口:ProbManageService.java:280` / `实现:ProbManageServiceImpl.java:1013`
+
+**【技术公告产品 ProbProduct CRUD 方法】**
+
+#### `ProbProduct selectProbProductById(Integer id)`
+- **功能描述**：根据ID查询技术公告产品
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProbProductById()`
+- **源码行号**：`接口:ProbManageService.java:295` / `实现:ProbManageServiceImpl.java:1018`
+
+#### `ProbProductVO selectProbProductVOById(Integer id)`
+- **功能描述**：根据ID查询技术公告产品 VO（含关联信息）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProbProductVOById()`
+- **源码行号**：`接口:ProbManageService.java:301` / `实现:ProbManageServiceImpl.java:1023`
+
+#### `List<ProbProduct> selectProbProductList(ProbProduct probProduct)`
+- **功能描述**：查询技术公告产品列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProbProductList()`
+- **源码行号**：`接口:ProbManageService.java:307` / `实现:ProbManageServiceImpl.java:1028`
+
+#### `List<ProbProductVO> selectProbProductListPageable(ProbProductPageParam pageParam)`
+- **功能描述**：分页查询技术公告产品列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`probManageDao.selectProbProductListPageable()`
+- **源码行号**：`接口:ProbManageService.java:313` / `实现:ProbManageServiceImpl.java:1033`
+
+#### `Integer countProbProductListPageable(ProbProductPageParam pageParam)`
+- **功能描述**：统计分页查询技术公告产品列表总数
+- **事务类型**：无事务（count*为查询统计方法）
+- **调用的DAO方法**：`probManageDao.countProbProductListPageable()`
+- **源码行号**：`接口:ProbManageService.java:319` / `实现:ProbManageServiceImpl.java:1038`
+
+#### `Integer insertProbProduct(ProbProduct probProduct)`
+- **功能描述**：插入技术公告产品
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertProbProduct()`
+- **源码行号**：`接口:ProbManageService.java:324` / `实现:ProbManageServiceImpl.java:1043`
+
+#### `Integer insertProbProductSelective(ProbProduct probProduct)`
+- **功能描述**：选择性插入技术公告产品（仅插入非空字段）
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertProbProductSelective()`
+- **源码行号**：`接口:ProbManageService.java:330` / `实现:ProbManageServiceImpl.java:1048`
+
+#### `Integer insertOrUpdateProbProductSelective(ProbProduct probProduct)`
+- **功能描述**：选择性插入或更新技术公告产品
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **调用的DAO方法**：`probManageDao.insertOrUpdateProbProductSelective()`
+- **源码行号**：`接口:ProbManageService.java:349` / `实现:ProbManageServiceImpl.java:1053`
+
+#### `void updateProbProductById(ProbProduct probProduct)`
+- **功能描述**：根据ID更新技术公告产品
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`probManageDao.updateProbProductById()`
+- **源码行号**：`接口:ProbManageService.java:341` / `实现:ProbManageServiceImpl.java:1058`
+
+#### `void updateProbProductByIdSelective(ProbProduct probProduct)`
+- **功能描述**：根据ID选择性更新技术公告产品（仅更新非空字段）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`probManageDao.updateProbProductByIdSelective()`
+- **源码行号**：`接口:ProbManageService.java:345` / `实现:ProbManageServiceImpl.java:1063`
+
+#### `void updateProbProductByProbIdSelective(ProbProduct probProduct)`
+- **功能描述**：根据技术公告ID选择性更新技术公告产品（批量更新该公告下的所有产品）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`probManageDao.updateProbProductByProbIdSelective()`
+- **源码行号**：`接口:ProbManageService.java:347` / `实现:ProbManageServiceImpl.java:1068`
+
+#### `void deleteProbProductById(Integer id)`
+- **功能描述**：根据ID删除技术公告产品
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **调用的DAO方法**：`probManageDao.deleteProbProductById()`
+- **源码行号**：`接口:ProbManageService.java:336` / `实现:ProbManageServiceImpl.java:1073`
+
+#### `void deleteProbProductByProbId(Integer probId)`
+- **功能描述**：根据技术公告ID删除其下所有产品（批量删除）
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **调用的DAO方法**：`probManageDao.deleteProbProductByProbId()`
+- **源码行号**：`接口:ProbManageService.java:348` / `实现:ProbManageServiceImpl.java:1078`
+
+**【产品条目查询方法】**
+
+#### `List<? extends Object> selectProductItemListByExample(ProductItemExample example)`
+- **功能描述**：根据条件范例查询产品条目列表（规范输入）
+- **事务类型**：无事务（select*前缀）
+- **参数**：`example` ProductItemExample 查询条件范例对象
+- **调用的DAO方法**：`probManageDao.selectProductItemListByExample()`
+- **源码行号**：`接口:ProbManageService.java:369` / `实现:ProbManageServiceImpl.java:1135`
+
 ---
 
 ## 21. SubcontractServiceImpl
@@ -1964,6 +2929,453 @@
 
 #### `List<Project> queryProjectList(Project)` / `List<Project> queryProjectList(SubcontractProject)`
 - **功能描述**：查询项目列表
+
+### 补充方法文档（遗漏方法补全）
+
+> 以下方法为前期文档遗漏，现按功能类别分组补全。源码行号标注格式：`接口:SubcontractService.java:行号` / `实现:SubcontractServiceImpl.java:行号`。
+
+**【列表/查询类方法】**
+
+#### `List<SubcontractProject> selectSubcontractProjectList(SubcontractProject subcontractProject)`
+- **功能描述**：查询转包项目列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractProjectList()`
+- **源码行号**：`接口:SubcontractService.java:39` / `实现:SubcontractServiceImpl.java:202`
+
+#### `List<SubcontractProjectVO> selectSubcontractProjectVOList(SubcontractProject subcontractProject)`
+- **功能描述**：查询转包项目 VO 列表（含关联信息）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractProjectVOList()`
+- **源码行号**：`接口:SubcontractService.java:45` / `实现:SubcontractServiceImpl.java:207`
+
+#### `List<SubcontractFacilitator> selectSubcontractFacilitatorList(SubcontractFacilitator subcontractFacilitator)`
+- **功能描述**：查询服务商列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractFacilitatorList()`
+- **源码行号**：`接口:SubcontractService.java:53` / `实现:SubcontractServiceImpl.java:245`
+
+#### `List<SubcontractLine> selectSubcontractLineList(SubcontractLine subcontractLine)`
+- **功能描述**：查询转包序列号清单列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractLineList()`
+- **源码行号**：`接口:SubcontractService.java:137` / `实现:SubcontractServiceImpl.java:461`
+
+#### `SubcontractDeliver selectSubcontractDeliverById(Integer deliverId)`
+- **功能描述**：根据ID查询转包交付件
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractDeliverById()`
+- **源码行号**：`接口:SubcontractService.java:143` / `实现:SubcontractServiceImpl.java:466`
+
+#### `List<SubcontractDeliver> selectSubcontractDeliverList(SubcontractDeliver deliver)`
+- **功能描述**：查询转包交付件列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractDeliverList()`
+- **源码行号**：`接口:SubcontractService.java:149` / `实现:SubcontractServiceImpl.java:471`
+
+#### `List<SubcontractDeliverVO> selectSubcontractDeliverVOList(SubcontractDeliver deliver)`
+- **功能描述**：查询转包交付件 VO 列表（含关联信息）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractDeliverVOList()`
+- **源码行号**：`接口:SubcontractService.java:155` / `实现:SubcontractServiceImpl.java:476`
+
+#### `List<SubcontractPayment> selectSubcontractPaymentList(SubcontractPayment payment)`
+- **功能描述**：查询转包付款信息列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractPaymentList()`
+- **源码行号**：`接口:SubcontractService.java:364` / `实现:SubcontractServiceImpl.java:251`
+
+#### `SubcontractPayment selectSubcontractPaymentById(Integer paymentId)`
+- **功能描述**：根据ID查询转包付款信息
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractPaymentById()`
+- **源码行号**：`接口:SubcontractService.java:371` / `实现:SubcontractServiceImpl.java:256`
+
+#### `String querySubcontractPaiedAmount(Integer subcontractId)`
+- **功能描述**：查询转包项目已付款总额
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.querySubcontractPaiedAmmount()`（注：DAO方法名存在拼写错误 `Ammount`）
+- **源码行号**：`接口:SubcontractService.java:399` / `实现:SubcontractServiceImpl.java:261`
+
+#### `List<Map<String, Object>> queryContractNoEngineeFee(String contractNos)`
+- **功能描述**：查询合同工程服务费
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.queryContractNoEngineeFee()`
+- **源码行号**：`接口:SubcontractService.java:232` / `实现:SubcontractServiceImpl.java:780`
+
+#### `List<SubcontractPrice> queryContractNoEngineeFeeWithSubPrice(String contractNos, Integer subcontractId)`
+- **功能描述**：查询工程服务费（附带转包价）
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.queryContractNoEngineeFeeWithSubPrice()`
+- **源码行号**：`接口:SubcontractService.java:240` / `实现:SubcontractServiceImpl.java:785`
+
+#### `List<SubcontractCallback> selectSubcontractCallbackList(SubcontractCallback subcontractCallback)`
+- **功能描述**：查询转包回访记录列表
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractCallbackList()`
+- **源码行号**：`接口:SubcontractService.java:444` / `实现:SubcontractServiceImpl.java:3213`
+
+#### `SubcontractCallback selectMaxSubcontractCallback(SubcontractCallback subcontractCallback)`
+- **功能描述**：查询最新一条转包回访记录
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectMaxSubcontractCallback()`
+- **源码行号**：`接口:SubcontractService.java:450` / `实现:SubcontractServiceImpl.java:3218`
+
+#### `List<Map<String, Object>> querySubcontractCommentList(Integer subcontractId)`
+- **功能描述**：查询转包流程审批意见列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.querySubcontractCommentList()`
+- **源码行号**：`接口:SubcontractService.java:452` / `实现:SubcontractServiceImpl.java:3227`
+
+#### `SubcontractFacilitator selectSubcontractFacilitatorById(Integer id)`
+- **功能描述**：根据ID查询服务商
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectSubcontractFacilitatorById()`
+- **源码行号**：`接口:SubcontractService.java:468` / `实现:SubcontractServiceImpl.java:3249`
+
+#### `List<SubcontractProjectVO> querySubcontractInfoForProject(String projectIds)`
+- **功能描述**：查询项目转包记录（供项目管理中使用）
+- **事务类型**：无事务（query*前缀）
+- **参数**：`projectIds` 逗号分隔的项目ID
+- **调用的DAO方法**：`dao.querySubcontractInfoForProject()`
+- **源码行号**：`接口:SubcontractService.java:482` / `实现:SubcontractServiceImpl.java:3254`
+
+#### `List<Map<String, Object>> selectRejectedSubcontractProjectList(HashMap<String, Object> params)`
+- **功能描述**：服务经理查询被驳回的转包申请（显示在待办事项中）
+- **事务类型**：无事务（select*前缀）
+- **调用的DAO方法**：`dao.selectRejectedSubcontractProjectList()`
+- **源码行号**：`接口:SubcontractService.java:530` / `实现:SubcontractServiceImpl.java:3273`
+
+#### `List<SubcontractProjectVO> querySubcontractExportData(SubcontractProjectVO subcontractVO)`
+- **功能描述**：转包列表数据导出
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.querySubcontractExportData()`
+- **源码行号**：`接口:SubcontractService.java:537` / `实现:SubcontractServiceImpl.java:3278`
+
+#### `List<SubcontractProjectVO> queryNextPaymentTask()`
+- **功能描述**：查询下一付款任务列表
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.queryNextPaymentTask()`
+- **源码行号**：`接口:SubcontractService.java:568` / `实现:SubcontractServiceImpl.java:3284`
+
+#### `List<SubcontractPayment> querySSESubcontractPaymentList()`
+- **功能描述**：查询 SSE 新增的转包付款信息
+- **事务类型**：无事务（query*前缀）
+- **调用的DAO方法**：`dao.querySSESubcontractPaymentList()`
+- **源码行号**：`接口:SubcontractService.java:574` / `实现:SubcontractServiceImpl.java:3289`
+
+#### `Map<String, String> selectDefaultMultiDimByDep(String depNum)` / `Map<String, String> selectDefaultMultiDimByDep(String depNum, boolean directWithoutCache)`
+- **功能描述**：根据部门查询默认多维度信息
+- **事务类型**：无事务（select*前缀）
+- **参数**：
+  - 重载1：默认查询
+  - 重载2：`directWithoutCache` 为 true 时直接查询数据库，不查询缓存
+- **调用的DAO方法**：`dao.selectDefaultMultiDimByDep()`
+- **源码行号**：`接口:SubcontractService.java:581,589` / `实现:SubcontractServiceImpl.java:3486,3497`
+
+#### `Task queryCurrentTask(Integer subcontractId)`
+- **功能描述**：查询转包项目当前流程任务（已弃用）
+- **事务类型**：无事务（query*前缀）
+- **调用的其他Service方法**：`taskService.createTaskQuery()...`
+- **源码行号**：`接口:SubcontractService.java:255` / `实现:SubcontractServiceImpl.java:2864`
+- **注意事项**：⚠️ @Deprecated 已弃用
+
+#### `SubcontractComment queryCurrentSubcontractCommon(Integer subcontractId)`
+- **功能描述**：查询转包项目当前流程通用参数（已弃用）
+- **事务类型**：无事务（query*前缀）
+- **调用的其他Service方法**：`workFlowService.queryProcessVarMap()`
+- **源码行号**：`接口:SubcontractService.java:314` / `实现:SubcontractServiceImpl.java:2879`
+- **注意事项**：⚠️ @Deprecated 已弃用
+
+#### `WorkflowCommonParam queryCurrentWorkFlowCommonParam(Integer subcontractId)` / `queryCurrentWorkFlowCommonParam(Integer, String)` / `queryCurrentWorkFlowCommonParam(Integer, String, String)` / `queryCurrentWorkFlowCommonParam(Integer, String, String, HashMap)`
+- **功能描述**：查询转包项目当前流程通用参数（4个重载）
+- **事务类型**：无事务（query*前缀）
+- **参数**：
+  - 重载1：仅 subcontractId
+  - 重载2：subcontractId + taskKey
+  - 重载3：subcontractId + taskKey + roleGroup
+  - 重载4：subcontractId + taskKey + roleGroup + params（额外参数）
+- **核心算法**：根据 taskKey 和 roleGroup 过滤查询当前活动任务及其流程变量
+- **调用的其他Service方法**：`taskService.createTaskQuery()`, `workFlowService.queryProcessVarMap()`
+- **源码行号**：`接口:SubcontractService.java:320,406,415,425` / `实现:SubcontractServiceImpl.java:2898,2903,2908,2914`
+
+**【交付件相关方法】**
+
+#### `boolean saveDeliverFiles(Integer subcontractId, List<SubcontractDeliverVO> uploadDeliverList)`
+- **功能描述**：保存上传的交付件文件（含发票识别）
+- **事务类型**：REQUIRED（save*前缀匹配；本实现未配置 @Transactional 注解，但按前缀规则判为 REQUIRED）
+- **核心算法**：
+  1. 文件上传白名单校验
+  2. 遍历交付件列表，对每个文件：重命名 → 保存 → 插入交付件记录
+  3. 识别发票类型附件，收集发票文件列表
+  4. 调用 `verifySubcontractPaymentDeliver()` 进行发票识别
+  5. 更新付款申请对应的发票编号
+- **返回值**：callBackFlag（是否需要发起回访流程，当前实现固定返回 false）
+- **调用的Service方法**：`this.insertSubcontractDeliver()`, `this.verifySubcontractPaymentDeliver()`, `this.updateSubcontractPaymentInvoiceNumber()`
+- **调用的工具类**：`UploadFileUtil`, `SubcontractUtil`, `FPApi`（发票识别API）
+- **源码行号**：`接口:SubcontractService.java:204` / `实现:SubcontractServiceImpl.java:488`
+
+#### `void deleteSubcontractDeliver(SubcontractDeliverVO subcontractDeliverVO)`
+- **功能描述**：删除转包交付件
+- **事务类型**：REQUIRED（delete*前缀匹配）
+- **核心算法**：
+  1. 遍历待删除的交付件ID，查询其关联的 paymentId
+  2. 调用 DAO 删除交付件
+  3. 更新受影响的付款申请对应的发票编号
+- **调用的DAO方法**：`dao.deleteSubcontractDeliver()`
+- **调用的Service方法**：`this.selectSubcontractDeliverById()`, `this.updateSubcontractPaymentInvoiceNumber()`
+- **源码行号**：`接口:SubcontractService.java:172` / `实现:SubcontractServiceImpl.java:703`
+
+#### `void updateSubcontractDeliverByIdSelective(SubcontractDeliver subcontractDeliver)`
+- **功能描述**：根据ID选择性更新转包交付件（仅更新非空字段）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **调用的DAO方法**：`dao.updateSubcontractDeliverByIdSelective()`
+- **源码行号**：`接口:SubcontractService.java:165` / `实现:SubcontractServiceImpl.java:335`
+
+#### `Result verifySubcontractPaymentDeliver(Integer subcontractId, Integer paymentId)` / `Result verifySubcontractPaymentDeliver(SubcontractPayment payment)`
+- **功能描述**：付款附件查验（发票识别与验真）
+- **事务类型**：无事务（verify*前缀不匹配事务规则，且未配置 @Transactional 注解）
+- **核心算法**：
+  1. 重载1：构建 SubcontractPayment 对象委托给重载2
+  2. 重载2：查询指定类型的交付件列表 → 按文件路径分组去重 → 委托给内部三参重载
+  3. 内部三参重载：调用 `FPApi.postElectronicInvoice()` 发票识别API → 更新交付件的发票信息和类型
+- **调用的Service方法**：`this.selectSubcontractDeliverList()`, `this.updateSubcontractDeliverByIdSelective()`
+- **调用的工具类**：`FPApi`, `SubcontractUtil`, `InvoiceUtil`
+- **源码行号**：`接口:SubcontractService.java:612,619` / `实现:SubcontractServiceImpl.java:569,582`
+
+#### `Result updateSubcontractPaymentInvoiceNumber(Set<Integer> paymentIds)`
+- **功能描述**：更新付款申请对应的发票编号（汇总发票号和金额）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：
+  1. 遍历 paymentIds
+  2. 查询每个付款的发票类型交付件列表
+  3. 提取去重的发票编号和金额合计
+  4. 更新付款记录的发票编号和金额
+- **调用的Service方法**：`this.selectSubcontractDeliverList()`, `this.updateSubcontractPaymentByIdSelective()`
+- **调用的工具类**：`InvoiceUtil`, `MapUtil`
+- **源码行号**：`接口:SubcontractService.java:625` / `实现:SubcontractServiceImpl.java:725`
+
+**【CRUD 方法】**
+
+#### `void createSubcontractProject(SubcontractProject, List<SubcontractLine>, List<SubcontractDeliver>, File[])` / `createSubcontractProject(SubcontractProject, List<SubcontractLine>, List<SubcontractDeliverVO>)` / `createSubcontractProject(SubcontractProject, List<SubcontractDeliverVO>)` / `createSubcontractProject(SubcontractProject, List<SubcontractDeliverVO>, String[])`
+- **功能描述**：创建转包项目（4个遗漏重载，含序列号清单批量插入）
+- **事务类型**：REQUIRED（@Transactional注解；部分重载注释掉了 @Transactional）
+- **核心算法**：
+  1. 重载1（含 SubcontractDeliver 列表）：空实现
+  2. 重载2（含 SubcontractDeliverVO 列表）：调用 `insertSubcontractProjectSelective()` 插入项目
+  3. 重载3（仅 VO 列表）：委托给重载2
+  4. 重载4（VO 列表 + selected）：创建项目后调用 `batchInsertSubcontractLine()` 批量插入序列号清单
+- **调用的Service方法**：`this.insertSubcontractProjectSelective()`, `this.batchInsertSubcontractLine()`（private）
+- **源码行号**：`接口:SubcontractService.java:120,179,197,217` / `实现:SubcontractServiceImpl.java:410,417,425,431`
+
+#### `void updateSubcontractProject(SubcontractProject, List<SubcontractDeliverVO>)` / `void updateSubcontractProject(SubcontractProject, List<SubcontractDeliverVO>, String[])`
+- **功能描述**：更新转包项目（2个遗漏重载，含序列号清单批量插入）
+- **事务类型**：REQUIRED（@Transactional注解 + update*前缀）
+- **核心算法**：
+  1. 重载1：调用 `updateSubcontractProjectByIdSelective()` 更新项目
+  2. 重载2：更新项目后调用 `batchInsertSubcontractLine()` 批量插入序列号清单
+- **调用的Service方法**：`this.updateSubcontractProjectByIdSelective()`, `this.batchInsertSubcontractLine()`（private）
+- **源码行号**：`接口:SubcontractService.java:186,225` / `实现:SubcontractServiceImpl.java:439,446`
+
+#### `void updateSubcontractProjectByIdSelective(SubcontractProject subcontract)`
+- **功能描述**：根据ID选择性更新转包项目（仅更新非空字段）
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：自动设置 updateBy、updateTime 后委托 DAO 更新
+- **调用的DAO方法**：`dao.updateSubcontractProjectByIdSelective()`
+- **源码行号**：`接口:SubcontractService.java:191` / `实现:SubcontractServiceImpl.java:454`
+
+#### `void saveSubcontractPayment(List<SubcontractPayment> subcontractPaymentList)`
+- **功能描述**：保存转包付款信息（无删除重载，委托给带 delIds 的重载）
+- **事务类型**：REQUIRED（save*前缀匹配）
+- **核心算法**：调用 `saveSubcontractPayment(subcontractPaymentList, null)`
+- **调用的Service方法**：`this.saveSubcontractPayment(List, Integer[])`
+- **源码行号**：`接口:SubcontractService.java:377` / `实现:SubcontractServiceImpl.java:356`
+
+#### `void updateSubcontractPaymentByIdSelective(SubcontractPayment subcontractPayment)`
+- **功能描述**：根据ID选择性更新转包付款信息
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：自动设置 updateBy、updateTime 后委托 DAO 更新
+- **调用的DAO方法**：`dao.updateSubcontractPaymentByIdSelective()`
+- **源码行号**：`接口:SubcontractService.java:393` / `实现:SubcontractServiceImpl.java:349`
+
+#### `void insertSubcontractCallback(SubcontractCallback callback)`
+- **功能描述**：插入转包回访记录
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **核心算法**：自动设置 createBy、createTime 后委托 DAO 插入
+- **调用的DAO方法**：`dao.insertSubcontractCallback()`
+- **源码行号**：`接口:SubcontractService.java:430` / `实现:SubcontractServiceImpl.java:3197`
+
+#### `void insertSubcontractQuesnaire(SubcontractCallback callback, PmClQuesnaireResultHeader pmClQuesnaireResultHeader, List<PmClQuesnaireResultLine> pmClQuesnaireResultLineList)`
+- **功能描述**：插入转包回访问卷（问卷头+问卷行+关联关系）
+- **事务类型**：REQUIRED（@Transactional注解 + insert*前缀）
+- **核心算法**：
+  1. 插入问卷头（pmClosedLoopDao）
+  2. 插入问卷结果行列表
+  3. 查询是否已保存过问卷 → 更新或新增关联关系
+- **调用的DAO方法**：`pmClosedLoopDao.addPmClQuesResultHeader()`, `pmClosedLoopDao.addPmClQuesResultLineList()`, `dao.queryCallBackQuesnaireId()`, `dao.updateCallBackQuesnaire()` / `dao.insertCallBackQuesnaire()`
+- **源码行号**：`接口:SubcontractService.java:437` / `实现:SubcontractServiceImpl.java:3153`
+
+#### `void insertSubcontractFacilitator(SubcontractFacilitator subcontractFacilitator)`
+- **功能描述**：插入服务商
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **核心算法**：自动设置 createBy、createTime 后委托 DAO 插入
+- **调用的DAO方法**：`dao.insertSubcontractFacilitator()`
+- **源码行号**：`接口:SubcontractService.java:457` / `实现:SubcontractServiceImpl.java:3232`
+
+#### `void updateSubcontractFacilitatorByIdSelective(SubcontractFacilitator subcontractFacilitator)`
+- **功能描述**：根据ID选择性更新服务商
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：自动设置 updateBy、updateTime 后委托 DAO 更新
+- **调用的DAO方法**：`dao.updateSubcontractFacilitatorByIdSelective()`
+- **源码行号**：`接口:SubcontractService.java:462` / `实现:SubcontractServiceImpl.java:3242`
+
+#### `void insertSubcontractPrice(SubcontractPrice price)`
+- **功能描述**：插入转包价格
+- **事务类型**：REQUIRED（insert*前缀匹配）
+- **核心算法**：自动设置 createBy、createTime 后委托 DAO 插入
+- **调用的DAO方法**：`dao.insertSubcontractPrice()`
+- **源码行号**：`接口:SubcontractService.java:487` / `实现:SubcontractServiceImpl.java:3259`
+
+#### `void updateSubcontractPriceByIdSelective(SubcontractPrice price)`
+- **功能描述**：根据ID选择性更新转包价格
+- **事务类型**：REQUIRED（update*前缀匹配）
+- **核心算法**：自动设置 updateBy、updateTime 后委托 DAO 更新
+- **调用的DAO方法**：`dao.updateSubcontractPriceByIdSelective()`
+- **源码行号**：`接口:SubcontractService.java:492` / `实现:SubcontractServiceImpl.java:3266`
+
+**【流程发起方法】**
+
+#### `String startSubcontractFlow(WorkflowCommonParam, SubcontractEvaluationHeader, SubcontractProject)` / `String startSubcontractFlow(SubcontractProject)`
+- **功能描述**：启动转包申请流程
+- **事务类型**：REQUIRED（@Transactional注解 + start*前缀）
+- **核心算法**：
+  1. 重载1（已弃用）：校验是否有进行中的流程 → 启动 Activiti 流程实例 → 回写 instId → 办理首个任务 → 添加审批意见 → 发送邮件通知
+  2. 重载2：构建流程变量 → 启动流程 → 办理任务 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.startProcess()`, `workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`, `taskService.createTaskQuery()`
+- **源码行号**：`接口:SubcontractService.java:248,267` / `实现:SubcontractServiceImpl.java:792,854`
+- **注意事项**：⚠️ 重载1 标记为 @Deprecated 已弃用
+
+#### `String profitSerivceManagerFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：受益部门服务经理审批流程
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理当前任务 → 更新流程变量 → 添加审批意见 → 邮件通知下一步审批人
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:275` / `实现:SubcontractServiceImpl.java:951`
+
+#### `SubcontractCallback startCallBackFlow(Integer subcontractId)` / `SubcontractCallback startCallBackFlow(Integer subcontractId, ActComment comment)`
+- **功能描述**：启动转包回访流程
+- **事务类型**：REQUIRED（@Transactional注解 + start*前缀）
+- **核心算法**：
+  1. 重载1：构建默认 ActComment（消息为"上传服务单触发回访流程"）委托给重载2
+  2. 重载2：
+     - 校验 subcontractId 有效性
+     - 更新转包项目回访状态为"回访中"（20）
+     - 插入回访记录（含问卷版本号）
+     - 校验是否有进行中的回访流程
+     - 启动 Activiti 回访流程实例
+     - 更新回访任务的 taskId/taskKey 到回访问卷表
+     - 办理首个任务（转给回访人员角色）
+     - 添加审批意见
+- **调用的DAO方法**：`dao.updateSubcontractProjectByIdSelective()`, `dao.queryCallBackQuesnaireVersion()`
+- **调用的Service方法**：`this.insertSubcontractCallback()`, `this.updateSubcontractCallbackByIdSelective()`
+- **调用的其他Service方法**：`workFlowService.startProcess()`, `workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **返回值**：创建的 SubcontractCallback 对象
+- **源码行号**：`接口:SubcontractService.java:335,342` / `实现:SubcontractServiceImpl.java:2539,2549`
+
+**【流程审批方法】**
+
+#### `String auditSubcontractFlow(WorkflowCommonParam, SubcontractEvaluationHeader, SubcontractProject)` / `String auditSubcontractFlow(WorkflowCommonParam, SubcontractProject, List<SubcontractPrice>)` / `String auditSubcontractFlow(SubcontractComment, SubcontractProject)`
+- **功能描述**：转包流程审批（3个重载）
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：
+  1. 重载1（已弃用）：办理任务 → 添加审批意见 → 邮件通知
+  2. 重载2：保存转包价格 → 办理任务 → 添加审批意见 → 邮件通知
+  3. 重载3（已弃用）：办理任务 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:291,300,308` / `实现:SubcontractServiceImpl.java:1222,1297,1447`
+- **注意事项**：⚠️ 重载1、重载3 标记为 @Deprecated 已弃用
+
+#### `String closeSubcontractFlow(WorkflowCommonParam taskParam, SubcontractEvaluationHeader pmClEvaluationHeader, SubcontractProject subcontract)`
+- **功能描述**：关闭转包流程
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:328` / `实现:SubcontractServiceImpl.java:1800`
+
+#### `String submitCallBackFlow(WorkflowCommonParam taskParam, SubcontractCallback subcontractCallback)`
+- **功能描述**：回访人员回访（单独的回访流程）
+- **事务类型**：REQUIRED（@Transactional注解 + submit*前缀）
+- **核心算法**：办理回访任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:350` / `实现:SubcontractServiceImpl.java:2632`
+
+#### `String submitCallBackFlow2(WorkflowCommonParam taskParam, SubcontractCallback subcontractCallback)`
+- **功能描述**：回访人员回访（在一个流程中，非单独回访流程）
+- **事务类型**：REQUIRED（@Transactional注解 + submit*前缀）
+- **核心算法**：办理回访任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:358` / `实现:SubcontractServiceImpl.java:2203`
+
+#### `String approveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：转包流程审批通过
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:475` / `实现:SubcontractServiceImpl.java:1708`
+
+#### `String generateContractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：生成合同号流程
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 生成合同号 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:500` / `实现:SubcontractServiceImpl.java:1879`
+
+#### `String applyPaymentFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：服务经理提交付款信息
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:508` / `实现:SubcontractServiceImpl.java:1951`
+
+#### `String approvePaymentFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：工程管理部付款审批
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:516` / `实现:SubcontractServiceImpl.java:2345`
+
+#### `String submitAcceptanceFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：验收审批流程
+- **事务类型**：REQUIRED（submit*前缀匹配；未配置 @Transactional 注解但前缀匹配）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:523` / `实现:SubcontractServiceImpl.java:2439`
+
+#### `String normalApproveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract)`
+- **功能描述**：通用审批节点
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:597` / `实现:SubcontractServiceImpl.java:1077`
+
+#### `String auditNormalApproveSubcontractFlow(WorkflowCommonParam taskParam, SubcontractProject subcontract, List<SubcontractPrice> subcontractPriceList)`
+- **功能描述**：工程管理部主管通用审批节点
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：保存转包价格 → 办理任务 → 更新流程变量 → 添加审批意见 → 邮件通知
+- **调用的Service方法**：`this.insertSubcontractPrice()` / `this.updateSubcontractPriceByIdSelective()`
+- **调用的其他Service方法**：`workFlowService.doSelfTask()`, `workFlowService.addSelfActComment()`
+- **源码行号**：`接口:SubcontractService.java:605` / `实现:SubcontractServiceImpl.java:1550`
+
+**【流程终止方法】**
+
+#### `void terminateWorkFlow(Integer subcontractId)` / `void terminateWorkFlow(Integer subcontractId, String comment)` / `void terminateWorkFlow(Integer subcontractId, WorkflowCommonParam taskParam)`
+- **功能描述**：终止转包流程（3个重载）
+- **事务类型**：REQUIRED（@Transactional注解）
+- **核心算法**：
+  1. 重载1：委托给重载2，comment 为空
+  2. 重载2：删除流程实例 → 更新项目状态 → 添加审批意见 → 邮件通知
+  3. 重载3：基于 WorkflowCommonParam 执行更完整的终止逻辑（含任务办理、状态更新、邮件通知）
+- **调用的其他Service方法**：`workFlowService.deleteProcessInstance()`, `workFlowService.addSelfActComment()`, `workFlowService.doSelfTask()`
+- **源码行号**：`接口:SubcontractService.java:549,556,563` / `实现:SubcontractServiceImpl.java:2692,2698,2766`
 
 ---
 
@@ -2080,13 +3492,32 @@
 - **功能描述**：查询客户项目维保回访统计
 - **事务类型**：无事务
 
-#### `List<Task> queryWarrantyCallbackTaskList(String taskKey, ...)` （多重重载）
-- **功能描述**：查询维保回访待办任务列表（6个重载版本）
+#### `List<Task> queryWarrantyCallbackTaskList(...)` （8 重载版本，**impl-only**）
+- **功能描述**：查询维保回访待办任务列表
 - **事务类型**：无事务
-- **核心算法**：
-  1. 根据当前用户角色自动确定roleGroup（工程管理员/回访人员/维保回访人员/区域负责人）
-  2. 设置查询参数（assignee、areaPower、taskKey、taskId等）
-  3. 调用DAO查询任务列表
+- **归属说明**：⚠️ 此 8 个重载方法仅存在于 `WarrantyCallbackServiceImpl` 实现类，**不在 `WarrantyCallbackService` 接口中声明**。底层 5 参版本为核心实现，其余 7 个重载均为委派包装
+- **源码行号**：`WarrantyCallbackServiceImpl.java:300-406`
+
+**重载版本清单**（按参数数量递增）：
+
+| # | 签名 | 行号 | 说明 |
+|---|------|------|------|
+| 1 | `queryWarrantyCallbackTaskList(String taskKey)` | 300 | 最简形式，仅按 taskKey 查询 |
+| 2 | `queryWarrantyCallbackTaskList(String taskKey, String taskId)` | 310 | + 指定任务ID |
+| 3 | `queryWarrantyCallbackTaskList(String taskKey, Integer projectWarrantyCallbackId)` | 320 | + 指定维保单ID |
+| 4 | `queryWarrantyCallbackTaskList(String taskKey, Integer projectWarrantyCallbackId, String taskId)` | 330 | + 维保单ID + 任务ID |
+| 5 | `queryWarrantyCallbackTaskList(String taskKey, String roleGroup, Integer projectWarrantyCallbackId)` | 334 | + 显式角色组 |
+| 6 | `queryWarrantyCallbackTaskList(String taskKey, String roleGroup, Integer projectWarrantyCallbackId, String taskId)` | 346 | + 任务ID |
+| 7 | `queryWarrantyCallbackTaskList(String taskKey, String roleGroup, Integer projectWarrantyCallbackId, HashMap<String, Object> params)` | 358 | + 扩展参数 Map（无 taskId） |
+| 8 | `queryWarrantyCallbackTaskList(String taskKey, String roleGroup, Integer projectWarrantyCallbackId, String taskId, HashMap<String, Object> params)` | 371 | **核心实现**，其余 7 个均委派到此 |
+
+- **签名修正**：原文档声称"6 个重载版本"，实际为 **8 个**
+- **核心算法**（仅 #8 实现真实逻辑）：
+  1. 根据 `UserContext` 获取当前登录用户与区域权限
+  2. 设置基础查询参数：`assignee`、`areaPower`、`taskKey`（支持 `;` 分隔多值）、`taskId`、`projectWarrantyCallbackId`
+  3. 当 `roleGroup` 为空时按用户角色自动判定（`emRole`/`cbRole`/`role_warranty_callbacker`/`zrRole`）
+  4. 区域负责人角色额外设置 `checkProfitDep=true` 用于利润部门过滤
+  5. 调用 `dao.queryWarrantyCallbackTaskList(params)` 返回 `List<Task>`
 
 #### `List<Project> queryProjectList(Project)` / `queryProjectList(ProjectWarrantyCallback)`
 - **功能描述**：查询项目列表
@@ -2252,3 +3683,68 @@ PROJECT_STATE_32 ──闭环通过──→ PROJECT_STATE_CLOSEDLOOP (已闭环
 ```
 项目经理申请(PM) → 服务经理审核(SM) → 回访人员回访(CB) → 工程管理部闭环(CL) → 结束(END)
 ```
+
+---
+
+## 附录E：IAbstractBaseService — MyBatis 风格泛型基类接口
+
+> 📌 **2026-06-30 新增**：本附录补充此前遗漏的 `IAbstractBaseService<T>` 抽象基类接口文档。该接口是 PMS-struts 各业务 Service（如 `WarrantyCallbackService`）的根接口，定义了 8 个通用 CRUD 方法契约。
+
+### 类概述
+
+- **接口全限定名**：`com.dp.plat.extend.mybatis.service.IAbstractBaseService<T>`
+- **源码位置**：`PMS/PMS-struts/src/com/dp/plat/extend/mybatis/service/IAbstractBaseService.java`
+- **类型**：泛型接口（`<T>` 为实体类型）
+- **继承关系**：无父接口
+- **直接继承该接口的业务 Service**：`WarrantyCallbackService`（其他 PMS-struts 业务 Service 多继承 `BaseService`，与 core 模块的 `IAbstractBaseService` 是同名但不同包的两个独立接口）
+
+### ⚠️ 与 core 模块同名接口的差异
+
+PMS 项目存在**两个同名但不同包**的 `IAbstractBaseService<T>` 接口：
+
+| 接口 | 包路径 | 方法数 | 差异 |
+|------|--------|--------|------|
+| **PMS-struts 版本** | `com.dp.plat.extend.mybatis.service` | 8 | 无分页方法 |
+| **core 模块版本** | `com.dp.plat.core.service` | 10 | 多出 `countBySelectivePageable` 和 `selectBySelectivePageable` 两个分页方法，供 PMS-springmvc 使用 |
+
+文档引用时必须明确包路径，避免混淆。本附录仅描述 PMS-struts 版本。
+
+### 方法列表（共 8 个）
+
+| # | 方法签名 | 事务前缀匹配 | 功能 |
+|---|---------|------------|------|
+| 1 | `int deleteByPrimaryKey(Object pk)` | `delete*`（事务） | 按主键删除 |
+| 2 | `int insert(T t)` | `insert*`（事务） | 插入（全字段） |
+| 3 | `int insertSelective(T t)` | `insert*`（事务） | 选择性插入（仅非空字段） |
+| 4 | `T selectByPrimaryKey(Object pk)` | `select*`（非事务） | 按主键查询 |
+| 5 | `int updateByPrimaryKeySelective(T t)` | `update*`（事务） | 选择性更新（仅非空字段） |
+| 6 | `int updateByPrimaryKey(T t)` | `update*`（事务） | 更新（全字段） |
+| 7 | `long countBySelective(T t)` | `count*`（非事务） | 条件计数 |
+| 8 | `List<T> selectBySelective(T t)` | `select*`（非事务） | 条件查询所有 |
+
+### 事务行为说明
+
+- 接口本身不声明事务，事务由 `applicationContext-service.xml` 中的 `*ServiceAgent`（`TransactionProxyFactoryBean`）按方法名前缀应用 `PROPAGATION_REQUIRED` 规则
+- **事务前缀规则**（与本文件头部声明一致）：`insert*` | `update*` | `delete*` | `add*` | `save*` | `do*` | `keep*` | `start*` | `submit*` | `parse*`
+- **非事务前缀**：`query*` | `find*` | `get*` | `check*` | `select*` | `back*` | `edit*` | `count*` 及其他
+
+### 实现示例（参考 `WarrantyCallbackServiceImpl`）
+
+```java
+public class WarrantyCallbackServiceImpl extends BaseServiceImpl
+        implements WarrantyCallbackService {
+
+    // 显式实现 IAbstractBaseService<ProjectWarrantyCallback> 的 8 个方法
+    @Override
+    public int deleteByPrimaryKey(Object pk) { ... }
+
+    @Override
+    public int insert(ProjectWarrantyCallback t) { ... }
+
+    // ... 其余 6 个方法
+}
+```
+
+### 历史修订记录
+
+- **2026-06-30 新增**：原 `service-methods-reference.md` 完全未文档化 `IAbstractBaseService` 抽象基类，导致读者无法理解各业务 Service 中"基础 CRUD 方法"的具体契约。本附录补充完整的 8 个方法签名与事务行为说明，并明确标注与 core 模块同名接口的差异。
