@@ -42,4 +42,24 @@ public class CertificateServiceImpl implements CertificateService {
     public void delete(Long id) {
         mapper.deleteById(id);
     }
+
+    @Override
+    @Transactional
+    public void update(PmsCertificate c) {
+        c.setUpdateBy(com.dp.plat.common.utils.SecurityUtil.getCurrentUsername());
+        c.setUpdateTime(LocalDateTime.now());
+        mapper.updateById(c);
+    }
+
+    @Override
+    @Transactional
+    public void uploadSealInfo(Long id, String sealInfo) {
+        PmsCertificate c = mapper.selectById(id);
+        if (c != null) {
+            c.setSealInfo(sealInfo);
+            c.setUpdateBy(com.dp.plat.common.utils.SecurityUtil.getCurrentUsername());
+            c.setUpdateTime(LocalDateTime.now());
+            mapper.updateById(c);
+        }
+    }
 }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class SupervisionServiceImpl implements SupervisionService {
@@ -52,5 +53,12 @@ public class SupervisionServiceImpl implements SupervisionService {
     @Transactional
     public void delete(Long id) {
         mapper.deleteById(id);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryPowerUsers() {
+        // 迁移自: SupervisionAction.queryPowerUser()
+        // 查询有督查权限的用户(工程管理部角色)
+        return mapper.selectPowerUsers();
     }
 }

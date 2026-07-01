@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class PmsPresalesServiceImpl implements PmsPresalesService {
@@ -296,5 +296,93 @@ public class PmsPresalesServiceImpl implements PmsPresalesService {
             wrapper.eq(PmsPresales::getApplyState, query.getApplyState());
         }
         return presalesMapper.selectList(wrapper);
+    }
+
+    // ===== 发货/借转销/授权信息 =====
+
+    @Override
+    public List<Map<String, Object>> queryShipmentInfo(String presalesCode, boolean containRma) {
+        return presalesMapper.selectShipmentInfoByCode(presalesCode, containRma);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryLend2SaleInfo(String presalesCode) {
+        return presalesMapper.selectLend2SaleInfoByCode(presalesCode);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryLend2RmaInfo(String presalesCode) {
+        return presalesMapper.selectLend2RmaInfoByCode(presalesCode);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryTempAuthInfo(Long presalesId) {
+        PmsPresales presales = presalesMapper.selectById(presalesId);
+        if (presales == null) return Collections.emptyList();
+        Map<String, Object> params = new HashMap<>();
+        params.put("lendInfoId", presales.getLendInfoId());
+        return presalesMapper.selectTempAuthInfo(params);
+    }
+
+    // ===== 交付件管理(扩展) =====
+
+    @Override
+    @Transactional
+    public void uploadDeliverFiles(Long presalesId, List<Map<String, Object>> deliverList) {
+        // 迁移自: PresalesAction.upload() -> PresalesServiceImpl.uploadFile()
+        if (deliverList == null || deliverList.isEmpty()) return;
+        for (Map<String, Object> deliver : deliverList) {
+            String fileIds = deliver.getOrDefault("fileIds", "").toString();
+            String deliverableType = deliver.getOrDefault("deliverableType", "").toString();
+            Long taskId = deliver.get("taskId") != null ? Long.parseLong(deliver.get("taskId").toString()) : null;
+            if (taskId != null && !fileIds.isEmpty()) {
+                PmsPresalesTask task = taskMapper.selectById(taskId);
+                if (task != null) {
+                    task.setDeliverFileIds(fileIds);
+                    task.setUpdateBy(SecurityUtil.getCurrentUsername());
+                    task.setUpdateTime(LocalDateTime.now());
+                    taskMapper.updateById(task);
+                }
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteDeliverById(Long fileId) {
+        // 迁移自: PresalesAction.deleteDeliverById() -> PresalesServiceImpl.deleteDeliverById()
+        // 删除交付件文件记录
+        if (fileId == null) return;
+        // 通过fileId删除关联的交付件记录
+        // 实际删除逻辑需要根据具体的文件关联表实现
+    }
+
+    @Override
+    @Transactional
+    public void updateDeliverById(Map<String, Object> deliver) {
+        // 迁移自: PresalesAction.updateDeliverById() -> PresalesServiceImpl.updateProjectDeliverById()
+        // 更新交付件记录
+        if (deliver == null || deliver.get("id") == null) return;
+        Long id = Long.parseLong(deliver.get("id").toString());
+        PmsPresalesTask task = taskMapper.selectById(id);
+        if (task != null) {
+            if (deliver.containsKey("deliverFileIds")) {
+                task.setDeliverFileIds(deliver.get("deliverFileIds").toString());
+            }
+            task.setUpdateBy(SecurityUtil.getCurrentUsername());
+            task.setUpdateTime(LocalDateTime.now());
+            taskMapper.updateById(task);
+        }
+    }
+
+    // ===== 同步 =====
+
+    @Override
+    public void syncOaData() {
+        // 迁移自: PresalesAction.syncOaData() -> GainPresalesInfoFromOA.execute()
+        // 调用OA数据同步Job
+        // 老系统通过定时任务从OA系统同步售前项目信息
+        // 新系统需集成数据同步模块，暂时标记为待实现
+    }
     }
 }

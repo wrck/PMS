@@ -60,7 +60,10 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
         closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
         closedLoopMapper.insert(closedLoop);
 
-        // TODO: 启动闭环审批流程(workflow)
+        // 迁移自: PmClosedLoopServiceImpl.addPmCLApply()
+        // 启动闭环审批流程(workflow)
+        // 老系统通过Activiti启动流程,新系统暂不集成工作流引擎
+        // 待后续决定是否引入Activiti/Flowable
     }
 
     @Override
@@ -97,7 +100,9 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
         cl.setUpdateTime(LocalDateTime.now());
         closedLoopMapper.updateById(cl);
 
-        // TODO: 完成审批任务(workflow)
+        // 迁移自: PmClosedLoopServiceImpl.approve()
+        // 完成审批任务(workflow)
+        // 老系统通过Activiti完成任务,新系统暂不集成
     }
 
     /** 查询项目的闭环历史 */
@@ -115,5 +120,73 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
                         .eq(PmClosedLoop::getProjectId, projectId)
                         .eq(PmClosedLoop::getApplyState, 0)
                         .last("LIMIT 1"));
+    }
+
+    @Override
+    @Transactional
+    public void pmApply(PmClosedLoop closedLoop) {
+        // 迁移自: PmClosedLoopAction.addPmCLApply()
+        closedLoop.setApplyType("PM");
+        closedLoop.setApplyState(0);
+        closedLoop.setApplyBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setApplyTime(LocalDateTime.now());
+        closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setCreateTime(LocalDateTime.now());
+        closedLoopMapper.insert(closedLoop);
+        // 迁移自: PmClosedLoopServiceImpl.addPmCLApply()
+        // 启动工作流(依赖Activiti,暂不集成)
+    }
+
+    @Override
+    @Transactional
+    public void smApply(PmClosedLoop closedLoop) {
+        // 迁移自: PmClosedLoopAction.addSmCLApply()
+        closedLoop.setApplyType("SM");
+        closedLoop.setApplyState(0);
+        closedLoop.setApplyBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setApplyTime(LocalDateTime.now());
+        closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setCreateTime(LocalDateTime.now());
+        closedLoopMapper.insert(closedLoop);
+    }
+
+    @Override
+    @Transactional
+    public void cbApply(PmClosedLoop closedLoop) {
+        // 迁移自: PmClosedLoopAction.addCbCLApply()
+        closedLoop.setApplyType("CB");
+        closedLoop.setApplyState(0);
+        closedLoop.setApplyBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setApplyTime(LocalDateTime.now());
+        closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setCreateTime(LocalDateTime.now());
+        closedLoopMapper.insert(closedLoop);
+    }
+
+    @Override
+    @Transactional
+    public void cantClose(Long id, String reason) {
+        // 迁移自: PmClosedLoopAction.cantCB()
+        PmClosedLoop cl = closedLoopMapper.selectById(id);
+        if (cl == null) throw new BusinessException("闭环记录不存在");
+        cl.setApplyState(3); // 无法闭环
+        cl.setCloseReason(reason);
+        cl.setEndTime(LocalDateTime.now());
+        cl.setUpdateBy(SecurityUtil.getCurrentUsername());
+        cl.setUpdateTime(LocalDateTime.now());
+        closedLoopMapper.updateById(cl);
+    }
+
+    @Override
+    @Transactional
+    public void clApply(PmClosedLoop closedLoop) {
+        // 迁移自: PmClosedLoopAction.addClCLApply()
+        closedLoop.setApplyType("CL");
+        closedLoop.setApplyState(0);
+        closedLoop.setApplyBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setApplyTime(LocalDateTime.now());
+        closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
+        closedLoop.setCreateTime(LocalDateTime.now());
+        closedLoopMapper.insert(closedLoop);
     }
 }

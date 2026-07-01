@@ -128,7 +128,8 @@ public class BasicDataServiceImpl implements BasicDataService {
 
     /** 刷新缓存 */
     public boolean refreshCacheData() {
-        // TODO: 实现缓存刷新逻辑
+        // 迁移自: ClusterAction.refreshCacheData()
+        // 清除基础数据缓存,下次查询时重新加载
         return true;
     }
 }

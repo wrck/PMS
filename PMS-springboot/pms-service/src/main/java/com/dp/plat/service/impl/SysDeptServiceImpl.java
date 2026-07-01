@@ -85,8 +85,10 @@ public class SysDeptServiceImpl implements SysDeptService {
     @Override
     @Transactional
     public void refreshDept() {
+        // 迁移自: DepartmentManageServiceImpl.refreshDepartment()
         // 从外部系统(OA/EHR)同步部门数据
-        // 老系统逻辑: departmentManageService.refreshDepartment()
+        // 老系统逻辑: 通过DepartmentManageDao查询外部数据源
+        // 新系统通过定时任务或手动触发同步
         // 实际实现需要调用外部系统API或读取同步数据
         // 这里标记为已刷新，实际数据需要通过定时任务或手动导入
     }

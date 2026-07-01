@@ -10,5 +10,10 @@ public interface CertificateService {
 
     void create(PmsCertificate certificate);
 
+    void update(PmsCertificate certificate);
+
     void delete(Long id);
+
+    /** 上传印章信息 - 迁移自 CertificateAction.uploadSealInfo() */
+    void uploadSealInfo(Long id, String sealInfo);
 }

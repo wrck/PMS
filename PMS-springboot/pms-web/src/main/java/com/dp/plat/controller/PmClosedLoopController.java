@@ -48,6 +48,56 @@ public class PmClosedLoopController {
         return R.ok();
     }
 
+    /**
+     * PM发起闭环申请
+     * 迁移自: PmClosedLoopAction.addPmCLApply()
+     */
+    @PostMapping("/pm-apply")
+    public R<Void> pmApply(@RequestBody PmClosedLoop closedLoop) {
+        closedLoopService.pmApply(closedLoop);
+        return R.ok();
+    }
+
+    /**
+     * SM发起闭环申请
+     * 迁移自: PmClosedLoopAction.addSmCLApply()
+     */
+    @PostMapping("/sm-apply")
+    public R<Void> smApply(@RequestBody PmClosedLoop closedLoop) {
+        closedLoopService.smApply(closedLoop);
+        return R.ok();
+    }
+
+    /**
+     * CB发起闭环申请
+     * 迁移自: PmClosedLoopAction.addCbCLApply()
+     */
+    @PostMapping("/cb-apply")
+    public R<Void> cbApply(@RequestBody PmClosedLoop closedLoop) {
+        closedLoopService.cbApply(closedLoop);
+        return R.ok();
+    }
+
+    /**
+     * 无法闭环
+     * 迁移自: PmClosedLoopAction.cantCB()
+     */
+    @PostMapping("/{id}/cant-close")
+    public R<Void> cantClose(@PathVariable Long id, @RequestParam String reason) {
+        closedLoopService.cantClose(id, reason);
+        return R.ok();
+    }
+
+    /**
+     * CL发起闭环申请
+     * 迁移自: PmClosedLoopAction.addClCLApply()
+     */
+    @PostMapping("/cl-apply")
+    public R<Void> clApply(@RequestBody PmClosedLoop closedLoop) {
+        closedLoopService.clApply(closedLoop);
+        return R.ok();
+    }
+
     /** 查询项目闭环历史 */
     @GetMapping("/project/{projectId}")
     public R<List<PmClosedLoop>> byProject(@PathVariable Long projectId) {

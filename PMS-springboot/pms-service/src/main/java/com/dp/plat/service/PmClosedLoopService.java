@@ -13,8 +13,23 @@ public interface PmClosedLoopService {
     /** 获取闭环详情 */
     PmClosedLoop getDetail(Long id);
 
-    /** 发起闭环申请 */
+    /** 发起闭环申请(通用) */
     void apply(PmClosedLoop closedLoop);
+
+    /** PM发起闭环申请 - 迁移自 PmClosedLoopAction.addPmCLApply() */
+    void pmApply(PmClosedLoop closedLoop);
+
+    /** SM发起闭环申请 - 迁移自 PmClosedLoopAction.addSmCLApply() */
+    void smApply(PmClosedLoop closedLoop);
+
+    /** CB发起闭环申请 - 迁移自 PmClosedLoopAction.addCbCLApply() */
+    void cbApply(PmClosedLoop closedLoop);
+
+    /** 无法闭环 - 迁移自 PmClosedLoopAction.cantCB() */
+    void cantClose(Long id, String reason);
+
+    /** CL发起闭环申请 - 迁移自 PmClosedLoopAction.addClCLApply() */
+    void clApply(PmClosedLoop closedLoop);
 
     /** 审批闭环 */
     void approve(Long id, String comment, boolean approved, String role);

@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.mapper.WorkSpaceMapper">
+
+    <!-- ============================================================ -->
+    <!-- 日常项目跟踪任务列表 (迁移自 sql-map-work-config.xml query_pm_task_list) -->
+    <!-- ============================================================ -->
+    <select id="queryPmTaskList" parameterType="map" resultType="map">
+        SELECT
+            t0.`projectCode`,
+            t0.`projectName`,
+            t4.`basicDataName` AS projectStateName,
+            t5.`basicDataName` AS taskName,
+            t0.`projectId`,
+            CASE
+                WHEN t1.projectPlanState = 40 THEN DATEDIFF(NOW(), t6.createTime)
+                WHEN t1.projectPlanState = 47 THEN DATEDIFF(NOW(), t1.projectplanTime)
+                ELSE DATEDIFF(NOW(), t2.`eventPlanHappenDateENG`)
+            END AS diff,
+            t2.`eventPlanHappenDateENG`,
+            t6.`memberName` AS programManager,
+            t8.departmentName AS officeName
+        FROM pm_project_header t0
+        LEFT JOIN pm_project_state t1 ON t0.`projectId` = t1.`projectId`
+        LEFT JOIN fnd_basic_data t4 ON t1.`projectPlanState` = t4.`basicDataId` AND t4.`dataTypeCode` = '22'
+        LEFT JOIN fnd_basic_data t3 ON t4.`basicDataName` = t3.`basicDataName` AND t3.`dataTypeCode` = '09'
+        LEFT JOIN pm_project_task t2 ON t2.`taskTypeCode` = t3.`dataTypeCode` AND t2.`taskTypeId` = t3.`basicDataId`
+            AND t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`visibleFlag` = 1
+        LEFT JOIN fnd_basic_data t5 ON t1.`projectPlanState` = t5.`basicDataId` AND t5.`dataTypeCode` = '23'
+        LEFT JOIN pm_project_member t6 ON t6.`projectId` = t0.`projectId` AND t6.`memberRole` = '30' AND t6.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t7 ON t7.`projectId` = t0.`projectId` AND t7.`memberRole` = '20' AND t7.`effectiveTo` IS NULL
+        LEFT JOIN fnd_department t8 ON t0.column001 = t8.departmentNum AND t8.`status` = 1
+        WHERE t0.`projectState` IN (30, 31, 32)
+            AND t0.`effectiveTo` IS NULL
+            AND (t2.`eventPlanHappenDateENG` IS NULL OR DATEDIFF(t2.`eventPlanHappenDateENG`, NOW()) &lt; 7)
+            AND t1.`projectPlanState` != 48
+            AND t6.memberCode IS NOT NULL
+        <if test="projectName != null and projectName != ''">
+            AND t0.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t0.column001 = #{officeCode}
+        </if>
+        <if test="programManager != null and programManager != ''">
+            AND t6.memberCode = #{programManager}
+        </if>
+        <if test="serviceManager != null and serviceManager != ''">
+            AND (t7.memberCode = #{serviceManager} OR t6.memberCode = #{serviceManager})
+        </if>
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="countPmTaskList" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM pm_project_header t0
+        LEFT JOIN pm_project_state t1 ON t0.`projectId` = t1.`projectId`
+        LEFT JOIN fnd_basic_data t4 ON t1.`projectPlanState` = t4.`basicDataId` AND t4.`dataTypeCode` = '22'
+        LEFT JOIN fnd_basic_data t3 ON t4.`basicDataName` = t3.`basicDataName` AND t3.`dataTypeCode` = '09'
+        LEFT JOIN pm_project_task t2 ON t2.`taskTypeCode` = t3.`dataTypeCode` AND t2.`taskTypeId` = t3.`basicDataId`
+            AND t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`visibleFlag` = 1
+        LEFT JOIN fnd_basic_data t5 ON t1.`projectPlanState` = t5.`basicDataId` AND t5.`dataTypeCode` = '23'
+        LEFT JOIN pm_project_member t6 ON t6.`projectId` = t0.`projectId` AND t6.`memberRole` = '30' AND t6.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t7 ON t7.`projectId` = t0.`projectId` AND t7.`memberRole` = '20' AND t7.`effectiveTo` IS NULL
+        WHERE t0.`projectState` IN (30, 31, 32)
+            AND t0.`effectiveTo` IS NULL
+            AND (t2.`eventPlanHappenDateENG` IS NULL OR DATEDIFF(t2.`eventPlanHappenDateENG`, NOW()) &lt; 7)
+            AND t1.`projectPlanState` != 48
+            AND t6.memberCode IS NOT NULL
+        <if test="projectName != null and projectName != ''">
+            AND t0.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t0.column001 = #{officeCode}
+        </if>
+        <if test="programManager != null and programManager != ''">
+            AND t6.memberCode = #{programManager}
+        </if>
+        <if test="serviceManager != null and serviceManager != ''">
+            AND (t7.memberCode = #{serviceManager} OR t6.memberCode = #{serviceManager})
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 项目回退确认任务 (迁移自 query_project_back_task_list) -->
+    <!-- ============================================================ -->
+    <select id="queryProjectBackTaskList" parameterType="map" resultType="map">
+        SELECT
+            t1.projectCode,
+            t1.projectName,
+            t4.departmentName AS officeName,
+            t3.basicDataName AS taskName,
+            t5.memberName AS programManager,
+            t1.projectId,
+            CASE WHEN t1.isback = '38' THEN t2.memberCode ELSE '工程管理部' END AS assignee,
+            '项目回退流程' AS procTypeDesc
+        FROM pm_project_header t1
+        LEFT JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`memberRole` = '20'
+        LEFT JOIN pm_project_member t5 ON t1.`projectId` = t5.`projectId` AND t5.`effectiveTo` IS NULL AND t5.`memberRole` = '30'
+        LEFT JOIN fnd_basic_data t3 ON t3.dataTypeCode = '23' AND basicDataId = '50'
+        LEFT JOIN fnd_department t4 ON t1.column001 = t4.departmentNum AND t4.`status` = 1
+        WHERE t1.`projectState` IN (30, 31, 32)
+            AND t1.effectiveTo IS NULL
+        <if test="backState != null and backState != ''">
+            AND t1.`isback` = #{backState}
+        </if>
+        <if test="assignee != null and assignee != ''">
+            AND t2.memberCode = #{assignee}
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 不予跟踪确认任务 (迁移自 query_project_track_task_list) -->
+    <!-- ============================================================ -->
+    <select id="queryProjectTrackTaskList" resultType="map">
+        SELECT
+            t1.projectCode,
+            t1.projectName,
+            t4.departmentName AS officeName,
+            '不予跟踪确认' AS taskName,
+            t1.isback,
+            t5.memberName AS programManager,
+            t1.projectId,
+            '工程管理部' AS assignee,
+            '不予跟踪确认流程' AS procTypeDesc
+        FROM pm_project_header t1
+        LEFT JOIN pm_project_member t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL AND t2.`memberRole` = '20'
+        LEFT JOIN pm_project_member t5 ON t1.`projectId` = t5.`projectId` AND t5.`effectiveTo` IS NULL AND t5.`memberRole` = '30'
+        LEFT JOIN fnd_basic_data t3 ON t3.dataTypeCode = '23' AND basicDataId = '50'
+        LEFT JOIN fnd_department t4 ON t1.column001 = t4.departmentNum AND t4.`status` = 1
+        WHERE t1.`projectState` IN (30, 31, 32, 20)
+            AND t1.isback IN ('42', '50')
+            AND t1.effectiveTo IS NULL
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 回访申请待办任务 (迁移自 query_call_back_task) -->
+    <!-- 依赖Activiti表 act_ru_task, act_re_procdef -->
+    <!-- ============================================================ -->
+    <select id="queryCallBackTaskList" parameterType="map" resultType="map">
+        SELECT
+            t3.`projectCode`,
+            t3.`projectName`,
+            t4.`departmentName` AS officeName,
+            t5.`memberName` AS programManager,
+            t1.`NAME_` AS taskName,
+            t3.`projectId`,
+            CASE WHEN t6.`realName` IS NULL THEN '回访人员' ELSE CONCAT(t6.username, '-', t6.realName) END AS assignee,
+            t1.id_ AS taskId,
+            t2.applyTime,
+            t7.KEY_ AS procTypeName,
+            t7.NAME_ AS procTypeDesc,
+            mm.memberName AS projectCustomer,
+            CASE
+                WHEN t3.column012 IS NULL AND t3.columno12_readonly = -1 THEN t3.column012
+                WHEN t3.column012 IS NOT NULL THEN t3.column012
+                ELSE t3.columno12_readonly
+            END AS implType
+        FROM act_ru_task t1
+        JOIN pm_cl_callback t2 ON t1.`PROC_INST_ID_` = t2.instId AND t2.`instId` IS NOT NULL AND t2.`effectiveTo` IS NULL
+        LEFT JOIN act_re_procdef t7 ON t1.PROC_DEF_ID_ = t7.ID_
+        LEFT JOIN pm_project_header t3 ON t2.`projectId` = t3.`projectId`
+        LEFT JOIN fnd_department t4 ON t3.`column001` = t4.`departmentNum` AND t4.`status` = 1
+        LEFT JOIN pm_project_member t5 ON t3.`projectId` = t5.`projectId` AND t5.`memberRole` = '30' AND t5.`effectiveTo` IS NULL
+        LEFT JOIN (
+            SELECT m.projectId, GROUP_CONCAT(m.memberName) AS memberName
+            FROM pm_project_member m
+            WHERE m.effectiveTo IS NULL AND m.memberRole = '60'
+            GROUP BY m.projectId
+        ) mm ON mm.projectId = t3.projectId
+        LEFT JOIN fnd_user_info t6 ON t1.`ASSIGNEE_` = t6.`username` AND t6.`status` = 1
+        WHERE t3.projectState != 20
+        <if test="callbackRole == 1">
+            AND (ASSIGNEE_ = 'callbackRole' OR ASSIGNEE_ = #{assignee})
+        </if>
+        <if test="callbackRole == 0">
+            AND ASSIGNEE_ = #{assignee}
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 售前流程待办任务 (迁移自 query_presales_task) -->
+    <!-- 依赖Activiti表 act_ru_task, act_re_procdef -->
+    <!-- ============================================================ -->
+    <select id="queryPresalesTaskList" parameterType="map" resultType="map">
+        SELECT
+            t1.`projectCode`,
+            t1.`projectName`,
+            t2.`departmentName` AS departmentName,
+            t3.`memberName`,
+            t0.`NAME_` AS taskName,
+            CASE WHEN t6.`realName` IS NULL THEN '工程管理部' ELSE CONCAT(t6.username, '-', t6.realName) END AS assignee,
+            t0.`CREATE_TIME_` AS createTime,
+            t7.KEY_ AS procTypeName,
+            t0.ID_ AS taskId,
+            t1.presalesId,
+            t7.NAME_ AS procTypeDesc
+        FROM act_ru_task t0
+        JOIN pm_presales_project_header t1 ON t0.`PROC_INST_ID_` = t1.`instId`
+        LEFT JOIN fnd_department t2 ON t1.`officeCode` = t2.`departmentNum` AND t2.`status` = 1
+        LEFT JOIN pm_project_member t3 ON t3.`projectId` = t1.`presalesId` AND t3.`memberRole` = '30' AND t3.`effectiveTo` IS NULL
+        LEFT JOIN fnd_user_info t6 ON t0.`ASSIGNEE_` = t6.`username` AND t6.`status` = 1
+        LEFT JOIN act_re_procdef t7 ON t0.PROC_DEF_ID_ = t7.ID_
+        WHERE 1 = 1
+        <if test="emRole == 1">
+            AND (ASSIGNEE_ = 'emRole' OR ASSIGNEE_ = #{assignee})
+        </if>
+        <if test="emRole == 0">
+            AND ASSIGNEE_ = #{assignee}
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 项目督查任务 (迁移自 queryProjectSupervisionTask) -->
+    <!-- ============================================================ -->
+    <select id="queryProjectSupervisionTask" resultType="map">
+        SELECT
+            ps.`projectId` AS applyNum,
+            ps.`projectCode`,
+            ps.`projectName`,
+            d.`departmentName` AS officeName,
+            pm.`memberName` AS realName,
+            '工程人员' AS assigneeName,
+            ps.`createTime`,
+            'ProjectSupervision' AS procTypeName,
+            '项目督查' AS procTypeDesc,
+            '填写督查问卷' AS taskName
+        FROM `pm_project_supervision` ps
+        LEFT JOIN pm_project_member pm ON ps.`projectId` = pm.`projectId` AND pm.`memberRole` = '30' AND pm.`effectiveTo` IS NULL
+        LEFT JOIN fnd_department d ON ps.`officeCode` = d.`departmentNum`
+        WHERE ps.isdelete = FALSE AND ps.state = FALSE
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 个人已办任务 - 闭环已办 (迁移自 sqlFromSelfHistoryTask) -->
+    <!-- ============================================================ -->
+    <select id="querySelfHistoryClosedLoopList" parameterType="map" resultType="map">
+        SELECT
+            a.projectCode,
+            a.projectName,
+            '项目闭环' AS procTypeName,
+            '项目人员回访' AS taskName,
+            c.evaluationPeopleId AS applyBy,
+            c.evaluationPeopleName AS applyName,
+            a.evaluationPeopleName AS assigneeName,
+            a.evaluationTime AS assigneeTime,
+            a.evaluationResult AS result,
+            a.projectId,
+            t1.column001 AS officeCode
+        FROM pm_cl_evaluation_header a
+        LEFT JOIN pm_cl_evaluation_header c ON a.applyHeaderId = c.id
+        LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
+        WHERE a.evaluationPeopleId = #{assignee} AND a.status = 1
+        <if test="projectName != null and projectName != ''">
+            AND t1.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t1.column001 = #{officeCode}
+        </if>
+    </select>
+
+    <!-- 个人已办任务 - 回访已办 -->
+    <select id="querySelfHistoryCallbackList" parameterType="map" resultType="map">
+        SELECT
+            t3.`projectCode`,
+            t3.`projectName`,
+            t4.`NAME_` AS procTypeName,
+            '项目人员回访' AS taskName,
+            t1.`applyBy`,
+            t5.`realName` AS applyName,
+            t6.`realName` AS assigneeName,
+            t2.`assigneeTime`,
+            t2.`result`,
+            t1.`projectId`,
+            t3.column001 AS officeCode
+        FROM fnd_act_hi_comment t2
+        LEFT JOIN pm_cl_callback t1 ON t1.`instId` = t2.`instId`
+        LEFT JOIN pm_project_header t3 ON t1.`projectId` = t3.`projectId`
+        LEFT JOIN act_re_procdef t4 ON t2.`procdefKey` = t4.`KEY_`
+        LEFT JOIN fnd_user_info t5 ON t1.`applyBy` = t5.`username` AND t5.`effectiveTo` IS NULL
+        LEFT JOIN fnd_user_info t6 ON t2.`assignee` = t6.`username` AND t6.`effectiveTo` IS NULL
+        WHERE t2.`assignee` = #{assignee} AND t2.procdefKey = 'CallBack'
+        <if test="projectName != null and projectName != ''">
+            AND t3.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t3.column001 = #{officeCode}
+        </if>
+    </select>
+
+    <!-- 个人已办任务 - 合并查询 -->
+    <select id="querySelfHistoryTaskList" parameterType="map" resultType="map">
+        SELECT t.*, fc.memberName AS projectCustomer, d.departmentName AS officeName
+        FROM (
+            SELECT a.projectCode, a.projectName, '项目闭环' AS procTypeName, '项目人员回访' AS taskName,
+                c.evaluationPeopleId AS applyBy, c.evaluationPeopleName AS applyName,
+                a.evaluationPeopleName AS assigneeName, a.evaluationTime AS assigneeTime,
+                a.evaluationResult AS result, a.projectId, t1.column001 AS officeCode
+            FROM pm_cl_evaluation_header a
+            LEFT JOIN pm_cl_evaluation_header c ON a.applyHeaderId = c.id
+            LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
+            WHERE a.evaluationPeopleId = #{assignee} AND a.status = 1
+            <if test="projectName != null and projectName != ''">
+                AND t1.projectName LIKE CONCAT('%', #{projectName}, '%')
+            </if>
+            <if test="officeCode != null and officeCode != ''">
+                AND t1.column001 = #{officeCode}
+            </if>
+            UNION ALL
+            SELECT t3.`projectCode`, t3.`projectName`, t4.`NAME_` AS procTypeName, '项目人员回访' AS taskName,
+                t1.`applyBy`, t5.`realName` AS applyName, t6.`realName` AS assigneeName,
+                t2.`assigneeTime`, t2.`result`, t1.`projectId`, t3.column001 AS officeCode
+            FROM fnd_act_hi_comment t2
+            LEFT JOIN pm_cl_callback t1 ON t1.`instId` = t2.`instId`
+            LEFT JOIN pm_project_header t3 ON t1.`projectId` = t3.`projectId`
+            LEFT JOIN act_re_procdef t4 ON t2.`procdefKey` = t4.`KEY_`
+            LEFT JOIN fnd_user_info t5 ON t1.`applyBy` = t5.`username` AND t5.`effectiveTo` IS NULL
+            LEFT JOIN fnd_user_info t6 ON t2.`assignee` = t6.`username` AND t6.`effectiveTo` IS NULL
+            WHERE t2.`assignee` = #{assignee} AND t2.procdefKey = 'CallBack'
+            <if test="projectName != null and projectName != ''">
+                AND t3.projectName LIKE CONCAT('%', #{projectName}, '%')
+            </if>
+            <if test="officeCode != null and officeCode != ''">
+                AND t3.column001 = #{officeCode}
+            </if>
+        ) t
+        LEFT JOIN fnd_department d ON t.officeCode = d.departmentNum AND d.`status` = 1
+        LEFT JOIN (
+            SELECT m.projectId,
+                REPLACE(REPLACE(REPLACE(GROUP_CONCAT(CONCAT_WS('-', trim(m.memberName), trim(m.phoneNum)) ORDER BY id), '\t', ''), '\r', ''), '\n', '') memberName
+            FROM pm_project_member m
+            WHERE m.effectiveTo IS NULL AND m.memberRole = '60'
+            GROUP BY m.projectId
+        ) fc ON t.projectId = fc.projectId
+        <if test="projectCustomer != null and projectCustomer != ''">
+            WHERE fc.memberName LIKE CONCAT('%', #{projectCustomer}, '%')
+        </if>
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="countSelfHistoryTaskList" parameterType="map" resultType="int">
+        SELECT COUNT(1) FROM (
+            SELECT a.projectId
+            FROM pm_cl_evaluation_header a
+            LEFT JOIN pm_cl_evaluation_header c ON a.applyHeaderId = c.id
+            LEFT JOIN pm_project_header t1 ON a.projectId = t1.projectId
+            WHERE a.evaluationPeopleId = #{assignee} AND a.status = 1
+            <if test="projectName != null and projectName != ''">
+                AND t1.projectName LIKE CONCAT('%', #{projectName}, '%')
+            </if>
+            <if test="officeCode != null and officeCode != ''">
+                AND t1.column001 = #{officeCode}
+            </if>
+            UNION ALL
+            SELECT t1.`projectId`
+            FROM fnd_act_hi_comment t2
+            LEFT JOIN pm_cl_callback t1 ON t1.`instId` = t2.`instId`
+            LEFT JOIN pm_project_header t3 ON t1.`projectId` = t3.`projectId`
+            WHERE t2.`assignee` = #{assignee} AND t2.procdefKey = 'CallBack'
+            <if test="projectName != null and projectName != ''">
+                AND t3.projectName LIKE CONCAT('%', #{projectName}, '%')
+            </if>
+            <if test="officeCode != null and officeCode != ''">
+                AND t3.column001 = #{officeCode}
+            </if>
+        ) t
+        LEFT JOIN (
+            SELECT m.projectId,
+                REPLACE(REPLACE(REPLACE(GROUP_CONCAT(CONCAT_WS('-', trim(m.memberName), trim(m.phoneNum)) ORDER BY id), '\t', ''), '\r', ''), '\n', '') memberName
+            FROM pm_project_member m
+            WHERE m.effectiveTo IS NULL AND m.memberRole = '60'
+            GROUP BY m.projectId
+        ) fc ON t.projectId = fc.projectId
+        <if test="projectCustomer != null and projectCustomer != ''">
+            WHERE fc.memberName LIKE CONCAT('%', #{projectCustomer}, '%')
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 技术公告任务列表 (迁移自 query_probTask_list) -->
+    <!-- ============================================================ -->
+    <select id="queryProbTaskList" parameterType="map" resultType="map">
+        SELECT
+            m.id AS probId,
+            m.probNum,
+            m.theme,
+            m.createTime,
+            m.status,
+            t1.`basicDataName` AS watchName,
+            t2.`basicDataName` AS statusName,
+            t3.basicDataName AS priorityName,
+            t4.username AS trackingUser,
+            CONCAT(t4.username, '-', t4.realName) AS trackingUsername,
+            d.`departmentName` AS officeName,
+            m.customInfo
+        FROM `prob_main` m
+        LEFT JOIN `prob_restore` r ON m.`id` = r.`probId`
+        LEFT JOIN `prob_restore_process` rp ON r.`processId` = rp.`id`
+        LEFT JOIN fnd_department d ON r.`officeCode` = d.`departmentNum`
+        LEFT JOIN fnd_basic_data t1 ON m.`watch` = t1.`basicDataId` AND t1.`dataTypeCode` = '30' AND t1.`effectiveTo` IS NULL
+        LEFT JOIN fnd_basic_data t2 ON m.`status` = t2.basicDataId AND t2.dataTypeCode = '31' AND t2.`effectiveTo` IS NULL
+        LEFT JOIN fnd_basic_data t3 ON m.`priority` = t3.`basicDataId` AND t3.`dataTypeCode` = '32' AND t3.`effectiveTo` IS NULL
+        LEFT JOIN fnd_user_info t4 ON m.trackingUser = t4.username
+        <where>
+            m.effectiveTo IS NULL
+            <choose>
+                <when test="isProbAdmin == 0">
+                    AND (
+                        (r.assignee = #{assignee}
+                        <if test="areapower != null and areapower != ''">
+                            OR r.officeCode IN (${areapower})
+                        </if>
+                        ) AND rp.`restoreStatus` = '10'
+                        OR m.watch = 15
+                    )
+                    AND m.`status` NOT IN ('10', '6', '8', '1')
+                </when>
+                <when test="isProbAdmin == 1">
+                    AND m.`status` NOT IN ('10', '6')
+                </when>
+                <when test="isProbAdmin == 2">
+                    AND m.`status` IN ('4', '5')
+                </when>
+                <when test="isProbAdmin == 3">
+                    AND m.`status` = '6' AND m.`trackingUser` = #{assignee}
+                </when>
+            </choose>
+        </where>
+        GROUP BY m.`id`
+        ORDER BY m.`watch` ASC, m.`priority` DESC, m.`id` DESC
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 分包任务列表 (迁移自 querySubcontractTaskList) -->
+    <!-- ============================================================ -->
+    <select id="querySubcontractTaskList" parameterType="map" resultType="map">
+        SELECT
+            sc.id,
+            sc.subcontractName,
+            sc.state,
+            sc.createBy,
+            sc.createTime,
+            sc.projectId,
+            p.projectCode,
+            p.projectName,
+            d.departmentName AS officeName,
+            t.NAME_ AS taskName,
+            t.ASSIGNEE_ AS assignee,
+            def.KEY_ AS procTypeName,
+            def.NAME_ AS procTypeDesc
+        FROM pm_subcontract sc
+        LEFT JOIN pm_project_header p ON sc.projectId = p.projectId
+        LEFT JOIN fnd_department d ON p.column001 = d.departmentNum AND d.`status` = 1
+        LEFT JOIN act_ru_task t ON t.PROC_INST_ID_ = sc.instId
+        LEFT JOIN act_re_procdef def ON t.PROC_DEF_ID_ = def.ID_
+        WHERE sc.effectiveTo IS NULL
+        <if test="assignee != null and assignee != ''">
+            AND t.ASSIGNEE_ = #{assignee}
+        </if>
+        <if test="roleGroups != null and roleGroups.size() > 0">
+            AND (
+            <foreach collection="roleGroups" item="rg" separator=" OR ">
+                (
+                    <if test="rg.roleGroup != null">
+                        def.KEY_ = #{rg.roleGroup}
+                    </if>
+                    <if test="rg.checkOffice == true and areaPower != null and areaPower != ''">
+                        AND p.column001 IN (${areaPower})
+                    </if>
+                    <if test="rg.checkProfitDep == true">
+                        AND sc.profitDepCode IS NOT NULL
+                    </if>
+                    <if test="rg.checkParentOffice == true">
+                        AND p.column001 IS NOT NULL
+                    </if>
+                )
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 通知列表 (迁移自 query_notify_list) -->
+    <!-- ============================================================ -->
+    <select id="queryNotifyList" parameterType="map" resultType="map">
+        SELECT
+            t1.`projectId`,
+            t2.`projectName`,
+            t5.`departmentName` AS officeName,
+            t1.`notifyContent`,
+            t1.`createTime`,
+            CONCAT(t1.`createBy`, '-', t6.`realName`) AS createBy,
+            t4.`memberName` AS programManager,
+            t3.`memberName` AS serviceManager
+        FROM pm_project_notification t1
+        LEFT JOIN pm_project_header t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t3 ON t2.`projectId` = t3.`projectId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t4 ON t2.`projectId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
+        LEFT JOIN fnd_user_info t6 ON t6.`username` = t1.`createBy`
+        LEFT JOIN fnd_department t5 ON t2.`column001` = t5.`departmentNum` AND t5.`status` = 1
+        WHERE t2.projectId IS NOT NULL
+        <if test="projectName != null and projectName != ''">
+            AND t2.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t2.column001 = #{officeCode}
+        </if>
+        <if test="programManager != null and programManager != ''">
+            AND t4.memberCode = #{programManager}
+        </if>
+        <if test="serviceManager != null and serviceManager != ''">
+            AND (t3.memberCode = #{serviceManager} OR t4.memberCode = #{serviceManager})
+        </if>
+        ORDER BY t1.`createTime` DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="countNotifyList" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM pm_project_notification t1
+        LEFT JOIN pm_project_header t2 ON t1.`projectId` = t2.`projectId` AND t2.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t3 ON t2.`projectId` = t3.`projectId` AND t3.`memberRole` = '20' AND t3.`effectiveTo` IS NULL
+        LEFT JOIN pm_project_member t4 ON t2.`projectId` = t4.`projectId` AND t4.`memberRole` = '30' AND t4.`effectiveTo` IS NULL
+        WHERE t2.projectId IS NOT NULL
+        <if test="projectName != null and projectName != ''">
+            AND t2.projectName LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+        <if test="officeCode != null and officeCode != ''">
+            AND t2.column001 = #{officeCode}
+        </if>
+        <if test="programManager != null and programManager != ''">
+            AND t4.memberCode = #{programManager}
+        </if>
+        <if test="serviceManager != null and serviceManager != ''">
+            AND (t3.memberCode = #{serviceManager} OR t4.memberCode = #{serviceManager})
+        </if>
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 系统通知列表 (迁移自 check_notification_list) -->
+    <!-- ============================================================ -->
+    <select id="querySystemNotificationList" parameterType="string" resultType="map">
+        SELECT * FROM (
+            SELECT
+                b.`notifySubject`,
+                b.`notifyContent`,
+                b.`projectId`,
+                a.`id` AS stateId,
+                b.`createTime`,
+                a.`checkTime`,
+                a.notifyState
+            FROM `pm_project_notification_state` a
+            LEFT JOIN `pm_project_notification` b ON a.`notifyId` = b.`id`
+            WHERE notifyObject = #{username} AND notifyState = 0
+            ORDER BY b.`createTime` DESC
+        ) AS tmp
+        UNION ALL
+        (
+            SELECT
+                b.`notifySubject`,
+                b.`notifyContent`,
+                b.`projectId`,
+                a.`id` AS stateId,
+                b.`createTime`,
+                a.`checkTime`,
+                a.notifyState
+            FROM `pm_project_notification_state` a
+            LEFT JOIN `pm_project_notification` b ON a.`notifyId` = b.`id`
+            WHERE notifyObject = #{username} AND notifyState = 1
+            ORDER BY a.`checkTime` DESC, b.`createTime` DESC
+            LIMIT 100
+        )
+    </select>
+
+    <!-- ============================================================ -->
+    <!-- 更新系统通知状态 (迁移自 update_notification_state) -->
+    <!-- ============================================================ -->
+    <update id="updateNotificationState" parameterType="int">
+        UPDATE `pm_project_notification_state` SET notifyState = 1, checkTime = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>

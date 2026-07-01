@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.mapper.PmsPresalesMapper">
+
+    <!-- 查询售前发货信息 (迁移自 PresalesServiceImpl.queryPresaleShipmentInfo) -->
+    <select id="selectShipmentInfoByCode" parameterType="map" resultType="map">
+        SELECT
+            s.id,
+            s.projectCode AS presalesCode,
+            s.serialNumber,
+            s.productCode,
+            s.productName,
+            s.productModel,
+            s.quantity,
+            s.shipmentState,
+            s.createTime
+        FROM pm_shipment_info s
+        WHERE s.projectCode = #{presalesCode}
+        <if test="containRma == false">
+            AND s.shipmentState != 'RMA'
+        </if>
+        ORDER BY s.createTime DESC
+    </select>
+
+    <!-- 查询借转销信息 (迁移自 PresalesServiceImpl.queryPresaleLend2SaleInfo) -->
+    <select id="selectLend2SaleInfoByCode" resultType="map">
+        SELECT
+            ls.id,
+            ls.presalesCode,
+            ls.lendCode,
+            ls.saleCode,
+            ls.lendAmount,
+            ls.saleAmount,
+            ls.status,
+            ls.createTime
+        FROM pm_presales_lend2sale ls
+        WHERE ls.presalesCode = #{presalesCode}
+        ORDER BY ls.createTime DESC
+    </select>
+
+    <!-- 查询核销信息 (迁移自 PresalesServiceImpl.queryPresaleLend2RmaInfo) -->
+    <select id="selectLend2RmaInfoByCode" resultType="map">
+        SELECT
+            lr.id,
+            lr.presalesCode,
+            lr.lendCode,
+            lr.rmaCode,
+            lr.lendAmount,
+            lr.rmaAmount,
+            lr.status,
+            lr.createTime
+        FROM pm_presales_lend2rma lr
+        WHERE lr.presalesCode = #{presalesCode}
+        ORDER BY lr.createTime DESC
+    </select>
+
+    <!-- 查询临时授权信息 (迁移自 PresalesServiceImpl.selectPresalesTempAuthInfo) -->
+    <select id="selectTempAuthInfo" parameterType="map" resultType="map">
+        SELECT
+            ta.id,
+            ta.lendInfoId,
+            ta.authCode,
+            ta.authType,
+            ta.startTime,
+            ta.endTime,
+            ta.status,
+            ta.createTime
+        FROM pm_presales_temp_auth ta
+        WHERE 1=1
+        <if test="params.lendInfoId != null">
+            AND ta.lendInfoId = #{params.lendInfoId}
+        </if>
+        ORDER BY ta.createTime DESC
+    </select>
+
+</mapper>

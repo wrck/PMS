@@ -162,4 +162,91 @@ public class PmsPresalesController {
         query.setApplyState(applyState);
         return R.ok(presalesService.exportPresales(query));
     }
+
+    // ===== 发货/借转销/授权信息 =====
+
+    /**
+     * 查询发货信息
+     * 迁移自: PresalesAction.shipmentInfo()
+     */
+    @GetMapping("/shipment-info")
+    public R<List<Map<String, Object>>> shipmentInfo(
+            @RequestParam String presalesCode,
+            @RequestParam(defaultValue = "false") boolean containRma) {
+        return R.ok(presalesService.queryShipmentInfo(presalesCode, containRma));
+    }
+
+    /**
+     * 查询借转销信息
+     * 迁移自: PresalesAction.lend2SaleInfo()
+     */
+    @GetMapping("/lend2sale-info")
+    public R<List<Map<String, Object>>> lend2SaleInfo(@RequestParam String presalesCode) {
+        return R.ok(presalesService.queryLend2SaleInfo(presalesCode));
+    }
+
+    /**
+     * 查询核销信息
+     * 迁移自: PresalesAction.lend2RmaInfo()
+     */
+    @GetMapping("/lend2rma-info")
+    public R<List<Map<String, Object>>> lend2RmaInfo(@RequestParam String presalesCode) {
+        return R.ok(presalesService.queryLend2RmaInfo(presalesCode));
+    }
+
+    /**
+     * 查询临时授权信息
+     * 迁移自: PresalesAction.tempAuthInfo()
+     */
+    @GetMapping("/temp-auth-info")
+    public R<List<Map<String, Object>>> tempAuthInfo(@RequestParam Long presalesId) {
+        return R.ok(presalesService.queryTempAuthInfo(presalesId));
+    }
+
+    // ===== 交付件管理(扩展) =====
+
+    /**
+     * 上传多个交付件
+     * 迁移自: PresalesAction.upload()
+     */
+    @PostMapping("/upload-delivers")
+    public R<Void> uploadDelivers(@RequestBody Map<String, Object> body) {
+        Long presalesId = Long.parseLong(body.get("presalesId").toString());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> deliverList = (List<Map<String, Object>>) body.get("deliverList");
+        presalesService.uploadDeliverFiles(presalesId, deliverList);
+        return R.ok();
+    }
+
+    /**
+     * 删除交付件
+     * 迁移自: PresalesAction.deleteDeliverById()
+     */
+    @DeleteMapping("/deliver/{fileId}")
+    public R<Void> deleteDeliverById(@PathVariable Long fileId) {
+        presalesService.deleteDeliverById(fileId);
+        return R.ok();
+    }
+
+    /**
+     * 更新交付件
+     * 迁移自: PresalesAction.updateDeliverById()
+     */
+    @PutMapping("/deliver")
+    public R<Void> updateDeliverById(@RequestBody Map<String, Object> deliver) {
+        presalesService.updateDeliverById(deliver);
+        return R.ok();
+    }
+
+    // ===== 同步 =====
+
+    /**
+     * 同步OA售前数据
+     * 迁移自: PresalesAction.syncOaData()
+     */
+    @PostMapping("/sync-oa")
+    public R<Void> syncOaData() {
+        presalesService.syncOaData();
+        return R.ok();
+    }
 }

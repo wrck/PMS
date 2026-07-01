@@ -82,4 +82,58 @@ public interface PmsPresalesService {
 
     /** 导出售前项目 */
     List<PmsPresales> exportPresales(PmsPresales query);
+
+    // ===== 发货/借转销/授权信息 =====
+
+    /**
+     * 查询售前发货信息
+     * 迁移自: PresalesAction.shipmentInfo()
+     */
+    List<Map<String, Object>> queryShipmentInfo(String presalesCode, boolean containRma);
+
+    /**
+     * 查询借转销信息
+     * 迁移自: PresalesAction.lend2SaleInfo()
+     */
+    List<Map<String, Object>> queryLend2SaleInfo(String presalesCode);
+
+    /**
+     * 查询核销信息
+     * 迁移自: PresalesAction.lend2RmaInfo()
+     */
+    List<Map<String, Object>> queryLend2RmaInfo(String presalesCode);
+
+    /**
+     * 查询临时授权信息
+     * 迁移自: PresalesAction.tempAuthInfo()
+     */
+    List<Map<String, Object>> queryTempAuthInfo(Long presalesId);
+
+    // ===== 交付件管理(扩展) =====
+
+    /**
+     * 上传多个交付件
+     * 迁移自: PresalesAction.upload()
+     */
+    void uploadDeliverFiles(Long presalesId, List<Map<String, Object>> deliverList);
+
+    /**
+     * 删除交付件(按文件ID)
+     * 迁移自: PresalesAction.deleteDeliverById()
+     */
+    void deleteDeliverById(Long fileId);
+
+    /**
+     * 更新交付件
+     * 迁移自: PresalesAction.updateDeliverById()
+     */
+    void updateDeliverById(Map<String, Object> deliver);
+
+    // ===== 同步 =====
+
+    /**
+     * 同步OA售前数据
+     * 迁移自: PresalesAction.syncOaData()
+     */
+    void syncOaData();
 }

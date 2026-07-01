@@ -7,6 +7,9 @@ import com.dp.plat.service.SupervisionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/supervision")
 public class SupervisionController {
@@ -42,5 +45,14 @@ public class SupervisionController {
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return R.ok();
+    }
+
+    /**
+     * 查询权限用户
+     * 迁移自: SupervisionAction.queryPowerUser()
+     */
+    @GetMapping("/power-users")
+    public R<List<Map<String, Object>>> queryPowerUsers() {
+        return R.ok(service.queryPowerUsers());
     }
 }

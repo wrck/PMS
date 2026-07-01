@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.mapper.PmsProbRestoreMapper">
+
+    <!-- 恢复任务列表查询 (迁移自 ProbManageServiceImpl.queryProbRestoreTaskList) -->
+    <select id="selectTaskListByParams" parameterType="map" resultType="map">
+        SELECT
+            r.id,
+            r.prob_id AS probId,
+            r.assignee,
+            r.assignee_role AS assigneeRole,
+            r.restore_status AS restoreStatus,
+            r.office_code AS officeCode,
+            r.create_time AS createTime,
+            r.create_by AS createBy,
+            m.probNum,
+            m.theme,
+            d.departmentName AS officeName,
+            u.realName AS assigneeName
+        FROM prob_restore r
+        LEFT JOIN prob_main m ON r.prob_id = m.id
+        LEFT JOIN fnd_department d ON r.office_code = d.departmentNum AND d.status = 1
+        LEFT JOIN fnd_user_info u ON r.assignee = u.username AND u.status = 1
+        WHERE r.effective_to IS NULL
+        <if test="params.probId != null">
+            AND r.prob_id = #{params.probId}
+        </if>
+        <if test="params.assignee != null and params.assignee != ''">
+            AND r.assignee = #{params.assignee}
+        </if>
+        <if test="params.restoreStatus != null">
+            AND r.restore_status = #{params.restoreStatus}
+        </if>
+        <if test="params.assigneeRole != null">
+            AND r.assignee_role = #{params.assigneeRole}
+        </if>
+        <if test="params.areapower != null and params.areapower != ''">
+            AND r.office_code IN (${params.areapower})
+        </if>
+        ORDER BY r.create_time DESC
+        <if test="params.offset != null and params.pageSize != null">
+            LIMIT #{params.offset}, #{params.pageSize}
+        </if>
+    </select>
+
+</mapper>

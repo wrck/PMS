@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.mapper.PmsProbSoftVersionMapper">
+
+    <!-- 软件版本列表查询 (迁移自 ProbManageServiceImpl.checkSoftVersionList/querySoftVersionList) -->
+    <select id="selectListByParams" parameterType="map" resultType="map">
+        SELECT
+            sv.id,
+            sv.prob_id AS probId,
+            sv.soft_version_code AS softVersionCode,
+            sv.soft_version_name AS softVersionName,
+            sv.create_time AS createTime,
+            sv.create_by AS createBy,
+            m.probNum,
+            m.theme
+        FROM prob_soft_version sv
+        LEFT JOIN prob_main m ON sv.prob_id = m.id
+        WHERE sv.effective_to IS NULL
+        <if test="params.probId != null">
+            AND sv.prob_id = #{params.probId}
+        </if>
+        <if test="params.softVersionCode != null and params.softVersionCode != ''">
+            AND sv.soft_version_code LIKE CONCAT('%', #{params.softVersionCode}, '%')
+        </if>
+        ORDER BY sv.create_time DESC
+    </select>
+
+</mapper>

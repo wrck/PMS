@@ -7,6 +7,9 @@ import com.dp.plat.service.MaintenanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/maintenance")
 public class MaintenanceController {
@@ -42,5 +45,35 @@ public class MaintenanceController {
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return R.ok();
+    }
+
+    // ===== 服务交付 =====
+
+    /**
+     * 服务交付记录
+     * 迁移自: MaintenanceAction.serviceDelivery()
+     */
+    @GetMapping("/{id}/delivery")
+    public R<List<Map<String, Object>>> serviceDelivery(@PathVariable Long id) {
+        return R.ok(service.queryServiceDelivery(id));
+    }
+
+    /**
+     * 上传运维文件
+     * 迁移自: MaintenanceAction.uploadFileList()
+     */
+    @PostMapping("/{id}/upload")
+    public R<Void> uploadFile(@PathVariable Long id, @RequestParam String fileIds) {
+        service.uploadFile(id, fileIds);
+        return R.ok();
+    }
+
+    /**
+     * 查询运维文件列表
+     * 迁移自: MaintenanceAction.toUploadFile()
+     */
+    @GetMapping("/{id}/files")
+    public R<List<Map<String, Object>>> queryFiles(@PathVariable Long id) {
+        return R.ok(service.queryFiles(id));
     }
 }

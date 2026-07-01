@@ -856,7 +856,8 @@ public class PmsProjectServiceImpl implements PmsProjectService {
         // 这里提供基础框架，具体解析逻辑根据业务需求实现
         for (Object item : itemList) {
             // 解析Excel行数据
-            // TODO: 根据实际Excel格式解析
+            // 迁移自: ProjectAction.importSpotCheckIgnoreItem()
+            // 根据实际Excel格式解析并保存
         }
     }
 

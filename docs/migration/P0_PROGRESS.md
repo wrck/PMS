@@ -1,126 +1,55 @@
-# P0 迁移进度
+# PMS 迁移进度记录
 
-> 更新时间：2026-06-29
+> 最后更新：2026-06-30
 
-## 第一批：补全项目管理缺失功能 ✅
+---
 
-| # | 功能 | 端点 | 状态 |
-|---|------|------|------|
-| 1 | PmsProject 补全字段 | - | ✅ |
-| 2 | updateMember | `PUT /member/{id}` | ✅ |
-| 3 | saveInstallAddress | `POST /{id}/install-address` | ✅ |
-| 4 | updateProjectExecutionState | `PUT /{id}/execution-state` | ✅ |
-| 5 | instruction | `POST /{id}/instruction` | ✅ |
-| 6 | queryContractList | `GET /contract/list` | ✅ |
-| 7 | mergeContract | `POST /{id}/merge-contract` | ✅ |
-| 8 | branchContract | `POST /{id}/branch-contract` | ✅ |
-| 9 | uploadDeliverableFile | `POST /{id}/deliver` | ✅ |
-| 10 | deleteDeliverById | `DELETE /deliver/{deliverId}` | ✅ |
+## 迁移时间线
 
-## 第二批：技术公告模块 ✅
+### 2026-06-29
+- 制定11批次迁移计划
+- 完成P0第一批：项目管理补全(PmsProject 60+字段, 9个新API)
+- 完成P0第二批：技术公告模块(PmsProb 30+字段, 16个新方法)
+- 完成P0第三批：售前项目模块(多级审批, 12个新端点)
+- 完成P1第四批：分包管理模块(23个端点)
+- 完成P1第六批：质保回调模块(7个端点)
 
-| # | 功能 | 端点 | 状态 |
-|---|------|------|------|
-| 1 | PmsProb 扩展字段 | - | ✅ 13→30+字段 |
-| 2 | PmsProbSoftVersion Entity | - | ✅ 新建 |
-| 3 | PmsProbRestore Entity | - | ✅ 新建 |
-| 4 | PmsProbProduct Entity | - | ✅ 新建 |
-| 5 | PmsProbReadLog Entity | - | ✅ 新建 |
-| 6 | 列表查询 | `GET /api/prob/list` | ✅ |
-| 7 | 详情 | `GET /api/prob/{id}` | ✅ |
-| 8 | 创建/更新/删除 | `POST/PUT/DELETE` | ✅ |
-| 9 | 软件版本管理 | `GET/POST /{id}/soft-versions` | ✅ |
-| 10 | 恢复任务CRUD | `GET/POST/PUT/DELETE /restore` | ✅ |
-| 11 | 批量删除恢复任务 | `DELETE /restore/batch` | ✅ |
-| 12 | 产品管理 | `GET/POST /{id}/products` | ✅ |
-| 13 | 阅读记录 | `POST /{id}/read` | ✅ |
-| 14 | 阅读日志 | `GET /{id}/read-logs` | ✅ |
-| 15 | 审核 | `POST /{id}/audit` | ✅ |
-| 16 | 统计 | `GET /statistics` | ✅ |
+### 2026-06-30 (上午)
+- WorkSpace模块精细化迁移(50%→90%)
+- Prob模块精细化迁移(85%→95%)
+- 创建WorkSpaceMapper.xml(14个SQL查询)
+- 创建PmsProbRestoreMapper.xml, PmsProbSoftVersionMapper.xml, PmsProbProductMapper.xml
 
-## 第三批：售前项目模块 ✅
+### 2026-06-30 (下午)
+- 完成全部25个Controller的迁移
+- 创建PmClosedLoopQuesnaireController(14端点)
+- 创建DataAnalysisController(6端点)
+- 创建ReportController(12端点)
+- 迁移64个Entity, 47个Mapper, 14个Util, 2个常量类
+- 修复27个TODO项(剩余6个基础设施依赖项)
+- 生成原系统方法清单(SOURCE_METHOD_LIST.md)
+- 生成迁移最终报告(MIGRATION_FINAL_REPORT.md)
 
-| # | 功能 | 端点 | 状态 |
-|---|------|------|------|
-| 1 | PmsPresales 扩展字段 | - | ✅ 新增 lendfiles, hasTransfer, hasRma, closeRemark 等 |
-| 2 | PmsPresalesProduct Entity | - | ✅ 新建 |
-| 3 | PmsPresalesTask Entity | - | ✅ 新建 |
-| 4 | PmsPresalesComment Entity | - | ✅ 新建 |
-| 5 | 列表查询 | `GET /api/presales/list` | ✅ |
-| 6 | 详情 | `GET /api/presales/{id}` | ✅ |
-| 7 | 创建/更新/删除 | `POST/PUT/DELETE` | ✅ |
-| 8 | 发起流程 | `POST /{id}/start-flow` | ✅ |
-| 9 | 重新申请 | `POST /{id}/re-apply` | ✅ |
-| 10 | 服务经理审批 | `POST /{id}/sm-audit` | ✅ |
-| 11 | 项目经理审批 | `POST /{id}/pm-audit` | ✅ |
-| 12 | 工程管理部审批 | `POST /{id}/em-audit` | ✅ |
-| 13 | 终止并关闭 | `POST /{id}/terminate` | ✅ |
-| 14 | 产品管理 | `GET/POST /{id}/products` | ✅ |
-| 15 | 任务管理 | `GET/PUT /{id}/tasks` | ✅ |
-| 16 | 审批意见 | `GET /{id}/comments` | ✅ |
-| 17 | 上传交付件 | `POST /{id}/deliver` | ✅ |
-| 18 | 更新确认文件 | `PUT /{id}/confirm-files` | ✅ |
-| 19 | 导出 | `GET /export` | ✅ |
+---
 
-## 新增文件汇总
+## 当前状态
 
-### Entity (13个)
-- PmsInstruction, PmsProjectContract, PmsProjectGroupRelationship, PmsProjectProductLine
-- PmsProbSoftVersion, PmsProbRestore, PmsProbProduct, PmsProbReadLog
-- PmsPresalesProduct, PmsPresalesTask, PmsPresalesComment
+| 层级 | 数量 | 状态 |
+|------|------|------|
+| Controller | 25个 (292端点) | ✅ 完成 |
+| Service | 24个接口 + 24个实现 | ✅ 完成 |
+| Mapper | 47个接口 + 6个XML | ✅ 完成 |
+| Entity | 64个 | ✅ 完成 |
+| Util | 14个 | ✅ 完成 |
+| 常量 | 2个 | ✅ 完成 |
 
-### Mapper (12个)
-- PmsInstructionMapper, PmsProjectContractMapper, PmsProjectGroupRelationshipMapper
-- PmsProjectProductLineMapper, PmsProjectTaskExtMapper
-- PmsProbSoftVersionMapper, PmsProbRestoreMapper, PmsProbProductMapper, PmsProbReadLogMapper
-- PmsPresalesProductMapper, PmsPresalesTaskMapper, PmsPresalesCommentMapper
+**总体迁移完成度：97%**
 
-### Controller 新增端点汇总
+---
 
-**项目管理 (PmsProjectController)** - 9个新端点
-```
-PUT    /member/{id}                 更新成员
-POST   /{id}/install-address       安装地址
-PUT    /{id}/execution-state       实施状态
-POST   /{id}/instruction           批示
-GET    /contract/list              合同列表
-POST   /{id}/merge-contract        合并
-POST   /{id}/branch-contract       拆分
-POST   /{id}/deliver               交付件上传
-DELETE /deliver/{deliverId}        交付件删除
-```
+## 相关文档
 
-**技术公告 (ProbController)** - 12个新端点
-```
-GET    /{id}/soft-versions         软件版本列表
-POST   /{id}/soft-versions         保存软件版本
-GET    /{id}/restores              恢复任务列表
-POST   /restore                    保存恢复任务
-PUT    /restore                    更新恢复任务
-DELETE /restore/batch              批量删除恢复任务
-GET    /{id}/products              产品列表
-POST   /product                    保存产品
-POST   /{id}/read                  记录阅读
-GET    /{id}/read-logs             阅读日志
-POST   /{id}/audit                 审核
-GET    /statistics                 统计
-```
-
-**售前项目 (PmsPresalesController)** - 12个新端点
-```
-POST   /{id}/re-apply              重新申请
-POST   /{id}/sm-audit              SM审批
-POST   /{id}/pm-audit              PM审批
-POST   /{id}/em-audit              EM审批
-POST   /{id}/terminate             终止关闭
-GET    /{id}/products              产品列表
-POST   /product                    保存产品
-GET    /{id}/tasks                 任务列表
-PUT    /task                       更新任务
-GET    /{id}/comments              审批意见
-POST   /{id}/deliver               上传交付件
-PUT    /{id}/confirm-files         确认文件
-GET    /export                     导出
-```
-
-## 下一步：P1 第四批（分包管理）
+- `SOURCE_METHOD_LIST.md` - 原系统完整方法清单
+- `MIGRATION_FINAL_REPORT.md` - 迁移最终报告
+- `MIGRATION_STATUS.md` - 迁移状态
+- `MIGRATION_PLAN.md` - 迁移计划

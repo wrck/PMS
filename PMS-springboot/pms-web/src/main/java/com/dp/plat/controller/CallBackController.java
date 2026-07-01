@@ -7,6 +7,8 @@ import com.dp.plat.service.CallBackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/callback")
 public class CallBackController {
@@ -48,5 +50,14 @@ public class CallBackController {
     public R<Void> resubmit(@PathVariable Long id, @RequestBody PmsCallBack callBack) {
         callBackService.resubmit(id, callBack);
         return R.ok();
+    }
+
+    /**
+     * 查看回访问卷
+     * 迁移自: CallBackAction.seeQuesnaire()
+     */
+    @GetMapping("/{id}/questionnaire")
+    public R<Map<String, Object>> seeQuestionnaire(@PathVariable Long id) {
+        return R.ok(callBackService.queryQuestionnaire(id));
     }
 }

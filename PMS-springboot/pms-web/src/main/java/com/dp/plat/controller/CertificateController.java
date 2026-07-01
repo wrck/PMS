@@ -36,4 +36,24 @@ public class CertificateController {
         service.delete(id);
         return R.ok();
     }
+
+    /**
+     * 更新证书
+     * 迁移自: CertificateAction (隐含edit方法)
+     */
+    @PutMapping
+    public R<Void> update(@RequestBody com.dp.plat.model.entity.PmsCertificate c) {
+        service.update(c);
+        return R.ok();
+    }
+
+    /**
+     * 上传印章信息
+     * 迁移自: CertificateAction.uploadSealInfo()
+     */
+    @PostMapping("/{id}/seal")
+    public R<Void> uploadSealInfo(@PathVariable Long id, @RequestParam String sealInfo) {
+        service.uploadSealInfo(id, sealInfo);
+        return R.ok();
+    }
 }
