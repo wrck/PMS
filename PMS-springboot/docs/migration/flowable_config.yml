@@ -1,0 +1,32 @@
+# ============================================================
+# Flowable工作流引擎配置 - 添加到 application.yml
+# 迁移自老系统 Activiti 配置
+# ============================================================
+
+flowable:
+  # 关闭异步执行器（开发环境）
+  async-executor-activate: false
+  # 数据库表自动创建/更新
+  database-schema-update: true
+  # 历史级别：none/activity/audit/full
+  history-level: full
+  # 流程定义自动部署（从classpath/processes目录）
+  check-process-definitions: true
+  # REST API 配置
+  rest:
+    enabled: true
+    servlet:
+      path: /api/flowable
+  # 流程图字体配置
+  activity-font-name: 宋体
+  label-font-name: 宋体
+  annotation-font-name: 宋体
+
+# 如需使用独立的Flowable数据源（推荐与主库分离）
+# spring:
+#   datasource:
+#     flowable:
+#       url: jdbc:mysql://localhost:3306/pms_flowable?useUnicode=true&characterEncoding=utf8
+#       username: root
+#       password: root
+#       driver-class-name: com.mysql.cj.jdbc.Driver

@@ -53,4 +53,12 @@ public class OperateLogServiceImpl implements OperateLogService {
                .orderByDesc(SysOperateLog::getCreateTime);
         return logMapper.selectList(wrapper);
     }
+
+    @Override
+    public void deleteLogs(List<Long> ids) {
+        // 迁移自: OpLogServiceImpl.delete()
+        if (ids != null && !ids.isEmpty()) {
+            logMapper.deleteBatchIds(ids);
+        }
+    }
 }

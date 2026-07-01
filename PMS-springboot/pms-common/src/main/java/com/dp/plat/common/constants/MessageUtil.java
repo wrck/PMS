@@ -53,9 +53,23 @@ public class MessageUtil {
     public static final int CL_EVALU_TYPE_SM = 2;              // SM评估
     public static final int CL_EVALU_TYPE_CB = 3;              // CB评估
     public static final int CL_EVALU_TYPE_CL = 4;              // CL评估
+    public static final int CL_EVALU_TYPE_END = 5;             // 闭环结束
+    public static final int CL_EVALU_RESULT_AGREE = 1;         // 同意
     public static final int CL_EVALU_RESULT_REJECT = 2;        // 驳回
     public static final int CL_EVALU_RESULT_CANTCB = 3;        // 无法闭环
-    public static final int CL_STATUS_SUBMIT = 1;              // 已提交
+    public static final int CL_STATUS_DRAFT = -1;              // 草稿
+    public static final int CL_STATUS_SUBMIT = 1;              // 已提交/生效
+    public static final int CL_STATUS_SUBMITQUES = 2;          // 问卷已提交
+    public static final int CL_STATUS_ENDEFFEC = -2;           // 失效
+
+    // ===== 问卷相关常量 =====
+    public static final String CL_QUESNAIRE_HEADERID = "13";   // 问卷类型基础数据类型编码
+    public static final String CL_QUESNAIRE_LINEID = "14";     // 问卷题目回访类型基础数据类型编码
+    public static final String CL_QUESNAIRE_HEADER_TYPE = "30"; // 问卷类型:闭环建议类
+    public static final String CL_QUESNAIRE_LINE_TYPE1 = "10";  // 工程项目类
+    public static final String CL_QUESNAIRE_LINE_TYPE2 = "20";  // 设备类
+    public static final String CL_QUESNAIRE_LINE_TYPE3 = "30";  // 工程师类
+    public static final String CL_QUESNAIRE_LINE_TYPE4 = "40";  // 其他
     public static final String CL_QUESNAIRE_PROCESSID = "35";  // 问卷流程ID
 
     // ===== 成员角色 =====

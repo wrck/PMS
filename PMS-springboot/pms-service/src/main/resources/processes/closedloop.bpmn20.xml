@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/process">
+
+    <!--
+        闭环审批流程 - 迁移自老系统 PmClosedLoopServiceImpl
+        流程: PM申请 → SM审批 → CB回访审批 → CL闭环确认 → 结束
+        对应老系统多角色审批链
+    -->
+    <process id="closedloop" name="项目闭环审批流程" isExecutable="true">
+
+        <!-- 开始事件 -->
+        <startEvent id="start" name="发起闭环申请" flowable:initiator="initiator"
+                    flowable:formKey="closedloop_apply"/>
+
+        <!-- 用户任务: SM审批 -->
+        <userTask id="smApproval" name="服务经理审批"
+                  flowable:candidateGroups="sm"
+                  flowable:formKey="closedloop_sm_audit">
+            <documentation>服务经理审批闭环申请</documentation>
+        </userTask>
+
+        <!-- 排他网关: SM审批结果 -->
+        <exclusiveGateway id="smGateway" name="SM审批结果"/>
+
+        <!-- 用户任务: CB回访审批 -->
+        <userTask id="cbApproval" name="回访审批"
+                  flowable:candidateGroups="cb"
+                  flowable:formKey="closedloop_cb_audit">
+            <documentation>回访审批（问卷评分）</documentation>
+        </userTask>
+
+        <!-- 排他网关: CB审批结果 -->
+        <exclusiveGateway id="cbGateway" name="CB审批结果"/>
+
+        <!-- 用户任务: CL闭环确认 -->
+        <userTask id="clConfirm" name="闭环确认"
+                  flowable:candidateGroups="cl"
+                  flowable:formKey="closedloop_cl_confirm">
+            <documentation>最终闭环确认</documentation>
+        </userTask>
+
+        <!-- 排他网关: CL确认结果 -->
+        <exclusiveGateway id="clGateway" name="CL确认结果"/>
+
+        <!-- 用户任务: 重新提交（驳回后） -->
+        <userTask id="resubmit" name="重新提交"
+                  flowable:assignee="${initiator}"
+                  flowable:formKey="closedloop_resubmit">
+            <documentation>申请被驳回，请重新提交</documentation>
+        </userTask>
+
+        <!-- 结束事件: 闭环成功 -->
+        <endEvent id="endSuccess" name="闭环成功"/>
+
+        <!-- 结束事件: 无法闭环 -->
+        <endEvent id="endFail" name="无法闭环"/>
+
+        <!-- 流程连线 -->
+        <sequenceFlow id="flow1" sourceRef="start" targetRef="smApproval"/>
+        <sequenceFlow id="flow2" sourceRef="smApproval" targetRef="smGateway"/>
+
+        <!-- SM通过 → CB审批 -->
+        <sequenceFlow id="flow3" name="SM通过" sourceRef="smGateway" targetRef="cbApproval">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == 1 || outcome == '1' || outcome == "1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- SM驳回 → 重新提交 -->
+        <sequenceFlow id="flow4" name="SM驳回" sourceRef="smGateway" targetRef="resubmit">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == -1 || outcome == '-1' || outcome == "-1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow5" sourceRef="cbApproval" targetRef="cbGateway"/>
+
+        <!-- CB通过 → CL确认 -->
+        <sequenceFlow id="flow6" name="CB通过" sourceRef="cbGateway" targetRef="clConfirm">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == 1 || outcome == '1' || outcome == "1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- CB驳回 → 重新提交 -->
+        <sequenceFlow id="flow7" name="CB驳回" sourceRef="cbGateway" targetRef="resubmit">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == -1 || outcome == '-1' || outcome == "-1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow8" sourceRef="clConfirm" targetRef="clGateway"/>
+
+        <!-- CL确认通过 → 闭环成功 -->
+        <sequenceFlow id="flow9" name="确认闭环" sourceRef="clGateway" targetRef="endSuccess">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == 1 || outcome == '1' || outcome == "1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- CL确认无法闭环 -->
+        <sequenceFlow id="flow10" name="无法闭环" sourceRef="clGateway" targetRef="endFail">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == -1 || outcome == '-1' || outcome == "-1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- 重新提交后回到SM审批 -->
+        <sequenceFlow id="flow11" sourceRef="resubmit" targetRef="smApproval"/>
+
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_closedloop">
+        <bpmndi:BPMNPlane bpmnElement="closedloop" id="BPMNPlane_closedloop">
+            <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
+                <omgdc:Bounds height="30.0" width="30.0" x="75.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="smApproval" id="BPMNShape_smApproval">
+                <omgdc:Bounds height="80.0" width="100.0" x="170.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="smGateway" id="BPMNShape_smGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="335.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="cbApproval" id="BPMNShape_cbApproval">
+                <omgdc:Bounds height="80.0" width="100.0" x="430.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="cbGateway" id="BPMNShape_cbGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="595.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="clConfirm" id="BPMNShape_clConfirm">
+                <omgdc:Bounds height="80.0" width="100.0" x="690.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="clGateway" id="BPMNShape_clGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="855.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="resubmit" id="BPMNShape_resubmit">
+                <omgdc:Bounds height="80.0" width="100.0" x="430.0" y="300.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endSuccess" id="BPMNShape_endSuccess">
+                <omgdc:Bounds height="28.0" width="28.0" x="950.0" y="100.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endFail" id="BPMNShape_endFail">
+                <omgdc:Bounds height="28.0" width="28.0" x="950.0" y="230.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/process">
+
+    <!--
+        回访审批流程 - 迁移自老系统 CallBackServiceImpl.startCallBackFlow()
+        流程: 发起申请 → 回访经理审批 → (通过/驳回) → 结束
+        对应老系统Activiti流程定义Key: CallBack
+    -->
+    <process id="callback" name="回访审批流程" isExecutable="true">
+
+        <!-- 开始事件 -->
+        <startEvent id="start" name="发起申请" flowable:initiator="initiator"
+                    flowable:formKey="callback_apply"/>
+
+        <!-- 用户任务: 回访经理审批 -->
+        <userTask id="callbackApproval" name="回访经理审批"
+                  flowable:candidateGroups="callback"
+                  flowable:formKey="callback_audit">
+            <documentation>回访经理审批回访申请（候选组: callback角色）</documentation>
+        </userTask>
+
+        <!-- 排他网关: 审批结果判断 -->
+        <exclusiveGateway id="approvalGateway" name="审批结果"/>
+
+        <!-- 用户任务: 重新提交（驳回后） -->
+        <userTask id="resubmit" name="重新提交"
+                  flowable:assignee="${initiator}"
+                  flowable:formKey="callback_resubmit">
+            <documentation>申请被驳回，请重新提交</documentation>
+        </userTask>
+
+        <!-- 结束事件: 通过 -->
+        <endEvent id="endApproved" name="审批通过"/>
+
+        <!-- 结束事件: 驳回 -->
+        <endEvent id="endRejected" name="审批驳回"/>
+
+        <!-- 流程连线 -->
+        <sequenceFlow id="flow1" sourceRef="start" targetRef="callbackApproval"/>
+
+        <sequenceFlow id="flow2" sourceRef="callbackApproval" targetRef="approvalGateway"/>
+
+        <!-- 通过 -->
+        <sequenceFlow id="flow3" name="通过" sourceRef="approvalGateway" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == 1 || outcome == '1' || outcome == "1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- 驳回: 回到发起人重新提交 -->
+        <sequenceFlow id="flow4" name="驳回" sourceRef="approvalGateway" targetRef="resubmit">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${outcome == -1 || outcome == '-1' || outcome == "-1"}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- 重新提交后回到审批节点 -->
+        <sequenceFlow id="flow5" sourceRef="resubmit" targetRef="callbackApproval"/>
+
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_callback">
+        <bpmndi:BPMNPlane bpmnElement="callback" id="BPMNPlane_callback">
+            <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
+                <omgdc:Bounds height="30.0" width="30.0" x="100.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="callbackApproval" id="BPMNShape_callbackApproval">
+                <omgdc:Bounds height="80.0" width="100.0" x="195.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="approvalGateway" id="BPMNShape_approvalGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="360.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="resubmit" id="BPMNShape_resubmit">
+                <omgdc:Bounds height="80.0" width="100.0" x="340.0" y="280.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endApproved" id="BPMNShape_endApproved">
+                <omgdc:Bounds height="28.0" width="28.0" x="470.0" y="100.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endRejected" id="BPMNShape_endRejected">
+                <omgdc:Bounds height="28.0" width="28.0" x="470.0" y="230.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

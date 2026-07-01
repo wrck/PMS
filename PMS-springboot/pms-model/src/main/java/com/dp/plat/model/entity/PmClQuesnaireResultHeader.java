@@ -44,4 +44,22 @@ public class PmClQuesnaireResultHeader extends BaseEntity {
 
     @TableField("status")
     private Integer status;
+
+    // ===== 评分相关字段（迁移自老系统 PmClQuesnaireResultHeader） =====
+
+    /** 问卷得分（计算后写入） */
+    @TableField("ques_mark_score")
+    private Double quesMarkScore;
+
+    /** 问卷达标分数 */
+    @TableField("ques_pass_score")
+    private Double quesPassScore;
+
+    /** 问卷答案字符串（格式：题目类型:题号-答案,题号-答案;） */
+    @TableField("ques_anw")
+    private String quesAnw;
+
+    /** 问卷评分结果: 1=通过, -1=驳回 */
+    @TableField("ques_mark_result")
+    private Integer quesMarkResult;
 }

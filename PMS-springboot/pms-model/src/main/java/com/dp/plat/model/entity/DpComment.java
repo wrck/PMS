@@ -1,10 +1,12 @@
 package com.dp.plat.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 /** 审批意见 - 对应老系统 DpComment (11字段) */
 @Data
+@TableName("dp_comment")
 public class DpComment {
     private Long id;
     private String instId;

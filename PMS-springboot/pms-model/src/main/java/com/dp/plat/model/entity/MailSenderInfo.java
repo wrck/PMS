@@ -1,6 +1,7 @@
 package com.dp.plat.model.entity;
 
 import lombok.Data;
+import java.util.Date;
 
 /** 邮件发送信息 - 对应老系统 MailSenderInfo (21字段) */
 @Data
@@ -19,4 +20,6 @@ public class MailSenderInfo {
     private String[] attachFileNames;
     private String charset;
     private String protocol;
+    /** 预期发送时间 */
+    private Date mailExpectSendTime;
 }

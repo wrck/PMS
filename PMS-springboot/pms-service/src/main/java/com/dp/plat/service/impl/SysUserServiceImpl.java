@@ -160,13 +160,24 @@ public class SysUserServiceImpl implements SysUserService {
             throw new BusinessException("用户不存在");
         }
         // 验证旧密码
-        if (!PasswordUtil.md5(oldPassword).equals(user.getPassword())) {
+        if (!PasswordUtil.encrypt(oldPassword).equals(user.getPassword())) {
             throw new BusinessException("旧密码不正确");
         }
         // 设置新密码
-        user.setPassword(PasswordUtil.md5(newPassword));
+        user.setPassword(PasswordUtil.encrypt(newPassword));
         user.setPwdOverdue(LocalDateTime.now().plusDays(90));
         user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
+    }
+
+    @Override
+    public void forcedOffline(String username) {
+        // 迁移自: PasswordServiceImpl.forcedOffline()
+        // 老系统逻辑: 遍历在线用户列表，踢除同用户名的其他Session
+        // 新系统(JWT无状态): 维护Token黑名单实现强制下线
+        // 实际实现需要Redis支持，这里标记为待集成
+        // 如需实现，可通过Redis维护一个Token黑名单:
+        // redisTemplate.opsForValue().set("token:blacklist:" + username, "1", 24, TimeUnit.HOURS);
+        // 然后在JWT过滤器中检查Token是否在黑名单中
     }
 }

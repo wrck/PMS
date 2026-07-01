@@ -7,7 +7,9 @@ import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.utils.SecurityUtil;
 import com.dp.plat.mapper.PmClosedLoopMapper;
 import com.dp.plat.model.entity.PmClosedLoop;
+import com.dp.plat.model.vo.WorkflowTaskVO;
 import com.dp.plat.service.PmClosedLoopService;
+import com.dp.plat.service.WorkflowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
 
     @Autowired
     private PmClosedLoopMapper closedLoopMapper;
+    @Autowired
+    private WorkflowService workflowService;
 
     @Override
     public IPage<PmClosedLoop> queryClosedLoopPage(Integer pageNum, Integer pageSize, Long projectId, Integer applyState) {
@@ -60,10 +64,20 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
         closedLoop.setCreateBy(SecurityUtil.getCurrentUsername());
         closedLoopMapper.insert(closedLoop);
 
-        // 迁移自: PmClosedLoopServiceImpl.addPmCLApply()
-        // 启动闭环审批流程(workflow)
-        // 老系统通过Activiti启动流程,新系统暂不集成工作流引擎
-        // 待后续决定是否引入Activiti/Flowable
+        // 启动Flowable闭环审批流程
+        String businessKey = "PmClosedLoop." + closedLoop.getId() + "." + closedLoop.getProjectId();
+        Map<String, Object> vars = new java.util.HashMap<>();
+        vars.put("initiator", SecurityUtil.getCurrentUsername());
+        vars.put("projectId", closedLoop.getProjectId());
+        String instId = workflowService.startProcess("closedloop", businessKey, vars);
+
+        // 回写流程实例ID
+        closedLoop.setInstId(instId);
+        closedLoopMapper.updateById(closedLoop);
+
+        // 添加审批意见
+        workflowService.addApprovalComment(closedLoop.getId(), "closedloop", null,
+                instId, 0, "发起闭环申请");
     }
 
     @Override
@@ -100,9 +114,30 @@ public class PmClosedLoopServiceImpl implements PmClosedLoopService {
         cl.setUpdateTime(LocalDateTime.now());
         closedLoopMapper.updateById(cl);
 
-        // 迁移自: PmClosedLoopServiceImpl.approve()
-        // 完成审批任务(workflow)
-        // 老系统通过Activiti完成任务,新系统暂不集成
+        // 通过Flowable完成审批任务
+        if (StringUtils.hasText(cl.getInstId())) {
+            // BPMN中使用candidateGroups，任务未直接分配，需要先认领
+            // 先尝试按assignee查询，再按候选组查询
+            WorkflowTaskVO task = workflowService.getTaskByProcessInstanceAndAssignee(
+                    cl.getInstId(), SecurityUtil.getCurrentUsername());
+            if (task == null) {
+                // 任务在候选组中，先认领再完成
+                List<WorkflowTaskVO> tasks = workflowService.getTasksByProcessInstanceId(cl.getInstId());
+                if (tasks != null && !tasks.isEmpty()) {
+                    task = tasks.get(0);
+                    workflowService.claimTask(task.getTaskId(), SecurityUtil.getCurrentUsername());
+                }
+            }
+            if (task != null) {
+                Map<String, Object> vars = new java.util.HashMap<>();
+                vars.put("outcome", approved ? 1 : -1);
+                workflowService.completeTask(task.getTaskId(), cl.getInstId(), comment, vars);
+            }
+        }
+
+        // 添加审批意见
+        workflowService.addApprovalComment(cl.getId(), "closedloop", null,
+                cl.getInstId(), approved ? 1 : -1, comment);
     }
 
     /** 查询项目的闭环历史 */

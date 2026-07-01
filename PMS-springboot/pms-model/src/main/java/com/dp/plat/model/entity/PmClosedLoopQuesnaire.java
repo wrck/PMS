@@ -38,4 +38,8 @@ public class PmClosedLoopQuesnaire extends BaseEntity {
 
     @TableField("total_score")
     private Integer totalScore;
+
+    /** 评分规则索引（逗号分隔，如"0,1,2"对应PmClosedLoopMarkFactory中的规则） */
+    @TableField("mark_indexs")
+    private String markIndexs;
 }

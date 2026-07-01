@@ -44,6 +44,36 @@ public interface BasicDataService {
     /** 查询基础数据Map(dataCode -> dataName) */
     Map<String, String> queryBasicDataMap(String dataType);
 
+    /** 查询所有基础数据类型 */
+    List<SysBasicData> queryBasicDataType();
+
+    /** 根据ID查询单条基础数据 */
+    SysBasicData queryBasicDataBean(Long id);
+
+    /** 根据条件Map查找基础数据ID */
+    int findBasicDataId(Map<String, Object> paramMap);
+
+    /** 执行原生SQL */
+    void executeSql(String sql);
+
+    /** 批量插入文件信息（含文件类型），返回逗号分隔的ID */
+    String batchInsertFileInfo(String path, String uploadFileName, String uploadFileType);
+
+    /** 根据逗号分隔的文件ID查询文件Map(id->fileName) */
+    Map<Long, String> queryFileMap(String fileIds);
+
+    /** 根据文件ID列表查询文件列表 */
+    List<SysFileInfo> queryFileList(String fileIds);
+
+    /** 根据dataId查询基础数据Bean */
+    SysBasicData queryBasicDataBeanByDataId(String basicDataId);
+
+    /** 根据类型和属性查询基础数据 */
+    List<SysBasicData> queryBasicDataBeanByAttri(String dataType, String attri1);
+
+    /** 查询带子类型的基础数据Map */
+    List<Map<String, Object>> queryBasicDataBeanMapWithSub(String dataTypeCode, String subDataTypeCode, Map<String, Object> extra);
+
     /** 刷新缓存 */
     boolean refreshCacheData();
 }

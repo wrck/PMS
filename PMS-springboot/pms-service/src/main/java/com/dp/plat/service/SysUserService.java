@@ -28,4 +28,10 @@ public interface SysUserService extends BaseService<SysUser> {
 
     /** 修改密码 */
     void changePassword(Long id, String oldPassword, String newPassword);
+
+    /**
+     * 强制指定用户下线
+     * 迁移自: PasswordServiceImpl.forcedOffline()
+     */
+    void forcedOffline(String username);
 }
