@@ -1,0 +1,2578 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+ 
+<!-- 技术公告数据库操作--> 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="prob">
+	<typeAlias alias="Prob" type="com.dp.plat.prob.bean.Prob"/>
+	<select id="query_next_val" resultType="int">
+		<![CDATA[
+			SELECT _nextval('probNum')
+		]]>	
+	</select>
+	<!-- 插入 -->
+	<insert id="insert_into_prob" parameterType="Prob">
+		<![CDATA[
+			INSERT INTO prob_main(probNum, watch, theme, `desc`,solution, `status`,  startdate,
+                duedate, attachments, priority, productType, trackingUser,createBy, createTime, effectiveFrom
+                , relatedSceneTypes, relatedSceneTypesMark, customInfo
+				, probTicketNo, mitigationActionTypes, mitigationActionTypesMark, solutionActionTypes, solutionActionTypesMark
+            )
+			VALUES(#{probNum},#{watch}, #{theme}, #{desc}, #{solution}, #{status}, #{startdate}, #{duedate},
+                #{attachments}, #{priority}, #{productType}, #{trackingUser}, #{createBy}, now(), now()
+                , #{relatedSceneTypes}, #{relatedSceneTypesMark}, #{customInfo}
+				, #{probTicketNo}, #{mitigationActionTypes}, #{mitigationActionTypesMark}, #{solutionActionTypes}, #{solutionActionTypesMark}
+            )
+		]]>
+		<selectKey resultType="int" keyProperty="probId">
+			SELECT last_insert_id() as id ;   
+		</selectKey>
+	</insert>
+	
+	<sql id="sqlWhereIterateSoftVersionList">
+	   <!-- <if test=" property="prob.softVersionParserList">
+           <if test=" prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </if>
+           <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
+               #prob.softVersionParserList[].mark# between 
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+               markStart
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+                   , #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+               </iterate>
+               and 
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+               markEnd
+               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+                   , #prob.softVersionParserList[].markAllPartsSet[].key#, #prob.softVersionParserList[].markAllPartsSet[].value#)
+               </iterate>
+           </iterate>
+       </if> -->
+       <isPropertyAvailable prob>
+	       <if test=" property="prob.softVersionParserList">
+	           <if test=" prepend="AND" property="prob.affectedType"> affectedType in (#prob.affectedType#, 0) </if>
+	           <iterate prepend="AND" property="prob.softVersionParserList" open="(" close=")" conjunction="OR" >
+	               '$prob.softVersionParserList[].mark$' between 
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+	               markStart
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+	                   , '$prob.softVersionParserList[].markAllPartsSet[].key$', '$prob.softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	               and 
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+	               markEnd
+	               <iterate property="prob.softVersionParserList[].markAllPartsSet">
+	                   , '$prob.softVersionParserList[].markAllPartsSet[].key$', '$prob.softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	           </iterate>
+	       </if>
+       </isPropertyAvailable>
+       <isNotPropertyAvailable prob>
+           <if test=" softVersionParserList>
+	           <if test=" prepend="AND" affectedType> affectedType in (#{affectedType}, 0) </if>
+	           <iterate prepend="AND" softVersionParserList open="(" close=")" conjunction="OR" >
+	               '$softVersionParserList[].mark$' between 
+	               <iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate> 
+	               markStart
+	               <iterate property="softVersionParserList[].markAllPartsSet">
+	                   , '$softVersionParserList[].markAllPartsSet[].key$', '$softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	               and 
+	               <iterate property="softVersionParserList[].markAllPartsSet">REPLACE(</iterate>
+	               markEnd
+	               <iterate property="softVersionParserList[].markAllPartsSet">
+	                   , '$softVersionParserList[].markAllPartsSet[].key$', '$softVersionParserList[].markAllPartsSet[].value$')
+	               </iterate>
+	           </iterate>
+	       </if>
+       </isNotPropertyAvailable>
+	</sql>
+	
+	<!-- 列表查询 -->
+	<select id="query_prob_count" parameterType="Prob" resultType="int">
+		<![CDATA[
+			SELECT count(*)
+			FROM prob_main t1 
+			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
+			AND t2.`effectiveTo` IS NULL
+		]]>	
+		<if test=" prepend=" " checkSoft compareValue="true"> 
+			LEFT JOIN (
+				SELECT 
+				  probId, <!-- GROUP_CONCAT(
+				      DISTINCT CONCAT(
+				            "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, ""), " manual:", IFNULL(manualEntry, "")
+				        ) SEPARATOR ";"
+				    ) AS affectedVersion -->
+				    GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+				FROM
+				    prob_softwares 
+				where datastate = 1  
+				<include refid="sqlWhereIterateSoftVersionList"/>  
+		        GROUP BY probId
+	        ) sf ON sf.probId = t1.id
+		</if>
+			where t1.effectiveTo is null
+		<if test=" prepend="and" probNum><![CDATA[ t1.probNum like CONCAT('%', #{probNum}, '%')]]></if>
+		<if test=" prepend="and" watch><![CDATA[ t1.watch = #{watch}]]></if>
+		<if test=" prepend="and" theme><![CDATA[ t1.theme like CONCAT('%', #{theme}, '%')]]></if>
+		<if test=" prepend="and" status><![CDATA[ t1.`status` = #{status}]]></if>
+		<if test=" prepend="and" statusList>
+			t1.status in
+			<iterate open="(" close=")" conjunction="," statusList>
+				#statusList[]#
+			</iterate>
+		</if>
+		
+		<if test=" prepend="and" productType><![CDATA[ t1.productType like concat("%", #{productType}, "%")]]></if>
+        <if test=" prepend="and" desc><![CDATA[ t1.desc like concat("%", #{desc}, "%")]]></if>
+        <if test=" prepend="and" affectedType> sf.probId is not null <!-- #{affectedType} = sf.affectedTypes --> </if>
+        <if test=" prepend="and" affectedVersion>
+        	(
+        	<![CDATA[ sf.affectedVersion like concat("%", #{affectedVersion}, "%") ]]>
+        	<if test=" prepend="or" softVersionParserList> sf.probId is not null </if>
+        	)
+       	</if>
+		
+		<if test=" visibleRange>
+            <if test=" prepend="and" visibleRange compareValue="-1" open="(" close=")">
+                t1.visibleRange = #{visibleRange}
+                <if test=" prepend="or" trackingUser> t1.trackingUser = #{trackingUser} </if>
+            </if>
+        </if>
+        
+        <if test=" customInfo>
+            <if test=" prepend="and" property="customInfo.trackingUserSearch"> t1.trackingUser = #customInfo.trackingUserSearch# </if>
+        </if>
+        <!-- 或匹配，包含任意一个 -->
+        <if test=" prepend="and" relatedSceneTypesMark><![CDATA[ t1.`relatedSceneTypesMark` & #{relatedSceneTypesMark} > 0]]></if>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <if test=" prepend="and" relatedSceneTypesMark><![CDATA[ t1.`relatedSceneTypesMark` & #{relatedSceneTypesMark} = #{relatedSceneTypesMark} ]]></if> -->
+        <if test=" prepend="and" mitigationActionTypesMark><![CDATA[ t1.`mitigationActionTypesMark` & #{mitigationActionTypesMark} > 0]]></if>
+        <if test=" prepend="and" solutionActionTypesMark><![CDATA[ t1.`solutionActionTypesMark` & #{solutionActionTypesMark} > 0]]></if>
+		<if test=" prepend="and" probTicketNo><![CDATA[ t1.probTicketNo like CONCAT('%', #{probTicketNo}, '%')]]></if>
+	</select>
+	<resultMap type="Prob" id="ProbMap">
+		<result probId column="id"/>
+		<result probNum column="probNum"/>
+		<result theme column="theme"/>
+		<result priority column="priority"/>
+		<result status column="status"/>
+		<result statusName column="statusName"/>
+		<result trackingUser column="trackingUser"/>
+		<result trackingUsername column="trackingUsername"/>
+		<result createTime column="createTime"/>
+		<result updateTime column="updateTime"/>
+	</resultMap>
+	<select id="query_prob_list" parameterType="java.util.Map" resultType="Prob">
+			SELECT t1.id as probId, t1.probNum, t1.theme,  t1.watch, t4.basicDataName as watchName<!-- , t1.`priority` AS priority -->, t2.`basicDataName` AS priority, t2.`basicDataName` AS priorityName, t1.status
+				, t3.basicDataName AS statusName, t1.trackingUser, CONCAT(t1.trackingUser,"-",ui.realName) AS trackingUsername,  t1.createTime, t1.updateTime 
+				<!-- , t1.desc, t1.solution, t1.productType -->
+				, t1.customInfo
+                , t1.relatedSceneTypes, t1.relatedSceneTypesMark
+                , t1.mitigationActionTypes, t1.mitigationActionTypesMark
+                , t1.solutionActionTypes, t1.solutionActionTypesMark
+				, t1.probTicketNo
+			FROM prob_main t1 
+			LEFT JOIN fnd_user_info ui ON ui.username = t1.trackingUser
+			LEFT JOIN fnd_basic_data t4 ON t1.`watch` = t4.`basicDataId` AND t4.`dataTypeCode` = '30' AND t4.`effectiveTo` IS NULL
+			LEFT JOIN fnd_basic_data t2 ON t1.`priority` = t2.`basicDataId` AND t2.`dataTypeCode` = '32' 
+			LEFT JOIN fnd_basic_data t3 ON t1.`status` = t3.basicDataId AND t3.dataTypeCode = '31' AND t2.`effectiveTo` IS NULL
+		<if test=" prepend=" " property="prob.checkSoft" compareValue="true"> 
+			LEFT JOIN (
+		        SELECT 
+		          probId,  <!-- GROUP_CONCAT(
+		              DISTINCT CONCAT(
+		                    "conp:", IFNULL(conp, ""), " cpld:", IFNULL(cpld, ""), " boot:", IFNULL(boot, ""), " pcb:", IFNULL(pcb, ""), " manual:", IFNULL(manualEntry, "")
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion -->
+		            GROUP_CONCAT(
+		              DISTINCT concat_ws(
+		                    " ", CONCAT("conp:", conp), CONCAT("cpld:", cpld), CONCAT("boot:", boot), CONCAT("pcb:", pcb), CONCAT("manual:", manualEntry)
+		                ) SEPARATOR ";"
+		            ) AS affectedVersion,
+		            GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+		        FROM
+		            prob_softwares 
+		        where datastate = 1
+		        <include refid="sqlWhereIterateSoftVersionList"/>  
+		        GROUP BY probId
+	        ) sf ON sf.probId = t1.id
+        </if>
+		WHERE t1.effectiveTo IS NULL
+		<if test=" prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like CONCAT('%', #prob.probNum#, '%')]]></if>
+		<if test=" prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></if>
+		<if test=" prepend="and" property="prob.theme"><![CDATA[ t1.theme like CONCAT('%', #prob.theme#, '%')]]></if>
+		<if test=" prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></if>
+		<if test=" prepend="and" property="prob.statusList">
+			t1.status in
+			<iterate open="(" close=")" conjunction="," property="prob.statusList">
+				#prob.statusList[]#
+			</iterate>
+		</if>
+		
+		<if test=" prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></if>
+        <if test=" prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></if>
+        <if test=" prepend="and" property="prob.affectedType"> sf.probId is not null <!-- #prob.affectedType# = sf.affectedTypes --> </if>
+        <if test=" prepend="and" property="prob.affectedVersion">
+        	(
+        	<![CDATA[ sf.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
+        	<if test=" prepend="or" property="prob.softVersionParserList"> sf.probId is not null </if>
+        	)
+       	</if>
+        
+        <if test=" property="prob.visibleRange">
+            <if test=" prepend="and" property="prob.visibleRange" compareValue="-1" open="(" close=")">
+                t1.visibleRange = #prob.visibleRange# 
+                <if test=" prepend="or" property="prob.trackingUser"> t1.trackingUser = #prob.trackingUser# </if>
+            </if>
+        </if>
+        
+        <if test=" property="prob.customInfo">
+            <if test=" prepend="and" property="prob.customInfo.trackingUserSearch"> t1.trackingUser = #prob.customInfo.trackingUserSearch# </if>
+        </if>
+		<!-- 或匹配，包含任意一个 -->
+        <if test=" prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# > 0]]></if>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <if test=" prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# = #prob.relatedSceneTypesMark# ]]></if> -->
+        <if test=" prepend="and" property="prob.mitigationActionTypesMark"><![CDATA[ t1.`mitigationActionTypesMark` & #prob.mitigationActionTypesMark# > 0]]></if>
+        <if test=" prepend="and" property="prob.solutionActionTypesMark"><![CDATA[ t1.`solutionActionTypesMark` & #prob.solutionActionTypesMark# > 0]]></if>
+		
+		<if test=" prepend="and" property="prob.probTicketNo"><![CDATA[ t1.probTicketNo like CONCAT('%', #prob.probTicketNo#, '%')]]></if>
+		
+		<if test=" prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<if test=" prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </if>
+			<if test=" prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </if>
+		</if>
+		<if test=" prepend=" order by " property="displayParam.sort">
+            t1.createTime desc
+        </if>
+		<if test=" property="displayParam.offset">
+			limit #displayParam.offset#,  #displayParam.pagesize#
+		</if>
+	</select>
+	<resultMap type="Prob" id="ProbSingleMap">
+		<result probId column="id"/>
+		<result probNum column="probNum"/>
+		<result probTicketNo column="probTicketNo"/>
+		<result watch column="watch"/>
+		<result watchName column="watchName"/>
+		<result theme column="theme"/>
+		<result desc column="desc"/>
+		<result solution column="solution"/>
+		<result status column="status"/>
+		<result statusName column="statusName"/>
+		<result startdate column="startdate"/>
+		<result attachments column="attachments"/>
+		<result productType column="productType"/>
+		<result trackingUser column="trackingUser"/>
+		<result trackingUsername column="trackingUsername"/>
+		<result duedate column="duedate"/>
+		<result priority column="priority"/>
+		<result priorityName column="priorityName"/>
+		<result createTime column="createTime"/>
+		<result updateTime column="updateTime"/>
+		<result remark column="remark"/>
+		<result visibleRange column="visibleRange"/>
+		<result readStatus column="readStatus"/>
+        <result customInfo column="customInfo"/>
+		<result relatedSceneTypes column="relatedSceneTypes"/>
+		<result relatedSceneTypesMark column="relatedSceneTypesMark"/>
+		<result mitigationActionTypes column="mitigationActionTypes"/>
+		<result mitigationActionTypesMark column="mitigationActionTypesMark"/>
+		<result solutionActionTypes column="solutionActionTypes"/>
+		<result solutionActionTypesMark column="solutionActionTypesMark"/>
+	</resultMap>
+	<select id="query_prob_one" parameterType="Prob" resultMap="ProbSingleMap">
+		SELECT t1.* , t3.`basicDataName` AS watchName,  t4.`basicDataName` AS statusName,  t5.`basicDataName` AS priorityName  
+			, concat(t6.username, '-', t6.realName) as trackingUsername
+		    <if test=" prepend="," reader> IFNULL(rl.status, 0) as readStatus </if>
+		    <if test=" prepend="," reader> 0 as readStatus </if>
+		FROM prob_main t1 
+        <if test=" reader>
+		   left join (select * from prob_read_log where probId = #{probId} and reader = #{reader} and status = 1 limit 1) rl
+              on t1.id = rl.probId and rl.status = 1
+        </if>
+        
+		LEFT JOIN fnd_basic_data t3 ON t1.`watch` = t3.`basicDataId` AND t3.`dataTypeCode` = '30' AND t3.`effectiveTo` IS NULL
+		LEFT JOIN fnd_basic_data t4 ON t1.`status` = t4.`basicDataId` AND t4.`dataTypeCode` = '31' AND t4.`effectiveTo` IS NULL
+		LEFT JOIN fnd_basic_data t5 ON t1.`priority` = t5.`basicDataId` AND t5.`dataTypeCode` = '32' AND t5.`effectiveTo` IS NULL
+		left join fnd_user_info t6 on t1.trackingUser = t6.username
+		
+		WHERE t1.id = #{probId}
+	</select>
+	
+	<select id="query_prob_file_map" parameterType="int" resultType="java.util.HashMap">
+		<![CDATA[
+			SELECT t1.`id` AS fileId, t1.`fileName` AS fileName FROM fnd_files t1 
+			JOIN prob_main t2 ON FIND_IN_SET (t1.`id`, t2.`attachments`) 
+			WHERE t2.`id` = #{probId};
+		]]>
+	</select>
+	
+	<update id="update_prob" parameterType="Prob">
+		<![CDATA[ update prob_main set id = #{probId}, updateTime = now() ]]>
+		<if test=" prepend="," probNum><![CDATA[ probNum = #{probNum}]]></if>
+		<if test=" prepend="," probTicketNo><![CDATA[ probTicketNo = #{probTicketNo}]]></if>
+		<if test=" prepend="," watch><![CDATA[ watch = #{watch}]]></if>
+		<if test=" prepend="," theme><![CDATA[ theme = #{theme}]]></if>
+		<if test=" prepend="," desc><![CDATA[ `desc` = #{desc}]]></if>
+		<if test=" prepend="," solution><![CDATA[ solution = #{solution}]]></if>
+		<if test=" prepend="," status><![CDATA[ `status` = #{status}]]></if>
+		<if test=" prepend="," startdate><![CDATA[ startdate = #{startdate}]]></if>
+		<if test=" prepend="," duedate><![CDATA[ duedate = #{duedate}]]></if>
+		<if test=" prepend="," priority><![CDATA[ priority = #{priority}]]></if>
+		<if test=" prepend="," productType><![CDATA[ productType = #{productType}]]> </if>
+		<if test=" prepend="," attachments><![CDATA[ attachments = concat(attachments,',', #{attachments})]]></if>
+		<if test=" prepend="," updateBy><![CDATA[ updateBy = #{updateBy}]]></if>
+		<if test=" prepend="," remark><![CDATA[ remark = #{remark}]]></if>
+		<if test=" prepend="," visibleRange><![CDATA[ visibleRange = #{visibleRange}]]></if>
+        <if test=" prepend="," customInfo>
+            <!-- customInfo = #customInfo:JSON#  -->
+            customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </if>
+        <if test=" prepend="," relatedSceneTypes><![CDATA[ relatedSceneTypes = #{relatedSceneTypes}]]></if>
+        <if test=" prepend="," relatedSceneTypesMark><![CDATA[ relatedSceneTypesMark = #{relatedSceneTypesMark}]]></if>
+        <if test=" prepend="," mitigationActionTypes><![CDATA[ mitigationActionTypes = #{mitigationActionTypes}]]></if>
+        <if test=" prepend="," mitigationActionTypesMark><![CDATA[ mitigationActionTypesMark = #{mitigationActionTypesMark}]]></if>
+        <if test=" prepend="," solutionActionTypes><![CDATA[ solutionActionTypes = #{solutionActionTypes}]]></if>
+        <if test=" prepend="," solutionActionTypesMark><![CDATA[ solutionActionTypesMark = #{solutionActionTypesMark}]]></if>
+		<![CDATA[ where id = #{probId}]]>
+	</update>
+	
+	<update id="update_prob_status" parameterType="Prob">
+		<![CDATA[ update prob_main set id = #{probId}, updateTime = now() ]]>
+		<if test=" prepend="," probNum><![CDATA[ probNum = #{probNum}]]></if>
+		<if test=" prepend="," probTicketNo><![CDATA[ probTicketNo = #{probTicketNo}]]></if>
+		<if test=" prepend="," watch><![CDATA[ watch = #{watch}]]></if>
+		<if test=" prepend="," theme><![CDATA[ theme = #{theme}]]></if>
+		<if test=" prepend="," desc><![CDATA[ `desc` = #{desc}]]></if>
+		<if test=" prepend="," solution><![CDATA[ solution = #{solution}]]></if>
+		<if test=" prepend="," status><![CDATA[ `status` = #{status}]]></if>
+		<if test=" prepend="," startdate><![CDATA[ startdate = #{startdate}]]></if>
+		<if test=" prepend="," duedate><![CDATA[ duedate = #{duedate}]]></if>
+		<if test=" prepend="," priority><![CDATA[ priority = #{priority}]]></if>
+		<if test=" prepend="," productType><![CDATA[ productType = #{productType}]]> </if>
+		<if test=" prepend="," attachments><![CDATA[ attachments = concat(attachments,',', #{attachments})]]></if>
+		<if test=" prepend="," updateBy><![CDATA[ updateBy = #{updateBy}]]></if>
+		<if test=" prepend="," remark><![CDATA[ remark = #{remark}]]></if>
+		<if test=" prepend="," visibleRange><![CDATA[ visibleRange = #{visibleRange}]]></if>
+		<if test=" prepend="," customInfo>
+            <!-- customInfo = #customInfo:JSON#  -->
+            customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+        </if>
+        <if test=" prepend="," relatedSceneTypes><![CDATA[ relatedSceneTypes = #{relatedSceneTypes}]]></if>
+        <if test=" prepend="," relatedSceneTypesMark><![CDATA[ relatedSceneTypesMark = #{relatedSceneTypesMark}]]></if>
+        <if test=" prepend="," mitigationActionTypes><![CDATA[ mitigationActionTypes = #{mitigationActionTypes}]]></if>
+        <if test=" prepend="," mitigationActionTypesMark><![CDATA[ mitigationActionTypesMark = #{mitigationActionTypesMark}]]></if>
+        <if test=" prepend="," solutionActionTypes><![CDATA[ solutionActionTypes = #{solutionActionTypes}]]></if>
+        <if test=" prepend="," solutionActionTypesMark><![CDATA[ solutionActionTypesMark = #{solutionActionTypesMark}]]></if>
+        <![CDATA[ where id = #{probId}]]>
+	</update>
+	
+	<typeAlias alias="SoftVersion" type="com.dp.plat.prob.bean.SoftVersion"/>
+	<resultMap type="SoftVersion" id="SoftVersionMap">
+		<result conp column="conp"/>
+		<result cpld column="cpld"/>
+		<result boot column="boot"/>
+		<result pcb column="pcb"/>
+	</resultMap>
+	<select id="check_soft_version_list" parameterType="SoftVersion" resultMap="SoftVersionMap"> 
+		SELECT  DISTINCT 
+		<if test=" conp>
+			conp 
+		</if>
+		<if test=" conp>
+			null as conp
+		</if>
+		<if test=" cpld>
+			,cpld 
+		</if>
+		<if test=" cpld>
+			,null as cpld 
+		</if>
+		<if test=" boot>
+			,boot 
+		</if>
+		<if test=" boot>
+			,null as boot
+		</if>
+		<if test=" pcb>
+			,pcb
+		</if>
+		<if test=" pcb>
+			,null as pcb
+		</if>
+		FROM 
+			(SELECT conp, cpld, boot, pcb  FROM fb_soft_version 
+		    UNION
+		    SELECT conp, cpld, boot, pcb FROM `pm_project_soft_version` 
+		    UNION
+            SELECT conp, cpld, boot, pcb FROM prob_soft_version) t
+		WHERE 1 = 1		
+		<if test=" conpCondition compareValue="between">
+			<if test=" prepend="and" conp><![CDATA[ conp between #{conp1} and #{conp2} ]]> </if>
+		</if>
+		<if test=" conpCondition compareValue="between">
+		    <if test=" conpCondition compareValue="regexp">
+	            <if test=" prepend="and" conp><![CDATA[ conp regexp #{conp}]]> </if>
+	        </if>
+	        <if test=" conpCondition compareValue="regexp">
+				<if test=" prepend="and" conp><![CDATA[ conp like CONCAT('%', #{conp}, '%')]]> </if>
+            </if>
+		</if>
+		<if test=" cpldCondition compareValue="between">
+		    <if test=" prepend="and" cpld><![CDATA[ cpld between #{cpld1} and #{cpld2} ]]> </if>
+		</if>
+		<if test=" cpldCondition compareValue="between">
+		    <if test=" cpldCondition compareValue="regexp">
+                <if test=" prepend="and" cpld><![CDATA[ cpld regexp #{cpld}]]> </if>
+            </if>
+            <if test=" cpldCondition compareValue="regexp">
+				<if test=" prepend="and" cpld><![CDATA[ cpld like CONCAT('%', #{cpld}, '%')]]> </if>
+            </if>
+		</if>
+		<if test=" bootCondition compareValue="between">
+			<if test=" prepend="and" boot><![CDATA[ boot between #{boot1} and #{boot2} ]]> </if>
+		</if>
+		<if test=" bootCondition compareValue="between">
+		    <if test=" bootCondition compareValue="regexp">
+                <if test=" prepend="and" boot><![CDATA[ boot regexp #{boot}]]> </if>
+            </if>
+            <if test=" bootCondition compareValue="regexp">
+				<if test=" prepend="and" boot><![CDATA[ boot like CONCAT('%', #{boot}, '%')]]> </if>
+            </if>
+		</if>
+		<if test=" pcbCondition compareValue="between">
+			<if test=" prepend="and" pcb><![CDATA[ pcb between #{pcb1} and #{pcb2} ]]> </if>
+		</if>
+		<if test=" pcbCondition compareValue="between">
+		    <if test=" pcbCondition compareValue="regexp">
+                <if test=" prepend="and" pcb><![CDATA[ pcb regexp #{pcb}]]> </if>
+            </if>
+            <if test=" pcbCondition compareValue="regexp">
+				<if test=" prepend="and" pcb><![CDATA[ pcb like CONCAT('%', #{pcb}, '%')]]> </if>
+            </if>
+		</if>
+		order by 1
+		<if test=" prepend="," conp>
+			 conp 
+		</if>
+		<if test=" prepend="," cpld>
+			cpld 
+		</if>
+		<if test=" prepend="," boot>
+			boot 
+		</if>
+		<if test=" prepend="," pcb>
+			pcb
+		</if>
+	</select>
+	
+	<update id="update_invalid_softversion" parameterType="java.util.Map" >
+		<![CDATA[
+			UPDATE prob_softwares SET datastate = 0, updateBy = #{updateBy},  updateTime = NOW() WHERE probId = #{probId} and datastate = 1;
+		]]>
+	</update>
+	<insert id="insert_into_softversion" parameterType="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_softwares(probId, conp,cpld,boot, pcb, 
+				manualEntry, manualEntrySub, entryType, entrySeries, entryStart, entryEnd, 
+				markStart, markEnd, affectedType, groupId, splited, 
+				datastate, createBy, createTime, customInfo) VALUES
+		]]>
+		<iterate conjunction="," list>
+			<![CDATA[ (#{probId}, #list[].conp#, #list[].cpld#, #list[].boot#,  #list[].pcb#, 
+				#list[].manualEntry#, #list[].manualEntrySub#, #list[].entryType#, #list[].entrySeries#, #list[].entryStart#, #list[].entryEnd#, 
+				#list[].markStart#, #list[].markEnd#, #list[].affectedType#, #list[].groupId#, #list[].splited#, 
+				1, #{createBy}, now() , #list[].customInfo#)]]>
+		</iterate>
+	</insert>
+
+    <resultMap type="SoftVersion" id="SoftVersionMapWithManual" extends="SoftVersionMap">
+    	<result probId column="probId"/>
+        <result manualEntry column="manualEntry"/>
+        <result manualEntrySub column="manualEntrySub"/>
+        <result entryType column="entryType"/>
+        <result entrySeries column="entrySeries"/>
+        <result entryStart column="entryStart"/>
+        <result entryEnd column="entryEnd"/>
+        <result markStart column="markStart"/>
+        <result markEnd column="markEnd"/>
+        <result affectedType column="affectedType"/>
+        <result affectedTypeName column="affectedTypeName"/>
+        <result groupId column="groupId"/>
+        <result splited column="splited"/>
+        <result customInfo column="customInfo"/>
+    </resultMap>	
+	<select id="query_prob_soft_version" parameterType="SoftVersion" resultMap="SoftVersionMapWithManual">
+		<![CDATA[
+			SELECT 
+			    ps.*, bd.`basicDataName` as affectedTypeName 
+			FROM
+			    prob_softwares ps 
+			    LEFT JOIN fnd_basic_data bd 
+			        ON bd.`dataTypeCode` = 'sofeVersionAffectedType' 
+			        AND ps.`affectedType` = bd.`basicDataId` 
+			WHERE ps.datastate = 1
+		]]>
+			<if test=" prepend="AND" probId> ps.probId = #{probId} </if>
+			<if test=" prepend="AND" splited> ps.splited = #{splited} </if>
+			<if test=" prepend="AND" affectedType> ps.affectedType = #{affectedType} </if>
+	</select>
+	<typeAlias alias="Project" type="com.dp.plat.data.bean.Project"/>
+	<typeAlias alias="ProbRestore" type="com.dp.plat.prob.bean.ProbRestore"/>
+	<resultMap type="ProbRestore" id="ProbRestoreMap">
+		<result serialNum column="barCode"/>
+		<result itemModel column="itemModel"/>
+		<result probId column="probId" nullValue="0"/>
+		<result projectId column="projectId" nullValue="0"/>
+		<result conp column="conp"/>
+		<result cpld column="cpld"/>
+		<result boot column="boot"/>
+		<result pcb column="pcb"/>
+		<result projectName column="projectName"/>
+		<result officeCode column="officeCode"/>
+		<result officeName column="officeName"/>
+		<result marketCode column="marketCode"/>
+        <result marketName column="marketName"/>
+        <result systemCode column="systemCode"/>
+        <result systemName column="systemName"/>
+        <result expendCode column="expendCode"/>
+        <result expendName column="expendName"/>
+        <result industryCode column="industryCode"/>
+        <result industryName column="industryName"/>
+		<result contractNo column="contractNo"/>
+		<result projectCode column="projectCode"/>
+		
+		<result property="prob.probId" column="probId" nullValue="0"/>
+		<result property="prob.probNum" column="probNum"/>
+		<result property="prob.theme" column="theme"/>
+	</resultMap>
+	<select id="query_prob_restore_list_old" parameterType="java.util.Map" resultMap="ProbRestoreMap">
+		<![CDATA[
+			SELECT t1.*, fi.`itemname` as itemModel, t6.`projectCode`, t6.`projectName`, t6.`column001` AS officeCode, t9.`departmentName` AS officeName, t4.`contractNo`
+	            , t6.column004 as marketCode, t6.column004 as marketName
+	            , t6.column005 as systemCode, t6.column005 as systemName
+	            , t6.column006 as expendCode, t6.column006 as expendName
+	            , t6.column007 as industryCode, t6.column007 as industryName
+	            
+				, t2.`probId`, MAX(t6.`projectId`) AS projectId  
+				, null AS probNum, null AS theme
+			FROM
+			    (SELECT * FROM prob_softwares WHERE datastate = 1 AND manualEntry is null AND probId = #probRestore.probId#) t2 
+			    LEFT JOIN 
+			        (SELECT  a1.serial_number AS barCode, 
+			            CASE WHEN a2.conp IS NULL THEN a1.conp ELSE a2.conp END AS conp, 
+			            CASE WHEN a2.boot IS NULL THEN a1.boot ELSE a2.boot END AS boot, 
+			            CASE WHEN a2.cpld IS NULL THEN a1.cpld ELSE a2.cpld END AS cpld, 
+			            CASE WHEN a2.pcb IS NULL THEN a1.pcb ELSE a2.pcb END AS pcb 
+			        FROM fb_soft_version a1 
+			            LEFT JOIN pm_project_soft_version a2 
+			                ON a1.`serial_number` = a2.`barcode` 
+			                AND a2.`datastate` = 1) t1  
+				ON  CASE WHEN t2.`conp` IS NOT NULL THEN t1.`conp` = t2.`conp` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`boot` IS NOT NULL THEN t1.`boot` = t2.`boot` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`cpld` IS NOT NULL THEN t1.`cpld` = t2.`cpld` ELSE 1 = 1 END 
+			        AND 
+			        CASE WHEN t2.`pcb` IS NOT NULL THEN t1.`pcb` = t2.`pcb` ELSE 1 = 1 END 
+			    INNER JOIN fb_shipment_barcode fsb 
+			        ON fsb.`barcode` = t1.serial_number 
+			        AND (
+			            ISNULL(`fsb`.`rma_no`) 
+			            OR (`fsb`.`rma_no` = '') 
+			            OR (`fsb`.`rma_no` = 'null')
+			        ) 
+			    INNER JOIN fb_shipment fs ON fs.`packlist_id` = fsb.`pack_id` 
+			    INNER JOIN fb_contract fc ON fc.`contract_id` = fs.`con_id`
+			    INNER JOIN fb_items fi ON fi.`item` = fsb.`item`
+			    INNER JOIN pm_project_contract t4 ON fc.`contract_code` = t4.`contractNo` 
+			    INNER JOIN pm_project_group_relationship t5 ON t4.`projectGroupCode` = t5.`projectGroupCode` 
+			    INNER JOIN pm_project_header t6 ON t5.`projectCode` = t6.`projectCode`
+			    	AND (
+			            (
+			                column012 IS NOT NULL 
+			                AND column012 <> 3
+			            ) 
+			            OR (
+			                column012 IS NULL 
+			                AND `columno12_readonly` <> 3
+			            )
+			        )  
+			    LEFT JOIN fnd_department t9 ON t6.`column001` = t9.`departmentNum` 
+			    LEFT JOIN fnd_basic_data t10 ON t6.`projectState` = t10.`basicDataId` AND t10.`dataTypeCode` = '02' AND t10.`effectiveTo` IS NULL 
+			WHERE t4.`contractNo` IS NOT NULL 
+			    AND t5.`projectCode` NOT LIKE '%his' 
+			    AND NOT EXISTS 
+			    (SELECT * FROM prob_restore WHERE serialNum = t1.serial_number AND probId = #probRestore.probId#) 
+		]]>
+		<if test=" prepend="and" property="probRestore.serialNum"><![CDATA[ t1.serial_number like concat(#probRestore.serialNum#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like concat(#probRestore.itemModel#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.projectName"><![CDATA[ t6.projectName like concat('%', #probRestore.projectName#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.contractNo"><![CDATA[ t4.contractNo = #probRestore.contractNo#]]></if>
+		<if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ t6.column001 = #probRestore.officeCode#]]></if>
+		<![CDATA[
+			GROUP BY t1.serial_number
+		]]>
+	</select>
+	
+	<sql id="sqlColumnProbAffectedProjectSoftVersion">
+        SELECT  sv.id, sv.projectId, sv.logId
+            , sv.contractNo, sv.itemCode, sv.datastate
+            , sv.barCode, sv.conp, sv.conpType, sv.conpSeries, sv.conpMark
+            , sv.conpBak, sv.conpChange, sv.cpld, sv.cpldBak, sv.cpldChange
+            , sv.boot, sv.bootBak, sv.bootChange, sv.pcb, sv.pcbBak
+            , sv.pcbChange, sv.executeTime, sv.createTime, sv.createBy
+            , sv.updateTime, sv.updateBy, sv.customInfo
+            
+            , fi.itemname AS itemModel
+            , fi.describe_ as itemDesc
+            
+            
+            , sw.probId, ph.`projectName`
+            
+            , ph.column001 as officeCode, fdp.departmentName as officeName
+            , ph.column004 as marketCode, ph.column004 as marketName
+            , ph.column005 as systemCode, ph.column005 as systemName
+            , ph.column006 as expendCode, ph.column006 as expendName
+            , ph.column007 as industryCode, ph.column007 as industryName
+            
+            , ph.projectCode
+            
+            , pm.probNum, pm.theme
+            
+           <!-- , GROUP_CONCAT(DISTINCT sw.`probId` ORDER BY sw.probId) AS probIds
+            , GROUP_CONCAT(DISTINCT pm.probNum  ORDER BY sw.probId) AS probNums
+            , GROUP_CONCAT(DISTINCT pm.theme ORDER BY sw.probId) AS themes -->
+	</sql>
+	<sql id="sqlFromProbAffectedProjectSoftVersion">
+        <![CDATA[
+        FROM prob_softwares sw
+                INNER JOIN pm_project_soft_version sv
+                ON sv.datastate = sw.datastate
+                    AND sv.conpType <=> sw.entryType
+                    AND sv.conpSeries <=> sw.entrySeries
+                    AND sv.conpMark BETWEEN sw.markStart AND sw.markEnd
+                INNER JOIN prob_product pp ON pp.probId = sw.probId AND pp.itemCode = sv.itemCode AND pp.status = 1
+                INNER JOIN prob_main pm ON pm.id = sw.probId 
+                INNER JOIN pm_project_header ph
+                ON sv.projectId = ph.projectId
+                    AND ((column012 IS NOT NULL
+                            AND column012 <> 3)
+                        OR (column012 IS NULL
+                            AND `columno12_readonly` <> 3))
+                    AND ph.effectiveTo IS NULL
+                INNER JOIN pm_project_group_relationship pgr ON pgr.`projectCode` = ph.`projectCode`
+                INNER JOIN pm_project_contract pc ON pc.`projectGroupCode` = pgr.`projectGroupCode` AND pc.contractNo = sv.contractNo
+                LEFT JOIN fnd_department fdp ON ph.`column001` = fdp.`departmentNum`
+                LEFT JOIN fb_items fi ON fi.item = sv.itemCode
+            WHERE sv.datastate = 1 AND pc.`contractNo` IS NOT NULL 
+                AND ph.`projectCode` NOT LIKE '%his' 
+        ]]>
+        <if test=" property="probRestore.probId">
+            <if test=" prepend="and" property="probRestore.probId" compareValue="0">
+            sw.probId = #probRestore.probId#
+            AND NOT EXISTS (SELECT * FROM prob_restore WHERE serialNum = sv.barcode AND probId = #probRestore.probId#) 
+            </if>
+        </if>
+        <if test=" prepend="and" property="probRestore.serialNum"><![CDATA[ sv.barcode like concat(#probRestore.serialNum#, '%')]]></if>
+        <if test=" prepend="and" property="probRestore.itemModel"><![CDATA[ fi.itemname like concat(#probRestore.itemModel#, '%')]]></if>
+        <if test=" prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%') ]]></if>
+        <if test=" prepend="and" property="probRestore.projectName"><![CDATA[ ph.projectName like concat('%', #probRestore.projectName#, '%') ]]></if>
+        <if test=" prepend="and" property="probRestore.contractNo"><![CDATA[ pc.contractNo = #probRestore.contractNo#]]></if>
+        <if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ ph.column001 = #probRestore.officeCode#]]></if>
+        <if test=" prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></if>
+        <if test=" prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></if>
+        <if test=" prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></if>
+        <if test=" prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></if>
+        <if test=" prepend="and" property="probRestore.areapower"><![CDATA[ ph.column001 in ($probRestore.areapower$) ]]></if>
+        
+        <if test=" property="probRestore.prob">
+            <if test=" prepend="and" property="probRestore.prob.probNum"><![CDATA[ pm.probNum = #probRestore.prob.probNum#]]></if>
+        </if>
+        <if test=" property="probRestore.version">
+            <if test=" property="probRestore.version.conp"> 
+	            <!-- <if test=" prepend="AND" property="probRestore.version.entryType"> sv.conpType = #probRestore.version.entryType# </if>
+	            <if test=" prepend="AND" property="probRestore.version.entrySeries"> sv.conpSeries = #probRestore.version.entrySeries# </if> -->
+	            <if test=" prepend="AND" property="probRestore.version.entryType"> sw.entryType = #probRestore.version.entryType# </if>
+                <if test=" prepend="AND" property="probRestore.version.entrySeries"> sw.entrySeries = #probRestore.version.entrySeries# </if>
+                AND ( sv.conp = #probRestore.version.conp# 
+                <if test=" prepend="OR" property="probRestore.version.conpMark"> (#probRestore.version.conpMark# BETWEEN sw.markStart AND sw.markEnd) </if>
+                )
+            </if>
+            
+            <if test=" prepend="AND" property="probRestore.version.boot"> sv.boot = #probRestore.version.boot# </if>
+            <if test=" prepend="AND" property="probRestore.version.cpld"> sv.cpld = #probRestore.version.cpld# </if>
+            <if test=" prepend="AND" property="probRestore.version.pcb">  sv.pcb  = #probRestore.version.pcb# </if>
+        </if>
+        
+    </sql>
+	<sql id="sqlQueryProbAffectedProjectSoftVersion">
+	    <include refid="sqlColumnProbAffectedProjectSoftVersion"/>
+	    <include refid="sqlFromProbAffectedProjectSoftVersion"/>
+	</sql>
+	<select id="count_prob_restore_list" parameterType="java.util.Map" resultType="int">
+        SELECT COUNT(*)
+        <include refid="sqlFromProbAffectedProjectSoftVersion"/>
+    </select>
+	<select id="query_prob_restore_list" parameterType="java.util.Map" resultMap="ProbRestoreMap">
+        <include refid="sqlQueryProbAffectedProjectSoftVersion"/>
+        <if test=" property="displayParam.offset">
+        LIMIT #displayParam.offset#, #displayParam.pagesize# 
+        </if>
+    </select>
+    
+	<insert id="insert_batch_probRestore_task_list" parameterType="java.util.Map" >
+		<![CDATA[
+			INSERT INTO prob_restore(probId, serialNum , itemModel, processId, officeCode, conp, boot, cpld, pcb, projectId,projectName,
+				contractNo,assignee, assigneeRole,  createBy,  createTime )
+			VALUES
+		]]>
+		<iterate conjunction="," list>
+			<if test=" compareValue="1" property="list[].ischecked">
+				<![CDATA[ ( #probRestore.probId# , #list[].serialNum# , #list[].itemModel# , #probRestore.processId# , #list[].officeCode# ,
+				#list[].conp# , #list[].boot# , #list[].cpld# , #list[].pcb# ,#list[].projectId# , #list[].projectName# ,
+				#list[].contractNo# , #probRestore.assignee# , #probRestore.assigneeRole# ,
+				#{createBy} , now())]]>	
+			</if>
+		</iterate>
+	</insert>
+	<select id="query_count_probRestore_task_project" parameterType="ProbRestore" resultType="int">
+		<![CDATA[
+			SELECT 
+			    COUNT(*) 
+			FROM
+			    (SELECT 
+			        a1.* 
+			    FROM
+			        prob_restore a1 
+			        LEFT JOIN prob_restore_process a4 
+			            ON a1.processId = a4.id 
+			    WHERE a1.probId = #{probId}
+		]]>
+				<if test=" prepend="and" assignee>
+					<![CDATA[
+						(a1.assignee = #{assignee} 
+					]]>	
+					<if test=" prepend="OR" areapower>
+						<![CDATA[ 
+							(a1.officeCode in ($areapower$) 
+						]]>	
+							<if test=" prepend="and" assigneeRole><![CDATA[ a1.assigneeRole = #{assigneeRole}  ]]></if>
+							)
+					</if>
+					)
+				</if>
+				<!-- <if test=" assignee>
+					<if test=" prepend="and" officeCode><![CDATA[ a1.officeCode = #{officeCode}]]></if>
+				</if> -->
+				<if test=" prepend="and" officeCode><![CDATA[ a1.officeCode = #{officeCode}]]></if>
+				<if test=" prepend="and" projectName><![CDATA[ a1.projectName like concat('%', #{projectName}, '%')]]></if>
+				<if test=" prepend="and" serialNum><![CDATA[ a1.serialNum = #{serialNum} ]]></if>
+				<if test=" prepend="and" itemModel><![CDATA[ a1.itemModel like concat(#{itemModel}, '%')]]></if>
+				<if test=" prepend="and" contractNo><![CDATA[ a1.contractNo = #{contractNo}]]></if>
+				<if test=" prepend="and" restoreStatus compareValue="0">
+					<![CDATA[ a4.restoreStatus = #{restoreStatus}]]>
+				</if>
+				GROUP BY a1.projectId, a1.assignee, a1.assigneeRole, a4.restoreStatus ) t
+	</select>
+	<select id="query_count_probRestore_task" parameterType="ProbRestore" resultType="int">
+		<![CDATA[
+			SELECT count(*) FROM prob_restore a1
+			left join prob_restore_process a4 on a1.processId = a4.id
+			WHERE a1.probId = #{probId}
+		]]>
+		<if test=" prepend="and" assignee>
+			<![CDATA[
+				(a1.assignee = #{assignee} 
+			]]>	
+			<if test=" prepend="OR" areapower>
+				<![CDATA[ 
+					(a1.officeCode in ($areapower$) 
+				]]>	
+					<if test=" prepend="and" assigneeRole><![CDATA[ a1.assigneeRole = #{assigneeRole}  ]]></if>
+					)
+			</if>
+			)
+		</if>
+		<!-- <if test=" assignee>
+			<if test=" prepend="and" officeCode><![CDATA[ a1.officeCode = #{officeCode}]]></if>
+		</if> -->
+		<if test=" prepend="and" officeCode><![CDATA[ a1.officeCode = #{officeCode}]]></if>
+		<if test=" prepend="and" projectName><![CDATA[ a1.projectName like concat('%', #{projectName}, '%')]]></if>
+		<if test=" prepend="and" serialNum><![CDATA[ a1.serialNum = #{serialNum} ]]></if>
+		<if test=" prepend="and" itemModel><![CDATA[ a1.itemModel like concat(#{itemModel}, '%')]]></if>
+		<if test=" prepend="and" contractNo><![CDATA[ a1.contractNo = #{contractNo}]]></if>
+		<if test=" prepend="and" restoreStatus compareValue="0">
+			<![CDATA[ a4.restoreStatus = #{restoreStatus}]]>
+		</if>
+	</select>
+	<resultMap type="ProbRestore" id="ProbRestoreTaskList">
+		<result id column="id"/>
+		<result serialNum column="serialNum"/>
+		<result itemModel column="itemModel"/>
+		<result probId column="probId" nullValue="0"/>
+		<result projectId column="projectId" nullValue="0"/>
+		<result processId column="processId" nullValue="0"/>
+		<result conp column="a1.conp"/>
+		<result cpld column="a1.cpld"/>
+		<result boot column="a1.boot"/>
+		<result pcb column="a1.pcb"/>
+		<result projectName column="projectName"/>
+		<result officeCode column="officeCode"/>
+		<result officeName column="officeName"/>
+		<result contractNo column="contractNo"/>
+		<result restoreStatus column="restoreStatus"/>
+		<result restoreStatusName column="restoreStatusName"/>
+		<result restoreRemark column="restoreRemark"/>
+		<result createTime column="createTime"/>
+		<result createBy column="createBy"/>
+		<result updateTime column="updateTime"/>
+		<result updateBy column="updateBy"/>
+		<result latestConp column="sv.conp"/>
+		<result latestCpld column="sv.cpld"/>
+		<result latestBoot column="sv.boot"/>
+		<result latestPcb column="sv.pcb"/>
+		<result executeTime column="executeTime"/>
+		<result assignee column="assigneeName"/>
+		<result probJson column="prob"/>
+		
+        <result marketCode column="marketCode"/>
+        <result marketName column="marketName"/>
+        <result systemCode column="systemCode"/>
+        <result systemName column="systemName"/>
+        <result expendCode column="expendCode"/>
+        <result expendName column="expendName"/>
+        <result industryCode column="industryCode"/>
+        <result industryName column="industryName"/>
+        <result projectCode column="projectCode"/>
+	</resultMap>
+	<select id="query_list_probRestore_task" parameterType="java.util.Map" resultMap="ProbRestoreTaskList">
+		<![CDATA[
+			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
+				a4.restoreRemark ,a4.restoreStatus ,sv.`conp` , sv.`boot` ,sv.`cpld` ,sv.`pcb` ,sv.`executeTime` ,
+				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
+				
+				, ph.projectCode
+				, ph.column004 as marketCode, ph.column004 as marketName
+                , ph.column005 as systemCode, ph.column005 as systemName
+                , ph.column006 as expendCode, ph.column006 as expendName
+                , ph.column007 as industryCode, ph.column007 as industryName
+		]]>
+                <!-- 查询受影响的技术公告，用来判断是否已经完成更新任务的处理 -->
+                , JSON_EXTRACT((
+                    <include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>
+		            AND sw.probId = #probRestore.probId#
+                ), '$$[0]') AS prob
+			FROM prob_restore a1
+				LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
+				LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
+				LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
+				LEFT JOIN pm_project_soft_version sv ON a1.`serialNum` = sv.`barcode` AND sv.`datastate` = 1 
+				LEFT JOIN pm_project_header ph ON ph.projectId = sv.projectId
+				LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
+			WHERE a1.probId = #probRestore.probId# 	
+		<if test=" prepend="and" property="probRestore.assignee">
+			<![CDATA[
+				(a1.assignee = #probRestore.assignee# 
+			]]>	
+			<if test=" prepend="OR" property="probRestore.areapower">
+				<![CDATA[ 
+					(a1.officeCode in ($probRestore.areapower$)
+				]]>	
+				<if test=" prepend="and" property="probRestore.assigneeRole"><![CDATA[ a1.assigneeRole = #probRestore.assigneeRole#]]></if>
+					)
+			</if>
+			)
+		</if>
+		<!-- <if test=" property="probRestore.assignee">
+			<if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></if>
+		</if> -->
+		<if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></if>
+		<if test=" prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like concat('%', #probRestore.projectName#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></if>
+		<if test=" prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></if>
+		
+		<if test=" prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></if>
+        <if test=" prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></if>
+        <if test=" prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></if>
+        <if test=" prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></if>
+        
+		<if test=" prepend="and" property="probRestore.restoreStatus" compareValue="0">
+			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
+		</if>
+		<if test=" prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<if test=" prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </if>
+			<if test=" prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </if>
+		</if>
+		<if test=" property="displayParam.offset">
+			limit #displayParam.offset# , #displayParam.pagesize#
+		</if>
+	</select>
+	<select id="query_list_probRestore_task_project" parameterType="java.util.Map" resultMap="ProbRestoreTaskList">
+		<![CDATA[
+			SELECT a1.* , a2.`basicDataName` AS restoreStatusName ,a3.`departmentName` AS officeName,
+				a4.restoreRemark ,a4.restoreStatus ,sv.`conp` , sv.`boot` ,sv.`cpld` ,sv.`pcb` ,sv.`executeTime` ,
+				CASE WHEN a6.realName IS NOT NULL THEN a6.realName ELSE '服务经理' END AS assigneeName
+				
+				, ph.projectCode
+			    , ph.column004 as marketCode, ph.column004 as marketName
+			    , ph.column005 as systemCode, ph.column005 as systemName
+			    , ph.column006 as expendCode, ph.column006 as expendName
+			    , ph.column007 as industryCode, ph.column007 as industryName
+		]]>
+			    <!-- 查询受影响的技术公告，用来判断是否已经完成更新任务的处理 -->
+			    , JSON_EXTRACT((
+                    <include refid="sqlSubSelectProjectSoftVersionAffectedProbs"/>
+                    AND sw.probId = #probRestore.probId#
+                ), '$$[0]') AS prob
+			FROM prob_restore a1
+			LEFT JOIN prob_restore_process a4 ON a1.processId = a4.id
+			LEFT JOIN fnd_basic_data a2 ON a4.`restoreStatus` = a2.`basicDataId` AND a2.`dataTypeCode` = '33'
+			LEFT JOIN fnd_department a3 ON a1.`officeCode` = a3.`departmentNum`
+			LEFT JOIN pm_project_soft_version sv ON a1.`serialNum` = sv.`barcode` AND sv.`datastate` = 1 
+			LEFT JOIN pm_project_header ph ON ph.projectId = sv.projectId
+			LEFT JOIN fnd_user_info a6 ON a1.`assignee` = a6.`username` 
+			WHERE a1.probId = #probRestore.probId# 	
+		<if test=" prepend="and" property="probRestore.assignee">
+			<![CDATA[
+				(a1.assignee = #probRestore.assignee# 
+			]]>	
+			<if test=" prepend="OR" property="probRestore.areapower">
+				<![CDATA[ 
+					(a1.officeCode in ($probRestore.areapower$)
+				]]>	
+				<if test=" prepend="and" property="probRestore.assigneeRole"><![CDATA[ a1.assigneeRole = #probRestore.assigneeRole#]]></if>
+					)
+			</if>
+			)
+		</if>
+		<!-- <if test=" property="probRestore.assignee">
+			<if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></if>
+		</if> -->
+		<if test=" prepend="and" property="probRestore.officeCode"><![CDATA[ a1.officeCode = #probRestore.officeCode#]]></if>
+		<if test=" prepend="and" property="probRestore.projectName"><![CDATA[ a1.projectName like concat('%', #probRestore.projectName#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.serialNum"><![CDATA[ a1.serialNum = #probRestore.serialNum# ]]></if>
+		<if test=" prepend="and" property="probRestore.itemModel"><![CDATA[ a1.itemModel like concat(#probRestore.itemModel#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.contractNo"><![CDATA[ a1.contractNo = #probRestore.contractNo#]]></if>
+		
+		<if test=" prepend="and" property="probRestore.projectCode"><![CDATA[ ph.projectCode like concat(#probRestore.projectCode#, '%')]]></if>
+		<if test=" prepend="and" property="probRestore.marketCode"><![CDATA[ ph.column004 = #probRestore.marketCode#]]></if>
+        <if test=" prepend="and" property="probRestore.systemCode"><![CDATA[ ph.column005 = #probRestore.systemCode#]]></if>
+        <if test=" prepend="and" property="probRestore.expendCode"><![CDATA[ ph.column006 = #probRestore.expendCode#]]></if>
+        <if test=" prepend="and" property="probRestore.industryCode"><![CDATA[ ph.column007 = #probRestore.industryCode#]]></if>
+        
+		<if test=" prepend="and" property="probRestore.restoreStatus" compareValue="0">
+			<![CDATA[ a4.restoreStatus = #probRestore.restoreStatus#]]>
+		</if>
+		GROUP BY a1.projectId, a1.assignee, a1.assigneeRole, a4.restoreStatus 
+		<if test=" prepend=" order by " property="displayParam.sort">
+			$displayParam.sort$
+			<if test=" prepend=" " property="displayParam.order" compareValue="desc">
+				desc
+		      </if>
+			<if test=" prepend=" " property="displayParam.order" compareValue="asc">
+				asc
+		    </if>
+		</if>
+		<if test=" property="displayParam.offset">
+			limit #displayParam.offset# , #displayParam.pagesize#
+		</if>
+	</select>
+	<insert id="insert_restore_process" parameterType="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_restore_process( probId ,restoreStatus ,restoreRemark ,createBy,createTime) 
+			VALUES(#probRestore.probId# , #probRestore.restoreStatus# ,#probRestore.restoreRemark# , #{createBy} ,now())
+		]]>
+		<selectKey resultType="int" keyProperty="id">
+			<![CDATA[ SELECT last_insert_id() as id ; ]]>
+		</selectKey>
+	</insert>
+	<update id="update_prob_restore_processId" parameterType="java.util.Map">
+		<![CDATA[
+			UPDATE prob_restore SET processId = #{processId} 
+		]]>
+		<if test=" prepend="," assignee>
+		<![CDATA[ assignee = #{assignee}]]>
+		</if>
+		<![CDATA[
+			,updateBy = #{updateBy},updateTime = now() WHERE FIND_IN_SET(id, #{restoreIds});
+		]]>
+	</update>
+	
+	<update id="update_prob_restore_assignee" parameterType="java.util.Map">
+		<![CDATA[
+			UPDATE prob_restore SET assignee = #{assignee},assigneeRole = 0 ,updateBy = #{updateBy},updateTime = now()  WHERE FIND_IN_SET(id, #{restoreIds});
+		]]>
+	</update>
+	<select id="query_prob_restore_process_size" parameterType="int" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*) FROM prob_restore_process WHERE probId = #{probId}
+		]]>
+	</select>
+	<update id="delete_prob_info" parameterType="java.util.Map">
+		<![CDATA[
+			UPDATE prob_main SET effectiveTo = NOW() ,updateBy = #{updateBy}, updateTime = now() WHERE id = #{probId} 
+		]]>
+	</update>
+	<resultMap type="com.dp.plat.prob.bean.ProbFile" id="ProbFile">
+		<result name column="fileName"/>
+		<result path column="filePath"/>
+	</resultMap>
+	<select id="query_prob_file_list" parameterType="string" resultMap="ProbFile">
+		<![CDATA[
+			SELECT fileName,filePath FROM fnd_files WHERE FIND_IN_SET(id , #{fileIds});
+		]]>
+	</select>
+	<insert id="insert_prob_task_weekly" parameterType="java.util.Map">
+		<![CDATA[
+			INSERT INTO prob_restore_weekly(probId ,fileId,createBy ,createTime) 
+			VALUES(#{probId} , #{fileId} , #{createBy} , now());
+		]]>
+	</insert>
+	<resultMap type="com.dp.plat.prob.bean.ProbRestoreWeekly" id="weeklyMap">
+		<result fileName column="fileName"/>
+		<result uploadUser column="uploadUser"/>
+		<result uploadTime column="uploadTime"/>
+		<result fileId column="fileId"/>
+	</resultMap>
+	<select id="query_prob_task_weekly" parameterType="java.util.Map" resultMap="weeklyMap">
+		<![CDATA[
+			SELECT t2.`fileName` , CONCAT(t3.`username` , '-' , t3.`realName`) AS uploadUser , t2.`uploadTime` ,t1.`fileId`  FROM prob_restore_weekly t1 
+			LEFT JOIN fnd_files t2 ON t1.`fileId` = t2.`id`
+			LEFT JOIN fnd_user_info t3 ON t2.`uploadBy` = t3.`username` 
+			WHERE t1.`probId` = #{probId} 
+		]]>
+		<if test=" uploaduser>
+			<![CDATA[ AND t2.`uploadBy` = #{uploaduser} ]]>
+		</if>
+	</select>
+	<select id="query_prob_assignee_emails" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(DISTINCT t2.email SEPARATOR ';') as emails FROM prob_restore t1
+			LEFT JOIN fnd_user_info t2 ON t1.`assignee` = t2.`username` AND t2.`status` = 1
+			WHERE FIND_IN_SET(t1.`id`, #{restoreIds})
+		]]>
+	</select>
+	
+	<delete id="batch_delete_probRestores" parameterType="string">
+		<![CDATA[
+			delete from prob_restore where FIND_IN_SET(id, #{probRestoreIds})
+		]]>
+	</delete>
+	
+	<resultMap type="com.dp.plat.data.bean.ProjectSoftVersion" id="softVersionChangeList">
+		<result projectId column="projectId"/>
+		<result barCode column="barcode"/>
+		<result itemName column="itemName"/>
+		<result conp column="conp"/>
+		<result conpBak column="conpBak"/>
+		<result conpChange column="conpChange" nullValue="0"/>
+		<result boot column="boot"/>
+		<result bootBak column="bootBak"/>
+		<result bootChange column="bootChange" nullValue="0"/>
+		<result cpld column="cpld"/>
+		<result cpldBak column="cpldBak"/>
+		<result cpldChange column="cpldChange" nullValue="0"/>
+		<result pcb column="pcb"/>
+		<result pcbBak column="pcbBak"/>
+		<result pcbChange column="pcbChange" nullValue="0"/>
+		<result executeTime column="executeTime"/>
+		<result createTime column="createTime"/>
+	</resultMap>
+	<select id="query_hist_soft_version_list_by_probRestoreIds" parameterType="string" resultMap="softVersionChangeList">
+		<![CDATA[
+			SELECT 
+			    pr.`serialNum` AS barCode, pr.`itemModel` AS itemName, pr.`projectId`, sv.`conp`, sv.`conpBak`, sv.`conpChange`, sv.`boot`, sv.`bootBak`, sv.`bootChange`, sv.`cpld`, sv.`cpldBak`, sv.`cpldChange`, sv.`pcb`, sv.`pcbBak`, sv.`pcbChange`, sv.`executeTime`, sv.`createTime` 
+			FROM
+			    `prob_restore` pr 
+			    LEFT JOIN `pm_project_soft_version` sv 
+			        ON pr.`serialNum` = sv.`barcode` 
+			        AND sv.`datastate` = 1 
+			    LEFT JOIN `pm_project_soft_change_logs` scl 
+			        ON pr.`projectId` = scl.`projectId` 
+			        AND scl.`latest` = 1
+			WHERE FIND_IN_SET(pr.id, #{restoreIds})
+		]]>
+	</select>
+	
+	<select id="query_officeMails_by_probRestoreIds" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT GROUP_CONCAT(DISTINCT ui.email SEPARATOR ';') 
+			FROM
+			    `prob_restore` pr 
+			    LEFT JOIN fnd_user_info ui 
+			        ON pr.`officeCode` = ui.`dpNo` 
+			        AND ui.`status` = 1 
+	       	WHERE FIND_IN_SET(pr.id, #{restoreIds})
+		]]>
+	</select>
+	
+	<select id="query_exportProb_list" parameterType="map" resultType="Prob">
+		SELECT 
+		    t1.*, t2.`basicDataName` AS priorityName, t4.`basicDataName` AS watchName, t3.basicDataName AS statusName, CONCAT(t1.trackingUser, "-", ui.realName) AS trackingUsername, sf.affectedVersion 
+		FROM
+		    prob_main t1 
+		    LEFT JOIN fnd_user_info ui 
+		        ON ui.username = t1.trackingUser 
+		    LEFT JOIN fnd_basic_data t2 
+		        ON t1.`priority` = t2.`basicDataId` 
+		        AND t2.`dataTypeCode` = '32' 
+		        AND t2.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t3 
+		        ON t1.`status` = t3.basicDataId 
+		        AND t3.dataTypeCode = '31' 
+		        AND t3.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data t4 
+		        ON t1.`watch` = t4.basicDataId 
+		        AND t4.dataTypeCode = '30' 
+		        AND t4.`effectiveTo` IS NULL 
+		    LEFT JOIN 
+		        (SELECT 
+		            probId, <!-- GROUP_CONCAT(
+		              DISTINCT  CONCAT_WS(
+		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("pcb[", pcb, "]"), CONCAT("manual[", manualEntry, "]")
+		                ) SEPARATOR ";\r\n"
+		            ) AS affectedVersion  -->
+		            GROUP_CONCAT(
+		              DISTINCT CONCAT(bd.`basicDataName`, ":", CONCAT_WS(
+		                    "-", CONCAT("conp[", conp, "]"), CONCAT("cpld[", cpld, "]"), CONCAT("boot[", boot, "]"), CONCAT("pcb[", pcb, "]"), CONCAT("", manualEntry, "")
+		                )) SEPARATOR ";\r\n"
+		            ) AS affectedVersion,
+                    GROUP_CONCAT(DISTINCT affectedType) AS affectedTypes
+		        FROM
+		            `prob_softwares` ps 
+			    LEFT JOIN fnd_basic_data bd 
+			        ON bd.`dataTypeCode` = 'sofeVersionAffectedType' 
+			        AND ps.`affectedType` = bd.`basicDataId` 
+		        WHERE datastate = 1
+                <include refid="sqlWhereIterateSoftVersionList"/>  
+                GROUP BY probId) sf 
+		        ON sf.probId = t1.`id` 
+        WHERE t1.effectiveTo IS NULL
+        <if test=" prepend="and" property="prob.probNum"><![CDATA[ t1.probNum like CONCAT('%', #prob.probNum#, '%')]]></if>
+        <if test=" prepend="and" property="prob.watch"><![CDATA[ t1.watch = #prob.watch#]]></if>
+        <if test=" prepend="and" property="prob.theme"><![CDATA[ t1.theme like CONCAT('%', #prob.theme#, '%')]]></if>
+        <if test=" prepend="and" property="prob.status"><![CDATA[ t1.`status` = #prob.status#]]></if>
+        <if test=" prepend="and" property="prob.statusList">
+            t1.status in
+            <iterate open="(" close=")" conjunction="," property="prob.statusList">
+                #prob.statusList[]#
+            </iterate>
+        </if>
+        
+        <if test=" prepend="and" property="prob.productType"><![CDATA[ t1.productType like concat("%", #prob.productType#, "%")]]></if>
+        <if test=" prepend="and" property="prob.desc"><![CDATA[ t1.desc like concat("%", #prob.desc#, "%")]]></if>
+        <if test=" prepend="and" property="prob.affectedType"> sf.probId is not null <!-- #prob.affectedType# = sf.affectedTypes --> </if>
+        <if test=" prepend="and" property="prob.affectedVersion">
+            (
+            <![CDATA[ sf.affectedVersion like concat("%", #prob.affectedVersion#, "%") ]]>
+            <if test=" prepend="or" property="prob.softVersionParserList"> sf.probId is not null </if>
+            )
+        </if>
+        
+        <if test=" property="prob.visibleRange">
+            <if test=" prepend="and" property="prob.visibleRange" compareValue="-1" open="(" close=")">
+                t1.visibleRange = #prob.visibleRange# 
+                <if test=" prepend="or" property="prob.trackingUser"> t1.trackingUser = #prob.trackingUser# </if>
+            </if>
+        </if>
+        
+        <if test=" property="prob.customInfo">
+            <if test=" prepend="and" property="prob.customInfo.trackingUserSearch"> t1.trackingUser = #prob.customInfo.trackingUserSearch# </if>
+        </if>
+        <!-- 或匹配，包含任意一个 -->
+        <if test=" prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# > 0]]></if>
+        <!-- 同时包含多个（AND 逻辑） -->
+        <!-- <if test=" prepend="and" property="prob.relatedSceneTypesMark"><![CDATA[ t1.`relatedSceneTypesMark` & #prob.relatedSceneTypesMark# = #prob.relatedSceneTypesMark# ]]></if> -->
+        <if test=" prepend="and" property="prob.mitigationActionTypesMark"><![CDATA[ t1.`mitigationActionTypesMark` & #prob.mitigationActionTypesMark# > 0]]></if>
+        <if test=" prepend="and" property="prob.solutionActionTypesMark"><![CDATA[ t1.`solutionActionTypesMark` & #prob.solutionActionTypesMark# > 0]]></if>
+        
+        <if test=" prepend="and" property="prob.probTicketNo"><![CDATA[ t1.probTicketNo like CONCAT('%', #prob.probTicketNo#, '%')]]></if>
+	</select>
+	
+	<insert id="batch_add_softVersion" parameterType="java.util.Map">
+        <![CDATA[
+            INSERT IGNORE INTO prob_soft_version(conp, cpld, boot, pcb, createdBy) VALUES
+        ]]>
+        <iterate conjunction="," list>
+            <![CDATA[ (#list[].conp#, #list[].cpld#, #list[].boot#, #list[].pcb#, #{createdBy})]]>
+        </iterate>
+    </insert>
+    
+    <select id="query_prob_statistics_count" parameterType="com.dp.plat.prob.bean.ProbStatistic" resultType="int">
+        select count(*) from statistic_tempTable
+        <!-- (
+	        SELECT 
+	             1
+	        FROM
+	            (SELECT 
+	                sv.`projectId`, fi.`itemname`, CONCAT(
+	                    "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(
+	                        CONCAT(
+	                            scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+	                            CASE
+	                                WHEN sv.`conpChange` = 1 
+	                                THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+	                                ELSE sv.`conp` 
+	                            END, "]", "，cpld:[", 
+	                            CASE
+	                                WHEN sv.`cpldChange` = 1 
+	                                THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+	                                ELSE sv.`cpld` 
+	                            END, "]", "，boot:[", 
+	                            CASE
+	                                WHEN sv.`bootChange` = 1 
+	                                THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+	                                ELSE sv.`boot` 
+	                            END, "]", "，pcb:[", 
+	                            CASE
+	                                WHEN sv.`pcbChange` = 1 
+	                                THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+	                                ELSE sv.`pcb` 
+	                            END, "]"
+	                        ) SEPARATOR ";\r\n"
+	                    )
+	                ) AS softInfo, COUNT(*) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+	            FROM
+	                pm_project_soft_version sv 
+	                LEFT JOIN pm_project_soft_change_logs scl 
+	                    ON sv.`projectId` = scl.projectId 
+	                    AND sv.`logId` = scl.id 
+	                LEFT JOIN fb_items fi 
+	                    ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+	                LEFT JOIN fb_soft_version fsv 
+	                    ON sv.`barcode` = fsv.`serial_number`
+	                LEFT JOIN `prob_softwares` ps 
+	                    ON 
+	                    CASE
+	                        WHEN ps.`conp` IS NOT NULL 
+	                        THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`cpld` IS NOT NULL 
+	                        THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`boot` IS NOT NULL 
+	                        THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND 
+	                    CASE
+	                        WHEN ps.`pcb` IS NOT NULL 
+	                        THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+	                        ELSE 1 = 1 
+	                    END 
+	                    AND ps.`datastate` = 1
+	            WHERE sv.`executeTime` >= #{startTime}
+	            <if test=" prepend="and" endTime>
+	               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+	            </if>
+	            GROUP BY sv.`projectId`, sv.`barcode`) sf 
+	            LEFT JOIN pm_project_header ph 
+	                ON sf.projectId = ph.`projectId` 
+	            LEFT JOIN pm_project_member pm1 
+	                ON ph.`projectId` = pm1.`projectId` 
+	                AND pm1.`memberRole` = "30" 
+	                AND pm1.`effectiveTo` IS NULL 
+	                AND pm1.`fromFlag` = 1 
+	            LEFT JOIN pm_project_member pm2 
+	                ON ph.`projectId` = pm2.`projectId` 
+	                AND pm2.`memberRole` = "30" 
+	                AND pm2.`effectiveTo` IS NULL 
+	                AND pm1.`fromFlag` = 2 
+	            LEFT JOIN pm_project_member sm 
+	                ON ph.`projectId` = sm.`projectId` 
+	                AND sm.`memberRole` = "20" 
+	                AND sm.`effectiveTo` IS NULL 
+	            LEFT JOIN fnd_department fd 
+	                ON ph.`column001` = fd.`departmentNum` 
+	            LEFT JOIN prob_main pbm 
+	                ON pbm.id = sf.probId 
+	        WHERE (
+	                (
+	                    ph.`column012` = 0 
+	                    OR ph.`column012` IS NULL
+	                ) 
+	                AND ph.columno12_readonly = - 1
+	            ) 
+	            OR ph.columno12_readonly = 0 
+	        GROUP BY sf.projectId, sf.itemName
+         ) t -->
+    </select>
+    
+    <select id="query_prob_statistics" parameterType="map" resultType="com.dp.plat.prob.bean.ProbStatistic">
+        <!-- SELECT 
+		    ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, ph.`column001` AS officeCode, fd.`departmentName` AS officeName, sm.`memberName` AS serviceManagerName, pm1.`memberName` AS programManagerNameA, pm2.`memberName` AS programManagerNameB, MAX(sf.executeTime) AS executeTime, sf.updateCount, MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+		FROM
+		    (SELECT 
+		        sv.`projectId`, fi.`itemname`, CONCAT(
+		            "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(
+		                CONCAT(
+		                    scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+		                    CASE
+		                        WHEN sv.`conpChange` = 1 
+		                        THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+		                        ELSE sv.`conp` 
+		                    END, "]", "，cpld:[", 
+		                    CASE
+		                        WHEN sv.`cpldChange` = 1 
+		                        THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+		                        ELSE sv.`cpld` 
+		                    END, "]", "，boot:[", 
+		                    CASE
+		                        WHEN sv.`bootChange` = 1 
+		                        THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+		                        ELSE sv.`boot` 
+		                    END, "]", "，pcb:[", 
+		                    CASE
+		                        WHEN sv.`pcbChange` = 1 
+		                        THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+		                        ELSE sv.`pcb` 
+		                    END, "]"
+		                ) SEPARATOR ";\r\n"
+		            )
+		        ) AS softInfo, COUNT(*) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+		    FROM
+		        pm_project_soft_version sv 
+		        LEFT JOIN pm_project_soft_change_logs scl 
+		            ON sv.`projectId` = scl.projectId 
+		            AND sv.`logId` = scl.id 
+		        LEFT JOIN fb_items fi 
+		            ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+		        LEFT JOIN fb_soft_version fsv 
+		            ON sv.`barcode` = fsv.`serial_number`
+		        LEFT JOIN `prob_softwares` ps 
+		            ON 
+		            CASE
+		                WHEN ps.`conp` IS NOT NULL 
+		                THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`cpld` IS NOT NULL 
+		                THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`boot` IS NOT NULL 
+		                THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND 
+		            CASE
+		                WHEN ps.`pcb` IS NOT NULL 
+		                THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+		                ELSE 1 = 1 
+		            END 
+		            AND ps.`datastate` = 1
+		    WHERE sv.`executeTime` >= #probStatistic.startTime#
+		    <if test=" prepend="and" property="probStatistic.endTime">
+		       <![CDATA[ sv.`executeTime` <= '$probStatistic.endTime$ 23:59:59']]>
+		    </if>
+		    GROUP BY sv.`projectId`, sv.`barcode`) sf 
+		    LEFT JOIN pm_project_header ph 
+		        ON sf.projectId = ph.`projectId` 
+		    LEFT JOIN pm_project_member pm1 
+		        ON ph.`projectId` = pm1.`projectId` 
+		        AND pm1.`memberRole` = "30" 
+		        AND pm1.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm2 
+		        ON ph.`projectId` = pm2.`projectId` 
+		        AND pm2.`memberRole` = "30" 
+		        AND pm2.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 2 
+		    LEFT JOIN pm_project_member sm 
+		        ON ph.`projectId` = sm.`projectId` 
+		        AND sm.`memberRole` = "20" 
+		        AND sm.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_department fd 
+		        ON ph.`column001` = fd.`departmentNum` 
+		    LEFT JOIN prob_main pbm 
+		        ON pbm.id = sf.probId 
+		WHERE (
+		        (
+		            ph.`column012` = 0 
+		            OR ph.`column012` IS NULL
+		        ) 
+		        AND ph.columno12_readonly = - 1
+		    ) 
+		    OR ph.columno12_readonly = 0 
+		GROUP BY sf.projectId, sf.itemName -->
+		select * from statistic_tempTable
+		<if test=" prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <if test=" prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </if>
+            <if test=" prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </if>
+        </if>
+        <if test=" prepend=" order by " property="displayParam.sort">
+            executeTime desc
+        </if>
+        <if test=" property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </if>
+    </select>
+    
+    <!-- 设置group_contract的最大长度，默认1024 -->
+    <insert id="setMaxGroupContractLength" parameterType="int">
+        SET group_concat_max_len=#{_parameter};
+    </insert>
+    <insert id="create_prob_softChangeLog_tempTable" parameterType="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE softChangeLog_tempTable
+        SELECT 
+		    sv.`projectId`, fi.`itemname`, CONCAT(
+		        CASE
+		            WHEN fsv.`serial_number` IS NULL 
+		            THEN "出厂版本信息:[无];\r\n" 
+		            ELSE CONCAT(
+		                "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n"
+		            ) 
+		        END, GROUP_CONCAT(
+		            DISTINCT CONCAT(
+		            	IFNULL(sv.createBy, ""), "-", IFNULL(ui.realName, ""), " ",
+		                scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+		                CASE
+		                    WHEN sv.`conpChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`conpBak`, "->", - 1), "->", sv.`conp`
+		                    ) 
+		                    ELSE sv.`conp` 
+		                END, "]", "，cpld:[", 
+		                CASE
+		                    WHEN sv.`cpldChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1), "->", sv.`cpld`
+		                    ) 
+		                    ELSE sv.`cpld` 
+		                END, "]", "，boot:[", 
+		                CASE
+		                    WHEN sv.`bootChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`bootBak`, "->", - 1), "->", sv.`boot`
+		                    ) 
+		                    ELSE sv.`boot` 
+		                END, "]", "，pcb:[", 
+		                CASE
+		                    WHEN sv.`pcbChange` = 1 
+		                    THEN CONCAT(
+		                        SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1), "->", sv.`pcb`
+		                    ) 
+		                    ELSE sv.`pcb` 
+		                END, "]"
+		            ) SEPARATOR ";\r\n"
+		        )
+		    ) AS softInfo, COUNT(DISTINCT sv.id) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+		FROM
+		    pm_project_soft_version sv 
+		    LEFT JOIN pm_project_soft_change_logs scl 
+		        ON sv.`projectId` = scl.projectId 
+		        AND sv.`logId` = scl.id 
+		    LEFT JOIN fb_items fi 
+		        ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+		    LEFT JOIN fb_soft_version fsv 
+		        ON sv.`barcode` = fsv.`serial_number` 
+		    LEFT JOIN `prob_softwares` ps 
+		        ON 
+		        CASE
+		            WHEN ps.`conp` IS NOT NULL 
+		            THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`cpld` IS NOT NULL 
+		            THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`boot` IS NOT NULL 
+		            THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND 
+		        CASE
+		            WHEN ps.`pcb` IS NOT NULL 
+		            THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+		            ELSE 1 = 1 
+		        END 
+		        AND ps.manualEntry IS NULL
+		        AND ps.`datastate` = 1
+		    LEFT JOIN `fnd_user_info` ui
+				ON ui.username = sv.createBy 
+		WHERE sv.`executeTime` >= #{startTime}
+            <if test=" prepend="and" endTime>
+               <![CDATA[ sv.`executeTime` <= CONCAT(#{endTime}, ' 23:59:59')]]>
+            </if>
+            and (sv.`conpChange` = 1 or sv.`bootChange` = 1 or sv.`cpldChange` = 1 or sv.`pcbChange` = 1)
+            <if test=" version>
+                <if test=" prepend="AND" property="version.conp"> sv.conp = #version.conp# </if>
+                <if test=" prepend="AND" property="version.boot"> sv.boot = #version.boot# </if>
+                <if test=" prepend="AND" property="version.cpld"> sv.cpld = #version.cpld# </if>
+                <if test=" prepend="AND" property="version.pcb"> sv.pcb = #version.pcb# </if>
+            </if>
+		GROUP BY sv.`projectId`, sv.`barcode`
+    </insert>
+    
+    <insert id="create_prob_statistics_tempTable" parameterType="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS statistic_tempTable
+        SELECT 
+            ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, 
+            ph.`column001` AS officeCode, fd.`departmentName` AS officeName, 
+            sm.memberCode AS serviceManagerCode, sm.`memberName` AS serviceManagerName, 
+            pm1.memberCode AS programManagerCodeA, pm1.`memberName` AS programManagerNameA, 
+            pm2.memberCode AS programManagerCodeB, pm2.`memberName` AS programManagerNameB, 
+            MAX(sf.executeTime) AS executeTime, sf.updateCount, 
+            MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+        FROM
+            softChangeLog_tempTable sf 
+            LEFT JOIN pm_project_header ph 
+                ON sf.projectId = ph.`projectId` 
+            LEFT JOIN pm_project_member pm1 
+                ON ph.`projectId` = pm1.`projectId` 
+                AND pm1.`memberRole` = "30" 
+                AND pm1.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 1 
+            LEFT JOIN pm_project_member pm2 
+                ON ph.`projectId` = pm2.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 2 
+            LEFT JOIN pm_project_member sm 
+                ON ph.`projectId` = sm.`projectId` 
+                AND sm.`memberRole` = "20" 
+                AND sm.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_department fd 
+                ON ph.`column001` = fd.`departmentNum` 
+            LEFT JOIN prob_main pbm 
+                ON pbm.id = sf.probId 
+        <!-- WHERE (
+                (
+                    ph.`column012` = 0 
+                    OR ph.`column012` IS NULL
+                ) 
+                AND ph.columno12_readonly = - 1
+            ) 
+            OR ph.columno12_readonly = 0 --> 
+        GROUP BY sf.projectId, sf.itemName
+    </insert>
+    
+    <!-- <insert id="create_prob_statistics_tempTable" parameterType="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS statistic_tempTable
+        SELECT 
+            ph.`projectId`, ph.`projectCode`, ph.`projectName`, sf.itemName, sf.softInfo, 
+            ph.`column001` AS officeCode, fd.`departmentName` AS officeName, 
+            sm.memberCode AS serviceManagerCode, sm.`memberName` AS serviceManagerName, 
+            pm1.memberCode AS programManagerCodeA, pm1.`memberName` AS programManagerNameA, 
+            pm2.memberCode AS programManagerCodeB, pm2.`memberName` AS programManagerNameB, 
+            MAX(sf.executeTime) AS executeTime, sf.updateCount, 
+            MAX(sf.probId) AS probId, pbm.`theme` AS probTheme 
+        FROM
+            (SELECT 
+                sv.`projectId`, fi.`itemname`, CONCAT(
+                    "出厂版本信息:[conp:", fsv.`conp`, ",cpld:", fsv.`cpld`, ",boot:", fsv.`boot`, ",pcb:", fsv.`pcb`, "];\r\n", GROUP_CONCAT(DISTINCT
+                        CONCAT(
+                            scl.`createTime`, "：", scl.changeRemark, "，conp:[", 
+                            CASE
+                                WHEN sv.`conpChange` = 1 
+                                THEN CONCAT(sv.`conpBak`, "->", sv.`conp`) 
+                                ELSE sv.`conp` 
+                            END, "]", "，cpld:[", 
+                            CASE
+                                WHEN sv.`cpldChange` = 1 
+                                THEN CONCAT(sv.`cpldBak`, "->", sv.`cpld`) 
+                                ELSE sv.`cpld` 
+                            END, "]", "，boot:[", 
+                            CASE
+                                WHEN sv.`bootChange` = 1 
+                                THEN CONCAT(sv.`bootBak`, "->", sv.`boot`) 
+                                ELSE sv.`boot` 
+                            END, "]", "，pcb:[", 
+                            CASE
+                                WHEN sv.`pcbChange` = 1 
+                                THEN CONCAT(sv.`pcbBak`, "->", sv.`pcb`) 
+                                ELSE sv.`pcb` 
+                            END, "]"
+                        ) SEPARATOR ";\r\n"
+                    )
+                ) AS softInfo, COUNT(DISTINCT sv.id) AS updateCount, MAX(ps.`probId`) AS probId, MAX(sv.`executeTime`) AS executeTime 
+            FROM
+                pm_project_soft_version sv 
+                LEFT JOIN pm_project_soft_change_logs scl 
+                    ON sv.`projectId` = scl.projectId 
+                    AND sv.`logId` = scl.id 
+                LEFT JOIN fb_items fi 
+                    ON fi.`item` = SUBSTR(sv.`barcode`, 1, 8) 
+                LEFT JOIN fb_soft_version fsv 
+                    ON sv.`barcode` = fsv.`serial_number`
+                LEFT JOIN `prob_softwares` ps 
+                    ON 
+                    CASE
+                        WHEN ps.`conp` IS NOT NULL 
+                        THEN ps.`conp` = SUBSTRING_INDEX(sv.`conpBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`cpld` IS NOT NULL 
+                        THEN ps.`cpld` = SUBSTRING_INDEX(sv.`cpldBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`boot` IS NOT NULL 
+                        THEN ps.`boot` = SUBSTRING_INDEX(sv.`bootBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND 
+                    CASE
+                        WHEN ps.`pcb` IS NOT NULL 
+                        THEN ps.`pcb` = SUBSTRING_INDEX(sv.`pcbBak`, "->", - 1) 
+                        ELSE 1 = 1 
+                    END 
+                    AND ps.`datastate` = 1
+            WHERE sv.`executeTime` >= #{startTime}
+            <if test=" prepend="and" endTime>
+               <![CDATA[ sv.`executeTime` <= '$endTime$ 23:59:59']]>
+            </if>
+            GROUP BY sv.`projectId`, sv.`barcode`) sf 
+            LEFT JOIN pm_project_header ph 
+                ON sf.projectId = ph.`projectId` 
+            LEFT JOIN pm_project_member pm1 
+                ON ph.`projectId` = pm1.`projectId` 
+                AND pm1.`memberRole` = "30" 
+                AND pm1.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 1 
+            LEFT JOIN pm_project_member pm2 
+                ON ph.`projectId` = pm2.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm1.`fromFlag` = 2 
+            LEFT JOIN pm_project_member sm 
+                ON ph.`projectId` = sm.`projectId` 
+                AND sm.`memberRole` = "20" 
+                AND sm.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_department fd 
+                ON ph.`column001` = fd.`departmentNum` 
+            LEFT JOIN prob_main pbm 
+                ON pbm.id = sf.probId 
+        WHERE (
+                (
+                    ph.`column012` = 0 
+                    OR ph.`column012` IS NULL
+                ) 
+                AND ph.columno12_readonly = - 1
+            ) 
+            OR ph.columno12_readonly = 0 
+        GROUP BY sf.projectId, sf.itemName
+    </insert> -->
+    
+    <delete id="drop_prob_statistics_tempTable">
+        DROP TEMPORARY TABLE IF EXISTS statistic_tempTable
+    </delete>
+    
+    <delete id="drop_prob_softChangeLog_tempTable">
+        DROP TEMPORARY TABLE IF EXISTS softChangeLog_tempTable
+    </delete>
+    
+    <select id="query_prob_statistics_report" resultType="com.dp.plat.data.bean.ReportLineData">
+        SELECT 
+		    t.column001 AS officeCode, t.officeName,
+		    COUNT(DISTINCT s.projectId) AS conditionValue, COUNT(DISTINCT t.projectId) AS totalValue,
+		    CONCAT(ROUND(COUNT(DISTINCT s.projectId)/COUNT(DISTINCT t.projectId) * 100, 2) ,'%') AS specificValue
+		FROM
+		    projectTempTable t 
+		    LEFT JOIN statistic_tempTable s 
+		        ON s.projectId = t.projectId 
+		GROUP BY t.column001
+		ORDER BY specificValue DESC, conditionValue DESC, totalValue DESC
+    </select>
+    
+    <insert id="create_prob_statistics_projectTempTable" parameterType="com.dp.plat.prob.bean.ProbStatistic">
+        CREATE TEMPORARY TABLE IF NOT EXISTS projectTempTable
+        SELECT 
+		    ph.*, GROUP_CONCAT(DISTINCT pc.`contractNo`) AS contractNo, 
+		    ph.column001 as officeCode, fd.departmentName AS officeName
+		    
+		    , ph.column004 as marketCode, ph.column004 as marketName
+		    , ph.column005 as systemCode, ph.column005 as systemName
+		    , ph.column006 as expendCode, ph.column006 as expendName
+		    , ph.column007 as industryCode, ph.column007 as industryName
+		    
+		    , fbd.`basicDataName` AS projectStateName,
+		    sm.`memberCode` AS serviceManagerCode, sm.`memberName` AS serviceManagerCodeforjson, 
+		    pm1.`memberCode` AS programManagerCodeA, pm1.`memberName` AS programManagerCodeforjson,
+		    pm2.`memberCode` AS programManagerCodeB, pm2.`memberName` AS programManagerCodeforjsonB
+		    , CASE WHEN ph.salesType = '14' THEN ph.column001 ELSE NULL END AS checkProfitCenter
+		FROM
+		    pm_project_header ph 
+		    LEFT JOIN pm_project_group_relationship pgr 
+		        ON ph.`projectCode` = pgr.`projectCode` 
+		    LEFT JOIN pm_project_group pg 
+		        ON pgr.`projectGroupCode` = pg.`projectGroupCode` 
+		    LEFT JOIN pm_project_contract pc 
+		        ON pc.`projectGroupCode` = pg.`projectGroupCode` 
+		    LEFT JOIN fnd_department fd 
+		        ON fd.`departmentNum` = ph.column001 
+		    LEFT JOIN fnd_basic_data fbd 
+		        ON fbd.`basicDataId` = ph.`projectState` 
+		        AND fbd.`dataTypeCode` = "02" 
+		    LEFT JOIN pm_project_member sm 
+		        ON sm.`projectId` = ph.`projectId` 
+		        AND sm.`memberRole` = "20" 
+		        AND sm.`effectiveTo` IS NULL 
+		        AND sm.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm1 
+		        ON pm1.`projectId` = ph.`projectId` 
+		        AND pm1.`memberRole` = "30" 
+		        AND pm1.`effectiveTo` IS NULL 
+		        AND pm1.`fromFlag` = 1 
+		    LEFT JOIN pm_project_member pm2 
+                ON pm2.`projectId` = ph.`projectId` 
+                AND pm2.`memberRole` = "30" 
+                AND pm2.`effectiveTo` IS NULL 
+                AND pm2.`fromFlag` = 2 
+            LEFT JOIN `pm_project_soft_change_logs` pscl
+			    ON pscl.`projectId` = ph.`projectId`
+			        AND pscl.`latest` = 1 
+		WHERE (
+		        ph.`column012` = 0 
+		        OR ph.`columno12_readonly` = 0
+		        OR pscl.id IS NOT NULL
+		    ) 
+		    AND ph.`effectiveTo` IS NULL 
+		<!-- GROUP BY pgr.`projectGroupCode`, ph.`projectCode` -->
+		GROUP BY ph.`projectCode`
+    </insert>
+    
+     <delete id="drop_prob_statistics_projectTempTable">
+        DROP TEMPORARY TABLE IF EXISTS projectTempTable
+    </delete>
+    
+    <select id="query_prob_statistics_project_Count" parameterType="com.dp.plat.prob.bean.ProbStatistic" resultType="int">
+        select count(*) from projectTempTable
+        <dynamic prepend="where">
+            <if test=" prepend="and" projectCode> (projectCode like CONCAT("%", #{projectCode}, "%") or contractNo like CONCAT("%", #{projectCode}, "%"))</if>
+            <if test=" prepend="and" projectName> projectName like CONCAT("%", #{projectName}, "%")</if>
+            <if test=" prepend="and" officeCode> officeCode = #{officeCode}</if>
+            <if test=" prepend="and" programManagerCode> (programManagerCodeA = #{programManagerCode} or programManagerCodeB = #{programManagerCode}) </if>
+            <if test=" prepend="and" serviceManagerCode> serviceManagerCode = #{serviceManagerCode}</if>
+        </dynamic>
+    </select>
+    
+    <select id="query_prob_statistics_project" parameterType="map" resultType="com.dp.plat.data.bean.Project">
+        select * from projectTempTable
+        <dynamic prepend="where">
+            <if test=" prepend="and" property="probStatistic.projectCode"> (projectCode like CONCAT("%", #probStatistic.projectCode#, "%") or contractNo like CONCAT("%", #probStatistic.projectCode#, "%"))</if>
+            <if test=" prepend="and" property="probStatistic.projectName"> projectName like CONCAT("%", #probStatistic.projectName#, "%")</if>
+            <if test=" prepend="and" property="probStatistic.officeCode"> officeCode = #probStatistic.officeCode#</if>
+            <if test=" prepend="and" property="probStatistic.programManagerCode"> (programManagerCodeA = #probStatistic.programManagerCode# or programManagerCodeB = #probStatistic.programManagerCode#) </if>
+            <if test=" prepend="and" property="probStatistic.serviceManagerCode"> serviceManagerCode = #probStatistic.serviceManagerCode#</if>
+        </dynamic>
+        <if test=" prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <if test=" prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </if>
+            <if test=" prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </if>
+        </if>
+        <if test=" property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </if>
+    </select>
+    
+    <select id="query_prob_statistics_report_total" parameterType="map" resultType="com.dp.plat.data.bean.ReportLineData">
+        SELECT 
+		    "total" as officeCode, "全国" as officeName, SUM(conditionValue) AS conditionValue, SUM(totalValue) AS totalValue, CONCAT(
+		        ROUND(
+		            SUM(conditionValue) / SUM(totalValue) * 100, 2
+		        ), '%'
+		    ) AS specificValue 
+		FROM
+	        (SELECT 
+	            t.column001 AS officeCode, t.officeName,
+	            COUNT(DISTINCT s.projectId) AS conditionValue, COUNT(DISTINCT t.projectId) AS totalValue,
+	            CONCAT(ROUND(COUNT(DISTINCT s.projectId)/COUNT(DISTINCT t.projectId) * 100, 2) ,'%') AS specificValue
+	        FROM
+	            projectTempTable t 
+	            LEFT JOIN statistic_tempTable s 
+	                ON s.projectId = t.projectId 
+	        GROUP BY t.column001) t
+    </select>
+    
+    <sql id="sql_contract_shipment_soft_list">
+        SELECT DISTINCT IFNULL(ph.projectId, 0) AS projectId, ph.projectCode, ph.projectName
+            , ph.officeCode AS `officeCode`, ph.officeName AS `officeName`
+            , ph.marketCode as marketCode, ph.marketName as marketName
+            , ph.systemCode as systemCode, ph.systemName as systemName
+            , ph.expendCode as expendCode, ph.expendName as expendName
+            , ph.industryCode as industryCode, ph.industryName as industryName
+            
+            , ph.projectStateName AS `projectStateName`
+            , ph.serviceManagerCode AS `serviceManagerCode`, ph.serviceManagerCodeforjson AS `serviceManagerCodeforjson`
+            , ph.programManagerCodeA AS `programManagerCodeA`, ph.programManagerCodeforjson AS `programManagerCodeforjson`
+            , ph.programManagerCodeB AS `programManagerCodeB`, ph.programManagerCodeforjsonB AS `programManagerCodeforjsonB`
+            
+            , vsip.contract_code AS contractNo, vsip.barcode AS barCode, vsip.itemCode AS itemCode, vsip.itemModel AS itemModel, vsip.itemName AS itemName
+            , CASE WHEN t3.conp IS NULL THEN t.`conp` ELSE t3.conp END AS conp, t3.conpBak, IFNULL(t3.conpChange, 0) conpChange
+            , CASE WHEN t3.boot IS NULL THEN t.`boot` ELSE t3.boot END AS boot, t3.bootBak, IFNULL(t3.bootChange, 0) bootChange
+            , CASE WHEN t3.cpld IS NULL THEN t.`cpld` ELSE t3.cpld END AS cpld, t3.cpldBak, IFNULL(t3.cpldChange, 0) cpldChange
+            , CASE WHEN t3.pcb  IS NULL THEN t.`pcb`  ELSE t3.pcb  END AS pcb,  t3.pcbBak,  IFNULL(t3.pcbChange, 0) pcbChange
+            , vsip.barcode2 AS barCode2, vsip.itemCode2 AS itemCode2
+            , vsip.itemModel2 AS itemModel2
+            , vsip.itemName2 AS itemName2
+        FROM view_shipment_info_4_pm vsip
+            LEFT JOIN view_shipment_ems_4_pm vsep
+            ON vsep.contract_code = vsip.contract_code
+                AND vsep.packId = vsip.packId
+            LEFT JOIN fb_soft_version t ON vsip.`barcode` = t.`serial_number`
+            LEFT JOIN fb_items fi ON fi.item = vsip.itemCode
+            LEFT JOIN pm_project_contract ppc ON ppc.contractno = vsep.contract_code
+            LEFT JOIN pm_project_group_relationship ppgr ON ppgr.projectGroupCode = ppc.projectGroupCode
+            LEFT JOIN projectTempTable ph ON ph.projectCode = ppgr.projectCode
+            LEFT JOIN pm_project_soft_version t3
+            ON vsip.`barcode` = t3.`barcode`
+                AND t3.`datastate` = 1
+                AND ph.`projectId` = t3.`projectId`
+        WHERE (ph.checkProfitCenter IS NULL or ph.officeCode = IFNULL(vsip.profitCenter, ph.officeCode))
+            <if test=" prepend="and" property="probStatistic.projectCode"> (ph.projectCode like CONCAT("%", #probStatistic.projectCode#, "%") or ph.contractNo like CONCAT("%", #probStatistic.projectCode#, "%"))</if>
+            <if test=" prepend="and" property="probStatistic.projectName"> ph.projectName like CONCAT("%", #probStatistic.projectName#, "%")</if>
+            <if test=" prepend="and" property="probStatistic.officeCode"><![CDATA[ ph.officeCode = #probStatistic.officeCode#]]></if>
+            <if test=" prepend="and" property="probStatistic.marketCode"><![CDATA[ ph.marketCode = #probStatistic.marketCode#]]></if>
+            <if test=" prepend="and" property="probStatistic.systemCode"><![CDATA[ ph.systemCode = #probStatistic.systemCode#]]></if>
+            <if test=" prepend="and" property="probStatistic.expendCode"><![CDATA[ ph.expendCode = #probStatistic.expendCode#]]></if>
+            <if test=" prepend="and" property="probStatistic.industryCode"><![CDATA[ ph.industryCode = #probStatistic.industryCode#]]></if>
+            
+            <if test=" prepend="and" property="probStatistic.programManagerCode"> (ph.programManagerCodeA = #probStatistic.programManagerCode# or ph.programManagerCodeB = #probStatistic.programManagerCode#) </if>
+            <if test=" prepend="and" property="probStatistic.serviceManagerCode"> ph.serviceManagerCode = #probStatistic.serviceManagerCode#</if>
+            <if test=" prepend="and" property="probStatistic.contractNo"> vsip.contract_code = #probStatistic.contractNo# </if>
+            <if test=" prepend="and" property="probStatistic.barCode"> (vsip.barCode = #probStatistic.barCode# or vsip.barcode2 = #probStatistic.barCode#) </if>
+            <if test=" prepend="and" property="probStatistic.itemCode"> (vsip.itemCode = #probStatistic.itemCode# or vsip.itemCode2 = #probStatistic.itemCode#) </if>
+            <if test=" prepend="and" property="probStatistic.itemModel"> (vsip.itemModel like CONCAT(#probStatistic.itemModel#, "%") or vsip.itemModel2 like CONCAT(#probStatistic.itemModel#, "%")) </if>
+            
+            <if test=" property="probStatistic.version">
+                <if test=" prepend="AND" property="probStatistic.version.conp"> t3.conp = #probStatistic.version.conp# </if>
+                <if test=" prepend="AND" property="probStatistic.version.boot"> t3.boot = #probStatistic.version.boot# </if>
+                <if test=" prepend="AND" property="probStatistic.version.cpld"> t3.cpld = #probStatistic.version.cpld# </if>
+                <if test=" prepend="AND" property="probStatistic.version.pcb"> t3.pcb = #probStatistic.version.pcb# </if>
+            </if>
+            <if test=" prepend="AND" itemFilters>
+                <iterate itemFilters conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </if>
+        <dynamic prepend="Having">
+	        <if test=" property="probStatistic.version">
+	            <if test=" prepend="AND" property="probStatistic.version.conp"> conp = #probStatistic.version.conp# </if>
+	            <if test=" prepend="AND" property="probStatistic.version.boot"> boot = #probStatistic.version.boot# </if>
+	            <if test=" prepend="AND" property="probStatistic.version.cpld"> cpld = #probStatistic.version.cpld# </if>
+	            <if test=" prepend="AND" property="probStatistic.version.pcb"> pcb = #probStatistic.version.pcb# </if>
+	        </if>
+        </dynamic>
+    </sql>
+    
+    <select id="query_contract_shipment_soft_count" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM (
+            <include refid="sql_contract_shipment_soft_list"/>
+        ) t
+        <if test=" prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <if test=" prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </if>
+            <if test=" prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </if>
+        </if>
+        <if test=" property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </if>
+    </select>
+    
+    <select id="query_contract_shipment_soft_list" parameterType="map" resultType="java.util.HashMap">
+        <include refid="sql_contract_shipment_soft_list"/>
+        <if test=" prepend=" order by " property="displayParam.sort">
+            $displayParam.sort$
+            <if test=" prepend=" " property="displayParam.order" compareValue="desc">
+                desc
+              </if>
+            <if test=" prepend=" " property="displayParam.order" compareValue="asc">
+                asc
+            </if>
+        </if>
+        <if test=" property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </if>
+    </select>
+    
+    <insert id="insertProbReadLog" parameterType="com.dp.plat.prob.bean.ProbReadLog" >
+        INSERT INTO `prob_read_log`
+        SELECT 
+            null, #{probId}, #{reader}, NOW(), GREATEST(IFNULL(MAX(status), #{status}), #{status}), 
+		    IFNULL(MIN(readTime), now()) AS firstTime, 
+		    IFNULL(Max(commitTime), IF(#{status} = 1, now(), null)) AS commitTime
+		FROM
+		    `prob_read_log` 
+		WHERE probId = #{probId} 
+		    AND reader = #{reader}
+        <selectKey resultType="int" keyProperty="id">
+            SELECT last_insert_id() as id ;   
+        </selectKey>
+    </insert>
+    <select id="count_prob_read_log" parameterType="com.dp.plat.prob.bean.ProbReadLog" resultType="int">
+        SELECT 
+            count(*)
+        FROM
+            prob_read_log rl 
+        where rl.probId = #{probId}
+        <if test=" prepend="and" reader> rl.reader = #{reader} </if>
+        <if test=" prepend="and" status> rl.status = #{status} </if>
+    </select>
+    <select id="query_prob_read_log" parameterType="map" resultType="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+		    rl.*, IFNULL(
+		        CONCAT(ui.`username`, "-", ui.`realName`), rl.reader
+		    ) AS readerName 
+		FROM
+		    prob_read_log rl 
+		    LEFT JOIN fnd_user_info ui 
+		        ON rl.`reader` = ui.`username` 
+		where rl.probId = #probReadLog.probId#
+		<if test=" prepend="and" property="probReadLog.reader"> rl.reader = #probReadLog.reader# </if>
+		<if test=" prepend="and" property="probReadLog.status"> rl.status = #probReadLog.status# </if>
+        order by rl.readTime desc
+        <if test=" property="displayParam.offset">
+            limit #displayParam.offset#,  #displayParam.pagesize#
+        </if>
+    </select>
+    
+    <select id="query_prob_read_statistics" parameterType="map" resultType="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+		    p.probNum, p.`theme`, p.`watch`, bd1.`basicDataName` AS watchName, p.`status`, bd2.`basicDataName` AS statusName, 
+		    ui.`username` AS render, CONCAT(ui.username, "-", ui.realName) AS readerName, rl.firstTime, rl.commitTime, rl.readStatus
+		FROM
+		    prob_main p 
+		    LEFT JOIN `fnd_user_info` ui 
+		        ON FALSE = FIND_IN_SET(ui.`roleIds`, ";1;,;9;,;20;") 
+		    LEFT JOIN 
+		        (SELECT 
+		            probId, reader, MIN(readTime) AS firstTime, MAX(commitTime) AS commitTime, IFNULL(MAX(STATUS), 0) AS readStatus
+		        FROM
+		            prob_read_log 
+		        GROUP BY `probId`, `reader`) rl 
+		        ON ui.`username` = rl.`reader` 
+		    LEFT JOIN fnd_basic_data bd1 
+		        ON p.`watch` = bd1.`basicDataId` 
+		        AND bd1.`dataTypeCode` = '30' 
+		        AND bd1.`effectiveTo` IS NULL 
+		    LEFT JOIN fnd_basic_data bd2 
+		        ON p.`priority` = bd2.`basicDataId` 
+		        AND bd2.`dataTypeCode` = '32' 
+		    LEFT JOIN fnd_basic_data bd3 
+		        ON p.`status` = bd3.basicDataId 
+		        AND bd3.dataTypeCode = '31' 
+		        AND bd3.`effectiveTo` IS NULL 
+        <dynamic prepend="where">
+            <if test=" prepend="and" property="prob.probNum"> p.probNum = #{probNum}</if>
+            <if test=" prepend="and" property="prob.theme"> p.theme = #{theme}</if>
+            <if test=" prepend="and" property="probReadLog.reader"> p.probNum = #{probNum}</if>
+            <if test=" prepend="and" probNum> p.probNum = #{probNum}</if>
+        </dynamic>
+		ORDER BY p.visibleRange, p.`id`
+    </select>
+    
+    <select id="count_prob_read_statistics" parameterType="map" resultType="com.dp.plat.prob.bean.ProbReadLog">
+        SELECT 
+            p.probNum, p.`theme`, p.`watch`, bd1.`basicDataName` AS watchName, p.`status`, bd2.`basicDataName` AS statusName, CONCAT(ui.username, "-", ui.realName) AS readerName, rl.* 
+        FROM
+            prob_main p 
+            LEFT JOIN `fnd_user_info` ui 
+                ON FALSE = FIND_IN_SET(ui.`roleIds`, ";1;,;9;,;20;") 
+            LEFT JOIN 
+                (SELECT 
+                    probId, reader, MIN(readTime) AS firstTime, MAX(commitTime) AS commitTime, IFNULL(MAX(STATUS), 0) AS readStatus
+                FROM
+                    prob_read_log 
+                GROUP BY `probId`, `reader`) rl 
+                ON ui.`username` = rl.`reader` 
+            LEFT JOIN fnd_basic_data bd1 
+                ON p.`watch` = bd1.`basicDataId` 
+                AND bd1.`dataTypeCode` = '30' 
+                AND bd1.`effectiveTo` IS NULL 
+            LEFT JOIN fnd_basic_data bd2 
+                ON p.`priority` = bd2.`basicDataId` 
+                AND bd2.`dataTypeCode` = '32' 
+            LEFT JOIN fnd_basic_data bd3 
+                ON p.`status` = bd3.basicDataId 
+                AND bd3.dataTypeCode = '31' 
+                AND bd3.`effectiveTo` IS NULL 
+        <dynamic prepend="where">
+            <if test=" prepend="and" probNum> p.probNum = #{probNum}</if>
+            <if test=" prepend="and" theme> p.theme = #{theme}</if>
+            <if test=" prepend="and" probNum> p.probNum = #{probNum}</if>
+            <if test=" prepend="and" probNum> p.probNum = #{probNum}</if>
+        </dynamic>
+        ORDER BY p.visibleRange, p.`id`
+    </select>
+    
+    
+    
+    <resultMap id="ProductComponentMap" type="com.dp.plat.prob.bean.ProductComponent">
+		<result column="id" jdbcType="INTEGER" id />
+		<result column="type" jdbcType="VARCHAR" type />
+		<result column="name" jdbcType="VARCHAR" name />
+		<result column="version" jdbcType="VARCHAR" version />
+		<result column="parentId" jdbcType="INTEGER" parentId />
+		<result column="state" jdbcType="BIT" state />
+	    <result column="customInfo" jdbcType="JSON" customInfo />
+	    <result column="createBy" jdbcType="VARCHAR" createBy />
+	    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+	    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+	    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+	</resultMap>
+	<sql id="ProductComponentColumnList">
+	    `id`, `type`, `name`, `version`, `parentId`, `state`, `customInfo`, `createBy`, `createTime`, 
+        `updateBy`, `updateTime`
+    </sql>
+    <select id="selectProductComponentById" parameterType="java.lang.Integer" resultType="com.dp.plat.prob.bean.ProductComponent">
+	    select 
+	    <include refid="ProductComponentColumnList" />
+	    from prob_product_component
+	    where `id` = #{id}
+	</select>
+	<select id="selectProductComponentVOById" parameterType="java.lang.Integer" resultType="com.dp.plat.prob.vo.ProductComponentVO">
+        select 
+        <include refid="ProductComponentColumnList" />
+        from prob_product_component
+        where `id` = #{id}
+    </select>
+	<delete id="deleteProductComponentById" parameterType="java.lang.Integer">
+	    delete from prob_product_component
+	    where `id` = #{id}
+	</delete>
+	<insert id="insertProductComponent" parameterType="com.dp.plat.prob.bean.ProductComponent">
+	    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+	      SELECT LAST_INSERT_ID()
+	    </selectKey>
+	    insert into prob_product_component (`type`, `name`, `version`, 
+	      `parentId`, `state`, `customInfo`, 
+	      `createBy`, `createTime`, `updateBy`, 
+	      `updateTime`)
+	    values (#{type}, #{name}, #{version}, 
+	      #{parentId}, #{state}, #{customInfo}, 
+	      #{createBy}, #{createTime}, #{updateBy}, 
+	      #{updateTime})
+	  </insert>
+	  <insert id="insertProductComponentSelective" parameterType="com.dp.plat.prob.bean.ProductComponent">
+	    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+	      SELECT LAST_INSERT_ID()
+	    </selectKey>
+	    insert into prob_product_component
+	    <dynamic prepend=" " open="(" close=")">
+	      <if test=" prepend="," type> `type` </if>
+	      <if test=" prepend="," name> `name` </if>
+	      <if test=" prepend="," version> `version` </if>
+	      <if test=" prepend="," parentId> `parentId` </if>
+	      <if test=" prepend="," state> `state` </if>
+	      <if test=" prepend="," customInfo> `customInfo` </if>
+	      <if test=" prepend="," createBy> `createBy` </if>
+	      <if test=" prepend="," createTime> `createTime` </if>
+	      <if test=" prepend="," updateBy> `updateBy` </if>
+	      <if test=" prepend="," updateTime> `updateTime` </if>
+	    </dynamic>
+	    <dynamic prepend="values" open="(" close=")">
+	      <if test=" prepend="," type> #{type} </if>
+	      <if test=" prepend="," name> #{name} </if>
+	      <if test=" prepend="," version> #{version} </if>
+	      <if test=" prepend="," parentId> #{parentId} </if>
+		  <if test=" prepend="," state> #{state} </if>
+	      <if test=" prepend="," customInfo> #{customInfo} </if>
+	      <if test=" prepend="," createBy> #{createBy} </if>
+	      <if test=" prepend="," createTime> #{createTime} </if>
+	      <if test=" prepend="," updateBy> #{updateBy} </if>
+	      <if test=" prepend="," updateTime> #{updateTime} </if>
+	    </dynamic>
+	  </insert>
+      <insert id="insertOrUpdateProductComponentSelective" parameterType="com.dp.plat.prob.bean.ProductComponent">
+        <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+          SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into prob_product_component
+        <dynamic prepend=" " open="(" close=")">
+          <if test=" prepend="," id> `id` </if>
+          <if test=" prepend="," type> `type` </if>
+          <if test=" prepend="," name> `name` </if>
+          <if test=" prepend="," version> `version` </if>
+          <if test=" prepend="," parentId> `parentId` </if>
+          <if test=" prepend="," state> `state` </if>
+          <if test=" prepend="," customInfo> `customInfo` </if>
+          <if test=" prepend="," createBy> `createBy` </if>
+          <if test=" prepend="," createTime> `createTime` </if>
+          <if test=" prepend="," updateBy> `updateBy` </if>
+          <if test=" prepend="," updateTime> `updateTime` </if>
+        </dynamic>
+        <dynamic prepend="values" open="(" close=")">
+          <if test=" prepend="," id> #{id} </if>
+          <if test=" prepend="," type> #{type} </if>
+          <if test=" prepend="," name> #{name} </if>
+          <if test=" prepend="," version> #{version} </if>
+          <if test=" prepend="," parentId> #{parentId} </if>
+          <if test=" prepend="," state> #{state} </if>
+          <if test=" prepend="," customInfo> #{customInfo} </if>
+          <if test=" prepend="," createBy> #{createBy} </if>
+          <if test=" prepend="," createTime> #{createTime} </if>
+          <if test=" prepend="," updateBy> #{updateBy} </if>
+          <if test=" prepend="," updateTime> #{updateTime} </if>
+        </dynamic>
+        ON DUPLICATE KEY UPDATE 
+        <dynamic prepend=" ">
+	      <if test=" prepend="," type> `type` = VALUES(`type`) </if>
+          <if test=" prepend="," name> `name` = VALUES(`name`) </if>
+          <if test=" prepend="," version> `version` = VALUES(`version`) </if>
+          <if test=" prepend="," parentId> `parentId` = VALUES(`parentId`) </if>
+          <if test=" prepend="," state> `state` = VALUES(`state`) </if>
+          <if test=" prepend="," customInfo> 
+            <!-- `customInfo` = VALUES(`customInfo`) -->
+	        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), VALUES(customInfo))
+          </if>
+          <if test=" prepend="," updateBy> `updateBy` = VALUES(`updateBy`) </if>
+          <if test=" prepend="," updateTime> `updateTime` = VALUES(`updateTime`) </if>
+        </dynamic>
+      </insert>
+	  <update id="updateProductComponentByIdSelective" parameterType="com.dp.plat.prob.bean.ProductComponent">
+	    update prob_product_component
+	    <dynamic prepend="SET">
+	      <if test=" prepend="," type> `type` = #{type} </if>
+	      <if test=" prepend="," name> `name` = #{name} </if>
+	      <if test=" prepend="," version> `version` = #{version} </if>
+	      <if test=" prepend="," parentId> `parentId` = #{parentId} </if>
+		  <if test=" prepend="," state> `state` = #{state} </if>
+	      <if test=" prepend="," customInfo>
+	        <!-- customInfo = #customInfo:JSON#  -->
+	        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	      </if>
+	      <if test=" prepend="," createBy> `createBy` = #{createBy} </if>
+	      <if test=" prepend="," createTime> `createTime` = #{createTime} </if>
+	      <if test=" prepend="," updateBy> `updateBy` = #{updateBy} </if>
+	      <if test=" prepend="," updateTime> `updateTime` = #{updateTime} </if>
+	    </dynamic>
+	    where `id` = #{id}
+	  </update>
+	  <update id="updateProductComponentById" parameterType="com.dp.plat.prob.bean.ProductComponent">
+	    update prob_product_component
+	    set `type` = #{type},
+	      `name` = #{name},
+	      `version` = #{version},
+	      `parentId` = #{parentId},
+	      `state` = #{state},
+	      `createBy` = #{createBy},
+	      `createTime` = #{createTime},
+	      `updateBy` = #{updateBy},
+	      `updateTime` = #{updateTime},
+	      <!-- `customInfo` = #customInfo:JSON# -->
+          customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	    where `id` = #{id}
+	  </update>
+	  <sql id="sqlProductComponent_List">
+	    <if test=" prepend="AND" id> pc.`id` = #{id} </if>
+	    <!-- <if test=" prepend="AND" type> pc.`type` = #{type} </if>
+	    <if test=" prepend="AND" name> pc.`name` = #{name} </if> -->
+	    <if test=" prepend="AND" type> pc.`type` like CONCAT('%', #{type}, '%') </if>
+	    <if test=" prepend="AND" name> pc.`name` like CONCAT('%', #{name}, '%') </if>
+	    <if test=" prepend="AND" version> pc.`version` = #{version} </if>
+	    <if test=" prepend="AND" parentId> pc.`parentId` = #{parentId} </if>
+	    <if test=" prepend="AND" state> pc.`state` = #{state} </if>
+	    <!-- <if test=" prepend="AND" customInfo> pc.`customInfo` = #{customInfo} </if> -->
+	    <if test=" prepend="AND" createBy> pc.`createBy` = #{createBy} </if>
+	    <if test=" prepend="AND" createTime> pc.`createTime` = #{createTime} </if>
+	    <if test=" prepend="AND" updateBy> pc.`updateBy` = #{updateBy} </if>
+	    <if test=" prepend="AND" updateTime> pc.`updateTime` = #{updateTime} </if>
+	  </sql>
+	  <sql id="sqlProductComponent_model_List">
+	    <if test=" prepend="AND" property="model != null ">
+	        <if test=" prepend="AND" property="model.id">  pc.`id` = #model.id# </if>
+            <!-- <if test=" prepend="AND" property="model.type"> pc.`type` = #model.type# </if>
+            <if test=" prepend="AND" property="model.name"> pc.`name` = #model.name# </if> -->
+            <if test=" prepend="AND" property="model.type"> pc.`type` like CONCAT('%', #model.type#, '%') </if>
+            <if test=" prepend="AND" property="model.name"> pc.`name` like CONCAT('%', #model.name#, '%') </if>
+            <if test=" prepend="AND" property="model.version"> pc.`version` = #model.version# </if>
+            <if test=" prepend="AND" property="model.parentId"> pc.`parentId` = #model.parentId# </if>
+            <if test=" prepend="AND" property="model.state"> pc.`state` = #model.state# </if>
+	        <!-- <if test=" prepend="AND" property="model.customInfo"> pc.`customInfo` = #model.customInfo# </if> -->
+	        <if test=" prepend="AND" property="model.createBy"> pc.`createBy` = #model.createBy# </if>
+	        <if test=" prepend="AND" property="model.createTime"> pc.`createTime` = #model.createTime# </if>
+	        <if test=" prepend="AND" property="model.updateBy"> pc.`updateBy` = #model.updateBy# </if>
+	        <if test=" prepend="AND" property="model.updateTime"> pc.`updateTime` = #model.updateTime# </if>
+       </if>
+       <if test=" prepend="AND" fuzzySearch>
+            (
+                pc.`type` like CONCAT("%", #{fuzzy}, "%") or
+                pc.`name` like CONCAT("%", #{fuzzy}, "%") or
+                pc.`version` like CONCAT("%", #{fuzzy}, "%")
+            )
+       </if>
+	  </sql>
+	  <sql id="sqlProductComponent_where">
+	    <dynamic prepend="where">
+            <include refid="sqlProductComponent_List" />
+        </dynamic>
+	  </sql>
+	  <sql id="sqlProductComponent_model_where">
+	    <dynamic prepend="where">
+	        <include refid="sqlProductComponent_model_List" />
+	    </dynamic>
+	  </sql>
+	  <sql id="sqlProductComponent_pageable_limit">
+        <if test=" displayParam>
+		    <if test=" property="displayParam.sort"> order by $displayParam.sort$ </if>
+		    <!-- <if test=" property="displayParam.sort"> order by id desc </if> -->
+		    limit #displayParam.offset#, #displayParam.pagesize#
+        </if>
+	  </sql>
+	  <select id="selectProductComponentList" parameterType="com.dp.plat.prob.bean.ProductComponent" resultType="com.dp.plat.prob.vo.ProductComponentVO">
+	    select * from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	  </select>
+	  <select id="countProductComponentList" parameterType="com.dp.plat.prob.bean.ProductComponent" resultType="int">
+	    select count(1) from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	  </select>
+	  <select id="selectProductComponentListPageable" parameterType="com.dp.plat.prob.vo.ProductComponentPageParam" resultType="com.dp.plat.prob.vo.ProductComponentVO">
+	    select * from prob_product_component AS `pc`
+	    <dynamic prepend="where">
+	    <include refid="sqlProductComponent_List" />
+	    </dynamic>
+	    <include refid="sqlProductComponent_pageable_limit" />
+	  </select>
+	  <select id="countProductComponentListPageable" parameterType="com.dp.plat.prob.vo.ProductComponentPageParam" resultType="int">
+	    select count(1) from prob_product_component AS `pc`
+        <dynamic prepend="where">
+	        <include refid="sqlProductComponent_List" />
+        </dynamic>
+	  </select>
+	  
+	<resultMap id="ProbProductMap" type="com.dp.plat.prob.bean.ProbProduct">
+		<result column="id" jdbcType="INTEGER" id />
+		<result column="probId" jdbcType="VARCHAR" probId />
+		<result column="productCode" jdbcType="VARCHAR" productCode />
+		<result column="productSubCode" jdbcType="VARCHAR" productSubCode />
+		<result column="itemCode" jdbcType="VARCHAR" itemCode />
+		<result column="itemModel" jdbcType="VARCHAR" itemModel />
+		<result column="itemDesc" jdbcType="VARCHAR" itemDesc />
+		<result column="status" jdbcType="INTEGER" status />
+		<result column="customInfo" jdbcType="JSON" customInfo />
+		<result column="createBy" jdbcType="VARCHAR" createBy />
+		<result column="createTime" jdbcType="TIMESTAMP" createTime />
+		<result column="updateBy" jdbcType="VARCHAR" updateBy />
+		<result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+	</resultMap>
+	<sql id="ProbProduct_Column_List">
+		`id`, `probId`, `productCode`, `productSubCode`, `itemCode`, `itemModel`, `itemDesc`, 
+		`status`, `customInfo`, `createBy`, `createTime`, `updateBy`, `updateTime`
+	</sql>
+	<select id="selectProbProductById" parameterType="java.lang.Integer" resultType="com.dp.plat.prob.bean.ProbProduct">
+		select 
+		<include refid="ProbProduct_Column_List" />
+		from prob_product
+		where `id` = #{id}
+	</select>
+	<delete id="deleteProbProductById" parameterType="java.lang.Integer">
+		delete from prob_product
+		where `id` = #{id}
+	</delete>
+	<insert id="insertProbProduct" parameterType="com.dp.plat.prob.bean.ProbProduct">
+		<selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+		  SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into prob_product (`probId`, `productCode`, `productSubCode`, 
+		  `itemCode`, `itemModel`, `itemDesc`, 
+		  `status`, `customInfo`, `createBy`, 
+		  `createTime`, `updateBy`, `updateTime`
+		)
+		values (#{probId}, #{productCode}, #{productSubCode}, 
+		  #{itemCode}, #{itemModel}, #{itemDesc}, 
+		  #{status}, #{customInfo}, #{createBy}, 
+		  #{createTime}, #{updateBy}, #{updateTime}
+		)
+	</insert>
+	<insert id="insertProbProductSelective" parameterType="com.dp.plat.prob.bean.ProbProduct">
+		<selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into prob_product
+		<dynamic prepend=" " open="(" close=")">
+			<if test=" prepend="," probId> `probId` </if>
+			<if test=" prepend="," productCode> `productCode` </if>
+			<if test=" prepend="," productSubCode> `productSubCode` </if>
+			<if test=" prepend="," itemCode> `itemCode` </if>
+			<if test=" prepend="," itemModel> `itemModel` </if>
+			<if test=" prepend="," itemDesc> `itemDesc` </if>
+			<if test=" prepend="," status> `status` </if>
+			<if test=" prepend="," customInfo> `customInfo` </if>
+			<if test=" prepend="," createBy> `createBy` </if>
+			<if test=" prepend="," createTime> `createTime` </if>
+			<if test=" prepend="," updateBy> `updateBy` </if>
+			<if test=" prepend="," updateTime> `updateTime` </if>
+		</dynamic>
+		<dynamic prepend="values" open="(" close=")">
+			<if test=" prepend="," probId> #{probId} </if>
+			<if test=" prepend="," productCode> #{productCode} </if>
+			<if test=" prepend="," productSubCode> #{productSubCode} </if>
+			<if test=" prepend="," itemCode> #{itemCode} </if>
+			<if test=" prepend="," itemModel> #{itemModel} </if>
+			<if test=" prepend="," itemDesc> #{itemDesc} </if>
+			<if test=" prepend="," status> #{status} </if>
+			<if test=" prepend="," customInfo> #{customInfo} </if>
+			<if test=" prepend="," createBy> #{createBy} </if>
+			<if test=" prepend="," createTime> #{createTime} </if>
+			<if test=" prepend="," updateBy> #{updateBy} </if>
+			<if test=" prepend="," updateTime> #{updateTime} </if>
+		</dynamic>
+	</insert>
+	<update id="updateProbProductByIdSelective" parameterType="com.dp.plat.prob.bean.ProbProduct">
+		update prob_product
+		<dynamic prepend="SET">
+		    <if test=" prepend="," probId> `probId` = #{probId} </if>
+		    <if test=" prepend="," productCode> `productCode` = #{productCode} </if>
+		    <if test=" prepend="," productSubCode> `productSubCode` = #{productSubCode} </if>
+		    <if test=" prepend="," itemCode> `itemCode` = #{itemCode} </if>
+		    <if test=" prepend="," itemModel> `itemModel` = #{itemModel} </if>
+		    <if test=" prepend="," itemDesc> `itemDesc` = #{itemDesc} </if>
+		    <if test=" prepend="," status> `status` = #{status} </if>
+		    <if test=" prepend="," customInfo>
+	          <!-- customInfo = #customInfo:JSON#  -->
+	          customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+	        </if>
+		    <if test=" prepend="," createBy> `createBy` = #{createBy} </if>
+		    <if test=" prepend="," createTime> `createTime` = #{createTime} </if>
+		    <if test=" prepend="," updateBy> `updateBy` = #{updateBy} </if>
+		    <if test=" prepend="," updateTime> `updateTime` = #{updateTime} </if>
+		</dynamic>
+		where `id` = #{id}
+	</update>
+	<update id="updateProbProductById" parameterType="com.dp.plat.prob.bean.ProbProduct">
+		update prob_product
+		set `probId` = #{probId},
+			`productCode` = #{productCode},
+			`productSubCode` = #{productSubCode},
+			`itemCode` = #{itemCode},
+			`itemModel` = #{itemModel},
+			`itemDesc` = #{itemDesc},
+			`status` = #{status},
+			<!-- `customInfo` = #customInfo:JSON# -->
+			customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# ),
+			`createBy` = #{createBy},
+			`createTime` = #{createTime},
+			`updateBy` = #{updateBy},
+			`updateTime` = #{updateTime}
+		where `id` = #{id}
+	</update>
+	<sql id="sqlProbProduct_List">
+		<if test=" prepend="AND" id> pp.`id` = #{id} </if>
+		<if test=" prepend="AND" probId> pp.`probId` = #{probId} </if>
+		<if test=" prepend="AND" productCode> pp.`productCode` = #{productCode} </if>
+		<if test=" prepend="AND" productSubCode> pp.`productSubCode` = #{productSubCode} </if>
+		<if test=" prepend="AND" itemCode> pp.`itemCode` = #{itemCode} </if>
+		<if test=" prepend="AND" itemModel> pp.`itemModel` = #{itemModel} </if>
+		<if test=" prepend="AND" itemDesc> pp.`itemDesc` = #{itemDesc} </if>
+		<if test=" prepend="AND" status> pp.`status` = #{status} </if>
+		<if test=" prepend="AND" customInfo> pp.`customInfo` = #{customInfo} </if>
+		<if test=" prepend="AND" createBy> pp.`createBy` = #{createBy} </if>
+		<if test=" prepend="AND" createTime> pp.`createTime` = #{createTime} </if>
+		<if test=" prepend="AND" updateBy> pp.`updateBy` = #{updateBy} </if>
+		<if test=" prepend="AND" updateTime> pp.`updateTime` = #{updateTime} </if>
+	</sql>
+	<sql id="sqlProbProduct_model_List">
+		<if test=" prepend="AND" model>
+		    <if test=" prepend="AND" property="model.id"> pp.`id` = #model.id# </if>
+		    <if test=" prepend="AND" property="model.probId"> pp.`probId` = #model.probId# </if>
+		    <if test=" prepend="AND" property="model.productCode"> pp.`productCode` = #model.productCode# </if>
+		    <if test=" prepend="AND" property="model.productSubCode"> pp.`productSubCode` = #model.productSubCode# </if>
+		    <if test=" prepend="AND" property="model.itemCode"> pp.`itemCode` = #model.itemCode# </if>
+		    <if test=" prepend="AND" property="model.itemModel"> pp.`itemModel` = #model.itemModel# </if>
+		    <if test=" prepend="AND" property="model.itemDesc"> pp.`itemDesc` = #model.itemDesc# </if>
+		    <if test=" prepend="AND" property="model.status"> pp.`status` = #model.status# </if>
+		    <if test=" prepend="AND" property="model.customInfo"> pp.`customInfo` = #model.customInfo# </if>
+		    <if test=" prepend="AND" property="model.createBy"> pp.`createBy` = #model.createBy# </if>
+		    <if test=" prepend="AND" property="model.createTime"> pp.`createTime` = #model.createTime# </if>
+		    <if test=" prepend="AND" property="model.updateBy"> pp.`updateBy` = #model.updateBy# </if>
+		    <if test=" prepend="AND" property="model.updateTime"> pp.`updateTime` = #model.updateTime# </if>
+		</if>
+	    <if test=" prepend="AND" fuzzySearch>
+	        (
+	            pp.`probId` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`productCode` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`productSubCode` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`itemCode` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`itemModel` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`itemDesc` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`createBy` like CONCAT("%", #{fuzzy}, "%") or
+	            pp.`updateBy` like CONCAT("%", #{fuzzy}, "%")
+	        )
+	    </if>
+    </sql>
+	<sql id="sqlProbProduct_where">
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</sql>
+	<sql id="sqlProbProduct_model_where">
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_model_List" />
+		</dynamic>
+	</sql>
+	<sql id="sqlProbProduct_pageable_limit">
+		<if test=" displayParam>
+			<if test=" property="displayParam.sort"> order by $displayParam.sort$
+			</if>
+			<!-- <if test=" property="displayParam.sort"> order by id desc </if> -->
+			limit #displayParam.offset#, #displayParam.pagesize#
+		</if>
+	</sql>
+	<select id="selectProbProductList" parameterType="com.dp.plat.prob.bean.ProbProduct" resultType="com.dp.plat.prob.vo.ProbProductVO">
+		select * from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	<select id="countProbProductList" parameterType="com.dp.plat.prob.bean.ProbProduct" resultType="int">
+		select count(1) from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	<select id="selectProbProductListPageable" parameterType="com.dp.plat.prob.vo.ProbProductPageParam" resultType="com.dp.plat.prob.vo.ProbProductVO"> select * from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+		<include refid="sqlProbProduct_pageable_limit" />
+	</select>
+	<select id="countProbProductListPageable" parameterType="com.dp.plat.prob.vo.ProbProductPageParam" resultType="int">
+		select count(1) from prob_product AS `pp`
+		<dynamic prepend="where">
+			<include refid="sqlProbProduct_List" />
+		</dynamic>
+	</select>
+	
+	<select id="selectProbProductVOById" parameterType="java.lang.Integer" resultType="com.dp.plat.prob.vo.ProbProductVO">
+        select 
+        <include refid="ProbProduct_Column_List" />
+        from prob_product
+        where `id` = #{id}
+    </select>
+    <delete id="deleteProbProductByProbId" parameterType="java.lang.Integer">
+        delete from prob_product
+        where `probId` = #{probId}
+    </delete>
+    
+	<update id="updateProbProductByProbIdSelective" parameterType="com.dp.plat.prob.bean.ProbProduct">
+        update prob_product
+        <dynamic prepend="SET">
+            <if test=" prepend="," probId> `probId` = #{probId} </if>
+            <if test=" prepend="," productCode> `productCode` = #{productCode} </if>
+            <if test=" prepend="," productSubCode> `productSubCode` = #{productSubCode} </if>
+            <if test=" prepend="," itemCode> `itemCode` = #{itemCode} </if>
+            <if test=" prepend="," itemModel> `itemModel` = #{itemModel} </if>
+            <if test=" prepend="," itemDesc> `itemDesc` = #{itemDesc} </if>
+            <if test=" prepend="," status> `status` = #{status} </if>
+            <if test=" prepend="," customInfo>
+              <!-- customInfo = #customInfo:JSON#  -->
+              customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+            </if>
+            <if test=" prepend="," createBy> `createBy` = #{createBy} </if>
+            <if test=" prepend="," createTime> `createTime` = #{createTime} </if>
+            <if test=" prepend="," updateBy> `updateBy` = #{updateBy} </if>
+            <if test=" prepend="," updateTime> `updateTime` = #{updateTime} </if>
+        </dynamic>
+        WHERE probId = #{probId}
+    </update>
+    
+    <insert id="bastchInsertProbProduct" parameterType="map">
+        insert into prob_product (`probId`, `productCode`, `productSubCode`, 
+          `itemCode`, `itemModel`, `itemDesc`, 
+          `status`, `customInfo`, `createBy`, 
+          `createTime`, `updateBy`, `updateTime`
+        )
+        <iterate conjunction="," list prepend="values">
+        (IFNULL(#list[].probId#, #{probId}), #list[].productCode#, #list[].productSubCode#, 
+          #list[].itemCode#, #list[].itemModel#, #list[].itemDesc#, 
+          #list[].status#, #list[].customInfo#, #{createBy}, 
+          #{createTime}, #{updateBy}, #{updateTime}
+        )
+        </iterate>
+    </insert>
+    
+    <select id="selectProductItemListByParams" parameterType="map" resultType="com.dp.plat.prob.vo.ProbProductVO">
+        SELECT
+            item AS itemCode, itemName as itemModel, describe_ AS itemDesc 
+        FROM fb_items fi
+        <dynamic prepend="WHERE">
+            <if test=" prepend="AND" itemCode> fi.item LIKE CONCAT(#{itemCode}, "%") </if>
+            <if test=" prepend="AND" itemModel> fi.item LIKE CONCAT(#{itemModel}, "%") </if>
+            <if test=" prepend="AND" itemGroups>
+                <iterate itemGroups conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemGroups"/>
+                </iterate>
+            </if>
+            <if test=" prepend="AND" itemFilters>
+                <iterate itemFilters conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </if>
+        </dynamic>
+    </select>
+    
+    <select id="selectProductItemListByExample" parameterType="com.dp.plat.prob.util.ProductItemExample" resultType="com.dp.plat.prob.vo.ProbProductVO">
+        SELECT
+            item AS itemCode, itemName as itemModel, describe_ AS itemDesc 
+        FROM fb_items fi
+        <dynamic prepend="WHERE">
+            <if test=" prepend="AND" itemGroups>
+                <iterate itemGroups conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemGroups"/>
+                </iterate>
+            </if>
+            <if test=" prepend="AND" itemFilters>
+                <iterate itemFilters conjunction="OR" open="(" close=")">
+                    <include refid="sqlItemFilters"/>
+                </iterate>
+            </if>
+        </dynamic>
+    </select>
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="maintenance" name="维保管理流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="create" name="创建维保记录" flowable:assignee="${creator}" />
+    <userTask id="execute" name="执行维保" flowable:assignee="${executor}" />
+    <userTask id="confirm" name="确认完成" flowable:assignee="${confirmer}" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="create" />
+    <sequenceFlow id="flow2" sourceRef="create" targetRef="execute" />
+    <sequenceFlow id="flow3" sourceRef="execute" targetRef="confirm" />
+    <sequenceFlow id="flow4" sourceRef="confirm" targetRef="end" />
+  </process>
+</definitions>

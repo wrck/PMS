@@ -1,0 +1,2064 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="maintenance">
+    <!-- 项目维护记录 -->
+    <resultMap id="MaintenanceMap" type="com.dp.plat.maintenance.entity.ProjectMaintenance">
+	    <result column="id" jdbcType="INTEGER" id />
+	    <result column="projectId" jdbcType="INTEGER" projectId />
+	    <result column="projectCode" jdbcType="VARCHAR" projectCode />
+	    <result column="projectName" jdbcType="VARCHAR" projectName />
+	    <result column="projectType" jdbcType="INTEGER" projectType />
+	    <result column="projectExecutionState" jdbcType="VARCHAR" projectExecutionState />
+	    <result column="contractNo" jdbcType="VARCHAR" contractNo />
+	    <result column="officeCode" jdbcType="VARCHAR" officeCode />
+	    <result column="compId" jdbcType="INTEGER" compId />
+	    <result column="type" jdbcType="VARCHAR" type />
+	    <result column="category" jdbcType="VARCHAR" category />
+	    <result column="subCategory" jdbcType="VARCHAR" subCategory />
+	    <result column="processTime" jdbcType="TIMESTAMP" processTime />
+	    <result column="processDesc" jdbcType="VARCHAR" processDesc />
+	    <result column="processStep" jdbcType="VARCHAR" processStep />
+	    <result column="remainProblem" jdbcType="VARCHAR" remainProblem />
+	    <result column="transitHour" jdbcType="REAL" transitHour />
+	    <result column="processHour" jdbcType="REAL" processHour />
+	    <result column="itemModel" jdbcType="VARCHAR" itemModel />
+	    <result column="softVersion" jdbcType="VARCHAR" softVersion />
+	    <result column="enabledFeatures" jdbcType="VARCHAR" enabledFeatures />
+	    <result column="customTos" jdbcType="VARCHAR" customTos />
+	    <result column="customCcs" jdbcType="VARCHAR" customCcs />
+	    <result column="hasReport" jdbcType="BIT" hasReport />
+	    <result column="quesnaireId" jdbcType="INTEGER" quesnaireId />
+	    <result column="deliverFileIds" jdbcType="VARCHAR" deliverFileIds />
+	    <result column="remark" jdbcType="VARCHAR" remark />
+	    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+	    <result column="createBy" jdbcType="VARCHAR" createBy />
+	    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+	    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+	    <result column="warrantyStatus" jdbcType="VARCHAR" warrantyStatus />
+	    <result column="industryName" jdbcType="VARCHAR" industryName />
+	    <result column="userOffice" jdbcType="VARCHAR" userOffice />
+	    <result column="year" jdbcType="INTEGER" year />
+	    <result column="quarter" jdbcType="INTEGER" quarter />
+	    <result column="month" jdbcType="INTEGER" month />
+	    <result column="wsCount" jdbcType="INTEGER" wsCount />
+	    <result column="wafCount" jdbcType="INTEGER" wafCount />
+	    <result column="wsYearCount" jdbcType="INTEGER" wsYearCount />
+	    <result column="wafYearCount" jdbcType="INTEGER" wafYearCount />
+	    <result column="warrantyInfo" jdbcType="VARCHAR" warrantyInfo />
+	    <result column="serviceInfo" jdbcType="VARCHAR" serviceInfo />
+	    <result column="customInfo" jdbcType="VARCHAR" customInfo />
+    </resultMap>
+  <insert id="insertProjectMaintenance" parameterType="com.dp.plat.maintenance.entity.ProjectMaintenance">
+    insert into pm_project_maintenance (id, projectId, projectCode, 
+      projectName, projectType, projectExecutionState, contractNo, officeCode, type, 
+      category, subCategory, processTime, compId,
+      processDesc, processStep, remainProblem, transitHour, 
+      processHour, itemModel, softVersion, 
+      enabledFeatures, customTos, customCcs, hasReport, quesnaireId, 
+      deliverFileIds, remark, createTime, 
+      createBy, updateTime, updateBy,
+      warrantyStatus, industryName, userOffice,
+      year, quarter, month, wsCount, wafCount, wsYearCount, wafYearCount, warrantyInfo
+      , customInfo
+      )
+    values (#{id}, #{projectId}, #{projectCode}, 
+      #{projectName}, #{projectType}, #{projectExecutionState}, #{contractNo}, #{officeCode}, #{type}, 
+      #{category}, #{subCategory}, #{processTime}, #{compId},
+      #{processDesc}, #{processStep}, #{remainProblem}, #{transitHour}, 
+      #{processHour}, #{itemModel}, #{softVersion}, 
+      #{enabledFeatures}, #{customTos}, #{customCcs}, #{hasReport}, #{quesnaireId}, 
+      #{deliverFileIds}, #{remark}, #{createTime}, 
+      #{createBy}, #{updateTime}, #{updateBy},
+      #{warrantyStatus}, #{industryName}, #{userOffice},
+      #{year}, #{quarter}, #{month}, 
+      #{wsCount}, #{wafCount}, #{wsYearCount}, 
+      #{wafYearCount}, #{warrantyInfo}, #{serviceInfo}
+      , #{customInfo}
+      )
+    <selectKey resultType="int" type="post" keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  <insert id="insertProjectMaintenanceSelective" parameterType="com.dp.plat.maintenance.entity.ProjectMaintenance">
+    insert into pm_project_maintenance
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," id> id </if>
+      <if test=" prepend="," projectId> projectId </if>
+      <if test=" prepend="," projectCode> projectCode </if>
+      <if test=" prepend="," projectName> projectName </if>
+      <if test=" prepend="," projectType> projectType </if>
+      <if test=" prepend="," projectExecutionState> projectExecutionState </if>
+      <if test=" prepend="," contractNo> contractNo </if>
+      <if test=" prepend="," officeCode> officeCode </if>
+      <if test=" prepend="," compId> compId </if>
+      <if test=" prepend="," type> type </if>
+      <if test=" prepend="," category> category </if>
+      <if test=" prepend="," subCategory> subCategory </if>
+      <if test=" prepend="," processTime> processTime </if>
+      <if test=" prepend="," processDesc> processDesc </if>
+      <if test=" prepend="," processStep> processStep </if>
+      <if test=" prepend="," remainProblem> remainProblem </if>
+      <if test=" prepend="," transitHour> transitHour </if>
+      <if test=" prepend="," processHour> processHour </if>
+      <if test=" prepend="," itemModel> itemModel </if>
+      <if test=" prepend="," softVersion> softVersion </if>
+      <if test=" prepend="," enabledFeatures> enabledFeatures </if>
+      <if test=" prepend="," customTos> customTos </if>
+      <if test=" prepend="," customCcs> customCcs </if>
+      <if test=" prepend="," hasReport> hasReport </if>
+      <if test=" prepend="," quesnaireId> quesnaireId </if>
+      <if test=" prepend="," deliverFileIds> deliverFileIds </if>
+      <if test=" prepend="," remark> remark </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," warrantyStatus> warrantyStatus </if>
+      <if test=" prepend="," industryName> industryName </if>
+      <if test=" prepend="," userOffice> userOffice </if>
+      <if test=" prepend="," year> year </if>
+      <if test=" prepend="," quarter> quarter </if>
+      <if test=" prepend="," month> month </if>
+      <if test=" prepend="," wsCount> wsCount </if>
+      <if test=" prepend="," wafCount> wafCount </if>
+      <if test=" prepend="," wsYearCount> wsYearCount </if>
+      <if test=" prepend="," wafYearCount> wafYearCount </if>
+      <if test=" prepend="," warrantyInfo> warrantyInfo </if>
+      <if test=" prepend="," serviceInfo> serviceInfo </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <if test=" prepend="," id> #{id} </if>
+      <if test=" prepend="," projectId> #{projectId} </if>
+      <if test=" prepend="," projectCode> #{projectCode} </if>
+      <if test=" prepend="," projectName> #{projectName} </if>
+      <if test=" prepend="," projectType> #{projectType} </if>
+      <if test=" prepend="," projectExecutionState> #{projectExecutionState} </if>
+      <if test=" prepend="," contractNo> #{contractNo} </if>
+      <if test=" prepend="," officeCode> #{officeCode} </if>
+      <if test=" prepend="," compId> #{compId} </if>
+      <if test=" prepend="," type> #{type} </if>
+      <if test=" prepend="," category> #{category} </if>
+      <if test=" prepend="," subCategory> #{subCategory} </if>
+      <if test=" prepend="," processTime> #{processTime} </if>
+      <if test=" prepend="," processDesc> #{processDesc} </if>
+      <if test=" prepend="," processStep> #{processStep} </if>
+      <if test=" prepend="," remainProblem> #{remainProblem} </if>
+      <if test=" prepend="," transitHour> #{transitHour} </if>
+      <if test=" prepend="," processHour> #{processHour} </if>
+      <if test=" prepend="," itemModel> #{itemModel} </if>
+      <if test=" prepend="," softVersion> #{softVersion} </if>
+      <if test=" prepend="," enabledFeatures> #{enabledFeatures} </if>
+      <if test=" prepend="," customTos> #{customTos} </if>
+      <if test=" prepend="," customCcs> #{customCcs} </if>
+      <if test=" prepend="," hasReport> #{hasReport} </if>
+      <if test=" prepend="," quesnaireId> #{quesnaireId} </if>
+      <if test=" prepend="," deliverFileIds> #{deliverFileIds} </if>
+      <if test=" prepend="," remark> #{remark} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," warrantyStatus> #{warrantyStatus} </if>
+      <if test=" prepend="," industryName> #{industryName} </if>
+      <if test=" prepend="," userOffice> #{userOffice} </if>
+      <if test=" prepend="," year> #{year} </if>
+      <if test=" prepend="," quarter> #{quarter} </if>
+      <if test=" prepend="," month> #{month} </if>
+      <if test=" prepend="," wsCount> #{wsCount} </if>
+      <if test=" prepend="," wafCount> #{wafCount} </if>
+      <if test=" prepend="," wsYearCount> #{wsYearCount} </if>
+      <if test=" prepend="," wafYearCount> #{wafYearCount} </if>
+      <if test=" prepend="," warrantyInfo> #{warrantyInfo} </if>
+      <if test=" prepend="," serviceInfo> #{serviceInfo} </if>
+      <if test=" prepend="," customInfo> #{customInfo} </if>
+    </dynamic>
+    <selectKey resultType="int" type="post" keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  <select id="selectProjectMaintenanceById" parameterType="int" resultType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
+    select * from pm_project_maintenance
+    where id = #{id}
+    limit 1
+  </select>
+  <select id="selectProjectMaintenanceList" parameterType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO">
+    select m.* from pm_project_maintenance m
+        LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm 
+            ON m.`projectId` = pm.`projectId` 
+            AND pm.`memberRole` = '30' 
+            AND pm.`effectiveTo` IS NULL 
+            AND pm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm2 
+            ON m.`projectId` = pm2.`projectId` 
+            AND pm2.`memberRole` = '30' 
+            AND pm2.`effectiveTo` IS NULL 
+            AND pm2.`fromFlag` = 2 
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" prepend="AND" serviceManager> sm.memberCode = #{serviceManager} </if>
+        <if test=" prepend="AND" programManager> (pm.memberCode = #{programManager} or pm2.memberCode = #{programManager}) </if>
+        
+        <if test=" prepend="AND" userPower open="(" close=")">
+            (m.createBy = #{userPower}
+                or sm.memberCode = #{userPower} 
+                or pm.memberCode = #{userPower} 
+                or pm2.memberCode = #{userPower}
+                <if test=" prepend="or" checkServicePower compareValue="true">
+                    exists (
+                       select 
+                            1 
+                        from
+                            serviceManagerPower_$userPower$ ep 
+                        where ep.serviceCode = #{userPower}
+                            AND ep.programCode = m.`createBy`
+                    )
+                </if>
+            )
+            <if test=" prepend="OR" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if>
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+	    <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+	    <if test=" prepend="AND" month> m.month = #{month} </if>
+	    <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+	    <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+	    <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+	    <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+	    <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+	    <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+	    <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+  </select>
+  <select id="countProjectMaintenanceList" parameterType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultType="int">
+    select count(1) from pm_project_maintenance m
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm 
+            ON m.`projectId` = pm.`projectId` 
+            AND pm.`memberRole` = '30' 
+            AND pm.`effectiveTo` IS NULL 
+            AND pm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm2 
+            ON m.`projectId` = pm2.`projectId` 
+            AND pm2.`memberRole` = '30' 
+            AND pm2.`effectiveTo` IS NULL 
+            AND pm2.`fromFlag` = 2 
+    <if test=" hideFiles compareValue="false">
+        <!-- LEFT JOIN `fnd_files` ff
+            ON FIND_IN_SET(ff.id, m.`deliverFileIds`) -->
+        LEFT JOIN pm_basic_deliver_detail pd
+            ON pd.projectId = m.id AND pd.projectType = m.projectType + 1
+        <![CDATA[ AND now() < IFNULL(pd.effectiveTo, "9999-12-30") ]]>
+    </if>
+    <if test=" hideWarranty compareValue="true">
+        LEFT JOIN temp_project_warranty_state wcs
+            ON wcs.projectId = m.projectId
+            AND m.projectType = 10
+    </if>
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" prepend="AND" serviceManager> sm.memberCode = #{serviceManager} </if>
+        <if test=" prepend="AND" programManager> (pm.memberCode = #{programManager} or pm2.memberCode = #{programManager}) </if>
+        
+        <if test=" prepend="AND" userPower open="(" close=")">
+            (m.createBy = #{userPower}
+                or sm.memberCode = #{userPower} 
+                or pm.memberCode = #{userPower} 
+                or pm2.memberCode = #{userPower}
+                <if test=" prepend="or" checkServicePower compareValue="true">
+                    exists (
+                       select 
+                            1 
+                        from
+                            serviceManagerPower_$userPower$ ep 
+                        where ep.serviceCode = #{userPower}
+                            AND ep.programCode = m.`createBy`
+                    )
+                </if>
+            )
+            <if test=" prepend="OR" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+   
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if> 
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+        
+        <if test=" hideFiles compareValue="false">
+	        <if test=" prepend="AND" deliverFiles>
+	        (
+	            <!-- ff.fileType like concat("%", #{deliverFiles}, "%")
+	            or
+	            ff.fileName like concat("%", #{deliverFiles}, "%") -->
+	            
+	            pd.deliverableType like concat("%", #{deliverFiles}, "%")
+                or
+                pd.deliverableName like concat("%", #{deliverFiles}, "%")
+	        )
+	        </if>
+        </if>
+        
+        <if test=" hideWarranty compareValue="true">
+		    <if test=" prepend="AND" queryWarrantyStatus> wcs.warrantyStatus = #{queryWarrantyStatus} </if>
+		    <if test=" prepend="AND" queryWarrantyGrade> wcs.warrantyGrade = #{queryWarrantyGrade} </if>
+		    <if test=" prepend="AND" queryWafService> wcs.wafService = #{queryWafService} </if>
+        </if>
+    </dynamic>
+  </select>
+  
+  <insert id="insertOrUpdateProjectMaintenance" parameterType="com.dp.plat.maintenance.entity.ProjectMaintenance">
+    insert into pm_project_maintenance
+    <dynamic prepend=" " open="(" close=")">
+      <if test=" prepend="," id> id </if>
+      <if test=" prepend="," projectId> projectId </if>
+      <if test=" prepend="," projectCode> projectCode </if>
+      <if test=" prepend="," projectName> projectName </if>
+      <if test=" prepend="," projectType> projectType </if>
+      <if test=" prepend="," projectExecutionState> projectExecutionState </if>
+      <if test=" prepend="," contractNo> contractNo </if>
+      <if test=" prepend="," officeCode> officeCode </if>
+      <if test=" prepend="," compId> compId </if>
+      <if test=" prepend="," type> type </if>
+      <if test=" prepend="," category> category </if>
+      <if test=" prepend="," subCategory> subCategory </if>
+      <if test=" prepend="," processTime> processTime </if>
+      <if test=" prepend="," processDesc> processDesc </if>
+      <if test=" prepend="," processStep> processStep </if>
+      <if test=" prepend="," remainProblem> remainProblem </if>
+      <if test=" prepend="," transitHour> transitHour </if>
+      <if test=" prepend="," processHour> processHour </if>
+      <if test=" prepend="," itemModel> itemModel </if>
+      <if test=" prepend="," softVersion> softVersion </if>
+      <if test=" prepend="," enabledFeatures> enabledFeatures </if>
+      <if test=" prepend="," customTos> customTos </if>
+      <if test=" prepend="," customCcs> customCcs </if>
+      <if test=" prepend="," hasReport> hasReport </if>
+      <if test=" prepend="," quesnaireId> quesnaireId </if>
+      <if test=" prepend="," deliverFileIds> deliverFileIds </if>
+      <if test=" prepend="," remark> remark </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," warrantyStatus> warrantyStatus </if>
+      <if test=" prepend="," industryName> industryName </if>
+      <if test=" prepend="," userOffice> userOffice </if>
+      <if test=" prepend="," year> year </if>
+      <if test=" prepend="," quarter> quarter </if>
+      <if test=" prepend="," month> month </if>
+      <if test=" prepend="," wsCount> wsCount </if>
+      <if test=" prepend="," wafCount> wafCount </if>
+      <if test=" prepend="," wsYearCount> wsYearCount </if>
+      <if test=" prepend="," wafYearCount> wafYearCount </if>
+      <if test=" prepend="," warrantyInfo> warrantyInfo </if>
+      <if test=" prepend="," serviceInfo> serviceInfo </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <if test=" prepend="," id> #{id} </if>
+      <if test=" prepend="," projectId> #{projectId} </if>
+      <if test=" prepend="," projectCode> #{projectCode} </if>
+      <if test=" prepend="," projectName> #{projectName} </if>
+      <if test=" prepend="," projectType> #{projectType} </if>
+      <if test=" prepend="," projectExecutionState> #{projectExecutionState} </if>
+      <if test=" prepend="," contractNo> #{contractNo} </if>
+      <if test=" prepend="," officeCode> #{officeCode} </if>
+      <if test=" prepend="," compId> #{compId} </if>
+      <if test=" prepend="," type> #{type} </if>
+      <if test=" prepend="," category> #{category} </if>
+      <if test=" prepend="," subCategory> #{subCategory} </if>
+      <if test=" prepend="," processTime> #{processTime} </if>
+      <if test=" prepend="," processDesc> #{processDesc} </if>
+      <if test=" prepend="," processStep> #{processStep} </if>
+      <if test=" prepend="," remainProblem> #{remainProblem} </if>
+      <if test=" prepend="," transitHour> #{transitHour} </if>
+      <if test=" prepend="," processHour> #{processHour} </if>
+      <if test=" prepend="," itemModel> #{itemModel} </if>
+      <if test=" prepend="," softVersion> #{softVersion} </if>
+      <if test=" prepend="," enabledFeatures> #{enabledFeatures} </if>
+      <if test=" prepend="," customTos> #{customTos} </if>
+      <if test=" prepend="," customCcs> #{customCcs} </if>
+      <if test=" prepend="," hasReport> #{hasReport} </if>
+      <if test=" prepend="," quesnaireId> #{quesnaireId} </if>
+      <if test=" prepend="," deliverFileIds> #{deliverFileIds} </if>
+      <if test=" prepend="," remark> #{remark} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," warrantyStatus> #{warrantyStatus} </if>
+      <if test=" prepend="," industryName> #{industryName} </if>
+      <if test=" prepend="," userOffice> #{userOffice} </if>
+      <if test=" prepend="," year> #{year} </if>
+      <if test=" prepend="," quarter> #{quarter} </if>
+      <if test=" prepend="," month> #{month} </if>
+      <if test=" prepend="," wsCount> #{wsCount} </if>
+      <if test=" prepend="," wafCount> #{wafCount} </if>
+      <if test=" prepend="," wsYearCount> #{wsYearCount} </if>
+      <if test=" prepend="," wafYearCount> #{wafYearCount} </if>
+      <if test=" prepend="," warrantyInfo> #{warrantyInfo} </if>
+      <if test=" prepend="," serviceInfo> #{serviceInfo} </if>
+      <if test=" prepend="," customInfo> #{customInfo} </if>
+    </dynamic>
+    ON DUPLICATE KEY UPDATE
+    <dynamic prepend=" ">
+        <if test=" prepend="," projectId> projectId = VALUES(projectId) </if>
+        <if test=" prepend="," projectCode> projectCode = VALUES(projectCode) </if>
+        <if test=" prepend="," projectName> projectName = VALUES(projectName) </if>
+        <if test=" prepend="," projectType> projectType = VALUES(projectType) </if>
+        <if test=" prepend="," projectExecutionState> projectExecutionState = VALUES(projectExecutionState) </if>
+        <if test=" prepend="," contractNo> contractNo = VALUES(contractNo) </if>
+        <if test=" prepend="," officeCode> officeCode = VALUES(officeCode) </if>
+        <if test=" prepend="," compId> compId = VALUES(compId) </if>
+        <if test=" prepend="," type> type = VALUES(type) </if>
+        <if test=" prepend="," category> category = VALUES(category) </if>
+        <if test=" prepend="," subCategory> subCategory = VALUES(subCategory) </if>
+        <if test=" prepend="," processTime> processTime = VALUES(processTime) </if>
+        <if test=" prepend="," processDesc> processDesc = VALUES(processDesc) </if>
+        <if test=" prepend="," processStep> processStep = VALUES(processStep) </if>
+        <if test=" prepend="," remainProblem> remainProblem = VALUES(remainProblem) </if>
+        <if test=" prepend="," transitHour> transitHour = VALUES(transitHour) </if>
+        <if test=" prepend="," processHour> processHour = VALUES(processHour) </if>
+        <if test=" prepend="," itemModel> itemModel = VALUES(itemModel) </if>
+        <if test=" prepend="," softVersion> softVersion = VALUES(softVersion) </if>
+        <if test=" prepend="," enabledFeatures> enabledFeatures = VALUES(enabledFeatures) </if>
+        <if test=" prepend="," customTos> customTos = VALUES(customTos) </if>
+        <if test=" prepend="," customCcs> customCcs = VALUES(customCcs) </if>
+        <if test=" prepend="," hasReport> hasReport = VALUES(hasReport) </if>
+        <if test=" prepend="," quesnaireId> quesnaireId = VALUES(quesnaireId) </if>
+        <if test=" prepend="," deliverFileIds> deliverFileIds = VALUES(deliverFileIds) </if>
+        <if test=" prepend="," remark> remark = VALUES(remark) </if>
+        <if test=" prepend="," createTime> createTime = VALUES(createTime) </if>
+        <if test=" prepend="," updateTime> updateTime = VALUES(updateTime) </if>
+        <if test=" prepend="," updateBy> updateBy = VALUES(updateBy) </if>
+        <if test=" prepend="," warrantyStatus> warrantyStatus = VALUES(warrantyStatus) </if>
+        <if test=" prepend="," industryName> industryName = VALUES(industryName) </if>
+        <if test=" prepend="," userOffice> userOffice = VALUES(userOffice) </if>
+        <if test=" prepend="," year> year = VALUES(year) </if>
+	    <if test=" prepend="," quarter> quarter = VALUES(quarter) </if>
+	    <if test=" prepend="," month> month = VALUES(month) </if>
+	    <if test=" prepend="," wsCount> wsCount = VALUES(wsCount) </if>
+	    <if test=" prepend="," wafCount> wafCount = VALUES(wafCount) </if>
+	    <if test=" prepend="," wsYearCount> wsYearCount = VALUES(wsYearCount) </if>
+	    <if test=" prepend="," wafYearCount> wafYearCount = VALUES(wafYearCount) </if>
+	    <if test=" prepend="," warrantyInfo> warrantyInfo = VALUES(warrantyInfo) </if>
+	    <if test=" prepend="," serviceInfo> serviceInfo = VALUES(serviceInfo) </if>
+        <if test=" prepend="," customInfo> customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), VALUES(customInfo)) </if>
+    </dynamic>
+    <selectKey resultType="int" type="post" keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  
+  <select id="selectSingleProjectMaintenanceMaxId" parameterType="com.dp.plat.maintenance.entity.ProjectMaintenance" resultType="int">
+    SELECT IFNULL(MAX(id), 0) maxId FROM pm_project_maintenance 
+    WHERE projectId = #{projectId} AND projectType = #{projectType}
+    GROUP BY projectType, projectId
+  </select>
+  
+  <resultMap type="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" id="ProjectMaintenanceVO" extends="MaintenanceMap" groupBy="id">
+    <result column="officeName" jdbcType="VARCHAR" officeName />
+    <result column="typeName" jdbcType="VARCHAR" typeName />
+    <result quesnaireResultList column="id" resultMap="business.quesnaireResult"/>
+    <result deliverFileList column="id" resultMap="business.deliverFile"/>
+  </resultMap>
+  <resultMap type="java.util.HashMap" id="ProjectMaintenanceMap" extends="MaintenanceMap" groupBy="id">
+    <result column="officeName" jdbcType="VARCHAR" officeName />
+    <result column="typeName" jdbcType="VARCHAR" typeName />
+    <result quesnaireResultList column="id" resultMap="business.quesnaireResult"/>
+    <result deliverFileList column="id" resultMap="business.deliverFile"/>
+  </resultMap>
+  <resultMap type="java.util.HashMap" id="business.quesnaireResult">
+    <result name column="questionContent" />
+    <result result column="questionOptionsContent"/>
+  </resultMap>
+  <resultMap type="com.dp.plat.param.FileParam" id="business.deliverFile">
+    <result id column="fileId"/>
+    <result fileName column="fileName" />
+    <result filePath column="filePath"/>
+  </resultMap>
+  <!-- <select id="ProjectMaintenanceQuesnaireResultColumns" parameterType="string" resultType="java.util.HashMap">
+    SELECT DISTINCT 
+	    GROUP_CONCAT(
+	        DISTINCT CONCAT(
+	            'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+	                "questionResult", qrt.questionNum
+	            ), '`'
+	        )
+	    ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+	        CONCAT(
+	            "questionResult", qrt.questionNum
+	        ), "=", qrt.questionContent
+	    ) AS titles
+	FROM
+	    $quesType$_tempQuesnaireResultLineTable qrt 
+	GROUP BY qrt.`quesnaireResultHeaderId` 
+	ORDER BY qrt.`quesnaireResultHeaderId` DESC, maxCount DESC 
+	LIMIT 1
+  </select> -->
+  <select id="ProjectMaintenanceQuesnaireResultColumns" parameterType="string" resultType="java.util.HashMap">
+	SELECT 
+        GROUP_CONCAT(
+            DISTINCT CONCAT(
+                'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+                    "questionResult", @rowNo := @rowNo + 1
+                ), '`'
+            )
+        ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+            CONCAT("questionResult", @rowNo), "=", qrt.questionContent
+        ) AS titles 
+    FROM
+        (SELECT DISTINCT 
+            questionContent<!-- , questionOptionsContent  -->
+        FROM
+            $quesType$_tempQuesnaireResultLineTable
+        <dynamic prepend="where">
+           <if test=" resultType> questionType = #{resultType} </if>
+        </dynamic>
+        ) qrt, 
+        (SELECT 
+            @rowNo := 0) b
+  </select>
+ 
+  <select id="selectProjectMaintenanceVOList" parameterType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceVO" >
+    SELECT 
+	    m.*, d.`departmentName` AS officeName, d2.`departmentName` AS userOfficeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName,
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName,
+	    qrt.questionContent, qrt.questionOptionsContent,
+        ff.`id` AS fileId, ff.`fileName`, ff.`filePath`,
+        IFNULL(ph.column004, prh.`marketName`) AS marketName, IFNULL(ph.column005, prh.`systemName`) AS systemName, 
+        IFNULL(ph.column006, prh.`expendName`) AS expendName, IFNULL(m.industryName, IFNULL(ph.column007, prh.`industryName`)) AS industryName,
+        ph.column013 AS finalCustomName,
+        IFNULL(prh.salesman, CONCAT(
+                s.`memberCode`, "-", REPLACE(
+                    s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
+                )
+            )
+        ) AS salerName, c.name as companyName, c.abbr as companyAbbr
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN pm_project_header ph 
+            ON m.`projectId` = ph.`projectId` 
+            AND m.`projectType` = "10" 
+        LEFT JOIN pm_presales_project_header prh 
+            ON m.`projectId` = prh.`presalesId` 
+            AND m.`projectType` = "20" 
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm 
+	        ON m.`projectId` = pm.`projectId` 
+	        AND pm.`memberRole` = '30' 
+	        AND pm.`effectiveTo` IS NULL 
+	        AND pm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm2 
+	        ON m.`projectId` = pm2.`projectId` 
+	        AND pm2.`memberRole` = '30' 
+	        AND pm2.`effectiveTo` IS NULL 
+	        AND pm2.`fromFlag` = 2 
+	    LEFT JOIN `pm_project_member` s 
+	        ON s.`projectId` = m.`projectId` 
+	        AND s.`projectType` = m.`projectType` 
+	        AND m.`projectType` = "10" 
+	        AND s.`memberRole` = "10" 
+        AND s.`effectiveTo` IS NULL 
+	    LEFT JOIN projectMaintenance_tempQuesnaireResultLineTable qrt 
+            ON qrt.quesnaireResultHeaderId = m.`quesnaireId`
+	    LEFT JOIN `fnd_files` ff
+            ON FIND_IN_SET(ff.id, m.`deliverFileIds`)
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+            ON bd1.`basicDataId` = m.`category` 
+            AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON bd2.`basicDataId` = m.`subCategory` 
+            AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+        LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode` 
+	    LEFT JOIN fnd_department d2 
+            ON d2.`departmentNum` = m.`userOffice` 
+        LEFT JOIN fnd_company c 
+            ON c.`id` = m.`compId` 
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" prepend="AND" serviceManager> sm.memberCode = #{serviceManager} </if>
+        <if test=" prepend="AND" programManager> (pm.memberCode = #{programManager} or pm2.memberCode = #{programManager}) </if>
+        
+        <if test=" prepend="AND" userPower open="(" close=")">
+            (m.createBy = #{userPower}
+                or sm.memberCode = #{userPower} 
+                or pm.memberCode = #{userPower} 
+                or pm2.memberCode = #{userPower}
+                <if test=" prepend="or" checkServicePower compareValue="true">
+                    exists (
+                       select 
+                            1 
+                        from
+                            serviceManagerPower_$userPower$ ep 
+                        where ep.serviceCode = #{userPower}
+                            AND ep.programCode = m.`createBy`
+                    )
+                </if>
+            )
+            <if test=" prepend="OR" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if>
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+    ORDER BY m.id desc
+  </select>
+  
+  <!-- <select id="selectProjectMaintenanceMapList" parameterType="com.dp.plat.maintenance.vo.ProjectMaintenanceVO" resultMap="ProjectMaintenanceMap" remapResults="true">
+   -->
+  <select id="selectProjectMaintenanceMapList" parameterType="map" resultType="java.util.HashMap" remapResults="true">
+    SELECT 
+	    m.*, d.`departmentName` AS officeName, d2.`departmentName` AS userOfficeName, sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName, 
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName,
+        IFNULL(ph.column004, prh.`marketName`) AS marketName, IFNULL(ph.column005, prh.`systemName`) AS systemName, 
+        IFNULL(ph.column006, prh.`expendName`) AS expendName, IFNULL(m.industryName, IFNULL(ph.column007, prh.`industryName`)) AS industryName,
+        ph.column013 AS finalCustomerName,
+	    IFNULL(prh.salesman, CONCAT(
+	            s.`memberCode`, "-", REPLACE(
+	                s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
+	            )
+	        )
+	    ) AS salerName, c.name AS companyName, c.abbr as companyAbbr
+        <if test=" property="projectMaintenance.hideQuesnaire" compareValue="true" prepend=",">
+	        qrt.* 
+	    </if>
+	    <if test=" hideFiles compareValue="true" prepend=",">
+	        <!-- GROUP_CONCAT(
+		        CONCAT(ff.`id`, "$$", ff.`fileName`) SEPARATOR "||"
+		    ) AS deliverFiles,
+		    GROUP_CONCAT(ff.`fileType` SEPARATOR " | ") AS deliverTypes -->
+		    <!-- GROUP_CONCAT(
+                CONCAT(pd.`deliverablePath`, "$$", pd.`deliverableName`) SEPARATOR "||"
+            ) AS deliverFiles,
+            GROUP_CONCAT(pd.`deliverableType` SEPARATOR " | ") AS deliverTypes -->
+            pd.deliverFiles, pd.deliverTypes
+	    </if>
+	    <if test=" hideWarranty compareValue="true" prepend=",">
+             <!-- CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = - 1 THEN '维保内' 
+                ELSE 
+                CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = 0 THEN '部分保外' 
+                    ELSE 
+                    CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = 1 THEN '维保外' 
+                    ELSE NULL 
+                    END 
+                END 
+            END AS warrantyStatusName -->
+	        IFNULL(wcs.warrantyStatus, m.warrantyStatus) as warrantyStatus <!-- `warrantyState.warrantyStatus` -->, 
+	        CASE WHEN IFNULL(SUM(DISTINCT wcs.warrantyStatus), m.warrantyStatus) = - 1 THEN '维保内' 
+                ELSE 
+                CASE WHEN IFNULL(SUM(DISTINCT wcs.warrantyStatus), m.warrantyStatus) = 0 THEN '部分保外' 
+                    ELSE 
+                    CASE WHEN IFNULL(SUM(DISTINCT wcs.warrantyStatus), m.warrantyStatus) = 1 THEN '维保外' 
+                    ELSE NULL 
+                    END 
+                END 
+            END AS warrantyStatusName <!-- as `warrantyState.warrantyStatusName` -->
+	        , wcs.warrantyGrade <!-- as `warrantyState.warrantyGrade` -->, 
+	        wcs.warrantyGradeName <!-- as `warrantyState.warrantyGradeName` -->
+	        , wcs.wafService <!-- as `warrantyState.wafService` -->, 
+	        wcs.wafServiceName <!-- as `warrantyState.wafServiceName` -->
+        </if>
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN pm_project_header ph 
+	        ON m.`projectId` = ph.`projectId` 
+	        AND m.`projectType` = "10" 
+	    LEFT JOIN pm_presales_project_header prh 
+	        ON m.`projectId` = prh.`presalesId` 
+	        AND m.`projectType` = "20" 
+	    LEFT JOIN pm_project_member sm 
+            ON m.`projectId` = sm.`projectId` 
+            AND m.`projectType` = sm.`projectType` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm 
+	        ON m.`projectId` = pm.`projectId` 
+	        AND m.`projectType` = pm.`projectType` 
+	        AND pm.`memberRole` = '30' 
+	        AND pm.`effectiveTo` IS NULL 
+	        AND pm.`fromFlag` = 1 
+	    LEFT JOIN pm_project_member pm2 
+	        ON m.`projectId` = pm2.`projectId` 
+	        AND m.`projectType` = pm2.`projectType` 
+	        AND pm2.`memberRole` = '30' 
+	        AND pm2.`effectiveTo` IS NULL 
+	        AND pm2.`fromFlag` = 2 
+	    LEFT JOIN `pm_project_member` s 
+	        ON s.`projectId` = m.`projectId` 
+	        AND s.`projectType` = m.`projectType` 
+	        AND m.`projectType` = "10" 
+	        AND s.`memberRole` = "10" 
+	        AND s.`effectiveTo` IS NULL 
+	<if test=" property="projectMaintenance.hideQuesnaire" compareValue="true">
+	    LEFT JOIN projectMaintenance_tempQuesnaireResultTable qrt 
+	        ON qrt.quesnaireResultHeaderId = m.`quesnaireId` 
+    </if>
+    <if test=" hideFiles compareValue="true">
+	    <!-- LEFT JOIN `fnd_files` ff
+            ON FIND_IN_SET(ff.id, m.`deliverFileIds`) -->
+        <!-- LEFT JOIN pm_basic_deliver_detail pd
+            ON pd.projectId = m.id AND pd.projectType = m.projectType + 1
+        <![CDATA[ AND now() < IFNULL(pd.effectiveTo, "9999-12-30") ]]>  -->
+        LEFT JOIN 
+            (select 
+                projectId, projectType, 
+                GROUP_CONCAT(
+	                CONCAT(pd.`deliverablePath`, "$$", pd.`deliverableName`) SEPARATOR "||"
+	            ) AS deliverFiles,
+	            GROUP_CONCAT(pd.`deliverableType` SEPARATOR " | ") AS deliverTypes
+            from
+                pm_basic_deliver_detail pd 
+            where <![CDATA[ now() < IFNULL(pd.effectiveTo, "9999-12-30") ]]>
+            group by projectId, projectType) pd 
+            ON pd.projectId = m.id 
+            AND pd.projectType = m.projectType + 1 
+    </if>
+    <if test=" hideWarranty compareValue="true">
+        <!-- LEFT JOIN temp_maintenance_contractNo mc 
+            ON mc.id = m.id 
+        LEFT JOIN temp_warranty_state ws 
+            ON mc.`contractNo` = ws.contractNo  -->
+        LEFT JOIN temp_project_warranty_state wcs 
+            ON m.`projectId` = wcs.projectId 
+            AND m.projectType = 10
+    </if>
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+            ON bd1.`basicDataId` = m.`category` 
+            AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON bd2.`basicDataId` = m.`subCategory` 
+            AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+        LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode`
+	    LEFT JOIN fnd_department d2 
+            ON d2.`departmentNum` = m.`userOffice`
+        LEFT JOIN fnd_company c 
+            ON c.id = m.compId
+    <dynamic prepend="where">
+        <if test=" prepend="AND" property="projectMaintenance.id"> m.id = #projectMaintenance.id# </if>
+        <if test=" prepend="AND" property="projectMaintenance.projectId"> m.projectId = #projectMaintenance.projectId# </if>
+        <if test=" prepend="AND" property="projectMaintenance.projectCode"> m.projectCode like concat("%", #projectMaintenance.projectCode#, "%") </if>
+        <if test=" prepend="AND" property="projectMaintenance.projectName"> m.projectName like concat("%", #projectMaintenance.projectName#, "%") </if>
+        <if test=" prepend="AND" property="projectMaintenance.projectType"> m.projectType = #projectMaintenance.projectType# </if>
+        <if test=" prepend="AND" property="projectMaintenance.projectExecutionState"> m.projectExecutionState = #projectMaintenance.projectExecutionState# </if>
+        <if test=" prepend="AND" property="projectMaintenance.contractNo"> m.contractNo = #projectMaintenance.contractNo# </if>
+        <if test=" prepend="AND" property="projectMaintenance.officeCode"> m.officeCode = #projectMaintenance.officeCode# </if>
+        <if test=" prepend="AND" property="projectMaintenance.compId"> m.compId = #projectMaintenance.compId# </if>
+        <if test=" prepend="AND" property="projectMaintenance.type"> m.type = #projectMaintenance.type# </if>
+        <if test=" prepend="AND" property="projectMaintenance.category"> m.category = #projectMaintenance.category# </if>
+        <if test=" prepend="AND" property="projectMaintenance.subCategory"> m.subCategory = #projectMaintenance.subCategory# </if>
+        <if test=" prepend="AND" property="projectMaintenance.processTime"> m.processTime = #projectMaintenance.processTime# </if>
+        <if test=" prepend="AND" property="projectMaintenance.processDesc"> m.processDesc = #projectMaintenance.processDesc# </if>
+        <if test=" prepend="AND" property="projectMaintenance.processStep"> m.processStep = #projectMaintenance.processStep# </if>
+        <if test=" prepend="AND" property="projectMaintenance.remainProblem"> m.remainProblem = #projectMaintenance.remainProblem# </if>
+        <if test=" prepend="AND" property="projectMaintenance.transitHour"> m.transitHour = #projectMaintenance.transitHour# </if>
+        <if test=" prepend="AND" property="projectMaintenance.processHour"> m.processHour = #projectMaintenance.processHour# </if>
+        <if test=" prepend="AND" property="projectMaintenance.itemModel"> m.itemModel = #projectMaintenance.itemModel# </if>
+        <if test=" prepend="AND" property="projectMaintenance.softVersion"> m.softVersion = #projectMaintenance.softVersion# </if>
+        <if test=" prepend="AND" property="projectMaintenance.enabledFeatures"> m.enabledFeatures = #projectMaintenance.enabledFeatures# </if>
+        <if test=" prepend="AND" property="projectMaintenance.hasReport"> m.hasReport = #projectMaintenance.hasReport# </if>
+        <if test=" prepend="AND" property="projectMaintenance.quesnaireId"> m.quesnaireId = #projectMaintenance.quesnaireId# </if>
+        <if test=" prepend="AND" property="projectMaintenance.deliverFileIds"> m.deliverFileIds = #projectMaintenance.deliverFileIds# </if>
+        <if test=" prepend="AND" property="projectMaintenance.remark"> m.remark = #projectMaintenance.remark# </if>
+        <if test=" prepend="AND" property="projectMaintenance.createTime"> m.createTime = #projectMaintenance.createTime# </if>
+        <if test=" prepend="AND" property="projectMaintenance.createBy"> m.createBy = #projectMaintenance.createBy# </if>
+        <if test=" prepend="AND" property="projectMaintenance.updateTime"> m.updateTime = #projectMaintenance.updateTime# </if>
+        <if test=" prepend="AND" property="projectMaintenance.updateBy"> m.updateBy = #projectMaintenance.updateBy# </if>
+        
+        <if test=" prepend="AND" property="projectMaintenance.serviceManager"> sm.memberCode = #projectMaintenance.serviceManager# </if>
+        <if test=" prepend="AND" property="projectMaintenance.programManager"> (pm.memberCode = #projectMaintenance.programManager# or pm2.memberCode = #projectMaintenance.programManager#) </if>
+        
+        <if test=" prepend="AND" property="projectMaintenance.userPower" open="(" close=")">
+            (m.createBy = #projectMaintenance.userPower#
+                or sm.memberCode = #projectMaintenance.userPower# 
+                or pm.memberCode = #projectMaintenance.userPower# 
+                or pm2.memberCode = #projectMaintenance.userPower#
+                <if test=" prepend="or" property="projectMaintenance.checkServicePower" compareValue="true">
+                    exists (
+					   select 
+			                1 
+			            from
+			                serviceManagerPower_$projectMaintenance.userPower$ ep 
+			            where ep.serviceCode = #projectMaintenance.userPower#
+			                AND ep.programCode = m.`createBy`
+					)
+                </if>
+            )
+            <if test=" prepend="OR" property="projectMaintenance.areaPower"> FIND_IN_SET(m.officeCode, #projectMaintenance.areaPower#)</if>
+        </if>
+        <if test=" property="projectMaintenance.userPower">
+            <if test=" prepend="AND" property="projectMaintenance.areaPower"> FIND_IN_SET(m.officeCode, #projectMaintenance.areaPower#)</if>
+        </if>
+        
+        <if test=" prepend="AND" property="projectMaintenance.processStartTime"> <![CDATA[ m.processTime >= #projectMaintenance.processStartTime# ]]> </if>
+        <if test=" prepend="AND" property="projectMaintenance.processEndTime"> <![CDATA[ m.processTime <= #projectMaintenance.processEndTime# ]]> </if>
+        <if test=" prepend="AND" property="projectMaintenance.createStartTime"> <![CDATA[ m.createTime >= #projectMaintenance.createStartTime# ]]> </if>
+        <if test=" prepend="AND" property="projectMaintenance.createEndTime"> <![CDATA[ m.createTime <= #projectMaintenance.createEndTime# ]]> </if>
+    
+        <if test=" prepend="AND" property="projectMaintenance.warrantyStatus"> m.warrantyStatus = #projectMaintenance.warrantyStatus# </if>
+        <if test=" prepend="AND" property="projectMaintenance.industryName"> m.industryName = #projectMaintenance.industryName# </if>
+        <if test=" prepend="AND" property="projectMaintenance.userOffice"> m.userOffice = #projectMaintenance.userOffice# </if>
+        <if test=" prepend="AND" property="projectMaintenance.year"> m.year = #projectMaintenance.year# </if>
+        <if test=" prepend="AND" property="projectMaintenance.quarter"> m.quarter = #projectMaintenance.quarter# </if>
+        <if test=" prepend="AND" property="projectMaintenance.month"> m.month = #projectMaintenance.month# </if>
+        <if test=" prepend="AND" property="projectMaintenance.wsCount"> m.wsCount = #projectMaintenance.wsCount# </if>
+        <if test=" prepend="AND" property="projectMaintenance.wafCount"> m.wafCount = #projectMaintenance.wafCount# </if>
+        <if test=" prepend="AND" property="projectMaintenance.wsYearCount"> m.wsYearCount = #projectMaintenance.wsYearCount# </if>
+        <if test=" prepend="AND" property="projectMaintenance.wafYearCount"> m.wafYearCount = #projectMaintenance.wafYearCount# </if>
+        <if test=" prepend="AND" property="projectMaintenance.warrantyInfo"> m.warrantyInfo = #projectMaintenance.warrantyInfo# </if>
+        <if test=" prepend="AND" property="projectMaintenance.serviceInfo"> m.serviceInfo = #projectMaintenance.serviceInfo# </if>
+        <if test=" property="projectMaintenance.customInfo">
+            <iterate property="projectMaintenance.customInfo.iterator" >
+                <if test=" prepend="AND" property="projectMaintenance.customInfo.iterator[].value">
+                    #projectMaintenance.customInfo.iterator[].value# = m.customInfo ->> '$$.$projectMaintenance.customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+        
+        <if test=" hideFiles compareValue="true">
+            <if test=" prepend="AND" property="projectMaintenance.deliverFiles">
+                (
+                <!-- ff.fileType like concat("%", #projectMaintenance.deliverFiles#, "%")
+                or
+                ff.fileName like concat("%", #projectMaintenance.deliverFiles#, "%") -->
+                
+                <!-- pd.deliverableType like concat("%", #projectMaintenance.deliverFiles#, "%")
+                or
+                pd.deliverableName like concat("%", #projectMaintenance.deliverFiles#, "%") -->
+                
+                pd.deliverFiles like concat("%", #projectMaintenance.deliverFiles#, "%")
+                or
+                pd.deliverTypes like concat("%", #projectMaintenance.deliverFiles#, "%")
+                )
+            </if>
+        </if>
+        
+        <if test=" hideWarranty compareValue="true">
+	        <if test=" prepend="AND" property="projectMaintenance.queryWarrantyStatus"> wcs.warrantyStatus = #projectMaintenance.queryWarrantyStatus# </if>
+	        <if test=" prepend="AND" property="projectMaintenance.queryWarrantyGrade"> wcs.warrantyGrade = #projectMaintenance.queryWarrantyGrade# </if>
+	        <if test=" prepend="AND" property="projectMaintenance.queryWafService"> wcs.wafService = #projectMaintenance.queryWafService# </if>
+        </if>
+    </dynamic>
+    GROUP BY m.id
+    ORDER BY m.id desc
+    <if test=" property="displayParam.offset">
+        limit #displayParam.offset#, #displayParam.pagesize# 
+    </if>
+  </select>
+  
+  <select id="selectDailyMaintenanceMapListView" parameterType="map" resultType="java.util.HashMap">
+    SELECT * from pm_project_maintenance_view m
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #{currentTime}) BETWEEN 0 AND 23 ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </if> -->
+    	<if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(#{currentTime}, INTERVAL -1 DAY) AND #{currentTime} ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </if>
+        
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if>
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+    GROUP BY m.id
+  </select>
+  
+  <select id="selectDailyMaintenanceMapList" parameterType="map" resultType="java.util.HashMap">
+    SELECT
+	    m.*, IFNULL(
+	        CONCAT(m.createBy, "-", ui.realName), m.createBy
+	    ) AS createUser, bd.`basicDataName` AS typeName, bd3.`basicDataName` AS projectExecutionStateName, 
+	    CONCAT(IF(m.projectType = 40, '自定义', ''), bd1.`basicDataName`) AS categoryName, bd2.`basicDataName` AS subCategoryName, 
+	    IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) AS diff, 
+	    CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = -1 THEN '维保内'
+	    ELSE CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = 0 THEN '部分保外'
+	         ELSE CASE WHEN IFNULL(SUM(DISTINCT ws.diff), m.warrantyStatus) = 1 THEN '维保外' ELSE NULL END
+	         END
+	    END AS diffName,
+	    CASE
+	        WHEN m.projectType = 10 
+	        THEN CONCAT(
+	            s.`memberCode`, "-", REPLACE(
+	                s.`memberName`, CONCAT(s.`memberCode`, "-"), ""
+	            )
+	        ) 
+	        ELSE prh.salesman 
+	    END AS salerName, c.name AS companyName, c.abbr as companyAbbr,
+	    IFNULL(ph.column004, prh.`marketName`) AS marketName, IFNULL(ph.column005, prh.`systemName`) AS systemName, 
+	    IFNULL(ph.column006, prh.`expendName`) AS expendName, IFNULL(m.industryName, IFNULL(ph.column007, prh.`industryName`)) AS industryName,
+	    ph.column013 AS finalCustomName
+	FROM
+	    pm_project_maintenance m 
+	    LEFT JOIN pm_project_header ph 
+            ON m.`projectId` = ph.`projectId` 
+            AND m.`projectType` = "10" 
+	    LEFT JOIN temp_maintenance_contractNo mc 
+	        ON mc.id = m.id 
+	    LEFT JOIN temp_warranty_state ws 
+	        ON mc.`contractNo` = ws.contractNo 
+	    LEFT JOIN `pm_project_member` s 
+	        ON s.`projectId` = m.`projectId` 
+	        AND s.`projectType` = m.`projectType` 
+	        AND m.`projectType` = 10 
+	        AND s.`memberRole` = '10' 
+	        AND s.`effectiveTo` IS NULL 
+	    LEFT JOIN `pm_presales_project_header` prh 
+	        ON prh.`presalesId` = m.`projectId` 
+	        AND m.`projectType` = 20 
+	        AND prh.`effectiveTo` IS NULL 
+	    LEFT JOIN `fnd_user_info` ui 
+	        ON ui.`username` = m.`createBy` 
+	    LEFT JOIN `fnd_basic_data` bd 
+	        ON bd.`basicDataId` = m.`type` 
+	        AND bd.`dataTypeCode` = 'maintenanceType' 
+	    LEFT JOIN `fnd_basic_data` bd1 
+	        ON bd1.`basicDataId` = m.`category` 
+	        AND bd1.`dataTypeCode` = 'maintenanceCategory' 
+	    LEFT JOIN `fnd_basic_data` bd2 
+	        ON bd2.`basicDataId` = m.`subCategory` 
+	        AND bd2.`dataTypeCode` = 'maintenanceSubCategory' 
+	    LEFT JOIN `fnd_basic_data` bd3 
+            ON bd3.`basicDataId` = m.`projectExecutionState` 
+            AND bd3.`dataTypeCode` = 'projectExecutionState' 
+	    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = m.`officeCode` 
+	    LEFT JOIN fnd_company c 
+            ON c.id = m.compId
+	<dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #{currentTime}) BETWEEN 0 AND 23 ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </if> -->
+    	<if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(#{currentTime}, INTERVAL -1 DAY) AND #{currentTime} ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </if>
+        
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if>
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+	GROUP BY m.id
+  </select>
+  
+  <select id="selectDailyMaintenanceUsersView" parameterType="map" resultType="string">
+    SELECT DISTINCT createBy FROM `pm_project_maintenance_view` m
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #{currentTime}) BETWEEN 0 AND 23 ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </if> -->
+   		<if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(#{currentTime}, INTERVAL -1 DAY) AND #{currentTime} ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </if>
+   
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if> 
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+  </select>
+  
+  <select id="selectDailyMaintenanceUsers" parameterType="map" resultType="string">
+    SELECT DISTINCT createBy FROM `pm_project_maintenance` m
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> m.id = #{id} </if>
+        <if test=" prepend="AND" projectId> m.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> m.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> m.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" projectType> m.projectType = #{projectType} </if>
+        <if test=" prepend="AND" projectExecutionState> m.projectExecutionState = #{projectExecutionState} </if>
+        <if test=" prepend="AND" contractNo> m.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" officeCode> m.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> m.compId = #{compId} </if>
+        <if test=" prepend="AND" type> m.type = #{type} </if>
+        <if test=" prepend="AND" category> m.category = #{category} </if>
+        <if test=" prepend="AND" subCategory> m.subCategory = #{subCategory} </if>
+        <if test=" prepend="AND" processTime> m.processTime = #{processTime} </if>
+        <if test=" prepend="AND" processDesc> m.processDesc = #{processDesc} </if>
+        <if test=" prepend="AND" processStep> m.processStep = #{processStep} </if>
+        <if test=" prepend="AND" remainProblem> m.remainProblem = #{remainProblem} </if>
+        <if test=" prepend="AND" transitHour> m.transitHour = #{transitHour} </if>
+        <if test=" prepend="AND" processHour> m.processHour = #{processHour} </if>
+        <if test=" prepend="AND" itemModel> m.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" softVersion> m.softVersion = #{softVersion} </if>
+        <if test=" prepend="AND" enabledFeatures> m.enabledFeatures = #{enabledFeatures} </if>
+        <if test=" prepend="AND" hasReport> m.hasReport = #{hasReport} </if>
+        <if test=" prepend="AND" quesnaireId> m.quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" deliverFileIds> m.deliverFileIds = #{deliverFileIds} </if>
+        <if test=" prepend="AND" remark> m.remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> m.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> m.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> m.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> m.updateBy = #{updateBy} </if>
+        
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(m.officeCode, #{areaPower})</if>
+        </if>
+        
+        <if test=" prepend="AND" processStartTime> <![CDATA[ m.processTime >= #{processStartTime} ]]> </if>
+        <if test=" prepend="AND" processEndTime> <![CDATA[ m.processTime <= #{processEndTime} ]]> </if>
+        <if test=" prepend="AND" createStartTime> <![CDATA[ m.createTime >= #{createStartTime} ]]> </if>
+        <if test=" prepend="AND" createEndTime> <![CDATA[ m.createTime <= #{createEndTime} ]]> </if>
+        
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(m.createTime, now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), #{currentDate}) ]]> </if>
+        <if test=" prepend="AND" currentDate> <![CDATA[ 0 = DATEDIFF(IFNULL(m.updateTime, m.createTime), now()) ]]> </if> -->
+        <!-- <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, #{currentTime}) BETWEEN 0 AND 23 ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ TIMESTAMPDIFF(HOUR, m.createTime, now()) BETWEEN 0 AND 23 ]]> </if> -->
+        <if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(#{currentTime}, INTERVAL -1 DAY) AND #{currentTime} ]]> </if>
+        <if test=" prepend="AND" currentTime> <![CDATA[ m.createTime BETWEEN DATE_ADD(now(), INTERVAL -1 DAY) AND now() ]]> </if>
+   
+        <if test=" prepend="AND" warrantyStatus> m.warrantyStatus = #{warrantyStatus} </if>
+        <if test=" prepend="AND" industryName> m.industryName = #{industryName} </if>
+        <if test=" prepend="AND" userOffice> m.userOffice = #{userOffice} </if> 
+        <if test=" prepend="AND" year> m.year = #{year} </if>
+        <if test=" prepend="AND" quarter> m.quarter = #{quarter} </if>
+        <if test=" prepend="AND" month> m.month = #{month} </if>
+        <if test=" prepend="AND" wsCount> m.wsCount = #{wsCount} </if>
+        <if test=" prepend="AND" wafCount> m.wafCount = #{wafCount} </if>
+        <if test=" prepend="AND" wsYearCount> m.wsYearCount = #{wsYearCount} </if>
+        <if test=" prepend="AND" wafYearCount> m.wafYearCount = #{wafYearCount} </if>
+        <if test=" prepend="AND" warrantyInfo> m.warrantyInfo = #{warrantyInfo} </if>
+        <if test=" prepend="AND" serviceInfo> m.serviceInfo = #{serviceInfo} </if>
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = m.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+  </select>
+  
+  <select id="queryQuesnaireResultColumns" parameterType="map" resultType="java.util.HashMap">
+    SELECT 
+        GROUP_CONCAT(
+            DISTINCT CONCAT(
+                'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, '''')) AS `', CONCAT(
+                    "questionResult", @rowNo := @rowNo + 1
+                ), '`'
+            )
+        ) AS `columns`, COUNT(1) AS maxCount, GROUP_CONCAT(
+            CONCAT("questionResult", @rowNo), "=", qrt.questionContent
+        ) AS titles, CONCAT(
+	        "CONCAT(", GROUP_CONCAT(
+	            DISTINCT CONCAT(
+	                "'questionResult", @rowNo, "=', ", 'MAX(IF(qrt.questionContent = ''', qrt.questionContent, ''', qrt.questionOptionsContent, ''''))'
+	            ) SEPARATOR ",',',"
+	        ), ")"
+	    ) AS oneColumn
+    FROM
+        (SELECT DISTINCT 
+            questionContent<!-- , questionOptionsContent  -->
+        FROM
+            $quesType$_tempQuesnaireResultLineTable
+        <dynamic prepend="where">
+           <if test=" resultType> questionType = #{resultType} </if>
+        </dynamic>
+        ) qrt, 
+        (SELECT 
+            @rowNo := 0) b
+  </select>
+  
+  <!-- 临时表一次查询不能使用多次，用内存表替代 -->
+  <insert id="createTempQuesnaireResultLineTable" parameterType="string">
+    CREATE TEMPORARY TABLE IF NOT EXISTS $quesType$_tempQuesnaireResultLineTable (
+	    KEY id (id), KEY quesnaireId (quesnaireResultHeaderId), KEY quesnaireTemplateHeaderId (quesnaireTemplateHeaderId)
+	) <!-- ENGINE = HEAP  -->
+	SELECT 
+	    qrl.id, qrl.`quesnaireResultHeaderId`, qrl.`questionScore`, 
+	    qrl.`questionAnswer`, qtl.`quesnaireTemplateHeaderId`, 
+	    qtl.`questionType`, qtl.`questionTypeForCB`, 
+	    qtl.`questionNum`, qtl.`questionContent`, 
+	    <!-- qto.`questionOptionsContent`  -->
+	    IFNULL(qto.`questionOptionsContent`, qrl.questionAnswer) AS questionOptionsContent 
+	FROM
+	    `pm_cl_quesnaire_result_line` qrl 
+	    LEFT JOIN `pm_cl_quesnaire_template_line` qtl 
+	        ON qtl.`id` = qrl.`quesnaireTemplateLineId` 
+	    LEFT JOIN `pm_cl_quesnaire_template_header` qth 
+	        ON qtl.`quesnaireTemplateHeaderId` = qth.id 
+	    LEFT JOIN `pm_cl_quesnaire_template_options` qto 
+	        ON qto.`id` = qrl.`questionTemplateOptId`  
+	WHERE qth.quesType = #{quesType}
+	ORDER BY qrl.`quesnaireResultHeaderId`, qtl.`questionNum`
+  </insert>
+  
+  <delete id="deleteTempQuesnaireResultLineTable" parameterType="String">
+    DROP TABLE IF EXISTS $quesType$_tempQuesnaireResultLineTable;
+  </delete>
+  
+  <insert id="createTempQuesnaireResultTable" parameterType="map">
+    CREATE TEMPORARY TABLE IF NOT EXISTS $quesType$_tempQuesnaireResultTable (
+        KEY quesnaireResultHeaderId (quesnaireResultHeaderId)
+    )
+    SELECT
+        qrt.`quesnaireResultHeaderId` 
+        <if test=" tempType compareValue="oneColumn">
+            <if test=" prepend="," oneColumn> $oneColumn$ AS questionResults </if>
+        </if>
+        <if test=" tempType compareValue="oneColumn">
+	        <if test=" prepend="," columns> $columns$ </if>
+        </if>
+    FROM
+        $quesType$_tempQuesnaireResultLineTable qrt
+	GROUP BY qrt.`quesnaireResultHeaderId` 
+	ORDER BY quesnaireResultHeaderId ASC
+  </insert>
+  
+  <delete id="deleteTempQuesnaireResultTable" parameterType="String">
+    DROP TEMPORARY TABLE IF EXISTS $quesType$_tempQuesnaireResultTable;
+  </delete>
+  
+  <insert id="createTempMaintenanceContractNoTable">
+	<![CDATA[
+		CREATE TEMPORARY TABLE IF NOT EXISTS temp_maintenance_contractNo (
+		    KEY id (id), KEY contractNo (contractNo)
+		) 
+		SELECT DISTINCT 
+		    m.`id`, SUBSTRING_INDEX(
+		        SUBSTRING_INDEX(m.contractNo, ',', b.id + 1), ',', - 1
+		    ) AS contractNo 
+		FROM
+		    pm_project_maintenance m 
+		    LEFT JOIN FIND_IN_SET_HELP b 
+		        ON b.id < (
+		            LENGTH(m.contractNo) - LENGTH(REPLACE(m.contractNo, ',', '')) + 1
+		        ) 
+		WHERE m.`contractNo` > ''
+	]]>
+  </insert>
+  
+  <delete id="deleteTempMaintenanceContractNoTable">
+    DROP TEMPORARY TABLE IF EXISTS temp_maintenance_contractNo;
+  </delete>
+  
+  <insert id="createTempWarrantyStateTable">
+    <!-- <![CDATA[
+        CREATE TEMPORARY TABLE IF NOT EXISTS temp_warranty_state (KEY contractNo (contractNo)) AS
+		SELECT DISTINCT
+		    `contract_code` AS `contractNo`, IF(diff > 0, 1, IF (diff <= 0, - 1, NULL)) AS diff 
+		FROM
+		    `view_warranty`
+    ]]> -->
+    <![CDATA[
+        CREATE TEMPORARY TABLE IF NOT EXISTS temp_warranty_state (KEY contractNo (contractNo)) AS
+        SELECT 
+            *
+        FROM
+            `view_warranty_contract_state`
+    ]]>        
+  </insert>
+  
+  <delete id="deleteTempWarrantyStateTable">
+    DROP TEMPORARY TABLE IF EXISTS temp_warranty_state;
+  </delete>
+  
+  <sql id="selectProjectWarrantyState">
+    SELECT 
+        ph.`projectId`, ph.`projectCode`, ph.`projectName`, pg.projectType,
+        ph.`column001` as officeCode, fd.`departmentName` as officeName, c.name as companyName, c.abbr as companyAbbr,
+        ph.column004 AS marketName, ph.column005 AS systemName, 
+	    ph.column006 AS expendName, ph.column007 AS industryName,
+	    ph.column013 AS finalCustomerName, ph.compId,
+        group_concat(DISTINCT pc.contractNo) as contractNos,
+        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
+        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
+            IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',
+                IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 1, '维保外', NULL)
+            )
+        ) AS warrantyStatusName,
+        MIN(wcs.`warrantyStartTime`) AS warrantyStartTime,
+        MAX(wcs.`warrantyEndTime`) AS warrantyEndTime,
+        GROUP_CONCAT(DISTINCT CONCAT(wcs.contractNo, ":", wcs.warrantyStatusName, "(", DATE(wcs.`warrantyStartTime`), "~", DATE(wcs.`warrantyEndTime`), ")") SEPARATOR "\r\n") AS warrantyStatusDesc,
+        MAX(wcs.`warrantyGrade`) warrantyGrade, 
+        IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
+            IF(MAX(wcs.`warrantyGrade`) = 2, '中级维保',
+                IF(MAX(wcs.`warrantyGrade`) = 3, '高级维保', NULL)
+            )
+        ) AS warrantyGradeName,
+        MIN(wcs.`warrantyGradeStartTime`) warrantyGradeStartTime,
+        MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
+        IF(DATE(NOW()) >= MIN(wcs.`warrantyGradeStartTime`) AND MAX(wcs.`warrantyGradeEndTime`) >= DATE(NOW()), "true", "false") AS warrantyGradeEnable,
+        GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
+        IFNULL(MAX(wcs.`wafService`), 0) wafService,
+        IF(MAX(wcs.`wafService`) = 1, "策略调优服务", NULL) AS  wafServiceName,
+        MIN(wcs.`wafServiceStartTime`) wafServiceStartTime,
+        MAX(wcs.`wafServiceEndTime`) wafServiceEndTime,
+        IF(DATE(NOW()) >= MIN(wcs.`wafServiceStartTime`) AND MAX(wcs.`wafServiceEndTime`) >= DATE(NOW()), "true", "false") AS wafServiceEnable,
+        GROUP_CONCAT(DISTINCT CONCAT(wcs.itemDesc, "(", DATE(wcs.`wafServiceStartTime`), "~", DATE(wcs.`wafServiceEndTime`), ")") SEPARATOR "\r\n") AS warrantyServiceDesc
+    FROM
+        `pm_project_header` ph 
+        LEFT JOIN `pm_project_group_relationship` pgr 
+            on ph.`projectCode` = pgr.`projectCode` 
+        LEFT JOIN `pm_project_group` pg
+            on pg.`projectGroupCode` = pgr.`projectGroupCode` 
+        LEFT JOIN `pm_project_contract` pc 
+            on pc.`projectGroupCode` = pgr.`projectGroupCode` 
+        LEFT JOIN `view_warranty_contract_state` wcs 
+            on wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
+        LEFT JOIN fnd_department fd
+            on fd.`departmentNum` = ph.`column001`
+        LEFT JOIN fnd_company c force key(primary)
+            ON c.id = ph.compId
+    WHERE ph.`effectiveTo` is null 
+  </sql>
+  
+  <insert id="createTempProjectWarrantyStateTable" parameterType="map">
+    CREATE TEMPORARY TABLE IF NOT EXISTS temp_project_warranty_state (
+        KEY projectId (projectId),
+        KEY warrantyStatus(warrantyStatus),
+        KEY warrantyGrade(warrantyGrade),
+        KEY wafService(wafService)
+    ) AS
+    <include refid="selectProjectWarrantyState"/>
+    <if test=" prepend="AND" projectId> ph.projectId = #{projectId} </if>
+    GROUP BY ph.projectCode;
+  </insert>
+  
+  <delete id="deleteTempProjectWarrantyStateTable">
+    DROP TEMPORARY TABLE IF EXISTS temp_project_warranty_state;
+  </delete>
+  
+  <!-- 查询维保状态、维保级别、增值服务 -->
+  <select id="queryProjectWarrantyState" parameterType="int" resultType="java.util.HashMap">
+     <include refid="selectProjectWarrantyState"/>
+     AND ph.projectId = #{projectId};
+  </select>
+  
+  <select id="queryProjectMaintenanceDeliverCountByProjectDeliver" parameterType="com.dp.plat.data.bean.ProjectDeliver" resultType="int">
+        SELECT COUNT(1) FROM `pm_basic_prj_deliver` 
+        <dynamic prepend="where">
+            <if test=" prepend="AND" column011> column011 = #{column011} </if>
+            <if test=" prepend="AND" dataTypeCode> dataTypeCode = #{dataTypeCode} </if>
+            <if test=" prepend="AND" basicDataId> basicDataId = #{basicDataId} </if>
+            <if test=" prepend="AND" isNeed compareValue="0"> isNeed = #{isNeed} </if>
+	            AND id NOT IN( 
+	               SELECT deliverId FROM `pm_basic_deliver_detail` p 
+	               WHERE p.`projectId` = #{projectId} 
+                   <if test=" prepend="AND" projectType> p.`projectType` = #{projectType}  </if>
+                   <if test=" prepend="AND" deliverableType>  FIND_IN_SET(p.`deliverableType`, #{deliverableType})  </if>
+	        <![CDATA[
+	               AND effectiveFrom <= NOW() AND (effectiveTo > NOW() OR effectiveTo IS NULL)
+	            )
+	            AND effectiveFrom <= NOW() AND (effectiveTo > NOW() OR effectiveTo IS NULL)
+	        ]]>
+	        <if test=" prepend="and " column010>column010 = #{column010}</if>
+	        <if test=" prepend="and " column010>column010 is null</if>
+        </dynamic>
+  </select>
+  <select id="queryProjectMaintenanceServiceDeliveriedByProjectDeliver" parameterType="com.dp.plat.data.bean.ProjectDeliver" resultType="java.lang.Boolean">
+        SELECT 
+		    COUNT(distinct deliverId) = LENGTH(std.basicDataAttri1) - LENGTH(replace(std.basicDataAttri1, ",", "")) + 1 AS hasQuarterDeliveried
+		FROM
+		    `pm_project_maintenance` m 
+		    LEFT JOIN `pm_basic_deliver_detail` pd 
+		        ON m.`id` = pd.projectId 
+		        AND pd.`projectType` = m.`projectType` + 1 
+		    INNER JOIN `fnd_basic_data` std
+		        ON std.dataTypeCode = 'projectServiceDeliveryType' 
+		        AND FIND_IN_SET(pd.deliverId, std.basicDataAttri1)
+		WHERE m.projectId = #{projectId}
+		    AND std.basicDataId = #{eventKey}
+           <if test=" prepend="AND" uploadTime>
+               year(m.`processTime`) = year(IFNULL(#{uploadTime}, now())) 
+               AND quarter(m.`processTime`) = quarter(IFNULL(#{uploadTime}, now()))
+           </if>
+           <!-- <if test=" startDate>
+	           <if test=" endDate>
+	              AND m.processTime between #{startDate} and #{endDate}
+	           </if>
+	        </if> -->
+		GROUP BY m.`projectId`, m.projectType, dataTypeCode
+    </select>
+    
+    <select id="queryProjectMaintenanceServiceDeliveriedByMap" parameterType="map" resultType="java.lang.Boolean">
+        SELECT 
+            COUNT(distinct deliverId) = LENGTH(std.basicDataAttri1) - LENGTH(replace(std.basicDataAttri1, ",", "")) + 1 AS hasQuarterDeliveried
+        FROM
+            `pm_project_maintenance` m 
+            LEFT JOIN `pm_basic_deliver_detail` pd 
+                ON m.`id` = pd.projectId 
+                AND pd.`projectType` = m.`projectType` + 1 
+            INNER JOIN `fnd_basic_data` std
+                ON std.dataTypeCode = 'projectServiceDeliveryType' 
+                AND FIND_IN_SET(pd.deliverId, std.basicDataAttri1)
+        WHERE m.projectId = #{projectId}
+            AND std.basicDataId = #{serviceType}
+           <if test=" prepend="AND" maintenanceId> m.id = #{maintenanceId} </if>
+           <if test=" prepend="AND" serviceDate>
+               year(m.`processTime`) = year(IFNULL(#{serviceDate}, now())) 
+               AND quarter(m.`processTime`) = quarter(IFNULL(#{serviceDate}, now()))
+           </if>
+           <if test=" startDate>
+               <if test=" endDate>
+                  AND m.processTime between #{startDate} and #{endDate}
+               </if>
+           </if>
+        GROUP BY m.`projectId`, m.projectType, dataTypeCode
+    </select>
+  
+  <select id="queryProjectMaintenanceDeliverCount" parameterType="map" resultType="java.util.HashMap">
+    select 
+        <!-- 单季度多次上传算一次 -->
+        <!-- <if test=" mergeQuarterCount compareValue="true">
+		    count(*) as `count` 
+        </if>
+        <if test=" mergeQuarterCount compareValue="true">
+            sum(quarterCount) quarterCount
+        </if> -->
+        count(deliverId) as `count`, IFNULL(sum(quarterCount), 0) totalCount,
+        IFNULL(sum(if(year = year(IFNULL(#{serviceDate}, now())) and quarter = quarter(IFNULL(#{serviceDate}, now())), quarterCount, 0)), 0) as quarterCount
+	from
+	    (select 
+	        m.`id`, m.projectId, pd.deliverId, deliverableType, year(m.`processTime`) as year, quarter(processTime) as quarter, count(deliverId) as quarterCount 
+	    from
+	        `pm_project_maintenance` m 
+	        left join `fnd_basic_data` std
+                on std.dataTypeCode = 'projectServiceDeliveryType' 
+	        inner join `pm_basic_deliver_detail` pd 
+	            on m.`id` = pd.projectId 
+	            and pd.`projectType` = m.`projectType` + 1 
+	            and pd.deliverId = #{deliverId} 
+	    where m.projectId = #{projectId} 
+	    <if test=" startDate>
+	       <if test=" endDate>
+		      AND m.processTime between #{startDate} and #{endDate}
+	       </if>
+	    </if>
+	    group by m.`projectId`, m.projectType, year, quarter) t
+  </select>
+  
+  <insert id="insertProjectServiceDeliveryBySelective" parameterType="map">
+    <!-- <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey> -->
+    insert into pm_project_maintenance_service_delivery
+    <dynamic prepend=" " open="(" close=")">
+      <if test=" prepend="," maintenanceId> maintenanceId </if>
+      <if test=" prepend="," projectId> projectId </if>
+      <if test=" prepend="," projectType> projectType </if>
+      <if test=" prepend="," serviceType> serviceType </if>
+      <if test=" prepend="," processTime> processTime </if>
+      <if test=" prepend="," year> year </if>
+      <if test=" prepend="," quarter> quarter </if>
+      <if test=" prepend="," month> month </if>
+      <if test=" prepend="," deliveried> deliveried </if>
+      <if test=" prepend="," startDate> startDate </if>
+      <if test=" prepend="," endDate> endDate </if>
+      <if test=" prepend="," count> count </if>
+      <if test=" prepend="," yearCount> yearCount </if>
+      <if test=" prepend="," remark> remark </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+    </dynamic>
+    <dynamic prepend="values" open="(" close=")">
+      <if test=" prepend="," maintenanceId> #{maintenanceId} </if>
+      <if test=" prepend="," projectId> #{projectId} </if>
+      <if test=" prepend="," projectType> #{projectType} </if>
+      <if test=" prepend="," serviceType> #{serviceType} </if>
+      <if test=" prepend="," processTime> #{processTime} </if>
+      <if test=" prepend="," year> #{year} </if>
+      <if test=" prepend="," quarter> #{quarter} </if>
+      <if test=" prepend="," month> #{month} </if>
+      <if test=" prepend="," deliveried> #{deliveried} </if>
+      <if test=" prepend="," startDate> #{startDate} </if>
+      <if test=" prepend="," endDate> #{endDate} </if>
+      <if test=" prepend="," count> #{count} </if>
+      <if test=" prepend="," yearCount> #{yearCount} </if>
+      <if test=" prepend="," remark> #{remark} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+     </dynamic>
+  </insert>
+  
+  <select id="queryProjectMaintenanceServiceDeliveriedCount" parameterType="map" resultType="java.util.HashMap">
+    select 
+	    count(serviceType) as `count`, 
+	    IFNULL(sum(quarterCount), 0) totalCount, 
+	    IFNULL(sum(if(year = year(#{serviceDate}) and quarter = quarter(#{serviceDate}), quarterCount, 0)), 0) as quarterCount
+	from
+	    (select 
+	        m.`id`, m.projectId, serviceType, 
+	        year(IFNULL(pm.processTime, m.processTime)) as year, 
+	        quarter(IFNULL(pm.processTime, m.processTime)) as quarter, 
+	        sum(deliveried) as quarterCount 
+	    from
+	        `pm_project_maintenance_service_delivery` m 
+	        Left join pm_project_maintenance pm
+	           on pm.id = m.maintenanceId
+	    where m.projectId = #{projectId} 
+	       and m.`deliveried` = 1
+	    <if test=" prepend="AND" serviceType> m.`serviceType` = #{serviceType} </if>
+	    <if test=" startDate>
+           <if test=" endDate>
+              AND IFNULL(pm.processTime, m.processTime) between #{startDate} and #{endDate}
+           </if>
+        </if>
+	group by m.`projectId`, m.projectType, serviceType, year, quarter) t
+  </select>
+  
+  <sql id="sqlProjectServiceDeliver2">
+    SELECT 
+        std.basicDataId as serviceType, m.`id`, m.projectId, pd.deliverId, deliverableType, 
+        <!-- m.`year` as year, m.`quarter` as quarter,  -->
+        year(m.`processTime`) as year, quarter(m.`processTime`) as quarter,
+        count(deliverId) as quarterCount, <!-- count(deliverId) > 0 hasQuarterDeliveried  -->
+        count(distinct deliverId) = IFNULL(LENGTH(std.basicDataAttri1) - LENGTH(replace(std.basicDataAttri1, ",", "")), 0) + 1 as hasQuarterDeliveried,
+        LENGTH(std.basicDataAttri1) - LENGTH(replace(std.basicDataAttri1, ",", "")) + 1 as deliverTypeNeedCount
+    FROM
+        `pm_project_maintenance` m 
+        LEFT JOIN `pm_basic_deliver_detail` pd 
+            ON m.`id` = pd.projectId 
+            AND pd.`projectType` = m.`projectType` + 1 
+        INNER JOIN `fnd_basic_data` std
+            ON std.dataTypeCode = 'projectServiceDeliveryType' 
+            <!-- AND pd.deliverId = std.basicDataAttri1  -->
+            AND FIND_IN_SET(pd.deliverId, std.basicDataAttri1)
+    WHERE <!-- m.`year` = year(IFNULL(#{serviceDate}, now())) 
+        and m.`quarter` = quarter(IFNULL(#{serviceDate}, now()))  -->
+        year(m.`processTime`) = year(IFNULL(#{serviceDate}, now())) 
+        AND quarter(m.`processTime`) = quarter(IFNULL(#{serviceDate}, now()))
+    GROUP BY m.`projectId`, m.projectType, serviceType
+  </sql>
+  <sql id="sqlProjectServiceDeliver">
+    SELECT 
+	    serviceType as serviceType, m.id, m.`maintenanceId`, m.projectId, m.projectType, 
+	    year(IFNULL(pm.processTime, m.processTime)) as year, 
+	    quarter(IFNULL(pm.processTime, m.processTime)) as quarter, 
+	    month(IFNULL(pm.processTime, m.processTime)) as month, 
+	    sum(deliveried) as quarterCount, sum(distinct deliveried) as hasQuarterDeliveried 
+	FROM
+	    `pm_project_maintenance_service_delivery` m 
+	    left join pm_project_maintenance pm
+            on m.`maintenanceId` = pm.`id`
+	WHERE year(IFNULL(pm.processTime, m.processTime)) = year(IFNULL(#{serviceDate}, now())) 
+        AND quarter(IFNULL(pm.processTime, m.processTime)) = quarter(IFNULL(#{serviceDate}, now()))
+        AND IFNULL(pm.processTime, m.processTime) BETWEEN m.startDate AND m.endDate
+	GROUP BY m.`projectId`, m.projectType, serviceType
+  </sql>
+  
+  <sql id="sqlProjectMaintenanceServiceDeliveryWhere">
+    <if test=" serviceTypes>
+        <!-- LEFT JOIN (
+            <iterate serviceTypes conjunction=" UNION ALL ">
+                SELECT #serviceTypes[]# as serviceType
+            </iterate>
+        ) st
+        ON 1 = 1 -->
+        LEFT JOIN (SELECT 
+                <!-- dataTypeCode, --> basicDataId as serviceType, basicDataAttri1 as deliverId 
+	        FROM
+	            `fnd_basic_data` 
+	        WHERE dataTypeCode = 'projectServiceDeliveryType') st
+            ON 1 = 1 <!-- st.dataTypeCode = 'projectServiceDeliveryType'  -->
+    </if>
+    <if test=" hasQuarterDeliveried>
+        LEFT JOIN (<include refid="sqlProjectServiceDeliver" />) sd
+        ON sd.projectId = wcs.projectId AND sd.serviceType = st.serviceType
+    </if>
+    <if test=" joinProjectMembers>
+        LEFT JOIN pm_project_member sm 
+            ON wcs.`projectId` = sm.`projectId` 
+            AND wcs.`projectType` = sm.`projectType` 
+            AND sm.`memberRole` = '20' 
+            AND sm.`effectiveTo` IS NULL 
+            AND sm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm 
+            ON wcs.`projectId` = pm.`projectId` 
+            AND wcs.`projectType` = pm.`projectType` 
+            AND pm.`memberRole` = '30' 
+            AND pm.`effectiveTo` IS NULL 
+            AND pm.`fromFlag` = 1 
+        LEFT JOIN pm_project_member pm2 
+            ON wcs.`projectId` = pm2.`projectId` 
+            AND wcs.`projectType` = pm2.`projectType` 
+            AND pm2.`memberRole` = '30' 
+            AND pm2.`effectiveTo` IS NULL 
+            AND pm2.`fromFlag` = 2 
+        LEFT JOIN `pm_project_member` s 
+            ON s.`projectId` = wcs.`projectId` 
+            AND s.`projectType` = wcs.`projectType` 
+            AND s.`memberRole` = "10" 
+            AND s.`effectiveTo` IS NULL 
+    </if>
+    <dynamic prepend="where">
+        <if test=" prepend="AND" serviceTypes>
+            <iterate serviceTypes open="(" close=")" conjunction=" or ">
+                <if test=" serviceQuarter compareValue="true">
+	                <if test=" serviceDate >
+	                (
+	                    #{serviceDate} between wcs.`$serviceTypes[]$StartTime` 
+	                    and wcs.`$serviceTypes[]$EndTime` 
+	                    and st.serviceType = #serviceTypes[]#
+	                )
+	                </if>
+                </if>
+                <if test=" serviceQuarter compareValue="true">
+                    <if test=" serviceDate >
+		                <!-- <![CDATA[
+		                (
+		                    #{serviceQuarter} >= CONCAT(YEAR(wcs.`$serviceTypes[]$StartTime`), QUARTER(wcs.`$serviceTypes[]$StartTime`))
+		                    AND #{serviceQuarter} <= CONCAT(YEAR(wcs.`$serviceTypes[]$EndTime`), QUARTER(wcs.`$serviceTypes[]$EndTime`))
+		                    AND st.serviceType = #serviceTypes[]#
+		                )
+		                ]]> -->
+		                <![CDATA[
+                        (
+                            CONCAT(YEAR(#{serviceDate}), QUARTER(#{serviceDate})) >= CONCAT(YEAR(wcs.`$serviceTypes[]$StartTime`), QUARTER(wcs.`$serviceTypes[]$StartTime`))
+                            AND CONCAT(YEAR(#{serviceDate}), QUARTER(#{serviceDate})) <= CONCAT(YEAR(wcs.`$serviceTypes[]$EndTime`), QUARTER(wcs.`$serviceTypes[]$EndTime`))
+                            AND st.serviceType = #serviceTypes[]#
+                        )
+                        ]]>
+	                </if>
+                </if>
+            </iterate>
+            <if test=" prepend="AND" serviceType> st.serviceType = #{serviceType} </if>
+        </if>
+        <if test=" prepend="AND" warrantyGradeDate>
+            DATE(#{warrantyGradeDate}) BETWEEN wcs.`warrantyGradeStartTime` AND wcs.`warrantyGradeEndTime`
+        </if>
+        <if test=" prepend="AND" wafServiceDate>
+            DATE(#{wafServiceDate}) BETWEEN wcs.`wafServiceStartTime` AND wcs.`wafServiceEndTime`
+        </if>
+        
+        <if test=" prepend="AND" projectId> wcs.projectId = #{projectId} </if>
+        <if test=" prepend="AND" projectCode> wcs.projectCode like concat("%", #{projectCode}, "%") </if>
+        <if test=" prepend="AND" projectName> wcs.projectName like concat("%", #{projectName}, "%") </if>
+        <if test=" prepend="AND" contractNo> wcs.contractNos like concat("%", #{contractNo}, "%") </if>
+        <if test=" prepend="AND" officeCode> wcs.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" compId> wcs.compId = #{compId} </if>
+        
+        <if test=" prepend="AND" serviceManager> sm.memberCode = #{serviceManager} </if>
+        <if test=" prepend="AND" programManager> (pm.memberCode = #{programManager} or pm2.memberCode = #{programManager}) </if>
+        
+        <if test=" prepend="AND" userPower open="(" close=")">
+            (sm.memberCode = #{userPower} 
+                or pm.memberCode = #{userPower} 
+                or pm2.memberCode = #{userPower}
+                <if test=" prepend="or" checkServicePower compareValue="true">
+                    exists (
+                       select 
+                            1 
+                        from
+                            serviceManagerPower_$userPower$ ep 
+                        where ep.serviceCode = #{userPower}
+                            AND ep.programCode = wcs.`createBy`
+                    )
+                </if>
+            )
+            <if test=" prepend="OR" areaPower> FIND_IN_SET(wcs.officeCode, #{areaPower})</if>
+        </if>
+        <if test=" userPower>
+            <if test=" prepend="AND" areaPower> FIND_IN_SET(wcs.officeCode, #{areaPower})</if>
+        </if>
+        
+        <if test=" prepend="AND" queryWarrantyStatus> wcs.warrantyStatus = #{queryWarrantyStatus} </if>
+        <if test=" prepend="AND" queryWarrantyGrade> wcs.warrantyGrade = #{queryWarrantyGrade} </if>
+        <if test=" prepend="AND" queryWafService> wcs.wafService = #{queryWafService} </if>
+        <if test=" prepend="AND" hasQuarterDeliveried> #{hasQuarterDeliveried} = IFNULL(sd.hasQuarterDeliveried, FALSE) </if>
+        
+        <!-- <if test="  prepend="AND" serviceTypes>
+            <if test=" serviceType >
+                <if test=" prepend="AND" serviceDate>
+                (
+                    (DATE(#{serviceDate}) BETWEEN wcs.`warrantyGradeStartTime` AND wcs.`warrantyGradeEndTime`)
+                    or
+                    (DATE(#{serviceDate}) BETWEEN wcs.`wafServiceStartTime` AND wcs.`wafServiceEndTime`)
+                </if>
+            </if>
+            <if test=" serviceType compareValue="warrantyGrade">
+                <if test=" prepend="AND" serviceDate>
+                    DATE(#{serviceDate}) BETWEEN wcs.`warrantyGradeStartTime` AND wcs.`warrantyGradeEndTime`
+                </if>
+            </if>
+            <if test=" serviceType compareValue="wafService">
+                <if test=" prepend="AND" serviceDate>
+                    DATE(#{serviceDate}) BETWEEN wcs.`wafServiceStartTime` AND wcs.`wafServiceEndTime`
+                </if>
+            </if>
+        </if> -->
+    </dynamic>
+    <!-- <if test=" joinProjectMembers>
+        group by wcs.projectType, wcs.projectId, wcs.serviceType
+    </if> -->
+  </sql>
+  
+  <select id="countProjectMaintenanceServiceDeliveryMapList" parameterType="map" resultType="java.lang.Integer">
+    select count(*) from temp_project_warranty_state wcs
+    <include refid="sqlProjectMaintenanceServiceDeliveryWhere"/>
+  </select>
+  
+  <select id="selectProjectMaintenanceServiceDeliveryMapList" parameterType="map" resultType="java.util.HashMap" remapResults="true">
+    SELECT wcs.*
+    <if test=" prepend="," serviceTypes>
+        st.*
+    </if>
+    <if test=" prepend="," joinProjectMembers>
+        sm.`memberName` as serviceManager, pm.`memberName` as programManagerA, pm2.`memberName` as programManagerB,
+        CONCAT(s.`memberCode`, "-", REPLACE(s.`memberName`, CONCAT(s.`memberCode`, "-"), "")) AS salerName 
+    </if>
+    <if test=" prepend="," hasQuarterDeliveried>
+        IFNULL(sd.hasQuarterDeliveried, false) AS hasQuarterDeliveried
+    </if>
+    FROM temp_project_warranty_state wcs
+    <include refid="sqlProjectMaintenanceServiceDeliveryWhere"/>
+    order by officeCode, projectType, projectId
+    <if test=" property="displayParam.offset">
+        limit #displayParam.offset#, #displayParam.pagesize# 
+    </if>
+  </select>
+  
+  <statement id="createTempServicePowerTable" parameterType="String">
+    <!-- 创建服务经理部门关系表 -->
+    CREATE TEMPORARY TABLE IF NOT EXISTS smDpNo_$userPower$
+	SELECT 
+	    ui.`username` as serviceCode, ui.`realName` as serviceName, fd.`departmentNum` AS `smDpNo`, CONCAT(
+	        ui.dpNo, ",", IFNULL(up.`areapower`, '')
+	    ) AS smAreapower, fd.`departmentName` as smDpName, roleIds AS smRoleIds
+	FROM
+	    `fnd_user_info` ui 
+	    LEFT JOIN `fnd_user_power` up 
+	        ON ui.`id` = up.`fndUserId` 
+	    LEFT JOIN `fnd_department` fd 
+	        ON fd.`isparam` 
+	        and (
+	            fd.`departmentNum` = ui.`dpNo` 
+	            OR FIND_IN_SET(
+	                fd.`departmentNum`, up.`areapower`
+	            )
+	        ) 
+	WHERE roleIds LIKE "%;11;%" 
+    <isParameterPresent prepend="AND"> ui.username = #{userPower} </isParameterPresent>
+	;
+	
+	<!-- 创建服务经理、项目经理部门关系表 -->
+	CREATE TEMPORARY TABLE IF NOT EXISTS smAndPmDpNo_$userPower$
+	SELECT 
+	    ui.`username` as programCode, ui.`realName` programName, fd.`departmentNum` AS `pmDpNo`, CONCAT(
+	        ui.dpNo, ",", IFNULL(up.`areapower`, '')
+	    ) AS pmAreapower, fd.`departmentName` as pmDpName, roleIds AS pmRoleIds 
+	FROM
+	    `fnd_user_info` ui 
+	    LEFT JOIN `fnd_user_power` up 
+	        ON ui.`id` = up.`fndUserId` 
+	    LEFT JOIN `fnd_department` fd 
+	        ON fd.`isparam` 
+	        and (
+	            fd.`departmentNum` = ui.`dpNo` 
+	            OR FIND_IN_SET(
+	                fd.`departmentNum`, up.`areapower`
+	            )
+	        ) 
+	WHERE (
+	        roleIds LIKE "%;12;%" 
+	        OR roleIds LIKE "%;11;%"
+	    )
+	    <!-- <isParameterPresent prepend="AND"> ui.username = #{userPower} </isParameterPresent> -->
+	;
+	
+	<!-- 服务经理所具有的服务经理和项目经理人员对应关系 -->
+	CREATE TEMPORARY TABLE IF NOT EXISTS serviceManagerPower_$userPower$ (
+	    key dpNo (smDpNo), 
+	    key serviceCode (serviceCode, programCode), 
+	    key programCode (programCode)
+	) 
+	SELECT 
+	    *
+	FROM
+	    smDpNo_$userPower$ sm 
+	    LEFT JOIN smAndPmDpNo_$userPower$ pm 
+	        ON sm.smDpNo = pm.pmDpNo 
+	<dynamic prepend="where">
+	   <isParameterPresent prepend="AND"> sm.serviceCode = #{userPower} </isParameterPresent>
+	</dynamic>
+	;
+  </statement>
+  
+  <statement id="deleteTempServicePowerTable" parameterType="string">
+    DROP TEMPORARY TABLE IF EXISTS smDpNo_$userPower$;
+    DROP TEMPORARY TABLE IF EXISTS smAndPmDpNo_$userPower$;
+    DROP TEMPORARY TABLE IF EXISTS serviceManagerPower_$userPower$;
+  </statement>
+  
+  <select id="queryDepartmentSectary" parameterType="java.util.Map" resultType="java.util.HashMap" remapResults="true">
+  	SELECT 
+	    ui.`username`, ui.`realName`, ui.`dpNo`, d.`departmentName`, 
+	    IFNULL(ve.`depLV2Code`, ve.`depLV1Code`) AS depCode, ve.`depAllName`, 
+	    e.`workNo` AS sectary, e.`name` AS sectaryName, e.`email` AS sectaryEmail, e.`mobile` AS sectaryPhone,
+	    ms.`sectary` AS sectary1, ms2.`sectary` AS sectary2
+	FROM
+	    `fnd_user_info` ui 
+	    LEFT JOIN `pm_project_maintenance_sectary_from_sse` ms 
+	        ON ms.`depNum` = LEFT(ui.`dpNo`, 6)
+	    LEFT JOIN `fnd_department` d 
+	        ON d.`departmentNum` = ui.`dpNo` 
+	    LEFT JOIN view_ehr_employee ve 
+	        ON ve.`workNo` = RIGHT(ui.`username`, 5) 
+	    LEFT JOIN `pm_project_maintenance_sectary_from_sse` ms2 
+	        ON ms2.`depNum` = IFNULL(ve.`depLV2Code`, ve.`depLV1Code`) 
+	    LEFT JOIN ehr_employee e
+		ON e.`workNo` = IFNULL(ms.`sectary`, ms2.`sectary` )
+	WHERE ui.`status` = 1
+	<if test=" prepend="AND" username> ui.username = #{username} </if>
+  </select>
+</mapper>

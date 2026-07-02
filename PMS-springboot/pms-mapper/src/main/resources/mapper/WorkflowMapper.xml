@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+ 
+<!-- 自定义activity 查询 --> 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper>
+	<typeAlias alias="Procdef" type="com.dp.plat.data.activity.Procdef"/>
+	<resultMap type="Procdef" id="ProcdefOne">
+		<result id column="ID_"/> 
+		<result name column="NAME_"/> 
+		<result deploymentId column="DEPLOYMENT_ID_"/> 
+		<result resourceName column="RESOURCE_NAME_"/> 
+		<result dgrmResouceName column="DGRM_RESOURCE_NAME_"/> 
+	</resultMap>
+	<select id="query_procdef" parameterType="Procdef" resultMap="ProcdefOne">
+		<![CDATA[
+			SELECT * FROM act_re_procdef WHERE KEY_ = #{key}  ORDER BY VERSION_ DESC LIMIT 1
+		]]>
+	</select>
+	<typeAlias alias="Comment" type="com.dp.plat.data.activity.ActComment"/>
+
+	<insert id="insert_fnd_act_comment" parameterType="Comment">
+		<![CDATA[
+			INSERT INTO `fnd_act_hi_comment`(objId ,procdefKey ,taskId ,instId ,assignee ,assigneeTime ,`result` ,message )
+			VALUES( #{objId} , #{procdefKey} , #{taskId} , #{instId} ,#{assignee} , #{assigneeTime} , #{result} , #{message})
+		]]>
+	</insert>
+	<insert id="insert_fnd_act_comment_by_params" parameterType="map">
+        <![CDATA[
+            INSERT INTO `fnd_act_hi_comment`(objId, procdefKey, taskKey, taskId, instId, assignee, assigneeTime, `result`, message, nextAssignee, nextAssigneeName)
+            VALUES(#{objId}, #{procdefKey}, #{taskKey}, #{taskId}, #{instId}, #{assignee}, #{assigneeTime}, #{result}, #{message}, #{nextAssignee}, #{nextAssigneeName})
+        ]]>
+        <selectKey resultType="int"  keyProperty="id">    
+	         SELECT last_insert_id() as id ;   
+	    </selectKey>
+    </insert>
+    <update id="update_fnd_act_comment_by_params" parameterType="map">
+        <![CDATA[
+            update fnd_act_hi_comment set taskId = #{taskId}, instId = #{instId} where id = #{commentId}
+        ]]>
+    </update>
+    
+    <typeAlias alias="PresalesComment" type="com.dp.plat.data.bean.PresalesComment"/>
+	<resultMap type="PresalesComment" id="CommentMap">
+		<result objId column="objId"/>
+		<result procdefKey column="procdefKey"/>
+		<result taskId column="taskId"/>
+		<result instId column="instId"/>
+		<result assignee column="assignee"/>
+		<result assigneeTime column="assigneeTime"/>
+		<result result column="result"/>
+		<result resultName column="resultName"/>
+		<result message column="message"/>
+		<result assigneeName column="assigneeName"/>
+		<result quesnaireId column="quesnaireId" nullValue="0"/>
+	</resultMap>
+	<select id="query_act_comment_list" parameterType="java.util.Map" resultMap="CommentMap">
+		<![CDATA[
+			SELECT t1.* ,t2.`basicDataName` AS resultName , CONCAT(t3.`username`,'-' , t3.`realName`) AS assigneeName,
+			t4.`quesnaireId`
+			FROM fnd_act_hi_comment t1 
+			LEFT JOIN fnd_basic_data t2 ON t1.`result` = t2.`basicDataId` AND t2.`dataTypeCode` = 26
+			LEFT JOIN fnd_user_info t3 ON t1.`assignee` = t3.`username` 
+			LEFT JOIN pm_presales_project_callback t4 ON t1.`objId` = t4.`presalesId` AND t1.`taskId` = t4.`taskId`
+			where objId = #{objId} and procdefKey = #{procdefKey}
+			order by t1.assigneeTime asc
+		]]>
+	</select>
+	
+	<update id="update_apply_info_byobjid" parameterType="java.util.Map">
+		<![CDATA[
+			update $tableName$ set instId = #{instId}, applyState = 1,applyBy = #{applyBy},applyTime = now()
+			where  $objColumn$ =  #{objId}
+		]]>
+	</update>
+</mapper>

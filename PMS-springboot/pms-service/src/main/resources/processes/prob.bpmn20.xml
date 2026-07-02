@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="prob" name="技术公告流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="tech_audit" name="技术审核" flowable:candidateGroups="tech_manager" />
+    <userTask id="release_task" name="发布修复任务" flowable:assignee="${releasePerson}" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="tech_audit" />
+    <sequenceFlow id="flow2" sourceRef="tech_audit" targetRef="release_task" />
+    <sequenceFlow id="flow3" sourceRef="release_task" targetRef="end" />
+  </process>
+</definitions>

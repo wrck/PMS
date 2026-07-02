@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="project" name="项目管理流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="assign_pm" name="指定项目经理" flowable:candidateGroups="service_manager" />
+    <userTask id="fill_channel" name="填写渠道信息" flowable:assignee="${pmCode}" />
+    <userTask id="project_execute" name="项目实施" flowable:assignee="${pmCode}" />
+    <userTask id="project_close" name="项目关闭" flowable:candidateGroups="service_manager" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="assign_pm" />
+    <sequenceFlow id="flow2" sourceRef="assign_pm" targetRef="fill_channel" />
+    <sequenceFlow id="flow3" sourceRef="fill_channel" targetRef="project_execute" />
+    <sequenceFlow id="flow4" sourceRef="project_execute" targetRef="project_close" />
+    <sequenceFlow id="flow5" sourceRef="project_close" targetRef="end" />
+  </process>
+</definitions>

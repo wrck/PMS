@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="subcontract" name="项目转包流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="apply" name="提交申请" flowable:assignee="${applicant}" />
+    <userTask id="dept_audit" name="部门审核" flowable:candidateGroups="dept_manager" />
+    <userTask id="finance_audit" name="财务审核" flowable:candidateGroups="finance" />
+    <userTask id="gm_audit" name="总经理审核" flowable:candidateGroups="gm" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="apply" />
+    <sequenceFlow id="flow2" sourceRef="apply" targetRef="dept_audit" />
+    <sequenceFlow id="flow3" sourceRef="dept_audit" targetRef="finance_audit" />
+    <sequenceFlow id="flow4" sourceRef="finance_audit" targetRef="gm_audit" />
+    <sequenceFlow id="flow5" sourceRef="gm_audit" targetRef="end" />
+  </process>
+</definitions>

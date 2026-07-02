@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="supervision" name="项目督查流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="create" name="创建督查" flowable:assignee="${supervisor}" />
+    <userTask id="rectify" name="整改" flowable:assignee="${pmCode}" />
+    <userTask id="verify" name="验证" flowable:assignee="${supervisor}" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="create" />
+    <sequenceFlow id="flow2" sourceRef="create" targetRef="rectify" />
+    <sequenceFlow id="flow3" sourceRef="rectify" targetRef="verify" />
+    <sequenceFlow id="flow4" sourceRef="verify" targetRef="end" />
+  </process>
+</definitions>

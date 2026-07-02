@@ -1,0 +1,2704 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+ 
+<!-- 项目转包数据库操作--> 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper>
+    <resultMap id="SubcontractProject" type="com.dp.plat.subcontract.entity.SubcontractProject">
+      <result column="id" jdbcType="INTEGER" id />
+      <result column="subcontractName" jdbcType="VARCHAR" subcontractName />
+      <result column="subcontractNo" jdbcType="VARCHAR" subcontractNo />
+      <result column="contractNos" jdbcType="VARCHAR" contractNos />
+      <result column="projectIds" jdbcType="VARCHAR" projectIds />
+      <result column="type" jdbcType="INTEGER" type />
+      <result column="state" jdbcType="INTEGER" state />
+      <result column="callbackState" jdbcType="INTEGER" callbackState />
+      <result column="facilitatorId" jdbcType="INTEGER" facilitatorId />
+      <result column="facilitatorName" jdbcType="VARCHAR" facilitatorName />
+      <result column="bankInfo" jdbcType="VARCHAR" bankInfo />
+      <result column="bankAccount" jdbcType="VARCHAR" bankAccount />
+      <result column="officeCode" jdbcType="VARCHAR" officeCode />
+      <result column="profitDepCode" jdbcType="VARCHAR" profitDepCode />
+      <result column="isAccrued" jdbcType="BIT" isAccrued />
+      <result column="isInvoiced" jdbcType="BIT" isInvoiced />
+      <result column="subcontractAmount" jdbcType="VARCHAR" subcontractAmount />
+      <result column="reason" jdbcType="VARCHAR" reason />
+      <result column="remark" jdbcType="VARCHAR" remark />
+      <result column="effectiveFrom" jdbcType="TIMESTAMP" effectiveFrom />
+      <result column="effectiveTo" jdbcType="TIMESTAMP" effectiveTo />
+      <result column="zrApproveTime" jdbcType="TIMESTAMP" zrApproveTime />
+      <result column="createBy" jdbcType="VARCHAR" createBy />
+      <result column="createTime" jdbcType="TIMESTAMP" createTime />
+      <result column="updateBy" jdbcType="VARCHAR" updateBy />
+      <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+      <result column="orgId" jdbcType="INTEGER" orgId />
+      <result column="customInfo" jdbcType="JSON" customInfo />
+    </resultMap>
+  <sql id="SubcontractProject_List">
+    id, subcontractName, contractNos, projectIds, type, state, callbackState, facilitatorId, facilitatorName, bankInfo, bankAccount, officeCode, profitDepCode, 
+    subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason, remark, effectiveFrom, effectiveTo, zrApproveTime, createBy, createTime, 
+    updateBy, updateTime, customInfo, orgId
+  </sql>
+  <select id="selectSubcontractProjectById" parameterType="java.lang.Integer" resultMap="SubcontractProject">
+    select 
+    <include refid="SubcontractProject_List" />
+    from pm_subcontract_project_header
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractProjectById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_project_header
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractProject" parameterType="com.dp.plat.subcontract.entity.SubcontractProject">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_header (subcontractName, contractNos, projectIds, type, 
+      state, callbackState, facilitatorId, officeCode, 
+      profitDepCode, facilitatorName, bankInfo, bankAccount, subcontractNo, isAccrued, isInvoiced, subcontractAmount, reason,
+      remark, effectiveFrom, effectiveTo, zrApproveTime,
+      createBy, createTime, updateBy, 
+      updateTime, orgId, customInfo)
+    values (#{subcontractName}, #{contractNos}, #{projectIds}, #{type}, 
+      #{state}, #{callbackState}, #{facilitatorId}, #{officeCode}, 
+      #{profitDepCode}, #{facilitatorName}, #{bankInfo}, #{bankAccount}, #{subcontractNo}, #{isAccrued}, #{isInvoiced}, #{subcontractAmount}, #{reason},
+      #{remark}, #{effectiveFrom}, #{effectiveTo}, #{zrApproveTime},
+      #{createBy}, #{createTime}, #{updateBy}, 
+      #{updateTime}, #{orgId}, #customInfo:JSON#)
+  </insert>
+  <insert id="insertSubcontractProjectSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractProject">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_header
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractName> subcontractName  </if>
+      <if test=" prepend="," contractNos> contractNos  </if>
+      <if test=" prepend="," projectIds> projectIds  </if>
+      <if test=" prepend="," type> type  </if>
+      <if test=" prepend="," state> state  </if>
+      <if test=" prepend="," callbackState> callbackState  </if>
+      <if test=" prepend="," facilitatorId> facilitatorId  </if>
+      <if test=" prepend="," facilitatorName> facilitatorName  </if>
+      <if test=" prepend="," bankInfo> bankInfo  </if>
+      <if test=" prepend="," bankAccount> bankAccount  </if>
+      <if test=" prepend="," officeCode> officeCode  </if>
+      <if test=" prepend="," profitDepCode> profitDepCode  </if>
+      <if test=" prepend="," subcontractNo> subcontractNo  </if>
+      <if test=" prepend="," isAccrued> isAccrued  </if>
+      <if test=" prepend="," isInvoiced> isInvoiced  </if>
+      <if test=" prepend="," subcontractAmount> subcontractAmount  </if>
+      <if test=" prepend="," reason> reason  </if>
+      <if test=" prepend="," remark> remark  </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom  </if>
+      <if test=" prepend="," effectiveTo> effectiveTo  </if>
+      <if test=" prepend="," zrApproveTime> zrApproveTime </if>
+      <if test=" prepend="," createBy> createBy  </if>
+      <if test=" prepend="," createTime> createTime  </if>
+      <if test=" prepend="," updateBy> updateBy  </if>
+      <if test=" prepend="," updateTime> updateTime  </if>
+      <if test=" prepend="," orgId> orgId  </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" removeFirstPrepend="true" prepend="," subcontractName> #{subcontractName} </if>
+      <if test=" prepend="," contractNos> #{contractNos} </if>
+      <if test=" prepend="," projectIds> #{projectIds} </if>
+      <if test=" prepend="," type> #{type} </if>
+      <if test=" prepend="," state> #{state} </if>
+      <if test=" prepend="," callbackState> #{callbackState}  </if>
+      <if test=" prepend="," facilitatorId> #{facilitatorId} </if>
+      <if test=" prepend="," facilitatorName> #{facilitatorName} </if>
+      <if test=" prepend="," bankInfo> #{bankInfo} </if>
+      <if test=" prepend="," bankAccount> #{bankAccount} </if>
+      <if test=" prepend="," officeCode> #{officeCode} </if>
+      <if test=" prepend="," profitDepCode> #{profitDepCode} </if>
+      <if test=" prepend="," subcontractNo> #{subcontractNo} </if>
+      <if test=" prepend="," isAccrued> #{isAccrued} </if>
+      <if test=" prepend="," isInvoiced> #{isInvoiced}  </if>
+      <if test=" prepend="," subcontractAmount> #{subcontractAmount}  </if>
+      <if test=" prepend="," reason> #{reason} </if>
+      <if test=" prepend="," remark> #{remark} </if>
+      <if test=" prepend="," effectiveFrom> #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> #{effectiveTo} </if>
+      <if test=" prepend="," zrApproveTime> #{zrApproveTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," orgId> #{orgId}  </if>
+      <if test=" prepend="," customInfo> #customInfo:JSON# </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractProjectByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractProject">
+    update pm_subcontract_project_header
+    <dynamic prepend="set">
+      <if test=" prepend="," subcontractName> subcontractName = #{subcontractName} </if>
+      <if test=" prepend="," contractNos> contractNos = #{contractNos} </if>
+      <if test=" prepend="," projectIds> projectIds = #{projectIds} </if>
+      <if test=" prepend="," type> type = #{type} </if>
+      <if test=" prepend="," state> state = #{state} </if>
+      <if test=" prepend="," callbackState> callbackState = #{callbackState}  </if>
+      <if test=" prepend="," facilitatorId> facilitatorId = #{facilitatorId} </if>
+      <if test=" prepend="," facilitatorName> facilitatorName = #{facilitatorName} </if>
+      <if test=" prepend="," bankInfo> bankInfo = #{bankInfo} </if>
+      <if test=" prepend="," bankAccount> bankAccount = #{bankAccount} </if>
+      <if test=" prepend="," officeCode> officeCode = #{officeCode} </if>
+      <if test=" prepend="," profitDepCode> profitDepCode = #{profitDepCode} </if>
+      <if test=" prepend="," subcontractNo> subcontractNo = #{subcontractNo} </if>
+      <if test=" prepend="," isAccrued> isAccrued = #{isAccrued} </if>
+      <if test=" prepend="," isInvoiced> isInvoiced = #{isInvoiced} </if>
+      <if test=" prepend="," subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+      <if test=" prepend="," reason> reason = #{reason} </if>
+      <if test=" prepend="," remark> remark = #{remark} </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom = #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> effectiveTo = #{effectiveTo} </if>
+      <if test=" prepend="," zrApproveTime> zrApproveTime = #{zrApproveTime} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+      <if test=" prepend="," orgId> orgId = #{orgId} </if>
+      <if test=" prepend="," customInfo>
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractProjectById" parameterType="com.dp.plat.subcontract.entity.SubcontractProject">
+    update pm_subcontract_project_header
+    set subcontractName = #{subcontractName},
+      contractNos = #{contractNos},
+      projectIds = #{projectIds},
+      type = #{type},
+      state = #{state},
+      callbackState = #{callbackState},
+      facilitatorId = #{facilitatorId},
+      facilitatorName = #{facilitatorName},
+      bankInfo = #{bankInfo},
+      bankAccount = #{bankAccount},
+      officeCode = #{officeCode},
+      profitDepCode = #{profitDepCode},
+      subcontractNo = #{subcontractNo},
+      isAccrued = #{isAccrued},
+      isInvoiced = #{isInvoiced},
+      subcontractAmount = #{subcontractAmount},
+      reason = #{reason},
+      remark = #{remark},
+      effectiveFrom = #{effectiveFrom},
+      effectiveTo = #{effectiveTo},
+      zrApproveTime = #{zrApproveTime},
+      createBy = #{createBy},
+      createTime = #{createTime},
+      updateBy = #{updateBy},
+      updateTime = #{updateTime},
+      orgId = #{orgId},
+      <!-- customInfo = #customInfo:JSON# -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractProjectList" parameterType="com.dp.plat.subcontract.entity.SubcontractProject" resultMap="SubcontractProject">
+    select * from pm_subcontract_project_header
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> subcontractName = #{subcontractName} </if>
+        <if test=" prepend="AND" contractNos> contractNos = #{contractNos} </if>
+        <if test=" prepend="AND" projectIds> projectIds = #{projectIds} </if>
+        <if test=" prepend="AND" type> type = #{type} </if>
+        <if test=" prepend="AND" state> state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> facilitatorName = #{facilitatorName} </if>
+        <if test=" prepend="AND" bankInfo> bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> reason = #{reason} </if>
+        <if test=" prepend="AND" remark> remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> orgId = #{orgId} </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractProjectList" parameterType="com.dp.plat.subcontract.entity.SubcontractProject" resultType="long">
+    select count(1) from pm_subcontract_project_header
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> subcontractName = #{subcontractName} </if>
+        <if test=" prepend="AND" contractNos> contractNos = #{contractNos} </if>
+        <if test=" prepend="AND" projectIds> projectIds = #{projectIds} </if>
+        <if test=" prepend="AND" type> type = #{type} </if>
+        <if test=" prepend="AND" state> state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> facilitatorName = #{facilitatorName} </if>
+        <if test=" prepend="AND" bankInfo> bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> reason = #{reason} </if>
+        <if test=" prepend="AND" remark> remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> orgId = #{orgId} </if>
+    </dynamic>
+  </select>
+  
+  <!-- LEFT JOIN 最新的付款记录 -->
+  <sql id="sqlLeftJoinLatestPayment">
+		LEFT JOIN 
+		    (
+		    SELECT 
+		        t.`subcontractId`, t.confirmTime, t.paymentTime, t.remark, maxPay.paidAmount, t.customInfo
+		    FROM
+		        `pm_subcontract_project_payment` t 
+		        INNER JOIN 
+		            (SELECT 
+		                <!-- MAX(IF(confirmTime IS NOT NULL, id, NULL)) AS maxPayId, -->
+		                MAX(id) AS maxPayId,
+		                SUM(
+		                    IF(
+		                        paymentTime IS NOT NULL, CONVERT(
+		                            REPLACE(IFNULL(customInfo ->> '$$.paidAmount', amount), ",", ""), DECIMAL (25, 2)
+		                        ), 0
+		                    )
+		                ) AS paidAmount 
+		            FROM
+		                `pm_subcontract_project_payment` 
+		            GROUP BY subcontractId) maxPay 
+		            ON t.id = maxPay.maxPayId
+		) spp
+		    ON spp.subcontractId = h.`id` 
+  </sql>
+  
+  <!-- 最新付款记录的WHERE条件 -->
+  <sql id="sqlWhereLatestPayment">
+        <if test=" prepend="AND" property="customInfo.paymentStatus"> #customInfo.paymentStatus# = spp.`customInfo` ->> '$$.status' </if>
+        <if test=" prepend="AND" property="customInfo.paid"> #customInfo.paid# = spp.`customInfo` ->> '$$.paid' </if>
+  </sql>
+  
+  <select id="selectSubcontractProjectVOList" parameterType="com.dp.plat.subcontract.vo.SubcontractProjectVO" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    SELECT 
+        h.*, d.`departmentName` AS officeName, d1.`departmentName` AS profitDepName, bd.`basicDataName` AS stateName,
+        bd1.`basicDataName` as callbackStateName, bd2.basicDataName as typeName, 
+        CONCAT(h.createBy, "-", ui.`realName`) AS createName 
+        <if test=" prepend="," searchTimeType compareValue="zrApproverTime"> zrApproverTime </if>
+        <isPropertyAvailable prepend="," property="extInfo.needPayment"> spp.customInfo AS extInfo </isPropertyAvailable>
+    FROM
+        pm_subcontract_project_header h 
+    <isPropertyAvailable property="extInfo.needPayment">
+        <include refid="sqlLeftJoinLatestPayment"/>
+    </isPropertyAvailable>
+        LEFT JOIN fnd_department d 
+            ON h.`officeCode` = d.`departmentNum` 
+        LEFT JOIN fnd_department d1 
+            ON h.`profitDepCode` = d1.`departmentNum` 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON h.`state` = bd.`basicDataId` 
+            AND bd.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON h.`callbackState` = bd1.`basicDataId` 
+            AND bd1.`dataTypeCode` = 'subcontractCbState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON h.`type` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractType' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            LEFT JOIN 
+                (SELECT 
+                    ach.`objId` AS subcontractId, MAX(ht.`END_TIME_`) AS zrApproverTime 
+                FROM
+                    `fnd_act_hi_comment` ach 
+                    LEFT JOIN `act_hi_taskinst` ht 
+                        ON ht.ID_ = ach.taskId 
+                        AND ht.PROC_INST_ID_ = ach.instId 
+                WHERE ach.`result` = 1 
+                    AND ach.`procdefKey` = 'Subcontract' 
+                    AND ht.`TASK_DEF_KEY_` = 'approveZRTask' 
+                GROUP BY ach.`procdefKey`, ach.`objId`) zra 
+                ON zra.subcontractId = h.`id`
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            LEFT JOIN `pm_subcontract_project_payment` p 
+                ON h.id = p.`subcontractId` 
+        </if>
+    WHERE h.`effectiveTo` IS NULL 
+        <if test=" prepend="AND" id> h.id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" projectIds> h.projectIds like concat("%", #{projectIds}, "%")  </if>
+        <if test=" prepend="AND" type> h.type = #{type} </if>
+        <if test=" prepend="AND" state> h.state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> h.facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" bankInfo> h.bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> h.bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> h.isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> h.reason = #{reason} </if>
+        <if test=" prepend="AND" remark> h.remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> h.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> h.zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> h.createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> h.createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> h.updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> h.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" areaPower> (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
+        <if test=" prepend="AND" projectId> FIND_IN_SET(#{projectId}, h.projectIds) </if>
+        
+        <if test=" prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </if>
+        <isPropertyAvailable property="extInfo.needPayment">
+	        <include refid="sqlWhereLatestPayment"/>
+	    </isPropertyAvailable>
+    
+        <if test=" searchTimeType compareValue="createTime">
+            <if test=" prepend="AND" searchStartTime> h.createTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.createTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            <if test=" prepend="AND" searchStartTime> zra.zrApproverTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ zra.zrApproverTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproveTime">
+            <if test=" prepend="AND" searchStartTime> h.zrApproveTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.zrApproveTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            <if test=" prepend="AND" searchStartTime> p.paymentTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ p.paymentTime <= #{searchEndTime} ]]> </if>
+            GROUP BY h.id
+        </if>
+     order by h.id desc
+  </select>
+  <select id="countSubcontractProjectVOList" parameterType="com.dp.plat.subcontract.vo.SubcontractProjectVO" resultType="long">
+    select count(DISTINCT h.id) from pm_subcontract_project_header h
+    <isPropertyAvailable property="extInfo.needPayment">
+        <include refid="sqlLeftJoinLatestPayment"/>
+    </isPropertyAvailable>
+    <dynamic prepend="where"> <if test=" prepend="AND" id> h.id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> h.subcontractName = #{subcontractName} </if>
+        <if test=" prepend="AND" contractNos> h.contractNos = #{contractNos} </if>
+        <if test=" prepend="AND" projectIds> h.projectIds = #{projectIds} </if>
+        <if test=" prepend="AND" type> h.type = #{type} </if>
+        <if test=" prepend="AND" state> h.state = #{state} </if>
+        <if test=" prepend="AND" callbackState> h.callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> h.facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName = #{facilitatorName} </if>
+        <if test=" prepend="AND" bankInfo> h.bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> h.bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> h.isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> h.isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> h.subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> h.reason = #{reason} </if>
+        <if test=" prepend="AND" remark> h.remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> h.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> h.zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> h.createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> h.createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> h.updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> h.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" areaPower> (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower})) </if>
+        <if test=" prepend="AND" projectId> FIND_IN_SET(#{projectId}, h.projectIds) </if>
+        
+        <if test=" prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </if>
+        <isPropertyAvailable property="extInfo.needPayment">
+	        <include refid="sqlWhereLatestPayment"/>
+	    </isPropertyAvailable>
+        
+    </dynamic>
+  </select>
+  
+  <select id="selectSubcontractProjectVOListPageable" parameterType="com.dp.plat.subcontract.vo.SubcontractPageParam" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    SELECT 
+        h.*, d.`departmentName` AS officeName, d1.`departmentName` AS profitDepName, bd.`basicDataName` AS stateName,
+        bd1.`basicDataName` as callbackStateName, bd2.basicDataName as typeName, 
+        CONCAT(h.createBy, "-", ui.`realName`) AS createName,
+	    CONCAT(
+	        ROUND(
+	            IfNULL(spp.paidAmount, 0) / CONVERT(
+	                REPLACE(h.subcontractAmount, ',', ''), DECIMAL (25, 2)
+	            ) * 100, 2
+	        ), "%"
+	    ) AS paidRatio,IfNULL(spp.paidAmount, 0) AS paidAmount,
+	    spp.customInfo AS extInfo
+        <if test=" prepend="," searchTimeType compareValue="zrApproverTime"> zra.zrApproverTime </if>
+        <if test=" prepend="," searchTimeType compareValue="zrApproverTime"> h.zrApproveTime as zrApproverTime</if>
+    FROM
+        pm_subcontract_project_header h 
+        <include refid="sqlLeftJoinLatestPayment"/>
+        LEFT JOIN fnd_department d 
+            ON h.`officeCode` = d.`departmentNum` 
+        LEFT JOIN fnd_department d1 
+            ON h.`profitDepCode` = d1.`departmentNum` 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON h.`state` = bd.`basicDataId` 
+            AND bd.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON h.`callbackState` = bd1.`basicDataId` 
+            AND bd1.`dataTypeCode` = 'subcontractCbState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON h.`type` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractType' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            LEFT JOIN 
+                (SELECT 
+                    ach.`objId` AS subcontractId, MAX(ht.`END_TIME_`) AS zrApproverTime 
+                FROM
+                    `fnd_act_hi_comment` ach 
+                    LEFT JOIN `act_hi_taskinst` ht 
+                        ON ht.ID_ = ach.taskId 
+                        AND ht.PROC_INST_ID_ = ach.instId 
+                WHERE ach.`result` = 1 
+                    AND ach.`procdefKey` = 'Subcontract' 
+                    AND ht.`TASK_DEF_KEY_` = 'approveZRTask' 
+                GROUP BY ach.`procdefKey`, ach.`objId`) zra 
+                ON zra.subcontractId = h.`id`
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            LEFT JOIN `pm_subcontract_project_payment` p 
+                ON h.id = p.`subcontractId` 
+        </if>
+    WHERE h.`effectiveTo` IS NULL 
+        <if test=" prepend="AND" id> h.id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" projectIds> h.projectIds like concat("%", #{projectIds}, "%")  </if>
+        <if test=" prepend="AND" type> h.type = #{type} </if>
+        <if test=" prepend="AND" state> h.state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> h.facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" bankInfo> h.bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> h.bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> h.isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> h.reason = #{reason} </if>
+        <if test=" prepend="AND" remark> h.remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> h.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> h.zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> h.createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> h.createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> h.updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> h.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" areaPower> (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
+        <if test=" prepend="AND" projectId> FIND_IN_SET(#{projectId}, h.projectIds) </if>
+        
+        <if test=" prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </if>
+        <include refid="sqlWhereLatestPayment"/>
+        
+        <if test=" searchTimeType compareValue="createTime">
+            <if test=" prepend="AND" searchStartTime> h.createTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.createTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            <if test=" prepend="AND" searchStartTime> zra.zrApproverTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ zra.zrApproverTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproveTime">
+            <if test=" prepend="AND" searchStartTime> h.zrApproveTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.zrApproveTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            <if test=" prepend="AND" searchStartTime> p.paymentTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ p.paymentTime <= #{searchEndTime} ]]> </if>
+            GROUP BY h.id
+        </if>
+     order by h.id desc
+     <if test=" displayParam>
+         limit #displayParam.offset#, #displayParam.pagesize# 
+     </if>
+  </select>
+  
+  <select id="countSubcontractProjectVOListPageable" parameterType="com.dp.plat.subcontract.vo.SubcontractPageParam" resultType="int">
+    SELECT 
+        count(distinct h.id)
+    FROM
+        pm_subcontract_project_header h 
+    <isPropertyAvailable property="extInfo.needPayment">
+        <include refid="sqlLeftJoinLatestPayment"/>
+    </isPropertyAvailable>
+        LEFT JOIN fnd_department d 
+            ON h.`officeCode` = d.`departmentNum` 
+        LEFT JOIN fnd_department d1 
+            ON h.`profitDepCode` = d1.`departmentNum` 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON h.`state` = bd.`basicDataId` 
+            AND bd.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON h.`callbackState` = bd1.`basicDataId` 
+            AND bd1.`dataTypeCode` = 'subcontractCbState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON h.`type` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractType' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            LEFT JOIN 
+                (SELECT 
+                    ach.`objId` AS subcontractId, MAX(ht.`END_TIME_`) AS zrApproverTime 
+                FROM
+                    `fnd_act_hi_comment` ach 
+                    LEFT JOIN `act_hi_taskinst` ht 
+                        ON ht.ID_ = ach.taskId 
+                        AND ht.PROC_INST_ID_ = ach.instId 
+                WHERE ach.`result` = 1 
+                    AND ach.`procdefKey` = 'Subcontract' 
+                    AND ht.`TASK_DEF_KEY_` = 'approveZRTask' 
+                GROUP BY ach.`procdefKey`, ach.`objId`) zra 
+                ON zra.subcontractId = h.`id`
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            LEFT JOIN `pm_subcontract_project_payment` p 
+                ON h.id = p.`subcontractId` 
+        </if>
+    WHERE h.`effectiveTo` IS NULL 
+        <if test=" prepend="AND" id> h.id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" projectIds> h.projectIds like concat("%", #{projectIds}, "%")  </if>
+        <if test=" prepend="AND" type> h.type = #{type} </if>
+        <if test=" prepend="AND" state> h.state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> h.facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" bankInfo> h.bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> h.bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> h.isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> h.reason = #{reason} </if>
+        <if test=" prepend="AND" remark> h.remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> h.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> h.zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> h.createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> h.createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> h.updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> h.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" areaPower> (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
+        <if test=" prepend="AND" projectId> FIND_IN_SET(#{projectId}, h.projectIds) </if>
+        
+        <if test=" prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </if>
+        <isPropertyAvailable property="extInfo.needPayment">
+	        <include refid="sqlWhereLatestPayment"/>
+	    </isPropertyAvailable>
+    
+        <if test=" searchTimeType compareValue="createTime">
+            <if test=" prepend="AND" searchStartTime> h.createTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.createTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            <if test=" prepend="AND" searchStartTime> zra.zrApproverTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ zra.zrApproverTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproveTime">
+            <if test=" prepend="AND" searchStartTime> h.zrApproveTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.zrApproveTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            <if test=" prepend="AND" searchStartTime> p.paymentTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ p.paymentTime <= #{searchEndTime} ]]> </if>
+        </if>
+  </select>
+  
+  <select id="selectSubcontractProjectVOById" parameterType="java.lang.Integer" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    SELECT 
+        sph.*, bd.`basicDataName` as stateName, bd1.`basicDataName` as callbackStateName, CONCAT(sph.createBy, "-", ui.`realName`) AS createName, 
+        d.`departmentName` AS officeName, d2.`departmentName` AS profitDepName, bd2.`basicDataName` as typeName
+    FROM
+        pm_subcontract_project_header sph 
+        LEFT JOIN fnd_department d 
+            ON sph.`officeCode` = d.`departmentNum` 
+        LEFT JOIN fnd_department d2 
+            ON sph.`profitDepCode` = d2.`departmentNum` 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON bd.`basicDataId` = sph.`state` 
+            AND bd.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON bd1.`basicDataId` = sph.`callbackState` 
+            AND bd1.`dataTypeCode` = 'subcontractCbState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON sph.`type` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractType' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = sph.`createBy`
+    where sph.id = #{id}
+  </select>
+  
+  <resultMap id="SubcontractLine" type="com.dp.plat.subcontract.entity.SubcontractLine">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="subcontractId" jdbcType="INTEGER" subcontractId />
+    <result column="projectId" jdbcType="INTEGER" projectId />
+    <result column="barCode" jdbcType="VARCHAR" barCode />
+    <result column="itemCode" jdbcType="VARCHAR" itemCode />
+    <result column="itemModel" jdbcType="VARCHAR" itemModel />
+    <result column="itemName" jdbcType="VARCHAR" itemName />
+    <result column="contractNo" jdbcType="VARCHAR" contractNo />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+  </resultMap>
+  <sql id="SubcontractLine_Column_List">
+    id, subcontractId, projectId, barCode, itemCode, itemModel, itemName, contractNo, createTime, 
+    createBy, updateTime, updateBy
+  </sql>
+  <select id="selectSubcontractLineById" parameterType="java.lang.Integer" resultMap="SubcontractLine">
+    select 
+    <include refid="SubcontractLine_Column_List" />
+    from pm_subcontract_project_line
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractLineById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_project_line
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractLine" parameterType="com.dp.plat.subcontract.entity.SubcontractLine">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_line (subcontractId, projectId, barCode, 
+      itemCode, itemModel, itemName, contractNo, 
+      createTime, createBy, updateTime, 
+      updateBy)
+    values (#{subcontractId}, #{projectId}, #{barCode}, 
+      #{itemCode}, #{itemModel}, #{itemName}, #{contractNo}, 
+      #{createTime}, #{createBy}, #{updateTime}, 
+      #{updateBy})
+  </insert>
+  <insert id="insertSubcontractLineSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractLine">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_line
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> subcontractId </if>
+      <if test=" prepend="," projectId> projectId </if>
+      <if test=" prepend="," barCode> barCode </if>
+      <if test=" prepend="," itemCode> itemCode </if>
+      <if test=" prepend="," itemModel> itemModel </if>
+      <if test=" prepend="," itemName> itemName </if>
+      <if test=" prepend="," contractNo> contractNo </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> #{subcontractId} </if>
+      <if test=" prepend="," projectId> #{projectId} </if>
+      <if test=" prepend="," barCode> #{barCode} </if>
+      <if test=" prepend="," itemCode> #{itemCode} </if>
+      <if test=" prepend="," itemModel> #{itemModel} </if>
+      <if test=" prepend="," itemName> #{itemName} </if>
+      <if test=" prepend="," contractNo> #{contractNo} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractLineByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractLine">
+    update pm_subcontract_project_line
+    <dynamic prepend="set">
+      <if test=" prepend="," subcontractId> subcontractId = #{subcontractId} </if>
+      <if test=" prepend="," projectId> projectId = #{projectId} </if>
+      <if test=" prepend="," barCode> barCode = #{barCode} </if>
+      <if test=" prepend="," itemCode> itemCode = #{itemCode} </if>
+      <if test=" prepend="," itemModel> itemModel = #{itemModel} </if>
+      <if test=" prepend="," itemName> itemName = #{itemName} </if>
+      <if test=" prepend="," contractNo> contractNo = #{contractNo} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractLineById" parameterType="com.dp.plat.subcontract.entity.SubcontractLine">
+    update pm_subcontract_project_line
+    set subcontractId = #{subcontractId},
+      projectId = #{projectId},
+      barCode = #{barCode},
+      itemCode = #{itemCode},
+      itemModel = #{itemModel},
+      itemName = #{itemName},
+      contractNo = #{contractNo},
+      createTime = #{createTime},
+      createBy = #{createBy},
+      updateTime = #{updateTime},
+      updateBy = #{updateBy}
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractLineList" parameterType="com.dp.plat.subcontract.entity.SubcontractLine" resultType="com.dp.plat.subcontract.vo.SubcontractLineVO">
+    select spl.*, sbr.item2 as itemCode2, fi.describe_ as itemName2, fi.itemname as itemModel2, sbr.sn2 as barCode2 
+    from pm_subcontract_project_line spl
+      LEFT JOIN `fb_shipment_barcode_relation` sbr 
+          ON sbr.contract = REPLACE(spl.contractNo, '-C', '') 
+          AND spl.barcode = sbr.sn1 
+      LEFT JOIN fb_items fi 
+          ON fi.`item` = sbr.`item2` 
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> spl.id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> spl.subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" projectId> spl.projectId = #{projectId} </if>
+        <if test=" prepend="AND" barCode> spl.barCode = #{barCode} </if>
+        <if test=" prepend="AND" itemCode> spl.itemCode = #{itemCode} </if>
+        <if test=" prepend="AND" itemModel> spl.itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" itemName> spl.itemName = #{itemName} </if>
+        <if test=" prepend="AND" contractNo> spl.contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" createTime> spl.createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> spl.createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> spl.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> spl.updateBy = #{updateBy} </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractLineList" parameterType="com.dp.plat.subcontract.entity.SubcontractLine" resultType="long">
+    select count(1) from pm_subcontract_project_line
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" projectId> projectId = #{projectId} </if>
+        <if test=" prepend="AND" barCode> barCode = #{barCode} </if>
+        <if test=" prepend="AND" itemCode> itemCode = #{itemCode} </if>
+        <if test=" prepend="AND" itemModel> itemModel = #{itemModel} </if>
+        <if test=" prepend="AND" itemName> itemName = #{itemName} </if>
+        <if test=" prepend="AND" contractNo> contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+    </dynamic>
+  </select>
+  
+  <insert id="batchInsertSubcontractLine" parameterType="map">
+    insert into pm_subcontract_project_line (subcontractId, projectId, itemModel, contractNo, barCode, 
+      itemCode, itemName
+      <if test=" prepend="," createBy> createTime, createBy </if>
+      <if test=" prepend="," updateBy> updateTime, updateBy </if>)
+    Select #{subcontractId}, ph.projectId, fi.`itemname` AS itemModel, t.*
+      <if test=" prepend="," createBy> now(), #{createBy} </if>
+      <if test=" prepend="," updateBy> null, null </if>
+    From (
+        SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName
+          FROM view_shipment_info_4_pm vsip 
+          LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+          WHERE vsip.contract_code in ($contractNos$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+              and contractNo in ($contractNos$) and projectId in ($projectIds$)
+          )
+        UNION 
+        SELECT `contractNo`, `barcode` as barCode, `itemCode`,`itemName`
+        FROM pm_project_shipment pps WHERE contractNo in ($contractNos$) and projectId in ($projectIds$)
+             AND transferFlag != 1
+             AND EXISTS 
+            (SELECT 
+                1 
+            FROM
+                view_shipment_info_4_pm vsip 
+                LEFT JOIN view_shipment_ems_4_pm vsep 
+                    ON vsep.contract_code = vsip.contract_code 
+                    AND vsep.packId = vsip.packId 
+            WHERE FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#{contractNos}, '-C', ''), "'",''))
+                AND vsip.barcode = pps.barcode)
+    ) t
+    LEFT JOIN fb_items  fi ON 
+        fi.`item` = t.itemCode
+    LEFT JOIN `pm_project_contract` pc 
+        ON pc.`contractNo` = t.contractNo 
+        AND pc.`contractNo` IN ($contractNos$) 
+    LEFT JOIN `pm_project_group` pg 
+        ON pc.`projectGroupCode` = pg.`projectGroupCode` 
+    LEFT JOIN `pm_project_group_relationship` gr 
+        ON gr.`projectGroupCode` = pg.`projectGroupCode` 
+    LEFT JOIN `pm_project_header` ph 
+        ON ph.`projectId` IN ($projectIds$) 
+        AND gr.`projectCode` = ph.`projectCode` 
+    WHERE ph.`projectId` IS NOT NULL 
+        AND FIND_IN_SET(t.barCode, #{barCodes})
+    ON DUPLICATE KEY UPDATE
+        projectId = VALUES(projectId), barCode = VALUES(barCode), itemCode = VALUES(itemCode), itemModel = VALUES(itemModel), 
+        itemName = VALUES(itemName), contractNo = VALUES(contractNo), updateBy = #{updateBy}, updateTime = now()
+  </insert>
+  <delete id="batchDeleteSubcontractLine" parameterType="map">
+    delete from pm_subcontract_project_line
+    <dynamic prepend="where">
+        <if test=" prepend="and" subcontractId> subcontractId = -1 </if>
+        <if test=" prepend="and" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="and" barCodes> !FIND_IN_SET(barCode, #{barCodes}) </if>
+    </dynamic>
+  </delete>
+  
+  <resultMap id="SubcontractFacilitator" type="com.dp.plat.subcontract.entity.SubcontractFacilitator">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="name" jdbcType="VARCHAR" name />
+    <result column="code" jdbcType="VARCHAR" code />
+    <result column="account" jdbcType="VARCHAR" account />
+    <result column="bankInfo" jdbcType="VARCHAR" bankInfo />
+    <result column="bankAccount" jdbcType="VARCHAR" bankAccount />
+    <result column="receiver" jdbcType="VARCHAR" receiver />
+    <result column="email" jdbcType="VARCHAR" email />
+    <result column="state" jdbcType="BIT" state />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" effectiveFrom />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" effectiveTo />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+  </resultMap>
+  <sql id="SubcontractFacilitator_Column_List">
+    id, name, code, account, bankInfo, bankAccount, receiver, email, state, effectiveFrom, effectiveTo, createBy, createTime, 
+    updateBy, updateTime
+  </sql>
+  <select id="selectSubcontractFacilitatorById" parameterType="java.lang.Integer" resultMap="SubcontractFacilitator">
+    select 
+    <include refid="SubcontractFacilitator_Column_List" />
+    from pm_subcontract_facilitator
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractFacilitatorById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_facilitator
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractFacilitator" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator">
+    <selectKey keyProperty="id" type ="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_facilitator (name, code, account, 
+      bankInfo, bankAccount, receiver, email,
+      state, effectiveFrom, effectiveTo, 
+      createBy, createTime, updateBy, 
+      updateTime)
+    values (#{name}, #{code}, #{account}, 
+      #{bankInfo}, #{bankAccount}, #{receiver}, #{email},
+      #{state}, #{effectiveFrom}, #{effectiveTo}, 
+      #{createBy}, #{createTime}, #{updateBy}, 
+      #{updateTime})
+  </insert>
+  <insert id="insertSubcontractFacilitatorSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator">
+    <selectKey keyProperty="id" type ="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_facilitator
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," name> name </if>
+      <if test=" prepend="," code> code </if>
+      <if test=" prepend="," account> account </if>
+      <if test=" prepend="," bankInfo> bankInfo </if>
+      <if test=" prepend="," bankAccount> bankAccount </if>
+      <if test=" prepend="," receiver> receiver </if>
+      <if test=" prepend="," email> email </if>
+      <if test=" prepend="," state> state </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom </if>
+      <if test=" prepend="," effectiveTo> effectiveTo </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," name> #{name} </if>
+      <if test=" prepend="," code> #{code} </if>
+      <if test=" prepend="," account> #{account} </if>
+      <if test=" prepend="," bankInfo> #{bankInfo} </if>
+      <if test=" prepend="," bankAccount> #{bankAccount} </if>
+      <if test=" prepend="," receiver> #{receiver} </if>
+      <if test=" prepend="," email> #{email} </if>
+      <if test=" prepend="," state> #{state} </if>
+      <if test=" prepend="," effectiveFrom> #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> #{effectiveTo} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractFacilitatorByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator">
+    update pm_subcontract_facilitator
+    <dynamic prepend="set">
+      <if test=" prepend="," name> name = #{name} </if>
+      <if test=" prepend="," code> code = #{code} </if>
+      <if test=" prepend="," account> account = #{account} </if>
+      <if test=" prepend="," bankInfo> bankInfo = #{bankInfo} </if>
+      <if test=" prepend="," bankAccount> bankAccount = #{bankAccount} </if>
+      <if test=" prepend="," receiver> receiver = #{receiver} </if>
+      <if test=" prepend="," email> email = #{email} </if>
+      <if test=" prepend="," state> state = #{state} </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom = #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> effectiveTo = #{effectiveTo} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractFacilitatorById" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator">
+    update pm_subcontract_facilitator
+    set name = #{name},
+      code = #{code},
+      account = #{account},
+      bankInfo = #{bankInfo},
+      bankAccount = #{bankAccount},
+      receiver = #{receiver},
+      email = #{email},
+      state = #{state},
+      effectiveFrom = #{effectiveFrom},
+      effectiveTo = #{effectiveTo},
+      createBy = #{createBy},
+      createTime = #{createTime},
+      updateBy = #{updateBy},
+      updateTime = #{updateTime}
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractFacilitatorList" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator" resultMap="SubcontractFacilitator">
+    select * from pm_subcontract_facilitator
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" code> code = #{code} </if>
+        <if test=" prepend="AND" account> account = #{account} </if>
+        <if test=" prepend="AND" name> name like concat("%", #{name}, "%") </if>
+        <if test=" prepend="AND" bankInfo> bankInfo like concat("%", #{bankInfo}, "%") </if>
+        <if test=" prepend="AND" bankAccount> bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" receiver> receiver = #{receiver} </if>
+        <if test=" prepend="AND" email> email = #{email} </if>
+        <if test=" prepend="AND" state> state = #{state} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractFacilitatorList" parameterType="com.dp.plat.subcontract.entity.SubcontractFacilitator" resultType="long">
+    select count(1) from pm_subcontract_facilitator
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" code> code = #{code} </if>
+        <if test=" prepend="AND" account> account = #{account} </if>
+        <if test=" prepend="AND" name> name like concat("%", #{name}, "%") </if>
+        <if test=" prepend="AND" bankInfo> bankInfo like concat("%", #{bankInfo}, "%") </if>
+        <if test=" prepend="AND" bankAccount> bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" receiver> receiver = #{receiver} </if>
+        <if test=" prepend="AND" email> email = #{email} </if>
+        <if test=" prepend="AND" state> state = #{state} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+    </dynamic>
+  </select>
+  
+  <resultMap id="SubcontractDeliver" type="com.dp.plat.subcontract.entity.SubcontractDeliver">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="subcontractId" jdbcType="INTEGER" subcontractId />
+    <result column="paymentId" jdbcType="INTEGER" paymentId />
+    <result column="fileName" jdbcType="VARCHAR" fileName />
+    <result column="filePath" jdbcType="VARCHAR" filePath />
+    <result column="type" jdbcType="VARCHAR" type />
+    <result column="uploadBy" jdbcType="VARCHAR" uploadBy />
+    <result column="uploadTime" jdbcType="TIMESTAMP" uploadTime />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" effectiveFrom />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" effectiveTo />
+    <result column="customInfo" jdbcType="JSON" customInfo />
+  </resultMap>
+  <sql id="SubcontractDeliver_Column_List">
+    id, subcontractId, paymentId, fileName, filePath, type, uploadBy, uploadTime, effectiveFrom, 
+    effectiveTo, customInfo
+  </sql>
+  <select id="selectSubcontractDeliverById" parameterType="java.lang.Integer" resultMap="SubcontractDeliver">
+    select 
+    <include refid="SubcontractDeliver_Column_List" />
+    from pm_subcontract_deliver_files
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractDeliverById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_deliver_files
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractDeliver" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver">
+    <selectKey keyProperty="id" type ="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_deliver_files (subcontractId, paymentId, fileName, filePath, 
+      type, uploadBy, uploadTime, 
+      effectiveFrom, effectiveTo, customInfo)
+    values (#{subcontractId}, #{paymentId}, #{fileName}, #{filePath}, 
+      #{type}, #{uploadBy}, #{uploadTime}, 
+      #{effectiveFrom}, #{effectiveTo}, #{customInfo})
+  </insert>
+  <insert id="insertSubcontractDeliverSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver">
+    <selectKey keyProperty="id" type ="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_deliver_files
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> subcontractId </if>
+      <if test=" prepend="," paymentId> paymentId </if>
+      <if test=" prepend="," fileName> fileName </if>
+      <if test=" prepend="," filePath> filePath </if>
+      <if test=" prepend="," type> type </if>
+      <if test=" prepend="," uploadBy> uploadBy </if>
+      <if test=" prepend="," uploadTime> uploadTime </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom </if>
+      <if test=" prepend="," effectiveTo> effectiveTo </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> #{subcontractId} </if>
+      <if test=" prepend="," paymentId> #{paymentId} </if>
+      <if test=" prepend="," fileName> #{fileName} </if>
+      <if test=" prepend="," filePath> #{filePath} </if>
+      <if test=" prepend="," type> #{type} </if>
+      <if test=" prepend="," uploadBy> #{uploadBy} </if>
+      <if test=" prepend="," uploadTime> #{uploadTime} </if>
+      <if test=" prepend="," effectiveFrom> #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> #{effectiveTo} </if>
+      <if test=" prepend="," customInfo> #{customInfo} </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractDeliverByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver">
+    update pm_subcontract_deliver_files
+    <dynamic prepend="set">
+      <if test=" prepend="," subcontractId> subcontractId = #{subcontractId} </if>
+      <if test=" prepend="," paymentId> paymentId = #{paymentId} </if>
+      <if test=" prepend="," fileName> fileName = #{fileName} </if>
+      <if test=" prepend="," filePath> filePath = #{filePath} </if>
+      <if test=" prepend="," type> type = #{type} </if>
+      <if test=" prepend="," uploadBy> uploadBy = #{uploadBy} </if>
+      <if test=" prepend="," uploadTime> uploadTime = #{uploadTime} </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom = #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> effectiveTo = #{effectiveTo} </if>
+      <if test=" prepend="," customInfo>
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractDeliverById" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver">
+    update pm_subcontract_deliver_files
+    set subcontractId = #{subcontractId},
+      paymentId = #{paymentId},
+      fileName = #{fileName},
+      filePath = #{filePath},
+      type = #{type},
+      uploadBy = #{uploadBy},
+      uploadTime = #{uploadTime},
+      effectiveFrom = #{effectiveFrom},
+      effectiveTo = #{effectiveTo},
+      <!-- customInfo = #customInfo:JSON#  -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractDeliverList" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver" resultMap="SubcontractDeliver">
+    select * from pm_subcontract_deliver_files
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" paymentId> paymentId = #{paymentId} </if>
+        <if test=" prepend="AND" fileName> fileName = #{fileName} </if>
+        <if test=" prepend="AND" filePath> filePath = #{filePath} </if>
+        <if test=" prepend="AND" type> type = #{type} </if>
+        <if test=" prepend="AND" uploadBy> uploadBy = #{uploadBy} </if>
+        <if test=" prepend="AND" uploadTime> uploadTime = #{uploadTime} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractDeliverList" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver" resultType="long">
+    select count(1) from pm_subcontract_deliver_files
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" paymentId> paymentId = #{paymentId} </if>
+        <if test=" prepend="AND" fileName> fileName = #{fileName} </if>
+        <if test=" prepend="AND" filePath> filePath = #{filePath} </if>
+        <if test=" prepend="AND" type> type = #{type} </if>
+        <if test=" prepend="AND" uploadBy> uploadBy = #{uploadBy} </if>
+        <if test=" prepend="AND" uploadTime> uploadTime = #{uploadTime} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+    </dynamic>
+  </select>
+  
+  <select id="selectSubcontractDeliverVOList" parameterType="com.dp.plat.subcontract.entity.SubcontractDeliver" resultType="com.dp.plat.subcontract.vo.SubcontractDeliverVO">
+    SELECT 
+        fl.*, 
+        CASE
+            WHEN ui.username IS NOT NULL 
+            THEN CONCAT(ui.username, "-", ui.realName) 
+            ELSE fl.uploadBy 
+        END AS uploadName, IFNULL(bd.`basicDataName`, fl.type) AS typeName 
+    FROM
+        pm_subcontract_deliver_files fl 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON fl.`type` = bd.`basicDataId` 
+            AND bd.`dataTypeCode` = 'subcontractDeliverState' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = fl.`uploadBy`
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> fl.id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> fl.subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" paymentId> fl.paymentId = #{paymentId} </if>
+        <if test=" prepend="AND" fileName> fl.fileName = #{fileName} </if>
+        <if test=" prepend="AND" filePath> fl.filePath = #{filePath} </if>
+        <if test=" prepend="AND" type> fl.type = #{type} </if>
+        <if test=" prepend="AND" uploadBy> fl.uploadBy = #{uploadBy} </if>
+        <if test=" prepend="AND" uploadTime> fl.uploadTime = #{uploadTime} </if>
+        <if test=" prepend="AND" effectiveFrom> fl.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(fl.effectiveTo, "9999-12-31") ]]> </if>
+    </dynamic>
+  </select>
+  
+  
+  <resultMap id="SubcontractPayment" type="com.dp.plat.subcontract.entity.SubcontractPayment">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="subcontractId" jdbcType="INTEGER" subcontractId />
+    <result column="ratio" jdbcType="VARCHAR" ratio />
+    <result column="amount" jdbcType="VARCHAR" amount />
+    <result column="confirmTime" jdbcType="TIMESTAMP" confirmTime />
+    <result column="paymentTime" jdbcType="TIMESTAMP" paymentTime />
+    <result column="remark" jdbcType="VARCHAR" remark />
+    <result column="sseId" jdbcType="INTEGER" sseId />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+    <result column="customInfo" jdbcType="JSON" customInfo />
+  </resultMap>
+  <sql id="SubcontractPayment_Column_List">
+    id, subcontractId, ratio, amount, confirmTime, paymentTime, remark, sseId, createTime, createBy, 
+    updateTime, updateBy, customInfo
+  </sql>
+  <select id="selectSubcontractPaymentById" parameterType="java.lang.Integer" resultMap="SubcontractPayment">
+    select 
+    <include refid="SubcontractPayment_Column_List" />
+    from pm_subcontract_project_payment
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractPaymentById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_project_payment
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractPayment" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_payment (subcontractId, ratio, amount, confirmTime, 
+      paymentTime, remark, sseId, createTime, 
+      createBy, updateTime, updateBy, customInfo
+      )
+    values (#{subcontractId}, #{ratio}, FORMAT(REPLACE(#{amount}, ",", ""), 2), #{confirmTime}, 
+      #{paymentTime}, #{remark}, #{sseId}, #{createTime}, 
+      #{createBy}, #{updateTime}, #{updateBy}, #customInfo:JSON#
+      )
+  </insert>
+  <insert id="insertSubcontractPaymentSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_payment
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> subcontractId </if>
+      <if test=" prepend="," ratio> ratio </if>
+      <if test=" prepend="," amount> amount </if>
+      <if test=" prepend="," confirmTime> confirmTime </if>
+      <if test=" prepend="," paymentTime> paymentTime </if>
+      <if test=" prepend="," remark> remark </if>
+      <if test=" prepend="," sseId> sseId </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> #{subcontractId} </if>
+      <if test=" prepend="," ratio> #{ratio} </if>
+      <if test=" prepend="," amount> FORMAT(REPLACE(#{amount}, ",", ""), 2) </if>
+      <if test=" prepend="," confirmTime> #{confirmTime} </if>
+      <if test=" prepend="," paymentTime> #{paymentTime} </if>
+      <if test=" prepend="," remark> #{remark} </if>
+      <if test=" prepend="," sseId> #{sseId} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," customInfo> #customInfo:JSON# </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractPaymentByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment">
+    update pm_subcontract_project_payment
+    <dynamic prepend="set">
+      <if test=" prepend="," subcontractId> subcontractId = #{subcontractId} </if>
+      <if test=" prepend="," ratio> ratio = #{ratio} </if>
+      <if test=" prepend="," amount> amount = FORMAT(REPLACE(#{amount}, ",", ""), 2) </if>
+      <if test=" prepend="," confirmTime> confirmTime = #{confirmTime} </if>
+      <if test=" prepend="," paymentTime> paymentTime = #{paymentTime} </if>
+      <if test=" prepend="," remark> remark = #{remark} </if>
+      <if test=" prepend="," sseId> sseId = #{sseId} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+      <if test=" prepend="," customInfo> 
+        <!-- customInfo = #customInfo:JSON#  -->
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractPaymentById" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment">
+    update pm_subcontract_project_payment
+    set subcontractId = #{subcontractId},
+      ratio = #{ratio},
+      amount = FORMAT(REPLACE(#{amount}, ",", ""), 2),
+      confirmTime = #{confirmTime},
+      paymentTime = #{paymentTime},
+      remark = #{remark},
+      sseId = #{sseId},
+      createTime = #{createTime},
+      createBy = #{createBy},
+      updateTime = #{updateTime},
+      updateBy = #{updateBy},
+      <!-- customInfo = #customInfo:JSON# -->
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractPaymentList" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment" resultMap="SubcontractPayment">
+    select * from pm_subcontract_project_payment
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" ratio> ratio = #{ratio} </if>
+        <if test=" prepend="AND" amount> amount = #{amount} </if>
+        <if test=" prepend="AND" confirmTime> confirmTime = #{confirmTime} </if>
+        <if test=" prepend="AND" paymentTime> paymentTime = #{paymentTime} </if>
+        <if test=" prepend="AND" remark> remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" customInfo> customInfo = #customInfo:JSON# </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractPaymentList" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment" resultType="long">
+    select count(1) from pm_subcontract_project_payment
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" ratio> ratio = #{ratio} </if>
+        <if test=" prepend="AND" amount> amount = #{amount} </if>
+        <if test=" prepend="AND" confirmTime> confirmTime = #{confirmTime} </if>
+        <if test=" prepend="AND" paymentTime> paymentTime = #{paymentTime} </if>
+        <if test=" prepend="AND" remark> remark = #{remark} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" customInfo> customInfo = #customInfo:JSON# </if>
+    </dynamic>
+  </select>
+  
+  <resultMap id="SubcontractCallbackResultMap" type="com.dp.plat.subcontract.entity.SubcontractCallback">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="subcontractId" jdbcType="INTEGER" subcontractId />
+    <result column="taskKey" jdbcType="VARCHAR" taskKey />
+    <result column="taskId" jdbcType="VARCHAR" taskId />
+    <result column="quesnaireId" jdbcType="INTEGER" quesnaireId />
+    <result column="quesnaireVersion" jdbcType="INTEGER" quesnaireVersion />
+    <result column="quesnaireState" jdbcType="INTEGER" quesnaireState />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+    <result column="effectiveFrom" jdbcType="TIMESTAMP" effectiveFrom />
+    <result column="effectiveTo" jdbcType="TIMESTAMP" effectiveTo />
+    <result column="customInfo" jdbcType="JSON" customInfo />
+  </resultMap>
+  <sql id="SubcontractCallback_Column_List">
+    id, subcontractId, taskKey, taskId, quesnaireId, quesnaireVersion, quesnaireState, createBy,
+    createTime, updateBy, updateTime, effectiveFrom, effectiveTo, customInfo
+  </sql>
+  <select id="selectSubcontractCallbackById" parameterType="java.lang.Integer" resultMap="SubcontractCallbackResultMap">
+    select
+    <include refid="SubcontractCallback_Column_List" />
+    from pm_subcontract_project_callback
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractCallbackById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_project_callback
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractCallback" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_callback (subcontractId, taskKey, taskId, quesnaireId,
+      quesnaireVersion, quesnaireState, createBy,
+      createTime, updateBy, updateTime,
+      effectiveFrom, effectiveTo, customInfo)
+    values (#{subcontractId}, #{taskKey}, #{taskId}, #{quesnaireId},
+      #{quesnaireVersion}, #{quesnaireState}, #{createBy},
+      #{createTime}, #{updateBy}, #{updateTime},
+      #{effectiveFrom}, #{effectiveTo}, #{customInfo})
+  </insert>
+  <insert id="insertSubcontractCallbackSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_callback
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> subcontractId </if>
+      <if test=" prepend="," taskKey> taskKey </if>
+      <if test=" prepend="," taskId> taskId </if>
+      <if test=" prepend="," quesnaireId> quesnaireId </if>
+      <if test=" prepend="," quesnaireVersion> quesnaireVersion </if>
+      <if test=" prepend="," quesnaireState> quesnaireState </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom </if>
+      <if test=" prepend="," effectiveTo> effectiveTo </if>
+      <if test=" prepend="," customInfo> customInfo </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> #{subcontractId} </if>
+      <if test=" prepend="," taskKey> #{taskKey} </if>
+      <if test=" prepend="," taskId> #{taskId} </if>
+      <if test=" prepend="," quesnaireId> #{quesnaireId} </if>
+      <if test=" prepend="," quesnaireVersion> #{quesnaireVersion} </if>
+      <if test=" prepend="," quesnaireState> #{quesnaireState} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," effectiveFrom> #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> #{effectiveTo} </if>
+      <!-- <if test=" prepend="," customInfo> customInfo = #{customInfo} </if> -->
+      <if test=" prepend="," customInfo>
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractCallbackByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback">
+    update pm_subcontract_project_callback
+    <dynamic prepend="SET">
+      <if test=" prepend="," subcontractId> subcontractId = #{subcontractId} </if>
+      <if test=" prepend="," taskKey> taskKey = #{taskKey} </if>
+      <if test=" prepend="," taskId> taskId = #{taskId} </if>
+      <if test=" prepend="," quesnaireId> quesnaireId = #{quesnaireId} </if>
+      <if test=" prepend="," quesnaireVersion> quesnaireVersion = #{quesnaireVersion} </if>
+      <if test=" prepend="," quesnaireState> quesnaireState = #{quesnaireState} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+      <if test=" prepend="," effectiveFrom> effectiveFrom = #{effectiveFrom} </if>
+      <if test=" prepend="," effectiveTo> effectiveTo = #{effectiveTo} </if>
+      <!-- <if test=" prepend="," customInfo> customInfo = #{customInfo} </if> -->
+      <if test=" prepend="," customInfo>
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractCallbackById" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback">
+    update pm_subcontract_project_callback
+    set subcontractId = #{subcontractId},
+      taskKey = #{taskKey},
+      taskId = #{taskId},
+      quesnaireId = #{quesnaireId},
+      quesnaireVersion = #{quesnaireVersion},
+      quesnaireState = #{quesnaireState},
+      createBy = #{createBy},
+      createTime = #{createTime},
+      updateBy = #{updateBy},
+      updateTime = #{updateTime},
+      effectiveFrom = #{effectiveFrom},
+      effectiveTo = #{effectiveTo},
+      customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON#
+    where id = #{id}
+  </update>
+  <select id="selectSubcontractCallbackList" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultMap="SubcontractCallbackResultMap">
+    select * from pm_subcontract_project_callback spc
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+        <if test=" prepend="AND" taskId> taskId = #{taskId} </if>
+        <if test=" prepend="AND" quesnaireId> quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" quesnaireVersion> quesnaireVersion = #{quesnaireVersion} </if>
+        <if test=" prepend="AND" quesnaireState> quesnaireState = #{quesnaireState} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <!-- <if test=" prepend="AND" customInfo> spc.`customInfo` = #{customInfo} </if> -->
+	    <if test=" customInfo>
+	        <iterate property="customInfo.iterator" >
+	            <if test=" prepend="AND" property="customInfo.iterator[].value">
+	                #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+	            </if>
+	        </iterate>
+	    </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractCallbackList" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultType="long">
+    select count(1) from pm_subcontract_project_callback spc
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+        <if test=" prepend="AND" taskId> taskId = #{taskId} </if>
+        <if test=" prepend="AND" quesnaireId> quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" quesnaireVersion> quesnaireVersion = #{quesnaireVersion} </if>
+        <if test=" prepend="AND" quesnaireState> quesnaireState = #{quesnaireState} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <!-- <if test=" prepend="AND" customInfo> spc.`customInfo` = #{customInfo} </if> -->
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+  </select>
+  
+  <select id="selectMaxSubcontractCallback" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultMap="SubcontractCallbackResultMap">
+    select * from pm_subcontract_project_callback spc
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+        <if test=" prepend="AND" taskId> taskId = #{taskId} </if>
+        <if test=" prepend="AND" quesnaireId> quesnaireId = #{quesnaireId} </if>
+        <if test=" prepend="AND" quesnaireVersion> quesnaireVersion = #{quesnaireVersion} </if>
+        <if test=" prepend="AND" quesnaireState> quesnaireState = #{quesnaireState} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" effectiveFrom> effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(effectiveTo, "9999-12-31") ]]> </if>
+        <!-- <if test=" prepend="AND" customInfo> spc.`customInfo` = #{customInfo} </if> -->
+        <if test=" customInfo>
+            <iterate property="customInfo.iterator" >
+                <if test=" prepend="AND" property="customInfo.iterator[].value">
+                    #customInfo.iterator[].value# = spc.customInfo ->> '$$.$customInfo.iterator[].key$'
+                </if>
+            </iterate>
+        </if>
+    </dynamic>
+    order by createTime desc
+    limit 1
+  </select>
+  
+  <select id="queryCallBackId" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultType="int">
+      <![CDATA[ 
+          SELECT id FROM pm_subcontract_project_callback WHERE subcontractId = #{subcontractId} AND taskId = #{taskId}
+      ]]>
+      <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+  </select>
+  
+  <select id="queryCallBackQuesnaireId" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultType="int">
+      <![CDATA[
+          SELECT quesnaireId FROM pm_subcontract_project_callback WHERE subcontractId = #{subcontractId} AND taskId = #{taskId}
+      ]]>
+      <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+  </select>
+  <select id="queryCallBackQuesnaireVersion" parameterType="com.dp.plat.subcontract.entity.SubcontractCallback" resultType="int">
+      <![CDATA[
+          SELECT COUNT(*) FROM pm_subcontract_project_callback WHERE subcontractId = #{subcontractId}
+      ]]>
+      <if test=" prepend="AND" taskKey> taskKey = #{taskKey} </if>
+  </select>
+  
+  <resultMap id="SubcontractPriceResultMap" type="com.dp.plat.subcontract.entity.SubcontractPrice">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="subcontractId" jdbcType="INTEGER" subcontractId />
+    <result column="contractNo" jdbcType="VARCHAR" contractNo />
+    <result column="orderExecNumber" jdbcType="VARCHAR" orderExecNumber />
+    <result column="projectCode" jdbcType="VARCHAR" projectCode />
+    <result column="engineeFee" jdbcType="VARCHAR" engineeFee />
+    <result column="objId" jdbcType="VARCHAR" objId />
+    <result column="procType" jdbcType="VARCHAR" procType />
+    <result column="price" jdbcType="VARCHAR" price />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+  </resultMap>
+  <sql id="SubcontractPrice_List">
+    id, subcontractName, contractNos, projectIds, type, state, callbackState, facilitatorId, facilitatorName, bankInfo, bankAccount, officeCode, profitDepCode,
+    subcontractNo, isAccrued, subcontractAmount, reason, remark, effectiveFrom, effectiveTo, createBy, createTime,
+    updateBy, updateTime
+  </sql>
+  <select id="selectSubcontractPriceById" parameterType="java.lang.Integer" resultMap="SubcontractPriceResultMap">
+    select
+    <include refid="SubcontractPrice_List" />
+    from pm_subcontract_project_price
+    where id = #{id}
+  </select>
+  <delete id="deleteSubcontractPriceById" parameterType="java.lang.Integer">
+    delete from pm_subcontract_project_price
+    where id = #{id}
+  </delete>
+  <insert id="insertSubcontractPrice" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+        SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_price (subcontractId, contractNo, orderExecNumber,
+      projectCode, engineeFee, objId,
+      procType, price, createTime,
+      createBy, updateTime, updateBy
+      )
+    values (#{subcontractId}, #{contractNo}, #{orderExecNumber},
+      #{projectCode}, #{engineeFee}, #{objId},
+      #{procType}, #{price}, #{createTime},
+      #{createBy}, #{updateTime}, #{updateBy}
+      )
+  </insert>
+  <insert id="insertSubcontractPriceSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice">
+    <selectKey keyProperty="id" type="post" resultType="java.lang.Integer">
+        SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into pm_subcontract_project_price
+    <dynamic open="(" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> subcontractId </if>
+      <if test=" prepend="," contractNo> contractNo </if>
+      <if test=" prepend="," orderExecNumber> orderExecNumber </if>
+      <if test=" prepend="," projectCode> projectCode </if>
+      <if test=" prepend="," engineeFee> engineeFee </if>
+      <if test=" prepend="," objId> objId </if>
+      <if test=" prepend="," procType> procType </if>
+      <if test=" prepend="," price> price </if>
+      <if test=" prepend="," createTime> createTime </if>
+      <if test=" prepend="," createBy> createBy </if>
+      <if test=" prepend="," updateTime> updateTime </if>
+      <if test=" prepend="," updateBy> updateBy </if>
+    </dynamic>
+    <dynamic open="values (" close=")" prepend=" ">
+      <if test=" prepend="," subcontractId> #{subcontractId} </if>
+      <if test=" prepend="," contractNo> #{contractNo} </if>
+      <if test=" prepend="," orderExecNumber> #{orderExecNumber} </if>
+      <if test=" prepend="," projectCode> #{projectCode} </if>
+      <if test=" prepend="," engineeFee> #{engineeFee} </if>
+      <if test=" prepend="," objId> #{objId} </if>
+      <if test=" prepend="," procType> #{procType} </if>
+      <if test=" prepend="," price> #{price} </if>
+      <if test=" prepend="," createTime> #{createTime} </if>
+      <if test=" prepend="," createBy> #{createBy} </if>
+      <if test=" prepend="," updateTime> #{updateTime} </if>
+      <if test=" prepend="," updateBy> #{updateBy} </if>
+    </dynamic>
+  </insert>
+  <update id="updateSubcontractPriceByIdSelective" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice">
+    update pm_subcontract_project_price
+    <dynamic prepend="set">
+      <if test=" prepend="," subcontractId> subcontractId = #{subcontractId} </if>
+      <if test=" prepend="," contractNo> contractNo = #{contractNo} </if>
+      <if test=" prepend="," orderExecNumber> orderExecNumber = #{orderExecNumber} </if>
+      <if test=" prepend="," projectCode> projectCode = #{projectCode} </if>
+      <if test=" prepend="," engineeFee> engineeFee = #{engineeFee} </if>
+      <if test=" prepend="," objId> objId = #{objId} </if>
+      <if test=" prepend="," procType> procType = #{procType} </if>
+      <if test=" prepend="," price> price = #{price} </if>
+      <if test=" prepend="," createTime> createTime = #{createTime} </if>
+      <if test=" prepend="," createBy> createBy = #{createBy} </if>
+      <if test=" prepend="," updateTime> updateTime = #{updateTime} </if>
+      <if test=" prepend="," updateBy> updateBy = #{updateBy} </if>
+    </dynamic>
+    where id = #{id}
+  </update>
+  <update id="updateSubcontractPriceById" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice">
+    update pm_subcontract_project_price
+    set subcontractId = #{subcontractId},
+      contractNo = #{contractNo},
+      orderExecNumber = #{orderExecNumber},
+      projectCode = #{projectCode},
+      engineeFee = #{engineeFee},
+      objId = #{objId},
+      procType = #{procType},
+      price = #{price},
+      createTime = #{createTime},
+      createBy = #{createBy},
+      updateTime = #{updateTime},
+      updateBy = #{updateBy}
+    where id = #{id}
+  </update>
+
+  <select id="selectSubcontractPriceList" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice" resultMap="SubcontractPriceResultMap">
+    select * from pm_subcontract_project_price
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" contractNo> contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" orderExecNumber> orderExecNumber = #{orderExecNumber} </if>
+        <if test=" prepend="AND" projectCode> projectCode = #{projectCode} </if>
+        <if test=" prepend="AND" engineeFee> engineeFee = #{engineeFee} </if>
+        <if test=" prepend="AND" objId> objId = #{objId} </if>
+        <if test=" prepend="AND" procType> procType = #{procType} </if>
+        <if test=" prepend="AND" price> price = #{price} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+    </dynamic>
+  </select>
+  <select id="countSubcontractPriceList" parameterType="com.dp.plat.subcontract.entity.SubcontractPrice" resultType="long">
+    select count(1) from pm_subcontract_project_price
+    <dynamic prepend="where">
+        <if test=" prepend="AND" id> id = #{id} </if>
+        <if test=" prepend="AND" subcontractId> subcontractId = #{subcontractId} </if>
+        <if test=" prepend="AND" contractNo> contractNo = #{contractNo} </if>
+        <if test=" prepend="AND" orderExecNumber> orderExecNumber = #{orderExecNumber} </if>
+        <if test=" prepend="AND" projectCode> projectCode = #{projectCode} </if>
+        <if test=" prepend="AND" engineeFee> engineeFee = #{engineeFee} </if>
+        <if test=" prepend="AND" objId> objId = #{objId} </if>
+        <if test=" prepend="AND" procType> procType = #{procType} </if>
+        <if test=" prepend="AND" price> price = #{price} </if>
+        <if test=" prepend="AND" createTime> createTime = #{createTime} </if>
+        <if test=" prepend="AND" createBy> createBy = #{createBy} </if>
+        <if test=" prepend="AND" updateTime> updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" updateBy> updateBy = #{updateBy} </if>
+    </dynamic>
+  </select>
+  
+  <!-- 转移设备序列号 -->
+  <resultMap type="com.dp.plat.data.bean.Project" id="transferProjectList">
+      <result projectId column="projectId" nullValue="-1"/>
+      <result projectCode column="projectCode"/>
+      <result column010Name column="rank"/>
+      <result projectName column="projectName"/>
+      <result projectStateName column="projectStateName"/>
+      <result projectState column="projectState"/>
+      <result contractNo column="contractNo"/>
+      <result column001 column="officeCode"/>
+      <result column001Name column="officeName"/>
+      <result salesType column="salesType"/>
+  </resultMap>
+  <!-- 转移设备是查询项目列表 -->
+  
+  <select id="queryProjectListBak" parameterType="map" resultMap="transferProjectList">
+      <![CDATA[
+          select * from (
+              SELECT 
+                  `ph`.`projectId` AS `projectId`, `ph`.`projectCode` AS `projectCode`, `rank`.`basicDataName` AS `rank`, (
+                      CASE
+                          WHEN (
+                              `pr`.`mergeBranchMark` IS NOT NULL
+                          ) 
+                          THEN CONCAT(
+                              `ph`.`projectName`, '-', `pr`.`mergeBranchMark`
+                          ) 
+                          ELSE `ph`.`projectName` 
+                      END
+                  ) AS `projectName`, `fd`.`basicDataName` AS `projectStateName`, `ph`.`projectState` AS `projectState`, GROUP_CONCAT(
+                      DISTINCT `pc`.`contractNo` SEPARATOR ','
+                  ) AS `contractNo`, `ph`.`column001` AS `officeCode`, `d`.`departmentName` AS `officeName` 
+              FROM
+                  `pm_project_header` `ph` 
+                  LEFT JOIN `pm_project_group_relationship` `pr` 
+                      ON (
+                          (
+                              `ph`.`projectCode` = `pr`.`projectCode`
+                          )
+                      ) 
+                  LEFT JOIN `pm_project_contract` `pc` 
+                      ON (
+                          (
+                              `pr`.`projectGroupCode` = `pc`.`projectGroupCode`
+                          )
+                      ) 
+                  LEFT JOIN `pm_project_group` `pg` 
+                      ON (
+                          `pr`.`projectGroupCode` = `pg`.`projectGroupCode`
+                      ) 
+                      AND (`pg`.`projectType` = '10') 
+                  LEFT JOIN `fnd_basic_data` `fd` 
+                      ON (
+                          `fd`.`basicDataId` = `ph`.`projectState`
+                      ) 
+                      AND (`fd`.`dataTypeCode` = '02') 
+                      AND (`fd`.`effectiveFrom` < NOW()) 
+                      AND (
+                          (`fd`.`effectiveTo` > NOW()) 
+                          OR ISNULL(`fd`.`effectiveTo`)
+                      ) 
+                  LEFT JOIN `fnd_basic_data` `rank` 
+                      ON (
+                          `ph`.`column010` = `rank`.`basicDataId`
+                      ) 
+                      AND (`rank`.`dataTypeCode` = '05') 
+                      AND (`rank`.`effectiveFrom` <= NOW()) 
+                      AND (
+                          (`rank`.`effectiveTo` > NOW()) 
+                          OR ISNULL(`rank`.`effectiveTo`)
+                      ) 
+                  LEFT JOIN `fnd_department` `d` 
+                      ON (
+                          `d`.`departmentNum` = `ph`.`column001`
+                      ) 
+              where ISNULL(`ph`.`effectiveTo`)
+      ]]>
+                 <if test=" prepend="AND" projectIds> FIND_IN_SET(`ph`.projectId, #{projectIds})</if>
+              <!-- GROUP BY `pc`.`projectGroupCode`, `ph`.`projectCode` -->
+              GROUP BY `ph`.`projectCode`
+              ) t
+      <dynamic prepend="where">  <!--  <if test=" prepend="and" projectName><![CDATA[ projectName like '%$projectName$%']]></if>
+          <if test=" prepend="and" projectState><![CDATA[ projectState in ( $projectState$ ) ]]></if>
+          <if test=" prepend="and" column001><![CDATA[ officeCode = #{column001}]]></if> -->
+          
+          <if test=" contractNos>
+              <iterate prepend="AND" open="(" close=")" contractNos conjunction="or" >
+                contractNo like CONCAT('%', #contractNos[]#, '%')
+              </iterate>
+          </if>
+          <if test=" prepend="AND" projectIds> FIND_IN_SET(projectId, #{projectIds})</if>
+          <!-- <if test=" prepend="and" contractNo><![CDATA[ (contractNo like'%$contractNo$%')]]></if> -->
+          <!-- <if test=" prepend="and" column010><![CDATA[ rank = #{column010}]]></if> -->
+      </dynamic>
+  </select>
+  
+  <select id="queryProjectList" parameterType="map" resultMap="transferProjectList">
+      <![CDATA[
+            SELECT 
+                *, `rank`.`basicDataName` AS `rank`, `fd`.`basicDataName` AS `projectStateName`, `d`.`departmentName` AS `officeName` 
+            FROM
+                (SELECT 
+                    `ph`.`projectId` AS `projectId`, `ph`.`projectCode` AS `projectCode`, (
+                        CASE
+                            WHEN (
+                                `pr`.`mergeBranchMark` IS NOT NULL
+                            ) 
+                            THEN CONCAT(
+                                `ph`.`projectName`, '-', `pr`.`mergeBranchMark`
+                            ) 
+                            ELSE `ph`.`projectName` 
+                        END
+                    ) AS `projectName`, `ph`.`projectState` AS `projectState`, GROUP_CONCAT(
+                        DISTINCT `pc`.`contractNo` SEPARATOR ','
+                    ) AS `contractNo`, `ph`.`column001` AS `officeCode`, ph.`column010`, ph.salesType
+                FROM
+                    `pm_project_header` `ph` 
+                    LEFT JOIN `pm_project_group_relationship` `pr` 
+                        ON (
+                            (
+                                `ph`.`projectCode` = `pr`.`projectCode`
+                            )
+                        ) 
+                    LEFT JOIN `pm_project_contract` `pc` 
+                        ON (
+                            (
+                                `pr`.`projectGroupCode` = `pc`.`projectGroupCode`
+                            )
+                        ) 
+                    LEFT JOIN `pm_project_group` `pg` 
+                        ON (
+                            `pr`.`projectGroupCode` = `pg`.`projectGroupCode`
+                        ) 
+                        AND (`pg`.`projectType` = '10') 
+                WHERE ISNULL(`ph`.`effectiveTo`) 
+        ]]>         <if test=" prepend="AND" projectIds> FIND_IN_SET(`ph`.projectId, #{projectIds})</if>
+                    <if test=" contractNos>
+                        <if test=" prepend="AND" projectIds> `ph`.projectId = -1 </if>
+                    </if>
+                    <if test=" projectIdList>
+					    <iterate prepend="AND" open=" ph.projectId in (" close=")" projectIdList conjunction="," > #projectIdList[]# </iterate>
+					</if>
+                <!-- GROUP BY `pc`.`projectGroupCode`, `ph`.`projectCode` -->
+                GROUP BY `ph`.`projectCode`
+                ) t 
+        <![CDATA[
+                LEFT JOIN `fnd_basic_data` `fd` 
+                    ON (
+                        `fd`.`basicDataId` = `t`.`projectState`
+                    ) 
+                    AND (`fd`.`dataTypeCode` = '02') 
+                    AND (`fd`.`effectiveFrom` < NOW()) 
+                    AND (
+                        (`fd`.`effectiveTo` > NOW()) 
+                        OR ISNULL(`fd`.`effectiveTo`)
+                    ) 
+                LEFT JOIN `fnd_basic_data` `rank` 
+                    ON (
+                        `t`.`column010` = `rank`.`basicDataId`
+                    ) 
+                    AND (`rank`.`dataTypeCode` = '05') 
+                    AND (`rank`.`effectiveFrom` <= NOW()) 
+                    AND (
+                        (`rank`.`effectiveTo` > NOW()) 
+                        OR ISNULL(`rank`.`effectiveTo`)
+                    ) 
+                LEFT JOIN `fnd_department` `d` 
+                    ON (
+                        `d`.`departmentNum` = `t`.`officeCode`
+                    )
+      ]]>
+      <dynamic prepend="where">
+          <if test=" contractNos>
+              <iterate prepend="AND" open="(" close=")" contractNos conjunction="or" >
+                contractNo like CONCAT('%', #contractNos[]#, '%')
+              </iterate>
+          </if>
+          <if test=" projectIdList>
+              <iterate prepend="AND" open=" projectId in (" close=")" projectIdList conjunction="," > #projectIdList[]# </iterate>
+          </if>
+          
+          <if test=" prepend="AND" projectIds> FIND_IN_SET(projectId, #{projectIds})</if>
+          <if test=" contractNos>
+              <if test=" prepend="AND" projectIds> projectId = -1 </if>
+          </if>
+      </dynamic>
+  </select>
+    
+  <resultMap type="com.dp.plat.data.bean.ShipmentInfo" id="shipmentinfo">
+      <result contractNo column="contractNo"/>
+      <result barCode column="barCode"/>
+      <result itemCode column="itemCode"/>
+      <result itemName column="itemName"/>
+      <result barCode2 column="barCode2"/>
+      <result itemCode2 column="itemCode2"/>
+      <result itemName2 column="itemName2"/>
+      <result chProjectId column="chProjectId"/>
+      <result chContractNo column="chContractNo"/>
+      <result transferProjectId column="transferProjectId"/>
+      <result transferContractNo column="transferContractNo"/>
+      <result transferFlag column="transferFlag"/>
+  </resultMap>
+  <select id="queryShipmentinfoByContractNosAndProjectIds" parameterType="java.util.Map" resultMap="shipmentinfo">
+    select * from (
+      SELECT DISTINCT vsip.contract_code contractNo, vsip.barcode barCode, vsip.itemCode itemCode, vsip.itemName itemName, 
+        NULL AS chProjectId, NULL AS chContractNo, NULL AS transferProjectId, NULL AS transferContractNo, -1 AS transferFlag,
+        vsip.barcode2 barCode2, vsip.itemCode2 itemCode2, vsip.itemName2 itemName2
+      FROM view_shipment_info_4_pm vsip 
+      LEFT JOIN view_shipment_ems_4_pm vsep ON vsep.contract_code = vsip.contract_code AND vsep.packId = vsip.packId
+      WHERE vsip.contract_code in ($contractNos$) AND NOT EXISTS(SELECT 1 FROM pm_project_shipment pps1 WHERE vsip.barcode = pps1.barcode
+          and contractNo in ($contractNos$) and projectId in ($projectIds$)
+      )
+      <if test=" contractProfitCenter>
+          <iterate prepend="AND" contractProfitCenter open="(" close=")" conjunction="OR">
+	          <!-- vsip.contract_code = #contractProfitCenter[].contractNo# and vsip.`profitCenter` = #contractProfitCenter[].officeCode# -->
+	          vsip.contract_code = #contractProfitCenter[].sourceContractNo# 
+	          <if test=" prepend="AND" property="contractProfitCenter[].officeCode">
+	              vsip.`profitCenter` = #contractProfitCenter[].officeCode#
+	          </if>
+	      </iterate>
+      </if>
+      UNION ALL 
+      SELECT pps.`contractNo`,pps.`barcode`,pps.`itemCode`,pps.`itemName`,
+        pps.chProjectId, pps.chContractNo, pps.transferProjectId, pps.transferContractNo, pps.transferFlag,
+        sbr.sn2 AS barCode2, sbr.item2 AS itemCode2, fi.describe_ AS itemName2
+      FROM pm_project_shipment pps 
+        LEFT JOIN `fb_shipment_barcode_relation` sbr ON sbr.contract = REPLACE(pps.contractNo, '-C', '') AND pps.barcode = sbr.sn1
+        LEFT JOIN `fb_items` fi ON fi.item = sbr.item2  
+      WHERE contractNo in ($contractNos$) and projectId in ($projectIds$)
+           <if test=" prepend="AND" excludeTransferOut compareValue="true">transferFlag != 1</if>
+           AND EXISTS 
+          (SELECT 
+              1 
+          FROM
+              view_shipment_info_4_pm vsip 
+              LEFT JOIN view_shipment_ems_4_pm vsep 
+                  ON vsep.contract_code = vsip.contract_code 
+                  AND vsep.packId = vsip.packId 
+          WHERE vsip.contract_code IN ($sourceContractNos$)
+              <!-- FIND_IN_SET(vsip.contract_code ,REPLACE(REPLACE(#{contractNos}, '-C', ''), "'",'')) -->
+              AND vsip.barcode = pps.barcode)
+      ORDER BY transferFlag asc) t
+      order by t.contractNo, t.itemCode
+  </select>
+  
+  <select id="checkSubcontractName" parameterType="com.dp.plat.subcontract.entity.SubcontractProject" resultType="int">
+      SELECT COUNT(1) FROM `pm_subcontract_project_header` WHERE subcontractName LIKE CONCAT(#{subcontractName} , "%")
+      <if test=" prepend="AND" id>
+         id != #{id}
+      </if>
+  </select>
+  
+  <select id="queryContractNoEngineeFee" parameterType="string" resultType="java.util.HashMap" remapResults="true">
+    SELECT 
+        pfs.`orderExecNumber`, dfs.`contractNo`, pfs.`projectCode`, 
+        CASE
+            WHEN pfs.`engineeFee` IS NOT NULL 
+            THEN pfs.engineeFee 
+            ELSE 0 
+        END AS engineeFee, pfs.`objId`, pfs.`applyType` as procType
+    FROM
+        `pm_project_property_from_sms` pfs 
+        LEFT JOIN `pm_order_data_from_sap` dfs 
+            ON pfs.`orderExecNumber` = dfs.`orderExecNumber` 
+    WHERE dfs.`contractNo` IS NOT NULL
+       AND FIND_IN_SET(dfs.contractNo, #{contractNos})
+  </select>
+  
+  <select id="queryContractNoEngineeFeeWithSubPrice" parameterType="map" resultType="com.dp.plat.subcontract.entity.SubcontractPrice" remapResults="true">
+    SELECT 
+        t.`orderExecNumber`, t.`contractNo`, t.`projectCode`, t.engineeFee, t.`objId`, t.procType
+        <if test=" prepend="," subcontractId> spp.`id`, spp.subcontractId, spp.`price` </if>
+    FROM
+        (SELECT 
+            MAX(pfs.`orderExecNumber`) AS `orderExecNumber`, dfs.`contractNo`, pfs.`projectCode`, 
+            CASE
+                WHEN pfs.`engineeFee` IS NOT NULL 
+                THEN pfs.engineeFee 
+                ELSE 0 
+            END AS engineeFee, pfs.`objId`, pfs.`applyType` AS procType 
+        FROM
+            `pm_project_property_from_sms` pfs 
+            LEFT JOIN `pm_order_data_from_sap` dfs 
+                ON pfs.`orderExecNumber` = dfs.`orderExecNumber` 
+        WHERE dfs.`contractNo` IS NOT NULL
+           AND FIND_IN_SET(dfs.contractNo, #{contractNos})
+        GROUP BY dfs.contractNo, pfs.projectCode, pfs.objId, pfs.applyType) t 
+        <if test=" prepend=" " subcontractId>
+        LEFT JOIN `pm_subcontract_project_price` spp 
+            ON t.`orderExecNumber` = spp.`orderExecNumber` 
+            AND t.contractNo = spp.contractNo 
+            AND t.projectCode = spp.`projectCode`
+            AND spp.subcontractId = #{subcontractId}
+            AND FIND_IN_SET(spp.contractNo, #{contractNos}) 
+        </if>
+        order by t.contractNo, t.orderExecNumber 
+  </select>
+  
+  
+  <insert id="insertSubcontractEvaluationHeader" parameterType="com.dp.plat.subcontract.vo.SubcontractEvaluationHeader">
+    <![CDATA[
+        insert into pm_cl_evaluation_header
+        (projectCode ,status ,createdTime ,evaluationScore ,
+        evaluationTime ,evaluationPeopleName ,evaluationPeopleId,createdPerson ,updatedPerson ,evaluationComment ,evaluationResult ,
+        nextAcceptPerson ,nextAcceptPersonName,evaluationType ,updatedTime ,applyHeaderId ,
+        projectId ,projectName, subcontractId, subcontractName) 
+        values
+        (#{projectCode} ,#{status} ,now() ,#{evaluationScore} ,
+    ]]>
+        <if test=" evaluationTime> now() </if>
+        <if test=" evaluationTime>  #{evaluationTime} </if>
+    <![CDATA[
+        ,#{evaluationPeopleName} ,#{evaluationPeopleId},#{createdPerson} ,null ,#{evaluationComment} ,#{evaluationResult} ,
+        #{nextAcceptPerson} ,#{nextAcceptPersonName},#{evaluationType} ,null ,#{applyHeaderId},
+        #{projectId} ,#{projectName}, #{subcontractId}, #{subcontractName})
+    ]]>
+    <selectKey resultType="int"  keyProperty="id">    
+         SELECT last_insert_id() as id ;   
+    </selectKey>
+  </insert>
+  
+  <update id="updateSubcontractEvaluationHeader" parameterType="com.dp.plat.subcontract.vo.SubcontractEvaluationHeader">
+    <![CDATA[
+        update pm_cl_evaluation_header set 
+        status=#{status}
+    ]]>
+    <if test=" prepend="," evaluationScore compareValue="0">
+        evaluationScore = #{evaluationScore}
+    </if>
+    <if test=" prepend="," applyHeaderId compareValue="0">
+        applyHeaderId = #{applyHeaderId}
+    </if>
+    <if test=" prepend="," procInstId>
+        procInstId= #{procInstId}
+    </if> 
+    <![CDATA[
+        ,evaluationTime=now(),
+        evaluationPeopleName=#{evaluationPeopleName},evaluationPeopleId=#{evaluationPeopleId},
+        updatedPerson=#{updatedPerson},evaluationComment=#{evaluationComment},evaluationResult=#{evaluationResult},
+        nextAcceptPerson=#{nextAcceptPerson},nextAcceptPersonName=#{nextAcceptPersonName},updatedTime=now()
+        where id=#{id}
+    ]]>
+  </update>
+  
+  <select id="querySubcontractTaskList" parameterType="map" resultType="java.util.HashMap" remapResults="true">
+    SELECT DISTINCT 
+        h.id AS subcontractId, h.contractNos, h.subcontractNo, h.subcontractName, h.officeCode, dep.departmentName AS officeName, h.profitDepCode, dep2.departmentName AS profitDepName, D.KEY_ AS processKey, D.NAME_ AS processName, RES.ID_ AS taskId, RES.NAME_ AS taskName, 
+        CASE
+            WHEN RES.ASSIGNEE_ = 'emlRole' THEN '工程管理部主管'
+            WHEN RES.ASSIGNEE_ = 'emRole' THEN '工程管理部'
+            WHEN RES.ASSIGNEE_ = 'cbRole' THEN '回访人员' 
+            WHEN RES.ASSIGNEE_ = 'zrRole' THEN '办事处主任' 
+		    ELSE IFNULL(fr.roleName, CONCAT(ui.username, '-', ui.realName))
+        END AS assigneeName, RES.CREATE_TIME_ AS createTime 
+        , h.customInfo ->> '$$.purchId' AS purchId
+	    , hp.id AS paymentId
+	    , hp.ratio AS paymentRatio
+	    , hp.amount AS paymentAmount
+	    , hp.remark AS paymentRemark
+	    , hp.customInfo ->> '$$.status' AS paymentStatus
+	    , fc.abbr AS compAbbr
+    FROM
+        ACT_RU_TASK RES 
+        INNER JOIN ACT_RU_VARIABLE A0 
+            ON RES.PROC_INST_ID_ = A0.PROC_INST_ID_ 
+        INNER JOIN ACT_RE_PROCDEF D 
+            ON RES.PROC_DEF_ID_ = D.ID_ 
+        INNER JOIN `pm_subcontract_project_header` h 
+            ON h.`id` = A0.`LONG_` 
+            AND A0.NAME_ = 'subcontractId' 
+            AND A0.TASK_ID_ IS NULL 
+            AND A0.NAME_ = 'subcontractId' 
+            AND A0.TYPE_ = 'integer' 
+            AND h.effectiveTo IS NULL
+        LEFT JOIN `pm_subcontract_project_payment` hp 
+	        ON h.`id` = hp.subcontractId 
+	        AND D.KEY_ = 'SubcontractInspection'
+	        AND hp.confirmTime IS NULL
+        LEFT JOIN fnd_user_info ui 
+            ON RES.`ASSIGNEE_` = ui.`username` 
+            AND ui.`status` = 1 
+        LEFT JOIN `fnd_roles` fr
+            ON RES.ASSIGNEE_ = CONCAT('role_', fr.id)
+        LEFT JOIN fnd_department dep 
+            ON h.`officeCode` = dep.`departmentNum` 
+            AND dep.`status` = 1 
+        LEFT JOIN fnd_department dep2 
+            ON h.profitDepCode = dep2.`departmentNum` 
+            <!-- AND dep2.isParam = 1  -->
+            AND dep.`status` = 1 
+        LEFT JOIN `fnd_company` fc
+            ON fc.id = h.orgId
+    WHERE RES.SUSPENSION_STATE_ = 1 
+        <if test=" processKey prepend="AND">
+            D.KEY_ = #{processKey}
+        </if>
+        <if test=" processKey prepend="AND">
+            <!-- (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack' or D.KEY_ = 'SubcontractInspection') -->
+            D.KEY_ in ('Subcontract', 'SubcontractCallBack', 'SubcontractInspection')
+        </if>
+        <if test=" taskId prepend="AND">
+            RES.ID_ = #{taskId}
+        </if>
+        <if test=" taskKey prepend="AND">
+            RES.TASK_DEF_KEY_ = #{taskKey}
+        </if>
+        AND (
+            <if test=" assignee prepend="">
+                (RES.ASSIGNEE_ = #{assignee}
+                    OR (RES.ASSIGNEE_ IS NULL
+                        AND EXISTS (
+                            SELECT 1
+                            FROM ACT_RU_IDENTITYLINK I
+                                LEFT JOIN `act_id_group` g
+                                ON g.`ID_` = i.`GROUP_ID_`
+                                    AND i.`TYPE_` = 'candidate'
+                                LEFT JOIN `act_id_membership` im ON im.`GROUP_ID_` = g.`ID_`
+                            WHERE I.TASK_ID_ = RES.ID_
+                                AND I.TYPE_ = 'candidate'
+                                AND (I.USER_ID_ = #{assignee} OR im.`USER_ID_` = #{assignee})
+                        )
+                    )
+                )
+            </if>
+<!--             <if test=" roleGroup prepend="OR">
+                RES.ASSIGNEE_ = #{roleGroup} 
+            </if>  -->
+            <!-- <if test=" roleGroup prepend="OR" open="(" close=")">
+                RES.ASSIGNEE_ = #{roleGroup} 
+                <if test=" checkOffice prepend="and">
+                    FIND_IN_SET(h.`officeCode`, #{areaPower})
+                </if>
+                <if test=" checkProfitDep prepend="and">
+                    FIND_IN_SET(h.`profitDepCode`, #{areaPower})
+                </if>
+            </if> -->
+            <if test=" roleGroups>
+                <iterate roleGroups>
+                    <if test=" property="roleGroups[].roleGroup" prepend="OR" open="(" close=")">
+                        RES.ASSIGNEE_ = #roleGroups[].roleGroup# 
+                        <if test=" property="roleGroups[].checkAll" prepend="and">
+                        (
+                            FIND_IN_SET(h.`officeCode`, #{areaPower}) OR 
+                            FIND_IN_SET(h.`profitDepCode`, #{areaPower}) OR
+                            FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+                        )
+                        </if>
+                        <if test=" property="roleGroups[].checkOffice" prepend="and">
+                            FIND_IN_SET(h.`officeCode`, #{areaPower})
+                        </if>
+                        <if test=" property="roleGroups[].checkProfitDep" prepend="and">
+                            FIND_IN_SET(h.`profitDepCode`, #{areaPower})
+                        </if>
+                        <if test=" property="roleGroups[].checkParentOffice" prepend="and">
+		                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+		                </if>
+                    </if>
+                </iterate>
+            </if>
+            )
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" purchId> #{purchId} = h.`customInfo` ->> '$$.purchId' </if>
+    ORDER BY RES.CREATE_TIME_ DESC 
+  </select>
+  
+  <select id="selectRejectedSubcontractProjectList" parameterType="map" resultType="java.util.HashMap" remapResults="true">
+    <![CDATA[
+        SELECT DISTINCT 
+            h.id AS subcontractId, h.contractNos, h.subcontractNo, h.subcontractName, h.officeCode, dep.departmentName AS officeName, h.profitDepCode,
+            dep2.departmentName AS profitDepName, "Subcontract" AS processKey, "项目转包流程" AS processName, -1 AS taskId, "重新发起申请" AS taskName, "服务经理" AS assigneeName, NULL AS createTime 
+        FROM
+            `pm_subcontract_project_header` h 
+            LEFT JOIN fnd_department dep 
+                ON h.`officeCode` = dep.`departmentNum` 
+                AND dep.`status` = 1 
+            LEFT JOIN fnd_department dep2 
+                ON h.profitDepCode = dep2.`departmentNum` 
+                AND dep2.isParam = 1 
+                AND dep.`status` = 1 
+        WHERE h.`state` < 0 AND FIND_IN_SET(h.`officeCode`, #{areaPower})
+            AND h.effectiveTo IS NULL
+    ]]>
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        
+        <if test=" prepend="AND" purchId> #{purchId} = h.`customInfo` ->> '$$.purchId' </if>
+  </select>
+  
+  <resultMap id="taskResultMap" type="org.activiti.engine.impl.persistence.entity.TaskEntity">
+    <result jdbcType="VARCHAR" column="ID_" id />
+    <result jdbcType="INTEGER" column="REV_" revision />
+    <result jdbcType="VARCHAR" column="NAME_" nameWithoutCascade />
+    <result jdbcType="VARCHAR" column="PARENT_TASK_ID_" parentTaskIdWithoutCascade />
+    <result jdbcType="VARCHAR" column="DESCRIPTION_" descriptionWithoutCascade />
+    <result jdbcType="INTEGER" column="PRIORITY_" priorityWithoutCascade />
+    <result jdbcType="TIMESTAMP" column="CREATE_TIME_" createTime />
+    <result jdbcType="VARCHAR" column="OWNER_" ownerWithoutCascade />
+    <result jdbcType="VARCHAR" column="ASSIGNEE_" assigneeWithoutCascade />
+    <result jdbcType="VARCHAR" column="DELEGATION_" delegationStateString />
+    <result jdbcType="VARCHAR" column="EXECUTION_ID_" executionId />
+    <result jdbcType="VARCHAR" column="PROC_INST_ID_" processInstanceId />
+    <result jdbcType="VARCHAR" column="PROC_DEF_ID_" processDefinitionId />
+    <result jdbcType="VARCHAR" column="TASK_DEF_KEY_" taskDefinitionKeyWithoutCascade />
+    <result jdbcType="TIMESTAMP" column="DUE_DATE_" dueDateWithoutCascade />
+    <result jdbcType="INTEGER" column="SUSPENSION_STATE_" suspensionState />
+  </resultMap>
+  <!-- <select id="querySubcontractActivitiTaskList" parameterType="map" resultMap="taskResultMap">
+    SELECT DISTINCT 
+        RES.* 
+    FROM
+        ACT_RU_TASK RES 
+        INNER JOIN ACT_RU_VARIABLE A0 
+            ON RES.PROC_INST_ID_ = A0.PROC_INST_ID_ 
+        INNER JOIN ACT_RE_PROCDEF D 
+            ON RES.PROC_DEF_ID_ = D.ID_ 
+    WHERE RES.SUSPENSION_STATE_ = 1 
+        <if test=" processKey prepend="AND">
+            D.KEY_ = #{processKey}
+        </if>
+        <if test=" processKey prepend="AND">
+            (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack')
+        </if>
+        <if test=" taskId prepend="AND">
+            RES.ID_ = #{taskId}
+        </if>
+        <if test=" taskKey prepend="AND">
+            <iterate taskKey open="(" close=")" conjunction="or">
+               RES.TASK_DEF_KEY_ = #taskKey[]#
+            </iterate>
+        </if>
+        <if test=" subcontractId prepend="AND">
+            (A0.NAME_ = 'subcontractId' 
+            AND A0.TYPE_ = 'integer'
+            AND A0.LONG_ = #{subcontractId} )
+        </if>
+        AND (
+            <if test=" assignee prepend="">
+                RES.ASSIGNEE_ = #{assignee}
+            </if>
+            <if test=" roleGroup prepend="OR">
+                RES.ASSIGNEE_ = #{roleGroup} 
+            </if>
+            )
+    ORDER BY RES.CREATE_TIME_ DESC 
+  </select> -->
+  <select id="querySubcontractActivitiTaskList" parameterType="map" resultMap="taskResultMap">
+    SELECT DISTINCT 
+        RES.* 
+    FROM
+        ACT_RU_TASK RES 
+        INNER JOIN ACT_RU_VARIABLE A0 
+            ON RES.PROC_INST_ID_ = A0.PROC_INST_ID_ 
+        INNER JOIN ACT_RE_PROCDEF D 
+            ON RES.PROC_DEF_ID_ = D.ID_ 
+        INNER JOIN `pm_subcontract_project_header` h 
+            ON h.`id` = A0.`LONG_` 
+            AND A0.NAME_ = 'subcontractId' 
+            AND A0.TASK_ID_ IS NULL 
+            AND A0.NAME_ = 'subcontractId' 
+            AND A0.TYPE_ = 'integer' 
+            AND h.effectiveTo IS NULL
+    WHERE RES.SUSPENSION_STATE_ = 1 
+        <if test=" processKey prepend="AND">
+            D.KEY_ = #{processKey}
+        </if>
+        <if test=" processKey prepend="AND">
+            <!-- (D.KEY_ = 'Subcontract' or D.KEY_ = 'SubcontractCallBack' or D.KEY_ = 'SubcontractInspection') -->
+            D.KEY_ in ('Subcontract', 'SubcontractCallBack', 'SubcontractInspection')
+        </if>
+        <if test=" taskId prepend="AND">
+            RES.ID_ = #{taskId}
+        </if>
+        <if test=" taskKey prepend="AND">
+            <iterate taskKey open="(" close=")" conjunction="or">
+               RES.TASK_DEF_KEY_ = #taskKey[]#
+            </iterate>
+        </if>
+        <if test=" subcontractId prepend="AND">
+            (A0.NAME_ = 'subcontractId' 
+            AND A0.TYPE_ = 'integer'
+            AND A0.LONG_ = #{subcontractId} )
+        </if>
+        AND (
+            <if test=" assignee prepend="">
+                <if test=" roleGroup prepend="">
+                    1 = 1
+                </if>
+            </if>
+            <if test=" assignee prepend="">
+                (RES.ASSIGNEE_ = #{assignee}
+			        OR (RES.ASSIGNEE_ IS NULL
+			            AND EXISTS (
+			                SELECT 1
+			                FROM ACT_RU_IDENTITYLINK I
+			                    LEFT JOIN `act_id_group` g
+			                    ON g.`ID_` = i.`GROUP_ID_`
+			                        AND i.`TYPE_` = 'candidate'
+			                    LEFT JOIN `act_id_membership` im ON im.`GROUP_ID_` = g.`ID_`
+			                WHERE I.TASK_ID_ = RES.ID_
+			                    AND I.TYPE_ = 'candidate'
+			                    AND (I.USER_ID_ = #{assignee} OR im.`USER_ID_` = #{assignee})
+			            )
+		            )
+		        )
+            </if>
+            <if test=" roleGroup prepend="OR" open="(" close=")">
+                <!-- RES.ASSIGNEE_ = #{roleGroup}  -->
+                FIND_IN_SET(RES.ASSIGNEE_, #{roleGroup} )
+                <if test=" checkAll prepend="and">
+                (
+                    FIND_IN_SET(h.`officeCode`, #{areaPower}) OR 
+                    FIND_IN_SET(h.`profitDepCode`, #{areaPower}) OR
+                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+                )
+                </if>
+                <if test=" checkOffice prepend="and">
+                    FIND_IN_SET(h.`officeCode`, #{areaPower})
+                </if>
+                <if test=" checkProfitDep prepend="and">
+                    FIND_IN_SET(h.`profitDepCode`, #{areaPower})
+                </if>
+                <if test=" checkParentOffice prepend="and">
+                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+                </if>
+            </if>
+            <if test=" roleGroups>
+                <iterate roleGroups>
+                    <if test=" property="roleGroups[].roleGroup" prepend="OR" open="(" close=")">
+                        RES.ASSIGNEE_ = #roleGroups[].roleGroup# 
+                        <if test=" property="roleGroups[].checkAll" prepend="and">
+                        (
+                            FIND_IN_SET(h.`officeCode`, #{areaPower}) OR 
+                            FIND_IN_SET(h.`profitDepCode`, #{areaPower}) OR
+                            FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+                        )
+                        </if>
+                        <if test=" property="roleGroups[].checkOffice" prepend="and">
+                            FIND_IN_SET(h.`officeCode`, #{areaPower})
+                        </if>
+                        <if test=" property="roleGroups[].checkProfitDep" prepend="and">
+                            FIND_IN_SET(h.`profitDepCode`, #{areaPower})
+                        </if>
+                        <if test=" property="roleGroups[].checkParentOffice" prepend="and">
+		                    FIND_IN_SET(h.customInfo ->> '$$.parentOfficeCode', #{areaPower})
+		                </if>
+                    </if>
+                </iterate>
+            </if>
+            )
+    ORDER BY RES.CREATE_TIME_ DESC 
+  </select>
+  
+  <select id="querySubcontractCommentList" parameterType="int" resultType="java.util.HashMap" remapResults="true">
+    SELECT 
+        rp.NAME_ AS processName, bd.basicDataName AS statusName, ht.NAME_ AS taskName, ach.message AS 'comment', ach.assigneeTime, 
+        CASE
+            WHEN ach.`procdefKey` = 'SubcontractCallback' 
+            THEN spc.subcontractId 
+            ELSE ach.objId
+        END AS subcontractId, 
+        CASE
+            WHEN ach.taskId = spc.taskId 
+            THEN spc.quesnaireId 
+            ELSE NULL 
+        END AS quesnaireId, 
+        CASE
+            WHEN ui.username IS NULL 
+            THEN ach.assignee 
+            ELSE CONCAT(ach.assignee, "-", ui.realName) 
+        END AS assigneeName, ach.nextAssignee, ach.nextAssigneeName
+    FROM
+        `fnd_act_hi_comment` ach 
+        LEFT JOIN `pm_subcontract_project_callback` spc 
+            ON ach.`objId` = spc.`id` 
+            AND ach.`procdefKey` = 'SubcontractCallback' 
+            <!-- AND ach.`taskKey` = spc.'taskKey'  -->
+        LEFT JOIN `fnd_basic_data` bd 
+            ON bd.dataTypeCode = 'subcontractWorkFlowState' 
+            AND bd.basicDataId = ach.result 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.username = ach.assignee 
+        LEFT JOIN `act_hi_taskinst` ht 
+            ON ht.ID_ = ach.taskId 
+            AND ht.PROC_INST_ID_ = ach.instId 
+        LEFT JOIN `act_re_procdef` rp 
+            ON rp.ID_ = ht.PROC_DEF_ID_
+    WHERE (
+            ach.`procdefKey` = 'SubcontractCallback' 
+            <if test=" prepend="AND" > spc.`subcontractId` = #{subcontractId}</if>
+        )
+        OR (
+            ach.`procdefKey` in ('Subcontract', 'SubcontractInspection')
+            <if test=" prepend="AND" > ach.`objId` = #{subcontractId}</if>
+        )
+    ORDER BY ach.`assigneeTime` ASC 
+  </select>
+  
+  <select id="querySubcontractInfoForProject" parameterType="string" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    SELECT
+        h.*, d.`departmentName` AS officeName, d1.`departmentName` AS profitDepName, bd.`basicDataName` AS stateName, bd1.`basicDataName` AS callbackStateName, bd2.basicDataName as typeName, CONCAT(h.createBy, "-", ui.`realName`) AS createName 
+    FROM
+        pm_subcontract_project_header h 
+        LEFT JOIN fnd_department d 
+            ON h.`officeCode` = d.`departmentNum` 
+        LEFT JOIN fnd_department d1 
+            ON h.`profitDepCode` = d1.`departmentNum` 
+        LEFT JOIN `fnd_basic_data` bd 
+            ON h.`state` = bd.`basicDataId` 
+            AND bd.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON h.`callbackState` = bd1.`basicDataId` 
+            AND bd1.`dataTypeCode` = 'subcontractCbState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON h.`type` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractType' 
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
+    WHERE h.`effectiveTo` IS NULL 
+        AND FIND_IN_SET(#{projectIds}, h.projectIds);
+  </select>
+  
+  <select id="querySubcontractExportData" parameterType="com.dp.plat.subcontract.vo.SubcontractProjectVO" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    select 
+        h.`contractNos`, h.`subcontractNo`, h.`subcontractName`, bd.`basicDataName` AS typeName, h.`facilitatorName`, h.`subcontractAmount`, 
+        office.`departmentName` AS officeName, profitDep.`departmentName` AS profitDepName, h.reason,
+        h.`createTime`, CONCAT(h.createBy, "-", ui.`realName`) AS createName, h.customInfo
+        <if test=" prepend="," searchTimeType compareValue="zrApproverTime"> zrTask.zrApproverTime </if>
+        <if test=" prepend="," searchTimeType compareValue="zrApproverTime"> h.zrApproveTime as zrApproverTime</if>,
+        bd1.`basicDataName` AS stateName, bd2.`basicDataName` AS callbackStateName, h.`isAccrued`, h.`isInvoiced`, pp.confirmTime, 
+        CONCAT(
+            ROUND(
+                pp.paidAmount / CONVERT(
+                    REPLACE(h.subcontractAmount, ',', ''), DECIMAL (25, 2)
+                ) * 100, 2
+            ), "%"
+        ) AS paidRatio, pp.paidAmount, pp.paymentTime, pp.remark, pp.customInfo AS extInfo
+        , h.orgId
+    from
+        `pm_subcontract_project_header` h
+    <if test=" searchTimeType compareValue="zrApproverTime">
+        left join 
+            (select 
+                objId as subcontractId, max(assigneeTime) as zrApproverTime 
+            from
+                `fnd_act_hi_comment` 
+            where result = 1 
+                and taskKey = 'approveZRTask' 
+                and procdefKey = 'Subcontract' 
+            group by procdefKey, objId) zrTask 
+            on zrTask.subcontractId = h.`id` 
+    </if>
+        left join 
+            (select 
+                t.`subcontractId`, t.confirmTime, t.paymentTime, t.remark, maxPay.paidAmount, t.customInfo
+            from
+                `pm_subcontract_project_payment` t 
+                inner join 
+                    (select 
+                        <!-- max(IF(confirmTime is not null, id, null)) as maxPayId,  -->
+                        max(id) AS maxPayId,
+                        sum(
+                            if(
+                                paymentTime is not null, convert(
+                                    replace(IFNULL(customInfo ->> '$$.paidAmount', amount), ",", ""), DECIMAL (25, 2)
+                                ), 0
+                            )
+                        ) as paidAmount 
+                    from
+                        `pm_subcontract_project_payment` 
+                    <!-- where confirmTime is not null  -->
+                    group by subcontractId) maxPay 
+                    on t.id = maxPay.maxPayId) pp 
+            on pp.subcontractId = h.id
+    <if test=" searchTimeType compareValue="paymentTime">
+        LEFT JOIN `pm_subcontract_project_payment` p 
+            ON h.id = p.`subcontractId` 
+    </if>
+        left join `fnd_basic_data` bd 
+            on bd.`basicDataId` = h.`type` 
+            and bd.`dataTypeCode` = 'SubcontractType' 
+        LEFT JOIN `fnd_basic_data` bd1 
+            ON h.`state` = bd1.`basicDataId` 
+            AND bd1.`dataTypeCode` = 'subcontractState' 
+        LEFT JOIN `fnd_basic_data` bd2 
+            ON h.`callbackState` = bd2.`basicDataId` 
+            AND bd2.`dataTypeCode` = 'subcontractCbState' 
+        left join fnd_department office 
+            on office.`departmentNum` = h.`officeCode` 
+            and office.`status` = 1 
+        left join fnd_department profitDep 
+            on profitDep.`departmentNum` = h.`profitDepCode` 
+            and profitDep.`status` = 1
+        LEFT JOIN fnd_user_info ui 
+            ON ui.`username` = h.`createBy`
+    where h.effectiveTo is NULL
+        <if test=" prepend="AND" id> h.id = #{id} </if>
+        <if test=" prepend="AND" subcontractName> h.subcontractName like concat("%", #{subcontractName}, "%") </if>
+        <if test=" prepend="AND" contractNos> (h.contractNos like concat("%", #{contractNos}, "%") or h.subcontractNo like concat("%", #{contractNos}, "%")) </if>
+        <if test=" prepend="AND" projectIds> h.projectIds like concat("%", #{projectIds}, "%")  </if>
+        <if test=" prepend="AND" type> h.type = #{type} </if>
+        <if test=" prepend="AND" state> h.state = #{state} </if>
+        <if test=" prepend="AND" callbackState> callbackState = #{callbackState}  </if>
+        <if test=" prepend="AND" facilitatorId> h.facilitatorId = #{facilitatorId} </if>
+        <if test=" prepend="AND" facilitatorName> h.facilitatorName like concat("%", #{facilitatorName}, "%") </if>
+        <if test=" prepend="AND" bankInfo> h.bankInfo = #{bankInfo} </if>
+        <if test=" prepend="AND" bankAccount> h.bankAccount = #{bankAccount} </if>
+        <if test=" prepend="AND" officeCode> h.officeCode = #{officeCode} </if>
+        <if test=" prepend="AND" profitDepCode> h.profitDepCode = #{profitDepCode} </if>
+        <if test=" prepend="AND" subcontractNo> h.subcontractNo = #{subcontractNo} </if>
+        <if test=" prepend="AND" isAccrued> h.isAccrued = #{isAccrued} </if>
+        <if test=" prepend="AND" isInvoiced> isInvoiced = #{isInvoiced} </if>
+        <if test=" prepend="AND" subcontractAmount> subcontractAmount = #{subcontractAmount} </if>
+        <if test=" prepend="AND" reason> h.reason = #{reason} </if>
+        <if test=" prepend="AND" remark> h.remark = #{remark} </if>
+        <if test=" prepend="AND" effectiveFrom> h.effectiveFrom >= #{effectiveFrom} </if>
+        <if test=" prepend="AND" effectiveTo> <![CDATA[ #{effectiveTo} <= IFNULL(h.effectiveTo, "9999-12-31") ]]> </if>
+        <if test=" prepend="AND" zrApproveTime> h.zrApproveTime = #{zrApproveTime} </if>
+        <if test=" prepend="AND" createBy> h.createBy = #{createBy} </if>
+        <if test=" prepend="AND" createTime> h.createTime = #{createTime} </if>
+        <if test=" prepend="AND" updateBy> h.updateBy = #{updateBy} </if>
+        <if test=" prepend="AND" updateTime> h.updateTime = #{updateTime} </if>
+        <if test=" prepend="AND" orgId> h.orgId = #{orgId} </if>
+        <if test=" prepend="AND" areaPower> (FIND_IN_SET(h.officeCode, #{areaPower}) or FIND_IN_SET(h.profitDepCode, #{areaPower}))</if>
+        <if test=" prepend="AND" projectId> FIND_IN_SET(#{projectId}, h.projectIds) </if>
+        <if test=" prepend="AND" property="customInfo.purchId"> #customInfo.purchId# = h.`customInfo` ->> '$$.purchId' </if>
+        <if test=" searchTimeType compareValue="createTime">
+            <if test=" prepend="AND" searchStartTime> h.createTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.createTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproverTime">
+            <if test=" prepend="AND" searchStartTime> zrTask.zrApproverTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ zrTask.zrApproverTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="zrApproveTime">
+            <if test=" prepend="AND" searchStartTime> h.zrApproveTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ h.zrApproveTime <= #{searchEndTime} ]]> </if>
+        </if>
+        <if test=" searchTimeType compareValue="paymentTime">
+            <if test=" prepend="AND" searchStartTime> p.paymentTime >= #{searchStartTime} </if>
+            <if test=" prepend="AND" searchEndTime> <![CDATA[ p.paymentTime <= #{searchEndTime} ]]> </if>
+            GROUP BY h.id
+        </if>
+     order by h.id desc
+  </select>
+  
+  <select id="querySubcontractPaiedAmount" parameterType="int" resultType="String">
+    SELECT 
+        SUM(REPLACE(amount, ",", "")) as paiedAmount
+    FROM
+        `pm_subcontract_project_payment` 
+    WHERE paymentTime IS NOT NULL 
+       and subcontractId = #{subcontractId}
+    GROUP BY subcontractId
+  </select>
+  
+  <!-- 工程实施类项目下次付款任务提醒，距离上次付款10月开始，每隔一个月提醒一次 -->
+  <select id="queryNextPaymentTask" resultType="com.dp.plat.subcontract.vo.SubcontractProjectVO">
+    SELECT 
+        ph.*, ppp.lastPaymentTime, ppp.monthDiff
+    FROM
+        ACT_RU_TASK ret 
+        INNER JOIN ACT_RU_VARIABLE arv 
+            ON ret.PROC_INST_ID_ = arv.PROC_INST_ID_ 
+        INNER JOIN 
+            (SELECT 
+                MAX(paymentTime) AS lastPaymentTime, TIMESTAMPDIFF(MONTH, MAX(paymentTime), NOW()) AS monthDiff, subcontractId 
+            FROM
+                pm_subcontract_project_payment ppp 
+            WHERE paymentTime IS NOT NULL 
+            GROUP BY subcontractId) ppp 
+            ON ppp.`subcontractId` = arv.`LONG_` 
+            AND arv.NAME_ = 'subcontractId' 
+            AND arv.TASK_ID_ IS NULL 
+            AND arv.NAME_ = 'subcontractId' 
+            AND arv.TYPE_ = 'integer' 
+        INNER JOIN `pm_subcontract_project_header` ph 
+            ON ph.`id` = ppp.`subcontractId` 
+            AND ph.`type` = '10' 
+            AND ph.effectiveTo is NULL
+    WHERE ret.TASK_DEF_KEY_ = 'applyPaymentTask' 
+        AND ppp.monthDiff >= 10 
+        AND DATE_FORMAT(NOW(), '%Y-%m-%d') = DATE_FORMAT(
+            DATE_ADD(
+                ppp.lastPaymentTime, INTERVAL ppp.monthDiff MONTH
+            ), '%Y-%m-%d'
+        ) 
+  </select>
+  
+  <!-- 查询SSE新增的付款信息 -->
+  <select id="querySSESubcontractPaymentList" parameterType="com.dp.plat.subcontract.entity.SubcontractPayment" resultType="com.dp.plat.subcontract.entity.SubcontractPayment">
+    SELECT NULL AS id
+        , sph.`id` AS subcontractId, ROUND(
+            spps.`approveAmount` / REPLACE(sph.`subcontractAmount`, ",", "") * 100, 2
+        ) AS ratio, FORMAT(spps.approveAmount, 2) AS amount, spps.`confirmTime`, spps.`paymentTime`, spps.`remark`, spps.`id` AS sseId, spps.`confirmTime` AS createTime, ui.`username` createBy, NULL AS updateTime, NULL AS updateBy 
+    FROM
+        `pm_subcontract_project_payment_sse` spps 
+        LEFT JOIN `pm_subcontract_project_header` sph 
+            ON sph.`subcontractNo` = REPLACE(spps.`subcontractNo`, " ", "") 
+        LEFT JOIN `pm_subcontract_project_payment` spp 
+            ON spps.`id` = spp.`sseId` 
+        LEFT JOIN fnd_user_info ui 
+            ON spps.`workNo` = SUBSTR(ui.`username`, 2) 
+    WHERE sph.id IS NOT NULL 
+        AND spp.`sseId` IS NULL 
+    ORDER BY spps.`confirmTime`, sph.id
+  </select>
+  
+  <delete id="deleteEmptySubcontractPayment" parameterType="String">
+    DELETE 
+    FROM
+        pm_subcontract_project_payment 
+    WHERE 
+   	(
+	    (
+	    	(`amount` = '' OR FORMAT(`amount`, 2) = '0.00')
+	        AND `confirmTime` IS NULL
+	        <!-- AND (`remark` = '' OR `remark` IS NULL) -->
+	    )
+	    OR (
+	    <!-- 删除sse中已经删除的报销行 -->
+            sseId NOT IN (SELECT id FROM `pm_subcontract_project_payment_sse`) 
+            AND 'SSE' = IFNULL(customInfo ->> '$$.relateSource', 'SSE')
+            AND sseId > 0
+        )
+    )
+        AND FIND_IN_SET(subcontractId, #{subcontractIds})
+  </delete>
+  
+  <update id="updateSSESubcontractPaymentTime">
+    UPDATE 
+        `pm_subcontract_project_payment` spp 
+        INNER JOIN `pm_subcontract_project_payment_sse` spps 
+            ON spp.`sseId` = spps.`id` 
+    SET spp.`paymentTime` = IFNULL(spp.`paymentTime`, spps.`paymentTime`), 
+        spp.`remark` = IFNULL(spp.`remark`, spps.`remark`)
+    WHERE spp.`paymentTime` IS NULL
+  </update>
+  
+  <!-- 根据部门查询默认的多维度信息 -->
+  <cacheModel type="CopyLRU" id="MultiDimCache" readOnly="true">
+      <flushInterval minutes="30"/>
+      <flushOnExecute statement="update_basic_data"/>
+      <flushOnExecute statement="insert_basic_data"/>
+      
+      <flushOnExecute statement="refreshCacheData"/>
+      
+      <property name="size" value="50"/>
+  </cacheModel>
+  <sql id="sqlSelectDefaultMultiDimByDep">
+      SELECT depNum AS dimDepartment, depName AS dimDepartmentName,
+             buCode AS dimBU, buName AS dimBUName,
+             productLineCode AS dimProductLine, productLineName AS dimProductLineName, 
+             officeCode AS dimTerritory, officeName AS dimTerritoryName,
+             industryCode AS dimIndustry,industryName AS dimIndustryName
+      FROM offer_dimension_default_mapping 
+      WHERE depNum = #{depNum} AND `status` = 1
+      LIMIT 1
+  </sql>
+  <select id="selectDefaultMultiDimByDep" parameterType="string" resultType="java.util.HashMap" cacheModel="MultiDimCache">
+      <include refid="sqlSelectDefaultMultiDimByDep"/>
+  </select>
+  <select id="selectDefaultMultiDimByDepDirect" parameterType="string" resultType="java.util.HashMap">
+      <include refid="sqlSelectDefaultMultiDimByDep"/>
+  </select>
+</mapper>

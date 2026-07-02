@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="presales" name="售前项目流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="sm_audit" name="服务经理审核" flowable:assignee="${smCode}" />
+    <userTask id="pm_audit" name="项目经理审核" flowable:assignee="${pmCode}" />
+    <userTask id="em_callback" name="工程管理部回访" flowable:candidateGroups="engineering" />
+    <userTask id="cb_quesnaire" name="回访问卷" flowable:assignee="${cbPerson}" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="sm_audit" />
+    <sequenceFlow id="flow2" sourceRef="sm_audit" targetRef="pm_audit" />
+    <sequenceFlow id="flow3" sourceRef="pm_audit" targetRef="em_callback" />
+    <sequenceFlow id="flow4" sourceRef="em_callback" targetRef="cb_quesnaire" />
+    <sequenceFlow id="flow5" sourceRef="cb_quesnaire" targetRef="end" />
+  </process>
+</definitions>

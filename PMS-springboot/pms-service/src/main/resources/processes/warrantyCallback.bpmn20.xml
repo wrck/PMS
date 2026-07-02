@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://www.flowable.org/processdef">
+  <process id="warrantyCallback" name="维保回访流程" isExecutable="true">
+    <startEvent id="start" name="开始" />
+    <userTask id="create" name="创建回访" flowable:assignee="${cbPerson}" />
+    <userTask id="callback" name="执行回访" flowable:assignee="${cbPerson}" />
+    <userTask id="audit" name="审核" flowable:candidateGroups="service_manager" />
+    <endEvent id="end" name="结束" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="create" />
+    <sequenceFlow id="flow2" sourceRef="create" targetRef="callback" />
+    <sequenceFlow id="flow3" sourceRef="callback" targetRef="audit" />
+    <sequenceFlow id="flow4" sourceRef="audit" targetRef="end" />
+  </process>
+</definitions>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+ 
+<!-- 回访数据库操作--> 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper>
+	<typeAlias alias="CallBack" type="com.dp.plat.data.bean.CallBack"/>
+	<insert id="insert_callback_info" parameterType="CallBack">
+		<![CDATA[
+			INSERT INTO pm_cl_callback(projectId , remark ,applyBy ,applyTime ,createTime ,createBy ,effectiveFrom)
+			VALUES( #{projectId} , #{remark} , #{applyBy} , #{applyTime} , #{createTime} , #{createBy} , #{effectiveFrom})
+		]]>
+		<selectKey resultType="int"  keyProperty="callBackId">    
+             SELECT last_insert_id() as id ;   
+        </selectKey>
+	</insert>
+	
+	<update id="update_callback_instid" parameterType="java.util.Map">
+		<![CDATA[
+			UPDATE pm_cl_callback SET instId = #{instId}, applyState = #{applyState}, updateTime = #{updateTime} ,updateBy = #{updateBy} 
+			WHERE id = #{callBackId}
+		]]>
+	</update>
+	<resultMap id="CallBackOne" type="CallBack">
+		<result callBackId column="id"/>
+		<result projectId column="projectId"/>
+		<result quesnaireId column="quesnaireId" nullValue="0"/>
+		<result instId column="instId"/>
+		<result remark column="remark"/>
+		<result applyState column="applyState"/>
+		<result applyBy column="applyBy"/>
+		<result applyTime column="applyTime"/>
+		<result taskId column="taskId"/>
+	</resultMap>
+	<select id="query_callback_byId" parameterType="int" resultMap="CallBackOne">
+		<![CDATA[
+			SELECT t1.id , t1.projectId,t1.instId ,t1.remark,t1.applyState , MAX(t2.id) AS quesnaireId ,t1.applyBy ,t1.applyTime,
+			MAX( CONVERT(t2.taskId , SIGNED)) AS taskId  FROM pm_cl_callback t1
+			LEFT JOIN  pm_cl_callback_quesnaire t2  ON t1.`id` = t2.`callBackId`
+			WHERE t1.id = #{callBackId}
+		]]>
+	</select>
+	<typeAlias alias="CallBackQuesnaire" type="com.dp.plat.data.bean.CallBackQuesnaire"/>
+	<insert id="insert_callback_quesnaire" parameterType="CallBackQuesnaire">
+		<![CDATA[
+			INSERT INTO pm_cl_callback_quesnaire(callBackId , taskId ,quesnaireId , quesnaireVersion ,quesnaireState ,createBy ,createTime ,effectiveFrom )
+			values( #{callBackId} , #{taskId} , #{quesnaireId}, #{quesnaireVersion} , #{quesnaireState} , #{createBy} , #{createTime} ,#{effectiveFrom})
+		]]>
+	</insert>
+	<select id="query_cb_quesnaire_version" parameterType="int" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*) FROM pm_cl_callback_quesnaire WHERE callBackId = #{callBackId}
+		]]>
+	</select>
+	
+	<select id="query_callback_quesnaire" parameterType="int" resultType="CallBackQuesnaire">
+		<![CDATA[
+			SELECT * FROM pm_cl_callback_quesnaire WHERE id = #{quesnaireId}
+		]]>
+	</select>
+	<select id="query_quesnaire_template_id" parameterType="int" resultType="int">
+		<![CDATA[
+			SELECT 	quesnaireTemplateHeaderId FROM `pm_cl_quesnaire_result_header` WHERE id = #{quesnaireId}
+		]]>
+	</select>
+	<select id="query_callbackQuesnaireId" parameterType="CallBack" resultType="int">
+		<![CDATA[
+			SELECT id FROM pm_cl_callback_quesnaire WHERE callBackId = #{callBackId} AND taskId = #{taskId}
+		]]>
+	</select>
+	<update id="update_callback_quesnaire" parameterType="java.util.Map" >
+		<![CDATA[
+			UPDATE pm_cl_callback_quesnaire SET quesnaireId = #{quesnaireId}, quesnaireState = #{quesnaireState} WHERE id = #{id}
+		]]>
+	</update>
+	
+	<update id="update_callback_applyState" parameterType="java.util.Map">
+		<![CDATA[
+			update pm_cl_callback set applyState = #{applyState},updateTime = #{updateTime},
+			updateBy = #{updateBy} where id = #{id}
+		]]>
+	</update>
+	<typeAlias alias="CallBackComment" type="com.dp.plat.data.bean.CallBackComment"/>
+	<resultMap type="CallBackComment" id="CallBackCommentMap">
+		<result objId column="objId"/>
+		<result procdefKey column="procdefKey"/>
+		<result taskId column="taskId"/>
+		<result instId column="instId"/>
+		<result assignee column="assignee"/>
+		<result assigneeTime column="assigneeTime"/>
+		<result result column="result"/>
+		<result resultName column="resultName"/>
+		<result message column="message"/>
+		<result assigneeName column="assigneeName"/>
+		<result quesnaireId column="quesnaireId" nullValue="0"/>
+	</resultMap>
+	
+	<select id="query_callback_comment" parameterType="int" resultMap="CallBackCommentMap">
+		<![CDATA[
+			SELECT t1.* ,t2.`basicDataName` AS resultName , CONCAT(t3.`username`,'-' , t3.`realName`) AS assigneeName ,t4.`quesnaireId` FROM fnd_act_hi_comment t1 
+			LEFT JOIN fnd_basic_data t2 ON t1.`result` = t2.`basicDataId` AND t2.`dataTypeCode` = 26
+			LEFT JOIN fnd_user_info t3 ON t1.`assignee` = t3.`username` 
+			LEFT JOIN pm_cl_callback_quesnaire t4 ON t1.`taskId` = t4.`taskId`
+			WHERE t1.`objId` = #{callBackId} and t1.procdefKey = 'CallBack'
+		]]>
+	</select>
+	<update id="update_callback" parameterType="CallBack" >
+		<![CDATA[
+			UPDATE pm_cl_callback SET remark = #{remark} WHERE id = #{callBackId}
+		]]>
+	</update>
+	<resultMap type="com.dp.plat.data.bean.CallBackQuesnaire" id="CallBackQuesnaireMap">
+		<result quesnaireId column="quesnaireId"/>
+		<result createBy column="createBy"/>
+		<result createTime column="createTime"/>
+	</resultMap>
+	<select id="query_is_callback" parameterType="int" resultMap="CallBackQuesnaireMap">
+		<![CDATA[
+			SELECT t2.* FROM pm_cl_callback t1
+			LEFT JOIN pm_cl_callback_quesnaire t2 ON t1.`id` = t2.`callBackId`  AND t2.`quesnaireState` = 1
+			WHERE t1.projectId = #{projectId} AND t1.applyState = 2 ORDER BY t1.applyTime DESC ,t2.`quesnaireVersion` DESC LIMIT 1
+		]]>
+	</select>
+	<update id="update_EvaluationHeaderId_byId" parameterType="java.util.Map" >
+		<![CDATA[
+			UPDATE pm_cl_quesnaire_result_header SET evaluationHeaderId = #{headerId} WHERE id = #{quesnaireId}
+		]]>
+	</update>
+	<update id="update_EvaluationHeader_NextAcceptPerson" parameterType="java.util.Map" >
+		<![CDATA[
+			UPDATE 
+			  pm_cl_evaluation_header
+			SET
+			  nextAcceptPerson = #{nextAcceptPerson},
+			  nextAcceptPersonName = #{nextAcceptPersonName}
+			WHERE id IN 
+			  (SELECT 
+			    * 
+			  FROM
+			    (SELECT 
+			      MAX(id) id 
+			    FROM
+			    `pm_cl_evaluation_header` t
+			 	WHERE FIND_IN_SET(t.projectId, #{projectIds}) 
+			    	AND t.nextAcceptPerson = #{oldNextAcceptPerson} 
+			  	GROUP BY t.projectId) tt)
+		]]>
+	</update>
+	
+</mapper>

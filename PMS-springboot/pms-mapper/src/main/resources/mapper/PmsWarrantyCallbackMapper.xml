@@ -1,0 +1,799 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pm_project_warranty_callback">
+  <resultMap type="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" id="ProjectWarrantyCallbackMap">
+    <result column="id" jdbcType="INTEGER" id />
+    <result column="projectId" jdbcType="INTEGER" projectId />
+    <result column="projectCode" jdbcType="VARCHAR" projectCode />
+    <result column="officeCode" jdbcType="VARCHAR" officeCode />
+    <result column="contractNos" jdbcType="VARCHAR" contractNos />
+    <result column="projectIds" jdbcType="VARCHAR" projectIds />
+    <result column="projectName" jdbcType="VARCHAR" projectName />
+    <result column="serviceImpl" jdbcType="VARCHAR" serviceImpl />
+    <result column="industryName" jdbcType="VARCHAR" industryName />
+    <result column="agentChannel" jdbcType="VARCHAR" agentChannel />
+    <result column="finalCustomerName" jdbcType="VARCHAR" finalCustomerName />
+    <result column="customer1" jdbcType="VARCHAR" customer1 />
+    <result column="customerContact1" jdbcType="VARCHAR" customerContact1 />
+    <result column="customer2" jdbcType="VARCHAR" customer2 />
+    <result column="customerContact2" jdbcType="VARCHAR" customerContact2 />
+    <result column="warrantyStartTime" jdbcType="DATE" warrantyStartTime />
+    <result column="warrantyEndTime" jdbcType="DATE" warrantyEndTime />
+    <result column="renewalIntention" jdbcType="Integer" renewalIntention />
+    <result column="callbackTime" jdbcType="TIMESTAMP" callbackTime />
+    <result column="nextCallbackTime" jdbcType="TIMESTAMP" nextCallbackTime />
+    <result column="taskId" jdbcType="VARCHAR" taskId />
+    <result column="quesnaireId" jdbcType="INTEGER" quesnaireId />
+    <result column="quesnaireVersion" jdbcType="INTEGER" quesnaireVersion />
+    <result column="quesnaireState" jdbcType="INTEGER" quesnaireState />
+    <result column="isDelete" jdbcType="BIT" isDelete />
+    <result column="remark" jdbcType="VARCHAR" remark />
+    <result column="compId" jdbcType="INTEGER" compId />
+    <result column="createBy" jdbcType="VARCHAR" createBy />
+    <result column="createTime" jdbcType="TIMESTAMP" createTime />
+    <result column="updateBy" jdbcType="VARCHAR" updateBy />
+    <result column="updateTime" jdbcType="TIMESTAMP" updateTime />
+    <result column="customInfo" jdbcType="JSON" customInfo />
+  </resultMap>
+  <sql id="ProjectWarrantyCallback_Column_List">
+    `id`, `projectId`, `projectCode`, `officeCode`, `contractNos`, `projectIds`, `projectName`, 
+    `serviceImpl`, `industryName`, `agentChannel`, `finalCustomerName`, `customer1`, 
+    `customerContact1`, `customer2`, `customerContact2`, `warrantyStartTime`, `warrantyEndTime`, 
+    `renewalIntention`, `callbackTime`, `nextCallbackTime`, `taskId`, `quesnaireId`, 
+    `quesnaireVersion`, `quesnaireState`, `isDelete`, `remark`, `compId`, `createBy`, 
+    `createTime`, `updateBy`, `updateTime`, `customInfo`
+  </sql>
+  <select id="selectProjectWarrantyCallbackById" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" resultMap="ProjectWarrantyCallbackMap">
+    select 
+    <include refid="ProjectWarrantyCallback_Column_List" />
+    from pm_project_warranty_callback
+    where `id` = #id:INTEGER#
+  </select>
+  <delete id="deleteProjectWarrantyCallbackById" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback">
+    delete from pm_project_warranty_callback
+    where `id` = #id:INTEGER#
+  </delete>
+  <insert id="insertProjectWarrantyCallback" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback">
+    insert into pm_project_warranty_callback (`projectId`, `projectCode`, `officeCode`, `contractNos`, 
+      `projectIds`, `projectName`, `serviceImpl`, `industryName`, 
+      `agentChannel`, `finalCustomerName`, `customer1`, `customerContact1`, 
+      `customer2`, `customerContact2`, `warrantyStartTime`, `warrantyEndTime`, 
+      `renewalIntention`, `callbackTime`, `nextCallbackTime`, 
+      `taskId`, `quesnaireId`, `quesnaireVersion`, `quesnaireState`, 
+      `isDelete`, `remark`, `compId`, `createBy`, `createTime`, 
+      `updateBy`, `updateTime`, `customInfo`)
+    values (#projectId:INTEGER#, #projectCode:VARCHAR#, #officeCode:VARCHAR#, #contractNos:VARCHAR#, 
+      #projectIds:VARCHAR#, #projectName:VARCHAR#, #serviceImpl:VARCHAR#, #industryName:VARCHAR#, 
+      #agentChannel:VARCHAR#, #finalCustomerName:VARCHAR#, #customer1:VARCHAR#, #customerContact1:VARCHAR#, 
+      #customer2:VARCHAR#, #customerContact2:VARCHAR#, #warrantyStartTime:DATE#, #warrantyEndTime:DATE#, 
+      #renewalIntention:INTEGER#, #callbackTime:TIMESTAMP#, #nextCallbackTime:TIMESTAMP#, 
+      #taskId:VARCHAR#, #quesnaireId:INTEGER#, #quesnaireVersion:INTEGER#, #quesnaireState:INTEGER#, 
+      #isDelete:BIT#, #remark:VARCHAR#, #compId:INTEGER#, #createBy:VARCHAR#, #createTime:TIMESTAMP#, 
+      #updateBy:VARCHAR#, #updateTime:TIMESTAMP#, #customInfo:JSON#)
+    <selectKey keyProperty="id" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <insert id="insertProjectWarrantyCallbackSelective" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback">
+    insert into pm_project_warranty_callback
+    <dynamic prepend="(">
+      <if test=" prepend="," projectId> `projectId` </if>
+      <if test=" prepend="," projectCode> `projectCode` </if>
+      <if test=" prepend="," officeCode> `officeCode` </if>
+      <if test=" prepend="," contractNos> `contractNos` </if>
+      <if test=" prepend="," projectIds> `projectIds` </if>
+      <if test=" prepend="," projectName> `projectName` </if>
+      <if test=" prepend="," serviceImpl> `serviceImpl` </if>
+      <if test=" prepend="," industryName> `industryName` </if>
+      <if test=" prepend="," agentChannel> `agentChannel` </if>
+      <if test=" prepend="," finalCustomerName> `finalCustomerName` </if>
+      <if test=" prepend="," customer1> `customer1` </if>
+      <if test=" prepend="," customerContact1> `customerContact1` </if>
+      <if test=" prepend="," customer2> `customer2` </if>
+      <if test=" prepend="," customerContact2> `customerContact2` </if>
+      <if test=" prepend="," warrantyStartTime> `warrantyStartTime` </if>
+      <if test=" prepend="," warrantyEndTime> `warrantyEndTime` </if>
+      <if test=" prepend="," renewalIntention> `renewalIntention` </if>
+      <if test=" prepend="," callbackTime> `callbackTime` </if>
+      <if test=" prepend="," nextCallbackTime> `nextCallbackTime` </if>
+      <if test=" prepend="," taskId> `taskId` </if>
+      <if test=" prepend="," quesnaireId> `quesnaireId` </if>
+      <if test=" prepend="," quesnaireVersion> `quesnaireVersion` </if>
+      <if test=" prepend="," quesnaireState> `quesnaireState` </if>
+      <if test=" prepend="," isDelete> `isDelete` </if>
+      <if test=" prepend="," remark> `remark` </if>
+      <if test=" prepend="," compId> `compId` </if>
+      <if test=" prepend="," createBy> `createBy` </if>
+      <if test=" prepend="," createTime> `createTime` </if>
+      <if test=" prepend="," updateBy> `updateBy` </if>
+      <if test=" prepend="," updateTime> `updateTime` </if>
+      <if test=" prepend="," customInfo> `customInfo` </if>
+      )
+    </dynamic>
+    values
+    <dynamic prepend="(">
+      <if test=" prepend="," projectId> #projectId:INTEGER# </if>
+      <if test=" prepend="," projectCode> #projectCode:VARCHAR# </if>
+      <if test=" prepend="," officeCode> #officeCode:VARCHAR# </if>
+      <if test=" prepend="," contractNos> #contractNos:VARCHAR# </if>
+      <if test=" prepend="," projectIds> #projectIds:VARCHAR# </if>
+      <if test=" prepend="," projectName> #projectName:VARCHAR# </if>
+      <if test=" prepend="," serviceImpl> #serviceImpl:VARCHAR# </if>
+      <if test=" prepend="," industryName> #industryName:VARCHAR# </if>
+      <if test=" prepend="," agentChannel> #agentChannel:VARCHAR# </if>
+      <if test=" prepend="," finalCustomerName> #finalCustomerName:VARCHAR# </if>
+      <if test=" prepend="," customer1> #customer1:VARCHAR# </if>
+      <if test=" prepend="," customerContact1> #customerContact1:VARCHAR# </if>
+      <if test=" prepend="," customer2> #customer2:VARCHAR# </if>
+      <if test=" prepend="," customerContact2> #customerContact2:VARCHAR# </if>
+      <if test=" prepend="," warrantyStartTime> #warrantyStartTime:DATE# </if>
+      <if test=" prepend="," warrantyEndTime> #warrantyEndTime:DATE# </if>
+      <if test=" prepend="," renewalIntention> #renewalIntention:INTEGER# </if>
+      <if test=" prepend="," callbackTime> #callbackTime:TIMESTAMP# </if>
+      <if test=" prepend="," nextCallbackTime> #nextCallbackTime:TIMESTAMP# </if>
+      <if test=" prepend="," taskId> #taskId:VARCHAR# </if>
+      <if test=" prepend="," quesnaireId> #quesnaireId:INTEGER# </if>
+      <if test=" prepend="," quesnaireVersion> #quesnaireVersion:INTEGER# </if>
+      <if test=" prepend="," quesnaireState> #quesnaireState:INTEGER# </if>
+      <if test=" prepend="," isDelete> #isDelete:BIT# </if>
+      <if test=" prepend="," remark> #remark:VARCHAR# </if>
+      <if test=" prepend="," compId> #compId:INTEGER# </if>
+      <if test=" prepend="," createBy> #createBy:VARCHAR# </if>
+      <if test=" prepend="," createTime> #createTime:TIMESTAMP# </if>
+      <if test=" prepend="," updateBy> #updateBy:VARCHAR# </if>
+      <if test=" prepend="," updateTime> #updateTime:TIMESTAMP# </if>
+      <if test=" prepend="," customInfo> #customInfo:JSON# </if>
+      )
+    </dynamic>
+    <selectKey keyProperty="id" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <update id="updateProjectWarrantyCallbackByIdSelective" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback">
+    update pm_project_warranty_callback
+    <dynamic prepend="set">
+      <if test=" prepend="," projectId> `projectId` = #projectId:INTEGER# </if>
+      <if test=" prepend="," projectCode> `projectCode` = #projectCode:VARCHAR# </if>
+      <if test=" prepend="," officeCode> `officeCode` = #officeCode:VARCHAR# </if>
+      <if test=" prepend="," contractNos> `contractNos` = #contractNos:VARCHAR# </if>
+      <if test=" prepend="," projectIds> `projectIds` = #projectIds:VARCHAR# </if>
+      <if test=" prepend="," projectName> `projectName` = #projectName:VARCHAR# </if>
+      <if test=" prepend="," serviceImpl> `serviceImpl` = #serviceImpl:VARCHAR# </if>
+      <if test=" prepend="," industryName> `industryName` = #industryName:VARCHAR# </if>
+      <if test=" prepend="," agentChannel> `agentChannel` = #agentChannel:VARCHAR# </if>
+      <if test=" prepend="," finalCustomerName> `finalCustomerName` = #finalCustomerName:VARCHAR# </if>
+      <if test=" prepend="," customer1> `customer1` = #customer1:VARCHAR# </if>
+      <if test=" prepend="," customerContact1> `customerContact1` = #customerContact1:VARCHAR# </if>
+      <if test=" prepend="," customer2> `customer2` = #customer2:VARCHAR# </if>
+      <if test=" prepend="," customerContact2> `customerContact2` = #customerContact2:VARCHAR# </if>
+      <if test=" prepend="," warrantyStartTime> `warrantyStartTime` = #warrantyStartTime:DATE# </if>
+      <if test=" prepend="," warrantyEndTime> `warrantyEndTime` = #warrantyEndTime:DATE# </if>
+      <if test=" prepend="," renewalIntention> `renewalIntention` = #renewalIntention:INTEGER# </if>
+      <if test=" prepend="," callbackTime> `callbackTime` = #callbackTime:TIMESTAMP# </if>
+      <if test=" prepend="," nextCallbackTime> `nextCallbackTime` = #nextCallbackTime:TIMESTAMP# </if>
+      <if test=" prepend="," taskId> `taskId` = #taskId:VARCHAR# </if>
+      <if test=" prepend="," quesnaireId> `quesnaireId` = #quesnaireId:INTEGER# </if>
+      <if test=" prepend="," quesnaireVersion> `quesnaireVersion` = #quesnaireVersion:INTEGER# </if>
+      <if test=" prepend="," quesnaireState> `quesnaireState` = #quesnaireState:INTEGER# </if>
+      <if test=" prepend="," isDelete> `isDelete` = #isDelete:BIT# </if>
+      <if test=" prepend="," remark> `remark` = #remark:VARCHAR# </if>
+      <if test=" prepend="," compId> `compId` = #compId:INTEGER# </if>
+      <if test=" prepend="," createBy> `createBy` = #createBy:VARCHAR# </if>
+      <if test=" prepend="," createTime> `createTime` = #createTime:TIMESTAMP# </if>
+      <if test=" prepend="," updateBy> `updateBy` = #updateBy:VARCHAR# </if>
+      <if test=" prepend="," updateTime> `updateTime` = #updateTime:TIMESTAMP# </if>
+      <!-- <if test=" prepend="," customInfo> `customInfo` = #customInfo:JSON# </if> -->
+      <if test=" prepend="," customInfo>
+        customInfo = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+      </if>
+    </dynamic>
+    where `id` = #id:INTEGER#
+  </update>
+  <update id="updateProjectWarrantyCallbackById" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback">
+    update pm_project_warranty_callback
+    set `projectId` = #projectId:INTEGER#,
+      `projectCode` = #projectCode:VARCHAR#,
+      `officeCode` = #officeCode:VARCHAR#,
+      `contractNos` = #contractNos:VARCHAR#,
+      `projectIds` = #projectIds:VARCHAR#,
+      `projectName` = #projectName:VARCHAR#,
+      `serviceImpl` = #serviceImpl:VARCHAR#,
+      `industryName` = #industryName:VARCHAR#,
+      `agentChannel` = #agentChannel:VARCHAR#,
+      `finalCustomerName` = #finalCustomerName:VARCHAR#,
+      `customer1` = #customer1:VARCHAR#,
+      `customerContact1` = #customerContact1:VARCHAR#,
+      `customer2` = #customer2:VARCHAR#,
+      `customerContact2` = #customerContact2:VARCHAR#,
+      `warrantyStartTime` = #warrantyStartTime:DATE#,
+      `warrantyEndTime` = #warrantyEndTime:DATE#,
+      `renewalIntention` = #renewalIntention:INTEGER#,
+      `callbackTime` = #callbackTime:TIMESTAMP#,
+      `nextCallbackTime` = #nextCallbackTime:TIMESTAMP#,
+      `taskId` = #taskId:VARCHAR#,
+      `quesnaireId` = #quesnaireId:INTEGER#,
+      `quesnaireVersion` = #quesnaireVersion:INTEGER#,
+      `quesnaireState` = #quesnaireState:INTEGER#,
+      `isDelete` = #isDelete:BIT#,
+      `remark` = #remark:VARCHAR#,
+      `compId` = #compId:INTEGER#,
+      `createBy` = #createBy:VARCHAR#,
+      `createTime` = #createTime:TIMESTAMP#,
+      `updateBy` = #updateBy:VARCHAR#,
+      `updateTime` = #updateTime:TIMESTAMP#,
+      <!-- `customInfo` = #customInfo:JSON# -->
+      `customInfo` = JSON_MERGE_PATCH(IFNULL(customInfo, "{}"), #customInfo:JSON# )
+    where `id` = #id:INTEGER#
+  </update>
+  
+  <select id="selectProjectWarrantyCallbackVOById" parameterType="int" resultType="com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO">
+    select pwc.* from pm_project_warranty_callback pwc
+    where pwc.`id` = #id:INTEGER#
+  </select>
+  
+  <sql id="sql_projectWarrantyCallback_where_selective">
+    <if test=" prepend="AND" id> pwc.`id` = #{id} </if>
+	<if test=" prepend="AND" projectId> pwc.`projectId` = #{projectId} </if>
+	<if test=" prepend="AND" officeCode> pwc.`officeCode` = #{officeCode} </if>
+	<if test=" prepend="AND" projectIds> pwc.`projectIds` = #{projectIds} </if>
+	<if test=" prepend="AND" serviceImpl> pwc.`serviceImpl` = #{serviceImpl} </if>
+	<if test=" prepend="AND" projectCode> pwc.`projectCode` like concat("%", #{projectCode}, "%") </if>
+	<if test=" prepend="AND" contractNos> pwc.`contractNos` like concat("%", #{contractNos}, "%") </if>
+	<if test=" prepend="AND" projectName> pwc.`projectName` like concat("%", #{projectName}, "%") </if>
+	<if test=" prepend="AND" industryName> pwc.`industryName` like concat("%", #{industryName}, "%") </if>
+	<if test=" prepend="AND" agentChannel> pwc.`agentChannel` like concat("%", #{agentChannel}, "%") </if>
+	<if test=" prepend="AND" finalCustomerName> pwc.`finalCustomerName` like concat("%", #{finalCustomerName}, "%") </if>
+	<if test=" prepend="AND" customer1> pwc.`customer1` like concat("%", #{customer1}, "%") </if>
+	<if test=" prepend="AND" customerContact1> pwc.`customerContact1` like concat("%", #{customerContact1}, "%") </if>
+	<if test=" prepend="AND" customer2> pwc.`customer2` like concat("%", #{customer2}, "%") </if>
+	<if test=" prepend="AND" customerContact2> pwc.`customerContact2` like concat("%", #{customerContact2}, "%") </if>
+	<if test=" prepend="AND" warrantyStartTime> pwc.`warrantyStartTime` = #{warrantyStartTime} </if>
+	<if test=" prepend="AND" warrantyEndTime> pwc.`warrantyEndTime` = #{warrantyEndTime} </if>
+	<if test=" prepend="AND" renewalIntention> pwc.`renewalIntention` = #{renewalIntention} </if>
+	<if test=" prepend="AND" callbackTime> pwc.`callbackTime` = #{callbackTime} </if>
+	<if test=" prepend="AND" nextCallbackTime> pwc.`nextCallbackTime` = #{nextCallbackTime} </if>
+	<if test=" prepend="AND" taskId> pwc.`taskId` = #{taskId} </if>
+	<if test=" prepend="AND" quesnaireId> pwc.`quesnaireId` = #{quesnaireId} </if>
+	<if test=" prepend="AND" quesnaireVersion> pwc.`quesnaireVersion` = #{quesnaireVersion} </if>
+	<if test=" prepend="AND" quesnaireState> pwc.`quesnaireState` = #{quesnaireState} </if>
+	<if test=" prepend="AND" isDelete> pwc.`isDelete` = #{isDelete} </if>
+	<if test=" prepend="AND" remark> pwc.`remark` = #{remark} </if>
+	<if test=" prepend="AND" compId> pwc.`compId` = #{compId} </if>
+	<if test=" prepend="AND" createBy> pwc.`createBy` = #{createBy} </if>
+	<if test=" prepend="AND" createTime> pwc.`createTime` = #{createTime} </if>
+	<if test=" prepend="AND" updateBy> pwc.`updateBy` = #{updateBy} </if>
+	<if test=" prepend="AND" updateTime> pwc.`updateTime` = #{updateTime} </if>
+	<!-- <if test=" prepend="AND" customInfo> pwc.`customInfo` = #{customInfo} </if> -->
+	<if test=" customInfo>
+        <iterate property="customInfo.iterator" >
+            <if test=" prepend="AND" property="customInfo.iterator[].value">
+                #customInfo.iterator[].value# = pwc.customInfo ->> '$$.$customInfo.iterator[].key$'
+            </if>
+        </iterate>
+        <!-- <if test=" prepend="AND" property="customInfo.phoneAnswerState"> 
+            <if test=" property="customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </if>
+            <if test=" property="customInfo.phoneAnswerState" compareValue="0"> #customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </if>
+        </if> -->
+    </if>
+	
+	<if test=" prepend="AND" warrantyEndTimeStart> pwc.warrantyEndTime >= #{warrantyEndTimeStart} </if>
+   	<if test=" prepend="AND" warrantyEndTimeEnd> #{warrantyEndTimeEnd} >= pwc.warrantyEndTime </if>
+   	<if test=" prepend="AND" processStartTime> pwc.callbackTime >= #{processStartTime} </if>
+   	<if test=" prepend="AND" processEndTime> #{processEndTime} >= pwc.callbackTime </if>
+   	<if test=" prepend="AND" callbackTimeStart> pwc.callbackTime >= #{callbackTimeStart} </if>
+ 	<if test=" prepend="AND" callbackTimeEnd> #{callbackTimeEnd} >= pwc.callbackTime </if>
+ 	<if test=" prepend="AND" nextCallbackTimeStart> pwc.nextCallbackTime >= #{nextCallbackTimeStart} </if>
+ 	<if test=" prepend="AND" nextCallbackTimeEnd> #{nextCallbackTimeEnd} >= pwc.nextCallbackTime </if>
+ 	<if test=" prepend="AND" customerSearch>
+ 		(
+			pwc.customer1 like concat("%", #{customerSearch}, "%") 
+			or pwc.customer2 like concat("%", #{customerSearch}, "%") 
+			or pwc.customerContact1 like concat("%", #{customerSearch}, "%") 
+			or pwc.customerContact2 like concat("%", #{customerSearch}, "%")
+		)
+ 	</if>
+ 	<if test=" prepend="AND" customerContactSearch>
+		(
+			pwc.customerContact1 like concat("%", #{customerContactSearch}, "%") 
+			or pwc.customerContact2 like concat("%", #{customerContactSearch}, "%") 
+		)
+	</if>
+	
+	<if test=" prepend="AND" customerContactSearch>
+        (
+            pwc.customerContact1 like concat("%", #{customerContactSearch}, "%") 
+            or pwc.customerContact2 like concat("%", #{customerContactSearch}, "%") 
+        )
+    </if>
+    <if test=" prepend="AND" salerSearch>
+        (
+            slm.memberCode = #{salerSearch}
+            or slm.memberName like concat("%", #{salerSearch}, "%") 
+            or slm.phoneNum like concat("%", #{salerSearch}, "%") 
+        )
+    </if>
+  </sql>
+  <sql id="sql_projectWarrantyCallback_model_where_selective">
+    <if test=" model>
+		<if test=" prepend="AND" property="model.id"> pwc.`id` = #model.id# </if>
+		<if test=" prepend="AND" property="model.projectId"> pwc.`projectId` = #model.projectId# </if>
+		<if test=" prepend="AND" property="model.officeCode"> pwc.`officeCode` = #model.officeCode# </if>
+		<if test=" prepend="AND" property="model.projectIds"> pwc.`projectIds` = #model.projectIds# </if>
+		<if test=" prepend="AND" property="model.serviceImpl"> pwc.`serviceImpl` = #model.serviceImpl# </if>
+		<if test=" prepend="AND" property="model.projectCode"> pwc.`projectCode` like concat("%", #model.projectCode#, "%") </if>
+		<if test=" prepend="AND" property="model.contractNos"> pwc.`contractNos` like concat("%", #model.contractNos#, "%") </if>
+		<if test=" prepend="AND" property="model.projectName"> pwc.`projectName` like concat("%", #model.projectName#, "%") </if>
+		<if test=" prepend="AND" property="model.industryName"> pwc.`industryName` like concat("%", #model.industryName#, "%") </if>
+		<if test=" prepend="AND" property="model.agentChannel"> pwc.`agentChannel` like concat("%", #model.agentChannel#, "%") </if>
+		<if test=" prepend="AND" property="model.finalCustomerName"> pwc.`finalCustomerName` like concat("%", #model.finalCustomerName#, "%") </if>
+		<if test=" prepend="AND" property="model.customer1"> pwc.`customer1` like concat("%", #model.customer1#, "%") </if>
+		<if test=" prepend="AND" property="model.customerContact1"> pwc.`customerContact1` like concat("%", #model.customerContact1#, "%") </if>
+		<if test=" prepend="AND" property="model.customer2"> pwc.`customer2` like concat("%", #model.customer2#, "%") </if>
+		<if test=" prepend="AND" property="model.customerContact2"> pwc.`customerContact2` like concat("%", #model.customerContact2#, "%") </if>
+		<if test=" prepend="AND" property="model.warrantyStartTime"> pwc.`warrantyStartTime` = #model.warrantyStartTime# </if>
+		<if test=" prepend="AND" property="model.warrantyEndTime"> pwc.`warrantyEndTime` = #model.warrantyEndTime# </if>
+		<if test=" prepend="AND" property="model.renewalIntention"> pwc.`renewalIntention` = #model.renewalIntention# </if>
+		<if test=" prepend="AND" property="model.callbackTime"> pwc.`callbackTime` = #model.callbackTime# </if>
+		<if test=" prepend="AND" property="model.nextCallbackTime"> pwc.`nextCallbackTime` = #model.nextCallbackTime# </if>
+		<if test=" prepend="AND" property="model.taskId"> pwc.`taskId` = #model.taskId# </if>
+		<if test=" prepend="AND" property="model.quesnaireId"> pwc.`quesnaireId` = #model.quesnaireId# </if>
+		<if test=" prepend="AND" property="model.quesnaireVersion"> pwc.`quesnaireVersion` = #model.quesnaireVersion# </if>
+		<if test=" prepend="AND" property="model.quesnaireState"> pwc.`quesnaireState` = #model.quesnaireState# </if>
+		<if test=" prepend="AND" property="model.isDelete"> pwc.`isDelete` = #model.isDelete# </if>
+		<if test=" prepend="AND" property="model.remark"> pwc.`remark` = #model.remark# </if>
+		<if test=" prepend="AND" property="model.compId"> pwc.`compId` = #model.compId# </if>
+		<if test=" prepend="AND" property="model.createBy"> pwc.`createBy` = #model.createBy# </if>
+		<if test=" prepend="AND" property="model.createTime"> pwc.`createTime` = #model.createTime# </if>
+		<if test=" prepend="AND" property="model.updateBy"> pwc.`updateBy` = #model.updateBy# </if>
+		<if test=" prepend="AND" property="model.updateTime"> pwc.`updateTime` = #model.updateTime# </if>
+		<!-- <if test=" prepend="AND" property="model.customInfo"> pwc.`customInfo` = #model.customInfo# </if> -->
+		<if test=" property="model.customInfo">
+		    <iterate property="model.customInfo.iterator" >
+	            <if test=" prepend="AND" property="model.customInfo.iterator[].value">
+	                #model.customInfo.iterator[].value# = pwc.customInfo ->> '$$.$model.customInfo.iterator[].key$'
+	            </if>
+	        </iterate>
+            <!-- <if test=" prepend="AND" property="model.customInfo.phoneAnswerState"> 
+                <if test=" property="model.customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </if>
+                <if test=" property="model.customInfo.phoneAnswerState" compareValue="0"> #model.customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </if>
+            </if> -->
+        </if>
+        
+		<if test=" prepend="AND" property="model.warrantyEndTimeStart"> pwc.warrantyEndTime >= #model.warrantyEndTimeStart# </if>
+   		<if test=" prepend="AND" property="model.warrantyEndTimeEnd"> #model.warrantyEndTimeEnd# >= pwc.warrantyEndTime </if>
+   		<if test=" prepend="AND" property="model.processStartTime"> pwc.callbackTime >= #model.processStartTime# </if>
+   		<if test=" prepend="AND" property="model.processEndTime"> #model.processEndTime# >= pwc.callbackTime </if>
+   		<if test=" prepend="AND" property="model.callbackTimeStart"> pwc.callbackTime >= #model.callbackTimeStart# </if>
+ 		<if test=" prepend="AND" property="model.callbackTimeEnd"> #model.callbackTimeEnd# >= pwc.callbackTime </if>
+ 		<if test=" prepend="AND" property="model.nextCallbackTimeStart"> pwc.nextCallbackTime >= #model.nextCallbackTimeStart# </if>
+ 		<if test=" prepend="AND" property="model.nextCallbackTimeEnd"> #model.nextCallbackTimeEnd# >= pwc.nextCallbackTime </if>
+ 		<if test=" prepend="AND" property="model.customerSearch">
+	 		(
+				pwc.customer1 like concat("%", #model.customerSearch#, "%") 
+				or pwc.customer2 like concat("%", #model.customerSearch#, "%") 
+				or pwc.customerContact1 like concat("%", #model.customerSearch#, "%") 
+				or pwc.customerContact2 like concat("%", #model.customerSearch#, "%") 
+			)
+ 		</if>
+ 		<if test=" prepend="AND" property="model.customerContactSearch">
+	 		(
+				pwc.customerContact1 like concat("%", #model.customerContactSearch#, "%") 
+				or pwc.customerContact2 like concat("%", #model.customerContactSearch#, "%") 
+			)
+ 		</if>
+ 		<if test=" prepend="AND" property="model.salerSearch">
+	        (
+	            slm.memberCode = #model.salerSearch#
+	            or slm.memberName like concat("%", #model.salerSearch#, "%") 
+	            or slm.phoneNum like concat("%", #model.salerSearch#, "%") 
+	        )
+	    </if>
+	</if>
+  </sql>
+  <sql id="sql_projectWarrantyCallback_where">
+    <dynamic prepend="where">
+		<include refid="sql_projectWarrantyCallback_where_selective" />
+	</dynamic>
+  </sql>
+  <sql id="sql_projectWarrantyCallback_model_where">
+    <dynamic prepend="where">
+		<include refid="sql_projectWarrantyCallback_model_where_selective" />
+	</dynamic>
+  </sql>
+  <sql id="sql_projectWarrantyCallback_pageable_limit">
+  	<if test=" displayParam>
+	    <if test=" property="displayParam.sort">
+	        order by $displayParam.sort$
+	    </if>
+	    <isGreaterThan property="displayParam.pagesize" compareValue="-1">
+	        limit #displayParam.offset#, #displayParam.pagesize# 
+	    </isGreaterThan>
+    </if>
+  </sql>
+  <select id="selectProjectWarrantyCallbackList" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" resultType="com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO">
+    select pwc.* 
+        , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
+    from pm_project_warranty_callback AS `pwc`
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+	<dynamic prepend="where">
+		<include refid="sql_projectWarrantyCallback_where_selective" />
+	</dynamic>
+  </select>
+  <select id="countProjectWarrantyCallbackList" parameterType="com.dp.plat.warrantyCallback.entity.ProjectWarrantyCallback" resultType="int">
+    select count(1) from pm_project_warranty_callback AS `pwc`
+    <if test=" prepend="AND" salerSearch>
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+    </if>
+	<dynamic prepend="where">
+		<include refid="sql_projectWarrantyCallback_where_selective" />
+	</dynamic>
+  </select>
+  <select id="selectProjectWarrantyCallbackVOListPageable" parameterType="com.dp.plat.warrantyCallback.vo.WarrantyCallbackPageParam" resultType="com.dp.plat.warrantyCallback.vo.ProjectWarrantyCallbackVO">
+    select pwc.*
+        , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
+    from pm_project_warranty_callback AS `pwc`
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+	<dynamic prepend="where">
+		<!-- <include refid="sql_projectWarrantyCallback_model_where_selective" /> -->
+		<include refid="sql_projectWarrantyCallback_where_selective" />
+	</dynamic>
+	<include refid="sql_projectWarrantyCallback_pageable_limit" />
+  </select>
+  <select id="countProjectWarrantyCallbackVOListPageable" parameterType="com.dp.plat.warrantyCallback.vo.WarrantyCallbackPageParam" resultType="int">
+    select count(1) from pm_project_warranty_callback AS `pwc`
+    <if test=" prepend="AND" salerSearch>
+        LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = pwc.`projectId`
+                AND slm.projectType = "10"
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+    </if>
+	<dynamic prepend="where">
+		<!-- <include refid="sql_projectWarrantyCallback_model_where_selective" /> -->
+		<include refid="sql_projectWarrantyCallback_where_selective" />
+	</dynamic>
+  </select>
+  
+  <sql id="sql_select_projectWarrantyCallbackMapList">
+  	select pwc.*, d.`departmentName` AS officeName, c.name AS companyName, c.abbr as companyAbbr,
+    	IFNULL(ssfs1.basicDataName, '未指定') AS serviceName
+    	<if test=" hideQuesnaire compareValue="true" prepend=",">
+	        qrt.* 
+	    </if>
+	    <if test=" hideWarranty compareValue="true" prepend=",">
+	        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))) warrantyStatus, 
+	        IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
+	            IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',
+	                IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 1, '维保外', NULL)
+	            )
+	        ) AS warrantyStatusName,
+<!-- 	    MIN(wcs.`warrantyStartTime`) AS warrantyStartTime,
+	        MAX(wcs.`warrantyEndTime`) AS warrantyEndTime, -->
+	        GROUP_CONCAT(DISTINCT CONCAT(wcs.contractNo, ":", wcs.warrantyStatusName, "(", DATE(wcs.`warrantyStartTime`), "~", DATE(wcs.`warrantyEndTime`), ")") SEPARATOR "\r\n") AS warrantyStatusDesc,
+	        MAX(wcs.`warrantyGrade`) warrantyGrade, 
+	        IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
+	            IF(MAX(wcs.`warrantyGrade`) = 2, '中级维保',
+	                IF(MAX(wcs.`warrantyGrade`) = 3, '高级维保', NULL)
+	            )
+	        ) AS warrantyGradeName,
+	        MIN(wcs.`warrantyGradeStartTime`) warrantyGradeStartTime,
+	        MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
+	        GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
+	        IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
+	        GROUP_CONCAT(DISTINCT wcs.renewalDesc SEPARATOR "\r\n") AS renewalDesc,
+	        IFNULL(MAX(wcs.hasLiscense), 0) hasLiscense,
+            GROUP_CONCAT(DISTINCT wcs.liscenseDesc SEPARATOR "\r\n") AS liscenseDesc
+	    </if>
+	    , slm.`memberCode` as salerCode 
+        , CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) AS salerName
+        , slm.`phoneNum` as salerContact  
+    from pm_project_warranty_callback AS `pwc`
+    <if test=" hideQuesnaire compareValue="true">
+	    LEFT JOIN projectWarrantyCallback_tempQuesnaireResultTable qrt 
+	        ON qrt.quesnaireResultHeaderId = pwc.`quesnaireId` 
+    </if>
+    <if test=" hideWarranty compareValue="true">
+        LEFT JOIN pm_project_header ph
+	        ON ph.projectId = pwc.projectId
+	    LEFT JOIN `pm_project_group_relationship` pgr 
+	        ON ph.`projectCode` = pgr.`projectCode` 
+	    LEFT JOIN `pm_project_contract` pc 
+	        ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+	    LEFT JOIN `view_warranty_contract_state` wcs 
+	        ON wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
+    </if>
+    LEFT JOIN pm_project_member slm
+	        ON slm.`projectId` = pwc.`projectId`
+	            AND slm.projectType = "10"
+	            AND slm.`memberRole` = "10"
+	            AND slm.`effectiveTo` is null
+    LEFT JOIN fnd_basic_data ssfs1 
+            ON ssfs1.dataTypeCode = '15'
+                AND ssfs1.basicDataId = pwc.serviceImpl
+                AND ssfs1.effectiveTo IS NULL 
+    LEFT JOIN fnd_department d 
+	        ON d.`departmentNum` = pwc.`officeCode`
+	LEFT JOIN fnd_company c 
+            ON c.id = pwc.compId
+	<dynamic prepend="where">
+		<include refid="sql_projectWarrantyCallback_model_where_selective" />
+	</dynamic>
+	<if test=" hideWarranty compareValue="true">
+		GROUP BY pwc.id
+	</if>
+	<dynamic prepend="having">
+		<if test=" hideWarranty compareValue="true">
+			<if test=" model>
+				<if test=" prepend="AND" property="model.hasRenewal"> hasRenewal = #model.hasRenewal# </if>
+				<if test=" prepend="AND" property="model.hasLiscense"> hasLiscense = #model.hasLiscense# </if>
+			</if>
+		</if>
+	</dynamic>
+  </sql>
+  
+  <select id="selectProjectWarrantyCallbackMapList" parameterType="map" resultType="java.util.HashMap" remapResults="true">
+	<include refid="sql_select_projectWarrantyCallbackMapList" />
+	<include refid="sql_projectWarrantyCallback_pageable_limit" />
+  </select>
+  
+  <select id="countProjectWarrantyCallbackMapList" parameterType="map" resultType="int">
+    select count(*) from (
+    	<include refid="sql_select_projectWarrantyCallbackMapList" />
+    ) t
+  </select>
+  
+  <sql id="sql_select_projectWarranty">
+    SELECT 
+        ph.`projectId`, ph.`projectCode`, ph.`projectName`, ph.projectType,
+        ph.`column001` as officeCode, fd.`departmentName` as officeName, c.name as companyName, c.abbr as companyAbbr,
+        <!-- ph.column004 AS marketName, ph.column005 AS systemName, 
+	    ph.column006 AS expendName, ph.column007 AS industryName, -->
+	    ph.column005 AS industryName,
+	    ph.column013 AS finalCustomerName, ph.compId,
+        GROUP_CONCAT(DISTINCT pm.`memberName` order by pm.phoneNum) as customer1, GROUP_CONCAT(DISTINCT pm.`phoneNum` order by pm.phoneNum) as customerContact1,
+		GROUP_CONCAT(DISTINCT ppfs.linkmanName order by ppfs.linkmanTel) as customer2, GROUP_CONCAT(DISTINCT ppfs.`linkmanTel` order by ppfs.linkmanTel) as customerContact2,
+		
+		GROUP_CONCAT(DISTINCT slm.`memberCode` order by slm.memberCode) as salerCode, 
+		GROUP_CONCAT(DISTINCT CONCAT(slm.`memberCode`, "-", REPLACE(slm.`memberName`, CONCAT(slm.`memberCode`, "-"), "")) order by slm.memberCode) AS salerName,
+		GROUP_CONCAT(DISTINCT slm.`phoneNum` order by slm.memberCode) as salerContact,
+		
+		prp.`partyName` as agentChannel,
+		IFNULL(ph.column012, ph.columno12_readonly) AS serviceImpl, 
+		IFNULL(IFNULL(ssfs1.basicDataName, ssfs2.basicDataName), '未指定') AS serviceName,
+        GROUP_CONCAT(DISTINCT pc.contractNo) as contractNos,
+        IFNULL(IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, 0, SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`))), 1) warrantyStatus, 
+        IFNULL(IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = -1, '维保内',
+            IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 0 OR SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) > 1, '部分保外',
+                IF(SUM(DISTINCT IF(wcs.`diff` = 0, 99, wcs.`diff`)) = 1, '维保外', NULL)
+            )
+        ), '维保外') AS warrantyStatusName,
+        MIN(wcs.`warrantyStartTime`) AS warrantyStartTime,
+        MAX(wcs.`warrantyEndTime`) AS warrantyEndTime,
+        GROUP_CONCAT(DISTINCT CONCAT(wcs.contractNo, ":", wcs.warrantyStatusName, "(", DATE(wcs.`warrantyStartTime`), "~", DATE(wcs.`warrantyEndTime`), ")") SEPARATOR "\r\n") AS warrantyStatusDesc,
+        IFNULL(MAX(wcs.`warrantyGrade`), 0) warrantyGrade, 
+        IFNULL(IF(MAX(wcs.`warrantyGrade`) = 1, '基本维保',
+            IF(MAX(wcs.`warrantyGrade`) = 2, '中级维保',
+                IF(MAX(wcs.`warrantyGrade`) = 3, '高级维保', NULL)
+            )
+        ), '无维保') AS warrantyGradeName,
+        MIN(wcs.`warrantyGradeStartTime`) warrantyGradeStartTime,
+        MAX(wcs.`warrantyGradeEndTime`) warrantyGradeEndTime,
+        GROUP_CONCAT(DISTINCT wcs.gradedesc SEPARATOR "\r\n") AS warrantyGradeDesc,
+        <!--
+        IF(DATE(NOW()) >= MIN(wcs.`warrantyGradeStartTime`) AND MAX(wcs.`warrantyGradeEndTime`) >= DATE(NOW()), "true", "false") AS warrantyGradeEnable,
+        IFNULL(MAX(wcs.`wafService`), 0) wafService,
+        IF(MAX(wcs.`wafService`) = 1, "策略调优服务", NULL) AS  wafServiceName,
+        MIN(wcs.`wafServiceStartTime`) wafServiceStartTime,
+        MAX(wcs.`wafServiceEndTime`) wafServiceEndTime,
+        IF(DATE(NOW()) >= MIN(wcs.`wafServiceStartTime`) AND MAX(wcs.`wafServiceEndTime`) >= DATE(NOW()), "true", "false") AS wafServiceEnable,
+        GROUP_CONCAT(DISTINCT CONCAT(wcs.itemDesc, "(", DATE(wcs.`wafServiceStartTime`), "~", DATE(wcs.`wafServiceEndTime`), ")") SEPARATOR "\r\n") AS warrantyServiceDesc, -->
+    	pwc.id AS latestId,
+    	pwc.`renewalIntention` as latestRenewalIntention,
+    	pwc.`customInfo` ->> '$$.phoneAnswerState' AS latestPhoneAnswerState,
+    	pwc.`customInfo` ->> '$$.phoneAnswerStateName' AS latestPhoneAnswerStateName,
+    	pwc.`callbackTime` as latestCallbackTime,
+    	pwc.`nextCallbackTime` as latestNextCallbackTime,
+    	pwc.`remark` as latestRemark,
+    	pwc.customInfo AS customInfo,
+    	IFNULL(mpwc.callbackCount, 0) callbackCount,
+    	IFNULL(mpwc.renewalIntentionCount, 0) renewalIntentionCount,
+    	IFNULL(MAX(wcs.hasRenewal), 0) hasRenewal,
+		GROUP_CONCAT(DISTINCT renewalDesc SEPARATOR "\r\n") AS renewalDesc,
+		IFNULL(MAX(wcs.hasLiscense), 0) hasLiscense,
+        GROUP_CONCAT(DISTINCT liscenseDesc SEPARATOR "\r\n") AS liscenseDesc
+    FROM
+        `pm_project_header` ph 
+        LEFT JOIN `pm_project_group_relationship` pgr 
+            ON ph.`projectCode` = pgr.`projectCode` 
+        <!-- LEFT JOIN `pm_project_group` pg
+            ON pg.`projectGroupCode` = pgr.`projectGroupCode`  -->
+        LEFT JOIN `pm_project_contract` pc 
+            ON pc.`projectGroupCode` = pgr.`projectGroupCode` 
+        LEFT JOIN `view_warranty_contract_state` wcs 
+            ON wcs.`contractNo` = REPLACE(REPLACE(pc.`contractNo`, "-C", ""), "-L", "")
+        LEFT JOIN 
+	        (SELECT 
+	            projectId, max(id) as id, count(id) as callbackCount, count(IF(renewalIntention = 1, 1, null)) as renewalIntentionCount 
+	        FROM
+	            pm_project_warranty_callback 
+	        GROUP BY projectId) mpwc 
+	        ON mpwc.projectId = ph.projectId 
+	    LEFT JOIN `pm_project_warranty_callback` pwc 
+	        ON pwc.`projectId` = ph.`projectId` 
+	        AND mpwc.id = pwc.id 
+        LEFT JOIN pm_project_member pm
+		    ON pm.`projectId` = ph.`projectId`
+		        AND pm.projectType = ph.projectType
+				AND pm.`memberRole` = "60"
+				AND pm.`effectiveTo` is null
+		LEFT JOIN pm_project_member slm
+            ON slm.`projectId` = ph.`projectId`
+                AND slm.projectType = ph.projectType
+                AND slm.`memberRole` = "10"
+                AND slm.`effectiveTo` is null
+		LEFT JOIN `pm_project_related_party` prp
+		    ON prp.`projectId` = ph.`projectId`
+				AND prp.`partyRole` = "30"
+				AND prp.`effectiveTo` is null
+		LEFT JOIN `pm_project_property_from_sms` ppfs
+	     	ON ppfs.`projectCode` = pgr.`smsProjectCode`
+		LEFT JOIN fnd_basic_data ssfs1 
+            ON ssfs1.dataTypeCode = '15'
+                AND ssfs1.basicDataId = ph.column012 
+                AND ssfs1.effectiveTo IS NULL 
+        LEFT JOIN fnd_basic_data ssfs2 
+            ON ssfs2.dataTypeCode = '15' 
+                AND ssfs2.basicDataId = ph.columno12_readonly 
+                AND ssfs2.effectiveTo IS NULL 
+        LEFT JOIN fnd_department fd
+            ON fd.`departmentNum` = ph.`column001`
+        LEFT JOIN fnd_company c force key(primary)
+            ON c.id = ph.compId
+    WHERE ph.`effectiveTo` is null
+  </sql>
+  
+  <sql id="sql_projectWarranty_where">
+    <if test=" prepend="AND" projectId> ph.projectId = #{projectId} </if>
+    <if test=" prepend="AND" projectCode> ph.projectCode like concat("%", #{projectCode}, "%") </if>
+    <if test=" prepend="AND" projectName> ph.projectName like concat("%", #{projectName}, "%") </if>
+    <if test=" prepend="AND" officeCode> ph.column001 = #{officeCode} </if>
+    <if test=" prepend="AND" industryName> ph.column005 like concat("%", #{industryName}, "%") </if>
+    <if test=" prepend="AND" agentChannel> prp.partyName like concat("%", #{agentChannel}, "%") </if>
+    <if test=" prepend="AND" finalCustomerName> ph.column013 like concat("%", #{finalCustomerName}, "%") </if>
+    <if test=" prepend="AND" customerNameNotFuzzy> #{customerNameNotFuzzy} = TRIM(IFNULL(ph.column013, "")) </if>
+    <if test=" prepend="AND" serviceImpl> #{serviceImpl} = IFNULL(ph.column012, ph.columno12_readonly) </if>
+    <if test=" prepend="AND" renewalIntentionInt> 
+        <if test=" renewalIntentionInt compareValue="-1"> pwc.renewalIntention is null </if>
+        <if test=" renewalIntentionInt compareValue="-1"> pwc.renewalIntention = #{renewalIntentionInt} </if>
+    </if>
+    <if test=" customInfo>
+        <iterate property="customInfo.iterator" >
+            <if test=" prepend="AND" property="customInfo.iterator[].value">
+	            #customInfo.iterator[].value# = pwc.customInfo ->> '$$.$customInfo.iterator[].key$'
+            </if>
+        </iterate>
+	    <!-- <if test=" prepend="AND" property="customInfo.phoneAnswerState"> 
+	        <if test=" property="customInfo.phoneAnswerState" compareValue="0"> pwc.customInfo ->> '$$.phoneAnswerState' is null </if>
+	        <if test=" property="customInfo.phoneAnswerState" compareValue="0"> #customInfo.phoneAnswerState# = pwc.customInfo ->> '$$.phoneAnswerState' </if>
+	    </if> -->
+    </if>
+    <if test=" prepend="AND" compId> ph.compId = #{compId} </if>
+    <if test=" prepend="AND" warrantyEndTimeStart> wcs.warrantyEndTime >= #{warrantyEndTimeStart} </if>
+    <if test=" prepend="AND" warrantyEndTimeEnd> #{warrantyEndTimeEnd} >= wcs.warrantyEndTime </if>
+    <if test=" prepend="AND" processStartTime> pwc.callbackTime >= #{processStartTime} </if>
+    <if test=" prepend="AND" processEndTime> #{processEndTime} >= pwc.callbackTime </if>
+    <if test=" prepend="AND" callbackTimeStart> pwc.callbackTime >= #{callbackTimeStart} </if>
+    <if test=" prepend="AND" callbackTimeEnd> #{callbackTimeEnd} >= pwc.callbackTime </if>
+    <if test=" prepend="AND" nextCallbackTimeStart> pwc.nextCallbackTime >= #{nextCallbackTimeStart} </if>
+    <if test=" prepend="AND" nextCallbackTimeEnd> #{nextCallbackTimeEnd} >= pwc.nextCallbackTime </if>
+    <if test=" prepend="AND" salerSearch>
+        (
+            slm.memberCode = #{salerSearch}
+            or slm.memberName like concat("%", #{salerSearch}, "%") 
+            or slm.phoneNum like concat("%", #{salerSearch}, "%") 
+        )
+    </if>
+    GROUP BY ph.projectCode
+    <dynamic prepend="having">
+        <if test=" prepend="AND" contractNos> contractNos like concat("%", #{contractNos}, "%") </if>
+        <if test=" prepend="AND" customerSearch>
+        (
+            customer1 like concat("%", #{customerSearch}, "%") 
+            or customer2 like concat("%", #{customerSearch}, "%") 
+            or customerContact1 like concat("%", #{customerSearch}, "%") 
+            or customerContact2 like concat("%", #{customerSearch}, "%")
+        )
+        </if>
+        <if test=" prepend="AND" customerContactSearch>
+        (
+            customerContact1 like concat("%", #{customerContactSearch}, "%") 
+            or customerContact2 like concat("%", #{customerContactSearch}, "%") 
+        )
+        </if>
+        <if test=" prepend="AND" hasCallback> callbackCount > 0 </if>
+        <if test=" prepend="AND" hasRenewal> hasRenewal = #{hasRenewal} </if>
+        <if test=" prepend="AND" hasLiscense> hasLiscense = #{hasLiscense} </if>
+    </dynamic>
+  </sql>
+  
+  <insert id="createTempProjectWarrantyTable" parameterType="map">
+    CREATE TEMPORARY TABLE IF NOT EXISTS temp_project_warranty_$tempSuffix$ (
+        KEY projectId (projectId),
+        KEY warrantyStatus(warrantyStatus),
+        KEY warrantyGrade(warrantyGrade),
+        KEY callbackCount(callbackCount),
+        KEY hasRenewal(hasRenewal),
+        KEY hasLiscense(hasLiscense)
+    ) AS
+    <include refid="sql_select_projectWarranty"/>
+    <include refid="sql_projectWarranty_where"/>
+    <!-- <if test=" prepend="AND" projectId> ph.projectId = #{projectId} </if>
+    GROUP BY ph.projectCode; -->
+  </insert>
+  
+  <delete id="deleteTempProjectWarrantyTable" parameterType="map">
+    DROP TEMPORARY TABLE IF EXISTS temp_project_warranty_$tempSuffix$;
+  </delete>
+  
+  <!-- 查询维保 -->
+  <select id="countProjectWarranty" parameterType="map" resultType="int">
+     <!-- select count(*) from (
+	     <include refid="sql_select_projectWarranty"/>
+	     <include refid="sql_projectWarranty_where"/>
+   	 ) t -->
+   	 select count(*) from temp_project_warranty_$tempSuffix$ t
+  </select>
+  
+  <!-- 查询维保 -->
+  <select id="selectProjectWarranty" parameterType="map" resultType="java.util.HashMap">
+     select * from temp_project_warranty_$tempSuffix$ t
+     <!-- <include refid="sql_select_projectWarranty"/>
+     <include refid="sql_projectWarranty_where"/> -->
+	 <include refid="sql_projectWarrantyCallback_pageable_limit" />
+  </select>
+  
+  <select id="countCustomerProjectWarrantyCallbackStatistics" parameterType="map" resultType="int">
+  	 select count(distinct trim(IFNULL(finalCustomerName, ""))) from temp_project_warranty_$tempSuffix$ t <!-- (
+		 <include refid="sql_select_projectWarranty"/>
+	     <include refid="sql_projectWarranty_where"/>
+     ) t --> 
+  </select>
+  
+  <select id="selectCustomerProjectWarrantyCallbackStatistics" parameterType="map" resultType="java.util.HashMap">
+  	 select 
+  	 	trim(IFNULL(finalCustomerName, "")) finalCustomerName, 
+  	 	count(*) as projectCount, 
+  	 	group_concat(distinct officeName) as officeNames, 
+  	 	count(IF(callbackCount > 0, 1, null)) callbackProjectCount, 
+  	 	IFNULL(sum(callbackCount), 0) callbackCount, 
+  	 	count(IF(renewalIntentionCount, 1, null)) renewalIntentionCount, 
+  	 	count(IF(hasRenewal = 1, 1, null)) as renewalCount,
+  	 	count(IF(hasLiscense = 1, 1, null)) as liscenseCount,
+  	 	max(latestCallbackTime) as latestCallbackTime,
+  	 	max(latestNextCallbackTime) as latestNextCallbackTime
+  	 from temp_project_warranty_$tempSuffix$ t <!-- (
+		 <include refid="sql_select_projectWarranty"/>
+	     <include refid="sql_projectWarranty_where"/>
+     ) t -->
+     group by trim(IFNULL(finalCustomerName, ""))
+     <include refid="sql_projectWarrantyCallback_pageable_limit" />
+  </select>
+</mapper>
