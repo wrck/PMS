@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
 import com.dp.plat.asset.entity.AssetTransfer;
+import com.dp.plat.asset.enums.AssetStatus;
 import com.dp.plat.asset.mapper.AssetLifecycleLogMapper;
 import com.dp.plat.asset.mapper.AssetMapper;
 import com.dp.plat.asset.mapper.AssetTransferMapper;
+import com.dp.plat.asset.service.AssetStateTransitionValidator;
 import com.dp.plat.asset.service.IAssetTransferService;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
@@ -44,7 +46,7 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
     private static final String STATUS_REJECTED = "REJECTED";
 
     /** Asset status constants. */
-    private static final String ASSET_ALLOCATED = "ALLOCATED";
+    private static final String ASSET_RECEIVED = "RECEIVED";
     private static final String ASSET_IN_TRANSIT = "IN_TRANSIT";
 
     private static final String ACTION_TRANSFER = "TRANSFER";
@@ -61,6 +63,7 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
     private final AssetMapper assetMapper;
     private final AssetLifecycleLogMapper assetLifecycleLogMapper;
     private final WorkflowService workflowService;
+    private final AssetStateTransitionValidator stateValidator;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -79,7 +82,9 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
         if (transfer.getFromProjectId() == null) {
             transfer.setFromProjectId(asset.getProjectId());
         }
-        // Set asset status to IN_TRANSIT
+        // Set asset status to IN_TRANSIT (validated against the state machine).
+        // On approval/rejection the asset returns to RECEIVED at the destination/source.
+        stateValidator.validate(parseStatus(asset.getStatus()), AssetStatus.IN_TRANSIT);
         asset.setStatus(ASSET_IN_TRANSIT);
         assetMapper.updateById(asset);
 
@@ -108,12 +113,12 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
         transfer.setApproveOpinion(opinion);
         boolean updated = this.updateById(transfer);
 
-        // Update asset: move to target project, restore allocated status
+        // Update asset: move to target project, mark received at destination.
         Asset asset = assetMapper.selectById(transfer.getAssetId());
         if (asset != null) {
-            Long previousProjectId = asset.getProjectId();
+            stateValidator.validate(parseStatus(asset.getStatus()), AssetStatus.RECEIVED);
             asset.setProjectId(transfer.getToProjectId());
-            asset.setStatus(ASSET_ALLOCATED);
+            asset.setStatus(ASSET_RECEIVED);
             assetMapper.updateById(asset);
             recordLog(transfer.getAssetId(), ACTION_TRANSFER,
                     transfer.getFromProjectId(), transfer.getToProjectId(),
@@ -138,10 +143,11 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
         transfer.setApproveOpinion(opinion);
         boolean updated = this.updateById(transfer);
 
-        // Restore asset status: back to allocated to the source project
+        // Restore asset: back to received at the source project.
         Asset asset = assetMapper.selectById(transfer.getAssetId());
         if (asset != null) {
-            asset.setStatus(ASSET_ALLOCATED);
+            stateValidator.validate(parseStatus(asset.getStatus()), AssetStatus.RECEIVED);
+            asset.setStatus(ASSET_RECEIVED);
             asset.setProjectId(transfer.getFromProjectId());
             assetMapper.updateById(asset);
             recordLog(transfer.getAssetId(), ACTION_TRANSFER,
@@ -188,6 +194,23 @@ public class AssetTransferServiceImpl extends ServiceImpl<AssetTransferMapper, A
                 .remarks(remarks)
                 .build();
         assetLifecycleLogMapper.insert(log);
+    }
+
+    /**
+     * Parse a stored status string into an {@link AssetStatus}. Returns {@code null}
+     * when the stored value is null.
+     *
+     * @throws BusinessException when the stored value is not a known status
+     */
+    private AssetStatus parseStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        try {
+            return AssetStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("未知的资产状态: " + status);
+        }
     }
 
     /**

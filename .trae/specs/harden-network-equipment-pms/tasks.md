@@ -27,12 +27,10 @@
   - [ ] SubTask 4.3: 实现 MTTR 与一次通过率 KPI 统计接口
   - [ ] SubTask 4.4: Flyway V13 创建 pms_rma 表
 
-- [ ] Task 5: 终验交付物强制校验 + 保留金台账
+- [ ] Task 5: 终验交付物强制校验
   - [ ] SubTask 5.1: 新增 DeliverableChecklist 实体（projectId/deliverableType[AS_BUILT/TEST_REPORT/ACCEPTANCE_CERT/TRAINING_RECORD/OPERATION_MANUAL/ASSET_REGISTER/WARRANTY_CERT/SPARE_PARTS_LIST]/required/uploaded/attachmentId/checkedAt）+ Mapper/Service
-  - [ ] SubTask 5.2: 修改 FinalAcceptanceServiceImpl.apply：终验申请前校验 8 项交付物全部 uploaded=true，缺项拒绝并列出清单
-  - [ ] SubTask 5.3: 新增 Retainage 实体（projectId/contractId/milestoneId/withheldAmount/releasableAmount/releasedAmount/status[WITHHELD/RELEASABLE/RELEASED]/...）+ Mapper/Service/Controller
-  - [ ] SubTask 5.4: 实现里程碑结算自动扣留保留金（按合同比例 5%-10%）+ Punch List 清零触发释放流程
-  - [ ] SubTask 5.5: Flyway V14 创建 pms_deliverable_checklist 与 pms_retainage 表
+  - [ ] SubTask 5.2: 修改 FinalAcceptanceServiceImpl.apply：终验申请前校验 8 项交付物全部 uploaded=true，缺项拒绝并列出清单；同时校验 Punch List 全部 VERIFIED
+  - [ ] SubTask 5.3: Flyway V14 创建 pms_deliverable_checklist 表
 
 - [ ] Task 6: 质保期管理 + 保内/保外判定
   - [ ] SubTask 6.1: 新增 Warranty 实体（assetId/startDate/endDate/durationMonths/slaLevel[BASIC/PREMIUM/PLATINUM]/contractNo/...）+ Mapper/Service/Controller
@@ -99,7 +97,7 @@
   - [ ] SubTask 14.4: 前端 WebSocket 客户端封装（sockjs-client + stompjs + 自动重连 + 心跳 + 订阅 /user/queue/notifications）
 
 - [ ] Task 15: 站内信通知中心 + 消息模板引擎
-  - [ ] SubTask 15.1: 新增 pms-notification 模块骨架 + Notification 实体（userId/title/content/category[MILESTONE/TASK/APPROVAL/PUNCH_LIST/WARRANTY/RMA/SETTLEMENT/RETAINAGE]/bizType/bizId/readStatus[UNREAD/READ]/channel[IN_APP/WS/EMAIL/OA]/createdAt）+ Mapper/Service/Controller
+  - [ ] SubTask 15.1: 新增 pms-notification 模块骨架 + Notification 实体（userId/title/content/category[MILESTONE/TASK/APPROVAL/PUNCH_LIST/WARRANTY/RMA/SETTLEMENT]/bizType/bizId/readStatus[UNREAD/READ]/channel[IN_APP/WS/EMAIL/OA]/createdAt）+ Mapper/Service/Controller
   - [ ] SubTask 15.2: 实现 NotificationService.multiChannelSend（并发发送：站内信落库 + WebSocket 推送 + 邮件 + OA 待办，任一通道失败不阻塞其他）
   - [ ] SubTask 15.3: 新增 NotificationTemplate 实体（templateCode/subject/body/variables[JSON]）+ 模板渲染引擎（Freemarker，支持变量注入 ${user} ${projectName} 等）
   - [ ] SubTask 15.4: 前端消息中心页面（消息列表 + 已读/未读筛选 + 分类筛选 + 批量已读 + 跳转业务详情）
@@ -110,7 +108,7 @@
   - [ ] SubTask 16.2: 任务派工/委派通知接入（ImplTaskServiceImpl.assignOemTask/assignAgentTask 调用 NotificationService 替代桩）
   - [ ] SubTask 16.3: 审批待办通知接入（WorkflowServiceImpl.startProcess/completeTask 通过 OaTaskListener + NotificationService 双通道推送）
   - [ ] SubTask 16.4: Punch List 整改到期通知（@Scheduled 扫描 deadline 临近的 OPEN 项推送责任人）
-  - [ ] SubTask 16.5: 质保期到期/RMA 状态变更/结算审批/保留金释放通知接入对应业务 Service
+  - [ ] SubTask 16.5: 质保期到期/RMA 状态变更/结算审批通知接入对应业务 Service
 
 ## Phase 5: 文件与附件管理
 
@@ -156,11 +154,10 @@
   - [ ] SubTask 22.4: 变更管理页面（CR 列表 + 影响评估表单 + CCB 审批 + 基线变更历史时间线）
   - [ ] SubTask 22.5: 问题日志页面（问题列表 + 责任人分派 + 状态流转 + 源风险/源变更关联展示）
   - [ ] SubTask 22.6: 质保期管理页面（资产质保期列表 + 到期预警日历 + 续保/退网决策操作 + SLA 等级展示）
-  - [ ] SubTask 22.7: 保留金台账页面（按项目/合同分组 + 扣留/应释放/已释放金额 + 释放审批流程）
-  - [ ] SubTask 22.8: 终验交付物清单页面（8 项交付物 checklist + 上传附件 + 校验状态 + 一键下载全部）
-  - [ ] SubTask 22.9: 消息中心页面（Task 15.4 实现）
-  - [ ] SubTask 22.10: 集成健康检查面板页面（Task 13.2 实现）
-  - [ ] SubTask 22.11: 路由配置 + 菜单配置更新（新增业务菜单分组）
+  - [ ] SubTask 22.7: 终验交付物清单页面（8 项交付物 checklist + 上传附件 + 校验状态 + 一键下载全部）
+  - [ ] SubTask 22.8: 消息中心页面（Task 15.4 实现）
+  - [ ] SubTask 22.9: 集成健康检查面板页面（Task 13.2 实现）
+  - [ ] SubTask 22.10: 路由配置 + 菜单配置更新（新增业务菜单分组）
 
 ## Phase 7: 运维与可观测性
 
@@ -179,7 +176,7 @@
 ## Phase 8: 全面质量保障
 
 - [ ] Task 25: 单元测试覆盖率提升 + Testcontainers 集成测试修复
-  - [ ] SubTask 25.1: 补全 pms-project Service 层测试（12 节点里程碑 + Punch List + 终验交付物校验 + 保留金），覆盖率 70%+
+  - [ ] SubTask 25.1: 补全 pms-project Service 层测试（12 节点里程碑 + Punch List + 终验交付物校验），覆盖率 70%+
   - [ ] SubTask 25.2: 补全 pms-asset Service 层测试（9 状态机迁移校验 + RMA 6 步 + 质保判定 + 序列化字段），覆盖率 70%+
   - [ ] SubTask 25.3: 补全 pms-implementation Service 层测试（派工单字段 + 代理商认证 + 结算推送 FP），覆盖率 70%+
   - [ ] SubTask 25.4: 补全 pms-governance Service 层测试（变更/风险/问题三本账联动），覆盖率 70%+
@@ -200,7 +197,7 @@
 - Task 2 depends on Task 1
 - Task 3 depends on Task 1
 - Task 4 depends on Task 2, Task 6
-- Task 5 depends on Task 1, Task 3, Task 17
+- Task 5 depends on Task 1, Task 3
 - Task 6 depends on Task 2
 - Task 7 depends on Task 2
 - Task 8 depends on Task 1 (pms-governance 依赖 pms-workflow 已有)

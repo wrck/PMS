@@ -1,19 +1,24 @@
 package com.dp.plat.integration.service;
 
+import com.dp.plat.integration.dto.OaHealthDto;
 import com.dp.plat.integration.model.oa.OaTodoRequest;
 
 /**
  * OA (致远 OA) integration service.
  *
  * <p>Provides operations to push pending todo items to OA when a Flowable
- * user task is created, and to complete the corresponding OA todo when the
- * Flowable task is completed. All calls are logged to
- * {@link com.dp.plat.integration.entity.IntegrationLog}.</p>
+ * user task is created, complete the corresponding OA todo when the
+ * Flowable task is completed, and transfer the handler when the task is
+ * reassigned. The OAuth2 token is cached with ahead-of-expiry auto-renewal
+ * (refreshed when less than 5 minutes remain). All calls are logged to
+ * {@link com.dp.plat.integration.entity.IntegrationLog} with
+ * {@code logType="OA"}.</p>
  */
 public interface OaIntegrationService {
 
     /**
-     * Obtain an OAuth2 access token (cached until near expiry).
+     * Obtain an OAuth2 access token (cached, auto-renewed when less than 5
+     * minutes remain before expiry).
      *
      * @return the access token
      */
@@ -30,8 +35,25 @@ public interface OaIntegrationService {
     /**
      * Complete a todo item in OA.
      *
-     * @param taskId the OA todo task identifier (the Flowable task id)
+     * @param businessKey the OA todo business key (the Flowable task id /
+     *                    process business key)
      * @return {@code true} if the OA API returned a success status
      */
-    boolean completeTodo(String taskId);
+    boolean completeTodo(String businessKey);
+
+    /**
+     * Transfer an OA todo to a new handler (sync a handler change to OA).
+     *
+     * @param businessKey      the OA todo business key
+     * @param newHandlerUserId the new handler user id in OA
+     * @return {@code true} if the OA API returned a success status
+     */
+    boolean transferTask(String businessKey, String newHandlerUserId);
+
+    /**
+     * Health check for the OA adapter.
+     *
+     * @return the OA health snapshot
+     */
+    OaHealthDto healthCheck();
 }

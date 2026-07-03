@@ -1,0 +1,33 @@
+# application-mock.yml
+# Profile used to run the PMS backend against the local mock D365/FP/OA
+# services (mock-d365:8091, mock-fp:8092, mock-oa:8093). Activate with
+# SPRING_PROFILES_ACTIVE=mock.
+
+d365:
+  base-url: ${D365_BASE_URL:http://mock-d365:8091/api}
+  token-url: ${D365_TOKEN_URL:http://mock-d365:8091/oauth2/token}
+  client-id: ${D365_CLIENT_ID:mock-client}
+  client-secret: ${D365_CLIENT_SECRET:mock-secret}
+  scope: ${D365_SCOPE:}
+  grant-type: client_credentials
+
+fp:
+  base-url: ${FP_BASE_URL:http://mock-fp:8092/api}
+  token-url: ${FP_TOKEN_URL:http://mock-fp:8092/oauth2/token}
+  client-id: ${FP_CLIENT_ID:mock-client}
+  client-secret: ${FP_CLIENT_SECRET:mock-secret}
+
+integration:
+  retry:
+    interval: 300000
+    max-retry: 3
+    backoff-multiplier: 2
+  oa:
+    base-url: ${OA_BASE_URL:http://mock-oa:8093/api}
+    token-url: ${OA_TOKEN_URL:http://mock-oa:8093/oauth2/token}
+    client-id: ${OA_CLIENT_ID:mock-client}
+    client-secret: ${OA_CLIENT_SECRET:mock-secret}
+
+logging:
+  level:
+    com.dp.plat.integration: DEBUG

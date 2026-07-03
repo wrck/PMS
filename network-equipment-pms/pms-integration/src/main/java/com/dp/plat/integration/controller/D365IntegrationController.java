@@ -1,0 +1,63 @@
+package com.dp.plat.integration.controller;
+
+import com.dp.plat.common.result.Result;
+import com.dp.plat.integration.dto.D365HealthDto;
+import com.dp.plat.integration.model.d365.PurchaseReceiptHeader;
+import com.dp.plat.integration.service.D365IntegrationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * D365 integration management controller: health check, sync triggers and
+ * manual push.
+ */
+@Tag(name = "D365集成", description = "D365 (Microsoft Dynamics 365) integration APIs")
+@RestController
+@RequestMapping("/api/integration/d365")
+@RequiredArgsConstructor
+public class D365IntegrationController {
+
+    private final D365IntegrationService d365IntegrationService;
+
+    @Operation(summary = "D365 health check")
+    @GetMapping("/health")
+    public Result<D365HealthDto> health() {
+        return Result.ok(d365IntegrationService.healthCheck());
+    }
+
+    @Operation(summary = "Manually push a purchase receipt to D365")
+    @PostMapping("/push-receipt")
+    public Result<String> pushReceipt(@RequestBody PurchaseReceiptHeader header) {
+        return Result.ok(d365IntegrationService.pushPurchaseReceipt(header));
+    }
+
+    @Operation(summary = "Trigger D365 purchase order sync")
+    @PostMapping("/sync/purchase-orders")
+    public Result<Integer> syncPurchaseOrders() {
+        return Result.ok(d365IntegrationService.syncPurchaseOrders());
+    }
+
+    @Operation(summary = "Trigger D365 purchase receipt sync")
+    @PostMapping("/sync/purchase-receipts")
+    public Result<Integer> syncPurchaseReceipts() {
+        return Result.ok(d365IntegrationService.syncPurchaseReceipts());
+    }
+
+    @Operation(summary = "Trigger D365 asset serial number sync")
+    @PostMapping("/sync/asset-serial-numbers")
+    public Result<Integer> syncAssetSerialNumbers() {
+        return Result.ok(d365IntegrationService.syncAssetSerialNumbers());
+    }
+
+    @Operation(summary = "Trigger D365 invoice sync")
+    @PostMapping("/sync/invoices")
+    public Result<Integer> syncInvoices() {
+        return Result.ok(d365IntegrationService.syncInvoices());
+    }
+}

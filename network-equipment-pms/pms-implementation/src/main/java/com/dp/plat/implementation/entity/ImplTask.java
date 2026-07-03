@@ -62,4 +62,33 @@ public class ImplTask extends BaseEntity {
     private String acceptUserName;
 
     private LocalDateTime acceptTime;
+
+    /** Service execution fields. */
+    private String customerContact;
+
+    private String serviceAddress;
+
+    /** SITE_SURVEY/INSTALL/DEBUG/MAINTENANCE. */
+    private String serviceType;
+
+    /** Standard operating procedure steps (long text). */
+    private String sopSteps;
+
+    /** Required materials list (long text). */
+    private String materialList;
+
+    private Integer plannedHours;
+
+    /** Required skill level: JUNIOR/SENIOR/EXPERT. */
+    private String skillLevel;
+
+    /** Safety requirements: PPE/LOTO/PERMIT. */
+    private String safetyPpe;
+
+    /** Evidence checkpoint definition (long text). */
+    private String evidenceCheckpoints;
+
+    /** Whether a formal sign-off is required (default true). */
+    @Builder.Default
+    private Boolean signOffRequired = true;
 }

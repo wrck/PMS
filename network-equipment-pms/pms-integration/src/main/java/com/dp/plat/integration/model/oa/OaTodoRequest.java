@@ -26,11 +26,17 @@ public class OaTodoRequest {
     /** Handler user id in OA (mapped from the Flowable task assignee). */
     private String handlerUserId;
 
+    /** Handler user display name in OA. */
+    private String handlerUserName;
+
     /** Flowable process instance id. */
     private String processInstanceId;
 
     /** Business key associated with the process instance. */
     private String businessKey;
+
+    /** Business type code (e.g. project approval, settlement approval). */
+    private String businessType;
 
     /** URL for the user to open the process detail page. */
     private String processUrl;

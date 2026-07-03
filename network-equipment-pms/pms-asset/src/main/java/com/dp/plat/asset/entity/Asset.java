@@ -45,4 +45,29 @@ public class Asset extends BaseEntity {
     private LocalDateTime outboundTime;
 
     private String remarks;
+
+    /** Serialization / deployment fields. */
+    private String macAddress;
+
+    private String managementIp;
+
+    private String hostname;
+
+    private String dataCenter;
+
+    private String rack;
+
+    /** Rack start U position. */
+    private Integer startU;
+
+    /** Rack end U position. */
+    private Integer endU;
+
+    private String imei;
+
+    private String poNo;
+
+    private String invoiceNo;
+
+    private String warrantyContractNo;
 }

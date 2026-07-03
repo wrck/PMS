@@ -33,6 +33,33 @@ services:
       timeout: 5s
       retries: 5
 
+  mock-d365:
+    build:
+      context: ./mock-d365
+      dockerfile: Dockerfile
+    container_name: pms-mock-d365
+    ports:
+      - "8091:8091"
+    restart: on-failure
+
+  mock-fp:
+    build:
+      context: ./mock-fp
+      dockerfile: Dockerfile
+    container_name: pms-mock-fp
+    ports:
+      - "8092:8092"
+    restart: on-failure
+
+  mock-oa:
+    build:
+      context: ./mock-oa
+      dockerfile: Dockerfile
+    container_name: pms-mock-oa
+    ports:
+      - "8093:8093"
+    restart: on-failure
+
   backend:
     build:
       context: .
@@ -45,16 +72,32 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mock-d365:
+        condition: service_started
+      mock-fp:
+        condition: service_started
+      mock-oa:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      D365_CLIENT_ID: ${D365_CLIENT_ID:-dummy}
-      D365_CLIENT_SECRET: ${D365_CLIENT_SECRET:-dummy}
-      FP_CLIENT_ID: ${FP_CLIENT_ID:-dummy}
-      FP_CLIENT_SECRET: ${FP_CLIENT_SECRET:-dummy}
+      # Use the mock profile so integration URLs point to the mock services.
+      SPRING_PROFILES_ACTIVE: mock
+      D365_BASE_URL: http://mock-d365:8091/api
+      D365_TOKEN_URL: http://mock-d365:8091/oauth2/token
+      D365_CLIENT_ID: ${D365_CLIENT_ID:-mock-client}
+      D365_CLIENT_SECRET: ${D365_CLIENT_SECRET:-mock-secret}
+      FP_BASE_URL: http://mock-fp:8092/api
+      FP_TOKEN_URL: http://mock-fp:8092/oauth2/token
+      FP_CLIENT_ID: ${FP_CLIENT_ID:-mock-client}
+      FP_CLIENT_SECRET: ${FP_CLIENT_SECRET:-mock-secret}
+      OA_BASE_URL: http://mock-oa:8093/api
+      OA_TOKEN_URL: http://mock-oa:8093/oauth2/token
+      OA_CLIENT_ID: ${OA_CLIENT_ID:-mock-client}
+      OA_CLIENT_SECRET: ${OA_CLIENT_SECRET:-mock-secret}
     restart: on-failure
 
   frontend:

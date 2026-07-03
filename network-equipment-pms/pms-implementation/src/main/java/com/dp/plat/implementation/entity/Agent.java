@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Agent / partner company entity.
@@ -40,4 +41,15 @@ public class Agent extends BaseEntity {
 
     /** Overall score 0-10 (average of all evaluations). */
     private BigDecimal overallScore;
+
+    /** Certification tier: SELECT/PREMIER/SILVER/GOLD. */
+    private String certLevel;
+
+    /** Number of CCIE-certified engineers. */
+    private Integer ccieCount;
+
+    /** Specializations (JSON array stored as text). */
+    private String specializations;
+
+    private LocalDate certExpiryDate;
 }

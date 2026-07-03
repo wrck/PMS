@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetAllocation;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
+import com.dp.plat.asset.enums.AssetStatus;
 import com.dp.plat.asset.mapper.AssetAllocationMapper;
 import com.dp.plat.asset.mapper.AssetLifecycleLogMapper;
 import com.dp.plat.asset.mapper.AssetMapper;
+import com.dp.plat.asset.service.AssetStateTransitionValidator;
 import com.dp.plat.asset.service.IAssetService;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.util.SecurityUtils;
@@ -27,10 +29,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements IAssetService {
 
-    /** Asset status constants. */
-    private static final String STATUS_IN_STOCK = "IN_STOCK";
+    /** Asset status constants (9-state lifecycle). */
+    private static final String STATUS_RECEIVED = "RECEIVED";
+    private static final String STATUS_INSTALLED = "INSTALLED";
+    /** Legacy status retained for backward-compatible queries on unmigrated rows. */
     private static final String STATUS_ALLOCATED = "ALLOCATED";
-    private static final String STATUS_IN_TRANSIT = "IN_TRANSIT";
 
     /** Lifecycle action type constants. */
     private static final String ACTION_INBOUND = "INBOUND";
@@ -39,14 +42,16 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
 
     private final AssetAllocationMapper assetAllocationMapper;
     private final AssetLifecycleLogMapper assetLifecycleLogMapper;
+    private final AssetStateTransitionValidator stateValidator;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean inbound(Asset asset) {
-        if (asset.getStatus() == null) {
-            asset.setStatus(STATUS_IN_STOCK);
-        }
         LocalDateTime now = LocalDateTime.now();
+        AssetStatus current = parseStatus(asset.getStatus());
+        AssetStatus target = AssetStatus.RECEIVED;
+        stateValidator.validate(current, target);
+        asset.setStatus(target.name());
         if (asset.getInboundTime() == null) {
             asset.setInboundTime(now);
         }
@@ -61,12 +66,15 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
     @Transactional(rollbackFor = Exception.class)
     public boolean allocate(Long assetId, Long projectId) {
         Asset asset = loadAsset(assetId);
-        if (!STATUS_IN_STOCK.equals(asset.getStatus())) {
-            throw new BusinessException("设备当前状态非在库，无法分配");
+        AssetStatus current = parseStatus(asset.getStatus());
+        // Allocation installs the asset at a project site; allowed from RECEIVED or STAGED.
+        if (current != AssetStatus.RECEIVED && current != AssetStatus.STAGED) {
+            throw new BusinessException("设备当前状态不可分配，仅已收货/已暂存设备可分配");
         }
+        stateValidator.validate(current, AssetStatus.INSTALLED);
         Long fromProjectId = asset.getProjectId();
         LocalDateTime now = LocalDateTime.now();
-        asset.setStatus(STATUS_ALLOCATED);
+        asset.setStatus(STATUS_INSTALLED);
         asset.setProjectId(projectId);
         if (asset.getOutboundTime() == null) {
             asset.setOutboundTime(now);
@@ -94,12 +102,11 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
     @Transactional(rollbackFor = Exception.class)
     public boolean returnAsset(Long assetId) {
         Asset asset = loadAsset(assetId);
-        if (!STATUS_ALLOCATED.equals(asset.getStatus())) {
-            throw new BusinessException("设备当前状态非已分配，无法归还");
-        }
+        AssetStatus current = parseStatus(asset.getStatus());
+        stateValidator.validate(current, AssetStatus.RECEIVED);
         Long fromProjectId = asset.getProjectId();
         LocalDateTime now = LocalDateTime.now();
-        asset.setStatus(STATUS_IN_STOCK);
+        asset.setStatus(STATUS_RECEIVED);
         asset.setProjectId(null);
         boolean updated = this.updateById(asset);
 
@@ -174,6 +181,23 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
             throw new BusinessException("设备不存在");
         }
         return asset;
+    }
+
+    /**
+     * Parse a stored status string into an {@link AssetStatus}. Returns {@code null}
+     * when the stored value is null (e.g. a brand-new asset prior to first save).
+     *
+     * @throws BusinessException when the stored value is not a known status
+     */
+    private AssetStatus parseStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        try {
+            return AssetStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("未知的资产状态: " + status);
+        }
     }
 
     private void recordLog(Long assetId, String actionType, Long fromProjectId, Long toProjectId,

@@ -1,0 +1,10 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: mock-oa
+
+logging:
+  level:
+    root: INFO

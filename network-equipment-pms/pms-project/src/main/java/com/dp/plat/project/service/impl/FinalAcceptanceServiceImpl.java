@@ -5,12 +5,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.project.deliverable.entity.DeliverableChecklist;
+import com.dp.plat.project.deliverable.enums.DeliverableType;
+import com.dp.plat.project.deliverable.service.IDeliverableChecklistService;
 import com.dp.plat.project.entity.FinalAcceptance;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.event.FinalAcceptanceApprovedEvent;
 import com.dp.plat.project.mapper.FinalAcceptanceMapper;
 import com.dp.plat.project.mapper.ProjectMapper;
+import com.dp.plat.project.punchlist.service.IPunchListService;
 import com.dp.plat.project.service.IFinalAcceptanceService;
 import com.dp.plat.project.service.IMilestoneService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,6 +47,8 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
     private final IMilestoneService milestoneService;
     private final ProjectMapper projectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final IPunchListService punchListService;
+    private final IDeliverableChecklistService deliverableChecklistService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -63,6 +70,31 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
                 .allMatch(m -> MILESTONE_COMPLETED.equals(m.getStatus()));
         if (!allCompleted) {
             throw new BusinessException("存在未完成的里程碑，无法申请终验");
+        }
+        // All punch list items for the project must be verified before final acceptance.
+        if (!punchListService.isAllVerified(projectId)) {
+            throw new BusinessException("存在未验证的 Punch List 项，无法申请终验");
+        }
+        // All mandatory deliverables must be uploaded. Auto-init the standard checklist
+        // when no checklist record exists yet for the project.
+        List<DeliverableChecklist> checklist = deliverableChecklistService.list(
+                new LambdaQueryWrapper<DeliverableChecklist>()
+                        .eq(DeliverableChecklist::getProjectId, projectId));
+        if (checklist == null || checklist.isEmpty()) {
+            Result<List<DeliverableChecklist>> initResult = deliverableChecklistService.initChecklist(projectId);
+            checklist = initResult != null ? initResult.getData() : null;
+        }
+        List<String> missing = new ArrayList<>();
+        if (checklist != null) {
+            for (DeliverableChecklist item : checklist) {
+                if (Boolean.TRUE.equals(item.getRequired()) && !Boolean.TRUE.equals(item.getUploaded())) {
+                    DeliverableType type = resolveDeliverableType(item.getDeliverableType());
+                    missing.add(type != null ? type.getDisplayName() : item.getDeliverableType());
+                }
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new BusinessException("终验交付物未齐全，缺失: " + String.join("、", missing));
         }
         // Prevent duplicate pending applications.
         FinalAcceptance existing = this.getOne(new LambdaQueryWrapper<FinalAcceptance>()
@@ -144,5 +176,22 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
                 .orderByDesc(FinalAcceptance::getCreateTime)
                 .last("LIMIT 1"));
         return Result.ok(acceptance);
+    }
+
+    /**
+     * Resolve a deliverable type name to its enum, returning {@code null} when unknown.
+     *
+     * @param typeName deliverable type name
+     * @return resolved deliverable type, or {@code null}
+     */
+    private DeliverableType resolveDeliverableType(String typeName) {
+        if (typeName == null || typeName.isBlank()) {
+            return null;
+        }
+        try {
+            return DeliverableType.valueOf(typeName.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

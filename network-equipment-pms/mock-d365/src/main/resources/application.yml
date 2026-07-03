@@ -1,0 +1,10 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: mock-d365
+
+logging:
+  level:
+    root: INFO

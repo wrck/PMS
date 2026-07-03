@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             targetNamespace="http://flowable.org/bpmn">
+  <process id="changeRequestApproval" name="变更请求CCB审批流程" isExecutable="true">
+    <documentation>Change request CCB approval workflow.
+      The requester submits the change request (start), then the CCB approver reviews it.
+      The CCB review userTask is assigned from the ccbApproverId process variable.
+      An exclusive gateway routes to the approved end event (CCB_APPROVED) or a
+      terminate end event (CCB_REJECTED) based on the approved process variable.</documentation>
+    <startEvent id="startEvent" name="请求人提交"/>
+    <userTask id="ccbReview" name="CCB审核"
+              flowable:assignee="${ccbApproverId}"
+              flowable:skipExpression="${assignee == initiator}"/>
+    <exclusiveGateway id="ccbDecisionGateway" name="CCB审批决定"/>
+    <endEvent id="approvedEnd" name="CCB审批通过"/>
+    <endEvent id="rejectedEnd" name="CCB驳回终止">
+      <terminateEventDefinition/>
+    </endEvent>
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="ccbReview"/>
+    <sequenceFlow id="flow2" sourceRef="ccbReview" targetRef="ccbDecisionGateway"/>
+    <sequenceFlow id="approveFlow" sourceRef="ccbDecisionGateway" targetRef="approvedEnd">
+      <conditionExpression>${approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="rejectFlow" sourceRef="ccbDecisionGateway" targetRef="rejectedEnd">
+      <conditionExpression>${!approved}</conditionExpression>
+    </sequenceFlow>
+  </process>
+</definitions>

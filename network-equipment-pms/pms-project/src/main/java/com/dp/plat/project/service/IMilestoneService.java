@@ -2,6 +2,7 @@ package com.dp.plat.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.project.dto.MilestoneGroupDto;
 import com.dp.plat.project.entity.Milestone;
 
 import java.util.List;
@@ -61,4 +62,12 @@ public interface IMilestoneService extends IService<Milestone> {
      * @return the recalculated progress percentage
      */
     int recalculateProjectProgress(Long projectId);
+
+    /**
+     * Build the milestone dashboard view for a project, grouping milestones by PPDIOO phase.
+     *
+     * @param projectId project id
+     * @return operation result containing the grouped milestone list
+     */
+    Result<List<MilestoneGroupDto>> dashboardByPpdiooPhase(Long projectId);
 }

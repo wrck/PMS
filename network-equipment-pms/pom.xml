@@ -26,6 +26,7 @@
         <module>pms-implementation</module>
         <module>pms-workflow</module>
         <module>pms-integration</module>
+        <module>pms-governance</module>
         <module>pms-admin</module>
     </modules>
 
@@ -76,6 +77,11 @@
             <dependency>
                 <groupId>com.dp.plat</groupId>
                 <artifactId>pms-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dp.plat</groupId>
+                <artifactId>pms-governance</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

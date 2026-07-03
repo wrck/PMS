@@ -27,8 +27,12 @@ public class Milestone extends BaseEntity {
     /** Milestone name. */
     private String milestoneName;
 
-    /** Milestone type (ARRIVAL, INSTALL, DEBUG, INITIAL_ACCEPTANCE, FINAL_ACCEPTANCE). */
+    /** Milestone type (SITE_SURVEY, NETWORK_DESIGN, PROCUREMENT, STAGING, FAT, ARRIVAL,
+     * INSTALLATION, TESTING, COMMISSIONING, SAT, UAT, FINAL_ACCEPTANCE). */
     private String milestoneType;
+
+    /** PPDIOO phase (PREPARE, PLAN, DESIGN, IMPLEMENT, OPERATE). */
+    private String ppdiooPhase;
 
     /** Planned date. */
     private LocalDate planDate;
@@ -36,7 +40,7 @@ public class Milestone extends BaseEntity {
     /** Actual date. */
     private LocalDate actualDate;
 
-    /** Status (PENDING, IN_PROGRESS, COMPLETED, OVERDUE). */
+    /** Status (PENDING, IN_PROGRESS, COMPLETED, OVERDUE, BLOCKED). */
     private String status;
 
     /** Description. */

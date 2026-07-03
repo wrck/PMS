@@ -6,7 +6,7 @@
 ## Why
 
 前一阶段重构交付了"立项→里程碑→终验 + 设备资产 + 原厂/代理商实施"三大核心域基础能力，但存在四类生产化短板：
-1. **业务深度不足**：仅 5 类线性里程碑（业内标准 12 节点）、设备状态机仅 5 态（业内 9 态）、无 Punch List 缺陷闭环、无 RMA/质保联动、无变更/风险/问题三本账、无保留金台账，与 Cisco PPDIOO/华为交付流程/HPE Aruba SAC 业内最优规范存在系统性差距。
+1. **业务深度不足**：仅 5 类线性里程碑（业内标准 12 节点）、设备状态机仅 5 态（业内 9 态）、无 Punch List 缺陷闭环、无 RMA/质保联动、无变更/风险/问题三本账，与 Cisco PPDIOO/华为交付流程/HPE Aruba SAC 业内最优规范存在系统性差距。
 2. **外部对接为桩**：D365/FP/OA 三大外部系统集成均为占位/桩实现，未完成真实 OAuth2、业务表回填、发票识别、付款回调、致远 OA 真实待办推送。
 3. **生产化能力缺失**：无 WebSocket 实时通知、无文件附件管理、无 SpringDoc API 文档、无 Druid 监控、无 CI/CD 流水线、测试覆盖率不足、@Disabled 集成测试未修复。
 4. **前端体验不全**：无 TagsView 多标签页、无移动端响应式、无文件上传组件、无通知下拉、无实时消息 Toast。
@@ -18,11 +18,10 @@
 ### A. 业务深度对齐业内规范（P0+P1）
 
 - **MODIFIED** 里程碑体系：由 5 类扩展为 12 节点（Site Survey / Network Design / Procurement / Staging / FAT / Arrival / Installation / Testing / Commissioning / SAT / UAT / Final Acceptance），覆盖 PPDIOO 全周期
-- **ADDED** Punch List 缺陷闭环：三级分级（Safety/Functional/Cosmetic）+ 两阶段走场（pre-punch/formal walkdown）+ 照片 GPS 时间戳 + 整改期限 + 保留金释放联动
+- **ADDED** Punch List 缺陷闭环：三级分级（Safety/Functional/Cosmetic）+ 两阶段走场（pre-punch/formal walkdown）+ 照片 GPS 时间戳 + 整改期限
 - **MODIFIED** 设备状态机：由 5 态升级为 9 态（Ordered/In-Transit/Received/Staged/Installed/Commissioned/In-Production/RMA/Decommissioned），含状态迁移规则与权限校验
 - **ADDED** RMA 返修流程：6 步闭环（登记工单→校验保修→签发 RMA→故障件返回→到货检验→CMDB 更新）+ SN 主键联动 + MTTR/一次通过率 KPI
 - **ADDED** 终验交付物清单：8 项标准交付物（As-Built 竣工图/Test Report/Acceptance Certificate/Training Record/Operation Manual/Asset Register/Warranty Certificate/Spare Parts List）强制校验
-- **ADDED** 保留金（Retainage）台账：按合同/项目/里程碑记录扣留/应释放/已释放，与 Punch List 清零联动
 - **ADDED** 变更管理（Change Request）：变更日志 + 影响评估 + CCB 审批工作流 + 基线更新
 - **ADDED** 风险登记册（Risk Register）：12 字段标准模板 + 概率影响矩阵 + 复审机制
 - **ADDED** 问题日志（Issue Log）：与风险/变更联动，支持"风险→问题→变更"转化
@@ -44,7 +43,7 @@
 - **ADDED** WebSocket 基础设施：Spring WebSocket + STOMP + Redis Pub/Sub 多实例广播
 - **ADDED** 站内信通知中心：消息列表 + 已读/未读 + 分类筛选 + 批量操作
 - **ADDED** 消息模板引擎：基于 Velocity/Freemarker 的模板渲染，支持变量注入
-- **MODIFIED** 通知触发点：里程碑延期、任务派工、审批待办、Punch List 整改到期、质保期到期、RMA 状态变更、结算审批、保留金释放
+- **MODIFIED** 通知触发点：里程碑延期、任务派工、审批待办、Punch List 整改到期、质保期到期、RMA 状态变更、结算审批
 - **MODIFIED** 通知通道：站内信 + WebSocket 实时推送 + 邮件 + 致远 OA 待办（多通道并发）
 
 ### D. 文件与附件管理
@@ -87,10 +86,10 @@
   - 后端：所有 8 个模块（pms-common/pms-system/pms-project/pms-asset/pms-implementation/pms-workflow/pms-integration/pms-admin）均有改动
   - 新增模块：`pms-file`（文件附件管理）、`pms-notification`（通知中心）、`pms-governance`（变更/风险/问题三本账）
   - 前端：新增 TagsView、消息中心、文件上传、Punch List、RMA、风险登记册、变更管理等页面
-  - 数据库：新增 ~25 张表（punch_list/rma/retention/change_request/risk/issue/attachment/notification/warranty 等）
+  - 数据库：新增 ~23 张表（punch_list/rma/change_request/risk/issue/attachment/notification/warranty 等）
   - 部署：docker-compose 增加 Mock D365/FP/OA 服务、SonarQube 服务
   - CI：新增 .github/workflows/ci.yml
-- **业务影响**：里程碑从 5 类扩展为 12 节点，需 Flyway 数据迁移历史里程碑类型；设备状态机升级需状态迁移脚本；保留金/质保期涉及历史项目数据回填
+- **业务影响**：里程碑从 5 类扩展为 12 节点，需 Flyway 数据迁移历史里程碑类型；设备状态机升级需状态迁移脚本；质保期涉及历史项目数据回填
 
 ## ADDED Requirements
 
@@ -108,15 +107,15 @@ The system SHALL provide 12 standard milestone types aligned with Cisco PPDIOO l
 
 ### Requirement: Punch List 缺陷闭环
 
-The system SHALL provide Punch List management with three-level severity (Safety/Functional/Cosmetic), two-stage walkdown (pre-punch/formal), photo evidence with GPS timestamp, rectification deadline, and retention release linkage.
+The system SHALL provide Punch List management with three-level severity (Safety/Functional/Cosmetic), two-stage walkdown (pre-punch/formal), photo evidence with GPS timestamp, and rectification deadline.
 
 #### Scenario: Safety 级缺陷立即停工
 - **WHEN** 创建 Punch List 项选择 severity=SAFETY
 - **THEN** 系统自动置关联里程碑状态为 BLOCKED，并推送紧急通知给项目经理与质量经理
 
-#### Scenario: Punch List 清零触发保留金释放
-- **WHEN** 项目所有 Punch List 项状态均为 RESOLVED 且终验通过
-- **THEN** 系统自动触发保留金释放流程，生成保留金释放申请单
+#### Scenario: Punch List 清零方可终验
+- **WHEN** 项目经理提交终验审批
+- **THEN** 系统校验所有 Punch List 项状态均为 VERIFIED，存在未清零项则拒绝并提示
 
 ### Requirement: 9 状态设备资产管理
 
@@ -149,14 +148,6 @@ The system SHALL provide Change Request, Risk Register, and Issue Log with PMBOK
 #### Scenario: 变更影响基线
 - **WHEN** CCB 批准 Change Request CR-001
 - **THEN** 系统更新项目基线（进度/成本/范围），记录基线变更历史，并通知所有项目成员
-
-### Requirement: 保留金台账
-
-The system SHALL maintain Retainage ledger per contract/project/milestone, tracking withheld/releasable/released amounts, linked to Punch List clearance.
-
-#### Scenario: 里程碑结算扣留保留金
-- **WHEN** 里程碑结算审批通过
-- **THEN** 系统按合同保留金比例（默认 5%-10%）自动扣留，记录到保留金台账
 
 ### Requirement: D365/FP/OA 全量真实对接
 

@@ -1,5 +1,6 @@
 package com.dp.plat.integration.service;
 
+import com.dp.plat.integration.dto.D365HealthDto;
 import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.d365.PurchaseHeader;
 import com.dp.plat.integration.model.d365.PurchaseReceiptHeader;
@@ -12,7 +13,9 @@ import com.dp.plat.integration.model.d365.PurchaseReceiptHeader;
 public interface D365IntegrationService {
 
     /**
-     * Obtain an OAuth2 access token (cached until near expiry).
+     * Obtain an OAuth2 access token (cached until near expiry). Maintains a
+     * consecutive-failure counter; after 3 consecutive token failures an
+     * {@code error} log is emitted.
      *
      * @return the access token
      */
@@ -42,4 +45,45 @@ public interface D365IntegrationService {
      * @return the refreshed log record
      */
     IntegrationLog retry(Long logId);
+
+    /**
+     * Sync purchase orders from D365 into the local table (upsert).
+     *
+     * @return the number of records synced
+     */
+    int syncPurchaseOrders();
+
+    /**
+     * Sync purchase receipts from D365, backfilling receipt data and setting
+     * {@code push_status} on the corresponding local records.
+     *
+     * @return the number of records synced
+     */
+    int syncPurchaseReceipts();
+
+    /**
+     * Sync asset serial numbers from D365 and update the local
+     * {@code pms_asset.serial_no}. The {@code AssetMapper} is looked up
+     * reflectively at runtime to avoid a module dependency cycle.
+     *
+     * @return the number of records synced
+     */
+    int syncAssetSerialNumbers();
+
+    /**
+     * Sync invoices from D365 and update the local settlement invoice number.
+     * The {@code SettlementMapper} is looked up reflectively at runtime to
+     * avoid a module dependency cycle.
+     *
+     * @return the number of records synced
+     */
+    int syncInvoices();
+
+    /**
+     * Health check for the D365 adapter: token validity, reachability and
+     * recent push/fail counts.
+     *
+     * @return the D365 health snapshot
+     */
+    D365HealthDto healthCheck();
 }

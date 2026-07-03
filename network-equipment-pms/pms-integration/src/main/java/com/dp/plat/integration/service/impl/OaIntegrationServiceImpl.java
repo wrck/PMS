@@ -1,8 +1,10 @@
 package com.dp.plat.integration.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.integration.config.OaProperties;
 import com.dp.plat.integration.constant.IntegrationConstants;
+import com.dp.plat.integration.dto.OaHealthDto;
 import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.oa.OaTodoRequest;
 import com.dp.plat.integration.model.oa.OaTokenResponse;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,23 +24,27 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implementation of {@link OaIntegrationService}.
  *
  * <p>Reuses the same OAuth2 token caching pattern (ConcurrentHashMap +
- * ahead-of-expiry refresh + double-checked locking) as
- * {@link D365IntegrationServiceImpl} and {@link FpIntegrationServiceImpl}.
- * All outbound calls are recorded in {@link IntegrationLog} for retry.</p>
+ * ahead-of-expiry refresh + double-checked locking) as the D365 and FP
+ * adapters, but with a 5-minute skew so the token is auto-renewed whenever
+ * less than 5 minutes remain before expiry. All outbound calls are recorded
+ * in {@link IntegrationLog} with {@code logType="OA"} for retry.</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OaIntegrationServiceImpl implements OaIntegrationService {
 
-    /** Refresh the token this many seconds before it actually expires. */
-    private static final long TOKEN_SKEW_SECONDS = 60L;
+    /** Refresh the token when less than this many seconds remain. */
+    private static final long TOKEN_SKEW_SECONDS = 300L;
 
     private static final String TOKEN_CACHE_KEY = "oa";
 
@@ -78,41 +85,93 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
 
     @Override
     public boolean pushTodo(OaTodoRequest request) {
-        String url = oaProperties.getBaseUrl() + "/todos";
+        String url = oaProperties.getBaseUrl() + "/todo/push";
         String body = writeJson(request);
         IntegrationLog logRecord = IntegrationLog.builder()
                 .logType(IntegrationConstants.LOG_TYPE_OA)
                 .businessType(IntegrationConstants.BIZ_OA_TODO_PUSH)
-                .businessId(request.getProcessInstanceId())
+                .businessId(request.getBusinessKey() != null
+                        ? request.getBusinessKey()
+                        : request.getProcessInstanceId())
                 .requestUrl(url)
                 .requestBody(body)
                 .build();
         logRecord = integrationLogService.log(logRecord);
-        return executePost(logRecord, url, body);
+        return execute(HttpMethod.POST, logRecord, url, body);
     }
 
     @Override
-    public boolean completeTodo(String taskId) {
-        String url = oaProperties.getBaseUrl() + "/todos/" + taskId + "/complete";
+    public boolean completeTodo(String businessKey) {
+        String url = oaProperties.getBaseUrl() + "/todo/complete";
+        String body = writeJson(java.util.Map.of("businessKey", businessKey == null ? "" : businessKey));
         IntegrationLog logRecord = IntegrationLog.builder()
                 .logType(IntegrationConstants.LOG_TYPE_OA)
                 .businessType(IntegrationConstants.BIZ_OA_TODO_COMPLETE)
-                .businessId(taskId)
+                .businessId(businessKey)
                 .requestUrl(url)
-                .requestBody("{}")
+                .requestBody(body)
                 .build();
         logRecord = integrationLogService.log(logRecord);
-        return executePost(logRecord, url, "{}");
+        return execute(HttpMethod.PUT, logRecord, url, body);
     }
 
-    private boolean executePost(IntegrationLog logRecord, String url, String body) {
+    @Override
+    public boolean transferTask(String businessKey, String newHandlerUserId) {
+        String url = oaProperties.getBaseUrl() + "/todo/transfer";
+        String body = writeJson(java.util.Map.of(
+                "businessKey", businessKey == null ? "" : businessKey,
+                "newHandlerUserId", newHandlerUserId == null ? "" : newHandlerUserId));
+        IntegrationLog logRecord = IntegrationLog.builder()
+                .logType(IntegrationConstants.LOG_TYPE_OA)
+                .businessType(IntegrationConstants.BIZ_OA_TODO_TRANSFER)
+                .businessId(businessKey)
+                .requestUrl(url)
+                .requestBody(body)
+                .build();
+        logRecord = integrationLogService.log(logRecord);
+        return execute(HttpMethod.PUT, logRecord, url, body);
+    }
+
+    @Override
+    public OaHealthDto healthCheck() {
+        boolean tokenValid = false;
+        boolean connected = false;
+        try {
+            getAccessToken();
+            tokenValid = true;
+            // A trivial GET against the base URL confirms reachability.
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            integrationRestTemplate.exchange(oaProperties.getBaseUrl(),
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
+            connected = true;
+        } catch (Exception e) {
+            log.debug("OA health check failed: {}", e.getMessage());
+        }
+        LocalDateTime since = LocalDateTime.now().minusHours(24);
+        long pushCount = countLogs(IntegrationConstants.STATUS_SUCCESS, since);
+        long failCount = countLogs(IntegrationConstants.STATUS_FAILED, since);
+        List<IntegrationLog> recent = recentLogs(10);
+        return OaHealthDto.builder()
+                .connected(connected)
+                .tokenValid(tokenValid)
+                .recentPushCount((int) pushCount)
+                .recentFailCount((int) failCount)
+                .recentLogs(recent)
+                .build();
+    }
+
+    // ---- internals ----
+
+    private boolean execute(HttpMethod method, IntegrationLog logRecord, String url, String body) {
         try {
             String token = getAccessToken();
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
-            ResponseEntity<String> response = integrationRestTemplate.postForEntity(url, entity, String.class);
+            ResponseEntity<String> response = integrationRestTemplate.exchange(
+                    url, method, entity, String.class);
             integrationLogService.markSuccess(logRecord.getId(), response.getBody());
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
@@ -144,5 +203,22 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
         } catch (Exception e) {
             throw new BusinessException("Failed to serialize OA request body: " + e.getMessage());
         }
+    }
+
+    private long countLogs(String status, LocalDateTime since) {
+        LambdaQueryWrapper<IntegrationLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(IntegrationLog::getLogType, IntegrationConstants.LOG_TYPE_OA)
+                .eq(IntegrationLog::getResponseStatus, status)
+                .ge(IntegrationLog::getCreateTime, since);
+        return integrationLogService.count(wrapper);
+    }
+
+    private List<IntegrationLog> recentLogs(int limit) {
+        LambdaQueryWrapper<IntegrationLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(IntegrationLog::getLogType, IntegrationConstants.LOG_TYPE_OA)
+                .orderByDesc(IntegrationLog::getCreateTime)
+                .last("LIMIT " + Math.max(limit, 1));
+        List<IntegrationLog> logs = integrationLogService.list(wrapper);
+        return logs == null ? new ArrayList<>() : logs;
     }
 }

@@ -26,12 +26,11 @@
 - [ ] MTTR 与一次通过率 KPI 统计接口返回正确数据
 - [ ] Flyway V13 pms_rma 表创建成功
 
-### Task 5: 终验交付物 + 保留金台账
+### Task 5: 终验交付物强制校验
 - [ ] DeliverableChecklist 实体/Mapper/Service 完整
 - [ ] 终验申请前 8 项交付物强制校验生效，缺项拒绝并列出清单
-- [ ] Retainage 实体/Mapper/Service/Controller 完整
-- [ ] 里程碑结算自动扣留保留金 + Punch List 清零触发释放
-- [ ] Flyway V14 pms_deliverable_checklist + pms_retainage 表创建成功
+- [ ] 终验申请前 Punch List 全部 VERIFIED 校验生效
+- [ ] Flyway V14 pms_deliverable_checklist 表创建成功
 
 ### Task 6: 质保期管理
 - [ ] Warranty 实体/Mapper/Service/Controller 完整
@@ -111,7 +110,7 @@
 - [ ] 任务派工/委派通知接入（替代桩）
 - [ ] 审批待办通知接入（双通道：OA + 站内信）
 - [ ] Punch List 整改到期通知（@Scheduled 扫描 deadline 临近项）
-- [ ] 质保期到期/RMA 状态变更/结算审批/保留金释放通知接入
+- [ ] 质保期到期/RMA 状态变更/结算审批通知接入
 
 ## Phase 5: 文件与附件管理
 
@@ -157,7 +156,6 @@
 - [ ] 变更管理页面（CR 列表 + 影响评估 + CCB 审批 + 基线时间线）
 - [ ] 问题日志页面（列表 + 分派 + 状态流转 + 源关联）
 - [ ] 质保期管理页面（列表 + 预警日历 + 续保/退网 + SLA）
-- [ ] 保留金台账页面（按项目/合同分组 + 金额 + 释放审批）
 - [ ] 终验交付物清单页面（8 项 checklist + 上传 + 校验 + 下载）
 - [ ] 消息中心页面（列表 + 已读/未读 + 分类 + 批量已读 + 跳转）
 - [ ] 集成健康检查面板页面（卡片 + 历史记录 + 手动重试）
@@ -182,7 +180,7 @@
 ## Phase 8: 全面质量保障
 
 ### Task 25: 单元测试 + Testcontainers 集成测试
-- [ ] pms-project Service 测试覆盖率 ≥70%（12 节点 + Punch List + 终验交付物 + 保留金）
+- [ ] pms-project Service 测试覆盖率 ≥70%（12 节点 + Punch List + 终验交付物）
 - [ ] pms-asset Service 测试覆盖率 ≥70%（9 状态机 + RMA + 质保 + 序列化）
 - [ ] pms-implementation Service 测试覆盖率 ≥70%（派工单 + 代理商认证 + 结算 FP）
 - [ ] pms-governance Service 测试覆盖率 ≥70%（三本账联动）
