@@ -79,8 +79,8 @@ onMounted(async () => {
   } finally { loading.value = false }
 })
 const handleAudit = async () => {
-  if (questionnaire.value) await saveQuestionnaire({ callbackId: id, answers: questionnaire.value, score: totalScore.value })
-  await auditCallback({ id, ...auditForm, score: totalScore.value })
+  if (questionnaire.value) await saveQuestionnaire(id, { callbackId: id, answers: questionnaire.value, score: totalScore.value })
+  await auditCallback(id, auditForm.comment, auditForm.result === 'agree')
   ElMessage.success('审批完成'); router.back()
 }
 </script>

@@ -122,13 +122,14 @@ const getStateType = (s) => ({ 0: 'info', 1: 'warning', 2: 'success', 3: 'danger
 const getStateText = (s) => ({ 0: '草稿', 1: '审批中', 2: '已通过', 3: '已驳回', 4: '已关闭' }[s] || '未知')
 const downloadFile = (row) => { window.open(`/api/file/download/${row.id}`) }
 const handleTabChange = async (tab) => {
+  const presalesCode = data.value.presalesCode
   const loaders = {
     product: async () => { const r = await getPresalesProducts(id); products.value = r.data || [] },
     task: async () => { const r = await getPresalesTasks(id); tasks.value = r.data || [] },
     comment: async () => { const r = await getPresalesComments(id); comments.value = r.data || [] },
-    shipment: async () => { const r = await getPresalesShipment(id); shipments.value = r.data || [] },
-    lend2sale: async () => { const r = await getPresalesLend2Sale(id); lend2saleList.value = r.data || [] },
-    lend2rma: async () => { const r = await getPresalesLend2Rma(id); lend2rmaList.value = r.data || [] },
+    shipment: async () => { if (presalesCode) { const r = await getPresalesShipment(presalesCode); shipments.value = r.data || [] } },
+    lend2sale: async () => { if (presalesCode) { const r = await getPresalesLend2Sale(presalesCode); lend2saleList.value = r.data || [] } },
+    lend2rma: async () => { if (presalesCode) { const r = await getPresalesLend2Rma(presalesCode); lend2rmaList.value = r.data || [] } },
     tempAuth: async () => { const r = await getPresalesTempAuth(id); tempAuthList.value = r.data || [] },
     deliver: async () => { const r = await getPresalesDelivers(id); delivers.value = r.data || [] }
   }

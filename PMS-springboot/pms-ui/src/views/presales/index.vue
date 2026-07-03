@@ -149,7 +149,7 @@ const handleExport = async (type) => {
 }
 const handleTerminateBatch = () => {
   ElMessageBox.confirm(`确认终止并关闭选中的 ${selectedRows.value.length} 个售前项目？`, '提示', { type: 'warning' }).then(async () => {
-    await terminatePresales(selectedRows.value.map(r => r.id))
+    for (const row of selectedRows.value) { await terminatePresales(row.id, '批量终止') }
     ElMessage.success('操作成功'); fetchData()
   }).catch(() => {})
 }

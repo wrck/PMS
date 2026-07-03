@@ -98,12 +98,12 @@ onMounted(async () => {
   try {
     const r = await getPresales(id); data.value = r.data || {}
     const p = await getPresalesProducts(id); products.value = p.data || []
-    const s = await getPresalesShipment(id); shipments.value = s.data || []
+    if (data.value.presalesCode) { const s = await getPresalesShipment(data.value.presalesCode); shipments.value = s.data || [] }
     const c = await getPresalesComments(id); comments.value = c.data || []
   } finally { loading.value = false }
 })
 const handleAudit = async () => {
-  await auditPresales({ id, ...auditForm })
+  await auditPresales(id, auditForm.comment, auditForm.result === 'agree')
   ElMessage.success('审批完成'); router.back()
 }
 </script>

@@ -42,11 +42,20 @@ const routes = [
       { path: 'weekly', name: 'Weekly', component: () => import('@/views/weekly/index.vue'), meta: { title: '周报' } },
       { path: 'weekly/detail/:id', name: 'WeeklyDetail', component: () => import('@/views/weekly/detail.vue'), meta: { title: '周报详情' } },
       { path: 'notification', name: 'Notification', component: () => import('@/views/notification/index.vue'), meta: { title: '通知' } },
+      { path: 'warrantyCallback', name: 'WarrantyCallbackList', component: () => import('@/views/warrantyCallback/index.vue'), meta: { title: '维保回访' } },
+      { path: 'warrantyCallback/detail/:id', name: 'WarrantyCallbackDetail', component: () => import('@/views/warrantyCallback/detail.vue'), meta: { title: '回访详情' } },
+      { path: 'warrantyCallback/create', name: 'WarrantyCallbackCreate', component: () => import('@/views/warrantyCallback/create.vue'), meta: { title: '新建回访' } },
+      { path: 'ehr/employee', name: 'EHREmployee', component: () => import('@/views/ehr/employee.vue'), meta: { title: '员工管理' } },
+      { path: 'ehr/job', name: 'EHRJob', component: () => import('@/views/ehr/job.vue'), meta: { title: '岗位管理' } },
+      { path: 'ehr/holiday', name: 'EHRHoliday', component: () => import('@/views/ehr/holiday.vue'), meta: { title: '假期管理' } },
       { path: 'system/user', name: 'UserManage', component: () => import('@/views/system/user.vue'), meta: { title: '用户管理' } },
       { path: 'system/role', name: 'RoleManage', component: () => import('@/views/system/role.vue'), meta: { title: '角色管理' } },
       { path: 'system/dept', name: 'DeptManage', component: () => import('@/views/system/dept.vue'), meta: { title: '部门管理' } },
       { path: 'system/basic-data', name: 'BasicData', component: () => import('@/views/system/basicData.vue'), meta: { title: '基础数据' } },
-      { path: 'system/operate-log', name: 'OperateLog', component: () => import('@/views/system/operateLog.vue'), meta: { title: '操作日志' } }
+      { path: 'system/operate-log', name: 'OperateLog', component: () => import('@/views/system/operateLog.vue'), meta: { title: '操作日志' } },
+      { path: 'system/menu', name: 'MenuManage', component: () => import('@/views/system/menu.vue'), meta: { title: '菜单管理' } },
+      { path: 'system/dict', name: 'DictManage', component: () => import('@/views/system/dict.vue'), meta: { title: '字典管理' } },
+      { path: 'system/login-record', name: 'LoginRecord', component: () => import('@/views/system/loginRecord.vue'), meta: { title: '登录日志' } }
     ]
   }
 ]

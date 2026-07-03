@@ -54,6 +54,35 @@
           <el-icon><Stamp /></el-icon>
           <template #title>合格证</template>
         </el-menu-item>
+        <el-menu-item index="/warrantyCallback">
+          <el-icon><Service /></el-icon>
+          <template #title>维保回访</template>
+        </el-menu-item>
+        <el-menu-item index="/workflow">
+          <el-icon><Connection /></el-icon>
+          <template #title>工作流</template>
+        </el-menu-item>
+        <el-menu-item index="/report">
+          <el-icon><DataAnalysis /></el-icon>
+          <template #title>报表</template>
+        </el-menu-item>
+        <el-menu-item index="/weekly">
+          <el-icon><Calendar /></el-icon>
+          <template #title>周报</template>
+        </el-menu-item>
+        <el-menu-item index="/notification">
+          <el-icon><Bell /></el-icon>
+          <template #title>通知</template>
+        </el-menu-item>
+        <el-sub-menu index="/ehr">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span>人事管理</span>
+          </template>
+          <el-menu-item index="/ehr/employee">员工管理</el-menu-item>
+          <el-menu-item index="/ehr/job">岗位管理</el-menu-item>
+          <el-menu-item index="/ehr/holiday">假期管理</el-menu-item>
+        </el-sub-menu>
         <el-sub-menu index="/system">
           <template #title>
             <el-icon><Setting /></el-icon>
@@ -64,6 +93,9 @@
           <el-menu-item index="/system/dept">部门管理</el-menu-item>
           <el-menu-item index="/system/basic-data">基础数据</el-menu-item>
           <el-menu-item index="/system/operate-log">操作日志</el-menu-item>
+          <el-menu-item index="/system/login-record">登录日志</el-menu-item>
+          <el-menu-item index="/system/menu">菜单管理</el-menu-item>
+          <el-menu-item index="/system/dict">字典管理</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

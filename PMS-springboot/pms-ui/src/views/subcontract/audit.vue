@@ -85,5 +85,5 @@ onMounted(async () => {
     const c = await getSubcontractComments(id); comments.value = c.data || []
   } finally { loading.value = false }
 })
-const handleAudit = async () => { await auditSubcontract({ id, ...auditForm }); ElMessage.success('审批完成'); router.back() }
+const handleAudit = async () => { await auditSubcontract(id, auditForm.comment, auditForm.result === 'agree'); ElMessage.success('审批完成'); router.back() }
 </script>

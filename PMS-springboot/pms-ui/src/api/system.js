@@ -23,3 +23,13 @@ export function updateMenu(data) { return request.put('/api/system/menu', data) 
 export function listNotifications(params) { return request.get('/api/notification/list', { params }) }
 export function updateNotificationState(id) { return request.put(`/api/notification/${id}/read`) }
 export function refreshCache() { return request.post('/api/system/refresh-cache') }
+export function listDict(params) { return request.get('/api/system/dict/list', { params }) }
+export function addDict(data) { return request.post('/api/system/dict', data) }
+export function updateDict(data) { return request.put('/api/system/dict', data) }
+export function deleteDict(id) { return request.delete(`/api/system/dict/${id}`) }
+export function listLoginRecords(params) { return request.get('/api/system/login-record/list', { params }) }
+export function deleteMenu(id) { return request.delete(`/api/system/menu/${id}`) }
+export function searchUsers(params) { return request.get('/api/system/user/search', { params }) }
+export function deleteNotification(id) { return request.delete(`/api/notification/${id}`) }
+export function markAllNotificationsRead() { return request.put('/api/notification/read-all') }
+export function getUnreadCount() { return request.get('/api/notification/unread-count') }
