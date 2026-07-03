@@ -61,6 +61,54 @@ public final class CSRFTokenManager {
 }
 ```
 
+**方法参数说明**：
+
+| 方法 | 参数 | 类型 | 取值范围/默认值 | 业务含义 |
+|------|------|------|-----------------|----------|
+| `generateToken()` | 无 | — | — | 调用 `UUID.randomUUID().toString()` 生成 128 位随机 token |
+| `getTokenForSession(HttpSession session)` | `session` | `javax.servlet.http.HttpSession` | 不可为 null（null 抛 NPE） | 当前会话；token 存于 Session attribute `CSRFTokenManager.class.getName() + ".tokenval"` |
+| `getTokenFromRequest(HttpServletRequest request)` | `request` | `HttpServletRequest` | 不可为 null | 从中提取 token，**依次**查 parameter → header → cookie（三道兜底） |
+| `getTokenName()` | 无 | — | 默认 `__RequestVerificationToken` | 返回当前 csrfTokenName（可通过 `setCsrfTokenName` 修改） |
+| `setCsrfTokenName(String csrfTokenName)` | `csrfTokenName` | `String` | 非空字符串 | 修改全局 token 参数名（**进程级静态变量**，影响所有后续请求） |
+
+**返回值说明**：
+- `getTokenForSession`：返回当前 Session 中的 CSRF token；若不存在则生成并写入 Session 后返回。同一 Session 内多次调用返回相同值。**线程安全**（对 session 加 `synchronized` 锁）。
+- `getTokenFromRequest`：返回请求中携带的 token；若 parameter/header/cookie 均无则返回 `null`。
+- `generateToken`：返回新 UUID 字符串（如 `"550e8400-e29b-41d4-a716-446655440000"`）。
+
+> ⚠️ **跨模块冲突提示**：core 模块存在**同名类** `com.dp.plat.security.csrf.CSRFTokenManager`，两者为**不同实现**，不可混用：
+
+| 维度 | core 版本 | PMS-security 版本（本文档） |
+|------|-----------|------------------------------|
+| 包名 | `com.dp.plat.security.csrf` | `com.dp.plat.security.csrf`（同名不同源） |
+| `getTokenForSession` 参数 | `org.apache.shiro.session.Session`（Shiro Session） | `javax.servlet.http.HttpSession`（Servlet HttpSession） |
+| 调用方式 | `SecurityUtils.getSubject().getSession()` 获取 Shiro Session 后传入 | `request.getSession()` 获取 Servlet HttpSession 后传入 |
+| 常量名 | `CSRF_PARAM_NAME` | `CSRF_PARAM_NAME_DEFAULT` + `CSRF_TOKEN_PARAM_NAME`（多一个） |
+| 方法集 | 仅 2 个公共方法 | 5 个公共方法（含 `generateToken`/`getTokenName`/`setCsrfTokenName`） |
+| `getTokenFromRequest` 查找顺序 | parameter → header | parameter → header → **cookie**（多一道兜底） |
+| StringUtils 依赖 | `org.apache.commons.lang.StringUtils`（lang2） | `org.apache.commons.lang3.StringUtils`（lang3） |
+| 类是否可改 token 名 | 否（final 常量硬编码） | 是（`setCsrfTokenName` 可运行时修改） |
+
+> 详见 [core 安全实践 §6.2 CSRFTokenManager](../../core/docs/05-standards/security-practices.md#62-csrftokenmanager--token-管理器) 中关于 core 版本的说明。
+
+**使用示例**：
+
+```java
+// 在 Spring MVC 拦截器中获取/生成 token（PMS-security 场景）
+HttpSession session = request.getSession();
+String token = CSRFTokenManager.getTokenForSession(session);
+// 将 token 写入响应头供前端 AJAX 使用
+response.addHeader(CSRFTokenManager.getTokenName(), token);
+
+// 从请求中提取 token（含 parameter/header/cookie 三道兜底）
+String clientToken = CSRFTokenManager.getTokenFromRequest(request);
+```
+
+**边界条件**：
+- `getTokenForSession(null)` 会抛 NPE（`synchronized(null)` 非法）
+- 同一 Session 并发调用 `getTokenForSession` 安全（`synchronized(session)`）
+- `getTokenFromRequest` 在 parameter 为空字符串时也会继续查 header（`StringUtils.isEmpty` 同时判 null 和空串）
+
 ### 2.2 CsrfFilter
 
 ```java
@@ -121,6 +169,60 @@ public class HttpContext {
 }
 ```
 
+**方法参数说明**：
+
+| 方法 | 参数 | 类型 | 取值范围/默认值 | 业务含义 |
+|------|------|------|-----------------|----------|
+| `getCurrentRequest()` | 无 | — | — | 从 Spring `RequestContextHolder` 获取当前线程绑定的请求；非 Web 线程或无上下文时返回 `null`（异常被吞掉） |
+| `getCurrentSession()` | 无 | — | — | 调用 `getCurrentRequest().getSession()`，无请求时返回 `null`（**会触发 Session 创建**，注意副作用） |
+| `isAjax()` | 无 | — | — | 检查 `accept` 含 `application/json` 或 `X-Requested-With` 含 `XMLHttpRequest` |
+| `isJSON()` | 无 | — | — | 检查 `accept` 含 `application/json` 或 servletPath 以 `.json` 结尾 |
+| `isHTML()` | 无 | — | — | 检查 `accept` 含 `text/plain` 或 servletPath 以 `.html`/`.htm` 结尾，或无扩展名 |
+| `baseUri()` | 无 | — | 默认空串 | 返回 `scheme://serverName:port/contextPath`（无请求时返回 `""`） |
+| `isExcel()` | 无 | — | — | 检查 servletPath 以 `.xlsx` 或 `.xls` 结尾 |
+| `getCurrentIp(HttpServletRequest request)` | `request` | `HttpServletRequest` | 可为 null（null 时内部调用 `getCurrentRequest()` 兜底，仍 null 返回 `""`） | 从中提取客户端 IP |
+| `getCurrentIp()` | 无 | — | 默认 `""` | 内部调用 `getCurrentIp(null)` |
+
+**`getCurrentIp` IP 提取顺序**（依次尝试，前者为空或 `"unknown"` 才查下一个）：
+
+| 顺序 | 来源 | Header 名 | 备注 |
+|------|------|-----------|------|
+| 1 | `request.getRemoteAddr()` | — | TCP 直连 IP，最可信 |
+| 2 | Request Header | `x-forwarded-for` | 反向代理透传；**注意：源码未按逗号分割取首段**，整个 header 值被当作 IP 返回（多级代理场景下可能返回 `"1.1.1.1, 2.2.2.2"` 形式） |
+| 3 | Request Header | `Proxy-Client-IP` | Apache 代理 |
+| 4 | Request Header | `WL-Proxy-Client-IP` | WebLogic 代理 |
+| 5 | Request Header | `HTTP_CLIENT_IP` | 部分代理 |
+| 6 | Request Header | `HTTP_X_FORWARDED_FOR` | CGI 风格 |
+| 7 | `request.getRemoteAddr()` | — | 全部失败时回退到 TCP 直连 |
+
+> ⚠️ **安全避坑**：
+> - 源码注释明确写有「**从请求头中获取容易被伪造**」。除 `getRemoteAddr()` 外的所有来源均可被客户端伪造，**不可作为鉴权唯一依据**。
+> - 字符串 `"unknown"` 被视为无效（继续尝试下一个来源），但 `null` 和空字符串也视为无效。
+> - 多级代理时 `x-forwarded-for` 形如 `"client, proxy1, proxy2"`，**源码未取首段**，需在调用方自行 split 取第一个 IP。
+
+**使用示例**：
+
+```java
+// Controller 中获取客户端 IP（推荐传入 request，避免再走 RequestContext 兜底）
+String clientIp = HttpContext.getCurrentIp(request);
+
+// 在非 Controller 层（无 request 引用）获取 IP，内部会从 RequestContextHolder 兜底
+String ip = HttpContext.getCurrentIp();
+if (ip == null || ip.isEmpty()) {
+    // 非 Web 线程（如定时任务、异步线程）会得到 ""
+    return;
+}
+
+// 多级代理场景：自行 split x-forwarded-for 取首段
+String rawIp = HttpContext.getCurrentIp(request);
+String realIp = rawIp != null && rawIp.contains(",") ? rawIp.split(",")[0].trim() : rawIp;
+```
+
+**边界条件**：
+- 非请求线程调用 `getCurrentRequest()` 返回 `null`（`RequestContextHolder.currentRequestAttributes()` 抛 `IllegalStateException` 被吞掉）
+- `getCurrentIp(null)` 在无 RequestContext 时返回 `""`（非 `null`，调用方判空需用 `isEmpty()`）
+- `getCurrentSession()` 会**强制创建** Session（`request.getSession()` 等价 `getSession(true)`），如仅判存在性应改用 `request.getSession(false)`
+
 ---
 
 ## 4. Interceptor 包
@@ -139,6 +241,51 @@ public abstract class PasswordInterceptor implements AsyncHandlerInterceptor {
     public void setRedirect(String redirect);
 }
 ```
+
+**方法参数说明**：
+
+| 方法 | 参数 | 类型 | 取值范围/默认值 | 业务含义 |
+|------|------|------|-----------------|----------|
+| `preHandle(request, response, handler)` | `request`/`response`/`handler` | `HttpServletRequest`/`HttpServletResponse`/`Object` | 标准 Spring MVC 参数 | 拦截入口；若 `isNeedRedirect` 返回 true 则 `sendRedirect(contextPath + redirect)` 并返回 false 中断流程 |
+| `isNeedRedirect(HttpServletRequest request)` | `request` | `HttpServletRequest` | 非空 | **抽象方法**，子类决定是否需要重定向到改密页 |
+| `getRedirect()` / `setRedirect(String redirect)` | `redirect` | `String` | 配置注入（如 `/system/password/modify`） | 强制改密页的 URL |
+
+> ⚠️ **跨模块冲突提示**：core 与 PMS-security 各有一个 `PasswordInterceptor`，**同名但不同实现**：
+
+| 维度 | core 版本 | PMS-security 版本（本文档） |
+|------|-----------|------------------------------|
+| 包名 | `com.dp.plat.core.interceptor.PasswordInterceptor` | `com.dp.plat.security.interceptor.PasswordInterceptor` |
+| 继承 | `HandlerInterceptorAdapter`（已弃用） | `AsyncHandlerInterceptor`（接口） |
+| 是否抽象 | **具体类**（可直接实例化） | **抽象类**（`abstract`，需子类实现 `isNeedRedirect`） |
+| `isNeedRedirect` 修饰符 | `private`（已实现具体逻辑） | `abstract`（无实现） |
+| 实现细节 | 完整：Shiro 认证态判断 + Session `needChangePwd` 缓存 + `Principal.getNeedChangePwd()` + CAS 集成（`sys.cas`/`CasFilter`） | 仅 preHandle 调 `isNeedRedirect`，业务逻辑下推到子类 |
+| 行数 | 73 行 | 67 行（含大量被注释的旧实现） |
+
+> **使用注意**：core 版本可直接通过 `<mvc:interceptor>` 注册并配置 `redirect` 即可工作；PMS-security 版本必须先实现 `isNeedRedirect` 的子类才能使用。
+
+**使用示例**：
+
+```java
+// PMS-security 版本使用方式：必须先实现子类
+@Component
+public class ForceChangePasswordInterceptor extends PasswordInterceptor {
+    @Override
+    public boolean isNeedRedirect(HttpServletRequest request) {
+        // 业务自行判断：例如 Session 中 needChangePwd=true 且不在改密页
+        HttpSession session = request.getSession(false);
+        if (session == null) return false;
+        Object needChangePwd = session.getAttribute("needChangePwd");
+        if (Boolean.TRUE.equals(needChangePwd) && !request.getServletPath().contains("/password/modify")) {
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+**边界条件**：
+- `preHandle` 中 `isNeedRedirect` 返回 true 后**直接 `sendRedirect` 并返回 false**，不调用 `super.preHandle`（实际返回 true 分支也无 super 调用，源码中被注释掉）
+- `redirect` 为 null 时，若 `isNeedRedirect` 仍返回 true 会触发 `sendRedirect(contextPath + "null")` 异常
 
 ---
 
@@ -224,17 +371,17 @@ public class SQLParser {
     private static final Pattern parserSqlTablePattern = ...;
     private static final TypeReference<Map<String, Object>> MapType = ...;
     private static final TypeReference<Map<String, Map<String, Object>>> MapMapType = ...;
-    
+
     // SQL 解析
     public static List<SQLStatement> parseStatements(String sql, DbType dbType);
     public static SQLStatement parseSingleStatement(String sql, DbType dbType);
     public static List<SchemaStatVisitor> parseStatementsVisitors(String sql, DbType dbType);
     public static SchemaStatVisitor parseStatementsVisitor(String sql, DbType dbType);
-    
+
     // 表名提取
     public static Set<String> parseTables(String sql, DbType dbType);
     public static Set<String> parseTables(String sql);
-    
+
     // 正则匹配
     public static boolean matcherAll(String sql, String regex);
     public static boolean matcherAll(String sql, String regex, DbType dbType);
@@ -273,7 +420,7 @@ public class SQLParser {
 public static class SqlParserResult {
     private boolean valid;
     private Set<String> matchTables;
-    
+
     public SqlParserResult();
     public SqlParserResult(boolean valid, Set<String> matchTables);
     public boolean isValid();
@@ -282,6 +429,55 @@ public static class SqlParserResult {
     public void setMatchTables(Set<String> matchTables);
 }
 ```
+
+**SQLParser 方法参数说明**：
+
+| 方法 | 参数 | 类型 | 取值范围/默认值 | 返回值 | 业务含义 |
+|------|------|------|-----------------|--------|----------|
+| `parseTables(String sql, DbType dbType)` | `sql` | `String` | 非空 SQL 字符串 | `Set<String>` | 要解析的 SQL（支持 SELECT/INSERT/UPDATE/DELETE） |
+| | `dbType` | `com.alibaba.druid.DbType` | 可为 null | | 数据库类型（mysql/postgresql/sql_server 等）；null 由 Druid 自动推断 |
+| `parseTables(String sql)` | `sql` | `String` | 非空 | `Set<String>` | 等价 `parseTables(sql, null)` |
+| `matcherSqlTables(String sql, String regex)` | `sql` | `String` | 非空 | `SqlParserResult` | 要校验的 SQL |
+| | `regex` | `String` | 合法 Java 正则 | | 表名白名单正则（如 `"(pm_project\|t_user)"`） |
+
+> ⚠️ **跨模块冲突提示**：core 与 PMS-security 各有一个 `SQLParser`，签名相同但**实现存在关键差异**：
+
+| 维度 | core 版本（`com.dp.plat.core.util.SQLParser`） | PMS-security 版本（本文档，`com.dp.plat.security.util.SQLParser`） |
+|------|-----------|------------------------------|
+| `parseTables` 异常处理 | **有 try-catch 重试**：解析失败时用 `select * from (sql) t` 包装重试 | **无 try-catch**：解析失败直接抛 Druid `ParserException` |
+| StringUtils 依赖 | `org.apache.commons.lang.StringUtils`（lang2） | `org.apache.commons.lang3.StringUtils`（lang3） |
+| 是否引用 UserContext | 是（import `UserContext`） | 否 |
+| 是否引用 ExceptionHandler | 是 | 否 |
+
+> **使用注意**：core 版本对子查询/UNION 等 Druid 直接解析失败的 SQL 有兜底，PMS-security 版本遇到同样 SQL 会抛异常向上传播。如需更稳健的解析能力，建议使用 core 版本。
+
+> ⚠️ **避坑提示（虚构方法澄清）**：
+> - **`validateSql` 方法不存在**！SQLParser 类中**没有任何** SQL 注入关键字黑名单校验方法。SQL 注入防护实际由 MyBatis `#{}` 参数化 + 表名白名单（`matcherSqlTables`）共同实现。
+> - 类似的 `parsePage` / `parseCount` 方法也**不存在**。
+> - 表名提取的真实方法名为 `parseTables`（注意是 `parse` 而非 `parser`，旧版 `parserSqlTables` 已被注释禁用）。
+
+**使用示例**：
+
+```java
+// 提取 SQL 涉及的所有表名
+String sql = "SELECT * FROM pm_project p LEFT JOIN t_user u ON p.creator = u.id";
+Set<String> tables = SQLParser.parseTables(sql);
+// 结果: [pm_project, t_user]
+
+// 表名白名单校验（防动态表名注入）
+String dynamicSql = "..."; // 业务拼接的 SQL
+String allowedPattern = "(pm_project|pm_project_task|t_user)";
+SQLParser.SqlParserResult result = SQLParser.matcherSqlTables(dynamicSql, allowedPattern);
+if (!result.isValid()) {
+    // result.getMatchTables() 返回不在白名单中的表名
+    throw new SecurityException("非法表访问：" + result.getMatchTables());
+}
+```
+
+**边界条件**：
+- `parseTables(null, ...)` 会抛 NPE（Druid 内部）
+- `parseTables("", ...)` 返回空 Set（Druid 解析空 SQL 为空语句列表）
+- PMS-security 版本遇到子查询（如 `SELECT * FROM (SELECT * FROM t) tmp`）可能直接抛 `ParserException`，调用方需自行 try-catch 或改用 core 版本
 
 ---
 
@@ -292,10 +488,10 @@ public static class SqlParserResult {
 ```java
 public class XssFilter implements Filter {
     FilterConfig filterConfig = null;
-    
+
     public void init(FilterConfig filterConfig) throws ServletException;
     public void destroy();
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException;
 }
 ```
@@ -305,14 +501,22 @@ public class XssFilter implements Filter {
 ```java
 public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     private static final Log logger = LogFactory.getLog(XssHttpServletRequestWrapper.class);
-    
+
     public XssHttpServletRequestWrapper(HttpServletRequest request);
-    
+
     @Override public String getHeader(String name);
     @Override public String getParameter(String name);
     @Override public String[] getParameterValues(String name);
 }
 ```
+
+> ⚠️ **避坑提示（虚构方法澄清）**：
+> - **`XssHttpServletRequestWrapper.escapeHtml` 方法不存在**！此类重写 `getHeader` / `getParameter` / `getParameterValues` 时调用的是 `JsoupUtil.clean(...)`（基于 Jsoup 白名单），**不是** 自定义的 `escapeHtml`。
+> - `escapeHtml(String s)` 方法实际定义在 **`XssRequestBodyHttpServletRequestWrapper`** 和 **`XssRequestBodyHttpServletRequestWrapper3`**（见 §6.3 / §6.5），且为 `public static`。`XssRequestBodyHttpServletRequestWrapper2` 中也有同名方法但为 `private`。
+> - 三者实现完全相同：仅替换 `<` `>` `&` 三个字符（`&` 替换为全角 `＆`），**不替换** `;`（源码 `case ';'` 已注释）。
+> - `XssHttpServletRequestWrapper` 与 `XssRequestBodyHttpServletRequestWrapper` 系列的**关键区别**：
+>   - 前者：基于 Jsoup Safelist 白名单清洗，保留合法 HTML 标签，**适用富文本**
+>   - 后者：基于字符替换，会破坏合法 HTML 实体（如 `&amp;`），**适用纯文本参数**
 
 ### 6.3 XssRequestBodyHttpServletRequestWrapper（版本 1）
 

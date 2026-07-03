@@ -613,11 +613,11 @@ public class FacilitatorService extends AbstractBaseService<Facilitator>
 - **数据源**：默认 `dataSourceLocal`（查询 `view_ehr_employee` 视图）
 - **详细 SQL**：见 [ehr-integration.md 第 9.6 节](ehr-integration.md#96-查询-sql)
 - ⚠️ **死代码**：此方法在 Service/DAO 层已声明，但全代码库无 Controller 调用
-- **源码行号**：`IEmployeeService.java:48`
+- **源码行号**：`IEmployeeService.java:62`
 
 #### `List<EmployeeVO> selectBySelectivePageableVO(PageParam<EmployeeVO> pageParam)`
 - **功能**：员工分页查询
-- **源码行号**：`IEmployeeService.java:22`
+- **源码行号**：`IEmployeeService.java:30`
 
 #### `long countBySelectivePageableVO(PageParam<EmployeeVO> pageParam)`
 - **功能**：员工分页查询总数统计（与 `selectBySelectivePageableVO` 配套）
@@ -639,9 +639,9 @@ public class FacilitatorService extends AbstractBaseService<Facilitator>
 - **功能**：查询员工列表并携带关联的 PMS 用户账号信息
 - **源码行号**：`IEmployeeService.java:68`
 
-#### `Integer initUser(List<EmployeeVO> employeeList)`
+#### `void initUser(List<EmployeeVO> employeeList)`
 - **功能**：初始化用户账号（根据 EHR 员工数据创建 PMS 用户）
-- **源码行号**：`IEmployeeService.java:62`
+- **源码行号**：`IEmployeeService.java:52`
 
 #### `void initActivitiUser()`
 - **功能**：初始化 Activiti 工作流用户（同步 EHR 员工到 `act_id_user`/`act_id_info`/`act_id_membership`）
@@ -653,7 +653,7 @@ public class FacilitatorService extends AbstractBaseService<Facilitator>
 
 #### `List<Select2Data> selectEmployeeSelect2Data(Select2Data select2Data)`
 - **功能**：员工 Select2 数据查询（用于下拉选择）
-- **源码行号**：`IEmployeeService.java:78`
+- **源码行号**：`IEmployeeService.java:47`
 
 > 📝 **历史修订记录**：2026-06-30 修订。原版本仅列出 4 个"关键方法"，遗漏 7 个接口声明方法（含 Activiti 用户同步、按工号查询、VO 查询等）。
 
@@ -678,20 +678,20 @@ public class FacilitatorService extends AbstractBaseService<Facilitator>
 - **返回**：受影响行数
 - **数据源**：`dataSourceLocal`（PMS MySQL）
 - **SQL 特性**：`INSERT INTO ... ON DUPLICATE KEY UPDATE`
-- **源码行号**：`IPmSynchronizeService.java:9`
+- **源码行号**：`IPmSynchronizeService.java:41`
 
 ##### `List<OfstContractHead> selectAllOfstContractHeadSAP()`
 - **功能**：从 CRM 数据源查询所有 SAP 合同头数据
 - **返回**：`List<OfstContractHead>`（父类）
 - **数据源**：`dataSourceCRM`（SQL Server，查询视图 `DPtech_v_order_contract_4_pms`）
 - **注意**：调用前必须通过 `DataSourceHolder.setDataSourceType("CRM")` 显式切换数据源
-- **源码行号**：`IPmSynchronizeService.java:11`
+- **源码行号**：`IPmSynchronizeService.java:42`
 
 ##### `void clearAllOfstContractHeadSAP()`
 - **功能**：清空本地 SAP 合同头表
 - **数据源**：`dataSourceLocal`（PMS MySQL）
 - **SQL**：`TRUNCATE TABLE sms_ofst_contract_head_sap`
-- **源码行号**：`IPmSynchronizeService.java:13`
+- **源码行号**：`IPmSynchronizeService.java:43`
 
 ##### `void insertSyncLog(SyncLog syncLog)` / `void insertSyncState(SyncState syncState)`
 - **功能**：记录同步日志 / 同步状态
@@ -731,7 +731,7 @@ public class FacilitatorService extends AbstractBaseService<Facilitator>
 ##### `void splitAfProjectByProductCode(Map<String, Object> params)`
 - **功能**：按产品编码 Map 拆分工程实施项目与安服项目
 - **数据源**：`dataSourceLocal`
-- **源码行号**：`IPmSynchronizeService.java:28`
+- **源码行号**：`IPmSynchronizeService.java:39`
 
 ##### `void splitAfProjectByProductCode(String productFirstCodes)`
 - **功能**：按产品首字母编码字符串拆分项目（重载版本）

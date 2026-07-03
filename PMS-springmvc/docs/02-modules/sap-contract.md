@@ -1,4 +1,4 @@
-# SAP 合同实体同步模块文档
+﻿# SAP 合同实体同步模块文档
 
 > 本文档详细分析 PMS-springmvc 模块中 SAP 合同头实体（OfstContractHead / OfstContractHeadSAP）的定义、数据库映射及同步流程。
 > 源码：
@@ -249,7 +249,7 @@ method.invoke(pmSynchronizeService, list);
 
 ### 4.4 主键识别
 
-`SMSDataJob.insert()` 通过反射识别实体类中标注 `@Primary`（注意：是 `com.dp.plat.core.annotation.Primary`，非 JPA `@Id`）的字段作为主键，用于记录同步状态 `SyncState`（`SMSDataJob.java:170-181`）：
+`SMSDataJob.insert()` 通过反射识别实体类中标注 `@Primary`（注意：是 `org.springframework.context.annotation.Primary`，非 JPA `@Id`）的字段作为主键，用于记录同步状态 `SyncState`（`SMSDataJob.java:170-181`）：
 
 ```java
 for (Field field : fields) {
@@ -264,7 +264,7 @@ for (Field field : fields) {
 }
 ```
 
-⚠️ **Bug 提示**：`OfstContractHead` 实体在 `id` 字段上标注的是 `@javax.persistence.Id`（`OfstContractHead.java:16`），而非 `@com.dp.plat.core.annotation.Primary`。这导致 `SMSDataJob` 反射识别主键时**无法找到主键字段**，`lastId` 将保持为 `null`，最终写入 `SyncState` 时使用 `"0"` 兜底。此问题不会阻断同步流程，但 `SyncState` 中的 `lastId` 信息不准确。
+⚠️ **Bug 提示**：`OfstContractHead` 实体在 `id` 字段上标注的是 `@javax.persistence.Id`（`OfstContractHead.java:16`），而非 `@org.springframework.context.annotation.Primary`。这导致 `SMSDataJob` 反射识别主键时**无法找到主键字段**，`lastId` 将保持为 `null`，最终写入 `SyncState` 时使用 `"0"` 兜底。此问题不会阻断同步流程，但 `SyncState` 中的 `lastId` 信息不准确。
 
 ---
 

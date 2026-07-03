@@ -1,4 +1,4 @@
-# Controller 方法参考文档
+﻿# Controller 方法参考文档
 
 > 本文档提供 PMS-springmvc 模块所有 Controller 类的方法全量参考，作为现有 [action-methods-reference.md](action-methods-reference.md) 的补充和扩展。
 > 源码位置：`com.dp.plat.pms.springmvc.controller`、`com.dp.plat.ehr.controller`
@@ -297,9 +297,9 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 | `create` | `/pm/user/detail` | POST | 新增用户 | `user:add` |
 | `update` | `/pm/user/{userId}` | PUT | 更新用户 | `user:edit` |
 | `delete` | `/pm/user/{id}` | DELETE | 删除用户 | `user:delete` |
-| `checkUnique` | `/pm/user/checkUnique` | GET | 校验用户名唯一 | - |
+| `checkUnique` | `/pm/user/checkUnique` | POST | 校验用户名唯一 | - |
 | `resetPassword` | `/pm/user/resetPassword` | POST | 重置密码 | `user:edit` |
-| `findUserInfoWithParam` | `/pm/user/findUserInfoWithParam` | GET | 按条件查询用户信息 | `user:detail` |
+| `findUserInfoWithParam` | `/pm/user/param` | GET | 按条件查询用户信息 | `user:detail` |
 | `initActitityUser` | `/pm/user/initActitityUser` | GET | 初始化 Activiti 用户 | `user:edit` |
 | `checkPermission` | - | - | 权限检查 | - |
 
@@ -390,7 +390,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 13.1 方法列表
 
 > URL 命名空间：`/pm/member`（类级 `@RequestMapping(PROJECT_MANAGER + "member")`，注意常量末尾已带斜杠）
-> 继承 `AbstractController<ProjectMemberService, ProjectMember, ProjectMemberVO>`，仅重写以下方法。
+> 继承 `AbstractController<IProjectMemberService, ProjectMember, MemberVO>`，仅重写以下方法。
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|
@@ -406,7 +406,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 14.1 方法列表
 
 > URL 命名空间：`/pm/project/task`（类级 `@RequestMapping(PROJECT_MANAGER + "/project/task")`，源码字面拼接产生双斜杠 `/pm//project/task`，Spring 默认归一化）
-> 继承 `AbstractController<ProjectTaskService, ProjectTask, TaskVO>`。
+> 继承 `AbstractController<IProjectTaskService, ProjectTask, TaskVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 | 源码行号 |
 |------|-----|----------|------|------|---------|
@@ -428,7 +428,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 15.1 方法列表
 
 > URL 命名空间：`/pm/daily/report`（类级 `@RequestMapping(PROJECT_MANAGER + "/daily/report")`，源码字面拼接产生双斜杠）
-> 继承 `AbstractController<DailyReportService, DailyReport, DailyReportVO>`。
+> 继承 `AbstractController<IDailyReportService, DailyReport, DailyReportVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 源码行号 |
 |------|-----|----------|------|---------|
@@ -450,7 +450,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 16.1 方法列表
 
 > URL 命名空间：`/af/industry/asset`（类级 `@RequestMapping(AF_MANAGER + "/industry/asset")`，源码字面拼接产生双斜杠）
-> 继承 `AbstractController<IndustryAssetService, IndustryAsset, IndustryAssetVO>`。
+> 继承 `AbstractController<IIndustryAssetService, IndustryAsset, IndustryAssetVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|
@@ -468,7 +468,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 17.1 方法列表
 
 > URL 命名空间：`/af/industry/leak`（类级 `@RequestMapping(AF_MANAGER + "/industry/leak")`，源码字面拼接产生双斜杠）
-> 继承 `AbstractController<IndustryLeakService, IndustryLeak, IndustryLeakVO>`。
+> 继承 `AbstractController<IIndustryLeakService, IndustryLeak, IndustryLeakVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|
@@ -486,7 +486,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 18.1 方法列表
 
 > URL 命名空间：`/af/industry/warning`（类级 `@RequestMapping(AF_MANAGER + "/industry/warning")`，源码字面拼接产生双斜杠）
-> 继承 `AbstractController<IndustryLeakWarningService, IndustryLeakWarning, IndustryLeakWarningVO>`。
+> 继承 `AbstractController<IIndustryLeakWarningService, IndustryLeakWarning, LeakWarningVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 源码行号 |
 |------|-----|----------|------|---------|
@@ -505,7 +505,7 @@ public boolean checkPermission(V v, Model model, String... permissions) {
 ### 19.1 方法列表
 
 > URL 命名空间：`/pm/facilitator`（类级 `@RequestMapping(PROJECT_MANAGER + "facilitator")`）
-> 继承 `AbstractController<FacilitatorService, Facilitator, FacilitatorVO>`。
+> 继承 `AbstractController<IAbstractBaseService<Facilitator>, Facilitator, FacilitatorVO>`。
 
 | 方法 | URL | HTTP 方法 | 功能 | 权限 |
 |------|-----|----------|------|------|

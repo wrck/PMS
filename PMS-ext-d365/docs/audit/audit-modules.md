@@ -1,4 +1,4 @@
-# PMS-ext-d365 模块文档审计报告
+﻿# PMS-ext-d365 模块文档审计报告
 
 > 审计日期：2026-06-25
 > 审计范围：PMS-ext-d365 模块全部知识库文档（含历史文档与本次新增文档）
@@ -203,17 +203,17 @@
 |------|------------------------|---------|------|
 | `getToken` | `public static TokenResponse getToken()` | `getToken()` 无参 | ✅ |
 | `createPurchaseOrder` | `public static Response createPurchaseOrder(Request<Response> request)` | `createPurchaseOrder(Request<Response> request)` | ✅ |
-| `pushPurchaseOrder` (泛型版) | `public static <T> Response pushPurchaseOrder(T subcontract, String dataAreaId, Class<? extends PurchaseHeader> headerClazz, Class<? extends PurchaseLine> lineClazz, Map<String, Object> config)` | 完整泛型签名 | ✅ |
-| `pushPurchaseOrder` (字符串版) | `public static Response pushPurchaseOrder(String dataAreaId, PurchaseHeader header, List<? extends PurchaseLine> lines, Map<String, Object> config)` | 完整签名 | ✅ |
+| `pushPurchaseOrder` (泛型版) | `public static <T> T pushPurchaseOrder(T subcontract, String dataAreaId, PurchaseHeader purchTable, List<PurchaseLine> purchLines, Map<String, Object> config)` | 完整泛型签名 | ✅ |
+| `pushPurchaseOrder` (字符串版) | `public static Map<String, Object> pushPurchaseOrder(String dataAreaId, PurchaseHeader purchTable, List<PurchaseLine> purchLines, Map<String, Object> config)` | 完整签名 | ✅ |
 | `receiptPurchaseOrder` | `public static Response receiptPurchaseOrder(Request<Response> request)` | `receiptPurchaseOrder(Request<Response> request)` | ✅ |
-| `pushPurchaseReceipt` (泛型版) | `public static <T> Response pushPurchaseReceipt(T subcontract, ...)` | 完整泛型签名 | ✅ |
-| `pushPurchaseReceipt` (字符串版) | `public static Response pushPurchaseReceipt(String dataAreaId, PurchaseReceiptHeader header, ...)` | 完整签名 | ✅ |
-| `pushContractAcceptanceDeliveryInfo` | `public static Response pushContractAcceptanceDeliveryInfo(String dataAreaId, String contractNo, List<Map<String, Object>> deliveryInfo, Map<String, Object> config)` | 完整签名 | ✅ |
-| `fillPurchaseUnitBase` | `public static <T> void fillPurchaseUnitBase(T subcontract, Map<String, Object> config)` | 完整签名 | ✅ |
+| `pushPurchaseReceipt` (泛型版) | `public static <T> T pushPurchaseReceipt(T subcontract, String dataAreaId, PurchaseReceiptHeader receipt, List<PurchaseReceiptLine> receiptLines, Map<String, Object> config)` | 完整泛型签名 | ✅ |
+| `pushPurchaseReceipt` (字符串版) | `public static Map<String, Object> pushPurchaseReceipt(String dataAreaId, PurchaseReceiptHeader receipt, List<PurchaseReceiptLine> receiptLines, Map<String, Object> config)` | 完整签名 | ✅ |
+| `pushContractAcceptanceDeliveryInfo` | `public static Response pushContractAcceptanceDeliveryInfo(String dataAreaId, String contractNo, List<Map<String, Object>> lines, Map<String, Object> config)` | 完整签名 | ✅ |
+| `fillPurchaseUnitBase` | `public static <T> T fillPurchaseUnitBase(T subcontract, Map<String, Object> config)` | 完整签名 | ✅ |
 | `initAuthorization` | `@Deprecated public static void initAuthorization(Request<?> request)` | 标注 @Deprecated | ✅ |
 | `initConfig` | `public static void initConfig(Map<String, Object> config)` | 完整签名 | ✅ |
-| `postForm` / `postBody` / `post` | 私有静态方法 | 文档已描述 | ✅ |
-| `toJSONMap` / `toJSONString` | 私有静态方法 | 文档已描述 | ✅ |
+| `postForm` / `postBody` / `post` | 公开静态方法（public static） | 文档已描述 | ✅ |
+| `toJSONMap` / `toJSONString` | 公开静态方法（public static） | 文档已描述 | ✅ |
 
 **结论**：14 个核心方法签名 100% 一致。
 

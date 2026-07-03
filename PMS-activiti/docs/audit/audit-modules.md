@@ -61,9 +61,9 @@
 **发现 1：统一任务表名称**
 
 - **任务描述**：原始任务描述中提到 `dp_act_unify_task` 表
-- **源码实际**：源码中实际表名为 `dp_act_unify_task`（见 `ActUserTaskMapper.xml`）
-- **处理**：文档中统一使用源码实际的 `dp_act_unify_task` 表名，并在 `unify-task-table.md` 中说明
-- **结论**：✓ 已正确处理
+- **源码实际**：源码中实际表名为 `t_act_user_task`（见 `ActUserTaskMapper.xml` 第 21、25、29、37、92、119、133 行），数据库实际表名为 `dp_act_unify_task`。⚠️ 源码与数据库表名不一致。
+- **处理**：`unify-task-table.md` 第 48-53 行已正确记录此差异（源码用 `t_act_user_task`，数据库用 `dp_act_unify_task`）。其他文档应同步此说明。
+- **结论**：⚠️ `unify-task-table.md` 已正确记录，但其他多个文档（data-flow.md、er-diagram.md、glossary.md 等）仍将 `dp_act_unify_task` 描述为源码表名，需同步修正
 
 **发现 2：RevokeTaskCmd 返回值**
 

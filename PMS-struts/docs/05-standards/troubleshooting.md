@@ -650,7 +650,7 @@ try {
 **防护措施**：
 
 1. `XssStrutsInterceptor` 对请求参数进行 XSS 过滤
-2. Struts2 升级到安全版本（当前使用 2.5.x）
+2. Struts2 升级到安全版本（当前使用 2.3.35）
 3. 配置 `global-allowed-methods` 限制可调用的方法
 
 > **建议**：生产环境应配置具体的方法白名单，而非 `regex:.*`。

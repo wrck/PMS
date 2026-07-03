@@ -266,7 +266,7 @@ public String deploy(@PathVariable("modelId") String modelId,
 
 ## 7. 自定义 BpmnJsonConverter
 
-PMS-activiti 提供自定义的 `BpmnJsonConverter`（`com.dp.plat.activiti.converter.BpmnJsonConverter`），扩展了官方转换器，主要增强：
+PMS-activiti 提供自定义的 `BpmnJsonConverter`（`com.dp.plat.activiti.converter.BpmnJsonConverter`），**重写了**官方转换器（`implements EditorJsonConstants, StencilConstants, ActivityProcessor`，非 extends 官方类），主要增强：
 
 - 支持 `CallActivity`（调用活动）的转换
 - 修复官方转换器的部分兼容性问题

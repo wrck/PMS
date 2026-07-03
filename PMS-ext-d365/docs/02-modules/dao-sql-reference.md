@@ -1,4 +1,4 @@
-# DAO/SQL 参考
+﻿# DAO/SQL 参考
 
 > 本文档基于实际 Mapper XML 源码编写，说明各 Mapper 的 SQL 映射、动态条件、特殊设计。
 > 注意：实际表名带 `dp_erp_` 前缀，早期文档中的 `purchase_order` 等表名有误。
@@ -210,9 +210,16 @@
 
 ### 6.2 表别名
 
-仅 `selectBySelective` 和 `countBySelective` 使用表别名 `poh`（purchase order header）。其他语句直接使用表名（无别名）。
+`selectBySelective` 和 `countBySelective` 语句通过 `AS` 别名引用表，各 Mapper 使用对应的表别名：
 
-> ⚠️ PurchaseLineMapper、PurchaseReceiptMapper、PurchaseReceiptLineMapper 的 selective 条件中也使用 `poh` 别名（复用同一段 SQL 片段命名），但实际表不是 header。这是 MyBatisGenerator 生成时的命名遗留，不影响功能。
+| Mapper | 表名 | 别名 |
+|--------|------|------|
+| PurchaseMapper | `dp_erp_purchase_order_header` | `poh` |
+| PurchaseLineMapper | `dp_erp_purchase_order_line` | `pol` |
+| PurchaseReceiptMapper | `dp_erp_purchase_receipt_header` | `prh` |
+| PurchaseReceiptLineMapper | `dp_erp_purchase_receipt_line` | `prl` |
+
+其他语句直接使用表名（无别名）。
 
 ### 6.3 字段引用
 

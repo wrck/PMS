@@ -1,4 +1,4 @@
-# PMS-springmvc 系统架构总览
+﻿# PMS-springmvc 系统架构总览
 
 ## 1. 系统概述
 
@@ -19,7 +19,7 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 | `ProjectAssetController` | `/pm/project/asset` | 项目资产管理 | 7 |
 | `ProjectAssetLeakController` | `/pm/asset/leak` | 项目资产漏洞管理 | 7 |
 | `WorkFlowController` | `/workflow` | 工作流管理 | 15 |
-| `WorkBenchController` | `/workflow/workbench` | 工作台 | 5 |
+| `WorkBenchController` | `/workflow/workbench` | 工作台 | 4 |
 | `DailyReportController` | `/pm/daily/report` | 日报管理 | 10 |
 | `DispatchProjectController` | `/pm/dispatch` | 发运项目管理 | 13 |
 | `DispatchSettlementController` | `/pm/settlement` | 发运结算管理 | 13 |
@@ -28,7 +28,7 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 | `IndustryLeakWarningController` | `/af/industry/warning` | 行业漏洞预警 | 4 |
 | `CommonRelatedDataController` | `/pm/common/related` | 关联数据管理 | 6 |
 | `FacilitatorController` | `/pm/facilitator` | 服务商管理 | 2 |
-| `StrutsApiController` | `/api` | Struts API 兼容 | 4 |
+| `StrutsApiController` | `/api` | Struts API 兼容 | 3 |
 | `EHRDataController` | `/ehr/` | EHR 数据集成 | 14 |
 
 ### 涉及的 Service 类列表（28个）
@@ -54,7 +54,7 @@ PMS-springmvc 是 PMS 系统中较新的 Spring MVC Web 应用模块，负责项
 | `IIndustryAssetLeakRelationService` | `IndustryAssetLeakRelationService` | 资产漏洞关联服务 |
 | `IExcelAnalysisService` | `ExcelAnalysisService` | Excel分析服务 |
 | `ICommonRelatedDataService` | `CommonRelatedDataService` | 关联数据服务 |
-| `IFacilitatorService` | `FacilitatorService` | 协调员服务 |
+| `IFacilitatorService` | `FacilitatorService` | 服务商服务 |
 | `IPmSynchronizeService` | `PmSynchronizeService` | 数据同步服务 |
 | `IDataFieldRelationService` | `DataFieldRelationService` | 数据字段关联服务 |
 | `IEhrCompanyService` | `EhrCompanyService` | EHR 公司服务 |
@@ -327,6 +327,7 @@ public List<EhrData> queryEhrData() {
 | `D365DataJob` | D365 数据同步 | Quartz cron |
 | `DispatchSettlementInvoiceToFPJob` | 发运结算发票同步 | Quartz cron |
 | `DispatchSettlementSEEPaymentJob` | 发运结算付款同步 | Quartz cron |
+| `EhrDataJob` | EHR 数据同步 | Quartz cron |
 
 ---
 

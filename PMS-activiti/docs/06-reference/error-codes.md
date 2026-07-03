@@ -3,6 +3,8 @@
 > 本文档汇总 PMS-activiti 模块的错误码、异常类、错误信息和处理建议。
 > 数据来源：`d:\常规软件\QoderCode\workspace\PMS\PMS-activiti\src\` 源码与 Activiti 5.23.0 官方文档。
 
+> ⚠️ **重要声明**（2026-07-01 审查）：以下 ACT-XXX 错误码分类体系为**教学化示例**，PMS-activiti 源码中**不存在**任何 ACT-XXX 错误码定义。源码实际异常处理方式：Controller 层使用 try-catch + `ExceptionHandler.insertException(e)` 捕获 Activiti 原生异常（如 `ActivitiObjectNotFoundException`、`ActivitiTaskAlreadyClaimedException`）。PMS-activiti 自定义异常类为 `CustomActivitiException`（继承 `ActivitiException`），**不使用** `CustomRuntimeException`（该类存在于 core 模块但 PMS-activiti 未引用）。本文档中的错误码和异常用法仅作为设计参考，不代表源码实际实现。
+
 ---
 
 ## 1. 错误码分类

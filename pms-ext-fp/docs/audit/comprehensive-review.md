@@ -1,4 +1,4 @@
-# pms-ext-fp 模块知识库综合审查报告
+﻿# pms-ext-fp 模块知识库综合审查报告
 
 > **审查日期**：2026-06-25
 > **审查范围**：`d:\常规软件\QoderCode\workspace\PMS\pms-ext-fp\docs\` 下全部知识库文档
@@ -280,11 +280,11 @@ private static final Integer SUCCESS_CODE = 0;
 
 1. **错误处理机制**：pms-ext-fp 不使用自定义异常类，所有错误通过 `Response.failure()` 静态工厂方法返回 Response 对象，调用方通过 `isSuccess()` 判断结果。
 2. **Token 管理机制**：Token 缓存使用 `volatile TokenResponse cachedToken` + `ReentrantReadWriteLock`，过期检查基于 `expiresOn` 字段（秒级时间戳），过期后调用 `clearToken()` 清除缓存与 cookie。
-3. **SUCCESS_CODE 定义**：`private static final Integer SUCCESS_CODE = 0`，仅 0 视为成功（非 {0, 200}）。
-4. **isSuccess() 判断逻辑**：`Boolean.TRUE.equals(getIsSuccess()) || SUCCESS_CODE.equals(this.code)`，即 isSuccess 为 true 或 code 为 0。
+3. **SUCCESS_CODE 定义**：`private static final Integer[] SUCCESS_CODE = new Integer[] {0, 200}`，0 和 200 均视为成功。
+4. **isSuccess() 判断逻辑**：`Boolean.TRUE.equals(getIsSuccess()) || this.code != null && Arrays.asList(SUCCESS_CODE).contains(this.code)`，即 isSuccess 为 true 或 code 为 0/200。
 5. **ElectronicInvoiceResponse/MsgResponse/ElectronicInvoiceIdentifyAndVerifyResponse 均为空类**：无自身字段，全部继承自 `Response<InvoiceProviderInfo>`。
 6. **InvoiceUtil 是纯本地工具**：通过 Aviator 表达式（来自 pms-rules 模块的 AviatorUtils）进行发票类型/状态判断，无任何 HTTP 调用或数据库访问。
-7. **FPApi 三种 HTTP 客户端**：Hutool、Apache HttpClient、OkHttp（默认），通过 `httpClient.type` 配置切换。
+7. **FPApi 三种 HTTP 客户端实现**：Hutool（`requestWithHutool`）、Apache HttpClient（`requestWithPool`）、OkHttp（`requestWithOkHttp`，默认）。`request()` 方法（FPApi.java 第 1220-1223 行）**硬编码**调用 `requestWithOkHttp`，Hutool 和 Apache HttpClient 实现的调用被注释掉（第 1221-1222 行），**不存在 `httpClient.type` 配置切换逻辑**。
 8. **限流三种模式**：MINUTE（基于 ScheduledExecutorService 定时调度）、SINGLE（单线程顺序推送）、MULTIPLE（基于线程池并发推送）。
 
 ### 6.3 文档质量评估

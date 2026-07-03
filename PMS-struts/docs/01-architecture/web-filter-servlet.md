@@ -608,4 +608,4 @@ HTTP 请求
 3. **CAS 服务器地址**：配置中硬编码了 CAS 服务器地址（`cas2.dptech.com:8443`）和应用服务器地址（`10.162.0.141:8083`），部署到不同环境时需修改
 4. **SiteMesh 与 Struts2 集成**：三段式过滤器配置是 SiteMesh 与 Struts2 集成的标准模式，不可简化为单个过滤器
 5. **包名兼容性**：当前使用 `org.apache.struts2.dispatcher.ng.filter` 包名，升级到 Struts2 2.5.x 后需改为 `org.apache.struts2.dispatcher.filter`
-6. **Struts2 DTD 版本**：当前 `struts.xml` 使用 Struts 2.0 DTD（`struts-2.0.dtd`），但实际 Struts2 版本为 2.5.30。2.5 DTD 声明已在配置文件中注释，升级后需启用 2.5 DTD 以支持 `global-allowed-methods` 等新特性
+6. **Struts2 DTD 版本**：当前 `struts.xml` 使用 Struts 2.0 DTD（`struts-2.0.dtd`），但实际 Struts2 版本为 2.3.35。2.5 DTD 声明已在配置文件中注释，升级后需启用 2.5 DTD 以支持 `global-allowed-methods` 等新特性

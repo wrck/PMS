@@ -1,4 +1,4 @@
-# pms-rules 代码示例与参考
+﻿# pms-rules 代码示例与参考
 
 ---
 
@@ -101,8 +101,7 @@ AviatorUtils.getInstance().addFunction(new AbstractFunction() {
     }
     
     @Override
-    public AviatorObject invoke(AviatorEvaluatorInstance instance, 
-                                 Map<String, Object> env, 
+    public AviatorObject invoke(Map<String, Object> env, 
                                  AviatorObject... args) {
         String arg1 = (String) args[0].getValue(env);
         return new AviatorString("结果: " + arg1);

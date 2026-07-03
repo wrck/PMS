@@ -1,4 +1,4 @@
-# PMS-ext-d365 知识库全面审查报告
+﻿# PMS-ext-d365 知识库全面审查报告
 
 > 审查日期：2026-06-25
 > 审查范围：`PMS/PMS-ext-d365/docs/` 下全部 21 个 Markdown 文档
@@ -250,7 +250,7 @@
 
 ### 7.3 表别名描述
 
-`audit-modules.md` 第 178 行声称 PurchaseLineMapper 表别名为 `pol`、PurchaseReceiptMapper 为 `prh`、PurchaseReceiptLineMapper 为 `prl`。实际经 `PurchaseMapper.xml` 取证，selective 查询均使用 `poh` 别名（MyBatisGenerator 生成遗留）。`dao-sql-reference.md` 第 215 行已正确记录此现象。
+`audit-modules.md` 第 178 行正确记录了各 Mapper 的表别名：PurchaseMapper 为 `poh`、PurchaseLineMapper 为 `pol`、PurchaseReceiptMapper 为 `prh`、PurchaseReceiptLineMapper 为 `prl`。经 `PurchaseLineMapper.xml`（第 723 行 `AS pol`）和 `PurchaseReceiptMapper.xml`（第 384 行 `AS prh`）取证确认。`dao-sql-reference.md` 第 215 行此前错误声称所有 Mapper 均使用 `poh` 别名，已修正为各 Mapper 使用对应别名。
 
 ---
 
@@ -258,7 +258,7 @@
 
 ### 8.1 源码类覆盖
 
-经核对，27 个源码文件在 14 个准确文档中均有覆盖（详见 `audit-modules.md` 第 3 节覆盖率分析，本次核验确认仍成立）。
+经核对，39 个源码文件（35 Java + 4 XML）在准确文档中均有覆盖（详见 `audit-modules.md` 第 3 节覆盖率分析，本次核验确认仍成立）。
 
 ### 8.2 D365Api 方法覆盖
 

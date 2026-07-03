@@ -1,4 +1,4 @@
-# pms-rules 数据流图
+﻿# pms-rules 数据流图
 
 ## 1. 规则引擎整体数据流
 
@@ -167,11 +167,11 @@ sequenceDiagram
     participant E as AviatorEvaluatorInstance
 
     S->>A: 类加载触发静态初始化
-    A->>E: AviatorEvaluator.newInstance()
-    E->>E: 创建 Aviator 实例
-    E->>E: 配置缓存大小
-    A->>E: setOption(TRACE, false)
-    A->>E: setOption(ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true)
+    A->>E: AviatorEvaluator.getInstance()
+    E->>E: 获取全局 Aviator 实例
+    A->>E: useLRUExpressionCache(cacheSize)
+    A->>E: setCachedExpressionByDefault(true)
+    A->>E: setFunctionMissing(JavaMethodReflectionFunctionMissing.getInstance())
     A-->>S: 初始化完成
 ```
 
@@ -188,7 +188,7 @@ graph TB
     end
 
     subgraph PMS-struts 模块
-        A3[AviatorUtils<br/>com.dp.plat.pms.util<br/>可能为旧版本]
+        A3[AviatorUtils<br/>com.dp.plat.util<br/>可能为旧版本]
     end
 
     A1 -->|主版本| B[推荐使用]

@@ -1,4 +1,4 @@
-# PMS-security 数据流图
+﻿# PMS-security 数据流图
 
 ## 1. 安全过滤器链数据流
 
@@ -9,7 +9,6 @@ sequenceDiagram
     participant C as 浏览器
     participant F1 as CsrfFilter
     participant F2 as XssFilter
-    participant F3 as SqlInjectFilter
     participant S as ShiroFilter
     participant A as Action/Controller
     participant DB as Database
@@ -22,9 +21,8 @@ sequenceDiagram
         F1->>F2: 继续过滤链
     end
     F2->>F2: XSS 清理参数
-    F2->>F3: 继续过滤链
-    F3->>F3: SQL 注入检查
-    F3->>S: Shiro 认证授权
+    Note over F2,S: SQL 注入防护由 SQLParser 表名白名单<br/>+ MyBatis #{} 参数化实现，无独立 Filter
+    F2->>S: Shiro 认证授权
     S->>A: 转发到业务处理
     A->>DB: 数据库操作
     DB-->>A: 返回结果
@@ -44,7 +42,7 @@ graph LR
 
     subgraph 后续请求
         A2[浏览器] -->|POST + Token| B2[CsrfFilter]
-        B2 -->|提取 Token| C2[请求参数/Cookie]
+        B2 -->|提取 Token| C2[请求参数/Header/Cookie]
         B2 -->|获取 Session Token| D2[HttpSession]
         B2 -->|比较 Token| E2{Token 匹配?}
         E2 -->|是| F2[继续过滤链]
@@ -58,12 +56,12 @@ graph LR
 graph TB
     A[HTTP 请求参数] --> B[XssFilter.doFilter]
     B --> C[包装 HttpServletRequest]
-    C --> D[XssHttpServletRequestWrapper]
+    C --> D[XssRequestBodyHttpServletRequestWrapper]
     D --> E{获取参数}
     E -->|getParameter| F[JsoupUtil.clean]
     E -->|getParameterValues| F
     E -->|getHeader| F
-    F --> G[Jsoup Whitelist.relaxed]
+    F --> G[Jsoup Safelist.relaxed]
     G --> H[清理后的参数]
     H --> I[传递给下游]
 ```
@@ -79,10 +77,10 @@ sequenceDiagram
     participant DB as Database
 
     U->>A: 提交密码（明文）
-    A->>PI: MyBatis 拦截器
+    A->>PI: Spring MVC HandlerInterceptor
     PI->>PI: 检测 password 字段
     alt 是 password 字段
-        PI->>ASE: ASEUtil.encrypt(password)
+        PI->>ASE: ASEUtil.encrypt(content, password)
         ASE-->>PI: 返回密文
         PI->>DB: INSERT/UPDATE 密文
     else 非 password 字段
@@ -129,6 +127,8 @@ graph LR
 ```
 
 ## 3. 安全组件与数据库交互
+
+> ⚠️ **重要说明**：PMS-security 是纯工具库（jar），**无任何数据库表、Mapper、DAO、Service**（见 [no-database.md](../03-database/no-database.md)）。以下 §3.1/§3.2 描述的是 **core 模块**（Shiro 集成）的认证/权限流程，PMS-security 仅提供 `ASEUtil`、`CSRFTokenManager` 等工具类供 core 模块调用。`t_user`、`t_role`、`UserService`、`Realm` 均在 core 模块。
 
 ### 3.1 用户认证数据流
 

@@ -96,15 +96,15 @@
 
 ## 4. 交叉验证结果
 
-### 4.1 统一任务表名称一致性 ✅
+### 4.1 统一任务表名称一致性 ⚠️
 
 | 检查项 | 文档描述 | 源码实际 | 结论 |
 |--------|----------|----------|------|
-| 表名 | `dp_act_unify_task` | `ActUserTaskMapper.xml` 中 7 处引用均为 `dp_act_unify_task` | ✅ 一致 |
+| 表名 | `dp_act_unify_task` | `ActUserTaskMapper.xml` 中 7 处 SQL 实际使用 `t_act_user_task`（源码），数据库实际表名为 `dp_act_unify_task` | ⚠️ 源码与数据库表名不一致 |
 | 实体类 | `ActUserTask` | `com.dp.plat.activiti.entity.ActUserTask` | ✅ 一致 |
 | Mapper | `ActUserTaskMapper` | `com.dp.plat.activiti.dao.ActUserTaskMapper` | ✅ 一致 |
 
-> 说明：`audit-modules.md` 中作为"原始任务描述引用"出现 `dp_act_unify_task`，这是对用户原始任务描述中错误名称的历史记录，非文档本身的错误使用，处理正确。
+> ⚠️ **更正说明**（2026-07-01 审查）：源码 `ActUserTaskMapper.xml` 中 7 处 SQL 实际使用旧表名 `t_act_user_task`（第 21、25、29、37、92、119、133 行），而非 `dp_act_unify_task`。`dp_act_unify_task` 是数据库实际表名。`unify-task-table.md` 第 48-53 行已正确记录此差异。本审计文档之前的"✅ 一致"结论为虚假声明，现予更正。
 
 ### 4.2 Controller 验证 ✅
 

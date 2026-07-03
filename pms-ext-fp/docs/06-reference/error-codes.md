@@ -1,4 +1,4 @@
-# 错误码定义文档
+﻿# 错误码定义文档
 
 > 本文档定义 pms-ext-fp 模块的错误码体系，包括 Response.failure 错误消息、HTTP 状态码和 Token 错误码。
 
@@ -44,24 +44,24 @@ graph TB
 ### 2.1 成功码定义
 
 ```java
-private static final Integer SUCCESS_CODE = 0;
+private static final Integer[] SUCCESS_CODE = new Integer[] {0, 200};
 ```
 
 ### 2.2 成功判断逻辑
 
 ```java
 public boolean isSuccess() {
-    return Boolean.TRUE.equals(getIsSuccess()) || SUCCESS_CODE.equals(this.code);
+    return Boolean.TRUE.equals(getIsSuccess()) || this.code != null && Arrays.asList(SUCCESS_CODE).contains(this.code);
 }
 ```
 
 | 判断条件 | 结果 | 说明 |
 |----------|------|------|
 | `isSuccess == true` | 成功 | FP 平台显式返回成功标志 |
-| `code == 0` | 成功 | FP 平台返回码 0（SUCCESS_CODE） |
+| `code == 0` 或 `code == 200` | 成功 | FP 平台返回码 0 或 200（SUCCESS_CODE） |
 | 其他 | 失败 | code 为 null 或其他值 |
 
-> **注意**：`SUCCESS_CODE` 仅为 `0`（非 `{0, 200}`）。此前版本中描述为 `Integer[] {0, 200}` 是不准确的，实际源码为单个 `Integer` 值 `0`。
+> **注意**：`SUCCESS_CODE` 为 `Integer[] {0, 200}`（含 0 与 200 两个成功码）。源码 `Response.java` 第 22 行定义为数组形式。
 
 ---
 
@@ -113,10 +113,10 @@ FPApi **不直接处理 HTTP 状态码**，而是将响应体解析为 `Response
 |-------------|-----------|---------------|
 | 200 | JSON 响应 | 解析为 Response，检查 code/isSuccess |
 | 200 | 非 JSON 响应 | `message="响应内容不是Json格式！..."` |
-| 401 | JSON 错误（Token 过期） | 解析为 Response，code 非 0，isSuccess=false |
+| 401 | JSON 错误（Token 过期） | 解析为 Response，code 非 0/200，isSuccess=false |
 | 401 | HTML 登录页 | `message="响应内容不是Json格式！..."` |
 | 404 | HTML 404 页 | `message="响应内容不是Json格式！..."` |
-| 500 | JSON 错误 | 解析为 Response，code 非 0 |
+| 500 | JSON 错误 | 解析为 Response，code 非 0/200 |
 | 500 | HTML 错误页 | `message="响应内容不是Json格式！..."` |
 | 超时 | 无响应 | `message="请求超时"`（MULTIPLE 模式） |
 | 连接拒绝 | 无响应 | `message="反序列化发生异常！错误信息：..."` |
@@ -192,10 +192,11 @@ FP 平台的响应通过 `Response.code` 字段返回业务错误码：
 
 | code 值 | 含义 | 处理方式 |
 |---------|------|----------|
-| 0 | 成功 | `isSuccess()` 返回 true（SUCCESS_CODE） |
+| 0 | 成功 | `isSuccess()` 返回 true（SUCCESS_CODE 之一） |
+| 200 | 成功 | `isSuccess()` 返回 true（SUCCESS_CODE 之一） |
 | 其他 | 失败 | `isSuccess()` 返回 false，查看 `message` |
 
-> **注意**：`SUCCESS_CODE` 仅为 `0`。`isSuccess()` 的判断逻辑为 `Boolean.TRUE.equals(getIsSuccess()) || SUCCESS_CODE.equals(this.code)`，即 `isSuccess` 为 true 或 `code` 为 0 时均视为成功。
+> **注意**：`SUCCESS_CODE` 为 `Integer[] {0, 200}`。`isSuccess()` 的判断逻辑为 `Boolean.TRUE.equals(getIsSuccess()) || this.code != null && Arrays.asList(SUCCESS_CODE).contains(this.code)`，即 `isSuccess` 为 true 或 `code` 为 0/200 时均视为成功。
 
 ### 6.2 ElectronicInvoiceResponse 错误处理
 

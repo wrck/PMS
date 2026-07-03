@@ -109,7 +109,7 @@ PMS-springmvc 依赖 PMS-activiti（war+jar）和 PMS-struts（classifier 为 `c
 ### SPMS 项目
 - **Web 层**：Struts2 2.3.35（传统配置）
 - **ORM 层**：iBATIS 2.3.0.677（SqlMapClient）
-- **数据库**：MySQL（主库 `dppms_d365`，329张表）、SQL Server（MES/SAP/D365 集成）
+- **数据库**：MySQL（主库 `dppms_d365`，286 张表 + 43 个视图）、SQL Server（MES/SAP/D365 集成）
 - **连接池**：commons-dbcp（BasicDataSource）
 - **事务管理**：Spring JDBC DataSourceTransactionManager
 - **日志**：Log4j

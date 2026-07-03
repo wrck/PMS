@@ -326,7 +326,7 @@ PMS 系统的流程结束监听器位于 `com.dp.plat.taskHandler` 包（PMS-str
 
 ### 7.1 表结构
 
-`UserTaskListener` 依赖 `dp_act_unify_task` 表（通过 `ActUserTaskMapper` 访问）：
+`UserTaskListener` 通过 `ActUserTaskMapper` 访问统一任务表。⚠️ **表名差异**：源码 SQL 使用 `t_act_user_task`，数据库实际表名为 `dp_act_unify_task`（详见 [unify-task-table.md](../03-database/unify-task-table.md)）：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|

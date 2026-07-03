@@ -130,55 +130,66 @@ PMS-activiti/src/main/java/com/dp/plat/activiti/
 
 ## 5. 核心功能
 
+> URL 前缀由 `Consts.URLPath.WORKFLOW_MANAGER = ``"/workflow/"``` 统一定义（源码 `core/.../Consts.java:97`）。完整方法签名详见 [controller-methods-reference.md](../02-modules/controller-methods-reference.md)。
+
 ### 5.1 流程定义管理
 
-**控制器**：`ProcessDefinitionController`
+**控制器**：`ProcessDefinitionController`（URL 前缀 `/workflow/definition`）
 
-| 方法 | 功能 | URL |
-|------|------|-----|
-| list | 流程定义列表 | /processDefinition/list |
-| deploy | 部署流程定义 | /processDefinition/deploy |
-| delete | 删除流程定义 | /processDefinition/delete |
-| export | 导出 BPMN 文件 | /processDefinition/export |
+| 方法 | 功能 | URL | HTTP |
+|------|------|-----|------|
+| list | 跳转流程定义列表页 | /workflow/definition | GET |
+| listProcess | 查询流程定义列表 | /workflow/definition/list | GET |
+| deploy | 上传部署流程 | /workflow/definition/deploy | POST |
+| delete | 删除部署 | /workflow/definition/{deploymentId} | DELETE |
+| convertToModel | 流程定义转模型 | /workflow/definition/model/{processDefinitionId} | GET |
+| loadByDeployment | 加载流程图/XML | /workflow/definition/{resourceType}/{processDefinitionId} | GET |
+| updateProcessStatusByProDefinitionId | 激活/挂起流程定义 | /workflow/definition/{status}/{processDefinitionId} | POST |
 
 ### 5.2 流程实例管理
 
-**控制器**：`ProcessInstanceController`
+**控制器**：`ProcessInstanceController`（URL 前缀 `/workflow/instance`）
 
-| 方法 | 功能 | URL |
-|------|------|-----|
-| list | 流程实例列表 | /processInstance/list |
-| start | 启动流程实例 | /processInstance/start |
-| delete | 删除流程实例 | /processInstance/delete |
-| suspend | 挂起流程实例 | /processInstance/suspend |
-| activate | 激活流程实例 | /processInstance/activate |
+| 方法 | 功能 | URL | HTTP |
+|------|------|-----|------|
+| list | 跳转运行中流程列表页 | /workflow/instance | GET |
+| listRuningProcess | 查询运行中流程 | /workflow/instance/runningProcess | GET |
+| findFinishedProcessInstances | 查询已结束流程 | /workflow/instance/finishedProcess | GET |
+| showDiagram | 显示流程图（带跟踪） | /workflow/instance/diagram/{processInstanceId} | GET |
+| showInfo | 显示流程明细 | /workflow/instance/info/{processInstanceId}/list | POST |
+| updateProcessStatusByProInstanceId | 激活/挂起流程实例 | /workflow/instance/{status}/{processInstanceId} | POST |
+| deleteProcessByProInstanceId | 删除流程实例 | /workflow/instance/delete/{processInstanceId} | POST |
 
 ### 5.3 任务管理
 
-**控制器**：`TaskController`
+**控制器**：`TaskController`（URL 前缀 `/workflow/task`）
 
-| 方法 | 功能 | URL |
-|------|------|-----|
-| myTask | 我的任务 | /task/myTask |
-| complete | 完成任务 | /task/complete |
-| claim | 签收任务 | /task/claim |
-| delegate | 委派任务 | /task/delegate |
-| withdraw | 撤回任务 | /task/withdraw |
-| revoke | 驳回任务 | /task/revoke |
-| jump | 跳转任务 | /task/jump |
-| comment | 添加评论 | /task/comment |
+| 方法 | 功能 | URL | HTTP |
+|------|------|-----|------|
+| list | 跳转任务列表页 | /workflow/task | GET |
+| todoTask | 查询待办任务 | /workflow/task/todoTask | GET |
+| findFinishedTaskInstances | 查询已完成任务 | /workflow/task/endTask | GET |
+| claim | 签收任务 | /workflow/task/claim/{taskId} | GET/POST |
+| unclaim | 取消签收 | /workflow/task/unclaim/{taskId} | GET/POST |
+| delegateTask | 委派任务 | /workflow/task/delegate/{taskId} | POST |
+| transferTask | 转办任务 | /workflow/task/transfer/{taskId} | POST |
+| revoke | 撤销任务 | /workflow/task/revoke/{processInstanceId}/{taskId} | GET/POST |
+| jumpTargetTask | 任务跳转 | /workflow/task/jump | POST |
+| withdrawTask | 撤回任务 | /workflow/task/withdraw/{instanceId}/{userId} | POST |
 
 ### 5.4 模型设计
 
-**控制器**：`ModelController`
+**控制器**：`ModelController`（URL 前缀 `/workflow/model`）
 
-| 方法 | 功能 | URL |
-|------|------|-----|
-| list | 模型列表 | /model/list |
-| create | 创建模型 | /model/create |
-| edit | 编辑模型 | /model/edit |
-| delete | 删除模型 | /model/delete |
-| deploy | 部署模型 | /model/deploy |
+| 方法 | 功能 | URL | HTTP |
+|------|------|-----|------|
+| toListModel | 跳转模型列表页 | /workflow/model | GET |
+| findAll | 查询模型列表 | /workflow/model/list | GET |
+| findOne | 跳转模型编辑器 | /workflow/model/{modelId} | GET |
+| toCreateModel | 跳转创建模型页面 | /workflow/model/create | GET |
+| create | 创建模型 | /workflow/model/create | POST |
+| deploy | 部署模型 | /workflow/model/{modelId} | PATCH |
+| delete | 删除模型 | /workflow/model/{modelId} | DELETE |
 
 ---
 
@@ -190,7 +201,7 @@ PMS-activiti/src/main/java/com/dp/plat/activiti/
 
 ```java
 // 使用方式
-workflowService.withdrawTask(taskId, userId);
+processService.withdrawTask(instanceId, userId);  // IProcessService, 非 IWorkflowService
 ```
 
 ### 6.2 任务驳回（RevokeTaskCmd）
@@ -199,7 +210,7 @@ workflowService.withdrawTask(taskId, userId);
 
 ```java
 // 使用方式
-workflowService.revokeTask(taskId, userId, comment);
+processService.revoke(historyTaskId, processInstanceId);  // IProcessService, 参数无 comment
 ```
 
 ### 6.3 任务跳转（JumpTaskCmdService）
@@ -208,7 +219,7 @@ workflowService.revokeTask(taskId, userId, comment);
 
 ```java
 // 使用方式
-workflowService.jumpTask(taskId, targetActivityId, userId);
+processService.moveTo(currentTaskId, targetTaskDefinitionKey);  // IProcessService, 参数无 userId
 ```
 
 ### 6.4 删除活动任务（DeleteActiveTaskCmd）

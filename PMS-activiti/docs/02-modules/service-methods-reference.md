@@ -29,16 +29,24 @@
 #### `List<Task> getCurrentTaskInfo(ProcessInstance processInstance)`
 - **功能**：获取流程实例当前节点的任务信息
 - **事务类型**：无事务
-- **参数**：`processInstance` - 流程实例
-- **返回值**：`List<Task>` - 当前节点任务列表
-- **核心算法**：
-  1. 通过 `PropertyUtils.getProperty(processInstance, "activityId")` 获取流程实例当前活动 ID
-  2. 根据流程实例 ID 和活动 ID（taskDefinitionKey）查询任务
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 | 取值范围 |
+  |--------|------|----------|----------|----------|
+  | processInstance | ProcessInstance | 流程实例 | 非空 | `runtimeService.createProcessInstanceQuery()` 查询结果 |
+- **返回值**：`List<Task>` - 当前节点任务列表；**异常时返回 null**（非空列表）
+- **核心算法**（源码 `WorkflowService.java:31-42`）：
+  1. 通过 `PropertyUtils.getProperty(processInstance, "activityId")` 反射获取流程实例当前活动 ID
+  2. 通过 `taskService.createTaskQuery().processInstanceId(id).taskDefinitionKey(activitiId).list()` 查询任务
   3. 返回任务列表
 - **异常处理**：
   | 异常类型 | 触发条件 | 处理方式 |
   |----------|----------|----------|
-  | Exception | 反射获取属性或查询失败 | `e.printStackTrace()` 并返回 null |
+  | Exception | 反射获取属性失败（如 processInstance 不含 activityId 属性）或查询失败 | `e.printStackTrace()` 并返回 null |
+- **边界条件**：
+  - `processInstance == null`：`PropertyUtils.getProperty` 抛 NPE，被 catch 后返回 null
+  - **流程已结束**：`processInstance` 为 null 时不应调用此方法（调用方需自行判断）
+  - **多实例节点**：同一 activityId 可能对应多个 Task，返回列表大小 > 1
+  - **返回值可能为 null**：调用方（如 `RevokeTaskCmd`）需做 null 检查，否则遍历会 NPE
 
 ---
 
@@ -72,37 +80,92 @@
 - **参数**：`userId` - 转办目标用户 ID, `taskId` - 任务 ID
 
 ##### `void complete(String taskId, String content, String userid, Map<String, Object> variables) throws Exception`
-- **功能**：完成任务
+- **功能**：完成任务（含委派任务解决、审批意见记录、流程变量设置）
+- **事务类型**：`@Transactional`（源码 `ProcessService.java:568`）
 - **参数**：
-  | 参数名 | 类型 | 业务含义 | 校验规则 |
-  |--------|------|----------|----------|
-  | taskId | String | 任务 ID | 非空 |
-  | content | String | 审批意见 | 可空 |
-  | userid | String | 办理人 ID | 非空 |
-  | variables | Map<String, Object> | 流程变量 | 可空 |
-- **核心算法**：
-  1. 查询任务并校验
-  2. 通过 `taskService.addComment(taskId, processInstanceId, content)` 添加审批意见
-  3. 设置流程变量
-  4. 调用 `taskService.complete(taskId, variables)` 完成任务
+  | 参数名 | 类型 | 业务含义 | 校验规则 | 取值范围/默认值 |
+  |--------|------|----------|----------|------------------|
+  | taskId | String | 任务 ID | 非空 | Activiti 任务 ID（如 "12345" 数字串） |
+  | content | String | 审批意见 | 可空 | 为 null 时不调用 addComment；非空时作为流程评论持久化 |
+  | userid | String | 办理人 ID | 非空 | 必须为已签收或候选办理人，否则查不到任务 |
+  | variables | Map<String, Object> | 流程变量 | 可空 | 传入后会同时调用 setVariablesLocal 和 complete |
+- **核心算法**（源码 `ProcessService.java:569-593`）：
+  1. 通过 `taskService.createTaskQuery().taskCandidateOrAssigned(userid).taskId(taskId).singleResult()` 查询任务
+  2. 任务为 null 时抛 `ActivitiObjectNotFoundException("任务不存在！")`
+  3. 查询流程实例 `ProcessInstance`
+  4. 调用 `identityService.setAuthenticatedUserId(userid)` 设置评论人（**必须**，否则查看评论时报错）
+  5. **仅当 content != null 时**调用 `taskService.addComment(taskId, processInstanceId, content)`
+  6. 调用 `taskService.setVariablesLocal(task.getId(), variables)` 设置任务本地变量
+  7. **委派任务处理**：若 `DelegationState.PENDING == task.getDelegationState()`，先调用 `taskService.resolveTask(taskId, variables)` 解决委派
+  8. 调用 `taskService.setAssignee(taskId, userid)` 强制设置办理人
+  9. 调用 `taskService.complete(taskId, variables)` 完成任务
 - **异常处理**：
   | 异常类型 | 触发条件 | 处理方式 |
   |----------|----------|----------|
-  | ActivitiObjectNotFoundException | 任务不存在 | 抛出异常 |
-  | ActivitiException | 流程异常 | 提取错误信息 |
+  | ActivitiObjectNotFoundException | 任务不存在（taskId 错误或 userid 不匹配） | 抛出异常，消息"任务不存在！" |
+  | 其他 RuntimeException | 流程引擎内部异常 | 向上传播（方法未 catch） |
+- **边界条件**：
+  - `content == null`：跳过 addComment，其余流程正常执行
+  - `variables == null`：setVariablesLocal 和 complete 接收 null（由 Activiti 内部处理）
+  - **委派任务**：当任务处于 `DelegationState.PENDING` 时，先 resolveTask 再 complete，确保委派状态正确流转
+  - **userid 与任务不匹配**：taskCandidateOrAssigned 查询返回 null，抛出"任务不存在！"
+- **使用示例（审批通过流程）**：
+  ```java
+  // 场景：审批人办理任务，同意审批
+  Map<String, Object> variables = new HashMap<>();
+  variables.put("isPass", true);           // 排他网关条件变量
+  variables.put("approveResult", "同意");   // 自定义审批结果
+  processService.complete(
+      "10001",                    // taskId - 待办任务 ID
+      "同意，材料齐全，予以通过",   // content - 审批意见
+      "user001",                   // userid - 当前办理人
+      variables                    // variables - 流程变量
+  );
+  // 执行后：任务完成，评论已记录，流程流转至下一节点
+  ```
+- **使用示例（驳回流程）**：
+  ```java
+  Map<String, Object> variables = new HashMap<>();
+  variables.put("isPass", false);
+  variables.put("approveResult", "驳回");
+  processService.complete(taskId, "材料不完整，请补充后重新提交", "user001", variables);
+  ```
 
 #### 2.2 任务撤回与跳转类
 
 ##### `Integer revoke(String historyTaskId, String processInstanceId) throws Exception`
-- **功能**：撤销任务（基于历史任务 ID 撤回已完成的任务）
-- **参数**：`historyTaskId` - 历史任务 ID, `processInstanceId` - 流程实例 ID
-- **返回值**：`Integer` - 撤销结果
-  | 返回值 | 含义 |
-  |--------|------|
-  | 0 | 撤销成功 |
-  | 1 | 流程已结束 |
-  | 2 | 下一结点已经通过 |
-- **核心算法**：通过 `managementService.executeCommand(new RevokeTaskCmd(...))` 执行撤销命令
+- **功能**：撤销任务（基于历史任务 ID 撤回已完成的任务，恢复至该历史任务节点）
+- **事务类型**：`@Transactional`（源码 `ProcessService.java:667`）
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 | 取值范围 |
+  |--------|------|----------|----------|----------|
+  | historyTaskId | String | 历史任务 ID | 非空 | ACT_HI_TASKINST.ID_ 值，必须为已完成任务 |
+  | processInstanceId | String | 流程实例 ID | 非空 | ACT_RU_EXECUTION.PROC_INST_ID_ 值 |
+- **返回值**：`Integer` - 撤销结果（返回值源自 `RevokeTaskCmd.execute`，源码 `RevokeTaskCmd.java:68`）
+  | 返回值 | 含义 | 触发条件 |
+  |--------|------|----------|
+  | 0 | 撤销成功 | 流程实例存在且下一节点未通过 |
+  | 1 | 流程已结束 | `processInstance == null`（流程已完结） |
+  | 2 | 下一结点已经通过 | 当前任务 `deleteReason == "completed"` |
+- **核心算法**（源码 `ProcessService.java:668-672`）：
+  1. 构造 `RevokeTaskCmd(historyTaskId, processInstanceId, runtimeService, workflowService, historyService)`
+  2. 调用 `processEngine.getManagementService().executeCommand(cmd)` 执行命令
+- **RevokeTaskCmd 内部执行流程**（源码 `RevokeTaskCmd.java:74-121`）：
+  1. 查询历史任务实体 `HistoricTaskInstanceEntity`
+  2. 通过 `getHistoricActivityInstanceEntity` 查询历史活动节点（使用 JdbcTemplate 直接查询 ACT_HI_ACTINST）
+  3. 查询流程实例 `processInstance`：
+     - 为 null → 返回 1（流程已结束）
+     - 不为 null → 获取当前任务列表 `currentTasks`
+  4. 遍历当前任务，检查 `deleteReason`：
+     - 若为 "completed" → 返回 2（下一节点已通过）
+  5. 删除所有活动中的任务（`deleteActiveTasks`）
+  6. 执行 `DeleteActiveTaskCmd` 删除当前任务
+  7. 删除历史活动记录（`deleteHistoryActivities`）
+  8. 恢复历史任务（`processHistoryTask`）：重置 endTime/duration，重建 TaskEntity，将流程指向任务对应节点
+- **边界条件**：
+  - `currentTasks` 为空但 `processInstance != null`：for 循环不执行，直接返回 0
+  - 历史任务不存在：`findHistoricTaskInstanceById` 返回 null，后续 `historicTaskInstanceEntity` 操作可能 NPE
+  - **JdbcTemplate 直接操作**：`RevokeTaskCmd` 通过 `SpringContext.getBean("dataSource")` 获取 `RoutingDataSource`，绕过 Activiti 上下文直接执行 SQL
 
 ##### `Object withdrawTask(String instanceId, String userId)`
 - **功能**：撤回任务（撤回当前用户已办理的下一个任务，回到当前用户）
@@ -112,11 +175,35 @@
 
 ##### `void moveTo(String currentTaskId, String targetTaskDefinitionKey) throws Exception`
 - **功能**：跳转（包括回退和向前）至指定活动节点
-- **参数**：`currentTaskId` - 当前任务节点 ID, `targetTaskDefinitionKey` - 目标任务节点定义键
+- **事务类型**：调用私有 `moveTo(TaskEntity, ActivityImpl)`（该方法标注 `@Transactional`，但**注意**：私有方法的 `@Transactional` 不被 Spring AOP 代理拦截，事务可能不生效）
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 | 取值范围 |
+  |--------|------|----------|----------|----------|
+  | currentTaskId | String | 当前任务 ID | 非空 | ACT_RU_TASK.ID_ 值 |
+  | targetTaskDefinitionKey | String | 目标节点定义键 | 非空 | BPMN 中 userTask 的 id 属性，必须存在于流程定义中 |
+- **核心算法**（源码 `ProcessService.java:911-914`）：
+  1. 通过 `taskService.createTaskQuery().taskId(currentTaskId).singleResult()` 查询 TaskEntity
+  2. 调用 `moveTo(TaskEntity, targetTaskDefinitionKey)` 重载方法
+- **边界条件**：
+  - `currentTaskId` 不存在：taskEntity 为 null，后续操作 NPE
+  - `targetTaskDefinitionKey` 在 BPMN 中不存在：`findActivity` 返回 null，`moveTo(TaskEntity, ActivityImpl)` NPE
 
 ##### `void moveTo(TaskEntity currentTaskEntity, String targetTaskDefinitionKey) throws Exception`
 - **功能**：跳转（包括回退和向前）至指定活动节点（重载方法，传入 TaskEntity）
-- **参数**：`currentTaskEntity` - 当前任务实体, `targetTaskDefinitionKey` - 目标任务节点定义键
+- **事务类型**：同上（调用私有 `moveTo`）
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 |
+  |--------|------|----------|----------|
+  | currentTaskEntity | TaskEntity | 当前任务实体 | 非空 |
+  | targetTaskDefinitionKey | String | 目标节点定义键 | 非空，必须存在于 BPMN 流程定义 |
+- **核心算法**（源码 `ProcessService.java:920-926`）：
+  1. 通过 `((RepositoryServiceImpl) repositoryService).getDeployedProcessDefinition()` 获取 `ProcessDefinitionEntity`
+  2. 调用 `processDefinitionEntity.findActivity(targetTaskDefinitionKey)` 获取 `ActivityImpl`
+  3. 调用私有 `moveTo(currentTaskEntity, activity)`
+- **私有 moveTo 实现**（源码 `ProcessService.java:928-934`）：
+  - 构造 `DeleteActiveTaskCmd(currentTaskEntity, "jump", true)` 删除当前活动任务
+  - 构造 `StartActivityCmd(executionId, activity)` 启动目标节点
+  - 通过 `managementService.executeCommand` 分别执行两个 Command
 
 ##### `Result canWithdraw(String processInstanceId, String userId)`
 - **功能**：判断流程能否撤回
@@ -224,7 +311,7 @@
 - 接口：`IActUserTaskService`
 - 实现类：`ActUserTaskService`
 - 依赖：`ActUserTaskMapper`
-- 说明：用于访问 `dp_act_unify_task` 统一任务分配配置表
+- 说明：用于访问统一任务分配配置表。⚠️ **表名差异**：源码 `ActUserTaskMapper.xml` 使用 `t_act_user_task`，数据库实际表名为 `dp_act_unify_task`（详见 [unify-task-table.md](../03-database/unify-task-table.md)）
 
 ### 方法列表
 
@@ -263,17 +350,23 @@
 - 接口：`IVacationService`（`com.dp.plat.activiti.service.IVacationService`）
 - 实现类：`VacationService`（`@Service("vacationService")`）
 - 继承关系：
-  - 接口：`extends IAbstractBaseService<Vacation>`
+  - 接口：`extends IAbstractBaseService<Vacation>`（**注意：继承自 core 模块的 `com.dp.plat.core.service.IAbstractBaseService`**）
   - 实现类：`extends AbstractBaseService<VacationMapper, Vacation> implements IVacationService`
 - 依赖：`VacationMapper`（通过基类注入）
 - **重要说明**：接口和实现类均为空，仅继承基类 `IAbstractBaseService<Vacation>` 提供的通用 CRUD 方法，**未定义任何业务方法**
 
+> ⚠️ **跨模块基类注意**：PMS-activiti 的 `IVacationService` 继承的是 **core 模块**的 `com.dp.plat.core.service.IAbstractBaseService`（共 11 个方法），**非** PMS-ext-d365 模块的 `com.dp.plat.pms.extend.d365.service.IAbstractBaseService`（仅 8 个方法）。两者接口名相同但全限定名不同、方法集不同，详见 [跨模块冲突检测](#跨模块基类对比)。
+
 ### 方法列表
 
-接口未定义任何自定义方法。可用方法均来自基类 `IAbstractBaseService<Vacation>`，包括：
-- 通用增删改查方法（具体方法签名见 `com.dp.plat.core.service.IAbstractBaseService`）
+接口未定义任何自定义方法。可用方法均来自 core 模块的 `IAbstractBaseService<Vacation>`（共 11 个方法），包括：
+- 通用增删改查方法（8 个）：`deleteByPrimaryKey`、`insert`、`insertSelective`、`selectByPrimaryKey`、`updateByPrimaryKey`、`updateByPrimaryKeySelective`、`countBySelective`、`selectBySelective`
+- **分页查询方法（3 个，core 独有，ext-d365 无此方法）**：
+  - `long countBySelectivePageable(PageParam<?> pageParam)` — 分页计数
+  - `<V> List<V> selectBySelectivePageable(PageParam<?> pageParam)` — 分页查询
+  - （具体方法签名见 `com.dp.plat.core.service.IAbstractBaseService`）
 
-> 注：请假业务逻辑（如启动请假流程）由 `ProcessService` 等其他服务通过 `Vacation` 实体和 `VacationMapper` 实现，不在本接口定义。
+> 注：请假业务逻辑（如启动请假流程）由 `ProcessService` 等其他服务通过 `Vacation` 实体和 `VacationMapper` 实现，不在本接口定义。`ProcessService.listRuningVacation` 实际调用了 `vacationService.countBySelectivePageable` 和 `vacationService.selectBySelectivePageable` 分页方法。
 
 ---
 
@@ -318,16 +411,42 @@
 - **核心算法**：通过任务 ID 查询流程实例，再查询启动人
 
 #### `List<ActivityVo> getActivityList(String processInstanceId)`
-- **功能**：获取单个流程实例的活动列表
-- **参数**：`processInstanceId` - 流程实例 ID
-- **返回值**：`List<ActivityVo>` - 活动列表
-- **核心算法**：通过原生 SQL 查询 `ACT_HI_ACTINST` 历史活动表
+- **功能**：获取单个流程实例的活动列表（含已执行节点、当前节点、下一步预测节点）
+- **事务类型**：无事务（只读）
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 | 取值范围 |
+  |--------|------|----------|----------|----------|
+  | processInstanceId | String | 流程实例 ID | 非空 | ACT_RU_EXECUTION.PROC_INST_ID_ 值 |
+- **返回值**：`List<ActivityVo>` - 活动列表，按时间升序排列
+- **核心算法**（源码 `RuntimePageService.java:89-220`）：
+  1. **原生 SQL 查询**：通过 `createNativeHistoricActivityInstanceQuery` 查询 `ACT_HI_ACTINST`，**LEFT JOIN `act_hi_taskinst`** 关联任务表（条件：`ACT_ID_ = TASK_DEF_KEY_` 且 `PROC_INST_ID_` 且 `EXECUTION_ID_` 且 `RES.ID_ + 1 = TSK.ID_`）
+     - FIXME 注释：目标承诺驳回时会数据重复，`RES.ID_ + 1 = TSK.ID_` 条件为临时方案
+  2. **过滤节点类型**：仅保留 `userTask` 和 `startEvent` 类型（跳过网关、结束事件等）
+  3. **填充审批人名称**：
+     - startEvent：使用 `startUserId` 查询用户名
+     - userTask：已签收用 `assignee` 查询；未签收用 `getCandidateUserNames` 解析候选组/候选人
+  4. **设置节点状态**：`endTime != null` → `STATE_DONE`；否则 → `STATE_DOING`；若 approved 为 `STATE_TERMINATE` → `STATE_TERMINATE`
+  5. **获取审批结果**：从 Local 变量读取 `isPass`/`APPROVE_RESULT`，从评论读取 `APPROVE_SUGGESTION`
+  6. **预测下一步节点**：调用 `findNextActivity` 递归遍历出边，根据条件表达式判断路径
+- **边界条件**：
+  - `processInstanceId` 不存在：historicActivityInstanceList 为空，返回空列表
+  - **流程已结束**：processInstance 为 null，从 historicProcessInstance 获取 startUserId
+  - **候选人解析失败**：getCandidateUserNames 内部 catch 异常返回"待定"
 
 #### `List<ActivityVo> getActivityList(Collection<String> processInstanceIdSet)`
 - **功能**：批量获取多个流程实例的活动列表
-- **参数**：`processInstanceIdSet` - 流程实例 ID 集合（`Collection<String>`）
-- **返回值**：`List<ActivityVo>` - 活动列表
-- **核心算法**：通过原生 SQL 查询 `ACT_HI_ACTINST` 历史活动表（IN 条件查询）
+- **事务类型**：无事务（只读）
+- **参数**：
+  | 参数名 | 类型 | 业务含义 | 校验规则 |
+  |--------|------|----------|----------|
+  | processInstanceIdSet | Collection<String> | 流程实例 ID 集合 | 非空集合 |
+- **返回值**：`List<ActivityVo>` - 活动列表（合并所有实例的活动）
+- **核心算法**（源码 `RuntimePageService.java:79-86`）：
+  - 遍历集合，对每个 processInstanceId 调用 `getActivityList(String)` 单参数版本
+  - 将所有结果合并到一个列表返回
+- **边界条件**：
+  - 空集合：返回空列表
+  - 集合中某个 ID 不存在：不影响其他 ID 的查询结果
 
 ---
 

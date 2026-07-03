@@ -3,6 +3,8 @@
 > 本文档描述 PMS-activiti 模块的安全实践，涵盖流程权限控制、数据安全、输入校验、审计日志等方面。
 > 数据来源：`d:\常规软件\QoderCode\workspace\PMS\PMS-activiti\src\main\java\com\dp\plat\activiti\` 源码。
 
+> ⚠️ **重要声明**（2026-07-01 审查）：本文档中的 `CustomRuntimeException` 用法为**教学化示例**，PMS-activiti 源码中**不使用** `CustomRuntimeException`（该类存在于 core 模块但 PMS-activiti 未引用）。源码实际异常处理：Controller 层使用 try-catch + `ExceptionHandler.insertException(e)` 捕获 Activiti 原生异常。PMS-activiti 自定义异常类为 `CustomActivitiException`（继承 `ActivitiException`），仅在 `WithdrawTaskCmd` 中使用。本文档中的安全实践示例仅作为设计参考，不代表源码实际实现。
+
 ---
 
 ## 1. 安全架构概览
