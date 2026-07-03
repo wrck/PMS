@@ -44,7 +44,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProbTasks, updateProbTask } from '@/api/prob'
+import { getProbTasks, updateProbTask, weeklyUpload } from '@/api/prob'
 import { ElMessage, ElMessageBox } from 'element-plus'
 const route = useRoute()
 const probId = route.query.probId
@@ -60,6 +60,11 @@ const handleUpdate = (row) => {
     ElMessage.success('更新成功'); fetchData()
   }).catch(() => {})
 }
-const handleUploadWeekly = (row) => { ElMessage.info('上传周报功能开发中') }
+const handleUploadWeekly = (row) => {
+  ElMessageBox.prompt('请输入周报内容', '上传周报', { inputType: 'textarea', confirmButtonText: '上传' }).then(async ({ value }) => {
+    await weeklyUpload({ probId: row.probId, taskId: row.id, content: value })
+    ElMessage.success('上传成功'); fetchData()
+  }).catch(() => {})
+}
 onMounted(fetchData)
 </script>

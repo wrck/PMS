@@ -115,8 +115,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMyTasks, getDeployments, deleteDeployment, getHistoryTasks, getDelegates, addDelegate, updateDelegate, deleteDelegate as apiDeleteDelegate } from '@/api/workflow'
 import { ElMessage, ElMessageBox } from 'element-plus'
+const router = useRouter()
 const activeTab = ref('todo')
 const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('pms_token')}` }))
 
@@ -147,8 +149,8 @@ const fetchDeploy = async () => { deployLoading.value = true; try { const r = aw
 const fetchHistory = async () => { historyLoading.value = true; try { const r = await getHistoryTasks(); historyList.value = r.data || [] } finally { historyLoading.value = false } }
 const fetchDelegate = async () => { delegateLoading.value = true; try { const r = await getDelegates(); delegateList.value = r.data || [] } finally { delegateLoading.value = false } }
 
-const handleTask = (row) => { ElMessage.info('任务办理功能开发中') }
-const viewProcess = (row) => { ElMessage.info('查看流程功能开发中') }
+const handleTask = (row) => { router.push(`/workflow/task/${row.taskId || row.processInstanceId}`) }
+const viewProcess = (row) => { window.open(`/api/workflow/instance/${row.processInstanceId}/image`) }
 const viewImage = (row) => { window.open(`/api/workflow/deploy/${row.deploymentId}/image`) }
 const deleteDeploy = (row) => { ElMessageBox.confirm('确认删除该流程部署？', '提示', { type: 'warning' }).then(async () => { await deleteDeployment(row.deploymentId); ElMessage.success('删除成功'); fetchDeploy() }).catch(() => {}) }
 

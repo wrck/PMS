@@ -54,8 +54,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { listClosedLoops } from '@/api/closedloop'
-import { ElMessage } from 'element-plus'
+import { listClosedLoops, approveClosedLoop } from '@/api/closedloop'
+import { ElMessage, ElMessageBox } from 'element-plus'
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
@@ -64,6 +64,22 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('zh-CN') : ''
 const fetchData = async () => { loading.value = true; try { const r = await listClosedLoops(queryForm); tableData.value = r.data?.records || []; total.value = r.data?.total || 0 } finally { loading.value = false } }
 const handleQuery = () => { queryForm.pageNum = 1; fetchData() }
 const resetQuery = () => { Object.assign(queryForm, { projectName: '', applyState: '', currentStep: '' }); handleQuery() }
-const handleApprove = (row) => { ElMessage.info('审批功能开发中') }
+const handleApprove = (row) => {
+  ElMessageBox.prompt('请输入审批意见', '闭环审批', {
+    inputType: 'textarea',
+    confirmButtonText: '同意',
+    cancelButtonText: '驳回',
+    distinguishCancelAndClose: true
+  }).then(async ({ value }) => {
+    await approveClosedLoop(row.id, value, true, row.currentStep)
+    ElMessage.success('审批通过'); fetchData()
+  }).catch(async (action) => {
+    if (action === 'cancel') {
+      const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回', { inputType: 'textarea' })
+      await approveClosedLoop(row.id, value, false, row.currentStep)
+      ElMessage.success('已驳回'); fetchData()
+    }
+  })
+}
 onMounted(fetchData)
 </script>

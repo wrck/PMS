@@ -32,12 +32,20 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getMaintenanceDailyReport } from '@/api/maintenance'
 import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const queryForm = reactive({ pageNum: 1, pageSize: 20, projectName: '', maintenancePerson: '', reportDate: '' })
 const fetchData = async () => { loading.value = true; try { const r = await getMaintenanceDailyReport(queryForm); tableData.value = r.data?.records || []; total.value = r.data?.total || 0 } finally { loading.value = false } }
 const handleQuery = () => { queryForm.pageNum = 1; fetchData() }
-const handleExport = () => { ElMessage.info('导出功能开发中') }
+const handleExport = async () => {
+  try {
+    const r = await getMaintenanceDailyReport({ ...queryForm, export: true })
+    const url = URL.createObjectURL(r.data)
+    const a = document.createElement('a'); a.href = url; a.download = '维保日报.xlsx'; a.click(); URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (e) { ElMessage.error('导出失败') }
+}
 onMounted(fetchData)
 </script>

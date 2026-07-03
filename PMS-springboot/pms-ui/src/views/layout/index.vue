@@ -114,6 +114,9 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99" style="margin-right:16px;cursor:pointer" @click="$router.push('/notification')">
+            <el-icon :size="20"><Bell /></el-icon>
+          </el-badge>
           <el-dropdown @command="handleCommand">
             <span class="user-info">
               <el-icon><User /></el-icon>
@@ -137,20 +140,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { getUnreadCount } from '@/api/system'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const isCollapse = ref(false)
+const unreadCount = ref(0)
+let unreadTimer = null
+
+const fetchUnreadCount = async () => {
+  try { const r = await getUnreadCount(); unreadCount.value = r.data || 0 } catch (e) {}
+}
 
 onMounted(async () => {
-  try {
-    await userStore.fetchUserInfo()
-  } catch (e) { /* handled */ }
+  try { await userStore.fetchUserInfo() } catch (e) { /* handled */ }
+  fetchUnreadCount()
+  unreadTimer = setInterval(fetchUnreadCount, 60000)
 })
+
+onUnmounted(() => { if (unreadTimer) clearInterval(unreadTimer) })
 
 const handleCommand = async (cmd) => {
   if (cmd === 'logout') {
