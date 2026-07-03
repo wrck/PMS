@@ -3,6 +3,7 @@ package com.dp.plat.admin;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Spring Boot application entry point for the network equipment PMS.
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication(scanBasePackages = "com.dp.plat")
 @MapperScan("com.dp.plat.**.mapper")
+@EnableScheduling
 public class PmsApplication {
 
     public static void main(String[] args) {

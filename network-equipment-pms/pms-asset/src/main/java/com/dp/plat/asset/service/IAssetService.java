@@ -41,4 +41,13 @@ public interface IAssetService extends IService<Asset> {
      * Return all assets currently allocated to a project. Used by final acceptance.
      */
     List<Asset> returnByProject(Long projectId);
+
+    /**
+     * Recycle all assets currently allocated to a project. Each asset is returned
+     * to the warehouse (status IN_STOCK, project cleared, RETURN lifecycle log).
+     *
+     * @param projectId project id whose bound assets should be recycled
+     * @return number of assets recycled
+     */
+    int recycleByProject(Long projectId);
 }

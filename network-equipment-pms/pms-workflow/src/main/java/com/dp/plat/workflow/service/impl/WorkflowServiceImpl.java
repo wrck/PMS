@@ -57,6 +57,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     private static final String FONT_NAME = "sans-serif";
     private static final double DEFAULT_SCALE = 1.0;
 
+    /** Flowable process variable that globally enables skipExpression evaluation. */
+    private static final String VAR_SKIP_EXPRESSION_ENABLED = "_FLOWABLE_SKIP_EXPRESSION_ENABLED";
+    /** Process variable holding the initiator (start user) id, used by skipExpression. */
+    private static final String VAR_INITIATOR = "initiator";
+
     private final RepositoryService repositoryService;
     private final RuntimeService runtimeService;
     private final TaskService taskService;
@@ -128,10 +133,17 @@ public class WorkflowServiceImpl implements WorkflowService {
         String currentUserId = currentUserId();
         Authentication.setAuthenticatedUserId(currentUserId);
 
+        Map<String, Object> variables = new HashMap<>();
+        if (request.getVariables() != null) {
+            variables.putAll(request.getVariables());
+        }
+        variables.put(VAR_SKIP_EXPRESSION_ENABLED, Boolean.TRUE);
+        variables.put(VAR_INITIATOR, currentUserId);
+
         ProcessInstance instance = runtimeService.createProcessInstanceBuilder()
                 .processDefinitionKey(request.getProcessDefinitionKey())
                 .businessKey(request.getBusinessKey())
-                .variables(request.getVariables())
+                .variables(variables)
                 .start();
 
         return Result.ok(toProcessInstanceDTO(instance, null));

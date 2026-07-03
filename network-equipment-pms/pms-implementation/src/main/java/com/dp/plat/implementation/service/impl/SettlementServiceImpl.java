@@ -4,12 +4,22 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.implementation.entity.Agent;
 import com.dp.plat.implementation.entity.Settlement;
 import com.dp.plat.implementation.entity.SettlementDetail;
+import com.dp.plat.implementation.mapper.AgentMapper;
 import com.dp.plat.implementation.mapper.SettlementDetailMapper;
 import com.dp.plat.implementation.mapper.SettlementMapper;
 import com.dp.plat.implementation.service.ISettlementService;
+import com.dp.plat.integration.model.fp.FpResponse;
+import com.dp.plat.integration.model.fp.SettlementPushDetail;
+import com.dp.plat.integration.model.fp.SettlementPushRequest;
+import com.dp.plat.integration.service.FpIntegrationService;
+import com.dp.plat.workflow.dto.ProcessInstanceDTO;
+import com.dp.plat.workflow.dto.StartProcessRequest;
+import com.dp.plat.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +28,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -39,7 +52,12 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
     private static final DateTimeFormatter NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final BigDecimal DEFAULT_TAX_RATE = new BigDecimal("13.00");
 
+    private static final String PROCESS_KEY_SETTLEMENT_APPROVAL = "settlementApproval";
+
     private final SettlementDetailMapper settlementDetailMapper;
+    private final AgentMapper agentMapper;
+    private final WorkflowService workflowService;
+    private final FpIntegrationService fpIntegrationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -60,6 +78,8 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         }
 
         BigDecimal totalAmount = settlement.getTotalAmount() == null ? BigDecimal.ZERO : settlement.getTotalAmount();
+        totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
+        settlement.setTotalAmount(totalAmount);
         BigDecimal taxRate = settlement.getTaxRate() == null ? DEFAULT_TAX_RATE : settlement.getTaxRate();
         BigDecimal taxAmount = totalAmount.multiply(taxRate)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
@@ -82,6 +102,21 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
                 settlementDetailMapper.insert(detail);
             }
         }
+
+        // Start the settlement approval workflow and link the process instance.
+        StartProcessRequest req = new StartProcessRequest();
+        req.setProcessDefinitionKey(PROCESS_KEY_SETTLEMENT_APPROVAL);
+        req.setBusinessKey(settlement.getSettlementNo());
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("applicantId", SecurityUtils.getCurrentUserId());
+        variables.put("settlementAmount", settlement.getTotalAmount());
+        req.setVariables(variables);
+        Result<ProcessInstanceDTO> resp = workflowService.startProcess(req);
+        if (resp == null || !resp.isSuccess() || resp.getData() == null) {
+            throw new BusinessException("结算审批流程启动失败");
+        }
+        settlement.setProcessInstanceId(resp.getData().getId());
+        this.updateById(settlement);
         return settlement;
     }
 
@@ -99,8 +134,7 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         settlement.setApproveTime(LocalDateTime.now());
         this.updateById(settlement);
 
-        // TODO: push the approved settlement to the FP financial system.
-        // pushToFp(settlementId);
+        pushSettlementToFp(settlement);
     }
 
     @Override
@@ -118,23 +152,47 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         this.updateById(settlement);
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void pushToFp(Long settlementId) {
-        Settlement settlement = loadOrThrow(settlementId);
-        // TODO: call the FP integration adapter to push the settlement data.
-        // FpAdapter.push(settlement, settlementDetailMapper.selectList(...));
+    /**
+     * Build the FP push request from the settlement and its line items and
+     * invoke {@link FpIntegrationService#pushSettlement}. Records the push
+     * outcome (success/failed) on the settlement. A failed push does not roll
+     * back the approval itself so the integration log can be retried later.
+     */
+    private void pushSettlementToFp(Settlement settlement) {
+        List<SettlementDetail> details = settlementDetailMapper.selectList(
+                new LambdaQueryWrapper<SettlementDetail>()
+                        .eq(SettlementDetail::getSettlementId, settlement.getId()));
+        Agent agent = settlement.getAgentId() == null
+                ? null : agentMapper.selectById(settlement.getAgentId());
+        List<SettlementPushDetail> pushDetails = details == null
+                ? Collections.emptyList()
+                : details.stream().map(d -> SettlementPushDetail.builder()
+                        .itemName(d.getItemName())
+                        .workQuantity(d.getWorkQuantity())
+                        .unit(d.getUnit())
+                        .unitPrice(d.getUnitPrice())
+                        .amount(d.getAmount())
+                        .build()).toList();
+        SettlementPushRequest pushReq = SettlementPushRequest.builder()
+                .settlementNo(settlement.getSettlementNo())
+                .agentName(agent == null ? null : agent.getAgentName())
+                .totalAmount(settlement.getTotalAmount())
+                .taxAmount(settlement.getTaxAmount())
+                .totalWithTax(settlement.getTotalWithTax())
+                .details(pushDetails)
+                .build();
         try {
-            // Placeholder: FP push not yet implemented.
-            settlement.setPushStatus(PUSH_SUCCESS);
-            settlement.setPushTime(LocalDateTime.now());
-            settlement.setPushResponse("FP push not implemented yet");
-            settlement.setStatus(STATUS_PUSHED);
-        } catch (Exception e) {
+            FpResponse<String> pushResp = fpIntegrationService.pushSettlement(pushReq);
+            boolean success = pushResp != null && pushResp.isSuccess();
+            settlement.setPushStatus(success ? PUSH_SUCCESS : PUSH_FAILED);
+            settlement.setPushResponse(pushResp == null
+                    ? "FP push returned null response"
+                    : pushResp.getMessage());
+        } catch (BusinessException e) {
             settlement.setPushStatus(PUSH_FAILED);
-            settlement.setPushTime(LocalDateTime.now());
             settlement.setPushResponse(e.getMessage());
         }
+        settlement.setPushTime(LocalDateTime.now());
         this.updateById(settlement);
     }
 

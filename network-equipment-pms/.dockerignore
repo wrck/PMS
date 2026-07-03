@@ -1,0 +1,6 @@
+**/node_modules
+**/target
+**/.git
+**/*.log
+**/dist
+pms-frontend/node_modules

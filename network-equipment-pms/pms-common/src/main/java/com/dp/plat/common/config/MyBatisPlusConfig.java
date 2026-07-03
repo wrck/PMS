@@ -2,10 +2,12 @@ package com.dp.plat.common.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.dp.plat.common.util.SecurityUtils;
 import org.apache.ibatis.reflection.MetaObject;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,16 +15,22 @@ import java.time.LocalDateTime;
 
 /**
  * MyBatis-Plus configuration: pagination interceptor, optimistic lock interceptor,
- * and {@link MetaObjectHandler} for auto-filling audit fields.
+ * optional custom inner interceptors (e.g. data permission), and a
+ * {@link MetaObjectHandler} for auto-filling audit fields.
  */
 @Configuration
 public class MyBatisPlusConfig {
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(
+            ObjectProvider<InnerInterceptor> innerInterceptors) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        // Add any custom InnerInterceptor beans discovered in the context
+        // (e.g. DataPermissionInterceptor from pms-system). Ordering: data permission
+        // is applied last so it operates on the original SQL before pagination wraps it.
+        innerInterceptors.orderedStream().forEach(interceptor::addInnerInterceptor);
         return interceptor;
     }
 

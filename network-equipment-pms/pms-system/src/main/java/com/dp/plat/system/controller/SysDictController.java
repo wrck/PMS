@@ -3,12 +3,14 @@ package com.dp.plat.system.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysDict;
 import com.dp.plat.system.entity.SysDictItem;
 import com.dp.plat.system.service.ISysDictService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +36,7 @@ public class SysDictController {
 
     @Operation(summary = "Paginated dict query")
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('system:dict:list')")
     public Result<Page<SysDict>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                       @RequestParam(required = false) String dictName) {
@@ -45,24 +48,31 @@ public class SysDictController {
 
     @Operation(summary = "Get dict by id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('system:dict:list')")
     public Result<SysDict> get(@PathVariable Long id) {
         return Result.ok(sysDictService.getById(id));
     }
 
     @Operation(summary = "Create dict")
     @PostMapping
+    @PreAuthorize("hasAuthority('system:dict:add')")
+    @OperLog(title = "字典管理", businessType = 1)
     public Result<Boolean> add(@RequestBody SysDict dict) {
         return Result.ok(sysDictService.save(dict));
     }
 
     @Operation(summary = "Update dict")
     @PutMapping
+    @PreAuthorize("hasAuthority('system:dict:edit')")
+    @OperLog(title = "字典管理", businessType = 2)
     public Result<Boolean> update(@RequestBody SysDict dict) {
         return Result.ok(sysDictService.updateById(dict));
     }
 
     @Operation(summary = "Delete dict")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('system:dict:remove')")
+    @OperLog(title = "字典管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysDictService.removeById(id));
     }

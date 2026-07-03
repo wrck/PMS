@@ -4,13 +4,47 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              targetNamespace="http://flowable.org/bpmn">
   <process id="settlementApproval" name="结算审批流程" isExecutable="true">
-    <documentation>Settlement approval workflow: PM review then finance review.</documentation>
+    <documentation>Settlement approval workflow: PM review then finance review.
+      SkipExpression auto-skips a task when its assignee equals the process initiator.
+      Each review task has an exclusive gateway: approved continues, rejected goes to a
+      terminate end event. OA task listener mirrors task create/complete to 致远 OA.</documentation>
     <startEvent id="startEvent" name="开始"/>
-    <userTask id="pmReview" name="PM审核" flowable:assignee="${pmUserId}"/>
-    <userTask id="financeReview" name="财务审核" flowable:assignee="${financeUserId}"/>
+    <userTask id="pmReview" name="PM审核"
+              flowable:assignee="${pmUserId}"
+              flowable:skipExpression="${assignee == initiator}">
+      <extensionElements>
+        <flowable:taskListener event="create" delegateExpression="${oaTaskListener}"/>
+        <flowable:taskListener event="complete" delegateExpression="${oaTaskListener}"/>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="pmDecisionGateway" name="PM审核决定"/>
+    <userTask id="financeReview" name="财务审核"
+              flowable:assignee="${financeUserId}"
+              flowable:skipExpression="${assignee == initiator}">
+      <extensionElements>
+        <flowable:taskListener event="create" delegateExpression="${oaTaskListener}"/>
+        <flowable:taskListener event="complete" delegateExpression="${oaTaskListener}"/>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="financeDecisionGateway" name="财务审核决定"/>
     <endEvent id="endEvent" name="结束"/>
+    <endEvent id="rejectedEnd" name="驳回终止">
+      <terminateEventDefinition/>
+    </endEvent>
     <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="pmReview"/>
-    <sequenceFlow id="flow2" sourceRef="pmReview" targetRef="financeReview"/>
-    <sequenceFlow id="flow3" sourceRef="financeReview" targetRef="endEvent"/>
+    <sequenceFlow id="flow2" sourceRef="pmReview" targetRef="pmDecisionGateway"/>
+    <sequenceFlow id="pmApproveFlow" sourceRef="pmDecisionGateway" targetRef="financeReview">
+      <conditionExpression>${approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="pmRejectFlow" sourceRef="pmDecisionGateway" targetRef="rejectedEnd">
+      <conditionExpression>${!approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="financeReview" targetRef="financeDecisionGateway"/>
+    <sequenceFlow id="financeApproveFlow" sourceRef="financeDecisionGateway" targetRef="endEvent">
+      <conditionExpression>${approved}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="financeRejectFlow" sourceRef="financeDecisionGateway" targetRef="rejectedEnd">
+      <conditionExpression>${!approved}</conditionExpression>
+    </sequenceFlow>
   </process>
 </definitions>

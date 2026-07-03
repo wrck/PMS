@@ -44,3 +44,25 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+d365:
+  base-url: https://d365.example.com/api
+  token-url: https://d365.example.com/oauth2/token
+  client-id: ${D365_CLIENT_ID:dummy}
+  client-secret: ${D365_CLIENT_SECRET:dummy}
+  scope: ${D365_SCOPE:}
+  grant-type: client_credentials
+fp:
+  base-url: https://fp.example.com/api
+  token-url: https://fp.example.com/oauth2/token
+  client-id: ${FP_CLIENT_ID:dummy}
+  client-secret: ${FP_CLIENT_SECRET:dummy}
+integration:
+  retry:
+    interval: 300000  # 5 minutes
+    max-retry: 3
+    backoff-multiplier: 2
+  oa:
+    base-url: ${OA_BASE_URL:https://oa.example.com/api}
+    token-url: ${OA_TOKEN_URL:https://oa.example.com/oauth2/token}
+    client-id: ${OA_CLIENT_ID:dummy}
+    client-secret: ${OA_CLIENT_SECRET:dummy}

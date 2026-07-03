@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * JWT token generation and validation using jjwt 0.12.x.
@@ -39,6 +40,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .issuedAt(now)
@@ -65,6 +67,32 @@ public class JwtTokenProvider {
     public String getUsernameFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.get("username", String.class);
+    }
+
+    /**
+     * Get the JWT id (jti) from the token. Used for token blacklisting on logout.
+     */
+    public String getJtiFromToken(String token) {
+        try {
+            return parseClaims(token).getId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the token expiration timestamp (ms since epoch).
+     */
+    public long getExpirationFromToken(String token) {
+        Date exp = parseClaims(token).getExpiration();
+        return exp != null ? exp.getTime() : 0L;
+    }
+
+    /**
+     * Get the configured token expiration (ms).
+     */
+    public long getExpiration() {
+        return expiration;
     }
 
     /**

@@ -8,16 +8,27 @@ import com.dp.plat.common.result.Result;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IProjectService;
+import com.dp.plat.workflow.dto.CompleteTaskRequest;
+import com.dp.plat.workflow.dto.ProcessInstanceDTO;
+import com.dp.plat.workflow.dto.StartProcessRequest;
+import com.dp.plat.workflow.dto.TaskDTO;
+import com.dp.plat.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link IProjectService}.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> implements IProjectService {
@@ -28,6 +39,17 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private static final String STATUS_APPROVED = "APPROVED";
     /** Default priority. */
     private static final String PRIORITY_NORMAL = "NORMAL";
+
+    /** Workflow process definition key for project approval. */
+    private static final String PROCESS_KEY_PROJECT_APPROVAL = "projectApproval";
+    /** Workflow variable name for the project manager user id. */
+    private static final String VAR_PM_USER_ID = "pmUserId";
+    /** Approval comment for project approval. */
+    private static final String APPROVE_COMMENT = "项目审批通过";
+    /** Page size used when querying todo tasks for a process instance. */
+    private static final int TODO_QUERY_SIZE = 200;
+
+    private final WorkflowService workflowService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -46,10 +68,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         if (project.getProgress() == null) {
             project.setProgress(0);
         }
-        // Generate project code on creation.
-        project.setProjectCode(generateProjectCode());
+        // Project code is generated on approval, not on creation.
         project.setId(null);
         this.save(project);
+        startApprovalWorkflow(project);
         return Result.ok(project);
     }
 
@@ -109,24 +131,26 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             throw new BusinessException("当前项目状态不允许审批");
         }
         project.setStatus(STATUS_APPROVED);
-        // Ensure the project code exists, generate one if missing.
+        // Generate the project code on approval.
         if (!StringUtils.hasText(project.getProjectCode())) {
             project.setProjectCode(generateProjectCode());
         }
-        // TODO: integrate workflow module to start the project approval workflow once pms-workflow is ready.
         this.updateById(project);
+        completeApprovalTask(project, APPROVE_COMMENT);
         return Result.ok(project);
     }
 
     @Override
-    public Result<Page<Project>> dashboard(String status) {
-        // Return projects filtered by status for dashboard display.
-        Page<Project> pageObj = new Page<>(1, 1000);
-        LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<Project>()
+    public Result<Map<String, List<Project>>> dashboard(String status) {
+        // Group all projects by status for dashboard display. When a status filter is
+        // supplied the result still uses the same shape but only contains that group.
+        List<Project> all = this.list(new LambdaQueryWrapper<Project>()
                 .eq(StringUtils.hasText(status), Project::getStatus, status)
-                .orderByDesc(Project::getCreateTime);
-        Page<Project> result = this.page(pageObj, wrapper);
-        return Result.ok(result);
+                .orderByDesc(Project::getCreateTime));
+        Map<String, List<Project>> grouped = all.stream()
+                .filter(p -> StringUtils.hasText(p.getStatus()))
+                .collect(Collectors.groupingBy(Project::getStatus));
+        return Result.ok(grouped);
     }
 
     @Override
@@ -138,5 +162,78 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 .likeRight(Project::getProjectCode, prefix));
         long sequence = count + 1;
         return prefix + String.format("%04d", sequence);
+    }
+
+    /**
+     * Start the project approval workflow for the given project and persist the
+     * returned process instance id.
+     */
+    private void startApprovalWorkflow(Project project) {
+        try {
+            StartProcessRequest req = new StartProcessRequest();
+            req.setProcessDefinitionKey(PROCESS_KEY_PROJECT_APPROVAL);
+            req.setBusinessKey(project.getId().toString());
+            Map<String, Object> variables = new HashMap<>();
+            if (project.getProjectManagerId() != null) {
+                variables.put(VAR_PM_USER_ID, project.getProjectManagerId());
+            }
+            req.setVariables(variables);
+            Result<ProcessInstanceDTO> resp = workflowService.startProcess(req);
+            if (resp != null && resp.isSuccess() && resp.getData() != null) {
+                project.setProcessInstanceId(resp.getData().getId());
+                this.updateById(project);
+            } else {
+                log.warn("项目 {} 启动审批流程未返回实例: {}", project.getId(),
+                        resp == null ? "null" : resp.getMessage());
+            }
+        } catch (Exception e) {
+            // Workflow engine unavailable should not block project creation.
+            log.error("项目 {} 启动审批流程失败: {}", project.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Complete the current approval task for the project's workflow instance.
+     */
+    private void completeApprovalTask(Project project, String comment) {
+        String processInstanceId = project.getProcessInstanceId();
+        if (!StringUtils.hasText(processInstanceId)) {
+            return;
+        }
+        try {
+            String taskId = findCurrentTaskId(processInstanceId);
+            if (!StringUtils.hasText(taskId)) {
+                log.warn("项目 {} 未找到当前待办任务，processInstanceId={}", project.getId(), processInstanceId);
+                return;
+            }
+            CompleteTaskRequest req = new CompleteTaskRequest();
+            req.setTaskId(taskId);
+            req.setComment(comment);
+            workflowService.completeTask(req);
+        } catch (Exception e) {
+            log.error("项目 {} 完成审批任务失败: {}", project.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Find the current user's todo task id for the given process instance.
+     */
+    @SuppressWarnings("unchecked")
+    private String findCurrentTaskId(String processInstanceId) {
+        Result<Map<String, Object>> todoResult = workflowService.getTodoTasks(1, TODO_QUERY_SIZE);
+        if (todoResult == null || !todoResult.isSuccess() || todoResult.getData() == null) {
+            return null;
+        }
+        Object records = todoResult.getData().get("records");
+        if (!(records instanceof List<?> list)) {
+            return null;
+        }
+        for (Object item : list) {
+            if (item instanceof TaskDTO task
+                    && processInstanceId.equals(task.getProcessInstanceId())) {
+                return task.getId();
+            }
+        }
+        return null;
     }
 }

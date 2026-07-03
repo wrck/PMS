@@ -75,4 +75,7 @@ public class Project extends BaseEntity {
 
     /** Priority (HIGH, NORMAL, LOW). */
     private String priority;
+
+    /** Workflow process instance id for the project approval flow. */
+    private String processInstanceId;
 }

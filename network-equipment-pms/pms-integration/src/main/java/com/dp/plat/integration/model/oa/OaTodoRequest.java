@@ -1,0 +1,37 @@
+package com.dp.plat.integration.model.oa;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OA (致远 OA) todo push request payload.
+ *
+ * <p>Used by {@link com.dp.plat.integration.service.OaIntegrationService#pushTodo}
+ * to create a pending todo item in the OA system for a Flowable user task.</p>
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class OaTodoRequest {
+
+    /** Todo title, typically the Flowable task name. */
+    private String title;
+
+    /** Todo content / description. */
+    private String content;
+
+    /** Handler user id in OA (mapped from the Flowable task assignee). */
+    private String handlerUserId;
+
+    /** Flowable process instance id. */
+    private String processInstanceId;
+
+    /** Business key associated with the process instance. */
+    private String businessKey;
+
+    /** URL for the user to open the process detail page. */
+    private String processUrl;
+}

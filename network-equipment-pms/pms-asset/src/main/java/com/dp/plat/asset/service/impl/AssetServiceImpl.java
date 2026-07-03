@@ -150,6 +150,21 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
                 .orderByDesc(Asset::getId));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int recycleByProject(Long projectId) {
+        if (projectId == null) {
+            return 0;
+        }
+        List<Asset> assets = baseMapper.selectList(new LambdaQueryWrapper<Asset>()
+                .eq(Asset::getProjectId, projectId)
+                .eq(Asset::getStatus, STATUS_ALLOCATED));
+        for (Asset asset : assets) {
+            returnAsset(asset.getId());
+        }
+        return assets.size();
+    }
+
     private Asset loadAsset(Long assetId) {
         if (assetId == null) {
             throw new BusinessException("设备 id 不能为空");

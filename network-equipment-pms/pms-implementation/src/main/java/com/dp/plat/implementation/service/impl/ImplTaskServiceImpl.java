@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.mapper.ImplTaskMapper;
 import com.dp.plat.implementation.service.IImplProgressService;
 import com.dp.plat.implementation.service.IImplTaskService;
+import com.dp.plat.implementation.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
     public static final String STATUS_REJECTED = "REJECTED";
 
     private final IImplProgressService implProgressService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -46,6 +49,10 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setProgress(0);
         }
         this.save(task);
+        if (task.getEngineerId() != null) {
+            notificationService.notifyUser(task.getEngineerId(), "派工通知",
+                    "您有新的原厂实施任务：" + task.getTaskName());
+        }
         return task;
     }
 
@@ -58,6 +65,10 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setProgress(0);
         }
         this.save(task);
+        if (task.getAgentId() != null) {
+            notificationService.notifyUser(task.getAgentId(), "委派通知",
+                    "您有新的代理商实施任务：" + task.getTaskName());
+        }
         return task;
     }
 
@@ -128,6 +139,8 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
         }
         task.setStatus(STATUS_CONFIRMED);
         task.setAcceptOpinion(opinion);
+        task.setAcceptUserId(SecurityUtils.getCurrentUserId());
+        task.setAcceptUserName(SecurityUtils.getCurrentUsername());
         task.setAcceptTime(LocalDateTime.now());
         this.updateById(task);
     }
@@ -138,6 +151,8 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
         ImplTask task = loadOrThrow(taskId);
         task.setStatus(STATUS_REJECTED);
         task.setAcceptOpinion(opinion);
+        task.setAcceptUserId(SecurityUtils.getCurrentUserId());
+        task.setAcceptUserName(SecurityUtils.getCurrentUsername());
         task.setAcceptTime(LocalDateTime.now());
         this.updateById(task);
     }

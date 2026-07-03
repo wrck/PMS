@@ -46,4 +46,7 @@ public class AssetTransfer extends BaseEntity {
     private LocalDateTime approveTime;
 
     private String approveOpinion;
+
+    /** Workflow process instance id for the asset transfer approval flow. */
+    private String processInstanceId;
 }

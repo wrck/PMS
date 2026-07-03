@@ -1,5 +1,6 @@
 package com.dp.plat.system.controller;
 
+import com.dp.plat.common.constant.CommonConstants;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.result.ResultCode;
@@ -8,13 +9,16 @@ import com.dp.plat.system.dto.LoginRequest;
 import com.dp.plat.system.dto.LoginResponse;
 import com.dp.plat.system.entity.SysUser;
 import com.dp.plat.system.security.JwtTokenProvider;
+import com.dp.plat.system.security.TokenBlacklistService;
 import com.dp.plat.system.service.ISysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +38,7 @@ public class AuthController {
     private final ISysUserService sysUserService;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Operation(summary = "Login with username/password and return a JWT token")
     @PostMapping("/login")
@@ -55,10 +60,21 @@ public class AuthController {
         return Result.ok(response);
     }
 
-    @Operation(summary = "Logout (clears server-side session; client should discard token)")
+    @Operation(summary = "Logout and blacklist the current JWT token until it expires")
     @PostMapping("/logout")
-    public Result<Void> logout() {
-        // Stateless JWT: nothing to invalidate server-side. Client should discard the token.
+    public Result<Void> logout(HttpServletRequest request) {
+        String bearerToken = request.getHeader(CommonConstants.AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(CommonConstants.TOKEN_PREFIX)) {
+            String token = bearerToken.substring(CommonConstants.TOKEN_PREFIX.length());
+            if (jwtTokenProvider.validateToken(token)) {
+                String jti = jwtTokenProvider.getJtiFromToken(token);
+                long expAt = jwtTokenProvider.getExpirationFromToken(token);
+                long remaining = expAt - System.currentTimeMillis();
+                if (remaining > 0) {
+                    tokenBlacklistService.blacklist(jti, remaining);
+                }
+            }
+        }
         return Result.ok();
     }
 

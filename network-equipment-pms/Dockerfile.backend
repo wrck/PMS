@@ -1,0 +1,27 @@
+# Build stage
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /build
+# Copy pom files first for dependency caching
+COPY pom.xml .
+COPY pms-common/pom.xml pms-common/
+COPY pms-system/pom.xml pms-system/
+COPY pms-project/pom.xml pms-project/
+COPY pms-asset/pom.xml pms-asset/
+COPY pms-implementation/pom.xml pms-implementation/
+COPY pms-workflow/pom.xml pms-workflow/
+COPY pms-integration/pom.xml pms-integration/
+COPY pms-admin/pom.xml pms-admin/
+# Download dependencies
+RUN mvn dependency:go-offline -B || true
+# Copy source
+COPY . .
+# Build
+RUN mvn clean package -DskipTests -q
+
+# Runtime stage
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /build/pms-admin/target/*.jar app.jar
+EXPOSE 8080
+ENV JAVA_OPTS="-Xms256m -Xmx512m -Dspring.profiles.active=prod"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

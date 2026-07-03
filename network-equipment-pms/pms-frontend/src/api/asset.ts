@@ -1,5 +1,4 @@
 import { del, get, post, put } from '@/utils/request'
-import type { PageQuery, PageResult } from './system'
 
 // ===================== Category =====================
 
@@ -14,19 +13,19 @@ export interface AssetCategory {
 }
 
 export function getCategoryTree(): Promise<AssetCategory[]> {
-  return get<AssetCategory[]>('/api/asset/categories/tree')
+  return get<AssetCategory[]>('/api/asset/category/tree')
 }
 
 export function createCategory(data: AssetCategory): Promise<AssetCategory> {
-  return post<AssetCategory>('/api/asset/categories', data)
+  return post<AssetCategory>('/api/asset/category', data)
 }
 
 export function updateCategory(data: AssetCategory): Promise<AssetCategory> {
-  return put<AssetCategory>(`/api/asset/categories/${data.id}`, data)
+  return put<AssetCategory>('/api/asset/category', data)
 }
 
 export function deleteCategory(id: number): Promise<void> {
-  return del<void>(`/api/asset/categories/${id}`)
+  return del<void>(`/api/asset/category/${id}`)
 }
 
 // ===================== Model =====================
@@ -39,99 +38,191 @@ export interface AssetModel {
   name: string
   brand?: string
   spec?: string
+  standardPrice?: number
   unit?: string
+  status?: number
   remark?: string
 }
 
-export function getModelPage(params: PageQuery & { categoryId?: number }): Promise<PageResult<AssetModel>> {
-  return get<PageResult<AssetModel>>('/api/asset/models', params)
+export interface ModelPageQuery {
+  categoryId?: number
+  name?: string
+  page?: number
+  size?: number
+}
+
+export interface ModelPageResult {
+  records: AssetModel[]
+  total: number
+  page: number
+  size: number
+}
+
+export function listModels(params: ModelPageQuery): Promise<ModelPageResult> {
+  return get<ModelPageResult>('/api/asset/model/list', params)
 }
 
 export function createModel(data: AssetModel): Promise<AssetModel> {
-  return post<AssetModel>('/api/asset/models', data)
+  return post<AssetModel>('/api/asset/model', data)
 }
 
 export function updateModel(data: AssetModel): Promise<AssetModel> {
-  return put<AssetModel>(`/api/asset/models/${data.id}`, data)
+  return put<AssetModel>('/api/asset/model', data)
 }
 
 export function deleteModel(id: number): Promise<void> {
-  return del<void>(`/api/asset/models/${id}`)
+  return del<void>(`/api/asset/model/${id}`)
 }
 
 // ===================== Asset =====================
 
+/** Asset status enumeration values */
+export const ASSET_STATUS = {
+  IN_STOCK: 'IN_STOCK',
+  ALLOCATED: 'ALLOCATED',
+  IN_TRANSIT: 'IN_TRANSIT',
+  SCRAPPED: 'SCRAPPED'
+} as const
+
 export interface Asset {
   id?: number
-  sn: string
-  modelId: number
+  serialNo: string
+  name?: string
+  modelId?: number
   modelName?: string
   categoryId?: number
-  projectName?: string
-  location?: string
+  categoryName?: string
   status?: string
+  warehouse?: string
+  location?: string
+  projectId?: number
+  projectName?: string
   inboundDate?: string
   ownerId?: number
   ownerName?: string
   remark?: string
 }
 
-export interface AssetLifecycleRecord {
-  id?: number
-  assetId: number
-  action: string
-  operator?: string
-  operateTime?: string
-  remark?: string
+export interface AssetListQuery {
+  page: number
+  size: number
+  serialNo?: string
+  status?: string
+  projectId?: number
 }
 
-export function getAssetPage(params: PageQuery & { status?: string; categoryId?: number }): Promise<PageResult<Asset>> {
-  return get<PageResult<Asset>>('/api/assets', params)
+export interface AssetPageResult {
+  records: Asset[]
+  total: number
+  page: number
+  size: number
 }
 
 export function inboundAsset(data: Asset): Promise<Asset> {
-  return post<Asset>('/api/assets/inbound', data)
+  return post<Asset>('/api/asset/inbound', data)
 }
 
-export function allocateAsset(id: number, data: { ownerId: number; projectId?: number; remark?: string }): Promise<void> {
-  return post<void>(`/api/assets/${id}/allocate`, data)
+export function allocateAsset(id: number, data: { projectId: number }): Promise<void> {
+  return post<void>(`/api/asset/${id}/allocate`, data)
 }
 
-export function returnAsset(id: number, remark?: string): Promise<void> {
-  return post<void>(`/api/assets/${id}/return`, { remark })
+export function returnAsset(id: number): Promise<void> {
+  return post<void>(`/api/asset/${id}/return`)
+}
+
+export function getAsset(id: number): Promise<Asset> {
+  return get<Asset>(`/api/asset/${id}`)
+}
+
+export function listAssets(params: AssetListQuery): Promise<AssetPageResult> {
+  return get<AssetPageResult>('/api/asset/list', params)
+}
+
+export function updateAsset(data: Asset): Promise<Asset> {
+  return put<Asset>('/api/asset', data)
+}
+
+export function deleteAsset(id: number): Promise<void> {
+  return del<void>(`/api/asset/${id}`)
+}
+
+export interface AssetLifecycleRecord {
+  id?: number
+  assetId: number
+  action: string // INBOUND | ALLOCATE | TRANSFER | RETURN | SCRAP
+  operator?: string
+  operateTime?: string
+  fromProjectId?: number
+  fromProjectName?: string
+  toProjectId?: number
+  toProjectName?: string
+  remark?: string
 }
 
 export function getAssetLifecycle(id: number): Promise<AssetLifecycleRecord[]> {
-  return get<AssetLifecycleRecord[]>(`/api/assets/${id}/lifecycle`)
+  return get<AssetLifecycleRecord[]>(`/api/asset/${id}/lifecycle`)
+}
+
+export function returnAssetsByProject(projectId: number): Promise<void> {
+  return post<void>(`/api/asset/return-by-project/${projectId}`)
 }
 
 // ===================== Transfer =====================
 
+export const TRANSFER_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
 export interface AssetTransfer {
   id?: number
   assetId: number
-  assetSn?: string
-  fromUserId?: number
-  fromUserName?: string
-  toUserId: number
-  toUserName?: string
-  reason?: string
+  assetSerialNo?: string
+  fromProjectId?: number
+  fromProjectName?: string
+  toProjectId?: number
+  toProjectName?: string
+  transferReason?: string
   status?: string
-  applyDate?: string
+  applicantId?: number
+  applicantName?: string
+  applyTime?: string
+  opinion?: string
 }
 
-export function getTransferPage(params: PageQuery): Promise<PageResult<AssetTransfer>> {
-  return get<PageResult<AssetTransfer>>('/api/asset/transfers', params)
+export interface TransferApplyPayload {
+  assetId: number
+  fromProjectId: number
+  toProjectId: number
+  transferReason: string
 }
 
-export function applyTransfer(data: AssetTransfer): Promise<AssetTransfer> {
-  return post<AssetTransfer>('/api/asset/transfers/apply', data)
+export interface TransferListQuery {
+  page: number
+  size: number
+  status?: string
 }
 
-export function approveTransfer(id: number, comment?: string): Promise<void> {
-  return post<void>(`/api/asset/transfers/${id}/approve`, { comment })
+export interface TransferPageResult {
+  records: AssetTransfer[]
+  total: number
+  page: number
+  size: number
 }
 
-export function rejectTransfer(id: number, comment?: string): Promise<void> {
-  return post<void>(`/api/asset/transfers/${id}/reject`, { comment })
+export function applyTransfer(data: TransferApplyPayload): Promise<AssetTransfer> {
+  return post<AssetTransfer>('/api/asset/transfer/apply', data)
+}
+
+export function approveTransfer(id: number, data: { opinion: string }): Promise<void> {
+  return post<void>(`/api/asset/transfer/${id}/approve`, data)
+}
+
+export function rejectTransfer(id: number, data: { opinion: string }): Promise<void> {
+  return post<void>(`/api/asset/transfer/${id}/reject`, data)
+}
+
+export function listTransfers(params: TransferListQuery): Promise<TransferPageResult> {
+  return get<TransferPageResult>('/api/asset/transfer/list', params)
 }

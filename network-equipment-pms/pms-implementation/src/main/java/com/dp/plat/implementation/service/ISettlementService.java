@@ -19,9 +19,8 @@ public interface ISettlementService extends IService<Settlement> {
     Settlement createSettlement(Settlement settlement, List<SettlementDetail> details);
 
     /**
-     * Approve a settlement (status=APPROVED).
-     *
-     * TODO: push settlement to FP financial system after approval.
+     * Approve a settlement (status=APPROVED) and push it to the FP financial
+     * system, recording the push outcome on the settlement.
      */
     void approve(Long settlementId, String opinion);
 
@@ -29,14 +28,6 @@ public interface ISettlementService extends IService<Settlement> {
      * Reject a settlement (status=REJECTED).
      */
     void reject(Long settlementId, String opinion);
-
-    /**
-     * Push an approved settlement to the FP integration adapter and update
-     * push_status.
-     *
-     * TODO: call FP integration adapter.
-     */
-    void pushToFp(Long settlementId);
 
     /**
      * Paginated settlement query with optional filters.

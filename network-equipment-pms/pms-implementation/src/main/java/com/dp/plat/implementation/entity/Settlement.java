@@ -62,4 +62,7 @@ public class Settlement extends BaseEntity {
     private LocalDateTime pushTime;
 
     private String pushResponse;
+
+    /** Workflow process instance id for the settlement approval flow. */
+    private String processInstanceId;
 }

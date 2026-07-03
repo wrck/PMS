@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 3000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+mybatis-plus:
+  mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ${JWT_SECRET:ZGVwdGVjaC1wbXMtc2VjcmV0LWtleS1mb3Itand0LXRva2VuLWdlbmVyYXRpb24tMjAyNA==}
+  expiration: 86400000
+
+d365:
+  base-url: ${D365_BASE_URL:https://d365.example.com/api}
+  token-url: ${D365_TOKEN_URL:https://d365.example.com/oauth2/token}
+  client-id: ${D365_CLIENT_ID:dummy}
+  client-secret: ${D365_CLIENT_SECRET:dummy}
+  scope: ${D365_SCOPE:}
+  grant-type: client_credentials
+
+fp:
+  base-url: ${FP_BASE_URL:https://fp.example.com/api}
+  token-url: ${FP_TOKEN_URL:https://fp.example.com/oauth2/token}
+  client-id: ${FP_CLIENT_ID:dummy}
+  client-secret: ${FP_CLIENT_SECRET:dummy}
+
+integration:
+  retry:
+    interval: 300000
+    max-retry: 3
+    backoff-multiplier: 2
+
+# Disable Swagger UI in production
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.dp.plat: INFO

@@ -1,5 +1,6 @@
 package com.dp.plat.system.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.dp.plat.common.entity.BaseEntity;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * System menu entity.
@@ -39,4 +42,8 @@ public class SysMenu extends BaseEntity {
 
     /** 0=visible, 1=hidden. */
     private String visible;
+
+    /** Transient children for tree construction. Not persisted. */
+    @TableField(exist = false)
+    private List<SysMenu> children;
 }

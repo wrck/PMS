@@ -5,13 +5,16 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.entity.Project;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Service for {@link Project}.
  */
 public interface IProjectService extends IService<Project> {
 
     /**
-     * Create a project with status PENDING and generate the project code.
+     * Create a project with status PENDING and trigger the approval workflow.
      *
      * @param project project to create
      * @return operation result
@@ -54,7 +57,8 @@ public interface IProjectService extends IService<Project> {
     Result deleteProject(Long id);
 
     /**
-     * Approve a project, setting status to APPROVED and ensuring the project code exists.
+     * Approve a project, setting status to APPROVED, generating the project code
+     * and completing the corresponding approval workflow task.
      *
      * @param projectId project id
      * @return operation result
@@ -62,12 +66,12 @@ public interface IProjectService extends IService<Project> {
     Result approveProject(Long projectId);
 
     /**
-     * Get dashboard data: projects grouped/filtered by status.
+     * Get dashboard data: projects grouped by status.
      *
      * @param status status filter (null for all)
-     * @return operation result containing the page
+     * @return operation result containing the status-to-projects map
      */
-    Result<Page<Project>> dashboard(String status);
+    Result<Map<String, List<Project>>> dashboard(String status);
 
     /**
      * Generate the project code in format PMS-YYYY-XXXX.

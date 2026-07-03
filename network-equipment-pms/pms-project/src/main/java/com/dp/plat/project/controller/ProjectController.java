@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Project management controller.
  */
@@ -68,7 +71,7 @@ public class ProjectController {
 
     @Operation(summary = "获取项目仪表盘数据")
     @GetMapping("/dashboard")
-    public Result<?> dashboard(@RequestParam(required = false) String status) {
+    public Result<Map<String, List<Project>>> dashboard(@RequestParam(required = false) String status) {
         return projectService.dashboard(status);
     }
 }

@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,11 +18,15 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Collection;
 
 /**
  * JWT authentication filter that extracts the token from the Authorization header,
  * validates it, and sets the security context with the authenticated user.
+ *
+ * <p>Authorities (role-based permissions) are loaded from the database via
+ * {@link UserAuthorityService} (with a short TTL cache) and the token is
+ * rejected when it has been blacklisted by {@link TokenBlacklistService}.</p>
  */
 @Slf4j
 @Component
@@ -30,6 +34,8 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserAuthorityService userAuthorityService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -37,13 +43,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = resolveToken(request);
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+            String jti = jwtTokenProvider.getJtiFromToken(token);
+            if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
+                log.warn("Blacklisted JWT token rejected, jti={}", jti);
+                filterChain.doFilter(request, response);
+                return;
+            }
             Long userId = jwtTokenProvider.getUserIdFromToken(token);
             String username = jwtTokenProvider.getUsernameFromToken(token);
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userId != null && username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+                Collection<GrantedAuthority> authorities = userAuthorityService.loadAuthorities(username);
                 UserDetails userDetails = User.builder()
                         .username(username)
                         .password("")
-                        .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")))
+                        .authorities(authorities)
                         .build();
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

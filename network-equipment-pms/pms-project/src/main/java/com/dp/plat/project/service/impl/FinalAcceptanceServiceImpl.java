@@ -8,11 +8,13 @@ import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.project.entity.FinalAcceptance;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
+import com.dp.plat.project.event.FinalAcceptanceApprovedEvent;
 import com.dp.plat.project.mapper.FinalAcceptanceMapper;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IFinalAcceptanceService;
 import com.dp.plat.project.service.IMilestoneService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -39,6 +41,7 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
 
     private final IMilestoneService milestoneService;
     private final ProjectMapper projectMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -100,13 +103,15 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
         this.updateById(acceptance);
 
         // Close the project by setting its status to COMPLETED.
-        Project project = projectMapper.selectById(acceptance.getProjectId());
+        Long projectId = acceptance.getProjectId();
+        Project project = projectMapper.selectById(projectId);
         if (project != null) {
             project.setStatus(PROJECT_COMPLETED);
             projectMapper.updateById(project);
         }
 
-        // TODO: release bound project equipment once the asset module is ready.
+        // Notify listeners (e.g. the asset module) to recycle project-bound equipment.
+        applicationEventPublisher.publishEvent(new FinalAcceptanceApprovedEvent(this, projectId));
         return Result.ok(acceptance);
     }
 

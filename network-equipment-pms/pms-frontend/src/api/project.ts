@@ -1,113 +1,146 @@
 import { del, get, post, put } from '@/utils/request'
-import type { PageQuery, PageResult } from './system'
 
 // ===================== Project =====================
 
+/** 项目状态枚举 */
+export type ProjectStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'IN_PROGRESS'
+  | 'INITIAL_ACCEPTANCE'
+  | 'FINAL_ACCEPTANCE'
+  | 'COMPLETED'
+  | 'CLOSED'
+  | 'REJECTED'
+
+/** 项目类型枚举 */
+export type ProjectType = 'NETWORK_DEVICE' | 'SECURITY' | 'DATACENTER'
+
 export interface Project {
   id?: number
-  code: string
+  code?: string
   name: string
-  customerId?: number
+  type?: ProjectType
   customerName?: string
-  managerId?: number
+  customerContact?: string
+  customerPhone?: string
+  contractNo?: string
+  contractAmount?: number
+  planStartDate?: string
+  planEndDate?: string
   managerName?: string
-  status?: string
-  startDate?: string
-  endDate?: string
-  amount?: number
+  priority?: number
   description?: string
+  status?: ProjectStatus
+  progress?: number
   createTime?: string
 }
 
-export interface ProjectDashboard {
+export interface ProjectListResult {
+  records: Project[]
   total: number
-  inProgress: number
-  completed: number
-  delayed: number
+  page: number
+  size: number
 }
 
-export function getProjectPage(params: PageQuery): Promise<PageResult<Project>> {
-  return get<PageResult<Project>>('/api/projects', params)
+/** 看板数据：按状态分组的项目列表 */
+export type ProjectDashboard = Partial<Record<ProjectStatus, Project[]>>
+
+export function createProject(data: any): Promise<Project> {
+  return post<Project>('/api/project', data)
 }
 
-export function getProjectById(id: number): Promise<Project> {
-  return get<Project>(`/api/projects/${id}`)
+export function getProject(id: number): Promise<Project> {
+  return get<Project>(`/api/project/${id}`)
 }
 
-export function createProject(data: Project): Promise<Project> {
-  return post<Project>('/api/projects', data)
+export function listProjects(params: {
+  page: number
+  size: number
+  projectName?: string
+  status?: string
+}): Promise<ProjectListResult> {
+  return get<ProjectListResult>('/api/project/list', params)
 }
 
-export function updateProject(data: Project): Promise<Project> {
-  return put<Project>(`/api/projects/${data.id}`, data)
+export function updateProject(data: any): Promise<Project> {
+  return put<Project>('/api/project', data)
 }
 
 export function deleteProject(id: number): Promise<void> {
-  return del<void>(`/api/projects/${id}`)
+  return del<void>(`/api/project/${id}`)
 }
 
-export function approveProject(id: number, comment?: string): Promise<void> {
-  return post<void>(`/api/projects/${id}/approve`, { comment })
+export function approveProject(id: number): Promise<void> {
+  return post<void>(`/api/project/${id}/approve`)
 }
 
-export function getProjectDashboard(): Promise<ProjectDashboard> {
-  return get<ProjectDashboard>('/api/projects/dashboard')
+export function getDashboard(): Promise<ProjectDashboard> {
+  return get<ProjectDashboard>('/api/project/dashboard')
 }
 
 // ===================== Milestone =====================
 
 export interface Milestone {
   id?: number
-  projectId: number
+  projectId?: number
   name: string
+  type?: string
   plannedDate?: string
   actualDate?: string
-  progress?: number
+  description?: string
   status?: string
-  remark?: string
+  progress?: number
 }
 
-export function listMilestones(projectId: number): Promise<Milestone[]> {
-  return get<Milestone[]>(`/api/projects/${projectId}/milestones`)
+export function createMilestone(data: any): Promise<Milestone> {
+  return post<Milestone>('/api/project/milestone', data)
 }
 
-export function createMilestone(data: Milestone): Promise<Milestone> {
-  return post<Milestone>('/api/projects/milestones', data)
-}
-
-export function updateMilestone(data: Milestone): Promise<Milestone> {
-  return put<Milestone>(`/api/projects/milestones/${data.id}`, data)
+export function updateMilestone(data: any): Promise<Milestone> {
+  return put<Milestone>('/api/project/milestone', data)
 }
 
 export function deleteMilestone(id: number): Promise<void> {
-  return del<void>(`/api/projects/milestones/${id}`)
+  return del<void>(`/api/project/milestone/${id}`)
 }
 
-export function updateMilestoneProgress(id: number, progress: number): Promise<void> {
-  return put<void>(`/api/projects/milestones/${id}/progress`, { progress })
+export function listMilestones(projectId: number): Promise<Milestone[]> {
+  return get<Milestone[]>(`/api/project/milestone/project/${projectId}`)
+}
+
+export function updateMilestoneProgress(
+  id: number,
+  data: { actualDate: string; description: string }
+): Promise<void> {
+  return post<void>(`/api/project/milestone/${id}/progress`, data)
 }
 
 // ===================== Final Acceptance =====================
 
 export interface FinalAcceptance {
   id?: number
-  projectId: number
-  applicantId?: number
-  applicantName?: string
+  projectId?: number
+  report?: string
   status?: string
+  applicantName?: string
   applyDate?: string
+  opinion?: string
   acceptDate?: string
-  comment?: string
 }
 
-export function applyFinalAcceptance(projectId: number, data?: Partial<FinalAcceptance>): Promise<FinalAcceptance> {
-  return post<FinalAcceptance>(`/api/projects/${projectId}/final-acceptance/apply`, data)
+export function applyAcceptance(data: { projectId: number; report: string }): Promise<FinalAcceptance> {
+  return post<FinalAcceptance>('/api/project/acceptance/apply', data)
 }
 
-export function approveFinalAcceptance(id: number, comment?: string): Promise<void> {
-  return post<void>(`/api/projects/final-acceptance/${id}/approve`, { comment })
+export function approveAcceptance(id: number, data: { opinion: string }): Promise<void> {
+  return post<void>(`/api/project/acceptance/${id}/approve`, data)
 }
 
-export function rejectFinalAcceptance(id: number, comment?: string): Promise<void> {
-  return post<void>(`/api/projects/final-acceptance/${id}/reject`, { comment })
+export function rejectAcceptance(id: number, data: { opinion: string }): Promise<void> {
+  return post<void>(`/api/project/acceptance/${id}/reject`, data)
+}
+
+export function getAcceptanceByProject(projectId: number): Promise<FinalAcceptance | null> {
+  return get<FinalAcceptance | null>(`/api/project/acceptance/${projectId}`)
 }
