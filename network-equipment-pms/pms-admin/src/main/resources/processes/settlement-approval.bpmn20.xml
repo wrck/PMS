@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             targetNamespace="http://flowable.org/bpmn">
+  <process id="settlementApproval" name="结算审批流程" isExecutable="true">
+    <documentation>Settlement approval workflow: PM review then finance review.</documentation>
+    <startEvent id="startEvent" name="开始"/>
+    <userTask id="pmReview" name="PM审核" flowable:assignee="${pmUserId}"/>
+    <userTask id="financeReview" name="财务审核" flowable:assignee="${financeUserId}"/>
+    <endEvent id="endEvent" name="结束"/>
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="pmReview"/>
+    <sequenceFlow id="flow2" sourceRef="pmReview" targetRef="financeReview"/>
+    <sequenceFlow id="flow3" sourceRef="financeReview" targetRef="endEvent"/>
+  </process>
+</definitions>

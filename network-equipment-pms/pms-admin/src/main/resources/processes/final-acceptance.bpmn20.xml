@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             targetNamespace="http://flowable.org/bpmn">
+  <process id="finalAcceptance" name="最终验收流程" isExecutable="true">
+    <documentation>Final acceptance workflow: customer confirmation then PM review.</documentation>
+    <startEvent id="startEvent" name="开始"/>
+    <userTask id="customerConfirm" name="客户确认" flowable:assignee="${customerUserId}"/>
+    <userTask id="pmReview" name="PM审核" flowable:assignee="${pmUserId}"/>
+    <endEvent id="endEvent" name="结束"/>
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="customerConfirm"/>
+    <sequenceFlow id="flow2" sourceRef="customerConfirm" targetRef="pmReview"/>
+    <sequenceFlow id="flow3" sourceRef="pmReview" targetRef="endEvent"/>
+  </process>
+</definitions>

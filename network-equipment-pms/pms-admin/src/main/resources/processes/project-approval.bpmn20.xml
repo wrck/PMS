@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             targetNamespace="http://flowable.org/bpmn">
+  <process id="projectApproval" name="项目审批流程" isExecutable="true">
+    <documentation>Project approval workflow: PM review then department manager review.</documentation>
+    <startEvent id="startEvent" name="开始"/>
+    <userTask id="pmReview" name="PM审核" flowable:assignee="${pmUserId}"/>
+    <userTask id="deptManagerReview" name="部门经理审核" flowable:assignee="${deptManagerUserId}"/>
+    <endEvent id="endEvent" name="结束"/>
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="pmReview"/>
+    <sequenceFlow id="flow2" sourceRef="pmReview" targetRef="deptManagerReview"/>
+    <sequenceFlow id="flow3" sourceRef="deptManagerReview" targetRef="endEvent"/>
+  </process>
+</definitions>
