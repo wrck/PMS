@@ -3,8 +3,11 @@ package com.dp.plat.project.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.excel.ExcelImportResult;
+import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.dto.MilestoneGroupDto;
+import com.dp.plat.project.dto.MilestoneImportDTO;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.enums.MilestoneType;
@@ -16,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -285,5 +290,90 @@ public class MilestoneServiceImpl extends ServiceImpl<MilestoneMapper, Milestone
         merged.setPpdiooPhase(incoming.getPpdiooPhase() != null
                 ? incoming.getPpdiooPhase() : existing.getPpdiooPhase());
         return merged;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExcelImportResult<MilestoneImportDTO> batchImport(MultipartFile file) {
+        ExcelImportResult<MilestoneImportDTO> result = ExcelUtils.importWithValidation(
+                file, MilestoneImportDTO.class, row -> {
+                    if (row == null) {
+                        throw new BusinessException("空行");
+                    }
+                    if (!StringUtils.hasText(row.getProjectId())) {
+                        throw new BusinessException("项目ID不能为空");
+                    }
+                    Long projectId = parseLong(row.getProjectId(), "项目ID格式错误");
+                    Project project = projectMapper.selectById(projectId);
+                    if (project == null) {
+                        throw new BusinessException("项目不存在: " + projectId);
+                    }
+                    if (!StringUtils.hasText(row.getMilestoneType())) {
+                        throw new BusinessException("里程碑类型不能为空");
+                    }
+                    MilestoneType type = MilestoneType.fromName(row.getMilestoneType());
+                    if (type == null) {
+                        throw new BusinessException("里程碑类型不在12节点枚举内: " + row.getMilestoneType());
+                    }
+                    if (!StringUtils.hasText(row.getPlanDate())) {
+                        throw new BusinessException("计划完成日不能为空");
+                    }
+                    parseDate(row.getPlanDate(), "计划完成日格式错误，应为 yyyy-MM-dd");
+                    if (StringUtils.hasText(row.getActualDate())) {
+                        parseDate(row.getActualDate(), "实际完成日格式错误，应为 yyyy-MM-dd");
+                    }
+                    if (!StringUtils.hasText(row.getStatus())) {
+                        throw new BusinessException("状态不能为空");
+                    }
+                });
+
+        // Convert validated rows into Milestone entities and persist in one batch.
+        List<Milestone> entities = new ArrayList<>(result.getSuccessList().size());
+        for (MilestoneImportDTO dto : result.getSuccessList()) {
+            Milestone m = new Milestone();
+            m.setProjectId(parseLong(dto.getProjectId(), "项目ID格式错误"));
+            MilestoneType type = MilestoneType.fromName(dto.getMilestoneType());
+            m.setMilestoneType(type.name());
+            m.setMilestoneName(StringUtils.hasText(dto.getMilestoneName())
+                    ? dto.getMilestoneName()
+                    : type.getDescription());
+            m.setPpdiooPhase(type.getPpdiooPhase().name());
+            m.setSortOrder(type.getSortOrder());
+            m.setPlanDate(parseDate(dto.getPlanDate(), "计划完成日格式错误，应为 yyyy-MM-dd"));
+            if (StringUtils.hasText(dto.getActualDate())) {
+                m.setActualDate(parseDate(dto.getActualDate(), "实际完成日格式错误，应为 yyyy-MM-dd"));
+            }
+            m.setStatus(dto.getStatus().trim().toUpperCase());
+            m.setDescription(dto.getDescription());
+            entities.add(m);
+        }
+        if (!entities.isEmpty()) {
+            this.saveBatch(entities);
+        }
+        return result;
+    }
+
+    /**
+     * Parse a String into a Long, throwing a {@link BusinessException} with the
+     * supplied message when the value is not a valid long.
+     */
+    private Long parseLong(String value, String errMsg) {
+        try {
+            return Long.valueOf(value.trim());
+        } catch (NumberFormatException e) {
+            throw new BusinessException(errMsg);
+        }
+    }
+
+    /**
+     * Parse a String into a {@link LocalDate}, throwing a {@link BusinessException}
+     * with the supplied message when the value is not a valid date.
+     */
+    private LocalDate parseDate(String value, String errMsg) {
+        try {
+            return LocalDate.parse(value.trim());
+        } catch (DateTimeParseException e) {
+            throw new BusinessException(errMsg);
+        }
     }
 }

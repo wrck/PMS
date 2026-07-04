@@ -6,6 +6,7 @@ import com.dp.plat.system.entity.SysMenu;
 import com.dp.plat.system.mapper.SysMenuMapper;
 import com.dp.plat.system.service.ISysMenuService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements ISysMenuService {
 
     @Override
+    @Cacheable(value = "sysMenu", key = "'byUser:' + #userId")
     public List<SysMenu> listMenusByUserId(Long userId) {
         if (userId == null) {
             return Collections.emptyList();
@@ -31,6 +33,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @Cacheable(value = "sysMenu", key = "'children:' + #parentId")
     public List<SysMenu> listChildren(Long parentId) {
         return this.list(new LambdaQueryWrapper<SysMenu>()
                 .eq(SysMenu::getParentId, parentId)

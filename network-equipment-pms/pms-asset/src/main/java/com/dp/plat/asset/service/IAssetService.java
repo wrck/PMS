@@ -2,8 +2,11 @@ package com.dp.plat.asset.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.asset.dto.AssetImportDTO;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
+import com.dp.plat.common.excel.ExcelImportResult;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -50,4 +53,16 @@ public interface IAssetService extends IService<Asset> {
      * @return number of assets recycled
      */
     int recycleByProject(Long projectId);
+
+    /**
+     * Batch import assets from an uploaded Excel file. Each row is validated
+     * (assetNo non-empty and unique within the upload, projectId exists, status
+     * is a known {@link com.dp.plat.asset.enums.AssetStatus}); valid rows are
+     * persisted via {@link #saveBatch(java.util.Collection)} and invalid rows
+     * are returned as error entries.
+     *
+     * @param file uploaded .xlsx file
+     * @return aggregated import result carrying success and error lists
+     */
+    ExcelImportResult<AssetImportDTO> batchImport(MultipartFile file);
 }

@@ -8,6 +8,7 @@ import com.dp.plat.system.mapper.SysDictItemMapper;
 import com.dp.plat.system.mapper.SysDictMapper;
 import com.dp.plat.system.service.ISysDictService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -23,12 +24,14 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
     private final SysDictItemMapper sysDictItemMapper;
 
     @Override
+    @Cacheable(value = "sysDict", key = "#dictType")
     public SysDict getByDictType(String dictType) {
         return this.getOne(new LambdaQueryWrapper<SysDict>()
                 .eq(SysDict::getDictType, dictType));
     }
 
     @Override
+    @Cacheable(value = "sysDict", key = "'items:' + #dictType")
     public List<SysDictItem> listItemsByDictType(String dictType) {
         SysDict dict = getByDictType(dictType);
         if (dict == null) {

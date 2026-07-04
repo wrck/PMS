@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.notification.entity.Notification;
+import com.dp.plat.notification.service.INotificationService;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.mapper.MilestoneMapper;
 import com.dp.plat.project.punchlist.entity.PunchList;
@@ -12,12 +14,15 @@ import com.dp.plat.project.punchlist.mapper.PunchListMapper;
 import com.dp.plat.project.punchlist.service.IPunchListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link IPunchListService}.
@@ -37,7 +42,15 @@ public class PunchListServiceImpl extends ServiceImpl<PunchListMapper, PunchList
     /** Milestone blocked status. */
     private static final String MILESTONE_BLOCKED = "BLOCKED";
 
+    /** Notification metadata. */
+    private static final String CATEGORY_PUNCH_LIST = "PUNCH_LIST";
+    private static final String BIZ_TYPE_PUNCH_LIST_DEADLINE = "PUNCH_LIST_DEADLINE";
+    private static final Set<String> CHANNELS = Set.of("IN_APP", "WS");
+    /** Scan window: items whose deadline is within this many days (inclusive). */
+    private static final int DEADLINE_WINDOW_DAYS = 3;
+
     private final MilestoneMapper milestoneMapper;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -183,5 +196,60 @@ public class PunchListServiceImpl extends ServiceImpl<PunchListMapper, PunchList
             return true;
         }
         return list.stream().allMatch(p -> STATUS_VERIFIED.equals(p.getStatus()));
+    }
+
+    /**
+     * Every day at 09:00, scan punch list items whose deadline is approaching
+     * (within {@value #DEADLINE_WINDOW_DAYS} days, inclusive) and notify the
+     * assignee. Items already verified or closed are skipped. Notification
+     * failures are isolated in try-catch so they never affect the scan.
+     */
+    @Scheduled(cron = "0 0 9 * * ?")
+    public void scanDeadlineApproaching() {
+        LocalDate today = LocalDate.now();
+        LocalDate windowEnd = today.plusDays(DEADLINE_WINDOW_DAYS);
+        List<PunchList> approaching = this.list(new LambdaQueryWrapper<PunchList>()
+                .isNotNull(PunchList::getDeadline)
+                .ge(PunchList::getDeadline, today)
+                .le(PunchList::getDeadline, windowEnd)
+                .ne(PunchList::getStatus, STATUS_VERIFIED));
+        if (approaching.isEmpty()) {
+            return;
+        }
+        log.info("Punch List 整改到期扫描：发现 {} 条临近到期项", approaching.size());
+        for (PunchList item : approaching) {
+            sendDeadlineNotification(item);
+        }
+    }
+
+    /**
+     * Send a deadline-approaching notification to the assignee. Failures are
+     * swallowed: notifications are best-effort.
+     */
+    private void sendDeadlineNotification(PunchList item) {
+        Long assigneeId = item.getAssigneeId();
+        if (assigneeId == null) {
+            log.warn("Punch List 项 id={} 未指派负责人，跳过通知发送", item.getId());
+            return;
+        }
+        String title = "Punch List 整改到期提醒";
+        String content = String.format("缺陷 %s(%s) 将于 %s 到期，请尽快整改",
+                item.getId(),
+                item.getSeverity() == null ? "未知等级" : item.getSeverity(),
+                item.getDeadline());
+        Notification notification = Notification.builder()
+                .userId(assigneeId)
+                .title(title)
+                .content(content)
+                .category(CATEGORY_PUNCH_LIST)
+                .bizType(BIZ_TYPE_PUNCH_LIST_DEADLINE)
+                .bizId(item.getId())
+                .build();
+        try {
+            notificationService.multiChannelSend(notification, CHANNELS);
+        } catch (Exception e) {
+            log.error("Punch List 整改到期通知发送失败 punchListId={} assigneeId={}",
+                    item.getId(), assigneeId, e);
+        }
     }
 }

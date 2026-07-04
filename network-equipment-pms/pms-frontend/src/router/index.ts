@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { startRouteLoading, stopRouteLoading } from '@/directives/loading'
 
 const Layout = () => import('@/layouts/DefaultLayout.vue')
 
@@ -45,6 +46,24 @@ export const routes: RouteRecordRaw[] = [
         name: 'SysDict',
         component: () => import('@/views/system/dict/index.vue'),
         meta: { title: '字典管理', icon: 'Document' }
+      },
+      {
+        path: 'system/cache',
+        name: 'SysCache',
+        component: () => import('@/views/system/cache/index.vue'),
+        meta: { title: '缓存管理', icon: 'Coin', requiresAuth: true }
+      },
+      {
+        path: 'system/schedule',
+        name: 'SysSchedule',
+        component: () => import('@/views/system/schedule/index.vue'),
+        meta: { title: '定时任务', icon: 'Timer', requiresAuth: true }
+      },
+      {
+        path: 'system/audit',
+        name: 'SysAudit',
+        component: () => import('@/views/system/audit/index.vue'),
+        meta: { title: '审计日志', icon: 'DocumentChecked', requiresAuth: true }
       },
       {
         path: 'project/list',
@@ -183,6 +202,7 @@ const router = createRouter({
 
 // Navigation guard: require authentication for protected routes
 router.beforeEach((to, _from, next) => {
+  startRouteLoading()
   const userStore = useUserStore()
   const title = (to.meta.title as string | undefined) ?? ''
   document.title = title ? `${title} - 网络设备工程项目管理系统` : '网络设备工程项目管理系统'
@@ -203,6 +223,11 @@ router.beforeEach((to, _from, next) => {
     return
   }
   next()
+})
+
+// 路由结束后关闭顶部加载条
+router.afterEach(() => {
+  stopRouteLoading()
 })
 
 export default router

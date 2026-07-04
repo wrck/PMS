@@ -1,13 +1,20 @@
 package com.dp.plat.asset.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.dp.plat.asset.dto.AssetExportDTO;
+import com.dp.plat.asset.dto.AssetImportDTO;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
 import com.dp.plat.asset.service.IAssetService;
+import com.dp.plat.common.excel.ExcelImportResult;
+import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -85,5 +93,61 @@ public class AssetController {
     @PostMapping("/return-by-project/{projectId}")
     public Result<List<Asset>> returnByProject(@PathVariable Long projectId) {
         return Result.ok(assetService.returnByProject(projectId));
+    }
+
+    @Operation(summary = "Download asset import template")
+    @GetMapping("/template")
+    public void template(HttpServletResponse response) {
+        ExcelUtils.exportTemplate(response, "asset-template", "资产导入模板", AssetImportDTO.class);
+    }
+
+    @Operation(summary = "Export asset list to Excel")
+    @GetMapping("/export")
+    public void export(HttpServletResponse response, Asset filter) {
+        List<Asset> rows = filter == null
+                ? assetService.list(new LambdaQueryWrapper<Asset>().orderByDesc(Asset::getId))
+                : assetService.list(buildExportWrapper(filter));
+        List<AssetExportDTO> data = rows.stream().map(a -> {
+            AssetExportDTO dto = new AssetExportDTO();
+            BeanUtils.copyProperties(a, dto);
+            return dto;
+        }).toList();
+        ExcelUtils.export(response, "asset-list", "资产清单", AssetExportDTO.class, data);
+    }
+
+    @Operation(summary = "Batch import assets from Excel")
+    @PostMapping("/import")
+    public Result<ExcelImportResult<AssetImportDTO>> importExcel(@RequestParam("file") MultipartFile file) {
+        return Result.ok(assetService.batchImport(file));
+    }
+
+    /**
+     * Build a {@link LambdaQueryWrapper} mirroring the list filter for export.
+     *
+     * @param filter filter bean
+     * @return wrapper with the supported conditions applied
+     */
+    private LambdaQueryWrapper<Asset> buildExportWrapper(Asset filter) {
+        LambdaQueryWrapper<Asset> wrapper = new LambdaQueryWrapper<>();
+        if (filter.getSerialNo() != null) {
+            wrapper.like(Asset::getSerialNo, filter.getSerialNo());
+        }
+        if (filter.getAssetName() != null) {
+            wrapper.like(Asset::getAssetName, filter.getAssetName());
+        }
+        if (filter.getStatus() != null) {
+            wrapper.eq(Asset::getStatus, filter.getStatus());
+        }
+        if (filter.getCategoryId() != null) {
+            wrapper.eq(Asset::getCategoryId, filter.getCategoryId());
+        }
+        if (filter.getModelId() != null) {
+            wrapper.eq(Asset::getModelId, filter.getModelId());
+        }
+        if (filter.getProjectId() != null) {
+            wrapper.eq(Asset::getProjectId, filter.getProjectId());
+        }
+        wrapper.orderByDesc(Asset::getId);
+        return wrapper;
     }
 }

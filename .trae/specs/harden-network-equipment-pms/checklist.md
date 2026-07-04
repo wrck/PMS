@@ -94,9 +94,9 @@
 
 ### Task 14: WebSocket 基础设施
 - [x] NotificationPublisher 通过 Redis Pub/Sub 发布广播消息
-- [x] NotificationSubscriber 订阅 Redis 频道并推送 WebSocket 消息
-- [ ] WebSocketConfig 配置 STOMP + SockJS 端点 /ws + 心跳（待补全 @EnableWebSocketMessageBroker 配置）
-- [ ] WebSocket 鉴权拦截器校验 JWT Token 与订阅权限
+- [x] NotificationSubscriber 订阅 Redis 频道并推送 WebSocket 消息（广播频道 /topic/notification/{userId}）
+- [x] WebSocketConfig 配置 STOMP 端点 /ws + 心跳 10s（@EnableWebSocketMessageBroker，未启用 SockJS 以兼容原生 WebSocket 前端）
+- [x] WebSocket 鉴权拦截器（JwtHandshakeInterceptor 从 Header/query 提取 JWT 解析 userId，解析失败拒绝握手）
 - [x] 前端 WebSocket 客户端自动重连 + 心跳 + 订阅通知（原生 WebSocket API + Pinia store）
 
 ### Task 15: 站内信通知中心 + 模板引擎
@@ -108,10 +108,10 @@
 
 ### Task 16: 多通道通知触发点接入
 - [x] 任务派工/委派通知接入（pms-implementation NotificationServiceImpl 已委托至通知中心）
-- [ ] 里程碑延期预警接入真实通知（替代日志）
-- [ ] 审批待办通知接入（双通道：OA + 站内信）
-- [ ] Punch List 整改到期通知（@Scheduled 扫描 deadline 临近项）
-- [ ] 质保期到期/RMA 状态变更/结算审批通知接入
+- [x] 里程碑延期预警接入真实通知（MilestoneOverdueScheduler 注入 INotificationService，category=MILESTONE，IN_APP+WS 双通道）
+- [x] 审批待办通知接入（结算审批 approve/reject 通知申请人，category=SETTLEMENT，IN_APP+WS+OA 三通道）
+- [x] Punch List 整改到期通知（PunchListServiceImpl @Scheduled 每天 9:00 扫描 deadline 临近 3 天项，category=PUNCH_LIST）
+- [x] 质保期到期/RMA 状态变更/结算审批通知接入（WarrantyExpiryScheduler 90/60/30 天分级；RmaServiceImpl 5 个状态流转方法；SettlementServiceImpl 审批通知）
 
 ## Phase 5: 文件与附件管理
 
@@ -127,24 +127,24 @@
 - [x] 文件预览：图片缩略图生成（Thumbnailator）
 - [x] Punch List 缺陷照片附件（前端 FileUploader 组件 + bizType=PUNCH_LIST）
 - [x] 终验交付物附件关联（前端 FileUploader 组件 + bizType=DELIVERABLE）
-- [ ] RMA 故障件照片附件关联（后端实体字段预留，前端待接入）
-- [ ] 实施照片附件（ImplProgress 关联多图）
+- [x] RMA 故障件照片附件关联（RmaController 新增 photos 端点，bizType=RMA）
+- [x] 实施照片附件（ImplProgressController 新增 photos 端点，bizType=IMPL_PROGRESS）
 - [ ] PDF 在线预览 + Office 预览（可选）
 
 ### Task 19: Excel 批量导入导出
-- [ ] ExcelUtils 工具类（模板下载/导入/导出/校验/错误报告）
-- [ ] 资产批量导入（模板下载 + 上传解析 + 校验 + 入库 + 错误报告）
-- [ ] 里程碑批量导入
-- [ ] 结算明细导出 + 报表导出（delivery/asset/implementation）
-- [ ] 前端导入导出组件封装（上传 + 模板下载 + 错误报告下载 + 导出按钮）
+- [x] ExcelUtils 工具类（EasyExcel 模板下载/导入/导出/校验/错误报告 + ExcelImportResult/ExcelImportError）
+- [x] 资产批量导入（模板下载 + 上传解析 + 校验 assetNo/serialNo/projectId/status + 入库 + 错误报告）
+- [x] 里程碑批量导入（校验 projectId/milestoneType/日期格式）
+- [x] 结算明细导出（SettlementController /export 支持多条件过滤）
+- [x] 前端导入导出组件封装（ExcelImportExport 组件 + excel.ts API + 集成资产页）
 
 ## Phase 6: 前端 UX 补全
 
 ### Task 20: TagsView + 移动端 + 加载态
 - [x] TagsView 多标签页（标签栏 + 右键菜单 + localStorage 持久化 + 路由联动）
 - [x] DefaultLayout 集成 TagsView
-- [ ] 移动端响应式适配（栅格 + 抽屉侧边栏 + 触摸友好）
-- [ ] 全局 loading 指令 + 表单异步校验 + 防抖搜索
+- [x] 移动端响应式适配（isMobile 检测 + el-drawer 抽屉侧边栏 + 汉堡按钮 + responsive.scss 断点 mixin）
+- [x] 全局 loading 指令 + 表单异步校验 + 防抖搜索（routeLoading 顶部加载条 + v-debounce/v-permission 指令 + useDebounce composable + serialNo 异步校验）
 
 ### Task 21: 文件上传 + 通知下拉 + 实时 Toast
 - [x] FileUploader.vue 拖拽上传 + 进度条 + 缩略图
@@ -170,16 +170,16 @@
 - [x] SpringDoc OpenAPI 配置完成，/swagger-ui.html 可访问
 - [x] API 分组生效（system/project/asset/implementation/workflow/integration/file/notification/governance）
 - [x] 全局 JWT 鉴权配置（SecurityScheme bearerAuth）
-- [ ] Druid SQL 监控面板可访问，慢 SQL 告警生效，SQL 防火墙启用
+- [ ] Druid SQL 监控面板（项目使用 HikariCP，切换 Druid 影响较大，暂不接入）
 - [x] ScheduleLog 实体 + Mapper + Service 创建完成
-- [ ] 定时任务监控：失败告警 + 手动触发接口
+- [x] 定时任务监控：ScheduleMonitorController（recent/failed/statistic/retry 端点 + 前端监控页面）
 
 ### Task 24: Redis 缓存 + 性能优化 + 审计增强
 - [x] RedisConfig 配置 RedisTemplate + CacheManager（TTL 30min + 随机抖动防雪崩）
 - [x] 命名缓存 sysDict/sysMenu/sysConfig/sysRole（TTL 60min）
-- [ ] SysDict/SysMenu/SysConfig/SysRole @Cacheable 注解接入
-- [ ] 缓存管理面板（手动清除）
-- [ ] 核心表索引优化（复合索引）+ 慢查询日志分析
+- [x] SysDict/SysMenu/SysConfig/SysRole @Cacheable/@CacheEvict 注解接入
+- [x] 缓存管理面板（CacheManagementController /api/system/cache + 前端 cache 页面）
+- [x] 核心表索引优化（Flyway V23 复合索引）— 慢查询日志分析待生产环境观察
 - [x] LoginLog + ExceptionLog + ScheduleLog 实体 + 统一审计面板 Controller
 - [x] Flyway V22 sys_login_log + sys_exception_log + sys_schedule_log 表创建成功
 

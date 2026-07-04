@@ -1,9 +1,12 @@
 package com.dp.plat.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.common.excel.ExcelImportResult;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.dto.MilestoneGroupDto;
+import com.dp.plat.project.dto.MilestoneImportDTO;
 import com.dp.plat.project.entity.Milestone;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -70,4 +73,16 @@ public interface IMilestoneService extends IService<Milestone> {
      * @return operation result containing the grouped milestone list
      */
     Result<List<MilestoneGroupDto>> dashboardByPpdiooPhase(Long projectId);
+
+    /**
+     * Batch import milestones from an uploaded Excel file. Each row is validated
+     * (projectId exists, milestoneType is a known {@link com.dp.plat.project.enums.MilestoneType},
+     * plan/actual dates parse as {@code yyyy-MM-dd}); valid rows are persisted
+     * via {@link #saveBatch(java.util.Collection)} and invalid rows are returned
+     * as error entries.
+     *
+     * @param file uploaded .xlsx file
+     * @return aggregated import result carrying success and error lists
+     */
+    ExcelImportResult<MilestoneImportDTO> batchImport(MultipartFile file);
 }

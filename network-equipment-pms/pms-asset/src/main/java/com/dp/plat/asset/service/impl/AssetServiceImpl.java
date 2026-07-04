@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dp.plat.asset.dto.AssetImportDTO;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetAllocation;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
@@ -14,13 +15,22 @@ import com.dp.plat.asset.mapper.AssetMapper;
 import com.dp.plat.asset.service.AssetStateTransitionValidator;
 import com.dp.plat.asset.service.IAssetService;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.excel.ExcelImportResult;
+import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.project.entity.Project;
+import com.dp.plat.project.mapper.ProjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link IAssetService}.
@@ -43,6 +53,7 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
     private final AssetAllocationMapper assetAllocationMapper;
     private final AssetLifecycleLogMapper assetLifecycleLogMapper;
     private final AssetStateTransitionValidator stateValidator;
+    private final ProjectMapper projectMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -170,6 +181,97 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
             returnAsset(asset.getId());
         }
         return assets.size();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExcelImportResult<AssetImportDTO> batchImport(MultipartFile file) {
+        // Track asset numbers seen within this upload to enforce intra-batch uniqueness.
+        Set<String> seenAssetNos = new HashSet<>();
+        // Pre-fetch any asset numbers that already exist for the rows in this batch
+        // so that duplicates against the database can be reported per row.
+        ExcelImportResult<AssetImportDTO> result = ExcelUtils.importWithValidation(
+                file, AssetImportDTO.class, row -> {
+                    if (row == null) {
+                        throw new BusinessException("空行");
+                    }
+                    String assetNo = row.getAssetNo();
+                    if (!StringUtils.hasText(assetNo)) {
+                        throw new BusinessException("资产编号不能为空");
+                    }
+                    String trimmedNo = assetNo.trim();
+                    if (!seenAssetNos.add(trimmedNo)) {
+                        throw new BusinessException("资产编号在本次导入中重复: " + trimmedNo);
+                    }
+                    Long count = baseMapper.selectCount(new LambdaQueryWrapper<Asset>()
+                            .eq(Asset::getAssetName, trimmedNo));
+                    if (count != null && count > 0) {
+                        throw new BusinessException("资产编号已存在: " + trimmedNo);
+                    }
+                    if (!StringUtils.hasText(row.getSerialNo())) {
+                        throw new BusinessException("序列号不能为空");
+                    }
+                    if (StringUtils.hasText(row.getProjectId())) {
+                        Long projectId = parseLong(row.getProjectId(), "项目ID格式错误");
+                        Project project = projectMapper.selectById(projectId);
+                        if (project == null) {
+                            throw new BusinessException("项目不存在: " + projectId);
+                        }
+                    }
+                    if (StringUtils.hasText(row.getStatus())) {
+                        try {
+                            AssetStatus.valueOf(row.getStatus().trim().toUpperCase());
+                        } catch (IllegalArgumentException e) {
+                            throw new BusinessException("状态不在合法枚举内: " + row.getStatus());
+                        }
+                    } else {
+                        throw new BusinessException("状态不能为空");
+                    }
+                });
+
+        // Convert validated rows into Asset entities and persist in one batch.
+        List<Asset> entities = new ArrayList<>(result.getSuccessList().size());
+        for (AssetImportDTO dto : result.getSuccessList()) {
+            Asset asset = new Asset();
+            asset.setAssetName(dto.getAssetNo().trim());
+            asset.setSerialNo(dto.getSerialNo().trim());
+            if (StringUtils.hasText(dto.getProjectId())) {
+                asset.setProjectId(parseLong(dto.getProjectId(), "项目ID格式错误"));
+            }
+            if (StringUtils.hasText(dto.getCategoryId())) {
+                asset.setCategoryId(parseLong(dto.getCategoryId(), "设备类别ID格式错误"));
+            }
+            if (StringUtils.hasText(dto.getModelId())) {
+                asset.setModelId(parseLong(dto.getModelId(), "型号ID格式错误"));
+            }
+            asset.setStatus(dto.getStatus().trim().toUpperCase());
+            if (StringUtils.hasText(dto.getManufacturer())) {
+                // The Asset entity has no dedicated manufacturer column; persist it
+                // in the remarks field so the data is not lost.
+                asset.setRemarks("制造商: " + dto.getManufacturer().trim());
+            }
+            entities.add(asset);
+        }
+        if (!entities.isEmpty()) {
+            this.saveBatch(entities);
+        }
+        return result;
+    }
+
+    /**
+     * Parse a String into a Long, throwing a {@link BusinessException} with the
+     * supplied message when the value is not a valid long.
+     *
+     * @param value   raw string
+     * @param errMsg  error message used when parsing fails
+     * @return parsed long value
+     */
+    private Long parseLong(String value, String errMsg) {
+        try {
+            return Long.valueOf(value.trim());
+        } catch (NumberFormatException e) {
+            throw new BusinessException(errMsg);
+        }
     }
 
     private Asset loadAsset(Long assetId) {

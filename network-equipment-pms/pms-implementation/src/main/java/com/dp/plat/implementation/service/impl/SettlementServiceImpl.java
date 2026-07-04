@@ -17,10 +17,13 @@ import com.dp.plat.integration.model.fp.FpResponse;
 import com.dp.plat.integration.model.fp.SettlementPushDetail;
 import com.dp.plat.integration.model.fp.SettlementPushRequest;
 import com.dp.plat.integration.service.FpIntegrationService;
+import com.dp.plat.notification.entity.Notification;
+import com.dp.plat.notification.service.INotificationService;
 import com.dp.plat.workflow.dto.ProcessInstanceDTO;
 import com.dp.plat.workflow.dto.StartProcessRequest;
 import com.dp.plat.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +35,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Implementation of {@link ISettlementService}.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlement> implements ISettlementService {
@@ -54,10 +59,18 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
 
     private static final String PROCESS_KEY_SETTLEMENT_APPROVAL = "settlementApproval";
 
+    /** Notification metadata. */
+    private static final String CATEGORY_SETTLEMENT = "SETTLEMENT";
+    private static final String BIZ_TYPE_SETTLEMENT_APPROVED = "SETTLEMENT_APPROVED";
+    private static final String BIZ_TYPE_SETTLEMENT_REJECTED = "SETTLEMENT_REJECTED";
+    /** OA 通道走占位实现（见 NotificationServiceImpl）。 */
+    private static final Set<String> CHANNELS = Set.of("IN_APP", "WS", "OA");
+
     private final SettlementDetailMapper settlementDetailMapper;
     private final AgentMapper agentMapper;
     private final WorkflowService workflowService;
     private final FpIntegrationService fpIntegrationService;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -135,6 +148,9 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         this.updateById(settlement);
 
         pushSettlementToFp(settlement);
+
+        // Notify the applicant the settlement has been approved.
+        sendSettlementNotification(settlement, "已审批通过", BIZ_TYPE_SETTLEMENT_APPROVED);
     }
 
     @Override
@@ -150,6 +166,38 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         settlement.setApproveUserName(SecurityUtils.getCurrentUsername());
         settlement.setApproveTime(LocalDateTime.now());
         this.updateById(settlement);
+
+        // Notify the applicant the settlement has been rejected.
+        sendSettlementNotification(settlement, "已被驳回", BIZ_TYPE_SETTLEMENT_REJECTED);
+    }
+
+    /**
+     * Send a settlement approval notification to the applicant. Failures are
+     * swallowed: notifications are best-effort and must not roll back the
+     * approval decision.
+     */
+    private void sendSettlementNotification(Settlement settlement, String outcomeSuffix, String bizType) {
+        Long applicantId = settlement.getApplyUserId();
+        if (applicantId == null) {
+            log.warn("结算单 id={} 无申请人 userId，跳过审批通知发送", settlement.getId());
+            return;
+        }
+        String title = "结算审批通知";
+        String content = String.format("结算单 %s %s", settlement.getSettlementNo(), outcomeSuffix);
+        Notification notification = Notification.builder()
+                .userId(applicantId)
+                .title(title)
+                .content(content)
+                .category(CATEGORY_SETTLEMENT)
+                .bizType(bizType)
+                .bizId(settlement.getId())
+                .build();
+        try {
+            notificationService.multiChannelSend(notification, CHANNELS);
+        } catch (Exception e) {
+            log.error("结算审批通知发送失败 settlementId={} applicantId={}",
+                    settlement.getId(), applicantId, e);
+        }
     }
 
     /**

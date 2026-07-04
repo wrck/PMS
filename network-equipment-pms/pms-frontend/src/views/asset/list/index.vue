@@ -21,6 +21,7 @@ import {
   type AssetTransfer,
   type TransferListQuery
 } from '@/api/asset'
+import ExcelImportExport from '@/components/ExcelImportExport/index.vue'
 
 // ============ Asset list ============
 const loading = ref(false)
@@ -92,6 +93,30 @@ function handleSizeChange(s: number) {
   loadAssets()
 }
 
+// ============ 序列号异步校验 ============
+// TODO: 后端暂无专门的序列号查重接口，此处用列表过滤模拟。
+//       后续应改为调用 GET /api/asset/check-serial-no?serialNo=xxx 由后端返回是否占用。
+function makeSerialNoValidator(getCurrentId: () => number | undefined) {
+  return async (
+    _rule: unknown,
+    value: string,
+    callback: (err?: Error) => void
+  ) => {
+    if (!value) return callback()
+    try {
+      const res = await listAssets({ page: 1, size: 50, serialNo: value })
+      const exists = (res.records || []).some(
+        (a) => a.serialNo === value && a.id !== getCurrentId()
+      )
+      if (exists) return callback(new Error('该序列号已存在'))
+      callback()
+    } catch {
+      // 查重接口异常时不阻塞表单提交
+      callback()
+    }
+  }
+}
+
 // ============ Inbound dialog ============
 const inboundVisible = ref(false)
 const inboundRef = ref<FormInstance>()
@@ -99,7 +124,10 @@ const inboundSubmitting = ref(false)
 const inboundForm = reactive<Asset>(createInboundForm())
 
 const inboundRules: FormRules = {
-  serialNo: [{ required: true, message: '请输入序列号', trigger: 'blur' }],
+  serialNo: [
+    { required: true, message: '请输入序列号', trigger: 'blur' },
+    { validator: makeSerialNoValidator(() => undefined), trigger: 'blur' }
+  ],
   name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
   warehouse: [{ required: true, message: '请输入仓库', trigger: 'blur' }]
 }
@@ -204,7 +232,10 @@ const editSubmitting = ref(false)
 const editForm = reactive<Asset>(createEditForm())
 
 const editRules: FormRules = {
-  serialNo: [{ required: true, message: '请输入序列号', trigger: 'blur' }],
+  serialNo: [
+    { required: true, message: '请输入序列号', trigger: 'blur' },
+    { validator: makeSerialNoValidator(() => editForm.id), trigger: 'blur' }
+  ],
   name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }]
 }
 
@@ -550,6 +581,19 @@ onMounted(() => {
             <el-button type="warning" :icon="'Switch'" @click="openTransferApply()">
               设备调拨
             </el-button>
+            <ExcelImportExport
+              template-url="/api/asset/template"
+              import-url="/api/asset/import"
+              export-url="/api/asset/export"
+              template-file-name="asset-template.xlsx"
+              export-file-name="asset-list.xlsx"
+              :export-params="{
+                serialNo: query.serialNo || undefined,
+                status: query.status || undefined,
+                projectId: query.projectId
+              }"
+              @refresh="loadAssets"
+            />
           </div>
 
           <el-table v-loading="loading" :data="tableData" border stripe>

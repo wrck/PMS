@@ -1,13 +1,18 @@
 package com.dp.plat.implementation.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.implementation.dto.SettlementCreateRequest;
+import com.dp.plat.implementation.dto.SettlementExportDTO;
 import com.dp.plat.implementation.entity.Settlement;
 import com.dp.plat.implementation.service.ISettlementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * Settlement management controller.
@@ -60,5 +67,26 @@ public class SettlementController {
                                          @RequestParam(defaultValue = "10") int size,
                                          Settlement filters) {
         return Result.ok(settlementService.list(page, size, filters));
+    }
+
+    @Operation(summary = "Export settlement list to Excel")
+    @GetMapping("/export")
+    public void export(HttpServletResponse response, Settlement filters) {
+        LambdaQueryWrapper<Settlement> wrapper = new LambdaQueryWrapper<>();
+        if (filters != null) {
+            wrapper.eq(filters.getTaskId() != null, Settlement::getTaskId, filters.getTaskId())
+                    .eq(filters.getAgentId() != null, Settlement::getAgentId, filters.getAgentId())
+                    .eq(filters.getProjectId() != null, Settlement::getProjectId, filters.getProjectId())
+                    .eq(filters.getStatus() != null, Settlement::getStatus, filters.getStatus())
+                    .like(filters.getSettlementNo() != null, Settlement::getSettlementNo, filters.getSettlementNo());
+        }
+        wrapper.orderByDesc(Settlement::getCreateTime);
+        List<Settlement> rows = settlementService.list(wrapper);
+        List<SettlementExportDTO> data = rows.stream().map(s -> {
+            SettlementExportDTO dto = new SettlementExportDTO();
+            BeanUtils.copyProperties(s, dto);
+            return dto;
+        }).toList();
+        ExcelUtils.export(response, "settlement-list", "结算单清单", SettlementExportDTO.class, data);
     }
 }

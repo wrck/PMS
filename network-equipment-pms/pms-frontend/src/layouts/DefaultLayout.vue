@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import { useWebSocketStore } from '@/stores/websocket'
+import { routeLoading } from '@/directives/loading'
 import TagsView from '@/components/TagsView/index.vue'
 import NotificationBell from '@/components/NotificationBell/index.vue'
 
@@ -24,6 +25,27 @@ const userStore = useUserStore()
 const websocketStore = useWebSocketStore()
 const route = useRoute()
 const router = useRouter()
+
+// ===== 移动端响应式检测 =====
+const MOBILE_BREAKPOINT = 768
+const isMobile = ref(false)
+/** 移动端抽屉可见性 */
+const drawerVisible = ref(false)
+
+function updateMobileFlag() {
+  isMobile.value =
+    typeof window !== 'undefined' &&
+    (window.matchMedia
+      ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
+      : window.innerWidth <= MOBILE_BREAKPOINT)
+  // 切回桌面端时关闭抽屉
+  if (!isMobile.value) drawerVisible.value = false
+}
+
+if (typeof window !== 'undefined') {
+  updateMobileFlag()
+  window.addEventListener('resize', updateMobileFlag)
+}
 
 // Sidebar menu structure (grouped by business module)
 const menuGroups: (MenuGroup | MenuLeaf)[] = [
@@ -93,7 +115,10 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     icon: 'DataLine',
     children: [
       { title: '消息中心', path: '/notification', icon: 'Bell' },
-      { title: '集成健康', path: '/integration-health', icon: 'Monitor' }
+      { title: '集成健康', path: '/integration-health', icon: 'Monitor' },
+      { title: '缓存管理', path: '/system/cache', icon: 'Coin' },
+      { title: '定时任务', path: '/system/schedule', icon: 'Timer' },
+      { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' }
     ]
   },
   { title: '报表统计', path: '/report', icon: 'TrendCharts' }
@@ -112,6 +137,18 @@ const username = computed(
   () => userStore.userInfo?.nickname || userStore.userInfo?.username || '用户'
 )
 
+/** 移动端点击菜单项后关闭抽屉 */
+function handleMenuSelect() {
+  if (isMobile.value) {
+    drawerVisible.value = false
+  }
+}
+
+/** 切换移动端抽屉 */
+function toggleMobileDrawer() {
+  drawerVisible.value = !drawerVisible.value
+}
+
 function handleUserCommand(command: string) {
   if (command === 'logout') {
     ElMessageBox.confirm('确定要退出登录吗？', '提示', { type: 'warning' })
@@ -126,19 +163,31 @@ function handleUserCommand(command: string) {
 
 // 已登录时建立 WebSocket 连接，组件销毁时断开
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateMobileFlag)
+    window.addEventListener('resize', updateMobileFlag)
+  }
   if (userStore.token) {
     websocketStore.connect()
   }
 })
 
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateMobileFlag)
+  }
   websocketStore.disconnect()
 })
 </script>
 
 <template>
   <el-container class="layout-root">
-    <el-aside :width="appStore.sidebarCollapsed ? '64px' : '220px'" class="layout-aside">
+    <!-- 桌面端侧边栏 -->
+    <el-aside
+      v-if="!isMobile"
+      :width="appStore.sidebarCollapsed ? '64px' : '220px'"
+      class="layout-aside"
+    >
       <div class="logo">
         <el-icon :size="24" color="#fff"><Cpu /></el-icon>
         <span v-show="!appStore.sidebarCollapsed" class="logo-text">网络设备 PMS</span>
@@ -171,14 +220,70 @@ onBeforeUnmount(() => {
       </el-menu>
     </el-aside>
 
+    <!-- 移动端抽屉侧边栏 -->
+    <el-drawer
+      v-if="isMobile"
+      v-model="drawerVisible"
+      direction="ltr"
+      :size="220"
+      :with-header="false"
+      class="mobile-drawer"
+    >
+      <div class="logo">
+        <el-icon :size="24" color="#fff"><Cpu /></el-icon>
+        <span class="logo-text">网络设备 PMS</span>
+      </div>
+      <el-menu
+        :default-active="activeMenu"
+        router
+        background-color="#001529"
+        text-color="#cfd5dc"
+        active-text-color="#ffffff"
+        class="side-menu"
+        @select="handleMenuSelect"
+      >
+        <template v-for="(item, idx) in menuGroups" :key="idx">
+          <el-sub-menu v-if="'children' in item" :index="String(idx)">
+            <template #title>
+              <el-icon><component :is="item.icon" /></el-icon>
+              <span>{{ item.title }}</span>
+            </template>
+            <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
+              <el-icon><component :is="child.icon" /></el-icon>
+              <template #title>{{ child.title }}</template>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item v-else :index="(item as MenuLeaf).path">
+            <el-icon><component :is="(item as MenuLeaf).icon" /></el-icon>
+            <template #title>{{ (item as MenuLeaf).title }}</template>
+          </el-menu-item>
+        </template>
+      </el-menu>
+    </el-drawer>
+
     <el-container>
       <el-header class="layout-header">
         <div class="header-left">
-          <el-icon class="collapse-btn" :size="20" @click="appStore.toggleSidebar()">
+          <!-- 桌面端：折叠按钮；移动端：汉堡按钮 -->
+          <el-icon
+            v-if="!isMobile"
+            class="collapse-btn"
+            :size="20"
+            @click="appStore.toggleSidebar()"
+          >
             <Fold v-if="!appStore.sidebarCollapsed" />
             <Expand v-else />
           </el-icon>
-          <el-breadcrumb separator="/">
+          <el-icon
+            v-else
+            class="collapse-btn"
+            :size="22"
+            @click="toggleMobileDrawer"
+          >
+            <Expand />
+          </el-icon>
+          <!-- 面包屑在移动端隐藏 -->
+          <el-breadcrumb v-if="!isMobile" separator="/">
             <el-breadcrumb-item
               v-for="(b, i) in breadcrumbs"
               :key="i"
@@ -195,7 +300,7 @@ onBeforeUnmount(() => {
               <el-avatar :size="30" class="user-avatar">
                 <el-icon><UserFilled /></el-icon>
               </el-avatar>
-              <span class="username">{{ username }}</span>
+              <span v-if="!isMobile" class="username">{{ username }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -208,7 +313,11 @@ onBeforeUnmount(() => {
         </div>
       </el-header>
 
-      <TagsView />
+      <!-- 路由切换顶部加载条 -->
+      <div v-if="routeLoading" class="route-loading-bar"></div>
+
+      <!-- 标签栏在移动端隐藏 -->
+      <TagsView v-if="!isMobile" />
 
       <el-main class="layout-main">
         <router-view v-slot="{ Component }">
@@ -334,5 +443,31 @@ onBeforeUnmount(() => {
 .fade-transform-leave-to {
   opacity: 0;
   transform: translateX(12px);
+}
+
+/* 路由切换顶部加载条 */
+.route-loading-bar {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, #409eff 0%, #79bbff 50%, #409eff 100%);
+  background-size: 200% 100%;
+  animation: route-loading-move 1s linear infinite;
+}
+
+@keyframes route-loading-move {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+</style>
+
+<style>
+/* 移动端抽屉：覆盖 el-drawer 默认背景，匹配侧边栏深色风格 */
+.mobile-drawer .el-drawer__body {
+  padding: 0;
+  background-color: #001529;
 }
 </style>

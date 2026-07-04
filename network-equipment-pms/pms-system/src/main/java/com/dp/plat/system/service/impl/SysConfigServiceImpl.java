@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.system.entity.SysConfig;
 import com.dp.plat.system.mapper.SysConfigMapper;
 import com.dp.plat.system.service.ISysConfigService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,22 +17,26 @@ import org.springframework.stereotype.Service;
 public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> implements ISysConfigService {
 
     @Override
+    @Cacheable(value = "sysConfig", key = "#configKey")
     public SysConfig getByConfigKey(String configKey) {
         return this.getOne(new LambdaQueryWrapper<SysConfig>()
                 .eq(SysConfig::getConfigKey, configKey));
     }
 
     @Override
+    @CacheEvict(value = "sysConfig", allEntries = true)
     public boolean create(SysConfig config) {
         return this.save(config);
     }
 
     @Override
+    @CacheEvict(value = "sysConfig", allEntries = true)
     public boolean update(SysConfig config) {
         return this.updateById(config);
     }
 
     @Override
+    @CacheEvict(value = "sysConfig", allEntries = true)
     public boolean deleteById(Long id) {
         return this.removeById(id);
     }

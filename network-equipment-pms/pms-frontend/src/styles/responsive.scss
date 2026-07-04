@@ -1,0 +1,85 @@
+// 全局响应式断点 mixin 与适配规则
+
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// ===== 全局响应式适配 =====
+
+// 顶部 header 在移动端压缩高度与内边距
+@include mobile {
+  .layout-header {
+    padding: 0 12px !important;
+    height: 52px !important;
+  }
+
+  // 主区域减小内边距，给内容更多空间
+  .layout-main {
+    padding: 8px !important;
+  }
+
+  // 分页组件在移动端紧凑展示
+  .el-pagination {
+    .el-pagination__sizes,
+    .el-pagination__jump {
+      display: none !important;
+    }
+  }
+
+  // 内联表单在移动端改为垂直堆叠
+  .el-form--inline .el-form-item {
+    display: flex;
+    margin-right: 0;
+    margin-bottom: 12px;
+    width: 100%;
+  }
+
+  // 对话框在移动端接近全屏
+  .el-dialog {
+    width: 92% !important;
+    margin: 4vh auto !important;
+  }
+
+  // 表格横向滚动优化：保证最小宽度，强制横向滚动条可见
+  .el-table {
+    width: 100% !important;
+    .el-table__body-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  // 卡片内边距收紧
+  .el-card__body {
+    padding: 12px;
+  }
+
+  // 页面标题字号缩小
+  .page-title {
+    font-size: 16px;
+  }
+}
+
+// 平板端：表格适度压缩
+@include tablet {
+  .el-table {
+    .el-table__body-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}

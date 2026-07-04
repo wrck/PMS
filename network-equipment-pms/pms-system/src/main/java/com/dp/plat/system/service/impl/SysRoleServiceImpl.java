@@ -10,6 +10,8 @@ import com.dp.plat.system.mapper.SysRoleMenuMapper;
 import com.dp.plat.system.security.UserAuthorityService;
 import com.dp.plat.system.service.ISysRoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private final UserAuthorityService userAuthorityService;
 
     @Override
+    @Cacheable(value = "sysRole", key = "#roleCode")
     public SysRole getByRoleCode(String roleCode) {
         return this.getOne(new LambdaQueryWrapper<SysRole>()
                 .eq(SysRole::getRoleCode, roleCode));
@@ -34,6 +37,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "sysRole", allEntries = true)
     public void assignMenus(Long roleId, List<Long> menuIds) {
         sysRoleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
                 .eq(SysRoleMenu::getRoleId, roleId));

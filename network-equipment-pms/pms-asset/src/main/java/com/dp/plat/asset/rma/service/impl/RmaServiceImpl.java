@@ -13,7 +13,10 @@ import com.dp.plat.asset.service.AssetStateTransitionValidator;
 import com.dp.plat.asset.warranty.service.IWarrantyService;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.notification.entity.Notification;
+import com.dp.plat.notification.service.INotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,10 +27,12 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link IRmaService}.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaService {
@@ -44,10 +49,16 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
     private static final String WARRANTY_IN = "IN_WARRANTY";
     private static final String WARRANTY_OUT = "OUT_OF_WARRANTY";
 
+    /** Notification metadata. */
+    private static final String CATEGORY_RMA = "RMA";
+    private static final String BIZ_TYPE_RMA_STATUS_CHANGE = "RMA_STATUS_CHANGE";
+    private static final Set<String> CHANNELS = Set.of("IN_APP", "WS");
+
     private final AssetMapper assetMapper;
     private final AssetStateTransitionValidator stateValidator;
     /** Optional dependency: defaults to IN_WARRANTY when the warranty module is absent. */
     private final ObjectProvider<IWarrantyService> warrantyServiceProvider;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -87,7 +98,9 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
         rma.setWarrantyStatus(inWarranty ? WARRANTY_IN : WARRANTY_OUT);
         rma.setWarrantyCheckedAt(LocalDateTime.now());
         rma.setTicketStatus(TICKET_WARRANTY_CHECKED);
-        return this.updateById(rma);
+        boolean updated = this.updateById(rma);
+        sendStatusChangeNotification(rma, TICKET_WARRANTY_CHECKED);
+        return updated;
     }
 
     @Override
@@ -100,7 +113,9 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
         }
         rma.setTicketStatus(TICKET_RMA_ISSUED);
         rma.setRmaIssuedAt(LocalDateTime.now());
-        return this.updateById(rma);
+        boolean updated = this.updateById(rma);
+        sendStatusChangeNotification(rma, TICKET_RMA_ISSUED);
+        return updated;
     }
 
     @Override
@@ -112,7 +127,9 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
         }
         rma.setTicketStatus(TICKET_RETURNING);
         rma.setReturningAt(LocalDateTime.now());
-        return this.updateById(rma);
+        boolean updated = this.updateById(rma);
+        sendStatusChangeNotification(rma, TICKET_RETURNING);
+        return updated;
     }
 
     @Override
@@ -139,6 +156,7 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
                 assetMapper.updateById(asset);
             }
         }
+        sendStatusChangeNotification(rma, TICKET_INSPECTED);
         return updated;
     }
 
@@ -151,7 +169,9 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
         }
         rma.setTicketStatus(TICKET_CLOSED);
         rma.setClosedAt(LocalDateTime.now());
-        return this.updateById(rma);
+        boolean updated = this.updateById(rma);
+        sendStatusChangeNotification(rma, TICKET_CLOSED);
+        return updated;
     }
 
     @Override
@@ -229,6 +249,38 @@ public class RmaServiceImpl extends ServiceImpl<RmaMapper, Rma> implements IRmaS
             throw new BusinessException("RMA 单不存在");
         }
         return rma;
+    }
+
+    /**
+     * Notify the RMA registrant that the ticket status has changed. The RMA
+     * entity's {@code registerUserId} is the creator/owner of the ticket.
+     * Failures are swallowed: notifications are best-effort and must not roll
+     * back the status transition.
+     */
+    private void sendStatusChangeNotification(Rma rma, String newStatus) {
+        Long recipientId = rma.getRegisterUserId();
+        if (recipientId == null) {
+            log.warn("RMA id={} 无登记人 userId，跳过状态变更通知", rma.getId());
+            return;
+        }
+        String title = "RMA 状态变更";
+        String content = String.format("RMA %s 状态已变更为 %s",
+                rma.getRmaNo() == null ? rma.getId() : rma.getRmaNo(),
+                newStatus);
+        Notification notification = Notification.builder()
+                .userId(recipientId)
+                .title(title)
+                .content(content)
+                .category(CATEGORY_RMA)
+                .bizType(BIZ_TYPE_RMA_STATUS_CHANGE)
+                .bizId(rma.getId())
+                .build();
+        try {
+            notificationService.multiChannelSend(notification, CHANNELS);
+        } catch (Exception e) {
+            log.error("RMA 状态变更通知发送失败 rmaId={} userId={}",
+                    rma.getId(), recipientId, e);
+        }
     }
 
     /**
