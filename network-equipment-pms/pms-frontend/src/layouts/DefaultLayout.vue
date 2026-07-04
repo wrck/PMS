@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
+import { useWebSocketStore } from '@/stores/websocket'
+import TagsView from '@/components/TagsView/index.vue'
+import NotificationBell from '@/components/NotificationBell/index.vue'
 
 interface MenuLeaf {
   title: string
@@ -18,6 +21,7 @@ interface MenuGroup {
 
 const appStore = useAppStore()
 const userStore = useUserStore()
+const websocketStore = useWebSocketStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -65,6 +69,33 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     icon: 'Connection',
     children: [{ title: '待办中心', path: '/workflow/todo', icon: 'Bell' }]
   },
+  {
+    title: '交付治理',
+    icon: 'Operation',
+    children: [
+      { title: 'Punch List', path: '/punch-list', icon: 'WarningFilled' },
+      { title: 'RMA 返修', path: '/rma', icon: 'RefreshRight' },
+      { title: '质保期管理', path: '/warranty', icon: 'Timer' },
+      { title: '终验交付物', path: '/deliverable', icon: 'Document' }
+    ]
+  },
+  {
+    title: '项目治理',
+    icon: 'SetUp',
+    children: [
+      { title: '风险登记册', path: '/risk', icon: 'Warning' },
+      { title: '变更管理', path: '/change-request', icon: 'EditPen' },
+      { title: '问题日志', path: '/issue', icon: 'ChatLineSquare' }
+    ]
+  },
+  {
+    title: '系统监控',
+    icon: 'DataLine',
+    children: [
+      { title: '消息中心', path: '/notification', icon: 'Bell' },
+      { title: '集成健康', path: '/integration-health', icon: 'Monitor' }
+    ]
+  },
   { title: '报表统计', path: '/report', icon: 'TrendCharts' }
 ]
 
@@ -92,6 +123,17 @@ function handleUserCommand(command: string) {
     router.push('/dashboard')
   }
 }
+
+// 已登录时建立 WebSocket 连接，组件销毁时断开
+onMounted(() => {
+  if (userStore.token) {
+    websocketStore.connect()
+  }
+})
+
+onBeforeUnmount(() => {
+  websocketStore.disconnect()
+})
 </script>
 
 <template>
@@ -147,6 +189,7 @@ function handleUserCommand(command: string) {
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <NotificationBell class="header-notification" />
           <el-dropdown @command="handleUserCommand">
             <span class="user-info">
               <el-avatar :size="30" class="user-avatar">
@@ -164,6 +207,8 @@ function handleUserCommand(command: string) {
           </el-dropdown>
         </div>
       </el-header>
+
+      <TagsView />
 
       <el-main class="layout-main">
         <router-view v-slot="{ Component }">
@@ -243,6 +288,12 @@ function handleUserCommand(command: string) {
 
 .header-right {
   display: flex;
+  align-items: center;
+}
+
+.header-notification {
+  margin-right: 16px;
+  display: inline-flex;
   align-items: center;
 }
 

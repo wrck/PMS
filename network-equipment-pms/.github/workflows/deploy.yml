@@ -1,0 +1,34 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Notice
+        run: |
+          echo "TODO: 按实际环境补充部署步骤"
+          echo "镜像已由 CI 流水线推送至 ghcr.io/${{ github.repository }}"
+          echo "下一步：SSH 到部署服务器拉取最新镜像并重启 docker-compose"
+
+      - name: SSH Deploy (optional)
+        if: ${{ env.DEPLOY_HOST != '' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker-compose pull backend frontend
+            docker-compose up -d backend frontend

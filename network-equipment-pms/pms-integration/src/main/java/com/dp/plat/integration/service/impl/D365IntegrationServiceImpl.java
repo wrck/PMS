@@ -236,8 +236,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
             if (assetId == null || sn == null) {
                 continue;
             }
-            UpdateWrapper<Object> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id", assetId).set("serial_no", sn);
+            UpdateWrapper wrapper = new UpdateWrapper();
+            wrapper.eq("id", assetId);
+            wrapper.set("serial_no", sn);
             int rows = assetMapper.update(null, wrapper);
             if (rows > 0) {
                 count++;
@@ -503,8 +504,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
             log.warn("SettlementMapper bean not available; cannot update invoice_no for {}", settlementNo);
             return;
         }
-        UpdateWrapper wrapper = new UpdateWrapper<>();
-        wrapper.eq("settlement_no", settlementNo).set("invoice_no", invoiceNo);
+        UpdateWrapper wrapper = new UpdateWrapper();
+        wrapper.eq("settlement_no", settlementNo);
+        wrapper.set("invoice_no", invoiceNo);
         settlementMapper.update(null, wrapper);
     }
 

@@ -252,9 +252,9 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
                         "SettlementMapper bean not available");
                 throw new BusinessException("SettlementMapper bean not available");
             }
-            UpdateWrapper<Object> wrapper = new UpdateWrapper<>();
-            wrapper.eq("settlement_no", callback.getSettlementNo())
-                    .set("payment_status", callback.getPaymentStatus());
+            UpdateWrapper wrapper = new UpdateWrapper();
+            wrapper.eq("settlement_no", callback.getSettlementNo());
+            wrapper.set("payment_status", callback.getPaymentStatus());
             int rows = settlementMapper.update(null, wrapper);
             integrationLogService.markSuccess(logRecord.getId(),
                     "updated rows=" + rows + ", paymentStatus=" + callback.getPaymentStatus());

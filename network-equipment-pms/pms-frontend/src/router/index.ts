@@ -107,6 +107,60 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '待办中心', icon: 'Bell' }
       },
       {
+        path: 'punch-list',
+        name: 'PunchList',
+        component: () => import('@/views/punch-list/index.vue'),
+        meta: { title: 'Punch List', icon: 'WarningFilled', requiresAuth: true }
+      },
+      {
+        path: 'rma',
+        name: 'Rma',
+        component: () => import('@/views/rma/index.vue'),
+        meta: { title: 'RMA 返修', icon: 'RefreshRight', requiresAuth: true }
+      },
+      {
+        path: 'warranty',
+        name: 'Warranty',
+        component: () => import('@/views/warranty/index.vue'),
+        meta: { title: '质保期管理', icon: 'Timer', requiresAuth: true }
+      },
+      {
+        path: 'deliverable',
+        name: 'Deliverable',
+        component: () => import('@/views/deliverable/index.vue'),
+        meta: { title: '终验交付物', icon: 'Document', requiresAuth: true }
+      },
+      {
+        path: 'notification',
+        name: 'NotificationCenter',
+        component: () => import('@/views/notification/index.vue'),
+        meta: { title: '消息中心', icon: 'Bell', requiresAuth: true }
+      },
+      {
+        path: 'integration-health',
+        name: 'IntegrationHealth',
+        component: () => import('@/views/integration-health/index.vue'),
+        meta: { title: '集成健康检查', icon: 'Monitor', requiresAuth: true }
+      },
+      {
+        path: 'risk',
+        name: 'Risk',
+        component: () => import('@/views/risk/index.vue'),
+        meta: { title: '风险登记册', icon: 'Warning', requiresAuth: true }
+      },
+      {
+        path: 'change-request',
+        name: 'ChangeRequest',
+        component: () => import('@/views/change-request/index.vue'),
+        meta: { title: '变更管理', icon: 'EditPen', requiresAuth: true }
+      },
+      {
+        path: 'issue',
+        name: 'Issue',
+        component: () => import('@/views/issue/index.vue'),
+        meta: { title: '问题日志', icon: 'ChatLineSquare', requiresAuth: true }
+      },
+      {
         path: 'report',
         name: 'Report',
         component: () => import('@/views/report/index.vue'),
