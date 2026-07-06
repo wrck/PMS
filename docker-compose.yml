@@ -1,0 +1,82 @@
+# =============================================================================
+# PMS 容器化编排：MySQL 8.0 数据库 + PMS 应用（Tomcat）
+#
+# 启动：./scripts/deploy.sh up   或   docker-compose up -d
+# 停止：./scripts/deploy.sh down
+#
+# 可在调用前用环境变量覆盖默认值，例如：
+#   APP_PORT=9090 MYSQL_ROOT_PASSWORD=secret ./scripts/deploy.sh up
+#   BUILD_PROFILE=pms3 WAR_NAME=AFPMS3.war ./scripts/deploy.sh up
+# =============================================================================
+version: "3.8"
+
+services:
+  # --------------------------------------------------------------------------
+  # 数据库：MySQL 8.0，库 dppms_d365
+  # --------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: pms-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dppms_d365}
+      MYSQL_USER: ${MYSQL_USER:-pms}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pms123}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      # 命名数据卷，持久化数据库文件
+      - pms-mysql-data:/var/lib/mysql
+      # 可选：将 *.sql / *.sh 初始化脚本放入 ./docker/db/init，首次启动自动执行
+      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - pms-net
+
+  # --------------------------------------------------------------------------
+  # 应用：PMS-springmvc（Tomcat 9 + JDK 8）
+  # --------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-pms2}
+        ENV_PROFILE: ${ENV_PROFILE:-dev}
+        WAR_NAME: ${WAR_NAME:-PMS2.war}
+    container_name: pms-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # 指向 compose 内的 db 服务（主机名 db，端口 3306）
+      JDBC_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-dppms_d365}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      JDBC_USERNAME: ${MYSQL_USER:-pms}
+      JDBC_PASSWORD: ${MYSQL_PASSWORD:-pms123}
+      TZ: Asia/Shanghai
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx2048m}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - pms-net
+
+volumes:
+  pms-mysql-data:
+    name: pms-mysql-data
+
+networks:
+  pms-net:
+    name: pms-net
+    driver: bridge

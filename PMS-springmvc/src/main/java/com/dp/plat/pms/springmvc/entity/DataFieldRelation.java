@@ -97,6 +97,18 @@ public class DataFieldRelation extends DataTableColumn {
     // 是否为系统字段
     private Boolean isSystemField;
 
+    // 配置状态：draft / published / disabled
+    private String configStatus;
+
+    // 版本号，每次发布递增
+    private Integer version;
+
+    // 模板ID，用于模板分组
+    private String templateId;
+
+    // 描述
+    private String description;
+
     private String createBy;
 
     @JsonSerialize(using = JsonSerializer.class)
@@ -672,6 +684,78 @@ public class DataFieldRelation extends DataTableColumn {
      */
     public void setIsSystemField(Boolean isSystemField) {
         this.isSystemField = isSystemField;
+    }
+
+    /**
+     * 获取配置状态
+     *
+     * @return configStatus - 配置状态：draft / published / disabled
+     */
+    public String getConfigStatus() {
+        return configStatus;
+    }
+
+    /**
+     * 设置配置状态
+     *
+     * @param configStatus 配置状态：draft / published / disabled
+     */
+    public void setConfigStatus(String configStatus) {
+        this.configStatus = configStatus;
+    }
+
+    /**
+     * 获取版本号
+     *
+     * @return version - 版本号，每次发布递增
+     */
+    public Integer getVersion() {
+        return version;
+    }
+
+    /**
+     * 设置版本号
+     *
+     * @param version 版本号，每次发布递增
+     */
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    /**
+     * 获取模板ID
+     *
+     * @return templateId - 模板ID，用于模板分组
+     */
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    /**
+     * 设置模板ID
+     *
+     * @param templateId 模板ID，用于模板分组
+     */
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
+    }
+
+    /**
+     * 获取描述
+     *
+     * @return description - 描述
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * 设置描述
+     *
+     * @param description 描述
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**

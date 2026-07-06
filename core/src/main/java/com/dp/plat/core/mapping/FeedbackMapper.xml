@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.plat.core.dao.FeedbackMapper">
+  <resultMap id="BaseResultMap" type="com.dp.plat.core.pojo.Feedback">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+    <result column="contact" jdbcType="VARCHAR" property="contact" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="create_user" jdbcType="VARCHAR" property="createUser" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_user" jdbcType="VARCHAR" property="updateUser" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, type, title, content, contact, status, create_user, create_time, update_user, 
+    update_time
+  </sql>
+  <insert id="insert" parameterType="com.dp.plat.core.pojo.Feedback" useGeneratedKeys="true" keyProperty="id">
+    insert into t_feedback (type, title, content, 
+      contact, status, create_user, 
+      create_time, update_user, update_time
+      )
+    values (#{type,jdbcType=VARCHAR}, #{title,jdbcType=VARCHAR}, #{content,jdbcType=VARCHAR}, 
+      #{contact,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{createUser,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <update id="update" parameterType="com.dp.plat.core.pojo.Feedback">
+    update t_feedback
+    <set>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="contact != null">
+        contact = #{contact,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="createUser != null">
+        create_user = #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        update_user = #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_feedback
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="findList" parameterType="com.dp.plat.core.pojo.Feedback" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_feedback
+    <where>
+      <trim prefixOverrides="and |or" suffixOverrides="and |or">
+        <if test="type != null and '' != type">
+          type = #{type, jdbcType=VARCHAR} AND
+        </if>
+        <if test="status != null and '' != status">
+          status = #{status, jdbcType=VARCHAR} AND
+        </if>
+        <if test="title != null and '' != title">
+          title like CONCAT("%", #{title}, "%") AND
+        </if>
+        <if test="content != null and '' != content">
+          content like CONCAT("%", #{content}, "%") AND
+        </if>
+        <if test="createUser != null and '' != createUser">
+          create_user = #{createUser, jdbcType=VARCHAR} AND
+        </if>
+      </trim>
+    </where>
+    order by id desc
+  </select>
+  <delete id="deleteByIds" parameterType="java.util.List">
+    delete from t_feedback
+    where id in
+    <foreach collection="list" item="id" open="(" separator="," close=")">
+      #{id,jdbcType=BIGINT}
+    </foreach>
+  </delete>
+</mapper>

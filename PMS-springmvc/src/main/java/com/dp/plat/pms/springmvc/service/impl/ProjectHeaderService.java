@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +39,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.fastjson.JSON;
@@ -90,6 +94,9 @@ import com.dp.plat.util.Util;
 public class ProjectHeaderService extends ProjectServiceImpl
 		/* extends AbstractBaseService<ProjectMapper, Project> */ implements IProjectHeaderService,
 		IAbstractBaseService<ProjectHeader> {
+
+    // 组编码生成锁（按前缀分锁）。注意：仅适用于单节点部署；多节点需改用数据库唯一约束或独立的序列表
+    private static final ConcurrentHashMap<String, ReentrantLock> PROJECT_GROUPCODE_LOCKS = new ConcurrentHashMap<>();
 
     @Autowired
     protected ProjectHeaderMapper dao;
@@ -329,16 +336,39 @@ public class ProjectHeaderService extends ProjectServiceImpl
             // - 项目表
             pid = project.getProjectId();
             String projectGroupCode = project.getProjectGroupCode();
+            boolean projectGroupInserted = false;
             if (projectGroupCode == null) {
                 // project.setProjectType(0);//页面传递过来，无需在此编写hard code
-                // FIXME 并发情况下，会获取到相同的组编码，造成错误
-                // 查询最大的组编码
-                projectGroupCode = projectDao.queryMaxProjectGroupCode();
                 // 组编码前缀
                 String pre = MessageUtil.PROJECT_GROUPCODE_PRE + "_" + projectType;
-                // 如果查询的组编码为空，则置为prj_gp1，否则置为最大值+1
-                projectGroupCode = ((projectGroupCode == null) ? (pre + "1") : pre + (Integer.valueOf(projectGroupCode.replace(pre, "")) + 1));
-                project.setProjectGroupCode(projectGroupCode);
+                // 并发场景下按组编码前缀加锁，避免并发请求获取到相同的组编码；
+                // 处于事务中时锁延迟到事务提交/回滚后释放，确保并发事务读取到已提交的最大值
+                ReentrantLock groupCodeLock = PROJECT_GROUPCODE_LOCKS.computeIfAbsent(pre, k -> new ReentrantLock());
+                groupCodeLock.lock();
+                boolean lockReleased = false;
+                try {
+                    // 查询最大的组编码
+                    projectGroupCode = projectDao.queryMaxProjectGroupCode();
+                    // 如果查询的组编码为空，则置为prj_gp1，否则置为最大值+1
+                    projectGroupCode = ((projectGroupCode == null) ? (pre + "1") : pre + (Integer.valueOf(projectGroupCode.replace(pre, "")) + 1));
+                    project.setProjectGroupCode(projectGroupCode);
+                    // 在锁内完成项目组信息表插入，确保生成的组编码已持久化（或随事务提交后对并发可见）
+                    projectDao.insertProjectGroup(project);// 插入到表pm_project_group - 项目组信息表
+                    projectGroupInserted = true;
+                    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCompletion(int status) {
+                                groupCodeLock.unlock();
+                            }
+                        });
+                        lockReleased = true;
+                    }
+                } finally {
+                    if (!lockReleased) {
+                        groupCodeLock.unlock();
+                    }
+                }
             }
             if (StringUtils.isBlank(project.getSmsProjectCode())) {
                 String projectCode = project.getProjectCode();
@@ -349,8 +379,10 @@ public class ProjectHeaderService extends ProjectServiceImpl
                 	project.setSmsProjectCode(projectCode);
                 }
             }
-            // 插入到表pm_project_group - 项目组信息表
-            projectDao.insertProjectGroup(project);
+            if (!projectGroupInserted) {
+                // 插入到表pm_project_group - 项目组信息表
+                projectDao.insertProjectGroup(project);
+            }
             // 插入到表pm_project_contract -
             projectDao.insertProjectContract(project);
             // 项目合同关联表

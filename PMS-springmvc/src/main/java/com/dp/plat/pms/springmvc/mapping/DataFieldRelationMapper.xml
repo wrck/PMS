@@ -32,16 +32,20 @@
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="compId" jdbcType="INTEGER" property="compId" />
     <result column="isSystemField" jdbcType="BIT" property="isSystemField" />
+    <result column="configStatus" jdbcType="VARCHAR" property="configStatus" />
+    <result column="version" jdbcType="INTEGER" property="version" />
+    <result column="templateId" jdbcType="VARCHAR" property="templateId" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
     <result column="createBy" jdbcType="VARCHAR" property="createBy" />
     <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
     <result column="updateBy" jdbcType="VARCHAR" property="updateBy" />
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, dataName, dataType, dataId, field, alias, name, title, titleKey, cssId, cssClass, 
-    cssStyle, type, render, sort, orderable, searchable, visible, required, readonly, 
-    disabled, extData, extKey, extValue, media, clazzName, superData, status, compId, isSystemField, 
-    createBy, createTime, updateBy, updateTime
+    id, dataName, dataType, dataId, field, alias, name, title, titleKey, cssId, cssClass,
+    cssStyle, type, render, sort, orderable, searchable, visible, required, readonly,
+    disabled, extData, extKey, extValue, media, clazzName, superData, status, compId, isSystemField,
+    configStatus, version, templateId, description, createBy, createTime, updateBy, updateTime
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -65,20 +69,22 @@
       searchable, visible, required, 
       readonly, disabled, extData, 
       extKey, extValue, media, 
-      clazzName, superData, status, 
-      compId, isSystemField, createBy, 
+      clazzName, superData, status,
+      compId, isSystemField, configStatus, version, templateId, description, createBy,
       createTime, updateBy, updateTime
       )
-    values (#{dataName,jdbcType=VARCHAR}, #{dataType,jdbcType=VARCHAR}, #{dataId,jdbcType=INTEGER}, 
-      #{field,jdbcType=VARCHAR}, #{alias,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
-      #{title,jdbcType=VARCHAR}, #{titleKey,jdbcType=VARCHAR}, #{cssId,jdbcType=VARCHAR}, 
-      #{cssClass,jdbcType=VARCHAR}, #{cssStyle,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, 
-      #{render,jdbcType=VARCHAR}, #{sort,jdbcType=INTEGER}, #{orderable,jdbcType=BIT}, 
-      #{searchable,jdbcType=BIT}, #{visible,jdbcType=BIT}, #{required,jdbcType=BIT}, 
-      #{readonly,jdbcType=BIT}, #{disabled,jdbcType=BIT}, #{extData,jdbcType=VARCHAR}, 
-      #{extKey,jdbcType=VARCHAR}, #{extValue,jdbcType=VARCHAR}, #{media,jdbcType=VARCHAR}, 
-      #{clazzName,jdbcType=VARCHAR}, #{superData,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
-      #{compId,jdbcType=INTEGER}, #{isSystemField,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, 
+    values (#{dataName,jdbcType=VARCHAR}, #{dataType,jdbcType=VARCHAR}, #{dataId,jdbcType=INTEGER},
+      #{field,jdbcType=VARCHAR}, #{alias,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR},
+      #{title,jdbcType=VARCHAR}, #{titleKey,jdbcType=VARCHAR}, #{cssId,jdbcType=VARCHAR},
+      #{cssClass,jdbcType=VARCHAR}, #{cssStyle,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR},
+      #{render,jdbcType=VARCHAR}, #{sort,jdbcType=INTEGER}, #{orderable,jdbcType=BIT},
+      #{searchable,jdbcType=BIT}, #{visible,jdbcType=BIT}, #{required,jdbcType=BIT},
+      #{readonly,jdbcType=BIT}, #{disabled,jdbcType=BIT}, #{extData,jdbcType=VARCHAR},
+      #{extKey,jdbcType=VARCHAR}, #{extValue,jdbcType=VARCHAR}, #{media,jdbcType=VARCHAR},
+      #{clazzName,jdbcType=VARCHAR}, #{superData,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER},
+      #{compId,jdbcType=INTEGER}, #{isSystemField,jdbcType=BIT}, #{configStatus,jdbcType=VARCHAR},
+      #{version,jdbcType=INTEGER}, #{templateId,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+      #{createBy,jdbcType=VARCHAR},
       #{createTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}
       )
   </insert>
@@ -174,6 +180,18 @@
       </if>
       <if test="isSystemField != null">
         isSystemField,
+      </if>
+      <if test="configStatus != null">
+        configStatus,
+      </if>
+      <if test="version != null">
+        version,
+      </if>
+      <if test="templateId != null">
+        templateId,
+      </if>
+      <if test="description != null">
+        description,
       </if>
       <if test="createBy != null">
         createBy,
@@ -275,6 +293,18 @@
       </if>
       <if test="isSystemField != null">
         #{isSystemField,jdbcType=BIT},
+      </if>
+      <if test="configStatus != null">
+        #{configStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="version != null">
+        #{version,jdbcType=INTEGER},
+      </if>
+      <if test="templateId != null">
+        #{templateId,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
       </if>
       <if test="createBy != null">
         #{createBy,jdbcType=VARCHAR},
@@ -380,6 +410,18 @@
       <if test="isSystemField != null">
         isSystemField = #{isSystemField,jdbcType=BIT},
       </if>
+      <if test="configStatus != null">
+        configStatus = #{configStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="version != null">
+        version = #{version,jdbcType=INTEGER},
+      </if>
+      <if test="templateId != null">
+        templateId = #{templateId,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
       <if test="createBy != null">
         createBy = #{createBy,jdbcType=VARCHAR},
       </if>
@@ -426,6 +468,10 @@
       status = #{status,jdbcType=INTEGER},
       compId = #{compId,jdbcType=INTEGER},
       isSystemField = #{isSystemField,jdbcType=BIT},
+      configStatus = #{configStatus,jdbcType=VARCHAR},
+      version = #{version,jdbcType=INTEGER},
+      templateId = #{templateId,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
       createBy = #{createBy,jdbcType=VARCHAR},
       createTime = #{createTime,jdbcType=TIMESTAMP},
       updateBy = #{updateBy,jdbcType=VARCHAR},
@@ -947,4 +993,47 @@
 		</trim>
 	</where>
   </select>
+
+  <!-- ===== 低代码配置状态机查询 ===== -->
+  <select id="selectByDataNameAndConfigStatus" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from data_field_relation
+    where dataName = #{dataName,jdbcType=VARCHAR}
+      and dataType = #{dataType,jdbcType=VARCHAR}
+      and configStatus = #{configStatus,jdbcType=VARCHAR}
+    order by sort asc
+  </select>
+
+  <delete id="deleteByDataNameAndConfigStatus">
+    delete from data_field_relation
+    where dataName = #{dataName,jdbcType=VARCHAR}
+      and dataType = #{dataType,jdbcType=VARCHAR}
+      and configStatus = #{configStatus,jdbcType=VARCHAR}
+  </delete>
+
+  <update id="updateStateByDataName">
+    update data_field_relation
+    set configStatus = #{newConfigStatus,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      updateTime = now()
+    where dataName = #{dataName,jdbcType=VARCHAR}
+      and dataType = #{dataType,jdbcType=VARCHAR}
+      and configStatus = #{oldConfigStatus,jdbcType=VARCHAR}
+  </update>
+
+  <select id="selectMaxVersion" resultType="java.lang.Integer">
+    select max(version) from data_field_relation
+    where dataName = #{dataName,jdbcType=VARCHAR}
+      and dataType = #{dataType,jdbcType=VARCHAR}
+  </select>
+
+  <update id="updateVersionByDataName">
+    update data_field_relation
+    set version = #{version,jdbcType=INTEGER},
+      updateTime = now()
+    where dataName = #{dataName,jdbcType=VARCHAR}
+      and dataType = #{dataType,jdbcType=VARCHAR}
+      and configStatus = #{configStatus,jdbcType=VARCHAR}
+  </update>
 </mapper>

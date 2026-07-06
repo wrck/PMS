@@ -8,12 +8,12 @@
 	<name>PMS</name>
 
 	<modules>
-		<module>pms-struts</module>
+		<module>PMS-struts</module>
 		<module>core</module>
-		<module>pms-activiti</module>
-		<module>pms-springmvc</module>
-		<module>pms-ext-d365</module>
-		<module>pms-security</module>
+		<module>PMS-activiti</module>
+		<module>PMS-springmvc</module>
+		<module>PMS-ext-d365</module>
+		<module>PMS-security</module>
 		<module>pms-ext-fp</module>
 		<module>pms-rules</module>
 	</modules>
