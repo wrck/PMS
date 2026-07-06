@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.flowable.engine.delegate.TaskListener;
 import org.flowable.task.service.delegate.DelegateTask;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Flowable {@link TaskListener} that mirrors user-task lifecycle events to
@@ -14,15 +16,28 @@ import org.springframework.stereotype.Component;
  *
  * <p>On task {@code create} a todo is pushed to OA for the task assignee; on
  * task {@code complete} the corresponding OA todo is closed. The listener is
- * registered in the BPMN via {@code delegateExpression="${oaTaskListener}"}.
+ * registered in the BPMN via {@code delegateExpression="${oaTaskListener}"}.</p>
  *
- * <p>OA integration is best-effort and intentionally independent of the main
- * workflow transaction: every OA call is wrapped in a try-catch and failures
- * are logged but never re-thrown, so a transient OA outage never rolls back
- * or breaks the Flowable task lifecycle. (An equivalent
- * {@code @Transactional(propagation=REQUIRES_NEW)} would also work, but since
- * the OA service already swallows internal errors and returns a boolean, a
- * plain try-catch is sufficient here.)</p>
+ * <p><b>事务隔离（Task 19.4）</b>：{@link #notify(DelegateTask)} 方法标注
+ * {@code @Transactional(propagation = REQUIRES_NEW)}，确保 OA 集成（含
+ * {@code IntegrationLog} 写入）在独立事务中执行，与 Flowable 工作流主流程
+ * 事务隔离：</p>
+ *
+ * <ul>
+ *   <li>OA 调用成功 → IntegrationLog 记录 SUCCESS，新事务提交，主流程继续</li>
+ *   <li>OA 调用失败 → IntegrationLog 记录 FAILED，新事务提交（日志需保留），
+ *       异常被 try-catch 吞掉，主流程不受影响</li>
+ *   <li>主流程后续回滚 → 不影响已提交的 OA 集成日志（REQUIRES_NEW 已提交）</li>
+ * </ul>
+ *
+ * <p><b>代理生效前提</b>：Flowable 通过 {@code delegateExpression} 从 Spring
+ * 容器获取本 Bean，获取的是 Spring 代理对象（CGLIB），因此 {@code @Transactional}
+ * 注解能正常生效。同类内部方法调用不会触发代理，但本类仅 {@code notify} 一个
+ * 入口方法，不存在内部调用链。</p>
+ *
+ * <p><b>异常策略</b>：所有异常（{@code IntegrationException} / HTTP 错误 /
+ * token 获取失败）均在 {@code notify} 内 catch，仅记录 WARN 日志，绝不向
+ * Flowable 引擎上抛。OA 集成是 best-effort，瞬时故障不应阻塞工作流。</p>
  */
 @Slf4j
 @Component("oaTaskListener")
@@ -31,7 +46,18 @@ public class OaTaskListener implements TaskListener {
 
     private final OaIntegrationService oaIntegrationService;
 
+    /**
+     * 处理 Flowable 任务事件，在独立事务中同步 OA 待办。
+     *
+     * <p>使用 {@code REQUIRES_NEW} 传播级别：暂停当前 Flowable 事务，开启
+     * 新事务执行 OA 集成。无论 OA 调用成功或失败，新事务都会提交（确保
+     * IntegrationLog 持久化），然后恢复原事务。异常被 catch 吞掉，不向
+     * Flowable 引擎传播。</p>
+     *
+     * @param delegateTask Flowable 委托任务实例
+     */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notify(DelegateTask delegateTask) {
         String eventName = delegateTask.getEventName();
         try {
@@ -52,6 +78,8 @@ public class OaTaskListener implements TaskListener {
             }
         } catch (Exception e) {
             // Swallow: OA integration must not affect the workflow transaction.
+            // REQUIRES_NEW 事务已提交（IntegrationLog 的 FAILED 记录已持久化），
+            // 此处仅记录告警，不向 Flowable 引擎抛出异常。
             log.warn("OA task listener '{}' failed for task {} (workflow unaffected): {}",
                     eventName, delegateTask.getId(), e.getMessage());
         }

@@ -17,6 +17,12 @@ import java.time.LocalDateTime;
  * MyBatis-Plus configuration: pagination interceptor, optimistic lock interceptor,
  * optional custom inner interceptors (e.g. data permission), and a
  * {@link MetaObjectHandler} for auto-filling audit fields.
+ *
+ * <p><b>慢 SQL 监控注册说明</b>：{@link com.dp.plat.common.mybatis.SlowSqlInterceptor}
+ * 为 MyBatis 原生 {@code org.apache.ibatis.plugin.Interceptor}（非 MyBatis-Plus 的
+ * {@link InnerInterceptor}），<b>不能</b>通过 {@link MybatisPlusInterceptor#addInnerInterceptor(InnerInterceptor)}
+ * 注册。其标注了 {@code @Component}，会被 MyBatis Spring 自动发现并注册为独立插件，
+ * 与下方的 {@code mybatisPlusInterceptor} 平行生效，无需在此处手动添加。</p>
  */
 @Configuration
 public class MyBatisPlusConfig {

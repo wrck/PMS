@@ -1,6 +1,43 @@
-**/node_modules
+# ============================================================================
+# .dockerignore — 减少 Docker 构建上下文体积，加速构建并避免敏感文件泄露
+# ============================================================================
+# 版本控制
+.git
+.gitignore
+.github
+
+# IDE 配置
+.idea
+.vscode
+*.iml
+
+# 构建产物（避免把本地 target/dist/node_modules 打入构建上下文）
 **/target
-**/.git
-**/*.log
+**/node_modules
 **/dist
-pms-frontend/node_modules
+**/build
+
+# 环境变量与密钥（防止敏感信息进入镜像层）
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+
+# 文档与日志
+*.md
+docs/
+logs/
+**/*.log
+
+# Docker Compose 与部署配置（构建镜像时不需要）
+docker-compose*.yml
+deploy/
+
+# 前端测试产物
+pms-frontend/e2e
+pms-frontend/coverage
+
+# Maven 包装器（镜像内使用 maven 基础镜像，不需要 mvnw）
+mvnw
+mvnw.cmd
+.mvn

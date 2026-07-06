@@ -184,6 +184,63 @@ export const routes: RouteRecordRaw[] = [
         name: 'Report',
         component: () => import('@/views/report/index.vue'),
         meta: { title: '报表统计', icon: 'TrendCharts' }
+      },
+      {
+        path: 'lowcode/form-list',
+        name: 'LowCodeFormList',
+        component: () => import('@/views/lowcode/form-list/index.vue'),
+        meta: { title: '表单配置', icon: 'Document', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/form-designer',
+        name: 'LowCodeFormDesigner',
+        component: () => import('@/views/lowcode/form-designer/index.vue'),
+        meta: { title: '表单设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
+      },
+      {
+        path: 'lowcode/list-list',
+        name: 'LowCodeListList',
+        component: () => import('@/views/lowcode/list-list/index.vue'),
+        meta: { title: '列表配置', icon: 'List', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/list-designer',
+        name: 'LowCodeListDesigner',
+        component: () => import('@/views/lowcode/list-designer/index.vue'),
+        meta: { title: '列表设计器', icon: 'Grid', requiresAuth: true, hidden: true }
+      },
+      {
+        path: 'lowcode/tab-list',
+        name: 'LowCodeTabList',
+        component: () => import('@/views/lowcode/tab-list/index.vue'),
+        meta: { title: '标签页配置', icon: 'Files', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/tab-designer',
+        name: 'LowCodeTabDesigner',
+        component: () => import('@/views/lowcode/tab-designer/index.vue'),
+        meta: { title: '标签页设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
+      },
+      {
+        path: 'lowcode/related-page-list',
+        name: 'LowCodeRelatedPageList',
+        component: () => import('@/views/lowcode/related-page-list/index.vue'),
+        meta: { title: '关联页配置', icon: 'Share', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/related-page-designer',
+        name: 'LowCodeRelatedPageDesigner',
+        component: () => import('@/views/lowcode/related-page-designer/index.vue'),
+        meta: { title: '关联页设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
+      },
+      {
+        // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
+        // pageType: form | list | tab | related-page
+        // pageCode: 低代码配置编码
+        path: 'lowcode/:pageType/:pageCode',
+        name: 'LowCodeRender',
+        component: () => import('@/views/lowcode/render/index.vue'),
+        meta: { title: '低代码页面', requiresAuth: true, hidden: true }
       }
     ]
   },

@@ -1,5 +1,6 @@
 package com.dp.plat.implementation.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.file.entity.Attachment;
 import com.dp.plat.file.service.IAttachmentService;
@@ -7,8 +8,10 @@ import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.service.IImplProgressService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,12 +49,16 @@ public class ImplProgressController {
 
     @Operation(summary = "Create a progress log")
     @PostMapping
-    public Result<ImplProgress> create(@RequestBody ImplProgress progress) {
+    @PreAuthorize("hasAuthority('implementation:implProgress:add')")
+    @OperLog(title = "实施进度管理", businessType = 1)
+    public Result<ImplProgress> create(@Valid @RequestBody ImplProgress progress) {
         return Result.ok(implProgressService.create(progress));
     }
 
     @Operation(summary = "Upload implementation photos for a progress log")
     @PostMapping("/{id}/photos")
+    @PreAuthorize("hasAuthority('implementation:implProgress:edit')")
+    @OperLog(title = "实施进度管理", businessType = 1)
     public Result<List<Attachment>> uploadPhotos(@PathVariable Long id,
                                                   @RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
@@ -75,6 +82,8 @@ public class ImplProgressController {
 
     @Operation(summary = "Delete a single implementation photo")
     @DeleteMapping("/photos/{attachmentId}")
+    @PreAuthorize("hasAuthority('implementation:implProgress:remove')")
+    @OperLog(title = "实施进度管理", businessType = 3)
     public Result<Boolean> deletePhoto(@PathVariable Long attachmentId) {
         return Result.ok(attachmentService.delete(attachmentId));
     }

@@ -189,7 +189,7 @@ async function handleDeploy(options: UploadRequestOptions): Promise<void> {
   const isValid = /\.bpmn(\.xml)?|\.xml$/i.test(file.name)
   if (!isValid) {
     ElMessage.warning('请上传 BPMN 或 XML 流程文件')
-    options.onError(new Error('invalid file type') as any)
+    options.onError(new Error('invalid file type') as unknown as Parameters<typeof options.onError>[0])
     return
   }
   try {
@@ -199,7 +199,7 @@ async function handleDeploy(options: UploadRequestOptions): Promise<void> {
     loadData()
     options.onSuccess({})
   } catch {
-    options.onError(new Error('deploy failed') as any)
+    options.onError(new Error('deploy failed') as unknown as Parameters<typeof options.onError>[0])
   }
 }
 

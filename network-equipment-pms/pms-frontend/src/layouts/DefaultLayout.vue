@@ -121,7 +121,12 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
       { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' }
     ]
   },
-  { title: '报表统计', path: '/report', icon: 'TrendCharts' }
+  { title: '报表统计', path: '/report', icon: 'TrendCharts' },
+  {
+    title: '低代码',
+    icon: 'MagicStick',
+    children: [{ title: '表单配置', path: '/lowcode/form-list', icon: 'Document' }]
+  }
 ]
 
 const activeMenu = computed(() => route.path)

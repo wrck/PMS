@@ -16,8 +16,12 @@ public enum ResultCode {
     PARAM_ERROR(400, "参数校验错误"),
     METHOD_NOT_ALLOWED(405, "请求方法不支持"),
     REQUEST_TIMEOUT(408, "请求超时"),
+    CONFLICT(409, "数据冲突"),
+    TOO_MANY_REQUESTS(429, "请求过于频繁，请稍后再试"),
     INTERNAL_SERVER_ERROR(500, "服务器内部错误"),
     SERVICE_UNAVAILABLE(503, "服务不可用"),
+    // 集成服务（D365/FP/OA）调用失败 / 熔断降级，统一返回 503，区分于内部 5xx
+    INTEGRATION_FAILURE(503, "集成服务暂不可用"),
     BUSINESS_ERROR(1001, "业务异常"),
     TOKEN_INVALID(1002, "Token 无效"),
     TOKEN_EXPIRED(1003, "Token 已过期"),

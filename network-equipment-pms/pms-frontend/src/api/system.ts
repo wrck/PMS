@@ -103,11 +103,15 @@ export interface SysMenu {
   path?: string
   component?: string
   icon?: string
-  type: number // 0=directory 1=menu 2=button
+  type: number // 0=directory 1=menu 2=button 3=lowcode page
   permission?: string
   sort?: number
   visible?: number
   status?: number
+  /** 低代码页面类型（type=3 时使用）：form / list / tab / related-page */
+  pageType?: string
+  /** 低代码配置编码（type=3 时使用） */
+  pageCode?: string
   children?: SysMenu[]
   createTime?: string
 }

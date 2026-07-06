@@ -55,6 +55,11 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-file</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>pms-lowcode</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.mysql</groupId>
@@ -64,6 +69,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- Actuator：生产级可观测性端点（health/metrics/prometheus 等） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- Micrometer Prometheus 注册表：暴露 /actuator/prometheus 指标端点供 Prometheus 抓取 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -77,6 +92,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- 结构化日志：将 Logback 输出为 JSON 格式，便于 ELK/Loki 采集与检索 -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+
+        <!-- OpenTelemetry 自动埋点：采集 Trace/Metrics 并通过 OTLP 上报 Jaeger/OTLP Collector -->
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-spring-boot-starter</artifactId>
+            <version>2.6.0</version>
         </dependency>
     </dependencies>
 

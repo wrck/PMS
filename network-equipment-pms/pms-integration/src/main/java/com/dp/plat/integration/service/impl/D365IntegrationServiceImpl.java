@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.exception.IntegrationException;
 import com.dp.plat.integration.config.D365Properties;
 import com.dp.plat.integration.constant.IntegrationConstants;
 import com.dp.plat.integration.d365.entity.D365Invoice;
@@ -15,10 +16,14 @@ import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.d365.PurchaseHeader;
 import com.dp.plat.integration.model.d365.PurchaseReceiptHeader;
 import com.dp.plat.integration.model.d365.TokenResponse;
+import com.dp.plat.integration.oauth.OAuthTokenCache;
 import com.dp.plat.integration.service.D365IntegrationService;
 import com.dp.plat.integration.service.IIntegrationLogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -36,76 +41,75 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of {@link D365IntegrationService}.
  *
- * <p>Performs a real OAuth2 {@code client_credentials} flow with an in-memory
- * token cache (ConcurrentHashMap + ahead-of-expiry refresh + double-checked
- * locking). A consecutive-failure counter emits an {@code error} log after 3
- * token failures in a row (a notification hook can be wired in later). All
+ * <p>Performs a real OAuth2 {@code client_credentials} flow with a distributed
+ * token cache ({@link OAuthTokenCache} / Redis Hash + ahead-of-expiry refresh +
+ * single-flight lock). Token 获取失败计数与告警由 {@link OAuthTokenCache} 统一管理
+ * （连续 3 次失败记录 ERROR + 递增 {@code pms_oauth_failure_total} 指标）。All
  * sync endpoints and the token endpoint are configurable via
  * {@link D365Properties} (bound from {@code d365.*}).</p>
+ *
+ * <p><b>Resilience4j 弹性保护</b>：所有对外部 D365 的写 / 同步调用均通过
+ * {@code @CircuitBreaker} + {@code @Bulkhead} + {@code @Retry} 三层保护：
+ * <ul>
+ *   <li>{@link CircuitBreaker}（{@code d365CircuitBreaker}）：失败率 ≥50% 触发熔断，
+ *       30s 后自动转半开，半开态允许 5 次试探。</li>
+ *   <li>{@link Bulkhead}（{@code d365Bulkhead}）：信号量隔离，最大并发 10。</li>
+ *   <li>{@link Retry}（{@code d365Retry}）：对 IOException / TimeoutException 重试，
+ *       最多 3 次，指数退避。</li>
+ * </ul>
+ * 熔断 OPEN 时由 fallback 方法抛出 {@link IntegrationException}，
+ * 由 {@code GlobalExceptionHandler} 统一返回 HTTP 503。
+ * {@link #healthCheck()} 不加注解，避免熔断时健康端点无法探测恢复。</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class D365IntegrationServiceImpl implements D365IntegrationService {
 
-    /** Refresh the token this many seconds before it actually expires. */
-    private static final long TOKEN_SKEW_SECONDS = 60L;
-
-    /** Consecutive token failures that trigger an error log + future alert. */
-    private static final int TOKEN_FAILURE_THRESHOLD = 3;
-
     private final D365Properties d365Properties;
     private final RestTemplate integrationRestTemplate;
     private final IIntegrationLogService integrationLogService;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
+    private final OAuthTokenCache oauthTokenCache;
 
     private final D365PurchaseReceiptMapper d365PurchaseReceiptMapper;
     private final D365InvoiceMapper d365InvoiceMapper;
 
-    /** Simple in-memory token cache (ConcurrentHashMap) with expiry timestamp. */
-    private final ConcurrentHashMap<String, TokenCache> tokenCache = new ConcurrentHashMap<>();
-
-    /** Consecutive token request failure counter. */
-    private final AtomicInteger tokenFailureCounter = new AtomicInteger(0);
-
-    private static final String TOKEN_CACHE_KEY = "d365";
-
-    private record TokenCache(String accessToken, long expiresAtMillis) {
-        boolean isValid(long now) {
-            return accessToken != null && expiresAtMillis > now + TOKEN_SKEW_SECONDS * 1000L;
-        }
-    }
-
     @Override
     public String getAccessToken() {
-        long now = System.currentTimeMillis();
-        TokenCache cache = tokenCache.get(TOKEN_CACHE_KEY);
-        if (cache != null && cache.isValid(now)) {
-            return cache.accessToken;
+        return oauthTokenCache.getToken("d365", this::fetchD365Token);
+    }
+
+    /**
+     * 调用 D365 OAuth2 token 端点获取新 token，封装为 {@link OAuthTokenCache.TokenInfo}
+     * 供分布式缓存使用。
+     *
+     * @return token 信息
+     * @throws IntegrationException 当 token 端点调用失败或响应为空时
+     */
+    private OAuthTokenCache.TokenInfo fetchD365Token() {
+        TokenResponse response = requestToken();
+        if (response == null || response.getAccessToken() == null) {
+            throw new IntegrationException("d365", "D365 token response is empty");
         }
-        synchronized (this) {
-            cache = tokenCache.get(TOKEN_CACHE_KEY);
-            if (cache != null && cache.isValid(now)) {
-                return cache.accessToken;
-            }
-            TokenResponse response = requestToken();
-            if (response == null || response.getAccessToken() == null) {
-                throw new BusinessException("D365 token response is empty");
-            }
-            int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
-            tokenCache.put(TOKEN_CACHE_KEY, new TokenCache(response.getAccessToken(), now + expiresIn * 1000L));
-            return response.getAccessToken();
-        }
+        long now = System.currentTimeMillis() / 1000;
+        int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
+        return OAuthTokenCache.TokenInfo.builder()
+                .accessToken(response.getAccessToken())
+                .expiresAt(now + expiresIn)
+                .tokenType(response.getTokenType())
+                .build();
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "pushPurchaseReceiptFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public String pushPurchaseReceipt(PurchaseReceiptHeader header) {
         String url = d365Properties.getBaseUrl() + "/purchase-receipts";
         String body = writeJson(header);
@@ -121,6 +125,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "pushPurchaseOrderFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public String pushPurchaseOrder(PurchaseHeader header) {
         String url = d365Properties.getBaseUrl() + "/purchase-orders";
         String body = writeJson(header);
@@ -151,6 +158,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "syncPurchaseOrdersFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public int syncPurchaseOrders() {
         String url = d365Properties.getBaseUrl() + "/purchase-orders";
         String response = executeGet(url, IntegrationConstants.BIZ_PURCHASE_ORDER, "SYNC_PO");
@@ -184,6 +194,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "syncPurchaseReceiptsFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public int syncPurchaseReceipts() {
         String url = d365Properties.getBaseUrl() + "/purchase-receipts";
         String response = executeGet(url, IntegrationConstants.BIZ_PURCHASE_RECEIPT, "SYNC_RECEIPT");
@@ -220,6 +233,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "syncAssetSerialNumbersFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public int syncAssetSerialNumbers() {
         String url = d365Properties.getBaseUrl() + "/asset-serial-numbers";
         String response = executeGet(url, IntegrationConstants.BIZ_PURCHASE_ORDER, "SYNC_SN");
@@ -249,6 +265,9 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "d365CircuitBreaker", fallbackMethod = "syncInvoicesFallback")
+    @Bulkhead(name = "d365Bulkhead")
+    @Retry(name = "d365Retry")
     public int syncInvoices() {
         String url = d365Properties.getBaseUrl() + "/invoices";
         String response = executeGet(url, IntegrationConstants.BIZ_INVOICE, "SYNC_INVOICE");
@@ -324,11 +343,69 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
                 .build();
     }
 
+    // ---- Resilience4j fallback methods ----
+    // 当熔断器 OPEN（CallNotPermittedException）或方法抛出 record-exceptions 中的异常时，
+    // Resilience4j 调用对应 fallback；fallback 包装为 IntegrationException 上抛，
+    // 由 GlobalExceptionHandler 统一返回 HTTP 503。
+
+    /**
+     * pushPurchaseReceipt 熔断 / 失败降级：记录日志并抛出 IntegrationException。
+     *
+     * @param header 原方法入参
+     * @param t      触发降级的异常（CallNotPermittedException 或 IntegrationException）
+     */
+    private String pushPurchaseReceiptFallback(PurchaseReceiptHeader header, Throwable t) {
+        log.error("D365 pushPurchaseReceipt 熔断降级 poId={} err={}",
+                header == null ? null : header.getPurchaseOrderId(), t.getMessage());
+        throw new IntegrationException("d365", "D365 采购收货推送服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * pushPurchaseOrder 熔断 / 失败降级。
+     */
+    private String pushPurchaseOrderFallback(PurchaseHeader header, Throwable t) {
+        log.error("D365 pushPurchaseOrder 熔断降级 poId={} err={}",
+                header == null ? null : header.getPurchaseOrderId(), t.getMessage());
+        throw new IntegrationException("d365", "D365 采购单推送服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * syncPurchaseOrders 熔断 / 失败降级。
+     */
+    private int syncPurchaseOrdersFallback(Throwable t) {
+        log.error("D365 syncPurchaseOrders 熔断降级 err={}", t.getMessage());
+        throw new IntegrationException("d365", "D365 采购单同步服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * syncPurchaseReceipts 熔断 / 失败降级。
+     */
+    private int syncPurchaseReceiptsFallback(Throwable t) {
+        log.error("D365 syncPurchaseReceipts 熔断降级 err={}", t.getMessage());
+        throw new IntegrationException("d365", "D365 采购收货同步服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * syncAssetSerialNumbers 熔断 / 失败降级。
+     */
+    private int syncAssetSerialNumbersFallback(Throwable t) {
+        log.error("D365 syncAssetSerialNumbers 熔断降级 err={}", t.getMessage());
+        throw new IntegrationException("d365", "D365 资产序列号同步服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * syncInvoices 熔断 / 失败降级。
+     */
+    private int syncInvoicesFallback(Throwable t) {
+        log.error("D365 syncInvoices 熔断降级 err={}", t.getMessage());
+        throw new IntegrationException("d365", "D365 发票同步服务暂不可用，请稍后重试", t);
+    }
+
     /**
      * Perform the actual POST against D365, then mark the log success/failed.
      *
-     * @throws BusinessException when the HTTP call fails (the log is already
-     *                           marked failed before rethrowing).
+     * @throws IntegrationException when the HTTP call fails (the log is already
+     *                              marked failed before rethrowing).
      */
     private String executePost(IntegrationLog logRecord, String url, String body) {
         try {
@@ -341,9 +418,13 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
             String responseBody = response.getBody();
             integrationLogService.markSuccess(logRecord.getId(), responseBody);
             return responseBody;
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException（来自 token 获取失败），直接透传
+            integrationLogService.markFailed(logRecord.getId(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
-            throw new BusinessException("D365 integration call failed: " + e.getMessage());
+            throw new IntegrationException("d365", "D365 integration call failed: " + e.getMessage(), e);
         }
     }
 
@@ -372,9 +453,13 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
             String responseBody = response.getBody();
             integrationLogService.markSuccess(logRecord.getId(), responseBody);
             return responseBody;
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException（来自 token 获取失败），直接透传
+            integrationLogService.markFailed(logRecord.getId(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
-            throw new BusinessException("D365 GET failed: " + e.getMessage());
+            throw new IntegrationException("d365", "D365 GET failed: " + e.getMessage(), e);
         }
     }
 
@@ -390,18 +475,11 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
         }
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
         try {
-            TokenResponse response = integrationRestTemplate.postForObject(
+            return integrationRestTemplate.postForObject(
                     d365Properties.getTokenUrl(), entity, TokenResponse.class);
-            // Reset the failure counter on success.
-            tokenFailureCounter.set(0);
-            return response;
         } catch (RestClientException e) {
-            int failures = tokenFailureCounter.incrementAndGet();
-            if (failures >= TOKEN_FAILURE_THRESHOLD) {
-                log.error("D365 token request failed {} consecutive times; last error: {}. "
-                        + "Notification hook will be wired here.", failures, e.getMessage());
-            }
-            throw new BusinessException("D365 token request failed: " + e.getMessage());
+            // 失败计数与告警由 RedisOAuthTokenCache 统一管理，此处仅抛出异常
+            throw new IntegrationException("d365", "D365 token request failed: " + e.getMessage(), e);
         }
     }
 
@@ -427,7 +505,7 @@ public class D365IntegrationServiceImpl implements D365IntegrationService {
             }
             return objectMapper.createArrayNode();
         } catch (Exception e) {
-            throw new BusinessException("Failed to parse D365 response: " + e.getMessage());
+            throw new IntegrationException("d365", "Failed to parse D365 response: " + e.getMessage(), e);
         }
     }
 

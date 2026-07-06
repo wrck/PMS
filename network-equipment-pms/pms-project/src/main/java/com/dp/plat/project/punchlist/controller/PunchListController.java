@@ -1,11 +1,14 @@
 package com.dp.plat.project.punchlist.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.punchlist.entity.PunchList;
 import com.dp.plat.project.punchlist.service.IPunchListService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,18 +34,24 @@ public class PunchListController {
 
     @Operation(summary = "创建 Punch List 项")
     @PostMapping
-    public Result<PunchList> create(@RequestBody PunchList punchList) {
+    @PreAuthorize("hasAuthority('project:punchList:add')")
+    @OperLog(title = "Punch List管理", businessType = 1)
+    public Result<PunchList> create(@Valid @RequestBody PunchList punchList) {
         return punchListService.create(punchList);
     }
 
     @Operation(summary = "更新 Punch List 项")
     @PutMapping
-    public Result<?> update(@RequestBody PunchList punchList) {
+    @PreAuthorize("hasAuthority('project:punchList:edit')")
+    @OperLog(title = "Punch List管理", businessType = 2)
+    public Result<?> update(@Valid @RequestBody PunchList punchList) {
         return punchListService.update(punchList);
     }
 
     @Operation(summary = "删除 Punch List 项")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('project:punchList:remove')")
+    @OperLog(title = "Punch List管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return punchListService.delete(id);
     }
@@ -67,12 +76,16 @@ public class PunchListController {
 
     @Operation(summary = "标记 Punch List 项为已解决")
     @PostMapping("/{id}/resolve")
+    @PreAuthorize("hasAuthority('project:punchList:resolve')")
+    @OperLog(title = "Punch List管理", businessType = 2)
     public Result<PunchList> resolve(@PathVariable Long id) {
         return punchListService.resolve(id);
     }
 
     @Operation(summary = "验证 Punch List 项")
     @PostMapping("/{id}/verify")
+    @PreAuthorize("hasAuthority('project:punchList:verify')")
+    @OperLog(title = "Punch List管理", businessType = 2)
     public Result<PunchList> verify(@PathVariable Long id) {
         return punchListService.verify(id);
     }

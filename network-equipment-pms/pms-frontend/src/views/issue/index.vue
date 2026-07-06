@@ -9,21 +9,23 @@ import {
   listIssues,
   resolveIssue,
   type Issue,
+  type IssueListQuery,
   type IssueStatus
 } from '@/api/issue'
 import type { ChangeRequestPriority } from '@/api/change-request'
+import type { EpTagType } from '@/types'
 
 defineOptions({ name: 'IssueLog' })
 
 // ============== 选项配置 ==============
-const statusOptions: { value: IssueStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: IssueStatus; label: string; tagType: EpTagType }[] = [
   { value: 'OPEN', label: '待处理', tagType: 'warning' },
   { value: 'IN_PROGRESS', label: '处理中', tagType: 'primary' },
   { value: 'RESOLVED', label: '已解决', tagType: 'success' },
   { value: 'CLOSED', label: '已关闭', tagType: 'info' }
 ]
 
-const priorityOptions: { value: ChangeRequestPriority; label: string; tagType: any }[] = [
+const priorityOptions: { value: ChangeRequestPriority; label: string; tagType: EpTagType }[] = [
   { value: 'LOW', label: '低', tagType: 'info' },
   { value: 'MEDIUM', label: '中', tagType: 'success' },
   { value: 'HIGH', label: '高', tagType: 'warning' },
@@ -66,7 +68,7 @@ const query = reactive<{ page: number; size: number; projectId?: number; status?
 async function loadData() {
   loading.value = true
   try {
-    const params: any = { page: query.page, size: query.size }
+    const params: IssueListQuery = { page: query.page, size: query.size }
     if (query.projectId) params.projectId = query.projectId
     if (query.status) params.status = query.status
     if (query.assigneeId) params.assigneeId = query.assigneeId

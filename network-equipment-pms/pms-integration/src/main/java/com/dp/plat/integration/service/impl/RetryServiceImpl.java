@@ -6,6 +6,7 @@ import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.service.D365IntegrationService;
 import com.dp.plat.integration.service.FpIntegrationService;
 import com.dp.plat.integration.service.IIntegrationLogService;
+import com.dp.plat.integration.service.OaIntegrationService;
 import com.dp.plat.integration.service.RetryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class RetryServiceImpl implements RetryService {
     private final IIntegrationLogService integrationLogService;
     private final D365IntegrationService d365IntegrationService;
     private final FpIntegrationService fpIntegrationService;
+    private final OaIntegrationService oaIntegrationService;
 
     /**
      * Run every {@code integration.retry.interval} milliseconds (default 5 min).
@@ -68,6 +70,9 @@ public class RetryServiceImpl implements RetryService {
         }
         if (IntegrationConstants.LOG_TYPE_FP.equals(logType)) {
             return fpIntegrationService.retry(logRecord.getId());
+        }
+        if (IntegrationConstants.LOG_TYPE_OA.equals(logType)) {
+            return oaIntegrationService.retry(logRecord.getId());
         }
         log.warn("No retry adapter registered for log type: {} (logId={})", logType, logRecord.getId());
         return integrationLogService.getById(logRecord.getId());

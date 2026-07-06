@@ -1,0 +1,181 @@
+# Grafana 托管告警规则（Grafana Managed Alert Rules）
+# 与 Prometheus rules 互补：在 Grafana 侧统一管理告警 UI 与通知策略。
+# 数据源：Prometheus（uid 自动匹配 default datasource）
+# 覆盖：API 错误率 / JVM 堆 / 慢 SQL / 熔断器 / 集成失败 / 定时任务失败
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: PMS-API
+    interval: 30s
+    rules:
+      - uid: pms-api-error-rate-high
+        title: APIErrorRateHigh
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum(rate(http_server_requests_seconds_count{application="pms", status=~"5.."}[5m]))
+                  / sum(rate(http_server_requests_seconds_count{application="pms"}[5m])) > 0.05
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "API 错误率过高"
+          description: "5xx 错误率超过 5%，持续 5 分钟。"
+        labels:
+          severity: critical
+          application: pms
+          category: api
+
+  - orgId: 1
+    name: PMS-JVM
+    interval: 30s
+    rules:
+      - uid: pms-jvm-heap-high
+        title: JVMHeapHigh
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum(jvm_memory_used_bytes{application="pms", area="heap"})
+                  / sum(jvm_memory_max_bytes{application="pms", area="heap"}) > 0.85
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "JVM 堆内存使用率过高"
+          description: "堆内存使用率超过 85%，持续 5 分钟。"
+        labels:
+          severity: warning
+          application: pms
+          category: jvm
+
+  - orgId: 1
+    name: PMS-SlowSQL
+    interval: 30s
+    rules:
+      - uid: pms-slow-sql-error
+        title: SlowSqlError
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                rate(pms_slow_sql_total{application="pms", threshold="error"}[5m]) > 0
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "慢 SQL (ERROR 级别) 频发"
+          description: "出现 >5s 的慢 SQL，持续 2 分钟。请排查 SQL 与索引。"
+        labels:
+          severity: critical
+          application: pms
+          category: slowsql
+
+  - orgId: 1
+    name: PMS-CircuitBreaker
+    interval: 30s
+    rules:
+      - uid: pms-circuit-breaker-open
+        title: CircuitBreakerOpen
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                resilience4j_circuitbreaker_states{application="pms", state="open"} == 1
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "熔断器已开启"
+          description: "Resilience4j 熔断器处于 open 状态超过 1 分钟。"
+        labels:
+          severity: critical
+          application: pms
+          category: integration
+
+  - orgId: 1
+    name: PMS-Integration
+    interval: 30s
+    rules:
+      - uid: pms-integration-failure
+        title: IntegrationFailure
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by (system) (rate(pms_integration_failures_total{application="pms"}[5m])) > 0.5
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "集成调用失败率过高 ({{ $labels.system }})"
+          description: "集成失败速率超过 0.5/s，持续 5 分钟。"
+        labels:
+          severity: critical
+          application: pms
+          category: integration
+
+  - orgId: 1
+    name: PMS-Schedule
+    interval: 30s
+    rules:
+      - uid: pms-schedule-task-failure
+        title: ScheduleTaskFailure
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                rate(pms_schedule_failure_total{application="pms"}[10m]) > 0
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "定时任务执行失败"
+          description: "定时任务失败速率 > 0，持续 5 分钟。"
+        labels:
+          severity: warning
+          application: pms
+          category: schedule

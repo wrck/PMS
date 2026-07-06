@@ -15,6 +15,7 @@ import {
   type RmaTicketStatus,
   type WarrantyStatus
 } from '@/api/rma'
+import type { EpTagType } from '@/types'
 
 const loading = ref(false)
 const tableData = ref<Rma[]>([])
@@ -31,7 +32,7 @@ const query = reactive<{ page: number; size: number; ticketStatus?: string; asse
 })
 
 // 工单状态选项
-const statusOptions: { value: RmaTicketStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: RmaTicketStatus; label: string; tagType: EpTagType }[] = [
   { value: 'REGISTERED', label: '已登记', tagType: 'info' },
   { value: 'WARRANTY_CHECKED', label: '已校验保修', tagType: 'warning' },
   { value: 'RMA_ISSUED', label: '已签发 RMA', tagType: 'primary' },
@@ -41,7 +42,7 @@ const statusOptions: { value: RmaTicketStatus; label: string; tagType: any }[] =
 ]
 
 // 保修状态标签
-const warrantyTagType: Record<string, any> = {
+const warrantyTagType: Record<string, EpTagType> = {
   IN_WARRANTY: 'success',
   OUT_OF_WARRANTY: 'danger'
 }

@@ -1,0 +1,30 @@
+# 敏感配置（含真实凭据，禁止提交）
+.env
+.env.*
+!.env.example
+
+# 日志文件
+logs/
+*.log
+pms-app.log
+
+# Maven 构建产物
+target/
+*.class
+
+# IDE 文件
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# 前端构建产物
+dist/
+node_modules/
+pms-frontend/node_modules/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db

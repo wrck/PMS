@@ -2,14 +2,15 @@ package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysDict;
 import com.dp.plat.system.entity.SysDictItem;
 import com.dp.plat.system.service.ISysDictService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +58,7 @@ public class SysDictController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:dict:add')")
     @OperLog(title = "字典管理", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysDict dict) {
+    public Result<Boolean> add(@Valid @RequestBody SysDict dict) {
         return Result.ok(sysDictService.save(dict));
     }
 
@@ -65,7 +66,7 @@ public class SysDictController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:dict:edit')")
     @OperLog(title = "字典管理", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysDict dict) {
+    public Result<Boolean> update(@Valid @RequestBody SysDict dict) {
         return Result.ok(sysDictService.updateById(dict));
     }
 

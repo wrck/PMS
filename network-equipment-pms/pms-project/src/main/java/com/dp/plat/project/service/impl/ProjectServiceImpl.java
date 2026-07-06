@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
@@ -50,6 +51,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private static final int TODO_QUERY_SIZE = 200;
 
     private final WorkflowService workflowService;
+    private final BusinessMetrics businessMetrics;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -71,6 +73,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         // Project code is generated on approval, not on creation.
         project.setId(null);
         this.save(project);
+        // 业务指标：记录项目创建（按项目类型计数）
+        businessMetrics.recordProjectCreated(project.getProjectType());
         startApprovalWorkflow(project);
         return Result.ok(project);
     }

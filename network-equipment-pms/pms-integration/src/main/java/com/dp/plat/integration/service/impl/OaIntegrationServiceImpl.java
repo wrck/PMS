@@ -2,15 +2,20 @@ package com.dp.plat.integration.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.exception.IntegrationException;
 import com.dp.plat.integration.config.OaProperties;
 import com.dp.plat.integration.constant.IntegrationConstants;
 import com.dp.plat.integration.dto.OaHealthDto;
 import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.oa.OaTodoRequest;
 import com.dp.plat.integration.model.oa.OaTokenResponse;
+import com.dp.plat.integration.oauth.OAuthTokenCache;
 import com.dp.plat.integration.service.IIntegrationLogService;
 import com.dp.plat.integration.service.OaIntegrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -27,63 +32,70 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implementation of {@link OaIntegrationService}.
  *
- * <p>Reuses the same OAuth2 token caching pattern (ConcurrentHashMap +
- * ahead-of-expiry refresh + double-checked locking) as the D365 and FP
- * adapters, but with a 5-minute skew so the token is auto-renewed whenever
- * less than 5 minutes remain before expiry. All outbound calls are recorded
- * in {@link IntegrationLog} with {@code logType="OA"} for retry.</p>
+ * <p>Uses a distributed OAuth2 token cache ({@link OAuthTokenCache} / Redis Hash +
+ * ahead-of-expiry refresh + single-flight lock), shared with the D365 and FP
+ * adapters. The cache auto-renews the token when less than 5 minutes remain
+ * before expiry. Token 获取失败计数与告警由 {@link OAuthTokenCache} 统一管理。
+ * All outbound calls are recorded in {@link IntegrationLog} with
+ * {@code logType="OA"} for retry.</p>
+ *
+ * <p><b>Resilience4j 弹性保护</b>：{@link #pushTodo}、{@link #completeTodo}、
+ * {@link #transferTask} 三个对外部 OA 的入口方法均通过
+ * {@code @CircuitBreaker} + {@code @Bulkhead} + {@code @Retry} 三层保护。
+ * 失败时（HTTP 错误 / token 获取失败）抛出 {@link IntegrationException}，
+ * 触发熔断器记录失败；熔断 OPEN 时由 fallback 包装为 IntegrationException 上抛，
+ * 由 GlobalExceptionHandler 统一返回 HTTP 503。
+ * {@link #healthCheck()} 不加注解，避免熔断时健康端点无法探测恢复。</p>
+ *
+ * <p><b>异常语义变更</b>：原实现中 {@code execute} 方法捕获异常后返回 {@code false}，
+ * 现改为抛出 {@link IntegrationException}。调用方（如 {@code OaTaskListener}）
+ * 已通过 try-catch 吞掉异常，确保 OA 集成失败不影响主流程事务。</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OaIntegrationServiceImpl implements OaIntegrationService {
 
-    /** Refresh the token when less than this many seconds remain. */
-    private static final long TOKEN_SKEW_SECONDS = 300L;
-
-    private static final String TOKEN_CACHE_KEY = "oa";
-
     private final OaProperties oaProperties;
     private final RestTemplate integrationRestTemplate;
     private final IIntegrationLogService integrationLogService;
     private final ObjectMapper objectMapper;
-
-    private final ConcurrentHashMap<String, TokenCache> tokenCache = new ConcurrentHashMap<>();
-
-    private record TokenCache(String accessToken, long expiresAtMillis) {
-        boolean isValid(long now) {
-            return accessToken != null && expiresAtMillis > now + TOKEN_SKEW_SECONDS * 1000L;
-        }
-    }
+    private final OAuthTokenCache oauthTokenCache;
 
     @Override
     public String getAccessToken() {
-        long now = System.currentTimeMillis();
-        TokenCache cache = tokenCache.get(TOKEN_CACHE_KEY);
-        if (cache != null && cache.isValid(now)) {
-            return cache.accessToken;
+        return oauthTokenCache.getToken("oa", this::fetchOaToken);
+    }
+
+    /**
+     * 调用 OA OAuth2 token 端点获取新 token，封装为 {@link OAuthTokenCache.TokenInfo}
+     * 供分布式缓存使用。
+     *
+     * @return token 信息
+     * @throws IntegrationException 当 token 端点调用失败或响应为空时
+     */
+    private OAuthTokenCache.TokenInfo fetchOaToken() {
+        OaTokenResponse response = requestToken();
+        if (response == null || response.getAccessToken() == null) {
+            throw new IntegrationException("oa", "OA token response is empty");
         }
-        synchronized (this) {
-            cache = tokenCache.get(TOKEN_CACHE_KEY);
-            if (cache != null && cache.isValid(now)) {
-                return cache.accessToken;
-            }
-            OaTokenResponse response = requestToken();
-            if (response == null || response.getAccessToken() == null) {
-                throw new BusinessException("OA token response is empty");
-            }
-            int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
-            tokenCache.put(TOKEN_CACHE_KEY, new TokenCache(response.getAccessToken(), now + expiresIn * 1000L));
-            return response.getAccessToken();
-        }
+        long now = System.currentTimeMillis() / 1000;
+        int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
+        return OAuthTokenCache.TokenInfo.builder()
+                .accessToken(response.getAccessToken())
+                .expiresAt(now + expiresIn)
+                .tokenType(response.getTokenType())
+                .build();
     }
 
     @Override
+    @CircuitBreaker(name = "oaCircuitBreaker", fallbackMethod = "pushTodoFallback")
+    @Bulkhead(name = "oaBulkhead")
+    @Retry(name = "oaRetry")
     public boolean pushTodo(OaTodoRequest request) {
         String url = oaProperties.getBaseUrl() + "/todo/push";
         String body = writeJson(request);
@@ -101,6 +113,9 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "oaCircuitBreaker", fallbackMethod = "completeTodoFallback")
+    @Bulkhead(name = "oaBulkhead")
+    @Retry(name = "oaRetry")
     public boolean completeTodo(String businessKey) {
         String url = oaProperties.getBaseUrl() + "/todo/complete";
         String body = writeJson(java.util.Map.of("businessKey", businessKey == null ? "" : businessKey));
@@ -116,6 +131,9 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "oaCircuitBreaker", fallbackMethod = "transferTaskFallback")
+    @Bulkhead(name = "oaBulkhead")
+    @Retry(name = "oaRetry")
     public boolean transferTask(String businessKey, String newHandlerUserId) {
         String url = oaProperties.getBaseUrl() + "/todo/transfer";
         String body = writeJson(java.util.Map.of(
@@ -130,6 +148,58 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
                 .build();
         logRecord = integrationLogService.log(logRecord);
         return execute(HttpMethod.PUT, logRecord, url, body);
+    }
+
+    /**
+     * 重试之前记录的 OA 调用：根据日志 ID 取出存储的请求 URL 与请求体，
+     * 按 businessType 推断 HTTP method，重新发送请求并更新日志状态。
+     *
+     * <p>本方法不加 {@code @Retry}/@{@code CircuitBreaker}/@{@code Bulkhead} 注解，
+     * 避免在调度重试（{@code RetryServiceImpl.scheduledRetry}）之上叠加额外的
+     * Resilience4j 重试层。异常被 try-catch 吞掉（仅记录 WARN 日志），
+     * 确保调度任务不会因单条日志重试失败而中断后续重试。</p>
+     *
+     * @param logId 集成日志 ID
+     * @return 重试后的最新日志记录
+     * @throws BusinessException 日志不存在时抛出
+     */
+    @Override
+    public IntegrationLog retry(Long logId) {
+        IntegrationLog logRecord = integrationLogService.getById(logId);
+        if (logRecord == null) {
+            throw new BusinessException("集成日志不存在");
+        }
+        HttpMethod method = resolveHttpMethod(logRecord.getBusinessType());
+        try {
+            execute(method, logRecord, logRecord.getRequestUrl(), logRecord.getRequestBody());
+        } catch (Exception e) {
+            // execute 内部已调用 markFailed 更新日志状态，此处仅记录告警
+            log.warn("OA retry failed for log {}: {}", logId, e.getMessage());
+        }
+        return integrationLogService.getById(logId);
+    }
+
+    /**
+     * 根据业务类型推断 HTTP method：
+     * <ul>
+     *   <li>{@code TODO_PUSH} → POST（创建待办）</li>
+     *   <li>{@code TODO_COMPLETE} → PUT（完成待办）</li>
+     *   <li>{@code TODO_TRANSFER} → PUT（转办待办）</li>
+     *   <li>其他 / 未知 → POST（安全默认值）</li>
+     * </ul>
+     *
+     * @param businessType 业务类型常量
+     * @return 对应的 HTTP method
+     */
+    private HttpMethod resolveHttpMethod(String businessType) {
+        if (IntegrationConstants.BIZ_OA_TODO_PUSH.equals(businessType)) {
+            return HttpMethod.POST;
+        }
+        if (IntegrationConstants.BIZ_OA_TODO_COMPLETE.equals(businessType)
+                || IntegrationConstants.BIZ_OA_TODO_TRANSFER.equals(businessType)) {
+            return HttpMethod.PUT;
+        }
+        return HttpMethod.POST;
     }
 
     @Override
@@ -161,6 +231,40 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
                 .build();
     }
 
+    // ---- Resilience4j fallback methods ----
+    // 当熔断器 OPEN（CallNotPermittedException）或方法抛出 record-exceptions 中的异常时，
+    // Resilience4j 调用对应 fallback；fallback 包装为 IntegrationException 上抛，
+    // 由 GlobalExceptionHandler 统一返回 HTTP 503。
+
+    /**
+     * pushTodo 熔断 / 失败降级：记录日志并抛出 IntegrationException。
+     *
+     * @param request 原方法入参
+     * @param t       触发降级的异常
+     */
+    private boolean pushTodoFallback(OaTodoRequest request, Throwable t) {
+        log.error("OA pushTodo 熔断降级 businessKey={} err={}",
+                request == null ? null : request.getBusinessKey(), t.getMessage());
+        throw new IntegrationException("oa", "OA 待办推送服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * completeTodo 熔断 / 失败降级。
+     */
+    private boolean completeTodoFallback(String businessKey, Throwable t) {
+        log.error("OA completeTodo 熔断降级 businessKey={} err={}", businessKey, t.getMessage());
+        throw new IntegrationException("oa", "OA 待办完成服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * transferTask 熔断 / 失败降级。
+     */
+    private boolean transferTaskFallback(String businessKey, String newHandlerUserId, Throwable t) {
+        log.error("OA transferTask 熔断降级 businessKey={} newHandler={} err={}",
+                businessKey, newHandlerUserId, t.getMessage());
+        throw new IntegrationException("oa", "OA 任务转办服务暂不可用，请稍后重试", t);
+    }
+
     // ---- internals ----
 
     private boolean execute(HttpMethod method, IntegrationLog logRecord, String url, String body) {
@@ -173,11 +277,16 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
             ResponseEntity<String> response = integrationRestTemplate.exchange(
                     url, method, entity, String.class);
             integrationLogService.markSuccess(logRecord.getId(), response.getBody());
+            // RestTemplate 默认对 4xx/5xx 抛出 HttpStatusCodeException，到达此处即 2xx 成功
             return response.getStatusCode().is2xxSuccessful();
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException（来自 token 获取失败），直接透传
+            integrationLogService.markFailed(logRecord.getId(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
             log.warn("OA integration call failed for log {}: {}", logRecord.getId(), e.getMessage());
-            return false;
+            throw new IntegrationException("oa", "OA integration call failed: " + e.getMessage(), e);
         }
     }
 
@@ -193,7 +302,7 @@ public class OaIntegrationServiceImpl implements OaIntegrationService {
             return integrationRestTemplate.postForObject(
                     oaProperties.getTokenUrl(), entity, OaTokenResponse.class);
         } catch (RestClientException e) {
-            throw new BusinessException("OA token request failed: " + e.getMessage());
+            throw new IntegrationException("oa", "OA token request failed: " + e.getMessage(), e);
         }
     }
 

@@ -19,6 +19,34 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-common</artifactId>
         </dependency>
+
+        <!-- Resilience4j：熔断 / 隔离 / 限流 / 重试（Spring Boot 3 专用 starter）。
+             通过自动装配注册 CircuitBreakerRegistry / BulkheadRegistry /
+             RateLimiterRegistry / RetryRegistry，并提供 AOP 注解支持。 -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <!-- Resilience4j Reactor 模块：为后续接入响应式 / 异步外部调用提供支持 -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-reactor</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <!-- AOP 支持：Resilience4j 注解（@CircuitBreaker / @Bulkhead / @Retry /
+             @RateLimiter）依赖 AOP 代理生效 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- 测试：Mockito + Spring Boot Test 验证熔断器流程 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

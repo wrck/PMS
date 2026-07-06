@@ -1,7 +1,7 @@
 package com.dp.plat.system.aop;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.util.SecurityUtils;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysOperLog;
 import com.dp.plat.system.service.ISysOperLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -7,14 +7,19 @@ import com.dp.plat.asset.dto.AssetImportDTO;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
 import com.dp.plat.asset.service.IAssetService;
+import com.dp.plat.common.annotation.Idempotent;
+import com.dp.plat.common.annotation.OperLog;
+import com.dp.plat.common.annotation.RateLimit;
 import com.dp.plat.common.excel.ExcelImportResult;
 import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,18 +46,28 @@ public class AssetController {
 
     @Operation(summary = "Inbound a new asset")
     @PostMapping("/inbound")
-    public Result<Boolean> inbound(@RequestBody Asset asset) {
+    @PreAuthorize("hasAuthority('asset:asset:add')")
+    @OperLog(title = "设备资产管理", businessType = 1)
+    @RateLimit(key = "#userId", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
+    @Idempotent
+    public Result<Boolean> inbound(@Valid @RequestBody Asset asset) {
         return Result.ok(assetService.inbound(asset));
     }
 
     @Operation(summary = "Allocate asset to a project")
     @PostMapping("/{id}/allocate")
+    @PreAuthorize("hasAuthority('asset:asset:allocate')")
+    @OperLog(title = "设备资产管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> allocate(@PathVariable Long id, @RequestParam Long projectId) {
         return Result.ok(assetService.allocate(id, projectId));
     }
 
     @Operation(summary = "Return an allocated asset")
     @PostMapping("/{id}/return")
+    @PreAuthorize("hasAuthority('asset:asset:return')")
+    @OperLog(title = "设备资产管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> returnAsset(@PathVariable Long id) {
         return Result.ok(assetService.returnAsset(id));
     }
@@ -73,12 +88,18 @@ public class AssetController {
 
     @Operation(summary = "Update asset")
     @PutMapping
-    public Result<Boolean> update(@RequestBody Asset asset) {
+    @PreAuthorize("hasAuthority('asset:asset:edit')")
+    @OperLog(title = "设备资产管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
+    public Result<Boolean> update(@Valid @RequestBody Asset asset) {
         return Result.ok(assetService.updateById(asset));
     }
 
     @Operation(summary = "Delete asset")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('asset:asset:remove')")
+    @OperLog(title = "设备资产管理", businessType = 3)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(assetService.removeById(id));
     }
@@ -91,6 +112,9 @@ public class AssetController {
 
     @Operation(summary = "Return all assets allocated to a project")
     @PostMapping("/return-by-project/{projectId}")
+    @PreAuthorize("hasAuthority('asset:asset:return')")
+    @OperLog(title = "设备资产管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<List<Asset>> returnByProject(@PathVariable Long projectId) {
         return Result.ok(assetService.returnByProject(projectId));
     }
@@ -117,6 +141,9 @@ public class AssetController {
 
     @Operation(summary = "Batch import assets from Excel")
     @PostMapping("/import")
+    @PreAuthorize("hasAuthority('asset:asset:import')")
+    @OperLog(title = "设备资产管理", businessType = 5)
+    @RateLimit(key = "#userId", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<ExcelImportResult<AssetImportDTO>> importExcel(@RequestParam("file") MultipartFile file) {
         return Result.ok(assetService.batchImport(file));
     }

@@ -1,12 +1,15 @@
 package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.system.entity.SysDept;
 import com.dp.plat.system.service.ISysDeptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,18 +47,24 @@ public class SysDeptController {
 
     @Operation(summary = "Create department")
     @PostMapping
-    public Result<Boolean> add(@RequestBody SysDept dept) {
+    @PreAuthorize("hasAuthority('system:dept:add')")
+    @OperLog(title = "部门管理", businessType = 1)
+    public Result<Boolean> add(@Valid @RequestBody SysDept dept) {
         return Result.ok(sysDeptService.save(dept));
     }
 
     @Operation(summary = "Update department")
     @PutMapping
-    public Result<Boolean> update(@RequestBody SysDept dept) {
+    @PreAuthorize("hasAuthority('system:dept:edit')")
+    @OperLog(title = "部门管理", businessType = 2)
+    public Result<Boolean> update(@Valid @RequestBody SysDept dept) {
         return Result.ok(sysDeptService.updateById(dept));
     }
 
     @Operation(summary = "Delete department")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('system:dept:remove')")
+    @OperLog(title = "部门管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysDeptService.removeById(id));
     }

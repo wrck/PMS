@@ -1,12 +1,15 @@
 package com.dp.plat.integration.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.integration.dto.OaHealthDto;
 import com.dp.plat.integration.model.oa.OaTodoRequest;
 import com.dp.plat.integration.service.OaIntegrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,18 +38,24 @@ public class OaIntegrationController {
 
     @Operation(summary = "Manually push a todo to OA")
     @PostMapping("/todo/push")
-    public Result<Boolean> pushTodo(@RequestBody OaTodoRequest request) {
+    @PreAuthorize("hasAuthority('integration:oa:push')")
+    @OperLog(title = "OA集成", businessType = 2)
+    public Result<Boolean> pushTodo(@Valid @RequestBody OaTodoRequest request) {
         return Result.ok(oaIntegrationService.pushTodo(request));
     }
 
     @Operation(summary = "Manually complete an OA todo")
     @PutMapping("/todo/complete")
+    @PreAuthorize("hasAuthority('integration:oa:process')")
+    @OperLog(title = "OA集成", businessType = 2)
     public Result<Boolean> completeTodo(@RequestParam String businessKey) {
         return Result.ok(oaIntegrationService.completeTodo(businessKey));
     }
 
     @Operation(summary = "Manually transfer an OA todo to a new handler")
     @PutMapping("/todo/transfer")
+    @PreAuthorize("hasAuthority('integration:oa:process')")
+    @OperLog(title = "OA集成", businessType = 2)
     public Result<Boolean> transferTask(@RequestParam String businessKey,
                                         @RequestParam String newHandlerUserId) {
         return Result.ok(oaIntegrationService.transferTask(businessKey, newHandlerUserId));

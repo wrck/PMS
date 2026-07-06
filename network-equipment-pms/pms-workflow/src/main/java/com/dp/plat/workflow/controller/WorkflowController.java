@@ -1,5 +1,6 @@
 package com.dp.plat.workflow.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.workflow.dto.CompleteTaskRequest;
 import com.dp.plat.workflow.dto.ProcessInstanceDTO;
@@ -7,9 +8,11 @@ import com.dp.plat.workflow.dto.StartProcessRequest;
 import com.dp.plat.workflow.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +39,8 @@ public class WorkflowController {
 
     @Operation(summary = "部署流程定义")
     @PostMapping("/deploy")
+    @PreAuthorize("hasAuthority('workflow:definition:deploy')")
+    @OperLog(title = "工作流管理", businessType = 1)
     public Result<Map<String, Object>> deploy(@RequestParam("file") MultipartFile file) {
         return workflowService.deployProcess(file);
     }
@@ -49,24 +54,32 @@ public class WorkflowController {
 
     @Operation(summary = "删除部署")
     @DeleteMapping("/deployment/{deploymentId}")
+    @PreAuthorize("hasAuthority('workflow:definition:remove')")
+    @OperLog(title = "工作流管理", businessType = 3)
     public Result<Void> deleteDeployment(@PathVariable String deploymentId) {
         return workflowService.deleteDeployment(deploymentId);
     }
 
     @Operation(summary = "启动流程实例")
     @PostMapping("/start")
-    public Result<ProcessInstanceDTO> start(@RequestBody StartProcessRequest request) {
+    @PreAuthorize("hasAuthority('workflow:instance:start')")
+    @OperLog(title = "工作流管理", businessType = 1)
+    public Result<ProcessInstanceDTO> start(@Valid @RequestBody StartProcessRequest request) {
         return workflowService.startProcess(request);
     }
 
     @Operation(summary = "完成任务")
     @PostMapping("/task/complete")
-    public Result<Void> completeTask(@RequestBody CompleteTaskRequest request) {
+    @PreAuthorize("hasAuthority('workflow:task:complete')")
+    @OperLog(title = "工作流管理", businessType = 2)
+    public Result<Void> completeTask(@Valid @RequestBody CompleteTaskRequest request) {
         return workflowService.completeTask(request);
     }
 
     @Operation(summary = "撤回任务")
     @PostMapping("/task/withdraw")
+    @PreAuthorize("hasAuthority('workflow:task:withdraw')")
+    @OperLog(title = "工作流管理", businessType = 2)
     public Result<Void> withdrawTask(@RequestParam String processInstanceId,
                                      @RequestParam String currentTaskId) {
         return workflowService.withdrawTask(processInstanceId, currentTaskId);
@@ -74,6 +87,8 @@ public class WorkflowController {
 
     @Operation(summary = "转办任务")
     @PostMapping("/task/transfer")
+    @PreAuthorize("hasAuthority('workflow:task:transfer')")
+    @OperLog(title = "工作流管理", businessType = 2)
     public Result<Void> transferTask(@RequestParam String taskId,
                                      @RequestParam String targetUserId) {
         return workflowService.transferTask(taskId, targetUserId);

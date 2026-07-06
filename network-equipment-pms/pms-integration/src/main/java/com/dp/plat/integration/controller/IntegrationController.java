@@ -1,6 +1,7 @@
 package com.dp.plat.integration.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.service.IIntegrationLogService;
@@ -8,6 +9,7 @@ import com.dp.plat.integration.service.RetryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +49,8 @@ public class IntegrationController {
 
     @Operation(summary = "Manually retry a failed integration by log id")
     @PostMapping("/log/{id}/retry")
+    @PreAuthorize("hasAuthority('integration:log:retry')")
+    @OperLog(title = "集成管理", businessType = 2)
     public Result<IntegrationLog> retry(@PathVariable Long id) {
         return Result.ok(retryService.retryLog(id));
     }

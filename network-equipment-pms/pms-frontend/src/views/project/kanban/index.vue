@@ -103,7 +103,7 @@ onMounted(loadDashboard)
                 <el-progress
                   :percentage="Number(project.progress ?? 0)"
                   :stroke-width="8"
-                  :status="(Number(project.progress ?? 0) >= 100 ? 'success' : '') as any"
+                  :status="(Number(project.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
                 />
               </div>
               <div class="card-row">

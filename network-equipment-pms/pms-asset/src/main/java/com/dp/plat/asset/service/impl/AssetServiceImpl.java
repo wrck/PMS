@@ -17,6 +17,7 @@ import com.dp.plat.asset.service.IAssetService;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.excel.ExcelImportResult;
 import com.dp.plat.common.excel.ExcelUtils;
+import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
@@ -54,6 +55,7 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
     private final AssetLifecycleLogMapper assetLifecycleLogMapper;
     private final AssetStateTransitionValidator stateValidator;
     private final ProjectMapper projectMapper;
+    private final BusinessMetrics businessMetrics;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -70,6 +72,7 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
         if (saved) {
             recordLog(asset.getId(), ACTION_INBOUND, null, null, "设备入库", now);
         }
+        updateAssetStatusGauge(asset.getStatus());
         return saved;
     }
 
@@ -106,6 +109,9 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
         assetAllocationMapper.insert(allocation);
 
         recordLog(assetId, ACTION_ALLOCATE, fromProjectId, projectId, "设备分配至项目", now);
+        // 状态转移后更新原状态与新状态的资产分布 Gauge
+        updateAssetStatusGauge(current == null ? null : current.name());
+        updateAssetStatusGauge(STATUS_INSTALLED);
         return updated;
     }
 
@@ -135,6 +141,9 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
         }
 
         recordLog(assetId, ACTION_RETURN, fromProjectId, null, "设备归还入库", now);
+        // 状态转移后更新原状态与新状态的资产分布 Gauge
+        updateAssetStatusGauge(current == null ? null : current.name());
+        updateAssetStatusGauge(STATUS_RECEIVED);
         return updated;
     }
 
@@ -315,5 +324,26 @@ public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset> implements
                 .remarks(remarks)
                 .build();
         assetLifecycleLogMapper.insert(log);
+    }
+
+    /**
+     * 更新资产状态分布 Gauge（best-effort，采集失败不影响业务逻辑）。
+     *
+     * <p>查询当前状态下资产总数并更新 Gauge，使 Prometheus 抓取时读取最新值。
+     * 异常被吞掉以保证业务操作不受监控采集失败影响。</p>
+     *
+     * @param status 资产状态
+     */
+    private void updateAssetStatusGauge(String status) {
+        if (status == null) {
+            return;
+        }
+        try {
+            Long count = baseMapper.selectCount(new LambdaQueryWrapper<Asset>()
+                    .eq(Asset::getStatus, status));
+            businessMetrics.registerAssetStatusGauge(status, count == null ? 0 : count);
+        } catch (Exception e) {
+            // 指标采集失败不影响业务逻辑
+        }
     }
 }

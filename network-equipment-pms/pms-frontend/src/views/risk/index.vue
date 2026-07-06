@@ -11,23 +11,25 @@ import {
   updateRisk,
   type Risk,
   type RiskCategory,
+  type RiskListQuery,
   type RiskMatrixCell,
   type RiskMitigation,
   type RiskPriority,
   type RiskStatus
 } from '@/api/risk'
+import type { EpTagType } from '@/types'
 
 defineOptions({ name: 'RiskRegister' })
 
 // ============== 选项配置 ==============
-const statusOptions: { value: RiskStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: RiskStatus; label: string; tagType: EpTagType }[] = [
   { value: 'OPEN', label: '待处理', tagType: 'info' },
   { value: 'IN_PROGRESS', label: '处理中', tagType: 'primary' },
   { value: 'CLOSED', label: '已关闭', tagType: 'success' },
   { value: 'ESCALATED', label: '已升级', tagType: 'danger' }
 ]
 
-const priorityOptions: { value: RiskPriority; label: string; tagType: any }[] = [
+const priorityOptions: { value: RiskPriority; label: string; tagType: EpTagType }[] = [
   { value: 'LOW', label: '低', tagType: 'success' },
   { value: 'MEDIUM', label: '中', tagType: 'warning' },
   { value: 'HIGH', label: '高', tagType: 'danger' }
@@ -115,8 +117,8 @@ function renderMatrix() {
   chartInstance.setOption(
     {
       tooltip: {
-        formatter: (params: any) => {
-          const cell = params.data.cellData as RiskMatrixCell
+        formatter: (params: unknown) => {
+          const cell = (params as { data: { cellData: RiskMatrixCell } }).data.cellData
           const score = cell.likelihood * cell.impact
           return [
             `概率：${cell.likelihood}`,
@@ -160,8 +162,8 @@ function renderMatrix() {
           data,
           label: {
             show: true,
-            formatter: (params: any) => {
-              return params.data.cellData.count
+            formatter: (params: unknown) => {
+              return (params as { data: { cellData: RiskMatrixCell } }).data.cellData.count
             }
           },
           emphasis: {
@@ -174,8 +176,8 @@ function renderMatrix() {
   )
 }
 
-function handleMatrixClick(params: any) {
-  const cell = params?.data?.cellData as RiskMatrixCell | undefined
+function handleMatrixClick(params: unknown) {
+  const cell = (params as { data?: { cellData?: RiskMatrixCell } })?.data?.cellData
   if (!cell || !cell.risks || cell.risks.length === 0) {
     ElMessage.info('该格子暂无风险')
     return
@@ -205,7 +207,7 @@ const query = reactive<{ page: number; size: number; projectId?: number; status?
 async function loadData() {
   loading.value = true
   try {
-    const params: any = { page: query.page, size: query.size }
+    const params: RiskListQuery = { page: query.page, size: query.size }
     if (query.projectId) params.projectId = query.projectId
     if (query.status) params.status = query.status
     if (query.priority) params.priority = query.priority

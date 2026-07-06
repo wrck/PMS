@@ -46,7 +46,7 @@ export interface ProjectListResult {
 /** 看板数据：按状态分组的项目列表 */
 export type ProjectDashboard = Partial<Record<ProjectStatus, Project[]>>
 
-export function createProject(data: any): Promise<Project> {
+export function createProject(data: Project): Promise<Project> {
   return post<Project>('/api/project', data)
 }
 
@@ -63,7 +63,7 @@ export function listProjects(params: {
   return get<ProjectListResult>('/api/project/list', params)
 }
 
-export function updateProject(data: any): Promise<Project> {
+export function updateProject(data: Project): Promise<Project> {
   return put<Project>('/api/project', data)
 }
 
@@ -93,11 +93,11 @@ export interface Milestone {
   progress?: number
 }
 
-export function createMilestone(data: any): Promise<Milestone> {
+export function createMilestone(data: Milestone): Promise<Milestone> {
   return post<Milestone>('/api/project/milestone', data)
 }
 
-export function updateMilestone(data: any): Promise<Milestone> {
+export function updateMilestone(data: Milestone): Promise<Milestone> {
   return put<Milestone>('/api/project/milestone', data)
 }
 

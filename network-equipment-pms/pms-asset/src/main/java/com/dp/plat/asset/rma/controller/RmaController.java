@@ -3,14 +3,17 @@ package com.dp.plat.asset.rma.controller;
 import com.dp.plat.asset.rma.dto.RmaKpiDto;
 import com.dp.plat.asset.rma.entity.Rma;
 import com.dp.plat.asset.rma.service.IRmaService;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.file.entity.Attachment;
 import com.dp.plat.file.service.IAttachmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,31 +46,41 @@ public class RmaController {
 
     @Operation(summary = "Register a new RMA ticket")
     @PostMapping
-    public Result<Rma> create(@RequestBody Rma rma) {
+    @PreAuthorize("hasAuthority('asset:rma:add')")
+    @OperLog(title = "RMA退货返修", businessType = 1)
+    public Result<Rma> create(@Valid @RequestBody Rma rma) {
         rmaService.create(rma);
         return Result.ok(rma);
     }
 
     @Operation(summary = "Check warranty status for the RMA asset")
     @PostMapping("/{id}/check-warranty")
+    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> checkWarranty(@PathVariable Long id) {
         return Result.ok(rmaService.checkWarranty(id));
     }
 
     @Operation(summary = "Issue the RMA (RMA_ISSUED)")
     @PostMapping("/{id}/issue")
+    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> issueRma(@PathVariable Long id) {
         return Result.ok(rmaService.issueRma(id));
     }
 
     @Operation(summary = "Mark the RMA as returning (RETURNING)")
     @PostMapping("/{id}/returning")
+    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> markReturning(@PathVariable Long id) {
         return Result.ok(rmaService.markReturning(id));
     }
 
     @Operation(summary = "Inspect the returned asset (INSPECTED) and update asset status")
     @PostMapping("/{id}/inspect")
+    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> inspect(@PathVariable Long id,
                                    @RequestParam(required = false) String notes) {
         return Result.ok(rmaService.inspect(id, notes));
@@ -75,6 +88,8 @@ public class RmaController {
 
     @Operation(summary = "Close the RMA ticket (CLOSED)")
     @PostMapping("/{id}/close")
+    @PreAuthorize("hasAuthority('asset:rma:close')")
+    @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> close(@PathVariable Long id) {
         return Result.ok(rmaService.close(id));
     }
@@ -106,6 +121,8 @@ public class RmaController {
 
     @Operation(summary = "Upload fault photos for an RMA ticket")
     @PostMapping("/{id}/photos")
+    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @OperLog(title = "RMA退货返修", businessType = 1)
     public Result<List<Attachment>> uploadPhotos(@PathVariable Long id,
                                                   @RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
@@ -129,6 +146,8 @@ public class RmaController {
 
     @Operation(summary = "Delete a single RMA fault photo")
     @DeleteMapping("/photos/{attachmentId}")
+    @PreAuthorize("hasAuthority('asset:rma:remove')")
+    @OperLog(title = "RMA退货返修", businessType = 3)
     public Result<Boolean> deletePhoto(@PathVariable Long attachmentId) {
         return Result.ok(attachmentService.delete(attachmentId));
     }

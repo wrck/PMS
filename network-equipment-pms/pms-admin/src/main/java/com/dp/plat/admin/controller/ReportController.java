@@ -1,6 +1,11 @@
 package com.dp.plat.admin.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.admin.dto.ActivityItem;
+import com.dp.plat.admin.dto.DashboardStats;
+import com.dp.plat.admin.dto.ProjectTrendItem;
+import com.dp.plat.admin.dto.TodoItem;
+import com.dp.plat.admin.service.ReportService;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetCategory;
 import com.dp.plat.asset.entity.AssetModel;
@@ -67,6 +72,7 @@ public class ReportController {
     private final ImplTaskMapper implTaskMapper;
     private final AgentMapper agentMapper;
     private final AgentScoreMapper agentScoreMapper;
+    private final ReportService reportService;
 
     @Operation(summary = "项目交付统计")
     @GetMapping("/delivery")
@@ -325,5 +331,35 @@ public class ReportController {
         stats.put("completionRate", BigDecimal.valueOf(completionRate).setScale(1, RoundingMode.HALF_UP));
         stats.put("avgDurationDays", BigDecimal.valueOf(avgDuration).setScale(1, RoundingMode.HALF_UP));
         return stats;
+    }
+
+    // ========================================================================
+    // Dashboard endpoints (Task 31)
+    // ========================================================================
+
+    @Operation(summary = "仪表盘统计")
+    @GetMapping("/dashboard/stats")
+    public Result<DashboardStats> dashboardStats() {
+        return Result.ok(reportService.getDashboardStats());
+    }
+
+    @Operation(summary = "项目趋势（最近 6 月状态分布）")
+    @GetMapping("/project/trend")
+    public Result<List<ProjectTrendItem>> projectTrend() {
+        return Result.ok(reportService.getProjectTrend());
+    }
+
+    @Operation(summary = "待办列表（Top N）")
+    @GetMapping("/todo/list")
+    public Result<List<TodoItem>> todoList(
+            @RequestParam(defaultValue = "5") int limit) {
+        return Result.ok(reportService.getTodoList(limit));
+    }
+
+    @Operation(summary = "近期动态（最近 N 条日志）")
+    @GetMapping("/recent-activities")
+    public Result<List<ActivityItem>> recentActivities(
+            @RequestParam(defaultValue = "10") int limit) {
+        return Result.ok(reportService.getRecentActivities(limit));
     }
 }

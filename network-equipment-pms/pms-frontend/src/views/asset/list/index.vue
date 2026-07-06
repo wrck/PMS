@@ -22,6 +22,15 @@ import {
   type TransferListQuery
 } from '@/api/asset'
 import ExcelImportExport from '@/components/ExcelImportExport/index.vue'
+import MobileListCard from '@/components/MobileListCard/index.vue'
+import type { MobileColumn, MobileOperation } from '@/components/MobileListCard/index.vue'
+import type { EpTagType } from '@/types'
+
+// 复用 MobileListCard 组件导出的列 / 操作配置类型（避免本地 any 复制）
+type Col = MobileColumn<Asset>
+type Op = MobileOperation<Asset>
+type TransferCol = MobileColumn<AssetTransfer>
+type TransferOp = MobileOperation<AssetTransfer>
 
 // ============ Asset list ============
 const loading = ref(false)
@@ -35,15 +44,15 @@ const query = reactive({
   projectId: undefined as number | undefined
 })
 
-const statusOptions = [
+const statusOptions: { value: string; label: string; tag: EpTagType }[] = [
   { value: ASSET_STATUS.IN_STOCK, label: '在库', tag: 'success' },
   { value: ASSET_STATUS.ALLOCATED, label: '已分配', tag: 'warning' },
   { value: ASSET_STATUS.IN_TRANSIT, label: '调拨中', tag: 'primary' },
   { value: ASSET_STATUS.SCRAPPED, label: '已报废', tag: 'danger' }
 ]
 
-function statusTagType(status?: string): 'success' | 'warning' | 'primary' | 'danger' | 'info' {
-  return (statusOptions.find((o) => o.value === status)?.tag as any) ?? 'info'
+function statusTagType(status?: string): EpTagType {
+  return statusOptions.find((o) => o.value === status)?.tag ?? 'info'
 }
 
 function statusLabel(status?: string) {
@@ -404,14 +413,14 @@ const transferQuery = reactive<TransferListQuery>({
   status: ''
 })
 
-const transferStatusOptions = [
+const transferStatusOptions: { value: string; label: string; tag: EpTagType }[] = [
   { value: TRANSFER_STATUS.PENDING, label: '待审批', tag: 'warning' },
   { value: TRANSFER_STATUS.APPROVED, label: '已通过', tag: 'success' },
   { value: TRANSFER_STATUS.REJECTED, label: '已驳回', tag: 'danger' }
 ]
 
-function transferStatusTag(status?: string): 'success' | 'warning' | 'danger' | 'info' {
-  return (transferStatusOptions.find((o) => o.value === status)?.tag as any) ?? 'info'
+function transferStatusTag(status?: string): EpTagType {
+  return transferStatusOptions.find((o) => o.value === status)?.tag ?? 'info'
 }
 
 function transferStatusLabel(status?: string) {
@@ -526,6 +535,97 @@ function handleTabChange(name: string | number) {
 onMounted(() => {
   loadAssets()
 })
+
+// ============ 移动端卡片视图配置：资产列表 ============
+const assetMobileColumns: Col[] = [
+  { prop: 'name', label: '设备名称' },
+  {
+    prop: 'status',
+    label: '状态',
+    render: 'tag',
+    tagType: (row) => statusTagType(row.status),
+    formatter: (row) => statusLabel(row.status),
+    subtitle: true
+  },
+  { prop: 'serialNo', label: '序列号' },
+  { prop: 'modelName', label: '型号' },
+  { prop: 'categoryName', label: '分类' },
+  { prop: 'warehouse', label: '仓库' },
+  { prop: 'location', label: '库位' },
+  {
+    prop: 'inboundDate',
+    label: '入库时间',
+    formatter: (_r, v) => formatDateTime(v as string)
+  },
+  {
+    prop: 'projectId',
+    label: '关联项目',
+    formatter: (row) => (row.projectId ? `${row.projectName ?? row.projectId}` : '-')
+  }
+]
+
+const assetMobileOperations: Op[] = [
+  { label: '生命周期', type: 'primary', onClick: (row) => openLifecycle(row) },
+  {
+    label: '分配',
+    type: 'primary',
+    show: (row) => row.status === ASSET_STATUS.IN_STOCK,
+    onClick: (row) => openAllocate(row)
+  },
+  {
+    label: '回收',
+    type: 'warning',
+    show: (row) => row.status === ASSET_STATUS.ALLOCATED,
+    onClick: (row) => handleReturn(row)
+  },
+  { label: '编辑', type: 'primary', onClick: (row) => openEdit(row) },
+  { label: '删除', type: 'danger', onClick: (row) => handleDelete(row) }
+]
+
+// ============ 移动端卡片视图配置：调拨管理 ============
+const transferMobileColumns: TransferCol[] = [
+  { prop: 'assetSerialNo', label: '设备序列号' },
+  {
+    prop: 'status',
+    label: '状态',
+    render: 'tag',
+    tagType: (row) => transferStatusTag(row.status),
+    formatter: (row) => transferStatusLabel(row.status),
+    subtitle: true
+  },
+  {
+    prop: 'fromProjectId',
+    label: '源项目',
+    formatter: (row) => String(row.fromProjectName ?? row.fromProjectId ?? '-')
+  },
+  {
+    prop: 'toProjectId',
+    label: '目标项目',
+    formatter: (row) => String(row.toProjectName ?? row.toProjectId ?? '-')
+  },
+  { prop: 'transferReason', label: '调拨原因' },
+  { prop: 'applicantName', label: '申请人' },
+  {
+    prop: 'applyTime',
+    label: '申请时间',
+    formatter: (_r, v) => formatDateTime(v as string)
+  }
+]
+
+const transferMobileOperations: TransferOp[] = [
+  {
+    label: '审批通过',
+    type: 'success',
+    show: (row) => canApprove(row.status),
+    onClick: (row) => openApprove(row)
+  },
+  {
+    label: '驳回',
+    type: 'danger',
+    show: (row) => canApprove(row.status),
+    onClick: (row) => openReject(row)
+  }
+]
 </script>
 
 <template>
@@ -596,57 +696,73 @@ onMounted(() => {
             />
           </div>
 
-          <el-table v-loading="loading" :data="tableData" border stripe>
-            <el-table-column prop="serialNo" label="序列号" min-width="160" show-overflow-tooltip />
-            <el-table-column prop="name" label="设备名称" min-width="140" show-overflow-tooltip />
-            <el-table-column prop="modelName" label="型号" min-width="140" show-overflow-tooltip />
-            <el-table-column prop="categoryName" label="分类" min-width="120" show-overflow-tooltip />
-            <el-table-column label="状态" width="100" align="center">
-              <template #default="{ row }">
-                <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+          <!-- 列表区：桌面端表格 / 移动端卡片 -->
+          <div class="mobile-card-list">
+            <el-table v-loading="loading" :data="tableData" border stripe>
+              <el-table-column prop="serialNo" label="序列号" min-width="160" show-overflow-tooltip />
+              <el-table-column prop="name" label="设备名称" min-width="140" show-overflow-tooltip />
+              <el-table-column prop="modelName" label="型号" min-width="140" show-overflow-tooltip />
+              <el-table-column prop="categoryName" label="分类" min-width="120" show-overflow-tooltip />
+              <el-table-column label="状态" width="100" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="warehouse" label="仓库" min-width="120" show-overflow-tooltip />
+              <el-table-column prop="location" label="库位" min-width="120" show-overflow-tooltip />
+              <el-table-column label="关联项目" min-width="120">
+                <template #default="{ row }">
+                  {{ row.projectId ? `${row.projectName ?? row.projectId}` : '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column label="入库时间" width="160">
+                <template #default="{ row }">
+                  {{ formatDateTime(row.inboundDate) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="280" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" @click="openLifecycle(row)">
+                    生命周期
+                  </el-button>
+                  <el-button
+                    v-if="row.status === ASSET_STATUS.IN_STOCK"
+                    link
+                    type="primary"
+                    @click="openAllocate(row)"
+                  >
+                    分配
+                  </el-button>
+                  <el-button
+                    v-if="row.status === ASSET_STATUS.ALLOCATED"
+                    link
+                    type="warning"
+                    @click="handleReturn(row)"
+                  >
+                    回收
+                  </el-button>
+                  <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+                  <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+                </template>
+              </el-table-column>
+              <template #empty>
+                <el-empty description="暂无数据" />
               </template>
-            </el-table-column>
-            <el-table-column prop="warehouse" label="仓库" min-width="120" show-overflow-tooltip />
-            <el-table-column prop="location" label="库位" min-width="120" show-overflow-tooltip />
-            <el-table-column label="关联项目" min-width="120">
-              <template #default="{ row }">
-                {{ row.projectId ? `${row.projectName ?? row.projectId}` : '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="入库时间" width="160">
-              <template #default="{ row }">
-                {{ formatDateTime(row.inboundDate) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="280" fixed="right">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="openLifecycle(row)">
-                  生命周期
-                </el-button>
-                <el-button
-                  v-if="row.status === ASSET_STATUS.IN_STOCK"
-                  link
-                  type="primary"
-                  @click="openAllocate(row)"
-                >
-                  分配
-                </el-button>
-                <el-button
-                  v-if="row.status === ASSET_STATUS.ALLOCATED"
-                  link
-                  type="warning"
-                  @click="handleReturn(row)"
-                >
-                  回收
-                </el-button>
-                <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-                <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-              </template>
-            </el-table-column>
-            <template #empty>
-              <el-empty description="暂无数据" />
-            </template>
-          </el-table>
+            </el-table>
+
+            <!-- 移动端卡片视图（仅 md-down 显示） -->
+            <div class="mobile-cards">
+              <MobileListCard
+                v-loading="loading"
+                :data="tableData"
+                :columns="assetMobileColumns"
+                :operations="assetMobileOperations"
+                title-prop="name"
+                title-icon="Box"
+                empty-text="暂无数据"
+              />
+            </div>
+          </div>
 
           <el-pagination
             class="pagination"
@@ -692,55 +808,71 @@ onMounted(() => {
             </el-form-item>
           </el-form>
 
-          <el-table v-loading="transferLoading" :data="transferTableData" border stripe>
-            <el-table-column
-              prop="assetSerialNo"
-              label="设备序列号"
-              min-width="160"
-              show-overflow-tooltip
-            />
-            <el-table-column label="源项目" min-width="140">
-              <template #default="{ row }">
-                {{ row.fromProjectName ?? row.fromProjectId ?? '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="目标项目" min-width="140">
-              <template #default="{ row }">
-                {{ row.toProjectName ?? row.toProjectId ?? '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="transferReason"
-              label="调拨原因"
-              min-width="180"
-              show-overflow-tooltip
-            />
-            <el-table-column label="状态" width="100" align="center">
-              <template #default="{ row }">
-                <el-tag :type="transferStatusTag(row.status)">
-                  {{ transferStatusLabel(row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="applicantName" label="申请人" min-width="100" />
-            <el-table-column label="申请时间" width="160">
-              <template #default="{ row }">
-                {{ formatDateTime(row.applyTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="160" fixed="right">
-              <template #default="{ row }">
-                <template v-if="canApprove(row.status)">
-                  <el-button link type="success" @click="openApprove(row)">审批通过</el-button>
-                  <el-button link type="danger" @click="openReject(row)">驳回</el-button>
+          <!-- 列表区：桌面端表格 / 移动端卡片 -->
+          <div class="mobile-card-list">
+            <el-table v-loading="transferLoading" :data="transferTableData" border stripe>
+              <el-table-column
+                prop="assetSerialNo"
+                label="设备序列号"
+                min-width="160"
+                show-overflow-tooltip
+              />
+              <el-table-column label="源项目" min-width="140">
+                <template #default="{ row }">
+                  {{ row.fromProjectName ?? row.fromProjectId ?? '-' }}
                 </template>
-                <span v-else class="text-muted">-</span>
+              </el-table-column>
+              <el-table-column label="目标项目" min-width="140">
+                <template #default="{ row }">
+                  {{ row.toProjectName ?? row.toProjectId ?? '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="transferReason"
+                label="调拨原因"
+                min-width="180"
+                show-overflow-tooltip
+              />
+              <el-table-column label="状态" width="100" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="transferStatusTag(row.status)">
+                    {{ transferStatusLabel(row.status) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="applicantName" label="申请人" min-width="100" />
+              <el-table-column label="申请时间" width="160">
+                <template #default="{ row }">
+                  {{ formatDateTime(row.applyTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="160" fixed="right">
+                <template #default="{ row }">
+                  <template v-if="canApprove(row.status)">
+                    <el-button link type="success" @click="openApprove(row)">审批通过</el-button>
+                    <el-button link type="danger" @click="openReject(row)">驳回</el-button>
+                  </template>
+                  <span v-else class="text-muted">-</span>
+                </template>
+              </el-table-column>
+              <template #empty>
+                <el-empty description="暂无数据" />
               </template>
-            </el-table-column>
-            <template #empty>
-              <el-empty description="暂无数据" />
-            </template>
-          </el-table>
+            </el-table>
+
+            <!-- 移动端卡片视图（仅 md-down 显示） -->
+            <div class="mobile-cards">
+              <MobileListCard
+                v-loading="transferLoading"
+                :data="transferTableData"
+                :columns="transferMobileColumns"
+                :operations="transferMobileOperations"
+                title-prop="assetSerialNo"
+                title-icon="Switch"
+                empty-text="暂无数据"
+              />
+            </div>
+          </div>
 
           <el-pagination
             class="pagination"
@@ -758,38 +890,58 @@ onMounted(() => {
     </el-tabs>
 
     <!-- ============ Inbound dialog ============ -->
-    <el-dialog v-model="inboundVisible" title="设备入库" width="560px" destroy-on-close>
-      <el-form ref="inboundRef" :model="inboundForm" :rules="inboundRules" label-width="100px">
-        <el-form-item label="序列号" prop="serialNo">
-          <el-input v-model="inboundForm.serialNo" placeholder="请输入序列号" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="设备名称" prop="name">
-          <el-input v-model="inboundForm.name" placeholder="请输入设备名称" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="型号ID" prop="modelId">
-          <el-input-number
-            v-model="inboundForm.modelId"
-            :min="1"
-            controls-position="right"
-            placeholder="设备型号ID"
-            style="width: 200px"
-          />
-        </el-form-item>
-        <el-form-item label="仓库" prop="warehouse">
-          <el-input v-model="inboundForm.warehouse" placeholder="请输入仓库名称" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="库位" prop="location">
-          <el-input v-model="inboundForm.location" placeholder="请输入库位" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="inboundForm.remark"
-            type="textarea"
-            :rows="2"
-            placeholder="备注信息"
-            maxlength="200"
-          />
-        </el-form-item>
+    <el-dialog v-model="inboundVisible" title="设备入库" width="680px" destroy-on-close>
+      <el-form
+        ref="inboundRef"
+        :model="inboundForm"
+        :rules="inboundRules"
+        label-width="100px"
+        class="responsive-form"
+      >
+        <el-row :gutter="16" class="form-two-col-md">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="序列号" prop="serialNo">
+              <el-input v-model="inboundForm.serialNo" placeholder="请输入序列号" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="设备名称" prop="name">
+              <el-input v-model="inboundForm.name" placeholder="请输入设备名称" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="型号ID" prop="modelId">
+              <el-input-number
+                v-model="inboundForm.modelId"
+                :min="1"
+                controls-position="right"
+                placeholder="设备型号ID"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="仓库" prop="warehouse">
+              <el-input v-model="inboundForm.warehouse" placeholder="请输入仓库名称" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="库位" prop="location">
+              <el-input v-model="inboundForm.location" placeholder="请输入库位" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                v-model="inboundForm.remark"
+                type="textarea"
+                :rows="2"
+                placeholder="备注信息"
+                maxlength="200"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="inboundVisible = false">取消</el-button>
@@ -824,29 +976,47 @@ onMounted(() => {
     </el-dialog>
 
     <!-- ============ Edit dialog ============ -->
-    <el-dialog v-model="editVisible" title="编辑设备" width="560px" destroy-on-close>
-      <el-form ref="editRef" :model="editForm" :rules="editRules" label-width="100px">
-        <el-form-item label="序列号" prop="serialNo">
-          <el-input v-model="editForm.serialNo" placeholder="请输入序列号" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="设备名称" prop="name">
-          <el-input v-model="editForm.name" placeholder="请输入设备名称" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="仓库" prop="warehouse">
-          <el-input v-model="editForm.warehouse" placeholder="请输入仓库名称" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="库位" prop="location">
-          <el-input v-model="editForm.location" placeholder="请输入库位" maxlength="50" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="editForm.remark"
-            type="textarea"
-            :rows="2"
-            placeholder="备注信息"
-            maxlength="200"
-          />
-        </el-form-item>
+    <el-dialog v-model="editVisible" title="编辑设备" width="680px" destroy-on-close>
+      <el-form
+        ref="editRef"
+        :model="editForm"
+        :rules="editRules"
+        label-width="100px"
+        class="responsive-form"
+      >
+        <el-row :gutter="16" class="form-two-col-md">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="序列号" prop="serialNo">
+              <el-input v-model="editForm.serialNo" placeholder="请输入序列号" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="设备名称" prop="name">
+              <el-input v-model="editForm.name" placeholder="请输入设备名称" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="仓库" prop="warehouse">
+              <el-input v-model="editForm.warehouse" placeholder="请输入仓库名称" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="库位" prop="location">
+              <el-input v-model="editForm.location" placeholder="请输入库位" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                v-model="editForm.remark"
+                type="textarea"
+                :rows="2"
+                placeholder="备注信息"
+                maxlength="200"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="editVisible = false">取消</el-button>
@@ -889,52 +1059,65 @@ onMounted(() => {
     </el-dialog>
 
     <!-- ============ Transfer apply dialog ============ -->
-    <el-dialog v-model="transferApplyVisible" title="设备调拨申请" width="560px" destroy-on-close>
+    <el-dialog v-model="transferApplyVisible" title="设备调拨申请" width="680px" destroy-on-close>
       <el-form
         ref="transferApplyRef"
         :model="transferApplyForm"
         :rules="transferApplyRules"
         label-width="100px"
+        class="responsive-form"
       >
-        <el-form-item label="设备ID" prop="assetId">
-          <el-input-number
-            v-model="transferApplyForm.assetId"
-            :min="1"
-            controls-position="right"
-            placeholder="请输入设备ID"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item v-if="transferApplyForm.assetSerialNo" label="序列号">
-          <el-input :model-value="transferApplyForm.assetSerialNo" disabled />
-        </el-form-item>
-        <el-form-item label="源项目ID" prop="fromProjectId">
-          <el-input-number
-            v-model="transferApplyForm.fromProjectId"
-            :min="1"
-            controls-position="right"
-            placeholder="请输入源项目ID"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="目标项目ID" prop="toProjectId">
-          <el-input-number
-            v-model="transferApplyForm.toProjectId"
-            :min="1"
-            controls-position="right"
-            placeholder="请输入目标项目ID"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="调拨原因" prop="transferReason">
-          <el-input
-            v-model="transferApplyForm.transferReason"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入调拨原因"
-            maxlength="200"
-          />
-        </el-form-item>
+        <el-row :gutter="16" class="form-two-col-md">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="设备ID" prop="assetId">
+              <el-input-number
+                v-model="transferApplyForm.assetId"
+                :min="1"
+                controls-position="right"
+                placeholder="请输入设备ID"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col v-if="transferApplyForm.assetSerialNo" :xs="24" :sm="12">
+            <el-form-item label="序列号">
+              <el-input :model-value="transferApplyForm.assetSerialNo" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="源项目ID" prop="fromProjectId">
+              <el-input-number
+                v-model="transferApplyForm.fromProjectId"
+                :min="1"
+                controls-position="right"
+                placeholder="请输入源项目ID"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="目标项目ID" prop="toProjectId">
+              <el-input-number
+                v-model="transferApplyForm.toProjectId"
+                :min="1"
+                controls-position="right"
+                placeholder="请输入目标项目ID"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="调拨原因" prop="transferReason">
+              <el-input
+                v-model="transferApplyForm.transferReason"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入调拨原因"
+                maxlength="200"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="transferApplyVisible = false">取消</el-button>
@@ -976,26 +1159,32 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../../styles/design-tokens' as *;
+
 .page-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $spacing-3;
 }
 .page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
 }
 .toolbar {
-  margin-bottom: 12px;
+  margin-bottom: $spacing-3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+  align-items: center;
 }
 .pagination {
-  margin-top: 12px;
+  margin-top: $spacing-3;
   justify-content: flex-end;
 }
 .text-muted {
-  color: #c0c4cc;
+  color: $color-text-placeholder;
 }
 .lifecycle-card {
   margin-bottom: 0;
@@ -1003,24 +1192,43 @@ onMounted(() => {
 .lifecycle-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
+  gap: $spacing-3;
+  margin-bottom: $spacing-2;
 }
 .lifecycle-operator {
-  color: #606266;
-  font-size: 13px;
+  color: $color-text-regular;
+  font-size: $font-size-sm;
 }
 .lifecycle-project {
-  font-size: 13px;
-  color: #606266;
-  margin-bottom: 6px;
+  font-size: $font-size-sm;
+  color: $color-text-regular;
+  margin-bottom: $spacing-2;
 }
 .lifecycle-project .arrow {
-  margin: 0 6px;
-  color: #909399;
+  margin: 0 $spacing-2;
+  color: $color-text-secondary;
 }
 .lifecycle-remark {
-  font-size: 13px;
-  color: #909399;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+// 移动端：工具栏按钮全宽堆叠
+@media (max-width: $breakpoint-md - 1px) {
+  .toolbar {
+    :deep(.el-button) {
+      width: 100%;
+      margin-left: 0;
+    }
+    :deep(.el-button + .el-button) {
+      margin-left: 0;
+    }
+  }
+  .pagination {
+    :deep(.el-pagination__sizes),
+    :deep(.el-pagination__jump) {
+      display: none;
+    }
+  }
 }
 </style>

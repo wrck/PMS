@@ -1,12 +1,15 @@
 package com.dp.plat.governance.risk.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.governance.risk.dto.RiskMatrixDto;
 import com.dp.plat.governance.risk.entity.Risk;
 import com.dp.plat.governance.risk.service.IRiskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,18 +35,24 @@ public class RiskController {
 
     @Operation(summary = "创建风险")
     @PostMapping
-    public Result<Risk> create(@RequestBody Risk risk) {
+    @PreAuthorize("hasAuthority('governance:risk:add')")
+    @OperLog(title = "风险管理", businessType = 1)
+    public Result<Risk> create(@Valid @RequestBody Risk risk) {
         return riskService.create(risk);
     }
 
     @Operation(summary = "更新风险")
     @PutMapping
-    public Result<?> update(@RequestBody Risk risk) {
+    @PreAuthorize("hasAuthority('governance:risk:edit')")
+    @OperLog(title = "风险管理", businessType = 2)
+    public Result<?> update(@Valid @RequestBody Risk risk) {
         return riskService.update(risk);
     }
 
     @Operation(summary = "删除风险")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('governance:risk:remove')")
+    @OperLog(title = "风险管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return riskService.delete(id);
     }
@@ -68,12 +77,16 @@ public class RiskController {
 
     @Operation(summary = "标记风险已发生并转化为问题")
     @PostMapping("/{id}/mark-occurred")
+    @PreAuthorize("hasAuthority('governance:risk:process')")
+    @OperLog(title = "风险管理", businessType = 2)
     public Result<?> markOccurred(@PathVariable Long id) {
         return riskService.markOccurred(id);
     }
 
     @Operation(summary = "升级风险为变更请求")
     @PostMapping("/{id}/escalate")
+    @PreAuthorize("hasAuthority('governance:risk:process')")
+    @OperLog(title = "风险管理", businessType = 2)
     public Result<?> escalate(@PathVariable Long id) {
         return riskService.escalate(id);
     }

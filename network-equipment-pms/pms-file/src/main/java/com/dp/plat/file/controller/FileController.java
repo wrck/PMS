@@ -1,5 +1,6 @@
 package com.dp.plat.file.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.file.entity.Attachment;
 import com.dp.plat.file.service.IAttachmentService;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +41,8 @@ public class FileController {
 
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('file:attachment:upload')")
+    @OperLog(title = "文件附件", businessType = 1)
     public Result<Attachment> upload(@RequestParam("file") MultipartFile file,
                                      @RequestParam String bizType,
                                      @RequestParam Long bizId,
@@ -95,6 +99,8 @@ public class FileController {
 
     @Operation(summary = "删除文件")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('file:attachment:remove')")
+    @OperLog(title = "文件附件", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(attachmentService.delete(id));
     }

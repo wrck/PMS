@@ -29,6 +29,7 @@
         <module>pms-governance</module>
         <module>pms-notification</module>
         <module>pms-file</module>
+        <module>pms-lowcode</module>
         <module>pms-admin</module>
     </modules>
 
@@ -95,6 +96,11 @@
             <dependency>
                 <groupId>com.dp.plat</groupId>
                 <artifactId>pms-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dp.plat</groupId>
+                <artifactId>pms-lowcode</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

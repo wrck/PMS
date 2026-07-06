@@ -1,0 +1,41 @@
+# API 层告警规则
+groups:
+  - name: api-alerts
+    interval: 30s
+    rules:
+      - alert: APIErrorRateHigh
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="pms", status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count{application="pms"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          application: pms
+          category: api
+        annotations:
+          summary: "API 错误率过高 ({{ $labels.application }})"
+          description: "5xx 错误率 {{ $value | humanizePercentage }} 超过 5%，持续 5 分钟。"
+
+      - alert: APIHighLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application="pms"}[5m]))) > 2
+        for: 10m
+        labels:
+          severity: warning
+          application: pms
+          category: api
+        annotations:
+          summary: "API P95 延迟过高"
+          description: "P95 延迟 {{ $value }}s 超过 2s，持续 10 分钟。"
+
+      - alert: APIRequestRateDrop
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="pms"}[5m])) < 0.1
+        for: 15m
+        labels:
+          severity: warning
+          application: pms
+          category: api
+        annotations:
+          summary: "API 请求量骤降"
+          description: "QPS 低于 0.1 持续 15 分钟，服务可能不可用。"

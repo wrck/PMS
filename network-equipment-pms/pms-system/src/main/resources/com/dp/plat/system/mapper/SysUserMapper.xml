@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    SysUser Mapper XML。
+    phone / email 字段通过 EncryptTypeHandler 在数据库读写时自动 AES-256-GCM 加解密。
+    注意：实体 SysUser 已通过 @TableField(typeHandler=EncryptTypeHandler.class) +
+    @TableName(autoResultMap=true) 让 MyBatis-Plus BaseMapper 方法自动应用 typeHandler，
+    本 XML 中的自定义查询同样显式声明 typeHandler，作为标准用法参考与兜底。
+-->
+<mapper namespace="com.dp.plat.system.mapper.SysUserMapper">
+
+    <!-- 通用结果映射：phone/email 显式声明 EncryptTypeHandler 解密 -->
+    <resultMap id="sysUserResultMap" type="com.dp.plat.system.entity.SysUser">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="email" property="email"
+                typeHandler="com.dp.plat.common.crypto.EncryptTypeHandler"/>
+        <result column="phone" property="phone"
+                typeHandler="com.dp.plat.common.crypto.EncryptTypeHandler"/>
+        <result column="status" property="status"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="company_id" property="companyId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <!-- 按用户名查询：phone/email 走 typeHandler 自动解密 -->
+    <select id="selectByUsername" resultMap="sysUserResultMap">
+        SELECT *
+        FROM sys_user
+        WHERE username = #{username}
+          AND deleted = 0
+    </select>
+
+    <!-- 按 id 查询：phone/email 走 typeHandler 自动解密 -->
+    <select id="selectByIdWithDecrypt" resultMap="sysUserResultMap">
+        SELECT *
+        FROM sys_user
+        WHERE id = #{id}
+          AND deleted = 0
+    </select>
+
+    <!-- 新增用户：phone/email 参数显式声明 typeHandler 自动加密 -->
+    <insert id="insertUser" parameterType="com.dp.plat.system.entity.SysUser"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, password, real_name, email, phone,
+                              status, dept_id, company_id,
+                              create_time, update_time, create_by, update_by, deleted)
+        VALUES (#{username}, #{password}, #{realName},
+                #{email, typeHandler=com.dp.plat.common.crypto.EncryptTypeHandler},
+                #{phone, typeHandler=com.dp.plat.common.crypto.EncryptTypeHandler},
+                #{status}, #{deptId}, #{companyId},
+                #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, 0)
+    </insert>
+
+    <!-- 更新用户：phone/email 参数显式声明 typeHandler 自动加密 -->
+    <update id="updateUser" parameterType="com.dp.plat.system.entity.SysUser">
+        UPDATE sys_user
+        SET username   = #{username},
+            real_name  = #{realName},
+            email      = #{email, typeHandler=com.dp.plat.common.crypto.EncryptTypeHandler},
+            phone      = #{phone, typeHandler=com.dp.plat.common.crypto.EncryptTypeHandler},
+            status     = #{status},
+            dept_id    = #{deptId},
+            company_id = #{companyId},
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

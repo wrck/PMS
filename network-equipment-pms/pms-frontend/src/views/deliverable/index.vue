@@ -11,6 +11,7 @@ import {
   type DeliverableChecklist,
   type DeliverableType
 } from '@/api/deliverable'
+import type { EpTagType } from '@/types'
 
 const loading = ref(false)
 const tableData = ref<DeliverableChecklist[]>([])
@@ -38,14 +39,14 @@ function formatDateTime(val?: string): string {
 }
 
 // 已上传状态标签
-function uploadedMeta(row: DeliverableChecklist): { tagType: any; label: string } {
+function uploadedMeta(row: DeliverableChecklist): { tagType: EpTagType; label: string } {
   if (row.uploaded) return { tagType: 'success', label: '已上传' }
   if (row.required) return { tagType: 'danger', label: '未上传' }
   return { tagType: 'info', label: '无需上传' }
 }
 
 // 是否必需标签
-function requiredMeta(row: DeliverableChecklist): { tagType: any; label: string } {
+function requiredMeta(row: DeliverableChecklist): { tagType: EpTagType; label: string } {
   return row.required
     ? { tagType: 'warning', label: '必需' }
     : { tagType: 'info', label: '可选' }
@@ -106,8 +107,8 @@ function handleUpload(row: DeliverableChecklist) {
   uploadVisible.value = true
 }
 
-// FileUploader 上传成功回调
-async function handleUploaded(payload: any) {
+// FileUploader 上传成功回调：可能直接返回附件 ID，也可能返回 { id } 对象
+async function handleUploaded(payload: number | { id?: number }) {
   const row = currentRow.value
   if (!row?.id) return
   const attachmentId = typeof payload === 'number' ? payload : payload?.id

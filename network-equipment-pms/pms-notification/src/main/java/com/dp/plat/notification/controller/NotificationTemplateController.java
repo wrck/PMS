@@ -1,12 +1,15 @@
 package com.dp.plat.notification.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.notification.entity.NotificationTemplate;
 import com.dp.plat.notification.service.INotificationTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,14 +52,18 @@ public class NotificationTemplateController {
 
     @Operation(summary = "新增通知模板")
     @PostMapping
-    public Result<NotificationTemplate> create(@RequestBody NotificationTemplate template) {
+    @PreAuthorize("hasAuthority('notification:template:add')")
+    @OperLog(title = "通知模板", businessType = 1)
+    public Result<NotificationTemplate> create(@Valid @RequestBody NotificationTemplate template) {
         templateService.save(template);
         return Result.ok(template);
     }
 
     @Operation(summary = "修改通知模板")
     @PutMapping("/{id}")
-    public Result<NotificationTemplate> update(@PathVariable Long id, @RequestBody NotificationTemplate template) {
+    @PreAuthorize("hasAuthority('notification:template:edit')")
+    @OperLog(title = "通知模板", businessType = 2)
+    public Result<NotificationTemplate> update(@PathVariable Long id, @Valid @RequestBody NotificationTemplate template) {
         template.setId(id);
         templateService.updateById(template);
         return Result.ok(template);
@@ -64,6 +71,8 @@ public class NotificationTemplateController {
 
     @Operation(summary = "删除通知模板")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('notification:template:remove')")
+    @OperLog(title = "通知模板", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(templateService.removeById(id));
     }

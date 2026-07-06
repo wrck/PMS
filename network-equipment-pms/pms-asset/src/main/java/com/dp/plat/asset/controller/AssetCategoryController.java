@@ -2,10 +2,13 @@ package com.dp.plat.asset.controller;
 
 import com.dp.plat.asset.entity.AssetCategory;
 import com.dp.plat.asset.service.IAssetCategoryService;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,18 +39,24 @@ public class AssetCategoryController {
 
     @Operation(summary = "Create category")
     @PostMapping
-    public Result<Boolean> create(@RequestBody AssetCategory category) {
+    @PreAuthorize("hasAuthority('asset:category:add')")
+    @OperLog(title = "设备分类管理", businessType = 1)
+    public Result<Boolean> create(@Valid @RequestBody AssetCategory category) {
         return Result.ok(assetCategoryService.create(category));
     }
 
     @Operation(summary = "Update category")
     @PutMapping
-    public Result<Boolean> update(@RequestBody AssetCategory category) {
+    @PreAuthorize("hasAuthority('asset:category:edit')")
+    @OperLog(title = "设备分类管理", businessType = 2)
+    public Result<Boolean> update(@Valid @RequestBody AssetCategory category) {
         return Result.ok(assetCategoryService.update(category));
     }
 
     @Operation(summary = "Delete category")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('asset:category:remove')")
+    @OperLog(title = "设备分类管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(assetCategoryService.delete(id));
     }

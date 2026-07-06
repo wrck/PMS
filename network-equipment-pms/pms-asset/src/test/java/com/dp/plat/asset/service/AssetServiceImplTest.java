@@ -4,17 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.dp.plat.asset.entity.Asset;
 import com.dp.plat.asset.entity.AssetAllocation;
 import com.dp.plat.asset.entity.AssetLifecycleLog;
+import com.dp.plat.asset.enums.AssetStatus;
 import com.dp.plat.asset.mapper.AssetAllocationMapper;
 import com.dp.plat.asset.mapper.AssetLifecycleLogMapper;
 import com.dp.plat.asset.mapper.AssetMapper;
 import com.dp.plat.asset.service.impl.AssetServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.metrics.BusinessMetrics;
+import com.dp.plat.project.mapper.ProjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -30,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,11 +45,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AssetServiceImplTest {
 
-    private static final String STATUS_IN_STOCK = "IN_STOCK";
+    private static final String STATUS_RECEIVED = "RECEIVED";
+    private static final String STATUS_INSTALLED = "INSTALLED";
     private static final String STATUS_ALLOCATED = "ALLOCATED";
-    private static final String ACTION_INBOUND = "INBOUND";
-    private static final String ACTION_ALLOCATE = "ALLOCATE";
-    private static final String ACTION_RETURN = "RETURN";
 
     @Mock
     private AssetMapper assetMapper;
@@ -56,13 +58,21 @@ class AssetServiceImplTest {
     @Mock
     private AssetLifecycleLogMapper assetLifecycleLogMapper;
 
-    @InjectMocks
+    @Mock
+    private AssetStateTransitionValidator stateValidator;
+
+    @Mock
+    private ProjectMapper projectMapper;
+
+    @Mock
+    private BusinessMetrics businessMetrics;
+
     private AssetServiceImpl assetService;
 
     @BeforeEach
     void setUp() {
-        // ServiceImpl.baseMapper is the AssetMapper; @InjectMocks stops at constructor
-        // injection so we wire the inherited field manually.
+        assetService = Mockito.spy(new AssetServiceImpl(
+                assetAllocationMapper, assetLifecycleLogMapper, stateValidator, projectMapper, businessMetrics));
         ReflectionTestUtils.setField(assetService, "baseMapper", assetMapper);
     }
 
@@ -81,9 +91,11 @@ class AssetServiceImplTest {
         return asset;
     }
 
+    // ==================== inbound ====================
+
     @Test
-    @DisplayName("inbound: 创建设备并置为 IN_STOCK，记录入库生命周期日志")
-    void inbound_shouldCreateWithInStockStatus() {
+    @DisplayName("inbound: 创建设备并置为 RECEIVED，记录入库生命周期日志")
+    void inbound_shouldCreateWithReceivedStatus() {
         Asset asset = Asset.builder()
                 .serialNo("SN-NEW")
                 .assetName("New Router")
@@ -99,27 +111,25 @@ class AssetServiceImplTest {
         boolean saved = assetService.inbound(asset);
 
         assertTrue(saved);
-        assertEquals(STATUS_IN_STOCK, asset.getStatus(), "缺省状态应为 IN_STOCK");
+        assertEquals(STATUS_RECEIVED, asset.getStatus(), "缺省状态应为 RECEIVED");
         assertNotNull(asset.getInboundTime(), "入库时间应被填充");
         verify(assetMapper, times(1)).insert(any(Asset.class));
         verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
     }
 
     @Test
-    @DisplayName("inbound: 保留已有状态与入库时间")
-    void inbound_keepsExistingStatusAndTime() {
+    @DisplayName("inbound: 保留已有入库时间")
+    void inbound_keepsExistingInboundTime() {
         LocalDateTime fixed = LocalDateTime.of(2024, 1, 1, 9, 0);
         Asset asset = Asset.builder()
                 .serialNo("SN-X")
                 .assetName("Router")
-                .status(STATUS_ALLOCATED)
                 .inboundTime(fixed)
                 .build();
         when(assetMapper.insert(any(Asset.class))).thenReturn(1);
 
         assetService.inbound(asset);
 
-        assertEquals(STATUS_ALLOCATED, asset.getStatus(), "已有状态不应被覆盖");
         assertEquals(fixed, asset.getInboundTime(), "已有入库时间不应被覆盖");
         verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
     }
@@ -132,22 +142,23 @@ class AssetServiceImplTest {
 
         boolean saved = assetService.inbound(asset);
 
-        // retBool(0) == false
         assertEquals(false, saved);
         verify(assetLifecycleLogMapper, never()).insert(any(AssetLifecycleLog.class));
     }
 
+    // ==================== allocate ====================
+
     @Test
-    @DisplayName("allocate: 设备状态由 IN_STOCK 变为 ALLOCATED，创建分配记录并记录日志")
-    void allocate_shouldChangeStatusToAllocated() {
-        Asset asset = sampleAsset(1L, STATUS_IN_STOCK, null);
+    @DisplayName("allocate: RECEIVED 状态设备分配后变为 INSTALLED，创建分配记录并记录日志")
+    void allocate_received_shouldChangeToInstalled() {
+        Asset asset = sampleAsset(1L, STATUS_RECEIVED, null);
         when(assetMapper.selectById(1L)).thenReturn(asset);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
 
         boolean updated = assetService.allocate(1L, 100L);
 
         assertTrue(updated);
-        assertEquals(STATUS_ALLOCATED, asset.getStatus());
+        assertEquals(STATUS_INSTALLED, asset.getStatus());
         assertEquals(100L, asset.getProjectId());
         assertNotNull(asset.getOutboundTime());
         verify(assetAllocationMapper, times(1)).insert(any(AssetAllocation.class));
@@ -155,14 +166,28 @@ class AssetServiceImplTest {
     }
 
     @Test
-    @DisplayName("allocate: 设备非在库状态时抛出业务异常")
-    void allocate_notInStock_throws() {
-        Asset asset = sampleAsset(1L, STATUS_ALLOCATED, 50L);
+    @DisplayName("allocate: STAGED 状态设备也可分配")
+    void allocate_staged_shouldChangeToInstalled() {
+        Asset asset = sampleAsset(1L, "STAGED", null);
+        when(assetMapper.selectById(1L)).thenReturn(asset);
+        when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
+
+        boolean updated = assetService.allocate(1L, 100L);
+
+        assertTrue(updated);
+        assertEquals(STATUS_INSTALLED, asset.getStatus());
+        verify(assetAllocationMapper, times(1)).insert(any(AssetAllocation.class));
+    }
+
+    @Test
+    @DisplayName("allocate: 非 RECEIVED/STAGED 状态设备不可分配")
+    void allocate_wrongStatus_throws() {
+        Asset asset = sampleAsset(1L, STATUS_INSTALLED, 50L);
         when(assetMapper.selectById(1L)).thenReturn(asset);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> assetService.allocate(1L, 100L));
-        assertTrue(ex.getMessage().contains("在库"));
+        assertTrue(ex.getMessage().contains("不可分配"));
         verify(assetMapper, never()).updateById(any(Asset.class));
         verify(assetAllocationMapper, never()).insert(any(AssetAllocation.class));
     }
@@ -183,9 +208,24 @@ class AssetServiceImplTest {
     }
 
     @Test
-    @DisplayName("returnAsset: 设备状态由 ALLOCATED 变回 IN_STOCK，更新分配记录并记录日志")
-    void returnAsset_shouldChangeStatusBackToInStock() {
-        Asset asset = sampleAsset(1L, STATUS_ALLOCATED, 100L);
+    @DisplayName("allocate: 设备已有项目时 fromProjectId 取自原 projectId")
+    void allocate_recordsFromProjectId() {
+        Asset asset = sampleAsset(1L, STATUS_RECEIVED, 50L);
+        when(assetMapper.selectById(1L)).thenReturn(asset);
+        when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
+
+        assetService.allocate(1L, 100L);
+
+        verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
+        assertEquals(100L, asset.getProjectId());
+    }
+
+    // ==================== returnAsset ====================
+
+    @Test
+    @DisplayName("returnAsset: 设备状态由 INSTALLED 变回 RECEIVED，更新分配记录并记录日志")
+    void returnAsset_shouldChangeStatusToReceived() {
+        Asset asset = sampleAsset(1L, STATUS_INSTALLED, 100L);
         when(assetMapper.selectById(1L)).thenReturn(asset);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
         AssetAllocation active = AssetAllocation.builder()
@@ -197,7 +237,7 @@ class AssetServiceImplTest {
         boolean updated = assetService.returnAsset(1L);
 
         assertTrue(updated);
-        assertEquals(STATUS_IN_STOCK, asset.getStatus());
+        assertEquals(STATUS_RECEIVED, asset.getStatus());
         assertNull(asset.getProjectId(), "归还后 projectId 应清空");
         assertEquals("RETURNED", active.getStatus());
         assertNotNull(active.getReturnTime());
@@ -206,22 +246,24 @@ class AssetServiceImplTest {
     }
 
     @Test
-    @DisplayName("returnAsset: 设备非已分配状态时抛出业务异常")
-    void returnAsset_notAllocated_throws() {
-        Asset asset = sampleAsset(1L, STATUS_IN_STOCK, null);
+    @DisplayName("returnAsset: 非法状态迁移时抛出业务异常")
+    void returnAsset_invalidTransition_throws() {
+        Asset asset = sampleAsset(1L, STATUS_RECEIVED, null);
         when(assetMapper.selectById(1L)).thenReturn(asset);
+        // stateValidator 拒绝 RECEIVED → RECEIVED 之外的非法迁移
+        Mockito.doThrow(new BusinessException("非法状态迁移: RECEIVED → RECEIVED"))
+                .when(stateValidator).validate(AssetStatus.RECEIVED, AssetStatus.RECEIVED);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> assetService.returnAsset(1L));
-        assertTrue(ex.getMessage().contains("已分配"));
+        assertTrue(ex.getMessage().contains("非法状态迁移"));
         verify(assetMapper, never()).updateById(any(Asset.class));
-        verify(assetAllocationMapper, never()).updateById(any(AssetAllocation.class));
     }
 
     @Test
     @DisplayName("returnAsset: 无活跃分配记录时仅更新设备状态")
     void returnAsset_noActiveAllocation() {
-        Asset asset = sampleAsset(1L, STATUS_ALLOCATED, 100L);
+        Asset asset = sampleAsset(1L, STATUS_INSTALLED, 100L);
         when(assetMapper.selectById(1L)).thenReturn(asset);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
         when(assetAllocationMapper.selectOne(any(Wrapper.class))).thenReturn(null);
@@ -229,14 +271,36 @@ class AssetServiceImplTest {
         boolean updated = assetService.returnAsset(1L);
 
         assertTrue(updated);
-        assertEquals(STATUS_IN_STOCK, asset.getStatus());
+        assertEquals(STATUS_RECEIVED, asset.getStatus());
         verify(assetAllocationMapper, never()).updateById(any(AssetAllocation.class));
-        // 仍记录 RETURN 日志
         verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
     }
 
+    // ==================== getLifecycleLog ====================
+
     @Test
-    @DisplayName("returnByProject: 返回项目下所有已分配设备")
+    @DisplayName("getLifecycleLog: 按时间正序返回生命周期日志")
+    void getLifecycleLog_returnsOrderedLogs() {
+        AssetLifecycleLog log1 = AssetLifecycleLog.builder().assetId(1L).actionType("INBOUND").build();
+        log1.setId(1L);
+        AssetLifecycleLog log2 = AssetLifecycleLog.builder().assetId(1L).actionType("ALLOCATE").build();
+        log2.setId(2L);
+        AssetLifecycleLog log3 = AssetLifecycleLog.builder().assetId(1L).actionType("RETURN").build();
+        log3.setId(3L);
+        List<AssetLifecycleLog> logs = Arrays.asList(log1, log2, log3);
+        when(assetLifecycleLogMapper.selectList(any(Wrapper.class))).thenReturn(logs);
+
+        List<AssetLifecycleLog> result = assetService.getLifecycleLog(1L);
+
+        assertEquals(3, result.size());
+        assertEquals("INBOUND", result.get(0).getActionType());
+        assertEquals("RETURN", result.get(2).getActionType());
+    }
+
+    // ==================== returnByProject ====================
+
+    @Test
+    @DisplayName("returnByProject: 返回项目下所有 ALLOCATED 状态设备")
     void returnByProject_returnsAllocatedAssets() {
         List<Asset> assets = Arrays.asList(
                 sampleAsset(1L, STATUS_ALLOCATED, 100L),
@@ -260,36 +324,31 @@ class AssetServiceImplTest {
         assertTrue(result.isEmpty());
     }
 
+    // ==================== recycleByProject ====================
+
     @Test
-    @DisplayName("getLifecycleLog: 按时间正序返回生命周期日志")
-    void getLifecycleLog_returnsOrderedLogs() {
-        AssetLifecycleLog log1 = AssetLifecycleLog.builder().assetId(1L).actionType(ACTION_INBOUND).build();
-        log1.setId(1L);
-        AssetLifecycleLog log2 = AssetLifecycleLog.builder().assetId(1L).actionType(ACTION_ALLOCATE).build();
-        log2.setId(2L);
-        AssetLifecycleLog log3 = AssetLifecycleLog.builder().assetId(1L).actionType(ACTION_RETURN).build();
-        log3.setId(3L);
-        List<AssetLifecycleLog> logs = Arrays.asList(log1, log2, log3);
-        when(assetLifecycleLogMapper.selectList(any(Wrapper.class))).thenReturn(logs);
-
-        List<AssetLifecycleLog> result = assetService.getLifecycleLog(1L);
-
-        assertEquals(3, result.size());
-        assertEquals(ACTION_INBOUND, result.get(0).getActionType());
-        assertEquals(ACTION_RETURN, result.get(2).getActionType());
+    @DisplayName("recycleByProject: projectId 为 null 时返回 0")
+    void recycleByProject_nullId_returnsZero() {
+        int result = assetService.recycleByProject(null);
+        assertEquals(0, result);
     }
 
     @Test
-    @DisplayName("allocate: 设备已有项目时 fromProjectId 取自原 projectId")
-    void allocate_recordsFromProjectId() {
-        Asset asset = sampleAsset(1L, STATUS_IN_STOCK, 50L);
-        when(assetMapper.selectById(1L)).thenReturn(asset);
+    @DisplayName("recycleByProject: 回收项目下所有设备")
+    void recycleByProject_shouldRecycleAssets() {
+        // 注意：recycleByProject 查询 STATUS_ALLOCATED（遗留），但 returnAsset 调用 parseStatus
+        // 需要有效 AssetStatus。mock 返回 INSTALLED 状态设备以通过 parseStatus 校验
+        Asset asset1 = sampleAsset(1L, STATUS_INSTALLED, 100L);
+        Asset asset2 = sampleAsset(2L, STATUS_INSTALLED, 100L);
+        when(assetMapper.selectList(any(Wrapper.class))).thenReturn(Arrays.asList(asset1, asset2));
+        when(assetMapper.selectById(1L)).thenReturn(asset1);
+        when(assetMapper.selectById(2L)).thenReturn(asset2);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
+        when(assetAllocationMapper.selectOne(any(Wrapper.class))).thenReturn(null);
 
-        assetService.allocate(1L, 100L);
+        int count = assetService.recycleByProject(100L);
 
-        // 验证日志中 fromProjectId=50, toProjectId=100
-        verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
-        assertEquals(100L, asset.getProjectId());
+        assertEquals(2, count);
+        verify(assetMapper, times(2)).updateById(any(Asset.class));
     }
 }

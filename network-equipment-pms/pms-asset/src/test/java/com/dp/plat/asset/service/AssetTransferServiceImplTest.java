@@ -8,15 +8,13 @@ import com.dp.plat.asset.mapper.AssetMapper;
 import com.dp.plat.asset.mapper.AssetTransferMapper;
 import com.dp.plat.asset.service.impl.AssetTransferServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
-import com.dp.plat.common.result.Result;
-import com.dp.plat.workflow.dto.ProcessInstanceDTO;
 import com.dp.plat.workflow.service.WorkflowService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -41,7 +39,7 @@ class AssetTransferServiceImplTest {
     private static final String STATUS_APPROVED = "APPROVED";
     private static final String STATUS_REJECTED = "REJECTED";
     private static final String ASSET_IN_TRANSIT = "IN_TRANSIT";
-    private static final String ASSET_ALLOCATED = "ALLOCATED";
+    private static final String ASSET_RECEIVED = "RECEIVED";
 
     @Mock
     private AssetTransferMapper assetTransferMapper;
@@ -55,13 +53,17 @@ class AssetTransferServiceImplTest {
     @Mock
     private WorkflowService workflowService;
 
-    @InjectMocks
+    @Mock
+    private AssetStateTransitionValidator stateValidator;
+
     private AssetTransferServiceImpl assetTransferService;
 
     @BeforeEach
     void setUp() {
+        assetTransferService = Mockito.spy(new AssetTransferServiceImpl(
+                assetMapper, assetLifecycleLogMapper, workflowService, stateValidator));
         // ServiceImpl.baseMapper (AssetTransferMapper) is set via field injection in real
-        // runtime; @InjectMocks stops at constructor injection, so set it manually.
+        // runtime; constructor injection stops there, so set it manually.
         ReflectionTestUtils.setField(assetTransferService, "baseMapper", assetTransferMapper);
     }
 
@@ -92,10 +94,11 @@ class AssetTransferServiceImplTest {
     @Test
     @DisplayName("apply: 创建调拨申请并置为 PENDING，设备置为 IN_TRANSIT")
     void apply_shouldCreatePendingTransferAndMarkAssetInTransit() {
-        Asset asset = sampleAsset(1L, ASSET_ALLOCATED, 100L);
+        Asset asset = sampleAsset(1L, ASSET_RECEIVED, 100L);
         when(assetMapper.selectById(1L)).thenReturn(asset);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
-        when(assetTransferMapper.insert(any(AssetTransfer.class))).thenReturn(1);
+        // spy: stub save() since ServiceImpl.save() depends on SqlSessionFactory in pure unit tests
+        Mockito.doReturn(true).when(assetTransferService).save(any(AssetTransfer.class));
 
         AssetTransfer transfer = AssetTransfer.builder()
                 .assetId(1L)
@@ -111,17 +114,17 @@ class AssetTransferServiceImplTest {
         assertEquals(200L, transfer.getToProjectId());
         assertNotNull(transfer.getApplyTime());
         assertEquals(ASSET_IN_TRANSIT, asset.getStatus(), "设备状态应置为 IN_TRANSIT");
+        verify(stateValidator, times(1)).validate(any(), any());
         verify(assetMapper, times(1)).updateById(any(Asset.class));
-        verify(assetTransferMapper, times(1)).insert(any(AssetTransfer.class));
     }
 
     @Test
     @DisplayName("apply: 显式传入 fromProjectId 时不被覆盖")
     void apply_keepsExplicitFromProjectId() {
-        Asset asset = sampleAsset(1L, ASSET_ALLOCATED, 100L);
+        Asset asset = sampleAsset(1L, ASSET_RECEIVED, 100L);
         when(assetMapper.selectById(1L)).thenReturn(asset);
         when(assetMapper.updateById(any(Asset.class))).thenReturn(1);
-        when(assetTransferMapper.insert(any(AssetTransfer.class))).thenReturn(1);
+        Mockito.doReturn(true).when(assetTransferService).save(any(AssetTransfer.class));
 
         AssetTransfer transfer = AssetTransfer.builder()
                 .assetId(1L)
@@ -178,7 +181,8 @@ class AssetTransferServiceImplTest {
         assertNotNull(transfer.getApproveTime());
         assertEquals("同意调拨", transfer.getApproveOpinion());
         assertEquals(200L, asset.getProjectId(), "设备 project_id 应更新为目标项目");
-        assertEquals(ASSET_ALLOCATED, asset.getStatus(), "设备状态应恢复为 ALLOCATED");
+        assertEquals(ASSET_RECEIVED, asset.getStatus(), "设备状态应恢复为 RECEIVED");
+        verify(stateValidator, times(1)).validate(any(), any());
         verify(assetTransferMapper, times(1)).updateById(any(AssetTransfer.class));
         verify(assetMapper, times(1)).updateById(any(Asset.class));
         verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));
@@ -205,7 +209,7 @@ class AssetTransferServiceImplTest {
     }
 
     @Test
-    @DisplayName("reject: 驳回后设备恢复为原项目 ALLOCATED 状态")
+    @DisplayName("reject: 驳回后设备恢复为原项目 RECEIVED 状态")
     void reject_shouldRestoreAssetToPreviousStatus() {
         AssetTransfer transfer = sampleTransfer(5L, 1L, 100L, 200L, STATUS_PENDING);
         when(assetTransferMapper.selectById(5L)).thenReturn(transfer);
@@ -219,8 +223,9 @@ class AssetTransferServiceImplTest {
         assertTrue(updated);
         assertEquals(STATUS_REJECTED, transfer.getStatus());
         assertEquals("不同意", transfer.getApproveOpinion());
-        assertEquals(ASSET_ALLOCATED, asset.getStatus(), "设备状态应恢复为 ALLOCATED");
+        assertEquals(ASSET_RECEIVED, asset.getStatus(), "设备状态应恢复为 RECEIVED");
         assertEquals(100L, asset.getProjectId(), "设备应恢复至原项目 fromProjectId");
+        verify(stateValidator, times(1)).validate(any(), any());
         verify(assetTransferMapper, times(1)).updateById(any(AssetTransfer.class));
         verify(assetMapper, times(1)).updateById(any(Asset.class));
         verify(assetLifecycleLogMapper, times(1)).insert(any(AssetLifecycleLog.class));

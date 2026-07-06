@@ -12,6 +12,13 @@ import {
   type ProjectStatus,
   type ProjectType
 } from '@/api/project'
+import MobileListCard from '@/components/MobileListCard/index.vue'
+import type { MobileColumn, MobileOperation } from '@/components/MobileListCard/index.vue'
+import type { EpTagType } from '@/types'
+
+// 复用 MobileListCard 组件导出的列 / 操作配置类型（避免本地 any 复制）
+type Col = MobileColumn<Project>
+type Op = MobileOperation<Project>
 
 const router = useRouter()
 
@@ -27,7 +34,7 @@ const query = reactive<{ page: number; size: number; projectName?: string; statu
 })
 
 // 状态选项（颜色与文案）
-const statusOptions: { value: ProjectStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: ProjectStatus; label: string; tagType: EpTagType }[] = [
   { value: 'PENDING', label: '待审批', tagType: 'info' },
   { value: 'APPROVED', label: '已立项', tagType: 'warning' },
   { value: 'IN_PROGRESS', label: '执行中', tagType: 'primary' },
@@ -238,6 +245,43 @@ function viewDetail(row: Project) {
   router.push(`/project/detail/${row.id}`)
 }
 
+// ============== 移动端卡片视图配置 ==============
+const mobileColumns: Col[] = [
+  { prop: 'code', label: '项目编号' },
+  { prop: 'type', label: '项目类型', formatter: (_r, v) => getTypeLabel(v as string), subtitle: true },
+  { prop: 'customerName', label: '客户名称' },
+  {
+    prop: 'status',
+    label: '状态',
+    render: 'tag',
+    tagType: (row) => getStatusMeta(row.status).tagType,
+    formatter: (row) => getStatusMeta(row.status).label
+  },
+  { prop: 'managerName', label: '项目经理' },
+  {
+    prop: 'planStartDate',
+    label: '计划开始',
+    formatter: (_r, v) => formatDate(v as string)
+  },
+  {
+    prop: 'planEndDate',
+    label: '计划结束',
+    formatter: (_r, v) => formatDate(v as string)
+  }
+]
+
+const mobileOperations: Op[] = [
+  { label: '详情', type: 'primary', onClick: (row) => viewDetail(row) },
+  { label: '编辑', type: 'primary', onClick: (row) => handleEdit(row) },
+  {
+    label: '审批',
+    type: 'warning',
+    show: (row) => row.status === 'PENDING',
+    onClick: (row) => handleApprove(row)
+  },
+  { label: '删除', type: 'danger', onClick: (row) => handleDelete(row) }
+]
+
 onMounted(loadData)
 </script>
 
@@ -283,57 +327,72 @@ onMounted(loadData)
         <el-button type="primary" :icon="'Plus'" @click="handleAdd">新建项目</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="code" label="项目编号" min-width="140" />
-        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
-        <el-table-column label="项目类型" width="120">
-          <template #default="{ row }">
-            {{ getTypeLabel(row.type) }}
+      <!-- 列表区：桌面端表格 / 移动端卡片 -->
+      <div class="mobile-card-list">
+        <el-table v-loading="loading" :data="tableData" border stripe>
+          <el-table-column prop="code" label="项目编号" min-width="140" />
+          <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
+          <el-table-column label="项目类型" width="120">
+            <template #default="{ row }">
+              {{ getTypeLabel(row.type) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="customerName" label="客户名称" min-width="150" show-overflow-tooltip />
+          <el-table-column label="状态" width="110" align="center">
+            <template #default="{ row }">
+              <el-tag :type="getStatusMeta(row.status).tagType">
+                {{ getStatusMeta(row.status).label }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="进度" width="160" align="center">
+            <template #default="{ row }">
+              <el-progress
+                :percentage="Number(row.progress ?? 0)"
+                :stroke-width="10"
+                :status="(Number(row.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="计划开始日期" width="120" align="center">
+            <template #default="{ row }">{{ formatDate(row.planStartDate) }}</template>
+          </el-table-column>
+          <el-table-column label="计划结束日期" width="120" align="center">
+            <template #default="{ row }">{{ formatDate(row.planEndDate) }}</template>
+          </el-table-column>
+          <el-table-column prop="managerName" label="项目经理" width="110" />
+          <el-table-column label="操作" width="240" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="viewDetail(row)">查看详情</el-button>
+              <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+              <el-button
+                v-if="row.status === 'PENDING'"
+                link
+                type="warning"
+                @click="handleApprove(row)"
+              >
+                立项审批
+              </el-button>
+              <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <el-empty description="暂无项目数据" />
           </template>
-        </el-table-column>
-        <el-table-column prop="customerName" label="客户名称" min-width="150" show-overflow-tooltip />
-        <el-table-column label="状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getStatusMeta(row.status).tagType">
-              {{ getStatusMeta(row.status).label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="进度" width="160" align="center">
-          <template #default="{ row }">
-            <el-progress
-              :percentage="Number(row.progress ?? 0)"
-              :stroke-width="10"
-              :status="(Number(row.progress ?? 0) >= 100 ? 'success' : '') as any"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column label="计划开始日期" width="120" align="center">
-          <template #default="{ row }">{{ formatDate(row.planStartDate) }}</template>
-        </el-table-column>
-        <el-table-column label="计划结束日期" width="120" align="center">
-          <template #default="{ row }">{{ formatDate(row.planEndDate) }}</template>
-        </el-table-column>
-        <el-table-column prop="managerName" label="项目经理" width="110" />
-        <el-table-column label="操作" width="240" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="viewDetail(row)">查看详情</el-button>
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button
-              v-if="row.status === 'PENDING'"
-              link
-              type="warning"
-              @click="handleApprove(row)"
-            >
-              立项审批
-            </el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无项目数据" />
-        </template>
-      </el-table>
+        </el-table>
+
+        <!-- 移动端卡片视图（仅 md-down 显示） -->
+        <div class="mobile-cards">
+          <MobileListCard
+            :data="tableData"
+            :columns="mobileColumns"
+            :operations="mobileOperations"
+            title-prop="name"
+            title-icon="Folder"
+            empty-text="暂无项目数据"
+          />
+        </div>
+      </div>
 
       <el-pagination
         class="pagination"
@@ -360,14 +419,15 @@ onMounted(loadData)
         :model="form"
         :rules="rules"
         label-width="110px"
+        class="responsive-form"
       >
-        <el-row :gutter="16">
-          <el-col :span="12">
+        <el-row :gutter="16" class="form-two-col-md">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="项目名称" prop="name">
               <el-input v-model="form.name" placeholder="请输入项目名称" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="项目类型" prop="type">
               <el-select v-model="form.type" placeholder="请选择" style="width: 100%">
                 <el-option
@@ -379,27 +439,27 @@ onMounted(loadData)
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="客户名称">
               <el-input v-model="form.customerName" placeholder="请输入客户名称" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="客户联系人">
               <el-input v-model="form.customerContact" placeholder="请输入客户联系人" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="客户电话">
               <el-input v-model="form.customerPhone" placeholder="请输入客户电话" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="合同编号">
               <el-input v-model="form.contractNo" placeholder="请输入合同编号" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="合同金额">
               <el-input-number
                 v-model="form.contractAmount"
@@ -411,12 +471,12 @@ onMounted(loadData)
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="项目经理">
               <el-input v-model="form.managerName" placeholder="请输入项目经理" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="优先级">
               <el-select v-model="form.priority" placeholder="请选择" style="width: 100%">
                 <el-option
@@ -462,21 +522,38 @@ onMounted(loadData)
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../../styles/design-tokens' as *;
+
 .page-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $spacing-3;
 }
 .page-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
 }
 .toolbar {
-  margin-bottom: 12px;
+  margin-bottom: $spacing-3;
 }
 .pagination {
-  margin-top: 12px;
+  margin-top: $spacing-3;
   justify-content: flex-end;
+}
+
+// 移动端：工具栏按钮全宽
+@media (max-width: $breakpoint-md - 1px) {
+  .toolbar {
+    :deep(.el-button) {
+      width: 100%;
+    }
+  }
+  .pagination {
+    :deep(.el-pagination__sizes),
+    :deep(.el-pagination__jump) {
+      display: none;
+    }
+  }
 }
 </style>

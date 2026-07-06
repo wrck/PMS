@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.exception.IntegrationException;
 import com.dp.plat.integration.config.FpProperties;
 import com.dp.plat.integration.constant.IntegrationConstants;
 import com.dp.plat.integration.d365.entity.D365Invoice;
@@ -15,10 +16,14 @@ import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.fp.FpResponse;
 import com.dp.plat.integration.model.fp.FpTokenResponse;
 import com.dp.plat.integration.model.fp.SettlementPushRequest;
+import com.dp.plat.integration.oauth.OAuthTokenCache;
 import com.dp.plat.integration.service.FpIntegrationService;
 import com.dp.plat.integration.service.IIntegrationLogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +45,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -48,19 +52,25 @@ import java.util.concurrent.TimeUnit;
 /**
  * Implementation of {@link FpIntegrationService}.
  *
- * <p>Performs a real OAuth2 {@code client_credentials} flow with an in-memory
- * token cache. Settlement push uses exponential backoff retry
- * (1/2/4/8/16 min, up to 5 retries) driven by a daemon
- * {@link ScheduledExecutorService}; every attempt is logged to
+ * <p>Performs a real OAuth2 {@code client_credentials} flow with a distributed
+ * token cache ({@link OAuthTokenCache} / Redis Hash + ahead-of-expiry refresh +
+ * single-flight lock). Token 获取失败计数与告警由 {@link OAuthTokenCache} 统一管理。
+ * Settlement push uses exponential backoff retry (1/2/4/8/16 min, up to 5 retries)
+ * driven by a daemon {@link ScheduledExecutorService}; every attempt is logged to
  * {@link IntegrationLog} with full request/response. Invoice OCR and payment
  * callbacks are also fully logged.</p>
+ *
+ * <p><b>Resilience4j 弹性保护</b>：{@link #pushSettlement}、{@link #ocrInvoice}、
+ * {@link #handlePaymentCallback} 三个对外部 FP 的入口方法均通过
+ * {@code @CircuitBreaker} + {@code @Bulkhead} + {@code @Retry} 三层保护。
+ * {@link #pushSettlementOnce} 作为内部方法被 {@link #pushSettlement} 和
+ * 后台重试调度器调用，不单独标注（避免双重代理）。
+ * {@link #healthCheck()} 不加注解，避免熔断时健康端点无法探测恢复。</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FpIntegrationServiceImpl implements FpIntegrationService {
-
-    private static final long TOKEN_SKEW_SECONDS = 60L;
 
     /** Exponential backoff delays in minutes for settlement push retries. */
     private static final long[] BACKOFF_MINUTES = {1L, 2L, 4L, 8L, 16L};
@@ -74,9 +84,7 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
     private final D365InvoiceMapper d365InvoiceMapper;
-
-    private final ConcurrentHashMap<String, TokenCache> tokenCache = new ConcurrentHashMap<>();
-    private static final String TOKEN_CACHE_KEY = "fp";
+    private final OAuthTokenCache oauthTokenCache;
 
     /** Daemon scheduler for settlement push retries. */
     private final ScheduledExecutorService retryScheduler =
@@ -86,12 +94,6 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
                 return t;
             });
 
-    private record TokenCache(String accessToken, long expiresAtMillis) {
-        boolean isValid(long now) {
-            return accessToken != null && expiresAtMillis > now + TOKEN_SKEW_SECONDS * 1000L;
-        }
-    }
-
     @PreDestroy
     public void shutdown() {
         retryScheduler.shutdownNow();
@@ -99,27 +101,33 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
 
     @Override
     public String getAccessToken() {
-        long now = System.currentTimeMillis();
-        TokenCache cache = tokenCache.get(TOKEN_CACHE_KEY);
-        if (cache != null && cache.isValid(now)) {
-            return cache.accessToken;
+        return oauthTokenCache.getToken("fp", this::fetchFpToken);
+    }
+
+    /**
+     * 调用 FP OAuth2 token 端点获取新 token，封装为 {@link OAuthTokenCache.TokenInfo}
+     * 供分布式缓存使用。
+     *
+     * @return token 信息
+     * @throws IntegrationException 当 token 端点调用失败或响应为空时
+     */
+    private OAuthTokenCache.TokenInfo fetchFpToken() {
+        FpTokenResponse response = requestToken();
+        if (response == null || response.getAccessToken() == null) {
+            throw new IntegrationException("fp", "FP token response is empty");
         }
-        synchronized (this) {
-            cache = tokenCache.get(TOKEN_CACHE_KEY);
-            if (cache != null && cache.isValid(now)) {
-                return cache.accessToken;
-            }
-            FpTokenResponse response = requestToken();
-            if (response == null || response.getAccessToken() == null) {
-                throw new BusinessException("FP token response is empty");
-            }
-            int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
-            tokenCache.put(TOKEN_CACHE_KEY, new TokenCache(response.getAccessToken(), now + expiresIn * 1000L));
-            return response.getAccessToken();
-        }
+        long now = System.currentTimeMillis() / 1000;
+        int expiresIn = response.getExpiresIn() == null ? 3600 : response.getExpiresIn();
+        return OAuthTokenCache.TokenInfo.builder()
+                .accessToken(response.getAccessToken())
+                .expiresAt(now + expiresIn)
+                .build();
     }
 
     @Override
+    @CircuitBreaker(name = "fpCircuitBreaker", fallbackMethod = "pushSettlementFallback")
+    @Bulkhead(name = "fpBulkhead")
+    @Retry(name = "fpRetry")
     public FpResponse<String> pushSettlement(SettlementPushRequest request) {
         FpResponse<String> response;
         try {
@@ -128,8 +136,8 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
             // First attempt failed; schedule background retries and surface
             // the failure to the caller.
             scheduleRetry(request, 0);
-            throw e instanceof BusinessException be ? be
-                    : new BusinessException("FP settlement push failed: " + e.getMessage());
+            throw e instanceof IntegrationException ie ? ie
+                    : new IntegrationException("fp", "FP settlement push failed: " + e.getMessage(), e);
         }
         if (response == null || !response.isSuccess()) {
             scheduleRetry(request, 0);
@@ -183,6 +191,9 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
     }
 
     @Override
+    @CircuitBreaker(name = "fpCircuitBreaker", fallbackMethod = "ocrInvoiceFallback")
+    @Bulkhead(name = "fpBulkhead")
+    @Retry(name = "fpRetry")
     public D365Invoice ocrInvoice(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("发票图片不能为空");
@@ -221,16 +232,23 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
                 throw new BusinessException("FP OCR 未识别到发票号");
             }
             return applyOcrResult(ocr);
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException（来自 token / 响应解析），直接透传
+            integrationLogService.markFailed(logRecord.getId(), e.getMessage());
+            throw e;
         } catch (BusinessException e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
             throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
-            throw new BusinessException("FP OCR call failed: " + e.getMessage());
+            throw new IntegrationException("fp", "FP OCR call failed: " + e.getMessage(), e);
         }
     }
 
     @Override
+    @CircuitBreaker(name = "fpCircuitBreaker", fallbackMethod = "handlePaymentCallbackFallback")
+    @Bulkhead(name = "fpBulkhead")
+    @Retry(name = "fpRetry")
     public void handlePaymentCallback(PaymentCallbackDto callback) {
         if (callback == null || callback.getSettlementNo() == null) {
             throw new BusinessException("支付回调缺少结算单号");
@@ -250,7 +268,7 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
             if (settlementMapper == null) {
                 integrationLogService.markFailed(logRecord.getId(),
                         "SettlementMapper bean not available");
-                throw new BusinessException("SettlementMapper bean not available");
+                throw new IntegrationException("fp", "SettlementMapper bean not available");
             }
             UpdateWrapper wrapper = new UpdateWrapper();
             wrapper.eq("settlement_no", callback.getSettlementNo());
@@ -258,9 +276,12 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
             int rows = settlementMapper.update(null, wrapper);
             integrationLogService.markSuccess(logRecord.getId(),
                     "updated rows=" + rows + ", paymentStatus=" + callback.getPaymentStatus());
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException，直接透传（日志已标记失败）
+            throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
-            throw new BusinessException("FP payment callback failed: " + e.getMessage());
+            throw new IntegrationException("fp", "FP payment callback failed: " + e.getMessage(), e);
         }
     }
 
@@ -304,6 +325,43 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
                 .build();
     }
 
+    // ---- Resilience4j fallback methods ----
+    // 当熔断器 OPEN（CallNotPermittedException）或方法抛出 record-exceptions 中的异常时，
+    // Resilience4j 调用对应 fallback；fallback 包装为 IntegrationException 上抛，
+    // 由 GlobalExceptionHandler 统一返回 HTTP 503。
+
+    /**
+     * pushSettlement 熔断 / 失败降级：记录日志并抛出 IntegrationException。
+     * 注意：即使熔断，后台重试调度器仍会在 circuit 外运行（scheduleRetry 已在
+     * 抛异常前调用），后续重试会通过 pushSettlementOnce 直接执行，不再走熔断器。
+     *
+     * @param request 原方法入参
+     * @param t       触发降级的异常
+     */
+    private FpResponse<String> pushSettlementFallback(SettlementPushRequest request, Throwable t) {
+        log.error("FP pushSettlement 熔断降级 settlementNo={} err={}",
+                request == null ? null : request.getSettlementNo(), t.getMessage());
+        throw new IntegrationException("fp", "FP 结算推送服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * ocrInvoice 熔断 / 失败降级。
+     */
+    private D365Invoice ocrInvoiceFallback(MultipartFile file, Throwable t) {
+        log.error("FP ocrInvoice 熔断降级 file={} err={}",
+                file == null ? null : file.getOriginalFilename(), t.getMessage());
+        throw new IntegrationException("fp", "FP 发票 OCR 服务暂不可用，请稍后重试", t);
+    }
+
+    /**
+     * handlePaymentCallback 熔断 / 失败降级。
+     */
+    private void handlePaymentCallbackFallback(PaymentCallbackDto callback, Throwable t) {
+        log.error("FP handlePaymentCallback 熔断降级 settlementNo={} err={}",
+                callback == null ? null : callback.getSettlementNo(), t.getMessage());
+        throw new IntegrationException("fp", "FP 付款回调处理服务暂不可用，请稍后重试", t);
+    }
+
     // ---- internals ----
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -319,9 +377,13 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
             FpResponse<String> fpResponse = (FpResponse<String>) response.getBody();
             integrationLogService.markSuccess(logRecord.getId(), writeJson(fpResponse));
             return fpResponse;
+        } catch (IntegrationException e) {
+            // 已经是 IntegrationException（来自 token 获取失败），直接透传
+            integrationLogService.markFailed(logRecord.getId(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             integrationLogService.markFailed(logRecord.getId(), e.getMessage());
-            throw new BusinessException("FP integration call failed: " + e.getMessage());
+            throw new IntegrationException("fp", "FP integration call failed: " + e.getMessage(), e);
         }
     }
 
@@ -343,7 +405,7 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
             return integrationRestTemplate.postForObject(
                     fpProperties.getTokenUrl(), entity, FpTokenResponse.class);
         } catch (RestClientException e) {
-            throw new BusinessException("FP token request failed: " + e.getMessage());
+            throw new IntegrationException("fp", "FP token request failed: " + e.getMessage(), e);
         }
     }
 
@@ -369,7 +431,7 @@ public class FpIntegrationServiceImpl implements FpIntegrationService {
                     .rawResponse(body)
                     .build();
         } catch (Exception e) {
-            throw new BusinessException("Failed to parse FP OCR response: " + e.getMessage());
+            throw new IntegrationException("fp", "Failed to parse FP OCR response: " + e.getMessage(), e);
         }
     }
 

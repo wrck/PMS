@@ -3,11 +3,14 @@ package com.dp.plat.asset.warranty.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.asset.warranty.entity.Warranty;
 import com.dp.plat.asset.warranty.service.IWarrantyService;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,18 +57,24 @@ public class WarrantyController {
 
     @Operation(summary = "Create warranty")
     @PostMapping
-    public Result<Boolean> add(@RequestBody Warranty warranty) {
+    @PreAuthorize("hasAuthority('asset:warranty:add')")
+    @OperLog(title = "质保管理", businessType = 1)
+    public Result<Boolean> add(@Valid @RequestBody Warranty warranty) {
         return Result.ok(warrantyService.save(warranty));
     }
 
     @Operation(summary = "Update warranty")
     @PutMapping
-    public Result<Boolean> update(@RequestBody Warranty warranty) {
+    @PreAuthorize("hasAuthority('asset:warranty:edit')")
+    @OperLog(title = "质保管理", businessType = 2)
+    public Result<Boolean> update(@Valid @RequestBody Warranty warranty) {
         return Result.ok(warrantyService.updateById(warranty));
     }
 
     @Operation(summary = "Delete warranty")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('asset:warranty:remove')")
+    @OperLog(title = "质保管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(warrantyService.removeById(id));
     }
@@ -97,6 +106,8 @@ public class WarrantyController {
 
     @Operation(summary = "Initialize warranty records for all assets of a project")
     @PostMapping("/init-for-project")
+    @PreAuthorize("hasAuthority('asset:warranty:add')")
+    @OperLog(title = "质保管理", businessType = 1)
     public Result<Boolean> initForProject(@RequestParam Long projectId,
                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate finalAcceptanceDate,
                                           @RequestParam(required = false) Integer durationMonths) {

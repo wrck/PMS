@@ -19,6 +19,16 @@ import {
   type ProjectStatus,
   type ProjectType
 } from '@/api/project'
+import type { EpTagType } from '@/types'
+
+/** 项目成员（占位实体：后续接入成员管理接口时替换为后端 DTO） */
+interface ProjectMember {
+  id?: number
+  name?: string
+  role?: string
+  phone?: string
+  email?: string
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -30,7 +40,7 @@ const project = ref<Project | null>(null)
 const activeTab = ref('basic')
 
 // ===== 状态映射 =====
-const statusOptions: { value: ProjectStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: ProjectStatus; label: string; tagType: EpTagType }[] = [
   { value: 'PENDING', label: '待审批', tagType: 'info' },
   { value: 'APPROVED', label: '已立项', tagType: 'warning' },
   { value: 'IN_PROGRESS', label: '执行中', tagType: 'primary' },
@@ -124,7 +134,7 @@ function isMilestoneDone(m: Milestone): boolean {
   return !!m.actualDate
 }
 
-function getMilestoneStatusMeta(m: Milestone): { label: string; tagType: any } {
+function getMilestoneStatusMeta(m: Milestone): { label: string; tagType: EpTagType } {
   if (isMilestoneDone(m)) return { label: '已完成', tagType: 'success' }
   if (m.status) {
     const s = m.status.toUpperCase()
@@ -270,7 +280,7 @@ async function handleSubmitProgress() {
 }
 
 // ============== 项目成员（占位） ==============
-const members = ref<any[]>([])
+const members = ref<ProjectMember[]>([])
 
 // ============== 终验交付 ==============
 const acceptanceLoading = ref(false)
@@ -421,7 +431,7 @@ onMounted(async () => {
         <el-progress
           :percentage="Number(project?.progress ?? 0)"
           :stroke-width="14"
-          :status="(Number(project?.progress ?? 0) >= 100 ? 'success' : '') as any"
+          :status="(Number(project?.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
           style="flex: 1"
         />
       </div>

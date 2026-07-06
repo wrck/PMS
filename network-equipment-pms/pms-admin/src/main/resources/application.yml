@@ -6,9 +6,9 @@ spring:
     name: network-equipment-pms
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:pmspassword}
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
@@ -20,6 +20,7 @@ spring:
       host: localhost
       port: 6379
       database: 0
+      password: ${REDIS_PASSWORD:}
       timeout: 3000
   flyway:
     enabled: true
@@ -37,8 +38,42 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 jwt:
-  secret: ZGVwdGVjaC1wbXMtc2VjcmV0LWtleS1mb3Itand0LXRva2VuLWdlbmVyYXRpb24tMjAyNA==
+  secret: ${JWT_SECRET:default-jwt-secret-please-change}
   expiration: 86400000
+app:
+  security:
+    # AES-256-GCM 字段级加密密钥，Base64 编码的 32 字节（256 位）。
+    # 生产环境必须通过环境变量 APP_ENCRYPT_KEY 覆盖，切勿提交真实密钥。
+    encrypt-key: ${APP_ENCRYPT_KEY:default-encrypt-key}
+# Actuator + Micrometer + Prometheus 可观测性配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,configprops,loggers,scheduledtasks,threaddump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: always
+    prometheus:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s, 2s, 5s
+    tags:
+      application: pms
+      env: ${spring.profiles.active:dev}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 30s
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -48,14 +83,14 @@ d365:
   base-url: https://d365.example.com/api
   token-url: https://d365.example.com/oauth2/token
   client-id: ${D365_CLIENT_ID:dummy}
-  client-secret: ${D365_CLIENT_SECRET:dummy}
+  client-secret: ${D365_OAUTH_CLIENT_SECRET:}
   scope: ${D365_SCOPE:}
   grant-type: client_credentials
 fp:
   base-url: https://fp.example.com/api
   token-url: https://fp.example.com/oauth2/token
   client-id: ${FP_CLIENT_ID:dummy}
-  client-secret: ${FP_CLIENT_SECRET:dummy}
+  client-secret: ${FP_OAUTH_CLIENT_SECRET:}
 integration:
   retry:
     interval: 300000  # 5 minutes
@@ -65,4 +100,102 @@ integration:
     base-url: ${OA_BASE_URL:https://oa.example.com/api}
     token-url: ${OA_TOKEN_URL:https://oa.example.com/oauth2/token}
     client-id: ${OA_CLIENT_ID:dummy}
-    client-secret: ${OA_CLIENT_SECRET:dummy}
+    client-secret: ${OA_OAUTH_CLIENT_SECRET:}
+
+# Resilience4j：D365 / FP / OA 三个外部集成的熔断 / 隔离 / 限流 / 重试配置。
+# - CircuitBreaker：基于计数滑动窗口，失败率 ≥50% 触发熔断；30s 后自动转半开；
+#   半开态允许 5 次试探调用；半开态失败率仍高则再次打开，否则关闭。
+# - Bulkhead：信号量隔离，单实例最大并发 10，等待获取信号量最长 5s。
+# - RateLimiter：每秒限流 50 次，超过则等待 10s。
+# - Retry：最多 3 次尝试（含首调），1s 起步指数退避（2x，上限 16s），
+#   仅对 IOException / TimeoutException 重试（业务异常不重试）。
+# 健康检查（healthCheck）方法不加注解，避免熔断器 OPEN 时健康端点无法恢复。
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - com.dp.plat.common.exception.IntegrationException
+    instances:
+      d365CircuitBreaker:
+        base-config: default
+      fpCircuitBreaker:
+        base-config: default
+      oaCircuitBreaker:
+        base-config: default
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 10
+        max-wait-duration: 5s
+    instances:
+      d365Bulkhead:
+        base-config: default
+      fpBulkhead:
+        base-config: default
+      oaBulkhead:
+        base-config: default
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 50
+        limit-refresh-period: 1s
+        timeout-duration: 10s
+    instances:
+      d365RateLimiter:
+        base-config: default
+      fpRateLimiter:
+        base-config: default
+      oaRateLimiter:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 16s
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+    instances:
+      d365Retry:
+        base-config: default
+      fpRetry:
+        base-config: default
+      oaRetry:
+        base-config: default
+
+# OpenTelemetry 分布式追踪配置
+# - service.name：服务名，在 Jaeger 中标识本服务
+# - exporter.otlp：通过 OTLP gRPC 上报至 Jaeger（默认 4317 端口）
+# - traces.sampler：parentbased_traceidratio 采样率 0.1（10%），生产可按需调整
+# - metrics/logs exporter：none，仅启用 traces（避免与 Micrometer/Prometheus 重复）
+otel:
+  service:
+    name: ${OTEL_SERVICE_NAME:pms}
+    version: ${project.version:1.0.0}
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      protocol: grpc
+  traces:
+    exporter: otlp
+    sampler:
+      type: parentbased_traceidratio
+      arg: ${OTEL_TRACES_SAMPLER_ARG:0.1}
+  metrics:
+    exporter: none
+  logs:
+    exporter: none

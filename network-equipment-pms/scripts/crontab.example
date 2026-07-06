@@ -1,0 +1,92 @@
+# =============================================================================
+# PMS 备份恢复 crontab 配置示例
+#
+# 使用方法:
+#   1. 复制此文件并修改为实际配置（密码、路径、webhook 等）
+#   2. 将环境变量提取到 /etc/pms-backup.env 文件（chmod 600 保护）
+#   3. crontab -e 粘贴定时任务
+#
+# 推荐做法：将密码等敏感信息放入 /etc/pms-backup.env（权限 600），
+# 然后在 crontab 中通过 BASH_ENV 或 source 加载。
+# =============================================================================
+
+# ---- 环境变量文件 /etc/pms-backup.env 示例（chmod 600）-----------------------
+# #!/bin/bash
+# export BACKUP_DIR=/data/backups/pms
+# export MYSQL_HOST=127.0.0.1
+# export MYSQL_PORT=3306
+# export MYSQL_USER=root
+# export MYSQL_PASSWORD=<your_real_password>
+# export MYSQL_DATABASE=pms
+# export REDIS_HOST=127.0.0.1
+# export REDIS_PORT=6379
+# export REDIS_PASSWORD=<your_real_redis_password>
+# export USE_DOCKER=true
+# export MYSQL_CONTAINER=pms-mysql
+# export REDIS_CONTAINER=pms-redis
+# export RETENTION_DAYS=30
+# export WEBHOOK_URL=https://hooks.example.com/services/pms-backup
+# -----------------------------------------------------------------------------
+
+# 脚本根目录
+SCRIPTS_DIR=/workspace/network-equipment-pms/scripts
+
+# 日志目录
+LOG_DIR=/var/log/pms-backup
+mkdir -p "${LOG_DIR}"
+
+# =============================================================================
+# 定时任务
+# =============================================================================
+
+# 环境变量加载方式：每个任务前 source /etc/pms-backup.env
+# 注意：crontab 的 PATH 通常很受限，需显式指定命令路径
+
+# 每天 02:00 执行全量备份
+# 输出重定向到日志文件（追加模式）
+0 2 * * * . /etc/pms-backup.env && ${SCRIPTS_DIR}/backup.sh --type full >> ${LOG_DIR}/backup.log 2>&1
+
+# 每天中午 12:00 执行增量备份（仅 binlog + Redis RDB）
+# 用于缩短 RPO（恢复点目标）
+0 12 * * * . /etc/pms-backup.env && ${SCRIPTS_DIR}/backup.sh --type incremental >> ${LOG_DIR}/backup-incremental.log 2>&1
+
+# 每天 03:00 清理过期备份（保留周一/月初的备份）
+0 3 * * * . /etc/pms-backup.env && ${SCRIPTS_DIR}/backup-cleanup.sh >> ${LOG_DIR}/cleanup.log 2>&1
+
+# 每周日凌晨 04:00 执行 dry-run 清理（用于巡检，确认将删除哪些文件）
+0 4 * * 0 . /etc/pms-backup.env && ${SCRIPTS_DIR}/backup-cleanup.sh --dry-run >> ${LOG_DIR}/cleanup-dryrun.log 2>&1
+
+# 每月 1 日 05:00 执行 DR 演练（仅在测试环境）
+# 注意：DR 演练必须在非生产环境执行
+# 需设置 DR_ENV=test（或 staging），且配置测试环境的 MySQL/Redis 连接信息
+0 5 1 * * . /etc/pms-backup.env && DR_ENV=test ${SCRIPTS_DIR}/dr-drill.sh --yes >> ${LOG_DIR}/dr-drill.log 2>&1
+
+# =============================================================================
+# 日志轮转（建议配合 logrotate）
+# =============================================================================
+# /etc/logrotate.d/pms-backup 示例:
+# /var/log/pms-backup/*.log {
+#     daily
+#     rotate 30
+#     compress
+#     delaycompress
+#     missingok
+#     notifempty
+#     create 0640 root root
+# }
+
+# =============================================================================
+# 监控建议
+# =============================================================================
+# 1. 监控备份成功率：
+#    - 检查 /var/log/pms-backup/backup.log 是否有 "备份成功" 关键字
+#    - 检查 /data/backups/pms/ 下是否有当天的 pms_YYYYMMDD_*.tar.gz 文件
+#
+# 2. 监控备份文件大小：
+#    - 备份文件大小突然变小可能表示数据丢失或备份异常
+#
+# 3. 监控磁盘空间：
+#    - /data 分区可用空间低于 20% 时告警
+#
+# 4. 监控清理任务：
+#    - 确保过期备份被及时清理，避免磁盘占满

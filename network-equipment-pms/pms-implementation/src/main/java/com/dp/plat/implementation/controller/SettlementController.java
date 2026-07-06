@@ -2,6 +2,9 @@ package com.dp.plat.implementation.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.Idempotent;
+import com.dp.plat.common.annotation.OperLog;
+import com.dp.plat.common.annotation.RateLimit;
 import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.implementation.dto.SettlementCreateRequest;
@@ -11,8 +14,10 @@ import com.dp.plat.implementation.service.ISettlementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,13 +41,21 @@ public class SettlementController {
 
     @Operation(summary = "Create a settlement with line items")
     @PostMapping
-    public Result<Settlement> create(@RequestBody SettlementCreateRequest request) {
+    @PreAuthorize("hasAuthority('implementation:settlement:add')")
+    @OperLog(title = "结算管理", businessType = 1)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @Idempotent
+    public Result<Settlement> create(@Valid @RequestBody SettlementCreateRequest request) {
         return Result.ok(settlementService.createSettlement(
                 request.getSettlement(), request.getDetails()));
     }
 
     @Operation(summary = "Approve a settlement")
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('implementation:settlement:approve')")
+    @OperLog(title = "结算管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @Idempotent
     public Result<Void> approve(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         settlementService.approve(id, opinion);
         return Result.ok();
@@ -50,6 +63,9 @@ public class SettlementController {
 
     @Operation(summary = "Reject a settlement")
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('implementation:settlement:approve')")
+    @OperLog(title = "结算管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Void> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         settlementService.reject(id, opinion);
         return Result.ok();
@@ -71,6 +87,8 @@ public class SettlementController {
 
     @Operation(summary = "Export settlement list to Excel")
     @GetMapping("/export")
+    @PreAuthorize("hasAuthority('implementation:settlement:export')")
+    @OperLog(title = "结算管理", businessType = 4)
     public void export(HttpServletResponse response, Settlement filters) {
         LambdaQueryWrapper<Settlement> wrapper = new LambdaQueryWrapper<>();
         if (filters != null) {

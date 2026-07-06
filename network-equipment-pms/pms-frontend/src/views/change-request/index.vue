@@ -9,14 +9,16 @@ import {
   rejectChangeRequest,
   type BaselineHistory,
   type ChangeRequest,
+  type ChangeRequestListQuery,
   type ChangeRequestPriority,
   type ChangeRequestStatus
 } from '@/api/change-request'
+import type { EpTagType } from '@/types'
 
 defineOptions({ name: 'ChangeRequestManage' })
 
 // ============== 选项配置 ==============
-const statusOptions: { value: ChangeRequestStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: ChangeRequestStatus; label: string; tagType: EpTagType }[] = [
   { value: 'SUBMITTED', label: '已提交', tagType: 'info' },
   { value: 'UNDER_REVIEW', label: '审核中', tagType: 'warning' },
   { value: 'CCB_APPROVED', label: 'CCB 通过', tagType: 'success' },
@@ -25,7 +27,7 @@ const statusOptions: { value: ChangeRequestStatus; label: string; tagType: any }
   { value: 'CLOSED', label: '已关闭', tagType: 'info' }
 ]
 
-const priorityOptions: { value: ChangeRequestPriority; label: string; tagType: any }[] = [
+const priorityOptions: { value: ChangeRequestPriority; label: string; tagType: EpTagType }[] = [
   { value: 'LOW', label: '低', tagType: 'info' },
   { value: 'MEDIUM', label: '中', tagType: 'success' },
   { value: 'HIGH', label: '高', tagType: 'warning' },
@@ -71,7 +73,7 @@ const query = reactive<{ page: number; size: number; projectId?: number; status?
 async function loadData() {
   loading.value = true
   try {
-    const params: any = { page: query.page, size: query.size }
+    const params: ChangeRequestListQuery = { page: query.page, size: query.size }
     if (query.projectId) params.projectId = query.projectId
     if (query.status) params.status = query.status
     const res = await listChangeRequests(params)
@@ -243,7 +245,7 @@ async function handleViewBaseline(row: ChangeRequest) {
   }
 }
 
-function baselineTagType(type?: string): any {
+function baselineTagType(type?: string): EpTagType {
   switch (type) {
     case 'SCHEDULE':
       return 'primary'

@@ -1,5 +1,6 @@
 package com.dp.plat.project.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.excel.ExcelImportResult;
 import com.dp.plat.common.excel.ExcelUtils;
 import com.dp.plat.common.result.Result;
@@ -9,7 +10,9 @@ import com.dp.plat.project.service.IMilestoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,18 +37,24 @@ public class MilestoneController {
 
     @Operation(summary = "创建里程碑")
     @PostMapping
-    public Result<Milestone> create(@RequestBody Milestone milestone) {
+    @PreAuthorize("hasAuthority('project:milestone:add')")
+    @OperLog(title = "里程碑管理", businessType = 1)
+    public Result<Milestone> create(@Valid @RequestBody Milestone milestone) {
         return milestoneService.createMilestone(milestone);
     }
 
     @Operation(summary = "更新里程碑")
     @PutMapping
-    public Result<?> update(@RequestBody Milestone milestone) {
+    @PreAuthorize("hasAuthority('project:milestone:edit')")
+    @OperLog(title = "里程碑管理", businessType = 2)
+    public Result<?> update(@Valid @RequestBody Milestone milestone) {
         return milestoneService.updateMilestone(milestone);
     }
 
     @Operation(summary = "删除里程碑")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('project:milestone:remove')")
+    @OperLog(title = "里程碑管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return milestoneService.deleteMilestone(id);
     }
@@ -58,6 +67,8 @@ public class MilestoneController {
 
     @Operation(summary = "更新里程碑进度")
     @PostMapping("/{id}/progress")
+    @PreAuthorize("hasAuthority('project:milestone:edit')")
+    @OperLog(title = "里程碑管理", businessType = 2)
     public Result<Milestone> updateProgress(@PathVariable Long id,
                                             @RequestParam(required = false) String actualDate,
                                             @RequestParam(required = false) String description) {
@@ -72,6 +83,8 @@ public class MilestoneController {
 
     @Operation(summary = "Batch import milestones from Excel")
     @PostMapping("/import")
+    @PreAuthorize("hasAuthority('project:milestone:import')")
+    @OperLog(title = "里程碑管理", businessType = 5)
     public Result<ExcelImportResult<MilestoneImportDTO>> importExcel(@RequestParam("file") MultipartFile file) {
         return Result.ok(milestoneService.batchImport(file));
     }

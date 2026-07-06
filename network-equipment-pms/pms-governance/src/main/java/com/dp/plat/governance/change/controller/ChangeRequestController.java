@@ -1,11 +1,15 @@
 package com.dp.plat.governance.change.controller;
 
+import com.dp.plat.common.annotation.Idempotent;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.governance.change.entity.ChangeRequest;
 import com.dp.plat.governance.change.service.IChangeRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,18 +35,25 @@ public class ChangeRequestController {
 
     @Operation(summary = "创建变更请求")
     @PostMapping
-    public Result<ChangeRequest> create(@RequestBody ChangeRequest changeRequest) {
+    @PreAuthorize("hasAuthority('governance:changeRequest:add')")
+    @OperLog(title = "变更请求管理", businessType = 1)
+    @Idempotent
+    public Result<ChangeRequest> create(@Valid @RequestBody ChangeRequest changeRequest) {
         return changeRequestService.create(changeRequest);
     }
 
     @Operation(summary = "更新变更请求")
     @PutMapping
-    public Result<?> update(@RequestBody ChangeRequest changeRequest) {
+    @PreAuthorize("hasAuthority('governance:changeRequest:edit')")
+    @OperLog(title = "变更请求管理", businessType = 2)
+    public Result<?> update(@Valid @RequestBody ChangeRequest changeRequest) {
         return changeRequestService.update(changeRequest);
     }
 
     @Operation(summary = "删除变更请求")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('governance:changeRequest:remove')")
+    @OperLog(title = "变更请求管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return changeRequestService.delete(id);
     }
@@ -67,12 +78,16 @@ public class ChangeRequestController {
 
     @Operation(summary = "提交变更请求进行CCB审批")
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAuthority('governance:changeRequest:process')")
+    @OperLog(title = "变更请求管理", businessType = 2)
     public Result<ChangeRequest> submit(@PathVariable Long id) {
         return changeRequestService.submit(id);
     }
 
     @Operation(summary = "CCB审批通过变更请求")
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('governance:changeRequest:process')")
+    @OperLog(title = "变更请求管理", businessType = 2)
     public Result<ChangeRequest> approve(@PathVariable Long id,
                                          @RequestParam(required = false) String approverName) {
         return changeRequestService.approve(id, approverName);
@@ -80,6 +95,8 @@ public class ChangeRequestController {
 
     @Operation(summary = "CCB驳回变更请求")
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('governance:changeRequest:process')")
+    @OperLog(title = "变更请求管理", businessType = 2)
     public Result<ChangeRequest> reject(@PathVariable Long id,
                                         @RequestParam(required = false) String reason) {
         return changeRequestService.reject(id, reason);
@@ -87,12 +104,16 @@ public class ChangeRequestController {
 
     @Operation(summary = "开始实施已批准的变更请求")
     @PostMapping("/{id}/implement")
+    @PreAuthorize("hasAuthority('governance:changeRequest:process')")
+    @OperLog(title = "变更请求管理", businessType = 2)
     public Result<ChangeRequest> implement(@PathVariable Long id) {
         return changeRequestService.implement(id);
     }
 
     @Operation(summary = "关闭变更请求")
     @PostMapping("/{id}/close")
+    @PreAuthorize("hasAuthority('governance:changeRequest:process')")
+    @OperLog(title = "变更请求管理", businessType = 2)
     public Result<ChangeRequest> close(@PathVariable Long id) {
         return changeRequestService.close(id);
     }

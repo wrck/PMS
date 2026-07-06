@@ -9,6 +9,7 @@ import {
   type SlaLevel,
   type Warranty
 } from '@/api/warranty'
+import type { EpTagType } from '@/types'
 
 const loading = ref(false)
 const tableData = ref<Warranty[]>([])
@@ -29,7 +30,7 @@ const expiringOptions = [
 ]
 
 // SLA 等级选项
-const slaOptions: { value: SlaLevel; label: string; tagType: any }[] = [
+const slaOptions: { value: SlaLevel; label: string; tagType: EpTagType }[] = [
   { value: 'BASIC', label: '基础版', tagType: 'info' },
   { value: 'PREMIUM', label: '高级版', tagType: 'warning' },
   { value: 'PLATINUM', label: '铂金版', tagType: 'danger' }

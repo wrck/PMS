@@ -1,0 +1,52 @@
+# 业务层告警规则（含慢 SQL，对应 Task 10.4）
+groups:
+  - name: business-alerts
+    interval: 30s
+    rules:
+      - alert: SlowSqlError
+        expr: |
+          rate(pms_slow_sql_total{application="pms", threshold="error"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          application: pms
+          category: slowsql
+        annotations:
+          summary: "慢 SQL (ERROR 级别) 频发"
+          description: "5s 内出现 >5s 的慢 SQL，速率 {{ $value }}/s，持续 2 分钟。请排查 SQL 与索引。"
+
+      - alert: SlowSqlWarn
+        expr: |
+          rate(pms_slow_sql_total{application="pms", threshold="warn"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: slowsql
+        annotations:
+          summary: "慢 SQL (WARN 级别) 较多"
+          description: ">1s 的慢 SQL 速率 {{ $value }}/s 超过 1/s，持续 5 分钟。"
+
+      - alert: ScheduleTaskFailure
+        expr: |
+          rate(pms_schedule_failure_total{application="pms"}[10m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: schedule
+        annotations:
+          summary: "定时任务执行失败"
+          description: "定时任务失败速率 {{ $value }}/s，持续 5 分钟。请检查定时任务日志。"
+
+      - alert: BusinessSettlementAnomaly
+        expr: |
+          rate(pms_settlement_amount_count{application="pms"}[1h]) < 0.01
+        for: 2h
+        labels:
+          severity: info
+          application: pms
+          category: business
+        annotations:
+          summary: "结算业务量偏低"
+          description: "近 1 小时无结算记录，可能存在业务异常。"

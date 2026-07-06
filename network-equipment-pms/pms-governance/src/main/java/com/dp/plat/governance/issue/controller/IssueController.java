@@ -1,11 +1,14 @@
 package com.dp.plat.governance.issue.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.governance.issue.entity.Issue;
 import com.dp.plat.governance.issue.service.IIssueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,18 +34,24 @@ public class IssueController {
 
     @Operation(summary = "创建问题")
     @PostMapping
-    public Result<Issue> create(@RequestBody Issue issue) {
+    @PreAuthorize("hasAuthority('governance:issue:add')")
+    @OperLog(title = "问题管理", businessType = 1)
+    public Result<Issue> create(@Valid @RequestBody Issue issue) {
         return issueService.create(issue);
     }
 
     @Operation(summary = "更新问题")
     @PutMapping
-    public Result<?> update(@RequestBody Issue issue) {
+    @PreAuthorize("hasAuthority('governance:issue:edit')")
+    @OperLog(title = "问题管理", businessType = 2)
+    public Result<?> update(@Valid @RequestBody Issue issue) {
         return issueService.update(issue);
     }
 
     @Operation(summary = "删除问题")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('governance:issue:remove')")
+    @OperLog(title = "问题管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return issueService.delete(id);
     }
@@ -67,6 +76,8 @@ public class IssueController {
 
     @Operation(summary = "分配问题处理人")
     @PostMapping("/{id}/assign")
+    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> assign(@PathVariable Long id,
                                 @RequestParam Long assigneeId,
                                 @RequestParam(required = false) String assigneeName) {
@@ -75,6 +86,8 @@ public class IssueController {
 
     @Operation(summary = "解决问题")
     @PostMapping("/{id}/resolve")
+    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> resolve(@PathVariable Long id,
                                  @RequestParam(required = false) String resolution) {
         return issueService.resolve(id, resolution);
@@ -82,12 +95,16 @@ public class IssueController {
 
     @Operation(summary = "关闭问题")
     @PostMapping("/{id}/close")
+    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> close(@PathVariable Long id) {
         return issueService.close(id);
     }
 
     @Operation(summary = "升级问题为变更请求")
     @PostMapping("/{id}/escalate")
+    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @OperLog(title = "问题管理", businessType = 2)
     public Result<?> escalate(@PathVariable Long id) {
         return issueService.escalate(id);
     }

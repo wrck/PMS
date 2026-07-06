@@ -1,34 +1,273 @@
 name: Deploy
 
+# ============================================================================
+# PMS 部署流水线（Task 23.4）
+#
+# 触发条件：
+#   - 推送 main / release/* 分支
+#   - 推送 v* tag（生产发布）
+#   - 手动触发（可选 environment / image_tag）
+#
+# 流程：
+#   build  → 构建后端 JAR + 前端 dist → 构建并推送 Docker 镜像到 GHCR
+#   deploy → SSH 到部署服务器 → 拉取最新代码 → 蓝绿部署 → 健康检查
+#
+# 必需 Secrets（GitHub → Settings → Secrets and variables → Actions）：
+#   - DEPLOY_HOST          部署服务器 IP/域名
+#   - DEPLOY_USER          SSH 用户（需免密 sudo docker / nginx）
+#   - DEPLOY_SSH_KEY       SSH 私钥（ed25519 建议公钥加入服务器 authorized_keys）
+#   - DEPLOY_PATH          服务器上项目根目录（如 /opt/pms）
+#   - APP_ENCRYPT_KEY      字段加密密钥（32 字节 Base64）
+#   - MYSQL_PASSWORD       生产 MySQL 密码
+#   - REDIS_PASSWORD       生产 Redis 密码
+#
+# Environment secrets（建议按 staging / production 拆分）：
+#   - 在 GitHub 仓库 Settings → Environments 中创建 staging / production
+#   - 为每个 environment 配置独立的 DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY / DEPLOY_PATH
+#   - production 建议开启 required reviewers / deployment branches 限制
+# ============================================================================
+
 on:
   push:
     branches:
       - main
+      - 'release/*'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: '镜像 tag（留空则使用 commit sha 或 tag 名）'
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  deploy:
-    name: Deploy to Server
+  # --------------------------------------------------------------------------
+  # Job 1: 构建镜像并推送到 GHCR
+  # --------------------------------------------------------------------------
+  build:
+    name: Build & Push Images
     runs-on: ubuntu-latest
-    env:
-      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      backend_image: ${{ steps.meta.outputs.backend_image }}
+      frontend_image: ${{ steps.meta.outputs.frontend_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy Notice
-        run: |
-          echo "TODO: 按实际环境补充部署步骤"
-          echo "镜像已由 CI 流水线推送至 ghcr.io/${{ github.repository }}"
-          echo "下一步：SSH 到部署服务器拉取最新镜像并重启 docker-compose"
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: SSH Deploy (optional)
-        if: ${{ env.DEPLOY_HOST != '' }}
-        uses: appleboy/ssh-action@v1
+      - name: Build backend (skip tests, CI 已在 PR 阶段验证)
+        run: mvn -B clean package -DskipTests
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: pms-frontend/package-lock.json
+
+      - name: Build frontend
+        run: |
+          cd pms-frontend
+          npm ci
+          npm run build
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (image tag)
+        id: meta
+        run: |
+          # 优先级：手动输入 > git tag > commit sha
+          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            TAG="${{ github.event.inputs.image_tag }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="${GITHUB_SHA::7}"
+          fi
+          BACKEND="${REGISTRY}/${IMAGE_NAME,,}/pms-backend:${TAG}"
+          FRONTEND="${REGISTRY}/${IMAGE_NAME,,}/pms-frontend:${TAG}"
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=${BACKEND}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=${FRONTEND}" >> "$GITHUB_OUTPUT"
+          echo "==> Backend image:  ${BACKEND}"
+          echo "==> Frontend image: ${FRONTEND}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.backend_image }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/pms-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.frontend_image }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/pms-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # --------------------------------------------------------------------------
+  # Job 2: 部署到 staging（main 分支 / 手动 staging）
+  # --------------------------------------------------------------------------
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server
+        id: deploy
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
           script: |
+            set -euo pipefail
             cd ${{ secrets.DEPLOY_PATH }}
-            docker-compose pull backend frontend
-            docker-compose up -d backend frontend
+            git fetch --all --tags
+            git checkout --force ${{ github.sha }}
+            git reset --hard ${{ github.sha }}
+
+            # 拉取最新镜像
+            export IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
+            export BACKEND_IMAGE="${{ needs.build.outputs.backend_image }}"
+            docker pull "${BACKEND_IMAGE}"
+
+            # 注入生产配置（密钥来自 GitHub Secrets，其他配置由 deploy.sh 默认值或服务器 .env 提供）
+            export SPRING_PROFILES_ACTIVE=prod
+            export MYSQL_PASSWORD="${{ secrets.MYSQL_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            export APP_ENCRYPT_KEY="${{ secrets.APP_ENCRYPT_KEY }}"
+            export NOTIFY_WEBHOOK="${{ secrets.DEPLOY_NOTIFY_WEBHOOK }}"
+
+            # 蓝绿部署 + 健康检查
+            ./scripts/deploy.sh
+            ./scripts/health-check.sh
+
+            echo "deploy_url=https://staging.pms.example.com" >> "$GITHUB_OUTPUT"
+
+  # --------------------------------------------------------------------------
+  # Job 3: 部署到 production（v* tag 或手动 production）
+  # --------------------------------------------------------------------------
+  deploy-production:
+    name: Deploy to Production
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server
+        id: deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+            git fetch --all --tags
+            git checkout --force ${{ github.ref_name }}
+            git reset --hard ${{ github.ref_name }}
+
+            export IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
+            export BACKEND_IMAGE="${{ needs.build.outputs.backend_image }}"
+            docker pull "${BACKEND_IMAGE}"
+
+            export SPRING_PROFILES_ACTIVE=prod
+            export MYSQL_PASSWORD="${{ secrets.MYSQL_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            export APP_ENCRYPT_KEY="${{ secrets.APP_ENCRYPT_KEY }}"
+            export NOTIFY_WEBHOOK="${{ secrets.DEPLOY_NOTIFY_WEBHOOK }}"
+
+            # 生产环境失败自动回滚
+            export ROLLBACK_ON_FAILURE=true
+            ./scripts/deploy.sh
+            ./scripts/health-check.sh
+
+            echo "deploy_url=https://pms.example.com" >> "$GITHUB_OUTPUT"
+
+  # --------------------------------------------------------------------------
+  # Job 4: 部署后通知（成功/失败汇总）
+  # --------------------------------------------------------------------------
+  notify:
+    name: Notify
+    needs: [build, deploy-staging, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize deployment result
+        run: |
+          echo "## PMS Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Stage | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build | ${{ needs.build.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Staging | ${{ needs.deploy-staging.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Production | ${{ needs.deploy-production.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image: \`${{ needs.build.outputs.backend_image }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Author: @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+
+          # 任一部署失败时退出码非零（便于 Slack/钉钉 webhook 告警）
+          if [[ "${{ needs.deploy-staging.result }}" == "failure" ]] || \
+             [[ "${{ needs.deploy-production.result }}" == "failure" ]]; then
+            echo "::error::Deployment failed, please check logs and run rollback.sh if needed"
+            exit 1
+          fi

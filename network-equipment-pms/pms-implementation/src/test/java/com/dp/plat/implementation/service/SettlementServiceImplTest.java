@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.implementation.entity.Settlement;
 import com.dp.plat.implementation.entity.SettlementDetail;
 import com.dp.plat.implementation.mapper.AgentMapper;
 import com.dp.plat.implementation.mapper.SettlementDetailMapper;
 import com.dp.plat.implementation.mapper.SettlementMapper;
+import com.dp.plat.implementation.saga.SettlementSaga;
 import com.dp.plat.implementation.service.impl.SettlementServiceImpl;
 import com.dp.plat.integration.model.fp.FpResponse;
 import com.dp.plat.integration.model.fp.SettlementPushRequest;
@@ -71,6 +73,12 @@ class SettlementServiceImplTest {
 
     @Mock
     private FpIntegrationService fpIntegrationService;
+
+    @Mock
+    private BusinessMetrics businessMetrics;
+
+    @Mock
+    private SettlementSaga settlementSaga;
 
     @InjectMocks
     private SettlementServiceImpl settlementService;

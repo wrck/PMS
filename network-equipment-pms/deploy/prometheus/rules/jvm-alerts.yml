@@ -1,0 +1,66 @@
+# JVM 层告警规则
+groups:
+  - name: jvm-alerts
+    interval: 30s
+    rules:
+      - alert: JVMHeapHigh
+        expr: |
+          sum(jvm_memory_used_bytes{application="pms", area="heap"})
+            / sum(jvm_memory_max_bytes{application="pms", area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: jvm
+        annotations:
+          summary: "JVM 堆内存使用率过高"
+          description: "堆内存使用率 {{ $value | humanizePercentage }} 超过 85%，持续 5 分钟。"
+
+      - alert: JVMHeapCritical
+        expr: |
+          sum(jvm_memory_used_bytes{application="pms", area="heap"})
+            / sum(jvm_memory_max_bytes{application="pms", area="heap"}) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          application: pms
+          category: jvm
+        annotations:
+          summary: "JVM 堆内存使用率严重过高"
+          description: "堆内存使用率 {{ $value | humanizePercentage }} 超过 95%，可能触发 OOM。"
+
+      - alert: JVMHighGC
+        expr: |
+          rate(jvm_gc_pause_seconds_count{application="pms"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: jvm
+        annotations:
+          summary: "JVM GC 频率过高"
+          description: "GC 次数速率 {{ $value }}/s 超过 5/s，持续 5 分钟。"
+
+      - alert: JVMThreadsBlocked
+        expr: |
+          jvm_threads_states_threads{application="pms", state="blocked"} > 10
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: jvm
+        annotations:
+          summary: "JVM 阻塞线程过多"
+          description: "阻塞线程数 {{ $value }} 超过 10，持续 5 分钟。"
+
+      - alert: JVMProcessCPUPercentHigh
+        expr: |
+          process_cpu_usage{application="pms"} > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          application: pms
+          category: jvm
+        annotations:
+          summary: "JVM 进程 CPU 使用率过高"
+          description: "进程 CPU 使用率 {{ $value | humanizePercentage }} 超过 90%。"

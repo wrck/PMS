@@ -92,10 +92,11 @@ export function triggerBlobDownload(blob: Blob, fileName: string): void {
  * @param url     请求地址（用于回退）
  */
 function extractFileNameFromResponse(
-  headers: Record<string, string> | undefined,
+  headers: Record<string, unknown> | undefined,
   url: string
 ): string {
-  const disposition = headers?.['content-disposition'] || headers?.['Content-Disposition']
+  const raw = headers?.['content-disposition'] ?? headers?.['Content-Disposition']
+  const disposition = typeof raw === 'string' ? raw : ''
   if (disposition) {
     const match = /filename\*?=([^;]+)/i.exec(disposition)
     if (match && match[1]) {

@@ -2,13 +2,14 @@ package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysRole;
 import com.dp.plat.system.service.ISysRoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,7 +57,7 @@ public class SysRoleController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:role:add')")
     @OperLog(title = "角色管理", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysRole role) {
+    public Result<Boolean> add(@Valid @RequestBody SysRole role) {
         return Result.ok(sysRoleService.save(role));
     }
 
@@ -64,7 +65,7 @@ public class SysRoleController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:role:edit')")
     @OperLog(title = "角色管理", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysRole role) {
+    public Result<Boolean> update(@Valid @RequestBody SysRole role) {
         return Result.ok(sysRoleService.updateById(role));
     }
 

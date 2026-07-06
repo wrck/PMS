@@ -10,6 +10,7 @@ import {
   type Notification,
   type NotificationCategory
 } from '@/api/notification'
+import type { EpTagType } from '@/types'
 
 const router = useRouter()
 
@@ -47,7 +48,7 @@ const menuItems: MenuItem[] = [
 ]
 
 // 分类标签文案与颜色
-const categoryMeta: Record<string, { label: string; tagType: any }> = {
+const categoryMeta: Record<string, { label: string; tagType: EpTagType }> = {
   MILESTONE: { label: '里程碑', tagType: 'primary' },
   TASK: { label: '任务', tagType: 'warning' },
   APPROVAL: { label: '审批', tagType: 'danger' },
@@ -58,9 +59,9 @@ const categoryMeta: Record<string, { label: string; tagType: any }> = {
 }
 
 function getCategoryMeta(category?: string) {
-  return (categoryMeta as Record<string, { label: string; tagType: any }>)[category ?? ''] ?? {
+  return categoryMeta[category ?? ''] ?? {
     label: category ?? '-',
-    tagType: 'info'
+    tagType: 'info' as EpTagType
   }
 }
 

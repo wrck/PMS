@@ -1,13 +1,14 @@
 package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysDictItem;
 import com.dp.plat.system.service.ISysDictItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,7 +46,7 @@ public class SysDictItemController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:dict:add')")
     @OperLog(title = "字典管理", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysDictItem item) {
+    public Result<Boolean> add(@Valid @RequestBody SysDictItem item) {
         return Result.ok(sysDictItemService.create(item));
     }
 
@@ -53,7 +54,7 @@ public class SysDictItemController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:dict:edit')")
     @OperLog(title = "字典管理", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysDictItem item) {
+    public Result<Boolean> update(@Valid @RequestBody SysDictItem item) {
         return Result.ok(sysDictItemService.update(item));
     }
 

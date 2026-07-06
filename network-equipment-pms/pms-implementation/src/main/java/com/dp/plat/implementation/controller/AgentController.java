@@ -1,12 +1,15 @@
 package com.dp.plat.implementation.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.implementation.entity.Agent;
 import com.dp.plat.implementation.service.IAgentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,18 +49,24 @@ public class AgentController {
 
     @Operation(summary = "Create agent")
     @PostMapping
-    public Result<Boolean> add(@RequestBody Agent agent) {
+    @PreAuthorize("hasAuthority('implementation:agent:add')")
+    @OperLog(title = "代理商管理", businessType = 1)
+    public Result<Boolean> add(@Valid @RequestBody Agent agent) {
         return Result.ok(agentService.save(agent));
     }
 
     @Operation(summary = "Update agent")
     @PutMapping
-    public Result<Boolean> update(@RequestBody Agent agent) {
+    @PreAuthorize("hasAuthority('implementation:agent:edit')")
+    @OperLog(title = "代理商管理", businessType = 2)
+    public Result<Boolean> update(@Valid @RequestBody Agent agent) {
         return Result.ok(agentService.updateById(agent));
     }
 
     @Operation(summary = "Delete agent")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('implementation:agent:remove')")
+    @OperLog(title = "代理商管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(agentService.removeById(id));
     }

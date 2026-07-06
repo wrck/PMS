@@ -1,0 +1,139 @@
+// =============================================================================
+// Element Plus 全局样式覆盖
+// -----------------------------------------------------------------------------
+// 将 Element Plus 的内部 CSS 变量（--el-*）桥接到 PMS 设计令牌，
+// 并对常用组件（Card / Button / Table / Form / Pagination / Tabs / Dialog）
+// 做轻量统一处理，保证全站视觉一致。
+// 不破坏 Element Plus 既有功能，仅做样式覆盖。
+// =============================================================================
+
+@use 'design-tokens' as *;
+
+// =============================================================================
+// 1. CSS 变量桥接：用 PMS 设计令牌覆盖 Element Plus 默认变量
+// =============================================================================
+:root {
+  // 颜色
+  --el-color-primary: #{$color-primary};
+  --el-color-success: #{$color-success};
+  --el-color-warning: #{$color-warning};
+  --el-color-danger: #{$color-danger};
+  --el-color-info: #{$color-info};
+
+  --el-text-color-primary: #{$color-text-primary};
+  --el-text-color-regular: #{$color-text-regular};
+  --el-text-color-secondary: #{$color-text-secondary};
+  --el-text-color-placeholder: #{$color-text-placeholder};
+
+  --el-border-color: #{$color-border};
+  --el-border-color-light: #{$color-border-light};
+
+  --el-bg-color: #{$color-bg-card};
+  --el-bg-color-page: #{$color-bg-page};
+
+  // 字体 / 圆角 / 阴影
+  --el-font-size-base: #{$font-size-base};
+  --el-border-radius-base: #{$radius-base};
+  --el-box-shadow: #{$shadow-base};
+  --el-box-shadow-light: #{$shadow-sm};
+
+  // 字体族（保持 Element Plus 既有变量名）
+  --el-font-family: #{$font-family-base};
+}
+
+// =============================================================================
+// 2. 卡片统一
+// =============================================================================
+.el-card {
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  transition: box-shadow $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+// =============================================================================
+// 3. 按钮统一
+// =============================================================================
+.el-button {
+  border-radius: $radius-base;
+  font-weight: $font-weight-medium;
+}
+
+// =============================================================================
+// 4. 表格统一
+// =============================================================================
+.el-table {
+  th.el-table__cell {
+    background-color: $color-bg-page;
+    color: $color-text-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// =============================================================================
+// 5. 表单统一
+// =============================================================================
+.el-form-item__label {
+  font-weight: $font-weight-medium;
+  color: $color-text-regular;
+}
+
+// =============================================================================
+// 6. 分页统一
+// =============================================================================
+.el-pagination {
+  margin-top: $spacing-4;
+  justify-content: flex-end;
+}
+
+// =============================================================================
+// 7. 标签页统一
+// =============================================================================
+.el-tabs__item {
+  font-weight: $font-weight-medium;
+}
+
+// =============================================================================
+// 8. 弹窗统一
+// =============================================================================
+.el-dialog {
+  border-radius: $radius-lg;
+
+  .el-dialog__header {
+    border-bottom: 1px solid $color-border-light;
+    padding: $spacing-4 $spacing-6;
+  }
+
+  .el-dialog__body {
+    padding: $spacing-6;
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid $color-border-light;
+    padding: $spacing-4 $spacing-6;
+  }
+}
+
+// =============================================================================
+// 9. 全局滚动条统一
+// =============================================================================
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $color-border;
+  border-radius: $radius-full;
+
+  &:hover {
+    background: $color-text-placeholder;
+  }
+}
+
+::-webkit-scrollbar-track {
+  background: $color-bg-page;
+}

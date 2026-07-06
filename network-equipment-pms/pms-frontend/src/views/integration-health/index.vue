@@ -6,8 +6,10 @@ import {
   listIntegrationLogs,
   retryPush,
   type IntegrationHealthItem,
-  type IntegrationLog
+  type IntegrationLog,
+  type IntegrationLogQuery
 } from '@/api/integration-health'
+import type { EpTagType } from '@/types'
 
 defineOptions({ name: 'IntegrationHealth' })
 
@@ -45,12 +47,12 @@ function statusMeta(status?: string): { color: string; label: string } {
   }
 }
 
-function tokenTagType(valid: boolean): any {
+function tokenTagType(valid: boolean): EpTagType {
   return valid ? 'success' : 'danger'
 }
 
-// 成功率进度条状态
-function rateStatus(rate: number): any {
+// 成功率进度条状态：el-progress 的 status 取值
+function rateStatus(rate: number): 'success' | 'warning' | 'exception' {
   if (rate >= 95) return 'success'
   if (rate >= 80) return 'warning'
   return 'exception'
@@ -91,7 +93,7 @@ const query = reactive<{ page: number; size: number; logType?: string; responseS
 async function loadLogs() {
   logLoading.value = true
   try {
-    const params: any = { page: query.page, size: query.size }
+    const params: IntegrationLogQuery = { page: query.page, size: query.size }
     if (query.logType) params.logType = query.logType
     if (query.responseStatus) params.responseStatus = query.responseStatus
     const res = await listIntegrationLogs(params)
@@ -128,7 +130,7 @@ function handleSizeChange(s: number) {
 }
 
 // 响应状态标签
-function responseTagType(status?: string): any {
+function responseTagType(status?: string): EpTagType {
   return status === 'SUCCESS' ? 'success' : 'danger'
 }
 

@@ -13,6 +13,7 @@ import {
   type PunchListStatus,
   type WalkdownStage
 } from '@/api/punch-list'
+import type { EpTagType } from '@/types'
 
 const loading = ref(false)
 const tableData = ref<PunchList[]>([])
@@ -27,14 +28,14 @@ const query = reactive<{ page: number; size: number; projectId?: number; severit
 })
 
 // 严重等级选项
-const severityOptions: { value: PunchListSeverity; label: string; tagType: any }[] = [
+const severityOptions: { value: PunchListSeverity; label: string; tagType: EpTagType }[] = [
   { value: 'SAFETY', label: '安全', tagType: 'danger' },
   { value: 'FUNCTIONAL', label: '功能', tagType: 'warning' },
   { value: 'COSMETIC', label: '外观', tagType: 'info' }
 ]
 
 // 状态选项
-const statusOptions: { value: PunchListStatus; label: string; tagType: any }[] = [
+const statusOptions: { value: PunchListStatus; label: string; tagType: EpTagType }[] = [
   { value: 'OPEN', label: '待整改', tagType: 'warning' },
   { value: 'RESOLVED', label: '已整改', tagType: 'primary' },
   { value: 'VERIFIED', label: '已验证', tagType: 'success' }
@@ -104,7 +105,7 @@ const rules: FormRules = {
 }
 
 // FileUploader 上传成功回调，收集附件 ID
-function handleUploaded(payload: any) {
+function handleUploaded(payload: number | { id?: number }) {
   const id = typeof payload === 'number' ? payload : payload?.id
   if (typeof id === 'number') {
     form.attachmentIds.push(id)

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { InternalAxiosRequestConfig } from 'axios'
+import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios'
 
 // Mock ElMessage so no DOM message rendering happens in jsdom.
 vi.mock('element-plus', () => ({
@@ -22,7 +22,7 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 /** Build a mock axios adapter that resolves with the given envelope payload. */
-function makeAdapter(payload: any) {
+function makeAdapter(payload: unknown) {
   return (config: InternalAxiosRequestConfig) =>
     Promise.resolve({
       data: payload,
@@ -34,7 +34,7 @@ function makeAdapter(payload: any) {
 }
 
 /** Build a mock axios adapter that rejects with the given error. */
-function makeErrorAdapter(err: any) {
+function makeErrorAdapter(err: unknown) {
   return () => Promise.reject(err)
 }
 
@@ -59,7 +59,7 @@ describe('request utility', () => {
         })
       }
 
-      await get('/api/test', undefined, { adapter: adapter as any })
+      await get('/api/test', undefined, { adapter: adapter as unknown as AxiosAdapter })
 
       expect(captured.headers.Authorization).toBe('Bearer my-token')
     })
@@ -77,7 +77,7 @@ describe('request utility', () => {
         })
       }
 
-      await get('/api/test', undefined, { adapter: adapter as any })
+      await get('/api/test', undefined, { adapter: adapter as unknown as AxiosAdapter })
 
       expect(captured.headers.Authorization).toBeUndefined()
     })
@@ -88,7 +88,7 @@ describe('request utility', () => {
       const payload = { code: 200, message: 'ok', data: { foo: 'bar' } }
 
       const result = await get<{ foo: string }>('/api/test', undefined, {
-        adapter: makeAdapter(payload) as any
+        adapter: makeAdapter(payload) as unknown as AxiosAdapter
       })
 
       expect(result).toEqual({ foo: 'bar' })
@@ -98,7 +98,7 @@ describe('request utility', () => {
       const payload = { code: 500, message: '操作失败', data: null }
 
       await expect(
-        get('/api/test', undefined, { adapter: makeAdapter(payload) as any })
+        get('/api/test', undefined, { adapter: makeAdapter(payload) as unknown as AxiosAdapter })
       ).rejects.toThrow('操作失败')
 
       expect(ElMessage.error).toHaveBeenCalledWith('操作失败')
@@ -108,7 +108,7 @@ describe('request utility', () => {
       const payload = { code: 500, message: '', data: null }
 
       await expect(
-        get('/api/test', undefined, { adapter: makeAdapter(payload) as any })
+        get('/api/test', undefined, { adapter: makeAdapter(payload) as unknown as AxiosAdapter })
       ).rejects.toThrow('请求失败')
 
       expect(ElMessage.error).toHaveBeenCalledWith('请求失败')
@@ -119,7 +119,7 @@ describe('request utility', () => {
       const payload = { code: 401, message: '未授权', data: null }
 
       await expect(
-        get('/api/test', undefined, { adapter: makeAdapter(payload) as any })
+        get('/api/test', undefined, { adapter: makeAdapter(payload) as unknown as AxiosAdapter })
       ).rejects.toThrow('未授权')
 
       expect(ElMessage.error).toHaveBeenCalledWith('登录状态已过期，请重新登录')
@@ -130,7 +130,7 @@ describe('request utility', () => {
     it('handles network/HTTP errors by showing the message and rejecting', async () => {
       await expect(
         get('/api/test', undefined, {
-          adapter: makeErrorAdapter(new Error('Network Error')) as any
+          adapter: makeErrorAdapter(new Error('Network Error')) as unknown as AxiosAdapter
         })
       ).rejects.toThrow('Network Error')
 
@@ -140,7 +140,7 @@ describe('request utility', () => {
     it('uses a default message for network errors without one', async () => {
       await expect(
         get('/api/test', undefined, {
-          adapter: makeErrorAdapter({}) as any
+          adapter: makeErrorAdapter({}) as unknown as AxiosAdapter
         })
       ).rejects.toBeDefined()
 

@@ -1,13 +1,14 @@
 package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysConfig;
 import com.dp.plat.system.service.ISysConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,7 +57,7 @@ public class SysConfigController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:config:add')")
     @OperLog(title = "参数配置", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysConfig config) {
+    public Result<Boolean> add(@Valid @RequestBody SysConfig config) {
         return Result.ok(sysConfigService.create(config));
     }
 
@@ -64,7 +65,7 @@ public class SysConfigController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:config:edit')")
     @OperLog(title = "参数配置", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysConfig config) {
+    public Result<Boolean> update(@Valid @RequestBody SysConfig config) {
         return Result.ok(sysConfigService.update(config));
     }
 

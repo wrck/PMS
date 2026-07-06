@@ -2,13 +2,14 @@ package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysUser;
 import com.dp.plat.system.service.ISysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,7 @@ public class SysUserController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:user:add')")
     @OperLog(title = "用户管理", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysUser user) {
+    public Result<Boolean> add(@Valid @RequestBody SysUser user) {
         return Result.ok(sysUserService.save(user));
     }
 
@@ -62,7 +63,7 @@ public class SysUserController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:user:edit')")
     @OperLog(title = "用户管理", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysUser user) {
+    public Result<Boolean> update(@Valid @RequestBody SysUser user) {
         return Result.ok(sysUserService.updateById(user));
     }
 

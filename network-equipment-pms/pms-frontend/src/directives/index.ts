@@ -15,6 +15,9 @@ interface DebounceOptions {
   delay?: number
 }
 
+/** 缓存每个元素上的防抖监听器，便于卸载时移除（避免在 HTMLElement 上扩展任意属性） */
+const debounceListeners = new WeakMap<HTMLElement, (event: Event) => void>()
+
 const debounce: Directive<HTMLElement, DebounceOptions | ((event: Event) => void)> = {
   mounted(el, binding) {
     const opts: DebounceOptions =
@@ -31,13 +34,14 @@ const debounce: Directive<HTMLElement, DebounceOptions | ((event: Event) => void
       timer = setTimeout(() => handler(event), delay)
     }
     el.addEventListener('click', listener)
-    // 缓存到元素上以便卸载时移除
-    ;(el as any).__debounceListener__ = listener
+    // 缓存到 WeakMap 以便卸载时移除（避免污染 HTMLElement）
+    debounceListeners.set(el, listener)
   },
   unmounted(el) {
-    const listener = (el as any).__debounceListener__
-    if (typeof listener === 'function') {
+    const listener = debounceListeners.get(el)
+    if (listener) {
       el.removeEventListener('click', listener)
+      debounceListeners.delete(el)
     }
   }
 }

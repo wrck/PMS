@@ -1,14 +1,15 @@
 package com.dp.plat.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
-import com.dp.plat.system.annotation.OperLog;
 import com.dp.plat.system.entity.SysMenu;
 import com.dp.plat.system.service.ISysMenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,7 +69,7 @@ public class SysMenuController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:menu:add')")
     @OperLog(title = "菜单管理", businessType = 1)
-    public Result<Boolean> add(@RequestBody SysMenu menu) {
+    public Result<Boolean> add(@Valid @RequestBody SysMenu menu) {
         return Result.ok(sysMenuService.save(menu));
     }
 
@@ -76,7 +77,7 @@ public class SysMenuController {
     @PutMapping
     @PreAuthorize("hasAuthority('system:menu:edit')")
     @OperLog(title = "菜单管理", businessType = 2)
-    public Result<Boolean> update(@RequestBody SysMenu menu) {
+    public Result<Boolean> update(@Valid @RequestBody SysMenu menu) {
         return Result.ok(sysMenuService.updateById(menu));
     }
 

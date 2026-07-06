@@ -32,7 +32,9 @@ import {
   applyAcceptance,
   approveAcceptance,
   rejectAcceptance,
-  getAcceptanceByProject
+  getAcceptanceByProject,
+  type Project,
+  type Milestone
 } from '@/api/project'
 
 beforeEach(() => {
@@ -43,7 +45,7 @@ describe('project API', () => {
   describe('project CRUD', () => {
     it('createProject calls POST /api/project with the given body', () => {
       mocks.post.mockResolvedValue({})
-      const data = { name: 'Project A', type: 'NETWORK_DEVICE' }
+      const data: Project = { name: 'Project A', type: 'NETWORK_DEVICE' }
       createProject(data)
       expect(mocks.post).toHaveBeenCalledWith('/api/project', data)
     })
@@ -63,7 +65,7 @@ describe('project API', () => {
 
     it('updateProject calls PUT /api/project with the given body', () => {
       mocks.put.mockResolvedValue({})
-      const data = { id: 5, name: 'Updated' }
+      const data: Project = { id: 5, name: 'Updated' }
       updateProject(data)
       expect(mocks.put).toHaveBeenCalledWith('/api/project', data)
     })
@@ -90,14 +92,14 @@ describe('project API', () => {
   describe('milestone', () => {
     it('createMilestone calls POST /api/project/milestone', () => {
       mocks.post.mockResolvedValue({})
-      const data = { projectId: 1, name: 'M1', plannedDate: '2026-01-01' }
+      const data: Milestone = { projectId: 1, name: 'M1', plannedDate: '2026-01-01' }
       createMilestone(data)
       expect(mocks.post).toHaveBeenCalledWith('/api/project/milestone', data)
     })
 
     it('updateMilestone calls PUT /api/project/milestone', () => {
       mocks.put.mockResolvedValue({})
-      const data = { id: 3, name: 'M1-updated' }
+      const data: Milestone = { id: 3, name: 'M1-updated' }
       updateMilestone(data)
       expect(mocks.put).toHaveBeenCalledWith('/api/project/milestone', data)
     })

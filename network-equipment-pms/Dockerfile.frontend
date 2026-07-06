@@ -1,14 +1,42 @@
-# Build stage
-FROM node:18-alpine AS builder
+# ============================================================================
+# Dockerfile.frontend — 网络设备 PMS 前端（多阶段构建 + 非 root + HEALTHCHECK）
+# Task 21.4 安全加固
+# ============================================================================
+
+# ---------------------------- 阶段 1: Node 构建 ----------------------------
+FROM node:20-alpine AS builder
 WORKDIR /build
+
+# 1. 复制 package 文件利用 Docker 层缓存
 COPY pms-frontend/package*.json ./
-RUN npm ci
+RUN npm config set registry https://registry.npmmirror.com && \
+    (npm ci --no-audit --no-fund || npm install --no-audit --no-fund)
+
+# 2. 复制源码并构建（vite build 输出到 dist/）
 COPY pms-frontend/ .
 RUN npm run build
 
-# Runtime stage
-FROM nginx:alpine
+# ---------------------------- 阶段 2: Nginx 运行 ----------------------------
+FROM nginx:1.25-alpine AS runtime
+
+# 3. 创建非 root 用户 app（UID/GID 1001）
+RUN addgroup -g 1001 -S app && adduser -u 1001 -S app -G app
+
+# 4. 复制构建产物与 nginx 配置
 COPY --from=builder /build/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 5. 修改文件所有权，确保非 root 用户可读写 nginx 运行时目录
+RUN chown -R app:app /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && chown app:app /var/run/nginx.pid
+
+# 6. 切换非 root 用户
+USER app
+
 EXPOSE 80
+
+# 7. 健康检查（alpine 镜像自带 wget）
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:80/ || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]

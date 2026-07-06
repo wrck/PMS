@@ -1,0 +1,186 @@
+// =============================================================================
+// PMS 设计令牌（Design Tokens）
+// -----------------------------------------------------------------------------
+// 该文件定义全局颜色 / 间距 / 字体 / 阴影 / 圆角等设计基础变量，
+// 同时通过 :root 输出对应的 CSS 自定义属性（--pms-* 前缀），
+// 供 JS / 第三方组件 / 内联样式直接消费。
+// 仅作为变量定义文件，不应包含具体的样式规则。
+// =============================================================================
+
+// ===== 颜色 - 品牌色 =====
+$color-primary: #409eff;
+$color-primary-light-3: #79bbff;
+$color-primary-light-5: #a0cfff;
+$color-primary-light-7: #c6e2ff;
+$color-primary-light-9: #ecf5ff;
+$color-primary-dark-2: #337ecc;
+
+// ===== 颜色 - 状态色 =====
+$color-success: #67c23a;
+$color-warning: #e6a23c;
+$color-danger: #f56c6c;
+$color-info: #909399;
+
+// ===== 颜色 - 中性色 =====
+$color-text-primary: #1f2d3d;
+$color-text-regular: #606266;
+$color-text-secondary: #909399;
+$color-text-placeholder: #c0c4cc;
+$color-border: #dcdfe6;
+$color-border-light: #e4e7ed;
+$color-bg-page: #f5f7fa;
+$color-bg-card: #ffffff;
+
+// ===== 字体 =====
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  'PingFang SC', 'Microsoft YaHei', sans-serif;
+$font-family-mono: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-base: 14px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 22px;
+$font-size-3xl: 28px;
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-base: 1.5;
+$line-height-tight: 1.2;
+$line-height-loose: 1.8;
+
+// ===== 间距（4px 基础单位） =====
+$spacing-1: 4px;
+$spacing-2: 8px;
+$spacing-3: 12px;
+$spacing-4: 16px;
+$spacing-5: 20px;
+$spacing-6: 24px;
+$spacing-8: 32px;
+$spacing-10: 40px;
+$spacing-12: 48px;
+$spacing-16: 64px;
+
+// ===== 圆角 =====
+$radius-sm: 2px;
+$radius-base: 4px;
+$radius-md: 6px;
+$radius-lg: 8px;
+$radius-xl: 12px;
+$radius-full: 9999px;
+
+// ===== 阴影 =====
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-base: 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+$shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.15);
+
+// ===== 过渡 =====
+$transition-fast: 0.15s ease-in-out;
+$transition-base: 0.25s ease-in-out;
+$transition-slow: 0.4s ease-in-out;
+
+// ===== Z-index 层级 =====
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal: 1050;
+$z-index-popover: 1070;
+$z-index-tooltip: 1080;
+
+// ===== 断点 =====
+$breakpoint-xs: 0;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1600px;
+
+// =============================================================================
+// CSS 自定义属性导出（可在 JS / 内联样式 / 第三方组件中通过 var(--pms-*) 消费）
+// =============================================================================
+:root {
+  // 颜色
+  --pms-color-primary: #{$color-primary};
+  --pms-color-primary-light-3: #{$color-primary-light-3};
+  --pms-color-primary-light-5: #{$color-primary-light-5};
+  --pms-color-primary-light-7: #{$color-primary-light-7};
+  --pms-color-primary-light-9: #{$color-primary-light-9};
+  --pms-color-primary-dark-2: #{$color-primary-dark-2};
+
+  --pms-color-success: #{$color-success};
+  --pms-color-warning: #{$color-warning};
+  --pms-color-danger: #{$color-danger};
+  --pms-color-info: #{$color-info};
+
+  --pms-color-text-primary: #{$color-text-primary};
+  --pms-color-text-regular: #{$color-text-regular};
+  --pms-color-text-secondary: #{$color-text-secondary};
+  --pms-color-text-placeholder: #{$color-text-placeholder};
+  --pms-color-border: #{$color-border};
+  --pms-color-border-light: #{$color-border-light};
+  --pms-color-bg-page: #{$color-bg-page};
+  --pms-color-bg-card: #{$color-bg-card};
+
+  // 字体
+  --pms-font-family: #{$font-family-base};
+  --pms-font-family-mono: #{$font-family-mono};
+  --pms-font-size-xs: #{$font-size-xs};
+  --pms-font-size-sm: #{$font-size-sm};
+  --pms-font-size-base: #{$font-size-base};
+  --pms-font-size-lg: #{$font-size-lg};
+  --pms-font-size-xl: #{$font-size-xl};
+  --pms-font-size-2xl: #{$font-size-2xl};
+  --pms-font-size-3xl: #{$font-size-3xl};
+
+  // 间距
+  --pms-spacing-1: #{$spacing-1};
+  --pms-spacing-2: #{$spacing-2};
+  --pms-spacing-3: #{$spacing-3};
+  --pms-spacing-4: #{$spacing-4};
+  --pms-spacing-5: #{$spacing-5};
+  --pms-spacing-6: #{$spacing-6};
+  --pms-spacing-8: #{$spacing-8};
+  --pms-spacing-10: #{$spacing-10};
+  --pms-spacing-12: #{$spacing-12};
+  --pms-spacing-16: #{$spacing-16};
+
+  // 圆角
+  --pms-radius-sm: #{$radius-sm};
+  --pms-radius-base: #{$radius-base};
+  --pms-radius-md: #{$radius-md};
+  --pms-radius-lg: #{$radius-lg};
+  --pms-radius-xl: #{$radius-xl};
+  --pms-radius-full: #{$radius-full};
+
+  // 阴影
+  --pms-shadow-sm: #{$shadow-sm};
+  --pms-shadow-base: #{$shadow-base};
+  --pms-shadow-md: #{$shadow-md};
+  --pms-shadow-lg: #{$shadow-lg};
+  --pms-shadow-xl: #{$shadow-xl};
+
+  // 过渡
+  --pms-transition-fast: #{$transition-fast};
+  --pms-transition-base: #{$transition-base};
+  --pms-transition-slow: #{$transition-slow};
+
+  // Z-index
+  --pms-z-dropdown: #{$z-index-dropdown};
+  --pms-z-sticky: #{$z-index-sticky};
+  --pms-z-fixed: #{$z-index-fixed};
+  --pms-z-modal: #{$z-index-modal};
+  --pms-z-popover: #{$z-index-popover};
+  --pms-z-tooltip: #{$z-index-tooltip};
+
+  // 断点（仅供 JS 通过 getComputedStyle 读取，CSS 中应使用 mixin）
+  --pms-bp-sm: #{$breakpoint-sm};
+  --pms-bp-md: #{$breakpoint-md};
+  --pms-bp-lg: #{$breakpoint-lg};
+  --pms-bp-xl: #{$breakpoint-xl};
+}

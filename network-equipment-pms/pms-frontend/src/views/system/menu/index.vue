@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { createMenu, deleteMenu, getMenuTree, updateMenu, type SysMenu } from '@/api/system'
 
@@ -20,12 +20,23 @@ const menuTreeWithRoot = computed(() => [
 const menuTypeOptions = [
   { value: 0, label: '目录' },
   { value: 1, label: '菜单' },
-  { value: 2, label: '按钮' }
+  { value: 2, label: '按钮' },
+  { value: 3, label: '低代码页面' }
+]
+
+/** 低代码页面类型选项 */
+const lowcodePageTypeOptions = [
+  { value: 'form', label: '表单' },
+  { value: 'list', label: '列表' },
+  { value: 'tab', label: '标签页' },
+  { value: 'related-page', label: '关联页' }
 ]
 
 const rules: FormRules = {
   name: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择菜单类型', trigger: 'change' }]
+  type: [{ required: true, message: '请选择菜单类型', trigger: 'change' }],
+  pageType: [{ required: true, message: '请选择低代码页面类型', trigger: 'change' }],
+  pageCode: [{ required: true, message: '请输入低代码配置编码', trigger: 'blur' }]
 }
 
 function createEmptyForm(): SysMenu {
@@ -39,7 +50,9 @@ function createEmptyForm(): SysMenu {
     permission: '',
     sort: 0,
     visible: 1,
-    status: 1
+    status: 1,
+    pageType: 'form',
+    pageCode: ''
   }
 }
 
@@ -63,9 +76,27 @@ function handleAdd(row?: SysMenu) {
 
 function handleEdit(row: SysMenu) {
   dialogTitle.value = '编辑菜单'
-  Object.assign(form, row)
+  Object.assign(form, createEmptyForm(), row)
   dialogVisible.value = true
 }
+
+/**
+ * 当低代码页面类型或编码变化时，自动生成路由 path 为 /lowcode/{pageType}/{pageCode}。
+ * 同时为权限标识生成默认值 lowcode:page:{pageType}:{pageCode}（仅在用户未自定义时）。
+ */
+watch(
+  () => [form.type, form.pageType, form.pageCode],
+  ([type, pageType, pageCode]) => {
+    if (type === 3 && pageType && pageCode) {
+      form.path = `/lowcode/${pageType}/${pageCode}`
+      // 权限标识为空或匹配自动生成规则时，跟随 pageType/pageCode 更新
+      const autoPerm = `lowcode:page:${pageType}:${pageCode}`
+      if (!form.permission || /^lowcode:page:[a-z-]+:.+$/.test(form.permission)) {
+        form.permission = autoPerm
+      }
+    }
+  }
+)
 
 async function handleSubmit() {
   if (!formRef.value) return
@@ -108,7 +139,10 @@ function typeLabel(type: number) {
 }
 
 function typeTagType(type: number) {
-  return type === 0 ? 'primary' : type === 1 ? 'success' : 'warning'
+  if (type === 0) return 'primary'
+  if (type === 1) return 'success'
+  if (type === 3) return 'danger'
+  return 'warning'
 }
 
 onMounted(loadData)
@@ -184,14 +218,38 @@ onMounted(loadData)
         <el-form-item label="图标" prop="icon">
           <el-input v-model="form.icon" placeholder="Element Plus 图标名称，如 User" />
         </el-form-item>
+        <!-- 低代码页面类型（type=3 时显示） -->
+        <el-form-item v-if="form.type === 3" label="页面类型" prop="pageType">
+          <el-select v-model="form.pageType" placeholder="请选择低代码页面类型" style="width: 100%">
+            <el-option
+              v-for="o in lowcodePageTypeOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="form.type === 3" label="页面编码" prop="pageCode">
+          <el-input
+            v-model="form.pageCode"
+            placeholder="低代码配置编码，如 tpl_project_create"
+          />
+        </el-form-item>
         <el-form-item v-if="form.type !== 2" label="路由路径" prop="path">
-          <el-input v-model="form.path" placeholder="如 /system/user" />
+          <el-input
+            v-model="form.path"
+            :placeholder="form.type === 3 ? '由页面类型和编码自动生成' : '如 /system/user'"
+            :disabled="form.type === 3"
+          />
         </el-form-item>
         <el-form-item v-if="form.type === 1" label="组件路径" prop="component">
           <el-input v-model="form.component" placeholder="如 system/user/index" />
         </el-form-item>
         <el-form-item v-if="form.type !== 0" label="权限标识" prop="permission">
-          <el-input v-model="form.permission" placeholder="如 system:user:list" />
+          <el-input
+            v-model="form.permission"
+            :placeholder="form.type === 3 ? '如 lowcode:page:form:myCode（可自定义）' : '如 system:user:list'"
+          />
         </el-form-item>
         <el-form-item label="排序" prop="sort">
           <el-input-number v-model="form.sort" :min="0" />

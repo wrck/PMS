@@ -1,4 +1,87 @@
-// 全局响应式断点 mixin 与适配规则
+// =============================================================================
+// PMS 响应式断点 mixin 与全局适配规则
+// -----------------------------------------------------------------------------
+// 提供两套断点方案：
+// 1. 现代断点 mixin（sm / md / lg / xl，含 *-up / *-down 变体）
+//    基于 design-tokens.scss 中定义的 $breakpoint-* 变量
+// 2. 旧版断点 mixin（mobile / tablet / desktop）保留向下兼容
+// =============================================================================
+
+@use 'design-tokens' as *;
+
+// =============================================================================
+// 现代断点 mixin
+// =============================================================================
+
+// 仅在该断点范围内
+@mixin xs {
+  @media (max-width: $breakpoint-sm - 1px) {
+    @content;
+  }
+}
+@mixin sm {
+  @media (min-width: $breakpoint-sm) and (max-width: $breakpoint-md - 1px) {
+    @content;
+  }
+}
+@mixin md {
+  @media (min-width: $breakpoint-md) and (max-width: $breakpoint-lg - 1px) {
+    @content;
+  }
+}
+@mixin lg {
+  @media (min-width: $breakpoint-lg) and (max-width: $breakpoint-xl - 1px) {
+    @content;
+  }
+}
+@mixin xl {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// 至少宽度（向上覆盖）
+@mixin sm-up {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+@mixin md-up {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+@mixin lg-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+@mixin xl-up {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// 至多宽度（向下覆盖）
+@mixin sm-down {
+  @media (max-width: $breakpoint-sm - 1px) {
+    @content;
+  }
+}
+@mixin md-down {
+  @media (max-width: $breakpoint-md - 1px) {
+    @content;
+  }
+}
+@mixin lg-down {
+  @media (max-width: $breakpoint-lg - 1px) {
+    @content;
+  }
+}
+
+// =============================================================================
+// 旧版断点 mixin（向下兼容）
+// =============================================================================
 
 @mixin mobile {
   @media (max-width: 768px) {
@@ -18,7 +101,194 @@
   }
 }
 
-// ===== 全局响应式适配 =====
+// =============================================================================
+// 显示 / 隐藏工具类
+// =============================================================================
+
+.hidden-xs {
+  @include xs {
+    display: none !important;
+  }
+}
+.hidden-sm {
+  @include sm {
+    display: none !important;
+  }
+}
+.hidden-md {
+  @include md {
+    display: none !important;
+  }
+}
+.hidden-lg {
+  @include lg {
+    display: none !important;
+  }
+}
+.hidden-xl {
+  @include xl {
+    display: none !important;
+  }
+}
+
+.visible-xs-only {
+  display: none !important;
+  @include xs {
+    display: block !important;
+  }
+}
+.visible-sm-only {
+  display: none !important;
+  @include sm {
+    display: block !important;
+  }
+}
+.visible-md-only {
+  display: none !important;
+  @include md {
+    display: block !important;
+  }
+}
+.visible-lg-only {
+  display: none !important;
+  @include lg {
+    display: block !important;
+  }
+}
+.visible-xl-only {
+  display: none !important;
+  @include xl {
+    display: block !important;
+  }
+}
+
+// 隐藏 / 显示（向上覆盖）
+.hidden-md-down {
+  @include md-down {
+    display: none !important;
+  }
+}
+.hidden-md-up {
+  @include md-up {
+    display: none !important;
+  }
+}
+.hidden-lg-down {
+  @include lg-down {
+    display: none !important;
+  }
+}
+.hidden-lg-up {
+  @include lg-up {
+    display: none !important;
+  }
+}
+
+// =============================================================================
+// 响应式栅格工具类
+// =============================================================================
+
+.responsive-grid {
+  display: grid;
+  gap: $spacing-4;
+
+  &.cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  &.cols-2 {
+    grid-template-columns: 1fr;
+    @include md-up {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &.cols-3 {
+    grid-template-columns: 1fr;
+    @include md-up {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @include lg-up {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &.cols-4 {
+    grid-template-columns: 1fr;
+    @include sm-up {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @include lg-up {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+// =============================================================================
+// 移动端卡片视图（替代表格）
+// 用法：在表格容器上加 .mobile-card-list，并提供 .mobile-cards 容器
+// 移动端隐藏 el-table 显示卡片，桌面端反之
+// =============================================================================
+.mobile-card-list {
+  @include md-down {
+    .el-table {
+      display: none !important;
+    }
+    .mobile-cards {
+      display: block;
+    }
+  }
+  @include md-up {
+    .el-table {
+      display: table;
+    }
+    .mobile-cards {
+      display: none !important;
+    }
+  }
+}
+
+// =============================================================================
+// 表单响应式
+// =============================================================================
+
+// 让表单项 label 在移动端占满一行左对齐
+.responsive-form {
+  .el-form-item {
+    @include md-down {
+      .el-form-item__label {
+        width: 100% !important;
+        text-align: left !important;
+      }
+    }
+  }
+}
+
+// 桌面端表单单列布局（强制每个 el-col 占满 24 栅格）
+.form-single-col-md {
+  @include md-down {
+    .el-col {
+      grid-column: span 24;
+      max-width: 100%;
+      flex: 0 0 100%;
+    }
+  }
+}
+
+// 桌面端表单双列布局（每个 el-col 占 12 栅格）
+.form-two-col-md {
+  @include md-up {
+    .el-col {
+      grid-column: span 12;
+      max-width: 50%;
+      flex: 0 0 50%;
+    }
+  }
+}
+
+// =============================================================================
+// 全局响应式适配规则
+// =============================================================================
 
 // 顶部 header 在移动端压缩高度与内边距
 @include mobile {

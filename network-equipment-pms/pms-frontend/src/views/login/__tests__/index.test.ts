@@ -34,7 +34,7 @@ vi.mock('@/stores/user', () => ({
 // Mock vue-router — the component uses useRouter/useRoute.
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mocks.routerPush }),
-  useRoute: () => ({ query: {} as Record<string, any> })
+  useRoute: () => ({ query: {} as Record<string, unknown> })
 }))
 
 import Login from '@/views/login/index.vue'

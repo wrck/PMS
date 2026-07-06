@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Logback 配置：基于 Spring Profile 区分日志格式。
+
+    - dev/test：控制台输出普通格式，便于本地开发与排查。
+    - prod/release：控制台 + JSON 结构化文件日志（LogstashEncoder），
+      配合 MDC（traceId/userId/username/requestUri/method）便于
+      ELK/Loki 采集与全链路检索。
+
+    注意：本文件命名为 logback-spring.xml（Spring Boot 约定），
+    方可使用 <springProfile> 与 <springProperty> 标签。
+-->
+<configuration>
+
+    <!-- 应用名（来自 spring.application.name，回退到 pms） -->
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="pms"/>
+    <!-- 当前激活的 Profile（用于 JSON 自定义字段） -->
+    <springProperty scope="context" name="activeProfile" source="spring.profiles.active" defaultValue="dev"/>
+    <!-- 应用版本（来自 Maven，回退到 1.0.0） -->
+    <springProperty scope="context" name="appVersion" source="spring.application.version" defaultValue="1.0.0"/>
+
+    <!-- ==================== 控制台 Appender（普通文本） ==================== -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] [%X{userId}] [%X{username}] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ==================== JSON 结构化文件 Appender（生产） ==================== -->
+    <appender name="JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/pms-app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 按天 + 按大小滚动，归档为 gz -->
+            <fileNamePattern>logs/pms-app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 仅包含业务相关的 MDC 字段，避免泄露敏感上下文 -->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>username</includeMdcKeyName>
+            <includeMdcKeyName>requestUri</includeMdcKeyName>
+            <includeMdcKeyName>method</includeMdcKeyName>
+            <!-- 自定义全局字段：应用名、环境、版本，便于日志平台筛选 -->
+            <customFields>{"app":"${appName}","env":"${activeProfile}","version":"${appVersion}"}</customFields>
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- ==================== 异步包装（避免磁盘 I/O 阻塞业务线程） ==================== -->
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="JSON"/>
+    </appender>
+
+    <!-- ==================== Profile 路由 ==================== -->
+
+    <!-- dev/test：仅控制台输出 -->
+    <springProfile name="dev,test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <!-- 本地调试包降级到 DEBUG -->
+        <logger name="com.dp.plat" level="DEBUG"/>
+    </springProfile>
+
+    <!-- prod/release：控制台 + JSON 结构化文件 -->
+    <springProfile name="prod,release">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_JSON"/>
+        </root>
+        <logger name="com.dp.plat" level="INFO"/>
+    </springProfile>
+
+    <!-- 兜底：未指定 profile 时默认控制台输出 -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

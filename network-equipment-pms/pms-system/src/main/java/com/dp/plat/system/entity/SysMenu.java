@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * System menu entity.
- * menuType: M=directory, C=menu, F=button.
+ * menuType: M=directory, C=menu, F=button, L=lowcode page.
  */
 @Data
 @Builder
@@ -27,7 +27,7 @@ public class SysMenu extends BaseEntity {
 
     private String menuName;
 
-    /** M=directory, C=menu, F=button. */
+    /** M=directory, C=menu, F=button, L=lowcode page. */
     private String menuType;
 
     private String path;

@@ -127,7 +127,7 @@ describe('useUserStore', () => {
 
       const store = useUserStore()
       store.token = 'some-token'
-      store.userInfo = { id: 1, username: 'x', nickname: 'x' } as any
+      store.userInfo = { id: 1, username: 'x', nickname: 'x' }
       store.permissions = ['x']
 
       await store.logout()
@@ -159,7 +159,7 @@ describe('useUserStore', () => {
     it('clears local state without calling the logout API or redirecting', () => {
       const store = useUserStore()
       store.token = 'some-token'
-      store.userInfo = { id: 1, username: 'x', nickname: 'x' } as any
+      store.userInfo = { id: 1, username: 'x', nickname: 'x' }
       store.permissions = ['x']
 
       store.reset()

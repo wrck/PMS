@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
@@ -55,6 +56,9 @@ class ProjectServiceImplTest {
 
     @Mock
     private WorkflowService workflowService;
+
+    @Mock
+    private BusinessMetrics businessMetrics;
 
     @InjectMocks
     private ProjectServiceImpl projectService;

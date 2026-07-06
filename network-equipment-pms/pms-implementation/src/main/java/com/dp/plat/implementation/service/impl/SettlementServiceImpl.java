@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.implementation.entity.Agent;
@@ -12,7 +13,10 @@ import com.dp.plat.implementation.entity.SettlementDetail;
 import com.dp.plat.implementation.mapper.AgentMapper;
 import com.dp.plat.implementation.mapper.SettlementDetailMapper;
 import com.dp.plat.implementation.mapper.SettlementMapper;
+import com.dp.plat.implementation.saga.SettlementSaga;
+import com.dp.plat.implementation.saga.SettlementSagaContext;
 import com.dp.plat.implementation.service.ISettlementService;
+import com.dp.plat.common.saga.SagaCoordinator.SagaResult;
 import com.dp.plat.integration.model.fp.FpResponse;
 import com.dp.plat.integration.model.fp.SettlementPushDetail;
 import com.dp.plat.integration.model.fp.SettlementPushRequest;
@@ -71,6 +75,9 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
     private final WorkflowService workflowService;
     private final FpIntegrationService fpIntegrationService;
     private final INotificationService notificationService;
+    private final BusinessMetrics businessMetrics;
+    /** 结算单提交 Saga 协调器，submit 方法委托其编排多步骤流程与补偿。 */
+    private final SettlementSaga settlementSaga;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -108,6 +115,8 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
         settlement.setApplyTime(LocalDateTime.now());
 
         this.save(settlement);
+        // 业务指标：记录结算金额分布（Settlement 无币种字段，默认 CNY）
+        businessMetrics.recordSettlementAmount(settlement.getTotalAmount().doubleValue(), "CNY");
 
         if (details != null && !details.isEmpty()) {
             for (SettlementDetail detail : details) {
@@ -169,6 +178,20 @@ public class SettlementServiceImpl extends ServiceImpl<SettlementMapper, Settlem
 
         // Notify the applicant the settlement has been rejected.
         sendSettlementNotification(settlement, "已被驳回", BIZ_TYPE_SETTLEMENT_REJECTED);
+    }
+
+    @Override
+    public void submit(Long settlementId) {
+        Settlement settlement = loadOrThrow(settlementId);
+        SagaResult<SettlementSagaContext> result = settlementSaga.submit(settlement);
+        if (!result.isSuccess()) {
+            log.error("结算单提交 Saga 失败 settlementId={} 已执行步骤={} 已补偿步骤={} 错误={}",
+                    settlementId, result.getExecutedSteps(), result.getCompensatedSteps(),
+                    result.getErrorMessage());
+            throw new BusinessException("结算单提交失败: " + result.getErrorMessage());
+        }
+        log.info("结算单提交 Saga 成功 settlementId={} 已执行步骤={}",
+                settlementId, result.getExecutedSteps());
     }
 
     /**

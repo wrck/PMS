@@ -1,5 +1,6 @@
 package com.dp.plat.integration.controller;
 
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.integration.d365.entity.D365Invoice;
 import com.dp.plat.integration.dto.FpHealthDto;
@@ -9,7 +10,9 @@ import com.dp.plat.integration.model.fp.SettlementPushRequest;
 import com.dp.plat.integration.service.FpIntegrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,19 +41,24 @@ public class FpIntegrationController {
 
     @Operation(summary = "Manually push a settlement to FP")
     @PostMapping("/push-settlement")
-    public Result<FpResponse<String>> pushSettlement(@RequestBody SettlementPushRequest request) {
+    @PreAuthorize("hasAuthority('integration:fp:push')")
+    @OperLog(title = "FP集成", businessType = 2)
+    public Result<FpResponse<String>> pushSettlement(@Valid @RequestBody SettlementPushRequest request) {
         return Result.ok(fpIntegrationService.pushSettlement(request));
     }
 
     @Operation(summary = "Push an invoice image to FP OCR")
     @PostMapping(value = "/ocr-invoice", consumes = "multipart/form-data")
+    @PreAuthorize("hasAuthority('integration:fp:ocr')")
+    @OperLog(title = "FP集成", businessType = 2)
     public Result<D365Invoice> ocrInvoice(@RequestParam("file") MultipartFile file) {
         return Result.ok(fpIntegrationService.ocrInvoice(file));
     }
 
     @Operation(summary = "Receive an FP payment callback")
     @PostMapping("/payment-callback")
-    public Result<Void> paymentCallback(@RequestBody PaymentCallbackDto callback) {
+    @OperLog(title = "FP集成-支付回调", businessType = 2, isSaveResponseData = false)
+    public Result<Void> paymentCallback(@Valid @RequestBody PaymentCallbackDto callback) {
         fpIntegrationService.handlePaymentCallback(callback);
         return Result.ok();
     }

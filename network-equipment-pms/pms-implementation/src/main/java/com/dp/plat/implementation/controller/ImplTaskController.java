@@ -1,13 +1,16 @@
 package com.dp.plat.implementation.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.service.IImplTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,18 +34,24 @@ public class ImplTaskController {
 
     @Operation(summary = "Assign OEM implementation task")
     @PostMapping("/oem/assign")
-    public Result<ImplTask> assignOem(@RequestBody ImplTask task) {
+    @PreAuthorize("hasAuthority('implementation:implTask:add')")
+    @OperLog(title = "实施任务管理", businessType = 1)
+    public Result<ImplTask> assignOem(@Valid @RequestBody ImplTask task) {
         return Result.ok(implTaskService.assignOemTask(task));
     }
 
     @Operation(summary = "Assign agent implementation task")
     @PostMapping("/agent/assign")
-    public Result<ImplTask> assignAgent(@RequestBody ImplTask task) {
+    @PreAuthorize("hasAuthority('implementation:implTask:add')")
+    @OperLog(title = "实施任务管理", businessType = 1)
+    public Result<ImplTask> assignAgent(@Valid @RequestBody ImplTask task) {
         return Result.ok(implTaskService.assignAgentTask(task));
     }
 
     @Operation(summary = "Accept a task")
     @PostMapping("/{id}/accept")
+    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> accept(@PathVariable Long id) {
         implTaskService.acceptTask(id);
         return Result.ok();
@@ -50,6 +59,8 @@ public class ImplTaskController {
 
     @Operation(summary = "Start a task")
     @PostMapping("/{id}/start")
+    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> start(@PathVariable Long id) {
         implTaskService.startTask(id);
         return Result.ok();
@@ -57,13 +68,17 @@ public class ImplTaskController {
 
     @Operation(summary = "Report task progress")
     @PostMapping("/{id}/progress")
-    public Result<Void> reportProgress(@PathVariable Long id, @RequestBody ImplProgress progress) {
+    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @OperLog(title = "实施任务管理", businessType = 2)
+    public Result<Void> reportProgress(@PathVariable Long id, @Valid @RequestBody ImplProgress progress) {
         implTaskService.reportProgress(id, progress);
         return Result.ok();
     }
 
     @Operation(summary = "Complete a task")
     @PostMapping("/{id}/complete")
+    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> complete(@PathVariable Long id, @RequestParam(required = false) String description) {
         implTaskService.completeTask(id, description);
         return Result.ok();
@@ -71,6 +86,8 @@ public class ImplTaskController {
 
     @Operation(summary = "Confirm a completed task")
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAuthority('implementation:implTask:confirm')")
+    @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> confirm(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         implTaskService.confirmTask(id, opinion);
         return Result.ok();
@@ -78,6 +95,8 @@ public class ImplTaskController {
 
     @Operation(summary = "Reject a task")
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('implementation:implTask:confirm')")
+    @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         implTaskService.rejectTask(id, opinion);
         return Result.ok();

@@ -1,11 +1,16 @@
 package com.dp.plat.project.controller;
 
+import com.dp.plat.common.annotation.Idempotent;
+import com.dp.plat.common.annotation.OperLog;
+import com.dp.plat.common.annotation.RateLimit;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.service.IProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +37,11 @@ public class ProjectController {
 
     @Operation(summary = "创建项目")
     @PostMapping
-    public Result<Project> create(@RequestBody Project project) {
+    @PreAuthorize("hasAuthority('project:project:add')")
+    @OperLog(title = "项目管理", businessType = 1)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @Idempotent
+    public Result<Project> create(@Valid @RequestBody Project project) {
         return projectService.createProject(project);
     }
 
@@ -53,18 +62,28 @@ public class ProjectController {
 
     @Operation(summary = "更新项目")
     @PutMapping
-    public Result<?> update(@RequestBody Project project) {
+    @PreAuthorize("hasAuthority('project:project:edit')")
+    @OperLog(title = "项目管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
+    @Idempotent
+    public Result<?> update(@Valid @RequestBody Project project) {
         return projectService.updateProject(project);
     }
 
     @Operation(summary = "删除项目")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('project:project:remove')")
+    @OperLog(title = "项目管理", businessType = 3)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<?> delete(@PathVariable Long id) {
         return projectService.deleteProject(id);
     }
 
     @Operation(summary = "审批立项项目")
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('project:project:approve')")
+    @OperLog(title = "项目管理", businessType = 2)
+    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Project> approve(@PathVariable Long id) {
         return projectService.approveProject(id);
     }

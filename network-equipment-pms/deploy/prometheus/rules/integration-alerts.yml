@@ -1,0 +1,52 @@
+# 集成层告警规则（D365/FP/OA + 熔断器）
+groups:
+  - name: integration-alerts
+    interval: 30s
+    rules:
+      - alert: CircuitBreakerOpen
+        expr: |
+          resilience4j_circuitbreaker_states{application="pms", state="open"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          application: pms
+          category: integration
+        annotations:
+          summary: "熔断器已开启 ({{ $labels.name }})"
+          description: "Resilience4j 熔断器 {{ $labels.name }} 处于 open 状态超过 1 分钟，集成服务可能不可用。"
+
+      - alert: IntegrationFailure
+        expr: |
+          sum by (system) (rate(pms_integration_failures_total{application="pms"}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          application: pms
+          category: integration
+        annotations:
+          summary: "集成调用失败率过高 ({{ $labels.system }})"
+          description: "{{ $labels.system }} 集成失败速率 {{ $value }}/s 超过 0.5/s，持续 5 分钟。"
+
+      - alert: IntegrationHealthDown
+        expr: |
+          pms_integration_health{application="pms"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          application: pms
+          category: integration
+        annotations:
+          summary: "集成健康检查异常 ({{ $labels.system }})"
+          description: "{{ $labels.system }} 集成健康检查为 down，持续 2 分钟。"
+
+      - alert: IntegrationLatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le, system) (rate(pms_integration_duration_seconds_bucket{application="pms"}[5m]))) > 5
+        for: 5m
+        labels:
+          severity: warning
+          application: pms
+          category: integration
+        annotations:
+          summary: "集成响应时间过长 ({{ $labels.system }})"
+          description: "{{ $labels.system }} P95 响应时间 {{ $value }}s 超过 5s，持续 5 分钟。"

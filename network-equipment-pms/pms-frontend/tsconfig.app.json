@@ -9,9 +9,23 @@
       "@/*": ["./src/*"]
     },
 
-    /* Linting */
+    /* Strict Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    /* Linting
+     * noUnusedLocals / noUnusedParameters 故意保持 false：
+     * TypeScript 在 tsconfig 中仅支持「error」级别，不支持 warn。
+     * 改为 true 会因现存代码的少量未使用变量直接 fail build，
+     * 与「警告而非错误，避免破坏现有代码」的要求冲突，故维持 false，
+     * 交由 ESLint @typescript-eslint/no-unused-vars 规则以 warn 级别覆盖。
+     */
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "noImplicitReturns": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },

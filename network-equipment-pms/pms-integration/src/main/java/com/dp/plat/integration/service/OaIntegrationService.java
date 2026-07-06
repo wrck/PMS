@@ -1,6 +1,7 @@
 package com.dp.plat.integration.service;
 
 import com.dp.plat.integration.dto.OaHealthDto;
+import com.dp.plat.integration.entity.IntegrationLog;
 import com.dp.plat.integration.model.oa.OaTodoRequest;
 
 /**
@@ -49,6 +50,22 @@ public interface OaIntegrationService {
      * @return {@code true} if the OA API returned a success status
      */
     boolean transferTask(String businessKey, String newHandlerUserId);
+
+    /**
+     * Retry a previously logged OA call by log id. Re-dispatches the stored
+     * request body to the stored request URL and updates the log status.
+     *
+     * <p>Called by {@link com.dp.plat.integration.service.RetryService#scheduledRetry()}
+     * (the scheduled retry job) and by manual retry endpoints. Unlike the
+     * primary {@code pushTodo}/{@code completeTodo}/{@code transferTask}
+     * methods, this method is NOT annotated with {@code @Retry}/
+     * {@code @CircuitBreaker}/{@code @Bulkhead} to avoid stacking an
+     * additional Resilience4j retry layer on top of the scheduler-driven retry.</p>
+     *
+     * @param logId the integration log id
+     * @return the refreshed log record after the retry attempt
+     */
+    IntegrationLog retry(Long logId);
 
     /**
      * Health check for the OA adapter.
