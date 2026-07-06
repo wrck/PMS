@@ -312,7 +312,7 @@ class ChangeRequestServiceImplTest {
         cr.setImpactScope("新增 2 个站点");
         when(changeRequestMapper.selectById(1L)).thenReturn(cr);
         Mockito.doReturn(true).when(changeRequestService).updateById(any(ChangeRequest.class));
-        when(workflowServiceProvider.getIfAvailable()).thenReturn(null);
+        // processInstanceId 为 null 时 completeReviewTask 提前 return，不会调用 workflowServiceProvider
 
         Result<ChangeRequest> result = changeRequestService.approve(1L, "ccb-approver");
 
@@ -340,7 +340,7 @@ class ChangeRequestServiceImplTest {
         // impactSchedule/Cost/Scope 均为 null
         when(changeRequestMapper.selectById(1L)).thenReturn(cr);
         Mockito.doReturn(true).when(changeRequestService).updateById(any(ChangeRequest.class));
-        when(workflowServiceProvider.getIfAvailable()).thenReturn(null);
+        // processInstanceId 为 null 时 completeReviewTask 提前 return，不会调用 workflowServiceProvider
 
         changeRequestService.approve(1L, "approver");
 
@@ -372,7 +372,7 @@ class ChangeRequestServiceImplTest {
         ChangeRequest cr = sampleCr(1L, "CR-2024-0001", STATUS_UNDER_REVIEW);
         when(changeRequestMapper.selectById(1L)).thenReturn(cr);
         Mockito.doReturn(true).when(changeRequestService).updateById(any(ChangeRequest.class));
-        when(workflowServiceProvider.getIfAvailable()).thenReturn(null);
+        // processInstanceId 为 null 时 completeReviewTask 提前 return，不会调用 workflowServiceProvider
 
         Result<ChangeRequest> result = changeRequestService.reject(1L, "不符合规范");
 

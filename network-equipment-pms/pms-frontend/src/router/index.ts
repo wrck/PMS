@@ -12,6 +12,13 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: '登录', requiresAuth: false }
   },
   {
+    // 帮助中心：公开访问（无需登录），后端 /api/system/help-content 也已放行
+    path: '/help',
+    name: 'Help',
+    component: () => import('@/views/help/index.vue'),
+    meta: { title: '帮助中心', requiresAuth: false }
+  },
+  {
     path: '/',
     component: Layout,
     redirect: '/dashboard',
@@ -241,6 +248,20 @@ export const routes: RouteRecordRaw[] = [
         name: 'LowCodeRender',
         component: () => import('@/views/lowcode/render/index.vue'),
         meta: { title: '低代码页面', requiresAuth: true, hidden: true }
+      },
+      {
+        // 系统状态：后端健康 / 磁盘 / 反馈统计 / 近期动态
+        path: 'system-status',
+        name: 'SystemStatus',
+        component: () => import('@/views/system-status/index.vue'),
+        meta: { title: '系统状态', icon: 'Monitor', requiresAuth: true }
+      },
+      {
+        // 版本日志：按版本展示变更记录
+        path: 'changelog',
+        name: 'Changelog',
+        component: () => import('@/views/changelog/index.vue'),
+        meta: { title: '版本日志', icon: 'Notebook', requiresAuth: true }
       }
     ]
   },

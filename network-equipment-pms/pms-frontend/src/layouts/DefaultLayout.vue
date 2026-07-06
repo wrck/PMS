@@ -8,6 +8,8 @@ import { useWebSocketStore } from '@/stores/websocket'
 import { routeLoading } from '@/directives/loading'
 import TagsView from '@/components/TagsView/index.vue'
 import NotificationBell from '@/components/NotificationBell/index.vue'
+import UserGuide from '@/components/UserGuide/index.vue'
+import FeedbackButton from '@/components/FeedbackButton/index.vue'
 
 interface MenuLeaf {
   title: string
@@ -116,9 +118,11 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     children: [
       { title: '消息中心', path: '/notification', icon: 'Bell' },
       { title: '集成健康', path: '/integration-health', icon: 'Monitor' },
+      { title: '系统状态', path: '/system-status', icon: 'Monitor' },
       { title: '缓存管理', path: '/system/cache', icon: 'Coin' },
       { title: '定时任务', path: '/system/schedule', icon: 'Timer' },
-      { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' }
+      { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' },
+      { title: '版本日志', path: '/changelog', icon: 'Notebook' }
     ]
   },
   { title: '报表统计', path: '/report', icon: 'TrendCharts' },
@@ -164,6 +168,19 @@ function handleUserCommand(command: string) {
   } else if (command === 'dashboard') {
     router.push('/dashboard')
   }
+}
+
+/** 用户引导组件实例（用于手动触发引导） */
+const userGuideRef = ref<InstanceType<typeof UserGuide> | null>(null)
+
+/** 跳转到帮助中心页 */
+function goHelp() {
+  router.push('/help')
+}
+
+/** 手动触发用户引导（点击「引导」按钮时调用） */
+function startGuide() {
+  userGuideRef.value?.start()
 }
 
 // 已登录时建立 WebSocket 连接，组件销毁时断开
@@ -299,6 +316,16 @@ onBeforeUnmount(() => {
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <el-tooltip content="功能引导" placement="bottom">
+            <el-icon class="header-action-btn" :size="18" @click="startGuide">
+              <Guide />
+            </el-icon>
+          </el-tooltip>
+          <el-tooltip content="帮助中心" placement="bottom">
+            <el-icon class="header-action-btn" :size="18" @click="goHelp">
+              <QuestionFilled />
+            </el-icon>
+          </el-tooltip>
           <NotificationBell class="header-notification" />
           <el-dropdown @command="handleUserCommand">
             <span class="user-info">
@@ -332,6 +359,12 @@ onBeforeUnmount(() => {
         </router-view>
       </el-main>
     </el-container>
+
+    <!-- 用户引导：首次登录自动触发，也可通过顶部「引导」按钮手动触发 -->
+    <UserGuide ref="userGuideRef" />
+
+    <!-- 浮动反馈按钮：右下角悬浮 -->
+    <FeedbackButton />
   </el-container>
 </template>
 
@@ -403,10 +436,21 @@ onBeforeUnmount(() => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.header-action-btn {
+  cursor: pointer;
+  color: #5a5e66;
+  outline: none;
+}
+
+.header-action-btn:hover {
+  color: #409eff;
 }
 
 .header-notification {
-  margin-right: 16px;
+  margin-right: 4px;
   display: inline-flex;
   align-items: center;
 }

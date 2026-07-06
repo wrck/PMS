@@ -46,6 +46,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        // 帮助中心：list/{id}/categories 公开访问（无需登录即可浏览帮助文档）
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/system/help-content/list",
+                                "/api/system/help-content/categories",
+                                "/api/system/help-content/*").permitAll()
                         // Actuator 端点放行（由 Actuator 自身安全或网络层控制访问）
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/doc.html").permitAll()
