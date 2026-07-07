@@ -79,7 +79,8 @@ class LowCodeEntityServiceImplTest {
         ReflectionTestUtils.setField(entityService, "baseMapper", entityMapper);
 
         LowCodeEntity entity = LowCodeEntity.builder()
-                .id(1L).code("device").tableName("pms_lc_device").build();
+                .code("device").tableName("pms_lc_device").build();
+        entity.setId(1L);
         LowCodeField field = LowCodeField.builder()
                 .entityId(1L).name("id").fieldType("LONG").primaryKey(1).build();
 
@@ -99,7 +100,8 @@ class LowCodeEntityServiceImplTest {
         ReflectionTestUtils.setField(entityService, "baseMapper", entityMapper);
 
         LowCodeEntity entity = LowCodeEntity.builder()
-                .id(1L).code("device").tableName("pms_lc_device").build();
+                .code("device").tableName("pms_lc_device").build();
+        entity.setId(1L);
         LowCodeField idField = LowCodeField.builder()
                 .name("id").fieldType("LONG").primaryKey(1).nullable(0).build();
 
@@ -122,7 +124,8 @@ class LowCodeEntityServiceImplTest {
         ReflectionTestUtils.setField(entityService, "baseMapper", entityMapper);
 
         LowCodeEntity entity = LowCodeEntity.builder()
-                .id(1L).code("device").tableName("pms_lc_device").status("DRAFT").build();
+                .code("device").tableName("pms_lc_device").status("DRAFT").build();
+        entity.setId(1L);
         LowCodeField field = LowCodeField.builder()
                 .name("id").fieldType("LONG").primaryKey(1).build();
 
@@ -145,7 +148,8 @@ class LowCodeEntityServiceImplTest {
         ReflectionTestUtils.setField(entityService, "baseMapper", entityMapper);
 
         LowCodeEntity existing = LowCodeEntity.builder()
-                .id(2L).tableName("pms_lc_device").build();
+                .tableName("pms_lc_device").build();
+        existing.setId(2L);
         when(entityMapper.selectOne(any())).thenReturn(existing);
 
         assertTrue(entityService.isTableNameExists("pms_lc_device", 1L));

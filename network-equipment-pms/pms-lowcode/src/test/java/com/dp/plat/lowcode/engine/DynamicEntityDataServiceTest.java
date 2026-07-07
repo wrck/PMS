@@ -34,8 +34,10 @@ class DynamicEntityDataServiceTest {
     private DynamicEntityDataService dataService;
 
     private LowCodeEntity buildEntity() {
-        return LowCodeEntity.builder()
-                .id(1L).code("device").tableName("pms_lc_device").build();
+        LowCodeEntity entity = LowCodeEntity.builder()
+                .code("device").tableName("pms_lc_device").build();
+        entity.setId(1L);
+        return entity;
     }
 
     private List<LowCodeField> buildFields() {
@@ -57,8 +59,8 @@ class DynamicEntityDataServiceTest {
     void list_success() {
         when(entityService.getOne(any())).thenReturn(buildEntity());
         when(entityService.getDesign(any())).thenReturn(buildDesign());
-        when(jdbcTemplate.queryForObject(anyString(), eq(Long.class), any())).thenReturn(5L);
-        when(jdbcTemplate.queryForList(anyString(), any())).thenReturn(
+        when(jdbcTemplate.queryForObject(anyString(), eq(Long.class), any(Object[].class))).thenReturn(5L);
+        when(jdbcTemplate.queryForList(anyString(), any(Object[].class))).thenReturn(
                 List.of(Map.of("id", 1, "device_name", "Router")));
 
         Map<String, Object> result = dataService.list("device", 1, 10, null);
@@ -72,7 +74,7 @@ class DynamicEntityDataServiceTest {
     void getById_success() {
         when(entityService.getOne(any())).thenReturn(buildEntity());
         when(entityService.getDesign(any())).thenReturn(buildDesign());
-        when(jdbcTemplate.queryForMap(anyString(), any())).thenReturn(
+        when(jdbcTemplate.queryForMap(anyString(), any(Object[].class))).thenReturn(
                 Map.of("id", 1, "device_name", "Router"));
 
         Map<String, Object> result = dataService.getById("device", 1L);
@@ -85,14 +87,14 @@ class DynamicEntityDataServiceTest {
     void create_success() {
         when(entityService.getOne(any())).thenReturn(buildEntity());
         when(entityService.getDesign(any())).thenReturn(buildDesign());
-        when(jdbcTemplate.update(anyString(), any())).thenReturn(1);
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
         when(jdbcTemplate.queryForObject(eq("SELECT LAST_INSERT_ID()"), eq(Long.class)))
                 .thenReturn(10L);
 
         Long id = dataService.create("device", Map.of("device_name", "Switch", "hacked_field", "x"));
 
         assertEquals(10L, id);
-        verify(jdbcTemplate).update(contains("INSERT INTO"), any());
+        verify(jdbcTemplate).update(contains("INSERT INTO"), any(Object[].class));
     }
 
     @Test
@@ -103,7 +105,7 @@ class DynamicEntityDataServiceTest {
 
         dataService.update("device", 1L, Map.of("device_name", "Updated", "id", 999));
 
-        verify(jdbcTemplate).update(contains("UPDATE"), any(), any());
+        verify(jdbcTemplate).update(contains("UPDATE"), any(Object[].class));
     }
 
     @Test

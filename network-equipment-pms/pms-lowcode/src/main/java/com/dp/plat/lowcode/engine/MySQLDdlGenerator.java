@@ -159,8 +159,9 @@ public class MySQLDdlGenerator implements DdlGenerator {
             refTable = currentTableName;
         }
 
-        String onDelete = "ON DELETE " + relation.getOnDelete();
-        String onUpdate = "ON UPDATE " + relation.getOnUpdate();
+        // 将下划线分隔的策略名转为 SQL 语法（SET_NULL → SET NULL, NO_ACTION → NO ACTION）
+        String onDelete = "ON DELETE " + relation.getOnDelete().replace("_", " ");
+        String onUpdate = "ON UPDATE " + relation.getOnUpdate().replace("_", " ");
         return "CONSTRAINT `fk_" + relation.getFromFieldName() + "` FOREIGN KEY (`"
                 + relation.getFromFieldName() + "`) REFERENCES `" + refTable + "`(`id`) "
                 + onDelete + " " + onUpdate;
