@@ -54,7 +54,7 @@ function createClient(token?: string): AxiosInstance {
   return client
 }
 
-describeE2e('Project Lifecycle E2E', () => {
+describeE2E('Project Lifecycle E2E', () => {
   let token: string
   let authClient: AxiosInstance
   let projectId: number

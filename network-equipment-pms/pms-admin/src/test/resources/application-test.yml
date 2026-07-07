@@ -1,0 +1,107 @@
+# 测试环境配置（Task 12 集成测试）
+# 通过 @ActiveProfiles("test") 激活，配合 Testcontainers 提供的动态数据源覆盖以下本地配置。
+server:
+  port: 0
+
+spring:
+  # 数据源默认值：实际值由 AbstractIntegrationTest 的 @DynamicPropertySource 注入 Testcontainers MySQL 地址
+  datasource:
+    url: jdbc:mysql://localhost:3306/network_equipment_pms_test?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: test
+    password: test
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 30000
+  # Redis 默认值：实际值由 @DynamicPropertySource 注入 Testcontainers Redis 地址
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+      timeout: 3000
+  # Flyway：保持开启，应用启动时自动对 Testcontainers MySQL 执行迁移
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    clean-disabled: false
+  # Quartz：本项目未引入 Quartz 依赖，此处显式关闭以兼容未来可能引入的场景
+  quartz:
+    auto-startup: false
+
+mybatis-plus:
+  mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT：测试专用密钥与较短过期时间（Base64 编码的 32 字节 HMAC-SHA256 密钥）
+jwt:
+  secret: dGVzdC1qd3Qtc2VjcmV0LWtleS1mb3ItaW50ZWdyYXRpb24tdGVzdHMtb25seQ==
+  expiration: 3600000
+
+app:
+  security:
+    encrypt-key: dGVzdC1lbmNyeXB0LWtleS1mb3ItaW50ZWdyYXRpb24tdGVzdHMtb25seQ==
+
+# 关闭外部集成（D365 / FP / OA）的真实调用，使用 dummy 地址，避免测试期间发起外部请求
+d365:
+  base-url: http://localhost:0/dummy
+  token-url: http://localhost:0/dummy/token
+  client-id: dummy
+  client-secret: dummy
+  scope: dummy
+  grant-type: client_credentials
+fp:
+  base-url: http://localhost:0/dummy
+  token-url: http://localhost:0/dummy/token
+  client-id: dummy
+  client-secret: dummy
+integration:
+  retry:
+    interval: 300000
+    max-retry: 1
+    backoff-multiplier: 2
+  oa:
+    base-url: http://localhost:0/dummy
+    token-url: http://localhost:0/dummy/token
+    client-id: dummy
+    client-secret: dummy
+
+# Resilience4j：测试环境关闭熔断健康指标注册，降低上下文加载开销
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: false
+
+# Actuator：测试环境仅暴露 health 端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+# OpenTelemetry：测试环境关闭链路追踪上报
+otel:
+  traces:
+    exporter: none
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+
+# Prometheus 指标导出关闭
+springdoc:
+  swagger-ui:
+    enabled: false

@@ -75,26 +75,26 @@
 
 ## Phase 3: 测试基础设施
 
-- [ ] Task 11: 5 个核心模块单元测试
-  - [ ] SubTask 11.1: pms-project Service 覆盖率 ≥70%
-  - [ ] SubTask 11.2: pms-asset Service 覆盖率 ≥70%
-  - [ ] SubTask 11.3: pms-implementation Service 覆盖率 ≥70%
-  - [ ] SubTask 11.4: pms-governance Service 覆盖率 ≥70%
-  - [ ] SubTask 11.5: pms-notification + pms-file Service 覆盖率 ≥70%
+- [x] Task 11: 5 个核心模块单元测试
+  - [x] SubTask 11.1: pms-project Service 覆盖率 ≥70%
+  - [x] SubTask 11.2: pms-asset Service 覆盖率 ≥70%
+  - [x] SubTask 11.3: pms-implementation Service 覆盖率 ≥70%
+  - [x] SubTask 11.4: pms-governance Service 覆盖率 ≥70%
+  - [x] SubTask 11.5: pms-notification + pms-file Service 覆盖率 ≥70%
 
-- [ ] Task 12: Testcontainers 集成测试
-  - [ ] SubTask 12.1: 引入 testcontainers 1.19.7 + mysql/redis/flowable
-  - [ ] SubTask 12.2: 修复 `ProjectControllerIntegrationTest`（移除 @Disabled）
-  - [ ] SubTask 12.3: 新增 `AssetControllerIntegrationTest`
-  - [ ] SubTask 12.4: 新增 `SettlementControllerIntegrationTest`
-  - [ ] SubTask 12.5: 新增 `WorkflowControllerIntegrationTest`
+- [x] Task 12: Testcontainers 集成测试
+  - [x] SubTask 12.1: 引入 testcontainers 1.19.7 + mysql/redis/flowable
+  - [x] SubTask 12.2: 修复 `ProjectControllerIntegrationTest`（移除 @Disabled）
+  - [x] SubTask 12.3: 新增 `AssetControllerIntegrationTest`
+  - [x] SubTask 12.4: 新增 `SettlementControllerIntegrationTest`
+  - [x] SubTask 12.5: 新增 `WorkflowControllerIntegrationTest`
 
-- [ ] Task 13: 集成测试 + 前端测试补齐
-  - [ ] SubTask 13.1: WebSocket 集成测试
-  - [ ] SubTask 13.2: 文件上传/下载/EXIF 集成测试
-  - [ ] SubTask 13.3: Excel 导入导出集成测试
-  - [ ] SubTask 13.4: 前端 Vitest 组件 + store + 工具测试
-  - [ ] SubTask 13.5: 前端 Playwright E2E 测试
+- [x] Task 13: 集成测试 + 前端测试补齐
+  - [x] SubTask 13.1: WebSocket 集成测试
+  - [x] SubTask 13.2: 文件上传/下载/EXIF 集成测试
+  - [x] SubTask 13.3: Excel 导入导出集成测试
+  - [x] SubTask 13.4: 前端 Vitest 组件 + store + 工具测试
+  - [x] SubTask 13.5: 前端 Playwright E2E 测试
 
 ## Phase 4: 数据完整性
 
@@ -199,12 +199,12 @@
   - [x] SubTask 27.3: 前端设计器 + 渲染器组件
   - [x] SubTask 27.4: 预置 4 个标准模板
 
-- [ ] Task 28: 低代码页面路由与权限集成
-  - [ ] SubTask 28.1: 前端 `/lowcode/:pageCode` 动态路由
-  - [ ] SubTask 28.2: 前端 `views/lowcode/render/index.vue` 通用渲染入口
-  - [ ] SubTask 28.3: 后端 `LowCodePermissionController` 权限校验接口
-  - [ ] SubTask 28.4: 菜单管理增加"低代码页面"类型 + `permission` 字段
-  - [ ] SubTask 28.5: 集成测试验证权限
+- [x] Task 28: 低代码页面路由与权限集成
+  - [x] SubTask 28.1: 前端 `/lowcode/:pageCode` 动态路由
+  - [x] SubTask 28.2: 前端 `views/lowcode/render/index.vue` 通用渲染入口
+  - [x] SubTask 28.3: 后端 `LowCodePermissionController` 权限校验接口
+  - [x] SubTask 28.4: 菜单管理增加"低代码页面"类型 + `permission` 字段
+  - [x] SubTask 28.5: 集成测试验证权限
 
 ## Phase 8: 前端类型安全与 UI 完善
 
@@ -231,27 +231,27 @@
 
 ## Phase 9: 文档/用户引导/技术支持
 
-- [ ] Task 32: 部署文档与运维手册
-  - [ ] SubTask 32.1: `docs/deployment.md`（Docker Compose + 蓝绿部署 + 回滚 + 配置）
-  - [ ] SubTask 32.2: `docs/operations.md`（备份恢复 + DR + 日志 + 监控 + 告警）
-  - [ ] SubTask 32.3: `docs/troubleshooting.md`（FAQ + 错误码 + 故障树）
-  - [ ] SubTask 32.4: `docs/api-spec.md`（SpringDoc + 鉴权 + 错误规范）
-  - [ ] SubTask 32.5: `docs/lowcode-guide.md`（设计器 + Schema + 模板）
+- [x] Task 32: 部署文档与运维手册
+  - [x] SubTask 32.1: `docs/deployment.md`（Docker Compose + 蓝绿部署 + 回滚 + 配置）
+  - [x] SubTask 32.2: `docs/operations.md`（备份恢复 + DR + 日志 + 监控 + 告警）
+  - [x] SubTask 32.3: `docs/troubleshooting.md`（FAQ + 错误码 + 故障树）
+  - [x] SubTask 32.4: `docs/api-spec.md`（SpringDoc + 鉴权 + 错误规范）
+  - [x] SubTask 32.5: `docs/lowcode-guide.md`（设计器 + Schema + 模板）
 
-- [ ] Task 33: 用户引导系统
-  - [ ] SubTask 33.1: 前端 `components/UserGuide/index.vue`（driver.js 5 步引导）
-  - [ ] SubTask 33.2: `composables/useFirstLogin.ts`（首次登录检测）
-  - [ ] SubTask 33.3: 前端 `components/HelpBubble/index.vue`（功能气泡）
-  - [ ] SubTask 33.4: 前端 `views/help/index.vue`（帮助中心）
-  - [ ] SubTask 33.5: 后端 `/api/system/help-content` 接口
+- [x] Task 33: 用户引导系统
+  - [x] SubTask 33.1: 前端 `components/UserGuide/index.vue`（driver.js 5 步引导）
+  - [x] SubTask 33.2: `composables/useFirstLogin.ts`（首次登录检测）
+  - [x] SubTask 33.3: 前端 `components/HelpBubble/index.vue`（功能气泡）
+  - [x] SubTask 33.4: 前端 `views/help/index.vue`（帮助中心）
+  - [x] SubTask 33.5: 后端 `/api/system/help-content` 接口
 
-- [ ] Task 34: 技术支持与反馈机制
-  - [ ] SubTask 34.1: 前端 `components/FeedbackButton/index.vue`（反馈表单）
-  - [ ] SubTask 34.2: 后端 `FeedbackController` + `Feedback` 实体 + Mapper/Service
-  - [ ] SubTask 34.3: Flyway V28 创建 `sys_feedback` 表
-  - [ ] SubTask 34.4: 前端 `views/system-status/index.vue`（系统状态页）
-  - [ ] SubTask 34.5: 前端 `views/changelog/index.vue`（版本日志）
-  - [ ] SubTask 34.6: `CHANGELOG.md`（Keep a Changelog 格式）
+- [x] Task 34: 技术支持与反馈机制
+  - [x] SubTask 34.1: 前端 `components/FeedbackButton/index.vue`（反馈表单）
+  - [x] SubTask 34.2: 后端 `FeedbackController` + `Feedback` 实体 + Mapper/Service
+  - [x] SubTask 34.3: Flyway V28 创建 `sys_feedback` 表
+  - [x] SubTask 34.4: 前端 `views/system-status/index.vue`（系统状态页）
+  - [x] SubTask 34.5: 前端 `views/changelog/index.vue`（版本日志）
+  - [x] SubTask 34.6: `CHANGELOG.md`（Keep a Changelog 格式）
 
 # Task Dependencies
 

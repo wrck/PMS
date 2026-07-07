@@ -4,3 +4,11 @@ target
 */.svn
 */.svn/*
 logs
+
+# Maven wrapper local settings (may contain credentials/proxy)
+.mvn/
+
+# Frontend test artifacts
+network-equipment-pms/pms-frontend/test-results/
+network-equipment-pms/pms-frontend/playwright-report/
+
