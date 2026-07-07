@@ -253,6 +253,30 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '版本历史', icon: 'Timer', requiresAuth: true }
       },
       {
+        path: 'lowcode/microflow-designer',
+        name: 'LowcodeMicroflowDesigner',
+        component: () => import('@/views/lowcode/microflow-designer/index.vue'),
+        meta: { title: '微流设计器', icon: 'Share', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/rule-designer',
+        name: 'LowcodeRuleDesigner',
+        component: () => import('@/views/lowcode/rule-designer/index.vue'),
+        meta: { title: '规则设计器', icon: 'Filter', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/process-designer',
+        name: 'LowcodeProcessDesigner',
+        component: () => import('@/views/lowcode/process-designer/index.vue'),
+        meta: { title: '流程设计器', icon: 'Connection', requiresAuth: true }
+      },
+      {
+        path: 'lowcode/trigger-list',
+        name: 'LowcodeTriggerList',
+        component: () => import('@/views/lowcode/trigger-list/index.vue'),
+        meta: { title: '触发器', icon: 'BellFilled', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码
