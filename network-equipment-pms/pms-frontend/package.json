@@ -14,10 +14,13 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@antv/x6": "^3.1.7",
+    "@antv/x6-vue-shape": "^3.0.2",
     "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.18.1",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.2",
+    "jsondiffpatch": "^0.7.6",
     "pinia": "^3.0.4",
     "vue": "^3.5.39",
     "vue-router": "^4.6.4",
