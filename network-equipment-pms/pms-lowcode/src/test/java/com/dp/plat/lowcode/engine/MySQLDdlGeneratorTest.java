@@ -196,4 +196,29 @@ class MySQLDdlGeneratorTest {
 
         assertTrue(sql.contains("`is_active` TINYINT(1) NOT NULL DEFAULT 1"));
     }
+
+    @Test
+    @DisplayName("DROP INDEX 语句生成")
+    void testGenerateDropIndex() {
+        String sql = generator.generateDropIndex("pms_lc_order", "idx_status");
+        assertTrue(sql.contains("DROP INDEX"), "应包含 DROP INDEX");
+        assertTrue(sql.contains("`idx_status`"), "应包含索引名");
+        assertTrue(sql.contains("`pms_lc_order`"), "应包含表名");
+    }
+
+    @Test
+    @DisplayName("ALTER COLUMN 语句生成 — 修改列类型")
+    void testGenerateAlterColumn() {
+        LowCodeField field = LowCodeField.builder()
+                .name("remark")
+                .fieldType("STRING")
+                .length(500)
+                .nullable(1)
+                .build();
+        String sql = generator.generateAlterColumn("pms_lc_order", field);
+        assertTrue(sql.contains("ALTER TABLE"), "应包含 ALTER TABLE");
+        assertTrue(sql.contains("MODIFY COLUMN"), "应使用 MODIFY COLUMN");
+        assertTrue(sql.contains("`remark`"), "应包含列名");
+        assertTrue(sql.contains("VARCHAR(500)"), "应包含新类型");
+    }
 }

@@ -109,6 +109,19 @@ public class MySQLDdlGenerator implements DdlGenerator {
         return sql.toString();
     }
 
+    @Override
+    public String generateDropIndex(String tableName, String indexName) {
+        return "DROP INDEX `" + indexName + "` ON `" + tableName + "`";
+    }
+
+    @Override
+    public String generateAlterColumn(String tableName, LowCodeField field) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE `").append(tableName).append("` MODIFY COLUMN ");
+        sb.append(buildColumnDef(field));
+        return sb.toString();
+    }
+
     private String buildColumnDef(LowCodeField field) {
         StringBuilder sb = new StringBuilder();
         sb.append("`").append(field.getName()).append("` ");
