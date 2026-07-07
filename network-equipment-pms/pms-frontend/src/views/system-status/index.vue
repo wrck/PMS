@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { get, service } from '@/utils/request'
+import service, { get } from '@/utils/request'
 import { getFeedbackStatusStats, type FeedbackStatusStats } from '@/api/feedback'
 import { getRecentActivities, type ActivityItem } from '@/api/report'
 
