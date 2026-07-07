@@ -34,6 +34,7 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
     private final LowCodeRelationMapper relationMapper;
     private final DdlGenerator ddlGenerator;
     private final LowCodeConfigVersionService configVersionService;
+    private final com.dp.plat.lowcode.engine.ddl.DdlExecutionService ddlExecutionService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -145,7 +146,7 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
             throw new IllegalArgumentException("实体不存在: " + entityId);
         }
 
-        // 生成版本快照
+        // 1. 生成版本快照（保留原有逻辑）
         EntityDesignDTO design = getDesign(entityId);
         try {
             String snapshot = objectMapper.writeValueAsString(design);
@@ -155,7 +156,16 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
             throw new RuntimeException("生成版本快照失败", e);
         }
 
-        // 更新状态
+        // 2. 执行 DDL
+        if ("DRAFT".equals(entity.getStatus())) {
+            // 首次发布：CREATE TABLE
+            ddlExecutionService.executeCreate(entityId, false);
+        } else {
+            // 已发布：增量 ALTER（不自动 DROP COLUMN）
+            ddlExecutionService.executeAlter(entityId, false);
+        }
+
+        // 3. 更新状态
         entity.setStatus("PUBLISHED");
         updateById(entity);
         return entity;
