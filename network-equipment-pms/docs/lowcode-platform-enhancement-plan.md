@@ -1,10 +1,20 @@
 # 低代码平台功能完善规划方案
 
-> **文档状态**：待评审
-> **版本**：v1.0
+> **文档状态**：评审通过 ✓
+> **版本**：v1.1（含评审决策）
 > **日期**：2026-07-07
 > **作者**：平台架构组
 > **适用项目**：network-equipment-pms / pms-lowcode 模块
+>
+> **评审决策记录（2026-07-07）**：
+> 1. 范围确认：阶段一-四（25 项功能点）覆盖核心需求，阶段五（AI）延后 ✓
+> 2. 数据建模深度：F1.1 实体设计器需支持复杂关联（多对多/自关联/级联删除）✓
+> 3. 微流 vs 规则引擎：F2.1 微流（图灵完备）与 F2.2 规则引擎（决策表）都需要 ✓
+> 4. 流程编排复用：F2.4 流程设计器复用现有 Flowable + 新增前端设计器 ✓
+> 5. 协作模式：F4.1 悲观锁优先，CRDT（F4.3）延后 ✓
+> 6. 部署灰度：F4.8 灰度发布延后到平台成熟期 ✓
+> 7. 技术选型：ER 图编辑器 X6（开源），微流编辑器 X6，Vue 节点适配器 + 交互插件（拖拽、撤销重做）✓
+> 8. 数据库范围：DDL 生成仅支持 MySQL 8.0，DDL 生成器抽象为接口预留 PostgreSQL 扩展点 ✓
 
 ---
 
@@ -151,7 +161,7 @@
 | F4.5 | 实时预览 | 多设备模拟（PC / Tablet / Mobile 尺寸切换） | P2 | 前端：DeviceSimulator（预设尺寸 + 自定义 + 横竖屏） | 低 |
 | F4.6 | 实时预览 | 编辑-预览实时同步（配置变更即刷新） | P2 | 前端：响应式 config watch + iframe postMessage | 低 |
 | F4.7 | 部署 | 一键发布流水线（校验 → 审批 → 发布 → 通知） | P2 | 后端：PublishPipeline（校验 + 审批 workflow + 发布 + 通知）；前端：发布向导 | 高 |
-| F4.8 | 部署 | 灰度发布（按用户/角色/比例放量） | P3 | 后端：GrayRelease（用户白名单 + 角色过滤 + 比例计算）；前端：灰度配置 | 高 |
+| F4.8 | 部署 | 灰度发布（按用户/角色/比例放量） | P3 | 后端：GrayRelease（用户白名单 + 角色过滤 + 比例计算）；前端：灰度配置 — **评审决策：延后到平台成熟期** | 高 |
 | F4.9 | 部署 | 回滚（一键回滚到上一版本） | P2 | 后端：复用 F1.6 版本回滚 + 发布记录 | 低 |
 
 #### 阶段五（P3 — Won't Have in this plan）：AI 辅助（后续规划）
@@ -279,19 +289,22 @@ F3.4 REST 连接器 → F3.6 连接器市场
 
 **F1.1 可视化实体设计器**
 
-- 前端：基于 [GoJS](https://gojs.net/) 或 [X6](https://x6.antv.antgroup.com/) 实现 ER 图编辑器
+- 前端：基于 [AntV X6](https://x6.antv.antgroup.com/)（开源，**评审决策选型**）实现 ER 图编辑器
   - 实体以矩形节点表示，字段以列表项展示，关联以连线表示
+  - X6 Vue 节点适配器 + 交互插件（拖拽、撤销重做、缩放、框选）
   - 属性面板：实体名/表名/业务类型 + 字段名/类型/长度/主键/索引/可空/默认值
   - 操作：新增实体/删除实体/新增字段/编辑字段/拖拽建立关联
+  - **复杂关联支持（评审决策）**：多对多（自动生成中间表）、自关联（实体自引用外键）、级联删除（CASCADE/SET NULL/RESTRICT 三种策略可选）
 - 后端：`LowCodeEntity` + `LowCodeField` + `LowCodeRelation` 三实体
   - 实体定义存储为配置，不立即生成 DDL
   - 校验：表名唯一、字段名合法、主键必填、关联双向校验
 
 **F1.2 DDL 自动生成与执行**
 
-- 后端：`DdlGenerator` 基于 `JSqlParser` 生成标准 SQL
-  - 支持 MySQL 8 + PostgreSQL（项目已支持双数据库）
+- 后端：`DdlGenerator` 接口（抽象，预留 PostgreSQL 扩展点）+ `MySQLDdlGenerator` 实现（**评审决策：本期仅支持 MySQL 8.0**）
+  - 支持 MySQL 8.0（项目主库 dppms_d365）
   - 生成 `CREATE TABLE` / `ALTER TABLE ADD COLUMN` / `ALTER TABLE DROP COLUMN` / `CREATE INDEX`
+  - 支持复杂关联：多对多（自动生成中间表 DDL）、自关联（self-reference 外键）、级联删除（ON DELETE CASCADE / SET NULL / RESTRICT）
   - **安全策略**：DROP COLUMN 需二次确认 + 审批；DROP TABLE 禁止（仅归档）
 - 执行：通过 Flyway 动态迁移（版本号 V29+ 自动递增），保留迁移历史
 - 审计：每次 DDL 变更记录到 `sys_oper_log` + `pms_lowcode_config_version`
