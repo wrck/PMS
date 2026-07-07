@@ -79,8 +79,8 @@ jobs:
           cache: maven
           cache-dependency-path: ${{ env.PROJECT_DIR }}/pom.xml
 
-      - name: Build backend (skip tests, CI 已在 PR 阶段验证)
-        run: mvn -B clean package -DskipTests
+      - name: Build backend (skip test compile & run, CI 已在 PR 阶段验证)
+        run: mvn -B clean package -Dmaven.test.skip=true
 
       - name: Set up Node 20
         uses: actions/setup-node@v4
