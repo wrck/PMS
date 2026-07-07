@@ -6,6 +6,7 @@ import com.dp.plat.lowcode.entity.LowCodeRelation;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +33,13 @@ public class MySQLDdlGenerator implements DdlGenerator {
     @Override
     public String generateCreateTable(LowCodeEntity entity, List<LowCodeField> fields,
                                       List<LowCodeRelation> relations) {
+        // 3 参版本：委托给 4 参版本（传空映射，外键目标表名走兜底逻辑）以保持向后兼容
+        return generateCreateTable(entity, fields, relations, null);
+    }
+
+    @Override
+    public String generateCreateTable(LowCodeEntity entity, List<LowCodeField> fields,
+                                      List<LowCodeRelation> relations, Map<Long, String> entityIdToTableName) {
         StringBuilder sql = new StringBuilder();
         sql.append("CREATE TABLE `").append(entity.getTableName()).append("` (\n");
 
@@ -65,7 +73,8 @@ public class MySQLDdlGenerator implements DdlGenerator {
         if (relations != null) {
             relations.stream()
                     .filter(r -> !"MANY_TO_MANY".equals(r.getRelationType()))
-                    .forEach(r -> columnDefs.add(buildForeignKeyConstraint(r, entity.getTableName())));
+                    .forEach(r -> columnDefs.add(
+                            buildForeignKeyConstraint(r, entity.getTableName(), entityIdToTableName)));
         }
 
         sql.append(String.join(",\n", columnDefs));
@@ -156,20 +165,19 @@ public class MySQLDdlGenerator implements DdlGenerator {
         };
     }
 
-    private String buildForeignKeyConstraint(LowCodeRelation relation, String currentTableName) {
+    private String buildForeignKeyConstraint(LowCodeRelation relation, String currentTableName,
+                                              Map<Long, String> entityIdToTableName) {
         String refTable;
         // 自关联：引用当前表
-        if (relation.getFromEntityId().equals(relation.getToEntityId())) {
+        if (relation.getFromEntityId() != null && relation.getFromEntityId().equals(relation.getToEntityId())) {
             refTable = currentTableName;
+        } else if (entityIdToTableName != null && relation.getToEntityId() != null
+                && entityIdToTableName.containsKey(relation.getToEntityId())) {
+            // 优先使用调用方提供的 toEntityId → 物理表名 映射
+            refTable = entityIdToTableName.get(relation.getToEntityId());
         } else {
-            // 非自关联：引用目标表，但目标表名需通过 entity 查询
-            // 此处简化：约定目标表名为 toFieldName 对应的表，实际由调用方补充
+            // 兜底：按 fromFieldName 约定推导（不完美，仅在未提供映射时使用）
             refTable = "pms_lc_" + relation.getFromFieldName().replace("_id", "");
-        }
-
-        // 对于自关联，引用自身表名
-        if (relation.getFromEntityId().equals(relation.getToEntityId())) {
-            refTable = currentTableName;
         }
 
         // 将下划线分隔的策略名转为 SQL 语法（SET_NULL → SET NULL, NO_ACTION → NO ACTION）

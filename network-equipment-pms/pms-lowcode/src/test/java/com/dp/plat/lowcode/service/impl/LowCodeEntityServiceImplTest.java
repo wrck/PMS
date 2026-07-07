@@ -108,7 +108,7 @@ class LowCodeEntityServiceImplTest {
         doReturn(entity).when(entityService).getById(1L);
         when(fieldMapper.selectList(any())).thenReturn(List.of(idField));
         when(relationMapper.selectList(any())).thenReturn(List.of());
-        when(ddlGenerator.generateCreateTable(any(), any(), any()))
+        when(ddlGenerator.generateCreateTable(any(), any(), any(), any()))
                 .thenReturn("CREATE TABLE `pms_lc_device` (\n  `id` BIGINT NOT NULL\n)");
 
         DdlResultDTO result = entityService.generateDdl(1L);

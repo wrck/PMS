@@ -105,7 +105,7 @@ class DdlExecutionServiceImplTest {
         when(fieldMapper.selectList(any())).thenReturn(Collections.emptyList());
         when(relationMapper.selectList(any())).thenReturn(Collections.emptyList());
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), anyString())).thenReturn(0);
-        when(ddlGenerator.generateCreateTable(any(), any(), any())).thenReturn(
+        when(ddlGenerator.generateCreateTable(any(), any(), any(), any())).thenReturn(
                 "CREATE TABLE `pms_lc_order` (id BIGINT PRIMARY KEY)");
 
         List<String> result = service.executeCreate(1L, false);
@@ -144,7 +144,7 @@ class DdlExecutionServiceImplTest {
         when(fieldMapper.selectList(any())).thenReturn(Collections.emptyList());
         when(relationMapper.selectList(any())).thenReturn(List.of(relation));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), anyString())).thenReturn(0);
-        when(ddlGenerator.generateCreateTable(any(), any(), any())).thenReturn(
+        when(ddlGenerator.generateCreateTable(any(), any(), any(), any())).thenReturn(
                 "CREATE TABLE `pms_lc_order` (id BIGINT PRIMARY KEY)");
         when(ddlGenerator.generateJunctionTable(anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString())).thenReturn(

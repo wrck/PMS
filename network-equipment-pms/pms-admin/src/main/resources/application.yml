@@ -26,6 +26,11 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  # Quartz 调度配置：内存存储（简化，无需建表；如需集群持久化可改为 jdbc）
+  quartz:
+    job-store-type: memory
+    properties:
+      org.quartz.threadPool.threadCount: 5
 mybatis-plus:
   mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
   configuration:
@@ -45,6 +50,12 @@ app:
     # AES-256-GCM 字段级加密密钥，Base64 编码的 32 字节（256 位）。
     # 生产环境必须通过环境变量 APP_ENCRYPT_KEY 覆盖，切勿提交真实密钥。
     encrypt-key: ${APP_ENCRYPT_KEY:default-encrypt-key}
+# 低代码平台配置
+lowcode:
+  encryption:
+    # 低代码连接器凭据 AES 加密密钥（明文口令）。生产环境必须通过环境变量
+    # LOWCODE_ENCRYPTION_KEY 覆盖；使用默认值会在启动时打印警告日志。
+    key: ${LOWCODE_ENCRYPTION_KEY:default-lowcode-encryption-key-change-me}
 # Actuator + Micrometer + Prometheus 可观测性配置
 management:
   endpoints:

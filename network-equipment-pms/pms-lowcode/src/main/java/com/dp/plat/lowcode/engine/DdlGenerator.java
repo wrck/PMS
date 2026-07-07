@@ -4,6 +4,7 @@ import com.dp.plat.lowcode.entity.LowCodeEntity;
 import com.dp.plat.lowcode.entity.LowCodeField;
 import com.dp.plat.lowcode.entity.LowCodeRelation;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DDL 生成器接口。
@@ -22,6 +23,25 @@ public interface DdlGenerator {
      * @return 完整 CREATE TABLE SQL
      */
     String generateCreateTable(LowCodeEntity entity, List<LowCodeField> fields, List<LowCodeRelation> relations);
+
+    /**
+     * 生成 CREATE TABLE 语句（含字段、主键、索引、外键约束）。
+     *
+     * <p>支持通过 {@code entityIdToTableName} 映射（toEntityId → 物理表名）正确推导
+     * 外键目标表名，避免依赖字段名约定猜测目标表。</p>
+     *
+     * <p>默认实现忽略映射，委托给 3 参版本以保持向后兼容；建议各方言实现重写以使用映射。</p>
+     *
+     * @param entity              实体定义
+     * @param fields              字段列表
+     * @param relations           关联列表（可为空）
+     * @param entityIdToTableName toEntityId → 物理表名 映射（可为空）
+     * @return 完整 CREATE TABLE SQL
+     */
+    default String generateCreateTable(LowCodeEntity entity, List<LowCodeField> fields,
+                                        List<LowCodeRelation> relations, Map<Long, String> entityIdToTableName) {
+        return generateCreateTable(entity, fields, relations);
+    }
 
     /**
      * 生成 ALTER TABLE ADD COLUMN 语句。

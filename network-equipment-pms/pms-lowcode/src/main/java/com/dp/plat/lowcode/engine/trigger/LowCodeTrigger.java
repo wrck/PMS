@@ -39,7 +39,14 @@ public class LowCodeTrigger extends BaseEntity {
     @Size(max = 32, message = "触发类型长度不能超过 32 个字符")
     private String type;
 
-    /** 配置 JSON: {entityCode, operation / cron / eventType} */
+    /**
+     * 配置 JSON，按触发类型不同结构不同：
+     * <ul>
+     *   <li>CRUD：{entityCode, operations:["CREATE","UPDATE","DELETE"], timing:["BEFORE","AFTER"]}</li>
+     *   <li>QUARTZ：{cronExpression:"0 0/5 * * * ?", cron:"0 0/5 * * * ?"}（cron 为兼容别名）</li>
+     *   <li>EVENT：{eventType:"xxx"}</li>
+     * </ul>
+     */
     @NotBlank(message = "配置不能为空")
     private String config;
 

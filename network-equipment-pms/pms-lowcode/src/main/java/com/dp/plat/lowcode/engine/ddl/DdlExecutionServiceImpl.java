@@ -62,7 +62,9 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
 
         // 1. 主表 CREATE TABLE
         if (!tableExists(entity.getTableName())) {
-            String createSql = ddlGenerator.generateCreateTable(entity, fields, relations);
+            // 构建 toEntityId → 物理表名 映射，供外键目标表名推导使用
+            Map<Long, String> entityIdToTableName = buildEntityIdToTableName(relations, entityId);
+            String createSql = ddlGenerator.generateCreateTable(entity, fields, relations, entityIdToTableName);
             validateBeforeExecution(createSql);
             executeAndLog(entity, createSql, "CREATE");
             executedSqls.add(createSql);
@@ -114,13 +116,17 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
 
         List<String> executedSqls = new ArrayList<>();
 
-        // 查询当前表已有列
+        // 查询当前表已有列的完整元数据（用于真实字段 Diff，避免无条件 MODIFY COLUMN）
         List<Map<String, Object>> existingColumns = jdbcTemplate.queryForList(
-                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
+                "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, IS_NULLABLE "
+                        + "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
                 tableName);
         List<String> existingColumnNames = new ArrayList<>();
+        Map<String, Map<String, Object>> existingColumnMeta = new HashMap<>();
         for (Map<String, Object> col : existingColumns) {
-            existingColumnNames.add((String) col.get("COLUMN_NAME"));
+            String colName = (String) col.get("COLUMN_NAME");
+            existingColumnNames.add(colName);
+            existingColumnMeta.put(colName, col);
         }
 
         // 对比字段差异
@@ -134,7 +140,12 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
                 executeAndLog(entity, addSql, "ALTER");
                 executedSqls.add(addSql);
             } else {
-                // 修改列（类型/长度变化）
+                // 修改列：仅当 fieldType/length/scale/nullable 实际变化时才生成 MODIFY COLUMN
+                Map<String, Object> colMeta = existingColumnMeta.get(field.getName());
+                if (colMeta != null && !fieldNeedsAlter(field, colMeta)) {
+                    log.debug("字段 {} 类型/长度/精度/可空性无变化，跳过 MODIFY COLUMN", field.getName());
+                    continue;
+                }
                 String alterSql = ddlGenerator.generateAlterColumn(tableName, field);
                 validateBeforeExecution(alterSql);
                 executeAndLog(entity, alterSql, "ALTER");
@@ -258,5 +269,121 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
     private String getEntityCode(Long entityId) {
         LowCodeEntity entity = entityMapper.selectById(entityId);
         return entity != null ? entity.getCode() : "UNKNOWN";
+    }
+
+    /**
+     * 比较设计字段与数据库现有列元数据，判断是否需要执行 MODIFY COLUMN。
+     * 仅比较 fieldType/length/scale/nullable 四个维度；任一不同即返回 true。
+     */
+    private boolean fieldNeedsAlter(LowCodeField field, Map<String, Object> colMeta) {
+        String dbDataType = asString(colMeta.get("DATA_TYPE"));
+        String fieldType = field.getFieldType();
+
+        // 类型对比
+        String expectedDataType = mapFieldTypeToDb(fieldType);
+        if (expectedDataType != null && !expectedDataType.equalsIgnoreCase(dbDataType)) {
+            return true;
+        }
+
+        // 长度对比（STRING 看 CHARACTER_MAXIMUM_LENGTH；DECIMAL 看 NUMERIC_PRECISION/NUMERIC_SCALE）
+        if ("STRING".equals(fieldType)) {
+            Integer expectedLen = field.getLength() != null ? field.getLength() : 255;
+            Integer dbLen = asInteger(colMeta.get("CHARACTER_MAXIMUM_LENGTH"));
+            if (!expectedLen.equals(dbLen)) {
+                return true;
+            }
+        } else if ("DECIMAL".equals(fieldType)) {
+            Integer expectedPrecision = field.getLength() != null ? field.getLength() : 10;
+            Integer expectedScale = field.getScale() != null ? field.getScale() : 2;
+            Integer dbPrecision = asInteger(colMeta.get("NUMERIC_PRECISION"));
+            Integer dbScale = asInteger(colMeta.get("NUMERIC_SCALE"));
+            if (!expectedPrecision.equals(dbPrecision) || !expectedScale.equals(dbScale)) {
+                return true;
+            }
+        }
+
+        // 可空性对比（IS_NULLABLE: YES/NO）
+        Integer expectedNullable = field.getNullable() != null ? field.getNullable() : 1;
+        String dbNullable = asString(colMeta.get("IS_NULLABLE"));
+        boolean dbIsNullable = "YES".equalsIgnoreCase(dbNullable);
+        if ((expectedNullable == 1) != dbIsNullable) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 低代码字段类型 → MySQL INFORMATION_SCHEMA.DATA_TYPE 小写映射。
+     */
+    private String mapFieldTypeToDb(String fieldType) {
+        if (fieldType == null) {
+            return null;
+        }
+        return switch (fieldType) {
+            case "STRING" -> "varchar";
+            case "INTEGER" -> "int";
+            case "LONG" -> "bigint";
+            case "DECIMAL" -> "decimal";
+            case "BOOLEAN" -> "tinyint";
+            case "DATE" -> "date";
+            case "DATETIME" -> "datetime";
+            case "TEXT" -> "text";
+            default -> null;
+        };
+    }
+
+    private String asString(Object obj) {
+        return obj == null ? null : String.valueOf(obj);
+    }
+
+    private Integer asInteger(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof Number) {
+            return ((Number) obj).intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(obj));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 根据关联列表构建 toEntityId → 物理表名 映射，用于外键目标表名推导。
+     * 自关联（fromEntityId == toEntityId）无需查表，跳过。
+     */
+    private Map<Long, String> buildEntityIdToTableName(List<LowCodeRelation> relations, Long selfEntityId) {
+        Map<Long, String> result = new HashMap<>();
+        if (relations == null || relations.isEmpty()) {
+            return result;
+        }
+        List<Long> targetIds = new ArrayList<>();
+        for (LowCodeRelation rel : relations) {
+            if (rel.getToEntityId() == null) {
+                continue;
+            }
+            if (rel.getFromEntityId() != null && rel.getFromEntityId().equals(rel.getToEntityId())) {
+                // 自关联：由生成器用当前表名处理
+                continue;
+            }
+            if (!targetIds.contains(rel.getToEntityId())) {
+                targetIds.add(rel.getToEntityId());
+            }
+        }
+        if (targetIds.isEmpty()) {
+            return result;
+        }
+        List<LowCodeEntity> targets = entityMapper.selectBatchIds(targetIds);
+        if (targets != null) {
+            for (LowCodeEntity t : targets) {
+                if (t.getTableName() != null) {
+                    result.put(t.getId(), t.getTableName());
+                }
+            }
+        }
+        return result;
     }
 }

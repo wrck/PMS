@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 低代码实体管理服务实现。
@@ -103,8 +105,10 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
         EntityDesignDTO design = getDesign(entityId);
 
         List<String> statements = new ArrayList<>();
+        // 构建 toEntityId → 物理表名 映射，供外键目标表名推导使用
+        Map<Long, String> entityIdToTableName = buildEntityIdToTableName(design.getRelations());
         String createTableSql = ddlGenerator.generateCreateTable(
-                design.getEntity(), design.getFields(), design.getRelations());
+                design.getEntity(), design.getFields(), design.getRelations(), entityIdToTableName);
         statements.add(createTableSql);
 
         // 处理多对多中间表
@@ -185,6 +189,41 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
             String type, Long id, String code, String snapshot, String changeLog) {
         return new LowCodeConfigVersionService.SnapshotContext(
                 type, id, code, snapshot, changeLog);
+    }
+
+    /**
+     * 根据关联列表构建 toEntityId → 物理表名 映射，用于外键目标表名推导。
+     * 自关联（fromEntityId == toEntityId）跳过（由生成器用当前表名处理）。
+     */
+    private Map<Long, String> buildEntityIdToTableName(List<LowCodeRelation> relations) {
+        Map<Long, String> result = new HashMap<>();
+        if (relations == null || relations.isEmpty()) {
+            return result;
+        }
+        List<Long> targetIds = new ArrayList<>();
+        for (LowCodeRelation rel : relations) {
+            if (rel.getToEntityId() == null) {
+                continue;
+            }
+            if (rel.getFromEntityId() != null && rel.getFromEntityId().equals(rel.getToEntityId())) {
+                continue;
+            }
+            if (!targetIds.contains(rel.getToEntityId())) {
+                targetIds.add(rel.getToEntityId());
+            }
+        }
+        if (targetIds.isEmpty()) {
+            return result;
+        }
+        List<LowCodeEntity> targets = listByIds(targetIds);
+        if (targets != null) {
+            for (LowCodeEntity t : targets) {
+                if (t.getTableName() != null) {
+                    result.put(t.getId(), t.getTableName());
+                }
+            }
+        }
+        return result;
     }
 
     @Override
