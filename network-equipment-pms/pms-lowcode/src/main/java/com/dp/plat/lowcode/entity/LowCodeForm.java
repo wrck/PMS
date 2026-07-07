@@ -43,6 +43,9 @@ public class LowCodeForm extends BaseEntity {
     @NotBlank(message = "表单配置不能为空")
     private String formConfig;
 
+    /** 事件绑定 JSON: {onLoad:{type,code}, onChange:{...}, onSubmit:{...}} */
+    private String events;
+
     /** 版本号（乐观锁） */
     @Version
     @Builder.Default
