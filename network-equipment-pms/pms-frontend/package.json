@@ -22,6 +22,7 @@
     "element-plus": "^2.14.2",
     "jsondiffpatch": "^0.7.6",
     "pinia": "^3.0.4",
+    "tslib": "^2.8.1",
     "vue": "^3.5.39",
     "vue-router": "^4.6.4",
     "xlsx": "^0.18.5"
