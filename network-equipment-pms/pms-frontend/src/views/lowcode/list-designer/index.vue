@@ -37,7 +37,8 @@ import {
   type ListConfig,
   type ListFilterConfig,
   type ListOperationConfig,
-  type LowCodeListConfig
+  type LowCodeListConfig,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 import LowCodeListRenderer from '@/components/LowCodeListRenderer/index.vue'
 
@@ -163,6 +164,52 @@ const selectedColumn = computed(() =>
 const selectedFilter = computed(() =>
   listConfig.filters?.find((f) => f.id === selectedId.value) || null
 )
+
+// ===================== 响应式栅格断点（xs/sm/md/lg/xl） =====================
+
+type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+/** 响应式断点折叠面板激活项（默认展开） */
+const filterResponsiveCollapse = ref<string[]>(['resp'])
+
+/** 当前选中筛选项是否启用响应式断点（span 为对象） */
+const isFilterResponsive = computed<boolean>({
+  get: () => !!selectedFilter.value && typeof selectedFilter.value.span === 'object',
+  set: (val: boolean) => {
+    const filter = selectedFilter.value
+    if (!filter) return
+    if (val) {
+      const cur = typeof filter.span === 'number' ? filter.span : 6
+      filter.span = { xs: cur, sm: cur, md: cur, lg: cur, xl: cur }
+    } else {
+      const obj = filter.span
+      filter.span = typeof obj === 'object' && obj ? (obj.md ?? 6) : 6
+    }
+  }
+})
+
+/** 非响应式模式下的栅格宽度（数字） */
+const filterSpan = computed<number>({
+  get: () => (typeof selectedFilter.value?.span === 'number' ? selectedFilter.value.span : 6),
+  set: (v: number) => {
+    if (selectedFilter.value) selectedFilter.value.span = v
+  }
+})
+
+/** 读取指定断点值（缺省回退 6） */
+function getFilterBreakpoint(k: Breakpoint): number {
+  const s = selectedFilter.value?.span
+  return typeof s === 'object' && s && s[k] !== undefined ? (s[k] as number) : 6
+}
+
+/** 设置指定断点值（自动转为响应式对象） */
+function setFilterBreakpoint(k: Breakpoint, v: number): void {
+  const filter = selectedFilter.value
+  if (!filter) return
+  const s = filter.span
+  const obj: ResponsiveSpan = typeof s === 'object' && s ? { ...s } : {}
+  obj[k] = v
+  filter.span = obj
+}
 /** 当前选中的行操作 */
 const selectedOperation = computed(() =>
   listConfig.operations?.find((o) => o.id === selectedId.value) || null
@@ -942,9 +989,32 @@ if (editId > 0) {
           <el-form-item label="默认值">
             <el-input v-model="selectedFilter.defaultValue" placeholder="留空表示无默认值" />
           </el-form-item>
-          <el-form-item label="栅格宽度">
-            <el-slider v-model="selectedFilter.span" :min="1" :max="24" show-input style="width: 100%" />
+          <el-form-item label="响应式栅格">
+            <el-switch v-model="isFilterResponsive" />
+            <span class="form-tip">开启后按 xs/sm/md/lg/xl 五档断点配置</span>
           </el-form-item>
+          <el-form-item v-if="!isFilterResponsive" label="栅格宽度">
+            <el-slider v-model="filterSpan" :min="1" :max="24" show-input style="width: 100%" />
+          </el-form-item>
+          <el-collapse v-else v-model="filterResponsiveCollapse" class="resp-collapse">
+            <el-collapse-item title="响应式断点（1-24）" name="resp">
+              <el-form-item label="xs">
+                <el-input-number :model-value="getFilterBreakpoint('xs')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('xs', v)" />
+              </el-form-item>
+              <el-form-item label="sm">
+                <el-input-number :model-value="getFilterBreakpoint('sm')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('sm', v)" />
+              </el-form-item>
+              <el-form-item label="md">
+                <el-input-number :model-value="getFilterBreakpoint('md')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('md', v)" />
+              </el-form-item>
+              <el-form-item label="lg">
+                <el-input-number :model-value="getFilterBreakpoint('lg')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('lg', v)" />
+              </el-form-item>
+              <el-form-item label="xl">
+                <el-input-number :model-value="getFilterBreakpoint('xl')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('xl', v)" />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
           <el-form-item label="可清空">
             <el-switch v-model="selectedFilter.clearable" />
           </el-form-item>
@@ -1256,6 +1326,20 @@ if (editId > 0) {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+}
+
+.form-tip {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.resp-collapse {
+  margin: 4px 0 12px;
+}
+
+.resp-collapse :deep(.el-collapse-item__content) {
+  padding-bottom: 0;
 }
 
 /* 响应式：小屏堆叠 */

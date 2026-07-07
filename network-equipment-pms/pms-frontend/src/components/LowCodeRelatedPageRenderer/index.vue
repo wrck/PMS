@@ -32,7 +32,8 @@ import {
   type ListConfig,
   type TabConfig,
   type RelatedPageConfig,
-  type RelatedPageSectionConfig
+  type RelatedPageSectionConfig,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 import { useUserStore } from '@/stores/user'
 
@@ -85,6 +86,25 @@ const layout = computed(() => props.config.layout || RelatedPageLayout.GRID)
 
 /** 栅格间距（默认 16） */
 const gutter = computed(() => props.config.gutter ?? 16)
+
+/**
+ * 解析 section.span 为 el-col 绑定属性。
+ *
+ * <p>向后兼容：span 为数字或缺省时按 :span= 渲染（缺省 24）；
+ * span 为响应式断点对象时按 :xs= :sm= :md= :lg= :xl= 渲染。</p>
+ */
+function colProps(span: number | ResponsiveSpan | undefined): Record<string, number> {
+  if (span === undefined || typeof span === 'number') {
+    return { span: span ?? 24 }
+  }
+  const result: Record<string, number> = {}
+  if (span.xs !== undefined) result.xs = span.xs
+  if (span.sm !== undefined) result.sm = span.sm
+  if (span.md !== undefined) result.md = span.md
+  if (span.lg !== undefined) result.lg = span.lg
+  if (span.xl !== undefined) result.xl = span.xl
+  return result
+}
 
 /** tabs/collapse 模式下当前激活项 */
 const activeTab = ref<string>('')
@@ -267,7 +287,7 @@ function handleCustomNavigate(section: RelatedPageSectionConfig) {
       <el-col
         v-for="section in visibleSections"
         :key="section.id"
-        :span="section.span ?? 24"
+        v-bind="colProps(section.span)"
       >
         <el-card shadow="never" class="section-card">
           <template #header>

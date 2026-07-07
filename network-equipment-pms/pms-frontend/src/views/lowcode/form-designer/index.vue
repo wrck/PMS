@@ -36,7 +36,8 @@ import {
   type FormConfig,
   type FormFieldConfig,
   type LowCodeFormConfig,
-  type LowCodeFormQuery
+  type LowCodeFormQuery,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 import LowCodeFormRenderer from '@/components/LowCodeFormRenderer/index.vue'
 
@@ -148,6 +149,53 @@ const previewData = reactive<Record<string, unknown>>({})
 const selectedField = computed(() =>
   formConfig.fields.find((f) => f.id === selectedFieldId.value) || null
 )
+
+// ===================== 响应式栅格断点（xs/sm/md/lg/xl） =====================
+
+/** 响应式断点折叠面板激活项（默认展开） */
+const responsiveCollapse = ref<string[]>(['resp'])
+
+type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
+/** 当前选中字段是否启用响应式断点（span 为对象） */
+const isResponsive = computed<boolean>({
+  get: () => !!selectedField.value && typeof selectedField.value.span === 'object',
+  set: (val: boolean) => {
+    const field = selectedField.value
+    if (!field) return
+    if (val) {
+      const cur = typeof field.span === 'number' ? field.span : 24
+      field.span = { xs: cur, sm: cur, md: cur, lg: cur, xl: cur }
+    } else {
+      const obj = field.span
+      field.span = typeof obj === 'object' && obj ? (obj.md ?? 24) : 24
+    }
+  }
+})
+
+/** 非响应式模式下的栅格宽度（数字） */
+const fieldSpan = computed<number>({
+  get: () => (typeof selectedField.value?.span === 'number' ? selectedField.value.span : 24),
+  set: (v: number) => {
+    if (selectedField.value) selectedField.value.span = v
+  }
+})
+
+/** 读取指定断点值（缺省回退 24） */
+function getBreakpoint(k: Breakpoint): number {
+  const s = selectedField.value?.span
+  return typeof s === 'object' && s && s[k] !== undefined ? (s[k] as number) : 24
+}
+
+/** 设置指定断点值（自动转为响应式对象） */
+function setBreakpoint(k: Breakpoint, v: number): void {
+  const field = selectedField.value
+  if (!field) return
+  const s = field.span
+  const obj: ResponsiveSpan = typeof s === 'object' && s ? { ...s } : {}
+  obj[k] = v
+  field.span = obj
+}
 
 /**
  * 创建一个新字段对象。
@@ -819,9 +867,32 @@ if (editId > 0) {
 
           <!-- 样式属性 -->
           <el-divider content-position="left">样式属性</el-divider>
-          <el-form-item label="栅格宽度">
-            <el-slider v-model="selectedField.span" :min="1" :max="24" show-input style="width: 100%" />
+          <el-form-item label="响应式栅格">
+            <el-switch v-model="isResponsive" />
+            <span class="form-tip">开启后按 xs/sm/md/lg/xl 五档断点配置</span>
           </el-form-item>
+          <el-form-item v-if="!isResponsive" label="栅格宽度">
+            <el-slider v-model="fieldSpan" :min="1" :max="24" show-input style="width: 100%" />
+          </el-form-item>
+          <el-collapse v-else v-model="responsiveCollapse" class="resp-collapse">
+            <el-collapse-item title="响应式断点（1-24）" name="resp">
+              <el-form-item label="xs">
+                <el-input-number :model-value="getBreakpoint('xs')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('xs', v)" />
+              </el-form-item>
+              <el-form-item label="sm">
+                <el-input-number :model-value="getBreakpoint('sm')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('sm', v)" />
+              </el-form-item>
+              <el-form-item label="md">
+                <el-input-number :model-value="getBreakpoint('md')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('md', v)" />
+              </el-form-item>
+              <el-form-item label="lg">
+                <el-input-number :model-value="getBreakpoint('lg')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('lg', v)" />
+              </el-form-item>
+              <el-form-item label="xl">
+                <el-input-number :model-value="getBreakpoint('xl')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('xl', v)" />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
           <el-form-item label="可清空">
             <el-switch v-model="selectedField.clearable" />
           </el-form-item>
@@ -1060,6 +1131,20 @@ if (editId > 0) {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+}
+
+.form-tip {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.resp-collapse {
+  margin: 4px 0 12px;
+}
+
+.resp-collapse :deep(.el-collapse-item__content) {
+  padding-bottom: 0;
 }
 
 .preview-card {

@@ -79,6 +79,21 @@ export interface FieldOption {
   disabled?: boolean
 }
 
+/**
+ * 响应式栅格断点配置（借鉴 Element Plus el-col 断点）。
+ *
+ * <p>每个断点取值 1-24，对应 xs/sm/md/lg/xl 五档屏幕宽度。
+ * 与数字形式的 span 保持兼容：当 span 为数字时按 :span= 渲染，
+ * 为对象时按 :xs= :sm= :md= :lg= :xl= 渲染。</p>
+ */
+export interface ResponsiveSpan {
+  xs?: number
+  sm?: number
+  md?: number
+  lg?: number
+  xl?: number
+}
+
 /** 表单字段定义（FormConfigSchema.fields[]） */
 export interface FormFieldConfig {
   /** 字段唯一标识（field_1, field_2...） */
@@ -96,8 +111,8 @@ export interface FormFieldConfig {
   readonly?: boolean
   hidden?: boolean
   clearable?: boolean
-  /** 栅格宽度 1-24 */
-  span?: number
+  /** 栅格宽度 1-24（数字）或响应式断点对象（xs/sm/md/lg/xl） */
+  span?: number | ResponsiveSpan
   /** 自定义校验规则（el-form rules 格式） */
   rules?: Array<Record<string, unknown>>
   /** 类型特定属性 */
@@ -350,8 +365,8 @@ export interface ListFilterConfig {
   dictCode?: string
   /** 默认值 */
   defaultValue?: unknown
-  /** 栅格宽度 1-24 */
-  span?: number
+  /** 栅格宽度 1-24（数字）或响应式断点对象（xs/sm/md/lg/xl） */
+  span?: number | ResponsiveSpan
   /** 是否可清空 */
   clearable?: boolean
   /** 是否多选（type=select 时使用） */
@@ -758,8 +773,8 @@ export interface RelatedPageSectionConfig {
   pageCode?: string
   /** 自定义页面 URL（type=custom 时使用，{prop} 占位） */
   pageUrl?: string
-  /** 栅格宽度 1-24（grid 模式生效，默认 24） */
-  span?: number
+  /** 栅格宽度 1-24（数字，grid 模式生效默认 24）或响应式断点对象（xs/sm/md/lg/xl） */
+  span?: number | ResponsiveSpan
   /** 排序号（升序，相同 order 按数组顺序，默认 100） */
   order?: number
   /** 显示条件表达式（对 contextData 求值，假值则隐藏） */

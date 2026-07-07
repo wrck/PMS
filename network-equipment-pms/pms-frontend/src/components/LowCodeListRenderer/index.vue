@@ -29,7 +29,8 @@ import {
   type ListColumnConfig,
   type ListConfig,
   type ListFilterConfig,
-  type ListOperationConfig
+  type ListOperationConfig,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 import { getDictPage, getDictItems, type SysDictItem } from '@/api/system'
 import { TOKEN_KEY } from '@/utils/request'
@@ -108,6 +109,24 @@ const pageSizes = computed(() => props.config.pageSizes ?? [10, 20, 50, 100])
 
 /** 筛选表单数据（按 filter.prop 为 key） */
 const filterForm = reactive<Record<string, unknown>>({})
+
+/**
+ * 将筛选项的 span 解析为单个宽度数字（1-24），用于内联百分比宽度。
+ *
+ * <p>向后兼容：span 为数字时直接使用；span 为响应式断点对象时取 md 优先，
+ * 依次回退 sm/lg/xs/xl，全缺省时返回 undefined（不设宽度）。</p>
+ */
+function resolveFilterSpan(span: number | ResponsiveSpan | undefined): number | undefined {
+  if (span === undefined) return undefined
+  if (typeof span === 'number') return span
+  return span.md ?? span.sm ?? span.lg ?? span.xs ?? span.xl
+}
+
+/** 计算筛选项的内联样式（按 span 设置百分比宽度） */
+function filterStyle(f: ListFilterConfig): Record<string, string> | undefined {
+  const spanNum = resolveFilterSpan(f.span)
+  return spanNum ? { width: `${(spanNum / 24) * 100}%`, flex: '0 0 auto' } : undefined
+}
 
 /** 初始化筛选项默认值 */
 function initFilterDefaults() {
@@ -616,7 +635,7 @@ watch(
         v-for="f in config.filters"
         :key="f.id"
         :label="f.label"
-        :style="f.span ? { width: `${(f.span / 24) * 100}%`, flex: '0 0 auto' } : undefined"
+        :style="filterStyle(f)"
       >
         <!-- 输入框 -->
         <el-input

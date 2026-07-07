@@ -17,6 +17,7 @@
 import { computed } from 'vue'
 import { create } from 'jsondiffpatch'
 import { format as formatHtml } from 'jsondiffpatch/formatters/html'
+import DOMPurify from 'dompurify'
 
 const props = defineProps<{
   oldData: any
@@ -27,13 +28,24 @@ const jsondiffpatch = create()
 
 const delta = computed(() => jsondiffpatch.diff(props.oldData, props.newData))
 
+// jsondiffpatch 的 HTML formatter 输出会通过 v-html 渲染，存在 XSS 风险，
+// 此处用 DOMPurify 消毒后再交给模板，仅保留白名单标签与样式类。
+function sanitize(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ADD_ATTR: ['class', 'style'],
+    ADD_TAGS: ['em']
+  })
+}
+
 const leftHtml = computed(() => {
-  return formatHtml(delta.value, props.oldData) || '<em>无数据</em>'
+  const raw = formatHtml(delta.value, props.oldData) || '<em>无数据</em>'
+  return sanitize(raw)
 })
 
 const rightHtml = computed(() => {
   const reversedDelta = jsondiffpatch.diff(props.newData, props.oldData)
-  return formatHtml(reversedDelta, props.newData) || '<em>无数据</em>'
+  const raw = formatHtml(reversedDelta, props.newData) || '<em>无数据</em>'
+  return sanitize(raw)
 })
 </script>
 

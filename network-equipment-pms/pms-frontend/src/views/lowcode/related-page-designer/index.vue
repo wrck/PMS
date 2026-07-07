@@ -33,7 +33,8 @@ import {
   type LowCodeRelatedPageConfig,
   type LowCodeRelatedPageQuery,
   type RelatedPageConfig,
-  type RelatedPageSectionConfig
+  type RelatedPageSectionConfig,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 import LowCodeRelatedPageRenderer from '@/components/LowCodeRelatedPageRenderer/index.vue'
 
@@ -131,6 +132,65 @@ const previewVisible = ref(false)
 const selectedSection = computed<RelatedPageSectionConfig | null>(() =>
   relatedConfig.sections.find((s) => s.id === selectedId.value) || null
 )
+
+// ===================== 响应式栅格断点（xs/sm/md/lg/xl） =====================
+
+type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+/** 响应式断点折叠面板激活项（默认展开） */
+const sectionResponsiveCollapse = ref<string[]>(['resp'])
+
+/** 当前选中区块是否启用响应式断点（span 为对象） */
+const isSectionResponsive = computed<boolean>({
+  get: () => !!selectedSection.value && typeof selectedSection.value.span === 'object',
+  set: (val: boolean) => {
+    const section = selectedSection.value
+    if (!section) return
+    if (val) {
+      const cur = typeof section.span === 'number' ? section.span : 24
+      section.span = { xs: cur, sm: cur, md: cur, lg: cur, xl: cur }
+    } else {
+      const obj = section.span
+      section.span = typeof obj === 'object' && obj ? (obj.md ?? 24) : 24
+    }
+  }
+})
+
+/** 非响应式模式下的栅格宽度（数字） */
+const sectionSpan = computed<number>({
+  get: () => (typeof selectedSection.value?.span === 'number' ? selectedSection.value.span : 24),
+  set: (v: number) => {
+    if (selectedSection.value) selectedSection.value.span = v
+  }
+})
+
+/** 读取指定断点值（缺省回退 24） */
+function getSectionBreakpoint(k: Breakpoint): number {
+  const s = selectedSection.value?.span
+  return typeof s === 'object' && s && s[k] !== undefined ? (s[k] as number) : 24
+}
+
+/** 设置指定断点值（自动转为响应式对象） */
+function setSectionBreakpoint(k: Breakpoint, v: number): void {
+  const section = selectedSection.value
+  if (!section) return
+  const s = section.span
+  const obj: ResponsiveSpan = typeof s === 'object' && s ? { ...s } : {}
+  obj[k] = v
+  section.span = obj
+}
+
+/** 格式化 span 用于卡片展示：数字直接返回，对象拼接断点键值 */
+function formatSpan(span: number | ResponsiveSpan | undefined): string {
+  if (span === undefined) return '24'
+  if (typeof span === 'number') return String(span)
+  const parts: string[] = []
+  if (span.xs !== undefined) parts.push(`xs:${span.xs}`)
+  if (span.sm !== undefined) parts.push(`sm:${span.sm}`)
+  if (span.md !== undefined) parts.push(`md:${span.md}`)
+  if (span.lg !== undefined) parts.push(`lg:${span.lg}`)
+  if (span.xl !== undefined) parts.push(`xl:${span.xl}`)
+  return parts.length ? parts.join(' ') : '24'
+}
 
 // ===================== 创建新项 =====================
 
@@ -591,7 +651,7 @@ if (editId > 0) {
                 <el-tag size="small" type="info">{{ section.type }}</el-tag>
                 <span class="item-label">{{ section.title }}</span>
                 <span v-if="section.pageCode" class="item-prop">pageCode: {{ section.pageCode }}</span>
-                <span class="item-prop">span: {{ section.span ?? 24 }}</span>
+                <span class="item-prop">span: {{ formatSpan(section.span) }}</span>
                 <span class="item-prop">order: {{ section.order ?? 100 }}</span>
                 <div class="item-actions">
                   <el-button-group size="small">
@@ -644,10 +704,33 @@ if (editId > 0) {
           </el-form-item>
 
           <el-divider content-position="left">布局与排序</el-divider>
-          <el-form-item label="栅格宽度">
-            <el-input-number v-model="selectedSection.span" :min="1" :max="24" :step="1" style="width: 100%" />
+          <el-form-item label="响应式栅格">
+            <el-switch v-model="isSectionResponsive" />
+            <span class="form-tip">开启后按 xs/sm/md/lg/xl 五档断点配置</span>
+          </el-form-item>
+          <el-form-item v-if="!isSectionResponsive" label="栅格宽度">
+            <el-input-number v-model="sectionSpan" :min="1" :max="24" :step="1" style="width: 100%" />
             <span class="form-tip">grid 布局下生效，1-24</span>
           </el-form-item>
+          <el-collapse v-else v-model="sectionResponsiveCollapse" class="resp-collapse">
+            <el-collapse-item title="响应式断点（1-24）" name="resp">
+              <el-form-item label="xs">
+                <el-input-number :model-value="getSectionBreakpoint('xs')" :min="1" :max="24" :step="1" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setSectionBreakpoint('xs', v)" />
+              </el-form-item>
+              <el-form-item label="sm">
+                <el-input-number :model-value="getSectionBreakpoint('sm')" :min="1" :max="24" :step="1" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setSectionBreakpoint('sm', v)" />
+              </el-form-item>
+              <el-form-item label="md">
+                <el-input-number :model-value="getSectionBreakpoint('md')" :min="1" :max="24" :step="1" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setSectionBreakpoint('md', v)" />
+              </el-form-item>
+              <el-form-item label="lg">
+                <el-input-number :model-value="getSectionBreakpoint('lg')" :min="1" :max="24" :step="1" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setSectionBreakpoint('lg', v)" />
+              </el-form-item>
+              <el-form-item label="xl">
+                <el-input-number :model-value="getSectionBreakpoint('xl')" :min="1" :max="24" :step="1" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setSectionBreakpoint('xl', v)" />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
           <el-form-item label="排序号">
             <el-input-number v-model="selectedSection.order" :min="0" :max="9999" :step="10" style="width: 100%" />
             <span class="form-tip">升序排列，相同 order 按数组顺序</span>
@@ -910,6 +993,14 @@ if (editId > 0) {
   color: var(--el-text-color-secondary);
   margin-top: 2px;
   line-height: 1.4;
+}
+
+.resp-collapse {
+  margin: 4px 0 12px;
+}
+
+.resp-collapse :deep(.el-collapse-item__content) {
+  padding-bottom: 0;
 }
 
 /* 响应式：小屏堆叠 */

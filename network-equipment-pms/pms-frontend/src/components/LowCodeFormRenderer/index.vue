@@ -37,7 +37,8 @@ import {
   FieldType,
   LayoutType,
   type FormConfig,
-  type FormFieldConfig
+  type FormFieldConfig,
+  type ResponsiveSpan
 } from '@/api/lowcode'
 
 /** Props 定义 */
@@ -167,6 +168,25 @@ const formRules = computed<FormRules>(() => {
 
 /** 布局配置 */
 const layout = computed(() => props.config.layout || { type: LayoutType.GRID, gutter: 16 })
+
+/**
+ * 解析栅格 span 为 el-col 绑定属性。
+ *
+ * <p>向后兼容：span 为数字或缺省时按 :span= 渲染（缺省 24）；
+ * span 为响应式断点对象时按 :xs= :sm= :md= :lg= :xl= 渲染。</p>
+ */
+function colProps(span: number | ResponsiveSpan | undefined): Record<string, number> {
+  if (span === undefined || typeof span === 'number') {
+    return { span: span ?? 24 }
+  }
+  const result: Record<string, number> = {}
+  if (span.xs !== undefined) result.xs = span.xs
+  if (span.sm !== undefined) result.sm = span.sm
+  if (span.md !== undefined) result.md = span.md
+  if (span.lg !== undefined) result.lg = span.lg
+  if (span.xl !== undefined) result.xl = span.xl
+  return result
+}
 
 /** tabs 折叠面板激活项 */
 const activeTab = ref<string>('')
@@ -350,7 +370,7 @@ defineExpose({
       <el-col
         v-for="field in visibleFields"
         :key="field.id"
-        :span="field.span ?? 24"
+        v-bind="colProps(field.span)"
       >
         <!-- 分隔线 -->
         <el-divider
@@ -499,7 +519,7 @@ defineExpose({
           <el-col
             v-for="field in resolveFields(tab.fields)"
             :key="field.id"
-            :span="field.span ?? 24"
+            v-bind="colProps(field.span)"
           >
             <el-form-item :label="field.label" :prop="field.prop">
               <component
@@ -530,7 +550,7 @@ defineExpose({
           <el-col
             v-for="field in resolveFields(group.fields)"
             :key="field.id"
-            :span="field.span ?? 24"
+            v-bind="colProps(field.span)"
           >
             <el-form-item :label="field.label" :prop="field.prop">
               <component
