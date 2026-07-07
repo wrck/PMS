@@ -65,4 +65,20 @@ public interface DdlGenerator {
      */
     String generateJunctionTable(String junctionTable, String fromTableName, String toTableName,
                                   String fromFieldName, String toFieldName, String onDelete);
+
+    /**
+     * 生成 DROP INDEX 语句
+     * @param tableName 表名
+     * @param indexName 索引名
+     * @return DROP INDEX SQL
+     */
+    String generateDropIndex(String tableName, String indexName);
+
+    /**
+     * 生成 ALTER COLUMN 语句（修改列类型/可空性）
+     * @param tableName 表名
+     * @param field 字段定义（新定义）
+     * @return ALTER TABLE MODIFY COLUMN SQL
+     */
+    String generateAlterColumn(String tableName, com.dp.plat.lowcode.entity.LowCodeField field);
 }
