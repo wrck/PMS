@@ -2,10 +2,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import JsonTreeDiff from '@/components/JsonTreeDiff/index.vue'
 import {
   getVersionHistory,
   diffVersions,
   rollbackVersion,
+  exportPackageZip,
+  importPackage,
   type LowCodeConfigVersion,
   type VersionDiffDTO
 } from '@/api/lowcode-version'
@@ -19,6 +22,15 @@ const versionList = ref<LowCodeConfigVersion[]>([])
 const selectedVersions = ref<number[]>([])
 const diffResult = ref<VersionDiffDTO | null>(null)
 const loading = ref(false)
+const diffMode = ref<'tree' | 'flat'>('tree')
+const oldSnapshot = ref<any>(null)
+const newSnapshot = ref<any>(null)
+const exportDialogVisible = ref(false)
+const importDialogVisible = ref(false)
+const exportCodes = ref('')
+const exportTargetEnv = ref('TEST')
+const importFile = ref<File | null>(null)
+const importOverwrite = ref(false)
 
 async function loadHistory() {
   if (!configId.value) {
@@ -43,6 +55,18 @@ async function showDiff() {
   const [from, to] = [...selectedVersions.value].sort((a, b) => a - b)
   try {
     diffResult.value = await diffVersions(configType.value, configId.value!, from, to)
+    // 解析快照用于树形 Diff
+    const fromVersion = versionList.value.find(v => v.version === selectedVersions.value.sort((a, b) => a - b)[0])
+    const toVersion = versionList.value.find(v => v.version === selectedVersions.value.sort((a, b) => a - b)[1])
+    if (fromVersion && toVersion) {
+      try {
+        oldSnapshot.value = JSON.parse(fromVersion.snapshot || '{}')
+        newSnapshot.value = JSON.parse(toVersion.snapshot || '{}')
+      } catch (e) {
+        oldSnapshot.value = null
+        newSnapshot.value = null
+      }
+    }
   } catch (e) {
     ElMessage.error('Diff 计算失败')
   }
@@ -61,6 +85,47 @@ async function rollback(version: LowCodeConfigVersion) {
   } catch (e) {
     // 用户取消
   }
+}
+
+async function onExport() {
+  const codes = exportCodes.value.split(',').map(s => s.trim()).filter(Boolean)
+  if (codes.length === 0) {
+    ElMessage.warning('请输入至少一个配置编码')
+    return
+  }
+  try {
+    const blob = await exportPackageZip(codes, exportTargetEnv.value)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lowcode-package-${exportTargetEnv.value}.zip`
+    a.click()
+    URL.revokeObjectURL(url)
+    exportDialogVisible.value = false
+    ElMessage.success('导出成功')
+  } catch (e) {
+    ElMessage.error('导出失败')
+  }
+}
+
+async function onImport() {
+  if (!importFile.value) {
+    ElMessage.warning('请选择文件')
+    return
+  }
+  try {
+    await importPackage(importFile.value, importOverwrite.value)
+    ElMessage.success('导入成功')
+    importDialogVisible.value = false
+    importFile.value = null
+    if (configId.value) await loadHistory()
+  } catch (e) {
+    ElMessage.error('导入失败')
+  }
+}
+
+function onFileChange(file: any) {
+  importFile.value = file.raw
 }
 
 function changeTypeTag(type: string): EpTagType {
@@ -108,6 +173,51 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
       </el-form>
     </el-card>
 
+    <el-card shadow="never" style="margin-top: 16px">
+      <template #header>
+        <span>环境晋升</span>
+      </template>
+      <el-button type="success" @click="exportDialogVisible = true">导出配置包</el-button>
+      <el-button type="warning" @click="importDialogVisible = true">导入配置包</el-button>
+    </el-card>
+
+    <!-- 导出对话框 -->
+    <el-dialog v-model="exportDialogVisible" title="导出配置包" width="500px">
+      <el-form label-width="120px">
+        <el-form-item label="配置编码（逗号分隔）">
+          <el-input v-model="exportCodes" placeholder="如 entity_user,entity_role" />
+        </el-form-item>
+        <el-form-item label="目标环境">
+          <el-select v-model="exportTargetEnv" style="width: 200px">
+            <el-option label="测试环境" value="TEST" />
+            <el-option label="生产环境" value="PROD" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="exportDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onExport">导出</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 导入对话框 -->
+    <el-dialog v-model="importDialogVisible" title="导入配置包" width="500px">
+      <el-form label-width="120px">
+        <el-form-item label="选择文件">
+          <el-upload :auto-upload="false" :on-change="onFileChange" :limit="1" accept=".zip,.json">
+              <el-button type="primary">选择文件</el-button>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="覆盖已存在">
+          <el-switch v-model="importOverwrite" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onImport">导入</el-button>
+      </template>
+    </el-dialog>
+
     <el-row :gutter="16" style="margin-top: 16px">
       <el-col :span="12">
         <el-card shadow="never">
@@ -152,12 +262,19 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
       <el-col :span="12">
         <el-card shadow="never">
           <template #header>
-            <span>版本差异</span>
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <span>版本差异</span>
+              <el-radio-group v-model="diffMode" size="small" v-if="diffResult">
+                <el-radio-button value="tree">树形视图</el-radio-button>
+                <el-radio-button value="flat">扁平表格</el-radio-button>
+              </el-radio-group>
+            </div>
           </template>
           <el-empty v-if="!diffResult" description="请选择两个版本进行对比" :image-size="60" />
           <div v-else-if="!hasDiff" style="text-align: center; padding: 40px; color: #909399">
             两个版本无差异
           </div>
+          <JsonTreeDiff v-else-if="diffMode === 'tree'" :old-data="oldSnapshot" :new-data="newSnapshot" />
           <el-table v-else :data="diffResult.entries" size="small" border>
             <el-table-column label="类型" prop="changeType" width="80">
               <template #default="{ row }">

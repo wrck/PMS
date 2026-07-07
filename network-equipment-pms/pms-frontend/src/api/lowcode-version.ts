@@ -71,3 +71,16 @@ export function exportPackage(configCodes: string[]) {
     configCodes: configCodes.join(',')
   })
 }
+
+/** 导出配置包（zip 二进制） */
+export function exportPackageZip(configCodes: string[], targetEnvironment: string) {
+  return post<Blob>('/api/lowcode/version/export-package', { configCodes, targetEnvironment }, { responseType: 'blob' })
+}
+
+/** 导入配置包 */
+export function importPackage(file: File, overwrite: boolean) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('overwrite', String(overwrite))
+  return post('/api/lowcode/version/import-package', formData)
+}
