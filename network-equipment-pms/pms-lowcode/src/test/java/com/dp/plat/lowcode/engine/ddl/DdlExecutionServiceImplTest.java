@@ -55,12 +55,12 @@ class DdlExecutionServiceImplTest {
                 fieldMapper, relationMapper, executionLogMapper, backupMapper, objectMapper);
 
         entity = LowCodeEntity.builder()
-                .id(1L)
                 .code("order")
                 .name("订单")
                 .tableName("pms_lc_order")
                 .status("DRAFT")
                 .build();
+        entity.setId(1L);
     }
 
     @Test
@@ -153,6 +153,6 @@ class DdlExecutionServiceImplTest {
         List<String> result = service.executeCreate(1L, false);
 
         assertEquals(2, result.size());
-        verify(jdbcTemplate).execute(anyString());
+        verify(jdbcTemplate, org.mockito.Mockito.times(2)).execute(anyString());
     }
 }
