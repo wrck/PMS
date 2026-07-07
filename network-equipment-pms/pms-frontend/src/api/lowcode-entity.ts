@@ -86,3 +86,8 @@ export function checkTableName(tableName: string, excludeId?: number) {
     excludeId
   })
 }
+
+/** 保存实体关联 */
+export function saveRelations(entityId: number, relations: LowCodeRelation[]) {
+  return post(`/api/lowcode/entity/${entityId}/relations`, relations)
+}

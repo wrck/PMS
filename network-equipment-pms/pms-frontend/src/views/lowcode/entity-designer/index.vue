@@ -11,6 +11,7 @@ import {
   publishEntity,
   deleteEntity,
   checkTableName,
+  saveRelations,
   type LowCodeEntity,
   type LowCodeField,
   type LowCodeRelation,
@@ -18,6 +19,7 @@ import {
   type DdlResultDTO
 } from '@/api/lowcode-entity'
 import FieldPanel from '@/components/EntityDesigner/FieldPanel.vue'
+import RelationConfigDialog from '@/components/EntityDesigner/RelationConfigDialog.vue'
 
 defineOptions({ name: 'EntityDesignerView' })
 
@@ -32,6 +34,8 @@ const currentEntity = ref<LowCodeEntity>({
 })
 const currentFields = ref<LowCodeField[]>([])
 const currentRelations = ref<LowCodeRelation[]>([])
+const relationDialogVisible = ref(false)
+const pendingRelation = ref<{ from: number; to: number } | null>(null)
 const ddlDialogVisible = ref(false)
 const ddlResult = ref<DdlResultDTO | null>(null)
 const loading = ref(false)
@@ -172,6 +176,74 @@ function newEntity() {
   currentRelations.value = []
 }
 
+function onEdgeConnected({ source, target }: { source: { cell: any }; target: { cell: any } }) {
+  const fromEntityId = source.cell.getData()?.entityId
+  const toEntityId = target.cell.getData()?.entityId
+  if (fromEntityId && toEntityId) {
+    pendingRelation.value = { from: fromEntityId, to: toEntityId }
+    relationDialogVisible.value = true
+  }
+}
+
+async function onRelationConfirm(relation: LowCodeRelation) {
+  if (!pendingRelation.value) return
+  try {
+    await saveRelations(pendingRelation.value.from, [relation])
+    ElMessage.success('关联已保存')
+    const entity = entityList.value.find(x => x.id === pendingRelation.value!.from)
+    if (entity) await selectEntity(entity)
+  } catch (e) {
+    ElMessage.error('保存关联失败')
+  }
+}
+
+function onEntityDragStart(e: DragEvent, entity: LowCodeEntity) {
+  e.dataTransfer?.setData('entityId', String(entity.id))
+}
+
+async function onCanvasDrop(e: DragEvent) {
+  e.preventDefault()
+  const entityId = Number(e.dataTransfer?.getData('entityId'))
+  if (!entityId) return
+  const entity = entityList.value.find(x => x.id === entityId)
+  if (!entity) return
+  try {
+    const design = await getEntityDesign(entity.id)
+    const rect = canvasContainer.value?.getBoundingClientRect()
+    const x = (e.clientX - (rect?.left || 0)) - 110
+    const y = (e.clientY - (rect?.top || 0)) - 100
+    const node = graphRef.value?.addNode({
+      shape: 'rect',
+      x: Math.max(0, x),
+      y: Math.max(0, y),
+      width: 220,
+      height: 80 + design.fields.length * 22,
+      label: entity.name,
+      attrs: {
+        body: { fill: '#fff', stroke: '#409eff', strokeWidth: 2 },
+        label: { fontSize: 14, fill: '#303133' }
+      },
+      data: {
+        entityId: entity.id,
+        entityName: entity.name,
+        tableName: entity.tableName,
+        fields: design.fields
+      }
+    })
+    // 给节点添加端口
+    const groups = ['top', 'bottom', 'left', 'right']
+    design.fields.forEach((f, i) => {
+      node?.addPort({
+        id: `port-${entity.id}-${f.name}`,
+        group: groups[i % 4],
+        attrs: { text: { text: f.name } }
+      })
+    })
+  } catch (err) {
+    ElMessage.error('加载实体设计失败')
+  }
+}
+
 function initGraph() {
   if (!canvasContainer.value) return
   graphRef.value = new Graph({
@@ -182,11 +254,23 @@ function initGraph() {
     mousewheel: { enabled: true, modifiers: ['ctrl'] },
     connecting: {
       allowBlank: false,
-      allowLoop: true,
+      allowLoop: false,
       allowMulti: true,
       router: 'orth',
-      connector: 'rounded'
+      connector: 'rounded',
+      createEdge() {
+        return this.createEdge({
+          shape: 'edge',
+          attrs: {
+            line: { stroke: '#409eff', strokeWidth: 2 }
+          }
+        })
+      }
     }
+  })
+
+  graphRef.value.on('edge:connected', ({ source, target }) => {
+    onEdgeConnected({ source, target })
   })
 }
 
@@ -214,6 +298,8 @@ onBeforeUnmount(() => {
           :key="entity.id"
           class="entity-item"
           :class="{ active: entity.id === currentEntity.id }"
+          draggable="true"
+          @dragstart="onEntityDragStart($event, entity)"
           @click="selectEntity(entity)"
         >
           <div class="entity-item-name">{{ entity.name }}</div>
@@ -238,7 +324,7 @@ onBeforeUnmount(() => {
         <el-button size="small" @click="previewDdl">DDL 预览</el-button>
         <el-button type="success" size="small" @click="publish">发布</el-button>
       </div>
-      <div ref="canvasContainer" class="canvas-container"></div>
+      <div ref="canvasContainer" class="canvas-container" @drop="onCanvasDrop" @dragover.prevent></div>
     </div>
 
     <!-- 右侧：属性面板 -->
@@ -264,6 +350,13 @@ onBeforeUnmount(() => {
         <pre v-for="(sql, i) in ddlResult.ddlStatements" :key="i" class="ddl-block">{{ sql }};</pre>
       </div>
     </el-dialog>
+
+    <RelationConfigDialog
+      v-model="relationDialogVisible"
+      :from-entity-id="pendingRelation?.from || 0"
+      :to-entity-id="pendingRelation?.to || 0"
+      @confirm="onRelationConfirm"
+    />
   </div>
 </template>
 

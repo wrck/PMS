@@ -1,5 +1,6 @@
 <!-- src/components/EntityDesigner/EntityNode.vue -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { LowCodeField } from '@/api/lowcode-entity'
 
 interface EntityNodeData {
@@ -8,7 +9,16 @@ interface EntityNodeData {
   fields: LowCodeField[]
 }
 
-defineProps<{ data: EntityNodeData }>()
+const props = defineProps<{ data: EntityNodeData }>()
+
+const ports = computed(() => {
+  const groups = ['top', 'bottom', 'left', 'right']
+  return (props.data.fields || []).map((f, i) => ({
+    id: `port-${f.name}`,
+    group: groups[i % 4],
+    attrs: { text: { text: f.name } }
+  }))
+})
 </script>
 
 <template>
