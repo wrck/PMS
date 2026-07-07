@@ -283,6 +283,18 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '连接器配置', icon: 'Connection', requiresAuth: true }
       },
       {
+        path: 'lowcode/preview',
+        name: 'LowcodePreview',
+        component: () => import('@/views/lowcode/preview/index.vue'),
+        meta: { title: '预览', icon: 'View', requiresAuth: true, hidden: true }
+      },
+      {
+        path: 'lowcode/publish-center',
+        name: 'LowcodePublishCenter',
+        component: () => import('@/views/lowcode/publish-center/index.vue'),
+        meta: { title: '发布中心', icon: 'Promotion', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码
