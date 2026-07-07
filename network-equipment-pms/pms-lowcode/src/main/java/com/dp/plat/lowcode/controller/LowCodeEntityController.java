@@ -5,6 +5,7 @@ import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.dto.DdlResultDTO;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
+import com.dp.plat.lowcode.entity.LowCodeRelation;
 import com.dp.plat.lowcode.service.LowCodeEntityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -80,6 +81,16 @@ public class LowCodeEntityController {
     public Result<Void> delete(@PathVariable Long id) {
         entityService.removeById(id);
         return Result.ok();
+    }
+
+    @PostMapping("/{entityId}/relations")
+    @Operation(summary = "保存实体关联", description = "保存实体的关联关系（先删后插）")
+    @PreAuthorize("hasAuthority('lowcode:entity:edit')")
+    @OperLog(title = "低代码实体关联", businessType = 1)
+    public Result<List<LowCodeRelation>> saveRelations(
+            @PathVariable Long entityId,
+            @Valid @RequestBody List<LowCodeRelation> relations) {
+        return Result.ok(entityService.saveRelations(entityId, relations));
     }
 
     @Operation(summary = "校验物理表名唯一性")

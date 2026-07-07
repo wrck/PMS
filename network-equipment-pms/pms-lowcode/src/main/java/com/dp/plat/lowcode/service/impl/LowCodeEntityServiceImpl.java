@@ -186,4 +186,22 @@ public class LowCodeEntityServiceImpl extends ServiceImpl<LowCodeEntityMapper, L
         return new LowCodeConfigVersionService.SnapshotContext(
                 type, id, code, snapshot, changeLog);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<LowCodeRelation> saveRelations(Long entityId, List<LowCodeRelation> relations) {
+        // 先删旧
+        relationMapper.delete(new LambdaQueryWrapper<LowCodeRelation>()
+                .eq(LowCodeRelation::getFromEntityId, entityId));
+        // 再插新
+        if (relations != null) {
+            for (LowCodeRelation rel : relations) {
+                rel.setFromEntityId(entityId);
+                rel.setId(null); // 确保新增
+                relationMapper.insert(rel);
+            }
+        }
+        return relationMapper.selectList(new LambdaQueryWrapper<LowCodeRelation>()
+                .eq(LowCodeRelation::getFromEntityId, entityId));
+    }
 }

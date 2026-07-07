@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
 import com.dp.plat.lowcode.dto.DdlResultDTO;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
+import com.dp.plat.lowcode.entity.LowCodeRelation;
+
+import java.util.List;
 
 /**
  * 低代码实体管理服务。
@@ -34,4 +37,12 @@ public interface LowCodeEntityService extends IService<LowCodeEntity> {
      * 校验表名唯一性。
      */
     boolean isTableNameExists(String tableName, Long excludeId);
+
+    /**
+     * 保存实体关联
+     * @param entityId 实体 ID
+     * @param relations 关联列表
+     * @return 保存后的关联列表
+     */
+    List<LowCodeRelation> saveRelations(Long entityId, List<LowCodeRelation> relations);
 }
