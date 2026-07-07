@@ -32,8 +32,8 @@ RUN mvn dependency:go-offline -B -DskipTests || true
 # 3. 复制源码（变更频率高，放在依赖下载之后）
 COPY . .
 
-# 4. 编译打包（跳过测试，-B 批量模式避免交互）
-RUN mvn clean package -DskipTests -B
+# 4. 编译打包（跳过测试编译和执行，-B 批量模式避免交互）
+RUN mvn clean package -Dmaven.test.skip=true -B
 
 # ---------------------------- 阶段 2: 运行时 ----------------------------
 FROM eclipse-temurin:17-jre-jammy AS runtime
