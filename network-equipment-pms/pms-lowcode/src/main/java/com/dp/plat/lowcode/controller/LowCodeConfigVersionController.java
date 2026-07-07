@@ -7,8 +7,11 @@ import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.service.LowCodeConfigVersionService;
 import com.dp.plat.lowcode.version.EnvironmentPromotionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -79,5 +84,44 @@ public class LowCodeConfigVersionController {
     @OperLog(title = "低代码配置版本", businessType = 4)
     public Result<String> exportPackage(@RequestParam List<String> configCodes) {
         return Result.ok(promotionService.exportPackageJson(configCodes));
+    }
+
+    @Operation(summary = "导出配置包（zip）")
+    @PostMapping("/export-package")
+    @PreAuthorize("hasAuthority('lowcode:version:export')")
+    @OperLog(title = "低代码配置版本", businessType = 4)
+    public ResponseEntity<byte[]> exportPackageZip(@RequestBody ExportPackageRequest req) {
+        byte[] zip = promotionService.exportPackageZip(req.getConfigCodes(), req.getTargetEnvironment());
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=lowcode-package.zip")
+                .header("Content-Type", "application/zip")
+                .body(zip);
+    }
+
+    @Operation(summary = "导入配置包")
+    @PostMapping("/import-package")
+    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    @OperLog(title = "低代码配置版本", businessType = 1)
+    public Result<Void> importPackage(@RequestParam("file") MultipartFile file,
+                                       @RequestParam(defaultValue = "false") boolean overwrite) {
+        try {
+            String json = new String(file.getBytes(), StandardCharsets.UTF_8);
+            promotionService.importPackageWithConfirm(json, overwrite);
+            return Result.ok();
+        } catch (Exception e) {
+            throw new RuntimeException("导入失败", e);
+        }
+    }
+
+    /**
+     * 导出配置包请求体
+     */
+    @Data
+    @Schema(description = "导出配置包请求")
+    public static class ExportPackageRequest {
+        @Schema(description = "配置编码列表")
+        private List<String> configCodes;
+        @Schema(description = "目标环境")
+        private String targetEnvironment;
     }
 }
