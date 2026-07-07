@@ -128,13 +128,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Lowercase repository name
+        id: repo
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - name: Build & Push Backend Image
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.PROJECT_DIR }}
           file: ${{ env.PROJECT_DIR }}/Dockerfile.backend
           push: true
-          tags: ghcr.io/${{ github.repository }}/pms-backend:latest
+          tags: ghcr.io/${{ steps.repo.outputs.name }}/pms-backend:latest
 
       - name: Build & Push Frontend Image
         uses: docker/build-push-action@v5
@@ -142,4 +146,4 @@ jobs:
           context: ${{ env.PROJECT_DIR }}
           file: ${{ env.PROJECT_DIR }}/Dockerfile.frontend
           push: true
-          tags: ghcr.io/${{ github.repository }}/pms-frontend:latest
+          tags: ghcr.io/${{ steps.repo.outputs.name }}/pms-frontend:latest

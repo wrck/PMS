@@ -115,11 +115,14 @@ jobs:
           else
             TAG="${GITHUB_SHA::7}"
           fi
-          BACKEND="${REGISTRY}/${IMAGE_NAME,,}/pms-backend:${TAG}"
-          FRONTEND="${REGISTRY}/${IMAGE_NAME,,}/pms-frontend:${TAG}"
+          # 仓库名转小写（Docker tag 必须全小写）
+          IMAGE_NAME_LOWER="${IMAGE_NAME,,}"
+          BACKEND="${REGISTRY}/${IMAGE_NAME_LOWER}/pms-backend:${TAG}"
+          FRONTEND="${REGISTRY}/${IMAGE_NAME_LOWER}/pms-frontend:${TAG}"
           echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "backend_image=${BACKEND}" >> "$GITHUB_OUTPUT"
           echo "frontend_image=${FRONTEND}" >> "$GITHUB_OUTPUT"
+          echo "image_name_lower=${IMAGE_NAME_LOWER}" >> "$GITHUB_OUTPUT"
           echo "==> Backend image:  ${BACKEND}"
           echo "==> Frontend image: ${FRONTEND}"
 
@@ -134,7 +137,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.backend_image }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/pms-backend:latest
+            ${{ env.REGISTRY }}/${{ steps.meta.outputs.image_name_lower }}/pms-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -146,7 +149,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.frontend_image }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/pms-frontend:latest
+            ${{ env.REGISTRY }}/${{ steps.meta.outputs.image_name_lower }}/pms-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
