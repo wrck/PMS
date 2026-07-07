@@ -1,14 +1,18 @@
 package com.dp.plat.lowcode.engine.microflow;
 
+import com.dp.plat.lowcode.entity.LowCodeMicroflowExecutionLog;
+import com.dp.plat.lowcode.mapper.LowCodeMicroflowExecutionLogMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -16,6 +20,9 @@ import java.util.stream.Collectors;
  *
  * <p>遍历微流定义中的 DAG 节点，按节点类型分发到对应的 NodeExecutor 执行。
  * 支持顺序执行 + 条件跳转 + 提前终止（RETURN/END）。</p>
+ *
+ * <p>执行每个节点前后记录执行轨迹（借鉴 Joget APM），通过 executionId 串联同一次执行的所有节点轨迹。
+ * 轨迹记录为 best-effort，不影响主流程执行。</p>
  */
 @Slf4j
 @Component
@@ -24,16 +31,21 @@ public class MicroflowEngine {
 
     private final ObjectMapper objectMapper;
     private final List<MicroflowNodeExecutor> executors;
+    private final LowCodeMicroflowExecutionLogMapper executionLogMapper;
 
     /**
      * 执行微流。
      *
+     * @param microflowId    微流ID（用于轨迹记录，可为 null）
+     * @param microflowCode  微流编码（用于轨迹记录，可为 null）
      * @param definitionJson 微流定义 JSON（含 nodes: [{id, type, config}], edges: [{source, target}]）
      * @param inputs         输入参数
      * @return 执行上下文（含 result）
      */
     @SuppressWarnings("unchecked")
-    public MicroflowContext execute(String definitionJson, Map<String, Object> inputs) {
+    public MicroflowContext execute(Long microflowId, String microflowCode,
+                                    String definitionJson, Map<String, Object> inputs) {
+        String executionId = UUID.randomUUID().toString();
         try {
             Map<String, Object> definition = objectMapper.readValue(definitionJson,
                     new TypeReference<Map<String, Object>>() {});
@@ -67,10 +79,8 @@ public class MicroflowEngine {
                 MicroflowNodeType nodeType = MicroflowNodeType.valueOf(type);
                 MicroflowNodeExecutor executor = findExecutor(nodeType);
 
-                String nextNodeId = null;
-                if (executor != null) {
-                    nextNodeId = executor.execute(node, context);
-                }
+                String nextNodeId = executeNodeWithTrace(executionId, microflowId, microflowCode,
+                        node, nodeType, executor, context);
                 // 如果执行器未指定下一节点，按默认边走
                 if (nextNodeId == null && !context.isTerminated()) {
                     nextNodeId = edgeMap.get(currentNodeId);
@@ -78,8 +88,52 @@ public class MicroflowEngine {
                 currentNodeId = nextNodeId;
             }
             return context;
+        } catch (MicroflowExecutionException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("微流执行失败", e);
+        }
+    }
+
+    /**
+     * 执行单个节点并记录轨迹（best-effort）。
+     */
+    private String executeNodeWithTrace(String executionId, Long microflowId, String microflowCode,
+                                        Map<String, Object> node, MicroflowNodeType nodeType,
+                                        MicroflowNodeExecutor executor, MicroflowContext context) {
+        String nodeId = (String) node.get("id");
+        LocalDateTime startTime = LocalDateTime.now();
+        long startMs = System.currentTimeMillis();
+
+        LowCodeMicroflowExecutionLog logEntry = LowCodeMicroflowExecutionLog.builder()
+                .microflowId(microflowId)
+                .microflowCode(microflowCode == null ? "unknown" : microflowCode)
+                .executionId(executionId)
+                .nodeId(nodeId)
+                .nodeType(nodeType.name())
+                .startTime(startTime)
+                .inputs(toJson(node.get("config")))
+                .variablesSnapshot(toJson(context.getVariables()))
+                .status("RUNNING")
+                .operator(currentOperator())
+                .build();
+        insertLog(logEntry);
+
+        try {
+            String nextNodeId = executor != null ? executor.execute(node, context) : null;
+            logEntry.setEndTime(LocalDateTime.now());
+            logEntry.setDurationMs(System.currentTimeMillis() - startMs);
+            logEntry.setOutputs(context.getResult() != null ? toJson(context.getResult()) : null);
+            logEntry.setStatus("SUCCESS");
+            updateLog(logEntry);
+            return nextNodeId;
+        } catch (Exception e) {
+            logEntry.setEndTime(LocalDateTime.now());
+            logEntry.setDurationMs(System.currentTimeMillis() - startMs);
+            logEntry.setStatus("FAILED");
+            logEntry.setErrorMessage(e.getMessage());
+            updateLog(logEntry);
+            throw e;
         }
     }
 
@@ -88,5 +142,49 @@ public class MicroflowEngine {
                 .filter(e -> e.getNodeType() == type)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /** 序列化为 JSON 字符串（best-effort，失败返回 null） */
+    private String toJson(Object value) {
+        if (value == null) return null;
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception e) {
+            log.warn("序列化执行轨迹字段失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** 插入轨迹记录（best-effort） */
+    private void insertLog(LowCodeMicroflowExecutionLog logEntry) {
+        try {
+            if (executionLogMapper != null) {
+                executionLogMapper.insert(logEntry);
+            }
+        } catch (Exception e) {
+            log.warn("写入微流执行轨迹失败: {}", e.getMessage());
+        }
+    }
+
+    /** 更新轨迹记录（best-effort） */
+    private void updateLog(LowCodeMicroflowExecutionLog logEntry) {
+        try {
+            if (executionLogMapper != null && logEntry.getId() != null) {
+                executionLogMapper.updateById(logEntry);
+            }
+        } catch (Exception e) {
+            log.warn("更新微流执行轨迹失败: {}", e.getMessage());
+        }
+    }
+
+    /** 获取当前操作人（best-effort，无安全上下文时返回 null） */
+    private String currentOperator() {
+        try {
+            Object principal = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+            return principal == null ? null : principal.toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

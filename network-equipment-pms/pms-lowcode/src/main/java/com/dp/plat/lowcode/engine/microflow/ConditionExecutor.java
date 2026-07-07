@@ -1,7 +1,7 @@
 package com.dp.plat.lowcode.engine.microflow;
 
 import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,10 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ConditionExecutor implements MicroflowNodeExecutor {
+
+    private final GroovySandboxExecutor groovySandboxExecutor;
 
     @Override
     public MicroflowNodeType getNodeType() {
@@ -30,7 +33,7 @@ public class ConditionExecutor implements MicroflowNodeExecutor {
         if (expression == null) return null;
 
         Binding binding = new Binding(context.getVariables());
-        Object result = new GroovyShell(binding).evaluate(expression);
+        Object result = groovySandboxExecutor.evaluate(binding, expression);
         boolean matched = Boolean.TRUE.equals(result);
         log.debug("ConditionExecutor: expression={}, result={}", expression, matched);
         return matched ? (String) config.get("trueBranch") : (String) config.get("falseBranch");

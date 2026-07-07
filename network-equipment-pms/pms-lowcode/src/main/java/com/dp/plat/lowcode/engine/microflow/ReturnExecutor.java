@@ -1,7 +1,7 @@
 package com.dp.plat.lowcode.engine.microflow;
 
 import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,10 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ReturnExecutor implements MicroflowNodeExecutor {
+
+    private final GroovySandboxExecutor groovySandboxExecutor;
 
     @Override
     public MicroflowNodeType getNodeType() {
@@ -27,7 +30,7 @@ public class ReturnExecutor implements MicroflowNodeExecutor {
         Map<String, Object> config = (Map<String, Object>) nodeDef.get("config");
         if (config != null && config.containsKey("expression")) {
             Binding binding = new Binding(context.getVariables());
-            Object value = new GroovyShell(binding).evaluate((String) config.get("expression"));
+            Object value = groovySandboxExecutor.evaluate(binding, (String) config.get("expression"));
             context.setResult(value);
         }
         context.setTerminated(true);

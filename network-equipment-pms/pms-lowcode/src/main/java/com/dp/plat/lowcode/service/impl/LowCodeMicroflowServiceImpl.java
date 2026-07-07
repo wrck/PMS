@@ -30,7 +30,8 @@ public class LowCodeMicroflowServiceImpl extends ServiceImpl<LowCodeMicroflowMap
         if (microflow == null) {
             throw new RuntimeException("微流不存在: " + code);
         }
-        MicroflowContext context = microflowEngine.execute(microflow.getDefinition(), inputs);
+        MicroflowContext context = microflowEngine.execute(
+                microflow.getId(), microflow.getCode(), microflow.getDefinition(), inputs);
         Map<String, Object> result = new HashMap<>();
         result.put("result", context.getResult());
         result.put("variables", context.getVariables());
