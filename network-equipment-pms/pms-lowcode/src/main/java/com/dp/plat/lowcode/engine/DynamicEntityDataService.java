@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +86,7 @@ public class DynamicEntityDataService {
                 .collect(Collectors.toSet());
         Map<String, Object> filtered = data.entrySet().stream()
                 .filter(e -> validFields.contains(e.getKey()))
-                .collect(Collectors.toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
 
         String columns = filtered.keySet().stream()
                 .map(f -> "`" + f + "`")
@@ -113,7 +114,7 @@ public class DynamicEntityDataService {
                 .collect(Collectors.toSet());
         Map<String, Object> filtered = data.entrySet().stream()
                 .filter(e -> validFields.contains(e.getKey()))
-                .collect(Collectors.toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
 
         if (filtered.isEmpty()) {
             return;
