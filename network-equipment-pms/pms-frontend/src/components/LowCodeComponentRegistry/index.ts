@@ -18,6 +18,19 @@ export function has(name: string) {
   return registry.has(name)
 }
 
+/**
+ * Registry 默认导出（聚合所有 API），供消费者以
+ * `import LowCodeComponentRegistry from '@/components/LowCodeComponentRegistry'`
+ * 形式调用 LowCodeComponentRegistry.list() / .get() / .has() / .register()。
+ */
+export default {
+  register,
+  get,
+  list,
+  has,
+  initBuiltinComponents
+}
+
 // 初始化预置组件（懒加载，避免循环依赖）
 export async function initBuiltinComponents() {
   const widgets = import.meta.glob('../LowCodeWidgets/*.vue')

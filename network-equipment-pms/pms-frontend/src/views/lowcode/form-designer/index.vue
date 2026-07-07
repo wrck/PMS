@@ -14,7 +14,7 @@
  * <p>使用原生 HTML5 拖拽 API（draggable + dragstart/dragover/drop）实现，
  * 避免引入额外依赖；字段排序通过上移/下移按钮 + 拖拽两种方式。</p>
  */
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ElMessage,
@@ -40,6 +40,11 @@ import {
   type ResponsiveSpan
 } from '@/api/lowcode'
 import LowCodeFormRenderer from '@/components/LowCodeFormRenderer/index.vue'
+import LowCodePropertyPanel from '@/components/LowCodePropertyPanel/index.vue'
+import LowCodeComponentRegistry, {
+  initBuiltinComponents
+} from '@/components/LowCodeComponentRegistry'
+import type { ComponentMeta } from '@/components/LowCodeComponentRegistry/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,10 +56,14 @@ interface ComponentDef {
   label: string
   icon: string
   defaultProps?: Record<string, unknown>
+  /** registry 组件标记：拖入后 field.type 设为 custom，并写入 componentName */
+  isRegistry?: boolean
+  /** 对应 LowCodeComponentRegistry meta.name */
+  componentName?: string
 }
 
-/** 组件库分组 */
-const componentGroups = ref<Array<{ title: string; items: ComponentDef[] }>>([
+/** 基础组件库分组（17 种内置字段类型，保留不动） */
+const baseComponentGroups: Array<{ title: string; items: ComponentDef[] }> = [
   {
     title: '基础组件',
     items: [
@@ -97,7 +106,41 @@ const componentGroups = ref<Array<{ title: string; items: ComponentDef[] }>>([
       { type: FieldType.TITLE, label: '标题', icon: 'Document', defaultProps: {} }
     ]
   }
-])
+]
+
+/** 注册中心加载的业务组件 meta 列表（按 category 分组后合并到组件库） */
+const registryComponents = ref<ComponentMeta[]>([])
+
+/**
+ * 组件库分组（computed）：基础组件 + 注册中心业务组件。
+ *
+ * <p>基础 5 组保留不动；registry 组件按 category 分组，在基础组之后追加。
+ * registry 组件统一标记 isRegistry=true、type='custom'，拖入画布时写入 componentName。</p>
+ */
+const componentGroups = computed<Array<{ title: string; items: ComponentDef[] }>(() => {
+  const groups = baseComponentGroups.map((g) => ({ ...g, items: [...g.items] }))
+  if (registryComponents.value.length === 0) return groups
+  // 按 category 分组
+  const byCategory = new Map<string, ComponentMeta[]>()
+  for (const meta of registryComponents.value) {
+    const cat = meta.category || '其他'
+    if (!byCategory.has(cat)) byCategory.set(cat, [])
+    byCategory.get(cat)!.push(meta)
+  }
+  for (const [cat, metas] of byCategory) {
+    groups.push({
+      title: `业务组件·${cat}`,
+      items: metas.map((meta) => ({
+        type: FieldType.CUSTOM,
+        label: meta.displayName,
+        icon: 'Box',
+        isRegistry: true,
+        componentName: meta.name
+      }))
+    })
+  }
+  return groups
+})
 
 // ===================== 表单元信息 + 配置状态 =====================
 
@@ -149,6 +192,18 @@ const previewData = reactive<Record<string, unknown>>({})
 const selectedField = computed(() =>
   formConfig.fields.find((f) => f.id === selectedFieldId.value) || null
 )
+
+/** 选中字段是否为 registry 业务组件（type=custom 且携带 componentName） */
+const isSelectedRegistry = computed(
+  () => !!selectedField.value && selectedField.value.type === FieldType.CUSTOM && !!selectedField.value.componentName
+)
+
+/** 选中 registry 组件的 meta（含 propsSchema，供 LowCodePropertyPanel 渲染） */
+const selectedComponentMeta = computed<ComponentMeta | null>(() => {
+  const field = selectedField.value
+  if (!field || !field.componentName) return null
+  return LowCodeComponentRegistry.get(field.componentName)?.meta || null
+})
 
 // ===================== 响应式栅格断点（xs/sm/md/lg/xl） =====================
 
@@ -224,6 +279,10 @@ function createField(type: string, label: string, extraProps: Record<string, unk
 /** 添加字段到画布（点击组件库或拖拽放置） */
 function addField(comp: ComponentDef) {
   const field = createField(comp.type, comp.label, comp.defaultProps || {})
+  // registry 组件：写入 componentName，属性面板据此渲染 schema 驱动表单
+  if (comp.isRegistry && comp.componentName) {
+    field.componentName = comp.componentName
+  }
   formConfig.fields.push(field)
   selectedFieldId.value = field.id
 }
@@ -282,12 +341,16 @@ function selectField(id: string) {
 
 /** 当前拖拽的组件类型（来自组件库） */
 let dragType = ''
+/** 当前拖拽的组件定义（registry 组件 type 同为 'custom'，需用完整对象区分） */
+let dragComp: ComponentDef | null = null
 
 function onDragStart(event: DragEvent, comp: ComponentDef) {
   dragType = comp.type
+  dragComp = comp
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'copy'
-    event.dataTransfer.setData('text/plain', comp.type)
+    // registry 组件用 componentName 区分；基础组件用 type
+    event.dataTransfer.setData('text/plain', comp.isRegistry && comp.componentName ? `custom::${comp.componentName}` : comp.type)
   }
 }
 
@@ -299,11 +362,29 @@ function onCanvasDragOver(event: DragEvent) {
 
 function onCanvasDrop(event: DragEvent) {
   event.preventDefault()
-  const type = event.dataTransfer?.getData('text/plain') || dragType
-  if (!type) return
-  // 从组件库找到对应定义
+  const raw = event.dataTransfer?.getData('text/plain') || dragType
+  if (!raw) return
+  // 优先用 dragComp（拖拽起始即记录的完整定义，最可靠）
+  if (dragComp) {
+    addField(dragComp)
+    dragComp = null
+    dragType = ''
+    return
+  }
+  // 回退：按 type 或 custom::componentName 查找
+  if (raw.startsWith('custom::')) {
+    const cn = raw.slice(8)
+    for (const group of componentGroups.value) {
+      const comp = group.items.find((c) => c.isRegistry && c.componentName === cn)
+      if (comp) {
+        addField(comp)
+        return
+      }
+    }
+    return
+  }
   for (const group of componentGroups.value) {
-    const comp = group.items.find((c) => c.type === type)
+    const comp = group.items.find((c) => c.type === raw && !c.isRegistry)
     if (comp) {
       addField(comp)
       return
@@ -606,6 +687,16 @@ if (editId > 0) {
   // 新建模式：初始化一个空标题
   formConfig.title = '未命名表单'
 }
+
+// 加载注册中心业务组件（15 个预置 Widget），合并到组件库"业务组件"分组
+onMounted(async () => {
+  try {
+    await initBuiltinComponents()
+    registryComponents.value = LowCodeComponentRegistry.list()
+  } catch {
+    // 加载失败仅静默降级（基础组件仍可用）
+  }
+})
 </script>
 
 <template>
@@ -737,7 +828,9 @@ if (editId > 0) {
               @click="selectField(field.id)"
             >
               <div class="field-card-header">
-                <el-tag size="small" type="info">{{ field.type }}</el-tag>
+                <el-tag size="small" :type="field.type === FieldType.CUSTOM && field.componentName ? 'warning' : 'info'">
+                  {{ field.type === FieldType.CUSTOM && field.componentName ? field.componentName : field.type }}
+                </el-tag>
                 <span class="field-label">{{ field.label }}</span>
                 <span class="field-prop">{{ field.prop }}</span>
                 <span v-if="field.required" class="field-required">*</span>
@@ -812,7 +905,12 @@ if (editId > 0) {
           <!-- 基础属性 -->
           <el-divider content-position="left">基础属性</el-divider>
           <el-form-item label="字段类型">
+            <!-- registry 业务组件：只读展示，不可切换（切换会丢失 componentName 与 schema 绑定） -->
+            <el-tag v-if="isSelectedRegistry" type="warning" size="small">
+              业务组件：{{ selectedField.componentName }}
+            </el-tag>
             <el-select
+              v-else
               :model-value="selectedField.type"
               @change="(v: string) => changeFieldType(selectedField!, v)"
               style="width: 100%"
@@ -835,8 +933,18 @@ if (editId > 0) {
             <el-input v-model="selectedField.defaultValue" placeholder="留空表示无默认值" />
           </el-form-item>
 
+          <!-- registry 业务组件：schema 驱动属性面板（propsSchema 渲染） -->
+          <template v-if="isSelectedRegistry && selectedComponentMeta">
+            <el-divider content-position="left">组件属性</el-divider>
+            <LowCodePropertyPanel
+              :meta="selectedComponentMeta"
+              :model-value="(selectedField.props as Record<string, any>) || {}"
+              @update:model-value="(v: Record<string, any>) => { selectedField!.props = v }"
+            />
+          </template>
+
           <!-- 选项编辑（select/radio/checkbox/cascader） -->
-          <template v-if="selectedField.props && ('options' in selectedField.props)">
+          <template v-if="!isSelectedRegistry && selectedField.props && ('options' in selectedField.props)">
             <el-divider content-position="left">选项配置</el-divider>
             <div
               v-for="(opt, idx) in (selectedField.props.options as Array<{ label: string; value: string }>)"

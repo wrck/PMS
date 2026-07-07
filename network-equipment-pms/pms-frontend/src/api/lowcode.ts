@@ -119,6 +119,8 @@ export interface FormFieldConfig {
   props?: Record<string, unknown>
   /** 事件回调名（前端约定） */
   events?: Record<string, string>
+  /** type=custom 时关联的注册中心组件名（LowCodeComponentRegistry meta.name） */
+  componentName?: string
 }
 
 /** 布局配置 */
@@ -345,6 +347,8 @@ export interface ListColumnConfig {
   hidden?: boolean
   /** 是否可编辑（预留） */
   editable?: boolean
+  /** type=custom 时关联的注册中心业务组件名（LowCodeComponentRegistry meta.name） */
+  componentName?: string
 }
 
 /** 筛选项定义 */

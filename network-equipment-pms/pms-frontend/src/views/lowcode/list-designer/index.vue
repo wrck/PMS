@@ -16,7 +16,7 @@
  * 支持组件库 → 画布拖拽、画布内排序拖拽两种交互。字段 ID 自动生成
  * （col_N / filter_N / op_N），点击"预览"打开 LowCodeListRenderer 弹窗。</p>
  */
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
@@ -41,6 +41,10 @@ import {
   type ResponsiveSpan
 } from '@/api/lowcode'
 import LowCodeListRenderer from '@/components/LowCodeListRenderer/index.vue'
+import LowCodeComponentRegistry, {
+  initBuiltinComponents
+} from '@/components/LowCodeComponentRegistry'
+import type { ComponentMeta } from '@/components/LowCodeComponentRegistry/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -98,6 +102,9 @@ const componentGroups = ref<Array<{ title: string; items: ComponentDef[] }>>([
     ]
   }
 ])
+
+/** 注册中心业务组件（供"自定义列"绑定 componentName） */
+const registryComponents = ref<ComponentMeta[]>([])
 
 // ===================== 元信息 + 配置状态 =====================
 
@@ -731,6 +738,16 @@ if (editId > 0) {
 } else {
   listConfig.title = '未命名列表'
 }
+
+// 加载注册中心业务组件，供"自定义列"绑定 componentName
+onMounted(async () => {
+  try {
+    await initBuiltinComponents()
+    registryComponents.value = LowCodeComponentRegistry.list()
+  } catch {
+    // 加载失败仅静默降级
+  }
+})
 </script>
 
 <template>
@@ -893,6 +910,30 @@ if (editId > 0) {
               <el-option-group label="列组件">
                 <el-option v-for="c in componentGroups[0].items" :key="c.type" :label="c.label" :value="c.type" />
               </el-option-group>
+              <el-option-group v-if="registryComponents.length" label="业务组件">
+                <el-option
+                  v-for="meta in registryComponents"
+                  :key="meta.name"
+                  :label="meta.displayName"
+                  :value="ColumnType.CUSTOM"
+                />
+              </el-option-group>
+            </el-select>
+          </el-form-item>
+          <!-- 业务组件：选择列类型为"自定义"后，绑定注册中心组件名 -->
+          <el-form-item v-if="selectedColumn.type === ColumnType.CUSTOM" label="业务组件">
+            <el-select
+              v-model="selectedColumn.componentName"
+              placeholder="选择业务组件"
+              clearable
+              style="width: 100%"
+            >
+              <el-option
+                v-for="meta in registryComponents"
+                :key="meta.name"
+                :label="`${meta.displayName} (${meta.name})`"
+                :value="meta.name"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="列标题">

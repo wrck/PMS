@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, shallowRef } from 'vue'
 import { Graph } from '@antv/x6'
+import { register } from '@antv/x6-vue-shape'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getEntityList,
@@ -19,7 +20,12 @@ import {
   type DdlResultDTO
 } from '@/api/lowcode-entity'
 import FieldPanel from '@/components/EntityDesigner/FieldPanel.vue'
+import IndexPanel, { type LowCodeIndex } from '@/components/EntityDesigner/IndexPanel.vue'
 import RelationConfigDialog from '@/components/EntityDesigner/RelationConfigDialog.vue'
+import EntityNode from '@/components/EntityDesigner/EntityNode.vue'
+
+/** 自定义实体节点 shape 名（通过 x6-vue-shape 注册） */
+const ENTITY_NODE_SHAPE = 'entity-node'
 
 defineOptions({ name: 'EntityDesignerView' })
 
@@ -34,6 +40,8 @@ const currentEntity = ref<LowCodeEntity>({
 })
 const currentFields = ref<LowCodeField[]>([])
 const currentRelations = ref<LowCodeRelation[]>([])
+/** 当前实体的复合索引列表（本地维护，后续可扩展到后端持久化） */
+const currentIndexes = ref<LowCodeIndex[]>([])
 const relationDialogVisible = ref(false)
 const pendingRelation = ref<{ from: number; to: number } | null>(null)
 const ddlDialogVisible = ref(false)
@@ -60,31 +68,131 @@ async function selectEntity(entity: LowCodeEntity) {
   currentEntity.value = design.entity
   currentFields.value = design.fields
   currentRelations.value = design.relations || []
+  currentIndexes.value = []
   renderGraph()
+}
+
+/** 构造实体节点数据（供 EntityNode vue-shape 渲染） */
+function buildEntityNodeData(entity: LowCodeEntity, fields: LowCodeField[], selected = false) {
+  return {
+    entityId: entity.id,
+    entityName: entity.name,
+    tableName: entity.tableName,
+    status: entity.status,
+    fields,
+    selected
+  }
+}
+
+/** 计算实体节点高度（标题+表名+字段行） */
+function entityNodeHeight(fields: LowCodeField[]): number {
+  return 56 + Math.min(fields.length, 8) * 22
 }
 
 function renderGraph() {
   if (!graphRef.value) return
   graphRef.value.clearCells()
 
-  // 渲染实体节点
+  // 渲染当前实体节点（单实体编辑模式）
   graphRef.value.addNode({
-    shape: 'rect',
-    x: 100,
-    y: 100,
-    width: 220,
-    height: 200,
-    label: currentEntity.value.name,
-    attrs: {
-      body: { fill: '#fff', stroke: '#409eff', strokeWidth: 2 },
-      label: { fontSize: 14, fill: '#303133' }
-    },
-    data: {
-      entityName: currentEntity.value.name,
-      tableName: currentEntity.value.tableName,
-      fields: currentFields.value
+    shape: ENTITY_NODE_SHAPE,
+    x: 120,
+    y: 80,
+    width: 240,
+    height: entityNodeHeight(currentFields.value),
+    data: buildEntityNodeData(currentEntity.value, currentFields.value, true)
+  })
+}
+
+/** 将指定 entityId 的节点设为选中，其余取消选中 */
+function highlightNode(entityId: number) {
+  if (!graphRef.value) return
+  graphRef.value.getNodes().forEach((node) => {
+    const data = node.getData() || {}
+    const isTarget = data.entityId === entityId
+    if (data.selected !== isTarget) {
+      node.setData({ ...data, selected: isTarget })
     }
   })
+}
+
+/** 画布节点点击：加载该实体到右侧编辑面板并高亮（多实体画布下生效） */
+async function onNodeClick({ node }: { node: { getData: () => any } }) {
+  const data = node.getData()
+  if (!data || !data.entityId) return
+  const entity = entityList.value.find((e) => e.id === data.entityId)
+  if (!entity) return
+  try {
+    const design = await getEntityDesign(data.entityId)
+    currentEntity.value = design.entity
+    currentFields.value = design.fields
+    currentRelations.value = design.relations || []
+    currentIndexes.value = []
+    highlightNode(data.entityId)
+  } catch {
+    ElMessage.error('加载实体设计失败')
+  }
+}
+
+/** 加载全部实体到画布，形成多实体 ER 全景图（自动网格布局 + 关联边） */
+async function loadAllEntities() {
+  if (!graphRef.value) return
+  loading.value = true
+  try {
+    const list = await getEntityList()
+    const designs: Array<{ entity: LowCodeEntity; fields: LowCodeField[]; relations: LowCodeRelation[] }> = []
+    for (const e of list) {
+      if (!e.id) continue
+      const design = await getEntityDesign(e.id)
+      designs.push({ entity: design.entity, fields: design.fields, relations: design.relations || [] })
+    }
+    graphRef.value.clearCells()
+
+    // 简单网格布局（按列数 = ceil(sqrt(n)) 排布）
+    const cols = Math.max(1, Math.ceil(Math.sqrt(designs.length)))
+    const gapX = 300
+    const gapY = 280
+    designs.forEach((d, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      graphRef.value!.addNode({
+        shape: ENTITY_NODE_SHAPE,
+        x: col * gapX + 40,
+        y: row * gapY + 40,
+        width: 240,
+        height: entityNodeHeight(d.fields),
+        data: buildEntityNodeData(d.entity, d.fields, false)
+      })
+    })
+
+    // 渲染实体间关联边（按 fromEntityId→toEntityId 去重）
+    const addedEdges = new Set<string>()
+    for (const d of designs) {
+      for (const rel of d.relations) {
+        const key = `${rel.fromEntityId}->${rel.toEntityId}`
+        if (addedEdges.has(key)) continue
+        addedEdges.add(key)
+        const sourceNode = graphRef.value!.getNodes().find((n) => n.getData()?.entityId === rel.fromEntityId)
+        const targetNode = graphRef.value!.getNodes().find((n) => n.getData()?.entityId === rel.toEntityId)
+        if (sourceNode && targetNode) {
+          graphRef.value!.addEdge({
+            source: sourceNode,
+            target: targetNode,
+            attrs: { line: { stroke: '#67c23a', strokeWidth: 2, targetMarker: { name: 'classic', size: 6 } } },
+            labels: rel.relationType ? [{ text: rel.relationType, fontSize: 10, fill: '#909399' }] : []
+          })
+        }
+      }
+    }
+
+    // 适配画布视口
+    graphRef.value.zoomToFit({ padding: 20, maxScale: 1 })
+    ElMessage.success(`已加载 ${designs.length} 个实体`)
+  } catch {
+    ElMessage.error('加载全部实体失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 async function saveDesign() {
@@ -174,6 +282,8 @@ function newEntity() {
   }
   currentFields.value = []
   currentRelations.value = []
+  currentIndexes.value = []
+  if (graphRef.value) graphRef.value.clearCells()
 }
 
 function onEdgeConnected({ source, target }: { source: { cell: any }; target: { cell: any } }) {
@@ -210,34 +320,15 @@ async function onCanvasDrop(e: DragEvent) {
   try {
     const design = await getEntityDesign(entity.id)
     const rect = canvasContainer.value?.getBoundingClientRect()
-    const x = (e.clientX - (rect?.left || 0)) - 110
-    const y = (e.clientY - (rect?.top || 0)) - 100
-    const node = graphRef.value?.addNode({
-      shape: 'rect',
+    const x = (e.clientX - (rect?.left || 0)) - 120
+    const y = (e.clientY - (rect?.top || 0)) - 50
+    graphRef.value?.addNode({
+      shape: ENTITY_NODE_SHAPE,
       x: Math.max(0, x),
       y: Math.max(0, y),
-      width: 220,
-      height: 80 + design.fields.length * 22,
-      label: entity.name,
-      attrs: {
-        body: { fill: '#fff', stroke: '#409eff', strokeWidth: 2 },
-        label: { fontSize: 14, fill: '#303133' }
-      },
-      data: {
-        entityId: entity.id,
-        entityName: entity.name,
-        tableName: entity.tableName,
-        fields: design.fields
-      }
-    })
-    // 给节点添加端口
-    const groups = ['top', 'bottom', 'left', 'right']
-    design.fields.forEach((f, i) => {
-      node?.addPort({
-        id: `port-${entity.id}-${f.name}`,
-        group: groups[i % 4],
-        attrs: { text: { text: f.name } }
-      })
+      width: 240,
+      height: entityNodeHeight(design.fields),
+      data: buildEntityNodeData(entity, design.fields, false)
     })
   } catch (err) {
     ElMessage.error('加载实体设计失败')
@@ -272,9 +363,21 @@ function initGraph() {
   graphRef.value.on('edge:connected', ({ source, target }) => {
     onEdgeConnected({ source, target })
   })
+
+  // 节点点击：加载该实体到右侧编辑面板并高亮（多实体画布场景）
+  graphRef.value.on('node:click', ({ node }) => {
+    onNodeClick({ node })
+  })
 }
 
 onMounted(() => {
+  // 注册 EntityNode 自定义 Vue 节点（x6-vue-shape）
+  register({
+    shape: ENTITY_NODE_SHAPE,
+    width: 240,
+    height: 120,
+    component: EntityNode
+  })
   initGraph()
   loadEntityList()
 })
@@ -323,6 +426,7 @@ onBeforeUnmount(() => {
         <el-button type="primary" size="small" @click="saveDesign">保存</el-button>
         <el-button size="small" @click="previewDdl">DDL 预览</el-button>
         <el-button type="success" size="small" @click="publish">发布</el-button>
+        <el-button type="warning" size="small" @click="loadAllEntities">加载全部实体</el-button>
       </div>
       <div ref="canvasContainer" class="canvas-container" @drop="onCanvasDrop" @dragover.prevent></div>
     </div>
@@ -332,8 +436,10 @@ onBeforeUnmount(() => {
       <FieldPanel
         :entity="currentEntity"
         :fields="currentFields"
+        :indexes="currentIndexes"
         @update:entity="currentEntity = $event"
         @update:fields="currentFields = $event"
+        @update:indexes="currentIndexes = $event"
       />
     </div>
 

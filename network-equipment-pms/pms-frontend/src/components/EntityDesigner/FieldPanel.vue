@@ -1,19 +1,22 @@
 <!-- src/components/EntityDesigner/FieldPanel.vue -->
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import type { LowCodeEntity, LowCodeField } from '@/api/lowcode-entity'
+import IndexPanel, { type LowCodeIndex } from '@/components/EntityDesigner/IndexPanel.vue'
 
 const props = defineProps<{
   entity: LowCodeEntity
   fields: LowCodeField[]
+  indexes?: LowCodeIndex[]
 }>()
 
 const emit = defineEmits<{
   'update:entity': [entity: LowCodeEntity]
   'update:fields': [fields: LowCodeField[]]
+  'update:indexes': [indexes: LowCodeIndex[]]
 }>()
 
-const activeTab = ref<'entity' | 'fields'>('entity')
+const activeTab = ref<'entity' | 'fields' | 'indexes'>('entity')
 
 const formData = reactive<LowCodeEntity>({ ...props.entity })
 
@@ -25,6 +28,12 @@ watch(() => props.entity, (val) => {
 watch(formData, () => {
   emit('update:entity', { ...formData })
 }, { deep: true })
+
+/** 索引列表 v-model 代理（透传到 IndexPanel） */
+const indexProxy = computed<LowCodeIndex[]>({
+  get: () => props.indexes || [],
+  set: (v) => emit('update:indexes', v)
+})
 
 function addField() {
   const newField: LowCodeField = {
@@ -48,6 +57,14 @@ function removeField(index: number) {
 }
 
 const FIELD_TYPES = ['STRING', 'INTEGER', 'LONG', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TEXT']
+
+/** 主键策略可选项 */
+const PK_STRATEGIES = [
+  { label: 'AUTO_INCREMENT（自增）', value: 'AUTO_INCREMENT' },
+  { label: 'UUID（36位）', value: 'UUID' },
+  { label: 'SNOWFLAKE（雪花）', value: 'SNOWFLAKE' },
+  { label: 'BUSINESS（业务主键）', value: 'BUSINESS' }
+] as const
 </script>
 
 <template>
@@ -99,14 +116,61 @@ const FIELD_TYPES = ['STRING', 'INTEGER', 'LONG', 'DECIMAL', 'BOOLEAN', 'DATE', 
               <el-input-number v-model="row.length" size="small" :min="1" controls-position="right" />
             </template>
           </el-table-column>
+          <el-table-column label="精度" prop="scale" width="70">
+            <template #default="{ row }">
+              <el-input-number
+                v-if="row.fieldType === 'DECIMAL'"
+                v-model="row.scale"
+                size="small"
+                :min="0"
+                :max="30"
+                controls-position="right"
+              />
+              <span v-else class="col-dash">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="默认值" prop="defaultValue" width="120">
+            <template #default="{ row }">
+              <el-input v-model="row.defaultValue" size="small" placeholder="无" />
+            </template>
+          </el-table-column>
           <el-table-column label="PK" prop="primaryKey" width="50">
             <template #default="{ row }">
               <el-checkbox v-model="row.primaryKey" :true-value="1" :false-value="0" />
             </template>
           </el-table-column>
+          <el-table-column label="主键策略" width="140">
+            <template #default="{ row }">
+              <el-select
+                v-if="row.primaryKey === 1"
+                v-model="row.pkStrategy"
+                size="small"
+                placeholder="选择策略"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="s in PK_STRATEGIES"
+                  :key="s.value"
+                  :label="s.label"
+                  :value="s.value"
+                />
+              </el-select>
+              <span v-else class="col-dash">—</span>
+            </template>
+          </el-table-column>
           <el-table-column label="可空" prop="nullable" width="50">
             <template #default="{ row }">
               <el-checkbox v-model="row.nullable" :true-value="1" :false-value="0" />
+            </template>
+          </el-table-column>
+          <el-table-column label="索引" prop="indexed" width="55">
+            <template #default="{ row }">
+              <el-switch v-model="row.indexed" :active-value="1" :inactive-value="0" size="small" />
+            </template>
+          </el-table-column>
+          <el-table-column label="唯一" prop="uniqueFlag" width="55">
+            <template #default="{ row }">
+              <el-switch v-model="row.uniqueFlag" :active-value="1" :inactive-value="0" size="small" />
             </template>
           </el-table-column>
           <el-table-column label="操作" width="70">
@@ -115,6 +179,9 @@ const FIELD_TYPES = ['STRING', 'INTEGER', 'LONG', 'DECIMAL', 'BOOLEAN', 'DATE', 
             </template>
           </el-table-column>
         </el-table>
+      </el-tab-pane>
+      <el-tab-pane label="索引配置" name="indexes">
+        <IndexPanel :fields="props.fields" v-model="indexProxy" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -129,5 +196,8 @@ export default { name: 'FieldPanel' }
   padding: 10px;
   height: 100%;
   overflow-y: auto;
+  .col-dash {
+    color: var(--el-text-color-placeholder);
+  }
 }
 </style>

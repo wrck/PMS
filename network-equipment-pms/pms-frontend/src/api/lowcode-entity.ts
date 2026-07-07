@@ -25,6 +25,8 @@ export interface LowCodeField {
   indexed: number
   uniqueFlag: number
   defaultValue?: string
+  /** 主键策略（仅当 primaryKey=1 时使用）：AUTO_INCREMENT / UUID / SNOWFLAKE / BUSINESS */
+  pkStrategy?: 'AUTO_INCREMENT' | 'UUID' | 'SNOWFLAKE' | 'BUSINESS'
   sortOrder: number
 }
 
