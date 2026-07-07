@@ -1,36 +1,32 @@
 name: Deploy
 
 # ============================================================================
-# PMS 部署流水线（Task 23.4）
+# PMS 部署流水线
+#
+# 注意：本仓库根是 /workspace，但 PMS 项目在 network-equipment-pms/ 子目录下。
+# 因此所有 build 步骤都通过 defaults.run.working-directory 指向该子目录，
+# Docker build 的 context 和 file 参数也显式指定为子目录路径。
 #
 # 触发条件：
-#   - 推送 main / release/* 分支
-#   - 推送 v* tag（生产发布）
+#   - 推送 main / release/* 分支 → 部署 staging
+#   - 推送 v* tag（生产发布）→ 部署 production
 #   - 手动触发（可选 environment / image_tag）
-#
-# 流程：
-#   build  → 构建后端 JAR + 前端 dist → 构建并推送 Docker 镜像到 GHCR
-#   deploy → SSH 到部署服务器 → 拉取最新代码 → 蓝绿部署 → 健康检查
 #
 # 必需 Secrets（GitHub → Settings → Secrets and variables → Actions）：
 #   - DEPLOY_HOST          部署服务器 IP/域名
 #   - DEPLOY_USER          SSH 用户（需免密 sudo docker / nginx）
-#   - DEPLOY_SSH_KEY       SSH 私钥（ed25519 建议公钥加入服务器 authorized_keys）
-#   - DEPLOY_PATH          服务器上项目根目录（如 /opt/pms）
+#   - DEPLOY_SSH_KEY       SSH 私钥
+#   - DEPLOY_PATH          服务器上 network-equipment-pms 目录路径（如 /opt/pms/network-equipment-pms）
 #   - APP_ENCRYPT_KEY      字段加密密钥（32 字节 Base64）
 #   - MYSQL_PASSWORD       生产 MySQL 密码
 #   - REDIS_PASSWORD       生产 Redis 密码
-#
-# Environment secrets（建议按 staging / production 拆分）：
-#   - 在 GitHub 仓库 Settings → Environments 中创建 staging / production
-#   - 为每个 environment 配置独立的 DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY / DEPLOY_PATH
-#   - production 建议开启 required reviewers / deployment branches 限制
 # ============================================================================
 
 on:
   push:
     branches:
       - main
+      - master
       - 'release/*'
     tags:
       - 'v*'
@@ -51,6 +47,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PROJECT_DIR: network-equipment-pms
 
 permissions:
   contents: read
@@ -63,6 +60,9 @@ jobs:
   build:
     name: Build & Push Images
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}
     outputs:
       image_tag: ${{ steps.meta.outputs.image_tag }}
       backend_image: ${{ steps.meta.outputs.backend_image }}
@@ -77,6 +77,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/pom.xml
 
       - name: Build backend (skip tests, CI 已在 PR 阶段验证)
         run: mvn -B clean package -DskipTests
@@ -86,7 +87,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: pms-frontend/package-lock.json
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/pms-frontend/package-lock.json
 
       - name: Build frontend
         run: |
@@ -103,6 +104,7 @@ jobs:
 
       - name: Extract metadata (image tag)
         id: meta
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           # 优先级：手动输入 > git tag > commit sha
           if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
@@ -126,8 +128,8 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile.backend
+          context: ${{ env.PROJECT_DIR }}
+          file: ${{ env.PROJECT_DIR }}/Dockerfile.backend
           push: true
           tags: |
             ${{ steps.meta.outputs.backend_image }}
@@ -138,8 +140,8 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile.frontend
+          context: ${{ env.PROJECT_DIR }}
+          file: ${{ env.PROJECT_DIR }}/Dockerfile.frontend
           push: true
           tags: |
             ${{ steps.meta.outputs.frontend_image }}
@@ -148,12 +150,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   # --------------------------------------------------------------------------
-  # Job 2: 部署到 staging（main 分支 / 手动 staging）
+  # Job 2: 部署到 staging（main/master/release/* 分支 / 手动 staging）
   # --------------------------------------------------------------------------
   deploy-staging:
     name: Deploy to Staging
     needs: build
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment:
       name: staging
