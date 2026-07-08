@@ -1,10 +1,11 @@
 #!/bin/bash
 # 提交级验证脚本（双重门禁）— RULES.md 支柱二 §2.3
-# 版本：1.0.0
+# 版本：1.1.0（新增 [CHANGES] 标签自动注入 §2.5）
 #
 # 用法：
 #   子代理侧（提交前）：bash scripts/verify-commit.sh --pre
 #   主代理侧（合并前）：bash scripts/verify-commit.sh <commit-hash>
+#   生成 [CHANGES] 标签：bash scripts/verify-commit.sh --changes [commit-hash]
 #
 # 退出码约定（RULES.md §2.3.2）：
 #   0 = 通过
@@ -14,7 +15,7 @@
 set -uo pipefail
 # 注意：不使用 -e，因为我们要捕获各步骤退出码并统一返回约定码
 
-VERIFY_VERSION="1.0.0"
+VERIFY_VERSION="1.1.0"
 LOG_DIR="scripts/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -203,6 +204,36 @@ check_lint() {
     return 0
 }
 
+# === 生成 [CHANGES] 标签（RULES.md §2.5 自动注入）===
+# 用法：generate_changes_tag [--pre | <commit-hash>]
+# 输出：[CHANGES: 5 files, +123 -45]
+generate_changes_tag() {
+    local mode="$1" hash="${2:-}"
+    local file_count add del
+
+    if [ "$mode" = "--pre" ]; then
+        # 子代理侧：统计暂存区 + 工作区的变更
+        local stats
+        stats=$(git diff --shortstat 2>/dev/null; git diff --cached --shortstat 2>/dev/null)
+        # 解析 "X files changed, Y insertions(+), Z deletions(-)"
+        file_count=$(echo "$stats" | grep -oP '\d+(?= file)' | awk '{s+=$1} END{print s+0}')
+        add=$(echo "$stats" | grep -oP '\d+(?= insertion)' | awk '{s+=$1} END{print s+0}')
+        del=$(echo "$stats" | grep -oP '\d+(?= deletion)' | awk '{s+=$1} END{print s+0}')
+    else
+        # 主代理侧：统计该 commit 相对其父的变更
+        local stats
+        stats=$(git diff --shortstat "$hash^..$hash" 2>/dev/null || git show --shortstat "$hash" 2>/dev/null | grep 'file')
+        file_count=$(echo "$stats" | grep -oP '\d+(?= file)' | head -1)
+        add=$(echo "$stats" | grep -oP '\d+(?= insertion)' | head -1)
+        del=$(echo "$stats" | grep -oP '\d+(?= deletion)' | head -1)
+    fi
+
+    file_count=${file_count:-0}
+    add=${add:-0}
+    del=${del:-0}
+    echo "[CHANGES: ${file_count} files, +${add} -${del}]"
+}
+
 # === 主流程 ===
 main() {
     local mode="${1:---pre}"
@@ -213,6 +244,18 @@ main() {
     log "Mode: $mode, Hash: ${hash:-N/A}"
     log "Log: $LOG_FILE"
     log "========================================"
+
+    # 独立模式：仅生成 [CHANGES] 标签（RULES.md §2.5 自动注入）
+    if [ "$mode" = "--changes" ]; then
+        log "生成 [CHANGES] 标签..."
+        # 如果提供了 hash，用 hash 模式；否则用 --pre 模式
+        if [ -n "$hash" ]; then
+            generate_changes_tag "hash" "$hash"
+        else
+            generate_changes_tag "--pre"
+        fi
+        exit 0
+    fi
 
     self_check
 
@@ -234,8 +277,14 @@ main() {
     # 检查 4：Lint 检查（可选，不阻断）
     check_lint "$mode" "$hash"
 
+    # 生成 [CHANGES] 标签（--pre 通过后自动输出，供子代理注入 commit message）
+    local changes_tag
+    changes_tag=$(generate_changes_tag "$mode" "$hash")
+    log "CHANGES_TAG: $changes_tag"
+
     log "========================================"
     log "RESULT: ALL CHECKS PASSED (exit 0)"
+    log "$changes_tag"
     log "========================================"
     exit 0
 }

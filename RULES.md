@@ -405,6 +405,68 @@ bash scripts/verify-commit.sh <commit-hash>
   - 用户批准记录（如"Approved-by: user on 2026-07-08"）
 - **完整性校验失败时**：脚本拒绝执行，视为 P1 事故，主代理立即停止工作并告知用户。
 
+#### 2.4.4 受保护资产更新通知机制（活跃子代理同步）
+
+当主代理修改了受保护资产（verify.sh / verify-commit.sh / *.sha256 / RULES.md / AGENTS.md），**必须通知所有活跃子代理重新拉取最新版本**，否则子代理会继续使用旧版规则导致验证不一致。
+
+**通知触发条件**：主代理提交包含以下任一文件变更时自动触发：
+- `scripts/verify.sh`、`scripts/verify-commit.sh`
+- `scripts/*.sha256`
+- `RULES.md`、`AGENTS.md`
+
+**通知与强制同步流程**：
+
+```bash
+# 主代理在提交受保护资产后执行
+notify_protected_asset_update() {
+    local updated_files="$1"  # 本次更新的受保护资产文件列表
+    local commit_hash=$(git rev-parse --short HEAD)
+
+    echo "==[受保护资产更新通知]=="
+    echo "更新文件: $updated_files"
+    echo "Commit: $commit_hash"
+
+    # 1. 遍历所有活跃 worktree，记录需要同步的子代理
+    local notify_list=""
+    while IFS=, read -r ts branch state extra; do
+        if [ "$state" = "ACTIVE" ] || [ "$state" = "COMMITTED" ]; then
+            notify_list="$notify_list $branch"
+        fi
+    done < /workspace/.worktree-registry.csv 2>/dev/null
+
+    # 2. 对每个活跃子代理的 worktree 执行强制同步
+    for branch in $notify_list; do
+        local wt_dir="/workspace/wt/$branch"
+        if [ -d "$wt_dir" ]; then
+            echo "SYNC: 强制同步 $branch"
+            # 从主仓库 checkout 最新受保护资产到子代理 worktree
+            cd "$wt_dir"
+            for f in $updated_files; do
+                git checkout "$commit_hash" -- "$f" 2>/dev/null && echo "  ✓ $f 已同步" || echo "  ✗ $f 同步失败（文件可能不存在于子代理侧）"
+            done
+            # 重新校验完整性
+            if [ -f scripts/verify-commit.sh ]; then
+                sha256sum -c scripts/verify-commit.sha256 2>/dev/null && echo "  ✓ $branch 完整性校验通过" || echo "  ✗ $branch 完整性校验失败，需人工介入"
+            fi
+        fi
+    done
+
+    # 3. 记录通知事件
+    echo "$(date +%s),$commit_hash,PROTECTED_UPDATE,$updated_files" >> /workspace/.worktree-registry.csv
+    echo "通知完成，共同步 $(echo $notify_list | wc -w) 个活跃子代理"
+}
+```
+
+**子代理侧义务**：
+
+- 子代理在收到主代理的受保护资产更新通知后（或下次提交前），**必须执行 `git checkout <最新commit> -- scripts/ RULES.md AGENTS.md`** 强制同步，否则其 `--pre` 验证结果不可信。
+- 子代理任务描述中必须包含："受保护资产更新后，下次提交前必须 `git checkout <hash> -- scripts/ RULES.md` 同步，否则 --pre 结果无效"。
+- 若子代理未同步就提交，主代理侧 `verify-commit.sh <hash>` 会因完整性校验失败（sha256 不匹配）而拒绝合并（exit 1）。
+
+**边界情况**：
+- 子代理正在执行 `--pre` 验证时主代理更新了脚本：子代理本次验证结果有效（用旧版），但下次提交前必须同步。
+- 子代理 worktree 内有未提交改动无法 checkout：主代理记录告警，该子代理任务降级为串行处理（等其他代理完成后主代理统一同步）。
+
 ### 2.5 结构化 Commit 模板
 
 每个 commit 必须遵循 Conventional Commits + 结构化 trailer：
@@ -420,11 +482,16 @@ Verify: <verify-commit.sh --pre: pass (exit 0) | verify.sh all: pass>
 Worktree: <wt/branch-name 或 main>
 Reviewed-by: <主代理>
 [VERIFIED]
+[CHANGES: <file-count> files, +<add> -<del>]
 ```
 
 - **type**：feat/fix/docs/refactor/test/chore
 - **scope**：模块名（lowcode/lowcode-frontend/system 等）
 - **`[VERIFIED]` 标签**：子代理提交必须带此标签，表示已通过 `--pre` 验证。主代理合并前检查此标签存在。
+- **`[CHANGES]` 标签（自动注入）**：变更统计标签，由 `verify-commit.sh` 在 `--pre` 通过后自动生成并注入到 commit message 末尾，为主代理提供更丰富的审计元数据。
+  - 格式：`[CHANGES: 5 files, +123 -45]`（文件数、新增行数、删除行数）
+  - 生成方式：`git diff --stat | tail -1` 解析，或 `git diff --shortstat` 提取。
+  - 主代理合并前可据此快速判断变更规模，决定是否需要详细审查。
 - **禁止模糊提交信息**：如 "update"、"fix bug"、"wip" 等一律禁止。
 - **一个 commit 一个逻辑单元**：禁止把多个不相关 Task 塞进一个 commit。
 
@@ -501,6 +568,72 @@ git status --short             # 确认工作区状态
 | 补丁片段语法错误导致合并失败 | 主代理合并后跑 verify.sh frontend，失败则回退 + 标记该子代理为需修复 |
 | 补丁片段冲突（两个子代理改同一行） | 主代理按 branch-name 排序顺序合并，冲突时后者追加而非覆盖 |
 | 补丁片段残留（已合并但未清理） | 合并成功后 `rm -f patches/router-*.ts`，批次末校验 patches/ 为空 |
+
+#### 3.3.1 优先级插队机制（非 FIFO）
+
+默认队列按 `branch-name` 排序合并（FIFO），但主代理可根据任务优先级调整队列顺序。**高优先级任务可标记为 `[URGENT]`，在当前任务完成后优先插入队首**。
+
+**优先级标记**：
+
+| 标记 | 含义 | 合并顺序 |
+|------|------|---------|
+| `[URGENT]` | 紧急任务（用户明确要求优先 / 阻塞其他任务） | 队首，当前任务完成后立即合并 |
+| （无标记） | 普通任务 | 按 branch-name 排序 |
+| `[DEFERRED]` | 延后任务（非关键路径 / 可独立合并） | 队尾，所有普通任务合并后再处理 |
+
+**插队执行流程**：
+
+```bash
+# 主代理维护优先级队列（基于 patches/ 目录的补丁片段）
+priority_queue() {
+    local action="$1"  # add | list | next
+
+    local queue_file="/workspace/.patch-queue.csv"
+
+    case "$action" in
+        add)
+            local branch="$2" priority="${3:-NORMAL}"
+            echo "$(date +%s),$branch,$priority" >> "$queue_file"
+            echo "ENQUEUE: $branch (priority=$priority)"
+            ;;
+        list)
+            echo "==[Patch 队列]=="
+            # 按优先级排序：URGENT > NORMAL > DEFERRED
+            sort -t, -k3,3 -r "$queue_file" 2>/dev/null | \
+                awk -F, '{printf "  %s %s %s\n", $3, $2, ($1?"@"$1:"")}'
+            ;;
+        next)
+            # 取下一个该合并的补丁（URGENT 优先）
+            local next_branch
+            next_branch=$(grep ',URGENT,' "$queue_file" 2>/dev/null | head -1 | cut -d, -f2)
+            if [ -z "$next_branch" ]; then
+                next_branch=$(grep -v ',URGENT,' "$queue_file" 2>/dev/null | grep -v ',DEFERRED,' | head -1 | cut -d, -f2)
+            fi
+            if [ -z "$next_branch" ]; then
+                next_branch=$(grep ',DEFERRED,' "$queue_file" 2>/dev/null | head -1 | cut -d, -f2)
+            fi
+            echo "$next_branch"
+            # 从队列移除
+            if [ -n "$next_branch" ]; then
+                grep -v ",$next_branch," "$queue_file" > "$queue_file.tmp" && mv "$queue_file.tmp" "$queue_file"
+            fi
+            ;;
+    esac
+}
+```
+
+**插队规则**：
+- 主代理在派发任务时可在子代理任务描述中声明优先级：`# 优先级：[URGENT]` 或 `# 优先级：[DEFERRED]`。
+- 子代理在补丁片段文件名中体现优先级：`patches/router-URGENT-<branch-name>.ts`（主代理合并时识别 URGENT 前缀优先处理）。
+- **插队不抢占**：URGENT 任务不中断当前正在合并的任务，而是在当前任务完成后立即插入队首。
+- **URGENT 数量限制**：同时最多 2 个 URGENT 任务在队列中，超过则降级为 NORMAL（防止 URGENT 泛滥失效）。
+- **队列可见性**：主代理每次合并后执行 `priority_queue list` 展示当前队列状态，便于审计。
+
+**示例场景**：
+1. 队列中已有 3 个 NORMAL 补丁：`wt/b4-engine-01`、`wt/b4-engine-02`、`wt/b4-frontend-03`。
+2. 用户要求紧急修复一个 bug，主代理派发 `wt/b4-fix-urgent` 任务并标记 `[URGENT]`。
+3. 主代理完成当前 `wt/b4-engine-01` 合并后，执行 `priority_queue next` → 返回 `wt/b4-fix-urgent`（URGENT 优先）。
+4. 合并 `wt/b4-fix-urgent` 后，继续按 NORMAL 顺序处理 `wt/b4-engine-02`、`wt/b4-frontend-03`。
 
 ### 3.4 超时熔断机制（防单点故障拖垮并行效率）
 
