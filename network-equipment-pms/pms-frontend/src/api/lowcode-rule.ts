@@ -10,6 +10,47 @@ export interface LowCodeRule {
   status?: string
   version?: number
   bizType?: string
+  /** 扩展信息 JSON 字符串（如表达式规则的 inputsSchema） */
+  ext?: string
+}
+
+// ===================== 决策表结构化类型 =====================
+
+/** 比较操作符 */
+export type DecisionOperator = 'EQ' | 'NE' | 'GT' | 'GE' | 'LT' | 'LE' | 'IN'
+
+/** 命中策略：FIRST 匹配首行 / ALL 匹配全部 / COLLECT 收集全部 */
+export type HitPolicy = 'FIRST' | 'ALL' | 'COLLECT'
+
+/** 条件列定义：字段名 + 操作符 */
+export interface ConditionColumn {
+  field: string
+  operator: DecisionOperator
+}
+
+/** 动作列定义：字段名 */
+export interface ActionColumn {
+  field: string
+}
+
+/** 决策表行：按列顺序对应条件值与动作值 */
+export interface DecisionRow {
+  conditions: { value: unknown }[]
+  actions: { value: unknown }[]
+}
+
+/** 决策表完整结构（新格式 definition） */
+export interface DecisionTable {
+  hitPolicy: HitPolicy
+  conditionColumns: ConditionColumn[]
+  actionColumns: ActionColumn[]
+  rows: DecisionRow[]
+}
+
+/** 表达式规则扩展信息（存入 ext 字段） */
+export interface ExpressionExt {
+  /** 用户手动维护的 facts schema，用于变量侧栏补全 */
+  inputsSchema: { name: string; type?: string; description?: string }[]
 }
 
 export function getRuleList() {
