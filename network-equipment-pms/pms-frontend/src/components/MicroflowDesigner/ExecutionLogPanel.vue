@@ -32,6 +32,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:collapsed', v: boolean): void
+  /** 点击日志条目时触发，父组件据 nodeId 在画布上高亮对应节点 */
+  (e: 'highlight-node', nodeId: string): void
+  /** 日志加载完成后触发，父组件据 status 在画布上同步节点状态 */
+  (e: 'logs-loaded', logs: MicroflowExecutionLog[]): void
 }>()
 
 const innerCollapsed = ref(props.collapsed || false)
@@ -90,6 +94,7 @@ async function loadRecentExecutions(microflowId: number) {
 async function loadLogs(executionId: string) {
   if (!executionId) {
     logs.value = []
+    emit('logs-loaded', logs.value)
     return
   }
   loading.value = true
@@ -100,6 +105,7 @@ async function loadLogs(executionId: string) {
     logs.value = []
   } finally {
     loading.value = false
+    emit('logs-loaded', logs.value)
   }
 }
 
@@ -113,6 +119,12 @@ function toggleExpand(nodeId: string) {
   if (s.has(nodeId)) s.delete(nodeId)
   else s.add(nodeId)
   expandedNodeIds.value = s
+}
+
+/** 点击日志条目：展开/收起详情，并通知父组件在画布上高亮对应节点 */
+function onLogItemClick(log: MicroflowExecutionLog) {
+  toggleExpand(log.nodeId)
+  emit('highlight-node', log.nodeId)
 }
 
 function statusColor(status: string): string {
@@ -201,7 +213,7 @@ async function refresh() {
             :timestamp="formatTime(log.startTime)"
             placement="top"
           >
-            <div class="log-item" :class="`status-${log.status.toLowerCase()}`" @click="toggleExpand(log.nodeId)">
+            <div class="log-item" :class="`status-${log.status.toLowerCase()}`" @click="onLogItemClick(log)">
               <div class="log-item-header">
                 <span class="node-name">{{ log.nodeId }}</span>
                 <el-tag size="small" :type="statusTagType(log.status)">{{ log.nodeType }}</el-tag>

@@ -1,0 +1,149 @@
+<script setup lang="ts">
+/**
+ * 微流节点（X6 自定义 Vue 节点，通过 @antv/x6-vue-shape 注册）。
+ *
+ * <p>由 x6-vue-shape 以 props.node（X6 Node 实例）注入；节点数据从 node.getData() 读取，
+ * 监听 change:data 以响应选中态、执行状态（RUNNING/SUCCESS/FAILED）与日志高亮变更。</p>
+ *
+ * <p>渲染：类型图标 + 节点名称 + 状态指示点。边框颜色随执行状态变化，
+ * 便于执行后在画布上直观看到每个节点的执行结果。</p>
+ */
+import { computed, onBeforeUnmount, ref } from 'vue'
+import type { Node } from '@antv/x6'
+import type { MicroflowNodeType } from '@/api/lowcode-microflow'
+
+/** 节点渲染数据（由父组件写入 node.data） */
+export interface MicroflowNodeData {
+  nodeId: string
+  type: MicroflowNodeType
+  label: string
+  /** 执行状态：来自执行日志，用于画布同步高亮 */
+  status?: 'RUNNING' | 'SUCCESS' | 'FAILED'
+  /** 是否被日志面板点击高亮 */
+  highlighted?: boolean
+}
+
+const props = defineProps<{ node: Node; graph?: unknown }>()
+
+/** 响应式读取节点数据（监听 change:data 以响应 setData 触发的状态/高亮变更） */
+const nodeData = ref<MicroflowNodeData>((props.node.getData() as MicroflowNodeData) || {})
+const onDataChange = () => {
+  nodeData.value = (props.node.getData() as MicroflowNodeData) || {}
+}
+props.node.on('change:data', onDataChange)
+onBeforeUnmount(() => {
+  props.node.off('change:data', onDataChange)
+})
+
+/** 节点类型元信息（图标 + 主题色） */
+const META: Record<MicroflowNodeType, { icon: string; color: string }> = {
+  START: { icon: '▶', color: '#67c23a' },
+  END: { icon: '■', color: '#f56c6c' },
+  ASSIGN: { icon: '=', color: '#409eff' },
+  CONDITION: { icon: '?', color: '#e6a23c' },
+  LOOP: { icon: '↻', color: '#9c27b0' },
+  CALL_SERVICE: { icon: '⚙', color: '#00bcd4' },
+  CALL_MICROFLOW: { icon: '✦', color: '#00bcd4' },
+  CALL_RULE: { icon: '§', color: '#00bcd4' },
+  CALL_CONNECTOR: { icon: '⇄', color: '#00bcd4' },
+  THROW_EXCEPTION: { icon: '!', color: '#ff9800' },
+  RETURN: { icon: '←', color: '#67c23a' }
+}
+
+const meta = computed(() => META[nodeData.value.type] || { icon: '•', color: '#909399' })
+
+/** 边框色：执行状态优先，否则取类型主题色 */
+const borderColor = computed(() => {
+  const s = nodeData.value.status
+  if (s === 'SUCCESS') return '#67c23a'
+  if (s === 'FAILED') return '#f56c6c'
+  if (s === 'RUNNING') return '#409eff'
+  return meta.value.color
+})
+</script>
+
+<template>
+  <div
+    class="microflow-node"
+    :class="{ highlighted: nodeData.highlighted }"
+    :style="{ borderColor: borderColor }"
+  >
+    <span class="mn-icon" :style="{ background: meta.color }">{{ meta.icon }}</span>
+    <span class="mn-label">{{ nodeData.label || nodeData.type }}</span>
+    <span v-if="nodeData.status" class="mn-status" :class="`st-${nodeData.status.toLowerCase()}`"></span>
+  </div>
+</template>
+
+<script lang="ts">
+export default { name: 'MicroflowNode' }
+</script>
+
+<style scoped lang="scss">
+.microflow-node {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 2px solid #409eff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-size: 13px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+
+  &.highlighted {
+    box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.35);
+  }
+
+  .mn-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .mn-label {
+    flex: 1;
+    color: #303133;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mn-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.st-success {
+      background: #67c23a;
+    }
+    &.st-failed {
+      background: #f56c6c;
+    }
+    &.st-running {
+      background: #409eff;
+      animation: mn-pulse 1s infinite;
+    }
+  }
+}
+
+@keyframes mn-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+</style>

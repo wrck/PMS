@@ -2,21 +2,22 @@
 /**
  * 微流节点参数面板（右侧，借鉴 Mendix Microflows 属性面板）。
  *
- * <p>根据选中节点的 type 渲染对应的参数配置表单：</p>
+ * <p>根据选中节点的 type 渲染对应的参数配置表单（config 字段名与后端 MicroflowNodeExecutor 对齐）：</p>
  * <ul>
- *   <li>ASSIGN：变量名 + 表达式（ExpressionEditor）</li>
- *   <li>CONDITION：条件表达式 + true/false 分支目标</li>
- *   <li>LOOP：迭代表达式 + 循环变量名 + 循环体起始节点</li>
- *   <li>CALL_SERVICE：beanName + methodName + 参数表达式</li>
- *   <li>CALL_MICROFLOW：microflowCode（下拉）+ 输入表达式</li>
- *   <li>CALL_RULE：ruleCode（下拉）+ 输入表达式</li>
- *   <li>CALL_CONNECTOR：connectorCode（下拉）+ 输入表达式</li>
- *   <li>THROW_EXCEPTION：错误消息 + 错误码</li>
- *   <li>RETURN：返回值表达式</li>
+ *   <li>ASSIGN：target（目标变量）+ expression（Groovy 表达式）</li>
+ *   <li>CONDITION：expression（Groovy 布尔表达式）+ trueBranch/falseBranch 目标节点</li>
+ *   <li>LOOP：iterableExpression（Groovy 表达式）+ bodyNodeId（循环体起始节点）</li>
+ *   <li>CALL_SERVICE：beanName + methodName + target（结果变量，可选）+ args（Groovy 表达式）</li>
+ *   <li>CALL_MICROFLOW：microflowCode（下拉）+ inputsExpression（Groovy 表达式）</li>
+ *   <li>CALL_RULE：ruleCode（下拉）+ inputsExpression（Groovy 表达式）</li>
+ *   <li>CALL_CONNECTOR：connectorCode（下拉）+ inputsExpression（Groovy 表达式）</li>
+ *   <li>THROW_EXCEPTION：errorMessage + errorCode</li>
+ *   <li>RETURN：expression（Groovy 返回值表达式）</li>
  *   <li>START/END：无参数</li>
  * </ul>
  *
- * <p>表达式字段统一使用批次1的 ExpressionEditor，可绑定变量/字段补全。</p>
+ * <p>表达式字段统一使用 ExpressionEditor（language=groovy，对齐后端 GroovySandboxExecutor），
+ * 可绑定变量/字段补全。</p>
  */
 import { computed, reactive, watch } from 'vue'
 import ExpressionEditor from '@/components/ExpressionEditor/index.vue'
@@ -141,12 +142,13 @@ function getTypeLabel(t: MicroflowNodeType): string {
 
         <!-- ASSIGN -->
         <template v-else-if="node.type === 'ASSIGN'">
-          <el-form-item label="变量名">
-            <el-input v-model="(config.varName as string)" placeholder="如 result" @change="syncConfig" />
+          <el-form-item label="目标变量">
+            <el-input v-model="(config.target as string)" placeholder="如 result" @change="syncConfig" />
           </el-form-item>
           <el-form-item label="表达式">
             <ExpressionEditor
               v-model="(config.expression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="160"
               @update:model-value="syncConfig"
@@ -158,7 +160,8 @@ function getTypeLabel(t: MicroflowNodeType): string {
         <template v-else-if="node.type === 'CONDITION'">
           <el-form-item label="条件表达式">
             <ExpressionEditor
-              v-model="(config.condition as string)"
+              v-model="(config.expression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="160"
               @update:model-value="syncConfig"
@@ -180,17 +183,15 @@ function getTypeLabel(t: MicroflowNodeType): string {
         <template v-else-if="node.type === 'LOOP'">
           <el-form-item label="迭代表达式">
             <ExpressionEditor
-              v-model="(config.iterable as string)"
+              v-model="(config.iterableExpression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"
             />
           </el-form-item>
-          <el-form-item label="循环变量名">
-            <el-input v-model="(config.loopVar as string)" placeholder="如 item" @change="syncConfig" />
-          </el-form-item>
           <el-form-item label="循环体起点">
-            <el-select v-model="(config.bodyStart as string)" placeholder="选择循环体起始节点" clearable @change="syncConfig">
+            <el-select v-model="(config.bodyNodeId as string)" placeholder="选择循环体起始节点" clearable @change="syncConfig">
               <el-option v-for="o in targetOptions" :key="o.value" :label="o.label" :value="o.value" />
             </el-select>
           </el-form-item>
@@ -204,9 +205,13 @@ function getTypeLabel(t: MicroflowNodeType): string {
           <el-form-item label="方法名">
             <el-input v-model="(config.methodName as string)" placeholder="如 getById" @change="syncConfig" />
           </el-form-item>
+          <el-form-item label="结果变量">
+            <el-input v-model="(config.target as string)" placeholder="可选，结果写入该变量" @change="syncConfig" />
+          </el-form-item>
           <el-form-item label="参数表达式">
             <ExpressionEditor
               v-model="(config.args as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"
@@ -228,7 +233,8 @@ function getTypeLabel(t: MicroflowNodeType): string {
           </el-form-item>
           <el-form-item label="输入表达式">
             <ExpressionEditor
-              v-model="(config.inputs as string)"
+              v-model="(config.inputsExpression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"
@@ -250,7 +256,8 @@ function getTypeLabel(t: MicroflowNodeType): string {
           </el-form-item>
           <el-form-item label="输入表达式">
             <ExpressionEditor
-              v-model="(config.inputs as string)"
+              v-model="(config.inputsExpression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"
@@ -272,7 +279,8 @@ function getTypeLabel(t: MicroflowNodeType): string {
           </el-form-item>
           <el-form-item label="输入表达式">
             <ExpressionEditor
-              v-model="(config.inputs as string)"
+              v-model="(config.inputsExpression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"
@@ -294,7 +302,8 @@ function getTypeLabel(t: MicroflowNodeType): string {
         <template v-else-if="node.type === 'RETURN'">
           <el-form-item label="返回值表达式">
             <ExpressionEditor
-              v-model="(config.returnValue as string)"
+              v-model="(config.expression as string)"
+              language="groovy"
               :variables="bindingItems"
               :height="120"
               @update:model-value="syncConfig"

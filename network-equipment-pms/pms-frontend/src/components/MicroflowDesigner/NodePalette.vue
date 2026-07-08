@@ -2,10 +2,12 @@
 /**
  * 微流节点面板（左侧，借鉴 Mendix Microflows 工具栏）。
  *
- * <p>列出 11 种节点类型，每种带图标 + 文字 + 主题色，支持 HTML5 draggable。
+ * <p>按分组列出 11 种节点类型，每种带图标 + 文字 + 主题色，支持 HTML5 draggable。
  * 拖到中间画布时，父组件监听 drop 事件并调用 X6 addNode 创建节点。</p>
  *
- * <p>同时支持点击节点项将其添加到画布默认位置（无 drag 时的降级路径）。</p>
+ * <p>分组：流程控制（START/END/RETURN/THROW_EXCEPTION）、逻辑（ASSIGN/CONDITION/LOOP）、
+ * 调用（CALL_SERVICE/CALL_MICROFLOW/CALL_RULE/CALL_CONNECTOR）。
+ * 同时支持点击节点项将其添加到画布默认位置（无 drag 时的降级路径）。</p>
  */
 import type { MicroflowNodeType } from '@/api/lowcode-microflow'
 
@@ -40,6 +42,22 @@ const PALETTE: PaletteItem[] = [
   { type: 'RETURN', label: '返回', icon: '←', color: '#67c23a', shape: 'rect', description: '返回结果' }
 ]
 
+/** 节点分组定义（流程控制 / 逻辑 / 调用） */
+const GROUPS: { title: string; types: MicroflowNodeType[] }[] = [
+  { title: '流程控制', types: ['START', 'END', 'RETURN', 'THROW_EXCEPTION'] },
+  { title: '逻辑', types: ['ASSIGN', 'CONDITION', 'LOOP'] },
+  { title: '调用', types: ['CALL_SERVICE', 'CALL_MICROFLOW', 'CALL_RULE', 'CALL_CONNECTOR'] }
+]
+
+/** type → PaletteItem 查找表 */
+const PALETTE_MAP: Record<MicroflowNodeType, PaletteItem> = PALETTE.reduce(
+  (acc, item) => {
+    acc[item.type] = item
+    return acc
+  },
+  {} as Record<MicroflowNodeType, PaletteItem>
+)
+
 function onDragStart(e: DragEvent, item: PaletteItem) {
   if (!e.dataTransfer) return
   e.dataTransfer.setData('microflow-node-type', item.type)
@@ -55,18 +73,24 @@ function onClick(item: PaletteItem) {
   <div class="node-palette">
     <div class="palette-header">节点面板</div>
     <div class="palette-list">
-      <div
-        v-for="item in PALETTE"
-        :key="item.type"
-        class="palette-item"
-        :class="`shape-${item.shape}`"
-        draggable="true"
-        :title="item.description"
-        @dragstart="onDragStart($event, item)"
-        @click="onClick(item)"
-      >
-        <span class="palette-icon" :style="{ background: item.color }">{{ item.icon }}</span>
-        <span class="palette-label">{{ item.label }}</span>
+      <div v-for="group in GROUPS" :key="group.title" class="palette-group">
+        <div class="group-title">{{ group.title }}</div>
+        <div
+          v-for="t in group.types"
+          :key="t"
+          class="palette-item"
+          :class="`shape-${PALETTE_MAP[t].shape}`"
+          draggable="true"
+          :title="PALETTE_MAP[t].description"
+          @dragstart="onDragStart($event, PALETTE_MAP[t])"
+          @click="onClick(PALETTE_MAP[t])"
+        >
+          <span class="palette-icon" :style="{ background: PALETTE_MAP[t].color }">{{ PALETTE_MAP[t].icon }}</span>
+          <span class="palette-text">
+            <span class="palette-label">{{ PALETTE_MAP[t].label }}</span>
+            <span class="palette-desc">{{ PALETTE_MAP[t].description }}</span>
+          </span>
+        </div>
       </div>
     </div>
     <div class="palette-tip">提示：拖拽或点击节点添加到画布</div>
@@ -98,7 +122,21 @@ function onClick(item: PaletteItem) {
   padding: 8px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.palette-group {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+}
+
+.group-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #909399;
+  padding: 0 2px;
+  letter-spacing: 0.5px;
 }
 
 .palette-item {
@@ -129,16 +167,7 @@ function onClick(item: PaletteItem) {
     border-radius: 4px;
   }
   &.shape-diamond .palette-icon {
-    border-radius: 0;
-    transform: rotate(45deg);
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  &.shape-diamond .palette-icon > span {
-    transform: rotate(-45deg);
+    border-radius: 2px;
   }
 }
 
@@ -154,10 +183,24 @@ function onClick(item: PaletteItem) {
   flex-shrink: 0;
 }
 
+.palette-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .palette-label {
   font-size: 13px;
   color: #303133;
-  flex: 1;
+}
+
+.palette-desc {
+  font-size: 11px;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .palette-tip {
