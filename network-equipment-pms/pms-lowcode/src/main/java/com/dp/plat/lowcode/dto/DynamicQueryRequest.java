@@ -24,6 +24,9 @@ public class DynamicQueryRequest {
     /** 排序字段列表 */
     private List<OrderBy> orderBy = new ArrayList<>();
 
+    /** 关联查询配置列表（批次3-T8：join 支持） */
+    private List<JoinConfig> joins = new ArrayList<>();
+
     /** 页码，从 1 开始 */
     private Integer page = 1;
 
@@ -56,5 +59,36 @@ public class DynamicQueryRequest {
         private String field;
         /** 排序方向: ASC/DESC */
         private String direction;
+    }
+
+    /**
+     * 关联查询配置（批次3-T8：join 支持）。
+     *
+     * <p>支持 INNER / LEFT / RIGHT JOIN，通过 onConditions 指定关联条件，
+     * selectFields 指定从关联表选择的字段（别名自动加前缀避免冲突）。</p>
+     */
+    @Data
+    public static class JoinConfig {
+        /** 关联类型: INNER / LEFT / RIGHT */
+        private String joinType = "LEFT";
+        /** 关联实体编码 */
+        private String entityCode;
+        /** 关联表别名（默认为实体编码） */
+        private String alias;
+        /** ON 条件列表（本表字段 = 关联表字段） */
+        private List<JoinOnCondition> onConditions = new ArrayList<>();
+        /** 从关联表选择的字段（为空则选 *） */
+        private List<String> selectFields = new ArrayList<>();
+    }
+
+    /**
+     * JOIN ON 条件。
+     */
+    @Data
+    public static class JoinOnCondition {
+        /** 本表字段名 */
+        private String localField;
+        /** 关联表字段名 */
+        private String foreignField;
     }
 }

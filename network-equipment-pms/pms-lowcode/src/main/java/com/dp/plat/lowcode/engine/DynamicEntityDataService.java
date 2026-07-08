@@ -153,8 +153,58 @@ public class DynamicEntityDataService {
             }
         }
 
+        // 关联查询（批次3-T8：join 支持）
+        StringBuilder joinClause = new StringBuilder();
+        StringBuilder joinSelect = new StringBuilder();
+        if (request.getJoins() != null) {
+            for (DynamicQueryRequest.JoinConfig join : request.getJoins()) {
+                if (join.getEntityCode() == null) continue;
+                EntityDesignDTO foreignDesign = getDesignByCode(join.getEntityCode());
+                if (foreignDesign == null || foreignDesign.getEntity() == null) continue;
+                String foreignTable = foreignDesign.getEntity().getTableName();
+                String alias = join.getAlias() != null ? join.getAlias() : join.getEntityCode();
+
+                // 构建 JOIN 子句
+                String joinType = join.getJoinType() != null ? join.getJoinType().toUpperCase() : "LEFT";
+                joinClause.append(" ").append(joinType).append(" JOIN `")
+                        .append(foreignTable).append("` AS `").append(alias).append("` ON ");
+
+                // ON 条件
+                List<DynamicQueryRequest.JoinOnCondition> onConds = join.getOnConditions();
+                if (onConds != null && !onConds.isEmpty()) {
+                    for (int i = 0; i < onConds.size(); i++) {
+                        if (i > 0) joinClause.append(" AND ");
+                        joinClause.append("`").append(tableName).append("`.`")
+                                .append(onConds.get(i).getLocalField()).append("` = `")
+                                .append(alias).append("`.`")
+                                .append(onConds.get(i).getForeignField()).append("`");
+                    }
+                } else {
+                    // 默认按 id 关联（外键约定：<alias>_id）
+                    joinClause.append("`").append(tableName).append("`.`").append(alias)
+                            .append("_id` = `").append(alias).append("`.`id`");
+                }
+
+                // 关联表字段
+                Set<String> foreignValidFields = foreignDesign.getFields().stream()
+                        .map(LowCodeField::getName).collect(Collectors.toSet());
+                foreignValidFields.add("id");
+                if (join.getSelectFields() != null && !join.getSelectFields().isEmpty()) {
+                    for (String f : join.getSelectFields()) {
+                        if (foreignValidFields.contains(f)) {
+                            joinSelect.append(", `").append(alias).append("`.`").append(f)
+                                    .append("` AS `").append(alias).append("_").append(f).append("`");
+                        }
+                    }
+                } else {
+                    // 默认选所有字段（加别名前缀）
+                    joinSelect.append(", `").append(alias).append("`.*");
+                }
+            }
+        }
+
         // 计数
-        String countSql = "SELECT COUNT(*) FROM `" + tableName + "`" + where;
+        String countSql = "SELECT COUNT(*) FROM `" + tableName + "`" + joinClause + where;
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
         if (total == null) {
             total = 0L;
@@ -164,7 +214,8 @@ public class DynamicEntityDataService {
         int page = request.getPage() != null && request.getPage() > 0 ? request.getPage() : 1;
         int size = request.getSize() != null && request.getSize() > 0 ? request.getSize() : 20;
         int offset = (page - 1) * size;
-        String listSql = "SELECT * FROM `" + tableName + "`" + where + order
+        String listSql = "SELECT `" + tableName + "`.*" + joinSelect + " FROM `"
+                + tableName + "`" + joinClause + where + order
                 + " LIMIT " + size + " OFFSET " + offset;
         List<Map<String, Object>> records = jdbcTemplate.queryForList(listSql, params.toArray());
 
