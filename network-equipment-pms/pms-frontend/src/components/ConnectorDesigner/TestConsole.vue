@@ -9,11 +9,12 @@
  *   <li>根据操作的 params / body 动态生成输入表单</li>
  *   <li>点击「发送」调用 testOperation API 测试单个操作</li>
  *   <li>展示响应：状态码（带颜色）、Headers 表格、Body（JSON 树形）、耗时</li>
- *   <li>请求历史（最近 10 次）：点击可重新加载请求参数和响应</li>
+ *   <li>请求历史持久化到 localStorage（key: lowcode:connector-test-history:${connectorCode}），
+ *       最多保留 20 条，支持点击「重放」回填表单与响应，支持「清空历史」</li>
  * </ol></p>
  */
-import { computed, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import JsonTree from './JsonTree.vue'
 import {
   testOperation,
@@ -31,22 +32,80 @@ const props = defineProps<{
   sqlTemplates: SqlTemplate[]
 }>()
 
-interface HistoryItem {
-  id: number
-  operationName: string
-  params: Record<string, unknown>
-  body: unknown
-  result: TestOperationResult | null
+/**
+ * 测试历史记录项。
+ *
+ * <p>持久化到 localStorage（key: lowcode:connector-test-history:${connectorCode}），
+ * 最多保留 20 条。包含请求/响应全部信息，支持点击重放（回填表单）。</p>
+ */
+interface TestHistoryItem {
   timestamp: number
+  operation: string
+  method: string
+  url: string
+  requestHeaders: Record<string, string>
+  requestBody: unknown
+  status: number
+  responseHeaders: Record<string, string>
+  responseBody: unknown
+  duration: number
+  error?: string
 }
+
+/** 历史记录保留上限 */
+const HISTORY_LIMIT = 20
+
+/** 历史记录折叠面板展开状态（el-collapse v-model 为展开项 name 数组） */
+const historyCollapsed = ref<string[]>([])
 
 const selectedOpName = ref<string>('')
 const paramValues = ref<Record<string, string>>({})
 const bodyText = ref<string>('')
 const sending = ref(false)
 const currentResult = ref<TestOperationResult | null>(null)
-const history = ref<HistoryItem[]>([])
-let historyIdSeq = 0
+const history = ref<TestHistoryItem[]>([])
+
+/** 拼接 localStorage key */
+function historyStorageKey(): string {
+  return `lowcode:connector-test-history:${props.connectorCode}`
+}
+
+/**
+ * 从 localStorage 读取历史记录。
+ *
+ * <p>容错处理：connectorCode 为空、localStorage 不可用、JSON 解析失败、
+ * 数据结构异常时均返回空数组，避免影响主流程。</p>
+ */
+function loadHistoryFromStorage(): TestHistoryItem[] {
+  if (!props.connectorCode) return []
+  try {
+    const raw = localStorage.getItem(historyStorageKey())
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    // 仅保留符合结构的最小校验项
+    return parsed
+      .filter((item): item is TestHistoryItem =>
+        item !== null &&
+        typeof item === 'object' &&
+        typeof (item as TestHistoryItem).timestamp === 'number' &&
+        typeof (item as TestHistoryItem).operation === 'string'
+      )
+      .slice(0, HISTORY_LIMIT)
+  } catch {
+    return []
+  }
+}
+
+/** 将当前 history 持久化到 localStorage（失败时静默降级） */
+function saveHistoryToStorage() {
+  if (!props.connectorCode) return
+  try {
+    localStorage.setItem(historyStorageKey(), JSON.stringify(history.value))
+  } catch {
+    // 容量超限或隐私模式下静默忽略
+  }
+}
 
 const availableOps = computed(() => {
   if (props.type === 'REST') {
@@ -152,15 +211,28 @@ async function send() {
     }
   })
 
+  // 构建请求侧元信息（用于历史记录回放）
+  const op = currentOp.value
+  const requestHeaders: Record<string, string> = {}
+  if (op) {
+    op.headers.forEach((h) => {
+      if (h.key) requestHeaders[h.key] = h.value
+    })
+  }
+
   sending.value = true
   const timestamp = Date.now()
-  const historyItem: HistoryItem = {
-    id: ++historyIdSeq,
-    operationName: selectedOpName.value,
-    params: { ...params },
-    body,
-    result: null,
-    timestamp
+  const historyItem: TestHistoryItem = {
+    timestamp,
+    operation: selectedOpName.value,
+    method: op?.method || '',
+    url: op?.path || '',
+    requestHeaders,
+    requestBody: body,
+    status: 0,
+    responseHeaders: {},
+    responseBody: undefined,
+    duration: 0
   }
 
   try {
@@ -170,8 +242,13 @@ async function send() {
       body
     })
     currentResult.value = result
-    historyItem.result = result
+    // 回填响应侧字段
+    historyItem.status = result.statusCode || 0
+    historyItem.responseHeaders = result.headers || {}
+    historyItem.responseBody = result.body
+    historyItem.duration = result.durationMillis || 0
     if (result.error) {
+      historyItem.error = result.error
       ElMessage.warning('测试返回错误：' + result.error)
     } else if (result.statusCode && result.statusCode >= 400) {
       ElMessage.warning(`响应状态码 ${result.statusCode}`)
@@ -179,46 +256,83 @@ async function send() {
       ElMessage.success('测试完成')
     }
   } catch (e: any) {
-    const errorResult: TestOperationResult = {
-      error: e?.message || String(e)
-    }
-    currentResult.value = errorResult
-    historyItem.result = errorResult
-    ElMessage.error('测试请求失败：' + (e?.message || String(e)))
+    const errorMsg = e?.message || String(e)
+    historyItem.error = errorMsg
+    currentResult.value = { error: errorMsg }
+    ElMessage.error('测试请求失败：' + errorMsg)
   } finally {
     sending.value = false
-    // 入历史，最多保留 10 条
+    // 入历史，最多保留 HISTORY_LIMIT 条
     history.value.unshift(historyItem)
-    if (history.value.length > 10) {
-      history.value = history.value.slice(0, 10)
+    if (history.value.length > HISTORY_LIMIT) {
+      history.value = history.value.slice(0, HISTORY_LIMIT)
     }
+    // 持久化到 localStorage
+    saveHistoryToStorage()
   }
 }
 
-function loadHistory(item: HistoryItem) {
-  selectedOpName.value = item.operationName
+/**
+ * 重放历史记录：填充操作选择 + Body 文本，并展示历史响应。
+ *
+ * <p>选择操作后会触发 selectedOpName 的 watch，自动 resetForm 重置参数表单，
+ * 故通过 setTimeout 在 watch 触发后再回填 Body 与响应。</p>
+ */
+function loadHistory(item: TestHistoryItem) {
+  selectedOpName.value = item.operation
   // 等待 currentOp 计算完成后再回填
   setTimeout(() => {
+    // 重置参数表单为操作定义的默认空值
     paramValues.value = {}
-    Object.entries(item.params).forEach(([k, v]) => {
-      paramValues.value[k] = String(v ?? '')
-    })
-    // 补齐操作定义中存在但历史中缺失的参数
     if (currentOp.value) {
       currentOp.value.params.forEach((p) => {
-        if (!(p.key in paramValues.value)) {
-          paramValues.value[p.key] = ''
-        }
+        paramValues.value[p.key] = ''
       })
     }
-    bodyText.value = item.body !== undefined ? JSON.stringify(item.body, null, 2) : ''
-    currentResult.value = item.result
+    bodyText.value =
+      item.requestBody !== undefined && item.requestBody !== null
+        ? safeStringify(item.requestBody)
+        : ''
+    // 还原响应展示
+    currentResult.value = {
+      statusCode: item.status || undefined,
+      headers: item.responseHeaders,
+      body: item.responseBody,
+      durationMillis: item.duration || undefined,
+      error: item.error
+    }
   }, 0)
 }
 
-function clearHistory() {
+/** 安全序列化（处理循环引用等异常） */
+function safeStringify(v: unknown): string {
+  try {
+    return JSON.stringify(v, null, 2)
+  } catch {
+    return String(v)
+  }
+}
+
+/** 清空历史记录（含 localStorage） */
+async function clearHistory() {
+  try {
+    await ElMessageBox.confirm('确认清空所有历史记录？此操作不可恢复。', '清空确认', {
+      type: 'warning',
+      confirmButtonText: '清空',
+      cancelButtonText: '取消'
+    })
+  } catch {
+    return // 用户取消
+  }
   history.value = []
   currentResult.value = null
+  if (props.connectorCode) {
+    try {
+      localStorage.removeItem(historyStorageKey())
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 function formatTime(ts: number): string {
@@ -228,6 +342,28 @@ function formatTime(ts: number): string {
   const ss = String(d.getSeconds()).padStart(2, '0')
   return `${hh}:${mm}:${ss}`
 }
+
+/** 完整日期时间格式（用于历史记录展开行展示） */
+function formatDateTime(ts: number): string {
+  const d = new Date(ts)
+  const yyyy = d.getFullYear()
+  const MM = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${MM}-${dd} ${formatTime(ts)}`
+}
+
+// 组件挂载时加载历史记录
+onMounted(() => {
+  history.value = loadHistoryFromStorage()
+})
+
+// connectorCode 变化时重新加载对应连接器的历史
+watch(
+  () => props.connectorCode,
+  () => {
+    history.value = loadHistoryFromStorage()
+  }
+)
 </script>
 
 <template>
@@ -367,47 +503,63 @@ function formatTime(ts: number): string {
       </el-col>
     </el-row>
 
-    <!-- 请求历史 -->
-    <el-card v-if="hasHistory" shadow="never" class="history-panel">
-      <template #header>
-        <div class="history-header">
-          <span class="panel-title">请求历史（最近 10 次）</span>
-          <el-button size="small" link type="danger" @click="clearHistory">清空</el-button>
-        </div>
-      </template>
-      <el-table :data="history" size="small" border>
-        <el-table-column label="时间" width="100">
-          <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" prop="operationName" min-width="140" show-overflow-tooltip />
-        <el-table-column label="状态码" width="90" align="center">
-          <template #default="{ row }">
-            <span
-              v-if="row.result?.statusCode"
-              class="status-badge"
-              :class="statusClass(row.result.statusCode)"
-            >
-              {{ row.result.statusCode }}
+    <!-- 请求历史（持久化到 localStorage，最多 20 条） -->
+    <el-collapse v-model="historyCollapsed" class="history-collapse">
+      <el-collapse-item name="history">
+        <template #title>
+          <div class="history-header">
+            <span class="panel-title">
+              历史记录（{{ history.length }}/{{ HISTORY_LIMIT }}，持久化）
             </span>
-            <span v-else-if="row.result?.error" class="status-badge status-5xx">ERR</span>
-            <span v-else class="muted-tip">—</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="耗时" width="90" align="center">
-          <template #default="{ row }">
-            {{ row.result?.durationMillis != null ? row.result.durationMillis + ' ms' : '—' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="参数" min-width="200" show-overflow-tooltip>
-          <template #default="{ row }">{{ JSON.stringify(row.params) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="90" align="center">
-          <template #default="{ row }">
-            <el-button size="small" link @click="loadHistory(row)">重载</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+            <el-button
+              v-if="hasHistory"
+              size="small"
+              link
+              type="danger"
+              @click.stop="clearHistory"
+            >清空历史</el-button>
+          </div>
+        </template>
+        <div v-if="!hasHistory" class="muted-tip" style="padding: 12px">
+          暂无历史记录。执行测试后将自动保存到浏览器本地，下次打开仍可查看。
+        </div>
+        <el-table v-else :data="history" size="small" border>
+          <el-table-column label="时间" width="160">
+            <template #default="{ row }">{{ formatDateTime(row.timestamp) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" prop="operation" min-width="140" show-overflow-tooltip />
+          <el-table-column label="方法" prop="method" width="80" align="center" />
+          <el-table-column label="状态" width="80" align="center">
+            <template #default="{ row }">
+              <span
+                v-if="row.status"
+                class="status-badge"
+                :class="statusClass(row.status)"
+              >
+                {{ row.status }}
+              </span>
+              <span v-else-if="row.error" class="status-badge status-5xx">ERR</span>
+              <span v-else class="muted-tip">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="耗时" width="90" align="center">
+            <template #default="{ row }">
+              {{ row.duration ? row.duration + ' ms' : '—' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="请求 Body" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ row.requestBody === undefined || row.requestBody === null ? '—' : safeStringify(row.requestBody) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" align="center">
+            <template #default="{ row }">
+              <el-button size="small" link type="primary" @click="loadHistory(row)">重放</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-collapse-item>
+    </el-collapse>
   </div>
 </template>
 
@@ -505,13 +657,17 @@ export default { name: 'TestConsole' }
     font-size: 12px;
     color: #871094;
   }
-  .history-panel {
+  .history-collapse {
     margin-top: 12px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 4px;
   }
   .history-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    padding-right: 12px;
   }
 }
 </style>
