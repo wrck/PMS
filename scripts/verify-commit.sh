@@ -1,21 +1,22 @@
 #!/bin/bash
 # 提交级验证脚本（双重门禁）— RULES.md 支柱二 §2.3
-# 版本：1.1.0（新增 [CHANGES] 标签自动注入 §2.5）
+# 版本：1.2.0（新增插件化架构 §5 + --skip-plugins 调试选项）
 #
 # 用法：
 #   子代理侧（提交前）：bash scripts/verify-commit.sh --pre
 #   主代理侧（合并前）：bash scripts/verify-commit.sh <commit-hash>
 #   生成 [CHANGES] 标签：bash scripts/verify-commit.sh --changes [commit-hash]
+#   调试模式（跳过插件）：bash scripts/verify-commit.sh --pre --skip-plugins
 #
 # 退出码约定（RULES.md §2.3.2）：
 #   0 = 通过
-#   1 = 编译失败（子代理自动修复重试）
+#   1 = 编译失败 / 插件验证失败（子代理自动修复重试）
 #   2 = 文件越权（子代理回退越权文件后重试）
 #   3 = Hash 丢失（主代理按 §4.1 SOP 恢复）
 set -uo pipefail
 # 注意：不使用 -e，因为我们要捕获各步骤退出码并统一返回约定码
 
-VERIFY_VERSION="1.1.0"
+VERIFY_VERSION="1.2.0"
 LOG_DIR="scripts/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -234,14 +235,91 @@ generate_changes_tag() {
     echo "[CHANGES: ${file_count} files, +${add} -${del}]"
 }
 
+# === 插件加载（RULES.md 支柱五 §5.1）===
+# 用法：run_plugins <mode> <hash> <skip_flag>
+# 返回：0=全部通过/无插件，1=有插件失败
+run_plugins() {
+    local mode="$1" hash="$2" skip="$3"
+    local plugin_dir="scripts/verify-plugins"
+
+    log "==[Plugins] 扩展验证插件=="
+
+    # 调试模式跳过插件
+    if [ "$skip" = "true" ]; then
+        log "SKIP: --skip-plugins 已启用（仅限调试，正式提交禁止使用）"
+        return 0
+    fi
+
+    # 插件目录不存在或为空：不阻断核心验证
+    if [ ! -d "$plugin_dir" ]; then
+        log "无插件目录，跳过插件验证"
+        return 0
+    fi
+
+    local plugins=()
+    while IFS= read -r p; do
+        plugins+=("$p")
+    done < <(find "$plugin_dir" -name '*.sh' -type f | sort)
+
+    if [ ${#plugins[@]} -eq 0 ]; then
+        log "无插件，跳过"
+        return 0
+    fi
+
+    local failed=0
+    for plugin in "${plugins[@]}"; do
+        local name=$(basename "$plugin")
+        log "RUN PLUGIN: $name"
+        # 插件超时 60 秒，超时视为失败
+        if timeout 60 bash "$plugin" "$mode" "$hash" 2>&1 | tee -a "$LOG_FILE"; then
+            log "PLUGIN $name: PASS"
+        else
+            local exit_code=$?
+            if [ $exit_code -eq 124 ]; then
+                log "PLUGIN $name: FAIL (timeout 60s)"
+            else
+                log "PLUGIN $name: FAIL (exit $exit_code)"
+            fi
+            failed=1
+        fi
+    done
+
+    if [ $failed -eq 0 ]; then
+        log "ALL PLUGINS PASSED"
+        return 0
+    else
+        log "SOME PLUGINS FAILED"
+        return 1
+    fi
+}
+
 # === 主流程 ===
 main() {
+    # 解析参数：支持 --pre / <hash> / --changes / --skip-plugins
     local mode="${1:---pre}"
-    local hash="${2:-}"
+    local hash=""
+    local skip_plugins="false"
+
+    # 解析可选参数
+    shift || true
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --skip-plugins)
+                skip_plugins="true"
+                shift
+                ;;
+            *)
+                if [ -z "$hash" ] && [ "$mode" != "--changes" ]; then
+                    hash="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
 
     log "========================================"
     log "verify-commit.sh v${VERIFY_VERSION}"
-    log "Mode: $mode, Hash: ${hash:-N/A}"
+    log "Mode: $mode, Hash: ${hash:-N/A}, SkipPlugins: $skip_plugins"
     log "Log: $LOG_FILE"
     log "========================================"
 
@@ -276,6 +354,11 @@ main() {
 
     # 检查 4：Lint 检查（可选，不阻断）
     check_lint "$mode" "$hash"
+
+    # 检查 5：插件验证（支柱五，任一失败则整体失败）
+    run_plugins "$mode" "$hash" "$skip_plugins"
+    rc=$?
+    [ $rc -ne 0 ] && { log "RESULT: FAIL (exit 1 - 插件验证失败)"; exit 1; }
 
     # 生成 [CHANGES] 标签（--pre 通过后自动输出，供子代理注入 commit message）
     local changes_tag

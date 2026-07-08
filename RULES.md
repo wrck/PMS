@@ -405,6 +405,61 @@ bash scripts/verify-commit.sh <commit-hash>
   - 用户批准记录（如"Approved-by: user on 2026-07-08"）
 - **完整性校验失败时**：脚本拒绝执行，视为 P1 事故，主代理立即停止工作并告知用户。
 
+#### 2.4.3.1 审批请求结构化模板（人机协同上下文传递）
+
+当主代理发起核心脚本修改审批时，**必须提供结构化审批请求**，禁止模糊描述。这降低用户认知负荷，提高审批效率与安全性。
+
+**审批请求模板**（主代理向用户请求批准时必须完整填写）：
+
+```
+========================================
+【受保护资产修改审批请求】
+========================================
+
+① 修改原因：
+<说明为什么要修改，解决什么问题，不修改会有什么风险>
+
+② 变更 Diff 摘要：
+<列出修改的文件 + 关键变更点，如：
+  - scripts/verify-commit.sh: 新增 generate_changes_tag 函数（+53 行）
+  - scripts/verify-commit.sha256: 重新生成（sha256 变更）
+  - RULES.md: §2.5 增加 [CHANGES] 标签说明（+15 行）>
+
+③ 影响范围评估：
+<说明修改对哪些流程/角色产生影响，如：
+  - 影响所有子代理的 --pre 验证流程（新增 CHANGES_TAG 输出）
+  - 影响主代理合并前的 hash 验证（自动注入标签）
+  - 不影响现有退出码约定（向后兼容）
+  - 需通知 N 个活跃子代理重新同步（见 §2.4.4）>
+
+④ 回滚方案：
+<说明如果修改出问题如何回滚，如：
+  - 回滚命令：git revert <commit-hash>
+  - 回滚后影响：子代理 --pre 不再输出 CHANGES_TAG，但不影响验证通过性
+  - 回滚验证：sha256sum -c scripts/verify-commit.sha256 确认恢复原版>
+
+⑤ 版本变更：
+  Verify-Version: <old> → <new>
+  兼容性: <向后兼容 / 破坏性变更>
+
+⑥ 测试结果：
+<修改后已执行的测试及结果，如：
+  - sha256 完整性校验: PASS
+  - --changes --pre 测试: 输出 [CHANGES: 2 files, +184 -2] 正确
+  - --pre 干净工作区测试: exit 0 正确>
+
+请用户确认：[批准 / 拒绝 / 要求修改]
+========================================
+```
+
+**禁止的审批请求**（模糊描述，一律视为无效）：
+- ❌ "需要更新验证脚本"
+- ❌ "verify-commit.sh 需要加个功能"
+- ❌ "修复验证脚本的问题"
+- ✅ 必须包含上述 6 个字段的完整结构化请求
+
+**审批记录归档**：用户批准后，主代理在 commit message 中记录 `Approved-by: user on <date>`，并将审批请求全文写入 `scripts/approval-logs/<timestamp>-<scope>.md` 归档备查。
+
 #### 2.4.4 受保护资产更新通知机制（活跃子代理同步）
 
 当主代理修改了受保护资产（verify.sh / verify-commit.sh / *.sha256 / RULES.md / AGENTS.md），**必须通知所有活跃子代理重新拉取最新版本**，否则子代理会继续使用旧版规则导致验证不一致。
@@ -763,11 +818,117 @@ circuit_breaker_check() {
 
 ---
 
+## 支柱五：插件化扩展架构 — 核心稳定，按需扩展
+
+> 保持核心验证脚本（verify.sh / verify-commit.sh）的稳定性，同时允许各子代理按需贡献领域特定的验证逻辑。
+> 核心原则：**插件不侵入核心，失败即整体失败**。
+
+### 5.1 插件目录与加载机制
+
+- **插件目录**：`scripts/verify-plugins/`，存放所有可选验证插件。
+- **加载规则**：主脚本（verify-commit.sh）在核心检查完成后，**按字母序**遍历执行 `scripts/verify-plugins/*.sh`。
+- **执行顺序**：按文件名字母升序（如 `01-java-style.sh` → `02-sql-check.sh` → `10-lowcode-schema.sh`）。
+- **任一插件失败则整体验证失败**：插件返回非 0 退出码，verify-commit.sh 立即终止并返回 exit 1（编译失败类）。
+
+```bash
+# verify-commit.sh 中的插件加载逻辑（核心检查通过后执行）
+run_plugins() {
+    local mode="$1" hash="$2"
+    local plugin_dir="scripts/verify-plugins"
+
+    log "==[Plugins] 扩展验证插件=="
+
+    if [ ! -d "$plugin_dir" ]; then
+        log "无插件目录，跳过插件验证"
+        return 0
+    fi
+
+    local plugins=()
+    while IFS= read -r p; do
+        plugins+=("$p")
+    done < <(find "$plugin_dir" -name '*.sh' -type f | sort)
+
+    if [ ${#plugins[@]} -eq 0 ]; then
+        log "无插件，跳过"
+        return 0
+    fi
+
+    for plugin in "${plugins[@]}"; do
+        local name=$(basename "$plugin")
+        log "RUN PLUGIN: $name"
+        # 插件接收 mode 和 hash 作为参数，返回 0=通过，非 0=失败
+        if bash "$plugin" "$mode" "$hash" 2>&1 | tee -a "$LOG_FILE"; then
+            log "PLUGIN $name: PASS"
+        else
+            log "PLUGIN $name: FAIL (exit ${PIPESTATUS[0]})"
+            return 1
+        fi
+    done
+    log "ALL PLUGINS PASSED"
+    return 0
+}
+```
+
+### 5.2 插件规范
+
+每个插件必须遵循以下规范：
+
+1. **可执行 bash 脚本**：`#!/bin/bash` 开头，文件名 `XX-<name>.sh`（XX 为两位数字，控制执行顺序）。
+2. **接收参数**：`$1` = mode（`--pre` 或 `<hash>`），`$2` = hash（可能为空）。
+3. **退出码**：`0` = 通过，`1` = 失败（失败原因写入 stderr）。
+4. **无副作用**：插件不得修改任何文件，仅做只读检查。
+5. **幂等性**：同一输入多次执行结果一致。
+6. **超时**：插件执行不得超过 60 秒，超时视为失败（主脚本用 `timeout` 命令包装）。
+7. **头部声明**：必须包含插件名、版本、作者、检查内容说明：
+
+```bash
+#!/bin/bash
+# Plugin: lowcode-schema-validator
+# Version: 1.0.0
+# Author: <agent-name>
+# Description: 校验 lowcode 配置 JSON 是否符合 Schema 规范
+# Usage: bash 10-lowcode-schema.sh [--pre|<hash>] [hash]
+set -uo pipefail
+
+mode="${1:---pre}"
+hash="${2:-}"
+
+# 插件逻辑...
+# 返回 0=通过，1=失败
+```
+
+### 5.3 插件的安全约束
+
+- **插件可由子代理贡献**：但必须通过主代理审批（同受保护资产修改流程，见 §2.4.3.1）。
+- **插件不得修改核心脚本**：插件只能放在 `scripts/verify-plugins/`，禁止修改 `scripts/verify.sh` 或 `scripts/verify-commit.sh`。
+- **插件清单**：`scripts/verify-plugins/PLUGIN_REGISTRY.md` 记录所有已批准插件的名称、版本、作者、用途、批准日期。
+- **插件失效不阻断核心**：如果插件目录不存在或为空，核心验证正常通过（插件是可选的）。
+- **插件调试模式**：`bash scripts/verify-commit.sh --pre --skip-plugins` 可跳过插件（仅限调试，正式提交禁止跳过）。
+
+### 5.4 典型插件示例
+
+| 插件文件名 | 用途 | 贡献方 |
+|-----------|------|--------|
+| `01-java-import-check.sh` | 检查 Java 文件 import 是否规范 | 后端子代理 |
+| `02-sql-injection-check.sh` | 检查 MyBatis XML 是否有 SQL 注入风险 | 安全子代理 |
+| `10-lowcode-schema-validator.sh` | 校验 lowcode 配置 JSON 符合 Schema | 低代码子代理 |
+| `20-i18n-key-check.sh` | 检查前端 i18n key 是否完整 | 前端子代理 |
+| `30-flyway-version-check.sh` | 检查 Flyway 迁移版本号是否冲突 | 数据库子代理 |
+
+### 5.5 插件版本控制
+
+- 插件文件本身受 git 版本控制，但**不属于受保护资产**（子代理可通过正常提交流程新增/修改插件）。
+- 新增插件必须在 `PLUGIN_REGISTRY.md` 登记。
+- 插件修改无需 sha256 完整性校验（仅核心脚本需要）。
+- 插件删除需主代理确认（防止误删导致验证遗漏）。
+
+---
+
 ## 附则
 
 - 本规则优先级高于 `AGENTS.md` 中的任何冲突条款。
 - 本规则随项目演进持续更新，每次更新需在提交信息中注明规则变更内容。
 - 所有代理（主代理与子代理）在开始工作前必须读取并遵守本规则。
-- 四支柱（Worktree/验证脚本化/共享文件锁/恢复 SOP）是方法论核心，具体规则是其落地实现。
-- **运维底线**：Worktree 磁盘零泄漏、命名空间零污染、验证脚本零篡改、共享文件零死锁。违反底线即视为重大事故。
+- **五支柱**（Worktree/验证脚本化/共享文件锁/恢复 SOP/插件化扩展）是方法论核心，具体规则是其落地实现。
+- **运维底线**：Worktree 磁盘零泄漏、命名空间零污染、验证脚本零篡改、共享文件零死锁、插件不侵入核心。违反底线即视为重大事故。
 - 用户指定的两条原始规则已融入支柱一（§1.5 合并协议）和支柱二（§2.5 结构化 Commit + §2.6 提交后复核），继续有效。
