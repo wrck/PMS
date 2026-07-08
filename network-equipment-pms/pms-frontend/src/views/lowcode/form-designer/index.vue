@@ -212,7 +212,33 @@ const responsiveCollapse = ref<string[]>(['resp'])
 
 type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
-/** 当前选中字段是否启用响应式断点（span 为对象） */
+/** 断点枚举数组（自小到大，用于遍历与继承查找） */
+const breakpointOrder: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl']
+
+/** 各断点对应的最小屏幕宽度（px），用于画布响应式预览模拟 */
+const breakpointWidth: Record<Breakpoint, number> = {
+  xs: 375,
+  sm: 768,
+  md: 992,
+  lg: 1200,
+  xl: 1920
+}
+
+/** 断点显示文案（含屏幕宽度范围） */
+const breakpointLabel: Record<Breakpoint, string> = {
+  xs: 'xs (<768px)',
+  sm: 'sm (≥768px)',
+  md: 'md (≥992px)',
+  lg: 'lg (≥1200px)',
+  xl: 'xl (≥1920px)'
+}
+
+/**
+ * 当前选中字段是否启用响应式断点（span 为对象）。
+ *
+ * <p>开启时仅初始化 xs 与 md 两个断点为当前 span，sm/lg/xl 留空，
+ * 由 el-col 按断点继承规则回退到更小断点，体现“留空即继承”。</p>
+ */
 const isResponsive = computed<boolean>({
   get: () => !!selectedField.value && typeof selectedField.value.span === 'object',
   set: (val: boolean) => {
@@ -220,10 +246,12 @@ const isResponsive = computed<boolean>({
     if (!field) return
     if (val) {
       const cur = typeof field.span === 'number' ? field.span : 24
-      field.span = { xs: cur, sm: cur, md: cur, lg: cur, xl: cur }
+      // 仅显式设置 xs/md，sm/lg/xl 留空继承，演示断点继承机制
+      field.span = { xs: cur, md: cur }
     } else {
       const obj = field.span
-      field.span = typeof obj === 'object' && obj ? (obj.md ?? 24) : 24
+      // 关闭时取最接近默认的断点值回退为数字 span
+      field.span = typeof obj === 'object' && obj ? (obj.md ?? obj.sm ?? obj.xs ?? 24) : 24
     }
   }
 })
@@ -236,21 +264,84 @@ const fieldSpan = computed<number>({
   }
 })
 
-/** 读取指定断点值（缺省回退 24） */
-function getBreakpoint(k: Breakpoint): number {
+/**
+ * 读取指定断点值。
+ *
+ * <p>未配置时返回 undefined，表示该断点留空、由 el-col 继承更小断点
+ * （对应属性面板 el-input-number 显示占位“留空”）。</p>
+ */
+function getBreakpoint(k: Breakpoint): number | undefined {
   const s = selectedField.value?.span
-  return typeof s === 'object' && s && s[k] !== undefined ? (s[k] as number) : 24
+  return typeof s === 'object' && s ? s[k] : undefined
 }
 
-/** 设置指定断点值（自动转为响应式对象） */
-function setBreakpoint(k: Breakpoint, v: number): void {
+/**
+ * 设置指定断点值。
+ *
+ * <p>传入 undefined/null/NaN 视为“留空”——从对象中删除该断点 key，
+ * el-col 渲染时即不输出对应 prop，自动继承更小断点。</p>
+ */
+function setBreakpoint(k: Breakpoint, v: number | undefined | null): void {
   const field = selectedField.value
   if (!field) return
   const s = field.span
   const obj: ResponsiveSpan = typeof s === 'object' && s ? { ...s } : {}
-  obj[k] = v
+  if (v === undefined || v === null || Number.isNaN(v)) {
+    delete obj[k]
+  } else {
+    obj[k] = v
+  }
   field.span = obj
 }
+
+/**
+ * 计算字段在指定断点下的有效 span（模拟 el-col 断点继承）。
+ *
+ * <p>从当前断点向更小断点逐级查找，取第一个已配置的值；均未配置回退 24。
+ * 用于画布响应式预览——因 el-col 的 :xs/:sm 等基于视口媒体查询，
+ * 无法在受限容器内触发，故手动计算有效 span 以 :span= 形式渲染。</p>
+ */
+function effectiveSpan(field: FormFieldConfig, bp: Breakpoint): number {
+  const s = field.span
+  if (s === undefined || typeof s === 'number') return s ?? 24
+  const idx = breakpointOrder.indexOf(bp)
+  for (let i = idx; i >= 0; i--) {
+    const v = s[breakpointOrder[i]]
+    if (v !== undefined) return v
+  }
+  return 24
+}
+
+// ===================== 画布响应式预览（模拟不同屏幕宽度栅格布局） =====================
+
+/** 预览宽度档位：auto=跟随画布宽度，其余模拟对应断点 */
+const previewWidth = ref<Breakpoint | 'auto'>('auto')
+
+/** 当前预览选中的断点（auto 时为 null） */
+const activePreviewBp = computed<Breakpoint | null>(() =>
+  previewWidth.value === 'auto' ? null : previewWidth.value
+)
+
+/** 预览模拟的屏幕宽度（px） */
+const previewWidthPx = computed<number>(() =>
+  activePreviewBp.value ? breakpointWidth[activePreviewBp.value] : 0
+)
+
+/** 预览断点显示文案 */
+const previewLabel = computed<string>(() =>
+  activePreviewBp.value ? breakpointLabel[activePreviewBp.value] : ''
+)
+
+/**
+ * 响应式预览行：每个字段在当前模拟断点下的有效 span。
+ *
+ * <p>实时反映 formConfig.fields 与各字段 span 配置，切换断点即时重算。</p>
+ */
+const previewRows = computed(() => {
+  const bp = activePreviewBp.value
+  if (!bp) return [] as Array<{ field: FormFieldConfig; span: number }>
+  return formConfig.fields.map((f) => ({ field: f, span: effectiveSpan(f, bp) }))
+})
 
 /**
  * 创建一个新字段对象。
@@ -806,6 +897,42 @@ onMounted(async () => {
           </div>
         </template>
 
+        <!-- 响应式预览栏：模拟不同屏幕宽度下的栅格布局 -->
+        <div class="resp-preview-bar">
+          <span class="resp-preview-bar__title">响应式预览</span>
+          <el-radio-group v-model="previewWidth" size="small">
+            <el-radio-button value="auto">自适应</el-radio-button>
+            <el-radio-button v-for="bp in breakpointOrder" :key="bp" :value="bp">{{ bp }}</el-radio-button>
+          </el-radio-group>
+          <span v-if="activePreviewBp" class="resp-preview-bar__tip">
+            模拟 {{ previewLabel }}（{{ previewWidthPx }}px）— 展示该断点下各字段栅格占比
+          </span>
+        </div>
+
+        <!-- 响应式预览栅格（仅特定断点且有字段时显示） -->
+        <div
+          v-if="activePreviewBp && formConfig.fields.length > 0"
+          class="resp-preview-grid"
+          :style="{ maxWidth: previewWidthPx + 'px' }"
+        >
+          <el-row :gutter="formConfig.layout?.gutter ?? 16">
+            <el-col
+              v-for="row in previewRows"
+              :key="row.field.id"
+              :span="row.span"
+            >
+              <div
+                class="resp-preview-cell"
+                :class="{ active: selectedFieldId === row.field.id }"
+                @click="selectField(row.field.id)"
+              >
+                <span class="resp-preview-cell__label">{{ row.field.label }}</span>
+                <span class="resp-preview-cell__span">{{ row.span }}/24</span>
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+
         <!-- 拖拽放置区 -->
         <div
           class="canvas-dropzone"
@@ -983,21 +1110,30 @@ onMounted(async () => {
             <el-slider v-model="fieldSpan" :min="1" :max="24" show-input style="width: 100%" />
           </el-form-item>
           <el-collapse v-else v-model="responsiveCollapse" class="resp-collapse">
-            <el-collapse-item title="响应式断点（1-24）" name="resp">
-              <el-form-item label="xs">
-                <el-input-number :model-value="getBreakpoint('xs')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('xs', v)" />
-              </el-form-item>
-              <el-form-item label="sm">
-                <el-input-number :model-value="getBreakpoint('sm')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('sm', v)" />
-              </el-form-item>
-              <el-form-item label="md">
-                <el-input-number :model-value="getBreakpoint('md')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('md', v)" />
-              </el-form-item>
-              <el-form-item label="lg">
-                <el-input-number :model-value="getBreakpoint('lg')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('lg', v)" />
-              </el-form-item>
-              <el-form-item label="xl">
-                <el-input-number :model-value="getBreakpoint('xl')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setBreakpoint('xl', v)" />
+            <el-collapse-item name="resp">
+              <template #title>
+                <span>响应式断点（1-24，留空继承更小断点）</span>
+              </template>
+              <el-form-item v-for="bp in breakpointOrder" :key="bp" :label="bp">
+                <div class="bp-row">
+                  <el-input-number
+                    :model-value="getBreakpoint(bp)"
+                    :min="1"
+                    :max="24"
+                    controls-position="right"
+                    placeholder="留空"
+                    style="flex: 1"
+                    @update:model-value="(v: number | undefined) => setBreakpoint(bp, v ?? undefined)"
+                  />
+                  <el-button
+                    v-if="getBreakpoint(bp) !== undefined"
+                    link
+                    type="primary"
+                    :icon="'Close'"
+                    title="清除（留空，继承更小断点）"
+                    @click="setBreakpoint(bp, undefined)"
+                  />
+                </div>
               </el-form-item>
             </el-collapse-item>
           </el-collapse>
@@ -1253,6 +1389,82 @@ onMounted(async () => {
 
 .resp-collapse :deep(.el-collapse-item__content) {
   padding-bottom: 0;
+}
+
+/* 响应式断点行：输入框 + 清除按钮 */
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* 响应式预览栏 */
+.resp-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0 4px;
+  border-bottom: 1px dashed var(--el-border-color-lighter);
+  margin-bottom: 8px;
+}
+
+.resp-preview-bar__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.resp-preview-bar__tip {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+/* 响应式预览栅格（模拟不同屏幕宽度） */
+.resp-preview-grid {
+  margin: 0 auto 12px;
+  padding: 8px;
+  border: 1px solid var(--el-color-primary-light-5);
+  border-radius: 4px;
+  background: var(--el-color-primary-light-9);
+  transition: max-width 0.2s;
+}
+
+.resp-preview-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 4px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 3px;
+  background: var(--el-bg-color);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: center;
+  word-break: break-all;
+  transition: all 0.2s;
+}
+
+.resp-preview-cell:hover {
+  border-color: var(--el-color-primary-light-5);
+}
+
+.resp-preview-cell.active {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px var(--el-color-primary-light-7);
+}
+
+.resp-preview-cell__label {
+  font-weight: 600;
+}
+
+.resp-preview-cell__span {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+  font-family: monospace;
 }
 
 .preview-card {
