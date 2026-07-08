@@ -80,4 +80,24 @@ public class LowCodeConnectorController {
                                            @RequestBody(required = false) Map<String, Object> params) {
         return Result.ok(connectorService.execute(code, params == null ? Map.of() : params));
     }
+
+    @Operation(summary = "测试单个操作（设计器实时测试，按操作名执行已保存连接器的指定操作）")
+    @PostMapping("/{code}/test-operation")
+    @PreAuthorize("hasAuthority('lowcode:connector:test')")
+    public Result<ConnectorResult> testOperation(@PathVariable String code,
+                                                   @RequestBody TestOperationRequest request) {
+        return Result.ok(connectorService.testOperation(
+                code,
+                request.getOperationName(),
+                request.getParams()));
+    }
+
+    /** 测试操作请求体（与前端 TestOperationPayload 对齐） */
+    @lombok.Data
+    public static class TestOperationRequest {
+        /** 操作名（REST: operations 数组中的 name；DB: SQL 模板名） */
+        private String operationName;
+        /** 执行参数 */
+        private Map<String, Object> params;
+    }
 }
