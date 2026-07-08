@@ -1,6 +1,6 @@
 #!/bin/bash
 # 提交级验证脚本（双重门禁）— RULES.md 支柱二 §2.3
-# 版本：1.2.0（新增插件化架构 §5 + --skip-plugins 调试选项）
+# 版本：1.3.0（插件校验和校验 + 超时隔离 + criticality/on_timeout 策略）
 #
 # 用法：
 #   子代理侧（提交前）：bash scripts/verify-commit.sh --pre
@@ -10,13 +10,13 @@
 #
 # 退出码约定（RULES.md §2.3.2）：
 #   0 = 通过
-#   1 = 编译失败 / 插件验证失败（子代理自动修复重试）
+#   1 = 编译失败 / critical 插件失败或超时（子代理自动修复重试）
 #   2 = 文件越权（子代理回退越权文件后重试）
 #   3 = Hash 丢失（主代理按 §4.1 SOP 恢复）
 set -uo pipefail
 # 注意：不使用 -e，因为我们要捕获各步骤退出码并统一返回约定码
 
-VERIFY_VERSION="1.2.0"
+VERIFY_VERSION="1.3.0"
 LOG_DIR="scripts/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -235,9 +235,33 @@ generate_changes_tag() {
     echo "[CHANGES: ${file_count} files, +${add} -${del}]"
 }
 
-# === 插件加载（RULES.md 支柱五 §5.1）===
+# === 从 PLUGIN_REGISTRY.md 解析插件配置（RULES.md §5.6）===
+# 用法：get_plugin_config <plugin-name> <field>
+# field: timeout_sec | on_timeout | criticality | checksum
+# 返回：配置值（字符串），未找到返回空
+get_plugin_config() {
+    local plugin_name="$1" field="$2"
+    local registry="scripts/verify-plugins/PLUGIN_REGISTRY.md"
+
+    [ -f "$registry" ] || return 0
+
+    # 解析表格行：| `filename` | version | author | desc | date | timeout_sec | on_timeout | criticality | checksum |
+    local line
+    line=$(grep -E "^\| \`$plugin_name\`" "$registry" 2>/dev/null | head -1)
+    [ -z "$line" ] && return 0
+
+    # 按字段位置提取
+    case "$field" in
+        timeout_sec) echo "$line" | awk -F'|' '{gsub(/ /,"",$7); print $7}' ;;
+        on_timeout)  echo "$line" | awk -F'|' '{gsub(/ /,"",$8); print $8}' ;;
+        criticality) echo "$line" | awk -F'|' '{gsub(/ /,"",$9); print $9}' ;;
+        checksum)    echo "$line" | awk -F'|' '{gsub(/ /,"",$10); print $10}' ;;
+    esac
+}
+
+# === 插件加载（RULES.md 支柱五 §5.1 + §5.6 校验和 + §5.7 超时隔离）===
 # 用法：run_plugins <mode> <hash> <skip_flag>
-# 返回：0=全部通过/无插件，1=有插件失败
+# 返回：0=全部通过/无插件/仅 optional 失败，1=有 critical 插件失败或超时
 run_plugins() {
     local mode="$1" hash="$2" skip="$3"
     local plugin_dir="scripts/verify-plugins"
@@ -266,30 +290,91 @@ run_plugins() {
         return 0
     fi
 
-    local failed=0
+    local critical_failed=0
+    local warnings=""
+
     for plugin in "${plugins[@]}"; do
         local name=$(basename "$plugin")
-        log "RUN PLUGIN: $name"
-        # 插件超时 60 秒，超时视为失败
-        if timeout 60 bash "$plugin" "$mode" "$hash" 2>&1 | tee -a "$LOG_FILE"; then
-            log "PLUGIN $name: PASS"
-        else
-            local exit_code=$?
-            if [ $exit_code -eq 124 ]; then
-                log "PLUGIN $name: FAIL (timeout 60s)"
-            else
-                log "PLUGIN $name: FAIL (exit $exit_code)"
+
+        # 1. 校验和校验（RULES.md §5.6）
+        local expected_checksum actual_checksum
+        expected_checksum=$(get_plugin_config "$name" "checksum")
+        if [ -n "$expected_checksum" ]; then
+            actual_checksum=$(sha256sum "$plugin" | awk '{print $1}')
+            if [ "$expected_checksum" != "$actual_checksum" ]; then
+                log "PLUGIN $name: FAIL (校验和不匹配)"
+                log "  期望值: $expected_checksum"
+                log "  实际值: $actual_checksum"
+                log "  修复: 重新生成校验和并原子性更新 PLUGIN_REGISTRY.md（见 §5.6）"
+                critical_failed=1
+                continue
             fi
-            failed=1
+            log "PLUGIN $name 校验和: PASS"
+        else
+            log "WARN: $name 在 PLUGIN_REGISTRY.md 中无校验和记录，跳过校验和校验"
+        fi
+
+        # 2. 解析配置
+        local timeout_sec on_timeout criticality
+        timeout_sec=$(get_plugin_config "$name" "timeout_sec")
+        on_timeout=$(get_plugin_config "$name" "on_timeout")
+        criticality=$(get_plugin_config "$name" "criticality")
+        timeout_sec=${timeout_sec:-30}
+        on_timeout=${on_timeout:-fail}
+        criticality=${criticality:-critical}
+
+        # 3. 执行插件（带超时）
+        log "RUN PLUGIN: $name (timeout=${timeout_sec}s, on_timeout=${on_timeout}, criticality=${criticality})"
+        local plugin_output
+        local exit_code=0
+        plugin_output=$(timeout "$timeout_sec" bash "$plugin" "$mode" "$hash" 2>&1) || exit_code=$?
+        echo "$plugin_output" | tee -a "$LOG_FILE" >/dev/null
+
+        if [ $exit_code -eq 0 ]; then
+            log "PLUGIN $name: PASS"
+        elif [ $exit_code -eq 124 ]; then
+            # 超时
+            log "PLUGIN $name: TIMEOUT (超过 ${timeout_sec}s)"
+            if [ "$on_timeout" = "fail" ]; then
+                if [ "$criticality" = "critical" ]; then
+                    log "  → critical + on_timeout=fail: 中断验证"
+                    critical_failed=1
+                else
+                    log "  → optional + on_timeout=fail: 中断验证"
+                    critical_failed=1
+                fi
+            else
+                # on_timeout=warn
+                log "  → on_timeout=warn: 降级警告（继续执行）"
+                warnings="$warnings $name(TIMEOUT)"
+            fi
+        else
+            # 插件失败
+            log "PLUGIN $name: FAIL (exit $exit_code)"
+            if [ "$criticality" = "critical" ]; then
+                log "  → criticality=critical: 中断验证"
+                critical_failed=1
+            else
+                log "  → criticality=optional: 降级警告（继续执行）"
+                warnings="$warnings $name(FAIL)"
+            fi
         fi
     done
 
-    if [ $failed -eq 0 ]; then
-        log "ALL PLUGINS PASSED"
+    # 汇总
+    if [ -n "$warnings" ]; then
+        log "PLUGINS WARNINGS:$warnings（optional 插件，已降级警告）"
+    fi
+
+    if [ $critical_failed -ne 0 ]; then
+        log "SOME CRITICAL PLUGINS FAILED"
+        return 1
+    elif [ -n "$warnings" ]; then
+        log "ALL CRITICAL PLUGINS PASSED (with warnings)"
         return 0
     else
-        log "SOME PLUGINS FAILED"
-        return 1
+        log "ALL PLUGINS PASSED"
+        return 0
     fi
 }
 

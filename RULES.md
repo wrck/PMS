@@ -922,6 +922,144 @@ hash="${2:-}"
 - 插件修改无需 sha256 完整性校验（仅核心脚本需要）。
 - 插件删除需主代理确认（防止误删导致验证遗漏）。
 
+### 5.6 插件校验和同步（防篡改）
+
+插件文件虽非受保护资产，但为防止插件被意外篡改导致验证逻辑变化，**已注册插件必须有校验和**：
+
+- **校验和记录**：每个插件在 `PLUGIN_REGISTRY.md` 中记录 SHA-256 校验和。
+- **校验时机**：`verify-commit.sh` 在执行插件前，先校验插件文件 sha256 与注册表一致。
+- **校验失败处理**：校验和不匹配视为 critical 失败，立即中断验证（exit 1）。
+- **友好错误提示**：校验失败时输出插件名 + 期望值 + 实际值，便于快速定位：
+  ```
+  PLUGIN 30-flyway-version-check.sh: FAIL (校验和不匹配)
+    期望值: bc446970bdd55ba073d8bcfc175debf8851854d3fa5ce59b0845cb1bd618b7de
+    实际值: a1b2c3d4...（被篡改后的值）
+    修复: 重新生成校验和并原子性更新 PLUGIN_REGISTRY.md（见 §5.6）
+  ```
+
+**原子性同步规则**：
+
+> 任何对已注册插件文件的修改，**必须原子性地同步更新 `PLUGIN_REGISTRY.md` 中的对应校验和**。禁止分步提交。
+
+- **原子性定义**：插件文件修改 + `PLUGIN_REGISTRY.md` 校验和更新必须在**同一个 commit** 中。
+- **禁止**：先提交插件修改，再提交注册表更新（会导致中间状态校验失败）。
+- **commit message**：必须包含 `Plugin-Updated: <name> <old-checksum> → <new-checksum>`。
+- **生成校验和**：`sha256sum scripts/verify-plugins/<name>.sh`，取 hash 部分填入注册表。
+
+### 5.7 插件超时隔离与 criticality 策略
+
+**核心原则**：插件超时或失败不应无差别中断验证，应根据插件重要性分级处理。
+
+#### 5.7.1 插件配置字段
+
+每个插件在 `PLUGIN_REGISTRY.md` 中配置以下字段：
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `timeout_sec` | number | 30 | 执行超时阈值（秒），上限 60 |
+| `on_timeout` | `fail` \| `warn` | `fail` | 超时策略：`fail`=中断验证，`warn`=降级警告 |
+| `criticality` | `critical` \| `optional` | `critical` | 重要性：`critical`=失败必中断，`optional`=失败仅警告 |
+| `checksum` | string | 必填 | SHA-256 校验和 |
+
+#### 5.7.2 组合策略矩阵
+
+| criticality | on_timeout | 插件失败时 | 插件超时时 |
+|-------------|------------|-----------|-----------|
+| critical | fail | 中断验证（exit 1） | 中断验证（exit 1） |
+| critical | warn | 中断验证（exit 1） | 降级警告（继续） |
+| optional | fail | 降级警告（continue） | 中断验证（exit 1） |
+| optional | warn | 降级警告（继续） | 降级警告（继续） |
+
+> **设计意图**：`criticality` 控制失败行为，`on_timeout` 控制超时行为，两者独立配置。
+> 例如：一个慢但非关键的检查插件，可设 `criticality=optional, on_timeout=warn`——失败和超时都仅警告。
+
+#### 5.7.3 超时隔离实现
+
+```bash
+# verify-commit.sh 中的超时隔离（已实现）
+timeout "$timeout_sec" bash "$plugin" "$mode" "$hash"
+# exit code 124 = 超时
+```
+
+- 超时插件被 `timeout` 命令强制终止，不影响后续插件执行。
+- 超时事件记录到日志，标注 `TIMEOUT (超过 ${timeout_sec}s)`。
+- 根据 `on_timeout` 决定是中断验证还是降级警告。
+
+#### 5.7.4 降级警告处理
+
+当 optional 插件失败或 `on_timeout=warn` 插件超时时，验证不中断，但记录警告：
+
+```
+PLUGINS WARNINGS: 20-i18n-key-check.sh(FAIL) 25-slow-lint.sh(TIMEOUT)（optional 插件，已降级警告）
+ALL CRITICAL PLUGINS PASSED (with warnings)
+```
+
+- 警告在日志末尾汇总，便于主代理审计。
+- 有警告但无 critical 失败时，验证仍返回 exit 0（通过）。
+- 主代理可在合并前审查警告，决定是否要求子代理修复。
+
+### 5.8 变更日志机器可读性（CHANGELOG.json）
+
+为支持主代理在批次开始前自动解析变更历史，判断是否需要重新验证已有 worktree 的环境一致性，维护结构化变更日志。
+
+#### 5.8.1 文件位置
+
+- `scripts/CHANGELOG.json`：机器可读的结构化变更日志。
+- `RULES.md` / `AGENTS.md`：人类可读的规则文档（不变）。
+
+#### 5.8.2 结构化格式
+
+```json
+{
+  "version": "1.0.0",
+  "last_updated": "2026-07-08T11:25:00Z",
+  "changes": [
+    {
+      "id": "rules-v4",
+      "date": "2026-07-08",
+      "type": "rules_update",
+      "description": "RULES.md 新增支柱五插件化架构",
+      "files_affected": ["RULES.md", "scripts/verify-commit.sh"],
+      "verify_version": {"verify.sh": "1.1.0", "verify-commit.sh": "1.2.0"},
+      "requires_worktree_resync": true,
+      "resync_files": ["scripts/verify-commit.sh", "RULES.md"]
+    },
+    {
+      "id": "plugin-30-flyway-v1.0.0",
+      "date": "2026-07-08",
+      "type": "plugin_added",
+      "description": "新增 Flyway 版本号冲突检查插件",
+      "plugin_name": "30-flyway-version-check.sh",
+      "plugin_version": "1.0.0",
+      "old_checksum": null,
+      "new_checksum": "bc446970bdd55ba073d8bcfc175debf8851854d3fa5ce59b0845cb1bd618b7de",
+      "criticality": "critical",
+      "timeout_sec": 30,
+      "on_timeout": "fail"
+    }
+  ]
+}
+```
+
+#### 5.8.3 字段说明
+
+| 字段 | 说明 |
+|------|------|
+| `version` | CHANGELOG.json 格式版本（语义化版本） |
+| `last_updated` | 最后更新时间（ISO 8601） |
+| `changes[]` | 变更列表，按时间倒序 |
+| `changes[].type` | `rules_update` / `plugin_added` / `plugin_modified` / `plugin_removed` / `verify_script_update` |
+| `changes[].requires_worktree_resync` | 是否需要通知活跃 worktree 重新同步（true 时触发 §2.4.4） |
+| `changes[].resync_files` | 需要同步到 worktree 的文件列表 |
+| `changes[].old_checksum` / `new_checksum` | 插件变更时的新旧校验和（用于审计） |
+
+#### 5.8.4 更新规则
+
+- **强制更新场景**：RULES.md/AGENTS.md/verify*.sh/插件文件变更时，必须同步更新 CHANGELOG.json。
+- **原子性提交**：CHANGELOG.json 与变更文件必须在同一个 commit 中。
+- **主代理批次前解析**：主代理在每个批次开始前执行 `jq .last_updated scripts/CHANGELOG.json`，对比上次解析时间，若有更新则检查 `requires_worktree_resync` 字段，决定是否同步 worktree。
+- **格式校验**：提交前必须 `jq . scripts/CHANGELOG.json >/dev/null` 校验 JSON 合法性。
+
 ---
 
 ## 附则
