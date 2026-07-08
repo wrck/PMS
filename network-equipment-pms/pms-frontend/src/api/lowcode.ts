@@ -939,3 +939,70 @@ export function createLowCodeMenu(
 ): Promise<number> {
   return post<number>('/api/lowcode/permission/menu', data)
 }
+
+// ===================== 动态实体数据 高级查询 =====================
+
+/** 查询操作符（与后端 DynamicQueryRequest.QueryCondition.operator 对应） */
+export type QueryOperator =
+  | 'EQ'
+  | 'NE'
+  | 'LIKE'
+  | 'IN'
+  | 'BETWEEN'
+  | 'GT'
+  | 'GE'
+  | 'LT'
+  | 'LE'
+  | 'IS_NULL'
+  | 'IS_NOT_NULL'
+
+/** 单个查询条件（与后端 QueryCondition 对应） */
+export interface QueryCondition {
+  /** 字段名（必须为实体合法字段） */
+  field: string
+  /** 操作符 */
+  operator: QueryOperator
+  /** 比较值；IN 时为数组 */
+  value?: unknown
+  /** BETWEEN 上界 */
+  value2?: unknown
+  /** OR 分组名：相同分组用 OR 连接，留空则归入 default 组用 AND 连接 */
+  orGroup?: string
+}
+
+/** 排序项（与后端 OrderBy 对应） */
+export interface QueryOrderBy {
+  field: string
+  direction: 'ASC' | 'DESC'
+}
+
+/** 高级查询请求（与后端 DynamicQueryRequest 对应） */
+export interface DynamicQueryRequest {
+  conditions: QueryCondition[]
+  orderBy: QueryOrderBy[]
+  page?: number
+  size?: number
+}
+
+/** 高级查询分页结果（与后端 MyBatis-Plus Page 对应） */
+export interface DynamicQueryPage {
+  records: Array<Record<string, unknown>>
+  total: number
+  current: number
+  size: number
+  pages?: number
+}
+
+/**
+ * 高级查询动态实体数据：支持 LIKE/IN/BETWEEN/比较/IS NULL、排序、OR 分组与分页。
+ *
+ * @param entityCode 实体编码
+ * @param request    查询请求
+ */
+export function queryEntityData(
+  entityCode: string,
+  request: DynamicQueryRequest
+): Promise<DynamicQueryPage> {
+  return post<DynamicQueryPage>(`/api/lowcode/data/${entityCode}/query`, request)
+}
+

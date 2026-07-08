@@ -13,11 +13,15 @@ import {
   deleteEntity,
   checkTableName,
   saveRelations,
+  listDdlBackups,
+  rollbackLastDdl,
+  rollbackByBackupId,
   type LowCodeEntity,
   type LowCodeField,
   type LowCodeRelation,
   type EntityDesignDTO,
-  type DdlResultDTO
+  type DdlResultDTO,
+  type DdlBackup
 } from '@/api/lowcode-entity'
 import FieldPanel from '@/components/EntityDesigner/FieldPanel.vue'
 import IndexPanel, { type LowCodeIndex } from '@/components/EntityDesigner/IndexPanel.vue'
@@ -47,6 +51,16 @@ const pendingRelation = ref<{ from: number; to: number } | null>(null)
 const ddlDialogVisible = ref(false)
 const ddlResult = ref<DdlResultDTO | null>(null)
 const loading = ref(false)
+const rollbackDialogVisible = ref(false)
+const rollbackBackups = ref<DdlBackup[]>([])
+const rollbackLoading = ref(false)
+
+/** 备份类型显示文案映射 */
+const backupTypeText: Record<string, string> = {
+  CREATE: '建表',
+  ALTER: '改表',
+  DROP_COLUMN: '删列'
+}
 
 const graphRef = shallowRef<Graph | null>(null)
 const canvasContainer = ref<HTMLDivElement>()
@@ -240,6 +254,64 @@ async function previewDdl() {
   }
 }
 
+/** 打开 DDL 回滚对话框并加载备份列表 */
+async function openRollbackDialog() {
+  if (!currentEntity.value.id) {
+    ElMessage.warning('请先保存实体')
+    return
+  }
+  rollbackDialogVisible.value = true
+  await loadRollbackBackups()
+}
+
+async function loadRollbackBackups() {
+  if (!currentEntity.value.id) return
+  rollbackLoading.value = true
+  try {
+    rollbackBackups.value = await listDdlBackups(currentEntity.value.id)
+  } catch (e) {
+    ElMessage.error('加载 DDL 备份列表失败')
+    rollbackBackups.value = []
+  } finally {
+    rollbackLoading.value = false
+  }
+}
+
+/** 回滚最近一次 DDL 操作（二次确认） */
+async function rollbackLast() {
+  if (!currentEntity.value.id) return
+  try {
+    await ElMessageBox.confirm(
+      '确认回滚最近一次 DDL 操作？该操作可能删除/重建物理表，请谨慎确认。',
+      '回滚最近 DDL',
+      { type: 'warning', confirmButtonText: '确认回滚', cancelButtonText: '取消' }
+    )
+    const type = await rollbackLastDdl(currentEntity.value.id)
+    ElMessage.success(`已回滚最近一次 DDL（${backupTypeText[type] || type}）`)
+    await loadRollbackBackups()
+  } catch (e) {
+    // 用户取消或回滚失败（失败时 request 拦截器已提示）
+  }
+}
+
+/** 按备份记录 ID 回滚（二次确认） */
+async function rollbackByBackup(backup: DdlBackup) {
+  if (!backup.id) return
+  const typeText = backupTypeText[backup.backupType || ''] || backup.backupType
+  try {
+    await ElMessageBox.confirm(
+      `确认回滚该备份记录（${typeText}，表 ${backup.tableName}）？该操作可能删除/重建物理表，请谨慎确认。`,
+      '按备份回滚',
+      { type: 'warning', confirmButtonText: '确认回滚', cancelButtonText: '取消' }
+    )
+    await rollbackByBackupId(backup.id)
+    ElMessage.success('回滚成功')
+    await loadRollbackBackups()
+  } catch (e) {
+    // 用户取消或回滚失败
+  }
+}
+
 async function publish() {
   if (!currentEntity.value.id) {
     ElMessage.warning('请先保存实体')
@@ -427,6 +499,7 @@ onBeforeUnmount(() => {
         <el-button size="small" @click="previewDdl">DDL 预览</el-button>
         <el-button type="success" size="small" @click="publish">发布</el-button>
         <el-button type="warning" size="small" @click="loadAllEntities">加载全部实体</el-button>
+        <el-button type="danger" size="small" @click="openRollbackDialog">回滚 DDL</el-button>
       </div>
       <div ref="canvasContainer" class="canvas-container" @drop="onCanvasDrop" @dragover.prevent></div>
     </div>
@@ -455,6 +528,37 @@ onBeforeUnmount(() => {
         />
         <pre v-for="(sql, i) in ddlResult.ddlStatements" :key="i" class="ddl-block">{{ sql }};</pre>
       </div>
+    </el-dialog>
+
+    <!-- DDL 回滚对话框 -->
+    <el-dialog v-model="rollbackDialogVisible" title="DDL 回滚" width="720px">
+      <el-alert
+        type="warning"
+        title="回滚会直接修改物理表结构（可能 DROP/重建表），属于高危操作，请谨慎确认。"
+        :closable="false"
+        style="margin-bottom: 12px"
+      />
+      <div style="margin-bottom: 10px">
+        <el-button type="danger" size="small" @click="rollbackLast">回滚最近一次</el-button>
+        <el-button size="small" @click="loadRollbackBackups">刷新</el-button>
+      </div>
+      <el-table v-loading="rollbackLoading" :data="rollbackBackups" border size="small" empty-text="暂无 DDL 备份记录">
+        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column label="类型" width="90">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.backupType === 'CREATE' ? 'success' : (row.backupType === 'ALTER' ? 'warning' : 'danger')">
+              {{ backupTypeText[row.backupType] || row.backupType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="tableName" label="物理表" width="180" />
+        <el-table-column prop="createTime" label="备份时间" width="170" />
+        <el-table-column label="操作" width="110" fixed="right">
+          <template #default="{ row }">
+            <el-button type="danger" size="small" link @click="rollbackByBackup(row)">回滚此备份</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-dialog>
 
     <RelationConfigDialog

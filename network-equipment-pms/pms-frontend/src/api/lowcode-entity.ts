@@ -56,6 +56,21 @@ export interface DdlResultDTO {
   junctionTableDdl?: string
 }
 
+/** DDL 备份记录（与后端 DdlBackup 对应） */
+export interface DdlBackup {
+  id?: number
+  entityId?: number
+  entityCode?: string
+  tableName?: string
+  /** 备份类型: CREATE/ALTER/DROP_COLUMN */
+  backupType?: string
+  /** 备份 SQL（SHOW CREATE TABLE 结果） */
+  backupSql?: string
+  /** DROP COLUMN 时备份的列数据 JSON */
+  backupData?: string
+  createTime?: string
+}
+
 export function getEntityList() {
   return get<LowCodeEntity[]>('/api/lowcode/entity/list')
 }
@@ -93,3 +108,19 @@ export function checkTableName(tableName: string, excludeId?: number) {
 export function saveRelations(entityId: number, relations: LowCodeRelation[]) {
   return post(`/api/lowcode/entity/${entityId}/relations`, relations)
 }
+
+/** 查询实体 DDL 备份记录列表（按时间倒序） */
+export function listDdlBackups(entityId: number) {
+  return get<DdlBackup[]>(`/api/lowcode/entity/${entityId}/ddl-backups`)
+}
+
+/** 回滚最近一次 DDL 操作，返回回滚的备份类型 */
+export function rollbackLastDdl(entityId: number) {
+  return post<string>(`/api/lowcode/entity/${entityId}/rollback-ddl`)
+}
+
+/** 按备份记录 ID 回滚 DDL */
+export function rollbackByBackupId(backupId: number) {
+  return post<void>(`/api/lowcode/entity/ddl/rollback/${backupId}`)
+}
+
