@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -123,6 +124,30 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         repositoryService.deleteDeployment(deploymentId, true);
         return Result.ok();
+    }
+
+    @Override
+    public String getProcessDefinitionBpmnXml(String processDefinitionKey) {
+        if (!StringUtils.hasText(processDefinitionKey)) {
+            throw new BusinessException("流程定义Key不能为空");
+        }
+        ProcessDefinition def = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionKey(processDefinitionKey)
+                .latestVersion()
+                .singleResult();
+        if (def == null) {
+            throw new BusinessException("流程定义不存在: " + processDefinitionKey);
+        }
+        String resourceName = StringUtils.hasText(def.getResourceName())
+                ? def.getResourceName()
+                : processDefinitionKey + ".bpmn20.xml";
+        try (InputStream in = repositoryService.getResourceAsStream(def.getDeploymentId(), resourceName);
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            in.transferTo(out);
+            return out.toString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new BusinessException("读取流程定义XML失败: " + e.getMessage());
+        }
     }
 
     @Override

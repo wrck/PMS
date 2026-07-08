@@ -37,6 +37,17 @@ public interface WorkflowService {
     Result<Map<String, Object>> listProcessDefinitions(int page, int size);
 
     /**
+     * 获取已部署流程定义的最新版本 BPMN 2.0 XML 原文。
+     *
+     * <p>用于低代码流程设计器的只读预览（bpmn-js Viewer）与节点表单绑定时
+     * 解析 UserTask 节点列表。返回部署时原始 XML，保留自定义扩展元素。</p>
+     *
+     * @param processDefinitionKey 流程定义 key
+     * @return BPMN 2.0 XML 字符串
+     */
+    String getProcessDefinitionBpmnXml(String processDefinitionKey);
+
+    /**
      * Delete a deployment (cascade).
      *
      * @param deploymentId the deployment identifier
