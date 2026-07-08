@@ -41,6 +41,18 @@ public class DynamicDataSourceManager {
         return jdbcTemplateMap.get(code);
     }
 
+    /**
+     * 获取已注册的 DataSource（批次3-T7）。
+     *
+     * <p>用于需要直接获取 JDBC Connection 的场景（如多数据源统一建模）。</p>
+     *
+     * @param code 数据源编码
+     * @return DataSource 实例，未注册返回 null
+     */
+    public DataSource getDataSource(String code) {
+        return dataSourceMap.get(code);
+    }
+
     public void unregister(String code) {
         DataSource ds = dataSourceMap.remove(code);
         jdbcTemplateMap.remove(code);
