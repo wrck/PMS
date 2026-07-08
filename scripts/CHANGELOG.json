@@ -1,7 +1,17 @@
 {
   "version": "1.0.0",
-  "last_updated": "2026-07-08T11:30:00Z",
+  "last_updated": "2026-07-08T11:50:00Z",
   "changes": [
+    {
+      "id": "rules-v6",
+      "date": "2026-07-08",
+      "type": "rules_update",
+      "description": "RULES.md 新增 §5.9 插件依赖关系（depends_on + 拓扑排序 + 循环依赖检测）+ §5.10 JSON 标准化输出协议（Schema + 合并验证报告）",
+      "files_affected": ["RULES.md", "scripts/verify-commit.sh", "scripts/verify-commit.sha256", "scripts/verify-plugins/PLUGIN_REGISTRY.md", "scripts/approval-logs/20260708-verify-v1.4.0-deps-jsonreport.md"],
+      "verify_version": {"verify.sh": "1.1.0", "verify-commit.sh": "1.4.0"},
+      "requires_worktree_resync": true,
+      "resync_files": ["scripts/verify-commit.sh", "scripts/verify-commit.sha256", "RULES.md", "scripts/verify-plugins/PLUGIN_REGISTRY.md"]
+    },
     {
       "id": "rules-v5",
       "date": "2026-07-08",

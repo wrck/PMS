@@ -1060,6 +1060,149 @@ ALL CRITICAL PLUGINS PASSED (with warnings)
 - **主代理批次前解析**：主代理在每个批次开始前执行 `jq .last_updated scripts/CHANGELOG.json`，对比上次解析时间，若有更新则检查 `requires_worktree_resync` 字段，决定是否同步 worktree。
 - **格式校验**：提交前必须 `jq . scripts/CHANGELOG.json >/dev/null` 校验 JSON 合法性。
 
+### 5.9 插件依赖关系（显式声明 + 拓扑排序）
+
+**核心原则**：插件间可能存在依赖（如 SQL 注入检查依赖 Java import 检查先通过），通过显式声明 + 拓扑排序确保执行顺序正确。
+
+#### 5.9.1 depends_on 字段
+
+每个插件在 `PLUGIN_REGISTRY.md` 中配置可选的 `depends_on` 字段：
+
+| 值 | 含义 |
+|----|------|
+| `-` | 无依赖（默认） |
+| `01-java-import-check.sh` | 单依赖 |
+| `01-java-import-check.sh,02-sql-injection-check.sh` | 多依赖（逗号分隔） |
+
+#### 5.9.2 拓扑排序算法
+
+verify-commit.sh 在执行插件前，根据 `depends_on` 构建有向图并做拓扑排序：
+
+1. **构建依赖图**：解析每个插件的 depends_on，构建邻接表 + 入度表。
+2. **Kahn 算法**：从入度为 0 的节点开始，逐步移除并加入执行序列。
+3. **循环依赖检测**：如果拓扑排序后仍有节点未处理（入度不为 0），说明存在循环依赖，**立即报错（exit 1）**。
+4. **同层按字母序**：入度同为 0 的节点按文件名字母序执行（保持稳定性）。
+
+#### 5.9.3 循环依赖处理
+
+```
+PLUGIN 依赖图检测: FAIL (循环依赖)
+  循环: 01-a.sh → 02-b.sh → 03-c.sh → 01-a.sh
+  修复: 检查 depends_on 声明，消除循环引用
+RESULT: FAIL (exit 1 - 循环依赖)
+```
+
+- 检测到循环依赖视为 critical 失败，立即中断验证。
+- 错误提示输出完整循环路径，便于定位。
+
+#### 5.9.4 依赖失败传播
+
+| 被依赖插件状态 | 依赖插件行为 |
+|---------------|-------------|
+| PASS | 正常执行 |
+| FAIL (critical) | 跳过执行，标记 `SKIPPED (dependency failed)` |
+| FAIL (optional) | 正常执行（optional 失败不阻断依赖） |
+| TIMEOUT (critical) | 跳过执行，标记 `SKIPPED (dependency timeout)` |
+| TIMEOUT (optional, warn) | 正常执行（optional 超时不阻断依赖） |
+
+> **设计意图**：critical 依赖失败时，依赖它的插件大概率也会失败（或产生误报），因此跳过执行更合理。optional 依赖失败不阻断，因为 optional 插件的失败不表示环境有问题。
+
+### 5.10 验证结果标准化输出协议（JSON Schema）
+
+**核心原则**：插件输出应机器可读，便于 verify-commit.sh 收集合并为单一验证报告，支持后续接入监控看板或智能分析工具。
+
+#### 5.10.1 插件输出 JSON Schema
+
+每个插件执行后，应输出一行 JSON 格式的结果（除常规日志外）：
+
+```json
+{
+  "plugin": "30-flyway-version-check.sh",
+  "version": "1.0.0",
+  "status": "pass",
+  "message": "无版本号冲突",
+  "metrics": {
+    "files_checked": 5,
+    "duration_ms": 120
+  }
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `plugin` | string | 是 | 插件文件名 |
+| `version` | string | 否 | 插件版本（从 PLUGIN_REGISTRY.md 读取） |
+| `status` | `pass` \| `fail` \| `warn` \| `timeout` | 是 | 验证状态 |
+| `message` | string | 是 | 人类可读的验证结果描述 |
+| `metrics` | object | 否 | 量化指标（如检查文件数、耗时、失败数等） |
+
+#### 5.10.2 status 与退出码映射
+
+| 插件退出码 | JSON status | 说明 |
+|-----------|-------------|------|
+| 0 | `pass` | 验证通过 |
+| 1 | `fail` | 验证失败 |
+| 124 | `timeout` | 执行超时 |
+| - | `warn` | optional 插件失败/超时降级时由 verify-commit.sh 标记 |
+
+#### 5.10.3 兼容性设计
+
+- **向后兼容**：插件不输出 JSON 时，verify-commit.sh 根据退出码自动生成标准 JSON（`message` 填默认值）。
+- **JSON 提取**：verify-commit.sh 从插件 stdout 中提取最后一行以 `{` 开头的 JSON（容错）。
+- **格式校验**：提取后 `jq .` 校验合法性，非法 JSON 时降级为自动生成。
+
+#### 5.10.4 合并验证报告
+
+verify-commit.sh 收集所有插件输出后，合并为单一验证报告：
+
+```json
+{
+  "report_version": "1.0.0",
+  "timestamp": "2026-07-08T11:30:00Z",
+  "verify_version": "1.4.0",
+  "mode": "--pre",
+  "commit_hash": null,
+  "summary": {
+    "total_plugins": 5,
+    "passed": 3,
+    "failed": 1,
+    "warned": 1,
+    "timeout": 0,
+    "skipped": 0
+  },
+  "plugins": [
+    {
+      "plugin": "01-java-import-check.sh",
+      "status": "pass",
+      "message": "无 import 问题",
+      "metrics": {"files_checked": 12, "duration_ms": 80}
+    },
+    {
+      "plugin": "30-flyway-version-check.sh",
+      "status": "fail",
+      "message": "版本号 V45 冲突",
+      "metrics": {"files_checked": 3, "duration_ms": 45}
+    }
+  ],
+  "overall_status": "fail",
+  "exit_code": 1
+}
+```
+
+#### 5.10.5 报告输出位置
+
+- **控制台**：人类可读摘要（已有的日志格式）。
+- **文件**：`scripts/logs/verify-report-<timestamp>.json`（机器可读完整报告）。
+- **CHANGELOG.json 关联**：报告路径写入 verify-commit.sh 日志末尾，便于审计追溯。
+
+#### 5.10.6 监控看板接入预留
+
+合并报告设计为可直接接入监控看板（如 Grafana）：
+
+- `summary` 字段提供聚合指标（passed/failed/warned/timeout/skipped）。
+- `plugins[]` 数组提供细粒度数据，可按 plugin 名做时序分析。
+- `overall_status` 和 `exit_code` 可用于告警规则（如连续 3 次 fail 触发告警）。
+
 ---
 
 ## 附则

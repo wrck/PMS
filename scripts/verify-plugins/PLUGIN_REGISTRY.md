@@ -7,9 +7,9 @@
 
 ## 已批准插件
 
-| 文件名 | 版本 | 作者 | 用途 | 批准日期 | timeout_sec | on_timeout | criticality | checksum |
-|--------|------|------|------|---------|-------------|------------|-------------|----------|
-| `30-flyway-version-check.sh` | 1.0.0 | 主代理 | 检查 Flyway 迁移版本号是否冲突（同模块内 Vxx 重复） | 2026-07-08 | 30 | fail | critical | bc446970bdd55ba073d8bcfc175debf8851854d3fa5ce59b0845cb1bd618b7de |
+| 文件名 | 版本 | 作者 | 用途 | 批准日期 | timeout_sec | on_timeout | criticality | depends_on | checksum |
+|--------|------|------|------|---------|-------------|------------|-------------|------------|----------|
+| `30-flyway-version-check.sh` | 1.0.0 | 主代理 | 检查 Flyway 迁移版本号是否冲突（同模块内 Vxx 重复） | 2026-07-08 | 30 | fail | critical | - | bc446970bdd55ba073d8bcfc175debf8851854d3fa5ce59b0845cb1bd618b7de |
 
 ## 插件配置字段说明
 
@@ -18,6 +18,7 @@
 | `timeout_sec` | number | 插件执行超时阈值（秒），默认 30，上限 60 |
 | `on_timeout` | `fail` \| `warn` | 超时时的处理策略：`fail`=中断验证（exit 1），`warn`=降级警告（继续执行） |
 | `criticality` | `critical` \| `optional` | 插件重要性：`critical`=失败/超时必须中断，`optional`=失败/超时仅警告 |
+| `depends_on` | `[plugin-name]` \| `-` | 依赖的插件列表（可选），verify-commit.sh 据此做拓扑排序；`-` 表示无依赖 |
 | `checksum` | string | 插件文件 SHA-256 校验和，用于检测插件被篡改 |
 
 **criticality 与 on_timeout 的组合行为**：
@@ -60,3 +61,41 @@
 3. **原子性更新**本清单中的 checksum 字段 + 校验和列表。
 4. **禁止分步提交**：插件文件修改和清单更新必须在同一个 commit 中。
 5. 提交时 commit message 包含 `Plugin-Updated: <name> <old-checksum> → <new-checksum>`。
+
+## 插件依赖关系（RULES.md §5.9）
+
+### depends_on 字段格式
+
+- **无依赖**：填 `-`（短横线）。
+- **单依赖**：填依赖插件文件名，如 `01-java-import-check.sh`。
+- **多依赖**：用逗号分隔，如 `01-java-import-check.sh,02-sql-injection-check.sh`。
+
+### 拓扑排序规则
+
+verify-commit.sh 在执行插件前，根据 `depends_on` 字段做拓扑排序：
+
+1. **构建依赖图**：解析每个插件的 depends_on，构建有向图。
+2. **Kahn 算法**：从入度为 0 的节点开始，逐步移除并加入执行序列。
+3. **循环依赖检测**：如果拓扑排序后仍有节点未处理，说明存在循环依赖，立即报错（exit 1）。
+4. **依赖失败传播**：如果被依赖的插件失败（critical），依赖它的插件跳过执行并标记为 SKIPPED。
+
+### 依赖声明示例
+
+```
+| `01-java-import-check.sh`       | ... | -                                   | ... |
+| `02-sql-injection-check.sh`     | ... | 01-java-import-check.sh             | ... |
+| `10-lowcode-schema-validator.sh`| ... | -                                   | ... |
+| `20-i18n-key-check.sh`          | ... | 10-lowcode-schema-validator.sh      | ... |
+```
+
+上例执行顺序：01 → 02 → 10 → 20（拓扑排序后）。
+
+### 依赖失败传播
+
+| 被依赖插件状态 | 依赖插件行为 |
+|---------------|-------------|
+| PASS | 正常执行 |
+| FAIL (critical) | 跳过执行，标记 SKIPPED (dependency failed) |
+| FAIL (optional) | 正常执行（optional 失败不阻断依赖） |
+| TIMEOUT (critical) | 跳过执行，标记 SKIPPED (dependency timeout) |
+| TIMEOUT (optional, warn) | 正常执行（optional 超时不阻断依赖） |
