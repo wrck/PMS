@@ -43,6 +43,27 @@ public class LowCodeComponentMeta {
     /** 描述 */
     private String description;
 
+    /** 组件版本（批次4-T8） */
+    private String version;
+
+    /** 作者（批次4-T8） */
+    private String author;
+
+    /** 状态: PUBLISHED / DRAFT / ARCHIVED（批次4-T8） */
+    private String status;
+
+    /** 标签（逗号分隔，批次4-T8） */
+    private String tags;
+
+    /** 下载量（批次4-T8） */
+    private Integer downloadCount;
+
+    /** 来源: BUILTIN / CUSTOM / MARKETPLACE（批次4-T8） */
+    private String sourceType;
+
+    /** 远程组件入口 URL（MARKETPLACE 类型，批次4-T8） */
+    private String entryUrl;
+
     /** 是否内置组件 */
     private Integer builtin;
 
