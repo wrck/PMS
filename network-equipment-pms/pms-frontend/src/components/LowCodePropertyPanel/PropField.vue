@@ -6,10 +6,15 @@
  * type=object 时按 properties 递归渲染子属性，type=array 时按 itemProp
  * 递归渲染数组项并支持新增/删除。组件通过自身文件名（PropField）实现递归引用。</p>
  *
+ * <p>type=code / type=expression 复用批次1的 ExpressionEditor（textarea + 变量/字段
+ * 侧栏 + 函数库 + 简易高亮）；expression 额外提供 language 切换下拉。</p>
+ *
  * <p>所有变更通过 emit('update:modelValue') 上抛不可变新值，
  * 由父级（LowCodePropertyPanel）写回响应式 modelValue，保证单向数据流。</p>
  */
+import { ref } from 'vue'
 import type { ComponentPropDef } from '@/components/LowCodeComponentRegistry/types'
+import ExpressionEditor from '@/components/ExpressionEditor/index.vue'
 
 defineOptions({ name: 'PropField' })
 
@@ -18,6 +23,11 @@ const props = defineProps<{
   modelValue: any
 }>()
 const emit = defineEmits<{ (e: 'update:modelValue', v: any): void }>()
+
+/** expression 类型的语言切换状态（缺省取 schema.language，回退 aviator） */
+const expressionLang = ref<'groovy' | 'aviator' | 'javascript'>(
+  props.propDef.language || 'aviator'
+)
 
 /** 显示标签：优先 label，回退 key */
 function label(): string {
@@ -147,25 +157,33 @@ function updateArrayItem(idx: number, v: any) {
       @update:model-value="(v: any) => emit('update:modelValue', v)"
     />
 
-    <!-- 代码（textarea，后续接入 monaco） -->
-    <el-input
+    <!-- 代码：复用 ExpressionEditor（textarea + 高亮 + 函数库） -->
+    <ExpressionEditor
       v-else-if="propDef.type === 'code'"
-      :model-value="modelValue"
-      type="textarea"
-      :rows="propDef.rows ?? 4"
-      :placeholder="propDef.placeholder"
+      :model-value="modelValue || ''"
+      :language="propDef.language || 'aviator'"
+      :height="propDef.rows ? propDef.rows * 22 : 160"
       @update:model-value="(v: string) => emit('update:modelValue', v)"
     />
 
-    <!-- 表达式（textarea，后续接入表达式编辑器） -->
-    <el-input
-      v-else-if="propDef.type === 'expression'"
-      :model-value="modelValue"
-      type="textarea"
-      :rows="propDef.rows ?? 2"
-      :placeholder="propDef.placeholder"
-      @update:model-value="(v: string) => emit('update:modelValue', v)"
-    />
+    <!-- 表达式：ExpressionEditor + language 切换下拉 -->
+    <div v-else-if="propDef.type === 'expression'" class="prop-expression">
+      <el-select
+        v-model="expressionLang"
+        size="small"
+        class="prop-expression-lang"
+      >
+        <el-option label="Aviator" value="aviator" />
+        <el-option label="Groovy" value="groovy" />
+        <el-option label="JavaScript" value="javascript" />
+      </el-select>
+      <ExpressionEditor
+        :model-value="modelValue || ''"
+        :language="expressionLang"
+        :height="propDef.rows ? propDef.rows * 22 : 140"
+        @update:model-value="(v: string) => emit('update:modelValue', v)"
+      />
+    </div>
 
     <!-- 对象：折叠面板 + 递归渲染子属性 -->
     <div v-else-if="propDef.type === 'object'" class="prop-object">
@@ -236,6 +254,13 @@ function updateArrayItem(idx: number, v: any) {
 .prop-object,
 .prop-array {
   width: 100%;
+}
+.prop-expression {
+  width: 100%;
+}
+.prop-expression-lang {
+  width: 120px;
+  margin-bottom: 6px;
 }
 .prop-object :deep(.el-collapse-item__header),
 .prop-array :deep(.el-collapse-item__header) {

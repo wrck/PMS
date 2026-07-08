@@ -11,8 +11,8 @@
  *   <li>date → el-date-picker</li>
  *   <li>array → 动态列表（按 itemProp 递归渲染，带新增/删除）</li>
  *   <li>object → 折叠面板（按 properties 递归渲染子属性）</li>
- *   <li>code → el-input textarea（后续批次接入 monaco）</li>
- *   <li>expression → el-input textarea（后续批次接入表达式编辑器）</li>
+ *   <li>code → ExpressionEditor（批次1表达式编辑器）</li>
+ *   <li>expression → ExpressionEditor + language 切换</li>
  * </ul>
  * </p>
  */
@@ -50,6 +50,8 @@ export interface ComponentPropDef {
   dateType?: 'date' | 'datetime' | 'daterange'
   /** type=code/expression 时的 textarea 行数 */
   rows?: number
+  /** type=code/expression 时的表达式语言（缺省 aviator） */
+  language?: 'groovy' | 'aviator' | 'javascript'
   /** type=string/input 的占位提示 */
   placeholder?: string
 }
