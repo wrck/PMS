@@ -8,12 +8,13 @@
  *   <li>左侧：表达式文本框（透明文字 + 下方 pre 着色，光标可编辑）</li>
  *   <li>右侧：变量/字段侧栏（点击插入到光标位置）</li>
  *   <li>底部：函数库提示（math / string / date，点击插入）</li>
+ *   <li>最底部：语法校验状态栏（实时检查括号 / 引号 / 运算符，debounce 300ms）</li>
  * </ul>
  *
  * <p>插入变量格式：Aviator 用 <code>${变量名}</code>，Groovy/JavaScript 用 <code>变量名</code>。
  * 通过 v-model 双向绑定 modelValue。</p>
  */
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 defineOptions({ name: 'ExpressionEditor' })
 
@@ -28,6 +29,12 @@ interface FieldItem {
 
 /** 变量项：既支持纯字符串名（task 规格），也兼容旧调用方传入的 {name, type} 对象 */
 type VariableItem = string | FieldItem
+
+/** 校验结果 */
+interface ValidationResult {
+  valid: boolean
+  error?: string
+}
 
 const props = withDefaults(
   defineProps<{
@@ -274,6 +281,255 @@ function tokenize(code: string, lang: ExpressionLanguage): Token[] {
 }
 
 const tokens = computed(() => tokenize(text.value, props.language))
+
+// ===================== 语法校验（简化版） =====================
+
+/** Aviator 合法运算符集合（含多字符运算符） */
+const AVIATOR_OPERATORS = new Set([
+  '+', '-', '*', '/', '%',
+  '>', '<', '==', '!=', '>=', '<=',
+  '&&', '||', '!', '?', ':'
+])
+
+/**
+ * 移除字符串字面量后的表达式（用于结构校验，避免字符串内字符被误判）。
+ *
+ * <p>对 `"..."` / `'...'` 进行扫描，跳过转义字符；未闭合的字符串保留起始引号
+ * 占位以便后续校验识别为「未闭合」。</p>
+ */
+function stripStrings(expr: string): { stripped: string; unclosedQuote: string | null } {
+  let out = ''
+  let i = 0
+  const n = expr.length
+  while (i < n) {
+    const ch = expr[i]
+    if (ch === '"' || ch === "'") {
+      // 寻找匹配的结束引号
+      let j = i + 1
+      while (j < n && expr[j] !== ch) {
+        if (expr[j] === '\\') j++
+        j++
+      }
+      if (j >= n) {
+        // 未闭合：保留起始引号，便于后续判断
+        out += ch
+        return { stripped: out, unclosedQuote: ch }
+      }
+      // 闭合：用空格替换字符串内容（保留长度，避免相邻 token 误连）
+      out += ' '
+      i = j + 1
+      continue
+    }
+    out += ch
+    i++
+  }
+  return { stripped: out, unclosedQuote: null }
+}
+
+/** 校验括号匹配：返回首个不匹配的括号信息（null 表示匹配） */
+function checkBrackets(s: string): { char: string; pos: number; kind: 'mismatch' | 'unclosed' } | null {
+  const stack: Array<{ ch: string; pos: number }> = []
+  const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }
+  const opens = new Set(['(', '[', '{'])
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]
+    if (opens.has(ch)) {
+      stack.push({ ch, pos: i })
+    } else if (ch in pairs) {
+      const top = stack.pop()
+      if (!top || top.ch !== pairs[ch]) {
+        return { char: ch, pos: i, kind: 'mismatch' }
+      }
+    }
+  }
+  if (stack.length > 0) {
+    return { char: stack[stack.length - 1].ch, pos: stack[stack.length - 1].pos, kind: 'unclosed' }
+  }
+  return null
+}
+
+/** Aviator 校验：括号、${} 闭合、运算符合法、字符串引号闭合 */
+function validateAviator(expr: string): ValidationResult {
+  // 1. 字符串引号闭合
+  const { stripped, unclosedQuote } = stripStrings(expr)
+  if (unclosedQuote) {
+    return { valid: false, error: `字符串引号 ${unclosedQuote} 未闭合` }
+  }
+
+  // 2. ${} 闭合检查：每个 $ 必须跟 {，且 { 必须有 } 闭合
+  let i = 0
+  while (i < stripped.length) {
+    if (stripped[i] === '$') {
+      if (stripped[i + 1] !== '{') {
+        return { valid: false, error: `位置 ${i + 1}：'$' 后必须跟 '{'` }
+      }
+      const end = stripped.indexOf('}', i + 2)
+      if (end === -1) {
+        return { valid: false, error: `位置 ${i + 1}：'\${' 未闭合 '}'` }
+      }
+      i = end + 1
+      continue
+    }
+    // 不允许孤立的 { 或 }（aviator 中 {} 仅用于 ${} 内）
+    if (stripped[i] === '{' || stripped[i] === '}') {
+      return { valid: false, error: `位置 ${i + 1}：Aviator 中 '{}' 仅用于 '\${变量名}'` }
+    }
+    i++
+  }
+
+  // 3. 括号匹配（仅 () 与 []，{} 已在上方处理）
+  const noBraces = stripped.replace(/[{}]/g, ' ')
+  const bracketErr = checkBrackets(noBraces)
+  if (bracketErr) {
+    if (bracketErr.kind === 'unclosed') {
+      return { valid: false, error: `括号 '${bracketErr.char}' 未闭合` }
+    }
+    return { valid: false, error: `位置 ${bracketErr.pos + 1}：括号 '${bracketErr.char}' 不匹配` }
+  }
+
+  // 4. 运算符合法性检查：扫描 stripped 中的运算符字符，多字符运算符优先匹配
+  const opChars = new Set(['+', '-', '*', '/', '%', '>', '<', '=', '!', '&', '|', '?', ':'])
+  let j = 0
+  while (j < stripped.length) {
+    const ch = stripped[j]
+    if (!opChars.has(ch)) {
+      j++
+      continue
+    }
+    // 尝试匹配 2 字符运算符
+    const two = stripped.slice(j, j + 2)
+    if (AVIATOR_OPERATORS.has(two)) {
+      j += 2
+      continue
+    }
+    // 单字符运算符
+    if (AVIATOR_OPERATORS.has(ch)) {
+      j += 1
+      continue
+    }
+    // 不在合法集合中的运算符字符（如 @ # ~ ^ \ 以及单独的 = & |）
+    return {
+      valid: false,
+      error: `位置 ${j + 1}：非法运算符 '${ch}'（Aviator 支持 + - * / % > < == != >= <= && || ! ? :）`
+    }
+  }
+
+  return { valid: true }
+}
+
+/** Groovy 校验：括号、字符串引号闭合、连续运算符（** 除外） */
+function validateGroovy(expr: string): ValidationResult {
+  // 1. 字符串引号闭合（Groovy 还支持三引号字符串，简化版仅检查单/双引号）
+  const { stripped, unclosedQuote } = stripStrings(expr)
+  if (unclosedQuote) {
+    return { valid: false, error: `字符串引号 ${unclosedQuote} 未闭合` }
+  }
+
+  // 2. 括号匹配（() [] {}）
+  const bracketErr = checkBrackets(stripped)
+  if (bracketErr) {
+    if (bracketErr.kind === 'unclosed') {
+      return { valid: false, error: `括号 '${bracketErr.char}' 未闭合` }
+    }
+    return { valid: false, error: `位置 ${bracketErr.pos + 1}：括号 '${bracketErr.char}' 不匹配` }
+  }
+
+  // 3. 连续运算符检查（** 除外；其它 3 个及以上相同运算符字符视为非法）
+  //    采用「3 个及以上连续相同运算符字符」判定，避免对合法 2 字符运算符（== != >= <= && || ** ++ -- 等）误报
+  const opChars = new Set(['+', '-', '*', '/', '%', '>', '<', '=', '!', '&', '|', '?', ':', '@', '~', '^'])
+  let k = 0
+  while (k < stripped.length) {
+    const ch = stripped[k]
+    if (!opChars.has(ch)) {
+      k++
+      continue
+    }
+    // 计算从 k 起，连续相同字符的长度
+    let run = 1
+    while (k + run < stripped.length && stripped[k + run] === ch) {
+      run++
+    }
+    if (run >= 3) {
+      return {
+        valid: false,
+        error: `位置 ${k + 1}：连续运算符 '${ch.repeat(run)}' 不合法`
+      }
+    }
+    k += run
+  }
+
+  return { valid: true }
+}
+
+/** JavaScript 校验：用 new Function(expr) try-catch（仅语法解析，不执行） */
+function validateJavaScript(expr: string): ValidationResult {
+  try {
+    // 用 Function 构造器解析表达式：包裹 return 让其作为函数体返回表达式结果
+    // 仅解析，不调用，无副作用
+    new Function(`return (${expr});`)
+    return { valid: true }
+  } catch (e: unknown) {
+    // 提取 SyntaxError 信息（去掉浏览器附加的 "Function:" 等前缀）
+    const msg = e instanceof Error ? e.message : String(e)
+    return { valid: false, error: `JavaScript 语法错误：${msg}` }
+  }
+}
+
+/**
+ * 表达式语法校验入口。
+ *
+ * <p>按语言分发：aviator/groovy 走简化本地校验（括号/引号/运算符），
+ * javascript 用 `new Function()` try-catch（仅解析不执行）。
+ * 空表达式视为合法（无需校验）。</p>
+ *
+ * @param expr     表达式字符串
+ * @param language 语言：aviator / groovy / javascript
+ * @returns 校验结果
+ */
+function validateExpression(expr: string, language: ExpressionLanguage): ValidationResult {
+  if (!expr || !expr.trim()) {
+    return { valid: true }
+  }
+  if (language === 'aviator') return validateAviator(expr)
+  if (language === 'groovy') return validateGroovy(expr)
+  return validateJavaScript(expr)
+}
+
+// ===================== 实时校验（debounce 300ms） =====================
+
+const isValid = ref(true)
+const errorMessage = ref('')
+let validateTimer: ReturnType<typeof setTimeout> | null = null
+
+function runValidation() {
+  const result = validateExpression(text.value, props.language)
+  isValid.value = result.valid
+  errorMessage.value = result.error ?? ''
+}
+
+watch(
+  () => text.value,
+  () => {
+    if (validateTimer) clearTimeout(validateTimer)
+    validateTimer = setTimeout(runValidation, 300)
+  }
+)
+
+// 语言切换时立即重新校验
+watch(
+  () => props.language,
+  () => {
+    if (validateTimer) clearTimeout(validateTimer)
+    runValidation()
+  }
+)
+
+onBeforeUnmount(() => {
+  if (validateTimer) clearTimeout(validateTimer)
+})
+
+// 初始校验
+runValidation()
 </script>
 
 <template>
@@ -340,6 +596,17 @@ const tokens = computed(() => tokenize(text.value, props.language))
           @click="onFuncClick(item)"
         >{{ item.label }}</span>
       </div>
+    </div>
+
+    <!-- 语法校验状态栏（实时校验，不阻断输入） -->
+    <div
+      class="ee-status"
+      :class="{ 'ee-status-valid': isValid, 'ee-status-invalid': !isValid }"
+      role="status"
+      aria-live="polite"
+    >
+      <span v-if="isValid" class="ee-status-text">✓ 语法正确</span>
+      <span v-else class="ee-status-text">✗ {{ errorMessage }}</span>
     </div>
   </div>
 </template>
@@ -520,5 +787,33 @@ const tokens = computed(() => tokenize(text.value, props.language))
 
 .ee-fn-chip:hover {
   background: var(--el-fill-color-dark);
+}
+
+/* ===== 语法校验状态栏 ===== */
+.ee-status {
+  border-top: 1px solid var(--el-border-color-lighter);
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ee-status-valid {
+  background: var(--el-color-success-light-9);
+  color: var(--el-color-success);
+}
+
+.ee-status-invalid {
+  background: var(--el-color-danger-light-9);
+  color: var(--el-color-danger);
+}
+
+.ee-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
