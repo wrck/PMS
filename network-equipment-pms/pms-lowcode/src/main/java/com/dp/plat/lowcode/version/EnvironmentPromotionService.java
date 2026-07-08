@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.version;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dp.plat.lowcode.dto.ConfigPackageDTO;
+import com.dp.plat.lowcode.dto.DependencyValidationResult;
 import com.dp.plat.lowcode.entity.LowCodeConnector;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
 import com.dp.plat.lowcode.entity.LowCodeMicroflow;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -124,63 +126,147 @@ public class EnvironmentPromotionService {
     /**
      * 校验配置包依赖完整性（借鉴 Appsmith）。
      *
-     * <p>遍历配置包中每个快照，用正则提取对其他配置（ENTITY/FORM/LIST/CONNECTOR/RULE/MICROFLOW）
-     * 的引用，检查目标环境是否已存在该依赖。返回缺失依赖清单（空表示完整）。</p>
+     * <p>遍历配置包中每个快照，按配置类型提取对其他配置的引用：
+     * <ul>
+     *   <li>FORM → ENTITY（formConfig.fields 中 entityCode）</li>
+     *   <li>LIST → ENTITY（listConfig 中 entityCode）</li>
+     *   <li>MICROFLOW → CONNECTOR/RULE/MICROFLOW（definition 节点 config 中 connectorCode/ruleCode/microflowCode）</li>
+     *   <li>PROCESS_BINDING → FORM/MICROFLOW（nodeFormBindings 中 formCode/microflowCode）</li>
+     *   <li>TRIGGER → MICROFLOW 或 PROCESS（targetCode，依赖类型由 targetType 决定）</li>
+     * </ul>
+     * 引用的 code 必须在包内存在或在目标环境已存在，否则记入缺失清单。
+     * JSON 解析失败时仅记录 warn 日志，不阻断整体校验（best-effort，单条失败不影响整体）。</p>
      *
      * @param pkg 配置包
-     * @return 缺失依赖描述列表
+     * @return 依赖校验结果（含缺失清单与 valid 标志）
      */
-    public List<String> validatePackageDependencies(ConfigPackageDTO pkg) {
-        List<String> missing = new ArrayList<>();
+    public DependencyValidationResult validatePackageDependencies(ConfigPackageDTO pkg) {
+        List<DependencyValidationResult.MissingDependency> missing = new ArrayList<>();
         if (pkg == null || pkg.getItems() == null || pkg.getItems().isEmpty()) {
-            missing.add("配置包为空");
-            return missing;
+            // 空包视为通过校验
+            return DependencyValidationResult.builder().valid(true).missing(missing).build();
         }
+
+        // 1. 汇总包内自带的配置编码（按类型分组），用于包内自洽校验
+        Map<String, Set<String>> packageCodes = new HashMap<>();
+        for (ConfigPackageDTO.PackageItem item : pkg.getItems()) {
+            String type = item.getConfigType() == null ? "UNKNOWN" : item.getConfigType();
+            String code = item.getConfigCode();
+            if (code != null && !code.isBlank()) {
+                packageCodes.computeIfAbsent(type, k -> new LinkedHashSet<>()).add(code);
+            }
+        }
+
+        // 2. 逐项提取引用并校验
         for (ConfigPackageDTO.PackageItem item : pkg.getItems()) {
             if (item.getSnapshot() == null || item.getSnapshot().isBlank()) {
                 continue;
             }
             String itemType = item.getConfigType() == null ? "UNKNOWN" : item.getConfigType();
-            String itemCode = item.getConfigCode() == null ? String.valueOf(item.getConfigId()) : item.getConfigCode();
-            Map<String, Set<String>> references = extractReferences(item.getSnapshot());
+            String itemCode = item.getConfigCode() == null
+                    ? String.valueOf(item.getConfigId()) : item.getConfigCode();
+            String referencedBy = itemType + " '" + itemCode + "'";
+
+            Map<String, Set<String>> references;
+            try {
+                references = extractReferences(itemType, item.getSnapshot());
+            } catch (Exception e) {
+                // best-effort：单条解析失败不影响整体
+                log.warn("快照引用提取失败，跳过: {} '{}'", itemType, itemCode, e);
+                continue;
+            }
+
             for (Map.Entry<String, Set<String>> entry : references.entrySet()) {
                 String depType = entry.getKey();
                 for (String depCode : entry.getValue()) {
-                    if (!dependencyExists(depType, depCode)) {
-                        missing.add(itemType + " '" + itemCode + "' 依赖 " + depType + " '" + depCode
-                                + "'，但目标环境不存在");
+                    if (!dependencySatisfied(packageCodes, depType, depCode)) {
+                        missing.add(DependencyValidationResult.MissingDependency.builder()
+                                .type(depType)
+                                .code(depCode)
+                                .referencedBy(referencedBy)
+                                .build());
                     }
                 }
             }
         }
-        return missing;
+
+        return DependencyValidationResult.builder()
+                .valid(missing.isEmpty())
+                .missing(missing)
+                .build();
     }
 
     /**
-     * 从快照 JSON 中提取引用（按字段名 → 依赖类型映射，用正则匹配）。
+     * 判断依赖是否满足：包内存在 或 目标环境已存在。
      */
-    private Map<String, Set<String>> extractReferences(String snapshotJson) {
+    private boolean dependencySatisfied(Map<String, Set<String>> packageCodes,
+                                        String depType, String depCode) {
+        // 包内自带则直接满足
+        Set<String> codes = packageCodes.get(depType);
+        if (codes != null && codes.contains(depCode)) {
+            return true;
+        }
+        // 否则查询目标环境是否已存在
+        return dependencyExists(depType, depCode);
+    }
+
+    /**
+     * 从快照 JSON 中提取引用（按字段名 → 依赖类型映射 + 类型特化处理）。
+     *
+     * <p>通用策略：递归遍历 JSON 树，按 REFERENCE_FIELDS 收集 entityCode/formCode/...
+     * 这覆盖 FORM→ENTITY、LIST→ENTITY、MICROFLOW→CONNECTOR/RULE/MICROFLOW、
+     * PROCESS_BINDING→FORM/MICROFLOW 等场景（引用字段可出现在任意嵌套层级）。</p>
+     *
+     * <p>特化策略：TRIGGER 的 targetCode 依赖类型由 targetType（MICROFLOW/PROCESS）决定，
+     * 需单独解析；PROCESS 类型无法在目标环境直接校验（Flowable 流程独立部署），
+     * 仅做包内自洽校验。</p>
+     *
+     * @param configType   配置类型
+     * @param snapshotJson 快照 JSON
+     * @return 依赖类型 → 引用编码集合
+     */
+    private Map<String, Set<String>> extractReferences(String configType, String snapshotJson) {
         Map<String, Set<String>> result = new LinkedHashMap<>();
+        JsonNode root = null;
+        try {
+            root = objectMapper.readTree(snapshotJson);
+            collectReferences(root, result);
+        } catch (Exception e) {
+            // best-effort：JSON 解析失败时回退到正则提取，避免阻断整体校验
+            log.warn("快照 JSON 解析失败，回退正则提取: {}", configType, e);
+            regexExtractReferences(snapshotJson, result);
+        }
+
+        // TRIGGER 特化：targetCode 的依赖类型由 targetType 决定（MICROFLOW/PROCESS）
+        if ("TRIGGER".equals(configType) && root != null) {
+            JsonNode targetTypeNode = root.get("targetType");
+            JsonNode targetCodeNode = root.get("targetCode");
+            if (targetTypeNode != null && targetCodeNode != null && targetCodeNode.isTextual()) {
+                String targetType = targetTypeNode.asText();
+                String targetCode = targetCodeNode.asText();
+                if ("MICROFLOW".equals(targetType) || "PROCESS".equals(targetType)) {
+                    result.computeIfAbsent(targetType, k -> new LinkedHashSet<>()).add(targetCode);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 正则回退提取（JSON 解析失败时使用，best-effort）。
+     */
+    private void regexExtractReferences(String snapshotJson, Map<String, Set<String>> result) {
         for (Map.Entry<String, String> field : REFERENCE_FIELDS.entrySet()) {
             Pattern p = Pattern.compile("\"" + Pattern.quote(field.getKey()) + "\"\\s*:\\s*\"([^\"]+)\"");
             Matcher m = p.matcher(snapshotJson);
-            Set<String> codes = new java.util.LinkedHashSet<>();
+            Set<String> codes = new LinkedHashSet<>();
             while (m.find()) {
                 codes.add(m.group(1));
             }
             if (!codes.isEmpty()) {
-                result.put(field.getValue(), codes);
+                result.computeIfAbsent(field.getValue(), k -> new LinkedHashSet<>()).addAll(codes);
             }
         }
-        // 仅保留 JSON 解析合法的引用（避免误匹配非 JSON 文本）；这里用正则已足够简化
-        // 额外校验：尝试解析为 JSON 以排除明显非 JSON 的快照
-        try {
-            JsonNode root = objectMapper.readTree(snapshotJson);
-            collectReferences(root, result);
-        } catch (Exception ignored) {
-            // 非 JSON 快照：仅使用正则结果
-        }
-        return result;
     }
 
     /**
@@ -212,6 +298,9 @@ public class EnvironmentPromotionService {
 
     /**
      * 检查目标环境中指定依赖是否存在。
+     *
+     * <p>PROCESS 类型由 Flowable 独立部署管理，此处无法直接校验，
+     * 归入 default 假定存在（仅依赖包内自洽校验），避免误报。</p>
      */
     private boolean dependencyExists(String depType, String code) {
         try {
@@ -226,7 +315,7 @@ public class EnvironmentPromotionService {
                         .eq(LowCodeConnector::getCode, code)) > 0;
                 case "RULE" -> ruleService.count(new LambdaQueryWrapper<LowCodeRule>()
                         .eq(LowCodeRule::getCode, code)) > 0;
-                default -> true; // 未知依赖类型，假定存在，避免误报
+                default -> true; // 未知/PROCESS 依赖类型，假定存在，避免误报
             };
         } catch (Exception e) {
             log.warn("依赖存在性校验失败，假定存在: {}/{}", depType, code, e);
@@ -250,6 +339,16 @@ public class EnvironmentPromotionService {
             log.info("导入配置包：共 {} 项，覆盖模式 = {}", items.size(), overwrite);
             // 转换回 ConfigPackageDTO 并调用 service 导入
             ConfigPackageDTO pkg = objectMapper.treeToValue(root, ConfigPackageDTO.class);
+
+            // 依赖完整性校验（best-effort：缺失依赖仅告警，不阻断导入）
+            DependencyValidationResult depResult = validatePackageDependencies(pkg);
+            if (!depResult.isValid()) {
+                log.warn("配置包存在 {} 项缺失依赖，导入可能不完整:", depResult.getMissing().size());
+                for (DependencyValidationResult.MissingDependency md : depResult.getMissing()) {
+                    log.warn("  - {} 引用 {} '{}' 不存在", md.getReferencedBy(), md.getType(), md.getCode());
+                }
+            }
+
             if (!overwrite) {
                 // TODO: 检查每个 item 是否已存在，若已存在则跳过
                 log.info("非覆盖模式：已存在的配置将被跳过（待实现完整校验）");
