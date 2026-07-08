@@ -172,3 +172,40 @@ export function deleteTrigger(id: number) {
 export function executeTrigger(code: string, data: Record<string, unknown>) {
   return post(`/api/lowcode/trigger/${code}/execute`, data)
 }
+
+// ===================== 触发器执行历史 =====================
+
+/** 触发器执行状态 */
+export type TriggerExecutionStatus = 'SUCCESS' | 'FAILED'
+
+/** 触发器执行日志（与后端 LowCodeTriggerExecutionLog 对应） */
+export interface LowCodeTriggerExecutionLog {
+  id?: number
+  triggerId: number
+  triggerCode: string
+  triggerType: TriggerType
+  targetType: TriggerTargetType
+  targetCode: string
+  /** 执行唯一ID（微流执行ID，用于串联节点轨迹） */
+  executionId?: string
+  /** 输入数据 JSON 字符串 */
+  inputs?: string
+  /** 输出结果 JSON 字符串 */
+  outputs?: string
+  status: TriggerExecutionStatus
+  errorMessage?: string
+  /** 执行耗时毫秒 */
+  durationMs?: number
+  operator?: string
+  createTime?: string
+}
+
+/** 查询指定触发器的执行历史（按时间倒序） */
+export function getTriggerExecutionLogs(id: number, limit = 50) {
+  return get<LowCodeTriggerExecutionLog[]>(`/api/lowcode/trigger/${id}/execution-logs`, { limit })
+}
+
+/** 查询全局最近触发器执行历史（按时间倒序） */
+export function getRecentTriggerExecutionLogs(limit = 50) {
+  return get<LowCodeTriggerExecutionLog[]>(`/api/lowcode/trigger/execution-logs/recent`, { limit })
+}

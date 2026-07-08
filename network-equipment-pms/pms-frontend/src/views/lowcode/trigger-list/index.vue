@@ -20,6 +20,7 @@ import {
   createDefaultTriggerConfig,
   deleteTrigger,
   executeTrigger,
+  getTriggerExecutionLogs,
   getTriggerList,
   parseTriggerConfig,
   saveTrigger,
@@ -28,6 +29,7 @@ import {
   type EventTriggerConfig,
   type LowCodeTrigger,
   type LowCodeTriggerConfig,
+  type LowCodeTriggerExecutionLog,
   type QuartzTriggerConfig,
   type TriggerTargetType,
   type TriggerType
@@ -139,6 +141,9 @@ function openNew() {
   activeStep.value = 0
   testData.value = '{\n  \n}'
   testResult.value = ''
+  executionLogs.value = []
+  historyCollapseActive.value = []
+  expandedRows.value = []
   dialogVisible.value = true
   loadTargets()
 }
@@ -149,6 +154,9 @@ function openEdit(row: LowCodeTrigger, startStep = 0) {
   activeStep.value = startStep
   testData.value = '{\n  \n}'
   testResult.value = ''
+  executionLogs.value = []
+  historyCollapseActive.value = []
+  expandedRows.value = []
   dialogVisible.value = true
   loadTargets()
 }
@@ -293,11 +301,82 @@ async function runTest() {
     const result = await executeTrigger(c.code, data)
     testResult.value = JSON.stringify(result, null, 2)
     ElMessage.success('执行完成')
+    // 执行成功后刷新执行历史
+    await loadExecutionLogs()
   } catch (e: unknown) {
     testResult.value = '执行失败：' + (e instanceof Error ? e.message : String(e))
+    // 执行失败也刷新历史（后端会记录 FAILED 日志）
+    await loadExecutionLogs()
   } finally {
     testing.value = false
   }
+}
+
+// ---------------- 执行历史 ----------------
+/** 当前编辑触发器的执行历史列表 */
+const executionLogs = ref<LowCodeTriggerExecutionLog[]>([])
+/** 折叠面板激活项（含 'history' 即展开） */
+const historyCollapseActive = ref<string[]>([])
+/** 历史加载中 */
+const historyLoading = ref(false)
+/** 展开行（点击行展开 inputs/outputs JSON）的 row key 集合 */
+const expandedRows = ref<number[]>([])
+
+/** 加载当前触发器的执行历史 */
+async function loadExecutionLogs() {
+  const c = current.value
+  if (!c?.id) {
+    executionLogs.value = []
+    return
+  }
+  historyLoading.value = true
+  try {
+    executionLogs.value = await getTriggerExecutionLogs(c.id, 50)
+  } catch (e: unknown) {
+    // 历史加载失败不阻断主流程
+    console.warn('加载执行历史失败：', e)
+    executionLogs.value = []
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+/** 折叠面板展开时按需加载历史 */
+async function onHistoryCollapseChange(activeNames: string | string[]) {
+  const names = Array.isArray(activeNames) ? activeNames : [activeNames]
+  const expanded = names.includes('history')
+  if (expanded && executionLogs.value.length === 0) {
+    await loadExecutionLogs()
+  }
+}
+
+/** 手动刷新历史 */
+async function refreshHistory() {
+  await loadExecutionLogs()
+}
+
+/** 行展开变化时同步 expandedRows（受控展开） */
+function onRowExpandChange(_row: LowCodeTriggerExecutionLog, expandedList: LowCodeTriggerExecutionLog[]) {
+  expandedRows.value = expandedList
+    .map((r) => r.id)
+    .filter((id): id is number => typeof id === 'number')
+}
+
+/** 美化 JSON 字符串展示（无效 JSON 原样返回） */
+function prettyJson(s?: string): string {
+  if (!s) return ''
+  try {
+    return JSON.stringify(JSON.parse(s), null, 2)
+  } catch {
+    return s
+  }
+}
+
+/** 格式化耗时展示 */
+function formatDuration(ms?: number): string {
+  if (ms == null) return '-'
+  if (ms < 1000) return `${ms} ms`
+  return `${(ms / 1000).toFixed(2)} s`
 }
 
 // ---------------- 配置预览 JSON（步骤 2 底部展示序列化结果） ----------------
@@ -453,6 +532,76 @@ onMounted(load)
         </div>
       </div>
 
+      <!-- 执行历史折叠面板（仅在已保存触发器时显示） -->
+      <el-collapse
+        v-if="current.id"
+        v-model="historyCollapseActive"
+        class="history-collapse"
+        @change="onHistoryCollapseChange"
+      >
+        <el-collapse-item name="history">
+          <template #title>
+            <div class="history-title">
+              <span>执行历史</span>
+              <el-tag size="small" type="info" style="margin-left: 8px">
+                {{ executionLogs.length }}
+              </el-tag>
+              <el-button
+                link
+                type="primary"
+                size="small"
+                style="margin-left: 12px"
+                :loading="historyLoading"
+                @click.stop="refreshHistory"
+              >刷新</el-button>
+            </div>
+          </template>
+          <el-table
+            :data="executionLogs"
+            v-loading="historyLoading"
+            row-key="id"
+            size="small"
+            :expand-row-keys="expandedRows"
+            @expand-change="onRowExpandChange"
+            empty-text="暂无执行历史"
+            max-height="320"
+          >
+            <el-table-column type="expand">
+              <template #default="{ row }">
+                <div class="log-expand">
+                  <div v-if="row.inputs" class="log-section">
+                    <div class="log-section-title">输入（inputs）</div>
+                    <pre class="config-preview">{{ prettyJson(row.inputs) }}</pre>
+                  </div>
+                  <div v-if="row.outputs" class="log-section">
+                    <div class="log-section-title">输出（outputs）</div>
+                    <pre class="config-preview">{{ prettyJson(row.outputs) }}</pre>
+                  </div>
+                  <div v-if="row.errorMessage" class="log-section">
+                    <div class="log-section-title">错误信息</div>
+                    <pre class="config-preview error-preview">{{ row.errorMessage }}</pre>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="执行时间" prop="createTime" width="170" />
+            <el-table-column label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'" size="small">
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="耗时" width="100">
+              <template #default="{ row }">{{ formatDuration(row.durationMs) }}</template>
+            </el-table-column>
+            <el-table-column label="操作人" prop="operator" width="120" show-overflow-tooltip />
+            <el-table-column label="执行ID" prop="executionId" min-width="200" show-overflow-tooltip />
+            <el-table-column label="错误信息" prop="errorMessage" min-width="200" show-overflow-tooltip />
+          </el-table>
+        </el-collapse-item>
+      </el-collapse>
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">关闭</el-button>
@@ -515,5 +664,44 @@ onMounted(load)
     max-height: 72vh;
     overflow-y: auto;
   }
+}
+
+/* ===== 执行历史折叠面板 ===== */
+.history-collapse {
+  margin-top: 12px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.history-title {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.log-expand {
+  padding: 8px 16px;
+  background: var(--el-fill-color-lighter);
+}
+
+.log-section {
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.log-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 4px;
+}
+
+.error-preview {
+  color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
+  border-color: var(--el-color-danger-light-7);
 }
 </style>
