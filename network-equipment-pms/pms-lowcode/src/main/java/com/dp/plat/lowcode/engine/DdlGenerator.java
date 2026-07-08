@@ -10,9 +10,19 @@ import java.util.Map;
  * DDL 生成器接口。
  *
  * <p>抽象 DDL 生成逻辑，支持不同数据库方言。
- * 本期仅实现 {@link MySQLDdlGenerator}，预留 PostgreSQL 扩展点。</p>
+ * 已实现：{@link MySQLDdlGenerator}（默认）、{@link PostgreSQLDdlGenerator}、
+ * {@link SqlServerDdlGenerator}。方言选择由 {@code DdlGeneratorFactory} 按 dbType 解析。</p>
  */
 public interface DdlGenerator {
+
+    /**
+     * 返回此生成器支持的数据库方言标识（小写，与 LowCodeDataSource.dbType 对齐）。
+     *
+     * <p>取值：mysql / postgresql / sqlserver</p>
+     *
+     * @return 方言标识
+     */
+    String getDialect();
 
     /**
      * 生成 CREATE TABLE 语句（含字段、主键、索引、外键约束）。
