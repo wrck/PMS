@@ -2,13 +2,13 @@ package com.dp.plat.lowcode.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dp.plat.lowcode.engine.connector.ConnectorCredentialEncryptor;
 import com.dp.plat.lowcode.engine.connector.ConnectorResult;
 import com.dp.plat.lowcode.engine.connector.DbConnectorExecutor;
 import com.dp.plat.lowcode.engine.connector.RestConnectorExecutor;
 import com.dp.plat.lowcode.entity.LowCodeConnector;
 import com.dp.plat.lowcode.mapper.LowCodeConnectorMapper;
 import com.dp.plat.lowcode.service.LowCodeConnectorService;
-import com.dp.plat.lowcode.util.CredentialEncryptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,8 @@ import java.util.Map;
  * 低代码连接器服务实现。
  *
  * <p>根据 type 分发到对应执行器：REST / DB。
- * 配置中的敏感字段（password/credentials/token/apiKey/secret/clientSecret）
- * 在持久化前由 {@link CredentialEncryptor} 加密，执行/测试前解密。</p>
+ * 配置中的敏感字段（password/token/apiKey/secret/clientSecret）
+ * 在持久化前由 {@link ConnectorCredentialEncryptor} 以 AES-GCM 加密，执行/测试前解密。</p>
  */
 @Slf4j
 @Service
@@ -30,7 +30,7 @@ public class LowCodeConnectorServiceImpl extends ServiceImpl<LowCodeConnectorMap
 
     private final RestConnectorExecutor restConnectorExecutor;
     private final DbConnectorExecutor dbConnectorExecutor;
-    private final CredentialEncryptor credentialEncryptor;
+    private final ConnectorCredentialEncryptor credentialEncryptor;
 
     @Override
     public boolean save(LowCodeConnector connector) {

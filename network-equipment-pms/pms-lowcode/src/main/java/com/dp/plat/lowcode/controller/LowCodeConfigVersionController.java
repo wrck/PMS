@@ -3,6 +3,7 @@ package com.dp.plat.lowcode.controller;
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.dto.VersionDiffDTO;
+import com.dp.plat.lowcode.dto.VersionTreeNode;
 import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.service.LowCodeConfigVersionService;
 import com.dp.plat.lowcode.version.EnvironmentPromotionService;
@@ -45,6 +46,14 @@ public class LowCodeConfigVersionController {
     public Result<List<LowCodeConfigVersion>> history(@RequestParam String configType,
                                                         @RequestParam Long configId) {
         return Result.ok(configVersionService.getVersionHistory(configType, configId));
+    }
+
+    @Operation(summary = "查询版本树（线性构建：v1 → v2 → v3 链式树）")
+    @GetMapping("/tree")
+    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    public Result<List<VersionTreeNode>> tree(@RequestParam String configType,
+                                                @RequestParam Long configId) {
+        return Result.ok(configVersionService.getVersionTree(configType, configId));
     }
 
     @Operation(summary = "对比两个版本差异")
