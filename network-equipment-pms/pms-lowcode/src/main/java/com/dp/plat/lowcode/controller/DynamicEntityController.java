@@ -1,7 +1,9 @@
 package com.dp.plat.lowcode.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.dto.DynamicQueryRequest;
 import com.dp.plat.lowcode.engine.DynamicEntityDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +44,15 @@ public class DynamicEntityController {
                                              @RequestParam(defaultValue = "20") int size,
                                              @RequestParam(required = false) Map<String, Object> filters) {
         return Result.ok(dataService.list(entityCode, page, size, filters));
+    }
+
+    @Operation(summary = "高级查询动态实体数据（LIKE/IN/BETWEEN/OR/排序）")
+    @PostMapping("/query")
+    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':list')")
+    public Result<Page<Map<String, Object>>> queryAdvanced(@PathVariable String entityCode,
+                                                            @RequestBody DynamicQueryRequest request) {
+        request.setEntityCode(entityCode);
+        return Result.ok(dataService.queryAdvanced(request));
     }
 
     @Operation(summary = "查询单条动态实体数据")

@@ -4,6 +4,8 @@ import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.dto.DdlResultDTO;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
+import com.dp.plat.lowcode.engine.ddl.DdlBackup;
+import com.dp.plat.lowcode.engine.ddl.DdlExecutionService;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
 import com.dp.plat.lowcode.entity.LowCodeRelation;
 import com.dp.plat.lowcode.service.LowCodeEntityService;
@@ -35,6 +37,7 @@ import java.util.List;
 public class LowCodeEntityController {
 
     private final LowCodeEntityService entityService;
+    private final DdlExecutionService ddlExecutionService;
 
     @Operation(summary = "查询实体列表")
     @GetMapping("/list")
@@ -99,5 +102,29 @@ public class LowCodeEntityController {
     public Result<Boolean> checkTableName(@RequestParam String tableName,
                                            @RequestParam(required = false) Long excludeId) {
         return Result.ok(entityService.isTableNameExists(tableName, excludeId));
+    }
+
+    @Operation(summary = "查询实体 DDL 备份记录列表")
+    @GetMapping("/{entityId}/ddl-backups")
+    @PreAuthorize("hasAuthority('lowcode:entity:ddl')")
+    public Result<List<DdlBackup>> listDdlBackups(@PathVariable Long entityId) {
+        return Result.ok(ddlExecutionService.listBackups(entityId));
+    }
+
+    @Operation(summary = "回滚最近一次 DDL 操作")
+    @PostMapping("/{entityId}/rollback-ddl")
+    @PreAuthorize("hasAuthority('lowcode:entity:ddl')")
+    @OperLog(title = "低代码 DDL 回滚", businessType = 3)
+    public Result<String> rollbackLastDdl(@PathVariable Long entityId) {
+        return Result.ok(ddlExecutionService.rollbackLastDdl(entityId));
+    }
+
+    @Operation(summary = "按备份记录 ID 回滚 DDL")
+    @PostMapping("/ddl/rollback/{backupId}")
+    @PreAuthorize("hasAuthority('lowcode:entity:ddl')")
+    @OperLog(title = "低代码 DDL 回滚", businessType = 3)
+    public Result<Void> rollbackByBackupId(@PathVariable Long backupId) {
+        ddlExecutionService.rollbackByBackupId(backupId);
+        return Result.ok();
     }
 }

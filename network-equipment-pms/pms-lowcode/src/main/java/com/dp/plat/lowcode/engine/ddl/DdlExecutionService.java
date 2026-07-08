@@ -44,4 +44,25 @@ public interface DdlExecutionService {
      * @return true=已存在
      */
     boolean tableExists(String tableName);
+
+    /**
+     * 查询指定实体的 DDL 备份记录列表（按时间倒序）。
+     * @param entityId 实体 ID
+     * @return 备份记录列表
+     */
+    List<DdlBackup> listBackups(Long entityId);
+
+    /**
+     * 回滚最近一次 DDL 操作（基于 backup 表，按 id 倒序取最新一条）。
+     * @param entityId 实体 ID
+     * @return 回滚的 DDL 备份类型（CREATE/ALTER/DROP_COLUMN）
+     */
+    String rollbackLastDdl(Long entityId);
+
+    /**
+     * 回滚指定备份记录。
+     * @param backupId 备份记录 ID
+     */
+    void rollbackByBackupId(Long backupId);
 }
+

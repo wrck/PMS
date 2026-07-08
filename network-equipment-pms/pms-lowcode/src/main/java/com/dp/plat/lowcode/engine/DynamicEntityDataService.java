@@ -1,6 +1,8 @@
 package com.dp.plat.lowcode.engine;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dp.plat.lowcode.dto.DynamicQueryRequest;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
 import com.dp.plat.lowcode.engine.trigger.CrudTriggerExecutor;
 import com.dp.plat.lowcode.engine.trigger.LowCodeTrigger;
@@ -14,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,6 +74,143 @@ public class DynamicEntityDataService {
         result.put("page", page);
         result.put("size", size);
         return result;
+    }
+
+    /**
+     * 高级查询：支持 LIKE/IN/BETWEEN/比较/IS NULL 等操作符、排序、OR 分组与分页。
+     *
+     * <p>条件按 {@code orGroup} 分组：未分组（default）条件用 AND 连接；
+     * 同一命名分组内用 OR 连接，分组整体与其它条件用 AND 连接。
+     * 字段名通过实体设计白名单校验以防 SQL 注入，值统一使用 {@code ?} 占位符参数化。</p>
+     *
+     * @param request 查询请求
+     * @return MyBatis-Plus 分页对象（records/total/current/size）
+     */
+    public Page<Map<String, Object>> queryAdvanced(DynamicQueryRequest request) {
+        EntityDesignDTO design = getDesignByCode(request.getEntityCode());
+        String tableName = design.getEntity().getTableName();
+
+        // 合法字段白名单（含 id），用于过滤条件/排序字段名以防 SQL 注入
+        Set<String> validFields = design.getFields().stream()
+                .map(LowCodeField::getName)
+                .collect(Collectors.toSet());
+        validFields.add("id");
+
+        // 按 orGroup 分组：default 组用 AND，命名组组内 OR、组间 AND
+        Map<String, List<DynamicQueryRequest.QueryCondition>> groups = new LinkedHashMap<>();
+        if (request.getConditions() != null) {
+            for (DynamicQueryRequest.QueryCondition c : request.getConditions()) {
+                if (c.getField() == null || !validFields.contains(c.getField())) {
+                    // 非法字段直接忽略，避免注入
+                    continue;
+                }
+                String group = c.getOrGroup() != null ? c.getOrGroup() : "default";
+                groups.computeIfAbsent(group, k -> new ArrayList<>()).add(c);
+            }
+        }
+
+        StringBuilder where = new StringBuilder(" WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        // default 组：AND 连接
+        List<DynamicQueryRequest.QueryCondition> defaultGroup = groups.get("default");
+        if (defaultGroup != null) {
+            for (DynamicQueryRequest.QueryCondition c : defaultGroup) {
+                where.append(" AND ");
+                appendConditionFragment(where, params, c);
+            }
+        }
+
+        // 命名组：组内 OR，整体 AND (...) 连接
+        for (Map.Entry<String, List<DynamicQueryRequest.QueryCondition>> entry : groups.entrySet()) {
+            if ("default".equals(entry.getKey())) {
+                continue;
+            }
+            List<DynamicQueryRequest.QueryCondition> groupConditions = entry.getValue();
+            if (groupConditions.isEmpty()) {
+                continue;
+            }
+            where.append(" AND (");
+            for (int i = 0; i < groupConditions.size(); i++) {
+                if (i > 0) {
+                    where.append(" OR ");
+                }
+                appendConditionFragment(where, params, groupConditions.get(i));
+            }
+            where.append(")");
+        }
+
+        // 排序
+        StringBuilder order = new StringBuilder();
+        if (request.getOrderBy() != null) {
+            for (DynamicQueryRequest.OrderBy ob : request.getOrderBy()) {
+                if (ob.getField() == null || !validFields.contains(ob.getField())) {
+                    continue;
+                }
+                order.append(order.length() == 0 ? " ORDER BY" : ", ");
+                order.append(" `").append(ob.getField()).append("`");
+                order.append("DESC".equalsIgnoreCase(ob.getDirection()) ? " DESC" : " ASC");
+            }
+        }
+
+        // 计数
+        String countSql = "SELECT COUNT(*) FROM `" + tableName + "`" + where;
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
+        if (total == null) {
+            total = 0L;
+        }
+
+        // 分页查询
+        int page = request.getPage() != null && request.getPage() > 0 ? request.getPage() : 1;
+        int size = request.getSize() != null && request.getSize() > 0 ? request.getSize() : 20;
+        int offset = (page - 1) * size;
+        String listSql = "SELECT * FROM `" + tableName + "`" + where + order
+                + " LIMIT " + size + " OFFSET " + offset;
+        List<Map<String, Object>> records = jdbcTemplate.queryForList(listSql, params.toArray());
+
+        Page<Map<String, Object>> pageResult = new Page<>(page, size);
+        pageResult.setRecords(records);
+        pageResult.setTotal(total);
+        return pageResult;
+    }
+
+    /**
+     * 构造单个条件的 SQL 片段（不含前缀 AND/OR）并填充参数。
+     */
+    private void appendConditionFragment(StringBuilder sb, List<Object> params,
+                                          DynamicQueryRequest.QueryCondition c) {
+        String col = "`" + c.getField() + "`";
+        String op = c.getOperator() == null ? "EQ" : c.getOperator();
+        switch (op) {
+            case "EQ" -> { sb.append(col).append(" = ?"); params.add(c.getValue()); }
+            case "NE" -> { sb.append(col).append(" <> ?"); params.add(c.getValue()); }
+            case "LIKE" -> { sb.append(col).append(" LIKE ?"); params.add(c.getValue()); }
+            case "GT" -> { sb.append(col).append(" > ?"); params.add(c.getValue()); }
+            case "GE" -> { sb.append(col).append(" >= ?"); params.add(c.getValue()); }
+            case "LT" -> { sb.append(col).append(" < ?"); params.add(c.getValue()); }
+            case "LE" -> { sb.append(col).append(" <= ?"); params.add(c.getValue()); }
+            case "IN" -> {
+                Object val = c.getValue();
+                if (val instanceof Collection<?> coll) {
+                    if (coll.isEmpty()) {
+                        // IN () 在 MySQL 非法，空集合直接置为恒假
+                        sb.append("1=0");
+                    } else {
+                        String placeholders = coll.stream().map(v -> "?")
+                                .collect(Collectors.joining(", "));
+                        sb.append(col).append(" IN (").append(placeholders).append(")");
+                        params.addAll(coll);
+                    }
+                } else {
+                    // 非集合值退化为等值
+                    sb.append(col).append(" = ?"); params.add(val);
+                }
+            }
+            case "BETWEEN" -> { sb.append(col).append(" BETWEEN ? AND ?"); params.add(c.getValue()); params.add(c.getValue2()); }
+            case "IS_NULL" -> sb.append(col).append(" IS NULL");
+            case "IS_NOT_NULL" -> sb.append(col).append(" IS NOT NULL");
+            default -> throw new IllegalArgumentException("不支持的操作符: " + op);
+        }
     }
 
     /**

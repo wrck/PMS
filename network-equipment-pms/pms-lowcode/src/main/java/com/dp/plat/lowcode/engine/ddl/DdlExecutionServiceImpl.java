@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -218,14 +219,206 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
         return count != null && count > 0;
     }
 
+    @Override
+    public List<DdlBackup> listBackups(Long entityId) {
+        return backupMapper.selectList(
+                new LambdaQueryWrapper<DdlBackup>()
+                        .eq(DdlBackup::getEntityId, entityId)
+                        .orderByDesc(DdlBackup::getId));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String rollbackLastDdl(Long entityId) {
+        // 按 id 倒序取最新一条备份记录
+        DdlBackup backup = backupMapper.selectOne(
+                new LambdaQueryWrapper<DdlBackup>()
+                        .eq(DdlBackup::getEntityId, entityId)
+                        .orderByDesc(DdlBackup::getId)
+                        .last("LIMIT 1"));
+        if (backup == null) {
+            throw new RuntimeException("无可回滚的 DDL 备份: entityId=" + entityId);
+        }
+        return executeRollback(backup);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void rollbackByBackupId(Long backupId) {
+        DdlBackup backup = backupMapper.selectById(backupId);
+        if (backup == null) {
+            throw new RuntimeException("备份记录不存在: " + backupId);
+        }
+        executeRollback(backup);
+    }
+
     /**
-     * 备份列数据（DROP COLUMN 前调用）
+     * 执行回滚：按备份类型分别处理。
+     *
+     * <ul>
+     *   <li>CREATE：DROP 本次创建的表</li>
+     *   <li>ALTER：DROP 当前表后用备份的 SHOW CREATE TABLE 重建</li>
+     *   <li>DROP_COLUMN：用 backup_data 重建列并恢复数据</li>
+     * </ul>
+     *
+     * <p>注意：CREATE/ALTER 回滚涉及 DROP TABLE，受 DDL 自动提交特性限制，
+     * {@code @Transactional} 无法回滚已执行的 DDL，故操作前需谨慎确认。</p>
+     *
+     * @return 回滚的备份类型
+     */
+    private String executeRollback(DdlBackup backup) {
+        String type = backup.getBackupType();
+        String tableName = backup.getTableName();
+        log.info("开始回滚 DDL: type={}, table={}, backupId={}", type, tableName, backup.getId());
+        switch (type) {
+            case "CREATE" -> {
+                // CREATE 回滚 = DROP TABLE（仅删除本次创建的表）
+                String dropSql = "DROP TABLE IF EXISTS `" + tableName + "`";
+                jdbcTemplate.execute(dropSql);
+                logRollback(backup, dropSql, null);
+            }
+            case "ALTER" -> {
+                // ALTER 回滚 = DROP 当前表 + 用备份的 SHOW CREATE TABLE 重建
+                // 注意：DROP 会丢失 ALTER 之后写入的数据，简化处理
+                jdbcTemplate.execute("DROP TABLE IF EXISTS `" + tableName + "`");
+                jdbcTemplate.execute(backup.getBackupSql());
+                logRollback(backup, backup.getBackupSql(), null);
+            }
+            case "DROP_COLUMN" -> restoreDroppedColumn(backup);
+            default -> throw new RuntimeException("不支持的备份类型: " + type);
+        }
+        // 回滚成功后删除该备份记录，避免重复回滚同一操作
+        backupMapper.deleteById(backup.getId());
+        log.info("DDL 回滚完成: type={}, table={}", type, tableName);
+        return type;
+    }
+
+    /**
+     * 恢复被删除的列：解析 backup_data 重建列结构并恢复数据。
+     *
+     * <p>支持两种 backup_data 格式：
+     * <ul>
+     *   <li>新格式（Map）：含 columnName/columnDef/rows，可完整恢复列类型与数据</li>
+     *   <li>旧格式（List）：仅行数据，列名从行数据推断，类型降级为 TEXT NULL</li>
+     * </ul></p>
+     */
+    @SuppressWarnings("unchecked")
+    private void restoreDroppedColumn(DdlBackup backup) {
+        String backupData = backup.getBackupData();
+        if (backupData == null || backupData.isBlank()) {
+            throw new RuntimeException("DROP_COLUMN 备份数据为空，无法回滚: backupId=" + backup.getId());
+        }
+        try {
+            Object parsed = objectMapper.readValue(backupData, Object.class);
+            String columnName;
+            String columnDef;
+            List<Map<String, Object>> rows;
+
+            if (parsed instanceof Map<?, ?> mapPayload) {
+                columnName = (String) mapPayload.get("columnName");
+                columnDef = (String) mapPayload.get("columnDef");
+                Object rowsObj = mapPayload.get("rows");
+                rows = rowsObj instanceof List<?> list ? (List<Map<String, Object>>) (List<?>) list : List.of();
+            } else if (parsed instanceof List<?> listPayload) {
+                // 旧格式：仅行数据数组。从首行推断列名，类型降级为 TEXT NULL
+                rows = (List<Map<String, Object>>) (List<?>) listPayload;
+                columnName = extractColumnName(rows);
+                columnDef = "TEXT NULL";
+                log.warn("旧格式 DROP_COLUMN 备份，列类型降级为 TEXT NULL: backupId={}", backup.getId());
+            } else {
+                throw new RuntimeException("无法解析 DROP_COLUMN 备份数据: backupId=" + backup.getId());
+            }
+
+            if (columnName == null || columnDef == null) {
+                throw new RuntimeException("DROP_COLUMN 备份数据缺少列名或列定义: backupId=" + backup.getId());
+            }
+
+            // 1. 重建列（ADD COLUMN）
+            String addSql = "ALTER TABLE `" + backup.getTableName() + "` ADD COLUMN `"
+                    + columnName + "` " + columnDef;
+            jdbcTemplate.execute(addSql);
+
+            // 2. 恢复数据（按 id 回填）
+            if (rows != null && !rows.isEmpty()) {
+                for (Map<String, Object> row : rows) {
+                    Object id = row.get("id");
+                    Object value = row.get(columnName);
+                    if (id != null) {
+                        jdbcTemplate.update(
+                                "UPDATE `" + backup.getTableName() + "` SET `" + columnName + "` = ? WHERE id = ?",
+                                value, id);
+                    }
+                }
+            }
+            logRollback(backup, addSql, null);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("恢复删除列失败: backupId={}", backup.getId(), e);
+            throw new RuntimeException("恢复删除列失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 从行数据中推断被删除列的列名（排除 id 列）。
+     */
+    private String extractColumnName(List<Map<String, Object>> rows) {
+        for (Map<String, Object> row : rows) {
+            for (String key : row.keySet()) {
+                if (!"id".equals(key)) {
+                    return key;
+                }
+            }
+        }
+        throw new RuntimeException("无法从备份数据推断列名");
+    }
+
+    /**
+     * 记录回滚操作日志（executionType=ROLLBACK）。
+     */
+    private void logRollback(DdlBackup backup, String ddlSql, String errorMessage) {
+        try {
+            DdlExecutionLog logEntry = DdlExecutionLog.builder()
+                    .entityId(backup.getEntityId())
+                    .entityCode(backup.getEntityCode())
+                    .tableName(backup.getTableName())
+                    .executionType("ROLLBACK")
+                    .ddlSql(ddlSql)
+                    .status(errorMessage == null ? "SUCCESS" : "FAILED")
+                    .errorMessage(errorMessage)
+                    .build();
+            executionLogMapper.insert(logEntry);
+        } catch (Exception e) {
+            log.error("记录回滚日志失败: backupId={}", backup.getId(), e);
+        }
+    }
+
+    /**
+     * 备份列数据（DROP COLUMN 前调用）。
+     *
+     * <p>backup_data 存储结构化 JSON：{@code {columnName, columnDef, rows}}，
+     * 其中 columnDef 为从 INFORMATION_SCHEMA 重建的列类型定义（如 {@code VARCHAR(255) NULL}），
+     * 供回滚时 ADD COLUMN 重建列结构；rows 为该列非空数据（id → 列值）。</p>
      */
     private void backupColumnData(Long entityId, String tableName, String columnName) {
         try {
+            // 查询列元数据，用于回滚时重建列类型
+            List<Map<String, Object>> colMeta = jdbcTemplate.queryForList(
+                    "SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, IS_NULLABLE "
+                            + "FROM INFORMATION_SCHEMA.COLUMNS "
+                            + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                    tableName, columnName);
+            String columnDef = colMeta.isEmpty() ? "TEXT NULL" : buildColumnDefFromMeta(colMeta.get(0));
+
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(
                     "SELECT `id`, `" + columnName + "` FROM `" + tableName + "` WHERE `" + columnName + "` IS NOT NULL");
-            String jsonData = objectMapper.writeValueAsString(rows);
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("columnName", columnName);
+            payload.put("columnDef", columnDef);
+            payload.put("rows", rows);
+            String jsonData = objectMapper.writeValueAsString(payload);
+
             DdlBackup backup = DdlBackup.builder()
                     .entityId(entityId)
                     .entityCode(getEntityCode(entityId))
@@ -234,11 +427,40 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
                     .backupData(jsonData)
                     .build();
             backupMapper.insert(backup);
-            log.info("已备份表 {} 列 {} 数据（{} 行）", tableName, columnName, rows.size());
+            log.info("已备份表 {} 列 {} 数据（{} 行，类型 {}）", tableName, columnName, rows.size(), columnDef);
         } catch (Exception e) {
             log.error("备份列数据失败: {}.{}", tableName, columnName, e);
             throw new RuntimeException("备份列数据失败: " + tableName + "." + columnName, e);
         }
+    }
+
+    /**
+     * 根据列元数据重建 SQL 列类型定义（不含列名），如 {@code VARCHAR(255) NULL}。
+     */
+    private String buildColumnDefFromMeta(Map<String, Object> colMeta) {
+        String dataType = asString(colMeta.get("DATA_TYPE"));
+        if (dataType == null) {
+            return "TEXT NULL";
+        }
+        dataType = dataType.toLowerCase();
+        Integer charLen = asInteger(colMeta.get("CHARACTER_MAXIMUM_LENGTH"));
+        Integer numPrec = asInteger(colMeta.get("NUMERIC_PRECISION"));
+        Integer numScale = asInteger(colMeta.get("NUMERIC_SCALE"));
+        String nullable = "YES".equalsIgnoreCase(asString(colMeta.get("IS_NULLABLE"))) ? "NULL" : "NOT NULL";
+
+        String type = switch (dataType) {
+            case "varchar" -> "VARCHAR(" + (charLen != null ? charLen : 255) + ")";
+            case "int" -> "INT";
+            case "bigint" -> "BIGINT";
+            case "decimal" -> "DECIMAL(" + (numPrec != null ? numPrec : 10) + ","
+                    + (numScale != null ? numScale : 2) + ")";
+            case "tinyint" -> "TINYINT(1)";
+            case "text" -> "TEXT";
+            case "date" -> "DATE";
+            case "datetime" -> "DATETIME";
+            default -> "TEXT";
+        };
+        return type + " " + nullable;
     }
 
     /**
