@@ -1,8 +1,10 @@
 package com.dp.plat.lowcode.engine.rule.impl;
 
+import com.dp.plat.lowcode.engine.rule.LiteFlowExecutor;
 import com.dp.plat.lowcode.engine.rule.RuleEngineService;
 import com.googlecode.aviator.AviatorEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -28,13 +30,16 @@ import java.util.Map;
  *   <li>ALL / COLLECT：匹配全部行，返回所有命中 actions 列表</li>
  * </ul></p>
  *
- * <p>表达式：通过 Aviator 求值。LiteFlow：占位实现，后续接入 pms-rules LiteFlowEngine。</p>
+ * <p>表达式：通过 Aviator 求值。LiteFlow：通过 {@link LiteFlowExecutor} 执行 EL 表达式。</p>
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RuleEngineServiceImpl implements RuleEngineService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final LiteFlowExecutor liteFlowExecutor;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -210,8 +215,6 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
     @Override
     public Object executeLiteFlow(String el, Map<String, Object> context) {
-        // LiteFlow 集成占位，后续接入 pms-rules LiteFlowEngine
-        log.warn("LiteFlow 执行暂未接入，EL: {}", el);
-        return null;
+        return liteFlowExecutor.execute(el, context);
     }
 }

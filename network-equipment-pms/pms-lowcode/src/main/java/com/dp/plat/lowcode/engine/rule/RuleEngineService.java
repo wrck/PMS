@@ -29,7 +29,7 @@ public interface RuleEngineService {
     Object executeExpression(String expression, Map<String, Object> context);
 
     /**
-     * 执行 LiteFlow EL（占位实现）。
+     * 执行 LiteFlow EL。
      *
      * @param el      LiteFlow EL 表达式
      * @param context 上下文变量

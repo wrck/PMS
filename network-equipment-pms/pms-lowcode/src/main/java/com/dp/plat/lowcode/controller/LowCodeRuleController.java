@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.controller;
 
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.entity.LowCodeRule;
 import com.dp.plat.lowcode.service.LowCodeRuleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,5 +71,29 @@ public class LowCodeRuleController {
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> facts) {
         return Result.ok(ruleService.execute(code, facts == null ? Map.of() : facts));
+    }
+
+    @Operation(summary = "发布规则并生成版本快照")
+    @PostMapping("/{id}/publish")
+    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @OperLog(title = "低代码规则", businessType = 2)
+    public Result<LowCodeConfigVersion> publishWithVersion(@PathVariable Long id) {
+        return Result.ok(ruleService.publishWithVersion(id));
+    }
+
+    @Operation(summary = "查询规则版本历史")
+    @GetMapping("/{id}/versions")
+    @PreAuthorize("hasAuthority('lowcode:rule:list')")
+    public Result<List<LowCodeConfigVersion>> listVersions(@PathVariable Long id) {
+        return Result.ok(ruleService.listRuleVersions(id));
+    }
+
+    @Operation(summary = "回滚规则到指定版本")
+    @PostMapping("/{id}/rollback/{targetVersion}")
+    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @OperLog(title = "低代码规则", businessType = 2)
+    public Result<Void> rollback(@PathVariable Long id, @PathVariable Integer targetVersion) {
+        ruleService.rollbackRule(id, targetVersion);
+        return Result.ok();
     }
 }
