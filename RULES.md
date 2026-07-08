@@ -17,15 +17,109 @@
 
 - **主仓库**：`/workspace/.git`（普通仓库，非 bare）。主代理在此工作。
 - **Worktree 根目录**：`/workspace/wt/`，每个子代理一个子目录。
-- **子代理 Worktree 创建**（主代理负责）：
-  ```bash
-  cd /workspace && git worktree add /workspace/wt/<agent-name> -b wt/<agent-name>
-  ```
 - **子代理工作目录**：子代理的 `cwd` 必须设为 `/workspace/wt/<agent-name>`，所有文件读写和 git 操作在该 worktree 内进行。
 - **禁止子代理直接操作主仓库 `/workspace` 工作树**：避免与主代理或其他并行 worktree 冲突。
 - **禁止 `git clone` 创建独立仓库**：所有工作必须基于主仓库的 worktree。
 
-### 1.2 Worktree 合并协议（主代理负责）
+### 1.2 分支命名规范
+
+所有 worktree 分支必须遵循统一命名格式，确保可追溯、可审计、可自动识别：
+
+```
+wt/<批次>-<任务组>-<代理编号>-<简述>
+```
+
+| 组成 | 说明 | 示例 |
+|------|------|------|
+| `wt/` | 固定前缀，标识 worktree 分支 | `wt/` |
+| `<批次>` | 批次号 | `b4`、`b5`、`b6` |
+| `<任务组>` | 任务组缩写 | `engine`、`frontend`、`security`、`test` |
+| `<代理编号>` | 并行代理序号 | `01`、`02` |
+| `<简述>` | 简短描述（kebab-case） | `mq-connectors` |
+
+**完整示例**：`wt/b4-engine-01-mq-connectors`、`wt/b6-frontend-02-i18n-dark`
+
+- **主分支**：`lowcode`（当前开发分支）或 `main`/`master`（保护分支，禁止直接提交）。
+- **Worktree 分支生命周期**：创建→合并→删除，**禁止长期保留**（超过 24 小时未合并视为 P3 事故）。
+- **命名校验**：主代理合并后执行 `git branch | grep 'wt/'` 确认无残留分支。
+
+### 1.3 Worktree 生命周期管理
+
+Worktree 经历完整的生命周期，每个阶段有明确的操作和状态校验：
+
+```
+创建(CREATE) → 激活(ACTIVE) → 提交(COMMITTED) → 合并(MERGED) → 清理(CLEANED) → 归档(ARCHIVED)
+                                                    ↓ 失败
+                                              恢复(RECOVER) → 重试
+```
+
+#### 阶段 1：创建（CREATE）
+
+```bash
+# 主代理创建 worktree + 分支
+cd /workspace && git worktree add /workspace/wt/<branch-name> -b <branch-name>
+
+# 校验创建成功
+test -d /workspace/wt/<branch-name>/.git || { echo "worktree 创建失败"; exit 1; }
+git worktree list | grep <branch-name> || { echo "worktree 未注册"; exit 1; }
+```
+
+#### 阶段 2：激活（ACTIVE）
+
+子代理在 worktree 内工作。主代理记录：
+```bash
+# 记录 worktree 元信息（用于审计）
+echo "$(date +%s),<branch-name>,ACTIVE" >> /workspace/.worktree-registry.csv
+```
+
+#### 阶段 3：提交（COMMITTED）
+
+子代理在 worktree 内提交后，主代理验证提交存在：
+```bash
+cd /workspace/wt/<branch-name> && git log --oneline -1
+# 记录 commit hash 以备验证
+```
+
+#### 阶段 4：合并（MERGED）
+
+主代理执行合并（见 §1.4 合并协议）。合并成功后更新注册表：
+```bash
+echo "$(date +%s),<branch-name>,MERGED" >> /workspace/.worktree-registry.csv
+```
+
+#### 阶段 5：清理（CLEANED）
+
+```bash
+git worktree remove /workspace/wt/<branch-name> --force
+git branch -D <branch-name>
+
+# 校验清理成功
+test ! -d /workspace/wt/<branch-name> || { echo "worktree 目录残留"; exit 1; }
+git worktree list | grep <branch-name> && { echo "worktree 仍注册"; exit 1; } || true
+echo "$(date +%s),<branch-name>,CLEANED" >> /workspace/.worktree-registry.csv
+```
+
+#### 阶段 6：归档（ARCHIVED）
+
+合并记录保留在 `.worktree-registry.csv`，用于事后审计。注册表格式：
+```
+timestamp,branch-name,state
+1783500000,wt/b4-engine-01-mq-connectors,CREATE
+1783500600,wt/b4-engine-01-mq-connectors,COMMITTED
+1783500900,wt/b4-engine-01-mq-connectors,MERGED
+1783500905,wt/b4-engine-01-mq-connectors,CLEANED
+```
+
+#### 异常：恢复（RECOVER）
+
+合并失败或验证失败时，worktree 进入恢复状态（见支柱四 §4.3）：
+```bash
+# 记录恢复事件
+echo "$(date +%s),<branch-name>,RECOVER" >> /workspace/.worktree-registry.csv
+# 按 SOP 处理后重新进入 MERGED 或重新创建
+```
+
+### 1.4 Worktree 合并协议（主代理负责）
 
 子代理在 worktree 内提交后，**主代理负责执行合并**（非子代理自身）：
 
@@ -33,35 +127,42 @@
 # 1. 主代理切换到主工作树
 cd /workspace
 
-# 2. 合并子代理分支（优先 rebase 保持线性历史）
-git merge --no-ff wt/<agent-name> -m "merge: <agent-name> 完成批次X"
+# 2. 合并子代理分支（--no-ff 保留分支历史，便于审计）
+git merge --no-ff <branch-name> -m "merge: <branch-name> 完成批次X"
 
 # 3. 合并后立即验证（见支柱二）
-mvn compile -q && cd network-equipment-pms/pms-frontend && npx vue-tsc --noEmit
+bash scripts/verify.sh all
 
-# 4. 验证通过后清理 worktree
-git worktree remove /workspace/wt/<agent-name> --force
-git branch -D wt/<agent-name>
+# 4. 验证通过后清理 worktree（见 §1.3 阶段 5）
 ```
 
-### 1.3 Worktree 监控
+- 如果合并产生冲突：按支柱四 §4.2 并发冲突恢复 SOP 处理。
+- 如果合并后验证失败：`git reset --merge` 回退合并，要求子代理修复后重新提交。
+
+### 1.5 Worktree 监控
 
 - 主代理每批次结束时执行 `git worktree list` 确认无残留 worktree。
 - 残留 worktree 视为 P3 事故，立即 `git worktree prune` + 手动清理。
 - Worktree 数量上限：同时不超过 5 个（防止资源耗尽）。
+- **超时清理**：worktree 创建超过 2 小时仍未合并，视为僵尸 worktree，主代理介入检查（P2 事故）。
+- **注册表审计**：批次结束时检查 `.worktree-registry.csv`，确认所有 worktree 都达到 CLEANED 状态。
 
-### 1.4 子代理任务描述规范
+### 1.6 子代理任务描述规范
 
 主代理派发子代理时，任务描述**必须包含**：
 
 ```
 # 工作目录（Worktree，禁止 clone）
-/workspace/wt/<agent-name>
+/workspace/wt/<branch-name>
 所有文件读写和 git 操作必须在此目录内进行。
 
+# 分支信息
+当前 worktree 分支：<branch-name>（命名遵循 §1.2 规范）
+
 # 提交要求
-在 worktree 内提交，commit message 遵循结构化模板（见支柱二）。
+在 worktree 内提交，commit message 遵循结构化模板（见支柱二 §2.2）。
 不要 push，不要合并到主分支——主代理会负责合并。
+不要修改共享文件（router/index.ts 等），将改动写入 patches/ 目录（见支柱三 §3.3）。
 ```
 
 ---
@@ -90,10 +191,110 @@ git branch -D wt/<agent-name>
   | 后端 Java | `mvn -pl <module> -am compile -q` | exit 0，无 ERROR |
   | 前端 TS/Vue | `npx vue-tsc --noEmit` | exit 0，0 errors |
   | 全量改动 | `scripts/verify.sh` | ALL CHECKS PASSED |
-- **验证输出归档**：全量验证输出写入 `scripts/verify-<timestamp>.log`，提交信息中引用。
+- **验证输出归档**：全量验证输出写入 `scripts/logs/verify-<timestamp>.log`，提交信息中引用。
 - **验证失败禁止提交**：必须先修复至通过。
 
-### 2.2 结构化 Commit 模板
+### 2.2 验证脚本前置安全检查
+
+`scripts/verify.sh` 在执行实际编译/类型检查前，**必须先完成前置安全检查**，防止在错误环境运行导致误判：
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# === 前置安全检查（pre-flight）===
+preflight() {
+    echo "==[Pre-flight] 安全前置检查=="
+
+    # 1. 确认在主仓库根目录（防止在 worktree 或错误目录运行全量验证）
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "FAIL: 不在 git 仓库内"; exit 1; }
+    [ "$git_root" = "/workspace" ] || { echo "FAIL: 必须在 /workspace 运行（当前 $git_root）"; exit 1; }
+
+    # 2. 确认主分支干净（worktree 分支不跑全量验证）
+    local branch
+    branch=$(git branch --show-current)
+    [ "$branch" = "lowcode" ] || [ "$branch" = "main" ] || { echo "FAIL: 全量验证仅在主分支运行（当前 $branch），worktree 分支请用 verify.sh backend/frontend"; exit 1; }
+
+    # 3. 确认 Maven 可用
+    command -v mvn >/dev/null 2>&1 || { echo "FAIL: mvn 未安装"; exit 1; }
+
+    # 4. 确认 Node/npx 可用
+    command -v npx >/dev/null 2>&1 || { echo "FAIL: npx 未安装"; exit 1; }
+
+    # 5. 确认关键目录存在（防止仓库结构异常）
+    [ -f "network-equipment-pms/pom.xml" ] || { echo "FAIL: 找不到 network-equipment-pms/pom.xml"; exit 1; }
+    [ -d "network-equipment-pms/pms-frontend" ] || { echo "FAIL: 找不到 pms-frontend 目录"; exit 1; }
+
+    # 6. 确认无残留 worktree（防止遗漏的并行工作未合并）
+    local wt_count
+    wt_count=$(git worktree list | wc -l)
+    [ "$wt_count" -le 1 ] || { echo "WARN: 存在 $((wt_count - 1)) 个残留 worktree，合并后再验证"; }
+
+    # 7. 确认磁盘空间充足（防止编译中途磁盘满）
+    local free_mb
+    free_mb=$(df -m /workspace | awk 'NR==2{print $4}')
+    [ "$free_mb" -gt 1024 ] || { echo "FAIL: 磁盘空间不足 1GB（剩余 ${free_mb}MB）"; exit 1; }
+
+    echo "Pre-flight: ALL CHECKS PASSED"
+}
+
+preflight
+# === 实际验证逻辑接续 ===
+```
+
+**前置检查项清单**：
+
+| # | 检查项 | 失败处理 |
+|---|--------|---------|
+| 1 | 确认在 `/workspace` 主仓库根目录 | 提示切换目录，exit 1 |
+| 2 | 确认在主分支（lowcode/main）运行全量验证 | 提示 worktree 分支用单模块验证 |
+| 3 | 确认 mvn 命令可用 | 提示安装 Maven，exit 1 |
+| 4 | 确认 npx 命令可用 | 提示安装 Node.js，exit 1 |
+| 5 | 确认关键目录结构完整 | 提示仓库异常，exit 1 |
+| 6 | 确认无残留 worktree | WARN 警告（不阻断） |
+| 7 | 确认磁盘空间 >1GB | 提示清理磁盘，exit 1 |
+
+### 2.3 验证脚本的版本控制与完整性保护
+
+验证脚本本身是规则执行的基石，**必须防止被篡改**：
+
+#### 2.3.1 版本号管理
+
+- `scripts/verify.sh` 头部声明版本号：`VERIFY_VERSION="1.0.0"`。
+- 每次修改 verify.sh 必须递增版本号（语义化版本：MAJOR.MINOR.PATCH）。
+- commit message 必须包含 `Verify-Version: <version>` trailer。
+
+#### 2.3.2 完整性校验
+
+- 仓库根维护 `scripts/verify.sha256`，存储 verify.sh 的 SHA-256 摘要。
+- **生成摘要**：`sha256sum scripts/verify.sh > scripts/verify.sha256`
+- **校验摘要**（verify.sh 启动时自校验）：
+  ```bash
+  # verify.sh 开头自校验
+  self_check() {
+      local script_path="$0"
+      local expected_hash stored_hash actual_hash
+      expected_hash=$(awk '{print $1}' scripts/verify.sha256)
+      actual_hash=$(sha256sum "$script_path" | awk '{print $1}')
+      if [ "$expected_hash" != "$actual_hash" ]; then
+          echo "FAIL: verify.sh 完整性校验失败（可能被篡改）"
+          echo "Expected: $expected_hash"
+          echo "Actual:   $actual_hash"
+          exit 1
+      fi
+  }
+  self_check
+  ```
+- **更新摘要**：修改 verify.sh 后必须重新生成 sha256：`sha256sum scripts/verify.sh > scripts/verify.sha256`，两者一起提交。
+
+#### 2.3.3 修改协议
+
+- 修改 verify.sh 必须**同时**提交 `verify.sh` + `verify.sha256`，禁止单独提交其一。
+- 如果 `verify.sha256` 缺失或校验失败，verify.sh 拒绝执行（防止运行被篡改的验证脚本导致误判通过）。
+- verify.sh 的修改必须通过结构化 commit（type=`chore`，scope=`verify`），并在 commit message 中说明修改原因。
+
+### 2.4 结构化 Commit 模板
 
 每个 commit 必须遵循 Conventional Commits + 结构化 trailer：
 
@@ -114,7 +315,7 @@ Reviewed-by: <主代理>
 - **禁止模糊提交信息**：如 "update"、"fix bug"、"wip" 等一律禁止。
 - **一个 commit 一个逻辑单元**：禁止把多个不相关 Task 塞进一个 commit。
 
-### 2.3 提交后复核（强制）
+### 2.5 提交后复核（强制）
 
 每个提交完成后，主代理必须执行复核：
 
@@ -126,7 +327,7 @@ git status --short             # 确认工作区状态
 
 - 如果 `git show --stat HEAD` 的文件列表与预期不符（多了或少了），必须立即修正。
 
-### 2.4 提交验证协议（防丢失）
+### 2.6 提交验证协议（防丢失）
 
 主代理收到子代理返回的 commit hash 后，**必须立即在主仓库验证**：
 
@@ -159,11 +360,43 @@ cd /workspace && git log --oneline | grep <commit-hash>
 - **获取锁**：
   ```bash
   LOCK=/workspace/.file-locks/$(echo "<file-path>" | md5sum | cut -d' ' -f1).lock
-  while [ -f "$LOCK" ]; do sleep 2; done
+  # 带超时的获取（防死锁等待）
+  WAIT=0
+  while [ -f "$LOCK" ] && [ $WAIT -lt 300 ]; do sleep 2; WAIT=$((WAIT+2)); done
+  # 超时检查：锁文件存在但超时，强制接管
+  if [ -f "$LOCK" ]; then
+      LOCK_AGE=$(( $(date +%s) - $(cut -d: -f2 "$LOCK") ))
+      [ $LOCK_AGE -gt 300 ] && { echo "WARN: 锁超时 ${LOCK_AGE}s，强制接管"; rm -f "$LOCK"; } || { echo "FAIL: 获取锁超时"; exit 1; }
+  fi
   echo "<agent-name>:$(date +%s)" > "$LOCK"
   ```
 - **释放锁**：修改完成并提交后 `rm -f "$LOCK"`。
 - **锁超时**：持有超过 300 秒视为死锁，其他代理可强制接管（记录告警日志）。
+- **锁原子性**：获取和释放必须配对（try-finally），异常退出时锁可能残留，由超时机制兜底。
+
+#### 锁死锁预防机制
+
+单纯的 `while [ -f "$LOCK" ]` 等待存在死锁风险（持有者崩溃不释放）。预防措施：
+
+| 风险 | 预防机制 |
+|------|---------|
+| 持有者崩溃不释放锁 | 锁文件含时间戳，超时 300s 后其他代理可强制接管 |
+| 等待者无限等待 | 获取锁带 `WAIT` 计数器，超 300s 报错退出（非无限循环） |
+| 多代理同时强制接管 | 接管前二次检查锁年龄，且 `rm -f` + `echo` 非原子但竞争窗口极小（可接受） |
+| 锁文件残留堆积 | 主代理每批次结束扫描 `/workspace/.file-locks/` 清理超时锁 |
+
+```bash
+# 主代理批次末锁清理（扫除所有超时锁）
+cleanup_stale_locks() {
+    local now lock_age
+    now=$(date +%s)
+    for lock in /workspace/.file-locks/*.lock; do
+        [ -f "$lock" ] || continue
+        lock_age=$(( now - $(cut -d: -f2 "$lock") ))
+        [ $lock_age -gt 600 ] && { echo "CLEANUP: 删除超时锁 $lock (age ${lock_age}s)"; rm -f "$lock"; }
+    done
+}
+```
 
 ### 3.3 共享文件队列模式（推荐，适用高竞争）
 
@@ -173,11 +406,48 @@ cd /workspace && git log --oneline | grep <commit-hash>
 2. 子代理在 worktree 内创建补丁片段文件，不碰共享文件。
 3. 所有子代理完成后，主代理一次性合并所有 `patches/router-*.ts` 到 `router/index.ts` 并提交。
 
+#### 队列死锁预防机制
+
+队列模式本身无锁，但存在另一种"死锁"——**补丁片段缺失导致主代理合并卡住**：
+
+| 风险 | 预防机制 |
+|------|---------|
+| 子代理未生成补丁片段就崩溃 | 主代理合并前校验：`ls patches/router-*.ts` 必须覆盖所有声明的子代理 |
+| 补丁片段语法错误导致合并失败 | 主代理合并后跑 verify.sh，失败则回退 + 标记该子代理为需修复 |
+| 补丁片段冲突（两个子代理改同一行） | 主代理按 agent-name 排序顺序合并，冲突时后者追加而非覆盖 |
+| 补丁片段残留（已合并但未清理） | 合并成功后 `rm -f patches/router-*.ts`，批次末校验 patches/ 为空 |
+
+```bash
+# 主代理合并补丁片段（带校验）
+merge_patches() {
+    local target="$1"        # 如 router/index.ts
+    local patch_glob="$2"    # 如 patches/router-*.ts
+
+    # 1. 校验补丁片段存在
+    local count
+    count=$(ls $patch_glob 2>/dev/null | wc -l)
+    [ "$count" -gt 0 ] || { echo "FAIL: 无补丁片段 $patch_glob"; return 1; }
+
+    # 2. 逐个追加合并（排序确保可重现）
+    for patch in $(ls $patch_glob | sort); do
+        echo "MERGE: $patch"
+        # 具体合并逻辑取决于补丁格式（TS import 追加 / 路由数组追加）
+    done
+
+    # 3. 验证
+    bash scripts/verify.sh frontend || { echo "FAIL: 合并后验证失败，回退"; git checkout -- "$target"; return 1; }
+
+    # 4. 清理补丁
+    rm -f $patch_glob
+    echo "MERGE DONE: $count patches merged into $target"
+}
+```
+
 ### 3.4 提交原子性
 
 - 每个子代理只能提交归属于自己任务的文件，**禁止 `git add -A` 或 `git add .`**。
 - 必须按文件路径精确 `git add <file1> <file2> ...`。
-- 合并时如遇冲突，按支柱四 D.2 SOP 解决。
+- 合并时如遇冲突，按支柱四 §4.2 SOP 解决。
 
 ---
 
