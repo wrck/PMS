@@ -220,6 +220,61 @@ public class LowCodeProcessController {
         return Result.ok();
     }
 
+    /**
+     * 启动流程实例（批次3-T4）。
+     *
+     * <p>调用 {@link RuntimeService#startProcessInstanceByKey}，
+     * 支持传入 businessKey 和流程变量。</p>
+     */
+    @Operation(summary = "启动流程实例")
+    @PostMapping("/instances")
+    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @OperLog(title = "启动流程实例", businessType = 1)
+    public Result<ProcessInstanceDTO> startInstance(
+            @RequestParam String processDefinitionKey,
+            @RequestParam(required = false) String businessKey,
+            @RequestBody(required = false) Map<String, Object> variables) {
+        ProcessInstance instance;
+        if (StringUtils.hasText(businessKey)) {
+            instance = runtimeService.startProcessInstanceByKey(
+                    processDefinitionKey, businessKey, variables);
+        } else {
+            instance = runtimeService.startProcessInstanceByKey(
+                    processDefinitionKey, variables);
+        }
+        return Result.ok(toRunningDto(instance, null));
+    }
+
+    /**
+     * 挂起流程实例（批次3-T4）。
+     *
+     * <p>调用 {@link RuntimeService#suspendProcessInstanceById}，
+     * 挂起后流程实例的任务不可完成，直到被重新激活。</p>
+     */
+    @Operation(summary = "挂起流程实例")
+    @PostMapping("/instances/{id}/suspend")
+    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @OperLog(title = "挂起流程实例", businessType = 1)
+    public Result<Void> suspendInstance(@PathVariable("id") String processInstanceId) {
+        runtimeService.suspendProcessInstanceById(processInstanceId);
+        return Result.ok();
+    }
+
+    /**
+     * 激活（恢复）流程实例（批次3-T4）。
+     *
+     * <p>调用 {@link RuntimeService#activateProcessInstanceById}，
+     * 将已挂起的流程实例恢复为运行状态。</p>
+     */
+    @Operation(summary = "激活流程实例")
+    @PostMapping("/instances/{id}/activate")
+    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @OperLog(title = "激活流程实例", businessType = 1)
+    public Result<Void> activateInstance(@PathVariable("id") String processInstanceId) {
+        runtimeService.activateProcessInstanceById(processInstanceId);
+        return Result.ok();
+    }
+
     /** 批量加载流程实例的当前任务名（按 processInstanceId 分组，逗号拼接多任务名） */
     private Map<String, String> loadCurrentTaskNames(Set<String> processInstanceIds) {
         if (processInstanceIds.isEmpty()) {
