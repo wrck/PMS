@@ -28,8 +28,28 @@ export interface VersionDiffDTO {
   entries: DiffEntry[]
 }
 
+/** 版本树节点（线性构建：v1 → v2 → v3 链式树） */
+export interface VersionTreeNode {
+  version: number
+  configCode: string
+  changeLog?: string
+  status: string
+  environment: string
+  createBy: string
+  createTime: string
+  children: VersionTreeNode[]
+}
+
 export function getVersionHistory(configType: string, configId: number) {
   return get<LowCodeConfigVersion[]>('/api/lowcode/version/history', {
+    configType,
+    configId
+  })
+}
+
+/** 查询版本树（线性链式树：v1 为根，后续版本依次挂在前一版本下） */
+export function getVersionTree(configType: string, configId: number) {
+  return get<VersionTreeNode[]>('/api/lowcode/version/tree', {
     configType,
     configId
   })

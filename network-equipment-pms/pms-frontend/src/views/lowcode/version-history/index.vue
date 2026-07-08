@@ -3,14 +3,17 @@
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import JsonTreeDiff from '@/components/JsonTreeDiff/index.vue'
+import PromotionPipeline from './PromotionPipeline.vue'
 import {
   getVersionHistory,
+  getVersionTree,
   diffVersions,
   rollbackVersion,
   exportPackageZip,
   importPackage,
   type LowCodeConfigVersion,
-  type VersionDiffDTO
+  type VersionDiffDTO,
+  type VersionTreeNode
 } from '@/api/lowcode-version'
 import type { EpTagType } from '@/types'
 
@@ -19,18 +22,21 @@ defineOptions({ name: 'VersionHistoryView' })
 const configType = ref('ENTITY')
 const configId = ref<number>()
 const versionList = ref<LowCodeConfigVersion[]>([])
+const versionTree = ref<VersionTreeNode[]>([])
 const selectedVersions = ref<number[]>([])
 const diffResult = ref<VersionDiffDTO | null>(null)
 const loading = ref(false)
 const diffMode = ref<'tree' | 'flat'>('tree')
-const oldSnapshot = ref<any>(null)
-const newSnapshot = ref<any>(null)
+const oldSnapshot = ref<unknown>(null)
+const newSnapshot = ref<unknown>(null)
 const exportDialogVisible = ref(false)
 const importDialogVisible = ref(false)
 const exportCodes = ref('')
 const exportTargetEnv = ref('TEST')
 const importFile = ref<File | null>(null)
 const importOverwrite = ref(false)
+/** 视图切换：列表 / 树形 / 管道图 */
+const activeTab = ref<'list' | 'tree' | 'pipeline'>('list')
 
 async function loadHistory() {
   if (!configId.value) {
@@ -40,10 +46,31 @@ async function loadHistory() {
   loading.value = true
   try {
     versionList.value = await getVersionHistory(configType.value, configId.value)
+    // 树形视图懒加载：仅当当前在树形/管道图视图时拉取，避免多余请求
+    if (activeTab.value !== 'list') {
+      await loadTree()
+    }
   } catch (e) {
     ElMessage.error('加载版本历史失败')
   } finally {
     loading.value = false
+  }
+}
+
+async function loadTree() {
+  if (!configId.value) return
+  try {
+    versionTree.value = await getVersionTree(configType.value, configId.value)
+  } catch (e) {
+    // 树加载失败不阻断主流程
+    versionTree.value = []
+  }
+}
+
+/** 切换到树形/管道图视图时按需加载版本树 */
+async function onTabChange(tab: string) {
+  if ((tab === 'tree' || tab === 'pipeline') && versionTree.value.length === 0 && configId.value) {
+    await loadTree()
   }
 }
 
@@ -53,11 +80,23 @@ async function showDiff() {
     return
   }
   const [from, to] = [...selectedVersions.value].sort((a, b) => a - b)
+  await doDiff(from, to)
+}
+
+/** 对比指定版本与其前一版本（树形/管道图卡片点击触发） */
+async function diffSingle(version: LowCodeConfigVersion) {
+  if (version.version <= 1) {
+    ElMessage.warning('首个版本无前置版本可对比')
+    return
+  }
+  await doDiff(version.version - 1, version.version)
+}
+
+async function doDiff(from: number, to: number) {
   try {
     diffResult.value = await diffVersions(configType.value, configId.value!, from, to)
-    // 解析快照用于树形 Diff
-    const fromVersion = versionList.value.find(v => v.version === selectedVersions.value.sort((a, b) => a - b)[0])
-    const toVersion = versionList.value.find(v => v.version === selectedVersions.value.sort((a, b) => a - b)[1])
+    const fromVersion = versionList.value.find(v => v.version === from)
+    const toVersion = versionList.value.find(v => v.version === to)
     if (fromVersion && toVersion) {
       try {
         oldSnapshot.value = JSON.parse(fromVersion.snapshot || '{}')
@@ -142,6 +181,21 @@ function changeTypeLabel(type: string) {
 
 function handleSelectionChange(rows: LowCodeConfigVersion[]) {
   selectedVersions.value = rows.map((r) => r.version)
+}
+
+/** el-tree 配置：子节点字段为 children */
+const treeProps = { children: 'children', label: 'version' }
+
+/** 树节点显示文案 */
+function treeNodeLabel(data: VersionTreeNode): string {
+  return `v${data.version}${data.changeLog ? ' · ' + data.changeLog : ''}`
+}
+
+/** 环境标签颜色 */
+function envTagType(env: string): EpTagType {
+  if (env === 'PROD') return 'danger'
+  if (env === 'TEST') return 'warning'
+  return 'info'
 }
 
 const hasDiff = computed(() => diffResult.value && diffResult.value.entries.length > 0)
@@ -229,33 +283,81 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
               </el-button>
             </div>
           </template>
-          <el-table
-            :data="versionList"
-            @selection-change="handleSelectionChange"
-            row-key="version"
-          >
-            <el-table-column type="selection" :reserve-selection="true" width="40" />
-            <el-table-column label="版本" prop="version" width="60" />
-            <el-table-column label="变更说明" prop="changeLog" show-overflow-tooltip />
-            <el-table-column label="环境" prop="environment" width="70">
-              <template #default="{ row }">
-                <el-tag size="small" :type="row.environment === 'PROD' ? 'danger' : row.environment === 'TEST' ? 'warning' : 'info'">
-                  {{ row.environment }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作人" prop="createBy" width="100" />
-            <el-table-column label="时间" prop="createTime" width="160">
-              <template #default="{ row }">
-                {{ row.createTime?.replace('T', ' ').slice(0, 16) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="80">
-              <template #default="{ row }">
-                <el-button type="warning" size="small" link @click="rollback(row)">回滚</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <!-- 三视图切换：列表 / 树形 / 管道图 -->
+          <el-tabs v-model="activeTab" @tab-change="onTabChange">
+            <el-tab-pane label="列表" name="list">
+              <el-table
+                :data="versionList"
+                @selection-change="handleSelectionChange"
+                row-key="version"
+                size="small"
+              >
+                <el-table-column type="selection" :reserve-selection="true" width="40" />
+                <el-table-column label="版本" prop="version" width="60" />
+                <el-table-column label="变更说明" prop="changeLog" show-overflow-tooltip />
+                <el-table-column label="环境" prop="environment" width="70">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="envTagType(row.environment)">
+                      {{ row.environment }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作人" prop="createBy" width="100" />
+                <el-table-column label="时间" prop="createTime" width="160">
+                  <template #default="{ row }">
+                    {{ row.createTime?.replace('T', ' ').slice(0, 16) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="80">
+                  <template #default="{ row }">
+                    <el-button type="warning" size="small" link @click="rollback(row)">回滚</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="版本树" name="tree">
+              <el-empty
+                v-if="versionTree.length === 0"
+                description="暂无版本数据"
+                :image-size="60"
+              />
+              <el-tree
+                v-else
+                :data="versionTree"
+                :props="treeProps"
+                node-key="version"
+                default-expand-all
+                :expand-on-click-node="false"
+              >
+                <template #default="{ data }">
+                  <div class="tree-node">
+                    <span class="tree-node-label">
+                      <strong>{{ treeNodeLabel(data) }}</strong>
+                    </span>
+                    <el-tag size="small" :type="envTagType(data.environment)" class="tree-node-tag">
+                      {{ data.environment }}
+                    </el-tag>
+                    <span class="tree-node-meta">
+                      {{ data.createBy || '-' }} · {{ data.createTime?.replace('T', ' ').slice(0, 16) }}
+                    </span>
+                    <span class="tree-node-actions" @click.stop>
+                      <el-button link type="primary" size="small" @click="diffSingle(data)">对比</el-button>
+                      <el-button link type="warning" size="small" @click="rollback(data)">回滚</el-button>
+                    </span>
+                  </div>
+                </template>
+              </el-tree>
+            </el-tab-pane>
+
+            <el-tab-pane label="晋升管道图" name="pipeline">
+              <PromotionPipeline
+                :versions="versionList"
+                @diff="diffSingle"
+                @rollback="rollback"
+              />
+            </el-tab-pane>
+          </el-tabs>
         </el-card>
       </el-col>
 
@@ -296,5 +398,34 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
 <style scoped lang="scss">
 .version-history {
   padding: 16px;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.tree-node-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-node-tag {
+  flex-shrink: 0;
+}
+
+.tree-node-meta {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+
+.tree-node-actions {
+  flex-shrink: 0;
 }
 </style>
