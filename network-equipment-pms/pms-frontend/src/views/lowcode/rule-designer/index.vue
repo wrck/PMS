@@ -11,12 +11,17 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   deleteRule,
   getRuleList,
+  getRuleVersions,
+  publishRuleWithVersion,
+  rollbackRule,
   saveRule,
   type LowCodeRule
 } from '@/api/lowcode-rule'
+import type { LowCodeConfigVersion } from '@/api/lowcode-version'
 import DecisionTableEditor from '@/components/RuleDesigner/DecisionTableEditor.vue'
 import ExpressionRuleEditor from '@/components/RuleDesigner/ExpressionRuleEditor.vue'
 import RuleTestPanel from '@/components/RuleDesigner/RuleTestPanel.vue'
+import JsonTreeDiff from '@/components/JsonTreeDiff/index.vue'
 
 defineOptions({ name: 'RuleDesignerView' })
 
@@ -25,6 +30,24 @@ const current = ref<LowCodeRule | null>(null)
 const dialogVisible = ref(false)
 /** 列表「执行」入口打开时自动展开测试面板 */
 const testExpanded = ref(false)
+
+// ===================== 版本管理 =====================
+/** 版本历史对话框 */
+const versionDialogVisible = ref(false)
+/** 版本历史加载中 */
+const versionLoading = ref(false)
+/** 版本历史列表 */
+const versionList = ref<LowCodeConfigVersion[]>([])
+/** 版本历史对应的规则（用于 Diff 取当前定义、回滚后刷新） */
+const versionRule = ref<LowCodeRule | null>(null)
+/** Diff 对话框 */
+const diffDialogVisible = ref(false)
+/** Diff 旧数据（历史版本快照） */
+const diffOldData = ref<unknown>(null)
+/** Diff 新数据（当前规则定义） */
+const diffNewData = ref<unknown>(null)
+/** Diff 标题（标注对比版本） */
+const diffTitle = ref('')
 
 const typeOptions = [
   { label: '决策表', value: 'DECISION_TABLE' },
@@ -121,6 +144,84 @@ async function remove(row: LowCodeRule) {
   }
 }
 
+// ===================== 版本管理 =====================
+
+/** 发布规则并生成版本快照 */
+async function publish(row: LowCodeRule) {
+  if (!row.id) return
+  try {
+    await ElMessageBox.confirm(
+      `确认发布规则「${row.name}」？发布后将生成不可变版本快照。`,
+      '规则发布',
+      { type: 'warning' }
+    )
+    await publishRuleWithVersion(row.id)
+    ElMessage.success('发布成功，已生成版本快照')
+    await load()
+  } catch {
+    /* cancelled or error */
+  }
+}
+
+/** 打开版本历史对话框 */
+async function openVersionHistory(row: LowCodeRule) {
+  if (!row.id) return
+  versionRule.value = { ...row }
+  versionDialogVisible.value = true
+  versionLoading.value = true
+  try {
+    versionList.value = await getRuleVersions(row.id)
+  } catch {
+    ElMessage.error('加载版本历史失败')
+    versionList.value = []
+  } finally {
+    versionLoading.value = false
+  }
+}
+
+/** 解析快照/定义为可 Diff 数据：JSON 优先，否则返回原始字符串 */
+function parseForDiff(raw: string | undefined): unknown {
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return raw
+  }
+}
+
+/** 查看指定历史版本与当前定义的 Diff */
+function showVersionDiff(version: LowCodeConfigVersion) {
+  diffOldData.value = parseForDiff(version.snapshot)
+  diffNewData.value = parseForDiff(versionRule.value?.definition)
+  diffTitle.value = `版本 v${version.version} 与当前定义对比`
+  diffDialogVisible.value = true
+}
+
+/** 回滚到指定历史版本 */
+async function onRollbackVersion(version: LowCodeConfigVersion) {
+  if (!versionRule.value?.id) return
+  try {
+    await ElMessageBox.confirm(
+      `确认回滚到版本 v${version.version}？当前规则定义将被历史快照覆盖，并生成新的回滚版本。`,
+      '版本回滚',
+      { type: 'warning' }
+    )
+    await rollbackRule(versionRule.value.id, version.version)
+    ElMessage.success('回滚成功')
+    // 刷新版本列表与规则列表（回滚后规则定义已变更）
+    await openVersionHistory(await refreshRule(versionRule.value.id))
+  } catch {
+    /* cancelled or error */
+  }
+}
+
+/** 重新拉取单条规则，回滚后用于刷新 versionRule 与列表 */
+async function refreshRule(id: number): Promise<LowCodeRule> {
+  await load()
+  const fresh = list.value.find((r) => r.id === id)
+  return fresh ?? versionRule.value!
+}
+
 onMounted(load)
 </script>
 
@@ -146,10 +247,12 @@ onMounted(load)
             <el-tag :type="row.status === 'PUBLISHED' ? 'success' : 'info'">{{ row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="240">
+        <el-table-column label="操作" width="380">
           <template #default="{ row }">
             <el-button size="small" @click="openEdit(row)">编辑</el-button>
             <el-button size="small" type="success" @click="openExec(row)">执行</el-button>
+            <el-button size="small" type="primary" @click="publish(row)">发布</el-button>
+            <el-button size="small" @click="openVersionHistory(row)">版本历史</el-button>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -207,14 +310,14 @@ onMounted(load)
             v-model="current.definition"
             v-model:ext="current.ext"
           />
-          <!-- LiteFlow 占位文本编辑 -->
+          <!-- LiteFlow EL 文本编辑 -->
           <div v-else class="rule-liteflow-placeholder">
             <el-alert
-              title="LiteFlow 集成暂未启用"
-              type="warning"
+              title="LiteFlow EL 编辑"
+              type="info"
               :closable="false"
               show-icon
-              description="当前后端 LiteFlow 仍为占位实现，此处仅提供 EL 文本编辑。"
+              description="后端通过 LiteFlow 2.15.0 执行 EL 表达式，组件内可通过 DefaultContext 读写上下文，执行结果取自 result 键。"
             />
             <el-input
               v-model="current.definition"
@@ -237,6 +340,56 @@ onMounted(load)
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="save">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 版本历史对话框 -->
+    <el-dialog
+      v-model="versionDialogVisible"
+      :title="`版本历史 — ${versionRule?.name ?? ''}`"
+      width="900px"
+      top="8vh"
+    >
+      <el-table v-loading="versionLoading" :data="versionList" row-key="version" size="small">
+        <el-table-column label="版本" prop="version" width="70">
+          <template #default="{ row }">
+            <el-tag size="small">v{{ row.version }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="变更说明" prop="changeLog" show-overflow-tooltip />
+        <el-table-column label="操作人" prop="createBy" width="100" />
+        <el-table-column label="时间" prop="createTime" width="160">
+          <template #default="{ row }">
+            {{ row.createTime?.replace('T', ' ').slice(0, 16) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160">
+          <template #default="{ row }">
+            <el-button size="small" link type="primary" @click="showVersionDiff(row)">查看 Diff</el-button>
+            <el-button size="small" link type="warning" @click="onRollbackVersion(row)">回滚</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty
+        v-if="!versionLoading && versionList.length === 0"
+        description="暂无版本历史，发布规则后将生成版本快照"
+        :image-size="60"
+      />
+      <template #footer>
+        <el-button @click="versionDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 版本 Diff 对话框 -->
+    <el-dialog
+      v-model="diffDialogVisible"
+      :title="diffTitle"
+      width="900px"
+      top="8vh"
+    >
+      <JsonTreeDiff :old-data="diffOldData" :new-data="diffNewData" />
+      <template #footer>
+        <el-button @click="diffDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>

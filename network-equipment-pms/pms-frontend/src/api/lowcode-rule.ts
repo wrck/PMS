@@ -1,4 +1,5 @@
 import { del, get, post } from '@/utils/request'
+import type { LowCodeConfigVersion } from '@/api/lowcode-version'
 
 export interface LowCodeRule {
   id?: number
@@ -71,4 +72,21 @@ export function deleteRule(id: number) {
 
 export function executeRule(code: string, facts: Record<string, unknown>) {
   return post(`/api/lowcode/rule/${code}/execute`, facts)
+}
+
+// ===================== 规则版本管理 =====================
+
+/** 发布规则并生成版本快照 */
+export function publishRuleWithVersion(id: number) {
+  return post<LowCodeConfigVersion>(`/api/lowcode/rule/${id}/publish`)
+}
+
+/** 查询规则版本历史 */
+export function getRuleVersions(id: number) {
+  return get<LowCodeConfigVersion[]>(`/api/lowcode/rule/${id}/versions`)
+}
+
+/** 回滚规则到指定版本 */
+export function rollbackRule(id: number, targetVersion: number) {
+  return post<void>(`/api/lowcode/rule/${id}/rollback/${targetVersion}`)
 }
