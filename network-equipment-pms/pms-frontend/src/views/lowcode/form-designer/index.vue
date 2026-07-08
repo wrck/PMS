@@ -14,7 +14,7 @@
  * <p>使用原生 HTML5 拖拽 API（draggable + dragstart/dragover/drop）实现，
  * 避免引入额外依赖；字段排序通过上移/下移按钮 + 拖拽两种方式。</p>
  */
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ElMessage,
@@ -45,6 +45,7 @@ import LowCodeComponentRegistry, {
   initBuiltinComponents
 } from '@/components/LowCodeComponentRegistry'
 import type { ComponentMeta } from '@/components/LowCodeComponentRegistry/types'
+import { useUndoRedo } from '@/composables/useUndoRedo'
 
 const route = useRoute()
 const router = useRouter()
@@ -569,6 +570,111 @@ function parseFormConfigFromStr() {
   }
 }
 
+// ===================== 撤销/重做 =====================
+
+/**
+ * 撤销/重做历史栈：对整个 formConfig 做 JSON 快照。
+ *
+ * <p>采用 watch 深度监听 formConfig 自动推历史（400ms 防抖合并连续输入，
+ * 避免 50 步栈被逐字符吞掉）；undo/redo 时反向同步快照回 reactive，
+ * 保持 formConfig 引用不变以兼容现有 UI 双向绑定。</p>
+ */
+const history = useUndoRedo<FormConfig>(JSON.parse(JSON.stringify(formConfig)))
+const { present: historyPresent, canUndo, canRedo } = history
+
+/** 抑制标志：undo/redo 同步快照回 formConfig 时关闭 watch 推历史，避免循环 */
+let suppressHistory = false
+/** 防抖计时器：连续输入合并为一次历史入栈 */
+let historyDebounce: ReturnType<typeof setTimeout> | null = null
+const HISTORY_DEBOUNCE_MS = 400
+
+/** 立即提交待入栈的变更（undo/redo 前调用，避免丢失未入栈编辑） */
+function commitPendingHistory() {
+  if (historyDebounce) {
+    clearTimeout(historyDebounce)
+    historyDebounce = null
+    history.set(JSON.parse(JSON.stringify(formConfig)))
+  }
+}
+
+// 深度监听 formConfig，自动推历史（flush: sync 便于精确抑制）
+watch(
+  formConfig,
+  () => {
+    if (suppressHistory) return
+    if (historyDebounce) clearTimeout(historyDebounce)
+    historyDebounce = setTimeout(() => {
+      historyDebounce = null
+      history.set(JSON.parse(JSON.stringify(formConfig)))
+    }, HISTORY_DEBOUNCE_MS)
+  },
+  { deep: true, flush: 'sync' }
+)
+
+/** 将历史当前快照同步回 reactive formConfig（保持引用不变，UI 自动更新） */
+function applyHistoryToFormConfig() {
+  const snap = historyPresent.value
+  suppressHistory = true
+  try {
+    const target = formConfig as unknown as Record<string, unknown>
+    const src = snap as unknown as Record<string, unknown>
+    // 删除快照中没有的 key
+    for (const key of Object.keys(target)) {
+      if (!(key in src)) delete target[key]
+    }
+    // 写入快照中的所有 key（深拷贝避免共享引用）
+    for (const key of Object.keys(src)) {
+      target[key] = JSON.parse(JSON.stringify(src[key]))
+    }
+    // 重算 fieldSeq，避免 undo/redo 后新增字段 ID 冲突
+    fieldSeq = 0
+    for (const f of formConfig.fields) {
+      const m = /field_(\d+)/.exec(f.id)
+      if (m) {
+        const n = parseInt(m[1], 10)
+        if (n > fieldSeq) fieldSeq = n
+      }
+    }
+  } finally {
+    nextTick(() => {
+      suppressHistory = false
+    })
+  }
+}
+
+/** 撤销 */
+function undo() {
+  commitPendingHistory()
+  if (!canUndo.value) return
+  history.undo()
+  applyHistoryToFormConfig()
+}
+
+/** 重做 */
+function redo() {
+  commitPendingHistory()
+  if (!canRedo.value) return
+  history.redo()
+  applyHistoryToFormConfig()
+}
+
+/** 键盘快捷键：Ctrl/Cmd+Z 撤销，Ctrl+Y 或 Ctrl/Cmd+Shift+Z 重做 */
+function onUndoRedoKeydown(event: KeyboardEvent) {
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey
+  if (!ctrlOrCmd) return
+  const key = event.key.toLowerCase()
+  if (key === 'z' && !event.shiftKey) {
+    event.preventDefault()
+    undo()
+  } else if ((key === 'z' && event.shiftKey) || key === 'y') {
+    event.preventDefault()
+    redo()
+  }
+}
+
 // ===================== 加载已有表单（编辑模式） =====================
 
 async function loadForm(id: number) {
@@ -577,6 +683,12 @@ async function loadForm(id: number) {
     const data = await getForm(id)
     Object.assign(metaForm, data)
     parseFormConfigFromStr()
+    // 编辑模式加载完成后重置历史栈，使加载的配置成为初始状态（不可 undo 回空状态）
+    if (historyDebounce) {
+      clearTimeout(historyDebounce)
+      historyDebounce = null
+    }
+    history.reset(JSON.parse(JSON.stringify(formConfig)))
   } catch {
     /* handled by interceptor */
   } finally {
@@ -777,16 +889,28 @@ if (editId > 0) {
 } else {
   // 新建模式：初始化一个空标题
   formConfig.title = '未命名表单'
+  // 重置历史栈，使初始标题作为干净的起点（不可 undo 回空标题）
+  if (historyDebounce) {
+    clearTimeout(historyDebounce)
+    historyDebounce = null
+  }
+  history.reset(JSON.parse(JSON.stringify(formConfig)))
 }
 
 // 加载注册中心业务组件（15 个预置 Widget），合并到组件库"业务组件"分组
 onMounted(async () => {
+  window.addEventListener('keydown', onUndoRedoKeydown)
   try {
     await initBuiltinComponents()
     registryComponents.value = LowCodeComponentRegistry.list()
   } catch {
     // 加载失败仅静默降级（基础组件仍可用）
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onUndoRedoKeydown)
+  if (historyDebounce) clearTimeout(historyDebounce)
 })
 </script>
 
@@ -803,7 +927,9 @@ onMounted(async () => {
           <el-button :icon="'Download'" @click="handleExport">导出</el-button>
           <el-button :icon="'Upload'" @click="handleImport">导入</el-button>
           <el-button :icon="'View'" @click="handlePreview">预览</el-button>
-          <el-button :icon="'RefreshLeft'" @click="handleReset">重置</el-button>
+          <el-button :icon="'RefreshLeft'" :disabled="!canUndo" @click="undo">撤销</el-button>
+          <el-button :icon="'RefreshRight'" :disabled="!canRedo" @click="redo">重做</el-button>
+          <el-button :icon="'Refresh'" @click="handleReset">重置</el-button>
           <el-button v-if="metaForm.status === 'PUBLISHED'" :icon="'FolderOpened'" @click="handleArchive">
             归档
           </el-button>
