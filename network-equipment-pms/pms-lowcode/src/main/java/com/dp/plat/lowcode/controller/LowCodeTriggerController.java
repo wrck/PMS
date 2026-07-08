@@ -3,6 +3,8 @@ package com.dp.plat.lowcode.controller;
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.engine.trigger.LowCodeTrigger;
+import com.dp.plat.lowcode.entity.LowCodeTriggerExecutionLog;
+import com.dp.plat.lowcode.service.LowCodeTriggerExecutionLogService;
 import com.dp.plat.lowcode.service.LowCodeTriggerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -31,6 +34,7 @@ import java.util.Map;
 public class LowCodeTriggerController {
 
     private final LowCodeTriggerService triggerService;
+    private final LowCodeTriggerExecutionLogService executionLogService;
 
     @Operation(summary = "触发器列表")
     @GetMapping
@@ -70,5 +74,22 @@ public class LowCodeTriggerController {
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> data) {
         return Result.ok(triggerService.executeTrigger(code, data == null ? Map.of() : data));
+    }
+
+    @Operation(summary = "查询指定触发器的执行历史")
+    @GetMapping("/{id}/execution-logs")
+    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    public Result<List<LowCodeTriggerExecutionLog>> getExecutionLogs(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "50") int limit) {
+        return Result.ok(executionLogService.listByTriggerId(id, limit));
+    }
+
+    @Operation(summary = "查询全局最近触发器执行历史")
+    @GetMapping("/execution-logs/recent")
+    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    public Result<List<LowCodeTriggerExecutionLog>> getRecentLogs(
+            @RequestParam(defaultValue = "50") int limit) {
+        return Result.ok(executionLogService.listRecent(limit));
     }
 }
