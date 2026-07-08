@@ -122,9 +122,61 @@ function parseDefinition(json?: string): MicroflowDefinition {
   }
 }
 
-/** 构造 X6 节点 addNode 配置（含输入/输出端口） */
-function nodeAddConfig(node: MicroflowNode) {
+/** 输入端口组（左侧，蓝色圆点） */
+function buildInPortGroup() {
   return {
+    position: 'left' as const,
+    attrs: { circle: { r: 4, magnet: true, stroke: '#409eff', fill: '#fff', strokeWidth: 1 } }
+  }
+}
+
+/** 普通输出端口组（右侧，绿色圆点） */
+function buildOutPortGroup() {
+  return {
+    position: 'right' as const,
+    attrs: { circle: { r: 4, magnet: true, stroke: '#67c23a', fill: '#fff', strokeWidth: 1 } }
+  }
+}
+
+/**
+ * 带文字标签的输出端口组（CONDITION 真/假、LOOP 循环/退出）。
+ * 通过 markup 同时渲染圆点与文字，使分支语义在画布上可视化。
+ */
+function buildLabeledOutPortGroup(label: string, color: string) {
+  return {
+    position: 'right' as const,
+    markup: [
+      { tagName: 'circle', selector: 'circle' },
+      { tagName: 'text', selector: 'text' }
+    ],
+    attrs: {
+      circle: { r: 5, magnet: true, stroke: color, fill: color, strokeWidth: 1 },
+      text: {
+        text: label,
+        fill: color,
+        fontSize: 11,
+        refX: 8,
+        textAnchor: 'start',
+        textVerticalAnchor: 'middle'
+      }
+    }
+  }
+}
+
+/**
+ * 构造 X6 节点 addNode 配置（含输入/输出端口）。
+ *
+ * <p>端口语义：</p>
+ * <ul>
+ *   <li>CONDITION：true（绿）/ false（红）双输出端口，对应 config.trueBranch/falseBranch</li>
+ *   <li>LOOP：body 循环体（蓝）/ exit 退出（灰）双输出端口，对应 config.bodyNodeId</li>
+ *   <li>其他节点：单 in/out 端口</li>
+ * </ul>
+ * <p>端口 ID 规范：`${nodeId}-in` / `-true` / `-false` / `-body` / `-exit` / `-out`，
+ * 便于 renderGraph 按 sourcePort 推断连线语义。CONDITION/LOOP 的 config 跳转字段仍保留（后端用）。</p>
+ */
+function nodeAddConfig(node: MicroflowNode) {
+  const base = {
     shape: MICROFLOW_NODE_SHAPE,
     id: node.id,
     x: node.x,
@@ -135,17 +187,48 @@ function nodeAddConfig(node: MicroflowNode) {
       nodeId: node.id,
       type: node.type,
       label: node.label
-    } as MicroflowNodeData,
+    } as MicroflowNodeData
+  }
+  if (node.type === 'CONDITION') {
+    return {
+      ...base,
+      ports: {
+        groups: {
+          in: buildInPortGroup(),
+          outTrue: buildLabeledOutPortGroup('真', '#67c23a'),
+          outFalse: buildLabeledOutPortGroup('假', '#f56c6c')
+        },
+        items: [
+          { id: `${node.id}-in`, group: 'in' },
+          { id: `${node.id}-true`, group: 'outTrue' },
+          { id: `${node.id}-false`, group: 'outFalse' }
+        ]
+      }
+    }
+  }
+  if (node.type === 'LOOP') {
+    return {
+      ...base,
+      ports: {
+        groups: {
+          in: buildInPortGroup(),
+          outBody: buildLabeledOutPortGroup('循环', '#409eff'),
+          outExit: buildLabeledOutPortGroup('退出', '#909399')
+        },
+        items: [
+          { id: `${node.id}-in`, group: 'in' },
+          { id: `${node.id}-body`, group: 'outBody' },
+          { id: `${node.id}-exit`, group: 'outExit' }
+        ]
+      }
+    }
+  }
+  return {
+    ...base,
     ports: {
       groups: {
-        in: {
-          position: 'left',
-          attrs: { circle: { r: 4, magnet: true, stroke: '#409eff', fill: '#fff', strokeWidth: 1 } }
-        },
-        out: {
-          position: 'right',
-          attrs: { circle: { r: 4, magnet: true, stroke: '#67c23a', fill: '#fff', strokeWidth: 1 } }
-        }
+        in: buildInPortGroup(),
+        out: buildOutPortGroup()
       },
       items: [
         { id: `${node.id}-in`, group: 'in' },
@@ -222,6 +305,20 @@ function newMicroflow() {
 
 // ===================== 画布渲染 =====================
 
+/**
+ * 根据源端口 ID 推断连线语义（标签 + 颜色）。
+ *
+ * <p>端口 ID 规范见 nodeAddConfig：`xxx-true` / `xxx-false` / `xxx-body` / `xxx-exit`。
+ * CONDITION 真→绿、假→红；LOOP 循环→蓝、退出→灰；其他→默认蓝、无标签。</p>
+ */
+function edgeSemantic(sourcePort: string): { label: string; color: string } {
+  if (sourcePort.endsWith('-true')) return { label: '真', color: '#67c23a' }
+  if (sourcePort.endsWith('-false')) return { label: '假', color: '#f56c6c' }
+  if (sourcePort.endsWith('-body')) return { label: '循环', color: '#409eff' }
+  if (sourcePort.endsWith('-exit')) return { label: '退出', color: '#909399' }
+  return { label: '', color: '#409eff' }
+}
+
 function renderGraph() {
   const g = graphRef.value
   if (!g) return
@@ -236,11 +333,18 @@ function renderGraph() {
     const target: { cell: string; port?: string } = { cell: e.target }
     if (e.sourcePort) source.port = e.sourcePort
     if (e.targetPort) target.port = e.targetPort
+    // 按源端口语义着色与标注，使 CONDITION/LOOP 分支在画布上可视化区分
+    const { label: edgeLabel, color: edgeColor } = edgeSemantic(e.sourcePort || '')
     g.addEdge({
       id: e.id,
       source,
       target,
-      attrs: { line: { stroke: '#409eff', strokeWidth: 2, targetMarker: { name: 'classic', size: 6 } } }
+      attrs: {
+        line: { stroke: edgeColor, strokeWidth: 2, targetMarker: { name: 'classic', size: 6 } }
+      },
+      labels: edgeLabel
+        ? [{ attrs: { label: { text: edgeLabel, fill: '#606266', fontSize: 11 } } }]
+        : []
     })
   }
   if (needsLayout && definition.value.nodes.length > 0) {
@@ -413,6 +517,71 @@ async function clearCanvas() {
 
 // ===================== 保存 / 执行 =====================
 
+/**
+ * 校验所有节点必填字段（config 字段名与 NodeParamPanel / 后端 MicroflowNodeExecutor 对齐）。
+ *
+ * <p>校验项：</p>
+ * <ul>
+ *   <li>ASSIGN：target（目标变量）+ expression（赋值表达式）</li>
+ *   <li>CONDITION：expression（条件表达式）</li>
+ *   <li>LOOP：iterableExpression（可迭代对象表达式）+ bodyNodeId（循环体起点）</li>
+ *   <li>CALL_SERVICE：beanName + methodName</li>
+ *   <li>CALL_MICROFLOW：microflowCode</li>
+ *   <li>CALL_RULE：ruleCode</li>
+ *   <li>CALL_CONNECTOR：connectorCode</li>
+ *   <li>THROW_EXCEPTION：errorMessage</li>
+ *   <li>RETURN：expression（返回值表达式）</li>
+ *   <li>结构校验：必须含 START，且含 END 或 RETURN</li>
+ * </ul>
+ */
+function validateNodes(): string[] {
+  const errors: string[] = []
+  for (const node of definition.value.nodes) {
+    const cfg = node.config || {}
+    switch (node.type) {
+      case 'ASSIGN':
+        if (!cfg.target) errors.push(`节点 ${node.label}：缺少目标变量名`)
+        if (!cfg.expression) errors.push(`节点 ${node.label}：缺少赋值表达式`)
+        break
+      case 'CONDITION':
+        if (!cfg.expression) errors.push(`节点 ${node.label}：缺少条件表达式`)
+        break
+      case 'LOOP':
+        if (!cfg.iterableExpression) errors.push(`节点 ${node.label}：缺少可迭代对象表达式`)
+        if (!cfg.bodyNodeId) errors.push(`节点 ${node.label}：缺少循环体起点节点`)
+        break
+      case 'CALL_SERVICE':
+        if (!cfg.beanName) errors.push(`节点 ${node.label}：缺少 Bean 名称`)
+        if (!cfg.methodName) errors.push(`节点 ${node.label}：缺少方法名`)
+        break
+      case 'CALL_MICROFLOW':
+        if (!cfg.microflowCode) errors.push(`节点 ${node.label}：缺少微流编码`)
+        break
+      case 'CALL_RULE':
+        if (!cfg.ruleCode) errors.push(`节点 ${node.label}：缺少规则编码`)
+        break
+      case 'CALL_CONNECTOR':
+        if (!cfg.connectorCode) errors.push(`节点 ${node.label}：缺少连接器编码`)
+        break
+      case 'THROW_EXCEPTION':
+        if (!cfg.errorMessage) errors.push(`节点 ${node.label}：缺少错误消息`)
+        break
+      case 'RETURN':
+        if (!cfg.expression) errors.push(`节点 ${node.label}：缺少返回值表达式`)
+        break
+    }
+  }
+  // 校验必须有 START 节点
+  if (!definition.value.nodes.some((n) => n.type === 'START')) {
+    errors.push('微流必须包含一个开始节点')
+  }
+  // 校验必须有 END 或 RETURN 节点
+  if (!definition.value.nodes.some((n) => n.type === 'END' || n.type === 'RETURN')) {
+    errors.push('微流必须包含结束或返回节点')
+  }
+  return errors
+}
+
 async function save() {
   if (!currentMicroflow.value) {
     ElMessage.warning('请先选择或新建微流')
@@ -420,6 +589,12 @@ async function save() {
   }
   if (!currentMicroflow.value.code || !currentMicroflow.value.name) {
     ElMessage.warning('请填写微流编码和名称')
+    return
+  }
+  // 保存前校验节点必填字段
+  const errors = validateNodes()
+  if (errors.length > 0) {
+    ElMessage.warning(`节点配置不完整：\n${errors.join('\n')}`)
     return
   }
   const g = graphRef.value

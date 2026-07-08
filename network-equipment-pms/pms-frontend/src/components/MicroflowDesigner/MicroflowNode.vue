@@ -52,20 +52,24 @@ const META: Record<MicroflowNodeType, { icon: string; color: string }> = {
 
 const meta = computed(() => META[nodeData.value.type] || { icon: '•', color: '#909399' })
 
-/** 边框色：执行状态优先，否则取类型主题色 */
+/** 边框色：执行状态优先，未执行节点使用默认灰色边框 */
 const borderColor = computed(() => {
   const s = nodeData.value.status
   if (s === 'SUCCESS') return '#67c23a'
   if (s === 'FAILED') return '#f56c6c'
   if (s === 'RUNNING') return '#409eff'
-  return meta.value.color
+  // 未执行 → 默认灰色边框
+  return '#c0c4cc'
 })
 </script>
 
 <template>
   <div
     class="microflow-node"
-    :class="{ highlighted: nodeData.highlighted }"
+    :class="{
+      highlighted: nodeData.highlighted,
+      'is-running': nodeData.status === 'RUNNING'
+    }"
     :style="{ borderColor: borderColor }"
   >
     <span class="mn-icon" :style="{ background: meta.color }">{{ meta.icon }}</span>
@@ -83,7 +87,7 @@ export default { name: 'MicroflowNode' }
   width: 100%;
   height: 100%;
   background: #fff;
-  border: 2px solid #409eff;
+  border: 2px solid #c0c4cc;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -95,6 +99,11 @@ export default { name: 'MicroflowNode' }
 
   &.highlighted {
     box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.35);
+  }
+
+  // 执行中：蓝色脉冲光晕动画（边框颜色由内联 style 设为蓝色）
+  &.is-running {
+    animation: mn-border-pulse 1s infinite;
   }
 
   .mn-icon {
@@ -144,6 +153,17 @@ export default { name: 'MicroflowNode' }
   }
   50% {
     opacity: 0.3;
+  }
+}
+
+// 执行中节点边框光晕脉冲（蓝色扩散与回缩）
+@keyframes mn-border-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(64, 158, 255, 0.15);
   }
 }
 </style>
