@@ -1,4 +1,4 @@
-import { get, post } from '@/utils/request'
+import { del, get, post } from '@/utils/request'
 
 export interface LowCodeProcessBinding {
   id?: number
@@ -9,6 +9,25 @@ export interface LowCodeProcessBinding {
   /** BPMN 2.0 XML 内容（流程图本体） */
   bpmnXml?: string
   status?: string
+}
+
+/**
+ * 流程实例（运行中 / 已完成 / 已终止）。
+ *
+ * <p>对应后端 ProcessInstanceDTO，由 LowCodeProcessController.listInstances 返回。</p>
+ */
+export interface ProcessInstance {
+  id: string
+  processDefinitionKey: string
+  processDefinitionName?: string
+  businessKey?: string
+  startUserId?: string
+  startTime?: string
+  endTime?: string
+  /** 状态：运行中 / 挂起 / 已完成 / 已终止 */
+  status?: string
+  /** 当前活动任务名（运行中实例） */
+  currentTaskName?: string
 }
 
 export function getProcessBindings() {
@@ -69,4 +88,31 @@ export function getProcessDiagram(processInstanceId: string) {
   return get<Blob>(`/api/workflow/diagram/${processInstanceId}`, undefined, {
     responseType: 'blob'
   })
+}
+
+/**
+ * 查询流程实例列表。
+ *
+ * <p>支持按 processDefinitionKey 与 status 过滤。status 可选值：
+ * <ul>
+ *   <li>未传 / running：仅返回运行中实例</li>
+ *   <li>completed：仅返回已完成实例</li>
+ *   <li>all：合并返回</li>
+ * </ul></p>
+ */
+export function getProcessInstances(params?: {
+  processDefinitionKey?: string
+  status?: string
+}) {
+  return get<ProcessInstance[]>('/api/lowcode/process/instances', params)
+}
+
+/**
+ * 终止流程实例（级联删除运行时数据）。
+ *
+ * @param id     流程实例 ID
+ * @param reason 终止原因（可选）
+ */
+export function terminateInstance(id: string, reason?: string) {
+  return del<void>(`/api/lowcode/process/instances/${id}`, reason ? { reason } : undefined)
 }

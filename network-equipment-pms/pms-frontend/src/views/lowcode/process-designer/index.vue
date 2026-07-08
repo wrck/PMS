@@ -12,7 +12,7 @@
  * 借鉴 Appian Process Modeler / Camunda Modeler 的三栏布局。</p>
  */
 import { computed, onMounted, ref, shallowRef } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute } from 'vue-router'
 import type BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { ModdleElement } from 'bpmn-js/lib/model/Types'
@@ -27,14 +27,21 @@ import {
   getProcessBindings,
   getProcessDefinitionBpmnXml,
   getProcessDefinitions,
+  getProcessDiagram,
   getProcessInstanceActivityIds,
+  getProcessInstances,
   saveProcessBinding,
-  type LowCodeProcessBinding
+  terminateInstance,
+  type LowCodeProcessBinding,
+  type ProcessInstance
 } from '@/api/lowcode-process'
 
 defineOptions({ name: 'ProcessDesignerView' })
 
 const route = useRoute()
+
+/** 当前激活的标签页：bindings=流程绑定 / instances=流程实例 */
+const activeTab = ref<'bindings' | 'instances'>('bindings')
 
 /** 已部署流程定义下拉项 */
 interface ProcessDefinitionOption {
@@ -49,6 +56,92 @@ const list = ref<LowCodeProcessBinding[]>([])
 
 async function load() {
   list.value = await getProcessBindings()
+}
+
+// ===== 流程实例列表 =====
+const instances = ref<ProcessInstance[]>([])
+const instanceStatusFilter = ref<string>('running')
+const instanceLoading = ref(false)
+
+async function loadInstances() {
+  instanceLoading.value = true
+  try {
+    instances.value = await getProcessInstances({
+      status: instanceStatusFilter.value || undefined
+    })
+  } catch (e) {
+    instances.value = []
+    ElMessage.error('加载流程实例失败：' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    instanceLoading.value = false
+  }
+}
+
+/** 切换 Tab 时按需加载数据 */
+function onTabChange(name: string | number) {
+  if (name === 'instances' && instances.value.length === 0) {
+    loadInstances()
+  }
+}
+
+/** 实例状态 → tag type */
+function instanceStatusTagType(status?: string): 'success' | 'warning' | 'info' | 'danger' {
+  if (status === '运行中') return 'success'
+  if (status === '挂起') return 'warning'
+  if (status === '已完成') return 'info'
+  if (status === '已终止') return 'danger'
+  return 'info'
+}
+
+// ===== 流程图查看对话框 =====
+const diagramDialogVisible = ref(false)
+const diagramUrl = ref<string>('')
+const diagramInstance = ref<ProcessInstance | null>(null)
+const diagramLoading = ref(false)
+
+async function viewDiagram(row: ProcessInstance) {
+  diagramInstance.value = row
+  diagramUrl.value = ''
+  diagramDialogVisible.value = true
+  diagramLoading.value = true
+  try {
+    const blob = await getProcessDiagram(row.id)
+    // 释放上一次的 ObjectURL，避免内存泄漏
+    if (diagramUrl.value) URL.revokeObjectURL(diagramUrl.value)
+    diagramUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    ElMessage.error('加载流程图失败：' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    diagramLoading.value = false
+  }
+}
+
+function closeDiagram() {
+  if (diagramUrl.value) {
+    URL.revokeObjectURL(diagramUrl.value)
+    diagramUrl.value = ''
+  }
+  diagramInstance.value = null
+}
+
+/** 终止流程实例（带确认） */
+async function terminateRow(row: ProcessInstance) {
+  try {
+    await ElMessageBox.confirm(
+      `确认终止流程实例「${row.processDefinitionName || row.processDefinitionKey}」吗？终止后不可恢复。`,
+      '终止确认',
+      { type: 'warning', confirmButtonText: '终止', cancelButtonText: '取消' }
+    )
+  } catch {
+    return // 用户取消
+  }
+  try {
+    await terminateInstance(row.id, '手动终止')
+    ElMessage.success('已终止')
+    await loadInstances()
+  } catch (e) {
+    ElMessage.error('终止失败：' + (e instanceof Error ? e.message : String(e)))
+  }
 }
 
 // ===== 流程绑定对话框 =====
@@ -257,32 +350,98 @@ onMounted(load)
 
 <template>
   <div style="padding: 16px">
-    <el-card shadow="never">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>流程设计器</span>
-          <div>
-            <el-button type="primary" @click="openDesigner">设计新流程</el-button>
-            <el-button @click="openNewBinding">新建流程绑定</el-button>
-          </div>
-        </div>
-      </template>
-      <el-table :data="list">
-        <el-table-column label="流程定义 Key" prop="processDefinitionKey" min-width="160" show-overflow-tooltip />
-        <el-table-column label="流程名称" prop="processDefinitionName" min-width="160" show-overflow-tooltip />
-        <el-table-column label="状态" prop="status" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">{{ row.status }}</el-tag>
+    <el-tabs v-model="activeTab" @tab-change="onTabChange">
+      <!-- 流程绑定 Tab -->
+      <el-tab-pane label="流程绑定" name="bindings">
+        <el-card shadow="never">
+          <template #header>
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <span>流程设计器</span>
+              <div>
+                <el-button type="primary" @click="openDesigner">设计新流程</el-button>
+                <el-button @click="openNewBinding">新建流程绑定</el-button>
+              </div>
+            </div>
           </template>
-        </el-table-column>
-        <el-table-column label="操作" width="220">
-          <template #default="{ row }">
-            <el-button size="small" @click="openEditBinding(row)">编辑绑定</el-button>
-            <el-button size="small" type="primary" link @click="openPreview(row)">预览</el-button>
+          <el-table :data="list">
+            <el-table-column label="流程定义 Key" prop="processDefinitionKey" min-width="160" show-overflow-tooltip />
+            <el-table-column label="流程名称" prop="processDefinitionName" min-width="160" show-overflow-tooltip />
+            <el-table-column label="状态" prop="status" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">{{ row.status }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="220">
+              <template #default="{ row }">
+                <el-button size="small" @click="openEditBinding(row)">编辑绑定</el-button>
+                <el-button size="small" type="primary" link @click="openPreview(row)">预览</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-tab-pane>
+
+      <!-- 流程实例 Tab -->
+      <el-tab-pane label="流程实例" name="instances">
+        <el-card shadow="never">
+          <template #header>
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <span>流程实例</span>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <el-select
+                  v-model="instanceStatusFilter"
+                  placeholder="状态"
+                  style="width: 140px"
+                  @change="loadInstances"
+                >
+                  <el-option label="运行中" value="running" />
+                  <el-option label="已完成" value="completed" />
+                  <el-option label="全部" value="all" />
+                </el-select>
+                <el-button @click="loadInstances">刷新</el-button>
+              </div>
+            </div>
           </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+          <el-table v-loading="instanceLoading" :data="instances">
+            <el-table-column label="实例 ID" prop="id" min-width="160" show-overflow-tooltip />
+            <el-table-column
+              label="流程定义"
+              prop="processDefinitionName"
+              min-width="160"
+              show-overflow-tooltip
+            >
+              <template #default="{ row }">
+                {{ row.processDefinitionName || row.processDefinitionKey }}
+              </template>
+            </el-table-column>
+            <el-table-column label="发起人" prop="startUserId" width="120" show-overflow-tooltip />
+            <el-table-column label="开始时间" prop="startTime" width="170" />
+            <el-table-column label="当前任务" prop="currentTaskName" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">
+                {{ row.currentTaskName || '—' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" prop="status" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag :type="instanceStatusTagType(row.status)">{{ row.status || '—' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" align="center">
+              <template #default="{ row }">
+                <el-button size="small" type="primary" link @click="viewDiagram(row)">查看流程图</el-button>
+                <el-button
+                  size="small"
+                  type="danger"
+                  link
+                  :disabled="row.status !== '运行中' && row.status !== '挂起'"
+                  @click="terminateRow(row)"
+                >终止</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
 
     <!-- 流程绑定对话框 -->
     <el-dialog v-model="bindingDialogVisible" title="流程绑定编辑" width="900px" :close-on-click-modal="false">
@@ -387,6 +546,24 @@ onMounted(load)
         <el-empty v-else-if="!previewLoading" description="无流程图数据" />
       </div>
     </el-dialog>
+
+    <!-- 流程图查看对话框（实例运行图） -->
+    <el-dialog
+      v-model="diagramDialogVisible"
+      title="流程实例图"
+      width="900px"
+      @close="closeDiagram"
+    >
+      <div v-if="diagramInstance" class="diagram-meta">
+        <span><b>实例 ID：</b>{{ diagramInstance.id }}</span>
+        <span><b>流程：</b>{{ diagramInstance.processDefinitionName || diagramInstance.processDefinitionKey }}</span>
+        <span><b>当前任务：</b>{{ diagramInstance.currentTaskName || '—' }}</span>
+      </div>
+      <div v-loading="diagramLoading" class="diagram-image-wrap">
+        <img v-if="diagramUrl" :src="diagramUrl" alt="流程图" class="diagram-image" />
+        <el-empty v-else-if="!diagramLoading" description="无流程图数据" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -461,5 +638,33 @@ onMounted(load)
   width: 100%;
   height: calc(100vh - 55px);
   background: #fff;
+}
+
+/* 流程实例图对话框 */
+.diagram-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.diagram-image-wrap {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.diagram-image {
+  max-width: 100%;
+  height: auto;
 }
 </style>
