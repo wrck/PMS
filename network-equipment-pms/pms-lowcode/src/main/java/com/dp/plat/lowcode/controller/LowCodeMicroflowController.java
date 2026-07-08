@@ -3,12 +3,16 @@ package com.dp.plat.lowcode.controller;
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.engine.microflow.MicroflowDebugger;
+import com.dp.plat.lowcode.engine.microflow.MicroflowDiagramService;
 import com.dp.plat.lowcode.entity.LowCodeMicroflow;
 import com.dp.plat.lowcode.service.LowCodeMicroflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +40,7 @@ public class LowCodeMicroflowController {
 
     private final LowCodeMicroflowService microflowService;
     private final MicroflowDebugger microflowDebugger;
+    private final MicroflowDiagramService diagramService;
 
     @Operation(summary = "微流列表")
     @GetMapping
@@ -74,6 +80,48 @@ public class LowCodeMicroflowController {
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> inputs) {
         return Result.ok(microflowService.execute(code, inputs == null ? Map.of() : inputs));
+    }
+
+    // ===================== 微流图渲染（批次3-T6） =====================
+
+    @Operation(summary = "导出微流流程图为 SVG")
+    @GetMapping("/{id}/diagram.svg")
+    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    public ResponseEntity<byte[]> exportSvg(@PathVariable Long id) {
+        LowCodeMicroflow microflow = microflowService.getById(id);
+        if (microflow == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String svg = diagramService.renderSvg(microflow.getDefinition());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/svg+xml"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"microflow-" + id + ".svg\"");
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(svg.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Operation(summary = "导出微流流程图为 PNG")
+    @GetMapping("/{id}/diagram.png")
+    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    public ResponseEntity<byte[]> exportPng(@PathVariable Long id) {
+        LowCodeMicroflow microflow = microflowService.getById(id);
+        if (microflow == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            byte[] png = diagramService.renderPng(microflow.getDefinition());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"microflow-" + id + ".png\"");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(png);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     // ===================== 微流断点调试 =====================

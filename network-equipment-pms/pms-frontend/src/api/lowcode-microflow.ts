@@ -1,4 +1,5 @@
 import { del, get, post } from '@/utils/request'
+import { triggerBlobDownload } from '@/api/excel'
 
 export interface LowCodeMicroflow {
   id?: number
@@ -175,3 +176,53 @@ export function getRecentExecutionLogs(microflowId: number, limit = 10) {
     `/api/lowcode/microflow-execution-log/recent?microflowId=${microflowId}&limit=${limit}`
   )
 }
+
+// ===================== 微流图渲染（批次3-T6） =====================
+
+/**
+ * 构建微流 SVG 图直链 URL（用于 `<img :src>` 直接展示）。
+ *
+ * <p>注意：该端点需 lowcode:microflow:list 权限，
+ * 直接用于 `<img>` 标签时需确保浏览器已携带 token（通过 cookie 或同源 session）。</p>
+ *
+ * @param id 微流 ID
+ * @returns SVG 端点相对路径
+ */
+export function getMicroflowDiagramSvgUrl(id: number): string {
+  return `/api/lowcode/microflow/${id}/diagram.svg`
+}
+
+/**
+ * 构建微流 PNG 图直链 URL（用于 `<img :src>` 直接展示）。
+ *
+ * @param id 微流 ID
+ * @returns PNG 端点相对路径
+ */
+export function getMicroflowDiagramPngUrl(id: number): string {
+  return `/api/lowcode/microflow/${id}/diagram.png`
+}
+
+/**
+ * 以 blob 形式下载微流 SVG 图，并触发浏览器下载。
+ *
+ * @param id 微流 ID
+ */
+export async function downloadMicroflowDiagramSvg(id: number): Promise<void> {
+  const response = await get<Blob>(`/api/lowcode/microflow/${id}/diagram.svg`, undefined, {
+    responseType: 'blob'
+  })
+  triggerBlobDownload(response, `microflow-${id}.svg`)
+}
+
+/**
+ * 以 blob 形式下载微流 PNG 图，并触发浏览器下载。
+ *
+ * @param id 微流 ID
+ */
+export async function downloadMicroflowDiagramPng(id: number): Promise<void> {
+  const response = await get<Blob>(`/api/lowcode/microflow/${id}/diagram.png`, undefined, {
+    responseType: 'blob'
+  })
+  triggerBlobDownload(response, `microflow-${id}.png`)
+}
+
