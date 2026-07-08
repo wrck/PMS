@@ -29,22 +29,22 @@ const jsondiffpatch = create()
 const delta = computed(() => jsondiffpatch.diff(props.oldData, props.newData))
 
 // jsondiffpatch 的 HTML formatter 输出会通过 v-html 渲染，存在 XSS 风险，
-// 此处用 DOMPurify 消毒后再交给模板，仅保留白名单标签与样式类。
+// 此处用 DOMPurify 消毒后再交给模板，采用严格白名单（仅保留 diff 展示所需标签与样式类）。
 function sanitize(html: string): string {
   return DOMPurify.sanitize(html, {
-    ADD_ATTR: ['class', 'style'],
-    ADD_TAGS: ['em']
+    ALLOWED_TAGS: ['div', 'span', 'ul', 'li', 'ins', 'del', 'i', 'b', 'small'],
+    ALLOWED_ATTR: ['class', 'style']
   })
 }
 
 const leftHtml = computed(() => {
-  const raw = formatHtml(delta.value, props.oldData) || '<em>无数据</em>'
+  const raw = formatHtml(delta.value, props.oldData) || '<i>无数据</i>'
   return sanitize(raw)
 })
 
 const rightHtml = computed(() => {
   const reversedDelta = jsondiffpatch.diff(props.newData, props.oldData)
-  const raw = formatHtml(reversedDelta, props.newData) || '<em>无数据</em>'
+  const raw = formatHtml(reversedDelta, props.newData) || '<i>无数据</i>'
   return sanitize(raw)
 })
 </script>
