@@ -118,6 +118,22 @@ public class LowCodeMicroflowController {
         return Result.ok();
     }
 
+    @Operation(summary = "添加断点")
+    @PostMapping("/debug/{sessionId}/breakpoints/{nodeId}")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<Void> addBreakpoint(@PathVariable String sessionId, @PathVariable String nodeId) {
+        microflowDebugger.addBreakpoint(sessionId, nodeId);
+        return Result.ok();
+    }
+
+    @Operation(summary = "移除断点")
+    @DeleteMapping("/debug/{sessionId}/breakpoints/{nodeId}")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<Void> removeBreakpoint(@PathVariable String sessionId, @PathVariable String nodeId) {
+        microflowDebugger.removeBreakpoint(sessionId, nodeId);
+        return Result.ok();
+    }
+
     /** 微流调试启动请求体 */
     @Data
     public static class DebugStartRequest {
