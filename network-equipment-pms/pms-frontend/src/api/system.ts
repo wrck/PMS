@@ -40,6 +40,26 @@ export function getUserPage(params: UserPageQuery): Promise<PageResult<SysUser>>
   return get<PageResult<SysUser>>('/api/system/users', params)
 }
 
+/** @提及自动补全用的轻量用户搜索结果（仅含 id/username/realName） */
+export interface MentionUser {
+  id: number
+  username: string
+  realName?: string
+}
+
+/**
+ * 用户搜索（@提及自动补全用）。
+ *
+ * <p>仅需登录（无需 system:user:list 权限），按用户名/真实姓名模糊匹配，
+ * 返回最多 20 条，仅包含 id/username/realName 字段。</p>
+ *
+ * @param keyword 关键词（用户名或真实姓名）
+ * @param limit   最大返回条数，默认 20，上限 50
+ */
+export function searchUsers(keyword?: string, limit = 20): Promise<MentionUser[]> {
+  return get<MentionUser[]>('/api/system/user/search', { keyword, limit })
+}
+
 export function getUserById(id: number): Promise<SysUser> {
   return get<SysUser>(`/api/system/users/${id}`)
 }
@@ -80,6 +100,25 @@ export function getRolePage(params: PageQuery): Promise<PageResult<SysRole>> {
 
 export function getRoleAll(): Promise<SysRole[]> {
   return get<SysRole[]>('/api/system/roles/all')
+}
+
+/** 角色下拉选项（与后端 SysRole 的 roleName/roleCode 字段对齐） */
+export interface RoleOption {
+  id?: number
+  /** 角色名称（后端 roleName） */
+  roleName: string
+  /** 角色编码（后端 roleCode） */
+  roleCode: string
+}
+
+/**
+ * 全部角色列表（审批链配置等场景下拉用）。
+ *
+ * <p>仅需登录（无需 system:role:list 权限），返回 id/roleName/roleCode 字段。
+ * 调用后端实际路径 /api/system/role/all。</p>
+ */
+export function getAllRoles(): Promise<RoleOption[]> {
+  return get<RoleOption[]>('/api/system/role/all')
 }
 
 export function createRole(data: SysRole): Promise<SysRole> {

@@ -295,6 +295,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '发布中心', icon: 'Promotion', requiresAuth: true }
       },
       {
+        // 多级审批链配置（借鉴 OutSystems LifeTime）
+        path: 'lowcode/approval-chain',
+        name: 'LowcodeApprovalChain',
+        component: () => import('@/views/lowcode/approval-chain/index.vue'),
+        meta: { title: '审批链配置', icon: 'SetUp', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码

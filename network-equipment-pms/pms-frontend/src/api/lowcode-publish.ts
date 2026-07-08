@@ -6,7 +6,11 @@ export interface LowCodePublishRecord {
   configId: number
   configCode?: string
   version?: number
-  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'PUBLISHED'
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED'
+  /** 当前审批级别（多级审批链生效时从 1 开始递增；单步审批为 null） */
+  currentLevel?: number | null
+  /** 审批链 ID（关联 pms_lowcode_approval_chain，无审批链时为 null） */
+  approvalChainId?: number | null
   applicantId?: number
   applicant?: string
   approverId?: number

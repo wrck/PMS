@@ -8,6 +8,11 @@ import {
   rollbackPublish,
   type LowCodePublishRecord
 } from '@/api/lowcode-publish'
+import {
+  getApprovalChainList,
+  parseLevels,
+  type LowCodeApprovalChain
+} from '@/api/lowcode-approval-chain'
 import { useUserStore } from '@/stores/user'
 
 defineOptions({ name: 'PublishCenterView' })
@@ -15,13 +20,76 @@ defineOptions({ name: 'PublishCenterView' })
 const userStore = useUserStore()
 const pendingList = ref<LowCodePublishRecord[]>([])
 const loading = ref(false)
+/** 审批链映射：approvalChainId → 审批链对象（用于显示当前级别名称/总数） */
+const chainMap = ref<Map<number, LowCodeApprovalChain>>(new Map())
 
 async function loadPending() {
   loading.value = true
   try {
-    pendingList.value = await getPendingList()
+    // 并行加载待审批列表与全部审批链（构建映射用于级别展示）
+    const [list, chains] = await Promise.all([getPendingList(), getApprovalChainList()])
+    pendingList.value = list
+    const map = new Map<number, LowCodeApprovalChain>()
+    chains.forEach((c) => {
+      if (c.id != null) map.set(c.id, c)
+    })
+    chainMap.value = map
   } finally {
     loading.value = false
+  }
+}
+
+/**
+ * 计算审批级别展示文本。
+ *
+ * <p>多级审批（approvalChainId 存在且 currentLevel 存在）：返回 "1/3 主管审批" 格式，
+ * 其中 3 为审批链总级数，"主管审批"为当前级别名称；
+ * 单步审批（无审批链）：返回 "单步审批"。</p>
+ */
+function approvalLevelText(row: LowCodePublishRecord): string {
+  if (!row.approvalChainId || row.currentLevel == null) return '单步审批'
+  const chain = chainMap.value.get(row.approvalChainId)
+  if (!chain) return `${row.currentLevel}/?`
+  const levels = parseLevels(chain.levels)
+  if (levels.length === 0) return `${row.currentLevel}/?`
+  const current = levels.find((l) => l.level === row.currentLevel)
+  const total = levels.length
+  const name = current?.name ?? ''
+  return `${row.currentLevel}/${total} ${name}`.trim()
+}
+
+/** 状态文案与颜色映射（含多级审批进行中 APPROVING） */
+function statusTagType(status: LowCodePublishRecord['status']): 'success' | 'danger' | 'warning' | 'info' {
+  switch (status) {
+    case 'PUBLISHED':
+      return 'success'
+    case 'APPROVED':
+      return 'success'
+    case 'REJECTED':
+      return 'danger'
+    case 'APPROVING':
+      return 'warning'
+    default:
+      return 'warning'
+  }
+}
+
+function statusLabel(status: LowCodePublishRecord['status']): string {
+  switch (status) {
+    case 'DRAFT':
+      return '草稿'
+    case 'SUBMITTED':
+      return '待审批'
+    case 'APPROVING':
+      return '审批中'
+    case 'APPROVED':
+      return '已通过'
+    case 'REJECTED':
+      return '已拒绝'
+    case 'PUBLISHED':
+      return '已发布'
+    default:
+      return status
   }
 }
 
@@ -74,10 +142,18 @@ onMounted(loadPending)
         <el-table-column label="版本" prop="version" width="60" />
         <el-table-column label="申请人" prop="applicant" width="100" />
         <el-table-column label="变更说明" prop="changeLog" show-overflow-tooltip />
-        <el-table-column label="状态" prop="status" width="100">
+        <el-table-column label="审批级别" width="140">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'PUBLISHED' ? 'success' : row.status === 'REJECTED' ? 'danger' : 'warning'">
-              {{ row.status }}
+            <el-tag v-if="row.approvalChainId" type="primary" size="small">
+              {{ approvalLevelText(row) }}
+            </el-tag>
+            <span v-else class="single-step">单步审批</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)">
+              {{ statusLabel(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -94,3 +170,10 @@ onMounted(loadPending)
     </el-card>
   </div>
 </template>
+
+<style scoped>
+.single-step {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+</style>
