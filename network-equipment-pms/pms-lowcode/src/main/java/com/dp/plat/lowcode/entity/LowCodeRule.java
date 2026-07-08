@@ -60,4 +60,7 @@ public class LowCodeRule extends BaseEntity {
     /** 业务类型 */
     @Size(max = 64, message = "业务类型长度不能超过 64 个字符")
     private String bizType;
+
+    /** 扩展信息（JSON 字符串，如表达式规则的 inputsSchema） */
+    private String ext;
 }
