@@ -2,10 +2,12 @@ package com.dp.plat.lowcode.controller;
 
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.engine.microflow.MicroflowDebugger;
 import com.dp.plat.lowcode.entity.LowCodeMicroflow;
 import com.dp.plat.lowcode.service.LowCodeMicroflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 低代码微流 Controller。
@@ -31,6 +34,7 @@ import java.util.Map;
 public class LowCodeMicroflowController {
 
     private final LowCodeMicroflowService microflowService;
+    private final MicroflowDebugger microflowDebugger;
 
     @Operation(summary = "微流列表")
     @GetMapping
@@ -70,5 +74,56 @@ public class LowCodeMicroflowController {
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> inputs) {
         return Result.ok(microflowService.execute(code, inputs == null ? Map.of() : inputs));
+    }
+
+    // ===================== 微流断点调试 =====================
+
+    @Operation(summary = "启动微流调试会话")
+    @PostMapping("/{code}/debug/start")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @OperLog(title = "低代码微流调试", businessType = 0)
+    public Result<MicroflowDebugger.DebugSession> startDebug(@PathVariable String code,
+                                                              @RequestBody(required = false) DebugStartRequest req) {
+        Map<String, Object> inputs = req == null || req.getInputs() == null ? Map.of() : req.getInputs();
+        Set<String> breakpoints = req == null || req.getBreakpointNodeIds() == null ? Set.of() : req.getBreakpointNodeIds();
+        return Result.ok(microflowDebugger.startSession(code, inputs, breakpoints));
+    }
+
+    @Operation(summary = "单步执行（step over）")
+    @PostMapping("/debug/{sessionId}/step")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<MicroflowDebugger.DebugStepResult> stepOver(@PathVariable String sessionId) {
+        return Result.ok(microflowDebugger.stepOver(sessionId));
+    }
+
+    @Operation(summary = "继续执行到下一断点")
+    @PostMapping("/debug/{sessionId}/continue")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<MicroflowDebugger.DebugStepResult> continueExecution(@PathVariable String sessionId) {
+        return Result.ok(microflowDebugger.continueExecution(sessionId));
+    }
+
+    @Operation(summary = "查询当前变量状态")
+    @GetMapping("/debug/{sessionId}/variables")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<Map<String, Object>> getVariables(@PathVariable String sessionId) {
+        return Result.ok(microflowDebugger.getVariables(sessionId));
+    }
+
+    @Operation(summary = "终止微流调试会话")
+    @DeleteMapping("/debug/{sessionId}")
+    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    public Result<Void> terminateDebug(@PathVariable String sessionId) {
+        microflowDebugger.terminate(sessionId);
+        return Result.ok();
+    }
+
+    /** 微流调试启动请求体 */
+    @Data
+    public static class DebugStartRequest {
+        /** 输入参数 */
+        private Map<String, Object> inputs;
+        /** 初始断点节点 ID 集合 */
+        private Set<String> breakpointNodeIds;
     }
 }

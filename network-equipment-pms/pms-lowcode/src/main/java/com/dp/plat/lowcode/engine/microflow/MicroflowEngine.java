@@ -96,6 +96,72 @@ public class MicroflowEngine {
     }
 
     /**
+     * 执行单个节点（调试模式用）。
+     *
+     * <p>解析微流定义，定位指定节点并执行，返回执行结果与下一节点 ID。
+     * 不循环、不写执行轨迹（调试步骤不应污染生产执行日志表）。
+     * 执行器返回 null 时按默认出边推导下一节点，与 {@link #execute} 保持一致。</p>
+     *
+     * @param definitionJson 微流定义 JSON（含 nodes / edges）
+     * @param variables      当前变量状态（执行后由结果快照替换）
+     * @param nodeId         要执行的节点 ID
+     * @return 节点执行结果（含下一节点 ID 与最新变量）
+     */
+    @SuppressWarnings("unchecked")
+    public MicroflowDebugger.DebugStepResult executeStep(String definitionJson,
+                                                         Map<String, Object> variables,
+                                                         String nodeId) {
+        try {
+            Map<String, Object> definition = objectMapper.readValue(definitionJson,
+                    new TypeReference<Map<String, Object>>() {});
+            List<Map<String, Object>> nodes = (List<Map<String, Object>>) definition.get("nodes");
+            List<Map<String, Object>> edges = (List<Map<String, Object>>) definition.get("edges");
+
+            // 构建边查找表 source → target（与 execute 一致）
+            Map<String, String> edgeMap = edges == null
+                    ? new HashMap<>()
+                    : edges.stream().collect(Collectors.toMap(
+                            e -> (String) e.get("source"),
+                            e -> (String) e.get("target"),
+                            (a, b) -> a));
+
+            Map<String, Object> node = nodes == null ? null : nodes.stream()
+                    .filter(n -> nodeId.equals(n.get("id")))
+                    .findFirst()
+                    .orElse(null);
+            if (node == null) {
+                throw new RuntimeException("节点不存在: " + nodeId);
+            }
+
+            String type = (String) node.get("type");
+            MicroflowNodeType nodeType = MicroflowNodeType.valueOf(type);
+            MicroflowNodeExecutor executor = findExecutor(nodeType);
+
+            // 以当前变量快照构造上下文（MicroflowContext 构造时会将入参复制到 variables）
+            MicroflowContext context = new MicroflowContext(variables);
+            String nextNodeId = executor != null ? executor.execute(node, context) : null;
+            // 执行器未指定下一节点且未终止 → 按默认边走
+            if (nextNodeId == null && !context.isTerminated()) {
+                nextNodeId = edgeMap.get(nodeId);
+            }
+
+            MicroflowDebugger.DebugStepResult result = new MicroflowDebugger.DebugStepResult();
+            result.setNodeId(nodeId);
+            result.setNodeType(type);
+            result.setVariables(context.getVariables());
+            result.setResult(context.getResult());
+            result.setNextNodeId(nextNodeId);
+            // 终止（RETURN/END）或无后续节点 → COMPLETED；否则 PAUSED
+            result.setStatus(context.isTerminated() || nextNodeId == null ? "COMPLETED" : "PAUSED");
+            return result;
+        } catch (MicroflowExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("微流单步执行失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 执行单个节点并记录轨迹（best-effort）。
      */
     private String executeNodeWithTrace(String executionId, Long microflowId, String microflowCode,

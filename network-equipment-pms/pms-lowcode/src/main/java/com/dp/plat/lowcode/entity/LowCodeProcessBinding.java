@@ -37,6 +37,14 @@ public class LowCodeProcessBinding extends BaseEntity {
     @NotBlank(message = "节点表单绑定不能为空")
     private String nodeFormBindings;
 
+    /**
+     * 任务回调 JSON: {nodeId: {onCreate: microflowCode, onAssign: microflowCode, onComplete: microflowCode}}。
+     *
+     * <p>由 {@code ProcessTaskCallbackListener} 在 Flowable 任务事件（create/assignment/complete）
+     * 时读取，触发对应微流。回调微流失败仅记日志，不阻断流程。</p>
+     */
+    private String taskCallbacks;
+
     /** 状态: ACTIVE/INACTIVE */
     @Size(max = 16, message = "状态长度不能超过 16 个字符")
     @Builder.Default
