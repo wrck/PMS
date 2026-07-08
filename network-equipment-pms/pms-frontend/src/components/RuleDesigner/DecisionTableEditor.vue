@@ -13,7 +13,8 @@
  * </pre>
  * 加载时若检测到旧格式（rows 内联 conditions/actions）会自动转换，保证向后兼容。</p>
  */
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import {
   type ActionColumn,
   type ConditionColumn,
@@ -23,6 +24,12 @@ import {
 } from '@/api/lowcode-rule'
 
 defineOptions({ name: 'DecisionTableEditor' })
+
+/** 有效的操作符集合，CSV 表头解析时校验 */
+const VALID_OPERATORS = new Set<DecisionOperator>(['EQ', 'NE', 'GT', 'GE', 'LT', 'LE', 'IN'])
+
+/** CSV 文件输入引用 */
+const csvFileInput = ref<HTMLInputElement | null>(null)
 
 const props = defineProps<{
   /** 决策表 definition JSON 字符串（v-model） */
@@ -233,6 +240,250 @@ function moveRow(idx: number, delta: number) {
   table.rows[target] = tmp
   emitChange()
 }
+
+// ===================== CSV 导入导出 =====================
+
+/**
+ * 单元格值序列化为 CSV 文本：
+ * - 数字/布尔/字符串原样输出；
+ * - 对象/数组用 JSON 字符串表示；
+ * - 含逗号、双引号或换行的值用双引号包裹，内部双引号转义为两个双引号。
+ */
+function toCsvCell(v: unknown): string {
+  let text: string
+  if (v === null || v === undefined) {
+    text = ''
+  } else if (typeof v === 'string') {
+    text = v
+  } else {
+    try {
+      text = JSON.stringify(v)
+    } catch {
+      text = String(v)
+    }
+  }
+  if (/[",\r\n]/.test(text)) {
+    return '"' + text.replace(/"/g, '""') + '"'
+  }
+  return text
+}
+
+/** 将决策表结构序列化为 CSV 字符串（含表头行 + 数据行） */
+function buildCsv(): string {
+  const headerCells: string[] = []
+  table.conditionColumns.forEach((c) => {
+    // 条件列表头格式：条件:字段名(操作符)
+    headerCells.push(toCsvCell(`条件:${c.field || ''}(${c.operator || 'EQ'})`))
+  })
+  table.actionColumns.forEach((a) => {
+    // 动作列表头格式：动作:字段名
+    headerCells.push(toCsvCell(`动作:${a.field || ''}`))
+  })
+  const lines: string[] = [headerCells.join(',')]
+  table.rows.forEach((row) => {
+    const cells: string[] = []
+    row.conditions.forEach((c) => cells.push(toCsvCell(c.value)))
+    row.actions.forEach((a) => cells.push(toCsvCell(a.value)))
+    lines.push(cells.join(','))
+  })
+  // 末尾换行（兼容 Excel 等表格软件）
+  return lines.join('\r\n') + '\r\n'
+}
+
+/** 解析一行 CSV 文本为单元格数组，支持双引号转义 */
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = []
+  let i = 0
+  const len = line.length
+  while (i <= len) {
+    if (i === len) {
+      // 行尾空单元格
+      cells.push('')
+      break
+    }
+    if (line[i] === '"') {
+      // 引号包裹的字段
+      let buf = ''
+      i++ // 跳过起始引号
+      while (i < len) {
+        if (line[i] === '"') {
+          if (i + 1 < len && line[i + 1] === '"') {
+            // 转义的双引号
+            buf += '"'
+            i += 2
+          } else {
+            // 字段结束引号
+            i++
+            break
+          }
+        } else {
+          buf += line[i]
+          i++
+        }
+      }
+      cells.push(buf)
+      // 跳过到下一个逗号或行尾
+      while (i < len && line[i] !== ',') i++
+      if (i < len && line[i] === ',') i++
+      else if (i >= len) break
+    } else {
+      // 普通字段（不含引号）
+      let j = i
+      while (j < len && line[j] !== ',') j++
+      cells.push(line.slice(i, j))
+      i = j
+      if (i < len && line[i] === ',') i++
+      else break
+    }
+  }
+  return cells
+}
+
+/**
+ * 将 CSV 文本拆分为行数组，处理引号内的换行（CRLF/LF）。
+ * 仅在引号未闭合时跨行合并。
+ */
+function splitCsvRows(text: string): string[] {
+  // 统一换行符为 \n
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const rows: string[] = []
+  let buf = ''
+  let inQuotes = false
+  for (let i = 0; i < normalized.length; i++) {
+    const ch = normalized[i]
+    if (ch === '"') {
+      // 判断是否为转义双引号
+      if (inQuotes && normalized[i + 1] === '"') {
+        buf += '""'
+        i++
+      } else {
+        inQuotes = !inQuotes
+        buf += ch
+      }
+    } else if (ch === '\n' && !inQuotes) {
+      rows.push(buf)
+      buf = ''
+    } else {
+      buf += ch
+    }
+  }
+  if (buf.length > 0) rows.push(buf)
+  // 过滤尾部空行
+  while (rows.length > 0 && rows[rows.length - 1].trim() === '') rows.pop()
+  return rows
+}
+
+/** 尝试把字符串解析为强类型值（数字/布尔/JSON），失败则返回原字符串 */
+function parseCellText(text: string): unknown {
+  const s = text.trim()
+  if (s === '') return ''
+  try {
+    return JSON.parse(s)
+  } catch {
+    return text
+  }
+}
+
+/**
+ * 解析 CSV 文本为决策表结构。
+ * 表头格式：`条件:字段名(操作符)` 或 `动作:字段名`，不区分的列视为动作列。
+ * 解析失败抛出 Error，由调用方捕获并提示。
+ */
+function parseCsv(text: string): DecisionTable {
+  const rows = splitCsvRows(text)
+  if (rows.length === 0) {
+    throw new Error('CSV 内容为空')
+  }
+  const headerCells = parseCsvLine(rows[0]).map((c) => c.trim())
+  const conditionColumns: ConditionColumn[] = []
+  const actionColumns: ActionColumn[] = []
+  const colTypes: ('cond' | 'act')[] = []
+  headerCells.forEach((h) => {
+    // 条件列：条件:field(op)
+    const condMatch = h.match(/^条件\s*:\s*(.*?)\s*\(\s*([A-Za-z]+)\s*\)\s*$/)
+    if (condMatch) {
+      const op = condMatch[2].toUpperCase() as DecisionOperator
+      conditionColumns.push({
+        field: condMatch[1] || '',
+        operator: VALID_OPERATORS.has(op) ? op : 'EQ'
+      })
+      colTypes.push('cond')
+      return
+    }
+    // 动作列：动作:field 或 纯字段名
+    const actMatch = h.match(/^动作\s*:\s*(.*)$/)
+    if (actMatch) {
+      actionColumns.push({ field: actMatch[1] || '' })
+    } else {
+      // 未识别的列当作动作列（保留原始文本作为字段名）
+      actionColumns.push({ field: h })
+    }
+    colTypes.push('act')
+  })
+  const dataRows: DecisionTable['rows'] = rows.slice(1).map((line) => {
+    const cells = parseCsvLine(line)
+    const conditions: { value: unknown }[] = []
+    const actions: { value: unknown }[] = []
+    colTypes.forEach((t, idx) => {
+      const raw = cells[idx] ?? ''
+      const value = parseCellText(raw)
+      if (t === 'cond') conditions.push({ value })
+      else actions.push({ value })
+    })
+    // 容错：列数与表头不一致时补齐
+    while (conditions.length < conditionColumns.length) conditions.push({ value: '' })
+    while (actions.length < actionColumns.length) actions.push({ value: '' })
+    return { conditions, actions }
+  })
+  return { hitPolicy: table.hitPolicy, conditionColumns, actionColumns, rows: dataRows }
+}
+
+/** 触发 CSV 下载（保留当前 hitPolicy） */
+function exportCsv() {
+  if (table.conditionColumns.length === 0 && table.actionColumns.length === 0) {
+    ElMessage.warning('当前决策表无列，无法导出')
+    return
+  }
+  const csv = buildCsv()
+  // 加 BOM 以便 Excel 正确识别 UTF-8
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `decision-table-${Date.now()}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+/** 触发文件选择器 */
+function onImportCsvClick() {
+  csvFileInput.value?.click()
+}
+
+/** 读取 CSV 文件并解析回填到决策表 */
+async function onImportCsvFile(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    const parsed = parseCsv(text)
+    syncing = true
+    table.conditionColumns.splice(0, table.conditionColumns.length, ...parsed.conditionColumns)
+    table.actionColumns.splice(0, table.actionColumns.length, ...parsed.actionColumns)
+    table.rows.splice(0, table.rows.length, ...parsed.rows)
+    syncing = false
+    emitChange()
+    ElMessage.success(`已导入 ${parsed.rows.length} 行规则`)
+  } catch (err) {
+    ElMessage.error('CSV 解析失败：' + (err instanceof Error ? err.message : String(err)))
+  } finally {
+    // 重置 value 以便重复选择同一文件可再次触发 change
+    target.value = ''
+  }
+}
 </script>
 
 <template>
@@ -251,6 +502,15 @@ function moveRow(idx: number, delta: number) {
       <el-button size="small" @click="addConditionColumn">+ 条件列</el-button>
       <el-button size="small" @click="addActionColumn">+ 动作列</el-button>
       <el-button size="small" type="primary" @click="addRow">+ 规则行</el-button>
+      <el-button size="small" @click="onImportCsvClick">导入 CSV</el-button>
+      <el-button size="small" @click="exportCsv">导出 CSV</el-button>
+      <input
+        ref="csvFileInput"
+        type="file"
+        accept=".csv,text/csv"
+        style="display: none"
+        @change="onImportCsvFile"
+      />
     </div>
 
     <!-- 决策表 -->
