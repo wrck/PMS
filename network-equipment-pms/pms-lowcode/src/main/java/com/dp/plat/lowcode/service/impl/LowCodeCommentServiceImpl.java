@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dp.plat.lowcode.dto.CommentTreeNode;
 import com.dp.plat.lowcode.entity.LowCodeComment;
 import com.dp.plat.lowcode.mapper.LowCodeCommentMapper;
 import com.dp.plat.lowcode.service.LowCodeCommentService;
@@ -12,8 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +38,34 @@ public class LowCodeCommentServiceImpl extends ServiceImpl<LowCodeCommentMapper,
                 .eq(LowCodeComment::getConfigType, configType)
                 .eq(LowCodeComment::getConfigId, configId)
                 .orderByAsc(LowCodeComment::getCreateTime));
+    }
+
+    @Override
+    public List<CommentTreeNode> listThreaded(String configType, Long configId) {
+        List<LowCodeComment> all = listByConfig(configType, configId);
+        if (all.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 按 parent_id 分组，null parent_id 归入 0L 作为顶层
+        Map<Long, List<LowCodeComment>> byParent = all.stream()
+                .collect(Collectors.groupingBy(c -> c.getParentId() != null ? c.getParentId() : 0L));
+        return buildTree(byParent, 0L);
+    }
+
+    /**
+     * 递归构建评论树（在内存中完成，不递归查询 DB）。
+     *
+     * @param byParent 按 parent_id 分组的评论映射
+     * @param parentId 当前父节点 ID（0L 表示顶层）
+     * @return 当前层级的树节点列表
+     */
+    private List<CommentTreeNode> buildTree(Map<Long, List<LowCodeComment>> byParent, Long parentId) {
+        List<LowCodeComment> children = byParent.getOrDefault(parentId, Collections.emptyList());
+        return children.stream().map(c -> {
+            CommentTreeNode node = new CommentTreeNode(c);
+            node.setReplies(buildTree(byParent, c.getId()));
+            return node;
+        }).collect(Collectors.toList());
     }
 
     @Override

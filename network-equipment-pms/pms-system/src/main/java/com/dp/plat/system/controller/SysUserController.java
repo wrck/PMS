@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * User management controller.
  */
@@ -42,6 +44,35 @@ public class SysUserController {
                 new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<SysUser>().like(username != null, SysUser::getUsername, username));
         return Result.ok(page);
+    }
+
+    /**
+     * 用户搜索（@提及自动补全用）。
+     *
+     * <p>仅需登录（无需 system:user:list 权限），按用户名/真实姓名模糊匹配，
+     * 返回最多 20 条，仅包含 id/username/realName 字段。</p>
+     */
+    @Operation(summary = "Search users for @mention autocomplete")
+    @GetMapping("/search")
+    public Result<List<SysUser>> search(@RequestParam(required = false) String keyword,
+                                        @RequestParam(defaultValue = "20") Integer limit) {
+        int safeLimit = limit == null || limit <= 0 ? 20 : Math.min(limit, 50);
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
+                .and(keyword != null && !keyword.isBlank(), w -> w
+                        .like(SysUser::getUsername, keyword)
+                        .or().like(SysUser::getRealName, keyword))
+                .eq(SysUser::getStatus, "0")
+                .last("LIMIT " + safeLimit);
+        List<SysUser> users = sysUserService.list(wrapper);
+        // 仅返回 @提及所需的字段，避免泄露 email/phone 等敏感信息
+        List<SysUser> safe = users.stream().map(u -> {
+            SysUser v = new SysUser();
+            v.setId(u.getId());
+            v.setUsername(u.getUsername());
+            v.setRealName(u.getRealName());
+            return v;
+        }).toList();
+        return Result.ok(safe);
     }
 
     @Operation(summary = "Get user by id")

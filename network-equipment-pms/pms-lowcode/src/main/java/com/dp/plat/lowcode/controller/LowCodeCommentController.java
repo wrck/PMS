@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.controller;
 
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.dto.CommentTreeNode;
 import com.dp.plat.lowcode.entity.LowCodeComment;
 import com.dp.plat.lowcode.service.LowCodeCommentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,14 @@ public class LowCodeCommentController {
     public Result<List<LowCodeComment>> list(@RequestParam String configType,
                                              @RequestParam Long configId) {
         return Result.ok(commentService.listByConfig(configType, configId));
+    }
+
+    @Operation(summary = "查询线程化评论（按 parent_id 构建树）")
+    @GetMapping("/threaded")
+    @PreAuthorize("hasAuthority('lowcode:comment:list')")
+    public Result<List<CommentTreeNode>> listThreaded(@RequestParam String configType,
+                                                      @RequestParam Long configId) {
+        return Result.ok(commentService.listThreaded(configType, configId));
     }
 
     @Operation(summary = "添加评论")

@@ -46,6 +46,29 @@ public class SysRoleController {
         return Result.ok(page);
     }
 
+    /**
+     * 全部角色列表（审批链配置等场景下拉用）。
+     *
+     * <p>仅需登录（无需 system:role:list 权限），返回 id/roleName/roleCode 字段，
+     * 供低代码审批链配置页选择 approverRole。</p>
+     */
+    @Operation(summary = "List all roles for dropdown")
+    @GetMapping("/all")
+    public Result<List<SysRole>> all() {
+        List<SysRole> roles = sysRoleService.list(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getStatus, "0")
+                .orderByAsc(SysRole::getId));
+        // 仅返回下拉所需字段
+        List<SysRole> safe = roles.stream().map(r -> {
+            SysRole v = new SysRole();
+            v.setId(r.getId());
+            v.setRoleName(r.getRoleName());
+            v.setRoleCode(r.getRoleCode());
+            return v;
+        }).toList();
+        return Result.ok(safe);
+    }
+
     @Operation(summary = "Get role by id")
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:list')")

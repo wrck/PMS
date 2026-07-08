@@ -22,8 +22,12 @@ public class LowCodePublishRecord {
     private Long configId;
     private String configCode;
     private Integer version;
-    /** DRAFT / SUBMITTED / APPROVED / REJECTED / PUBLISHED */
+    /** DRAFT / SUBMITTED / APPROVING / APPROVED / REJECTED / PUBLISHED */
     private String status;
+    /** 当前审批级别（多级审批链生效时从 1 开始递增；单步审批为 null） */
+    private Integer currentLevel;
+    /** 审批链 ID（关联 pms_lowcode_approval_chain，无审批链时为 null） */
+    private Long approvalChainId;
     private Long applicantId;
     private String applicant;
     private Long approverId;
