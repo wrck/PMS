@@ -107,6 +107,68 @@ export function getExecutionLogs(executionId: string) {
   return get<MicroflowExecutionLog[]>(`/api/lowcode/microflow-execution-log/${executionId}`)
 }
 
+// ===================== 微流断点调试 =====================
+
+/** 调试步骤状态 */
+export type DebugStepStatus = 'PAUSED' | 'COMPLETED' | 'FAILED'
+
+/** 调试会话 */
+export interface MicroflowDebugSession {
+  sessionId: string
+  microflowCode: string
+  microflowId?: number
+  definitionJson?: string
+  inputs?: Record<string, unknown>
+  breakpointNodeIds: string[]
+  variables: Record<string, unknown>
+  currentNodeId: string | null
+  result?: unknown
+  terminated: boolean
+  lastActivityTime?: number
+}
+
+/** 单步执行结果 */
+export interface MicroflowDebugStepResult {
+  nodeId: string | null
+  nodeType?: string
+  status: DebugStepStatus
+  variables: Record<string, unknown>
+  result?: unknown
+  nextNodeId: string | null
+  errorMessage?: string
+}
+
+/** 调试启动请求体 */
+export interface MicroflowDebugStartRequest {
+  inputs?: Record<string, unknown>
+  breakpointNodeIds?: string[]
+}
+
+/** 启动微流调试会话 */
+export function startMicroflowDebug(code: string, req: MicroflowDebugStartRequest) {
+  return post<MicroflowDebugSession>(`/api/lowcode/microflow/${code}/debug/start`, req)
+}
+
+/** 单步执行（step over） */
+export function stepOverMicroflowDebug(sessionId: string) {
+  return post<MicroflowDebugStepResult>(`/api/lowcode/microflow/debug/${sessionId}/step`)
+}
+
+/** 继续执行到下一断点 */
+export function continueMicroflowDebug(sessionId: string) {
+  return post<MicroflowDebugStepResult>(`/api/lowcode/microflow/debug/${sessionId}/continue`)
+}
+
+/** 查询当前变量状态 */
+export function getMicroflowDebugVariables(sessionId: string) {
+  return get<Record<string, unknown>>(`/api/lowcode/microflow/debug/${sessionId}/variables`)
+}
+
+/** 终止微流调试会话 */
+export function terminateMicroflowDebug(sessionId: string) {
+  return del<void>(`/api/lowcode/microflow/debug/${sessionId}`)
+}
+
 /** 查询某微流最近若干次执行日志（按时间倒序） */
 export function getRecentExecutionLogs(microflowId: number, limit = 10) {
   return get<MicroflowExecutionLog[]>(

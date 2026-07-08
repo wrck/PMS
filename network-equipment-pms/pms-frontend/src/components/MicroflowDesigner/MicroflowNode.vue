@@ -21,6 +21,10 @@ export interface MicroflowNodeData {
   status?: 'RUNNING' | 'SUCCESS' | 'FAILED'
   /** 是否被日志面板点击高亮 */
   highlighted?: boolean
+  /** 调试模式：是否设为断点 */
+  breakpoint?: boolean
+  /** 调试模式：是否为当前暂停节点 */
+  debugCurrent?: boolean
 }
 
 const props = defineProps<{ node: Node; graph?: unknown }>()
@@ -52,8 +56,10 @@ const META: Record<MicroflowNodeType, { icon: string; color: string }> = {
 
 const meta = computed(() => META[nodeData.value.type] || { icon: '•', color: '#909399' })
 
-/** 边框色：执行状态优先，未执行节点使用默认灰色边框 */
+/** 边框色：调试当前节点优先，其次执行状态，未执行节点使用默认灰色边框 */
 const borderColor = computed(() => {
+  // 调试中当前暂停节点 → 紫色突出
+  if (nodeData.value.debugCurrent) return '#9c27b0'
   const s = nodeData.value.status
   if (s === 'SUCCESS') return '#67c23a'
   if (s === 'FAILED') return '#f56c6c'
@@ -68,10 +74,13 @@ const borderColor = computed(() => {
     class="microflow-node"
     :class="{
       highlighted: nodeData.highlighted,
-      'is-running': nodeData.status === 'RUNNING'
+      'is-running': nodeData.status === 'RUNNING',
+      'is-debug-current': nodeData.debugCurrent
     }"
     :style="{ borderColor: borderColor }"
   >
+    <!-- 断点标记：右上角红点 -->
+    <span v-if="nodeData.breakpoint" class="mn-breakpoint" title="断点"></span>
     <span class="mn-icon" :style="{ background: meta.color }">{{ meta.icon }}</span>
     <span class="mn-label">{{ nodeData.label || nodeData.type }}</span>
     <span v-if="nodeData.status" class="mn-status" :class="`st-${nodeData.status.toLowerCase()}`"></span>
@@ -84,6 +93,7 @@ export default { name: 'MicroflowNode' }
 
 <style scoped lang="scss">
 .microflow-node {
+  position: relative;
   width: 100%;
   height: 100%;
   background: #fff;
@@ -104,6 +114,25 @@ export default { name: 'MicroflowNode' }
   // 执行中：蓝色脉冲光晕动画（边框颜色由内联 style 设为蓝色）
   &.is-running {
     animation: mn-border-pulse 1s infinite;
+  }
+
+  // 调试当前暂停节点：紫色脉冲光晕
+  &.is-debug-current {
+    animation: mn-debug-pulse 1s infinite;
+  }
+
+  // 断点标记：右上角红色实心圆
+  .mn-breakpoint {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f56c6c;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    z-index: 2;
   }
 
   .mn-icon {
@@ -164,6 +193,17 @@ export default { name: 'MicroflowNode' }
   }
   50% {
     box-shadow: 0 0 0 5px rgba(64, 158, 255, 0.15);
+  }
+}
+
+// 调试当前暂停节点紫色脉冲光晕
+@keyframes mn-debug-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(156, 39, 176, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(156, 39, 176, 0.15);
   }
 }
 </style>

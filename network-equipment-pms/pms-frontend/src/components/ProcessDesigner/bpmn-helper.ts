@@ -79,6 +79,8 @@ export const lowCodeModdleDescriptor = {
         { name: 'timeoutUnit', isAttr: true, type: 'String' },
         { name: 'timeoutHandler', isAttr: true, type: 'String' },
         { name: 'onCompleteMicroflow', isAttr: true, type: 'String' },
+        { name: 'onCreateMicroflow', isAttr: true, type: 'String' },
+        { name: 'onAssignMicroflow', isAttr: true, type: 'String' },
         { name: 'slaDuration', isAttr: true, type: 'String' },
         { name: 'slaUnit', isAttr: true, type: 'String' },
         { name: 'slaEscalationMicroflow', isAttr: true, type: 'String' }

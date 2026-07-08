@@ -20,12 +20,17 @@ import { Graph } from '@antv/x6'
 import { register } from '@antv/x6-vue-shape'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
+  continueMicroflowDebug,
   executeMicroflow,
   getExecutionLogs,
   getMicroflowList,
   getRecentExecutionLogs,
   saveMicroflow,
+  startMicroflowDebug,
+  stepOverMicroflowDebug,
+  terminateMicroflowDebug,
   type LowCodeMicroflow,
+  type MicroflowDebugStepResult,
   type MicroflowDefinition,
   type MicroflowExecutionLog,
   type MicroflowNode,
@@ -69,6 +74,29 @@ const connectorOptions = ref<LowCodeConnector[]>([])
 /** 执行输入对话框 */
 const execDialogVisible = ref(false)
 const execInputs = ref('')
+/** 对话框模式：execute（执行）/ debug（调试） */
+const dialogMode = ref<'execute' | 'debug'>('execute')
+
+// ===================== 断点调试状态 =====================
+
+/** 断点节点 ID 集合 */
+const breakpoints = ref<Set<string>>(new Set())
+/** 是否处于调试会话中 */
+const isDebugging = ref(false)
+/** 调试会话 ID */
+const debugSessionId = ref<string | null>(null)
+/** 当前变量快照 */
+const debugVariables = ref<Record<string, unknown>>({})
+/** 当前步骤状态：PAUSED/COMPLETED/FAILED */
+const debugStatus = ref<string | null>(null)
+/** 当前暂停节点 ID（下一个待执行节点） */
+const debugCurrentNodeId = ref<string | null>(null)
+/** 调试最终结果 */
+const debugResult = ref<unknown>(undefined)
+/** 变量监视抽屉可见性 */
+const debugVariablesVisible = ref(false)
+/** 调试操作进行中（禁用按钮防止重复点击） */
+const debugLoading = ref(false)
 
 const graphRef = shallowRef<Graph | null>(null)
 const canvasContainer = ref<HTMLDivElement>()
@@ -634,10 +662,12 @@ function openExec() {
     ElMessage.warning('请先保存微流')
     return
   }
+  dialogMode.value = 'execute'
   execInputs.value = ''
   execDialogVisible.value = true
 }
 
+/** 对话框确认：按 dialogMode 分发到执行或调试 */
 async function doExecute() {
   if (!currentMicroflow.value?.id) return
   let inputs: Record<string, unknown> = {}
@@ -648,6 +678,10 @@ async function doExecute() {
     return
   }
   execDialogVisible.value = false
+  if (dialogMode.value === 'debug') {
+    await doStartDebug(inputs)
+    return
+  }
   logCollapsed.value = false
   try {
     const result = await executeMicroflow(currentMicroflow.value.code, inputs)
@@ -661,6 +695,233 @@ async function doExecute() {
     // 执行失败时 FAILED 轨迹已记录，仍拉取展示
     await fetchLatestExecutionLogs(currentMicroflow.value.id)
   }
+}
+
+// ===================== 断点调试 =====================
+
+/** 切换选中节点的断点（无选中则提示） */
+function toggleBreakpoint() {
+  const nodeId = selectedNodeId.value
+  if (!nodeId) {
+    ElMessage.warning('请先选中一个节点')
+    return
+  }
+  toggleBreakpointAt(nodeId)
+}
+
+/** 切换指定节点的断点 */
+function toggleBreakpointAt(nodeId: string) {
+  const set = new Set(breakpoints.value)
+  if (set.has(nodeId)) {
+    set.delete(nodeId)
+  } else {
+    set.add(nodeId)
+  }
+  breakpoints.value = set
+  refreshDebugMarkers()
+}
+
+/** 打开调试输入对话框 */
+function openDebug() {
+  if (!currentMicroflow.value?.id) {
+    ElMessage.warning('请先保存微流')
+    return
+  }
+  if (isDebugging.value) {
+    ElMessage.warning('当前已在调试中，请先终止')
+    return
+  }
+  dialogMode.value = 'debug'
+  execInputs.value = ''
+  execDialogVisible.value = true
+}
+
+/** 启动调试会话 */
+async function doStartDebug(inputs: Record<string, unknown>) {
+  if (!currentMicroflow.value) return
+  debugLoading.value = true
+  try {
+    const session = await startMicroflowDebug(currentMicroflow.value.code, {
+      inputs,
+      breakpointNodeIds: Array.from(breakpoints.value)
+    })
+    debugSessionId.value = session.sessionId
+    isDebugging.value = true
+    debugVariables.value = session.variables || {}
+    debugStatus.value = 'PAUSED'
+    debugCurrentNodeId.value = session.currentNodeId
+    debugResult.value = undefined
+    debugVariablesVisible.value = true
+    clearAllNodeStatuses()
+    refreshDebugMarkers()
+    centerOnNode(session.currentNodeId)
+    ElMessage.success('调试会话已启动')
+  } catch (e) {
+    ElMessage.error('启动调试失败：' + (e as Error).message)
+  } finally {
+    debugLoading.value = false
+  }
+}
+
+/** 单步执行 */
+async function doStepOver() {
+  if (!debugSessionId.value || debugLoading.value) return
+  debugLoading.value = true
+  try {
+    const result = await stepOverMicroflowDebug(debugSessionId.value)
+    applyStepResult(result)
+  } catch (e) {
+    ElMessage.error('单步执行失败：' + (e as Error).message)
+  } finally {
+    debugLoading.value = false
+  }
+}
+
+/** 继续执行到下一断点 */
+async function doContinueDebug() {
+  if (!debugSessionId.value || debugLoading.value) return
+  debugLoading.value = true
+  try {
+    const result = await continueMicroflowDebug(debugSessionId.value)
+    applyStepResult(result)
+  } catch (e) {
+    ElMessage.error('继续执行失败：' + (e as Error).message)
+  } finally {
+    debugLoading.value = false
+  }
+}
+
+/** 终止调试会话 */
+async function doTerminateDebug() {
+  if (!debugSessionId.value) {
+    resetDebugState()
+    return
+  }
+  try {
+    await terminateMicroflowDebug(debugSessionId.value)
+  } catch {
+    // 忽略终止失败
+  }
+  resetDebugState()
+  ElMessage.info('调试会话已终止')
+}
+
+/** 重置调试本地状态 */
+function resetDebugState() {
+  isDebugging.value = false
+  debugSessionId.value = null
+  debugVariables.value = {}
+  debugStatus.value = null
+  debugCurrentNodeId.value = null
+  debugResult.value = undefined
+  debugLoading.value = false
+  refreshDebugMarkers()
+}
+
+/** 应用单步/继续结果到调试状态与画布 */
+function applyStepResult(result: MicroflowDebugStepResult) {
+  debugVariables.value = result.variables || {}
+  debugStatus.value = result.status
+  debugResult.value = result.result
+  // 已执行节点标记 SUCCESS / FAILED
+  setNodeStatus(result.nodeId, result.status === 'FAILED' ? 'FAILED' : 'SUCCESS')
+  if (result.status === 'COMPLETED' || result.status === 'FAILED') {
+    debugCurrentNodeId.value = null
+    if (result.status === 'COMPLETED') {
+      ElMessage.success('微流执行完成')
+    } else {
+      ElMessage.error('节点执行失败：' + (result.errorMessage || '未知错误'))
+    }
+  } else {
+    debugCurrentNodeId.value = result.nextNodeId
+  }
+  refreshDebugMarkers()
+  centerOnNode(debugCurrentNodeId.value)
+}
+
+/** 将调试标记（断点 / 当前节点）同步到画布所有节点 */
+function refreshDebugMarkers() {
+  const g = graphRef.value
+  if (!g) return
+  g.getNodes().forEach((node) => {
+    const data = (node.getData() || {}) as MicroflowNodeData
+    node.setData({
+      ...data,
+      breakpoint: breakpoints.value.has(data.nodeId),
+      debugCurrent: data.nodeId === debugCurrentNodeId.value
+    })
+  })
+}
+
+/** 设置某节点的执行状态 */
+function setNodeStatus(nodeId: string | null, status: string | null) {
+  const g = graphRef.value
+  if (!g || !nodeId) return
+  const cell = g.getCellById(nodeId)
+  if (cell && cell.isNode()) {
+    const data = (cell.getData() || {}) as MicroflowNodeData
+    cell.setData({ ...data, status: status || undefined })
+  }
+}
+
+/** 清空所有节点执行状态（调试开始时重置画布） */
+function clearAllNodeStatuses() {
+  const g = graphRef.value
+  if (!g) return
+  g.getNodes().forEach((node) => {
+    const data = (node.getData() || {}) as MicroflowNodeData
+    node.setData({ ...data, status: undefined })
+  })
+}
+
+/** 居中到指定节点 */
+function centerOnNode(nodeId: string | null) {
+  if (!nodeId) return
+  const g = graphRef.value
+  if (!g) return
+  const cell = g.getCellById(nodeId)
+  if (cell && cell.isNode()) g.centerCell(cell)
+}
+
+/** 调试状态标签类型 */
+const debugStatusTagType = computed<
+  'success' | 'warning' | 'danger' | 'info'
+>(() => {
+  if (debugStatus.value === 'COMPLETED') return 'success'
+  if (debugStatus.value === 'FAILED') return 'danger'
+  if (debugStatus.value === 'PAUSED') return 'warning'
+  return 'info'
+})
+
+/** 调试状态文案 */
+const debugStatusText = computed(() => {
+  if (!isDebugging.value) return ''
+  if (debugStatus.value === 'COMPLETED') return '已完成'
+  if (debugStatus.value === 'FAILED') return '失败'
+  if (debugStatus.value === 'PAUSED') return '已暂停'
+  return '调试中'
+})
+
+/** 变量监视面板：将变量转为可展示的键值对列表 */
+const debugVariableEntries = computed(() => {
+  return Object.entries(debugVariables.value).map(([k, v]) => ({
+    key: k,
+    value: formatDebugValue(v)
+  }))
+})
+
+/** 格式化调试变量值（对象/数组转 JSON，其余转字符串） */
+function formatDebugValue(v: unknown): string {
+  if (v === null) return 'null'
+  if (v === undefined) return 'undefined'
+  if (typeof v === 'object') {
+    try {
+      return JSON.stringify(v)
+    } catch {
+      return String(v)
+    }
+  }
+  return String(v)
 }
 
 /** 执行后取最新一次执行的 executionId，交给 ExecutionLogPanel 加载并高亮画布 */
@@ -807,6 +1068,41 @@ void getExecutionLogs
       <el-button size="small" @click="autoLayout">自动布局</el-button>
       <el-button size="small" @click="zoomToFit">缩放适配</el-button>
       <el-button size="small" type="warning" @click="deleteSelected">删除选中</el-button>
+
+      <!-- 调试工具组：断点切换 / 开始调试 / 单步 / 继续 / 终止 / 变量监视 -->
+      <el-divider direction="vertical" />
+      <el-button
+        size="small"
+        :disabled="!selectedNodeId"
+        @click="toggleBreakpoint"
+      >切换断点</el-button>
+      <template v-if="!isDebugging">
+        <el-button size="small" type="primary" @click="openDebug">开始调试</el-button>
+      </template>
+      <template v-else>
+        <el-tag :type="debugStatusTagType" size="small">{{ debugStatusText }}</el-tag>
+        <el-button
+          size="small"
+          type="primary"
+          :loading="debugLoading"
+          :disabled="debugStatus !== 'PAUSED'"
+          @click="doStepOver"
+        >单步</el-button>
+        <el-button
+          size="small"
+          type="success"
+          :loading="debugLoading"
+          :disabled="debugStatus !== 'PAUSED'"
+          @click="doContinueDebug"
+        >继续</el-button>
+        <el-button
+          size="small"
+          type="danger"
+          :loading="debugLoading"
+          @click="doTerminateDebug"
+        >终止</el-button>
+        <el-button size="small" @click="debugVariablesVisible = true">变量</el-button>
+      </template>
     </div>
 
     <!-- 主体：三栏 -->
@@ -863,8 +1159,12 @@ void getExecutionLogs
       @logs-loaded="onLogsLoaded"
     />
 
-    <!-- 执行输入对话框 -->
-    <el-dialog v-model="execDialogVisible" title="执行输入" width="600px">
+    <!-- 执行/调试输入对话框（按 dialogMode 切换标题与确认按钮文案） -->
+    <el-dialog
+      v-model="execDialogVisible"
+      :title="dialogMode === 'debug' ? '调试输入' : '执行输入'"
+      width="600px"
+    >
       <el-input
         v-model="execInputs"
         type="textarea"
@@ -873,9 +1173,46 @@ void getExecutionLogs
       />
       <template #footer>
         <el-button @click="execDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="doExecute">执行</el-button>
+        <el-button type="primary" @click="doExecute">
+          {{ dialogMode === 'debug' ? '开始调试' : '执行' }}
+        </el-button>
       </template>
     </el-dialog>
+
+    <!-- 调试变量监视抽屉：显示当前状态、当前节点、变量快照、最终结果 -->
+    <el-drawer
+      v-model="debugVariablesVisible"
+      title="变量监视"
+      direction="rtl"
+      size="440px"
+    >
+      <div class="debug-panel">
+        <div class="debug-section">
+          <span class="debug-label">状态：</span>
+          <el-tag :type="debugStatusTagType" size="small">{{ debugStatusText }}</el-tag>
+        </div>
+        <div v-if="debugCurrentNodeId" class="debug-section">
+          <span class="debug-label">当前节点：</span>
+          <span class="debug-value">{{ debugCurrentNodeId }}</span>
+        </div>
+        <div class="debug-section">
+          <div class="debug-label">变量：</div>
+          <el-table
+            :data="debugVariableEntries"
+            border
+            size="small"
+            empty-text="暂无变量"
+          >
+            <el-table-column prop="key" label="名称" width="140" />
+            <el-table-column prop="value" label="值" show-overflow-tooltip />
+          </el-table>
+        </div>
+        <div v-if="debugResult !== undefined" class="debug-section">
+          <div class="debug-label">结果：</div>
+          <pre class="debug-result">{{ formatDebugValue(debugResult) }}</pre>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -943,5 +1280,40 @@ void getExecutionLogs
   color: #303133;
   background: #fafafa;
   border-bottom: 1px solid #ebeef5;
+}
+
+// 调试变量监视抽屉内容样式
+.debug-panel {
+  padding: 0 12px;
+
+  .debug-section {
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #303133;
+  }
+
+  .debug-label {
+    font-weight: 600;
+    color: #606266;
+    margin-right: 4px;
+  }
+
+  .debug-value {
+    color: #303133;
+  }
+
+  .debug-result {
+    margin: 4px 0 0;
+    padding: 8px;
+    background: #f5f7fa;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #303133;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 240px;
+    overflow: auto;
+  }
 }
 </style>

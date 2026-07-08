@@ -64,6 +64,8 @@ const form = ref({
   timeoutUnit: 'HOURS',
   timeoutHandler: 'NOTIFY',
   onCompleteMicroflow: '',
+  onCreateMicroflow: '',
+  onAssignMicroflow: '',
   slaDuration: '',
   slaUnit: 'HOURS',
   slaEscalationMicroflow: ''
@@ -119,6 +121,8 @@ function loadFromElement() {
     form.value.timeoutUnit = getLowCodeProperty(bo, moddle, 'timeoutUnit') || 'HOURS'
     form.value.timeoutHandler = getLowCodeProperty(bo, moddle, 'timeoutHandler') || 'NOTIFY'
     form.value.onCompleteMicroflow = getLowCodeProperty(bo, moddle, 'onCompleteMicroflow')
+    form.value.onCreateMicroflow = getLowCodeProperty(bo, moddle, 'onCreateMicroflow')
+    form.value.onAssignMicroflow = getLowCodeProperty(bo, moddle, 'onAssignMicroflow')
     form.value.slaDuration = getLowCodeProperty(bo, moddle, 'slaDuration')
     form.value.slaUnit = getLowCodeProperty(bo, moddle, 'slaUnit') || 'HOURS'
     form.value.slaEscalationMicroflow = getLowCodeProperty(bo, moddle, 'slaEscalationMicroflow')
@@ -136,6 +140,8 @@ function resetLowCodeFields() {
   form.value.timeoutUnit = 'HOURS'
   form.value.timeoutHandler = 'NOTIFY'
   form.value.onCompleteMicroflow = ''
+  form.value.onCreateMicroflow = ''
+  form.value.onAssignMicroflow = ''
   form.value.slaDuration = ''
   form.value.slaUnit = 'HOURS'
   form.value.slaEscalationMicroflow = ''
@@ -286,6 +292,28 @@ function copyNodeId() {
 
         <!-- 回调微流 -->
         <el-divider content-position="left">回调微流</el-divider>
+        <el-form-item label="创建时回调微流 (onCreate)">
+          <el-select
+            v-model="form.onCreateMicroflow"
+            placeholder="任务创建时触发的微流"
+            filterable
+            clearable
+            @change="updateLowCode('onCreateMicroflow')"
+          >
+            <el-option v-for="m in microflows" :key="m.value" :label="m.label" :value="m.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="分配时回调微流 (onAssign)">
+          <el-select
+            v-model="form.onAssignMicroflow"
+            placeholder="任务分配时触发的微流"
+            filterable
+            clearable
+            @change="updateLowCode('onAssignMicroflow')"
+          >
+            <el-option v-for="m in microflows" :key="m.value" :label="m.label" :value="m.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="完成时回调微流 (onComplete)">
           <el-select
             v-model="form.onCompleteMicroflow"
