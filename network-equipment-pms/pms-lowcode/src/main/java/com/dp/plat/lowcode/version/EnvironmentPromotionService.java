@@ -363,6 +363,108 @@ public class EnvironmentPromotionService {
     }
 
     /**
+     * 检测导入配置包的冲突（批次5-T3）。
+     *
+     * <p>遍历配置包 items，对每个 item 查询目标环境是否已有同 configCode 的 ACTIVE 版本。
+     * 若有，记入冲突列表；若无，计入 noConflictCount。</p>
+     *
+     * @param packageJson      配置包 JSON 字符串
+     * @param targetEnvironment 目标环境
+     * @return 冲突检测结果
+     */
+    public com.dp.plat.lowcode.dto.ImportConflictDTO detectImportConflicts(String packageJson, String targetEnvironment) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(packageJson);
+            com.fasterxml.jackson.databind.JsonNode items = root.get("items");
+            if (items == null || !items.isArray()) {
+                throw new IllegalArgumentException("配置包格式错误：缺少 items 数组");
+            }
+            com.dp.plat.lowcode.dto.ConfigPackageDTO pkg = objectMapper.treeToValue(root, com.dp.plat.lowcode.dto.ConfigPackageDTO.class);
+            return detectConflictsForPackage(pkg, targetEnvironment);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("检测导入冲突失败", e);
+        }
+    }
+
+    private com.dp.plat.lowcode.dto.ImportConflictDTO detectConflictsForPackage(
+            com.dp.plat.lowcode.dto.ConfigPackageDTO pkg, String targetEnvironment) {
+        java.util.List<com.dp.plat.lowcode.dto.ImportConflictDTO.ConflictItem> conflicts = new java.util.ArrayList<>();
+        int noConflictCount = 0;
+        for (com.dp.plat.lowcode.dto.ConfigPackageDTO.PackageItem item : pkg.getItems()) {
+            com.dp.plat.lowcode.entity.LowCodeConfigVersion targetLatest = findLatestActive(targetEnvironment, item.getConfigCode());
+            if (targetLatest == null) {
+                noConflictCount++;
+                continue;
+            }
+            conflicts.add(com.dp.plat.lowcode.dto.ImportConflictDTO.ConflictItem.builder()
+                    .configType(item.getConfigType())
+                    .configId(item.getConfigId())
+                    .configCode(item.getConfigCode())
+                    .sourceVersion(item.getVersion())
+                    .targetVersion(targetLatest.getVersion())
+                    .targetChangeLog(targetLatest.getChangeLog())
+                    .targetCreateBy(targetLatest.getCreateBy())
+                    .targetCreateTime(targetLatest.getCreateTime() == null ? null : targetLatest.getCreateTime().toString())
+                    .resolution(null)
+                    .build());
+        }
+        return com.dp.plat.lowcode.dto.ImportConflictDTO.builder()
+                .sourceEnvironment(pkg.getSourceEnvironment())
+                .targetEnvironment(targetEnvironment)
+                .conflicts(conflicts)
+                .noConflictCount(noConflictCount)
+                .totalCount(pkg.getItems().size())
+                .build();
+    }
+
+    /**
+     * 按用户解决方案导入配置包（批次5-T3）。
+     *
+     * <p>根据每个冲突项的 resolution 决定导入行为：
+     * <ul>
+     *   <li>KEEP_SOURCE: 用源版本快照在目标环境创建新版本（覆盖式导入）</li>
+     *   <li>KEEP_TARGET: 跳过此项（保留目标版本）</li>
+     *   <li>SKIP: 跳过此项（不导入）</li>
+     *   <li>null 或其他: 默认按 KEEP_SOURCE 处理</li>
+     * </ul></p>
+     * <p>无冲突项直接按 KEEP_SOURCE 导入。</p>
+     *
+     * @param packageJson      配置包 JSON 字符串
+     * @param targetEnvironment 目标环境
+     * @param resolutions      冲突解决方案 Map<configCode, resolution>
+     */
+    public void importPackageWithResolution(String packageJson, String targetEnvironment,
+                                              java.util.Map<String, String> resolutions) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(packageJson);
+            com.dp.plat.lowcode.dto.ConfigPackageDTO pkg = objectMapper.treeToValue(root, com.dp.plat.lowcode.dto.ConfigPackageDTO.class);
+            pkg.setTargetEnvironment(targetEnvironment);
+
+            java.util.List<com.dp.plat.lowcode.dto.ConfigPackageDTO.PackageItem> itemsToImport = new java.util.ArrayList<>();
+            for (com.dp.plat.lowcode.dto.ConfigPackageDTO.PackageItem item : pkg.getItems()) {
+                String resolution = resolutions == null ? null : resolutions.get(item.getConfigCode());
+                if ("KEEP_TARGET".equals(resolution) || "SKIP".equals(resolution)) {
+                    log.info("跳过导入配置 '{}'，解决方式: {}", item.getConfigCode(), resolution);
+                    continue;
+                }
+                // KEEP_SOURCE 或无冲突项，加入导入列表
+                itemsToImport.add(item);
+            }
+            com.dp.plat.lowcode.dto.ConfigPackageDTO resolvedPkg = com.dp.plat.lowcode.dto.ConfigPackageDTO.builder()
+                    .sourceEnvironment(pkg.getSourceEnvironment())
+                    .targetEnvironment(targetEnvironment)
+                    .items(itemsToImport)
+                    .build();
+            configVersionService.importPackage(resolvedPkg);
+            log.info("按解决方案导入完成: 总 {} 项，实际导入 {} 项", pkg.getItems().size(), itemsToImport.size());
+        } catch (Exception e) {
+            throw new RuntimeException("按解决方案导入失败", e);
+        }
+    }
+
+    /**
      * 查询多个配置编码的晋升管道状态（批次5-T2）。
      *
      * <p>对每个 configCode 返回 DEV/TEST/PROD 三环境最新版本 + DEV→TEST/TEST→PROD 门禁状态。

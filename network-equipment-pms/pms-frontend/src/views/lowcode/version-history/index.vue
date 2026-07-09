@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import JsonTreeDiff from '@/components/JsonTreeDiff/index.vue'
 import PromotionPipeline from './PromotionPipeline.vue'
+import ImportConflictResolver from './ImportConflictResolver.vue'
 import {
   getVersionHistory,
   getVersionTree,
@@ -49,6 +50,10 @@ const tagForm = ref({ versionId: 0 as number, tag: '' })
 const pipelineCodesInput = ref('')
 /** 管道图传入的 configCodes 数组 */
 const pipelineCodes = ref<string[]>([])
+/** 冲突解决器对话框 */
+const conflictResolverVisible = ref(false)
+/** 冲突解决器目标环境 */
+const conflictResolverTargetEnv = ref('TEST')
 
 async function loadHistory() {
   if (!configId.value) {
@@ -174,15 +179,17 @@ async function onImport() {
     ElMessage.warning('请选择文件')
     return
   }
-  try {
-    await importPackage(importFile.value, importOverwrite.value)
-    ElMessage.success('导入成功')
-    importDialogVisible.value = false
-    importFile.value = null
-    if (configId.value) await loadHistory()
-  } catch (e) {
-    ElMessage.error('导入失败')
-  }
+  // 关闭导入对话框，打开冲突解决器（先检测冲突）
+  importDialogVisible.value = false
+  conflictResolverTargetEnv.value = 'TEST'
+  conflictResolverVisible.value = true
+}
+
+/** 冲突解决器导入完成回调 */
+async function onConflictResolved() {
+  conflictResolverVisible.value = false
+  importFile.value = null
+  if (configId.value) await loadHistory()
 }
 
 function onFileChange(file: any) {
@@ -540,6 +547,14 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
         <el-button type="primary" @click="submitTag">添加</el-button>
       </template>
     </el-dialog>
+
+    <!-- 导入冲突解决器（批次5-T3） -->
+    <ImportConflictResolver
+      v-model:visible="conflictResolverVisible"
+      :file="importFile"
+      :target-environment="conflictResolverTargetEnv"
+      @imported="onConflictResolved"
+    />
   </div>
 </template>
 

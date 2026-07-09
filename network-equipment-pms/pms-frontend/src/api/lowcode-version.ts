@@ -184,3 +184,60 @@ export function checkPromotionGate(params: {
 }) {
   return post<GateResult>('/api/lowcode/version/gate-check', params)
 }
+
+/** 导入冲突项 */
+export interface ImportConflictItem {
+  configType: string
+  configId: number
+  configCode: string
+  sourceVersion?: number
+  sourceChangeLog?: string
+  sourceCreateBy?: string
+  sourceCreateTime?: string
+  targetVersion?: number
+  targetChangeLog?: string
+  targetCreateBy?: string
+  targetCreateTime?: string
+  /** 解决方式: KEEP_SOURCE | KEEP_TARGET | SKIP（null 表示待选择） */
+  resolution?: string | null
+}
+
+/** 导入冲突检测结果 */
+export interface ImportConflictDTO {
+  sourceEnvironment: string
+  targetEnvironment: string
+  conflicts: ImportConflictItem[]
+  noConflictCount: number
+  totalCount: number
+}
+
+/** 检测导入冲突 */
+export function detectImportConflicts(packageJson: string, targetEnvironment: string) {
+  return post<ImportConflictDTO>('/api/lowcode/version/import-conflicts', {
+    packageJson,
+    targetEnvironment
+  })
+}
+
+/** 按解决方案导入配置包 */
+export function importWithResolution(
+  packageJson: string,
+  targetEnvironment: string,
+  resolutions: Record<string, string>
+) {
+  return post<void>('/api/lowcode/version/import-resolve', {
+    packageJson,
+    targetEnvironment,
+    resolutions
+  })
+}
+
+/** 读取上传文件为文本 */
+export function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsText(file)
+  })
+}

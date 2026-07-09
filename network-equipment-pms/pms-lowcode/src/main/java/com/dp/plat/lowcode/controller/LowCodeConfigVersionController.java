@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.controller;
 
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.dto.ImportConflictDTO;
 import com.dp.plat.lowcode.dto.PromotionPipelineDTO;
 import com.dp.plat.lowcode.dto.VersionDiffDTO;
 import com.dp.plat.lowcode.dto.VersionTreeNode;
@@ -139,6 +140,22 @@ public class LowCodeConfigVersionController {
         }
     }
 
+    @Operation(summary = "检测导入冲突（批次5-T3）")
+    @PostMapping("/import-conflicts")
+    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    public Result<ImportConflictDTO> detectImportConflicts(@RequestBody DetectConflictsRequest req) {
+        return Result.ok(promotionService.detectImportConflicts(req.getPackageJson(), req.getTargetEnvironment()));
+    }
+
+    @Operation(summary = "按解决方案导入配置包（批次5-T3）")
+    @PostMapping("/import-resolve")
+    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    @OperLog(title = "低代码配置版本", businessType = 1)
+    public Result<Void> importWithResolution(@RequestBody ImportResolveRequest req) {
+        promotionService.importPackageWithResolution(req.getPackageJson(), req.getTargetEnvironment(), req.getResolutions());
+        return Result.ok();
+    }
+
     @Operation(summary = "创建分支（批次5-T1）")
     @PostMapping("/branch")
     @PreAuthorize("hasAuthority('lowcode:version:branch')")
@@ -196,5 +213,21 @@ public class LowCodeConfigVersionController {
         @Schema(description = "源环境（DEV/TEST）") private String sourceEnvironment;
         @Schema(description = "目标环境（TEST/PROD）") private String targetEnvironment;
         @Schema(description = "配置编码列表") private List<String> configCodes;
+    }
+
+    @Data
+    @Schema(description = "检测导入冲突请求")
+    public static class DetectConflictsRequest {
+        @Schema(description = "配置包 JSON 字符串（zip 内 config.json 内容）") private String packageJson;
+        @Schema(description = "目标环境") private String targetEnvironment;
+    }
+
+    @Data
+    @Schema(description = "按解决方案导入请求")
+    public static class ImportResolveRequest {
+        @Schema(description = "配置包 JSON 字符串") private String packageJson;
+        @Schema(description = "目标环境") private String targetEnvironment;
+        @Schema(description = "冲突解决方案 Map<configCode, KEEP_SOURCE|KEEP_TARGET|SKIP>")
+        private java.util.Map<String, String> resolutions;
     }
 }
