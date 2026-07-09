@@ -1,6 +1,5 @@
 package com.dp.plat.lowcode.engine.microflow;
 
-import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.entity.LowCodeMicroflowExecutionLog;
 import com.dp.plat.lowcode.mapper.LowCodeMicroflowExecutionLogMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -33,7 +32,6 @@ public class MicroflowEngine {
     private final ObjectMapper objectMapper;
     private final List<MicroflowNodeExecutor> executors;
     private final LowCodeMicroflowExecutionLogMapper executionLogMapper;
-    private final LowCodeApmService apmService;
 
     /**
      * 执行微流。
@@ -48,7 +46,6 @@ public class MicroflowEngine {
     public MicroflowContext execute(Long microflowId, String microflowCode,
                                     String definitionJson, Map<String, Object> inputs) {
         String executionId = UUID.randomUUID().toString();
-        long apmStart = System.currentTimeMillis();
         try {
             Map<String, Object> definition = objectMapper.readValue(definitionJson,
                     new TypeReference<Map<String, Object>>() {});
@@ -90,13 +87,10 @@ public class MicroflowEngine {
                 }
                 currentNodeId = nextNodeId;
             }
-            apmService.recordMicroflowExecution(microflowCode, "SUCCESS", System.currentTimeMillis() - apmStart);
             return context;
         } catch (MicroflowExecutionException e) {
-            apmService.recordMicroflowExecution(microflowCode, "FAILED", System.currentTimeMillis() - apmStart);
             throw e;
         } catch (Exception e) {
-            apmService.recordMicroflowExecution(microflowCode, "FAILED", System.currentTimeMillis() - apmStart);
             throw new RuntimeException("微流执行失败", e);
         }
     }

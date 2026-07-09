@@ -2,7 +2,6 @@ package com.dp.plat.lowcode.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.connector.ConnectorCredentialEncryptor;
 import com.dp.plat.lowcode.engine.connector.ConnectorResult;
 import com.dp.plat.lowcode.engine.connector.DbConnectorExecutor;
@@ -41,7 +40,6 @@ public class LowCodeConnectorServiceImpl extends ServiceImpl<LowCodeConnectorMap
     private final FileConnectorExecutor fileConnectorExecutor;
     private final ConnectorCredentialEncryptor credentialEncryptor;
     private final ObjectMapper objectMapper;
-    private final LowCodeApmService apmService;
 
     @Override
     public boolean save(LowCodeConnector connector) {
@@ -79,25 +77,13 @@ public class LowCodeConnectorServiceImpl extends ServiceImpl<LowCodeConnectorMap
             throw new RuntimeException("连接器不存在: " + code);
         }
         String decryptedConfig = credentialEncryptor.decryptConfig(connector.getConfig());
-        long apmStart = System.currentTimeMillis();
-        ConnectorResult result;
-        try {
-            result = switch (connector.getType()) {
-                case "REST" -> restConnectorExecutor.execute(decryptedConfig, params);
-                case "DB" -> dbConnectorExecutor.execute(decryptedConfig, params);
-                case "MQ" -> mqConnectorExecutor.execute(decryptedConfig, params);
-                case "FILE" -> fileConnectorExecutor.execute(decryptedConfig, params);
-                default -> ConnectorResult.error(400, "未知连接器类型: " + connector.getType());
-            };
-        } catch (Exception e) {
-            apmService.recordConnectorCall(connector.getType(), "FAILED",
-                    System.currentTimeMillis() - apmStart);
-            throw e;
-        }
-        apmService.recordConnectorCall(connector.getType(),
-                result.isSuccess() ? "SUCCESS" : "ERROR",
-                System.currentTimeMillis() - apmStart);
-        return result;
+        return switch (connector.getType()) {
+            case "REST" -> restConnectorExecutor.execute(decryptedConfig, params);
+            case "DB" -> dbConnectorExecutor.execute(decryptedConfig, params);
+            case "MQ" -> mqConnectorExecutor.execute(decryptedConfig, params);
+            case "FILE" -> fileConnectorExecutor.execute(decryptedConfig, params);
+            default -> ConnectorResult.error(400, "未知连接器类型: " + connector.getType());
+        };
     }
 
     @Override
