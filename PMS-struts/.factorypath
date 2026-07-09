@@ -1,7 +1,7 @@
 <factorypath>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/postgresql/postgresql/42.7.0/postgresql-42.7.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="EXTJAR" id="D:\常规软件\QoderCode\workspace\PMS\PMS-struts\WebContent\WEB-INF\lib\Utils-v0.1.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="EXTJAR" id="D:\常规软件\AICoding\workspaces\PMS\PMS-struts\WebContent\WEB-INF\lib\Utils-v0.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/dp/plat/activiti-api-unifytask-patch/5.22.0.v20220902/activiti-api-unifytask-patch-5.22.0.v20220902.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/cn/hutool/hutool-http/5.8.34/hutool-http-5.8.34.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/cn/hutool/hutool-core/5.8.34/hutool-core-5.8.34.jar" enabled="true" runInBatchMode="false"/>
