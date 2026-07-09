@@ -48,7 +48,7 @@ public class LowCodeConfigVersionController {
         return Result.ok(configVersionService.getVersionHistory(configType, configId));
     }
 
-    @Operation(summary = "查询版本树（线性构建：v1 → v2 → v3 链式树）")
+    @Operation(summary = "查询版本树（按 parentVersionId 构建分支树，支持多分支）")
     @GetMapping("/tree")
     @PreAuthorize("hasAuthority('lowcode:version:list')")
     public Result<List<VersionTreeNode>> tree(@RequestParam String configType,
@@ -122,6 +122,26 @@ public class LowCodeConfigVersionController {
         }
     }
 
+    @Operation(summary = "创建分支（批次5-T1）")
+    @PostMapping("/branch")
+    @PreAuthorize("hasAuthority('lowcode:version:branch')")
+    @OperLog(title = "低代码配置版本", businessType = 1)
+    public Result<LowCodeConfigVersion> createBranch(@RequestBody CreateBranchRequest req) {
+        return Result.ok(configVersionService.createBranch(
+                req.getConfigType(), req.getConfigId(),
+                req.getBaseVersionId(), req.getBranchName(), req.getChangeLog()));
+    }
+
+    @Operation(summary = "为版本添加标签（批次5-T1）")
+    @PostMapping("/tag")
+    @PreAuthorize("hasAuthority('lowcode:version:tag')")
+    @OperLog(title = "低代码配置版本", businessType = 2)
+    public Result<LowCodeConfigVersion> addTag(@RequestBody AddTagRequest req) {
+        return Result.ok(configVersionService.addTag(
+                req.getConfigType(), req.getConfigId(),
+                req.getVersionId(), req.getTag()));
+    }
+
     /**
      * 导出配置包请求体
      */
@@ -132,5 +152,24 @@ public class LowCodeConfigVersionController {
         private List<String> configCodes;
         @Schema(description = "目标环境")
         private String targetEnvironment;
+    }
+
+    @Data
+    @Schema(description = "创建分支请求")
+    public static class CreateBranchRequest {
+        @Schema(description = "配置类型") private String configType;
+        @Schema(description = "配置 ID") private Long configId;
+        @Schema(description = "分支起点版本记录 ID") private Long baseVersionId;
+        @Schema(description = "新分支名（不能为 main）") private String branchName;
+        @Schema(description = "变更说明") private String changeLog;
+    }
+
+    @Data
+    @Schema(description = "添加标签请求")
+    public static class AddTagRequest {
+        @Schema(description = "配置类型") private String configType;
+        @Schema(description = "配置 ID") private Long configId;
+        @Schema(description = "版本记录 ID") private Long versionId;
+        @Schema(description = "要添加的标签") private String tag;
     }
 }

@@ -13,6 +13,9 @@ export interface LowCodeConfigVersion {
   environment: string
   createTime: string
   createBy: string
+  parentVersionId?: number | null
+  branch?: string
+  tags?: string
 }
 
 export interface DiffEntry {
@@ -28,7 +31,7 @@ export interface VersionDiffDTO {
   entries: DiffEntry[]
 }
 
-/** 版本树节点（线性构建：v1 → v2 → v3 链式树） */
+/** 版本树节点（按 parentVersionId 构建分支树，支持多分支） */
 export interface VersionTreeNode {
   version: number
   configCode: string
@@ -38,6 +41,10 @@ export interface VersionTreeNode {
   createBy: string
   createTime: string
   children: VersionTreeNode[]
+  versionId?: number
+  parentVersionId?: number | null
+  branch?: string
+  tags?: string
 }
 
 export function getVersionHistory(configType: string, configId: number) {
@@ -47,7 +54,7 @@ export function getVersionHistory(configType: string, configId: number) {
   })
 }
 
-/** 查询版本树（线性链式树：v1 为根，后续版本依次挂在前一版本下） */
+/** 查询版本树（按 parentVersionId 构建分支树，支持多分支） */
 export function getVersionTree(configType: string, configId: number) {
   return get<VersionTreeNode[]>('/api/lowcode/version/tree', {
     configType,
@@ -103,4 +110,25 @@ export function importPackage(file: File, overwrite: boolean) {
   formData.append('file', file)
   formData.append('overwrite', String(overwrite))
   return post('/api/lowcode/version/import-package', formData)
+}
+
+/** 创建分支（基于指定版本创建新分支） */
+export function createBranch(params: {
+  configType: string
+  configId: number
+  baseVersionId: number
+  branchName: string
+  changeLog?: string
+}) {
+  return post<LowCodeConfigVersion>('/api/lowcode/version/branch', params)
+}
+
+/** 为版本添加标签 */
+export function addTag(params: {
+  configType: string
+  configId: number
+  versionId: number
+  tag: string
+}) {
+  return post<LowCodeConfigVersion>('/api/lowcode/version/tag', params)
 }

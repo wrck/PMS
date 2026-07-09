@@ -11,6 +11,8 @@ import {
   rollbackVersion,
   exportPackageZip,
   importPackage,
+  createBranch,
+  addTag,
   type LowCodeConfigVersion,
   type VersionDiffDTO,
   type VersionTreeNode
@@ -37,6 +39,10 @@ const importFile = ref<File | null>(null)
 const importOverwrite = ref(false)
 /** 视图切换：列表 / 树形 / 管道图 */
 const activeTab = ref<'list' | 'tree' | 'pipeline'>('list')
+const branchDialogVisible = ref(false)
+const tagDialogVisible = ref(false)
+const branchForm = ref({ baseVersionId: 0 as number, branchName: '', changeLog: '' })
+const tagForm = ref({ versionId: 0 as number, tag: '' })
 
 async function loadHistory() {
   if (!configId.value) {
@@ -188,7 +194,8 @@ const treeProps = { children: 'children', label: 'version' }
 
 /** 树节点显示文案 */
 function treeNodeLabel(data: VersionTreeNode): string {
-  return `v${data.version}${data.changeLog ? ' · ' + data.changeLog : ''}`
+  const branchSuffix = data.branch && data.branch !== 'main' ? ` [${data.branch}]` : ''
+  return `v${data.version}${branchSuffix}${data.changeLog ? ' · ' + data.changeLog : ''}`
 }
 
 /** 环境标签颜色 */
@@ -196,6 +203,80 @@ function envTagType(env: string): EpTagType {
   if (env === 'PROD') return 'danger'
   if (env === 'TEST') return 'warning'
   return 'info'
+}
+
+/** 解析标签字符串为数组 */
+function parseTags(tags?: string): string[] {
+  if (!tags) return []
+  return tags.split(',').map(t => t.trim()).filter(Boolean)
+}
+
+/** 打开创建分支对话框 */
+function openBranchDialog(version: VersionTreeNode) {
+  branchForm.value = {
+    baseVersionId: version.versionId || 0,
+    branchName: '',
+    changeLog: ''
+  }
+  branchDialogVisible.value = true
+}
+
+/** 打开添加标签对话框 */
+function openTagDialog(version: VersionTreeNode) {
+  tagForm.value = {
+    versionId: version.versionId || 0,
+    tag: ''
+  }
+  tagDialogVisible.value = true
+}
+
+/** 提交创建分支 */
+async function submitBranch() {
+  if (!branchForm.value.branchName) {
+    ElMessage.warning('请输入分支名')
+    return
+  }
+  if (branchForm.value.branchName === 'main') {
+    ElMessage.warning('不能使用 main 作为分支名')
+    return
+  }
+  try {
+    await createBranch({
+      configType: configType.value,
+      configId: configId.value!,
+      baseVersionId: branchForm.value.baseVersionId,
+      branchName: branchForm.value.branchName,
+      changeLog: branchForm.value.changeLog
+    })
+    ElMessage.success('分支创建成功')
+    branchDialogVisible.value = false
+    await loadHistory()
+    if (activeTab.value !== 'list') await loadTree()
+  } catch (e) {
+    ElMessage.error('分支创建失败')
+  }
+}
+
+/** 提交添加标签 */
+async function submitTag() {
+  if (!tagForm.value.tag) {
+    ElMessage.warning('请输入标签')
+    return
+  }
+  try {
+    await addTag({
+      configType: configType.value,
+      configId: configId.value!,
+      versionId: tagForm.value.versionId,
+      tag: tagForm.value.tag
+    })
+    ElMessage.success('标签添加成功')
+    tagDialogVisible.value = false
+    await loadHistory()
+    if (activeTab.value !== 'list') await loadTree()
+  } catch (e) {
+    ElMessage.error('标签添加失败')
+  }
 }
 
 const hasDiff = computed(() => diffResult.value && diffResult.value.entries.length > 0)
@@ -338,12 +419,24 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
                     <el-tag size="small" :type="envTagType(data.environment)" class="tree-node-tag">
                       {{ data.environment }}
                     </el-tag>
+                    <el-tag
+                      v-for="t in parseTags(data.tags)"
+                      :key="t"
+                      size="small"
+                      type="success"
+                      effect="plain"
+                      class="tree-node-tag"
+                    >
+                      {{ t }}
+                    </el-tag>
                     <span class="tree-node-meta">
                       {{ data.createBy || '-' }} · {{ data.createTime?.replace('T', ' ').slice(0, 16) }}
                     </span>
                     <span class="tree-node-actions" @click.stop>
                       <el-button link type="primary" size="small" @click="diffSingle(data)">对比</el-button>
                       <el-button link type="warning" size="small" @click="rollback(data)">回滚</el-button>
+                      <el-button link type="success" size="small" @click="openBranchDialog(data)">分支</el-button>
+                      <el-button link type="info" size="small" @click="openTagDialog(data)">标签</el-button>
                     </span>
                   </div>
                 </template>
@@ -392,6 +485,35 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 创建分支对话框 -->
+    <el-dialog v-model="branchDialogVisible" title="创建分支" width="500px">
+      <el-form label-width="120px">
+        <el-form-item label="分支名">
+          <el-input v-model="branchForm.branchName" placeholder="如 hotfix-v1.2、feature-x" />
+        </el-form-item>
+        <el-form-item label="变更说明">
+          <el-input v-model="branchForm.changeLog" type="textarea" :rows="2" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="branchDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitBranch">创建</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 添加标签对话框 -->
+    <el-dialog v-model="tagDialogVisible" title="添加标签" width="500px">
+      <el-form label-width="120px">
+        <el-form-item label="标签">
+          <el-input v-model="tagForm.tag" placeholder="如 v1.0-release、审核通过" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="tagDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitTag">添加</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

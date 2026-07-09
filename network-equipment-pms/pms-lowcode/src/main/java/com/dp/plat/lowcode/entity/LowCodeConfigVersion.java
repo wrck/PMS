@@ -57,4 +57,34 @@ public class LowCodeConfigVersion extends BaseEntity {
     @Size(max = 16, message = "环境长度不能超过 16 个字符")
     @Builder.Default
     private String environment = "DEV";
+
+    /**
+     * 父版本 ID（批次5-T1：版本树分支支持）。
+     *
+     * <p>指向当前版本的父版本（base 版本），用于构建真正的分支树而非线性链。
+     * 为 null 表示根版本（首次创建的版本）。
+     * 借鉴 git 的 parent commit 模型：从 v2 分支出 v3a 与 v3b 时，两者 parentId 都指向 v2。</p>
+     */
+    private Long parentVersionId;
+
+    /**
+     * 分支名（批次5-T1：版本树分支支持）。
+     *
+     * <p>标识版本所属分支，默认 "main"。从某版本创建分支时，新版本 branch 为指定分支名。
+     * 同一 configType+configId 下可有多个分支，每个分支独立演进。
+     * 借鉴 git branch 模型，但简化为扁平分支（不支持 merge）。</p>
+     */
+    @Size(max = 64, message = "分支名长度不能超过 64 个字符")
+    @Builder.Default
+    private String branch = "main";
+
+    /**
+     * 标签（批次5-T1：版本树分支支持）。
+     *
+     * <p>可选的版本标签，用于标记里程碑（如 "v1.0-release"、"审核通过"、"生产发布"）。
+     * 与 git tag 不同，此处为简单字符串标签，不支持标签注释。
+     * 一个版本可有多个标签（逗号分隔），也可无标签。</p>
+     */
+    @Size(max = 128, message = "标签长度不能超过 128 个字符")
+    private String tags;
 }

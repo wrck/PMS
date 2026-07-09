@@ -24,10 +24,10 @@ public interface LowCodeConfigVersionService extends IService<LowCodeConfigVersi
     List<LowCodeConfigVersion> getVersionHistory(String configType, Long configId);
 
     /**
-     * 查询配置的版本树（线性构建：v1 → v2 → v3 链式树）。
+     * 查询配置的版本树（按 parentVersionId 构建真正的分支树，支持多分支，借鉴 git parent commit 模型）。
      *
-     * <p>当前版本实体无 parentVersionId 字段，按版本号升序线性构建父子关系：
-     * 最早版本为根，后续版本依次挂在前一版本下。</p>
+     * <p>每个版本通过 parentVersionId 指向其父版本，从根版本（parentVersionId 为 null）开始递归构建多分支树。
+     * 若数据中所有版本 parentVersionId 都为 null（旧数据未回填），降级为按版本号升序线性构建。</p>
      */
     List<VersionTreeNode> getVersionTree(String configType, Long configId);
 
@@ -63,6 +63,36 @@ public interface LowCodeConfigVersionService extends IService<LowCodeConfigVersi
      * 导入配置包（环境晋升）。
      */
     void importPackage(ConfigPackageDTO pkg);
+
+    /**
+     * 创建分支（批次5-T1）。
+     *
+     * <p>从指定版本创建新分支，新分支的首个版本基于该版本的快照。
+     * 借鉴 git branch：不修改原版本，仅在新版本上设置 branch 名与 parentVersionId。
+     *
+     * @param configType      配置类型
+     * @param configId        配置 ID
+     * @param baseVersionId   分支起点版本记录 ID
+     * @param branchName      新分支名（不能为 main，不能与已有分支重名）
+     * @param changeLog       变更说明
+     * @return 新创建的分支首版本
+     */
+    LowCodeConfigVersion createBranch(String configType, Long configId, Long baseVersionId,
+                                       String branchName, String changeLog);
+
+    /**
+     * 为版本添加标签（批次5-T1）。
+     *
+     * <p>向指定版本追加标签（逗号分隔），已存在的标签不重复添加。
+     * 借鉴 git tag，但简化为字符串标签（不支持注释）。
+     *
+     * @param configType 配置类型
+     * @param configId   配置 ID
+     * @param versionId  版本记录 ID
+     * @param tag        要添加的标签
+     * @return 更新后的版本
+     */
+    LowCodeConfigVersion addTag(String configType, Long configId, Long versionId, String tag);
 
     /**
      * 快照上下文。
