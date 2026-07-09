@@ -3,6 +3,7 @@ package com.dp.plat.lowcode.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.trigger.LowCodeTrigger;
 import com.dp.plat.lowcode.engine.trigger.QuartzTriggerExecutor;
 import com.dp.plat.lowcode.engine.trigger.TriggerExecutor;
@@ -38,6 +39,7 @@ public class LowCodeTriggerServiceImpl extends ServiceImpl<LowCodeTriggerMapper,
     private final QuartzTriggerExecutor quartzTriggerExecutor;
     private final LowCodeTriggerExecutionLogService executionLogService;
     private final ObjectMapper objectMapper;
+    private final LowCodeApmService apmService;
 
     @Override
     public Map<String, Object> executeTrigger(String code, Map<String, Object> data) {
@@ -74,6 +76,7 @@ public class LowCodeTriggerServiceImpl extends ServiceImpl<LowCodeTriggerMapper,
         } finally {
             long durationMs = System.currentTimeMillis() - startMs;
             recordExecutionLog(trigger, executionId, inputsJson, result, status, errorMessage, durationMs);
+            apmService.recordTriggerExecution(trigger.getType(), status, durationMs);
         }
         return result;
     }

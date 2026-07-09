@@ -137,6 +137,12 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-file</artifactId>
         </dependency>
+
+        <!-- Micrometer（APM 指标，批次5-T9） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

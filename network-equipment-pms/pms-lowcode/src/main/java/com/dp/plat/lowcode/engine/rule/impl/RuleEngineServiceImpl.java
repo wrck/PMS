@@ -1,5 +1,6 @@
 package com.dp.plat.lowcode.engine.rule.impl;
 
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.rule.LiteFlowExecutor;
 import com.dp.plat.lowcode.engine.rule.RuleEngineService;
 import com.googlecode.aviator.AviatorEvaluator;
@@ -30,7 +31,8 @@ import java.util.Map;
  *   <li>ALL / COLLECT：匹配全部行，返回所有命中 actions 列表</li>
  * </ul></p>
  *
- * <p>表达式：通过 Aviator 求值。LiteFlow：通过 {@link LiteFlowExecutor} 执行 EL 表达式。</p>
+ * <p>表达式：通过 Aviator 求值。LiteFlow：通过 {@link LiteFlowExecutor} 执行 EL 表达式。
+ * 所有执行路径记录 APM 指标（批次5-T9）。</p>
  */
 @Slf4j
 @Service
@@ -40,20 +42,26 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final LiteFlowExecutor liteFlowExecutor;
+    private final LowCodeApmService apmService;
 
     @Override
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> executeDecisionTable(String definition, Map<String, Object> facts) {
-        List<Map<String, Object>> hitActions = new ArrayList<>();
+        long apmStart = System.currentTimeMillis();
         try {
             Map<String, Object> table = objectMapper.readValue(definition, Map.class);
+            List<Map<String, Object>> result;
             // 新格式优先：包含 conditionColumns 或 hitPolicy
             if (table.containsKey("conditionColumns") || table.containsKey("hitPolicy")) {
-                return executeNewFormat(table, facts);
+                result = executeNewFormat(table, facts);
+            } else {
+                // 旧格式回退：rows.conditions/actions 内联
+                result = executeLegacyFormat(table, facts);
             }
-            // 旧格式回退：rows.conditions/actions 内联
-            return executeLegacyFormat(table, facts);
+            apmService.recordRuleExecution("DECISION_TABLE", "SUCCESS", System.currentTimeMillis() - apmStart);
+            return result;
         } catch (Exception e) {
+            apmService.recordRuleExecution("DECISION_TABLE", "FAILED", System.currentTimeMillis() - apmStart);
             throw new RuntimeException("决策表执行失败", e);
         }
     }
@@ -210,11 +218,27 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
     @Override
     public Object executeExpression(String expression, Map<String, Object> context) {
-        return AviatorEvaluator.execute(expression, context);
+        long apmStart = System.currentTimeMillis();
+        try {
+            Object result = AviatorEvaluator.execute(expression, context);
+            apmService.recordRuleExecution("EXPRESSION", "SUCCESS", System.currentTimeMillis() - apmStart);
+            return result;
+        } catch (Exception e) {
+            apmService.recordRuleExecution("EXPRESSION", "FAILED", System.currentTimeMillis() - apmStart);
+            throw e;
+        }
     }
 
     @Override
     public Object executeLiteFlow(String el, Map<String, Object> context) {
-        return liteFlowExecutor.execute(el, context);
+        long apmStart = System.currentTimeMillis();
+        try {
+            Object result = liteFlowExecutor.execute(el, context);
+            apmService.recordRuleExecution("LITEFLOW", "SUCCESS", System.currentTimeMillis() - apmStart);
+            return result;
+        } catch (Exception e) {
+            apmService.recordRuleExecution("LITEFLOW", "FAILED", System.currentTimeMillis() - apmStart);
+            throw e;
+        }
     }
 }
