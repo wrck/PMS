@@ -228,7 +228,7 @@
 #### 数据契约
 
 > 字段分级:C=写入(创建/更新)、I=查询输入、D=展示输出。兼具者并列标注。
-> 表名取自实际数据访问层 DML;模板三表(pmclosed_loop_quesnaire*)表名为推断,见 [待澄清]。
+> 表名取自实际数据访问层 DML;模板三表(pmclosed_loop_quesnaire*)表名为推断,[暂定决策:采纳推断表名为规范表名,后续正向工程前需检索 iBatis sql-map 配置或 DDL 脚本最终确认,若与推断不符则回写 spec,见 AMB-005-01]。
 > 本域遵循 DATA-REUSE-01:复用既有数据契约,不新增表;外部域表仅在引用点列出。
 
 ##### 3.1 pm_project_warranty_callback(项目维保回访记录)
@@ -357,7 +357,7 @@
 | quesEvaResult | INTEGER | C/D | 行级评测结果:-1标记 |
 | createdTime | TIMESTAMP | C/D | 创建时间 |
 
-##### 3.7 pm_closed_loop_quesnaire(问卷模板头)[表名为推断,待澄清]
+##### 3.7 pm_closed_loop_quesnaire(问卷模板头)[暂定决策:表名为推断,待 DDL 最终确认,见 AMB-005-01]
 
 | 字段 | 类型 | 分级 | 说明 |
 |------|------|------|------|
@@ -376,7 +376,7 @@
 | updatedPerson | VARCHAR | C/D | 更新人 |
 | updatedTime | TIMESTAMP | C/D | 更新时间 |
 
-##### 3.8 pm_closed_loop_quesnaire_line(问卷模板行/题目)[表名为推断,待澄清]
+##### 3.8 pm_closed_loop_quesnaire_line(问卷模板行/题目)[暂定决策:表名为推断,待 DDL 最终确认,见 AMB-005-01]
 
 | 字段 | 类型 | 分级 | 说明 |
 |------|------|------|------|
@@ -396,7 +396,7 @@
 | updatedPerson | VARCHAR | C/D | 更新人 |
 | updatedTime | TIMESTAMP | C/D | 更新时间 |
 
-##### 3.9 pm_closed_loop_quesnaire_opt(问卷模板选项)[表名为推断,待澄清]
+##### 3.9 pm_closed_loop_quesnaire_opt(问卷模板选项)[暂定决策:表名为推断,待 DDL 最终确认,见 AMB-005-01]
 
 | 字段 | 类型 | 分级 | 说明 |
 |------|------|------|------|
@@ -461,10 +461,12 @@
 - 假设数据库支持会话级临时表,统计后自动清理
 - 假设用户具备稳定网络连接与浏览器支持
 
-### Open Questions / 待澄清事项
+### Resolved Questions / 已澄清事项(原 Open Questions / 待澄清事项)
 
-1. **问卷模板三表表名**:`pm_closed_loop_quesnaire` / `pm_closed_loop_quesnaire_line` / `pm_closed_loop_quesnaire_opt` 的精确表名未在已读数据访问层 DML 中直接出现(实体与 Service 引用存在),标注为推断。[待澄清]
-2. **两套回访体系关系**:`pm_cl_callback`(独立回访工作流)与 `pm_cl_evaluation_header`(PM 闭环内嵌回访节点 evaluationType=3)两套回访数据是否并存、是否迁移、字段映射关系不明。[待澄清]
-3. **续保意向取值不一致**:`ProjectWarrantyCallback.renewalIntention` 注释为 0否/1有/2待定,但 `ProjectWarrantyCallbackVO.canEdit` 注释提及"续保状态为3"可编辑(当前实现已禁用恒返回 false)。值 3 的语义不明。[待澄清]
-4. **闭环网关 evaluationResult=2/3 语义**:PM 闭环流程定义中 flow20(evaluationResult==2 "已通过回访")、flow26(==2 "服务经理和项目经理一致")、flow27(==3 "服务经理与项目经理一致且通过回访")存在同一值 2 在不同网关的不同含义,且与常量定义(1/-1/-3)不完全对应,完整流转语义需结合服务实现确认。[待澄清]
-5. **pmClosedLoopResultType 完整语义**:入口注释列出 30/40/41/42/50/51,但代码中实际使用 0/1/2/30/40,41/42/50/51 的触发路径与界面映射不明。[待澄清]
+> 以下 5 条 spec 内部待澄清事项已正向固化,完整决策记录见 `clarify.md`(共 18 条 AMB,含 B/A 类)。决策结论统一以 [暂定决策:...] 形式标注,后续正向工程确认后可升级为最终决策。
+
+1. **问卷模板三表表名**:`pm_closed_loop_quesnaire` / `pm_closed_loop_quesnaire_line` / `pm_closed_loop_quesnaire_opt` 的精确表名未在已读数据访问层 DML 中直接出现(实体与 Service 引用存在),标注为推断。[暂定决策:采纳当前推断表名作为规范表名;后续正向工程前需检索 `PmClosedLoopQuesnaire*` 对应的 iBatis sql-map 配置或 DDL 脚本最终确认,若与推断不符则回写 spec,见 AMB-005-01]
+2. **两套回访体系关系**:`pm_cl_callback`(独立回访工作流)与 `pm_cl_evaluation_header`(PM 闭环内嵌回访节点 evaluationType=3)两套回访数据是否并存、是否迁移、字段映射关系不明。[暂定决策:确认两套体系并存服役,业务边界按"独立回访申请审批流"vs"PM 闭环内嵌回访环节"划分;两套数据不迁移、不归并,统计口径需按数据来源分区统计禁止跨体系混算,同一项目可在两套体系各产生回访记录但统计视图需标注来源避免重复计数,见 AMB-005-02]
+3. **续保意向取值不一致**:`ProjectWarrantyCallback.renewalIntention` 注释为 0否/1有/2待定,但 `ProjectWarrantyCallbackVO.canEdit` 注释提及"续保状态为3"可编辑(当前实现已禁用恒返回 false)。值 3 的语义不明。[暂定决策:值 3 显式标注为"已废弃枚举(历史'已续保'语义,当前无写入路径)";spec 枚举仅保留 0否/1有/2待定(-1 未填写仅查询用);`canEdit()` 中"续保状态=3"逻辑已禁用,不再纳入有效取值域,见 AMB-005-03]
+4. **闭环网关 evaluationResult=2/3 语义**:PM 闭环流程定义中 flow20(evaluationResult==2 "已通过回访")、flow26(==2 "服务经理和项目经理一致")、flow27(==3 "服务经理与项目经理一致且通过回访")存在同一值 2 在不同网关的不同含义,且与常量定义(1/-1/-3)不完全对应,完整流转语义需结合服务实现确认。[暂定决策:值 2/3/-2 明确标注为"流程内部网关态,非评测结果业务枚举",由 BPMN 网关表达式在流程流转中计算得出,不写入 `pm_cl_evaluation_header.evaluationResult` 业务字段;业务枚举仍以 FR-2.3.7 的 1=同意/-1=不同意/-3=无法回访 为准;网关态语义:2=已通过回访、3=服务经理与项目经理一致且通过回访、-2=驳回任务办理(结束),见 AMB-005-04]
+5. **pmClosedLoopResultType 完整语义**:入口注释列出 30/40/41/42/50/51,但代码中实际使用 0/1/2/30/40,41/42/50/51 的触发路径与界面映射不明。[暂定决策:spec 仅记录实际生效取值 0=流程图查看、1=提交问卷并计分、2=基于已有问卷完成节点、30=回访表单(入口取表单/提交后跳看分页)、40=闭环表单(入口取表单/提交后跳看分页);41/42/50/51 标注为"注释残留,代码未实现,视为废弃";=1/=2 语义依赖当前节点角色与流程上下文(回访人员节点 vs 工程人员节点),见 AMB-005-05/07/08]
