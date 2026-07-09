@@ -2,11 +2,13 @@ package com.dp.plat.lowcode.controller;
 
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.lowcode.dto.PromotionPipelineDTO;
 import com.dp.plat.lowcode.dto.VersionDiffDTO;
 import com.dp.plat.lowcode.dto.VersionTreeNode;
 import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.service.LowCodeConfigVersionService;
 import com.dp.plat.lowcode.version.EnvironmentPromotionService;
+import com.dp.plat.lowcode.version.PromotionGateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +41,7 @@ public class LowCodeConfigVersionController {
 
     private final LowCodeConfigVersionService configVersionService;
     private final EnvironmentPromotionService promotionService;
+    private final PromotionGateService gateService;
 
     @Operation(summary = "查询版本历史")
     @GetMapping("/history")
@@ -85,6 +88,20 @@ public class LowCodeConfigVersionController {
                                  @RequestBody List<String> configCodes) {
         promotionService.promote(targetEnvironment, configCodes);
         return Result.ok();
+    }
+
+    @Operation(summary = "查询晋升管道状态（批次5-T2）")
+    @GetMapping("/pipeline")
+    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    public Result<List<PromotionPipelineDTO>> pipeline(@RequestParam List<String> configCodes) {
+        return Result.ok(promotionService.getPipelineStatus(configCodes));
+    }
+
+    @Operation(summary = "晋升门禁预检（批次5-T2，不实际晋升）")
+    @PostMapping("/gate-check")
+    @PreAuthorize("hasAuthority('lowcode:version:promote')")
+    public Result<PromotionGateService.GateResult> gateCheck(@RequestBody GateCheckRequest req) {
+        return Result.ok(gateService.check(req.getSourceEnvironment(), req.getTargetEnvironment(), req.getConfigCodes()));
     }
 
     @Operation(summary = "导出配置包")
@@ -171,5 +188,13 @@ public class LowCodeConfigVersionController {
         @Schema(description = "配置 ID") private Long configId;
         @Schema(description = "版本记录 ID") private Long versionId;
         @Schema(description = "要添加的标签") private String tag;
+    }
+
+    @Data
+    @Schema(description = "晋升门禁预检请求")
+    public static class GateCheckRequest {
+        @Schema(description = "源环境（DEV/TEST）") private String sourceEnvironment;
+        @Schema(description = "目标环境（TEST/PROD）") private String targetEnvironment;
+        @Schema(description = "配置编码列表") private List<String> configCodes;
     }
 }

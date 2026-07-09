@@ -13,9 +13,11 @@ import {
   importPackage,
   createBranch,
   addTag,
+  getPipelineStatus,
   type LowCodeConfigVersion,
   type VersionDiffDTO,
-  type VersionTreeNode
+  type VersionTreeNode,
+  type PromotionPipelineDTO
 } from '@/api/lowcode-version'
 import type { EpTagType } from '@/types'
 
@@ -43,6 +45,10 @@ const branchDialogVisible = ref(false)
 const tagDialogVisible = ref(false)
 const branchForm = ref({ baseVersionId: 0 as number, branchName: '', changeLog: '' })
 const tagForm = ref({ versionId: 0 as number, tag: '' })
+/** 管道图 configCodes 输入 */
+const pipelineCodesInput = ref('')
+/** 管道图传入的 configCodes 数组 */
+const pipelineCodes = ref<string[]>([])
 
 async function loadHistory() {
   if (!configId.value) {
@@ -78,6 +84,16 @@ async function onTabChange(tab: string) {
   if ((tab === 'tree' || tab === 'pipeline') && versionTree.value.length === 0 && configId.value) {
     await loadTree()
   }
+}
+
+/** 加载管道图 */
+async function loadPipeline() {
+  const codes = pipelineCodesInput.value.split(',').map(s => s.trim()).filter(Boolean)
+  if (codes.length === 0) {
+    ElMessage.warning('请输入至少一个配置编码')
+    return
+  }
+  pipelineCodes.value = codes
 }
 
 async function showDiff() {
@@ -444,10 +460,20 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
             </el-tab-pane>
 
             <el-tab-pane label="晋升管道图" name="pipeline">
+              <div style="margin-bottom: 12px">
+                <el-input
+                  v-model="pipelineCodesInput"
+                  placeholder="输入配置编码（逗号分隔），如 entity_user,entity_role"
+                  style="width: 400px"
+                />
+                <el-button type="primary" size="small" @click="loadPipeline" style="margin-left: 8px">
+                  加载管道
+                </el-button>
+              </div>
               <PromotionPipeline
-                :versions="versionList"
-                @diff="diffSingle"
-                @rollback="rollback"
+                :config-codes="pipelineCodes"
+                @diff="(p: { configCode: string; version: number }) => doDiff(p.version - 1, p.version)"
+                @promoted="() => loadHistory()"
               />
             </el-tab-pane>
           </el-tabs>

@@ -66,6 +66,7 @@ public class EnvironmentPromotionService {
     private final LowCodeMicroflowService microflowService;
     private final LowCodeConnectorService connectorService;
     private final LowCodeRuleService ruleService;
+    private final com.dp.plat.lowcode.version.PromotionGateService gateService;
 
     /**
      * 晋升配置到目标环境。
@@ -359,5 +360,78 @@ public class EnvironmentPromotionService {
         } catch (Exception e) {
             throw new RuntimeException("导入配置包失败", e);
         }
+    }
+
+    /**
+     * 查询多个配置编码的晋升管道状态（批次5-T2）。
+     *
+     * <p>对每个 configCode 返回 DEV/TEST/PROD 三环境最新版本 + DEV→TEST/TEST→PROD 门禁状态。
+     * 借鉴 OutSystems LifeTime 的管道图视图。</p>
+     *
+     * @param configCodes 配置编码列表
+     * @return 管道状态列表（每个 configCode 一项）
+     */
+    public List<com.dp.plat.lowcode.dto.PromotionPipelineDTO> getPipelineStatus(List<String> configCodes) {
+        List<com.dp.plat.lowcode.dto.PromotionPipelineDTO> result = new java.util.ArrayList<>();
+        for (String code : configCodes) {
+            com.dp.plat.lowcode.entity.LowCodeConfigVersion dev = findLatestActive("DEV", code);
+            com.dp.plat.lowcode.entity.LowCodeConfigVersion test = findLatestActive("TEST", code);
+            com.dp.plat.lowcode.entity.LowCodeConfigVersion prod = findLatestActive("PROD", code);
+
+            com.dp.plat.lowcode.version.PromotionGateService.GateResult devToTest =
+                    gateService.check("DEV", "TEST", java.util.Collections.singletonList(code));
+            com.dp.plat.lowcode.version.PromotionGateService.GateResult testToProd =
+                    gateService.check("TEST", "PROD", java.util.Collections.singletonList(code));
+
+            result.add(com.dp.plat.lowcode.dto.PromotionPipelineDTO.builder()
+                    .configCode(code)
+                    .configType(dev != null ? dev.getConfigType()
+                            : test != null ? test.getConfigType()
+                            : prod != null ? prod.getConfigType() : null)
+                    .devVersion(toBrief(dev))
+                    .testVersion(toBrief(test))
+                    .prodVersion(toBrief(prod))
+                    .devToTestGate(toGateBrief(devToTest))
+                    .testToProdGate(toGateBrief(testToProd))
+                    .build());
+        }
+        return result;
+    }
+
+    private com.dp.plat.lowcode.dto.PromotionPipelineDTO.VersionBrief toBrief(
+            com.dp.plat.lowcode.entity.LowCodeConfigVersion v) {
+        if (v == null) return null;
+        return com.dp.plat.lowcode.dto.PromotionPipelineDTO.VersionBrief.builder()
+                .version(v.getVersion())
+                .status(v.getStatus())
+                .changeLog(v.getChangeLog())
+                .createBy(v.getCreateBy())
+                .createTime(v.getCreateTime() == null ? null : v.getCreateTime().toString())
+                .build();
+    }
+
+    private com.dp.plat.lowcode.dto.PromotionPipelineDTO.GateBrief toGateBrief(
+            com.dp.plat.lowcode.version.PromotionGateService.GateResult r) {
+        java.util.List<String> summaries = new java.util.ArrayList<>();
+        for (com.dp.plat.lowcode.version.PromotionGateService.GateFailure f : r.getFailures()) {
+            summaries.add(f.getRule() + ": " + f.getReason());
+            if (summaries.size() >= 3) break;
+        }
+        return com.dp.plat.lowcode.dto.PromotionPipelineDTO.GateBrief.builder()
+                .passed(r.isPassed())
+                .failureCount(r.getFailures().size())
+                .failureSummaries(summaries)
+                .build();
+    }
+
+    private com.dp.plat.lowcode.entity.LowCodeConfigVersion findLatestActive(String env, String code) {
+        java.util.List<com.dp.plat.lowcode.entity.LowCodeConfigVersion> list = configVersionService.list(
+                new LambdaQueryWrapper<com.dp.plat.lowcode.entity.LowCodeConfigVersion>()
+                        .eq(com.dp.plat.lowcode.entity.LowCodeConfigVersion::getEnvironment, env)
+                        .eq(com.dp.plat.lowcode.entity.LowCodeConfigVersion::getConfigCode, code)
+                        .eq(com.dp.plat.lowcode.entity.LowCodeConfigVersion::getStatus, "ACTIVE")
+                        .orderByDesc(com.dp.plat.lowcode.entity.LowCodeConfigVersion::getVersion)
+                        .last("LIMIT 1"));
+        return list.isEmpty() ? null : list.get(0);
     }
 }

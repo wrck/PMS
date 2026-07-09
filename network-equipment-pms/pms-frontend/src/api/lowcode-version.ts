@@ -132,3 +132,55 @@ export function addTag(params: {
 }) {
   return post<LowCodeConfigVersion>('/api/lowcode/version/tag', params)
 }
+
+/** 版本简报（管道图中的环境列卡片用） */
+export interface VersionBrief {
+  version: number
+  status: string
+  changeLog?: string
+  createBy?: string
+  createTime?: string
+}
+
+/** 门禁简报 */
+export interface GateBrief {
+  passed: boolean
+  failureCount: number
+  failureSummaries: string[]
+}
+
+/** 晋升管道状态（单 configCode 一项） */
+export interface PromotionPipelineDTO {
+  configCode: string
+  configType?: string
+  devVersion?: VersionBrief | null
+  testVersion?: VersionBrief | null
+  prodVersion?: VersionBrief | null
+  devToTestGate: GateBrief
+  testToProdGate: GateBrief
+}
+
+/** 门禁检查结果（后端 PromotionGateService.GateResult 对应） */
+export interface GateResult {
+  passed: boolean
+  failures: Array<{ rule: string; reason: string; configCode?: string }>
+  sourceEnvironment: string
+  targetEnvironment: string
+  configCodes: string[]
+}
+
+/** 查询晋升管道状态（多个 configCode） */
+export function getPipelineStatus(configCodes: string[]) {
+  return get<PromotionPipelineDTO[]>('/api/lowcode/version/pipeline', {
+    configCodes: configCodes.join(',')
+  })
+}
+
+/** 晋升门禁预检（不实际晋升） */
+export function checkPromotionGate(params: {
+  sourceEnvironment: string
+  targetEnvironment: string
+  configCodes: string[]
+}) {
+  return post<GateResult>('/api/lowcode/version/gate-check', params)
+}
