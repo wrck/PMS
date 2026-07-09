@@ -1,298 +1,262 @@
 <!--
-Sync Impact Report
-- Version change: (uninitialized template) → 1.0.0
-- Rationale: First formal ratification. Establishes all architectural principles
-  derived from reverse-engineering of the existing PMS codebase plus three
-  mandatory spec-governance principles (SPEC-TYPE-01, DATA-REUSE-01,
-  AMBIGUITY-01). A clean-slate founding adoption constitutes a MAJOR (1.0.0).
-- Added principles (all new):
-  - I. Layered Architecture With One-Way Dependency
-  - II. Module-Per-Feature Vertical Slicing
-  - III. Service-Layer Transaction Boundary
-  - IV. External System Isolation via Dedicated Datasources
-  - V. BPM-Driven Business Processes
-  - VI. Spec Technology-Agnosticism (SPEC-TYPE-01) [MANDATORY USER]
-  - VII. Database Schema As Contract (DATA-REUSE-01) [MANDATORY USER]
-  - VIII. Ambiguity Resolution Discipline (AMBIGUITY-01) [MANDATORY USER]
-- Added sections:
-  - "Technical Constraints & Cross-Cutting Standards" (Section 2)
-  - "Development Workflow & Quality Gates" (Section 3)
-- Removed sections: none
-- Templates requiring updates:
-  - .specify/templates/plan-template.md            ✅ compatible (Constitution Check gate already generic)
-  - .specify/templates/spec-template.md            ✅ compatible (Success Criteria already tech-agnostic)
-  - .specify/templates/tasks-template.md           ✅ compatible (phase model unchanged)
-  - .specify/templates/checklist-template.md       ✅ compatible
-- Follow-up TODOs: none. All placeholders resolved.
+同步影响报告
+- 版本变更:(未初始化模板) → 1.0.0
+- 理由:首次正式批准。建立由 PMS 现有代码库逆向推导出的全部架构原则,
+  叠加三条强制规范原则(SPEC-TYPE-01、DATA-REUSE-01、AMBIGUITY-01)。
+  全新奠基性采纳属于 MAJOR(1.0.0)。
+- 新增原则(全部为新增):
+  - I. 单向依赖的分层架构
+  - II. 按特性纵向切分模块
+  - III. Service 层事务边界
+  - IV. 外部系统经独立数据源隔离
+  - V. BPM 驱动业务流程
+  - VI. Spec 技术栈无关(SPEC-TYPE-01)[用户强制]
+  - VII. 数据库表结构视为契约(DATA-REUSE-01)[用户强制]
+  - VIII. 歧义处理纪律(AMBIGUITY-01)[用户强制]
+- 新增章节:
+  - "技术约束与横切标准"(第 2 节)
+  - "开发流程与质量门禁"(第 3 节)
+- 删除章节:无
+- 待同步模板:
+  - .specify/templates/plan-template.md            ✅ 兼容(Constitution Check 门禁本就通用)
+  - .specify/templates/spec-template.md            ✅ 兼容(成功标准本就技术无关)
+  - .specify/templates/tasks-template.md           ✅ 兼容(阶段模型未变)
+  - .specify/templates/checklist-template.md       ✅ 兼容
+- 后续待办:无。所有占位符已填实。
 -->
 
-# PMS Constitution
+# PMS 项目宪法
 
-## Core Principles
+## 核心原则
 
-### I. Layered Architecture With One-Way Dependency
+### I. 单向依赖的分层架构
 
-The system MUST follow a four-tier layered architecture: Presentation (Action)
-→ Service → Data Access (DAO) → Persistence Resources (SQL mappings).
-Dependencies MUST flow strictly downward. Upper layers MAY depend on lower
-layers; lower layers MUST NOT depend on upper layers.
+系统 MUST 遵循四层架构:表现层(Action)→ 服务层(Service)→ 数据访问层
+(DAO)→ 持久化资源(SQL 映射)。依赖 MUST 严格向下流动;上层 MAY 依赖
+下层,下层 MUST NOT 依赖上层。
 
-- Presentation layer MUST NOT contain business logic; it assembles parameters
-  and forwards views only.
-- Service layer MUST NOT reach into the web container (no `ServletAction`,
-  `ServletContext`, `HttpServletRequest` usage). Any such access is a layering
-  violation and MUST be pushed back to the presentation layer or an injected
-  port.
-- DAO layer MUST NOT orchestrate business rules; it exposes data operations
-  only.
-- Cross-layer shortcuts (e.g., Service calling `ServletActionContext`) are
-  forbidden in new code and flagged as refactor targets in existing code.
+- 表现层 MUST NOT 包含业务逻辑;仅负责组装参数与转发视图。
+- 服务层 MUST NOT 触达 Web 容器(禁止使用 `ServletAction`、
+  `ServletContext`、`HttpServletRequest`)。任何此类访问均属分层违规,
+  MUST 回退至表现层或通过注入端口处理。
+- DAO 层 MUST NOT 编排业务规则;仅暴露数据操作。
+- 跨层捷径(如 Service 调用 `ServletActionContext`)在新代码中禁止,
+  现有代码中标记为重构目标。
 
-**Rationale**: The reverse-engineered codebase shows repeated layering leaks
-(Service invoking `ServletActionContext.getServletContext()`), which couples
-business logic to the web container and blocks testability and reuse.
+**理由**:逆向分析显示代码中反复出现分层泄漏(Service 调用
+`ServletActionContext.getServletContext()`),将业务逻辑耦合到 Web 容器,
+阻碍可测试性与复用。
 
-### II. Module-Per-Feature Vertical Slicing
+### II. 按特性纵向切分模块
 
-Functionality MUST be organized into vertical feature modules under
-`com.dp.plat.{module}`. Each module owns its own `action`, `service`, `dao`,
-`bean`, `vo`, `param`, `util`, and `exception` subpackages. Cross-module
-reuse goes through the module's published Service interface, not its internal
-DAOs or beans.
+功能 MUST 按 `com.dp.plat.{module}` 下的纵向特性模块组织。每个模块拥有
+自身的 `action`、`service`、`dao`、`bean`、`vo`、`param`、`util`、
+`exception` 子包。跨模块复用 MUST 经由模块对外发布的 Service 接口,不得
+直连其内部 DAO 或 bean。
 
-- Naming suffixes are mandatory: `*Action`, `*Service` / `*ServiceImpl`,
-  `*Dao` / `*DaoImpl`, `*VO` (view objects), `*Param` (query parameters),
-  `*Bean` / entity (persistence).
-- Build modules (`pms-struts`, `pms-activiti`, `pms-ext-d365`, `pms-security`,
-  `pms-rules`, `pms-ext-fp`, `core`) map to deployment units; feature modules
-  map to source packages. Both axes are valid; do not conflate them.
-- A feature module MUST NOT import another feature module's `*DaoImpl` or
-  `*ServiceImpl` internals directly.
+- 命名后缀强制约定:`*Action`、`*Service` / `*ServiceImpl`、
+  `*Dao` / `*DaoImpl`、`*VO`(视图对象)、`*Param`(查询参数)、
+  `*Bean` / 实体(持久化)。
+- 构建模块(`pms-struts`、`pms-activiti`、`pms-ext-d365`、`pms-security`、
+  `pms-rules`、`pms-ext-fp`、`core`)对应部署单元;特性模块对应源码包。
+  两个维度均有效,不得混为一谈。
+- 特性模块 MUST NOT 直接 import 另一特性模块的 `*DaoImpl` 或
+  `*ServiceImpl` 内部实现。
 
-**Rationale**: The existing codebase already follows this convention
-consistently; codifying it preserves navigability and prevents entanglement.
+**理由**:现有代码库已一致遵循此约定;将其成文化以保持可导航性并防止
+纠缠。
 
-### III. Service-Layer Transaction Boundary
+### III. Service 层事务边界
 
-Transactions MUST be declared at the Service layer. Exactly ONE transaction
-strategy MAY be active for a given module. Mixing `@Transactional`,
-`TransactionProxyFactoryBean` prefix-matching, and manual
-`startTransaction/commit/rollback` within the same code path is forbidden.
+事务 MUST 在 Service 层声明。同一模块同一时刻 MAY 仅启用一种事务策略。
+在同一调用路径内混用 `@Transactional`、`TransactionProxyFactoryBean`
+前缀匹配与手动 `startTransaction/commit/rollback` 是禁止的。
 
-- New code MUST use declarative `@Transactional` on Service methods.
-- Manual transaction control inside DAOs is forbidden in new code; existing
-  manual-transaction DAOs are flagged as refactor targets.
-- Read-only operations SHOULD declare `@Transactional(readOnly = true)`.
+- 新代码 MUST 在 Service 方法上使用声明式 `@Transactional`。
+- DAO 内手动事务控制在新增代码中禁止;现存手动事务 DAO 标记为重构目标。
+- 只读操作 SHOULD 声明 `@Transactional(readOnly = true)`。
 
-**Rationale**: The codebase currently runs three competing transaction
-mechanisms, creating ambiguous boundaries and transaction-leak risk.
+**理由**:代码库当前并行三套事务机制,边界模糊,存在事务泄漏风险。
 
-### IV. External System Isolation via Dedicated Datasources
+### IV. 外部系统经独立数据源隔离
 
-Every external system integration (SAP, D365, CRM, OA, EHR, ITR, SMS, SSE,
-License, etc.) MUST be isolated behind a dedicated datasource and a dedicated
-SQL-map configuration. Integrations MUST be consumable through a Service
-interface so that downstream code is unaware of the source system.
+每个外部系统集成(SAP、D365、CRM、OA、EHR、ITR、SMS、SSE、License 等)
+MUST 隔离在独立数据源与独立 SQL-map 配置之后。集成 MUST 经由 Service
+接口对外暴露,使下游代码无感知源系统。
 
-- All external datasources MUST use a pooled connection provider. Use of
-  `DriverManagerDataSource` (no pooling) is forbidden in new integrations.
-- Cross-system data joins MUST be performed in the Service layer, never via
-  cross-database SQL.
-- Synchronization with external systems MUST run through the scheduled-task
-  (`job`) package, not inline in request-handling actions.
+- 所有外部数据源 MUST 使用池化连接提供者。新增集成禁止使用
+  `DriverManagerDataSource`(无池化)。
+- 跨系统数据连接 MUST 在 Service 层完成,禁止跨库 SQL。
+- 与外部系统的同步 MUST 经由定时任务(`job`)包执行,不得内联在
+  请求处理 Action 中。
 
-**Rationale**: Existing external datasources use non-pooled
-`DriverManagerDataSource`, a performance and resource-exhaustion risk under
-load.
+**理由**:现有外部数据源使用无池化的 `DriverManagerDataSource`,在高负载
+下存在性能与资源耗尽风险。
 
-### V. BPM-Driven Business Processes
+### V. BPM 驱动业务流程
 
-Long-running, multi-step, multi-actor business flows (presales, callback,
-subcontract, PM closed-loop, etc.) MUST be modeled and executed as BPMN
-processes via the Activiti engine, not as ad-hoc status fields and inline
-state machines.
+长流程、多步骤、多角色的业务流(售前、回访、分包、PM 闭环等)MUST 以
+BPMN 流程经 Activiti 引擎建模与执行,不得以临时状态字段和内联状态机
+替代。
 
-- A status transition that requires human approval, assignment, or async
-  notification MUST be a BPMN task, not a numeric status string.
-- Inline `new Thread()` for async work is forbidden; async work MUST go
-  through the engine, the scheduler, or a managed executor.
+- 需要人工审批、指派或异步通知的状态流转 MUST 为 BPMN 任务,不得是
+  数字状态字符串。
+- 异步工作禁止内联 `new Thread()`;异步工作 MUST 经由引擎、调度器或
+  受管执行器处理。
 
-**Rationale**: The codebase mixes BPMN-driven flows with hand-rolled status
-strings and raw `new Thread()` calls, producing inconsistent and unobservable
-process behavior.
+**理由**:代码库将 BPMN 驱动流程与手写状态字符串、裸 `new Thread()`
+混用,导致流程行为不一致且不可观测。
 
-### VI. Spec Technology-Agnosticism (SPEC-TYPE-01)
+### VI. Spec 技术栈无关(SPEC-TYPE-01)
 
-Feature specifications (spec.md) MUST be technology-agnostic. A spec MUST NOT
-bind a requirement to a concrete framework annotation, class name, or library
-identifier (e.g., "use `@Transactional`", "extend `BaseAction`", "call
-`SqlMapClientTemplate`"). Specs describe WHAT the system must do and the
-qualities it must have, not HOW a specific framework implements it.
+特性规格说明书(spec.md)MUST 技术栈无关。规格 MUST NOT 将需求绑定到具体
+框架注解、类名或库标识符(如"使用 `@Transactional`"、"继承
+`BaseAction`"、"调用 `SqlMapClientTemplate`")。规格描述系统必须做什么
+及其必须具备的质量属性,而非特定框架如何实现。
 
-- Technology choices are recorded in plan.md (Technical Context), not spec.md.
-- Acceptance criteria and success criteria MUST be measurable and
-  framework-neutral.
-- If a spec must reference an existing capability, it MUST name the capability
-  by behavior (e.g., "the persistence layer"), not by class.
+- 技术选型记录在 plan.md(技术上下文)中,而非 spec.md。
+- 验收标准与成功标准 MUST 可度量且框架无关。
+- 若规格必须引用既有能力,MUST 按行为命名(如"持久化层"),不得按
+  类名命名。
 
-**Rationale**: The current system is tightly coupled to Struts2 / iBatis /
-Hibernate. Binding specs to those names would freeze the debt and block any
-future migration. Specs must remain portable.
+**理由**:现有系统紧耦合于 Struts2 / iBatis / Hibernate。将规格绑定到
+这些名称将冻结技术债并阻断任何未来迁移。规格必须保持可移植性。
 
-### VII. Database Schema As Contract (DATA-REUSE-01)
+### VII. 数据库表结构视为契约(DATA-REUSE-01)
 
-The existing database table structure is treated as a contract. A new system
-or feature MUST reuse existing tables by default. Any change to table
-structure (rename, drop, type change, constraint change) or any decision to
-NOT reuse an existing table MUST be captured as an explicit spec item with
-rationale.
+现有数据库表结构视为契约。新系统或新特性 MUST 默认复用既有表。任何对表
+结构的变更(重命名、删除、类型变更、约束变更)或任何不复用既有表的决策
+MUST 作为显式规格条目记录并附理由。
 
-- New features MUST prefer mapping to existing tables over creating new ones.
-- Schema-affecting decisions MUST be recorded in the spec's "Key Entities"
-  section and revisited during `/clarify`.
-- Breaking schema changes require a dedicated migration task in tasks.md.
+- 新特性 MUST 优先映射既有表,而非新建表。
+- 影响表结构的决策 MUST 记录在规格的"关键实体"章节,并在 `/clarify`
+  阶段复核。
+- 破坏性表结构变更要求在 tasks.md 中单列迁移任务。
 
-**Rationale**: Multiple production integrations and reports depend on the
-current schema. Treating it as a contract prevents silent breakage and forces
-deliberate migration planning.
+**理由**:多个生产集成与报表依赖当前表结构。将其视为契约可防止隐性
+破坏并强制进行有意识的迁移规划。
 
-### VIII. Ambiguity Resolution Discipline (AMBIGUITY-01)
+### VIII. 歧义处理纪律(AMBIGUITY-01)
 
-Every ambiguity discovered during specification, planning, or implementation
-MUST be recorded during the `/clarify` phase with (a) the question, (b) the
-decision taken, and (c) the rationale/evidence supporting the decision.
-Unresolved ambiguities MUST NOT be silently resolved in code.
+在规格、计划或实现阶段发现的每个歧义 MUST 在 `/clarify` 阶段记录,内容
+包含:(a) 问题、(b) 所做决策、(c) 支撑决策的理由/证据。未决歧义 MUST NOT
+在代码中被静默处理。
 
-- Ambiguities discovered after `/clarify` MUST trigger a supplementary
-  clarification record before implementation proceeds.
-- "NEEDS CLARIFICATION" markers in specs MUST be resolved or explicitly
-  deferred with a stated owner and due trigger.
-- No speculative features: if a requirement is ambiguous, ask; do not assume.
+- `/clarify` 之后发现的歧义 MUST 在实现继续前触发补充澄清记录。
+- 规格中的"NEEDS CLARIFICATION"标记 MUST 被解决或显式延期,并注明负责人
+  与触发时机。
+- 禁止臆造特性:需求不明确时询问,不得假设。
 
-**Rationale**: The reverse-engineering pass surfaced several "待澄清" items
-(logging conventions, deployment topology, sharding). Leaving such gaps
-unrecorded causes divergent implementations across modules.
+**理由**:逆向分析过程中浮现了多处"待澄清"项(日志规范、部署拓扑、分库
+分表)。此类缺口若不记录,将导致各模块实现分叉。
 
-## Technical Constraints & Cross-Cutting Standards
+## 技术约束与横切标准
 
-### Logging
+### 日志
 
-- Logging facade MUST be SLF4J. Implementation MUST be Log4j2. Direct use of
-  `System.out`, `e.printStackTrace()`, or concrete logging implementations in
-  business code is forbidden.
-- Service and DAO layers MUST log at meaningful boundaries (entry/exit of
-  significant operations, caught exceptions). The current sparse logging
-  pattern is a known debt to be retired.
-- SQL logging in development uses p6spy; production MUST NOT log full SQL at
-  INFO level.
+- 日志门面 MUST 为 SLF4J,实现 MUST 为 Log4j2。业务代码中禁止直接使用
+  `System.out`、`e.printStackTrace()` 或具体日志实现。
+- Service 与 DAO 层 MUST 在有意义的边界(关键操作的入口/出口、捕获的
+  异常)记录日志。当前稀疏日志模式为已知技术债,应予以消除。
+- 开发环境的 SQL 日志使用 p6spy;生产环境 MUST NOT 以 INFO 级别输出
+  完整 SQL。
 
-### Security
+### 安全
 
-- The three coexisting security frameworks (Spring Security, CAS, Shiro) are
-  legacy. New authentication/authorization work MUST target a single chosen
-  framework per module and MUST NOT introduce hard-coded credentials
-  (e.g., the `admin/admin` test account in `applicationContext-security.xml`
-  is forbidden in any non-test artifact).
-- User identity MUST be accessed through the `UserContext` abstraction, not
-  by reading the HTTP session directly from Service/DAO code.
+- 并存的三套安全框架(Spring Security、CAS、Shiro)为遗留。新增认证/
+  授权工作 MUST 面向每个模块选定的单一框架,且 MUST NOT 引入硬编码凭据
+  (例如 `applicationContext-security.xml` 中的 `admin/admin` 测试账号
+  在任何非测试制品中禁止存在)。
+- 用户身份 MUST 经由 `UserContext` 抽象访问,不得在 Service/DAO 代码中
+  直接读取 HTTP 会话。
 
-### Caching
+### 缓存
 
-- MyBatis second-level cache is enabled for new mapper modules. Hibernate
-  second-level cache (ehcache) is confined to the `pms-activiti` module.
-- Redis-backed caching, if reintroduced, MUST be declared at the Service
-  layer (not inline in DAOs) and recorded in plan.md.
+- 新增 mapper 模块启用 MyBatis 二级缓存。Hibernate 二级缓存(ehcache)
+  仅限于 `pms-activiti` 模块。
+- 若重新引入 Redis 缓存,MUST 在 Service 层声明(不得内联于 DAO),并
+  记录在 plan.md。
 
-### Exception Handling
+### 异常处理
 
-- New code MUST NOT throw raw `RuntimeException` or `Exception`. Business
-  errors MUST use a typed exception rooted at a single business-exception
-  base (replacing the current ad-hoc `CustomRuntimeException` and misspelled
-  module exceptions like `NoMatchedSoftVersionStrategyExecption`).
-- The presentation layer is responsible for translating exceptions to user
-  messages; the Service layer MUST NOT assemble HTML error fragments.
+- 新代码 MUST NOT 抛出裸 `RuntimeException` 或 `Exception`。业务错误
+  MUST 使用以单一业务异常基类为根的类型化异常(替代当前临时的
+  `CustomRuntimeException` 及拼写错误的模块异常,如
+  `NoMatchedSoftVersionStrategyExecption`)。
+- 表现层负责将异常翻译为用户消息;Service 层 MUST NOT 自行拼装 HTML
+  错误片段。
 
-### Data Access
+### 数据访问
 
-- iBatis 2.x (`SqlMapClientTemplate`) is legacy; new features MUST use MyBatis
-  3.x mapper interfaces. Existing iBatis DAOs are refactor targets, not a
-  pattern to extend.
-- Temporary-table statistics patterns (create/drop temp tables per query)
-  are permitted only when no set-based alternative exists, and MUST be
-  documented in plan.md.
+- iBatis 2.x(`SqlMapClientTemplate`)为遗留;新特性 MUST 使用 MyBatis
+  3.x mapper 接口。既有 iBatis DAO 为重构目标,不得作为可扩展范式。
+- 临时表统计模式(每次查询创建/删除临时表)仅当无集合化替代方案时允许
+  使用,且 MUST 在 plan.md 中记录。
 
-### Build & Reproducibility
+### 构建与可复现性
 
-- `system`-scope dependencies on local JARs (e.g., `Utils-v0.1.jar`) are
-  forbidden in new modules. Such dependencies MUST be published to a
-  repository or vendored as a proper module.
-- Checkstyle is configured but non-blocking (`failOnViolation=false`). New
-  modules MAY raise this to blocking once the existing violations are
-  retired.
+- 新增模块禁止依赖 `system` 作用域的本地 JAR(如 `Utils-v0.1.jar`)。
+  此类依赖 MUST 发布至仓库或作为正式模块 vendoring。
+- Checkstyle 已配置但非阻断(`failOnViolation=false`)。新增模块 MAY
+  在既有违规清理后将其提升为阻断。
 
-### Known Technical Debt (Refactor Backlog)
+### 已知技术债(重构清单)
 
-The following are recognized debts and explicit refactor targets; they are
-NOT to be extended:
+以下为已识别的技术债与显式重构目标;MUST NOT 扩展:
 
-- Dual ORM (iBatis 2.x + MyBatis 3.x) coexistence.
-- Three coexisting transaction mechanisms.
-- Three coexisting security frameworks with hard-coded credentials.
-- Struts2 version drift (root 2.5.30 vs module 2.3.35).
-- Non-pooled external datasources.
-- fastjson 1.2.x (autotype RCE history); fastjson2 migration is pending.
-- Service-layer HTML/SQL string assembly.
-- Raw `new Thread()` without pool or exception handling.
-- Build reproducibility via local `system`-scope JARs.
-- Accumulated `_bak` / `.bak` / misspelled legacy files.
+- 双 ORM(iBatis 2.x + MyBatis 3.x)并存。
+- 三套事务机制并存。
+- 三套安全框架并存且含硬编码凭据。
+- Struts2 版本漂移(根 2.5.30 vs 模块 2.3.35)。
+- 外部数据源无池化。
+- fastjson 1.2.x(autotype RCE 历史);fastjson2 迁移待办。
+- Service 层拼装 HTML/SQL 字符串。
+- 裸 `new Thread()` 无线程池、无异常兜底。
+- 经本地 `system` 作用域 JAR 实现的构建可复现性。
+- 累积的 `_bak` / `.bak` / 拼写错误的遗留文件。
 
-## Development Workflow & Quality Gates
+## 开发流程与质量门禁
 
-### Spec-Driven Flow
+### 规格驱动流程
 
-All non-trivial work MUST follow the Spec Kit flow: `/speckit-specify` →
+所有非平凡工作 MUST 遵循 Spec Kit 流程:`/speckit-specify` →
 `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` →
-`/speckit-implement`. Skipping `/clarify` is forbidden when any ambiguity
-exists (per Principle VIII).
+`/speckit-implement`。当存在任何歧义时(见原则 VIII)禁止跳过
+`/clarify`。
 
-### Constitution Check Gate
+### 宪法核查门禁
 
-Every plan.md MUST include a "Constitution Check" gate that verifies
-alignment with each applicable principle before Phase 0 research and again
-after Phase 1 design. Violations require either a fix or a justified entry
-in the plan's Complexity Tracking table.
+每个 plan.md MUST 包含"Constitution Check"门禁,在 Phase 0 研究前与
+Phase 1 设计后各核查一次与各适用原则的对齐情况。违规项要么修正,要么在
+计划的"Complexity Tracking"表中给出有理由的登记。
 
-### Layering & Boundary Review
+### 分层与边界审查
 
-Code review MUST verify: (a) one-way dependency direction (Principle I),
-(b) no web-container access from Service/DAO, (c) single transaction
-strategy per module, (d) pooled external datasources, (e) no raw
-`new Thread()`.
+代码审查 MUST 核查:(a) 单向依赖方向(原则 I)、(b) Service/DAO 不触达
+Web 容器、(c) 每模块单一事务策略、(d) 外部数据源池化、(e) 无裸
+`new Thread()`。
 
-### Schema Change Review
+### 表结构变更审查
 
-Any task touching a table MUST reference the spec item that authorized the
-schema change (per Principle VII). Unreferenced schema changes are blocked
-at review.
+任何触及表的任务 MUST 引用授权该表结构变更的规格条目(见原则 VII)。无
+引用的表结构变更在审查阶段阻断。
 
-### Tech-Agnostic Spec Review
+### 技术无关规格审查
 
-Spec review MUST reject any spec that names a concrete framework annotation,
-class, or library as a binding requirement (per Principle VI).
+规格审查 MUST 拒绝任何将具体框架注解、类名或库作为绑定需求的规格
+(见原则 VI)。
 
-## Governance
+## 治理
 
-- This Constitution supersedes all other practices for the PMS project. Where
-  a practice conflicts with a Principle, the Principle prevails.
-- Amendments require: (a) a written proposal, (b) recorded rationale, (c)
-  approval, and (d) a migration plan for any code already non-compliant.
-- Versioning follows semantic versioning: MAJOR for principle removal or
-  incompatible redefinition, MINOR for new/expanded principle or section,
-  PATCH for clarification and typo fixes.
-- All plans, specs, and reviews MUST verify compliance with this
-  Constitution. Complexity beyond the principles MUST be justified in the
-  plan's Complexity Tracking table.
-- Runtime development guidance lives in the Spec Kit templates under
-  `.specify/templates/`; this Constitution is the normative source.
+- 本宪法凌驾于 PMS 项目的所有其他实践之上。当实践与原则冲突时,以原则
+  为准。
+- 修订需:(a) 书面提案、(b) 记录理由、(c) 批准、(d) 针对已不合规代码的
+  迁移计划。
+- 版本号遵循语义化版本:MAJOR 用于原则删除或不兼容重定义,MINOR 用于
+  新增/扩展原则或章节,PATCH 用于澄清与勘误。
+- 所有计划、规格与审查 MUST 核查与本宪法的合规性。超出原则范围的复杂性
+  MUST 在计划的"Complexity Tracking"表中给出理由。
+- 运行时开发指南位于 `.specify/templates/` 下的 Spec Kit 模板中;本宪法
+  为规范性来源。
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-09 | **Last Amended**: 2026-07-09
+**版本**: 1.0.0 | **批准日期**: 2026-07-09 | **最后修订**: 2026-07-09
