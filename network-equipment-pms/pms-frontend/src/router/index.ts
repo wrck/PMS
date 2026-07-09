@@ -316,6 +316,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'APM 看板', icon: 'TrendCharts', requiresAuth: true }
       },
       {
+        // 应用源码导出（借鉴网易轻舟源码导出，无黑盒引擎）
+        path: 'lowcode/app-source-export',
+        name: 'LowcodeAppSourceExport',
+        component: () => import('@/views/lowcode/app-source-export/index.vue'),
+        meta: { title: '应用源码导出', icon: 'Download', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码
