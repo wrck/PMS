@@ -42,6 +42,19 @@ public interface LowCodeConfigVersionService extends IService<LowCodeConfigVersi
     LowCodeConfigVersion rollback(String configType, Long configId, Integer targetVersion, String changeLog);
 
     /**
+     * 回滚预览：对比"当前版本"与"目标版本"的差异，不实际执行回滚。
+     *
+     * <p>当前版本 = DEV 环境最新 ACTIVE 版本；目标版本 = targetVersion 指定的历史版本。
+     * 借鉴 OutSystems LifeTime 的回滚预览功能。</p>
+     *
+     * @param configType    配置类型
+     * @param configId      配置 ID
+     * @param targetVersion 要回滚到的目标版本号
+     * @return 版本差异 DTO
+     */
+    VersionDiffDTO rollbackPreview(String configType, Long configId, Integer targetVersion);
+
+    /**
      * 导出配置包（用于环境晋升）。
      */
     ConfigPackageDTO exportPackage(String sourceEnvironment, List<String> configCodes);
