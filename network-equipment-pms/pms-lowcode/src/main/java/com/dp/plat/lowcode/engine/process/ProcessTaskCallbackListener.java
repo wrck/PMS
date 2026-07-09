@@ -4,6 +4,7 @@ import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.entity.LowCodeProcessBinding;
 import com.dp.plat.lowcode.service.LowCodeMicroflowService;
 import com.dp.plat.lowcode.service.LowCodeProcessBindingService;
+import com.dp.plat.lowcode.service.ProcessSlaService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,10 @@ public class ProcessTaskCallbackListener implements TaskListener {
     @Autowired(required = false)
     private LowCodeApmService apmService;
 
+    /** 流程 SLA 服务（可选注入，任务完成时调用 completeSla 置 COMPLETED） */
+    @Autowired(required = false)
+    private ProcessSlaService processSlaService;
+
     /** Flowable 任务事件名 → taskCallbacks JSON 中的回调键 */
     private static final Map<String, String> EVENT_TO_CALLBACK_KEY;
     static {
@@ -75,6 +80,15 @@ public class ProcessTaskCallbackListener implements TaskListener {
             if (callbackKey == null) {
                 // 非关注事件（如 delete）→ 跳过
                 return;
+            }
+
+            // 任务完成时（complete 事件）调用 SLA 服务置 COMPLETED（缺口4，best-effort）
+            if ("complete".equals(event) && processSlaService != null) {
+                try {
+                    processSlaService.completeSla(delegateTask.getId());
+                } catch (Exception slaEx) {
+                    log.debug("SLA completeSla 调用失败（best-effort）: taskId={}", delegateTask.getId(), slaEx);
+                }
             }
 
             LowCodeProcessBinding binding = bindingService.findByProcessKey(processDefinitionKey);
