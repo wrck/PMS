@@ -93,13 +93,16 @@ $z-index-modal: 1050;
 $z-index-popover: 1070;
 $z-index-tooltip: 1080;
 
-// ===== 断点 =====
+// ===== 断点（批次4-T9 统一口径，与 Element Plus el-col 媒体查询对齐） =====
+// 注意：sm=768 非 Bootstrap 的 576；xl=1920 非 Bootstrap 的 1200
+// 详见 src/styles/breakpoints.ts
 $breakpoint-xs: 0;
-$breakpoint-sm: 576px;
-$breakpoint-md: 768px;
-$breakpoint-lg: 992px;
-$breakpoint-xl: 1200px;
-$breakpoint-xxl: 1600px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 992px;
+$breakpoint-lg: 1200px;
+$breakpoint-xl: 1920px;
+// 保留 xxl 变量向后兼容，但建议使用 xl（1920）
+$breakpoint-xxl: 1920px;
 
 // =============================================================================
 // CSS 自定义属性导出（可在 JS / 内联样式 / 第三方组件中通过 var(--pms-*) 消费）

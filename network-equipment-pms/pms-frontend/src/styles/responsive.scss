@@ -80,23 +80,23 @@
 }
 
 // =============================================================================
-// 旧版断点 mixin（向下兼容）
+// 旧版断点 mixin（向下兼容，批次4-T9 统一为 SCSS 变量引用）
 // =============================================================================
 
 @mixin mobile {
-  @media (max-width: 768px) {
+  @media (max-width: $breakpoint-sm - 1px) {
     @content;
   }
 }
 
 @mixin tablet {
-  @media (max-width: 1024px) {
+  @media (max-width: $breakpoint-lg - 1px) {
     @content;
   }
 }
 
 @mixin desktop {
-  @media (min-width: 1025px) {
+  @media (min-width: $breakpoint-lg) {
     @content;
   }
 }

@@ -46,6 +46,11 @@ import LowCodeComponentRegistry, {
 } from '@/components/LowCodeComponentRegistry'
 import type { ComponentMeta } from '@/components/LowCodeComponentRegistry/types'
 import { useUndoRedo } from '@/composables/useUndoRedo'
+import {
+  BREAKPOINT_ORDER,
+  BREAKPOINT_PREVIEW_WIDTH,
+  BREAKPOINT_LABEL
+} from '@/styles/breakpoints'
 
 const route = useRoute()
 const router = useRouter()
@@ -213,26 +218,14 @@ const responsiveCollapse = ref<string[]>(['resp'])
 
 type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
-/** 断点枚举数组（自小到大，用于遍历与继承查找） */
-const breakpointOrder: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl']
+/** 断点枚举数组（自小到大，用于遍历与继承查找）— 引用统一常量 */
+const breakpointOrder: Breakpoint[] = BREAKPOINT_ORDER
 
-/** 各断点对应的最小屏幕宽度（px），用于画布响应式预览模拟 */
-const breakpointWidth: Record<Breakpoint, number> = {
-  xs: 375,
-  sm: 768,
-  md: 992,
-  lg: 1200,
-  xl: 1920
-}
+/** 各断点对应的最小屏幕宽度（px），用于画布响应式预览模拟 — 引用统一常量 */
+const breakpointWidth: Record<Breakpoint, number> = BREAKPOINT_PREVIEW_WIDTH
 
-/** 断点显示文案（含屏幕宽度范围） */
-const breakpointLabel: Record<Breakpoint, string> = {
-  xs: 'xs (<768px)',
-  sm: 'sm (≥768px)',
-  md: 'md (≥992px)',
-  lg: 'lg (≥1200px)',
-  xl: 'xl (≥1920px)'
-}
+/** 断点显示文案（含屏幕宽度范围）— 引用统一常量 */
+const breakpointLabel: Record<Breakpoint, string> = BREAKPOINT_LABEL
 
 /**
  * 当前选中字段是否启用响应式断点（span 为对象）。
