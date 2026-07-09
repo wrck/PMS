@@ -51,9 +51,13 @@ import {
   BREAKPOINT_PREVIEW_WIDTH,
   BREAKPOINT_LABEL
 } from '@/styles/breakpoints'
+import { useCollaboration } from '@/composables/useCollaboration'
+import OnlineUsersIndicator from '@/components/OnlineUsersIndicator/index.vue'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // ===================== 组件库定义 =====================
 
@@ -890,6 +894,16 @@ if (editId > 0) {
   history.reset(JSON.parse(JSON.stringify(formConfig)))
 }
 
+// ===================== 协同编辑（批次5-T6，借鉴 Mendix 协同编辑）=====================
+// 注：当前为 HTTP 轮询简化方案，预留 WebSocket（y-websocket）升级点。
+// 仅在编辑既有表单（editId > 0）时启用协同；新建模式不启用。
+const collaboration = useCollaboration({
+  configType: 'FORM',
+  configId: editId,
+  userId: userStore.userInfo?.id || 0,
+  userName: userStore.userInfo?.nickname || userStore.userInfo?.username || ''
+})
+
 // 加载注册中心业务组件（15 个预置 Widget），合并到组件库"业务组件"分组
 onMounted(async () => {
   window.addEventListener('keydown', onUndoRedoKeydown)
@@ -898,6 +912,10 @@ onMounted(async () => {
     registryComponents.value = LowCodeComponentRegistry.list()
   } catch {
     // 加载失败仅静默降级（基础组件仍可用）
+  }
+  // 进入页面时加入协同会话（仅编辑模式）
+  if (editId > 0) {
+    collaboration.join()
   }
 })
 
@@ -928,6 +946,11 @@ onBeforeUnmount(() => {
           </el-button>
         </div>
         <div class="toolbar-right">
+          <OnlineUsersIndicator
+            v-if="editId > 0"
+            :users="collaboration.onlineUsers.value"
+            :current-user-id="userStore.userInfo?.id || 0"
+          />
           <el-tag :type="metaForm.status === 'PUBLISHED' ? 'success' : metaForm.status === 'ARCHIVED' ? 'info' : 'warning'">
             {{ metaForm.status || 'DRAFT' }}
           </el-tag>
