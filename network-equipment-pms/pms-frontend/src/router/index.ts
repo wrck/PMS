@@ -302,6 +302,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '审批链配置', icon: 'SetUp', requiresAuth: true }
       },
       {
+        // 配置模板市场（借鉴 Zoho 模板市场 / Appsmith 模板 / Mendix App Store）
+        path: 'lowcode/template-market',
+        name: 'LowcodeTemplateMarket',
+        component: () => import('@/views/lowcode/template-market/index.vue'),
+        meta: { title: '模板市场', icon: 'Goods', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码
