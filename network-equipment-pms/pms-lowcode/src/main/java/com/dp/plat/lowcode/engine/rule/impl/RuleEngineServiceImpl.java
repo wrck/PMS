@@ -1,9 +1,9 @@
 package com.dp.plat.lowcode.engine.rule.impl;
 
 import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
+import com.dp.plat.lowcode.engine.rule.AviatorSandboxExecutor;
 import com.dp.plat.lowcode.engine.rule.LiteFlowExecutor;
 import com.dp.plat.lowcode.engine.rule.RuleEngineService;
-import com.googlecode.aviator.AviatorEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +45,9 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final LiteFlowExecutor liteFlowExecutor;
+
+    /** Aviator 沙箱执行器（禁用 NewInstance/Module/InternalVars 与危险系统函数，防 RCE） */
+    private final AviatorSandboxExecutor aviatorSandbox;
 
     /** APM 指标服务（可选注入，未注入时 no-op） */
     @Autowired(required = false)
@@ -229,7 +232,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         long startMs = System.currentTimeMillis();
         boolean success = true;
         try {
-            return AviatorEvaluator.execute(expression, context);
+            return aviatorSandbox.execute(expression, context);
         } catch (Exception e) {
             success = false;
             throw e;
