@@ -174,8 +174,12 @@ const selectedFilter = computed(() =>
 )
 
 // ===================== 响应式栅格断点（xs/sm/md/lg/xl） =====================
+// 断点类型与顺序从统一 SSOT 导入（批次4-T9），避免本地重复定义导致口径漂移
+import {
+  BREAKPOINT_ORDER as breakpointOrder,
+  type Breakpoint
+} from '@/styles/breakpoints'
 
-type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 /** 响应式断点折叠面板激活项（默认展开） */
 const filterResponsiveCollapse = ref<string[]>(['resp'])
 
@@ -203,20 +207,30 @@ const filterSpan = computed<number>({
   }
 })
 
-/** 读取指定断点值（缺省回退 6） */
-function getFilterBreakpoint(k: Breakpoint): number {
+/** 读取指定断点值（undefined 表示留空继承更小断点，与 form-designer 对齐） */
+function getFilterBreakpoint(k: Breakpoint): number | undefined {
   const s = selectedFilter.value?.span
-  return typeof s === 'object' && s && s[k] !== undefined ? (s[k] as number) : 6
+  if (typeof s !== 'object' || !s) return undefined
+  const v = s[k]
+  return typeof v === 'number' && !Number.isNaN(v) ? v : undefined
 }
 
-/** 设置指定断点值（自动转为响应式对象） */
-function setFilterBreakpoint(k: Breakpoint, v: number): void {
+/** 设置指定断点值（v=undefined 时删除该 key，体现"留空即继承"语义） */
+function setFilterBreakpoint(k: Breakpoint, v: number | undefined): void {
   const filter = selectedFilter.value
   if (!filter) return
   const s = filter.span
   const obj: ResponsiveSpan = typeof s === 'object' && s ? { ...s } : {}
-  obj[k] = v
-  filter.span = obj
+  if (v === undefined || v === null || Number.isNaN(v)) {
+    delete obj[k]
+  } else {
+    obj[k] = v
+  }
+  // 若所有断点都被清除，回退为数字 span（简化数据结构）
+  const hasAny = (['xs', 'sm', 'md', 'lg', 'xl'] as Breakpoint[]).some(
+    (bp) => obj[bp] !== undefined
+  )
+  filter.span = hasAny ? obj : 6
 }
 /** 当前选中的行操作 */
 const selectedOperation = computed(() =>
@@ -1170,21 +1184,27 @@ onBeforeUnmount(() => {
             <el-slider v-model="filterSpan" :min="1" :max="24" show-input style="width: 100%" />
           </el-form-item>
           <el-collapse v-else v-model="filterResponsiveCollapse" class="resp-collapse">
-            <el-collapse-item title="响应式断点（1-24）" name="resp">
-              <el-form-item label="xs">
-                <el-input-number :model-value="getFilterBreakpoint('xs')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('xs', v)" />
-              </el-form-item>
-              <el-form-item label="sm">
-                <el-input-number :model-value="getFilterBreakpoint('sm')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('sm', v)" />
-              </el-form-item>
-              <el-form-item label="md">
-                <el-input-number :model-value="getFilterBreakpoint('md')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('md', v)" />
-              </el-form-item>
-              <el-form-item label="lg">
-                <el-input-number :model-value="getFilterBreakpoint('lg')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('lg', v)" />
-              </el-form-item>
-              <el-form-item label="xl">
-                <el-input-number :model-value="getFilterBreakpoint('xl')" :min="1" :max="24" controls-position="right" style="width: 100%" @update:model-value="(v: number) => setFilterBreakpoint('xl', v)" />
+            <el-collapse-item title="响应式断点（1-24，留空继承更小断点）" name="resp">
+              <el-form-item v-for="bp in breakpointOrder" :key="bp" :label="bp">
+                <div class="bp-row">
+                  <el-input-number
+                    :model-value="getFilterBreakpoint(bp)"
+                    :min="1"
+                    :max="24"
+                    controls-position="right"
+                    placeholder="留空"
+                    style="flex: 1"
+                    @update:model-value="(v: number | undefined) => setFilterBreakpoint(bp, v ?? undefined)"
+                  />
+                  <el-button
+                    v-if="getFilterBreakpoint(bp) !== undefined"
+                    link
+                    type="primary"
+                    :icon="'Close'"
+                    title="清除（留空，继承更小断点）"
+                    @click="setFilterBreakpoint(bp, undefined)"
+                  />
+                </div>
               </el-form-item>
             </el-collapse-item>
           </el-collapse>
@@ -1513,6 +1533,14 @@ onBeforeUnmount(() => {
 
 .resp-collapse :deep(.el-collapse-item__content) {
   padding-bottom: 0;
+}
+
+/* 断点编辑行：input + 清除按钮横排 */
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
 }
 
 /* 响应式：小屏堆叠 */
