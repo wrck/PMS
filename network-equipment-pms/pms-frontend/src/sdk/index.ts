@@ -65,5 +65,18 @@ export {
   initRemoteComponents
 } from './runtime'
 
-/** SDK 版本（与 lowcode-platform-maturity-upgrade-design.md 批次4-T6 对齐） */
+// Guest 端运行时（批次4-T7，远程组件 iframe 内使用）
+export { initGuest, autoReportHeight } from './guest-runtime'
+export type { GuestConfig, GuestRuntime } from './guest-runtime'
+
+// CSP 白名单工具（批次4-T7）
+export {
+  isAllowedUrl,
+  buildSandboxAttribute,
+  buildFrameCsp,
+  getCspAllowlist,
+  setCspAllowlist
+} from './csp-allowlist'
+
+/** SDK 版本（与 lowcode-platform-maturity-upgrade-design.md 批次4-T6/T7 对齐） */
 export const SDK_VERSION = '1.0.0'

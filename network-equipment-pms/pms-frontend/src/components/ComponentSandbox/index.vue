@@ -1,105 +1,54 @@
+<!--
+  ComponentSandbox 组件（批次4-T7）
+
+  用途：以 iframe + sandbox 隔离加载第三方/市场远程组件，通过 postMessage 双向通信。
+  借鉴 ToolJet iframe 沙箱与 Power Apps PCF 隔离机制，解决：
+  1. 第三方组件 JS 不可信 → iframe 隔离，防止污染父页面 DOM/全局变量
+  2. 远程组件 props 实时同步 → postMessage UPDATE_PROPS 响应式推送
+  3. v-model 双向绑定 → iframe 上报 UPDATE_VALUE，父页面 emit update:modelValue
+  4. iframe 高度自适应 → REQUEST_HEIGHT + REPORT_HEIGHT 协议
+  5. CSP 白名单 + origin 校验 → 防止恶意 iframe 窃取父页面数据
+
+  用法：
+  <ComponentSandbox
+    :entry-url="componentMeta.entryUrl"
+    :component-name="componentMeta.name"
+    :props="renderProps"
+    :context="lowCodeContext"
+    v-model="formValue"
+    @event="onComponentEvent"
+  />
+-->
 <template>
-  <div class="component-sandbox" :class="{ 'sandbox-error': errorState }">
-    <!-- 加载中遮罩 -->
-    <div v-if="loading" class="sandbox-loading">
-      <el-icon class="is-loading"><Loading /></el-icon>
-      <span>组件加载中...</span>
-    </div>
-
-    <!-- 错误态 -->
-    <div v-else-if="errorState" class="sandbox-error-content">
-      <el-icon><WarningFilled /></el-icon>
-      <span>{{ errorMessage }}</span>
-    </div>
-
-    <!-- URL 不在白名单 -->
-    <div v-else-if="!isUrlAllowed" class="sandbox-blocked">
-      <el-icon><Lock /></el-icon>
-      <span>组件 URL 未通过安全校验，已被 CSP 白名单拦截</span>
-      <code class="sandbox-blocked-url">{{ src }}</code>
-    </div>
-
-    <!-- iframe 沙箱容器 -->
+  <div ref="containerRef" class="component-sandbox" :style="containerStyle">
     <iframe
-      v-else
+      v-if="shouldRender"
       ref="iframeRef"
-      :src="computedSrc"
+      :src="entryUrl"
       :sandbox="sandboxAttr"
       :style="iframeStyle"
-      :title="title || componentName"
       frameborder="0"
-      allow="clipboard-write 'self'"
-      class="sandbox-iframe"
+      :allow="allowFeatures"
       @load="onIframeLoad"
-      @error="onIframeError"
     />
+    <div v-else class="component-sandbox__error">
+      <el-alert
+        :title="errorMessage"
+        type="error"
+        :closable="false"
+        show-icon
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-/**
- * ComponentSandbox — 组件 iframe 沙箱（批次4-T7 核心）。
- *
- * <p>本组件是低代码平台远程/自定义组件的安全隔离容器，借鉴 ToolJet 的 iframe 沙箱
- * 与 Power Apps PCF 的组件隔离机制，提供以下能力：</p>
- *
- * <h3>核心能力</h3>
- * <ol>
- *   <li><b>iframe 隔离</b>：通过 sandbox 属性限制 iframe 内可执行的操作（最小权限原则）</li>
- *   <li><b>CSP 白名单</b>：加载前校验 src URL 是否在允许的域名/协议范围内</li>
- *   <li><b>postMessage 通信</b>：与 iframe 内组件双向通信，传递 props/context/事件</li>
- *   <li><b>配置实时同步</b>：父组件 props/context 变化时自动通过 postMessage 推送到 iframe</li>
- *   <li><b>v-model 双向绑定</b>：iframe 内组件值变更通过 postMessage 上报，触发 update:modelValue</li>
- *   <li><b>自适应高度</b>：iframe 上报内容高度，父容器自动调整 iframe 高度</li>
- *   <li><b>事件透传</b>：iframe 内组件的 change/blur/focus 等事件透传到父组件</li>
- * </ol>
- *
- * <h3>使用示例</h3>
- * <pre>
- * &lt;ComponentSandbox
- *   v-model="formData.progress"
- *   src="https://cdn.example.com/lowcode-components/progress-indicator/index.html"
- *   :component-name="'ProgressIndicator'"
- *   :props="{ status: 'success', showLabel: true }"
- *   :context="{ entityCode: 'order', mode: 'EDIT' }"
- *   @change="onProgressChange"
- * /&gt;
- * </pre>
- *
- * <h3>iframe 内组件需实现的协议</h3>
- * <p>iframe 内的组件页面需监听 message 事件，按 {@link ./protocol.ts} 定义的协议响应：</p>
- * <pre>
- * // iframe 内组件示例
- * window.addEventListener('message', (event) => {
- *   if (event.origin !== 'https://your-app.com') return
- *   const msg = event.data
- *   if (msg.type === 'LC_SANDBOX_INIT') {
- *     // 接收初始 props + context，渲染组件
- *     renderComponent(msg.payload.props, msg.payload.context)
- *   } else if (msg.type === 'LC_SANDBOX_UPDATE_PROPS') {
- *     // props 变更，更新组件
- *     updateProps(msg.payload.props)
- *   }
- * })
- * // 加载完成通知父页面
- * window.parent.postMessage({ version: '1.0', type: 'LC_SANDBOX_READY', timestamp: Date.now(), payload: {} }, '*')
- * // 值变更上报
- * function onValueChange(newValue) {
- *   window.parent.postMessage({
- *     version: '1.0', type: 'LC_SANDBOX_UPDATE_VALUE', timestamp: Date.now(),
- *     payload: { value: newValue }
- *   }, '*')
- * }
- * </pre>
- */
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { Loading, WarningFilled, Lock } from '@element-plus/icons-vue'
-import { isAllowedUrl, buildSandboxAttribute } from '@/sdk/csp-allowlist'
 import {
   HostToGuestMessage,
   GuestToHostMessage,
-  isSandboxMessage,
   createMessage,
+  isSandboxMessage,
   type InitPayload,
   type UpdatePropsPayload,
   type UpdateContextPayload,
@@ -108,233 +57,264 @@ import {
   type ReportHeightPayload,
   type ResizePayload,
   type ErrorPayload,
-  type LogPayload
+  type LogPayload,
+  type SandboxMessage
 } from './protocol'
+import { isAllowedUrl, buildSandboxAttribute } from '@/sdk/csp-allowlist'
 
 interface Props {
-  /** iframe 加载的 URL（远程组件页面地址） */
-  src: string
-  /** 组件名（注册 key，传递给 iframe 用于初始化） */
+  /** 远程组件入口 URL（必填） */
+  entryUrl: string
+  /** 组件名（注册 key，用于 INIT 标识） */
   componentName: string
-  /** iframe title 属性（无障碍） */
-  title?: string
-  /** 组件 props（响应式，变化时自动同步到 iframe） */
+  /** 初始 props（响应式 watch 后推送 UPDATE_PROPS） */
   props?: Record<string, unknown>
-  /** 运行时上下文（LowCodeContext，变化时自动同步） */
+  /** 运行时上下文（LowCodeContext） */
   context?: Record<string, unknown>
   /** v-model 绑定值 */
   modelValue?: unknown
-  /** iframe 固定高度（px，不设则自适应） */
-  height?: number | string
-  /** iframe 最小高度（px，自适应时下限） */
+  /** iframe 高度模式：fixed 固定高度 / auto 自适应 */
+  heightMode?: 'fixed' | 'auto'
+  /** 固定高度（px，heightMode=fixed 时生效） */
+  height?: number
+  /** 容器最小高度（避免 iframe 高度为 0 时塌陷） */
   minHeight?: number
-  /** 是否允许同源访问（trusted 场景才开启，降低隔离强度） */
+  /** 是否允许同源访问（trusted 场景才开启，默认 false） */
   sameOrigin?: boolean
   /** 是否允许表单提交 */
   allowForms?: boolean
   /** 是否允许弹窗 */
   allowPopups?: boolean
-  /** 是否启用自适应高度（监听 iframe 上报的 REPORT_HEIGHT） */
-  autoResize?: boolean
-  /** 是否开启调试日志 */
-  debug?: boolean
+  /** iframe allow 属性（权限策略） */
+  allowFeatures?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: '',
   props: () => ({}),
   context: () => ({}),
   modelValue: null,
-  height: undefined,
-  minHeight: 60,
+  heightMode: 'auto',
+  height: 0,
+  minHeight: 32,
   sameOrigin: false,
   allowForms: true,
   allowPopups: false,
-  autoResize: true,
-  debug: false
+  allowFeatures: 'clipboard-read; clipboard-write'
 })
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: unknown): void
-  (e: 'change', ...args: unknown[]): void
-  (e: 'blur'): void
-  (e: 'focus'): void
-  (e: 'event', eventName: string, args: unknown[]): void
+  (e: 'event', payload: EventPayload): void
   (e: 'ready'): void
-  (e: 'error', error: ErrorPayload): void
-  (e: 'log', log: LogPayload): void
+  (e: 'error', payload: ErrorPayload): void
+  (e: 'log', payload: LogPayload): void
 }>()
 
-const iframeRef = ref<HTMLIFrameElement | null>(null)
-const loading = ref(true)
-const errorState = ref(false)
-const errorMessage = ref('')
+const containerRef = ref<HTMLDivElement>()
+const iframeRef = ref<HTMLIFrameElement>()
+
+/** iframe 是否已 READY（收到 GuestToHostMessage.READY） */
 const iframeReady = ref(false)
-const adaptiveHeight = ref<number | null>(null)
+/** iframe 实际内容高度（自适应模式用） */
+const contentHeight = ref(0)
+/** 渲染错误信息（URL 校验失败等） */
+const errorMessage = ref('')
+/** 是否应渲染 iframe（URL 校验通过后为 true） */
+const shouldRender = ref(false)
 
-/** URL 安全校验 */
-const isUrlAllowed = computed(() => isAllowedUrl(props.src))
-
-/** 计算 iframe src（可附加初始 props 作为 URL hash 减少首屏闪烁） */
-const computedSrc = computed(() => props.src)
-
-/** sandbox 属性值（最小权限组合） */
+/** 计算 sandbox 属性值 */
 const sandboxAttr = computed(() =>
   buildSandboxAttribute(props.sameOrigin, props.allowForms, props.allowPopups)
 )
 
-/** iframe 样式（高度自适应或固定） */
-const iframeStyle = computed(() => {
-  const style: Record<string, string> = { width: '100%', border: 'none' }
-  if (props.height !== undefined) {
-    style.height = typeof props.height === 'number' ? `${props.height}px` : props.height
-  } else if (props.autoResize && adaptiveHeight.value !== null) {
-    style.height = `${Math.max(adaptiveHeight.value, props.minHeight)}px`
-  } else {
-    style.height = `${props.minHeight}px`
-  }
-  return style
-})
+/** 容器样式 */
+const containerStyle = computed(() => ({
+  minHeight: props.minHeight + 'px',
+  height:
+    props.heightMode === 'fixed' && props.height > 0
+      ? props.height + 'px'
+      : props.heightMode === 'auto' && contentHeight.value > 0
+        ? contentHeight.value + 'px'
+        : 'auto'
+}))
 
-/** iframe 的 origin（用于 postMessage 的 targetOrigin 校验） */
-const iframeOrigin = computed(() => {
-  try {
-    return new URL(props.src).origin
-  } catch {
-    return '*'
-  }
-})
+/** iframe 样式（铺满容器） */
+const iframeStyle = computed(() => ({
+  width: '100%',
+  height: '100%',
+  border: 'none',
+  display: 'block'
+}))
 
 /**
- * 向 iframe 发送消息（带 origin 校验，防止消息泄漏到其他域）。
+ * 校验 entryUrl 并触发渲染。
+ *
+ * <p>URL 不在白名单时显示错误提示，不渲染 iframe。</p>
  */
-function postToGuest<T>(type: HostToGuestMessage, payload: T, id?: string): void {
-  if (!iframeRef.value || !iframeRef.value.contentWindow) {
-    if (props.debug) console.warn('[ComponentSandbox] iframe 未就绪，消息丢弃', type)
+function validateAndRender() {
+  if (!props.entryUrl) {
+    errorMessage.value = 'ComponentSandbox: 缺少 entryUrl'
+    shouldRender.value = false
     return
   }
-  const msg = createMessage(type, payload, id)
-  // targetOrigin 限制为 iframe 的 origin，防止消息被其他域截获
-  iframeRef.value.contentWindow.postMessage(msg, iframeOrigin.value)
-  if (props.debug) console.debug('[ComponentSandbox] → guest', type, payload)
+  if (!isAllowedUrl(props.entryUrl)) {
+    errorMessage.value = `ComponentSandbox: entryUrl 不在 CSP 白名单内: ${props.entryUrl}`
+    shouldRender.value = false
+    return
+  }
+  errorMessage.value = ''
+  shouldRender.value = true
 }
 
 /**
- * iframe 加载完成回调。
+ * iframe load 事件回调。
  *
- * <p>注意：iframe load 事件触发不代表组件 READY（组件可能还在初始化），
- * 真正的 ready 信号来自 iframe 主动上报的 LC_SANDBOX_READY 消息。
- * 此处仅标记 loading 结束，等待 READY 消息后再发送 INIT。</p>
+ * <p>注意：load 事件触发不代表 iframe 内 JS 已初始化完成，需等待 READY 消息。
+ * 但同源 iframe 可在此处主动推送 INIT（异源需等 READY 后再推送）。</p>
  */
 function onIframeLoad() {
-  loading.value = false
-  if (props.debug) console.debug('[ComponentSandbox] iframe load 事件触发', props.src)
-  // 不立即发 INIT，等待 iframe 主动 READY 后再发
-}
-
-function onIframeError(e: Event) {
-  loading.value = false
-  errorState.value = true
-  errorMessage.value = 'iframe 加载失败'
-  emit('error', { message: 'iframe load error', source: 'iframe' })
-  if (props.debug) console.error('[ComponentSandbox] iframe error', e)
+  // 异源 iframe 无法直接访问 contentWindow.postMessage 的 targetOrigin，
+  // 需等待 READY 消息携带 origin 后再推送 INIT
+  // 同源 iframe 可立即推送
+  if (props.sameOrigin && iframeRef.value?.contentWindow) {
+    sendInit()
+  }
 }
 
 /**
- * 发送 INIT 消息（注入初始 props + context）。
- *
- * <p>仅在 iframe READY 后调用一次，后续 props/context 变更通过 UPDATE_PROPS/UPDATE_CONTEXT。</p>
+ * 向 iframe 发送 INIT 消息（注入初始 props + context）。
  */
 function sendInit() {
   const payload: InitPayload = {
     componentName: props.componentName,
     props: { ...props.props, modelValue: props.modelValue },
-    context: { ...props.context }
+    context: props.context
   }
   postToGuest(HostToGuestMessage.INIT, payload)
 }
 
 /**
- * 处理来自 iframe 的消息。
+ * 向 iframe 发送消息（postMessage）。
+ *
+ * <p>targetOrigin 使用 entryUrl 的 origin（精确匹配，避免 * 通配的安全风险）。</p>
+ */
+function postToGuest(type: HostToGuestMessage, payload: unknown): void {
+  if (!iframeRef.value?.contentWindow) return
+  let targetOrigin: string
+  try {
+    targetOrigin = new URL(props.entryUrl).origin
+  } catch {
+    targetOrigin = '*'
+  }
+  const msg = createMessage(type, payload)
+  iframeRef.value.contentWindow.postMessage(msg, targetOrigin)
+}
+
+/**
+ * 接收 iframe 发来的消息（Guest → Host）。
+ *
+ * <p>origin 校验：仅接受 entryUrl 对应 origin 的消息，防止恶意页面仿冒。</p>
  */
 function onMessage(event: MessageEvent) {
-  // origin 校验：仅接受 iframe 自身 origin 的消息
-  if (event.origin !== iframeOrigin.value) {
-    if (props.debug) {
-      console.warn('[ComponentSandbox] 忽略来源不匹配的消息', event.origin, '!=', iframeOrigin.value)
-    }
+  // origin 校验
+  let expectedOrigin: string
+  try {
+    expectedOrigin = new URL(props.entryUrl).origin
+  } catch {
     return
   }
-  if (!isSandboxMessage(event.data)) {
-    return
-  }
-  const msg = event.data
-  if (props.debug) console.debug('[ComponentSandbox] ← guest', msg.type, msg.payload)
+  if (event.origin !== expectedOrigin) return
+
+  if (!isSandboxMessage(event.data)) return
+  const msg = event.data as SandboxMessage
 
   switch (msg.type) {
     case GuestToHostMessage.READY:
       iframeReady.value = true
-      loading.value = false
+      // iframe 通知已就绪，推送初始数据
       sendInit()
       emit('ready')
       break
+
     case GuestToHostMessage.UPDATE_VALUE: {
       const payload = msg.payload as UpdateValuePayload
       emit('update:modelValue', payload.value)
       break
     }
+
     case GuestToHostMessage.EVENT: {
       const payload = msg.payload as EventPayload
-      // 标准事件透传
-      if (payload.eventName === 'change') emit('change', ...(payload.args || []))
-      else if (payload.eventName === 'blur') emit('blur')
-      else if (payload.eventName === 'focus') emit('focus')
-      // 通用事件透传
-      emit('event', payload.eventName, payload.args || [])
-      break
-    }
-    case GuestToHostMessage.REPORT_HEIGHT: {
-      const payload = msg.payload as ReportHeightPayload
-      if (props.autoResize && typeof payload.height === 'number' && payload.height > 0) {
-        adaptiveHeight.value = payload.height
+      emit('event', payload)
+      // change 事件同步触发 update:modelValue（兼容部分组件 change 即值变更的约定）
+      if (payload.eventName === 'change' && payload.args?.[0] !== undefined) {
+        emit('update:modelValue', payload.args[0])
       }
       break
     }
+
+    case GuestToHostMessage.REPORT_HEIGHT: {
+      const payload = msg.payload as ReportHeightPayload
+      if (props.heightMode === 'auto' && payload.height > 0) {
+        contentHeight.value = payload.height
+      }
+      break
+    }
+
     case GuestToHostMessage.ERROR: {
       const payload = msg.payload as ErrorPayload
-      errorState.value = true
-      errorMessage.value = payload.message
+      console.error(`[ComponentSandbox] iframe error from "${props.componentName}":`, payload)
       emit('error', payload)
       break
     }
+
     case GuestToHostMessage.LOG: {
       const payload = msg.payload as LogPayload
       emit('log', payload)
-      if (props.debug) {
-        const logger = console[payload.level] || console.log
-        logger('[ComponentSandbox guest]', ...payload.args)
-      }
       break
     }
+
     default:
-      if (props.debug) console.warn('[ComponentSandbox] 未知消息类型', msg.type)
+      // 未知消息类型，忽略
+      break
   }
 }
 
-/** 监听 props 变化，自动同步到 iframe */
+/**
+ * 监听容器尺寸变化，通知 iframe（响应式布局）。
+ */
+let resizeObserver: ResizeObserver | null = null
+function setupResizeObserver() {
+  if (!containerRef.value || typeof ResizeObserver === 'undefined') return
+  resizeObserver = new ResizeObserver((entries) => {
+    if (!iframeReady.value) return
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect
+      const payload: ResizePayload = { width: width, height: height }
+      postToGuest(HostToGuestMessage.RESIZE, payload)
+    }
+  })
+  resizeObserver.observe(containerRef.value)
+}
+
+/**
+ * 主动请求 iframe 上报高度（自适应场景）。
+ */
+function requestHeight() {
+  postToGuest(HostToGuestMessage.REQUEST_HEIGHT, {})
+}
+
+// watch props 变化，推送 UPDATE_PROPS
 watch(
   () => props.props,
   (newProps) => {
     if (!iframeReady.value) return
-    const payload: UpdatePropsPayload = {
-      props: { ...newProps, modelValue: props.modelValue }
-    }
+    const payload: UpdatePropsPayload = { props: { ...newProps, modelValue: props.modelValue } }
     postToGuest(HostToGuestMessage.UPDATE_PROPS, payload)
   },
   { deep: true }
 )
 
-/** 监听 modelValue 变化，作为 props 的一部分同步 */
+// watch modelValue 变化，推送 UPDATE_PROPS（含 modelValue）
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -346,36 +326,30 @@ watch(
   }
 )
 
-/** 监听 context 变化，自动同步到 iframe */
+// watch context 变化，推送 UPDATE_CONTEXT
 watch(
   () => props.context,
-  (newCtx) => {
+  (newContext) => {
     if (!iframeReady.value) return
-    const payload: UpdateContextPayload = { context: { ...newCtx } }
+    const payload: UpdateContextPayload = { context: { ...newContext } }
     postToGuest(HostToGuestMessage.UPDATE_CONTEXT, payload)
   },
   { deep: true }
 )
 
-/** 监听容器尺寸变化（ResizeObserver），通知 iframe */
-let resizeObserver: ResizeObserver | null = null
-function setupResizeObserver() {
-  if (!iframeRef.value?.parentElement || !props.autoResize) return
-  resizeObserver = new ResizeObserver((entries) => {
-    if (!iframeReady.value) return
-    for (const entry of entries) {
-      const payload: ResizePayload = {
-        width: entry.contentRect.width,
-        height: entry.contentRect.height
-      }
-      postToGuest(HostToGuestMessage.RESIZE, payload)
-    }
-  })
-  resizeObserver.observe(iframeRef.value.parentElement)
-}
+// watch entryUrl 变化，重新校验并渲染
+watch(
+  () => props.entryUrl,
+  () => {
+    iframeReady.value = false
+    contentHeight.value = 0
+    validateAndRender()
+  }
+)
 
 onMounted(() => {
   window.addEventListener('message', onMessage)
+  validateAndRender()
   nextTick(() => {
     setupResizeObserver()
   })
@@ -383,64 +357,28 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('message', onMessage)
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
-  }
+  resizeObserver?.disconnect()
+  resizeObserver = null
 })
 
-/** 暴露给父组件的命令式 API */
+// 暴露方法给父组件（可选）
 defineExpose({
-  /** 请求 iframe 上报高度 */
-  requestHeight: () => postToGuest(HostToGuestMessage.REQUEST_HEIGHT, {}),
-  /** 手动重新发送 INIT */
-  reinit: () => sendInit(),
-  /** 获取 iframe 元素 */
-  getIframe: () => iframeRef.value
+  /** 主动请求 iframe 上报高度 */
+  requestHeight,
+  /** 向 iframe 发送自定义消息 */
+  postMessage: postToGuest
 })
 </script>
 
 <style scoped>
 .component-sandbox {
+  width: 100%;
   position: relative;
+  overflow: hidden;
+}
+
+.component-sandbox__error {
+  padding: 8px;
   width: 100%;
-  min-height: 60px;
-}
-.sandbox-iframe {
-  display: block;
-  width: 100%;
-  border: none;
-  background: transparent;
-}
-.sandbox-loading,
-.sandbox-error-content,
-.sandbox-blocked {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 80px;
-  padding: 16px;
-  color: #909399;
-  gap: 8px;
-}
-.sandbox-error-content {
-  color: #f56c6c;
-}
-.sandbox-blocked {
-  color: #e6a23c;
-  background: #fdf6ec;
-  border: 1px dashed #e6a23c;
-  border-radius: 4px;
-}
-.sandbox-blocked-url {
-  font-size: 12px;
-  color: #909399;
-  word-break: break-all;
-  max-width: 100%;
-}
-.sandbox-error {
-  border: 1px dashed #f56c6c;
-  border-radius: 4px;
 }
 </style>
