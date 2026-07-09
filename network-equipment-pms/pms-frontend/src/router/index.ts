@@ -309,6 +309,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '模板市场', icon: 'Goods', requiresAuth: true }
       },
       {
+        // APM 可视化看板（借鉴 Joget APM，Micrometer 指标 + 执行日志聚合）
+        path: 'lowcode/apm-dashboard',
+        name: 'LowcodeApmDashboard',
+        component: () => import('@/views/lowcode/apm-dashboard/index.vue'),
+        meta: { title: 'APM 看板', icon: 'TrendCharts', requiresAuth: true }
+      },
+      {
         // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
         // pageType: form | list | tab | related-page
         // pageCode: 低代码配置编码
