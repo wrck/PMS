@@ -5,8 +5,9 @@ import com.dp.plat.lowcode.dto.ConfigPackageDTO;
 import com.dp.plat.lowcode.dto.DependencyValidationResult;
 import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.service.LowCodeConfigVersionService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,14 +26,24 @@ import java.util.List;
  *   <li>状态校验：源环境最新版本必须是 ACTIVE</li>
  *   <li>环境顺序：DEV→TEST→PROD 不能跨级（TEST 无版本时不能直接 DEV→PROD）</li>
  * </ul></p>
+ *
+ * <p>注：与 {@link EnvironmentPromotionService} 存在相互引用（本服务调用其依赖完整性校验，
+ * 其调用本服务的门禁检查构建管道状态），故对 EnvironmentPromotionService 采用 {@code @Lazy}
+ * 注入打破循环依赖，避免 Spring Boot 默认禁用循环引用时启动失败。</p>
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PromotionGateService {
 
     private final LowCodeConfigVersionService configVersionService;
     private final EnvironmentPromotionService promotionService;
+
+    @Autowired
+    public PromotionGateService(LowCodeConfigVersionService configVersionService,
+                                 @Lazy EnvironmentPromotionService promotionService) {
+        this.configVersionService = configVersionService;
+        this.promotionService = promotionService;
+    }
 
     /**
      * 门禁检查结果。
