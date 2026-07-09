@@ -8331,3 +8331,6 @@ const iframeStyle = computed(() => ({
 }))
 
 /**
+<template>
+<template>
+  <div class="component-sandbox" ref

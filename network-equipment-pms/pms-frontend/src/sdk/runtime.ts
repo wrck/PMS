@@ -16,6 +16,7 @@ import type { Component } from 'vue'
 import LowCodeComponentRegistry from '@/components/LowCodeComponentRegistry'
 import type { ComponentMeta, RegisteredComponent } from '@/components/LowCodeComponentRegistry/types'
 import { listComponentMetas } from '@/api/lowcode-component-meta'
+import { isAllowedUrl } from './csp-allowlist'
 
 /** 透传 registry 基础 API */
 export const register = LowCodeComponentRegistry.register
@@ -121,7 +122,7 @@ export async function initRemoteComponents(): Promise<void> {
   for (const meta of metas) {
     // 仅加载市场组件且有 entryUrl
     if (meta.sourceType !== 'MARKETPLACE' || !meta.entryUrl) continue
-    if (!isAllowedEntryUrl(meta.entryUrl)) {
+    if (!isAllowedUrl(meta.entryUrl)) {
       console.warn(
         `[LowCodeSDK] 跳过远程组件 "${meta.name}"：entryUrl 不在允许范围 (CSP 白名单/协议校验失败): ${meta.entryUrl}`
       )
@@ -153,52 +154,4 @@ export async function initRemoteComponents(): Promise<void> {
       console.warn(`[LowCodeSDK] 加载远程组件 "${meta.name}" 失败: ${meta.entryUrl}`, e)
     }
   }
-}
-
-/**
- * 校验 entryUrl 是否在允许范围内（CSP 白名单的运行时防御）。
- *
- * <p>规则：
- * <ul>
- *   <li>开发环境：允许 http://localhost:* 和 https://localhost:*</li>
- *   <li>生产环境：仅允许 https:// 开头</li>
- *   <li>禁止 file: / data: / javascript: 等危险协议</li>
- *   <li>域名白名单：可在 window.__LOWCODE_CSP_ALLOWLIST__ 中配置（数组），
- *       未配置则允许所有 https（向后兼容）</li>
- * </ul>
- * </p>
- */
-function isAllowedEntryUrl(url: string): boolean {
-  if (!url || typeof url !== 'string') return false
-  const lower = url.toLowerCase()
-  // 禁止危险协议
-  if (lower.startsWith('file:') || lower.startsWith('data:') || lower.startsWith('javascript:')) {
-    return false
-  }
-  const isDev = import.meta.env?.DEV === true
-  // 开发环境允许 localhost http
-  if (isDev && (lower.startsWith('http://localhost') || lower.startsWith('https://localhost'))) {
-    return true
-  }
-  // 生产强制 https
-  if (!isDev && !lower.startsWith('https://')) {
-    return false
-  }
-  // 域名白名单（可选，未配置则放行所有 https）
-  const allowlist = (window as any).__LOWCODE_CSP_ALLOWLIST__ as string[] | undefined
-  if (allowlist && Array.isArray(allowlist) && allowlist.length > 0) {
-    try {
-      const host = new URL(url).hostname
-      return allowlist.some((pattern) => {
-        // 支持 *.example.com 通配
-        if (pattern.startsWith('*.')) {
-          return host.endsWith(pattern.slice(1))
-        }
-        return host === pattern
-      })
-    } catch {
-      return false
-    }
-  }
-  return true
 }
