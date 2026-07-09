@@ -18,6 +18,7 @@
   - (c) 存在另一份未纳入仓库的流程定义文件包含该节点。
 - **影响面**: 高——User Story 2 场景 8(按 serviceApprove 节点 DURATION 求和)在新系统中可能无法实现;serviceApproveDuration 字段语义不确定。
 - **建议决策**: 标记为已知歧义。新系统实现时需明确:若保留服务经理审批环节,需在流程定义中显式定义 serviceApprove 节点;若废弃,应移除 serviceApproveDuration 字段及统计逻辑。在 spec 中保留 [待澄清] 标注直至决策。
+- **最终决策**: 1
 
 ---
 
@@ -31,6 +32,7 @@
   - 另:update_prob_restore_assignee(sql-map-prob-config.xml:1023)在更新指派人时始终将 assigneeRole 固定设为 0,与 FR-PROB-06 的条件逻辑(空→11,非空→0)存在路径差异。
 - **影响面**: 低(主要已可消解)——角色值明确;但更新路径的固定值行为需在 spec 中补充说明。
 - **建议决策**: 消解 [待澄清] #5,在 prob_restore 表定义中补录 assigneeRole 取值"0=指定人、11=服务经理(ROLE_SERVICEMANAGER)";在 FR-PROB-07 中补注"更新指派人时 assigneeRole 固定重置为 0"。
+- **最终决策**: 动态的角色常量
 
 ---
 
@@ -46,6 +48,7 @@
   - (b) DeviceVersionLogParser 内部可能间接调用 VersionParserFactory(需进一步验证 DeviceVersionLogParser 实现)。
 - **影响面**: 高——NFR-VER-04 与 SC-020 描述的解析路径不正确,新系统实现时可能遗漏设备日志解析独立组件(DeviceLogParserFacade / DeviceVersionLogParser)。
 - **建议决策**: 拆分为两条 NFR:(1) 手工录入版本解析走 VersionParserFactory(Legacy/New 策略,按正则 matches 选择);(2) 设备日志解析走 DeviceLogParserFacade(独立组件)。Legacy/New 策略的 matches 规则依赖各自 PATTERN(LegacyVersionUtil.PATTERN / SoftNewVersionUtil.PATTERN),需补充正则定义。
+- **最终决策**: a
 
 ---
 
@@ -61,6 +64,7 @@
   - 或 20/100 均为终态(20=驳回闭环、100=审批通过闭环)。
 - **影响面**: 中——售前列表默认状态过滤、时长统计 allDuration 计算、流程闭环处理器选择均依赖完整状态机。
 - **建议决策**: 暂保留 [待澄清] 但补充已知线索:20 与 PresalesClose20TaskHandler 关联(疑似直接/驳回闭环)、100 疑似正常闭环;需核对 fnd_basic_data dataTypeCode=27 实际数据以最终消解。
+- **最终决策**: 10=待开始、20=直接闭环(PresalesClose20TaskHandler)、30~33=各审批阶段、100=正常闭环;
 
 ---
 
@@ -71,6 +75,7 @@
 - **候选解释**: BinExt 为文件扩展名而非版本结构组成部分,故不计入 10 段版本结构;但正则中确实存在该捕获组,解析时会捕获。
 - **影响面**: 低——BinExt 为可选附属信息,不影响版本范围匹配;但新系统复用正则时需注意该组存在。
 - **建议决策**: 在 FR-VER-02 补注"正则另含可选 BinExt 扩展名捕获组(如 .app/.bin),不计入 10 段版本结构,解析时单独处理"。
+- **最终决策**: 在 FR-VER-02 补注"正则另含可选 BinExt 扩展名捕获组(如 .app/.bin),不计入 10 段版本结构,解析时单独处理"
 
 ---
 
@@ -84,6 +89,7 @@
 - **候选解释**: LATCHxx/MATCHxx 为语义命名(分别表示"定制版本后的补丁"和"多版本补丁匹配"),实际均复用 PATCH 格式;LATCHxx 位于 Lxx 之后,MATCHxx 位于最末可重复。
 - **影响面**: 低——spec 描述与正则实际行为一致,但命名易引起"存在 LATCH/MATCH 字面量前缀"的误解。
 - **建议决策**: 在 FR-VER-02 补注:"LATCHxx 命名为语义标识(定制版本 Lxx 之后的补丁),正则匹配 `PATCH\d{2,3}`;MATCHxx 为一个或多个 `PATCH\d{2,3}` 序列,用于多版本补丁匹配。两者均无 LATCH/MATCH 字面量前缀。"
+- **最终决策**: 在 FR-VER-02 补注:"LATCHxx 命名为语义标识(定制版本 Lxx 之后的补丁),正则匹配 `PATCH\d{2,3}`;MATCHxx 为一个或多个 `PATCH\d{2,3}` 序列,用于多版本补丁匹配。两者均无 LATCH/MATCH 字面量前缀。"
 
 ---
 
@@ -98,6 +104,7 @@
 - **候选解释**: Bean 层面 restoreStatus 为查询时从 join 填充的瞬态属性;写入时实际目标是 prob_restore_process 表;prob_restore 物理表本身无 restoreStatus 列。
 - **影响面**: 中——新系统实现时需明确 restoreStatus 不在 prob_restore 物理表;所有 restoreStatus 读写均通过 processId 关联 prob_restore_process。
 - **建议决策**: 在 FR-PROB-06 处理规则 7 显式标注"restoreStatus 写入 prob_restore_process 表(创建流转过程记录时写入),非 prob_restore 主表";在 FR-PROB-07 标注"restoreStatus 查询通过 processId LEFT JOIN prob_restore_process 获取"。
+- **最终决策**: 按建议决策执行
 
 ---
 
@@ -113,6 +120,7 @@
   - (b) prob_softwares 单表查询(line 530)可能是按特定 affectedType 精确筛选版本记录,与列表查询的"公告维度"过滤语义不同。
 - **影响面**: 中——当 affectedType=0(所有)时,prob_softwares 单表查询可能漏匹配;受影响设备检索的 affectedType 处理需统一语义。
 - **建议决策**: 需确认 affectedType=0 的公告在受影响设备匹配时是否应匹配所有设备类型(盒式+框式);若是,FR-PROB-06 匹配规则需补注"affectedType=0 时不限设备类型";统一各查询的过滤语义。
+- **最终决策**: a
 
 ---
 
@@ -126,6 +134,7 @@
 - **候选解释**: 场景 7 的"任一审批节点"应排除 usertask1(首节点),或改为"除首节点外的审批节点"。
 - **影响面**: 中——流程驳回逻辑实现时需区分首节点(usertask1 驳回→闭环)与其他节点(驳回→回退);按场景 7 字面实现会导致 usertask1 驳回时错误回退。
 - **建议决策**: 修正场景 7 为"除 usertask1 外的审批节点驳回→回退到上一节点;usertask1 驳回→直接闭环(见场景 3)"。或在场景 7 补注"首节点例外,见场景 3"。
+- **最终决策**: 按建议决策执行
 
 ---
 
@@ -139,6 +148,7 @@
 - **候选解释**: 字段命名取自该阶段的**产出/结果**而非操作人:serviceDuration="服务经理(被)指派阶段的耗时",programDuration="项目经理(被)指派阶段的耗时"。语义可解释但易混淆。
 - **影响面**: 低——代码行为一致(sql-map-presales-config.xml:802-805 明确映射),仅命名易误解。
 - **建议决策**: 在 pm_presales_project_duration 表定义中补注:"serviceDuration = usertask1 阶段耗时(该阶段由工程管理部指派服务经理);programDuration = usertask2 阶段耗时(该阶段由服务经理指定项目经理)。字段名取自阶段产出而非操作人。"
+- **最终决策**: 按建议决策执行
 
 ---
 
@@ -152,6 +162,7 @@
   - (c) 三表 UNION 中 pm_project_soft_version 可能数据量大(设备级记录),存在性能风险。
 - **影响面**: 中——新系统数据量增长后可能存在性能瓶颈,影响版本检索响应时间。
 - **建议决策**: 保留 [待澄清];新系统实现时需评估三表 UNION 查询计划与预估数据规模,视情况对 pm_project_soft_version.conp/cpld/boot/pcb 列加索引或引入缓存。
+- **最终决策**: c
 
 ---
 
@@ -162,6 +173,7 @@
 - **候选解释**: allDuration 为历史遗留的中间计算值,仅在子查询中存在但未被外层引用,属于冗余代码。
 - **影响面**: 低——不影响功能,但代码存在无效计算;新系统复用 SQL 时应移除。
 - **建议决策**: 无需修改 spec;记录为代码冗余,新系统实现时不应包含 allDuration 计算。
+- **最终决策**: 按建议决策执行
 
 ---
 
@@ -172,6 +184,7 @@
 - **候选解释**: spec 有意省略数值常量(遵循技术栈无关原则),角色编码属于实现细节(I 级)。
 - **影响面**: 低——不影响 spec 契约;但数据迁移与权限初始化时需角色编码映射。
 - **建议决策**: 不修改 spec 主体;可在附录或数据迁移文档中补录角色常量映射表(ROLE_ADMIN=1 等),供数据迁移与权限初始化参考。注意角色编码非连续(存在跳号),迁移时需精确映射。
+- **最终决策**: 按建议决策执行
 
 ---
 
