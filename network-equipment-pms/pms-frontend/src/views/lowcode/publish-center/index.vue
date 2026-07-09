@@ -14,6 +14,7 @@ import {
   type LowCodeApprovalChain
 } from '@/api/lowcode-approval-chain'
 import { useUserStore } from '@/stores/user'
+import GrayReleaseManager from './GrayReleaseManager.vue'
 
 defineOptions({ name: 'PublishCenterView' })
 
@@ -22,6 +23,20 @@ const pendingList = ref<LowCodePublishRecord[]>([])
 const loading = ref(false)
 /** 审批链映射：approvalChainId → 审批链对象（用于显示当前级别名称/总数） */
 const chainMap = ref<Map<number, LowCodeApprovalChain>>(new Map())
+
+/** 灰度发布管理对话框状态（批次5-T4） */
+const grayManagerVisible = ref(false)
+const grayManagerConfigType = ref('')
+const grayManagerConfigId = ref(0)
+const grayManagerPublishRecordId = ref<number | null>(null)
+
+/** 打开灰度发布管理器（仅 PUBLISHED 状态可用） */
+function openGrayManager(row: LowCodePublishRecord) {
+  grayManagerConfigType.value = row.configType
+  grayManagerConfigId.value = row.configId ?? 0
+  grayManagerPublishRecordId.value = row.id ?? null
+  grayManagerVisible.value = true
+}
 
 async function loadPending() {
   loading.value = true
@@ -157,17 +172,27 @@ onMounted(loadPending)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220">
+        <el-table-column label="操作" width="280">
           <template #default="{ row }">
             <el-button size="small" type="success" @click="approve(row.id!)">通过</el-button>
             <el-button size="small" type="danger" @click="reject(row.id!)">拒绝</el-button>
             <el-button size="small" type="warning" :disabled="row.status !== 'PUBLISHED'" @click="rollback(row.id!)">
               回滚
             </el-button>
+            <el-button v-if="row.status === 'PUBLISHED'" link type="warning" size="small" @click="openGrayManager(row)">
+              灰度
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
+
+    <GrayReleaseManager
+      v-model:visible="grayManagerVisible"
+      :config-type="grayManagerConfigType"
+      :config-id="grayManagerConfigId"
+      :publish-record-id="grayManagerPublishRecordId"
+    />
   </div>
 </template>
 
