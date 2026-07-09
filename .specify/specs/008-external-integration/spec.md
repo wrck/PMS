@@ -486,7 +486,7 @@
 | syncEndTime | TIMESTAMP | 是 | 同步结束时间 | ≥ syncStartTime | I |
 | isSuccess | BIT | 是 | 是否成功(0/1) | - | I |
 | dataCount | INTEGER | 是 | 同步数据条数 | ≥0 | D |
-| syncType | SMALLINT | 是 | 同步类型(枚举值待澄清) | - | I |
+| syncType | SMALLINT | 是 | 同步类型:1=FULL_SYNC(全量同步), 2=INCREM_SYNC(增量同步)(见 `SyncType.java`) | - | I |
 | exception | LONGTEXT | 是 | 异常堆栈 | - | D |
 
 ##### 表 `t_sync_state`(增量同步状态)
@@ -941,17 +941,17 @@
 ### Measurable Outcomes
 
 - **SC-001**(源自 NFR-01 多数据源动态切换):系统 MUST 能同时连接 10 个数据源(Local、SAP、D365、CRM、OA、EHR、ITR、SMS、SSE、License),运行时按需切换;同一事务内 MUST NOT 跨数据源操作,违反时事务必须失败。可测量:配置 10 个数据源后,任意同步任务能在源数据源查询、目标数据源插入,事务边界清晰。
-- **SC-002**(源自 NFR-02 定时调度):系统 MUST 通过外置调度配置触发同步任务,cron 表达式不在代码中硬编码;`work()` 异常 MUST 被捕获仅记录日志,不抛出,调度器后续触发不被中断。可测量:任意单次任务异常后,下一次 cron 触发仍能正常执行。声明并发保护的任务并发触发时 MUST 串行执行。具体 cron 表达式在哪里配置 [待澄清]。
+- **SC-002**(源自 NFR-02 定时调度):系统 MUST 通过外置调度配置触发同步任务,cron 表达式不在代码中硬编码;`work()` 异常 MUST 被捕获仅记录日志,不抛出,调度器后续触发不被中断。可测量:任意单次任务异常后,下一次 cron 触发仍能正常执行。声明并发保护的任务并发触发时 MUST 串行执行。具体 cron 表达式配置在 Spring/Quartz XML 配置文件(如 `applicationContext-quartz.xml` 或独立 properties 文件)中,代码中不硬编码 [暂定决策:具体配置文件路径待新系统调研 `applicationContext*.xml`/`quartz*.xml`/`scheduler*.xml` 后确认]。
 - **SC-003**(源自 NFR-03 同步失败处理与事务一致性):系统 MUST 在同步前插入"进行中"日志;查询、清理、批量插入 MUST 在目标库同一事务内;失败时 MUST 回滚事务并写入完整堆栈到 `refreshException`;同步后(无论成功/失败)MUST 更新 `refreshTo` 与状态字段。可测量:任意同步任务失败后,本地目标表数据保持同步前状态,日志含完整堆栈。
 - **SC-004**(源自 NFR-03 批量大小):系统默认批量大小 MUST 为 2000 条/批;`GainPresalesInfoBySMS`、`GainPersonByEHR` MUST 为 1000 条/批。可测量:配置批量大小后,单批插入条数符合预期。
-- **SC-005**(源自 NFR-04 双路径同步):SMS/CRM 来源同步任务 MUST 支持两种数据通道,通过 `SystemContext.enableCrm()` 切换;旧路径直连 SMS 数据库视图(只读),新路径调用 CRM API。可测量:切换开关后,任务分别走视图或 API 路径,结果一致。`enableCrm` 切换条件 [待澄清]。
-- **SC-006**(源自 NFR-05 配置外置化):D365/FP API 配置(tokenUrl、appId、clientSecret、serviceUrl、各业务接口 URL 等)MUST 通过系统参数表 `sys.d365.api.config`、`sys.fp.api` 动态读取;配置变更后 MUST 能动态生效,无需重启。敏感字段(clientSecret)应做加密存储 [待澄清]。
+- **SC-005**(源自 NFR-04 双路径同步):SMS/CRM 来源同步任务 MUST 支持两种数据通道,通过 `SystemContext.enableCrm()` 切换;旧路径直连 SMS 数据库视图(只读),新路径调用 CRM API。可测量:切换开关后,任务分别走视图或 API 路径,结果一致。`enableCrm` 切换条件:读取系统参数表 `sys.crm.api.config` 的 `enable` 字段(布尔,默认 false),true 时走 CRM API 路径,false 时走 SMS 数据库视图路径。
+- **SC-006**(源自 NFR-05 配置外置化):D365/FP API 配置(tokenUrl、appId、clientSecret、serviceUrl、各业务接口 URL 等)MUST 通过系统参数表 `sys.d365.api.config`、`sys.fp.api` 动态读取;配置变更后 MUST 能动态生效,无需重启。敏感字段(clientSecret)MUST 使用可逆加密存储(如 AES/JASYPT),应用读取时解密,密钥通过独立密钥管理流程分发。
 - **SC-007**(源自 NFR-06 接口认证与 Token 缓存):D365/FP API 调用前 MUST 获取 OAuth2 token;token MUST 缓存复用至过期;并发场景下只允许一个线程刷新 token。可测量:并发 10 次请求 D365 API,token 仅被获取 1 次(未过期时)。
 - **SC-008**(源自 NFR-07 HTTP 连接池与并发限流):FP 批量发票查验 MUST 使用连接池;限流模式 MUST 支持 `MINUTE`、`SINGLE`、`MULTIPLE` 三种;并发任务超时时间 = `delay × list.size × 20`,最低 30 秒;线程池 MUST 在应用销毁时关闭。可测量:`MULTIPLE` 模式下并发线程数固定为 10,任务超时时间符合公式。
 - **SC-009**(源自 NFR-08 失败重试):FP API 请求失败(响应为空或异常)时,若 `enableRetry=true`,MUST 清除 token 缓存后重新请求一次;MUST 通过 `retried=true` 标记防止无限递归;MUST NOT 重试超过一次。可测量:模拟首次失败,系统重试一次后停止。
 - **SC-010**(源自 NFR-09 执行单号规范化):跨系统对接时,执行单号 `orderExecNumber` 中的 `J` MUST 统一替换为 `X`;本地匹配阶段 MUST 生成 `orderExecNumberShort`(去版本号:`CONCAT(LEFT(,12), SUBSTR(,14))`)。可测量:SAP/SMS 同步后,本地镜像表 `orderExecNumber` 不含 `J`,`orderExecNumberShort` 长度为原长度减 1。
-- **SC-011**(源自 NFR-10 动态表结构演进):部分 SMS 同步表字段新增时,系统 MUST 在运行时检测并自动 `ALTER TABLE ADD`;字段类型 MUST 明确指定(如 `varchar(10)`、`varchar(255)`);DDL 操作 MUST NOT 放入事务。可测量:`pm_project_property_from_sms` 缺少 `serviceTypeName` 字段时,首次同步前自动添加。是否所有同步任务都有此自检逻辑,还是仅 `GainPrjPropertyBySMS` [待澄清]。
-- **SC-012**(源自 NFR-11 数据一致性保障):系统 MUST 在同步前清理目标表(全量 `truncate` 或按 `dataSource` 条件 `delete`);同步过程 MUST 在单事务内,失败回滚;多步同步任务(如 `GainOrderByERP` 的 5 个子步骤)每个子步骤 MUST 独立事务,前序失败不影响后序执行(只记录日志)。可测量:多步任务中第 2 步失败后,第 3、4、5 步仍执行,各步日志独立记录。多步任务前序失败可能导致数据不一致(如订单同步失败但发货状态更新成功);是否需要全任务级补偿机制 [待澄清]。
+- **SC-011**(源自 NFR-10 动态表结构演进):部分 SMS 同步表字段新增时,系统 MUST 在运行时检测并自动 `ALTER TABLE ADD`;字段类型 MUST 明确指定(如 `varchar(10)`、`varchar(255)`);DDL 操作 MUST NOT 放入事务。可测量:`pm_project_property_from_sms` 缺少 `serviceTypeName` 字段时,首次同步前自动添加。动态 ALTER TABLE 自检仅适用于 `pm_project_property_from_sms`(由 `GainPrjPropertyBySMS` 触发),其他镜像表字段变更通过手工迁移。
+- **SC-012**(源自 NFR-11 数据一致性保障):系统 MUST 在同步前清理目标表(全量 `truncate` 或按 `dataSource` 条件 `delete`);同步过程 MUST 在单事务内,失败回滚;多步同步任务(如 `GainOrderByERP` 的 5 个子步骤)每个子步骤 MUST 独立事务,前序失败不影响后序执行(只记录日志)。可测量:多步任务中第 2 步失败后,第 3、4、5 步仍执行,各步日志独立记录。多步任务前序失败可能导致数据不一致(如订单同步失败但发货状态更新成功);新系统 MUST 沿用现状(各子步骤独立事务,前序失败不阻断后序),SHOULD 提供补偿任务手动重试失败步骤,不强制全任务级自动补偿机制。
 - **SC-013**(源自 NFR-12 同步日志可观测性):每次同步任务执行后,`fnd_data_refresh_log`(旧版)或 `t_sync_log`(新版)MUST 记录开始时间、结束时间、状态、异常堆栈;MUST 支持按 `targetMethod`、`tableObject`、`dataFrom`、`dataTo` 模糊查询分页;日志表读写分离(查询不影响同步事务);异常堆栈需完整保留(`LONGTEXT`/`LONGVARCHAR`)。可测量:任意任务执行后,日志表新增一条记录,含完整开始/结束时间与状态。
 - **SC-014**(源自 NFR-13 SMS 视图同步的 SQL 注入风险):新系统 MUST 使用参数化查询或 ORM,不得直接拼接用户可控字段;`PlanGetBySMS` 旧实现的字符串拼接 SQL MUST 在新系统中改造。可测量:代码审计无字符串拼接 SQL;`contractNo` 等用户可控字段均通过参数绑定传入。
 - **SC-015**(数据一致性,源自 DATA-REUSE-01):所有本地表 MUST 沿用既有结构,不新建重复表;同步任务 MUST 复用既有镜像表(16 张)与既有业务表(`pm_project_header`、`pm_project_member`、`pm_project_task`、`pm_project_product_line` 等),不新建同类替代表。可测量:与既有 schema 比对,无新增重复表。
@@ -965,9 +965,9 @@
 - **配置参数表存在**:假设系统参数表 `sys.d365.api.config`、`sys.fp.api` 已初始化,含 tokenUrl、appId、clientSecret、serviceUrl、各业务接口 URL 等字段;敏感字段加密存储要求见 SC-006。
 - **本地基础表存在**:假设 `pm_project_header`、`pm_project_member`、`pm_project_task`、`pm_project_product_line`、`pm_project_contract`、`pm_project_related_party`、`pm_project_group_relationship`、`fnd_basic_data` 等业务基础表已存在并被其他域维护。
 - **双路径切换开关**:假设 `SystemContext.enableCrm()` 的切换逻辑由系统配置决定;切换条件见 SC-005。
-- **日志体系过渡**:假设旧版 `fnd_data_refresh_log` 与新版 `t_sync_log` 在过渡期并存;是否计划下线 `fnd_data_refresh_log` [待澄清]。
-- **`syncType` 枚举定义**:`t_sync_log.syncType` 类型为 SMALLINT,具体枚举值未在代码中显式定义 [待澄清]。
-- **多步任务补偿假设**:假设多步同步任务前序失败不阻断后序是业务可接受的;是否需要全局补偿机制 [待澄清]。
+- **日志体系过渡**:假设旧版 `fnd_data_refresh_log` 与新版 `t_sync_log` 在过渡期并存;新系统统一采用 `t_sync_log` 模型,`fnd_data_refresh_log` 标记为废弃只读保留(不再写入),SC-013 适用表为 `t_sync_log`。
+- **`syncType` 枚举定义**:`t_sync_log.syncType` 类型为 SMALLINT,枚举值已定义:1=FULL_SYNC(全量同步), 2=INCREM_SYNC(增量同步)(见 `core/src/main/java/com/dp/plat/core/schedule/SyncType.java`)。
+- **多步任务补偿假设**:假设多步同步任务前序失败不阻断后序是业务可接受的;沿用现状,不强制全局补偿机制;新系统 SHOULD 提供补偿任务手动重试失败步骤。
 - **UUID 类型转换无损**:假设 ITR 表 `pms_incident` 中的 UUID 字段经类型处理器转字符串后落入本地 VARCHAR 字段无损,字符串长度足够。
 - **OAuth2 token 有效期**:假设 D365/FP 的 OAuth2 token 有效期足够长(分钟级以上),不会在单次同步任务中过期多次;若过期,token 缓存机制能自动重取。
 - **FP 发票文件可读**:假设 FP 发票查验的发票文件可读,multipart/form-data 上传成功;若文件损坏,失败发票包装为 `Response.failure(message)` 返回。
