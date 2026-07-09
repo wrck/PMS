@@ -34,7 +34,7 @@
 2. **Given** 管理员在类型 `IMPL_WAY` 下新增编码为 `impl0` 的字典项,**When** 提交新增表单且同类型下无重复编码,**Then** 记录成功插入,基础数据缓存失效,列表页重定向并显示新记录。
 3. **Given** 管理员在类型 `IMPL_WAY` 下新增编码为 `impl0` 的字典项,**When** 同类型下已存在编码 `impl0`,**Then** 编码唯一性校验返回匹配数 > 0,拒绝新增。
 4. **Given** 管理员在新后台访问统一字典分页查询,**When** 输入 `dic_key` 模糊条件 `impl%` 并指定页码,**Then** 返回匹配的字典列表及总数,按 `id desc` 排序。
-5. **Given** 管理员在维护界面提交不含 `where` 关键字的 UPDATE 语句,**When** 执行受限 SQL 功能,**Then** 系统拒绝执行并返回"执行的 SQL 没有 where 条件,不允许执行"。`[待澄清]` 该受限 SQL 执行功能是否仍保留。
+5. **Given** 管理员在维护界面提交不含 `where` 关键字的 UPDATE 语句,**When** 执行受限 SQL 功能,**Then** 系统拒绝执行并返回"执行的 SQL 没有 where 条件,不允许执行"。[暂定决策:新系统废弃裸 SQL 执行入口(FR-2.1.5),紧急运维改走 SC-006 三层校验受控通道;老系统保留并标记为弃用,迁移时移除]
 
 ---
 
@@ -73,7 +73,7 @@
 **Acceptance Scenarios**:
 
 1. **Given** 管理员拥有 `roleId=1`,**When** 访问合格证查询主页,**Then** `canUpload` 标志为 true,显示印章上传入口。
-2. **Given** `mes_oqc_info` 中存在 barcode=`ABC123` 的检验记录且 `mes_seal_info` 中检验员在该检验时间窗口内领用了印章(`inspectTime` 在 `[takeTime, backTime]` 区间),**When** 服务工程师输入 barcode=`ABC123` 查询,**Then** 返回从 `info` 中正则提取的合格证号(`QC PASS` 开头),并根据 barcode 第 10-12 位(16 进制)生成生产日期。
+2. **Given** `mes_oqc_info` 中存在 barcode=`ABC123` 的检验记录且 `mes_seal_info` 中检验员在该检验时间窗口内领用了印章(`inspectTime` 在 `[takeTime, backTime]` 区间),**When** 服务工程师输入 barcode=`ABC123` 查询,**Then** 返回从 `info` 中正则提取的合格证号(`QC PASS` 开头),并根据 barcode 解析生成生产日期(解析规则见 FR-2.3.2)。
 3. **Given** 输入 barcode 为空,**When** 提交查询,**Then** 返回错误信息"请输入设备序列号!"。
 4. **Given** `mes_oqc_info` 中无匹配记录,**When** 查询 barcode=`NOTEXIST`,**Then** 返回错误信息"没有找到[NOTEXIST]对应的OQC检验信息!"。
 5. **Given** 管理员上传包含 50 条印章信息的 Excel 文件,**When** 执行批量导入,**Then** 系统先清空 `mes_seal_info` 表,再批量插入 50 条记录。
@@ -118,7 +118,7 @@
 1. **Given** 用户通过上传表单提交 2 个文件,**When** 上传完成,**Then** 文件存储至 `upload/file/{随机数}/` 目录,数据库插入 2 条文件记录,返回逗号分隔的文件 ID 列表。
 2. **Given** 文件 ID 为 100 的文件存在,**When** 用户点击下载链接,**Then** 以流式响应返回原文件,文件名 ISO8859-1 编码,同时记录下载日志。
 3. **Given** 用户在新架构下按文件类型编码 `avatar` 上传头像,**When** POST 至上传端点,**Then** 系统按 `t_file_type` 配置(大小限制、允许类型、重命名、压缩、缩略图、保存目录)处理上传,返回文件信息列表。
-4. **Given** 用户通过公开下载链接 `/file/down/public/{id}` 访问文件,**When** 请求到达,**Then** 直接返回文件流(公开下载端点鉴权策略见 SC-013)。
+4. **Given** 用户通过公开下载链接 `/file/down/public/{id}` 访问文件,**When** 请求到达且 `downloadKey` 校验通过,**Then** 返回文件流(公开下载端点须校验 `downloadKey`,见 SC-013)。
 5. **Given** 用户通过私有下载链接 `/file/down/private/{id}` 访问文件,**When** 用户未登录,**Then** 拒绝访问。
 6. **Given** 用户在富文本编辑器中上传图片,**When** 上传完成,**Then** 文件按 MD5 命名去重存储,返回完整可访问 URL 列表。
 
@@ -211,15 +211,15 @@
 
 - **无 WHERE 的 UPDATE/DELETE**:管理员在基础数据维护界面提交不含 `where` 关键字的 UPDATE/DELETE 语句时,系统拒绝执行并返回"执行的 SQL 没有 where 条件,不允许执行"。
 - **文件上传异常**:老架构文件上传过程中抛出异常时,异常堆栈被打印但操作仍返回 SUCCESS,需关注文件是否实际存储成功。
-- **邮件发送失败超过上限**:邮件 `failedCount` 达到 `sys.mail.sendFailed.maxCount`(默认 3)后,定时任务跳过该邮件不再重试,需人工介入。
+- **邮件发送失败达到上限**:邮件 `failedCount` 达到 `sys.mail.sendFailed.maxCount`(默认 3)后,定时任务跳过该邮件不再重试,需人工介入。
 - **合格证查询 barcode 为空**:用户未输入设备序列号即提交查询,系统返回"请输入设备序列号!"错误。
 - **合格证查询无匹配**:输入的 barcode 在 `mes_oqc_info` 中无匹配记录,系统返回"没有找到[barcode]对应的OQC检验信息!"。
 - **报表角色越权访问**:非授权角色访问报表首页,被重定向至项目状态汇总页且仅显示该报表 tab。
-- **印章导入覆盖**:批量上传印章信息前先 `truncate` 清空 `mes_seal_info` 表,历史数据被清除,需确保导入数据完整。
+- **印章导入覆盖**:批量上传印章信息前先 `truncate` 清空 `mes_seal_info` 表,历史数据被清除。[暂定决策:新系统改用事务内 `DELETE` + INSERT,失败可回滚,避免数据丢失]
 - **趋势数据历史版本**:同一 `dataTypeCode + officeCode + settingTime` 的历史数据通过 `effectiveTo` 失效,趋势查询仅返回 `effectiveTo IS NULL` 的当前有效记录。
 - **系统变量二次认证超时**:二次认证状态存储在会话中,会话过期后需重新认证才能查看明文。
 - **数据导出大数据量**:大数据量导出使用流式写出(窗口大小 100 行)避免内存溢出,异常时记录错误 ID 并抛出含错误 ID 的异常。
-- **新老架构表并存**:基础数据、邮件、系统变量、操作日志存在新老两套表结构,新老表是否通过同步任务保持一致待确认(见 SC-022)。
+- **新老架构表并存**:基础数据、邮件、系统变量、操作日志存在新老两套表结构。[暂定决策:过渡期新老表分别服务不同模块,无双向同步;迁移时按子域分批合并到新表](见 SC-022)。
 
 ---
 
@@ -272,7 +272,7 @@
   3. SQL 通过字符串拼接到 `<![CDATA[ $executeSql$ ]]>` 执行(`sql-map-admin-config.xml:919-923`)。
 - **输出**:`msg`(执行结果文本)
 - **异常**:异常信息拼接到 `msg`(`BasicDataManageAction.java:86-88`)
-- **风险**:SQL 注入风险极高 `[待澄清]` 该功能是否仍在生产使用
+- **风险**:SQL 注入风险极高。[暂定决策:新系统废弃该裸 SQL 执行入口,紧急运维改走 SC-006 三层校验受控通道;老系统保留并标记为弃用,迁移时移除]
 - **证据**:`BasicDataManageAction.java:72-90`、`sql-map-admin-config.xml:919-923`
 
 **FR-2.1.6 新架构数据字典 CRUD**
@@ -285,6 +285,7 @@
 **FR-2.1.7 查询字典类型最大 ID**
 - **触发**:新增字典类型时分配类型 ID
 - **处理规则**:`SELECT max(dic_type_id) FROM t_dictionary`(`DictionaryMapper.xml:256-258`)
+- **备注**:[暂定决策:新增字典类型与新增字典项为独立操作;`dic_type_id` 应改由数据库自增或唯一约束保证,避免 `max+1` 并发竞态]
 - **证据**:`DictionaryMapper.xml:256-258`
 
 #### 2.2 操作日志
@@ -341,7 +342,7 @@
 - **处理规则**:
   1. 查询 `mes_oqc_info` 关联 `mes_seal_info`(检验员 = 印章 `user`,且 `inspectTime` 在 `takeTime` 与 `backTime` 之间或 `backTime IS NULL` 且 `inspectTime >= takeTime`),且 `info like 'QC PASS%'`(`sql-map-certificate-config.xml:11-30`)。
   2. 取首条结果的 `info`,正则提取数字作为 `oqcNo`(`CertificateAction.java:56-61`)。
-  3. 根据 barcode 第 10-12 位(16 进制月)生成 `productionDate`(`CertificateAction.java:83-99`)。
+  3. 根据 barcode 解析生成 `productionDate`([暂定决策:待源码 `CertificateAction.java:83-99` 确认位偏移;暂定取第 11-12 位解析为 16 进制月份],`CertificateAction.java:83-99`)。
 - **输出**:`oqcNo`、`productionDate`
 - **异常**:未找到 → `errmsg="没有找到[barcode]对应的OQC检验信息!"`(`CertificateAction.java:70`);barcode 为空 → `errmsg="请输入设备序列号!"`(`CertificateAction.java:72`)
 - **证据**:`CertificateAction.java:48-75`、`sql-map-certificate-config.xml:11-30`
@@ -355,6 +356,7 @@
   3. 批量 INSERT(`sql-map-certificate-config.xml:49-54`)。
 - **输出**:重定向回主页
 - **异常**:解析异常 → `errmsg` + ERROR 页(`CertificateAction.java:104-107`)
+- **事务策略**:[暂定决策:新系统改用事务内 `DELETE` + INSERT 替代非事务的 `truncate`,失败可回滚;导入前可选备份,避免印章数据丢失]
 - **证据**:`CertificateAction.java:101-109`、`sql-map-certificate-config.xml:39-57`
 
 #### 2.4 报表统计与数据分析
@@ -440,6 +442,7 @@
 **FR-2.4.11 报表趋势数据持久化**
 - **触发**:定时任务批量保存趋势图数据
 - **处理规则**:批量 INSERT `pm_report_line_data(dataTypeCode, officeCode, conditionValue, totalValue, specificValue, settingTime, createTime, effectiveFrom)`(`sql-map-report-config.xml:555-580`)
+- **备注**:[暂定决策:待定位定时任务类后补充任务类名与调度周期;暂定为月度定时任务预计算所有指标并持久化,历史 `effectiveTo` 失效在持久化前执行]
 - **证据**:`sql-map-report-config.xml:555-580`
 
 **FR-2.4.12 回访数据统计分析**
@@ -501,7 +504,7 @@
 - **触发**:GET `/file/down/public/{fileId}`、`/file/down/private/{fileId}`、`/file/zipdown/public/{fileIds}`
 - **处理规则**:单文件直接响应流;多文件 ZIP 打包下载(`UploaderController.java:258-288`)
 - **输出**:文件流或 ZIP 流
-- **备注**:公开下载端点的鉴权策略待确认(见 SC-013)
+- **备注**:公开下载端点须校验 `downloadKey`(见 SC-013)
 - **证据**:`UploaderController.java:258-288`
 
 **FR-2.5.8 新架构文件列表查询**
@@ -614,6 +617,7 @@
 - **输入**:`cert`(用户输入验证码)
 - **处理规则**:校验 `cert` 与会话中的 `captcha` 是否相等(忽略大小写);相等则会话置 `isSC=true`,否则移除 `isSC`(`SystemVariableController.java:127-131`)
 - **输出**:无(仅会话状态变更)
+- **备注**:[暂定决策:`isSC` 二次认证会话标志全局共享,覆盖系统变量与通知模板;编辑通知模板前须先走系统变量二次认证]
 - **证据**:`SystemVariableController.java:123-133`
 
 **FR-2.7.4 手动缓存刷新**
@@ -639,6 +643,7 @@
 - **输入**:`objectName`、`objectKV`、`pageParamKV`、`fullServiceName`
 - **处理规则**:查询动态列配置 + 静态列工具,按排序规则排序(`DataExportController.java:43-50`)
 - **输出**:列定义页面
+- **备注**:[暂定决策:动态列配置存储于 `t_data_export` 表(草稿 FR-2.9.1 引用),补入本域数据契约;字段分级待 `DataExportMapper.xml` 源码确认后补全]
 - **证据**:`DataExportController.java:36-53`
 
 **FR-2.9.2 通用数据导出执行**
@@ -654,7 +659,7 @@
 **FR-2.9.3 数据操作配置 CRUD**
 - **触发**:用户访问 `/data` 系列端点
 - **输入**:`DataOperation`(`name`、`description`、`type`(0=导出/1=导入)、`clazz`、`method`、`parameterTypes`、`columns`、`empPower`、`depPower`、`state`、`effectiveFrom`、`effectiveTo`、`formHtml`、`script`)
-- **处理规则**:标准 CRUD;`type=0` 时 SQL 经校验(SQL 注入正则 + 表白名单/黑名单 + HTML 净化)(`DataOperationController.java:165-173,219-227,712-764`);`formHtml` 经表单白名单净化(`DataOperationController.java:175,229`);权限校验 `empPower` 包含当前用户 ID(`DataOperationController.java:766-784`)
+- **处理规则**:标准 CRUD;`type=0` 时 SQL 经校验(SQL 注入正则 + 表白名单/黑名单 + HTML 净化)(`DataOperationController.java:165-173,219-227,712-764`);`formHtml` 经表单白名单净化(`DataOperationController.java:175,229`);权限校验:管理员豁免 `empPower` 校验可操作所有配置,非管理员须 `empPower` 包含当前用户 ID(`DataOperationController.java:766-784`)
 - **输出**:配置列表/详情
 - **证据**:`DataOperationController.java:76-242`、`DataOperationMapper.xml:30-200`
 
@@ -841,7 +846,7 @@
 | exception_detail | VARCHAR | 是 | 异常详情 | — | I |
 | params | VARCHAR | 是 | 请求参数 | — | I |
 | create_by | VARCHAR | 是 | 操作人 | — | C |
-| create_date | VARCHAR | 是 | 操作时间(字符串) | — | C |
+| create_date | VARCHAR | 是 | 操作时间(字符串,格式 `yyyy-MM-dd HH:mm:ss`) | — | I(新系统新增 TIMESTAMP 列为 C 级) |
 
 - **证据**:`SysLogMapper.xml:4-15`(resultMap)、`16-19`(列清单)、`20-25`(select)、`30-39`(insert)、`40-106`(insertSelective)、`107-152`(update)、`154-221`(查询)
 
@@ -888,7 +893,7 @@
 |---|---|---|---|---|---|
 | code | VARCHAR | 否 | 变量编码,主键 | 唯一 | C |
 | id | INT | 是 | 自增 ID(冗余) | — | I |
-| var | VARCHAR | 是 | 变量值(可能加密存储) | — | C |
+| var | VARCHAR | 是 | 变量值(可能以 AES 加密存储) | — | C |
 | remark | VARCHAR | 是 | 备注 | — | I |
 | createBy | VARCHAR | 是 | 创建人 | — | I |
 | createTime | TIMESTAMP | 是 | 创建时间 | — | I |
@@ -898,7 +903,7 @@
 | effectiveTo | TIMESTAMP | 是 | 失效时间 | — | C |
 
 - **证据**:`SystemVariableMapper.xml:4-15`(resultMap)、`16-19`(列清单)、`20-25`(select)
-- **业务规则**:`var` 字段在非二次认证场景下以加密返回(`SystemVariableController.java:60-66,82-87`)
+- **业务规则**:`var` 字段在非二次认证场景下以 AES 加密返回(`SystemVariableController.java:60-66,82-87`;草稿 `ASE` 视为 `AES` 笔误)
 
 ##### 表 t_notify_template(通知模板)【本域专属】
 
@@ -954,7 +959,7 @@
 | uploadUrl | VARCHAR | 是 | 上传 URL(预留) | — | I |
 
 - **证据**:`FileInfoMapper.xml:325-329`(selectFileTypeByCode)、`FileType.java`
-- **备注**:表结构由 POJO 反推;mapper 仅查询,CRUD 操作在其他 mapper `[待澄清]`
+- **备注**:表结构由 POJO 反推;mapper 仅查询。[暂定决策:t_file_type 通过数据库直接维护(DBA/运维操作),无应用层 CRUD 端点]
 
 ##### 表 t_data_operation(数据操作配置)【本域专属】
 
@@ -968,7 +973,7 @@
 | method | VARCHAR | 是 | 目标方法名(导入用) | — | I |
 | parameterTypes | VARCHAR | 是 | 方法参数类型列表(空格分隔) | — | I |
 | columns | VARCHAR | 是 | 导出列定义(`key=title;...`) | — | C |
-| empPower | VARCHAR | 是 | 员工权限(用户 ID 列表) | 匹配当前用户 ID 才允许操作 | C |
+| empPower | VARCHAR | 是 | 员工权限(用户 ID 列表) | 非管理员须匹配当前用户 ID;管理员豁免 | C |
 | depPower | VARCHAR | 是 | 部门权限(预留) | — | I |
 | state | BIT | 是 | 状态 | — | C |
 | effectiveFrom | TIMESTAMP | 是 | 生效起始时间 | — | C |
@@ -1084,7 +1089,11 @@
 | updateTime | TIMESTAMP | 是 | 更新时间 | — | I |
 
 - **证据**:`CompanyMapper.xml:4-28`(resultMap)、`29-33`(列清单)
-- **备注**:业务归属本域(基础数据范畴),但公司管理与 001 组织管理有交叉 `[待澄清]`
+- **备注**:[暂定决策:t_company 归属 001 域组织管理(维护方在 001),本域仅查询,按"跨域引用表"处理]
+
+##### 表 t_data_export(数据导出列配置)【本域专属,待源码补全】
+
+[暂定决策:动态导出列配置存储于此表(草稿 FR-2.9.1 引用),补入本域数据契约;字段分级待 `DataExportMapper.xml` 源码确认后补全]
 
 ##### 跨域引用表(本域查询不维护)
 
@@ -1102,20 +1111,20 @@
 
 - **SC-001**:基础数据查询在缓存命中时响应时间 < 100ms,缓存未命中时 < 500ms;缓存容量 50 条,1 小时自动刷新,insert/update/手动刷新时失效。(源自 NFR-4.1.1)
 - **SC-002**:用户/角色/菜单查询在缓存命中时响应时间 < 100ms;缓存容量 50 条,1 小时自动刷新,相关 insert/update 时失效。(源自 NFR-4.1.2)
-- **SC-003**:质量报表与实施方式报表通过临时表聚合后查询,查询完成后自动清理临时表(`DROP TABLE IF EXISTS`),避免主表查询压力。(源自 NFR-4.1.3)
+- **SC-003**:质量报表与实施方式报表通过临时表聚合后查询,查询完成后自动清理临时表(`DROP TABLE IF EXISTS`),避免主表查询压力。[暂定决策:新系统改用 MySQL 会话级临时表(`CREATE TEMPORARY TABLE`)隔离并发查询,并发查询互不干扰]。(源自 NFR-4.1.3)
 - **SC-004**:数据导出 10 万行数据时内存峰值 < 512MB(通过流式 Excel 写出,窗口大小 100 行),进度以百分比实时写入会话供前端轮询。(源自 NFR-4.1.4)
 - **SC-005**:邮件发送结果通过批量合并更新减少数据库往返,N 封邮件的发送结果更新在 1 次批量操作内完成。(源自 NFR-4.1.5)
 
 **安全**
 
 - **SC-006**:数据导出/数据操作中的 SQL 经三层校验(HTML 净化 → SQL 注入正则匹配 → 表白名单/黑名单校验),命中注入规则时重定向至非法提示页面,通过率 100%。(源自 NFR-4.2.1)
-- **SC-007**:系统变量敏感值在非二次认证场景下以加密形式返回,二次认证(验证码校验通过)后返回明文;加密/解密对业务透明。(源自 NFR-4.2.2)
+- **SC-007**:系统变量敏感值在非二次认证场景下以加密形式返回,二次认证(验证码校验通过)后返回明文;加密/解密对业务透明。[暂定决策:统一采用 AES 对称加密(草稿 `ASE` 视为 `AES` 笔误),新系统迁移时以 AES 实现]。(源自 NFR-4.2.2)
 - **SC-008**:通知模板内容经 HTML 白名单净化(relaxed 白名单 + 表格属性 + 相对链接),`<script>` 等危险标签移除率 100%。(源自 NFR-4.2.3)
 - **SC-009**:数据操作配置含员工权限(`empPower`),非管理员仅能操作 `empPower` 包含自身用户 ID 的配置,越权拒绝率 100%。(源自 NFR-4.2.4)
 - **SC-010**:集群核心功能刷新仅管理员角色可调用,非管理员调用返回"没有权限"且不执行任何刷新。(源自 NFR-4.2.5)
 - **SC-011**:项目状态汇总报表对非管理员注入区域权限限制,SQL 中通过办事处编码过滤,非管理员仅可见授权办事处数据。(源自 NFR-4.2.6)
 - **SC-012**:非授权角色(非管理员/工程经理/工程经理组长/财务/项目管理员/回访员)访问报表首页被重定向至项目状态汇总页。(源自 NFR-4.2.7)
-- **SC-013**:文件下载区分公开与私有端点,私有端点需登录;`[待澄清]` 公开下载端点的鉴权策略(是否完全无鉴权)。(源自 NFR-4.2.8)
+- **SC-013**:文件下载区分公开与私有端点,私有端点需登录;[暂定决策:公开下载端点须校验 `t_file.downloadKey`(无 downloadKey 或不匹配则拒绝),防止 ID 枚举遍历]。(源自 NFR-4.2.8)
 
 **可观测性**
 
@@ -1133,13 +1142,13 @@
 
 **兼容性**
 
-- **SC-022**:老架构(`fnd_*`/`tb_sys_log` 表)与新架构(`t_*` 表)并存,基础数据、邮件、系统变量、操作日志存在两套表结构可分别服务;`[待澄清]` 新老表是否通过同步任务保持一致,还是分别服务不同模块。(源自 NFR-4.5.1)
+- **SC-022**:老架构(`fnd_*`/`tb_sys_log` 表)与新架构(`t_*` 表)并存,基础数据、邮件、系统变量、操作日志存在两套表结构可分别服务;[暂定决策:过渡期新老表分别服务不同模块(老模块读写老表、新模块读写新表),无双向同步;迁移时按子域分批合并到新表,合并前老表只读保留]。(源自 NFR-4.5.1)
 - **SC-023**:SQL 校验时根据当前数据源类型适配 SQL 解析,支持多数据源环境下统一校验逻辑。(源自 NFR-4.5.2)
 
 **数据完整性**
 
-- **SC-024**:基础数据、系统变量、通知模板均通过 `effectiveFrom`/`effectiveTo` 控制时效,查询均按 `effectiveFrom < now() AND (effectiveTo IS NULL OR effectiveTo > now())` 过滤,过期数据不可见率 100%。(源自 NFR-4.6.1)
-- **SC-025**:邮件发送失败次数超过 `sys.mail.sendFailed.maxCount`(默认 3)后不再重试,无限重试发生率 0%。(源自 NFR-4.6.2)
+- **SC-024**:基础数据、系统变量、通知模板均通过 `effectiveFrom`/`effectiveTo` 控制时效,各实体按其既定规则过滤(新架构统一 `effectiveFrom < now()`;老架构系统变量保留 `effectiveFrom <= now()` 含生效时刻),`(effectiveTo IS NULL OR effectiveTo > now())`,过期数据不可见率 100%。(源自 NFR-4.6.1)
+- **SC-025**:邮件发送失败次数达到 `sys.mail.sendFailed.maxCount`(默认 3)后不再重试(以代码 `failedCount < maxCount` 为准,失败计数从 0 开始,最多重试 maxCount 次),无限重试发生率 0%。(源自 NFR-4.6.2)
 - **SC-026**:同一 `dataTypeCode` 下 `basicDataId` 唯一,通过唯一性校验保证,重复编码写入率 0%。(源自 NFR-4.6.3)
 
 ## Assumptions
