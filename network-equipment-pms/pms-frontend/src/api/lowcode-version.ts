@@ -241,3 +241,41 @@ export function readFileAsText(file: File): Promise<string> {
     reader.readAsText(file)
   })
 }
+
+/** 发布影响项 */
+export interface ImpactItem {
+  configType: string
+  configId: number
+  configCode: string
+  referenceField: string
+  status?: string
+  severity: 'HIGH' | 'MEDIUM' | 'LOW' | string
+}
+
+/** 发布影响范围分析结果 */
+export interface PublishImpactDTO {
+  sourceConfigType: string
+  sourceConfigId: number
+  sourceConfigCode?: string
+  sourceVersion?: number
+  impactedConfigs: ImpactItem[]
+  totalImpacted: number
+}
+
+/** 回滚预览（对比当前版本与目标版本差异） */
+export function getRollbackPreview(configType: string, configId: number, targetVersion: number) {
+  return get<VersionDiffDTO>('/api/lowcode/version/rollback-preview', {
+    configType,
+    configId,
+    targetVersion
+  })
+}
+
+/** 发布影响范围分析 */
+export function getPublishImpact(configType: string, configId: number, configCode?: string) {
+  return get<PublishImpactDTO>('/api/lowcode/version/publish-impact', {
+    configType,
+    configId,
+    configCode
+  })
+}

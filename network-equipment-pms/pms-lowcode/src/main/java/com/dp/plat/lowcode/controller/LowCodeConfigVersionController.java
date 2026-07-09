@@ -10,6 +10,7 @@ import com.dp.plat.lowcode.entity.LowCodeConfigVersion;
 import com.dp.plat.lowcode.service.LowCodeConfigVersionService;
 import com.dp.plat.lowcode.version.EnvironmentPromotionService;
 import com.dp.plat.lowcode.version.PromotionGateService;
+import com.dp.plat.lowcode.version.PublishImpactService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,7 @@ public class LowCodeConfigVersionController {
     private final LowCodeConfigVersionService configVersionService;
     private final EnvironmentPromotionService promotionService;
     private final PromotionGateService gateService;
+    private final PublishImpactService impactService;
 
     @Operation(summary = "查询版本历史")
     @GetMapping("/history")
@@ -79,6 +81,24 @@ public class LowCodeConfigVersionController {
                                                    @RequestParam Integer targetVersion,
                                                    @RequestParam(required = false) String changeLog) {
         return Result.ok(configVersionService.rollback(configType, configId, targetVersion, changeLog));
+    }
+
+    @Operation(summary = "回滚预览（批次5-T5，对比当前版本与目标版本差异，不实际回滚）")
+    @GetMapping("/rollback-preview")
+    @PreAuthorize("hasAuthority('lowcode:version:rollback')")
+    public Result<VersionDiffDTO> rollbackPreview(@RequestParam String configType,
+                                                    @RequestParam Long configId,
+                                                    @RequestParam Integer targetVersion) {
+        return Result.ok(configVersionService.rollbackPreview(configType, configId, targetVersion));
+    }
+
+    @Operation(summary = "发布影响范围分析（批次5-T5）")
+    @GetMapping("/publish-impact")
+    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    public Result<com.dp.plat.lowcode.dto.PublishImpactDTO> publishImpact(@RequestParam String configType,
+                                                                            @RequestParam Long configId,
+                                                                            @RequestParam(required = false) String configCode) {
+        return Result.ok(impactService.analyzeImpact(configType, configId, configCode));
     }
 
     @Operation(summary = "环境晋升")

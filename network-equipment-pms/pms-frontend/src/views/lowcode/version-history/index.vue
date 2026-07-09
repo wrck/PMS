@@ -1,15 +1,15 @@
 <!-- src/views/lowcode/version-history/index.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import JsonTreeDiff from '@/components/JsonTreeDiff/index.vue'
 import PromotionPipeline from './PromotionPipeline.vue'
 import ImportConflictResolver from './ImportConflictResolver.vue'
+import RollbackPreviewDialog from './RollbackPreviewDialog.vue'
 import {
   getVersionHistory,
   getVersionTree,
   diffVersions,
-  rollbackVersion,
   exportPackageZip,
   importPackage,
   createBranch,
@@ -54,6 +54,10 @@ const pipelineCodes = ref<string[]>([])
 const conflictResolverVisible = ref(false)
 /** 冲突解决器目标环境 */
 const conflictResolverTargetEnv = ref('TEST')
+/** 回滚预览对话框 */
+const rollbackPreviewVisible = ref(false)
+const rollbackTargetVersion = ref<number | null>(null)
+const rollbackTargetSnapshot = ref<string>('')
 
 async function loadHistory() {
   if (!configId.value) {
@@ -138,19 +142,20 @@ async function doDiff(from: number, to: number) {
   }
 }
 
-async function rollback(version: LowCodeConfigVersion) {
-  try {
-    const { value: changeLog } = await ElMessageBox.prompt(
-      `确认回滚到版本 ${version.version}？请输入变更说明`,
-      '版本回滚',
-      { confirmButtonText: '回滚', cancelButtonText: '取消' }
-    )
-    await rollbackVersion(configType.value, configId.value!, version.version, changeLog)
-    ElMessage.success('回滚成功，已生成新版本')
-    await loadHistory()
-  } catch (e) {
-    // 用户取消
-  }
+async function rollback(version: LowCodeConfigVersion | VersionTreeNode) {
+  // 打开回滚预览对话框（批次5-T5）
+  // 从 versionList 中查找完整版本（含 snapshot）
+  const fullVersion = versionList.value.find(v => v.version === version.version)
+  rollbackTargetVersion.value = version.version
+  rollbackTargetSnapshot.value = fullVersion?.snapshot || ''
+  rollbackPreviewVisible.value = true
+}
+
+/** 回滚预览对话框回滚成功回调 */
+async function onRollbackDone() {
+  rollbackPreviewVisible.value = false
+  await loadHistory()
+  if (activeTab.value !== 'list') await loadTree()
 }
 
 async function onExport() {
@@ -554,6 +559,17 @@ const hasDiff = computed(() => diffResult.value && diffResult.value.entries.leng
       :file="importFile"
       :target-environment="conflictResolverTargetEnv"
       @imported="onConflictResolved"
+    />
+
+    <!-- 回滚预览对话框（批次5-T5） -->
+    <RollbackPreviewDialog
+      v-model:visible="rollbackPreviewVisible"
+      :config-type="configType"
+      :config-id="configId || 0"
+      :target-version="rollbackTargetVersion"
+      :target-snapshot="rollbackTargetSnapshot"
+      :version-list="versionList"
+      @rolled="onRollbackDone"
     />
   </div>
 </template>
