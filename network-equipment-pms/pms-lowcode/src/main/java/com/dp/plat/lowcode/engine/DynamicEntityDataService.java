@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +39,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DynamicEntityDataService {
 
+    /** 合法 JOIN 类型白名单（防 SQL 注入） */
+    private static final Set<String> VALID_JOIN_TYPES = Set.of("INNER", "LEFT", "RIGHT");
+    /** 标识符（表名/别名/字段名）正则白名单：字母/下划线开头，最长 64 字符 */
+    private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]{0,63}$");
+
     private final LowCodeEntityService entityService;
     private final JdbcTemplate jdbcTemplate;
     private final LowCodeTriggerService triggerService;
@@ -51,11 +57,22 @@ public class DynamicEntityDataService {
         EntityDesignDTO design = getDesignByCode(entityCode);
         String tableName = design.getEntity().getTableName();
 
+        // 合法字段白名单（含 id），过滤条件字段名必须命中以防 SQL 注入
+        Set<String> validFields = design.getFields().stream()
+                .map(LowCodeField::getName)
+                .collect(Collectors.toSet());
+        validFields.add("id");
+
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (filters != null) {
             for (Map.Entry<String, Object> entry : filters.entrySet()) {
-                where.append(" AND `").append(entry.getKey()).append("` = ?");
+                String field = entry.getKey();
+                if (!validFields.contains(field)) {
+                    // 非法字段直接忽略，避免注入
+                    continue;
+                }
+                where.append(" AND `").append(field).append("` = ?");
                 params.add(entry.getValue());
             }
         }
@@ -153,7 +170,7 @@ public class DynamicEntityDataService {
             }
         }
 
-        // 关联查询（批次3-T8：join 支持）
+        // 关联查询（批次3-T8：join 支持；批次6-T3：JOIN 类型/别名/ON 字段白名单校验防注入）
         StringBuilder joinClause = new StringBuilder();
         StringBuilder joinSelect = new StringBuilder();
         if (request.getJoins() != null) {
@@ -164,31 +181,67 @@ public class DynamicEntityDataService {
                 String foreignTable = foreignDesign.getEntity().getTableName();
                 String alias = join.getAlias() != null ? join.getAlias() : join.getEntityCode();
 
-                // 构建 JOIN 子句
+                // 别名需命中标识符正则白名单，否则跳过该 JOIN（防注入）
+                if (!IDENTIFIER_PATTERN.matcher(alias).matches()) {
+                    log.warn("JOIN 别名非法，已跳过: alias={}, entityCode={}", alias, join.getEntityCode());
+                    continue;
+                }
+                // JOIN 类型白名单校验
                 String joinType = join.getJoinType() != null ? join.getJoinType().toUpperCase() : "LEFT";
-                joinClause.append(" ").append(joinType).append(" JOIN `")
-                        .append(foreignTable).append("` AS `").append(alias).append("` ON ");
-
-                // ON 条件
-                List<DynamicQueryRequest.JoinOnCondition> onConds = join.getOnConditions();
-                if (onConds != null && !onConds.isEmpty()) {
-                    for (int i = 0; i < onConds.size(); i++) {
-                        if (i > 0) joinClause.append(" AND ");
-                        joinClause.append("`").append(tableName).append("`.`")
-                                .append(onConds.get(i).getLocalField()).append("` = `")
-                                .append(alias).append("`.`")
-                                .append(onConds.get(i).getForeignField()).append("`");
-                    }
-                } else {
-                    // 默认按 id 关联（外键约定：<alias>_id）
-                    joinClause.append("`").append(tableName).append("`.`").append(alias)
-                            .append("_id` = `").append(alias).append("`.`id`");
+                if (!VALID_JOIN_TYPES.contains(joinType)) {
+                    log.warn("JOIN 类型非法，已跳过: joinType={}, entityCode={}", joinType, join.getEntityCode());
+                    continue;
                 }
 
-                // 关联表字段
+                // 关联表合法字段白名单（在 ON 校验前构建）
                 Set<String> foreignValidFields = foreignDesign.getFields().stream()
                         .map(LowCodeField::getName).collect(Collectors.toSet());
                 foreignValidFields.add("id");
+
+                // 记录 JOIN 前缀长度，便于 ON 条件全部非法时回滚（避免生成空 ON 子句导致 SQL 语法错误）
+                int joinPrefixLen = joinClause.length();
+                joinClause.append(" ").append(joinType).append(" JOIN `")
+                        .append(foreignTable).append("` AS `").append(alias).append("` ON ");
+
+                // ON 条件：localField 必须命中主表白名单，foreignField 必须命中关联表白名单
+                List<DynamicQueryRequest.JoinOnCondition> onConds = join.getOnConditions();
+                boolean onValid = false;
+                if (onConds != null && !onConds.isEmpty()) {
+                    for (int i = 0; i < onConds.size(); i++) {
+                        DynamicQueryRequest.JoinOnCondition on = onConds.get(i);
+                        if (on.getLocalField() == null || !validFields.contains(on.getLocalField())
+                                || on.getForeignField() == null
+                                || !foreignValidFields.contains(on.getForeignField())) {
+                            // 非法 ON 条件跳过，避免注入
+                            continue;
+                        }
+                        if (onValid) {
+                            joinClause.append(" AND ");
+                        }
+                        joinClause.append("`").append(tableName).append("`.`")
+                                .append(on.getLocalField()).append("` = `")
+                                .append(alias).append("`.`")
+                                .append(on.getForeignField()).append("`");
+                        onValid = true;
+                    }
+                }
+                if (!onValid) {
+                    // 无合法 ON 条件：尝试默认外键约定 <alias>_id（须命中主表白名单）
+                    String defaultFk = alias + "_id";
+                    if (validFields.contains(defaultFk)) {
+                        joinClause.append("`").append(tableName).append("`.`").append(defaultFk)
+                                .append("` = `").append(alias).append("`.`id`");
+                        onValid = true;
+                    }
+                }
+                if (!onValid) {
+                    // 仍无合法 ON：回滚已追加的 JOIN 前缀，跳过该 JOIN（避免空 ON 子句）
+                    joinClause.setLength(joinPrefixLen);
+                    log.warn("JOIN 无合法 ON 条件，已回滚跳过: entityCode={}, alias={}", join.getEntityCode(), alias);
+                    continue;
+                }
+
+                // 关联表字段
                 if (join.getSelectFields() != null && !join.getSelectFields().isEmpty()) {
                     for (String f : join.getSelectFields()) {
                         if (foreignValidFields.contains(f)) {
