@@ -2,6 +2,7 @@ package com.dp.plat.lowcode.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.connector.ConnectorCredentialEncryptor;
 import com.dp.plat.lowcode.engine.connector.ConnectorResult;
 import com.dp.plat.lowcode.engine.connector.DbConnectorExecutor;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -27,6 +29,9 @@ import java.util.Map;
  * <p>根据 type 分发到对应执行器：REST / DB / MQ / FILE。
  * 配置中的敏感字段（password/token/apiKey/secret/clientSecret）
  * 在持久化前由 {@link ConnectorCredentialEncryptor} 以 AES-GCM 加密，执行/测试前解密。</p>
+ *
+ * <p><b>APM 指标</b>（批次5-T9）：连接器执行通过 {@link LowCodeApmService} 记录 Micrometer 指标，
+ * APM 记录为 best-effort，服务未注入时 no-op。</p>
  */
 @Slf4j
 @Service
@@ -40,6 +45,10 @@ public class LowCodeConnectorServiceImpl extends ServiceImpl<LowCodeConnectorMap
     private final FileConnectorExecutor fileConnectorExecutor;
     private final ConnectorCredentialEncryptor credentialEncryptor;
     private final ObjectMapper objectMapper;
+
+    /** APM 指标服务（可选注入，未注入时 no-op） */
+    @Autowired(required = false)
+    private LowCodeApmService apmService;
 
     @Override
     public boolean save(LowCodeConnector connector) {
@@ -77,13 +86,31 @@ public class LowCodeConnectorServiceImpl extends ServiceImpl<LowCodeConnectorMap
             throw new RuntimeException("连接器不存在: " + code);
         }
         String decryptedConfig = credentialEncryptor.decryptConfig(connector.getConfig());
-        return switch (connector.getType()) {
-            case "REST" -> restConnectorExecutor.execute(decryptedConfig, params);
-            case "DB" -> dbConnectorExecutor.execute(decryptedConfig, params);
-            case "MQ" -> mqConnectorExecutor.execute(decryptedConfig, params);
-            case "FILE" -> fileConnectorExecutor.execute(decryptedConfig, params);
-            default -> ConnectorResult.error(400, "未知连接器类型: " + connector.getType());
-        };
+        long startMs = System.currentTimeMillis();
+        boolean success = true;
+        ConnectorResult result;
+        try {
+            result = switch (connector.getType()) {
+                case "REST" -> restConnectorExecutor.execute(decryptedConfig, params);
+                case "DB" -> dbConnectorExecutor.execute(decryptedConfig, params);
+                case "MQ" -> mqConnectorExecutor.execute(decryptedConfig, params);
+                case "FILE" -> fileConnectorExecutor.execute(decryptedConfig, params);
+                default -> ConnectorResult.error(400, "未知连接器类型: " + connector.getType());
+            };
+            // ConnectorResult.success=false 或 HTTP 状态码 >= 400 视为失败
+            if (!result.isSuccess() || result.getStatus() >= 400) {
+                success = false;
+            }
+            return result;
+        } catch (Exception e) {
+            success = false;
+            throw e;
+        } finally {
+            if (apmService != null) {
+                apmService.recordConnectorCall(connector.getType(), code,
+                        System.currentTimeMillis() - startMs, success);
+            }
+        }
     }
 
     @Override

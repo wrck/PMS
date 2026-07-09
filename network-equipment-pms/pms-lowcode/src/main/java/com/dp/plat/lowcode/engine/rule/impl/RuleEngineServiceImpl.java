@@ -1,11 +1,13 @@
 package com.dp.plat.lowcode.engine.rule.impl;
 
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.rule.LiteFlowExecutor;
 import com.dp.plat.lowcode.engine.rule.RuleEngineService;
 import com.googlecode.aviator.AviatorEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,6 +33,9 @@ import java.util.Map;
  * </ul></p>
  *
  * <p>表达式：通过 Aviator 求值。LiteFlow：通过 {@link LiteFlowExecutor} 执行 EL 表达式。</p>
+ *
+ * <p><b>APM 指标</b>（批次5-T9）：决策表/表达式/LiteFlow 执行均通过 {@link LowCodeApmService} 记录
+ * Micrometer 指标，APM 记录为 best-effort，服务未注入时 no-op。</p>
  */
 @Slf4j
 @Service
@@ -41,10 +46,15 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
     private final LiteFlowExecutor liteFlowExecutor;
 
+    /** APM 指标服务（可选注入，未注入时 no-op） */
+    @Autowired(required = false)
+    private LowCodeApmService apmService;
+
     @Override
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> executeDecisionTable(String definition, Map<String, Object> facts) {
-        List<Map<String, Object>> hitActions = new ArrayList<>();
+        long startMs = System.currentTimeMillis();
+        boolean success = true;
         try {
             Map<String, Object> table = objectMapper.readValue(definition, Map.class);
             // 新格式优先：包含 conditionColumns 或 hitPolicy
@@ -54,7 +64,13 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             // 旧格式回退：rows.conditions/actions 内联
             return executeLegacyFormat(table, facts);
         } catch (Exception e) {
+            success = false;
             throw new RuntimeException("决策表执行失败", e);
+        } finally {
+            if (apmService != null) {
+                apmService.recordRuleExecution("decision-table",
+                        System.currentTimeMillis() - startMs, success);
+            }
         }
     }
 
@@ -210,11 +226,35 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
     @Override
     public Object executeExpression(String expression, Map<String, Object> context) {
-        return AviatorEvaluator.execute(expression, context);
+        long startMs = System.currentTimeMillis();
+        boolean success = true;
+        try {
+            return AviatorEvaluator.execute(expression, context);
+        } catch (Exception e) {
+            success = false;
+            throw e;
+        } finally {
+            if (apmService != null) {
+                apmService.recordRuleExecution("expression",
+                        System.currentTimeMillis() - startMs, success);
+            }
+        }
     }
 
     @Override
     public Object executeLiteFlow(String el, Map<String, Object> context) {
-        return liteFlowExecutor.execute(el, context);
+        long startMs = System.currentTimeMillis();
+        boolean success = true;
+        try {
+            return liteFlowExecutor.execute(el, context);
+        } catch (Exception e) {
+            success = false;
+            throw e;
+        } finally {
+            if (apmService != null) {
+                apmService.recordRuleExecution("liteflow",
+                        System.currentTimeMillis() - startMs, success);
+            }
+        }
     }
 }

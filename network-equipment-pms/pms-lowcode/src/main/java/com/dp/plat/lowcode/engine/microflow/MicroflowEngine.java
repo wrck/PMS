@@ -1,11 +1,13 @@
 package com.dp.plat.lowcode.engine.microflow;
 
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.entity.LowCodeMicroflowExecutionLog;
 import com.dp.plat.lowcode.mapper.LowCodeMicroflowExecutionLogMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,10 @@ import java.util.stream.Collectors;
  *
  * <p>执行每个节点前后记录执行轨迹（借鉴 Joget APM），通过 executionId 串联同一次执行的所有节点轨迹。
  * 轨迹记录为 best-effort，不影响主流程执行。</p>
+ *
+ * <p><b>APM 指标</b>（批次5-T9）：整体执行与单节点执行均通过 {@link LowCodeApmService} 记录
+ * Micrometer 指标（Counter + Timer），供 Prometheus 采集与 Grafana 面板展示。
+ * APM 记录为 best-effort，{@link LowCodeApmService} 未注入时 no-op。</p>
  */
 @Slf4j
 @Component
@@ -32,6 +38,10 @@ public class MicroflowEngine {
     private final ObjectMapper objectMapper;
     private final List<MicroflowNodeExecutor> executors;
     private final LowCodeMicroflowExecutionLogMapper executionLogMapper;
+
+    /** APM 指标服务（可选注入，未注入时 no-op，不影响微流执行） */
+    @Autowired(required = false)
+    private LowCodeApmService apmService;
 
     /**
      * 执行微流。
@@ -46,6 +56,8 @@ public class MicroflowEngine {
     public MicroflowContext execute(Long microflowId, String microflowCode,
                                     String definitionJson, Map<String, Object> inputs) {
         String executionId = UUID.randomUUID().toString();
+        long startMs = System.currentTimeMillis();
+        boolean success = true;
         try {
             Map<String, Object> definition = objectMapper.readValue(definitionJson,
                     new TypeReference<Map<String, Object>>() {});
@@ -89,9 +101,17 @@ public class MicroflowEngine {
             }
             return context;
         } catch (MicroflowExecutionException e) {
+            success = false;
             throw e;
         } catch (Exception e) {
+            success = false;
             throw new RuntimeException("微流执行失败", e);
+        } finally {
+            // APM 指标记录（best-effort，apmService 可能为 null）
+            if (apmService != null) {
+                apmService.recordMicroflowExecution(microflowCode,
+                        System.currentTimeMillis() - startMs, success);
+            }
         }
     }
 
@@ -187,18 +207,28 @@ public class MicroflowEngine {
 
         try {
             String nextNodeId = executor != null ? executor.execute(node, context) : null;
+            long durationMs = System.currentTimeMillis() - startMs;
             logEntry.setEndTime(LocalDateTime.now());
-            logEntry.setDurationMs(System.currentTimeMillis() - startMs);
+            logEntry.setDurationMs(durationMs);
             logEntry.setOutputs(context.getResult() != null ? toJson(context.getResult()) : null);
             logEntry.setStatus("SUCCESS");
             updateLog(logEntry);
+            // APM 节点级指标记录（best-effort）
+            if (apmService != null) {
+                apmService.recordMicroflowNodeExecution(nodeType.name(), durationMs, true);
+            }
             return nextNodeId;
         } catch (Exception e) {
+            long durationMs = System.currentTimeMillis() - startMs;
             logEntry.setEndTime(LocalDateTime.now());
-            logEntry.setDurationMs(System.currentTimeMillis() - startMs);
+            logEntry.setDurationMs(durationMs);
             logEntry.setStatus("FAILED");
             logEntry.setErrorMessage(e.getMessage());
             updateLog(logEntry);
+            // APM 节点级指标记录（best-effort）
+            if (apmService != null) {
+                apmService.recordMicroflowNodeExecution(nodeType.name(), durationMs, false);
+            }
             throw e;
         }
     }

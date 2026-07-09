@@ -1,5 +1,6 @@
 package com.dp.plat.lowcode.engine.process;
 
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.entity.LowCodeProcessBinding;
 import com.dp.plat.lowcode.service.LowCodeMicroflowService;
 import com.dp.plat.lowcode.service.LowCodeProcessBindingService;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.engine.delegate.TaskListener;
 import org.flowable.task.service.delegate.DelegateTask;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -31,6 +33,9 @@ import java.util.Map;
  *
  * <p><b>异常策略</b>：回调微流失败仅记 ERROR 日志，不向 Flowable 引擎上抛，
  * 不阻断流程主事务（与 OaTaskListener 的 best-effort 策略一致）。</p>
+ *
+ * <p><b>APM 指标</b>（批次5-T9）：Flowable 节点回调通过 {@link LowCodeApmService} 记录
+ * Micrometer 指标，APM 记录为 best-effort，服务未注入时 no-op。</p>
  */
 @Slf4j
 @Component("processTaskCallbackListener")
@@ -40,6 +45,10 @@ public class ProcessTaskCallbackListener implements TaskListener {
     private final LowCodeMicroflowService microflowService;
     private final LowCodeProcessBindingService bindingService;
     private final ObjectMapper objectMapper;
+
+    /** APM 指标服务（可选注入，未注入时 no-op） */
+    @Autowired(required = false)
+    private LowCodeApmService apmService;
 
     /** Flowable 任务事件名 → taskCallbacks JSON 中的回调键 */
     private static final Map<String, String> EVENT_TO_CALLBACK_KEY;
@@ -97,10 +106,18 @@ public class ProcessTaskCallbackListener implements TaskListener {
             microflowService.execute(microflowCode, inputs);
             log.info("流程任务回调微流成功: process={}, node={}, event={}, microflow={}",
                     processDefinitionKey, nodeId, event, microflowCode);
+            // APM 指标记录（best-effort）
+            if (apmService != null) {
+                apmService.recordFlowableCallback(processDefinitionKey, event, true);
+            }
         } catch (Exception e) {
             // 回调微流失败仅记日志，不阻断流程
             log.error("流程任务回调微流失败: taskId={}, event={}",
                     delegateTask.getId(), delegateTask.getEventName(), e);
+            // APM 指标记录（best-effort）
+            if (apmService != null) {
+                apmService.recordFlowableCallback(processDefinitionKey, event, false);
+            }
         }
     }
 

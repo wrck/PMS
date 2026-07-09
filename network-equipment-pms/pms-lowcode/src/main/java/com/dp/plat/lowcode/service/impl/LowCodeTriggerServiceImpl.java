@@ -3,6 +3,7 @@ package com.dp.plat.lowcode.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.lowcode.engine.apm.LowCodeApmService;
 import com.dp.plat.lowcode.engine.trigger.LowCodeTrigger;
 import com.dp.plat.lowcode.engine.trigger.QuartzTriggerExecutor;
 import com.dp.plat.lowcode.engine.trigger.TriggerExecutor;
@@ -13,6 +14,7 @@ import com.dp.plat.lowcode.service.LowCodeTriggerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +29,9 @@ import java.util.UUID;
  *
  * <p>每次执行都会记录执行日志（成功 / 失败均记录），用 try-finally 确保失败也记录，
  * 日志写入为 best-effort，不影响主流程。</p>
+ *
+ * <p><b>APM 指标</b>（批次5-T9）：触发器执行通过 {@link LowCodeApmService} 记录 Micrometer 指标，
+ * APM 记录为 best-effort，服务未注入时 no-op。</p>
  */
 @Slf4j
 @Service
@@ -38,6 +43,10 @@ public class LowCodeTriggerServiceImpl extends ServiceImpl<LowCodeTriggerMapper,
     private final QuartzTriggerExecutor quartzTriggerExecutor;
     private final LowCodeTriggerExecutionLogService executionLogService;
     private final ObjectMapper objectMapper;
+
+    /** APM 指标服务（可选注入，未注入时 no-op） */
+    @Autowired(required = false)
+    private LowCodeApmService apmService;
 
     @Override
     public Map<String, Object> executeTrigger(String code, Map<String, Object> data) {
@@ -74,6 +83,11 @@ public class LowCodeTriggerServiceImpl extends ServiceImpl<LowCodeTriggerMapper,
         } finally {
             long durationMs = System.currentTimeMillis() - startMs;
             recordExecutionLog(trigger, executionId, inputsJson, result, status, errorMessage, durationMs);
+            // APM 指标记录（best-effort，apmService 可能为 null）
+            if (apmService != null) {
+                apmService.recordTriggerExecution(trigger.getType(), trigger.getCode(),
+                        durationMs, "SUCCESS".equals(status));
+            }
         }
         return result;
     }
