@@ -140,7 +140,7 @@ public class FileConnectorExecutor {
             file.put("name", name);
             file.put("size", entry.getAttrs().getSize());
             file.put("isDirectory", entry.getAttrs().isDir());
-            file.put("modifiedTime", entry.getAttrs().getMTimeString());
+            file.put("modifiedTime", entry.getAttrs().getMTime());
             file.put("permissions", entry.getAttrs().getPermissionsString());
             files.add(file);
         }

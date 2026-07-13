@@ -3,9 +3,6 @@ package com.dp.plat.common.crypto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.apache.ibatis.type.MappedTypes;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -30,23 +27,28 @@ import java.sql.SQLException;
  * </ol>
  *
  * <p>注意：当字段值为 null 或空串时不做加解密处理，原样存取。</p>
+ *
+ * <p><b>重要</b>：此类 intentionally 不使用 {@code @Component} / {@code @MappedTypes} 注解。
+ * 否则 MyBatis-Spring 会将其注册为所有 String 字段的默认 TypeHandler，
+ * 导致全部字符串字段被错误加密。加密器通过 {@link AesGcmEncryptor#getInstance()}
+ * 静态获取，由 Spring 管理的 {@link AesGcmEncryptor} bean 在 {@code @PostConstruct}
+ * 阶段完成静态实例注入。</p>
  */
 @Slf4j
-@Component
-@MappedTypes(String.class)
 public class EncryptTypeHandler extends BaseTypeHandler<String> {
 
-    /** 注入的 AES-GCM 加密器。 */
-    private final AesGcmEncryptor encryptor;
-
     /**
-     * 通过构造器注入加密器。
-     *
-     * @param encryptor AES-GCM 加密器
+     * 无参构造器：由 MyBatis-Plus 在解析 {@code @TableField(typeHandler = ...)} 时通过反射调用。
+     * 加密器在首次使用时通过 {@link AesGcmEncryptor#getInstance()} 懒加载，
+     * 避免 MyBatis mapper 解析阶段 AesGcmEncryptor bean 尚未初始化的时序问题。
      */
-    @Autowired
-    public EncryptTypeHandler(AesGcmEncryptor encryptor) {
-        this.encryptor = encryptor;
+    public EncryptTypeHandler() {
+        // no-op：加密器在首次加/解密时懒加载
+    }
+
+    /** 懒加载获取加密器实例。 */
+    private AesGcmEncryptor encryptor() {
+        return AesGcmEncryptor.getInstance();
     }
 
     /**
@@ -61,7 +63,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType)
             throws SQLException {
-        String encrypted = encryptor.encrypt(parameter);
+        String encrypted = encryptor().encrypt(parameter);
         ps.setString(i, encrypted);
     }
 
@@ -118,7 +120,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
             return value;
         }
         try {
-            return encryptor.decrypt(value);
+            return encryptor().decrypt(value);
         } catch (Exception e) {
             // 解密失败说明该值可能是历史明文数据，原样返回并记录警告
             log.warn("字段解密失败，可能为历史明文数据，原样返回。原因：{}", e.getMessage());

@@ -1,6 +1,6 @@
 package com.dp.plat.lowcode.controller;
 
-import com.dp.plat.common.core.domain.R;
+import com.dp.plat.common.result.Result;
 import com.dp.plat.lowcode.engine.rule.RuleSetDefinition;
 import com.dp.plat.lowcode.engine.rule.RuleSetOrchestrator;
 import lombok.RequiredArgsConstructor;
@@ -52,14 +52,14 @@ public class LowCodeRuleSetController {
      */
     @PostMapping("/execute")
     @PreAuthorize("@ss.hasPermi('lowcode:rule:execute')")
-    public R<RuleSetOrchestrator.RuleSetResult> execute(@RequestBody RuleSetExecuteRequest request) {
+    public Result<RuleSetOrchestrator.RuleSetResult> execute(@RequestBody RuleSetExecuteRequest request) {
         log.info("执行规则集: code={}", request.getDefinition().getCode());
         RuleSetOrchestrator.RuleSetResult result =
                 ruleSetOrchestrator.execute(request.getDefinition(), request.getInputs());
         if ("FAILED".equals(result.getStatus())) {
-            return R.fail(result.getErrorMessage());
+            return Result.fail(result.getErrorMessage());
         }
-        return R.ok(result);
+        return Result.ok(result);
     }
 
     /**

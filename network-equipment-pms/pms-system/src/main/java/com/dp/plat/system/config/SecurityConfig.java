@@ -60,11 +60,12 @@ public class SecurityConfig {
                         .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .anyRequest().authenticated())
-                // 注册顺序：SecurityHeadersFilter → RateLimitFilter → XssFilter → JwtAuthenticationFilter
-                .addFilterBefore(securityHeadersFilter, RateLimitFilter.class)
-                .addFilterBefore(rateLimitFilter, XssFilter.class)
+                // 注册顺序（从后往前）：确保每次 addFilterBefore 引用的锚点过滤器已注册
+                // 最终链顺序：SecurityHeadersFilter → RateLimitFilter → XssFilter → JwtAuthenticationFilter → UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(xssFilter, JwtAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(rateLimitFilter, XssFilter.class)
+                .addFilterBefore(securityHeadersFilter, RateLimitFilter.class);
         return http.build();
     }
 

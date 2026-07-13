@@ -17,7 +17,7 @@ import java.util.Set;
  * 能进入统一的消息中心并被实时推送。</p>
  */
 @Slf4j
-@Service
+@Service("implementationNotificationServiceImpl")
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 

@@ -12,6 +12,7 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -52,9 +53,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // 为 SimpleBroker 心跳提供独立 TaskScheduler，避免与 WebSocket 配置形成循环依赖。
+        ThreadPoolTaskScheduler heartbeatScheduler = new ThreadPoolTaskScheduler();
+        heartbeatScheduler.setPoolSize(1);
+        heartbeatScheduler.setThreadNamePrefix("ws-heartbeat-");
+        heartbeatScheduler.initialize();
         // /topic、/queue 为 broker 广播目的地前缀；心跳 10s（入站/出站）保持连接活跃。
         registry.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{HEARTBEAT_MS, HEARTBEAT_MS});
+                .setHeartbeatValue(new long[]{HEARTBEAT_MS, HEARTBEAT_MS})
+                .setTaskScheduler(heartbeatScheduler);
         // /app 为应用目的地前缀，消息路由到 @MessageMapping 方法。
         registry.setApplicationDestinationPrefixes("/app");
     }

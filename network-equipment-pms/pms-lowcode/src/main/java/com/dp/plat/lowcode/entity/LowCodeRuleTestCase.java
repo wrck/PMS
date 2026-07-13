@@ -1,7 +1,7 @@
 package com.dp.plat.lowcode.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.dp.plat.common.core.domain.BaseEntity;
+import com.dp.plat.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

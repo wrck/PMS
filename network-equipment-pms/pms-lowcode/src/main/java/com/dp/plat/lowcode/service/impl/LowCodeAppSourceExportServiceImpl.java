@@ -1,6 +1,7 @@
 package com.dp.plat.lowcode.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.lowcode.dto.AppSourceManifest;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
@@ -410,7 +411,7 @@ public class LowCodeAppSourceExportServiceImpl implements LowCodeAppSourceExport
      * bizType 为 null/空时返回空 wrapper（查全部）。
      */
     private <T> LambdaQueryWrapper<T> bizTypeWrapper(
-            java.util.function.Function<T, String> bizTypeGetter, String bizType) {
+            SFunction<T, ?> bizTypeGetter, String bizType) {
         LambdaQueryWrapper<T> wrapper = new LambdaQueryWrapper<>();
         if (bizType != null && !bizType.isBlank()) {
             wrapper.eq(bizTypeGetter, bizType);

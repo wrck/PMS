@@ -67,15 +67,17 @@ public class ProcessTaskCallbackListener implements TaskListener {
 
     @Override
     public void notify(DelegateTask delegateTask) {
+        String processDefinitionKey = null;
+        String event = null;
         try {
             String processDefinitionId = delegateTask.getProcessDefinitionId();
             if (processDefinitionId == null) {
                 return;
             }
             // processDefinitionId 格式为 "key:version:deploymentId"，取 key
-            String processDefinitionKey = processDefinitionId.split(":")[0];
+            processDefinitionKey = processDefinitionId.split(":")[0];
             String nodeId = delegateTask.getTaskDefinitionKey();
-            String event = delegateTask.getEventName();
+            event = delegateTask.getEventName();
             String callbackKey = EVENT_TO_CALLBACK_KEY.get(event);
             if (callbackKey == null) {
                 // 非关注事件（如 delete）→ 跳过

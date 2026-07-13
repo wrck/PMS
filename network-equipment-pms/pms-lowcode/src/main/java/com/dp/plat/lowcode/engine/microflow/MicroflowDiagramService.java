@@ -318,7 +318,7 @@ public class MicroflowDiagramService {
                 int x1 = (int) (src.x + NODE_W / 2.0) + offsetX;
                 int y1 = (int) (src.y + NODE_H) + offsetY;
                 int x2 = (int) (tgt.x + NODE_W / 2.0) + offsetX;
-                int y2 = (int) tgt.y + offsetY;
+                int y2 = (int) (double) tgt.y + offsetY;
                 g.setColor(Color.GRAY);
                 g.drawLine(x1, y1, x2, y2);
                 drawArrowHead(g, x1, y1, x2, y2);

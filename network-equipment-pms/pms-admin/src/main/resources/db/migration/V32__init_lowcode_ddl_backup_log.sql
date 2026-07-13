@@ -36,6 +36,6 @@ CREATE TABLE IF NOT EXISTS `pms_lowcode_ddl_execution_log` (
 -- 权限初始化：DDL 执行相关权限码挂载到「低代码管理」父菜单
 -- 假设「低代码管理」父菜单 id 已在 V29 中插入
 INSERT INTO `sys_menu` (`menu_name`, `parent_id`, `order_num`, `path`, `component`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `create_by`, `create_time`, `remark`)
-SELECT 'DDL 执行日志', (SELECT IFNULL(MAX(menu_id),0) FROM (SELECT * FROM sys_menu) tmp WHERE menu_name='低代码管理'), 90, 'ddl-log', 'lowcode/ddl-log/index', 1, 0, 'C', '0', '0', 'lowcode:ddllog:list', 'log', 'admin', NOW(), 'DDL 执行日志查询'
+SELECT 'DDL 执行日志', (SELECT IFNULL(MAX(id),0) FROM (SELECT * FROM sys_menu) tmp WHERE menu_name='低代码管理'), 90, 'ddl-log', 'lowcode/ddl-log/index', 1, 0, 'C', '0', '0', 'lowcode:ddllog:list', 'log', 'admin', NOW(), 'DDL 执行日志查询'
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_menu WHERE perms = 'lowcode:ddllog:list');

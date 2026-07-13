@@ -48,6 +48,12 @@ public class AesGcmEncryptor {
     /** 密钥算法。 */
     private static final String KEY_ALGORITHM = "AES";
 
+    /**
+     * 静态实例引用：在 {@link #init()} 完成后赋值，
+     * 供非 Spring 管理的对象（如 {@link EncryptTypeHandler}）通过 {@link #getInstance()} 获取。
+     */
+    private static volatile AesGcmEncryptor instance;
+
     /** 用于生成随机 IV 的安全随机数生成器。 */
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -57,6 +63,19 @@ public class AesGcmEncryptor {
 
     /** 解码后的 AES 密钥规格。 */
     private SecretKeySpec secretKeySpec;
+
+    /**
+     * 获取已初始化的静态实例（供非 Spring 管理的对象使用）。
+     *
+     * @return 已初始化的 {@link AesGcmEncryptor} 实例
+     * @throws IllegalStateException 如果实例尚未初始化
+     */
+    public static AesGcmEncryptor getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("AesGcmEncryptor 尚未初始化");
+        }
+        return instance;
+    }
 
     /**
      * 初始化校验：解码并校验密钥长度必须为 32 字节。
@@ -80,6 +99,7 @@ public class AesGcmEncryptor {
                     "字段加密密钥长度必须为 " + KEY_LENGTH_BYTES + " 字节（AES-256），当前为 " + keyBytes.length + " 字节");
         }
         this.secretKeySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
+        instance = this;
         log.info("AesGcmEncryptor 初始化成功，密钥长度 {} 字节", keyBytes.length);
     }
 

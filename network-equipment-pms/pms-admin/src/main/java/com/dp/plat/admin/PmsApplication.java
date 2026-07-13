@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <p>Component scan covers all modules under {@code com.dp.plat}.</p>
  */
 @SpringBootApplication(scanBasePackages = "com.dp.plat")
-@MapperScan("com.dp.plat.**.mapper")
+@MapperScan({"com.dp.plat.**.mapper", "com.dp.plat.**.engine.ddl"})
 @EnableScheduling
 public class PmsApplication {
 

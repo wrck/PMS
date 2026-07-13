@@ -68,5 +68,5 @@ CREATE TABLE pms_lowcode_relation (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='低代码实体关联关系';
 
 -- 权限初始化
-INSERT INTO sys_menu (menu_name, parent_id, path, component, menu_type, permission, icon, sort_order, visible, status, create_time, create_by) VALUES
+INSERT INTO sys_menu (menu_name, parent_id, path, component, menu_type, perms, icon, order_num, visible, status, create_time, create_by) VALUES
 ('实体设计器', (SELECT id FROM (SELECT id FROM sys_menu WHERE menu_name='低代码管理' LIMIT 1) t), 'entity-designer', 'lowcode/entity-designer/index', 'C', 'lowcode:entity:list', 'Connection', 2, '0', '0', NOW(), 'system');
