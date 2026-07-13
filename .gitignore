@@ -12,3 +12,8 @@ logs
 network-equipment-pms/pms-frontend/test-results/
 network-equipment-pms/pms-frontend/playwright-report/
 
+# 持久化环境目录（沙盒环境配置，含密钥/缓存/日志，禁止提交）
+.env/.m2/
+.env/secrets/
+.env/logs/
+
