@@ -78,13 +78,37 @@ CREATE TABLE `sys_menu` (
     `icon`        VARCHAR(100) DEFAULT '' COMMENT 'Menu icon',
     `order_num`   INT          DEFAULT 0 COMMENT 'Display order',
     `visible`     CHAR(1)      DEFAULT '0' COMMENT '0=visible 1=hidden',
+    `is_frame`    CHAR(1)      DEFAULT '1' COMMENT '0=yes 1=no (external link)',
+    `is_cache`    CHAR(1)      DEFAULT '0' COMMENT '0=yes 1=no (cache)',
+    `status`      CHAR(1)      DEFAULT '0' COMMENT '0=normal 1=disabled',
+    `remark`      VARCHAR(500) DEFAULT '' COMMENT 'Remark',
     `create_by`   VARCHAR(64)  DEFAULT '' COMMENT 'Creator',
     `create_time` DATETIME     DEFAULT NULL COMMENT 'Create time',
     `update_by`   VARCHAR(64)  DEFAULT '' COMMENT 'Updater',
     `update_time` DATETIME     DEFAULT NULL COMMENT 'Update time',
     `deleted`     TINYINT      DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='System menu';
+) ENGINE=InnoDB DEFAULT CHARSET=utf4mb4 COMMENT='System menu';
+
+-- ----------------------------
+-- sys_permission
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_permission`;
+CREATE TABLE `sys_permission` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+    `code`        VARCHAR(100) NOT NULL COMMENT 'Permission code',
+    `name`        VARCHAR(100) NOT NULL COMMENT 'Permission name',
+    `type`        VARCHAR(20)  DEFAULT 'menu' COMMENT 'Permission type: menu/button/api',
+    `parent_id`   BIGINT       DEFAULT 0 COMMENT 'Parent permission id',
+    `sort`        INT          DEFAULT 0 COMMENT 'Display order',
+    `create_by`   VARCHAR(64)  DEFAULT '' COMMENT 'Creator',
+    `create_time` DATETIME     DEFAULT NULL COMMENT 'Create time',
+    `update_by`   VARCHAR(64)  DEFAULT '' COMMENT 'Updater',
+    `update_time` DATETIME     DEFAULT NULL COMMENT 'Update time',
+    `deleted`     TINYINT      DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_permission_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='System permission';
 
 -- ----------------------------
 -- sys_dict

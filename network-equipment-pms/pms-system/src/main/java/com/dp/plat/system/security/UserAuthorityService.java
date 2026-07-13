@@ -100,9 +100,16 @@ public class UserAuthorityService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         if (isAdmin) {
+            // 超级管理员：除角色标识（用于 @ss.hasPermi 放行）外，再授予 sys_menu
+            // 中已注册的全部权限，使 @PreAuthorize("hasAuthority('xxx')") 注解也能通过。
             authorities.add(new SimpleGrantedAuthority(CommonConstants.SUPER_ADMIN_ROLE));
+            List<String> allPerms = sysMenuMapper.listAllPerms();
+            for (String perm : allPerms) {
+                authorities.add(new SimpleGrantedAuthority(perm));
+            }
+            return authorities;
         }
-        // Always load concrete perms so @PreAuthorize("hasAuthority('xxx')") works.
+        // 普通用户：加载用户绑定的角色所拥有的具体权限
         List<String> perms = sysMenuMapper.listPermsByUserId(user.getId());
         for (String perm : perms) {
             authorities.add(new SimpleGrantedAuthority(perm));

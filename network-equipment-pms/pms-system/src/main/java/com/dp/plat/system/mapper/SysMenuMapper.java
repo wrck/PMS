@@ -33,4 +33,13 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
             + "WHERE ur.user_id = #{userId} AND m.deleted = 0 "
             + "AND m.perms IS NOT NULL AND m.perms <> ''")
     List<String> listPermsByUserId(@Param("userId") Long userId);
+
+    /**
+     * 列出 sys_menu 中所有已注册的权限标识（去重）。
+     * 用于超级管理员加载全部具体权限，使 {@code @PreAuthorize("hasAuthority('xxx')")}
+     * 注解也能通过。
+     */
+    @Select("SELECT DISTINCT perms FROM sys_menu "
+            + "WHERE deleted = 0 AND perms IS NOT NULL AND perms <> ''")
+    List<String> listAllPerms();
 }
