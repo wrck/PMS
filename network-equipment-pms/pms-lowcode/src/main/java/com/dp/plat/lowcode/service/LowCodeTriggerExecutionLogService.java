@@ -35,4 +35,13 @@ public interface LowCodeTriggerExecutionLogService extends IService<LowCodeTrigg
      * @return 执行日志列表（按时间倒序）
      */
     List<LowCodeTriggerExecutionLog> listRecent(int limit);
+
+    /**
+     * 查询近 N 小时内的全局触发器执行历史（APM 看板用）。
+     *
+     * @param hours 时间窗口（小时）
+     * @param limit 返回条数上限
+     * @return 执行日志列表（按创建时间倒序）
+     */
+    List<LowCodeTriggerExecutionLog> listRecentByHours(int hours, int limit);
 }

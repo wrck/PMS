@@ -8,6 +8,7 @@ import com.dp.plat.lowcode.service.LowCodeTriggerExecutionLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -50,6 +51,17 @@ public class LowCodeTriggerExecutionLogServiceImpl
         int safeLimit = sanitizeLimit(limit);
         return list(new LambdaQueryWrapper<LowCodeTriggerExecutionLog>()
                 .orderByDesc(LowCodeTriggerExecutionLog::getId)
+                .last("LIMIT " + safeLimit));
+    }
+
+    @Override
+    public List<LowCodeTriggerExecutionLog> listRecentByHours(int hours, int limit) {
+        int safeLimit = sanitizeLimit(limit);
+        int safeHours = hours <= 0 ? 24 : hours;
+        return list(new LambdaQueryWrapper<LowCodeTriggerExecutionLog>()
+                .ge(LowCodeTriggerExecutionLog::getCreateTime,
+                        LocalDateTime.now().minusHours(safeHours))
+                .orderByDesc(LowCodeTriggerExecutionLog::getCreateTime)
                 .last("LIMIT " + safeLimit));
     }
 

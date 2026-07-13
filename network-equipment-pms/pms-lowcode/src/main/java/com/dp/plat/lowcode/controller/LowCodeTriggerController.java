@@ -85,11 +85,27 @@ public class LowCodeTriggerController {
         return Result.ok(executionLogService.listByTriggerId(id, limit));
     }
 
-    @Operation(summary = "查询全局最近触发器执行历史")
+    /**
+     * 查询全局最近触发器执行历史。
+     *
+     * <p>支持两种查询模式：
+     * <ul>
+     *   <li><b>时间窗口</b>：传 {@code hours} 参数，返回近 N 小时内的执行历史（APM 看板用）。</li>
+     *   <li><b>全局最近</b>：不传 {@code hours}，返回最近 {@code limit} 条执行历史。</li>
+     * </ul></p>
+     *
+     * @param hours 时间窗口小时数（可选，APM 看板用）
+     * @param limit 返回条数上限（默认 50）
+     */
+    @Operation(summary = "查询全局最近触发器执行历史（支持时间窗口）")
     @GetMapping("/execution-logs/recent")
     @PreAuthorize("hasAuthority('lowcode:trigger:list')")
     public Result<List<LowCodeTriggerExecutionLog>> getRecentLogs(
+            @RequestParam(required = false) Integer hours,
             @RequestParam(defaultValue = "50") int limit) {
+        if (hours != null && hours > 0) {
+            return Result.ok(executionLogService.listRecentByHours(hours, limit));
+        }
         return Result.ok(executionLogService.listRecent(limit));
     }
 }
