@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.redis</groupId>
+  <artifactId>testcontainers-redis</artifactId>
+  <version>2.2.2</version>
+  <name>testcontainers-redis-build</name>
+  <description>"Testcontainers Redis"</description>
+  <url>https://github.com/redis-developer/testcontainers-redis-build</url>
+  <inceptionYear>2020</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://spdx.org/licenses/Apache-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>aalmiray</id>
+      <name>Andres Almiray</name>
+      <url>https://andresalmiray.com/</url>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <properties>
+        <twitter>aalmiray</twitter>
+        <github>aalmiray</github>
+      </properties>
+    </developer>
+    <developer>
+      <id>jruaux</id>
+      <name>Julien Ruaux</name>
+      <roles>
+        <role>developer</role>
+        <role>author</role>
+      </roles>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/redis-developer/testcontainers-redis-build.git</connection>
+    <developerConnection>scm:git:git@github.com:redis-developer/testcontainers-redis-build.git</developerConnection>
+    <url>https://github.com/redis-developer/testcontainers-redis-build</url>
+  </scm>
+  <properties/>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>3.2.3</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.redis</groupId>
+      <artifactId>testcontainers-redis-common</artifactId>
+      <version>2.2.2</version>
+    </dependency>
+  </dependencies>
+</project>
