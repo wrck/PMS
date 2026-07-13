@@ -1,4 +1,4 @@
-import { get, post, put } from '@/utils/request'
+import { get, post } from '@/utils/request'
 import type { ChangeRequestPriority } from './change-request'
 
 /** 问题状态 */
@@ -41,7 +41,7 @@ export interface IssueListResult {
 }
 
 export function listIssues(params: IssueListQuery): Promise<IssueListResult> {
-  return get<IssueListResult>('/api/governance/issue/list', params)
+  return get<IssueListResult>('/api/governance/issue', params)
 }
 
 export function createIssue(data: Issue): Promise<Issue> {
@@ -49,17 +49,17 @@ export function createIssue(data: Issue): Promise<Issue> {
 }
 
 export function assignIssue(id: number, assigneeId: number): Promise<Issue> {
-  return put<Issue>(`/api/governance/issue/${id}/assign`, { assigneeId })
+  return post<Issue>(`/api/governance/issue/${id}/assign`, { assigneeId })
 }
 
 export function resolveIssue(id: number): Promise<Issue> {
-  return put<Issue>(`/api/governance/issue/${id}/resolve`)
+  return post<Issue>(`/api/governance/issue/${id}/resolve`)
 }
 
 export function closeIssue(id: number): Promise<Issue> {
-  return put<Issue>(`/api/governance/issue/${id}/close`)
+  return post<Issue>(`/api/governance/issue/${id}/close`)
 }
 
 export function escalateIssue(id: number, reason: string): Promise<boolean> {
-  return put<boolean>(`/api/governance/issue/${id}/escalate`, { reason })
+  return post<boolean>(`/api/governance/issue/${id}/escalate`, { reason })
 }

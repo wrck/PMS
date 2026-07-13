@@ -1,4 +1,4 @@
-import { get, post, put } from '@/utils/request'
+import { get, post } from '@/utils/request'
 
 /** 变更请求状态 */
 export type ChangeRequestStatus =
@@ -65,7 +65,7 @@ export interface ChangeRequestListResult {
 export function listChangeRequests(
   params: ChangeRequestListQuery
 ): Promise<ChangeRequestListResult> {
-  return get<ChangeRequestListResult>('/api/governance/change-request/list', params)
+  return get<ChangeRequestListResult>('/api/governance/change-request', params)
 }
 
 export function createChangeRequest(data: ChangeRequest): Promise<ChangeRequest> {
@@ -73,13 +73,15 @@ export function createChangeRequest(data: ChangeRequest): Promise<ChangeRequest>
 }
 
 export function approveChangeRequest(id: number, opinion: string): Promise<ChangeRequest> {
-  return put<ChangeRequest>(`/api/governance/change-request/${id}/approve`, { opinion })
+  return post<ChangeRequest>(`/api/governance/change-request/${id}/approve`, { opinion })
 }
 
 export function rejectChangeRequest(id: number, opinion: string): Promise<ChangeRequest> {
-  return put<ChangeRequest>(`/api/governance/change-request/${id}/reject`, { opinion })
+  return post<ChangeRequest>(`/api/governance/change-request/${id}/reject`, { opinion })
 }
 
+// TODO: 后端 ChangeRequestController 暂无 baseline-history 端点，以下调用将返回 404，
+// 待后端补充该端点后再启用。函数保留以避免调用方（views/change-request/index.vue）编译失败。
 export function listBaselineHistory(changeRequestId: number): Promise<BaselineHistory[]> {
   return get<BaselineHistory[]>(`/api/governance/change-request/${changeRequestId}/baseline-history`)
 }

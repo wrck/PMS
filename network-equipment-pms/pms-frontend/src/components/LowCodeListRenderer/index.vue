@@ -234,7 +234,7 @@ async function loadDict(dictCode: string): Promise<void> {
       dictCache[dictCode] = []
       return
     }
-    const items: SysDictItem[] = await getDictItems(dict.id)
+    const items: SysDictItem[] = await getDictItems(dictCode)
     dictCache[dictCode] = items.map((it) => ({ label: it.label, value: it.value }))
   } catch {
     // 加载失败也置空，避免无限重试

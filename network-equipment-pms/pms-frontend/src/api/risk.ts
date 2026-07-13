@@ -56,19 +56,19 @@ export interface RiskListResult {
 }
 
 export function listRisks(params: RiskListQuery): Promise<RiskListResult> {
-  return get<RiskListResult>('/api/governance/risk/list', params)
+  return get<RiskListResult>('/api/governance/risk', params)
 }
 
 export function createRisk(data: Risk): Promise<Risk> {
   return post<Risk>('/api/governance/risk', data)
 }
 
-export function updateRisk(id: number, data: Risk): Promise<Risk> {
-  return put<Risk>(`/api/governance/risk/${id}`, data)
+export function updateRisk(data: Risk): Promise<Risk> {
+  return put<Risk>('/api/governance/risk', data)
 }
 
 export function markOccurred(id: number): Promise<boolean> {
-  return put<boolean>(`/api/governance/risk/${id}/mark-occurred`)
+  return post<boolean>(`/api/governance/risk/${id}/mark-occurred`)
 }
 
 export function getRiskMatrix(projectId?: number): Promise<RiskMatrixCell[][]> {

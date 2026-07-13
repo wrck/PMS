@@ -37,7 +37,7 @@ export interface UserPageQuery extends PageQuery {
 }
 
 export function getUserPage(params: UserPageQuery): Promise<PageResult<SysUser>> {
-  return get<PageResult<SysUser>>('/api/system/users', params)
+  return get<PageResult<SysUser>>('/api/system/user/page', params)
 }
 
 /** @提及自动补全用的轻量用户搜索结果（仅含 id/username/realName） */
@@ -61,24 +61,26 @@ export function searchUsers(keyword?: string, limit = 20): Promise<MentionUser[]
 }
 
 export function getUserById(id: number): Promise<SysUser> {
-  return get<SysUser>(`/api/system/users/${id}`)
+  return get<SysUser>(`/api/system/user/${id}`)
 }
 
 export function createUser(data: SysUser): Promise<SysUser> {
-  return post<SysUser>('/api/system/users', data)
+  return post<SysUser>('/api/system/user', data)
 }
 
 export function updateUser(data: SysUser): Promise<SysUser> {
-  return put<SysUser>(`/api/system/users/${data.id}`, data)
+  return put<SysUser>('/api/system/user', data)
 }
 
 export function deleteUser(id: number): Promise<void> {
-  return del<void>(`/api/system/users/${id}`)
+  return del<void>(`/api/system/user/${id}`)
 }
 
-export function resetUserPassword(id: number, password: string): Promise<void> {
-  return put<void>(`/api/system/users/${id}/password`, { password })
-}
+// TODO: 后端 SysUserController 暂无重置密码专用端点（无 /password 路径）。
+// 如需重置密码，请走 PUT /api/system/user 更新接口，或等待后端补充专用端点。
+// export function resetUserPassword(id: number, password: string): Promise<void> {
+//   return put<void>(`/api/system/users/${id}/password`, { password })
+// }
 
 // ===================== Role =====================
 
@@ -95,11 +97,11 @@ export interface SysRole {
 }
 
 export function getRolePage(params: PageQuery): Promise<PageResult<SysRole>> {
-  return get<PageResult<SysRole>>('/api/system/roles', params)
+  return get<PageResult<SysRole>>('/api/system/role/page', params)
 }
 
 export function getRoleAll(): Promise<SysRole[]> {
-  return get<SysRole[]>('/api/system/roles/all')
+  return get<SysRole[]>('/api/system/role/all')
 }
 
 /** 角色下拉选项（与后端 SysRole 的 roleName/roleCode 字段对齐） */
@@ -122,15 +124,15 @@ export function getAllRoles(): Promise<RoleOption[]> {
 }
 
 export function createRole(data: SysRole): Promise<SysRole> {
-  return post<SysRole>('/api/system/roles', data)
+  return post<SysRole>('/api/system/role', data)
 }
 
 export function updateRole(data: SysRole): Promise<SysRole> {
-  return put<SysRole>(`/api/system/roles/${data.id}`, data)
+  return put<SysRole>('/api/system/role', data)
 }
 
 export function deleteRole(id: number): Promise<void> {
-  return del<void>(`/api/system/roles/${id}`)
+  return del<void>(`/api/system/role/${id}`)
 }
 
 // ===================== Menu =====================
@@ -156,19 +158,19 @@ export interface SysMenu {
 }
 
 export function getMenuTree(): Promise<SysMenu[]> {
-  return get<SysMenu[]>('/api/system/menus/tree')
+  return get<SysMenu[]>('/api/system/menu/tree')
 }
 
 export function createMenu(data: SysMenu): Promise<SysMenu> {
-  return post<SysMenu>('/api/system/menus', data)
+  return post<SysMenu>('/api/system/menu', data)
 }
 
 export function updateMenu(data: SysMenu): Promise<SysMenu> {
-  return put<SysMenu>(`/api/system/menus/${data.id}`, data)
+  return put<SysMenu>('/api/system/menu', data)
 }
 
 export function deleteMenu(id: number): Promise<void> {
-  return del<void>(`/api/system/menus/${id}`)
+  return del<void>(`/api/system/menu/${id}`)
 }
 
 // ===================== Dict =====================
@@ -193,33 +195,33 @@ export interface SysDictItem {
 }
 
 export function getDictPage(params: PageQuery): Promise<PageResult<SysDict>> {
-  return get<PageResult<SysDict>>('/api/system/dicts', params)
+  return get<PageResult<SysDict>>('/api/system/dict/page', params)
 }
 
 export function createDict(data: SysDict): Promise<SysDict> {
-  return post<SysDict>('/api/system/dicts', data)
+  return post<SysDict>('/api/system/dict', data)
 }
 
 export function updateDict(data: SysDict): Promise<SysDict> {
-  return put<SysDict>(`/api/system/dicts/${data.id}`, data)
+  return put<SysDict>('/api/system/dict', data)
 }
 
 export function deleteDict(id: number): Promise<void> {
-  return del<void>(`/api/system/dicts/${id}`)
+  return del<void>(`/api/system/dict/${id}`)
 }
 
-export function getDictItems(dictId: number): Promise<SysDictItem[]> {
-  return get<SysDictItem[]>(`/api/system/dicts/${dictId}/items`)
+export function getDictItems(dictType: string): Promise<SysDictItem[]> {
+  return get<SysDictItem[]>(`/api/system/dict/items/${dictType}`)
 }
 
 export function createDictItem(data: SysDictItem): Promise<SysDictItem> {
-  return post<SysDictItem>('/api/system/dicts/items', data)
+  return post<SysDictItem>('/api/system/dict/item', data)
 }
 
 export function updateDictItem(data: SysDictItem): Promise<SysDictItem> {
-  return put<SysDictItem>(`/api/system/dicts/items/${data.id}`, data)
+  return put<SysDictItem>('/api/system/dict/item', data)
 }
 
 export function deleteDictItem(id: number): Promise<void> {
-  return del<void>(`/api/system/dicts/items/${id}`)
+  return del<void>(`/api/system/dict/item/${id}`)
 }

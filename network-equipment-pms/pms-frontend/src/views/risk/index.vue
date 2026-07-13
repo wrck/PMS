@@ -338,7 +338,7 @@ async function handleSubmit() {
         reviewDate: form.reviewDate
       }
       if (form.id) {
-        await updateRisk(form.id, payload)
+        await updateRisk(payload)
         ElMessage.success('更新成功')
       } else {
         await createRisk(payload)
