@@ -49,16 +49,16 @@ export function createPunchList(data: PunchList): Promise<PunchList> {
   return post<PunchList>('/api/project/punch-list', data)
 }
 
-export function updatePunchList(id: number, data: PunchList): Promise<PunchList> {
-  return put<PunchList>(`/api/project/punch-list/${id}`, data)
+export function updatePunchList(data: PunchList): Promise<PunchList> {
+  return put<PunchList>('/api/project/punch-list', data)
 }
 
 export function resolvePunchList(id: number): Promise<boolean> {
-  return put<boolean>(`/api/project/punch-list/${id}/resolve`)
+  return post<boolean>(`/api/project/punch-list/${id}/resolve`)
 }
 
 export function verifyPunchList(id: number): Promise<boolean> {
-  return put<boolean>(`/api/project/punch-list/${id}/verify`)
+  return post<boolean>(`/api/project/punch-list/${id}/verify`)
 }
 
 export function deletePunchList(id: number): Promise<boolean> {

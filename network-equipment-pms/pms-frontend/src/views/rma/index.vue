@@ -114,7 +114,7 @@ const inspectForm = reactive<{ id: number; inspectionResult: string; updateAsset
 // ============== 数据加载 ==============
 async function loadKpi() {
   try {
-    kpi.value = await getRmaKpi()
+    kpi.value = await getRmaKpi('2024-01-01', '2026-12-31')
   } catch {
     /* handled by interceptor */
   }

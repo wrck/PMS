@@ -32,6 +32,24 @@ public class PunchListController {
 
     private final IPunchListService punchListService;
 
+    @Operation(summary = "分页查询 Punch List 列表")
+    @GetMapping("/list")
+    public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<PunchList>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String status) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<PunchList> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<PunchList>()
+                .eq(projectId != null, PunchList::getProjectId, projectId)
+                .eq(severity != null, PunchList::getSeverity, severity)
+                .eq(status != null, PunchList::getStatus, status)
+                .orderByDesc(PunchList::getId);
+        return Result.ok(punchListService.page(
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), wrapper));
+    }
+
     @Operation(summary = "创建 Punch List 项")
     @PostMapping
     @PreAuthorize("hasAuthority('project:punchList:add')")

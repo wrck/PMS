@@ -52,28 +52,31 @@ export function createRma(data: Rma): Promise<Rma> {
 }
 
 export function checkWarranty(id: number): Promise<Rma> {
-  return put<Rma>(`/api/asset/rma/${id}/warranty-check`)
+  return post<Rma>(`/api/asset/rma/${id}/check-warranty`)
 }
 
 export function issueRma(id: number): Promise<Rma> {
-  return put<Rma>(`/api/asset/rma/${id}/issue`)
+  return post<Rma>(`/api/asset/rma/${id}/issue`)
 }
 
 export function markReturning(id: number): Promise<Rma> {
-  return put<Rma>(`/api/asset/rma/${id}/returning`)
+  return post<Rma>(`/api/asset/rma/${id}/returning`)
 }
 
 export function inspectRma(
   id: number,
   data: { inspectionResult: string; updateAsset: boolean }
 ): Promise<Rma> {
-  return put<Rma>(`/api/asset/rma/${id}/inspect`, data)
+  return post<Rma>(`/api/asset/rma/${id}/inspect`, data)
 }
 
 export function closeRma(id: number): Promise<Rma> {
-  return put<Rma>(`/api/asset/rma/${id}/close`)
+  return post<Rma>(`/api/asset/rma/${id}/close`)
 }
 
-export function getRmaKpi(): Promise<RmaKpi> {
-  return get<RmaKpi>('/api/asset/rma/kpi')
+export function getRmaKpi(startDate?: string, endDate?: string): Promise<RmaKpi> {
+  const params: Record<string, string> = {}
+  if (startDate) params.startDate = startDate
+  if (endDate) params.endDate = endDate
+  return get<RmaKpi>('/api/asset/rma/kpi', params)
 }

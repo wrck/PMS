@@ -65,6 +65,8 @@ export interface ScheduleLogQuery {
   size?: number
   /** SUCCESS / FAIL */
   status?: string
+  /** 任务名称 */
+  taskName?: string
   /** 触发类型过滤：MANUAL_TRIGGER 选项映射为 triggerType=MANUAL */
   triggerType?: string
   /** 起始日期（YYYY-MM-DD） */
@@ -80,12 +82,17 @@ export function getScheduleStatistic(): Promise<ScheduleStatistic> {
 
 /** 分页查询最近调度日志 */
 export function listScheduleLogs(params: ScheduleLogQuery): Promise<IPage<ScheduleLog>> {
-  return get<IPage<ScheduleLog>>('/api/system/schedule/page', params)
+  return get<IPage<ScheduleLog>>('/api/system/audit/schedule/page', {
+    page: params.page,
+    size: params.size,
+    status: params.status,
+    taskName: params.taskName
+  })
 }
 
 /** 查询失败任务列表 */
 export function listFailedScheduleLogs(
   params: { page?: number; size?: number } = {}
 ): Promise<IPage<ScheduleLog>> {
-  return get<IPage<ScheduleLog>>('/api/system/schedule/failed', params)
+  return get<IPage<ScheduleLog>>('/api/system/audit/schedule/failed', params)
 }

@@ -94,6 +94,21 @@ public class RmaController {
         return Result.ok(rmaService.close(id));
     }
 
+    @Operation(summary = "Paginated list of RMA tickets with optional filters")
+    @GetMapping("/list")
+    public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<Rma>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String ticketStatus,
+            @RequestParam(required = false) Long assetId) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Rma> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Rma>()
+                .eq(ticketStatus != null, Rma::getTicketStatus, ticketStatus)
+                .eq(assetId != null, Rma::getAssetId, assetId)
+                .orderByDesc(Rma::getId);
+        return Result.ok(rmaService.page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), wrapper));
+    }
+
     @Operation(summary = "Get RMA by id")
     @GetMapping("/{id}")
     public Result<Rma> get(@PathVariable Long id) {

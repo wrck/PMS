@@ -32,21 +32,24 @@ export function createWarranty(data: Warranty): Promise<Warranty> {
   return post<Warranty>('/api/asset/warranty', data)
 }
 
-export function updateWarranty(id: number, data: Warranty): Promise<Warranty> {
-  return put<Warranty>(`/api/asset/warranty/${id}`, data)
+export function updateWarranty(data: Warranty): Promise<Warranty> {
+  return put<Warranty>('/api/asset/warranty', data)
 }
 
+/** 续保 — 通过通用更新接口修改截止日期和时长 */
 export function renewWarranty(
   id: number,
   data: { durationMonths: number; endDate: string }
 ): Promise<Warranty> {
-  return put<Warranty>(`/api/asset/warranty/${id}/renew`, data)
+  return put<Warranty>('/api/asset/warranty', { id, durationMonths: data.durationMonths, endDate: data.endDate } as Warranty)
 }
 
+/** 退网 — 通过通用更新接口将截止日期设为今天 */
 export function decommissionAsset(id: number): Promise<boolean> {
-  return put<boolean>(`/api/asset/warranty/${id}/decommission`)
+  const today = new Date().toISOString().slice(0, 10)
+  return put<boolean>('/api/asset/warranty', { id, endDate: today } as unknown as Warranty).then(() => true)
 }
 
 export function listExpiringSoon(days: number): Promise<Warranty[]> {
-  return get<Warranty[]>('/api/asset/warranty/expiring', { days })
+  return get<Warranty[]>('/api/asset/warranty/expiring-soon', { days })
 }

@@ -54,9 +54,9 @@ export function getIntegrationHealth(): Promise<IntegrationHealthResponse> {
 export function listIntegrationLogs(
   params: IntegrationLogQuery
 ): Promise<IntegrationLogResult> {
-  return get<IntegrationLogResult>('/api/integration/logs', params)
+  return get<IntegrationLogResult>('/api/integration/log/list', params)
 }
 
 export function retryPush(logId: number): Promise<boolean> {
-  return post<boolean>(`/api/integration/logs/${logId}/retry`)
+  return post<boolean>(`/api/integration/log/${logId}/retry`)
 }
