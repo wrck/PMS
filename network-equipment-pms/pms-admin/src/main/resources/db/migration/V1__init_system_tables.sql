@@ -88,7 +88,7 @@ CREATE TABLE `sys_menu` (
     `update_time` DATETIME     DEFAULT NULL COMMENT 'Update time',
     `deleted`     TINYINT      DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf4mb4 COMMENT='System menu';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='System menu';
 
 -- ----------------------------
 -- sys_permission
