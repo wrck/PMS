@@ -5,8 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
- * Login response payload containing the JWT token.
+ * Login response payload containing the JWT token and user info.
+ *
+ * <p>Structure aligns with the frontend {@code LoginResult} type:
+ * {@code { token, userInfo: { id, username, nickname, roles, permissions } }}.</p>
  */
 @Data
 @Builder
@@ -16,9 +21,6 @@ public class LoginResponse {
 
     private String token;
 
-    private Long userId;
-
-    private String username;
-
-    private String realName;
+    /** User info expected by the frontend (id, username, nickname, roles, permissions, ...). */
+    private Map<String, Object> userInfo;
 }

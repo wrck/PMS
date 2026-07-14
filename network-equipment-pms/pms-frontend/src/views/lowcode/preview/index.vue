@@ -6,8 +6,10 @@ import { get } from '@/utils/request'
 defineOptions({ name: 'LowCodePreviewView' })
 
 const route = useRoute()
+// Preview receives configType (FORM/LIST/TAB/RELATED_PAGE) and configCode (string code)
+// via query params from the designer's "preview" button.
 const configType = ref((route.query.configType as string) || 'FORM')
-const configId = ref(Number(route.query.configId) || 0)
+const configCode = ref((route.query.configCode as string) || '')
 const device = ref<'pc' | 'tablet' | 'mobile'>('pc')
 const orientation = ref<'portrait' | 'landscape'>('portrait')
 
@@ -23,9 +25,18 @@ const deviceSize = computed(() => {
     : s
 })
 
+// Map configType (uppercase) to render route pageType (lowercase)
+const pageTypeMap: Record<string, string> = {
+  FORM: 'form',
+  LIST: 'list',
+  TAB: 'tab',
+  RELATED_PAGE: 'related-page'
+}
+
 const previewUrl = computed(() => {
-  // 内嵌渲染页（复用现有 render 路由）
-  return `/lowcode/render?type=${configType.value}&id=${configId.value}&preview=true`
+  const pt = pageTypeMap[configType.value] || configType.value.toLowerCase()
+  // Use the render route path format: /lowcode/:pageType/:pageCode
+  return `/lowcode/${pt}/${configCode.value}?preview=true`
 })
 </script>
 

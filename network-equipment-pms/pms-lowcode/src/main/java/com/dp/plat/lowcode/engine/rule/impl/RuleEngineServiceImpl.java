@@ -105,12 +105,14 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private boolean matchNewRow(List<Map<String, Object>> conditionColumns, Map<String, Object> row,
                                 Map<String, Object> facts) {
         if (conditionColumns == null) return true;
-        List<Map<String, Object>> conditions = (List<Map<String, Object>>) row.get("conditions");
+        List<?> conditions = (List<?>) row.get("conditions");
         for (int i = 0; i < conditionColumns.size(); i++) {
             Map<String, Object> col = conditionColumns.get(i);
             String field = (String) col.get("field");
             String op = (String) col.get("operator");
-            Object expected = conditions != null && i < conditions.size() ? conditions.get(i).get("value") : null;
+            Object condItem = conditions != null && i < conditions.size() ? conditions.get(i) : null;
+            // 兼容两种格式：值数组 ["P1"] 和对象数组 [{"value":"P1"}]
+            Object expected = condItem instanceof Map ? ((Map<String, Object>) condItem).get("value") : condItem;
             Object actual = facts.get(field);
             if (!matchOperator(actual, op, expected)) return false;
         }
@@ -124,10 +126,12 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private Map<String, Object> buildActions(List<Map<String, Object>> actionColumns, Map<String, Object> row) {
         Map<String, Object> actions = new LinkedHashMap<>();
         if (actionColumns == null) return actions;
-        List<Map<String, Object>> rowActions = (List<Map<String, Object>>) row.get("actions");
+        List<?> rowActions = (List<?>) row.get("actions");
         for (int i = 0; i < actionColumns.size(); i++) {
             String field = (String) actionColumns.get(i).get("field");
-            Object value = rowActions != null && i < rowActions.size() ? rowActions.get(i).get("value") : null;
+            Object actionItem = rowActions != null && i < rowActions.size() ? rowActions.get(i) : null;
+            // 兼容两种格式：值数组 [1] 和对象数组 [{"value":1}]
+            Object value = actionItem instanceof Map ? ((Map<String, Object>) actionItem).get("value") : actionItem;
             actions.put(field, value);
         }
         return actions;

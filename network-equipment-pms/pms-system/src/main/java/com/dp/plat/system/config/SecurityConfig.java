@@ -3,11 +3,15 @@ package com.dp.plat.system.config;
 import com.dp.plat.common.filter.RateLimitFilter;
 import com.dp.plat.common.filter.SecurityHeadersFilter;
 import com.dp.plat.common.filter.XssFilter;
+import com.dp.plat.common.result.Result;
 import com.dp.plat.system.security.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -60,6 +64,24 @@ public class SecurityConfig {
                         .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .anyRequest().authenticated())
+                // 未认证返回 401 JSON，权限不足返回 403 JSON（默认行为返回空体 403，前端无法识别）
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write(
+                                    new ObjectMapper().writeValueAsString(
+                                            Result.fail(401, "未登录或登录已过期，请重新登录")));
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write(
+                                    new ObjectMapper().writeValueAsString(
+                                            Result.fail(403, "权限不足，无法访问该资源")));
+                        }))
                 // 注册顺序（从后往前）：确保每次 addFilterBefore 引用的锚点过滤器已注册
                 // 最终链顺序：SecurityHeadersFilter → RateLimitFilter → XssFilter → JwtAuthenticationFilter → UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

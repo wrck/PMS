@@ -16,6 +16,23 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref<UserInfo | null>(null)
   const permissions = ref<string[]>([])
 
+  /**
+   * Check if current user has the given permission code.
+   * Super admin (permissions contains '*') or exact match passes.
+   */
+  function hasPermission(code: string): boolean {
+    if (!code) return true
+    return permissions.value.includes('*') || permissions.value.includes(code)
+  }
+
+  /**
+   * Check if current user has any of the given permission codes.
+   */
+  function hasAnyPermission(codes: string[]): boolean {
+    if (!codes || codes.length === 0) return true
+    return permissions.value.includes('*') || codes.some((c) => permissions.value.includes(c))
+  }
+
   async function login(params: LoginParams) {
     const res = await loginApi(params)
     token.value = res.token
@@ -50,5 +67,5 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem(TOKEN_KEY)
   }
 
-  return { token, userInfo, permissions, login, fetchUserInfo, logout, reset }
+  return { token, userInfo, permissions, hasPermission, hasAnyPermission, login, fetchUserInfo, logout, reset }
 })

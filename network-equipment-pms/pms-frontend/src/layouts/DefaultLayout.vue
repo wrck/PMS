@@ -129,7 +129,32 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
   {
     title: '低代码',
     icon: 'MagicStick',
-    children: [{ title: '表单配置', path: '/lowcode/form-list', icon: 'Document' }]
+    children: [
+      { title: '实体设计器', path: '/lowcode/entity-designer', icon: 'Connection' },
+      { title: '表单配置', path: '/lowcode/form-list', icon: 'Document' },
+      { title: '列表配置', path: '/lowcode/list-list', icon: 'List' },
+      { title: '标签页配置', path: '/lowcode/tab-list', icon: 'Files' },
+      { title: '关联页配置', path: '/lowcode/related-page-list', icon: 'Share' },
+      { title: '微流设计器', path: '/lowcode/microflow-designer', icon: 'Share' },
+      { title: '规则设计器', path: '/lowcode/rule-designer', icon: 'Filter' },
+      { title: '流程设计器', path: '/lowcode/process-designer', icon: 'Connection' },
+      { title: '触发器', path: '/lowcode/trigger-list', icon: 'BellFilled' },
+      { title: '连接器配置', path: '/lowcode/connector-designer', icon: 'Connection' },
+      { title: '发布中心', path: '/lowcode/publish-center', icon: 'Promotion' },
+      { title: '审批链配置', path: '/lowcode/approval-chain', icon: 'SetUp' },
+      { title: '版本历史', path: '/lowcode/version-history', icon: 'Timer' },
+      { title: '模板市场', path: '/lowcode/template-market', icon: 'Goods' },
+      { title: 'APM 看板', path: '/lowcode/apm-dashboard', icon: 'TrendCharts' },
+      { title: '应用源码导出', path: '/lowcode/app-source-export', icon: 'Download' }
+    ]
+  },
+  {
+    title: '演示中心',
+    icon: 'Star',
+    children: [
+      { title: '员工列表', path: '/lowcode/list/list_demo_employee', icon: 'User' },
+      { title: '员工档案', path: '/lowcode/form/form_demo_employee', icon: 'Document' }
+    ]
   }
 ]
 

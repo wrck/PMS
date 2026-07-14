@@ -19,6 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * JWT authentication filter that extracts the token from the Authorization header,
@@ -55,13 +57,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Collection<GrantedAuthority> authorities = userAuthorityService.loadAuthorities(username);
                 UserDetails userDetails = User.builder()
-                        .username(username)
+                        .username(String.valueOf(userId))
                         .password("")
                         .authorities(authorities)
                         .build();
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                Map<String, Object> details = new HashMap<>();
+                details.put("webDetails", new WebAuthenticationDetailsSource().buildDetails(request));
+                details.put("username", username);
+                authentication.setDetails(details);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

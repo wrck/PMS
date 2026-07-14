@@ -698,7 +698,7 @@ runValidation()
 
 /* ===== 侧栏 ===== */
 .ee-sidebar {
-  width: 180px;
+  width: 160px;
   flex-shrink: 0;
   border-left: 1px solid var(--el-border-color-lighter);
   padding: 8px;

@@ -20,12 +20,15 @@ export interface CollaborationChange {
   timestamp?: string
 }
 
+// 协同编辑请求统一使用 silent 模式，失败不弹 ElMessage 错误提示
+const SILENT = { silent: true }
+
 export function joinCollaboration(configType: string, configId: number, user: OnlineUser) {
   return post<void>('/api/lowcode/collaboration/join', {
     configType,
     configId,
     user
-  })
+  }, SILENT)
 }
 
 export function leaveCollaboration(configType: string, configId: number, userId: number) {
@@ -33,7 +36,7 @@ export function leaveCollaboration(configType: string, configId: number, userId:
     configType,
     configId,
     userId
-  })
+  }, SILENT)
 }
 
 export function heartbeatCollaboration(configType: string, configId: number, userId: number) {
@@ -41,11 +44,11 @@ export function heartbeatCollaboration(configType: string, configId: number, use
     configType,
     configId,
     userId
-  })
+  }, SILENT)
 }
 
 export function getOnlineUsers(configType: string, configId: number) {
-  return get<OnlineUser[]>('/api/lowcode/collaboration/online', { configType, configId })
+  return get<OnlineUser[]>('/api/lowcode/collaboration/online', { configType, configId }, SILENT)
 }
 
 export function broadcastChange(
@@ -57,7 +60,7 @@ export function broadcastChange(
     configType,
     configId,
     change
-  })
+  }, SILENT)
 }
 
 export function getChanges(configType: string, configId: number, sinceSeq = 0) {
@@ -65,5 +68,5 @@ export function getChanges(configType: string, configId: number, sinceSeq = 0) {
     configType,
     configId,
     sinceSeq
-  })
+  }, SILENT)
 }

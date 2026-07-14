@@ -45,6 +45,8 @@ export function useCollaboration(opts: UseCollaborationOptions) {
   const recentChanges = ref<CollaborationChange[]>([])
   const lastSeq = ref(0)
   const joined = ref(false)
+  // 防止竞态：组件卸载后不再启动定时器，避免定时器泄漏
+  let cancelled = false
 
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null
   let onlineTimer: ReturnType<typeof setInterval> | null = null
@@ -57,11 +59,16 @@ export function useCollaboration(opts: UseCollaborationOptions) {
         userName: opts.userName,
         avatar: opts.avatar
       })
+      // 组件已卸载则不再启动定时器（竞态保护）
+      if (cancelled) {
+        try { await leaveCollaboration(opts.configType, opts.configId, opts.userId) } catch {}
+        return
+      }
       joined.value = true
       // 立即拉取一次在线用户
       await refreshOnline()
       // 启动定时器
-      startTimers()
+      if (!cancelled) startTimers()
     } catch (e) {
       console.warn('[useCollaboration] join failed', e)
     }
@@ -140,6 +147,7 @@ export function useCollaboration(opts: UseCollaborationOptions) {
   }
 
   onUnmounted(() => {
+    cancelled = true
     leave()
   })
 

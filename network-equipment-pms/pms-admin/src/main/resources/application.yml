@@ -29,6 +29,10 @@ spring:
     baseline-version: 0
     placeholder-replacement: false
     out-of-order: true
+    # Dev env: skip checksum validation for already-applied migrations
+    # (migration scripts may be modified during development)
+    validate-on-migrate: false
+    clean-disabled: true
   # Quartz 调度配置：内存存储（简化，无需建表；如需集群持久化可改为 jdbc）
   quartz:
     job-store-type: memory
@@ -77,6 +81,13 @@ lowcode:
     # 低代码连接器凭据 AES 加密密钥（明文口令）。生产环境必须通过环境变量
     # LOWCODE_ENCRYPTION_KEY 覆盖；使用默认值会在启动时打印警告日志。
     key: ${LOWCODE_ENCRYPTION_KEY:default-lowcode-encryption-key-change-me}
+# LiteFlow 规则引擎配置
+# rule-source 留空：低代码规则设计器执行时动态传入 EL 表达式，无需默认规则
+liteflow:
+  rule-source: ""
+  enable-log: false
+  retry-count: 0
+  thread-executor-number: 2
 # Actuator + Micrometer + Prometheus 可观测性配置
 management:
   endpoints:

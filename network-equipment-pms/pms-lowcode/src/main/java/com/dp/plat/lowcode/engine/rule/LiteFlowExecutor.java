@@ -31,6 +31,9 @@ public class LiteFlowExecutor {
      * @return 执行结果（取自上下文 result 键），无结果时返回 null
      */
     public Object execute(String el, Map<String, Object> context) {
+        if (el == null || el.isBlank()) {
+            return null;
+        }
         try {
             DefaultContext liteflowContext = new DefaultContext();
             if (context != null) {
@@ -39,7 +42,6 @@ public class LiteFlowExecutor {
                 }
             }
             // LiteFlow 2.15.0：execute2RespWithEL(el, param, requestId, contextBeans...)
-            // 将 DefaultContext 作为上下文 Bean 传入，组件内可通过 getContextBean 获取
             LiteflowResponse response = flowExecutor.execute2RespWithEL(
                     el, null, null, liteflowContext);
             if (response == null) {
@@ -47,9 +49,9 @@ public class LiteFlowExecutor {
             }
             if (!response.isSuccess()) {
                 Throwable cause = response.getCause();
+                String errorMsg = cause == null ? "unknown" : cause.getMessage();
                 throw new RuntimeException(
-                        "LiteFlow 执行失败: " + el + (cause == null ? "" : " — " + cause.getMessage()),
-                        cause);
+                        "LiteFlow 执行失败: " + el + " — " + errorMsg, cause);
             }
             // 从执行后的上下文读取 result（组件可 setData("result", value)）
             DefaultContext resultContext = response.getFirstContextBean();
@@ -57,7 +59,7 @@ public class LiteFlowExecutor {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("LiteFlow 执行失败: " + el, e);
+            throw new RuntimeException("LiteFlow 执行失败: " + el + " — " + e.getMessage(), e);
         }
     }
 }

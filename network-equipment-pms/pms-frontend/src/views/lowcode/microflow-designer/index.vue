@@ -387,16 +387,29 @@ function renderGraph() {
 function addNodeToCanvas(type: MicroflowNodeType, x?: number, y?: number) {
   const id = `node_${Date.now()}_${Math.floor(Math.random() * 1000)}`
   const count = definition.value.nodes.length
+  // Fix: use distinct x/y formulas so nodes don't stack on the diagonal
+  const defaultX = 120 + (count % 6) * 40
+  const defaultY = 120 + Math.floor(count / 6) * 100 + (count % 3) * 20
   const node: MicroflowNode = {
     id,
     type,
     label: DEFAULT_LABELS[type],
-    x: x ?? 120 + (count % 6) * 30,
-    y: y ?? 120 + (count % 6) * 30,
+    x: x ?? defaultX,
+    y: y ?? defaultY,
     config: {}
   }
   definition.value.nodes.push(node)
-  graphRef.value?.addNode(nodeAddConfig(node))
+  // Fix: wrap addNode in try/catch to prevent UI freeze on X6 rendering errors
+  const g = graphRef.value
+  if (g) {
+    try {
+      g.addNode(nodeAddConfig(node))
+    } catch (e) {
+      console.error('[Microflow] Failed to add node to canvas:', e)
+    }
+  } else {
+    console.warn('[Microflow] Graph not initialized, node added to data only')
+  }
   selectedNodeId.value = id
   selectedCellId.value = id
   setHighlighted(id)
@@ -968,6 +981,9 @@ function onKeyDown(e: KeyboardEvent) {
   if (selectedCellId.value) {
     e.preventDefault()
     deleteSelected()
+  } else if (e.key === 'Backspace') {
+    // Prevent browser "back" navigation when no cell is selected
+    e.preventDefault()
   }
 }
 
@@ -1018,14 +1034,23 @@ function initGraph() {
 }
 
 onMounted(async () => {
-  // 注册微流自定义 Vue 节点
-  register({
-    shape: MICROFLOW_NODE_SHAPE,
-    width: NODE_WIDTH,
-    height: NODE_HEIGHT,
-    component: MicroflowNodeComp
-  })
-  initGraph()
+  // Register microflow custom Vue node (wrap in try/catch: re-entering the page
+  // may cause x6-vue-shape to throw "shape already registered")
+  try {
+    register({
+      shape: MICROFLOW_NODE_SHAPE,
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
+      component: MicroflowNodeComp
+    })
+  } catch (e) {
+    console.warn('[Microflow] Node shape registration skipped (may already be registered):', e)
+  }
+  try {
+    initGraph()
+  } catch (e) {
+    console.error('[Microflow] Failed to initialize graph:', e)
+  }
   await Promise.all([loadMicroflowList(), loadOptions()])
   window.addEventListener('keydown', onKeyDown)
 })
@@ -1260,7 +1285,8 @@ void getExecutionLogs
 }
 
 .right-panel {
-  width: 360px;
+  width: 480px;
+  min-width: 360px;
   background: #fff;
   overflow-y: auto;
   display: flex;

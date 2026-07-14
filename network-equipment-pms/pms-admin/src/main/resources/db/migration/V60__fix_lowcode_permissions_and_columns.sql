@@ -1,43 +1,111 @@
 -- =============================================================
 -- V60__fix_lowcode_permissions_and_columns.sql
--- 持久化 LowCode 模块联调修复：
---   1. 为缺少 deleted 列的 pms_lowcode_* 表补齐 deleted 列
---   2. 为 pms_lowcode_import_task 补齐 create_by/update_by 列
---   3. 注册 @PreAuthorize 注解引用但 sys_menu 中缺失的 lowcode 权限
---   4. 将新增 lowcode 权限绑定到超级管理员角色（role_id=1）
+-- Persist LowCode module integration fixes:
+--   1. Add deleted column to pms_lowcode_* tables that lack it
+--   2. Add create_by/update_by columns to pms_lowcode_import_task
+--   3. Add operate_time/update_time/create_by/update_by to pms_lowcode_config_audit_log
+--   4. Register missing lowcode permissions in sys_menu
+--   5. Bind new lowcode permissions to super admin role (role_id=1)
+--
+-- NOTE: Uses PREPARE/EXECUTE with INFORMATION_SCHEMA check to be
+--       idempotent (safe for re-run when columns already exist).
+--       MySQL 8.0.16 does not support ADD COLUMN IF NOT EXISTS,
+--       and Flyway does not support DELIMITER syntax.
 -- =============================================================
 
--- 1. 为缺少 deleted 列的表补齐
-ALTER TABLE pms_lowcode_datasource        ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_approval_chain    ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_backup_record     ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_collaboration_session ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_component_meta    ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_config_audit_log  ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_config_template   ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_ddl_backup        ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_ddl_execution_log ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_edit_lock         ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_gray_release      ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_import_task       ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_microflow_version ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_process_sla_record ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_publish_record    ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
-ALTER TABLE pms_lowcode_rule_test_case    ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT 'Logical delete 0=no 1=yes';
+-- 1. Add deleted column to tables that lack it (idempotent)
+-- pms_lowcode_datasource
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_datasource' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_datasource ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 2. 为 pms_lowcode_import_task 补齐 create_by/update_by 列
-ALTER TABLE pms_lowcode_import_task
-  ADD COLUMN create_by VARCHAR(64) DEFAULT '' AFTER end_time,
-  ADD COLUMN update_by VARCHAR(64) DEFAULT '' AFTER create_time;
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_approval_chain' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_approval_chain ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 2.1 为 pms_lowcode_config_audit_log 补齐 operate_time/update_time/create_by/update_by 列
-ALTER TABLE pms_lowcode_config_audit_log
-  ADD COLUMN operate_time DATETIME DEFAULT NULL AFTER tenant_id,
-  ADD COLUMN update_time DATETIME DEFAULT NULL AFTER create_time,
-  ADD COLUMN create_by VARCHAR(64) DEFAULT '' AFTER update_time,
-  ADD COLUMN update_by VARCHAR(64) DEFAULT '' AFTER create_by;
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_backup_record' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_backup_record ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 3. 注册 @PreAuthorize 注解引用但 sys_menu 中缺失的 lowcode 权限
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_collaboration_session' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_collaboration_session ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_component_meta' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_component_meta ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_audit_log' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_audit_log ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_template' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_template ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_ddl_backup' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_ddl_backup ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_ddl_execution_log' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_ddl_execution_log ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_edit_lock' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_edit_lock ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_gray_release' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_gray_release ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_import_task' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_import_task ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_microflow_version' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_microflow_version ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_process_sla_record' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_process_sla_record ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_publish_record' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_publish_record ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_rule_test_case' AND column_name = 'deleted');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_rule_test_case ADD COLUMN deleted TINYINT DEFAULT 0 COMMENT ''Logical delete 0=no 1=yes''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 2. Add create_by/update_by to pms_lowcode_import_task
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_import_task' AND column_name = 'create_by');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_import_task ADD COLUMN create_by VARCHAR(64) DEFAULT ''''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_import_task' AND column_name = 'update_by');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_import_task ADD COLUMN update_by VARCHAR(64) DEFAULT ''''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 2.1 Add operate_time/update_time/create_by/update_by to pms_lowcode_config_audit_log
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_audit_log' AND column_name = 'operate_time');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_audit_log ADD COLUMN operate_time DATETIME DEFAULT NULL', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_audit_log' AND column_name = 'update_time');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_audit_log ADD COLUMN update_time DATETIME DEFAULT NULL', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_audit_log' AND column_name = 'create_by');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_audit_log ADD COLUMN create_by VARCHAR(64) DEFAULT ''''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_lowcode_config_audit_log' AND column_name = 'update_by');
+SET @sql = IF(@c = 0, 'ALTER TABLE pms_lowcode_config_audit_log ADD COLUMN update_by VARCHAR(64) DEFAULT ''''', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 3. Register lowcode permissions referenced by @PreAuthorize but missing in sys_menu
 INSERT IGNORE INTO sys_menu (menu_name, parent_id, menu_type, perms, icon, order_num, visible, is_frame, is_cache, status, create_by, create_time)
 VALUES
 ('LC Microflow List',     0, 'F', 'lowcode:microflow:list',        '#', 0, '1', '1', '0', '0', 'admin', NOW()),
@@ -79,6 +147,6 @@ VALUES
 ('LC Comment List',       0, 'F', 'lowcode:comment:list',         '#', 0, '1', '1', '0', '0', 'admin', NOW()),
 ('LC GrayRelease List',   0, 'F', 'lowcode:gray-release:list',    '#', 0, '1', '1', '0', '0', 'admin', NOW());
 
--- 4. 将所有 lowcode 权限绑定到超级管理员角色（role_id=1）
+-- 4. Bind all lowcode permissions to super admin role (role_id=1)
 INSERT IGNORE INTO sys_role_menu (role_id, menu_id, create_by, create_time)
 SELECT 1, id, 'admin', NOW() FROM sys_menu WHERE perms LIKE 'lowcode:%';

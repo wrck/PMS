@@ -92,14 +92,27 @@ service.interceptors.response.use(
       router.push('/login')
       return Promise.reject(new Error(res.message || '未授权'))
     }
-    // Other business errors
-    ElMessage.error(res.message || '请求失败')
+    // Other business errors（silent 请求不弹错误提示）
+    if (!(response.config as AxiosRequestConfig & { silent?: boolean }).silent) {
+      ElMessage.error(res.message || '请求失败')
+    }
     return Promise.reject(new Error(res.message || '请求失败'))
   },
   (error) => {
-    // Network / HTTP errors
-    const msg = error?.response?.data?.message || error.message || '网络异常，请稍后重试'
-    ElMessage.error(msg)
+    // HTTP 401: 未登录或 token 过期，清除 token 并跳转登录页
+    if (error?.response?.status === 401) {
+      if (!(error?.config as AxiosRequestConfig & { silent?: boolean } | undefined)?.silent) {
+        ElMessage.error('登录状态已过期，请重新登录')
+      }
+      localStorage.removeItem(TOKEN_KEY)
+      router.push('/login')
+      return Promise.reject(new Error('未登录或登录已过期'))
+    }
+    // Network / HTTP errors（silent 请求不弹错误提示）
+    if (!(error?.config as AxiosRequestConfig & { silent?: boolean } | undefined)?.silent) {
+      const msg = error?.response?.data?.message || error.message || '网络异常，请稍后重试'
+      ElMessage.error(msg)
+    }
     return Promise.reject(error)
   }
 )

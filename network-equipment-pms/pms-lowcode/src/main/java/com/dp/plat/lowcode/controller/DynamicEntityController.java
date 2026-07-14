@@ -38,7 +38,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "分页查询动态实体数据")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':list')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':list')")
     public Result<Map<String, Object>> list(@PathVariable String entityCode,
                                              @RequestParam(defaultValue = "1") int page,
                                              @RequestParam(defaultValue = "20") int size,
@@ -48,7 +48,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "高级查询动态实体数据（LIKE/IN/BETWEEN/OR/排序）")
     @PostMapping("/query")
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':list')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':list')")
     public Result<Page<Map<String, Object>>> queryAdvanced(@PathVariable String entityCode,
                                                             @RequestBody DynamicQueryRequest request) {
         request.setEntityCode(entityCode);
@@ -57,7 +57,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "查询单条动态实体数据")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':query')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':query')")
     public Result<Map<String, Object>> getById(@PathVariable String entityCode,
                                                 @PathVariable Long id) {
         return Result.ok(dataService.getById(entityCode, id));
@@ -65,7 +65,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "新增动态实体数据")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':add')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':add')")
     @OperLog(title = "动态实体数据", businessType = 1)
     public Result<Long> create(@PathVariable String entityCode,
                                 @RequestBody Map<String, Object> data) {
@@ -74,7 +74,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "更新动态实体数据")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':edit')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':edit')")
     @OperLog(title = "动态实体数据", businessType = 2)
     public Result<Void> update(@PathVariable String entityCode,
                                 @PathVariable Long id,
@@ -85,7 +85,7 @@ public class DynamicEntityController {
 
     @Operation(summary = "删除动态实体数据")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:data:' + #entityCode + ':delete')")
+    @PreAuthorize("@ss.hasPermi('lowcode:data:' + #entityCode + ':delete')")
     @OperLog(title = "动态实体数据", businessType = 3)
     public Result<Void> delete(@PathVariable String entityCode,
                                 @PathVariable Long id) {

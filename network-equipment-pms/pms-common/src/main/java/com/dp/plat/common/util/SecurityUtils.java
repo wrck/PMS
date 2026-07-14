@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,11 +25,23 @@ public final class SecurityUtils {
 
     /**
      * Get the current username, or "system" if no authenticated user is present.
+     *
+     * <p>JwtAuthenticationFilter stores the real username in authentication details
+     * (key "username"), while the UserDetails username field holds the userId string.
+     * This method retrieves the real username from details first, falling back to
+     * the principal's username.</p>
      */
     public static String getCurrentUsername() {
         Authentication authentication = getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return "system";
+        }
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> map) {
+            Object username = map.get("username");
+            if (username instanceof String s && !s.isEmpty()) {
+                return s;
+            }
         }
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails userDetails) {

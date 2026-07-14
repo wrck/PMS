@@ -1,5 +1,6 @@
 package com.dp.plat.system.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dp.plat.common.constant.CommonConstants;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
@@ -7,9 +8,15 @@ import com.dp.plat.common.result.ResultCode;
 import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.system.dto.LoginRequest;
 import com.dp.plat.system.dto.LoginResponse;
+import com.dp.plat.system.entity.SysRole;
 import com.dp.plat.system.entity.SysUser;
+import com.dp.plat.system.entity.SysUserRole;
+import com.dp.plat.system.mapper.SysMenuMapper;
+import com.dp.plat.system.mapper.SysRoleMapper;
+import com.dp.plat.system.mapper.SysUserRoleMapper;
 import com.dp.plat.system.security.JwtTokenProvider;
 import com.dp.plat.system.security.TokenBlacklistService;
+import com.dp.plat.system.security.UserAuthorityService;
 import com.dp.plat.system.service.ISysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +32,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Authentication controller: login, logout, current user info.
  */
@@ -39,6 +52,10 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final TokenBlacklistService tokenBlacklistService;
+    private final UserAuthorityService userAuthorityService;
+    private final SysMenuMapper sysMenuMapper;
+    private final SysUserRoleMapper sysUserRoleMapper;
+    private final SysRoleMapper sysRoleMapper;
 
     @Operation(summary = "Login with username/password and return a JWT token")
     @PostMapping("/login")
@@ -51,11 +68,10 @@ public class AuthController {
             throw new BusinessException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
         }
         String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername());
+        Map<String, Object> userInfo = buildUserInfo(user);
         LoginResponse response = LoginResponse.builder()
                 .token(token)
-                .userId(user.getId())
-                .username(user.getUsername())
-                .realName(user.getRealName())
+                .userInfo(userInfo)
                 .build();
         return Result.ok(response);
     }
@@ -78,14 +94,55 @@ public class AuthController {
         return Result.ok();
     }
 
-    @Operation(summary = "Get current logged-in user info")
+    @Operation(summary = "Get current logged-in user info (including roles and permissions)")
     @GetMapping("/info")
-    public Result<SysUser> info() {
+    public Result<Map<String, Object>> info() {
         String username = SecurityUtils.getCurrentUsername();
         SysUser user = sysUserService.getByUsername(username);
-        if (user != null) {
-            user.setPassword(null);
+        if (user == null) {
+            return Result.ok(null);
         }
-        return Result.ok(user);
+        return Result.ok(buildUserInfo(user));
+    }
+
+    /**
+     * Build the user info map expected by the frontend:
+     * {@code { id, username, nickname, email, phone, deptId, roles, permissions }}.
+     */
+    private Map<String, Object> buildUserInfo(SysUser user) {
+        Map<String, Object> info = new HashMap<>();
+        info.put("id", user.getId());
+        info.put("username", user.getUsername());
+        info.put("nickname", user.getRealName());
+        info.put("email", user.getEmail());
+        info.put("phone", user.getPhone());
+        info.put("deptId", user.getDeptId());
+
+        // 查询用户角色
+        List<SysUserRole> userRoles = sysUserRoleMapper.selectList(
+                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, user.getId()));
+        Set<Long> roleIds = userRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toSet());
+        List<String> roleCodes;
+        if (!roleIds.isEmpty()) {
+            List<SysRole> roles = sysRoleMapper.selectList(
+                    new LambdaQueryWrapper<SysRole>().in(SysRole::getId, roleIds));
+            roleCodes = roles.stream().map(SysRole::getRoleCode).toList();
+        } else {
+            roleCodes = List.of();
+        }
+        info.put("roles", roleCodes);
+
+        // 查询用户权限
+        boolean isAdmin = roleCodes.contains(CommonConstants.SUPER_ADMIN_ROLE);
+        List<String> permissions;
+        if (isAdmin) {
+            // 超级管理员：加载全部权限
+            permissions = sysMenuMapper.listAllPerms();
+        } else {
+            permissions = sysMenuMapper.listPermsByUserId(user.getId());
+        }
+        info.put("permissions", permissions);
+
+        return info;
     }
 }

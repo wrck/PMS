@@ -910,8 +910,8 @@ onMounted(async () => {
   try {
     await initBuiltinComponents()
     registryComponents.value = LowCodeComponentRegistry.list()
-  } catch {
-    // 加载失败仅静默降级（基础组件仍可用）
+  } catch (e) {
+    console.error('[FormDesigner] 组件加载失败，业务组件面板可能不可用:', e)
   }
   // 进入页面时加入协同会话（仅编辑模式）
   if (editId > 0) {
