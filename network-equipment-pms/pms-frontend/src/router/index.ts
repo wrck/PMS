@@ -12,7 +12,6 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: '登录', requiresAuth: false }
   },
   {
-    // 帮助中心：公开访问（无需登录），后端 /api/system/help-content 也已放行
     path: '/help',
     name: 'Help',
     component: () => import('@/views/help/index.vue'),
@@ -29,324 +28,259 @@ export const routes: RouteRecordRaw[] = [
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
         meta: { title: '首页', icon: 'HomeFilled' }
-      },
+      }
+    ]
+  },
+  // ============ 项目管理（嵌套） ============
+  {
+    path: '/project',
+    component: Layout,
+    redirect: '/project/list',
+    meta: { title: '项目管理', icon: 'Folder', requiresAuth: true },
+    children: [
       {
-        path: 'system/user',
-        name: 'SysUser',
-        component: () => import('@/views/system/user/index.vue'),
-        meta: { title: '用户管理', icon: 'User' }
-      },
-      {
-        path: 'system/role',
-        name: 'SysRole',
-        component: () => import('@/views/system/role/index.vue'),
-        meta: { title: '角色管理', icon: 'UserFilled' }
-      },
-      {
-        path: 'system/menu',
-        name: 'SysMenu',
-        component: () => import('@/views/system/menu/index.vue'),
-        meta: { title: '菜单管理', icon: 'Menu' }
-      },
-      {
-        path: 'system/dict',
-        name: 'SysDict',
-        component: () => import('@/views/system/dict/index.vue'),
-        meta: { title: '字典管理', icon: 'Document' }
-      },
-      {
-        path: 'system/cache',
-        name: 'SysCache',
-        component: () => import('@/views/system/cache/index.vue'),
-        meta: { title: '缓存管理', icon: 'Coin', requiresAuth: true }
-      },
-      {
-        path: 'system/schedule',
-        name: 'SysSchedule',
-        component: () => import('@/views/system/schedule/index.vue'),
-        meta: { title: '定时任务', icon: 'Timer', requiresAuth: true }
-      },
-      {
-        path: 'system/audit',
-        name: 'SysAudit',
-        component: () => import('@/views/system/audit/index.vue'),
-        meta: { title: '审计日志', icon: 'DocumentChecked', requiresAuth: true }
-      },
-      {
-        path: 'project/list',
+        path: 'list',
         name: 'ProjectList',
         component: () => import('@/views/project/list/index.vue'),
         meta: { title: '项目列表', icon: 'Folder' }
       },
       {
-        path: 'project/detail/:id',
+        path: 'detail/:id',
         name: 'ProjectDetail',
         component: () => import('@/views/project/detail/index.vue'),
         meta: { title: '项目详情', hidden: true }
       },
       {
-        path: 'project/kanban',
+        path: 'kanban',
         name: 'ProjectKanban',
         component: () => import('@/views/project/kanban/index.vue'),
         meta: { title: '交付看板', icon: 'Grid' }
       },
       {
-        path: 'asset/category',
-        name: 'AssetCategory',
-        component: () => import('@/views/asset/category/index.vue'),
-        meta: { title: '设备分类', icon: 'Files' }
+        path: 'template',
+        name: 'ProjectTemplate',
+        component: () => import('@/views/project/template/index.vue'),
+        meta: { title: '项目模板', icon: 'Files', perms: 'project:template:list' }
       },
       {
-        path: 'asset/model',
-        name: 'AssetModel',
-        component: () => import('@/views/asset/model/index.vue'),
-        meta: { title: '设备型号', icon: 'Box' }
+        path: 'template/form/:id?',
+        name: 'ProjectTemplateForm',
+        component: () => import('@/views/project/template/form.vue'),
+        meta: { title: '模板编辑', hidden: true }
       },
       {
-        path: 'asset/list',
-        name: 'AssetList',
-        component: () => import('@/views/asset/list/index.vue'),
-        meta: { title: '资产清单', icon: 'List' }
-      },
-      {
-        path: 'implementation/task',
-        name: 'ImplTask',
-        component: () => import('@/views/implementation/task/index.vue'),
-        meta: { title: '实施任务', icon: 'Tickets' }
-      },
-      {
-        path: 'implementation/agent',
-        name: 'AgentManage',
-        component: () => import('@/views/implementation/agent/index.vue'),
-        meta: { title: '服务商管理', icon: 'OfficeBuilding' }
-      },
-      {
-        path: 'implementation/settlement',
-        name: 'Settlement',
-        component: () => import('@/views/implementation/settlement/index.vue'),
-        meta: { title: '结算管理', icon: 'Money' }
-      },
-      {
-        path: 'workflow/todo',
-        name: 'WorkflowTodo',
-        component: () => import('@/views/workflow/todo/index.vue'),
-        meta: { title: '待办中心', icon: 'Bell' }
-      },
-      {
-        path: 'punch-list',
-        name: 'PunchList',
-        component: () => import('@/views/punch-list/index.vue'),
-        meta: { title: 'Punch List', icon: 'WarningFilled', requiresAuth: true }
-      },
-      {
-        path: 'rma',
-        name: 'Rma',
-        component: () => import('@/views/rma/index.vue'),
-        meta: { title: 'RMA 返修', icon: 'RefreshRight', requiresAuth: true }
-      },
-      {
-        path: 'warranty',
-        name: 'Warranty',
-        component: () => import('@/views/warranty/index.vue'),
-        meta: { title: '质保期管理', icon: 'Timer', requiresAuth: true }
-      },
-      {
-        path: 'deliverable',
-        name: 'Deliverable',
-        component: () => import('@/views/deliverable/index.vue'),
-        meta: { title: '终验交付物', icon: 'Document', requiresAuth: true }
-      },
-      {
-        path: 'notification',
-        name: 'NotificationCenter',
-        component: () => import('@/views/notification/index.vue'),
-        meta: { title: '消息中心', icon: 'Bell', requiresAuth: true }
-      },
-      {
-        path: 'integration-health',
-        name: 'IntegrationHealth',
-        component: () => import('@/views/integration-health/index.vue'),
-        meta: { title: '集成健康检查', icon: 'Monitor', requiresAuth: true }
-      },
-      {
-        path: 'risk',
-        name: 'Risk',
-        component: () => import('@/views/risk/index.vue'),
-        meta: { title: '风险登记册', icon: 'Warning', requiresAuth: true }
-      },
-      {
-        path: 'change-request',
-        name: 'ChangeRequest',
-        component: () => import('@/views/change-request/index.vue'),
-        meta: { title: '变更管理', icon: 'EditPen', requiresAuth: true }
-      },
-      {
-        path: 'issue',
-        name: 'Issue',
-        component: () => import('@/views/issue/index.vue'),
-        meta: { title: '问题日志', icon: 'ChatLineSquare', requiresAuth: true }
-      },
-      {
-        path: 'report',
-        name: 'Report',
-        component: () => import('@/views/report/index.vue'),
-        meta: { title: '报表统计', icon: 'TrendCharts' }
-      },
-      {
-        path: 'lowcode/form-list',
-        name: 'LowCodeFormList',
-        component: () => import('@/views/lowcode/form-list/index.vue'),
-        meta: { title: '表单配置', icon: 'Document', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/form-designer',
-        name: 'LowCodeFormDesigner',
-        component: () => import('@/views/lowcode/form-designer/index.vue'),
-        meta: { title: '表单设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'lowcode/list-list',
-        name: 'LowCodeListList',
-        component: () => import('@/views/lowcode/list-list/index.vue'),
-        meta: { title: '列表配置', icon: 'List', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/list-designer',
-        name: 'LowCodeListDesigner',
-        component: () => import('@/views/lowcode/list-designer/index.vue'),
-        meta: { title: '列表设计器', icon: 'Grid', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'lowcode/tab-list',
-        name: 'LowCodeTabList',
-        component: () => import('@/views/lowcode/tab-list/index.vue'),
-        meta: { title: '标签页配置', icon: 'Files', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/tab-designer',
-        name: 'LowCodeTabDesigner',
-        component: () => import('@/views/lowcode/tab-designer/index.vue'),
-        meta: { title: '标签页设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'lowcode/related-page-list',
-        name: 'LowCodeRelatedPageList',
-        component: () => import('@/views/lowcode/related-page-list/index.vue'),
-        meta: { title: '关联页配置', icon: 'Share', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/related-page-designer',
-        name: 'LowCodeRelatedPageDesigner',
-        component: () => import('@/views/lowcode/related-page-designer/index.vue'),
-        meta: { title: '关联页设计器', icon: 'EditPen', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'lowcode/entity-designer',
-        name: 'LowcodeEntityDesigner',
-        component: () => import('@/views/lowcode/entity-designer/index.vue'),
-        meta: { title: '实体设计器', icon: 'Connection', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/version-history',
-        name: 'LowcodeVersionHistory',
-        component: () => import('@/views/lowcode/version-history/index.vue'),
-        meta: { title: '版本历史', icon: 'Timer', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/microflow-designer',
-        name: 'LowcodeMicroflowDesigner',
-        component: () => import('@/views/lowcode/microflow-designer/index.vue'),
-        meta: { title: '微流设计器', icon: 'Share', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/rule-designer',
-        name: 'LowcodeRuleDesigner',
-        component: () => import('@/views/lowcode/rule-designer/index.vue'),
-        meta: { title: '规则设计器', icon: 'Filter', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/process-designer',
-        name: 'LowcodeProcessDesigner',
-        component: () => import('@/views/lowcode/process-designer/index.vue'),
-        meta: { title: '流程设计器', icon: 'Connection', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/trigger-list',
-        name: 'LowcodeTriggerList',
-        component: () => import('@/views/lowcode/trigger-list/index.vue'),
-        meta: { title: '触发器', icon: 'BellFilled', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/connector-designer',
-        name: 'LowcodeConnectorDesigner',
-        component: () => import('@/views/lowcode/connector-designer/index.vue'),
-        meta: { title: '连接器配置', icon: 'Connection', requiresAuth: true }
-      },
-      {
-        path: 'lowcode/preview',
-        name: 'LowcodePreview',
-        component: () => import('@/views/lowcode/preview/index.vue'),
-        meta: { title: '预览', icon: 'View', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'lowcode/publish-center',
-        name: 'LowcodePublishCenter',
-        component: () => import('@/views/lowcode/publish-center/index.vue'),
-        meta: { title: '发布中心', icon: 'Promotion', requiresAuth: true }
-      },
-      {
-        // 多级审批链配置（借鉴 OutSystems LifeTime）
-        path: 'lowcode/approval-chain',
-        name: 'LowcodeApprovalChain',
-        component: () => import('@/views/lowcode/approval-chain/index.vue'),
-        meta: { title: '审批链配置', icon: 'SetUp', requiresAuth: true }
-      },
-      {
-        // 配置模板市场（借鉴 Zoho 模板市场 / Appsmith 模板 / Mendix App Store）
-        path: 'lowcode/template-market',
-        name: 'LowcodeTemplateMarket',
-        component: () => import('@/views/lowcode/template-market/index.vue'),
-        meta: { title: '模板市场', icon: 'Goods', requiresAuth: true }
-      },
-      {
-        // APM 可视化看板（借鉴 Joget APM，Micrometer 指标 + 执行日志聚合）
-        path: 'lowcode/apm-dashboard',
-        name: 'LowcodeApmDashboard',
-        component: () => import('@/views/lowcode/apm-dashboard/index.vue'),
-        meta: { title: 'APM 看板', icon: 'TrendCharts', requiresAuth: true }
-      },
-      {
-        // 应用源码导出（借鉴网易轻舟源码导出，无黑盒引擎）
-        path: 'lowcode/app-source-export',
-        name: 'LowcodeAppSourceExport',
-        component: () => import('@/views/lowcode/app-source-export/index.vue'),
-        meta: { title: '应用源码导出', icon: 'Download', requiresAuth: true }
-      },
-      {
-        // 低代码页面通用渲染入口：3 段路径与上方 2 段静态路径（lowcode/form-list 等）不冲突。
-        // pageType: form | list | tab | related-page
-        // pageCode: 低代码配置编码
-        path: 'lowcode/:pageType/:pageCode',
-        name: 'LowCodeRender',
-        component: () => import('@/views/lowcode/render/index.vue'),
-        meta: { title: '低代码页面', requiresAuth: true, hidden: true }
-      },
-      {
-        // 系统状态：后端健康 / 磁盘 / 反馈统计 / 近期动态
-        path: 'system-status',
-        name: 'SystemStatus',
-        component: () => import('@/views/system-status/index.vue'),
-        meta: { title: '系统状态', icon: 'Monitor', requiresAuth: true }
-      },
-      {
-        // 版本日志：按版本展示变更记录
-        path: 'changelog',
-        name: 'Changelog',
-        component: () => import('@/views/changelog/index.vue'),
-        meta: { title: '版本日志', icon: 'Notebook', requiresAuth: true }
+        path: 'template/version/:id',
+        name: 'ProjectTemplateVersion',
+        component: () => import('@/views/project/template/version.vue'),
+        meta: { title: '版本管理', hidden: true }
       }
     ]
   },
+  // ============ 资产管理（嵌套） ============
+  {
+    path: '/asset',
+    component: Layout,
+    redirect: '/asset/category',
+    meta: { title: '资产管理', icon: 'Files', requiresAuth: true },
+    children: [
+      { path: 'category', name: 'AssetCategory',
+        component: () => import('@/views/asset/category/index.vue'),
+        meta: { title: '设备分类', icon: 'Files' } },
+      { path: 'model', name: 'AssetModel',
+        component: () => import('@/views/asset/model/index.vue'),
+        meta: { title: '设备型号', icon: 'Box' } },
+      { path: 'list', name: 'AssetList',
+        component: () => import('@/views/asset/list/index.vue'),
+        meta: { title: '资产清单', icon: 'List' } }
+    ]
+  },
+  // ============ 实施管理（嵌套） ============
+  {
+    path: '/implementation',
+    component: Layout,
+    redirect: '/implementation/task',
+    meta: { title: '实施管理', icon: 'Tickets', requiresAuth: true },
+    children: [
+      { path: 'task', name: 'ImplTask',
+        component: () => import('@/views/implementation/task/index.vue'),
+        meta: { title: '实施任务', icon: 'Tickets' } },
+      { path: 'agent', name: 'AgentManage',
+        component: () => import('@/views/implementation/agent/index.vue'),
+        meta: { title: '服务商管理', icon: 'OfficeBuilding' } },
+      { path: 'settlement', name: 'Settlement',
+        component: () => import('@/views/implementation/settlement/index.vue'),
+        meta: { title: '结算管理', icon: 'Money' } }
+    ]
+  },
+  // ============ 工作流与审批（嵌套） ============
+  {
+    path: '/workflow',
+    component: Layout,
+    redirect: '/workflow/todo',
+    meta: { title: '工作流', icon: 'Bell', requiresAuth: true },
+    children: [
+      { path: 'todo', name: 'WorkflowTodo',
+        component: () => import('@/views/workflow/todo/index.vue'),
+        meta: { title: '待办中心', icon: 'Bell' } }
+    ]
+  },
+  // ============ 其他业务（保留平铺，逐步迁移） ============
+  {
+    path: '/',
+    component: Layout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'punch-list', name: 'PunchList',
+        component: () => import('@/views/punch-list/index.vue'),
+        meta: { title: 'Punch List', icon: 'WarningFilled' } },
+      { path: 'rma', name: 'Rma',
+        component: () => import('@/views/rma/index.vue'),
+        meta: { title: 'RMA 返修', icon: 'RefreshRight' } },
+      { path: 'warranty', name: 'Warranty',
+        component: () => import('@/views/warranty/index.vue'),
+        meta: { title: '质保期管理', icon: 'Timer' } },
+      { path: 'deliverable', name: 'Deliverable',
+        component: () => import('@/views/deliverable/index.vue'),
+        meta: { title: '终验交付物', icon: 'Document' } },
+      { path: 'notification', name: 'NotificationCenter',
+        component: () => import('@/views/notification/index.vue'),
+        meta: { title: '消息中心', icon: 'Bell' } },
+      { path: 'integration-health', name: 'IntegrationHealth',
+        component: () => import('@/views/integration-health/index.vue'),
+        meta: { title: '集成健康检查', icon: 'Monitor' } },
+      { path: 'risk', name: 'Risk',
+        component: () => import('@/views/risk/index.vue'),
+        meta: { title: '风险登记册', icon: 'Warning' } },
+      { path: 'change-request', name: 'ChangeRequest',
+        component: () => import('@/views/change-request/index.vue'),
+        meta: { title: '变更管理', icon: 'EditPen' } },
+      { path: 'issue', name: 'Issue',
+        component: () => import('@/views/issue/index.vue'),
+        meta: { title: '问题日志', icon: 'ChatLineSquare' } },
+      { path: 'report', name: 'Report',
+        component: () => import('@/views/report/index.vue'),
+        meta: { title: '报表统计', icon: 'TrendCharts' } }
+    ]
+  },
+  // ============ 低代码平台（保留原结构） ============
+  {
+    path: '/lowcode',
+    component: Layout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'form-list', name: 'LowCodeFormList',
+        component: () => import('@/views/lowcode/form-list/index.vue'),
+        meta: { title: '表单配置', icon: 'Document' } },
+      { path: 'form-designer', name: 'LowCodeFormDesigner',
+        component: () => import('@/views/lowcode/form-designer/index.vue'),
+        meta: { title: '表单设计器', icon: 'EditPen', hidden: true } },
+      { path: 'list-list', name: 'LowCodeListList',
+        component: () => import('@/views/lowcode/list-list/index.vue'),
+        meta: { title: '列表配置', icon: 'List' } },
+      { path: 'list-designer', name: 'LowCodeListDesigner',
+        component: () => import('@/views/lowcode/list-designer/index.vue'),
+        meta: { title: '列表设计器', icon: 'Grid', hidden: true } },
+      { path: 'tab-list', name: 'LowCodeTabList',
+        component: () => import('@/views/lowcode/tab-list/index.vue'),
+        meta: { title: '标签页配置', icon: 'Files' } },
+      { path: 'tab-designer', name: 'LowCodeTabDesigner',
+        component: () => import('@/views/lowcode/tab-designer/index.vue'),
+        meta: { title: '标签页设计器', icon: 'EditPen', hidden: true } },
+      { path: 'related-page-list', name: 'LowCodeRelatedPageList',
+        component: () => import('@/views/lowcode/related-page-list/index.vue'),
+        meta: { title: '关联页配置', icon: 'Share' } },
+      { path: 'related-page-designer', name: 'LowCodeRelatedPageDesigner',
+        component: () => import('@/views/lowcode/related-page-designer/index.vue'),
+        meta: { title: '关联页设计器', icon: 'EditPen', hidden: true } },
+      { path: 'entity-designer', name: 'LowcodeEntityDesigner',
+        component: () => import('@/views/lowcode/entity-designer/index.vue'),
+        meta: { title: '实体设计器', icon: 'Connection' } },
+      { path: 'version-history', name: 'LowcodeVersionHistory',
+        component: () => import('@/views/lowcode/version-history/index.vue'),
+        meta: { title: '版本历史', icon: 'Timer' } },
+      { path: 'microflow-designer', name: 'LowcodeMicroflowDesigner',
+        component: () => import('@/views/lowcode/microflow-designer/index.vue'),
+        meta: { title: '微流设计器', icon: 'Share' } },
+      { path: 'rule-designer', name: 'LowcodeRuleDesigner',
+        component: () => import('@/views/lowcode/rule-designer/index.vue'),
+        meta: { title: '规则设计器', icon: 'Filter' } },
+      { path: 'process-designer', name: 'LowcodeProcessDesigner',
+        component: () => import('@/views/lowcode/process-designer/index.vue'),
+        meta: { title: '流程设计器', icon: 'Connection' } },
+      { path: 'trigger-list', name: 'LowcodeTriggerList',
+        component: () => import('@/views/lowcode/trigger-list/index.vue'),
+        meta: { title: '触发器', icon: 'BellFilled' } },
+      { path: 'connector-designer', name: 'LowcodeConnectorDesigner',
+        component: () => import('@/views/lowcode/connector-designer/index.vue'),
+        meta: { title: '连接器配置', icon: 'Connection' } },
+      { path: 'preview', name: 'LowcodePreview',
+        component: () => import('@/views/lowcode/preview/index.vue'),
+        meta: { title: '预览', icon: 'View', hidden: true } },
+      { path: 'publish-center', name: 'LowcodePublishCenter',
+        component: () => import('@/views/lowcode/publish-center/index.vue'),
+        meta: { title: '发布中心', icon: 'Promotion' } },
+      { path: 'approval-chain', name: 'LowcodeApprovalChain',
+        component: () => import('@/views/lowcode/approval-chain/index.vue'),
+        meta: { title: '审批链配置', icon: 'SetUp' } },
+      { path: 'template-market', name: 'LowcodeTemplateMarket',
+        component: () => import('@/views/lowcode/template-market/index.vue'),
+        meta: { title: '模板市场', icon: 'Goods' } },
+      { path: 'apm-dashboard', name: 'LowcodeApmDashboard',
+        component: () => import('@/views/lowcode/apm-dashboard/index.vue'),
+        meta: { title: 'APM 看板', icon: 'TrendCharts' } },
+      { path: 'app-source-export', name: 'LowcodeAppSourceExport',
+        component: () => import('@/views/lowcode/app-source-export/index.vue'),
+        meta: { title: '应用源码导出', icon: 'Download' } },
+      { path: ':pageType/:pageCode', name: 'LowCodeRender',
+        component: () => import('@/views/lowcode/render/index.vue'),
+        meta: { title: '低代码页面', hidden: true } }
+    ]
+  },
+  // ============ 系统管理（嵌套） ============
+  {
+    path: '/system',
+    component: Layout,
+    redirect: '/system/user',
+    meta: { title: '系统管理', icon: 'Setting', requiresAuth: true },
+    children: [
+      { path: 'user', name: 'SysUser',
+        component: () => import('@/views/system/user/index.vue'),
+        meta: { title: '用户管理', icon: 'User' } },
+      { path: 'role', name: 'SysRole',
+        component: () => import('@/views/system/role/index.vue'),
+        meta: { title: '角色管理', icon: 'UserFilled' } },
+      { path: 'menu', name: 'SysMenu',
+        component: () => import('@/views/system/menu/index.vue'),
+        meta: { title: '菜单管理', icon: 'Menu' } },
+      { path: 'dict', name: 'SysDict',
+        component: () => import('@/views/system/dict/index.vue'),
+        meta: { title: '字典管理', icon: 'Document' } },
+      { path: 'cache', name: 'SysCache',
+        component: () => import('@/views/system/cache/index.vue'),
+        meta: { title: '缓存管理', icon: 'Coin' } },
+      { path: 'schedule', name: 'SysSchedule',
+        component: () => import('@/views/system/schedule/index.vue'),
+        meta: { title: '定时任务', icon: 'Timer' } },
+      { path: 'audit', name: 'SysAudit',
+        component: () => import('@/views/system/audit/index.vue'),
+        meta: { title: '审计日志', icon: 'DocumentChecked' } }
+    ]
+  },
+  // ============ 其他单页（保留平铺） ============
+  {
+    path: '/',
+    component: Layout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'system-status', name: 'SystemStatus',
+        component: () => import('@/views/system-status/index.vue'),
+        meta: { title: '系统状态', icon: 'Monitor' } },
+      { path: 'changelog', name: 'Changelog',
+        component: () => import('@/views/changelog/index.vue'),
+        meta: { title: '版本日志', icon: 'Notebook' } }
+    ]
+  },
+  // ============ 404 兜底 ============
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
@@ -360,14 +294,13 @@ const router = createRouter({
   scrollBehavior: () => ({ left: 0, top: 0 })
 })
 
-// Navigation guard: require authentication for protected routes
+// Navigation guard
 router.beforeEach((to, _from, next) => {
   startRouteLoading()
   const userStore = useUserStore()
   const title = (to.meta.title as string | undefined) ?? ''
   document.title = title ? `${title} - 网络设备工程项目管理系统` : '网络设备工程项目管理系统'
 
-  // Public routes (e.g. login). If already authenticated, skip the login page.
   if (to.meta.requiresAuth === false) {
     if (to.path === '/login' && userStore.token) {
       next('/dashboard')
@@ -377,15 +310,14 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  // Protected routes: redirect to login when there is no token
   if (!userStore.token) {
     next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
     return
   }
+
   next()
 })
 
-// 路由结束后关闭顶部加载条
 router.afterEach(() => {
   stopRouteLoading()
 })
