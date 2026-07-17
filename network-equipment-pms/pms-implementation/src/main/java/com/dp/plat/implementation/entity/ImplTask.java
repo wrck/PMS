@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -112,6 +113,38 @@ public class ImplTask extends BaseEntity {
     /** Whether a formal sign-off is required (default true). */
     @Builder.Default
     private Boolean signOffRequired = true;
+
+    // ===================== 任务层级与汇总字段（V67 扩展） =====================
+
+    /** 父任务ID（NULL=顶层任务）。 */
+    private Long parentTaskId;
+
+    /** 物化路径，格式 "/12/45/78/"，用于高效查询子树。 */
+    @Size(max = 500, message = "任务路径长度不能超过 500 个字符")
+    @Builder.Default
+    private String taskPath = "/";
+
+    /** 层级深度（0=顶层）。 */
+    @Builder.Default
+    private Integer depth = 0;
+
+    /** 优先级：LOW / MEDIUM / HIGH / CRITICAL。 */
+    @Size(max = 16, message = "优先级长度不能超过 16 个字符")
+    @Builder.Default
+    private String priority = "MEDIUM";
+
+    /** 实际工时。 */
+    private BigDecimal actualHours;
+
+    /** 剩余工时。 */
+    private BigDecimal remainingHours;
+
+    /** 关联项目阶段ID（pms_project_phase.id）。 */
+    private Long phaseId;
+
+    /** 自定义汇总权重（配置 task.rollup.weight.field=TASK_WEIGHT 时生效，默认 1.00）。 */
+    @Builder.Default
+    private BigDecimal taskWeight = BigDecimal.ONE;
 
     /** 乐观锁版本号（MyBatis-Plus @Version，并发更新冲突检测）. */
     @Version
