@@ -79,6 +79,40 @@ export function getDashboard(): Promise<ProjectDashboard> {
   return get<ProjectDashboard>('/api/project/dashboard')
 }
 
+// ===================== 主子项目树与进度（Phase 3 Story 2） =====================
+
+/** 主子项目树节点（对齐后端 ProjectTreeNode DTO） */
+export interface ProjectTreeNode {
+  id: number
+  projectCode?: string
+  projectName: string
+  status?: string
+  parentProjectId?: number
+  projectPath?: string
+  depth?: number
+  progress?: number
+  currentPhaseId?: number
+  children: ProjectTreeNode[]
+}
+
+/** 项目进度汇总 */
+export interface ProjectProgress {
+  projectId: number
+  projectName: string
+  ownProgress: number
+  aggregatedProgress: number
+}
+
+/** 主子项目树（递归）— GET /api/project/{id}/tree */
+export function getProjectTree(id: number): Promise<ProjectTreeNode> {
+  return get<ProjectTreeNode>(`/api/project/${id}/tree`)
+}
+
+/** 项目进度汇总（含子项目加权平均）— GET /api/project/{id}/progress */
+export function getProjectProgress(id: number): Promise<ProjectProgress> {
+  return get<ProjectProgress>(`/api/project/${id}/progress`)
+}
+
 // ===================== Milestone =====================
 
 export interface Milestone {
