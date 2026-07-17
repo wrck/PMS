@@ -13,13 +13,18 @@ import com.dp.plat.workflow.service.ApprovalCenterService;
 import com.dp.plat.workflow.vo.ApprovalStatisticsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.flowable.engine.RuntimeService;
+import org.flowable.engine.runtime.ProcessInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 统一审批中心服务实现（Story 6）。
@@ -30,8 +35,9 @@ import java.util.List;
  *
  * <p>关联设计文档：§3.5 审批中心统一规则（行 429-500）、Story 6 验收 2 审批历史保留。</p>
  *
- * <p>注：Flowable 流程实例启动由 {@code ApprovalCenterServiceImpl#createApproval}
- * 中的 TODO 标注，由 Task 7 在 Flowable 可用时接入；不可用时仅记录日志不阻断。</p>
+ * <p>Flowable 集成：{@code createApproval} 中尝试启动 BPMN 流程实例并将
+ * {@code processInstanceId} 写入审批记录。Flowable 不可用（未部署对应流程定义或引擎未启动）
+ * 时仅记录日志不阻断审批创建。</p>
  */
 @Slf4j
 @Service
@@ -41,6 +47,10 @@ public class ApprovalCenterServiceImpl extends ServiceImpl<ApprovalRecordMapper,
 
     private final ApprovalNodeMapper approvalNodeMapper;
     private final ApprovalHistoryMapper approvalHistoryMapper;
+
+    /** Flowable 运行时服务（可选注入，引擎未启用时为 null）。 */
+    @Autowired(required = false)
+    private RuntimeService runtimeService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -57,12 +67,52 @@ public class ApprovalCenterServiceImpl extends ServiceImpl<ApprovalRecordMapper,
         recordHistory(record.getId(), record.getRound(), "提交", record.getSubmitterId(),
                 record.getSubmitterName(), "SUBMIT", null);
 
-        // TODO Task 7: Flowable 可用时调用 RuntimeService.startProcessInstanceByKey
-        //              并将返回的 processInstanceId 写入 record。当前留空不阻断。
-        log.info("审批记录已创建：recordId={}, type={}, businessId={}, round={}",
-                record.getId(), record.getApprovalType(), record.getBusinessId(), record.getRound());
+        // 启动 Flowable 流程实例：以 approvalType（小写）作为流程 key
+        startFlowableProcess(record);
+
+        log.info("审批记录已创建：recordId={}, type={}, businessId={}, round={}, processInstanceId={}",
+                record.getId(), record.getApprovalType(), record.getBusinessId(),
+                record.getRound(), record.getProcessInstanceId());
 
         return record;
+    }
+
+    /**
+     * 启动 Flowable 流程实例并将 processInstanceId 写回审批记录。
+     *
+     * <p>流程 key 取 {@code approvalType} 小写形式（如 {@code BASELINE_CHANGE} →
+     * {@code baseline_change}）。Flowable 不可用（runtimeService 为 null）或流程定义未部署
+     * 时仅记录日志不阻断，processInstanceId 留空。</p>
+     */
+    private void startFlowableProcess(ApprovalRecord record) {
+        if (runtimeService == null) {
+            log.info("Flowable RuntimeService 未启用，跳过流程实例启动：recordId={}", record.getId());
+            return;
+        }
+        String processKey = record.getApprovalType() == null
+                ? "approval"
+                : record.getApprovalType().toLowerCase();
+        try {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("approvalRecordId", record.getId());
+            variables.put("approvalType", record.getApprovalType());
+            variables.put("businessId", record.getBusinessId());
+            variables.put("submitterId", record.getSubmitterId());
+            variables.put("round", record.getRound());
+            if (record.getProjectId() != null) {
+                variables.put("projectId", record.getProjectId());
+            }
+            ProcessInstance instance = runtimeService.startProcessInstanceByKey(
+                    processKey, String.valueOf(record.getId()), variables);
+            record.setProcessInstanceId(instance.getId());
+            this.updateById(record);
+            log.info("Flowable 流程实例已启动：recordId={}, processKey={}, processInstanceId={}",
+                    record.getId(), processKey, instance.getId());
+        } catch (Exception e) {
+            // 流程定义未部署或启动失败：不阻断审批创建
+            log.warn("Flowable 流程实例启动失败（不阻断审批创建）：recordId={}, processKey={}, cause={}",
+                    record.getId(), processKey, e.getMessage());
+        }
     }
 
     @Override
