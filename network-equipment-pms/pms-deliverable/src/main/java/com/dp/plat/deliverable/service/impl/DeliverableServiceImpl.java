@@ -148,6 +148,70 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         return transition(id, DeliverableStatus.ARCHIVED.code());
     }
 
+    // ==================== 版本管理 ====================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DeliverableVersion revise(Long deliverableId, String filePath, String changeLog, Long uploadedBy) {
+        Deliverable deliverable = loadOrThrow(deliverableId);
+        DeliverableStatus current = DeliverableStatus.of(deliverable.getStatus());
+
+        // 1. 校验当前状态允许修订（仅 PUBLISHED 或 REFERENCED 可修订）
+        if (current != DeliverableStatus.PUBLISHED && current != DeliverableStatus.REFERENCED) {
+            throw new BusinessException(
+                    "仅 PUBLISHED 或 REFERENCED 状态的交付件可修订，当前状态：" + deliverable.getStatus());
+        }
+        if (filePath == null || filePath.isBlank()) {
+            throw new BusinessException("修订需提供新文件路径");
+        }
+
+        // 2. 版本号 +1
+        int newVersionNo = (deliverable.getCurrentVersion() == null ? 0 : deliverable.getCurrentVersion()) + 1;
+
+        // 3. 新建版本记录（versionNo = newVersionNo，旧版本记录保留不变）
+        DeliverableVersion newVersion = DeliverableVersion.builder()
+                .deliverableId(deliverableId)
+                .versionNo(newVersionNo)
+                .filePath(filePath)
+                .uploadedBy(uploadedBy)
+                .uploadedAt(LocalDateTime.now())
+                .changeLog(changeLog)
+                .status(DeliverableStatus.DRAFT.code())
+                .build();
+        deliverableVersionMapper.insert(newVersion);
+
+        // 4. 更新 Deliverable.currentVersion + status=DRAFT + filePath=新文件（旧版本历史不受影响）
+        deliverable.setCurrentVersion(newVersionNo);
+        deliverable.setStatus(DeliverableStatus.DRAFT.code());
+        deliverable.setFilePath(filePath);
+        updateById(deliverable);
+
+        log.info("交付件修订：id={} 新版本 v{}，旧版本保留不变", deliverableId, newVersionNo);
+        return newVersion;
+    }
+
+    @Override
+    public List<DeliverableVersion> listVersions(Long deliverableId) {
+        if (deliverableId == null) {
+            throw new BusinessException("交付件ID不能为空");
+        }
+        return deliverableVersionMapper.selectList(
+                new LambdaQueryWrapper<DeliverableVersion>()
+                        .eq(DeliverableVersion::getDeliverableId, deliverableId)
+                        .orderByDesc(DeliverableVersion::getVersionNo));
+    }
+
+    @Override
+    public DeliverableVersion getVersion(Long deliverableId, Integer versionNo) {
+        if (deliverableId == null || versionNo == null) {
+            throw new BusinessException("交付件ID与版本号均不能为空");
+        }
+        return deliverableVersionMapper.selectOne(
+                new LambdaQueryWrapper<DeliverableVersion>()
+                        .eq(DeliverableVersion::getDeliverableId, deliverableId)
+                        .eq(DeliverableVersion::getVersionNo, versionNo));
+    }
+
     // ==================== helpers ====================
 
     private Deliverable loadOrThrow(Long id) {

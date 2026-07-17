@@ -2,6 +2,7 @@ package com.dp.plat.deliverable.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dp.plat.deliverable.entity.Deliverable;
+import com.dp.plat.deliverable.entity.DeliverableVersion;
 
 import java.util.List;
 
@@ -81,4 +82,44 @@ public interface DeliverableService extends IService<Deliverable> {
 
     /** 归档：REFERENCED → ARCHIVED（写入 archivedAt）。 */
     Deliverable archive(Long id);
+
+    // ==================== 版本管理 ====================
+
+    /**
+     * 修订 — 新建版本不覆盖旧版本（Story 5 验收 1）。
+     *
+     * <p>关联设计文档：§3.4（行 421-425）、§4.5 事务边界（单事务：新建版本 + 更新交付件）。
+     * 流程：</p>
+     * <ol>
+     *   <li>加载交付件，校验当前状态为 PUBLISHED 或 REFERENCED（其他状态禁止修订）。</li>
+     *   <li>currentVersion + 1。</li>
+     *   <li>创建新 {@link DeliverableVersion} 记录（versionNo = 新 currentVersion，status = DRAFT）。</li>
+     *   <li>更新 {@code Deliverable.currentVersion}、{@code status = DRAFT}、{@code filePath = 新文件}。</li>
+     *   <li><b>旧版本记录保留不变</b>（versionNo < 新版本的历史记录不受影响）。</li>
+     * </ol>
+     *
+     * @param deliverableId 交付件ID
+     * @param filePath      新版本文件路径
+     * @param changeLog     版本变更说明
+     * @param uploadedBy    上传人ID（可空，由审计字段兜底）
+     * @return 新建的版本记录
+     */
+    DeliverableVersion revise(Long deliverableId, String filePath, String changeLog, Long uploadedBy);
+
+    /**
+     * 查询交付件的版本历史（按版本号倒序，最新在前）。
+     *
+     * @param deliverableId 交付件ID
+     * @return 版本列表
+     */
+    List<DeliverableVersion> listVersions(Long deliverableId);
+
+    /**
+     * 查询指定版本的版本记录。
+     *
+     * @param deliverableId 交付件ID
+     * @param versionNo    版本号
+     * @return 版本记录（不存在返回 null）
+     */
+    DeliverableVersion getVersion(Long deliverableId, Integer versionNo);
 }
