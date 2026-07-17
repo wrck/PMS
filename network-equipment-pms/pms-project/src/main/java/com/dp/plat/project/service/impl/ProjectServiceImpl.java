@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -373,17 +374,21 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public Result<Map<String, Object>> getProjectProgress(Long id) {
-        // 注：完整 CTE 加权平均进度在 Phase 3 Task 4 实现（calculateAggregatedProgress）。
         Project project = this.getById(id);
         if (project == null) {
             throw new BusinessException("项目不存在");
         }
         int ownProgress = project.getProgress() != null ? project.getProgress() : 0;
+        // 递归 CTE 计算子孙项目加权平均进度（§2.5）；无子孙时返回 null，回退到自身进度。
+        BigDecimal aggregated = baseMapper.calculateAggregatedProgress(id);
+        int aggregatedProgress = aggregated != null
+                ? aggregated.setScale(0, java.math.RoundingMode.HALF_UP).intValue()
+                : ownProgress;
         Map<String, Object> progress = new HashMap<>();
         progress.put("projectId", project.getId());
         progress.put("projectName", project.getProjectName());
         progress.put("ownProgress", ownProgress);
-        progress.put("aggregatedProgress", ownProgress);
+        progress.put("aggregatedProgress", aggregatedProgress);
         return Result.ok(progress);
     }
 }
