@@ -3,6 +3,8 @@ package com.dp.plat.deliverable.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
+import com.dp.plat.deliverable.entity.DeliverableReference;
+import com.dp.plat.deliverable.entity.DeliverableSignature;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 
 import java.util.List;
@@ -144,4 +146,46 @@ public interface DeliverableService extends IService<Deliverable> {
      * @return 校验结果（含 allApproved 标志与未满足项列表）
      */
     MandatoryDeliverableValidationResult validateMandatoryDeliverables(Long phaseId);
+
+    // ==================== 签名管理 ====================
+
+    /**
+     * 查询交付件的签名记录（按签核时间倒序）。
+     *
+     * @param deliverableId 交付件ID
+     * @return 签名列表
+     */
+    List<DeliverableSignature> listSignatures(Long deliverableId);
+
+    /**
+     * 新增签名记录（REVIEWED → SIGNED 阶段的签核动作）。
+     *
+     * <p>versionNo 为空时取交付件当前版本；signatureType 为空时默认 ELECTRONIC；
+     * signedAt 为空时取当前时间。</p>
+     *
+     * @param signature 签名记录（deliverableId/signerId 必填）
+     * @return 已创建的签名记录
+     */
+    DeliverableSignature addSignature(DeliverableSignature signature);
+
+    // ==================== 引用管理 ====================
+
+    /**
+     * 查询交付件被引用的记录（按创建时间倒序）。
+     *
+     * @param deliverableId 被引用的交付件ID
+     * @return 引用关系列表
+     */
+    List<DeliverableReference> listReferences(Long deliverableId);
+
+    /**
+     * 新增引用关系（PUBLISHED → REFERENCED 流转，§3.4）。
+     *
+     * <p>校验源交付件存在且状态为 PUBLISHED 或 REFERENCED（仅已发布交付件可被引用）；
+     * 创建引用记录后，若源交付件为 PUBLISHED 则流转为 REFERENCED。</p>
+     *
+     * @param reference 引用关系（sourceDeliverableId/referenceType/referencedById 必填）
+     * @return 已创建的引用关系
+     */
+    DeliverableReference addReference(DeliverableReference reference);
 }

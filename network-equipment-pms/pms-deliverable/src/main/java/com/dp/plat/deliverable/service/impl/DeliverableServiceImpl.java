@@ -5,10 +5,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
+import com.dp.plat.deliverable.entity.DeliverableReference;
+import com.dp.plat.deliverable.entity.DeliverableSignature;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 import com.dp.plat.deliverable.enums.DeliverableStatus;
 import com.dp.plat.deliverable.exception.IllegalStateTransitionException;
 import com.dp.plat.deliverable.mapper.DeliverableMapper;
+import com.dp.plat.deliverable.mapper.DeliverableReferenceMapper;
+import com.dp.plat.deliverable.mapper.DeliverableSignatureMapper;
 import com.dp.plat.deliverable.mapper.DeliverableVersionMapper;
 import com.dp.plat.deliverable.service.DeliverableService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,8 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         implements DeliverableService {
 
     private final DeliverableVersionMapper deliverableVersionMapper;
+    private final DeliverableSignatureMapper deliverableSignatureMapper;
+    private final DeliverableReferenceMapper deliverableReferenceMapper;
 
     // ==================== CRUD ====================
 
@@ -256,6 +262,104 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
                 .allApproved(allApproved)
                 .items(unmet)
                 .build();
+    }
+
+    // ==================== 签名管理 ====================
+
+    @Override
+    public List<DeliverableSignature> listSignatures(Long deliverableId) {
+        if (deliverableId == null) {
+            throw new BusinessException("交付件ID不能为空");
+        }
+        return deliverableSignatureMapper.selectList(
+                new LambdaQueryWrapper<DeliverableSignature>()
+                        .eq(DeliverableSignature::getDeliverableId, deliverableId)
+                        .orderByDesc(DeliverableSignature::getSignedAt));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DeliverableSignature addSignature(DeliverableSignature signature) {
+        if (signature == null) {
+            throw new BusinessException("签名记录不能为空");
+        }
+        if (signature.getDeliverableId() == null) {
+            throw new BusinessException("交付件ID不能为空");
+        }
+        if (signature.getSignerId() == null) {
+            throw new BusinessException("签核人ID不能为空");
+        }
+
+        Deliverable deliverable = loadOrThrow(signature.getDeliverableId());
+
+        // versionNo 为空时取交付件当前版本
+        if (signature.getVersionNo() == null) {
+            signature.setVersionNo(deliverable.getCurrentVersion() == null ? 1 : deliverable.getCurrentVersion());
+        }
+        // signatureType 为空时默认 ELECTRONIC
+        if (signature.getSignatureType() == null || signature.getSignatureType().isBlank()) {
+            signature.setSignatureType("ELECTRONIC");
+        }
+        // signedAt 为空时取当前时间
+        if (signature.getSignedAt() == null) {
+            signature.setSignedAt(LocalDateTime.now());
+        }
+
+        deliverableSignatureMapper.insert(signature);
+        log.info("新增交付件签名：deliverableId={} versionNo={} signerId={}",
+                signature.getDeliverableId(), signature.getVersionNo(), signature.getSignerId());
+        return signature;
+    }
+
+    // ==================== 引用管理 ====================
+
+    @Override
+    public List<DeliverableReference> listReferences(Long deliverableId) {
+        if (deliverableId == null) {
+            throw new BusinessException("交付件ID不能为空");
+        }
+        return deliverableReferenceMapper.selectList(
+                new LambdaQueryWrapper<DeliverableReference>()
+                        .eq(DeliverableReference::getSourceDeliverableId, deliverableId)
+                        .orderByDesc(DeliverableReference::getCreateTime));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DeliverableReference addReference(DeliverableReference reference) {
+        if (reference == null) {
+            throw new BusinessException("引用关系不能为空");
+        }
+        if (reference.getSourceDeliverableId() == null) {
+            throw new BusinessException("被引用的交付件ID不能为空");
+        }
+        if (reference.getReferenceType() == null || reference.getReferenceType().isBlank()) {
+            throw new BusinessException("引用方业务类型不能为空");
+        }
+        if (reference.getReferencedById() == null) {
+            throw new BusinessException("引用方业务ID不能为空");
+        }
+
+        // 校验源交付件存在且状态为 PUBLISHED 或 REFERENCED（仅已发布交付件可被引用）
+        Deliverable source = loadOrThrow(reference.getSourceDeliverableId());
+        DeliverableStatus sourceStatus = DeliverableStatus.of(source.getStatus());
+        if (sourceStatus != DeliverableStatus.PUBLISHED && sourceStatus != DeliverableStatus.REFERENCED) {
+            throw new BusinessException("仅 PUBLISHED 或 REFERENCED 状态的交付件可被引用，当前状态："
+                    + source.getStatus());
+        }
+
+        deliverableReferenceMapper.insert(reference);
+
+        // 若源交付件为 PUBLISHED 则流转为 REFERENCED（PUBLISHED → REFERENCED 合法转换）
+        if (sourceStatus == DeliverableStatus.PUBLISHED) {
+            source.setStatus(DeliverableStatus.REFERENCED.code());
+            updateById(source);
+            log.info("交付件被引用后状态流转：id={} PUBLISHED → REFERENCED", source.getId());
+        }
+
+        log.info("新增交付件引用：sourceDeliverableId={} referenceType={} referencedById={}",
+                reference.getSourceDeliverableId(), reference.getReferenceType(), reference.getReferencedById());
+        return reference;
     }
 
     // ==================== helpers ====================
