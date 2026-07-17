@@ -106,4 +106,33 @@ public class Project extends BaseEntity {
     /** 乐观锁版本号（MyBatis-Plus @Version，并发更新冲突检测）. */
     @Version
     private Integer version;
+
+    // ============ Phase 1 扩展字段（V65 迁移） ============
+
+    /** 父项目ID（NULL=顶层） */
+    private Long parentProjectId;
+
+    /** 物化路径 "/1/5/"，用于祖先/后代查询 */
+    private String projectPath;
+
+    /** 深度冗余（0=顶层） */
+    private Integer depth;
+
+    /** 自定义汇总权重，默认 1.00 */
+    private java.math.BigDecimal weight;
+
+    /** 来源模板ID */
+    private Long templateId;
+
+    /** 模板版本快照 */
+    private String templateVersion;
+
+    /** 当前阶段ID */
+    private Long currentPhaseId;
+
+    /** 项目目标 */
+    private String projectObjective;
+
+    /** 项目范围 */
+    private String projectScope;
 }
