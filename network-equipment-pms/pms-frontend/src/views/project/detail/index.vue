@@ -19,16 +19,9 @@ import {
   type ProjectStatus,
   type ProjectType
 } from '@/api/project'
+import { listPhasesByProjectId, type ProjectPhase } from '@/api/project-phase'
+import { listMembersByProjectId, type ProjectMember } from '@/api/project-member'
 import type { EpTagType } from '@/types'
-
-/** 项目成员（占位实体：后续接入成员管理接口时替换为后端 DTO） */
-interface ProjectMember {
-  id?: number
-  name?: string
-  role?: string
-  phone?: string
-  email?: string
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -107,6 +100,39 @@ async function loadProject() {
 
 function goBack() {
   router.back()
+}
+
+// ============== 项目阶段（Phase 3 Story 2） ==============
+const phaseLoading = ref(false)
+const phases = ref<ProjectPhase[]>([])
+
+const phaseStatusMeta = (status?: string): { label: string; tagType: EpTagType } => {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return { label: '进行中', tagType: 'primary' }
+    case 'COMPLETED':
+      return { label: '已完成', tagType: 'success' }
+    case 'SKIPPED':
+      return { label: '已跳过', tagType: 'info' }
+    default:
+      return { label: '未开始', tagType: 'info' }
+  }
+}
+
+async function loadPhases() {
+  phaseLoading.value = true
+  try {
+    phases.value = (await listPhasesByProjectId(projectId.value)) ?? []
+  } catch {
+    /* handled by interceptor */
+  } finally {
+    phaseLoading.value = false
+  }
+}
+
+/** 跳转到独立的阶段管理页（流水线 + 推进按钮，关联 Task 8）。 */
+function goToPhaseManage() {
+  router.push({ name: 'ProjectPhaseManage', params: { projectId: String(projectId.value) } })
 }
 
 // ============== 里程碑 ==============
@@ -279,8 +305,31 @@ async function handleSubmitProgress() {
   })
 }
 
-// ============== 项目成员（占位） ==============
+// ============== 项目成员（接入后端成员接口） ==============
+const memberLoading = ref(false)
 const members = ref<ProjectMember[]>([])
+
+const memberRoleLabel = (role?: string): string => {
+  const map: Record<string, string> = {
+    PROJECT_MANAGER: '项目经理',
+    PROJECT_MEMBER: '项目成员',
+    APPROVER: '审批人',
+    VIEWER: '观察者',
+    CUSTOMER: '客户'
+  }
+  return (role && map[role]) || role || '-'
+}
+
+async function loadMembers() {
+  memberLoading.value = true
+  try {
+    members.value = (await listMembersByProjectId(projectId.value)) ?? []
+  } catch {
+    /* handled by interceptor */
+  } finally {
+    memberLoading.value = false
+  }
+}
 
 // ============== 终验交付 ==============
 const acceptanceLoading = ref(false)
@@ -394,7 +443,9 @@ async function handleSubmitOpinion(approve: boolean) {
 
 onMounted(async () => {
   await loadProject()
+  loadPhases()
   loadMilestones()
+  loadMembers()
   loadAcceptance()
 })
 </script>
@@ -469,7 +520,84 @@ onMounted(async () => {
           <el-empty v-else description="暂无项目信息" />
         </el-tab-pane>
 
-        <!-- 里程碑管理 -->
+        <!-- 阶段（Phase 3 Story 2） -->
+        <el-tab-pane label="阶段" name="phase">
+          <div class="toolbar">
+            <el-button type="primary" :icon="'Sort'" @click="goToPhaseManage">进入阶段管理</el-button>
+            <span v-if="phases.length > 0" class="milestone-tip">
+              共 {{ phases.length }} 个阶段，进行中
+              {{ phases.filter((p) => p.status === 'IN_PROGRESS').length }}
+            </span>
+          </div>
+          <el-table v-loading="phaseLoading" :data="phases" border stripe>
+            <el-table-column type="index" label="序" width="60" align="center" />
+            <el-table-column prop="phaseName" label="阶段名称" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="phaseCode" label="阶段编码" width="120" align="center" />
+            <el-table-column label="状态" width="110" align="center">
+              <template #default="{ row }">
+                <el-tag :type="phaseStatusMeta(row.status).tagType">
+                  {{ phaseStatusMeta(row.status).label }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="计划开始" width="120" align="center">
+              <template #default="{ row }">{{ formatDate(row.plannedStartDate) }}</template>
+            </el-table-column>
+            <el-table-column label="计划结束" width="120" align="center">
+              <template #default="{ row }">{{ formatDate(row.plannedEndDate) }}</template>
+            </el-table-column>
+            <template #empty>
+              <el-empty description="暂无阶段数据，可从模板创建项目时生成" />
+            </template>
+          </el-table>
+        </el-tab-pane>
+
+        <!-- 任务（待 Phase 4 实现） -->
+        <el-tab-pane label="任务" name="task">
+          <el-empty description="待 Phase 4 实现（任务管理）" />
+        </el-tab-pane>
+
+        <!-- 交付件（待 Phase 4 实现） -->
+        <el-tab-pane label="交付件" name="deliverable">
+          <el-empty description="待 Phase 4 实现（交付件管理）" />
+        </el-tab-pane>
+
+        <!-- 依赖（待 Phase 5 实现） -->
+        <el-tab-pane label="依赖" name="dependency">
+          <el-empty description="待 Phase 5 实现（任务依赖关系）" />
+        </el-tab-pane>
+
+        <!-- 基线（待 Phase 5 实现） -->
+        <el-tab-pane label="基线" name="baseline">
+          <el-empty description="待 Phase 5 实现（基线快照）" />
+        </el-tab-pane>
+
+        <!-- 审批（待 Phase 4 实现） -->
+        <el-tab-pane label="审批" name="approval">
+          <el-empty description="待 Phase 4 实现（统一审批中心）" />
+        </el-tab-pane>
+
+        <!-- 成员 -->
+        <el-tab-pane label="成员" name="member">
+          <el-table v-loading="memberLoading" :data="members" border stripe>
+            <el-table-column type="index" label="#" width="50" />
+            <el-table-column prop="userName" label="姓名" min-width="120" />
+            <el-table-column label="角色" min-width="120">
+              <template #default="{ row }">{{ memberRoleLabel(row.role) }}</template>
+            </el-table-column>
+            <el-table-column label="加入日期" width="140" align="center">
+              <template #default="{ row }">{{ formatDate(row.joinDate) }}</template>
+            </el-table-column>
+            <el-table-column label="离开日期" width="140" align="center">
+              <template #default="{ row }">{{ formatDate(row.leaveDate) }}</template>
+            </el-table-column>
+            <template #empty>
+              <el-empty description="暂无成员数据" />
+            </template>
+          </el-table>
+        </el-tab-pane>
+
+        <!-- 里程碑管理（保留：现有功能，待后续按设计文档重组到阶段/交付件） -->
         <el-tab-pane label="里程碑管理" name="milestone">
           <div class="toolbar">
             <el-button type="primary" :icon="'Plus'" @click="handleAddMilestone">新增里程碑</el-button>
@@ -505,20 +633,6 @@ onMounted(async () => {
             </el-table-column>
             <template #empty>
               <el-empty description="暂无里程碑数据" />
-            </template>
-          </el-table>
-        </el-tab-pane>
-
-        <!-- 项目成员 -->
-        <el-tab-pane label="项目成员" name="member">
-          <el-table :data="members" border stripe>
-            <el-table-column type="index" label="#" width="50" />
-            <el-table-column prop="name" label="姓名" min-width="120" />
-            <el-table-column prop="role" label="角色" min-width="120" />
-            <el-table-column prop="phone" label="电话" min-width="140" />
-            <el-table-column prop="email" label="邮箱" min-width="180" />
-            <template #empty>
-              <el-empty description="暂无成员数据" />
             </template>
           </el-table>
         </el-tab-pane>
