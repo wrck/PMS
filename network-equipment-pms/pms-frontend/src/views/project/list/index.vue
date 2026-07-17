@@ -13,6 +13,7 @@ import {
   type ProjectType
 } from '@/api/project'
 import MobileListCard from '@/components/MobileListCard/index.vue'
+import ProjectTemplateSelector from '@/components/ProjectTemplateSelector.vue'
 import type { MobileColumn, MobileOperation } from '@/components/MobileListCard/index.vue'
 import type { EpTagType } from '@/types'
 
@@ -21,6 +22,16 @@ type Col = MobileColumn<Project>
 type Op = MobileOperation<Project>
 
 const router = useRouter()
+
+const templateSelectorRef = ref<InstanceType<typeof ProjectTemplateSelector>>()
+
+function handleCreateFromTemplate() {
+  templateSelectorRef.value?.open()
+}
+
+function onTemplateCreateSuccess(projectId: number) {
+  router.push(`/project/detail/${projectId}`)
+}
 
 const loading = ref(false)
 const tableData = ref<Project[]>([])
@@ -325,6 +336,8 @@ onMounted(loadData)
 
       <div class="toolbar">
         <el-button type="primary" :icon="'Plus'" @click="handleAdd">新建项目</el-button>
+        <el-button type="success" :icon="'Files'" @click="handleCreateFromTemplate">从模板创建</el-button>
+        <ProjectTemplateSelector ref="templateSelectorRef" @success="onTemplateCreateSuccess" />
       </div>
 
       <!-- 列表区：桌面端表格 / 移动端卡片 -->
