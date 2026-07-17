@@ -51,6 +51,18 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '项目详情', hidden: true }
       },
       {
+        path: 'tree',
+        name: 'ProjectTree',
+        component: () => import('@/views/project/tree/index.vue'),
+        meta: { title: '主子项目树', icon: 'Share' }
+      },
+      {
+        path: 'phase/:projectId',
+        name: 'ProjectPhaseManage',
+        component: () => import('@/views/phase/index.vue'),
+        meta: { title: '阶段管理', hidden: true }
+      },
+      {
         path: 'kanban',
         name: 'ProjectKanban',
         component: () => import('@/views/project/kanban/index.vue'),
