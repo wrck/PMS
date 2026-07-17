@@ -30,6 +30,7 @@
         <module>pms-notification</module>
         <module>pms-file</module>
         <module>pms-lowcode</module>
+        <module>pms-baseline</module>
         <module>pms-admin</module>
     </modules>
 
@@ -101,6 +102,11 @@
             <dependency>
                 <groupId>com.dp.plat</groupId>
                 <artifactId>pms-lowcode</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dp.plat</groupId>
+                <artifactId>pms-baseline</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

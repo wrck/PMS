@@ -3,7 +3,10 @@ package com.dp.plat.common.handler;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.dp.plat.common.dto.PhaseCriteria;
 import com.dp.plat.common.dto.PhaseExitGate;
+import com.dp.plat.common.dto.TaskPlanSnapshot;
 import com.dp.plat.common.dto.TemplateSnapshot;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -47,11 +50,28 @@ public final class JsonTypeHandlers {
 
     /**
      * TaskPlanSnapshot List TypeHandler
-     * （BaselineSnapshot.snapshotJson 用，本任务先创建占位，Task 11 BaselineSnapshot 实体使用）
+     * （BaselineSnapshot.snapshotJson 用，pms-baseline 模块 BaselineSnapshot 实体使用）
+     *
+     * <p>重写 parse 以 {@link TypeReference}#{@code List<TaskPlanSnapshot>} 反序列化，
+     * 解决泛型擦除导致的元素退化为 LinkedHashMap 问题。使用自包含 ObjectMapper，
+     * 不依赖父类 getObjectMapper 的可见性差异。</p>
      */
     public static class TaskPlanSnapshotListHandler extends JacksonTypeHandler {
+        private static final ObjectMapper MAPPER = new ObjectMapper();
+        private static final TypeReference<List<TaskPlanSnapshot>> TYPE_REF = new TypeReference<>() {
+        };
+
         public TaskPlanSnapshotListHandler() {
             super(List.class);
+        }
+
+        @Override
+        protected Object parse(String json) {
+            try {
+                return MAPPER.readValue(json, TYPE_REF);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
