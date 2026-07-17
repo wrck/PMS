@@ -83,4 +83,22 @@ public interface IImplTaskService extends IService<ImplTask> {
      * @return 验收结果
      */
     TaskReviewResult approveTask(Long taskId, Long operatorId);
+
+    /**
+     * 移动任务（变更父任务），同步更新 taskPath 与 depth（含所有后代）。
+     *
+     * <p>校验 newParentId 不能是 taskId 的后代（避免环路），并批量更新子树路径。</p>
+     *
+     * @param taskId      任务ID
+     * @param newParentId 新父任务ID（NULL=提升为顶层）
+     */
+    void moveTask(Long taskId, Long newParentId);
+
+    /**
+     * 查询任务子树（基于 task_path 物化路径前缀匹配，含自身）。
+     *
+     * @param taskId 任务ID
+     * @return 子树任务列表（含自身）
+     */
+    List<ImplTask> getTaskSubtree(Long taskId);
 }

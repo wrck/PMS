@@ -274,4 +274,91 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
                 .taskStatus(STATUS_COMPLETED)
                 .build();
     }
+
+    /**
+     * 移动任务（变更父任务），同步更新 taskPath 与 depth（含所有后代）。
+     *
+     * <p>步骤：
+     * <ol>
+     *   <li>校验 newParentId 不是 taskId 的后代（避免环路）</li>
+     *   <li>计算新 taskPath：{@code <父taskPath><taskId>/}</li>
+     *   <li>更新所有后代任务的 taskPath（前缀替换）与 depth（按层级差平移）</li>
+     * </ol>
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void moveTask(Long taskId, Long newParentId) {
+        ImplTask task = loadOrThrow(taskId);
+        String oldTaskPath = task.getTaskPath();
+        if (oldTaskPath == null || oldTaskPath.isBlank()) {
+            oldTaskPath = "/" + taskId + "/";
+        }
+        int oldDepth = task.getDepth() != null ? task.getDepth() : 0;
+
+        String newTaskPath;
+        int newDepth;
+        if (newParentId == null) {
+            // 提升为顶层
+            newTaskPath = "/" + taskId + "/";
+            newDepth = 0;
+        } else {
+            if (newParentId.equals(taskId)) {
+                throw new BusinessException("不能将任务移动到自身下");
+            }
+            ImplTask newParent = this.getById(newParentId);
+            if (newParent == null) {
+                throw new BusinessException("目标父任务不存在");
+            }
+            String newParentPath = newParent.getTaskPath();
+            if (newParentPath == null || newParentPath.isBlank()) {
+                newParentPath = "/" + newParentId + "/";
+            }
+            // 环路校验：新父任务的路径若以当前任务路径为前缀，说明新父是当前任务的后代
+            if (newParentPath.startsWith(oldTaskPath)) {
+                throw new BusinessException("不能将任务移动到其自身或子任务下（避免环路）");
+            }
+            newTaskPath = newParentPath + taskId + "/";
+            newDepth = (newParent.getDepth() != null ? newParent.getDepth() : 0) + 1;
+        }
+
+        // 1. 更新被移动任务自身
+        task.setParentTaskId(newParentId);
+        task.setTaskPath(newTaskPath);
+        task.setDepth(newDepth);
+        this.updateById(task);
+
+        // 2. 批量更新所有后代：前缀替换 + depth 平移
+        int depthDelta = newDepth - oldDepth;
+        List<ImplTask> descendants = this.list(new LambdaQueryWrapper<ImplTask>()
+                .likeRight(ImplTask::getTaskPath, oldTaskPath)
+                .ne(ImplTask::getId, taskId));
+        for (ImplTask desc : descendants) {
+            String descPath = desc.getTaskPath();
+            if (descPath != null && descPath.startsWith(oldTaskPath)) {
+                // 替换前缀：oldTaskPath -> newTaskPath
+                desc.setTaskPath(newTaskPath + descPath.substring(oldTaskPath.length()));
+            }
+            if (desc.getDepth() != null) {
+                desc.setDepth(desc.getDepth() + depthDelta);
+            }
+            this.updateById(desc);
+        }
+    }
+
+    /**
+     * 查询任务子树（基于 task_path 物化路径前缀匹配，含自身）。
+     */
+    @Override
+    public List<ImplTask> getTaskSubtree(Long taskId) {
+        ImplTask task = loadOrThrow(taskId);
+        String path = task.getTaskPath();
+        if (path == null || path.isBlank()) {
+            path = "/" + taskId + "/";
+        }
+        // likeRight: LIKE 'path%'，匹配自身及所有后代
+        return this.list(new LambdaQueryWrapper<ImplTask>()
+                .likeRight(ImplTask::getTaskPath, path)
+                .orderByAsc(ImplTask::getDepth)
+                .orderByAsc(ImplTask::getId));
+    }
 }
