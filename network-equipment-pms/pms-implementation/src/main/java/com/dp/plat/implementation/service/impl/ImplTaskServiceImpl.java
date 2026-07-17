@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.util.SecurityUtils;
 import com.dp.plat.implementation.dto.TaskReviewResult;
+import com.dp.plat.implementation.dto.TaskProgressVO;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.entity.TaskChecklist;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -360,5 +362,85 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
                 .likeRight(ImplTask::getTaskPath, path)
                 .orderByAsc(ImplTask::getDepth)
                 .orderByAsc(ImplTask::getId));
+    }
+
+    /**
+     * 查询任务进度（含子任务加权汇总，递归构建子任务进度视图）。
+     */
+    @Override
+    public TaskProgressVO getTaskProgress(Long taskId) {
+        return buildProgressVO(taskId);
+    }
+
+    /**
+     * 递归构建任务进度视图。
+     *
+     * <p>rolledUpProgress = Σ(子任务 rolledUpProgress × weight) / Σ(weight)，
+     * weight = plannedHours（缺省 1）。无子任务时 rolledUpProgress = selfProgress。</p>
+     */
+    private TaskProgressVO buildProgressVO(Long taskId) {
+        ImplTask task = implTaskMapper.selectById(taskId);
+        if (task == null) {
+            throw new BusinessException("实施任务不存在");
+        }
+        int selfProgress = task.getProgress() != null ? task.getProgress() : 0;
+
+        List<ImplTask> children = this.list(new LambdaQueryWrapper<ImplTask>()
+                .eq(ImplTask::getParentTaskId, taskId)
+                .orderByAsc(ImplTask::getId));
+
+        if (children == null || children.isEmpty()) {
+            return TaskProgressVO.builder()
+                    .taskId(taskId)
+                    .taskName(task.getTaskName())
+                    .selfProgress(selfProgress)
+                    .rolledUpProgress(selfProgress)
+                    .totalSubtasks(0)
+                    .completedSubtasks(0)
+                    .status(task.getStatus())
+                    .children(List.of())
+                    .build();
+        }
+
+        List<TaskProgressVO> childVOs = new ArrayList<>(children.size());
+        int totalSubtasks = 0;
+        int completedSubtasks = 0;
+        double totalWeight = 0;
+        double weightedSum = 0;
+        for (ImplTask child : children) {
+            TaskProgressVO childVO = buildProgressVO(child.getId());
+            childVOs.add(childVO);
+            totalSubtasks += 1 + (childVO.getTotalSubtasks() != null ? childVO.getTotalSubtasks() : 0);
+            if (STATUS_COMPLETED.equals(child.getStatus()) || STATUS_CONFIRMED.equals(child.getStatus())) {
+                completedSubtasks += 1 + (childVO.getCompletedSubtasks() != null ? childVO.getCompletedSubtasks() : 0);
+            } else {
+                completedSubtasks += (childVO.getCompletedSubtasks() != null ? childVO.getCompletedSubtasks() : 0);
+            }
+            int weight = resolveRollupWeight(child);
+            int childRolled = childVO.getRolledUpProgress() != null ? childVO.getRolledUpProgress() : 0;
+            weightedSum += (double) childRolled * weight;
+            totalWeight += weight;
+        }
+        int rolledUp = totalWeight > 0 ? (int) Math.round(weightedSum / totalWeight) : selfProgress;
+
+        return TaskProgressVO.builder()
+                .taskId(taskId)
+                .taskName(task.getTaskName())
+                .selfProgress(selfProgress)
+                .rolledUpProgress(rolledUp)
+                .totalSubtasks(totalSubtasks)
+                .completedSubtasks(completedSubtasks)
+                .status(task.getStatus())
+                .children(childVOs)
+                .build();
+    }
+
+    /** 进度汇总权重解析：优先 plannedHours，缺省 1。 */
+    private int resolveRollupWeight(ImplTask task) {
+        Integer plannedHours = task.getPlannedHours();
+        if (plannedHours != null && plannedHours > 0) {
+            return plannedHours;
+        }
+        return 1;
     }
 }

@@ -2,6 +2,7 @@ package com.dp.plat.implementation.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.implementation.dto.TaskProgressVO;
 import com.dp.plat.implementation.dto.TaskReviewResult;
 import com.dp.plat.implementation.entity.ImplTask;
 
@@ -101,4 +102,12 @@ public interface IImplTaskService extends IService<ImplTask> {
      * @return 子树任务列表（含自身）
      */
     List<ImplTask> getTaskSubtree(Long taskId);
+
+    /**
+     * 查询任务进度（含子任务加权汇总）。
+     *
+     * @param taskId 任务ID
+     * @return 进度视图（含递归子任务进度）
+     */
+    TaskProgressVO getTaskProgress(Long taskId);
 }

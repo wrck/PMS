@@ -3,6 +3,9 @@ package com.dp.plat.implementation.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.common.annotation.OperLog;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.implementation.dto.TaskProgressVO;
+import com.dp.plat.implementation.dto.TaskReviewResult;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.service.IImplTaskService;
@@ -120,5 +123,44 @@ public class ImplTaskController {
     @GetMapping("/project/{projectId}")
     public Result<List<ImplTask>> listByProject(@PathVariable Long projectId) {
         return Result.ok(implTaskService.getByProjectId(projectId));
+    }
+
+    // ===================== Story 3 任务层级与协作端点 =====================
+
+    @Operation(summary = "查询任务子树（含自身及所有后代）")
+    @GetMapping("/{id}/subtree")
+    public Result<List<ImplTask>> subtree(@PathVariable Long id) {
+        return Result.ok(implTaskService.getTaskSubtree(id));
+    }
+
+    @Operation(summary = "移动任务（变更父任务，同步更新 taskPath）")
+    @PostMapping("/{id}/move")
+    @PreAuthorize("hasAuthority('project:task:move')")
+    @OperLog(title = "实施任务管理", businessType = 2)
+    public Result<Void> move(@PathVariable Long id, @RequestParam(required = false) Long newParentId) {
+        implTaskService.moveTask(id, newParentId);
+        return Result.ok();
+    }
+
+    @Operation(summary = "提交评审（含强制检查项校验）")
+    @PostMapping("/{id}/submit-review")
+    @PreAuthorize("hasAuthority('project:task:complete')")
+    @OperLog(title = "实施任务管理", businessType = 2)
+    public Result<TaskReviewResult> submitReview(@PathVariable Long id) {
+        return Result.ok(implTaskService.submitForReview(id, SecurityUtils.getCurrentUserId()));
+    }
+
+    @Operation(summary = "验收任务（评审通过）")
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('project:task:approve')")
+    @OperLog(title = "实施任务管理", businessType = 2)
+    public Result<TaskReviewResult> approve(@PathVariable Long id) {
+        return Result.ok(implTaskService.approveTask(id, SecurityUtils.getCurrentUserId()));
+    }
+
+    @Operation(summary = "任务进度（含子任务加权汇总）")
+    @GetMapping("/{id}/progress")
+    public Result<TaskProgressVO> progress(@PathVariable Long id) {
+        return Result.ok(implTaskService.getTaskProgress(id));
     }
 }
