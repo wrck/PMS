@@ -54,6 +54,9 @@ class ImplTaskServiceImplTest {
     @Mock
     private TaskChecklistMapper taskChecklistMapper;
 
+    @Mock
+    private ITaskRollupService taskRollupService;
+
     @InjectMocks
     private ImplTaskServiceImpl implTaskService;
 

@@ -14,6 +14,7 @@ import com.dp.plat.implementation.mapper.ImplTaskMapper;
 import com.dp.plat.implementation.mapper.TaskChecklistMapper;
 import com.dp.plat.implementation.service.IImplProgressService;
 import com.dp.plat.implementation.service.IImplTaskService;
+import com.dp.plat.implementation.service.ITaskRollupService;
 import com.dp.plat.implementation.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
     private final IImplProgressService implProgressService;
     private final NotificationService notificationService;
     private final TaskChecklistMapper taskChecklistMapper;
+    private final ITaskRollupService taskRollupService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -119,6 +121,8 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setStatus(STATUS_IN_PROGRESS);
         }
         this.updateById(task);
+        // 进度变更后异步触发父链路汇总
+        taskRollupService.recalculateProgress(taskId);
     }
 
     @Override
@@ -135,6 +139,8 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setWorkDescription(description);
         }
         this.updateById(task);
+        // 完成时进度置 100，异步触发父链路汇总
+        taskRollupService.recalculateProgress(taskId);
     }
 
     @Override
@@ -260,6 +266,8 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
         task.setAcceptUserName(SecurityUtils.getCurrentUsername());
         task.setAcceptTime(LocalDateTime.now());
         this.updateById(task);
+        // 验收完成进度置 100，异步触发父链路汇总
+        taskRollupService.recalculateProgress(taskId);
 
         return TaskReviewResult.builder()
                 .success(true)
