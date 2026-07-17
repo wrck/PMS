@@ -4,6 +4,7 @@ import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.mapper.ImplTaskMapper;
+import com.dp.plat.implementation.mapper.TaskChecklistMapper;
 import com.dp.plat.implementation.service.impl.ImplTaskServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +50,9 @@ class ImplTaskServiceImplTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private TaskChecklistMapper taskChecklistMapper;
 
     @InjectMocks
     private ImplTaskServiceImpl implTaskService;

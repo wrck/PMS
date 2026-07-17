@@ -2,6 +2,7 @@ package com.dp.plat.implementation.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.implementation.dto.TaskReviewResult;
 import com.dp.plat.implementation.entity.ImplTask;
 
 import java.util.List;
@@ -60,4 +61,26 @@ public interface IImplTaskService extends IService<ImplTask> {
      * Paginated task query with optional filters.
      */
     Page<ImplTask> list(int page, int size, ImplTask filters);
+
+    /**
+     * 提交评审 — 含强制检查项校验（Story 3 验收 1）。
+     *
+     * <p>若任务存在 mandatory=true 且 checked=false 的检查项，抛出
+     * {@link com.dp.plat.implementation.exception.TaskChecklistRequiredException}，
+     * 拦截状态流转；全部强制检查项已勾选则流转至 REVIEW 状态。</p>
+     *
+     * @param taskId     任务ID
+     * @param operatorId 操作人ID
+     * @return 评审提交结果（success=true 表示已进入 REVIEW）
+     */
+    TaskReviewResult submitForReview(Long taskId, Long operatorId);
+
+    /**
+     * 验收任务 — 评审通过，流转至 COMPLETED。
+     *
+     * @param taskId     任务ID
+     * @param operatorId 操作人ID
+     * @return 验收结果
+     */
+    TaskReviewResult approveTask(Long taskId, Long operatorId);
 }

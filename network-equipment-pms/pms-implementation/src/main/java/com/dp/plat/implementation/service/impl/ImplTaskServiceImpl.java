@@ -5,9 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.util.SecurityUtils;
+import com.dp.plat.implementation.dto.TaskReviewResult;
 import com.dp.plat.implementation.entity.ImplProgress;
 import com.dp.plat.implementation.entity.ImplTask;
+import com.dp.plat.implementation.entity.TaskChecklist;
+import com.dp.plat.implementation.exception.TaskChecklistRequiredException;
 import com.dp.plat.implementation.mapper.ImplTaskMapper;
+import com.dp.plat.implementation.mapper.TaskChecklistMapper;
 import com.dp.plat.implementation.service.IImplProgressService;
 import com.dp.plat.implementation.service.IImplTaskService;
 import com.dp.plat.implementation.service.NotificationService;
@@ -36,9 +40,12 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
     public static final String STATUS_COMPLETED = "COMPLETED";
     public static final String STATUS_CONFIRMED = "CONFIRMED";
     public static final String STATUS_REJECTED = "REJECTED";
+    /** 评审中（提交评审后、验收前）。 */
+    public static final String STATUS_REVIEW = "REVIEW";
 
     private final IImplProgressService implProgressService;
     private final NotificationService notificationService;
+    private final TaskChecklistMapper taskChecklistMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -185,5 +192,78 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             throw new BusinessException("实施任务不存在");
         }
         return task;
+    }
+
+    /**
+     * 提交评审 — 含强制检查项校验（Story 3 验收 1）。
+     *
+     * <p>流程：
+     * <ol>
+     *   <li>查询任务所有 mandatory=true 的检查项</li>
+     *   <li>过滤 checked=false 的条目</li>
+     *   <li>若存在未勾选的强制检查项 → 抛 {@link TaskChecklistRequiredException}（携带未勾选列表）</li>
+     *   <li>全部已勾选 → 更新任务状态为 REVIEW</li>
+     * </ol>
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TaskReviewResult submitForReview(Long taskId, Long operatorId) {
+        ImplTask task = loadOrThrow(taskId);
+
+        // 仅 IN_PROGRESS 状态允许提交评审
+        if (!STATUS_IN_PROGRESS.equals(task.getStatus())) {
+            throw new BusinessException("当前任务状态不允许提交评审");
+        }
+
+        // 1. 查询所有强制检查项（mandatory=true）
+        List<TaskChecklist> mandatoryItems = taskChecklistMapper.selectList(
+                new LambdaQueryWrapper<TaskChecklist>()
+                        .eq(TaskChecklist::getTaskId, taskId)
+                        .eq(TaskChecklist::getMandatory, true));
+
+        // 2. 过滤未勾选的强制检查项
+        List<TaskChecklist> uncheckedMandatory = mandatoryItems.stream()
+                .filter(item -> !Boolean.TRUE.equals(item.getChecked()))
+                .toList();
+
+        // 3. 存在未勾选的强制检查项 → 拦截，抛异常（保持原状态）
+        if (!uncheckedMandatory.isEmpty()) {
+            throw new TaskChecklistRequiredException(uncheckedMandatory, task.getStatus());
+        }
+
+        // 4. 全部强制检查项已勾选 → 流转至 REVIEW
+        task.setStatus(STATUS_REVIEW);
+        this.updateById(task);
+
+        return TaskReviewResult.builder()
+                .success(true)
+                .taskStatus(STATUS_REVIEW)
+                .build();
+    }
+
+    /**
+     * 验收任务 — 评审通过，流转至 COMPLETED。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TaskReviewResult approveTask(Long taskId, Long operatorId) {
+        ImplTask task = loadOrThrow(taskId);
+        if (!STATUS_REVIEW.equals(task.getStatus())) {
+            throw new BusinessException("当前任务状态不允许验收");
+        }
+        task.setStatus(STATUS_COMPLETED);
+        task.setProgress(100);
+        if (task.getActualEndDate() == null) {
+            task.setActualEndDate(LocalDateTime.now().toLocalDate());
+        }
+        task.setAcceptUserId(operatorId != null ? operatorId : SecurityUtils.getCurrentUserId());
+        task.setAcceptUserName(SecurityUtils.getCurrentUsername());
+        task.setAcceptTime(LocalDateTime.now());
+        this.updateById(task);
+
+        return TaskReviewResult.builder()
+                .success(true)
+                .taskStatus(STATUS_COMPLETED)
+                .build();
     }
 }
