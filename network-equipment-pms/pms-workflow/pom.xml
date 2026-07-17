@@ -12,7 +12,7 @@
 
     <artifactId>pms-workflow</artifactId>
     <name>pms-workflow</name>
-    <description>Flowable workflow engine</description>
+    <description>Flowable workflow engine & 统一审批中心（Story 6）</description>
 
     <dependencies>
         <dependency>
@@ -23,9 +23,26 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-integration</artifactId>
         </dependency>
+        <!-- 项目配置（审批超时策略读取 ProjectConfigService） -->
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>pms-project</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.flowable</groupId>
             <artifactId>flowable-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
