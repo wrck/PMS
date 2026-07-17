@@ -163,7 +163,19 @@ export const routes: RouteRecordRaw[] = [
     children: [
       { path: 'todo', name: 'WorkflowTodo',
         component: () => import('@/views/workflow/todo/index.vue'),
-        meta: { title: '待办中心', icon: 'Bell' } }
+        meta: { title: '待办中心', icon: 'Bell' } },
+      { path: 'approval-center', name: 'ApprovalCenter',
+        component: () => import('@/views/workflow/approval-center/index.vue'),
+        meta: { title: '统一审批中心', icon: 'Checked', perms: 'workflow:approval:handle' } },
+      { path: 'approval-detail/:id', name: 'ApprovalDetail',
+        component: () => import('@/views/workflow/approval-detail/index.vue'),
+        meta: { title: '审批详情', hidden: true } },
+      { path: 'approval-history/:recordId', name: 'ApprovalHistory',
+        component: () => import('@/views/workflow/approval-history/index.vue'),
+        meta: { title: '审批历史', hidden: true } },
+      { path: 'field-perm', name: 'ApprovalFieldPerm',
+        component: () => import('@/views/workflow/field-perm/index.vue'),
+        meta: { title: '字段权限配置', icon: 'Lock', perms: 'workflow:field:perm' } }
     ]
   },
   // ============ 其他业务（保留平铺，逐步迁移） ============
