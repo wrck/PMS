@@ -7,7 +7,9 @@ import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.project.dto.ProjectTreeNode;
+import com.dp.plat.project.dto.UncompletedSubProject;
 import com.dp.plat.project.entity.Project;
+import com.dp.plat.project.exception.SubprojectNotClosedException;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IProjectService;
 import com.dp.plat.workflow.dto.CompleteTaskRequest;
@@ -317,14 +319,44 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result<Project> closeProject(Long id) {
-        // 注：完整子项目校验（抛 SubprojectNotClosedException）在 Phase 3 Task 3 实现。
         Project project = this.getById(id);
         if (project == null) {
             throw new BusinessException("项目不存在");
         }
+        // 1. 收集所有子孙项目（邻接表递归，兼容历史 path 缺失数据）。
+        //    注：设计文档 §2.5 建议 project_path LIKE '/<id>/%' 单查询优化；createSubproject
+        //    已为新建子项目回填 path，path 完备时可直接 likeRight 切换为单查询。当前为
+        //    保证历史数据正确性采用递归遍历，项目树规模小，成本可接受。
+        List<Project> descendants = collectAllDescendants(id);
+        // 2. 校验所有子项目状态为 CLOSED 或 CANCELLED
+        List<UncompletedSubProject> uncompleted = descendants.stream()
+                .filter(d -> !STATUS_CLOSED.equals(d.getStatus())
+                        && !STATUS_CANCELLED.equals(d.getStatus()))
+                .map(UncompletedSubProject::new)
+                .collect(Collectors.toList());
+        if (!uncompleted.isEmpty()) {
+            // 存在未关闭子项目 → 拒绝关闭（Story 2 验收 2）
+            throw new SubprojectNotClosedException("子项目未全部关闭", uncompleted);
+        }
+        // 3. 全部已关闭 → 更新项目状态为 CLOSED
         project.setStatus(STATUS_CLOSED);
         this.updateById(project);
         return Result.ok(project);
+    }
+
+    /**
+     * 递归收集某个根项目的所有子孙项目（不含根本身）。
+     */
+    private List<Project> collectAllDescendants(Long rootId) {
+        List<Project> all = new ArrayList<>();
+        List<Project> directChildren = this.list(new LambdaQueryWrapper<Project>()
+                .eq(Project::getParentProjectId, rootId)
+                .orderByAsc(Project::getCreateTime));
+        for (Project child : directChildren) {
+            all.add(child);
+            all.addAll(collectAllDescendants(child.getId()));
+        }
+        return all;
     }
 
     @Override
