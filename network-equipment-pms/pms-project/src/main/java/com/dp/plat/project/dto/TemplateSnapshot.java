@@ -1,0 +1,100 @@
+package com.dp.plat.project.dto;
+
+import lombok.Data;
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * 模板内容快照（深拷贝到项目时反序列化）
+ * 关联设计文档：§2.2 ProjectTemplateVersion
+ */
+@Data
+public class TemplateSnapshot implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** 阶段定义 */
+    private List<PhaseDef> phases;
+
+    /** 任务定义（含父子层级） */
+    private List<TaskDef> tasks;
+
+    /** 里程碑定义 */
+    private List<MilestoneDef> milestones;
+
+    /** 交付件定义 */
+    private List<DeliverableDef> deliverables;
+
+    /** 任务依赖定义 */
+    private List<DependencyDef> dependencies;
+
+    /** 审批计划定义 */
+    private List<ApprovalPlanDef> approvalPlans;
+
+    /** 分配规则（自动分配任务给角色） */
+    private List<AssigneeRule> assigneeRules;
+
+    @Data
+    public static class PhaseDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String phaseCode;
+        private String phaseName;
+        private Integer sortOrder;
+        private PhaseCriteria entryCriteria;
+        private PhaseExitGate exitCriteria;
+    }
+
+    @Data
+    public static class TaskDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String taskName;
+        private String taskType;
+        private String parentTaskName; // 通过名称引用，便于跨模板复用
+        private String phaseCode;      // 关联阶段
+        private Integer plannedHours;
+        private String priority;
+        private Integer sortOrder;
+    }
+
+    @Data
+    public static class MilestoneDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String milestoneName;
+        private String milestoneType;
+        private String phaseCode;
+        private Integer sortOrder;
+    }
+
+    @Data
+    public static class DeliverableDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String deliverableName;
+        private String deliverableType;
+        private String phaseCode;
+        private Boolean mandatory;
+        private String approverRole;
+    }
+
+    @Data
+    public static class DependencyDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String predecessorTaskName;
+        private String successorTaskName;
+        private String dependencyType; // FS/FF/SS/SF
+        private Integer lagDays;
+    }
+
+    @Data
+    public static class ApprovalPlanDef implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String approvalType;
+        private String triggerPhaseCode;
+        private List<String> approverRoles;
+    }
+
+    @Data
+    public static class AssigneeRule implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String taskNamePattern;
+        private String role;
+    }
+}
