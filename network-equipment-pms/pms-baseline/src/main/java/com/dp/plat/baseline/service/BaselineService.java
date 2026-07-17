@@ -1,6 +1,7 @@
 package com.dp.plat.baseline.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.baseline.dto.BaselineDiffResult;
 import com.dp.plat.baseline.entity.BaselineSnapshot;
 
 import java.util.List;
@@ -31,4 +32,15 @@ public interface BaselineService extends IService<BaselineSnapshot> {
      * @return 基线列表
      */
     List<BaselineSnapshot> listByProject(Long projectId);
+
+    /**
+     * 基线偏差分析 — 逐任务对比当前计划与基线快照。
+     *
+     * <p>关联设计文档：§3.6、§5.5 Story 4 验收 2。计算每个任务的开始/结束偏差天数
+     * 与偏差百分比，并按双阈值（天数 OR 百分比）判定是否需要审批。</p>
+     *
+     * @param baselineId 基线ID
+     * @return 偏差分析结果（含基线摘要 + diffs 列表 + needsApproval）
+     */
+    BaselineDiffResult compareWithBaseline(Long baselineId);
 }
