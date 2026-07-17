@@ -1,6 +1,7 @@
 package com.dp.plat.deliverable.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 
@@ -122,4 +123,25 @@ public interface DeliverableService extends IService<Deliverable> {
      * @return 版本记录（不存在返回 null）
      */
     DeliverableVersion getVersion(Long deliverableId, Integer versionNo);
+
+    // ==================== 阶段退出校验 ====================
+
+    /**
+     * 阶段必需交付件校验（Story 5 验收 2）。
+     *
+     * <p>关联设计文档：§3.4（行 427）、§5.6（行 1059-1078）。
+     * 校验指定阶段下所有 {@code mandatory=true} 的交付件是否均已达到「已批准」状态
+     * （PUBLISHED/REFERENCED/ARCHIVED）。供 Phase 3 的 {@code advancePhase} 跨模块调用。</p>
+     *
+     * <p>逻辑：</p>
+     * <ol>
+     *   <li>查询阶段下所有 {@code mandatory=true} 的交付件。</li>
+     *   <li>过滤 status 未达到 PUBLISHED（即未批准）的条目。</li>
+     *   <li>返回未满足的交付件列表（{@code allApproved = items 为空}）。</li>
+     * </ol>
+     *
+     * @param phaseId 阶段ID
+     * @return 校验结果（含 allApproved 标志与未满足项列表）
+     */
+    MandatoryDeliverableValidationResult validateMandatoryDeliverables(Long phaseId);
 }

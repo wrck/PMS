@@ -3,6 +3,7 @@ package com.dp.plat.deliverable.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 import com.dp.plat.deliverable.enums.DeliverableStatus;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 交付件全生命周期服务实现 — 7 态状态机。
@@ -210,6 +212,50 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
                 new LambdaQueryWrapper<DeliverableVersion>()
                         .eq(DeliverableVersion::getDeliverableId, deliverableId)
                         .eq(DeliverableVersion::getVersionNo, versionNo));
+    }
+
+    // ==================== 阶段退出校验 ====================
+
+    @Override
+    public MandatoryDeliverableValidationResult validateMandatoryDeliverables(Long phaseId) {
+        if (phaseId == null) {
+            throw new BusinessException("阶段ID不能为空");
+        }
+
+        // 1. 查询阶段下所有 mandatory=true 的交付件
+        List<Deliverable> mandatoryDeliverables = list(new LambdaQueryWrapper<Deliverable>()
+                .eq(Deliverable::getPhaseId, phaseId)
+                .eq(Deliverable::getMandatory, Boolean.TRUE));
+
+        // 2. 过滤 status 未达到「已批准」（PUBLISHED/REFERENCED/ARCHIVED）的条目
+        List<MandatoryDeliverableValidationResult.Item> unmet = mandatoryDeliverables.stream()
+                .filter(d -> {
+                    DeliverableStatus status = DeliverableStatus.of(d.getStatus());
+                    return status == null || !status.isApproved();
+                })
+                .map(d -> {
+                    DeliverableStatus status = DeliverableStatus.of(d.getStatus());
+                    boolean approved = status != null && status.isApproved();
+                    return MandatoryDeliverableValidationResult.Item.builder()
+                            .deliverableId(d.getId())
+                            .deliverableName(d.getDeliverableName())
+                            .mandatory(Boolean.TRUE)
+                            .expectedStatus(DeliverableStatus.PUBLISHED.code())
+                            .actualStatus(d.getStatus())
+                            .approved(approved)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // 3. allApproved = 未满足项为空
+        boolean allApproved = unmet.isEmpty();
+        log.info("阶段必需交付件校验：phaseId={} 必需项={} 未满足={} allApproved={}",
+                phaseId, mandatoryDeliverables.size(), unmet.size(), allApproved);
+
+        return MandatoryDeliverableValidationResult.builder()
+                .allApproved(allApproved)
+                .items(unmet)
+                .build();
     }
 
     // ==================== helpers ====================
