@@ -52,6 +52,9 @@ public class ProjectConfigService {
         String systemDefault = null;
 
         for (ProjectConfig config : configs) {
+            if (!key.equals(config.getConfigKey())) {
+                continue;
+            }
             if (projectId != null && projectId.equals(config.getProjectId())) {
                 projectLevel = config.getConfigValue();
             } else if (templateId != null && templateId.equals(config.getTemplateId())
