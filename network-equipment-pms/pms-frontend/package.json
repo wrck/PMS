@@ -15,6 +15,7 @@
     "build:sdk": "vite build --config vite.config.lib.ts"
   },
   "dependencies": {
+    "@antv/g6": "^5.1.1",
     "@antv/x6": "^3.1.7",
     "@antv/x6-vue-shape": "^3.0.2",
     "@element-plus/icons-vue": "^2.3.2",
