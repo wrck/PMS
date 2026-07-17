@@ -139,6 +139,9 @@ CREATE TABLE pms_deliverable_signature (
     signed_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '签核时间',
     create_by       VARCHAR(64)  NULL,
     create_time     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_by       VARCHAR(64)  NULL,
+    update_time     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted         TINYINT(1)   NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     KEY idx_deliverable_version (deliverable_id, version_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='交付件签名';
@@ -154,8 +157,11 @@ CREATE TABLE pms_deliverable_reference (
     reference_type      VARCHAR(32)  NOT NULL                       COMMENT '引用方业务类型：TASK/PHASE/PROJECT/DELIVERABLE/REPORT',
     referenced_by_id    BIGINT       NOT NULL                       COMMENT '引用方业务ID',
     referenced_by_name  VARCHAR(128) NULL                           COMMENT '引用方名称（冗余）',
-    created_by          VARCHAR(64)  NULL,
+    create_by           VARCHAR(64)  NULL,
     create_time         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_by           VARCHAR(64)  NULL,
+    update_time         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted             TINYINT(1)   NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     KEY idx_source_deliverable (source_deliverable_id),
     KEY idx_ref_by (reference_type, referenced_by_id),
