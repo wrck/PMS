@@ -190,6 +190,75 @@ public class BaselineServiceImpl extends ServiceImpl<BaselineSnapshotMapper, Bas
                 .build();
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaselineDiffResult requestBaselineChange(Long baselineId, String changeReason) {
+        BaselineSnapshot baseline = this.getById(baselineId);
+        if (baseline == null) {
+            throw new BusinessException("基线不存在：id=" + baselineId);
+        }
+        if (!"DRAFT".equals(baseline.getStatus())) {
+            throw new BusinessException("仅 DRAFT 状态基线可申请变更，当前状态："
+                    + baseline.getStatus());
+        }
+
+        // 1. 偏差分析（天数/百分比双阈值，已计算 needsApproval）
+        BaselineDiffResult result = compareWithBaseline(baselineId);
+
+        // 2. count 阈值（偏差任务数）
+        int countThreshold = readIntConfig(baseline.getProjectId(),
+                "baseline.variance.threshold.count", 3);
+        int variancedCount = result.getTotalVarianced() == null ? 0 : result.getTotalVarianced();
+        boolean countExceeded = variancedCount > countThreshold;
+
+        // 3. 双阈值 OR：days/percent OR count
+        boolean daysOrPercentExceeded = Boolean.TRUE.equals(result.getNeedsApproval());
+        boolean needsApproval = daysOrPercentExceeded || countExceeded;
+
+        // 4. 合并审批原因
+        String approvalReason = null;
+        if (needsApproval) {
+            StringBuilder sb = new StringBuilder();
+            if (daysOrPercentExceeded) {
+                sb.append("偏差超过阈值");
+            }
+            if (countExceeded) {
+                if (sb.length() > 0) {
+                    sb.append("；");
+                }
+                sb.append("偏差任务数 ").append(variancedCount)
+                        .append(" 超过阈值 ").append(countThreshold);
+            }
+            approvalReason = sb.toString();
+        }
+        result.setNeedsApproval(needsApproval);
+        result.setApprovalReason(approvalReason);
+
+        if (needsApproval) {
+            // 触发 BASELINE_CHANGE 审批：Phase 7 实现具体审批流程与 ApprovalRecord 落库。
+            // TODO(Phase 7): approvalRecordService.create("BASELINE_CHANGE",
+            //               baseline.getProjectId(), baselineId, changeReason, ...)
+            //               并将返回的 approvalRecordId 回填到 baseline.approvalRecordId。
+            baseline.setChangeReason(changeReason);
+            this.updateById(baseline);
+            log.warn("基线 {} 偏差超阈值，需触发 BASELINE_CHANGE 审批（Phase 7 实现）。reason={}",
+                    baselineId, changeReason);
+        } else {
+            // 未超阈值 → 直接 APPROVED
+            baseline.setStatus("APPROVED");
+            baseline.setApprovedAt(LocalDateTime.now());
+            baseline.setChangeReason(changeReason);
+            this.updateById(baseline);
+            log.info("基线 {} 偏差未超阈值，直接 APPROVED", baselineId);
+            if (result.getBaseline() != null) {
+                result.getBaseline().setStatus("APPROVED");
+                result.getBaseline().setApprovedAt(baseline.getApprovedAt());
+            }
+        }
+
+        return result;
+    }
+
     /** LocalDate → ISO 字符串（null 返回 null）。 */
     private static String toStr(LocalDate date) {
         return date == null ? null : date.toString();
