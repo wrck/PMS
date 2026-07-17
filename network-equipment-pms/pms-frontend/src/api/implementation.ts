@@ -1,5 +1,6 @@
 import { del, get, post, put } from '@/utils/request'
 import type { PageQuery, PageResult } from './system'
+import type { TaskChecklistItem } from './task-checklist'
 
 // ===================== Implementation Task =====================
 
@@ -265,3 +266,80 @@ export function rejectSettlement(id: number, opinion?: string): Promise<void> {
 export function getSettlementDetail(id: number): Promise<Settlement> {
   return get<Settlement>(`/api/impl/settlement/${id}`)
 }
+
+// ===================== 任务层级与协作（Story 3） =====================
+
+/** 任务优先级 */
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+
+/** 扩展后的实施任务（含层级与汇总字段） */
+export interface ImplTaskNode extends ImplTask {
+  parentTaskId?: number | null
+  taskPath?: string
+  depth?: number
+  priority?: TaskPriority
+  actualHours?: number
+  remainingHours?: number
+  phaseId?: number | null
+  taskWeight?: number
+  /** 子任务（树形结构） */
+  children?: ImplTaskNode[]
+}
+
+/** 提交评审 / 验收结果 */
+export interface TaskReviewResult {
+  success: boolean
+  errorCode?: string
+  errorMessage?: string
+  uncheckedMandatoryItems?: TaskChecklistItem[]
+  taskStatus?: string
+}
+
+/** 任务进度视图（含子任务加权汇总） */
+export interface TaskProgressVO {
+  taskId: number
+  taskName: string
+  selfProgress: number
+  rolledUpProgress: number
+  totalSubtasks: number
+  completedSubtasks: number
+  status?: string
+  children?: TaskProgressVO[]
+}
+
+/** 查询任务子树（含自身及所有后代） */
+export function getTaskSubtree(id: number): Promise<ImplTaskNode[]> {
+  return get<ImplTaskNode[]>(`/api/impl/task/${id}/subtree`)
+}
+
+/** 移动任务（变更父任务，newParentId 为空表示提升为顶层） */
+export function moveTask(id: number, newParentId?: number | null): Promise<void> {
+  return post<void>(`/api/impl/task/${id}/move`, undefined, {
+    params: { newParentId: newParentId ?? '' }
+  })
+}
+
+/** 提交评审（含强制检查项校验） */
+export function submitForReview(id: number): Promise<TaskReviewResult> {
+  return post<TaskReviewResult>(`/api/impl/task/${id}/submit-review`)
+}
+
+/** 验收任务（评审通过） */
+export function approveTask(id: number): Promise<TaskReviewResult> {
+  return post<TaskReviewResult>(`/api/impl/task/${id}/approve`)
+}
+
+/** 查询任务进度（含子任务加权汇总） */
+export function getTaskProgress(id: number): Promise<TaskProgressVO> {
+  return get<TaskProgressVO>(`/api/impl/task/${id}/progress`)
+}
+
+/** 顶层任务列表（分页，复用已有 list 接口） */
+export function listTasks(params: TaskPageQuery): Promise<PageResult<ImplTaskNode>> {
+  return get<PageResult<ImplTaskNode>>('/api/impl/task/list', params)
+}
+
+// 任务评论 API：见 ./task-comment.ts
+// 任务活动记录 API：见 ./task-activity.ts
+// 任务检查项 API：见 ./task-checklist.ts
+
