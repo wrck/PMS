@@ -85,6 +85,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'ProjectTemplateVersion',
         component: () => import('@/views/project/template/version.vue'),
         meta: { title: '版本管理', hidden: true }
+      },
+      {
+        path: 'config/:id',
+        name: 'ProjectConfig',
+        component: () => import('@/views/project-config/index.vue'),
+        meta: { title: '项目配置', hidden: true }
       }
     ]
   },
@@ -116,6 +122,12 @@ export const routes: RouteRecordRaw[] = [
       { path: 'task', name: 'ImplTask',
         component: () => import('@/views/implementation/task/index.vue'),
         meta: { title: '实施任务', icon: 'Tickets' } },
+      { path: 'task/list', name: 'TaskList',
+        component: () => import('@/views/task/list/index.vue'),
+        meta: { title: '任务树列表', icon: 'Connection' } },
+      { path: 'task/detail/:id', name: 'TaskDetail',
+        component: () => import('@/views/task/detail/index.vue'),
+        meta: { title: '任务详情', hidden: true } },
       { path: 'agent', name: 'AgentManage',
         component: () => import('@/views/implementation/agent/index.vue'),
         meta: { title: '服务商管理', icon: 'OfficeBuilding' } },
