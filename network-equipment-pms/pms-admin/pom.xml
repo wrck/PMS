@@ -64,6 +64,10 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-baseline</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.dp.plat</groupId>
+            <artifactId>pms-deliverable</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.mysql</groupId>
