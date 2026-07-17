@@ -2,29 +2,29 @@ package com.dp.plat.project.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.dp.plat.common.entity.BaseEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 /**
- * Project member entity.
+ * 项目成员
+ * 关联表：pms_project_member
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("pms_project_member")
 public class ProjectMember extends BaseEntity {
 
-    /** Project id. */
+    private static final long serialVersionUID = 1L;
+
     private Long projectId;
-
-    /** User id. */
     private Long userId;
+    private String userName;
 
-    /** Role type (PM, ENGINEER, QA, OBSERVER). */
-    private String roleType;
+    /** PROJECT_MANAGER / PROJECT_MEMBER / APPROVER / VIEWER / CUSTOMER */
+    private String role;
+
+    private LocalDate joinDate;
+    private LocalDate leaveDate;
 }
