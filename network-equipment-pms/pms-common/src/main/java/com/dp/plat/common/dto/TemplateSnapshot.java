@@ -1,4 +1,4 @@
-package com.dp.plat.project.dto;
+package com.dp.plat.common.dto;
 
 import lombok.Data;
 import java.io.Serializable;
