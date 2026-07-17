@@ -128,12 +128,30 @@ export const routes: RouteRecordRaw[] = [
       { path: 'task/detail/:id', name: 'TaskDetail',
         component: () => import('@/views/task/detail/index.vue'),
         meta: { title: '任务详情', hidden: true } },
+      { path: 'task/dependency/:projectId', name: 'TaskDependencyGraph',
+        component: () => import('@/views/task/dependency/index.vue'),
+        meta: { title: '任务依赖关系图', hidden: true } },
       { path: 'agent', name: 'AgentManage',
         component: () => import('@/views/implementation/agent/index.vue'),
         meta: { title: '服务商管理', icon: 'OfficeBuilding' } },
       { path: 'settlement', name: 'Settlement',
         component: () => import('@/views/implementation/settlement/index.vue'),
         meta: { title: '结算管理', icon: 'Money' } }
+    ]
+  },
+  // ============ 计划基线（嵌套） ============
+  {
+    path: '/baseline',
+    component: Layout,
+    redirect: '/baseline/list',
+    meta: { title: '计划基线', icon: 'Histogram', requiresAuth: true },
+    children: [
+      { path: 'list', name: 'BaselineList',
+        component: () => import('@/views/baseline/index.vue'),
+        meta: { title: '基线管理', icon: 'Histogram' } },
+      { path: 'diff/:baselineId', name: 'BaselineDiff',
+        component: () => import('@/views/baseline/diff.vue'),
+        meta: { title: '基线偏差分析', hidden: true } }
     ]
   },
   // ============ 工作流与审批（嵌套） ============
