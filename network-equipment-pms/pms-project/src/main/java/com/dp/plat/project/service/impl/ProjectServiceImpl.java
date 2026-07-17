@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.metrics.BusinessMetrics;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.project.dto.ProjectTreeNode;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IProjectService;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private static final String STATUS_APPROVED = "APPROVED";
     /** Default priority. */
     private static final String PRIORITY_NORMAL = "NORMAL";
+
+    // ============ Phase 3 生命周期状态（关联设计文档 §3.1） ============
+    /** 收尾中：所有阶段完成，等待关闭审批。 */
+    private static final String STATUS_CLOSING = "CLOSING";
+    /** 已关闭。 */
+    private static final String STATUS_CLOSED = "CLOSED";
+    /** 已取消。 */
+    private static final String STATUS_CANCELLED = "CANCELLED";
 
     /** Workflow process definition key for project approval. */
     private static final String PROCESS_KEY_PROJECT_APPROVAL = "projectApproval";
@@ -239,5 +249,109 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             }
         }
         return null;
+    }
+
+    // ============ Phase 3：主子项目与生命周期（Story 2） ============
+
+    @Override
+    public Result<ProjectTreeNode> getProjectTree(Long id) {
+        Project root = this.getById(id);
+        if (root == null) {
+            throw new BusinessException("项目不存在");
+        }
+        return Result.ok(buildTreeNode(root));
+    }
+
+    /**
+     * 递归构建项目树节点。
+     *
+     * <p>采用 parentProjectId 邻接表逐层查询，兼容历史数据（projectPath 未填充时仍可工作）。
+     * 任务树深度通常较小，N+1 查询成本可接受；超大树的批量化优化留待后续迭代。
+     */
+    private ProjectTreeNode buildTreeNode(Project project) {
+        ProjectTreeNode node = new ProjectTreeNode(project);
+        List<Project> children = this.list(new LambdaQueryWrapper<Project>()
+                .eq(Project::getParentProjectId, project.getId())
+                .orderByAsc(Project::getCreateTime));
+        List<ProjectTreeNode> childNodes = new ArrayList<>(children.size());
+        for (Project child : children) {
+            childNodes.add(buildTreeNode(child));
+        }
+        node.setChildren(childNodes);
+        return node;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Project> createSubproject(Long parentId, Project subproject) {
+        if (subproject == null) {
+            throw new BusinessException("子项目信息不能为空");
+        }
+        if (!StringUtils.hasText(subproject.getProjectName())) {
+            throw new BusinessException("子项目名称不能为空");
+        }
+        Project parent = this.getById(parentId);
+        if (parent == null) {
+            throw new BusinessException("父项目不存在");
+        }
+        subproject.setId(null);
+        subproject.setParentProjectId(parentId);
+        subproject.setStatus(STATUS_PENDING);
+        if (!StringUtils.hasText(subproject.getPriority())) {
+            subproject.setPriority(PRIORITY_NORMAL);
+        }
+        if (subproject.getProgress() == null) {
+            subproject.setProgress(0);
+        }
+        // 先保存以获得自增 ID，再回填物化路径与深度。
+        this.save(subproject);
+        String parentPath = StringUtils.hasText(parent.getProjectPath())
+                ? parent.getProjectPath()
+                : "/" + parent.getId() + "/";
+        subproject.setProjectPath(parentPath + subproject.getId() + "/");
+        subproject.setDepth(parent.getDepth() != null ? parent.getDepth() + 1 : 1);
+        this.updateById(subproject);
+        return Result.ok(subproject);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Project> closeProject(Long id) {
+        // 注：完整子项目校验（抛 SubprojectNotClosedException）在 Phase 3 Task 3 实现。
+        Project project = this.getById(id);
+        if (project == null) {
+            throw new BusinessException("项目不存在");
+        }
+        project.setStatus(STATUS_CLOSED);
+        this.updateById(project);
+        return Result.ok(project);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Project> cancelProject(Long id) {
+        Project project = this.getById(id);
+        if (project == null) {
+            throw new BusinessException("项目不存在");
+        }
+        project.setStatus(STATUS_CANCELLED);
+        this.updateById(project);
+        return Result.ok(project);
+    }
+
+    @Override
+    public Result<Map<String, Object>> getProjectProgress(Long id) {
+        // 注：完整 CTE 加权平均进度在 Phase 3 Task 4 实现（calculateAggregatedProgress）。
+        Project project = this.getById(id);
+        if (project == null) {
+            throw new BusinessException("项目不存在");
+        }
+        int ownProgress = project.getProgress() != null ? project.getProgress() : 0;
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("projectId", project.getId());
+        progress.put("projectName", project.getProjectName());
+        progress.put("ownProgress", ownProgress);
+        progress.put("aggregatedProgress", ownProgress);
+        return Result.ok(progress);
     }
 }
