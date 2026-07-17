@@ -108,7 +108,7 @@ CREATE TABLE pms_deliverable_version (
     version_no      INT          NOT NULL                          COMMENT '版本号 1,2,3...',
     file_path       VARCHAR(500) NOT NULL                          COMMENT '文件路径',
     file_checksum   VARCHAR(128) NULL                              COMMENT 'SHA256 校验和',
-    uploaded_by     BIGINT       NOT NULL                          COMMENT '上传人ID',
+    uploaded_by     BIGINT       NULL                              COMMENT '上传人ID（初始版本可空，由 createBy 审计字段记录）',
     uploaded_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
     change_log      VARCHAR(500) NULL                              COMMENT '版本变更说明',
     status          VARCHAR(20)  NOT NULL DEFAULT 'DRAFT'           COMMENT '该版本流转状态',
