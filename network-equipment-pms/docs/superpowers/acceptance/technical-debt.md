@@ -14,20 +14,20 @@
 
 | 编号 | 标题 | 优先级 | 发现任务 | 状态 |
 |---|---|---|---|---|
-| TD-P8-001 | pms-project ↔ pms-workflow 双向依赖环 | 高 | Task 3 | 待修复 |
+| TD-P8-001 | pms-project ↔ pms-workflow 双向依赖环 | 高 | Task 3 | 已修复 |
 | TD-P8-002 | 前端权限码 `workflow:*` vs 后端 `approval:center:*` 命名不一致 | 中 | Task 5 | 已修复 |
-| TD-P8-003 | `createProjectFromTemplate` 仅深拷贝阶段，未含任务/交付件/依赖 | 高 | Task 6 | 待修复 |
+| TD-P8-003 | `createProjectFromTemplate` 仅深拷贝阶段，未含任务/交付件/依赖 | 高 | Task 6 | 已修复 |
 | TD-P8-004 | 权限码 `project:advance:phase` vs `project:phase:advance` 不一致 | 中 | Task 7 | 已修复 |
-| TD-P8-005 | TASK/APPROVAL 两类阶段退出条件未实现 | 中 | Task 7 | 待修复 |
-| TD-P8-006 | 前端 `api/project.ts` 未封装 subproject/close/cancel 三个端点 | 高 | Task 7/12 | 待修复 |
-| TD-P8-007 | 异步进度汇总失败仅日志记录不重试 | 低 | Task 8 | 可接受 |
-| TD-P8-008 | BASELINE_CHANGE 审批流程未实际触发 | 高 | Task 9 | 待修复 |
-| TD-P8-009 | `detectCycle` 全量加载邻接表性能隐患 | 低 | Task 9 | 可接受 |
-| TD-P8-010 | 设计文档响应结构描述与实现偏差（文档勘误） | 低 | Task 9 | 待修复（文档） |
-| TD-P8-011 | `validateExitGate` DELIVERABLE 分支精确匹配，与设计「已批准集合」语义不符 | 高 | Task 10 | 待修复 |
-| TD-P8-012 | `validateMandatoryDeliverables` 未被 `advancePhase` 复用 + 前端无视图调用 | 中 | Task 10 | 待修复 |
-| TD-P8-013 | `buildMaskedFields` 对 MASKED 字段重复脱敏计算 | 低 | Task 11 | 可接受 |
-| TD-P8-014 | HIDDEN 字段在 `maskedFields` 元数据中冗余 | 低 | Task 11 | 可接受 |
+| TD-P8-005 | TASK/APPROVAL 两类阶段退出条件未实现 | 中 | Task 7 | 已修复 |
+| TD-P8-006 | 前端 `api/project.ts` 未封装 subproject/close/cancel 三个端点 | 高 | Task 7/12 | 已修复 |
+| TD-P8-007 | 异步进度汇总失败仅日志记录不重试 | 低 | Task 8 | 已修复 |
+| TD-P8-008 | BASELINE_CHANGE 审批流程未实际触发 | 高 | Task 9 | 已修复 |
+| TD-P8-009 | `detectCycle` 全量加载邻接表性能隐患 | 低 | Task 9 | 已修复 |
+| TD-P8-010 | 设计文档响应结构描述与实现偏差（文档勘误） | 低 | Task 9 | 已修复 |
+| TD-P8-011 | `validateExitGate` DELIVERABLE 分支精确匹配，与设计「已批准集合」语义不符 | 高 | Task 10 | 已修复 |
+| TD-P8-012 | `validateMandatoryDeliverables` 未被 `advancePhase` 复用 + 前端无视图调用 | 中 | Task 10 | 已修复 |
+| TD-P8-013 | `buildMaskedFields` 对 MASKED 字段重复脱敏计算 | 低 | Task 11 | 已修复 |
+| TD-P8-014 | HIDDEN 字段在 `maskedFields` 元数据中冗余 | 低 | Task 11 | 已修复 |
 | TD-P8-015 | 任务管理模块路径命名不一致（`impl` vs `implementation`） | 中 | Task 12 | 已修复 |
 | TD-P8-016 | 设计文档 §5.4 路径与实现不符（文档勘误） | 低 | Task 12 | 已修复（与 TD-P8-015 联动） |
 
@@ -164,6 +164,13 @@
 - **现象**：`@Async` 进度汇总任务失败时仅 `log.error` 记录，不重试也不通知。
 - **影响**：进度汇总偶发失败时数据不更新，需手动触发。
 - **建议**：可接受现状。如需增强，可引入 Spring Retry 或消息队列重试机制。优先级低。
+- **状态**：已修复（Phase 9 / 批次 C）。在 `TaskRollupServiceImpl.recalculateProgress` 上添加
+  `@Retryable(maxAttempts=3, backoff=@Backoff(delay=1000, multiplier=2), retryFor=Exception.class)`
+  与 `@Async` 组合（Spring 代理顺序保证先异步调度、后在异步线程内执行重试）。
+  添加 `@Recover` 方法作为最终失败回调，记录详细错误日志（含异常类型与堆栈）。
+  - `pms-implementation/pom.xml` 引入 `spring-retry` 依赖
+  - `pms-admin/.../PmsApplication.java` 启用 `@EnableRetry`
+  - `pms-implementation/.../TaskRollupServiceImpl.java` 添加 `@Retryable` + `@Recover`
 
 ### TD-P8-009：`detectCycle` 全量加载邻接表性能隐患
 
@@ -173,6 +180,11 @@
 - **现象**：循环依赖检测时全量加载项目所有任务依赖到内存构建邻接表，再执行 DFS。任务量大时（>1000）可能内存与性能压力。
 - **影响**：大规模项目下检测延迟增加，但当前项目规模可接受。
 - **建议**：可接受现状。如需优化，可改为按需加载邻接节点或增量检测。优先级低。
+- **状态**：已修复（Phase 9 / 批次 C）。重构 `detectCycle` 与 `dfs` 为增量按需加载：
+  - 移除一次性 `selectList(projectId)` 全量加载邻接表的逻辑
+  - DFS 遍历每个节点时按 `predecessorTaskId=current` 单独查询后继列表
+  - 添加批量加载优化注释（>1000 任务场景可按 N 个节点 ID 批量查询，N 推荐 50-200）
+  - 清理未使用的 `Map`/`LinkedHashMap` 导入
 
 ### TD-P8-010：设计文档响应结构描述与实现偏差（文档勘误）
 
@@ -182,6 +194,14 @@
 - **现象**：设计文档中循环依赖响应结构的字段命名/嵌套与实际实现（`DependencyCycleResult` / `CycleNode`）存在细微偏差。
 - **影响**：文档与实现不符，可能误导开发者。
 - **建议**：更新设计文档响应示例，与实际 DTO 字段对齐。优先级低。
+- **状态**：已修复（Phase 9 / 批次 C）。更新设计文档 `docs/superpowers/specs/2026-07-17-project-management-enhancement-design.md`：
+  - §3.6 行 515 `saveDependency` 伪代码：由 `Result.fail("CYCLE_DETECTED", ...)` 改为
+    `throw new CycleDetectedException(cyclePath)`，并加注释说明由
+    `BaselineExceptionHandler` 捕获并转换为 `Result.ok(DependencyCycleResult{success=false, ...})`
+  - §5.5 Story 4 验收 1/2 响应示例：补充 `message: "成功"` 字段，与 `Result<T>`
+    包装器的 `code/message/data` 三字段结构一致
+  - 在 §5.5 示例上方添加 DTO 类型映射说明（`DependencyCycleResult`/`CycleNode`/
+    `BaselineDiffResult`/`BaselineDiffResult.BaselineInfo`/`TaskDiff`）
 
 ### TD-P8-013：`buildMaskedFields` 对 MASKED 字段重复脱敏计算
 
@@ -191,6 +211,10 @@
 - **现象**：`detail` 方法行 140 已通过 `maskMap` 对 `businessData` 整体脱敏，行 143 `buildMaskedFields` 又对同一批 MASKED 字段调用 `sensitiveFieldMasker.mask` 重新脱敏（基于原始 `businessData`）。两次脱敏结果一致（幂等），但重复计算。
 - **影响**：轻微性能浪费，无功能正确性问题。
 - **建议**：可接受现状。如需优化，让 `buildMaskedFields` 复用 `maskedData` 中已脱敏的值。优先级低。
+- **状态**：已修复（Phase 9 / 批次 C，与 TD-P8-014 联动）。`buildMaskedFields` 形参
+  由原始 `businessData` 改为已脱敏的 `maskedData`：
+  - MASKED 字段直接从 `maskedData` 取值，不再调用 `sensitiveFieldMasker.mask` 重复脱敏
+  - `detail()` 调用处同步传入 `maskedData`
 
 ### TD-P8-014：HIDDEN 字段在 `maskedFields` 元数据中冗余
 
@@ -200,6 +224,9 @@
 - **现象**：`buildMaskedFields` 为 HIDDEN 字段生成 `MaskedFieldVO{permission=HIDDEN, maskedValue=null}` 元数据项。但 `maskMap` 已将 HIDDEN 字段从 `businessData` 移除，前端 `v-for` 遍历 `businessData` 不会渲染 HIDDEN 字段，故 `maskedFields` 中的 HIDDEN 项无消费者。
 - **影响**：响应体冗余字段，无功能正确性问题。
 - **建议**：可接受现状。如需精简，在 `buildMaskedFields` 中跳过 HIDDEN 字段。优先级低。
+- **状态**：已修复（Phase 9 / 批次 C，与 TD-P8-013 联动）。在 `buildMaskedFields` 循环开头
+  添加 `if ("HIDDEN".equalsIgnoreCase(perm.getPermission())) { continue; }`，
+  HIDDEN 字段不再出现在 `maskedFields` 元数据列表中。
 
 ### TD-P8-016：设计文档 §5.4 路径与实现不符（文档勘误）
 
@@ -270,3 +297,9 @@ Phase 8 联调测试与验收阶段共发现 **16 个技术债**，其中：
 - **6 个低优先级**可接受现状或择机修复（性能优化、文档勘误、代码冗余）
 
 所有技术债均不影响已交付功能的核心正确性，高优先级问题主要集中于「设计已定义但实现未完成」的部分功能（模板深拷贝、基线审批触发、阶段退出条件语义），建议在 Phase 9 集中修复。
+
+> **Phase 9 修复进度**：截至 2026-07-20，**16 个技术债全部修复完毕**（高 5 / 中 5 / 低 6）。
+> 修复分三批推进：
+> - 批次 A（TD-P8-001/003/006/008/011）：高优先级，模块依赖环、模板深拷贝、前端封装、基线审批触发、退出条件语义
+> - 批次 B（TD-P8-002/004/005/012/015/016）：中优先级 + 联动文档勘误，命名统一、退出条件补全、复用、路径统一
+> - 批次 C（TD-P8-007/009/010/013/014）：低优先级，Spring Retry 重试、增量 DFS、文档勘误、脱敏优化
