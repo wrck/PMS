@@ -87,6 +87,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '项目工作区', hidden: true }
       },
       {
+        path: 'todo/:id',
+        name: 'ProjectTodo',
+        component: () => import('@/views/project/todo/index.vue'),
+        meta: { title: '项目待办', hidden: true }
+      },
+      {
         path: ':id/gantt',
         name: 'ProjectGantt',
         component: () => import('@/views/project/gantt/index.vue'),
