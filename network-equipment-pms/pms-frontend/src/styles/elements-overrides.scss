@@ -120,11 +120,14 @@
 }
 
 // 弹窗动画升级：钉飞风格的淡入 + 轻微缩放（覆盖 Element Plus 默认 dialog-fade）
+// 显式列出 opacity/transform 避免过渡无关属性造成性能损耗
 .dialog-fade-enter-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .dialog-fade-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .dialog-fade-enter-from {
   opacity: 0;
@@ -175,10 +178,14 @@
 }
 
 // =============================================================================
-// 11. 按钮扁平化 + hover 浮起
+// 11. 按钮扁平化 + hover 浮起（钉飞风格 - 显式属性过渡）
 // =============================================================================
 .el-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:not(.is-disabled):not(.is-loading):hover {
     transform: translateY(-1px);
@@ -242,4 +249,83 @@
 // =============================================================================
 .el-drawer {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// =============================================================================
+// 16. 浮层动画统一（钉飞风格 - scale + fade）
+// -----------------------------------------------------------------------------
+// 适用于 el-select 下拉、el-dropdown、el-cascader、el-popover、el-tooltip 等
+// 通过 el-popper 包裹的浮层。覆盖 Element Plus 默认的 zoom-in 进入动画，
+// 改为更柔和的 scale(0.96) → scale(1) + fade。
+// =============================================================================
+.el-zoom-in-top-enter-active,
+.el-zoom-in-bottom-enter-active {
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-zoom-in-top-leave-active,
+.el-zoom-in-bottom-leave-active {
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-zoom-in-top-enter-from,
+.el-zoom-in-bottom-enter-from {
+  opacity: 0;
+  transform: scaleY(0.96);
+}
+.el-zoom-in-top-leave-to,
+.el-zoom-in-bottom-leave-to {
+  opacity: 0;
+  transform: scaleY(0.98);
+}
+
+// =============================================================================
+// 17. 消息提示入场动画（钉飞风格 - slide-down + fade）
+// -----------------------------------------------------------------------------
+// el-message 默认从顶部下滑出现，钉飞风格更柔和：translateY(-16px) + fade
+// =============================================================================
+.el-message-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-message-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-message-enter-from {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+.el-message-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+// =============================================================================
+// 18. 通知提示入场动画（钉飞风格 - slide-right + fade）
+// -----------------------------------------------------------------------------
+// el-notification 默认从右上角滑入，钉飞风格：translateX(20px) + fade
+// =============================================================================
+.el-notification-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-notification-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.el-notification-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.el-notification-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+// =============================================================================
+// 19. 折叠/展开动画（钉飞风格 - el-collapse）
+// =============================================================================
+.el-collapse-item__wrap {
+  transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -308,7 +308,7 @@ onBeforeUnmount(() => {
           <el-main class="layout-main">
             <router-view v-slot="{ Component, route }">
               <transition
-                :name="(route.meta.transitionName as string) || 'fade-transform'"
+                :name="(route.meta.transitionName as string) || 'fade-slide-up'"
                 mode="out-in"
               >
                 <keep-alive :max="10">
