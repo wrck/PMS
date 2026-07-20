@@ -1,138 +1,347 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Clock,
+  CopyDocument,
+  Delete,
+  Edit,
+  Files,
+  Plus,
+  Refresh,
+  Search
+} from '@element-plus/icons-vue'
 import {
   listTemplates,
   deleteTemplate,
   type ProjectTemplate
 } from '@/api/project-template'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const router = useRouter()
-const loading = ref(false)
-const tableData = ref<ProjectTemplate[]>([])
-const total = ref(0)
 
-const query = reactive({ page: 1, size: 10, templateName: '', category: '', status: '' })
+const loading = ref(false)
+const templates = ref<ProjectTemplate[]>([])
+
+const query = reactive({
+  templateName: '',
+  category: '',
+  status: ''
+})
 
 const categoryOptions = [
   { value: 'IMPLEMENT', label: '实施' },
   { value: 'MAINTENANCE', label: '维护' },
   { value: 'CONSULTING', label: '咨询' }
 ]
+
 const statusOptions = [
-  { value: 'DRAFT', label: '草稿' },
-  { value: 'PUBLISHED', label: '已发布' },
-  { value: 'DEPRECATED', label: '已废弃' }
+  { value: 'DRAFT', label: '草稿', type: 'info' as const },
+  { value: 'PUBLISHED', label: '已发布', type: 'success' as const },
+  { value: 'DEPRECATED', label: '已废弃', type: 'danger' as const }
 ]
 
-function getStatusTagType(status: string) {
-  return { DRAFT: 'info', PUBLISHED: 'success', DEPRECATED: 'danger' }[status] ?? 'info'
+const filteredTemplates = computed(() => {
+  return templates.value.filter((t) => {
+    if (query.status && t.status !== query.status) return false
+    if (query.category && t.category !== query.category) return false
+    if (query.templateName) {
+      const kw = query.templateName.trim().toLowerCase()
+      if (
+        !t.templateName?.toLowerCase().includes(kw) &&
+        !t.templateCode?.toLowerCase().includes(kw)
+      ) {
+        return false
+      }
+    }
+    return true
+  })
+})
+
+function getStatusMeta(status?: string) {
+  return statusOptions.find((s) => s.value === status) ?? { label: status ?? '-', type: 'info' as const }
+}
+
+function getCategoryLabel(category?: string) {
+  return categoryOptions.find((c) => c.value === category)?.label ?? category ?? '-'
 }
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await listTemplates(query)
-    tableData.value = res.records ?? []
-    total.value = res.total ?? 0
+    const res = await listTemplates({ page: 1, size: 200 })
+    templates.value = res?.records ?? []
+  } catch {
+    templates.value = []
   } finally {
     loading.value = false
   }
 }
 
-function handleSearch() { query.page = 1; loadData() }
-function handleReset() {
-  query.templateName = ''; query.category = ''; query.status = ''
-  query.page = 1; loadData()
+function handleSearch() {
+  // 本地筛选，无需重新拉取
 }
-function handlePageChange(p: number) { query.page = p; loadData() }
-function handleSizeChange(s: number) { query.size = s; query.page = 1; loadData() }
 
-function handleAdd() { router.push('/project/template/form') }
-function handleEdit(row: ProjectTemplate) { router.push(`/project/template/form/${row.id}`) }
-function handleVersion(row: ProjectTemplate) { router.push(`/project/template/version/${row.id}`) }
+function handleReset() {
+  query.templateName = ''
+  query.category = ''
+  query.status = ''
+}
 
-function handleDelete(row: ProjectTemplate) {
-  if (!row.id) return
-  ElMessageBox.confirm(`确认删除模板「${row.templateName}」吗？仅 DRAFT 状态可删除。`, '提示', { type: 'warning' })
+function goCreate() {
+  router.push('/project/template/form')
+}
+
+function goEdit(id?: number) {
+  if (!id) return
+  router.push(`/project/template/form/${id}`)
+}
+
+function goVersion(id?: number) {
+  if (!id) return
+  router.push(`/project/template/version/${id}`)
+}
+
+async function handleCopy(tpl: ProjectTemplate) {
+  // 复制：基于当前模板打开新建表单（通过 router state 传递来源）
+  router.push({
+    path: '/project/template/form',
+    state: { copyFrom: tpl.id }
+  })
+}
+
+function handleDelete(tpl: ProjectTemplate) {
+  if (!tpl.id) return
+  ElMessageBox.confirm(
+    `确认删除模板「${tpl.templateName}」吗？仅 DRAFT 状态可删除。`,
+    '删除确认',
+    { type: 'warning' }
+  )
     .then(async () => {
-      await deleteTemplate(row.id!)
+      await deleteTemplate(tpl.id!)
       ElMessage.success('删除成功')
       loadData()
-    }).catch(() => {})
+    })
+    .catch(() => {})
 }
 
 onMounted(loadData)
 </script>
 
 <template>
-  <div class="page-container">
-    <el-card shadow="never">
-      <template #header><span class="page-title">项目模板</span></template>
+  <div class="template-list-page">
+    <PageHeader title="项目模板" description="管理项目模板，支持版本化发布">
+      <template #actions>
+        <el-button :icon="Refresh" @click="loadData">刷新</el-button>
+        <el-button type="primary" :icon="Plus" @click="goCreate">新建模板</el-button>
+      </template>
+    </PageHeader>
 
-      <el-form :inline="true" @submit.prevent>
-        <el-form-item label="模板名称">
-          <el-input v-model="query.templateName" placeholder="请输入" clearable style="width: 180px" @keyup.enter="handleSearch" />
-        </el-form-item>
-        <el-form-item label="类别">
-          <el-select v-model="query.category" placeholder="全部" clearable style="width: 140px">
-            <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-            <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="'Search'" @click="handleSearch">查询</el-button>
-          <el-button :icon="'Refresh'" @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-
-      <div class="toolbar">
-        <el-button type="primary" :icon="'Plus'" @click="handleAdd">新建模板</el-button>
-      </div>
-
-      <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="templateCode" label="模板编码" min-width="140" />
-        <el-table-column prop="templateName" label="模板名称" min-width="180" show-overflow-tooltip />
-        <el-table-column label="类别" width="100">
-          <template #default="{ row }">
-            {{ categoryOptions.find(c => c.value === row.category)?.label ?? row.category }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getStatusTagType(row.status) as any">
-              {{ statusOptions.find(s => s.value === row.status)?.label ?? row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="160" />
-        <el-table-column label="操作" width="220" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="primary" @click="handleVersion(row)">版本管理</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-        <template #empty><el-empty description="暂无模板数据" /></template>
-      </el-table>
-
-      <el-pagination
-        class="pagination"
-        background
-        :current-page="query.page"
-        :page-size="query.size"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
+    <div class="filter-bar">
+      <el-input
+        v-model="query.templateName"
+        placeholder="按名称 / 编码搜索"
+        clearable
+        :prefix-icon="Search"
+        style="width: 240px"
+        @keyup.enter="handleSearch"
       />
-    </el-card>
+      <el-select
+        v-model="query.category"
+        placeholder="全部类别"
+        clearable
+        style="width: 160px"
+      >
+        <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+      </el-select>
+      <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 160px">
+        <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+      </el-select>
+      <el-button :icon="Refresh" link @click="handleReset">重置</el-button>
+      <span class="filter-tip">共 {{ filteredTemplates.length }} 个模板</span>
+    </div>
+
+    <SkeletonCard v-if="loading" :loading="true" :rows="4" class="grid-skeleton" />
+
+    <EmptyState
+      v-else-if="filteredTemplates.length === 0"
+      title="暂无模板"
+      :description="templates.length === 0 ? '点击右上角「新建模板」开始创建' : '没有符合筛选条件的模板'"
+    >
+      <template #action>
+        <el-button v-if="templates.length === 0" type="primary" :icon="Plus" @click="goCreate">
+          新建模板
+        </el-button>
+      </template>
+    </EmptyState>
+
+    <div v-else class="template-grid">
+      <el-card
+        v-for="tpl in filteredTemplates"
+        :key="tpl.id"
+        shadow="hover"
+        class="template-card"
+      >
+        <div class="card-header">
+          <div class="card-icon">
+            <el-icon :size="22"><Files /></el-icon>
+          </div>
+          <el-tag :type="getStatusMeta(tpl.status).type" size="small" effect="light" round>
+            {{ getStatusMeta(tpl.status).label }}
+          </el-tag>
+        </div>
+
+        <h3 class="card-title" :title="tpl.templateName">{{ tpl.templateName }}</h3>
+
+        <div class="card-meta">
+          <span class="meta-item"><label>编码：</label>{{ tpl.templateCode || '-' }}</span>
+          <span class="meta-item"><label>分类：</label>{{ getCategoryLabel(tpl.category) }}</span>
+        </div>
+
+        <p class="card-desc">{{ tpl.description || '暂无描述' }}</p>
+
+        <div class="card-stats">
+          <div class="stat-item">
+            <span class="stat-label">创建时间</span>
+            <span class="stat-value">{{ tpl.createTime?.substring(0, 10) ?? '-' }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">更新时间</span>
+            <span class="stat-value">{{ tpl.updateTime?.substring(0, 10) ?? '-' }}</span>
+          </div>
+        </div>
+
+        <div class="card-actions" @click.stop>
+          <el-button text size="small" :icon="Edit" @click="goEdit(tpl.id)">编辑</el-button>
+          <el-button text size="small" :icon="Clock" @click="goVersion(tpl.id)">版本</el-button>
+          <el-button text size="small" :icon="CopyDocument" @click="handleCopy(tpl)">复制</el-button>
+          <el-button text size="small" type="danger" :icon="Delete" @click="handleDelete(tpl)">
+            删除
+          </el-button>
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.template-list-page {
+  padding: 16px 24px;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.filter-tip {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary);
+  margin-left: auto;
+}
+
+.grid-skeleton {
+  padding: 24px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  cursor: pointer;
+  transition: all var(--pms-transition-fast);
+  border-radius: var(--pms-radius-lg);
+}
+.template-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pms-shadow-card-hover);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pms-radius-md);
+  background: var(--pms-color-primary-light-9);
+  color: var(--pms-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pms-color-text-primary);
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--pms-color-text-secondary);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.card-meta label {
+  color: var(--pms-color-text-placeholder);
+  margin-right: 2px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--pms-color-text-regular);
+  margin: 0 0 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 38px;
+}
+
+.card-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px dashed var(--pms-color-border-light);
+  margin-bottom: 8px;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--pms-color-text-placeholder);
+}
+.stat-value {
+  font-size: 13px;
+  color: var(--pms-color-text-regular);
+}
+
+.card-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--pms-color-border-light);
+}
+</style>

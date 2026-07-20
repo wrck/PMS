@@ -1,166 +1,338 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getDashboard, type Project, type ProjectDashboard, type ProjectStatus } from '@/api/project'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Refresh, Search } from '@element-plus/icons-vue'
+import {
+  getDashboard,
+  updateProject,
+  type Project,
+  type ProjectDashboard,
+  type ProjectStatus
+} from '@/api/project'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import ProjectStatusTag from '@/components/common/ProjectStatusTag.vue'
+
+defineOptions({ name: 'ProjectKanban' })
 
 const router = useRouter()
-
 const loading = ref(false)
 const dashboard = ref<ProjectDashboard>({})
 
-// 看板列定义（按交付流程顺序排列）
-const columns: { status: ProjectStatus; title: string; color: string }[] = [
-  { status: 'PENDING', title: '待审批', color: '#909399' },
-  { status: 'APPROVED', title: '已立项', color: '#e6a23c' },
-  { status: 'IN_PROGRESS', title: '执行中', color: '#409eff' },
-  { status: 'INITIAL_ACCEPTANCE', title: '初验', color: '#e6a23c' },
-  { status: 'FINAL_ACCEPTANCE', title: '终验中', color: '#f56c6c' },
-  { status: 'COMPLETED', title: '已完成', color: '#67c23a' }
+// 5 列看板
+interface KanbanColumn {
+  key: string
+  canonicalStatus: ProjectStatus | string
+  title: string
+  mappedStatuses: string[]
+}
+
+const columns: KanbanColumn[] = [
+  {
+    key: 'PLANNING',
+    canonicalStatus: 'PLANNING',
+    title: '规划中',
+    mappedStatuses: ['PENDING', 'APPROVED', 'PLANNING']
+  },
+  {
+    key: 'IN_PROGRESS',
+    canonicalStatus: 'IN_PROGRESS',
+    title: '执行中',
+    mappedStatuses: ['IN_PROGRESS', 'INITIAL_ACCEPTANCE', 'FINAL_ACCEPTANCE', 'EXECUTING', 'CLOSING']
+  },
+  {
+    key: 'SUSPENDED',
+    canonicalStatus: 'SUSPENDED',
+    title: '已暂停',
+    mappedStatuses: ['SUSPENDED']
+  },
+  {
+    key: 'COMPLETED',
+    canonicalStatus: 'COMPLETED',
+    title: '已完成',
+    mappedStatuses: ['COMPLETED', 'CLOSED']
+  },
+  {
+    key: 'CANCELLED',
+    canonicalStatus: 'CANCELLED',
+    title: '已取消',
+    mappedStatuses: ['REJECTED', 'CANCELLED']
+  }
 ]
 
-function getColumnProjects(status: ProjectStatus): Project[] {
-  return dashboard.value[status] ?? []
+// 筛选
+const filter = reactive({
+  keyword: '',
+  customer: '',
+  manager: ''
+})
+
+const allProjects = computed<Project[]>(() => {
+  return Object.values(dashboard.value).flat().filter(Boolean) as Project[]
+})
+
+const customerOptions = computed(() => {
+  const set = new Map<string, string>()
+  allProjects.value.forEach((p) => {
+    if (p.customerName) set.set(p.customerName, p.customerName)
+  })
+  return Array.from(set.entries()).map(([value, label]) => ({ value, label }))
+})
+
+const managerOptions = computed(() => {
+  const set = new Map<string, string>()
+  allProjects.value.forEach((p) => {
+    if (p.managerName) set.set(p.managerName, p.managerName)
+  })
+  return Array.from(set.entries()).map(([value, label]) => ({ value, label }))
+})
+
+function applyFilter(list: Project[]): Project[] {
+  return list.filter((p) => {
+    if (filter.customer && p.customerName !== filter.customer) return false
+    if (filter.manager && p.managerName !== filter.manager) return false
+    if (filter.keyword) {
+      const kw = filter.keyword.trim().toLowerCase()
+      if (
+        !p.name?.toLowerCase().includes(kw) &&
+        !p.code?.toLowerCase().includes(kw)
+      ) {
+        return false
+      }
+    }
+    return true
+  })
 }
 
-function getColumnCount(status: ProjectStatus): number {
-  return getColumnProjects(status).length
+function getColumnProjects(col: KanbanColumn): Project[] {
+  const list: Project[] = []
+  col.mappedStatuses.forEach((s) => {
+    const items = dashboard.value[s as ProjectStatus] ?? []
+    list.push(...items)
+  })
+  return applyFilter(list)
 }
 
-function formatDate(date?: string) {
-  if (!date) return '-'
-  return date.length > 10 ? date.substring(0, 10) : date
+function getColumnCount(col: KanbanColumn): number {
+  return getColumnProjects(col).length
 }
 
-function progressStatus(progress: number | string | undefined): '' | 'success' {
-  return Number(progress ?? 0) >= 100 ? 'success' : ''
-}
-
-// 判断项目是否逾期（计划结束日期早于今天且未完成）
-function isOverdue(project: Project): boolean {
-  if (!project.planEndDate) return false
-  if (project.status === 'COMPLETED' || project.status === 'CLOSED') return false
-  const end = project.planEndDate.length > 10 ? project.planEndDate.substring(0, 10) : project.planEndDate
-  const today = new Date()
-  const todayStr =
-    today.getFullYear() +
-    '-' +
-    String(today.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(today.getDate()).padStart(2, '0')
-  return end < todayStr
-}
+const totalCount = computed(() =>
+  columns.reduce((sum, col) => sum + getColumnCount(col), 0)
+)
 
 function viewDetail(project: Project) {
   if (!project.id) return
   router.push(`/project/detail/${project.id}`)
 }
 
+// ============== 拖拽（HTML5 drag API） ==============
+
+const draggingProject = ref<Project | null>(null)
+const draggingFromColumn = ref<string>('')
+const dragOverColumn = ref<string>('')
+
+function onDragStart(event: DragEvent, project: Project, colKey: string) {
+  if (!event.dataTransfer) return
+  draggingProject.value = project
+  draggingFromColumn.value = colKey
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', String(project.id ?? ''))
+}
+
+function onDragOver(event: DragEvent, colKey: string) {
+  // 阻止默认以允许 drop
+  event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+  dragOverColumn.value = colKey
+}
+
+function onDragLeave(_event: DragEvent, colKey: string) {
+  if (dragOverColumn.value === colKey) dragOverColumn.value = ''
+}
+
+async function onDrop(event: DragEvent, col: KanbanColumn) {
+  event.preventDefault()
+  dragOverColumn.value = ''
+  const project = draggingProject.value
+  draggingProject.value = null
+  if (!project || !project.id) return
+  if (draggingFromColumn.value === col.key) return // 同列无需处理
+
+  // 校验当前原始状态是否已属于该列
+  const originalStatuses = col.mappedStatuses
+  if (project.status && originalStatuses.includes(project.status)) return
+
+  // 状态变更确认
+  try {
+    await ElMessageBox.confirm(
+      `确认将项目「${project.name}」状态变更为「${col.title}」吗？`,
+      '状态变更',
+      { type: 'warning', confirmButtonText: '变更', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+
+  try {
+    await updateProject({
+      ...project,
+      status: col.canonicalStatus as ProjectStatus
+    })
+    ElMessage.success('项目状态已更新')
+    await loadDashboard()
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+// ============== 加载 ==============
+
 async function loadDashboard() {
   loading.value = true
   try {
     dashboard.value = (await getDashboard()) ?? {}
   } catch {
-    /* handled by interceptor */
+    dashboard.value = {}
   } finally {
     loading.value = false
   }
 }
 
-const totalCount = computed(() =>
-  columns.reduce((sum, col) => sum + getColumnCount(col.status), 0)
-)
+function resetFilter() {
+  filter.keyword = ''
+  filter.customer = ''
+  filter.manager = ''
+}
 
 onMounted(loadDashboard)
 </script>
 
 <template>
-  <div class="page-container">
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span class="page-title">交付看板</span>
-          <span class="page-summary">项目总数：{{ totalCount }}</span>
-          <el-button class="refresh-btn" :icon="'Refresh'" link @click="loadDashboard">刷新</el-button>
-        </div>
+  <div class="kanban-page">
+    <PageHeader title="项目看板" description="按状态分列展示，支持拖拽变更状态">
+      <template #actions>
+        <el-button :icon="Refresh" @click="loadDashboard">刷新</el-button>
       </template>
+    </PageHeader>
 
-      <div v-loading="loading" class="kanban-board">
-        <div v-for="col in columns" :key="col.status" class="kanban-col">
-          <div class="kanban-col-header" :style="{ borderTopColor: col.color }">
-            <span class="col-title">
-              <span class="col-dot" :style="{ backgroundColor: col.color }"></span>
-              {{ col.title }}
-            </span>
-            <el-badge :value="getColumnCount(col.status)" :max="999" class="col-badge" />
+    <div class="filter-bar">
+      <el-input
+        v-model="filter.keyword"
+        placeholder="项目名 / 编码"
+        clearable
+        :prefix-icon="Search"
+        style="width: 220px"
+      />
+      <el-select
+        v-model="filter.customer"
+        placeholder="全部客户"
+        clearable
+        filterable
+        style="width: 200px"
+      >
+        <el-option v-for="o in customerOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-select
+        v-model="filter.manager"
+        placeholder="全部经理"
+        clearable
+        filterable
+        style="width: 180px"
+      >
+        <el-option v-for="o in managerOptions" :key="o.value" :label="o.label" :value="o.value" />
+      </el-select>
+      <el-button link :icon="Refresh" @click="resetFilter">重置</el-button>
+      <span class="filter-tip">共 {{ totalCount }} 个项目</span>
+    </div>
+
+    <SkeletonCard v-if="loading" :loading="true" :rows="6" />
+
+    <EmptyState
+      v-else-if="allProjects.length === 0"
+      title="暂无项目"
+      description="未获取到项目数据"
+    />
+
+    <div v-else class="kanban-board">
+      <div
+        v-for="col in columns"
+        :key="col.key"
+        class="kanban-column"
+        :class="{ 'drag-over': dragOverColumn === col.key }"
+        @dragover="onDragOver($event, col.key)"
+        @dragleave="onDragLeave($event, col.key)"
+        @drop="onDrop($event, col)"
+      >
+        <div class="column-header">
+          <div class="column-title">
+            <ProjectStatusTag :status="col.canonicalStatus" size="small" />
+            <span class="column-name">{{ col.title }}</span>
           </div>
-          <div class="kanban-col-body">
-            <div
-              v-for="project in getColumnProjects(col.status)"
-              :key="project.id"
-              class="kanban-card"
-              :class="{ overdue: isOverdue(project) }"
-              @click="viewDetail(project)"
-            >
-              <div class="card-name" :title="project.name">{{ project.name }}</div>
-              <div class="card-code">{{ project.code || '-' }}</div>
-              <div class="card-progress">
-                <el-progress
-                  :percentage="Number(project.progress ?? 0)"
-                  :stroke-width="8"
-                  :status="progressStatus(project.progress)"
-                />
+          <el-tag size="small" round effect="plain">{{ getColumnCount(col) }}</el-tag>
+        </div>
+        <div class="column-body">
+          <div
+            v-for="project in getColumnProjects(col)"
+            :key="project.id"
+            class="kanban-card"
+            draggable="true"
+            @dragstart="onDragStart($event, project, col.key)"
+            @click="viewDetail(project)"
+          >
+            <div class="card-title" :title="project.name">{{ project.name }}</div>
+            <div class="card-code">{{ project.code || '-' }}</div>
+            <el-progress
+              :percentage="Number(project.progress ?? 0)"
+              :stroke-width="4"
+              :show-text="false"
+              class="card-progress"
+            />
+            <div class="card-progress-text">进度 {{ project.progress ?? 0 }}%</div>
+            <div class="card-meta">
+              <div class="meta-row">
+                <span class="meta-label">客户：</span>
+                <span class="meta-value">{{ project.customerName || '-' }}</span>
               </div>
-              <div class="card-row">
-                <el-icon><User /></el-icon>
-                <span>{{ project.customerName || '-' }}</span>
+              <div class="meta-row">
+                <span class="meta-label">经理：</span>
+                <span class="meta-value">{{ project.managerName || '-' }}</span>
               </div>
-              <div class="card-row">
-                <el-icon><Avatar /></el-icon>
-                <span>{{ project.managerName || '-' }}</span>
-              </div>
-              <div class="card-row">
-                <el-icon><Calendar /></el-icon>
-                <span class="card-date" :class="{ 'date-overdue': isOverdue(project) }">
-                  {{ formatDate(project.planEndDate) }}
+              <div class="meta-row">
+                <span class="meta-label">计划结束：</span>
+                <span class="meta-value">
+                  {{ project.planEndDate ? project.planEndDate.substring(0, 10) : '-' }}
                 </span>
-                <el-tag v-if="isOverdue(project)" size="small" type="danger" effect="plain" class="overdue-tag">
-                  逾期
-                </el-tag>
               </div>
             </div>
-            <el-empty
-              v-if="getColumnCount(col.status) === 0"
-              :image-size="50"
-              description="暂无项目"
-              class="col-empty"
-            />
+          </div>
+          <div v-if="getColumnCount(col) === 0" class="column-empty">
+            <el-icon :size="32"><Plus /></el-icon>
+            <span>拖拽项目到此列</span>
           </div>
         </div>
       </div>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.kanban-page {
+  padding: 16px 24px;
 }
-.card-header {
+
+.filter-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
-.page-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-.page-summary {
-  color: #909399;
-  font-size: 13px;
-}
-.refresh-btn {
+.filter-tip {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary);
   margin-left: auto;
 }
 
@@ -171,48 +343,43 @@ onMounted(loadDashboard)
   padding-bottom: 8px;
 }
 
-.kanban-col {
+.kanban-column {
   flex: 0 0 300px;
-  background-color: #f5f7fa;
-  border-radius: 6px;
+  background: var(--pms-color-bg-page);
+  border-radius: var(--pms-radius-lg);
+  padding: 12px;
   display: flex;
   flex-direction: column;
   min-height: 520px;
-  max-height: calc(100vh - 220px);
+  max-height: calc(100vh - 240px);
+  border: 2px dashed transparent;
+  transition: border-color var(--pms-transition-fast);
+}
+.kanban-column.drag-over {
+  border-color: var(--pms-color-primary);
+  background: var(--pms-color-primary-light-9);
 }
 
-.kanban-col-header {
+.column-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-top: 3px solid #909399;
-  border-bottom: 1px solid #e6e6eb;
-  background-color: #fff;
-  border-radius: 6px 6px 0 0;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pms-color-border-light);
 }
-
-.col-title {
+.column-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+.column-name {
+  font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--pms-color-text-primary);
 }
 
-.col-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.col-badge :deep(.el-badge__content) {
-  background-color: #c0c4cc;
-}
-
-.kanban-col-body {
-  padding: 10px;
+.column-body {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -221,72 +388,77 @@ onMounted(loadDashboard)
 }
 
 .kanban-card {
-  background-color: #fff;
-  border-radius: 6px;
+  background: var(--pms-color-bg-card);
+  border-radius: var(--pms-radius-md);
   padding: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: var(--pms-shadow-card);
+  cursor: grab;
+  transition: all var(--pms-transition-fast);
   border-left: 3px solid transparent;
 }
-
 .kanban-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--pms-shadow-card-hover);
   transform: translateY(-2px);
 }
-
-.kanban-card.overdue {
-  border-left-color: #f56c6c;
+.kanban-card:active {
+  cursor: grabbing;
 }
 
-.card-name {
+.card-title {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--pms-color-text-primary);
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 4px;
 }
-
 .card-code {
   font-size: 12px;
-  color: #909399;
+  color: var(--pms-color-text-secondary);
   margin-bottom: 8px;
 }
-
 .card-progress {
+  margin-bottom: 2px;
+}
+.card-progress-text {
+  font-size: 11px;
+  color: var(--pms-color-text-secondary);
   margin-bottom: 8px;
 }
 
-.card-row {
+.card-meta {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #606266;
-  margin-top: 4px;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--pms-color-border-light);
 }
-
-.card-row .el-icon {
-  color: #909399;
+.meta-row {
+  display: flex;
+  font-size: 12px;
+}
+.meta-label {
+  color: var(--pms-color-text-placeholder);
   flex-shrink: 0;
 }
-
-.card-date {
-  flex: 1;
+.meta-value {
+  color: var(--pms-color-text-regular);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.card-date.date-overdue {
-  color: #f56c6c;
-  font-weight: 600;
-}
-
-.overdue-tag {
-  margin-left: auto;
-}
-
-.col-empty {
-  margin-top: 20px;
+.column-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--pms-color-text-placeholder);
+  font-size: 12px;
+  border: 1px dashed var(--pms-color-border-light);
+  border-radius: var(--pms-radius-md);
+  gap: 8px;
 }
 </style>
