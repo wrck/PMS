@@ -5,8 +5,8 @@
 -- 关联设计文档：§6.10（行 1649-1748）、§8.2 Phase 8 任务 8.1
 -- 内容：
 --   1. 权限菜单：项目管理相关 ~20 个权限码（project:template:*、project:phase:*、
---      project:task:*、project:baseline:*、project:deliverable:*、approval:center:*）
---      以及配套 sys_menu 菜单与超管绑定
+--      project:task:*、project:baseline:*、project:deliverable:*、workflow:approval:*、
+--      workflow:field:perm）以及配套 sys_menu 菜单与超管绑定
 --   2. 字典数据：项目状态、阶段状态、任务状态、交付件状态、审批状态、
 --      模板状态、依赖类型、优先级、签核类型
 --   3. 演示数据：1 个项目模板（已发布 v1.0.0）+ 1 个项目（从模板创建）
@@ -49,10 +49,10 @@ INSERT IGNORE INTO `sys_permission` (`code`, `name`, `type`, `parent_id`, `sort`
 ('project:deliverable:list',  '交付件-查询',     'menu',   0, 140, 'admin', NOW()),
 ('project:deliverable:revise','交付件-修订新版本','button', 0, 141, 'admin', NOW()),
 ('project:deliverable:publish','交付件-发布',    'button', 0, 142, 'admin', NOW()),
-('approval:center:list',      '审批中心-查询',   'menu',   0, 150, 'admin', NOW()),
-('approval:center:handle',    '审批中心-审批',   'button', 0, 151, 'admin', NOW()),
-('approval:center:resubmit',  '审批中心-重新提交','button', 0, 152, 'admin', NOW()),
-('approval:center:field-perm','审批中心-字段权限','button', 0, 153, 'admin', NOW());
+('workflow:approval:list',      '审批中心-查询',   'menu',   0, 150, 'admin', NOW()),
+('workflow:approval:handle',    '审批中心-审批',   'button', 0, 151, 'admin', NOW()),
+('workflow:approval:resubmit',  '审批中心-重新提交','button', 0, 152, 'admin', NOW()),
+('workflow:field:perm',         '审批中心-字段权限','button', 0, 153, 'admin', NOW());
 
 -- 1.2 注册项目管理顶级菜单（若不存在）
 INSERT INTO `sys_menu` (`menu_name`, `parent_id`, `menu_type`, `path`, `component`, `perms`, `icon`, `order_num`, `visible`, `is_frame`, `is_cache`, `create_by`, `create_time`)

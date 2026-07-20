@@ -203,16 +203,17 @@ V72 已注册的 25 个权限码中，前端路由直接引用的 4 个：
 |---|---|---|
 | `project:template:list`   | ✓（行 25 V72 INSERT） | OK |
 | `project:baseline:list`   | ✓（行 41 V72 INSERT） | OK |
-| `workflow:approval:handle`| ⚠ V72 中注册的是 `approval:center:handle`，前端使用 `workflow:approval:handle` | **WARN**（命名不一致） |
-| `workflow:field:perm`     | ⚠ V72 中注册的是 `approval:center:field-perm`，前端使用 `workflow:field:perm` | **WARN**（命名不一致） |
+| `workflow:approval:handle`| ✓ V72 已统一注册为 `workflow:approval:handle`（与后端 `ApprovalCenterController` `@PreAuthorize` 一致） | **OK**（TD-P8-002 已修复） |
+| `workflow:field:perm`     | ✓ V72 已统一注册为 `workflow:field:perm`（与后端 `ApprovalFieldPermissionController` `@PreAuthorize` 一致） | **OK**（TD-P8-002 已修复） |
 
-**根因**：前端 router/index.ts 沿用了早期 Phase 7 计划中的 `workflow:*` 命名空间，
-而 V72 后端权限码使用了 `approval:center:*` 命名空间（与设计文档 §6.10 一致）。
-两套命名不一致会导致前端 perms 校验无法匹配后端 sys_permission。
-
-**修复建议**（技术债 TD-P8-002，记录于 technical-debt.md）：
-统一采用 `approval:center:*` 命名空间，将前端 router/index.ts 行 169 与
-行 178 的 perms 改为 `approval:center:handle` 与 `approval:center:field-perm`。
+**修复历史**（技术债 TD-P8-002，已修复）：
+早期 V72 误用 `approval:center:*` 命名空间，与前端 router/index.ts 沿用的
+`workflow:*` 命名空间、后端 `@PreAuthorize` 实际值、设计文档 §6.10 权限码定义均不一致。
+现已统一为 `workflow:*` 命名空间（以后端 `@PreAuthorize` 实际值为准）：
+- `approval:center:list` → `workflow:approval:list`
+- `approval:center:handle` → `workflow:approval:handle`
+- `approval:center:resubmit` → `workflow:approval:resubmit`
+- `approval:center:field-perm` → `workflow:field:perm`
 
 ## 6. 嵌套路由重构合规性
 

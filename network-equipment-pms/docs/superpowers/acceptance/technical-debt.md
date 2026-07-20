@@ -15,7 +15,7 @@
 | 编号 | 标题 | 优先级 | 发现任务 | 状态 |
 |---|---|---|---|---|
 | TD-P8-001 | pms-project ↔ pms-workflow 双向依赖环 | 高 | Task 3 | 待修复 |
-| TD-P8-002 | 前端权限码 `workflow:*` vs 后端 `approval:center:*` 命名不一致 | 中 | Task 5 | 待修复 |
+| TD-P8-002 | 前端权限码 `workflow:*` vs 后端 `approval:center:*` 命名不一致 | 中 | Task 5 | 已修复 |
 | TD-P8-003 | `createProjectFromTemplate` 仅深拷贝阶段，未含任务/交付件/依赖 | 高 | Task 6 | 待修复 |
 | TD-P8-004 | 权限码 `project:advance:phase` vs `project:phase:advance` 不一致 | 中 | Task 7 | 待修复 |
 | TD-P8-005 | TASK/APPROVAL 两类阶段退出条件未实现 | 中 | Task 7 | 待修复 |
@@ -96,6 +96,7 @@
 - **现象**：前端使用 `workflow:*` 系列权限码（如 `workflow:approval:handle`），后端 Controller 实际使用 `approval:center:*` 命名风格存在差异。
 - **影响**：权限码不匹配可能导致前端菜单/按钮权限校验与后端接口权限校验不一致。
 - **建议**：统一权限码命名规范，建议以后端 `@PreAuthorize` 实际值为准，更新前端权限码配置。
+- **状态**：已修复（Phase 9 / 批次 B）。经核查，后端 `ApprovalCenterController` / `ApprovalFieldPermissionController` 实际 `@PreAuthorize` 使用的是 `workflow:approval:handle` / `workflow:field:perm`（与前端一致），不一致点实际在 V72 数据库迁移脚本误用 `approval:center:*` 命名空间。已统一 V72 中 4 个权限码为 `workflow:approval:list` / `workflow:approval:handle` / `workflow:approval:resubmit` / `workflow:field:perm`，并同步更新 `docs/superpowers/architecture/frontend-routes.md` §5。
 
 ### TD-P8-004：权限码 `project:advance:phase` vs `project:phase:advance` 不一致
 
