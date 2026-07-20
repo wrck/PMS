@@ -549,21 +549,8 @@ onBeforeUnmount(() => {
   flex: 1;
 }
 
-/* Route transition */
-.fade-transform-enter-active,
-.fade-transform-leave-active {
-  transition: all 0.25s;
-}
-
-.fade-transform-enter-from {
-  opacity: 0;
-  transform: translateX(-12px);
-}
-
-.fade-transform-leave-to {
-  opacity: 0;
-  transform: translateX(12px);
-}
+/* Route transition：动画曲线统一由 App.vue 全局 .fade-transform 定义（钉飞风格 cubic-bezier），
+   此处不再重复声明，避免 scoped 选择器特异性覆盖全局曲线 */
 
 /* 路由切换顶部加载条 */
 .route-loading-bar {
