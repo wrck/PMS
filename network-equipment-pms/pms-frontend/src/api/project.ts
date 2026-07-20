@@ -113,6 +113,21 @@ export function getProjectProgress(id: number): Promise<ProjectProgress> {
   return get<ProjectProgress>(`/api/project/${id}/progress`)
 }
 
+/** 创建子项目 — POST /api/project/{id}/subproject（TD-P8-006） */
+export function createSubproject(id: number, data: Project): Promise<Project> {
+  return post<Project>(`/api/project/${id}/subproject`, data)
+}
+
+/** 关闭主项目（含子项目校验）— POST /api/project/{id}/close（TD-P8-006） */
+export function closeProject(id: number): Promise<Project> {
+  return post<Project>(`/api/project/${id}/close`)
+}
+
+/** 取消项目 — POST /api/project/{id}/cancel（TD-P8-006） */
+export function cancelProject(id: number): Promise<Project> {
+  return post<Project>(`/api/project/${id}/cancel`)
+}
+
 // ===================== Milestone =====================
 
 export interface Milestone {
