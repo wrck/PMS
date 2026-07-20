@@ -7,10 +7,11 @@
  *
  * 字段命名以后端为准：projectCode / projectName / projectType 等。
  *
- * 历史问题：前端 `api/project.ts` 的 `Project` interface 曾使用短名
- * `code/name/type`，与后端不一致，导致 `POST /api/project` 触发 400 校验失败。
- * 本 validator 通过 `fieldMapping` 提供旧字段名→新字段名的自动映射，
- * 在不破坏现有 view 代码的前提下保证出站请求体字段名正确。
+ * 历史说明：前端 `api/project.ts` 的 `Project` interface 曾使用短名
+ * `code/name/type/managerName`，与后端不一致，依赖 `projectFieldMapping`
+ * 做隐式映射。现已将 `Project` interface 字段名与后端严格对齐，前端代码
+ * 全部使用长前缀字段名，`projectFieldMapping` 置为空对象（保留作防御性
+ * 兜底）。validator 仍负责必填/类型/范围校验。
  * ===========================================================================
  */
 import {
@@ -102,17 +103,17 @@ export const projectSchema: Schema = defineSchema({
 })
 
 /**
- * 旧字段名 → 后端字段名映射。
+ * 旧字段名 → 后端字段名映射（防御性兜底，当前为空）。
  *
- * 用于兼容历史代码：当前端代码仍使用 `name/type/managerName` 时，
- * validator 会自动映射到 `projectName/projectType/projectManagerName`。
+ * 历史 `api/project.ts` 的 `Project` interface 曾使用短名
+ * `code/name/type/managerName`，需要映射到后端 `projectCode/projectName/
+ * projectType/projectManagerName`。现已将 `Project` interface 字段名与后端
+ * 严格对齐，前端代码不再使用短名，因此映射表置为空对象。
+ *
+ * 保留此空对象定义，作为防御性兜底：未来若再有短名字段意外传入，validator
+ * 不会因找不到映射而抛错，但也不会做任何隐式转换。
  */
-export const projectFieldMapping = {
-  code: 'projectCode',
-  name: 'projectName',
-  type: 'projectType',
-  managerName: 'projectManagerName'
-} as const
+export const projectFieldMapping = {} as const
 
 /** Project 请求体 validator（带旧字段名兼容映射） */
 export const projectRequestValidator = createValidatorWithMapping(

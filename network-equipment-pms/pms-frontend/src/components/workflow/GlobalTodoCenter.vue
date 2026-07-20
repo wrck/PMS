@@ -260,7 +260,7 @@ async function loadPhaseTodos() {
       // 全局：拉取所有进行中的项目，前端按当前用户为 manager 过滤
       const res = await listProjects({ page: 1, size: 200, status: 'IN_PROGRESS' })
       phaseTodos.value = (res.records ?? []).filter(
-        (p) => !p.managerName || p.managerName === currentUserNickname.value
+        (p) => !p.projectManagerName || p.projectManagerName === currentUserNickname.value
       )
     }
   } catch {
@@ -276,9 +276,9 @@ async function loadBaselineTodos() {
     const pid = filterProjectId.value
     const items: BaselineTodoItem[] = []
     // 候选项目列表：项目模式下为当前项目；全局模式下复用 projectOptions（已加载）
-    const candidateProjects: Array<{ id?: number; name?: string }> = pid
+    const candidateProjects: Array<{ id?: number; projectName?: string }> = pid
       ? [{ id: pid }]
-      : projectOptions.value.map((p) => ({ id: p.id, name: p.name }))
+      : projectOptions.value.map((p) => ({ id: p.id, projectName: p.projectName }))
     // 全局模式下限制最多 20 个项目，避免 N+1 调用过载
     const projectsToCheck = candidateProjects.slice(0, 20)
     for (const p of projectsToCheck) {
@@ -386,7 +386,7 @@ function projectName(pid?: number): string {
   if (!pid) return '-'
   // 优先从下拉选项查找
   const found = projectOptions.value.find((p) => p.id === pid)
-  return found?.name ?? `#${pid}`
+  return found?.projectName ?? `#${pid}`
 }
 
 // 卡片左侧状态色条 class
@@ -471,7 +471,7 @@ defineExpose({ loadAll })
         <el-option
           v-for="p in projectOptions"
           :key="p.id"
-          :label="p.name"
+          :label="p.projectName"
           :value="p.id as number"
         />
       </el-select>
@@ -696,7 +696,7 @@ defineExpose({ loadAll })
                 />
                 <div class="todo-card-body">
                   <div class="todo-title">
-                    {{ todo.name }}
+                    {{ todo.projectName }}
                     <el-tag
                       v-if="phaseOverdue(todo)"
                       type="danger"
@@ -710,7 +710,7 @@ defineExpose({ loadAll })
                     >进行中</el-tag>
                   </div>
                   <div class="todo-desc">
-                    {{ todo.code || '-' }} · 经理 {{ todo.managerName || '-' }}
+                    {{ todo.projectCode || '-' }} · 经理 {{ todo.projectManagerName || '-' }}
                   </div>
                   <div class="todo-meta">
                     <span><el-icon><Folder /></el-icon>{{ todo.customerName || '-' }}</span>

@@ -45,7 +45,7 @@ describe('project API', () => {
   describe('project CRUD', () => {
     it('createProject calls POST /api/project with the given body', () => {
       mocks.post.mockResolvedValue({})
-      const data: Project = { name: 'Project A', type: 'NETWORK_DEVICE' }
+      const data: Project = { projectName: 'Project A', projectType: 'NETWORK_DEVICE' }
       createProject(data)
       expect(mocks.post).toHaveBeenCalledWith('/api/project', data)
     })
@@ -65,7 +65,7 @@ describe('project API', () => {
 
     it('updateProject calls PUT /api/project with the given body', () => {
       mocks.put.mockResolvedValue({})
-      const data: Project = { id: 5, name: 'Updated' }
+      const data: Project = { id: 5, projectName: 'Updated' }
       updateProject(data)
       expect(mocks.put).toHaveBeenCalledWith('/api/project', data)
     })

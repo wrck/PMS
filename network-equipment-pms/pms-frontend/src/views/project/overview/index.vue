@@ -157,16 +157,16 @@ watch(
         <el-card shadow="hover">
           <template #header>基础信息</template>
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="项目名称">{{ project.name || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="项目编码">{{ project.code || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目名称">{{ project.projectName || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目编码">{{ project.projectCode || '-' }}</el-descriptions-item>
             <el-descriptions-item label="项目状态">
               <ProjectStatusTag v-if="project.status" :status="project.status" size="small" />
               <span v-else>-</span>
             </el-descriptions-item>
-            <el-descriptions-item label="项目类型">{{ typeLabel(project.type) }}</el-descriptions-item>
+            <el-descriptions-item label="项目类型">{{ typeLabel(project.projectType) }}</el-descriptions-item>
             <el-descriptions-item label="计划开始">{{ formatDate(project.planStartDate) }}</el-descriptions-item>
             <el-descriptions-item label="计划结束">{{ formatDate(project.planEndDate) }}</el-descriptions-item>
-            <el-descriptions-item label="项目经理">{{ project.managerName || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目经理">{{ project.projectManagerName || '-' }}</el-descriptions-item>
             <el-descriptions-item label="客户名称">{{ project.customerName || '-' }}</el-descriptions-item>
             <el-descriptions-item label="项目描述" :span="2">
               {{ project.description || '-' }}
@@ -181,9 +181,9 @@ watch(
           <div v-if="parentProject" class="relation-block">
             <div class="relation-title">父项目</div>
             <el-link type="primary" @click="goProject(parentProject.id!)">
-              {{ parentProject.name }}
+              {{ parentProject.projectName }}
             </el-link>
-            <span class="relation-meta">（{{ parentProject.code || '-' }}）</span>
+            <span class="relation-meta">（{{ parentProject.projectCode || '-' }}）</span>
           </div>
           <div v-else class="relation-block">
             <div class="relation-title">父项目</div>

@@ -388,7 +388,7 @@ onMounted(async () => {
             <el-option
               v-for="p in projectOptions"
               :key="p.id"
-              :label="p.name"
+              :label="p.projectName"
               :value="p.id!"
             />
           </el-select>
@@ -495,7 +495,7 @@ onMounted(async () => {
             <el-option
               v-for="p in projectOptions"
               :key="p.id"
-              :label="p.name"
+              :label="p.projectName"
               :value="p.id!"
             />
           </el-select>

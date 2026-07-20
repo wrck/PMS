@@ -149,7 +149,7 @@ const currentProjectId = computed<number | undefined>(() => {
   return undefined
 })
 
-const currentProjectName = computed(() => projectInfo.value?.name || '全部项目')
+const currentProjectName = computed(() => projectInfo.value?.projectName || '全部项目')
 
 const headerTitle = computed(() => `任务管理 · ${currentProjectName.value}`)
 
@@ -643,7 +643,7 @@ onMounted(async () => {
         filterable
         style="width: 200px"
       >
-        <el-option v-for="p in projectOptions" :key="p.id" :label="p.name" :value="p.id!" />
+        <el-option v-for="p in projectOptions" :key="p.id" :label="p.projectName" :value="p.id!" />
       </el-select>
       <el-select
         v-model="query.phaseId"

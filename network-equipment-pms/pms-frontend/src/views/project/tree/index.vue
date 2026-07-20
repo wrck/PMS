@@ -236,10 +236,10 @@ onMounted(loadRootProjects)
           <div v-else class="detail-body">
             <el-descriptions :column="2" border size="small">
               <el-descriptions-item label="项目名称">
-                {{ selectedProject.name }}
+                {{ selectedProject.projectName }}
               </el-descriptions-item>
               <el-descriptions-item label="项目编码">
-                {{ selectedProject.code || '-' }}
+                {{ selectedProject.projectCode || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="状态">
                 <ProjectStatusTag
@@ -253,7 +253,7 @@ onMounted(loadRootProjects)
                 {{ selectedProject.customerName || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="项目经理">
-                {{ selectedProject.managerName || '-' }}
+                {{ selectedProject.projectManagerName || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="计划起止">
                 {{ selectedProject.planStartDate?.substring(0, 10) ?? '-' }} ~

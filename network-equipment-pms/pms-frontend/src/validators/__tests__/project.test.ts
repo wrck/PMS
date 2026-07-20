@@ -28,7 +28,7 @@ describe('Project validator', () => {
       expect(result.data?.projectName).toBe('网络设备升级项目')
     })
 
-    it('通过校验：旧短名字段自动映射', () => {
+    it('失败：旧短名字段不再自动映射（projectName/projectType 必填缺失）', () => {
       const result = projectRequestValidator({
         code: 'PMS-2026-0001',
         name: '网络设备升级项目',
@@ -36,11 +36,16 @@ describe('Project validator', () => {
         customerName: '客户A',
         managerName: '张三'
       })
-      expect(result.valid).toBe(true)
-      expect(result.data?.projectCode).toBe('PMS-2026-0001')
-      expect(result.data?.projectName).toBe('网络设备升级项目')
-      expect(result.data?.projectType).toBe('NETWORK_DEVICE')
-      expect(result.data?.projectManagerName).toBe('张三')
+      // projectFieldMapping 已置空，短名 code/name/type/managerName 不再被映射到长前缀
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual({
+        field: 'projectName',
+        message: '字段必填'
+      })
+      expect(result.errors).toContainEqual({
+        field: 'projectType',
+        message: '字段必填'
+      })
     })
 
     it('失败：必填字段 projectName 缺失', () => {
@@ -105,32 +110,40 @@ describe('Project validator', () => {
       expect(result.errors.some((e) => e.field === 'projectName' && e.message.includes('200'))).toBe(true)
     })
 
-    it('通过校验：旧短名 + 新长名混合（新名优先）', () => {
+    it('通过校验：仅识别长名字段（短名被忽略，不做映射）', () => {
       const result = projectRequestValidator({
         code: '旧code',
         projectCode: 'PMS-2026-0001',
         name: '旧名',
         projectName: '新名',
-        type: 'NETWORK_DEVICE',
+        type: 'IGNORED',
+        projectType: 'NETWORK_DEVICE',
         customerName: '客户A'
       })
+      // projectFieldMapping 已置空，短名 code/name/type 不再被映射；仅长名通过校验
       expect(result.valid).toBe(true)
       expect(result.data?.projectCode).toBe('PMS-2026-0001')
       expect(result.data?.projectName).toBe('新名')
+      expect(result.data?.projectType).toBe('NETWORK_DEVICE')
     })
 
-    it('normalize 后的字段是后端字段名（无短名残留）', () => {
+    it('normalize 后的 data 仅包含后端字段名（短名被白名单过滤）', () => {
       const result = projectRequestValidator({
-        code: 'PMS-2026-0001',
-        name: '项目A',
-        type: 'NETWORK_DEVICE',
+        code: '旧code',
+        projectCode: 'PMS-2026-0001',
+        name: '旧名',
+        projectName: '项目A',
+        type: 'IGNORED',
+        projectType: 'NETWORK_DEVICE',
         customerName: '客户A'
       })
       expect(result.valid).toBe(true)
       const data = result.data as Record<string, unknown>
+      // 短名字段不在 schema 中，被白名单过滤掉
       expect('code' in data).toBe(false)
       expect('name' in data).toBe(false)
       expect('type' in data).toBe(false)
+      // 长名字段保留
       expect('projectCode' in data).toBe(true)
       expect('projectName' in data).toBe(true)
       expect('projectType' in data).toBe(true)
@@ -153,17 +166,12 @@ describe('Project validator', () => {
   })
 
   describe('projectFieldMapping', () => {
-    it('包含 code → projectCode', () => {
-      expect(projectFieldMapping.code).toBe('projectCode')
-    })
-    it('包含 name → projectName', () => {
-      expect(projectFieldMapping.name).toBe('projectName')
-    })
-    it('包含 type → projectType', () => {
-      expect(projectFieldMapping.type).toBe('projectType')
-    })
-    it('包含 managerName → projectManagerName', () => {
-      expect(projectFieldMapping.managerName).toBe('projectManagerName')
+    it('为空对象（防御性兜底，不再做短名→长名映射）', () => {
+      // 历史 mapping 曾为 { code: 'projectCode', name: 'projectName',
+      // type: 'projectType', managerName: 'projectManagerName' }。
+      // 现已置空：前端代码已统一使用后端字段名，validator 不再做隐式映射。
+      // 保留空对象定义作为防御性兜底，避免未来若有短名意外传入时抛错。
+      expect(Object.keys(projectFieldMapping)).toHaveLength(0)
     })
   })
 })

@@ -151,8 +151,8 @@ const formRef = ref<FormInstance>()
 
 interface ProjectForm {
   id?: number
-  name: string
-  type?: ProjectType
+  projectName: string
+  projectType?: ProjectType
   customerName?: string
   customerContact?: string
   customerPhone?: string
@@ -160,7 +160,7 @@ interface ProjectForm {
   contractAmount?: number
   planStartDate?: string
   planEndDate?: string
-  managerName?: string
+  projectManagerName?: string
   priority?: number
   description?: string
 }
@@ -168,8 +168,8 @@ interface ProjectForm {
 function createEmptyForm(): ProjectForm {
   return {
     id: undefined,
-    name: '',
-    type: 'NETWORK_DEVICE',
+    projectName: '',
+    projectType: 'NETWORK_DEVICE',
     customerName: '',
     customerContact: '',
     customerPhone: '',
@@ -177,7 +177,7 @@ function createEmptyForm(): ProjectForm {
     contractAmount: undefined,
     planStartDate: '',
     planEndDate: '',
-    managerName: '',
+    projectManagerName: '',
     priority: 2,
     description: ''
   }
@@ -187,8 +187,8 @@ const form = reactive<ProjectForm>(createEmptyForm())
 const dateRange = ref<[string, string] | null>(null)
 
 const rules: FormRules = {
-  name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择项目类型', trigger: 'change' }]
+  projectName: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
+  projectType: [{ required: true, message: '请选择项目类型', trigger: 'change' }]
 }
 
 // ============== 数据加载 ==============
@@ -205,7 +205,7 @@ async function loadData() {
     const res = await listProjects(params)
     let records = res.records ?? []
     if (query.type) {
-      records = records.filter((r) => r.type === query.type)
+      records = records.filter((r) => r.projectType === query.type)
     }
     if (query.customerName) {
       records = records.filter((r) =>
@@ -299,7 +299,7 @@ async function handleSubmit() {
 // ============== 审批 / 删除 / 关闭 ==============
 function handleApprove(row: Project) {
   if (!row.id) return
-  ElMessageBox.confirm(`确认通过项目「${row.name}」的立项审批吗？`, '立项审批', {
+  ElMessageBox.confirm(`确认通过项目「${row.projectName}」的立项审批吗？`, '立项审批', {
     type: 'warning'
   })
     .then(async () => {
@@ -314,7 +314,7 @@ function handleApprove(row: Project) {
 
 function handleDelete(row: Project) {
   if (!row.id) return
-  ElMessageBox.confirm(`确定删除项目「${row.name}」吗？`, '提示', { type: 'warning' })
+  ElMessageBox.confirm(`确定删除项目「${row.projectName}」吗？`, '提示', { type: 'warning' })
     .then(async () => {
       await deleteProject(row.id!)
       ElMessage.success('删除成功')
@@ -328,7 +328,7 @@ function handleDelete(row: Project) {
 function handleClose(row: Project) {
   if (!row.id) return
   ElMessageBox.confirm(
-    `确定关闭项目「${row.name}」吗？关闭后项目将不可继续执行。`,
+    `确定关闭项目「${row.projectName}」吗？关闭后项目将不可继续执行。`,
     '关闭项目',
     { type: 'warning', confirmButtonText: '确定关闭', cancelButtonText: '取消' }
   )
@@ -486,7 +486,7 @@ onMounted(loadData)
           @click="goWorkspace(project)"
         >
           <div class="card-header">
-            <span class="card-code">{{ project.code || '-' }}</span>
+            <span class="card-code">{{ project.projectCode || '-' }}</span>
             <ProjectStatusTag
               v-if="project.status"
               :status="project.status"
@@ -494,7 +494,7 @@ onMounted(loadData)
             />
           </div>
 
-          <div class="card-title" :title="project.name">{{ project.name }}</div>
+          <div class="card-title" :title="project.projectName">{{ project.projectName }}</div>
 
           <div class="card-meta">
             <div class="meta-row">
@@ -503,7 +503,7 @@ onMounted(loadData)
             </div>
             <div class="meta-row">
               <span class="meta-label">经理</span>
-              <span class="meta-value">{{ project.managerName || '-' }}</span>
+              <span class="meta-value">{{ project.projectManagerName || '-' }}</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">周期</span>
@@ -522,7 +522,7 @@ onMounted(loadData)
           </div>
 
           <div class="card-footer" @click.stop>
-            <span class="footer-text">{{ getTypeLabel(project.type) }}</span>
+            <span class="footer-text">{{ getTypeLabel(project.projectType) }}</span>
             <el-dropdown
               trigger="click"
               @command="(cmd: string) => handleCardCommand(cmd, project)"
@@ -573,11 +573,11 @@ onMounted(loadData)
         stripe
         max-height="calc(100vh - 320px)"
       >
-        <el-table-column prop="code" label="项目编号" min-width="140" />
-        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="projectCode" label="项目编号" min-width="140" />
+        <el-table-column prop="projectName" label="项目名称" min-width="180" show-overflow-tooltip />
         <el-table-column label="项目类型" width="120">
           <template #default="{ row }">
-            {{ getTypeLabel(row.type) }}
+            {{ getTypeLabel(row.projectType) }}
           </template>
         </el-table-column>
         <el-table-column
@@ -608,7 +608,7 @@ onMounted(loadData)
         <el-table-column label="计划结束" width="110" align="center">
           <template #default="{ row }">{{ formatDate(row.planEndDate) }}</template>
         </el-table-column>
-        <el-table-column prop="managerName" label="项目经理" width="110" />
+        <el-table-column prop="projectManagerName" label="项目经理" width="110" />
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="goWorkspace(row)">工作区</el-button>
@@ -667,13 +667,13 @@ onMounted(loadData)
       >
         <el-row :gutter="16">
           <el-col :xs="24" :sm="12">
-            <el-form-item label="项目名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入项目名称" />
+            <el-form-item label="项目名称" prop="projectName">
+              <el-input v-model="form.projectName" placeholder="请输入项目名称" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
-            <el-form-item label="项目类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择" style="width: 100%">
+            <el-form-item label="项目类型" prop="projectType">
+              <el-select v-model="form.projectType" placeholder="请选择" style="width: 100%">
                 <el-option
                   v-for="opt in typeOptions"
                   :key="opt.value"
@@ -717,7 +717,7 @@ onMounted(loadData)
           </el-col>
           <el-col :xs="24" :sm="12">
             <el-form-item label="项目经理">
-              <el-input v-model="form.managerName" placeholder="请输入项目经理" />
+              <el-input v-model="form.projectManagerName" placeholder="请输入项目经理" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">

@@ -31,7 +31,7 @@ async function loadProject() {
 }
 
 const pageTitle = computed(() =>
-  project.value ? `项目待办 · ${project.value.name}` : '项目待办'
+  project.value ? `项目待办 · ${project.value.projectName}` : '项目待办'
 )
 
 function goBack() {

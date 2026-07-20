@@ -2,23 +2,17 @@ import { del, get, post, put } from '@/utils/request'
 
 // ===================== Project =====================
 //
-// 字段名兼容说明（重要）
+// 字段名说明（重要）
 // ----------------------
-// 历史 `Project` interface 使用短名 `code/name/type/managerName`，
-// 但后端 `pms-project/.../entity/Project.java` 使用长前缀
-// `projectCode/projectName/projectType/projectManagerName`，无 Jackson
-// 字段映射兜底，理论上 `POST /api/project` 会因 @NotBlank 校验失败返回 400。
+// `Project` interface 字段名与后端 `pms-project/.../entity/Project.java`
+// 严格一致：projectCode / projectName / projectType / projectManagerName 等。
 //
-// 为消除这一前后端字段名不一致风险，已建立「数据集成校验对象」：
-// - `@/validators/project.ts` 定义了 `projectSchema`（与后端实体字段一一对应）
-//   和 `projectFieldMapping`（旧短名 → 后端长前缀的映射表）。
-// - `@/utils/request.ts` 请求拦截器在发送写操作前，自动调用
-//   `projectRequestValidator` 做字段映射 + 必填/类型/范围校验。
-// - 因此现有 view 代码可继续使用 `name/type/managerName` 短名提交，
-//   拦截器会自动转换为 `projectName/projectType/projectManagerName`。
+// 历史 `Project` interface 曾使用短名 `code/name/type/managerName`，现已迁移
+// 到后端长前缀字段名，实现「同一实体语义交互统一」。
 //
-// 新代码推荐使用 `@/validators/project.ts` 中的 `ProjectDTO` interface
-// （字段名与后端严格一致），逐步替代本文件的短名 `Project`。
+// `@/validators/project.ts` 中的 `projectFieldMapping` 已置为空对象（保留作
+// 防御性兜底，无映射实际生效）。请求拦截器仍会调用 validator 做必填/类型/
+// 范围校验，但不再做字段名映射。
 
 /** 项目状态枚举 */
 export type ProjectStatus =
@@ -35,16 +29,13 @@ export type ProjectStatus =
 export type ProjectType = 'NETWORK_DEVICE' | 'SECURITY' | 'DATACENTER'
 
 /**
- * 项目（前端短名版本，向后兼容）。
- *
- * @deprecated 新代码请使用 `@/validators/project.ts` 中的 `ProjectDTO`，
- *             其字段名与后端 `Project` 实体严格一致。
+ * 项目（字段名与后端 Project 实体严格对齐）。
  */
 export interface Project {
   id?: number
-  code?: string
-  name: string
-  type?: ProjectType
+  projectCode?: string
+  projectName: string
+  projectType?: ProjectType
   customerName?: string
   customerContact?: string
   customerPhone?: string
@@ -52,45 +43,12 @@ export interface Project {
   contractAmount?: number
   planStartDate?: string
   planEndDate?: string
-  managerName?: string
+  projectManagerName?: string
   priority?: number
   description?: string
   status?: ProjectStatus
   progress?: number
   createTime?: string
-}
-
-/**
- * 把前端短名 Project 转换为后端长前缀字段名的 payload。
- *
- * 用于显式转换（推荐新代码使用），避免依赖拦截器隐式映射。
- * 拦截器层也会做同样的映射作为兜底，但显式转换更安全、可追溯。
- *
- * @example
- * ```ts
- * const payload = toProjectPayload(form)  // { projectName, projectType, ... }
- * await createProject(payload)
- * ```
- */
-export function toProjectPayload(form: Project): Record<string, unknown> {
-  const payload: Record<string, unknown> = {}
-  if (form.id != null) payload.id = form.id
-  if (form.code != null) payload.projectCode = form.code
-  if (form.name != null) payload.projectName = form.name
-  if (form.type != null) payload.projectType = form.type
-  if (form.customerName != null) payload.customerName = form.customerName
-  if (form.customerContact != null) payload.customerContact = form.customerContact
-  if (form.customerPhone != null) payload.customerPhone = form.customerPhone
-  if (form.contractNo != null) payload.contractNo = form.contractNo
-  if (form.contractAmount != null) payload.contractAmount = form.contractAmount
-  if (form.planStartDate != null) payload.planStartDate = form.planStartDate
-  if (form.planEndDate != null) payload.planEndDate = form.planEndDate
-  if (form.managerName != null) payload.projectManagerName = form.managerName
-  if (form.priority != null) payload.priority = form.priority
-  if (form.description != null) payload.description = form.description
-  if (form.status != null) payload.status = form.status
-  if (form.progress != null) payload.progress = form.progress
-  return payload
 }
 
 export interface ProjectListResult {

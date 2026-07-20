@@ -35,6 +35,7 @@ public class AgentController {
 
     @Operation(summary = "Paginated agent query")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('implementation:agent:list')")
     public Result<Page<Agent>> list(@RequestParam(defaultValue = "1") int page,
                                     @RequestParam(defaultValue = "10") int size,
                                     Agent filters) {
@@ -43,6 +44,7 @@ public class AgentController {
 
     @Operation(summary = "Get agent by id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('implementation:agent:list')")
     public Result<Agent> get(@PathVariable Long id) {
         return Result.ok(agentService.getById(id));
     }
@@ -73,6 +75,7 @@ public class AgentController {
 
     @Operation(summary = "Get average scores for an agent")
     @GetMapping("/{id}/scores")
+    @PreAuthorize("hasAuthority('implementation:agent:list')")
     public Result<Map<String, Object>> scores(@PathVariable Long id) {
         return Result.ok(agentService.getScore(id));
     }

@@ -107,12 +107,14 @@ public class ImplTaskController {
 
     @Operation(summary = "Get task by id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('implementation:implTask:list')")
     public Result<ImplTask> get(@PathVariable Long id) {
         return Result.ok(implTaskService.getById(id));
     }
 
     @Operation(summary = "Paginated task query")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('implementation:implTask:list')")
     public Result<Page<ImplTask>> list(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "10") int size,
                                        ImplTask filters) {
@@ -121,6 +123,7 @@ public class ImplTaskController {
 
     @Operation(summary = "List tasks by project id")
     @GetMapping("/project/{projectId}")
+    @PreAuthorize("hasAuthority('implementation:implTask:list')")
     public Result<List<ImplTask>> listByProject(@PathVariable Long projectId) {
         return Result.ok(implTaskService.getByProjectId(projectId));
     }
@@ -129,6 +132,7 @@ public class ImplTaskController {
 
     @Operation(summary = "查询任务子树（含自身及所有后代）")
     @GetMapping("/{id}/subtree")
+    @PreAuthorize("hasAuthority('implementation:implTask:list')")
     public Result<List<ImplTask>> subtree(@PathVariable Long id) {
         return Result.ok(implTaskService.getTaskSubtree(id));
     }
@@ -160,6 +164,7 @@ public class ImplTaskController {
 
     @Operation(summary = "任务进度（含子任务加权汇总）")
     @GetMapping("/{id}/progress")
+    @PreAuthorize("hasAuthority('implementation:implTask:list')")
     public Result<TaskProgressVO> progress(@PathVariable Long id) {
         return Result.ok(implTaskService.getTaskProgress(id));
     }

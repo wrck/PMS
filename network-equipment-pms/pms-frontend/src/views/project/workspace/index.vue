@@ -52,8 +52,8 @@ async function loadProject() {
     project.value = await getProject(projectId.value)
     setProject({
       id: project.value.id!,
-      projectCode: project.value.code ?? '',
-      projectName: project.value.name,
+      projectCode: project.value.projectCode ?? '',
+      projectName: project.value.projectName,
       status: project.value.status,
       currentPhaseId: null
     })
@@ -91,7 +91,7 @@ function handleSubprojectCreated(newProjectId: number) {
 async function handleClose() {
   try {
     await ElMessageBox.confirm(
-      `确定关闭项目「${project.value?.name ?? ''}」吗？关闭后项目将不可继续执行。`,
+      `确定关闭项目「${project.value?.projectName ?? ''}」吗？关闭后项目将不可继续执行。`,
       '关闭项目',
       { type: 'warning', confirmButtonText: '确定关闭', cancelButtonText: '取消' }
     )
@@ -113,7 +113,7 @@ async function handleClose() {
 async function handleCancel() {
   try {
     await ElMessageBox.confirm(
-      `确定取消项目「${project.value?.name ?? ''}」吗？此操作不可逆。`,
+      `确定取消项目「${project.value?.projectName ?? ''}」吗？此操作不可逆。`,
       '取消项目',
       { type: 'warning', confirmButtonText: '确定取消', cancelButtonText: '返回' }
     )
@@ -148,7 +148,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="project-workspace" v-loading="loading">
-    <PageHeader :title="project?.name ?? '加载中...'">
+    <PageHeader :title="project?.projectName ?? '加载中...'">
       <template #actions>
         <el-button-group>
           <el-button @click="goGantt">甘特图</el-button>
@@ -163,11 +163,11 @@ onBeforeUnmount(() => {
     <div class="workspace-meta">
       <span class="meta-item">
         <span class="meta-label">项目编码：</span>
-        <span class="meta-value">{{ project?.code || '-' }}</span>
+        <span class="meta-value">{{ project?.projectCode || '-' }}</span>
       </span>
       <span class="meta-item">
         <span class="meta-label">项目经理：</span>
-        <span class="meta-value">{{ project?.managerName || '-' }}</span>
+        <span class="meta-value">{{ project?.projectManagerName || '-' }}</span>
       </span>
       <span class="meta-item">
         <span class="meta-label">状态：</span>

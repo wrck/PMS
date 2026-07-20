@@ -63,7 +63,7 @@ public class ProjectPhaseController {
     @PostMapping("/{phaseId}/advance")
     @PreAuthorize("hasAuthority('project:phase:advance')")
     @OperLog(title = "项目阶段-推进", businessType = 2)
-    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<ProjectPhase> advance(@PathVariable Long phaseId) {
         return phaseService.advancePhase(phaseId);
     }

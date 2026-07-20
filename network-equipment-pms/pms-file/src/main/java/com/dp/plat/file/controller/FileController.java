@@ -60,6 +60,7 @@ public class FileController {
 
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
+    @PreAuthorize("hasAuthority('file:attachment:download')")
     public void download(@PathVariable Long id, HttpServletResponse response) {
         Attachment attachment = attachmentService.getById(id);
         if (attachment == null) {
@@ -83,6 +84,7 @@ public class FileController {
 
     @Operation(summary = "生成缩略图")
     @GetMapping("/{id}/thumbnail")
+    @PreAuthorize("hasAuthority('file:attachment:download')")
     public void thumbnail(@PathVariable Long id,
                           @RequestParam(defaultValue = "200") int width,
                           @RequestParam(defaultValue = "200") int height,
@@ -107,6 +109,7 @@ public class FileController {
 
     @Operation(summary = "按业务查询附件列表")
     @GetMapping("/biz")
+    @PreAuthorize("hasAuthority('file:attachment:list')")
     public Result<List<Attachment>> listByBiz(@RequestParam String bizType,
                                               @RequestParam Long bizId) {
         return Result.ok(attachmentService.listByBiz(bizType, bizId));

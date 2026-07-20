@@ -42,8 +42,8 @@ const project = ref<Project | null>(null)
 
 // 基础配置
 const basicForm = reactive<Project>({
-  name: '',
-  type: 'NETWORK_DEVICE',
+  projectName: '',
+  projectType: 'NETWORK_DEVICE',
   customerName: '',
   planStartDate: '',
   planEndDate: '',
@@ -332,7 +332,7 @@ onMounted(async () => {
 <template>
   <div class="project-config-page">
     <PageHeader
-      :title="`项目配置${project?.name ? ' · ' + project.name : ''}`"
+      :title="`项目配置${project?.projectName ? ' · ' + project.projectName : ''}`"
       description="6 组配置卡片，每组可独立保存"
     >
       <template #actions>
@@ -364,12 +364,12 @@ onMounted(async () => {
           <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item label="项目名称">
-                <el-input v-model="basicForm.name" />
+                <el-input v-model="basicForm.projectName" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="项目类型">
-                <el-select v-model="basicForm.type" style="width: 100%">
+                <el-select v-model="basicForm.projectType" style="width: 100%">
                   <el-option label="网络设备" value="NETWORK_DEVICE" />
                   <el-option label="安全" value="SECURITY" />
                   <el-option label="数据中心" value="DATACENTER" />

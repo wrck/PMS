@@ -50,15 +50,14 @@ const filterNode = (value: string, data: ProjectTreeNode) => {
 }
 
 /**
- * 读取项目名称：兼容后端 projectName 和前端接口 name 两种字段名。
- * 后端 Project 实体字段是 projectName/projectCode/projectType，
- * 前端 TypeScript 接口是 name/code/type，无 @JsonProperty 映射。
+ * 读取项目名称 / 编码：Project interface 已与后端字段名对齐，
+ * 直接读取 projectName/projectCode 即可。
  */
 function readProjectName(p: Project): string {
-  return (p as any).projectName || p.name || ''
+  return p.projectName || ''
 }
 function readProjectCode(p: Project): string {
-  return (p as any).projectCode || p.code || ''
+  return p.projectCode || ''
 }
 
 /**

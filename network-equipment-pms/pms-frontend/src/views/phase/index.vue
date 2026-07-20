@@ -244,7 +244,7 @@ onMounted(reload)
   <div class="phase-manage">
     <!-- 顶部 PageHeader -->
     <PageHeader
-      :title="`阶段管理${project?.name ? ' · ' + project.name : ''}`"
+      :title="`阶段管理${project?.projectName ? ' · ' + project.projectName : ''}`"
       :description="`共 ${phases.length} 个阶段 · 已完成 ${completedCount} · 进行中 ${inProgressCount}`"
     >
       <template #actions>

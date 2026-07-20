@@ -114,14 +114,14 @@ const pagedBaselines = computed<BaselineSnapshot[]>(() => {
 // ============ 项目名解析 ============
 const currentProjectName = computed(() => {
   if (!query.projectId) return '全部项目'
-  return projectOptions.value.find((p) => p.id === query.projectId)?.name ?? '未知项目'
+  return projectOptions.value.find((p) => p.id === query.projectId)?.projectName ?? '未知项目'
 })
 
 const headerTitle = computed(() => `基线管理 · ${currentProjectName.value}`)
 
 function projectName(id?: number): string {
   if (!id) return '-'
-  return projectOptions.value.find((p) => p.id === id)?.name ?? `#${id}`
+  return projectOptions.value.find((p) => p.id === id)?.projectName ?? `#${id}`
 }
 
 // ============ 数据加载 ============
@@ -315,7 +315,7 @@ onMounted(loadProjectOptions)
         filterable
         style="width: 220px"
       >
-        <el-option v-for="p in projectOptions" :key="p.id" :label="p.name" :value="p.id!" />
+        <el-option v-for="p in projectOptions" :key="p.id" :label="p.projectName" :value="p.id!" />
       </el-select>
       <el-select
         v-model="query.status"
@@ -487,7 +487,7 @@ onMounted(loadProjectOptions)
             <el-option
               v-for="p in projectOptions"
               :key="p.id"
-              :label="p.name"
+              :label="p.projectName"
               :value="p.id!"
             />
           </el-select>

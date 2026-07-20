@@ -175,7 +175,7 @@ onMounted(loadAll)
   <el-page-header :icon="null" @back="goBack">
     <template #content>
       <div class="header-content">
-        <span class="header-title">{{ project?.name ?? '任务依赖关系图' }}</span>
+        <span class="header-title">{{ project?.projectName ?? '任务依赖关系图' }}</span>
         <span v-if="dependencies.length > 0" class="header-stat">
           共 {{ dependencies.length }} 条依赖
         </span>

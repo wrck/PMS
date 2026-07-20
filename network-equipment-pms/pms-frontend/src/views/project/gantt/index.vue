@@ -83,7 +83,7 @@ onMounted(loadAll)
 <template>
   <div class="gantt-page">
     <PageHeader
-      :title="`项目甘特图${project?.name ? ' · ' + project.name : ''}`"
+      :title="`项目甘特图${project?.projectName ? ' · ' + project.projectName : ''}`"
       description="Dagre 从左到右布局 · 节点宽度按工期 · 关键路径红色加粗"
     >
       <template #actions>

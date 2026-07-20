@@ -96,6 +96,7 @@ public class RmaController {
 
     @Operation(summary = "Paginated list of RMA tickets with optional filters")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<Rma>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -111,24 +112,28 @@ public class RmaController {
 
     @Operation(summary = "Get RMA by id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<Rma> get(@PathVariable Long id) {
         return Result.ok(rmaService.getById(id));
     }
 
     @Operation(summary = "List RMA tickets for a project")
     @GetMapping("/by-project/{projectId}")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<List<Rma>> listByProject(@PathVariable Long projectId) {
         return Result.ok(rmaService.listByProject(projectId));
     }
 
     @Operation(summary = "List RMA tickets for an asset")
     @GetMapping("/by-asset/{assetId}")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<List<Rma>> listByAsset(@PathVariable Long assetId) {
         return Result.ok(rmaService.listByAsset(assetId));
     }
 
     @Operation(summary = "RMA KPIs (total, closed, MTTR, first-pass rate) for a date range")
     @GetMapping("/kpi")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<RmaKpiDto> kpi(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return Result.ok(rmaService.kpi(startDate, endDate));
@@ -155,6 +160,7 @@ public class RmaController {
 
     @Operation(summary = "List all fault photos for an RMA ticket")
     @GetMapping("/{id}/photos")
+    @PreAuthorize("hasAuthority('asset:rma:list')")
     public Result<List<Attachment>> listPhotos(@PathVariable Long id) {
         return Result.ok(attachmentService.listByBiz(ATTACHMENT_BIZ_TYPE_RMA, id));
     }

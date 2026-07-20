@@ -43,7 +43,7 @@ public class SettlementController {
     @PostMapping
     @PreAuthorize("hasAuthority('implementation:settlement:add')")
     @OperLog(title = "结算管理", businessType = 1)
-    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
     public Result<Settlement> create(@Valid @RequestBody SettlementCreateRequest request) {
         return Result.ok(settlementService.createSettlement(
@@ -54,7 +54,7 @@ public class SettlementController {
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAuthority('implementation:settlement:approve')")
     @OperLog(title = "结算管理", businessType = 2)
-    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
     public Result<Void> approve(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         settlementService.approve(id, opinion);
@@ -65,7 +65,7 @@ public class SettlementController {
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAuthority('implementation:settlement:approve')")
     @OperLog(title = "结算管理", businessType = 2)
-    @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
+    @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Void> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         settlementService.reject(id, opinion);
         return Result.ok();
@@ -73,12 +73,14 @@ public class SettlementController {
 
     @Operation(summary = "Get settlement by id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('implementation:settlement:list')")
     public Result<Settlement> get(@PathVariable Long id) {
         return Result.ok(settlementService.getById(id));
     }
 
     @Operation(summary = "Paginated settlement query")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('implementation:settlement:list')")
     public Result<Page<Settlement>> list(@RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "10") int size,
                                          Settlement filters) {

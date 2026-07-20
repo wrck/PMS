@@ -84,7 +84,7 @@ const customerOptions = computed(() => {
 const managerOptions = computed(() => {
   const set = new Map<string, string>()
   allProjects.value.forEach((p) => {
-    if (p.managerName) set.set(p.managerName, p.managerName)
+    if (p.projectManagerName) set.set(p.projectManagerName, p.projectManagerName)
   })
   return Array.from(set.entries()).map(([value, label]) => ({ value, label }))
 })
@@ -92,12 +92,12 @@ const managerOptions = computed(() => {
 function applyFilter(list: Project[]): Project[] {
   return list.filter((p) => {
     if (filter.customer && p.customerName !== filter.customer) return false
-    if (filter.manager && p.managerName !== filter.manager) return false
+    if (filter.manager && p.projectManagerName !== filter.manager) return false
     if (filter.keyword) {
       const kw = filter.keyword.trim().toLowerCase()
       if (
-        !p.name?.toLowerCase().includes(kw) &&
-        !p.code?.toLowerCase().includes(kw)
+        !p.projectName?.toLowerCase().includes(kw) &&
+        !p.projectCode?.toLowerCase().includes(kw)
       ) {
         return false
       }
@@ -168,7 +168,7 @@ async function onDrop(event: DragEvent, col: KanbanColumn) {
   // 状态变更确认
   try {
     await ElMessageBox.confirm(
-      `确认将项目「${project.name}」状态变更为「${col.title}」吗？`,
+      `确认将项目「${project.projectName}」状态变更为「${col.title}」吗？`,
       '状态变更',
       { type: 'warning', confirmButtonText: '变更', cancelButtonText: '取消' }
     )
@@ -282,8 +282,8 @@ onMounted(loadDashboard)
             @dragstart="onDragStart($event, project, col.key)"
             @click="viewDetail(project)"
           >
-            <div class="card-title" :title="project.name">{{ project.name }}</div>
-            <div class="card-code">{{ project.code || '-' }}</div>
+            <div class="card-title" :title="project.projectName">{{ project.projectName }}</div>
+            <div class="card-code">{{ project.projectCode || '-' }}</div>
             <el-progress
               :percentage="Number(project.progress ?? 0)"
               :stroke-width="4"
@@ -298,7 +298,7 @@ onMounted(loadDashboard)
               </div>
               <div class="meta-row">
                 <span class="meta-label">经理：</span>
-                <span class="meta-value">{{ project.managerName || '-' }}</span>
+                <span class="meta-value">{{ project.projectManagerName || '-' }}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">计划结束：</span>
