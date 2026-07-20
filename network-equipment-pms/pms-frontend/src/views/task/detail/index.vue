@@ -1,29 +1,62 @@
 <script setup lang="ts">
+// =============================================================================
+// TaskDetail - 任务详情页（Task 9 重做）
+// -----------------------------------------------------------------------------
+// 布局：左侧主区 (70%) + 右侧侧栏 (30%)
+//   主区：PageHeader + 基本信息 + 任务进度 + 检查项 + 评论 + 活动时间轴
+//   侧栏：任务状态 + 父子任务 + 依赖关系 + 附件 + 操作历史
+// 引用：PageHeader / SkeletonCard / EmptyState / TaskPriorityTag / TaskChecklist
+// API ：implementation / task-checklist / task-comment / task-activity / task-dependency
+// =============================================================================
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+  type UploadFile
+} from 'element-plus'
 import {
   approveTask,
   assignOemTask,
+  completeTask,
   getTaskDetail,
   getTaskProgress,
   getTasksByProject,
   getTaskSubtree,
   moveTask,
+  startTask,
   submitForReview,
   type ImplTask,
   type ImplTaskNode,
   type TaskPriority,
   type TaskProgressVO,
-  type TaskReviewResult
+  type TaskReviewResult,
+  type TaskStatus
 } from '@/api/implementation'
 import { listProjects, type Project } from '@/api/project'
-import { listComments, createComment, deleteComment, type TaskCommentItem } from '@/api/task-comment'
+import {
+  createComment,
+  deleteComment,
+  listComments,
+  type TaskCommentItem
+} from '@/api/task-comment'
 import { listActivities, type TaskActivityItem } from '@/api/task-activity'
-import TaskTree from '@/components/TaskTree.vue'
-import TaskChecklist from '@/components/TaskChecklist.vue'
+import {
+  deleteDependency,
+  listDependencies,
+  saveDependency,
+  type DependencyType,
+  type TaskDependency
+} from '@/api/task-dependency'
 import { useUserStore } from '@/stores/user'
 import type { EpTagType } from '@/types'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import TaskPriorityTag from '@/components/common/TaskPriorityTag.vue'
+import TaskChecklist from '@/components/TaskChecklist.vue'
 
 defineOptions({ name: 'TaskDetail' })
 
@@ -33,20 +66,16 @@ const userStore = useUserStore()
 
 const taskId = computed(() => Number(route.params.id))
 
-// ============ 任务详情 ============
-const loading = ref(false)
-const task = ref<ImplTask | null>(null)
-const progressVO = ref<TaskProgressVO | null>(null)
-
-const statusMeta: Record<string, { label: string; tagType: EpTagType }> = {
+// ============ 状态/优先级元信息 ============
+const statusMeta: Record<TaskStatus, { label: string; tagType: EpTagType }> = {
   PENDING: { label: '待接单', tagType: 'info' },
   ACCEPTED: { label: '已接单', tagType: 'warning' },
   IN_PROGRESS: { label: '进行中', tagType: 'primary' },
   REVIEW: { label: '评审中', tagType: 'warning' },
+  BLOCKED: { label: '已阻塞', tagType: 'danger' },
   COMPLETED: { label: '已完成', tagType: 'success' },
   CONFIRMED: { label: '已确认', tagType: 'success' },
-  REJECTED: { label: '已驳回', tagType: 'danger' },
-  BLOCKED: { label: '已阻塞', tagType: 'danger' }
+  REJECTED: { label: '已驳回', tagType: 'danger' }
 }
 
 const priorityOptions: { label: string; value: TaskPriority }[] = [
@@ -56,23 +85,21 @@ const priorityOptions: { label: string; value: TaskPriority }[] = [
   { label: '紧急', value: 'CRITICAL' }
 ]
 
+const dependencyTypeOptions: { label: string; value: DependencyType; desc: string }[] = [
+  { label: 'FS', value: 'FS', desc: '完成-开始' },
+  { label: 'FF', value: 'FF', desc: '完成-完成' },
+  { label: 'SS', value: 'SS', desc: '开始-开始' },
+  { label: 'SF', value: 'SF', desc: '开始-完成' }
+]
+
 function statusLabel(status?: string): string {
-  return status ? (statusMeta[status]?.label ?? status) : '-'
+  return status ? (statusMeta[status as TaskStatus]?.label ?? status) : '-'
 }
 function statusTagType(status?: string): EpTagType {
-  return status ? (statusMeta[status]?.tagType ?? 'info') : 'info'
+  return status ? (statusMeta[status as TaskStatus]?.tagType ?? 'info') : 'info'
 }
 function priorityLabel(priority?: TaskPriority): string {
   return priority ? (priorityOptions.find((p) => p.value === priority)?.label ?? priority) : '-'
-}
-function priorityTagType(priority?: TaskPriority): EpTagType {
-  switch (priority) {
-    case 'LOW': return 'info'
-    case 'MEDIUM': return 'primary'
-    case 'HIGH': return 'warning'
-    case 'CRITICAL': return 'danger'
-    default: return 'info'
-  }
 }
 function assigneeText(t: ImplTask | null): string {
   if (!t) return '-'
@@ -83,208 +110,108 @@ function formatDateTime(s?: string): string {
   if (!s) return '-'
   return s.length > 16 ? s.slice(0, 16).replace('T', ' ') : s
 }
+function formatDate(s?: string): string {
+  if (!s) return '-'
+  return s.length > 10 ? s.slice(0, 10) : s
+}
 
-// ============ Tab 切换 ============
-const activeTab = ref('basic')
+// ============ 任务详情 ============
+const loading = ref(false)
+const task = ref<ImplTask | null>(null)
+const progressVO = ref<TaskProgressVO | null>(null)
+const parentTask = ref<ImplTask | null>(null)
+const subtree = ref<ImplTaskNode[]>([])
 
-// 初始 Tab / Action 来自 query
-watch(
-  () => route.query,
-  (q) => {
-    if (q.tab && typeof q.tab === 'string') {
-      activeTab.value = q.tab
-    }
-  },
-  { immediate: true }
+// ============ 子任务（直接子任务） ============
+const directChildren = computed<ImplTaskNode[]>(() =>
+  subtree.value.filter((t) => t.parentTaskId === taskId.value)
 )
 
-watch(activeTab, (tab) => {
-  // 切到对应 Tab 时按需加载数据
-  if (tab === 'subtasks' && subtree.value.length === 0) loadSubtree()
-  if (tab === 'comments' && comments.value.length === 0) loadComments()
-  if (tab === 'activity' && activities.value.length === 0) loadActivities()
-  if (tab === 'dependencies' && subtree.value.length === 0) loadSubtree()
+// ============ 进度派生指标 ============
+/** 计划工时：实际工时 + 剩余工时（若任一缺失则返回 undefined） */
+const plannedHours = computed<number | undefined>(() => {
+  const a = task.value?.actualHours
+  const r = task.value?.remainingHours
+  if (a == null && r == null) return undefined
+  return (a ?? 0) + (r ?? 0)
 })
+
+/** 工时消耗率：actualHours / plannedHours * 100 */
+const hoursBurnRate = computed<number>(() => {
+  const p = plannedHours.value
+  const a = task.value?.actualHours ?? 0
+  if (!p || p <= 0) return 0
+  return Math.min(100, Math.round((a / p) * 100))
+})
+
+/** 子任务完成率 */
+const subtaskCompletionRate = computed<number>(() => {
+  if (!progressVO.value || progressVO.value.totalSubtasks === 0) return 0
+  return Math.round(
+    (progressVO.value.completedSubtasks / progressVO.value.totalSubtasks) * 100
+  )
+})
+
+/** 检查项完成率（依赖 TaskChecklist 内部状态，此处用 task.progress 估算） */
+const overallProgress = computed<number>(
+  () => progressVO.value?.rolledUpProgress ?? task.value?.progress ?? 0
+)
 
 // ============ 加载任务详情 ============
 async function loadTask() {
   loading.value = true
   try {
     task.value = await getTaskDetail(taskId.value)
-    // 顺便拉取进度视图（含子任务加权汇总）
     try {
       progressVO.value = await getTaskProgress(taskId.value)
     } catch {
       progressVO.value = null
     }
+    // 并行加载：父任务 / 子树 / 评论 / 活动 / 依赖
+    const parallel: Promise<unknown>[] = [loadSubtree(), loadComments(), loadActivities()]
+    if (task.value.parentTaskId) {
+      parallel.push(
+        getTaskDetail(task.value.parentTaskId)
+          .then((p) => {
+            parentTask.value = p
+          })
+          .catch(() => {
+            parentTask.value = null
+          })
+      )
+    } else {
+      parentTask.value = null
+    }
+    if (task.value.projectId) {
+      parallel.push(loadDependencies(task.value.projectId))
+    }
+    await Promise.allSettled(parallel)
     // 处理 ?action=add-child
     if (route.query.action === 'add-child') {
-      activeTab.value = 'subtasks'
       nextTick(() => handleAddChild())
     }
   } catch {
-    /* handled by interceptor */
+    task.value = null
   } finally {
     loading.value = false
   }
 }
 
-// ============ Tab 1: 基本信息 编辑 ============
-const editVisible = ref(false)
-const editSubmitting = ref(false)
-const editFormRef = ref<FormInstance>()
-const projectOptions = ref<Project[]>([])
-const editForm = reactive<Partial<ImplTask> & { priority?: TaskPriority }>({})
-
-const editRules: FormRules = {
-  taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }]
-}
-
-async function loadProjectOptions() {
-  try {
-    const res = await listProjects({ page: 1, size: 100 })
-    projectOptions.value = res.records
-  } catch {
-    /* handled by interceptor */
-  }
-}
-
-function handleEdit() {
-  if (!task.value) return
-  Object.assign(editForm, task.value)
-  editVisible.value = true
-}
-
-async function handleEditSubmit() {
-  if (!editFormRef.value) return
-  await editFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    editSubmitting.value = true
-    try {
-      // 复用 assignOemTask（后端按 id 走 update 分支）— 仅基础字段更新
-      // 注：实际更新接口应使用专用 PUT /api/implementation/task，此处先复用现有 API 保存基础字段
-      await assignOemTask(editForm as ImplTask)
-      ElMessage.success('保存成功')
-      editVisible.value = false
-      await loadTask()
-    } catch {
-      /* handled by interceptor */
-    } finally {
-      editSubmitting.value = false
-    }
-  })
-}
-
-// ============ Tab 2: 子任务 ============
-const subtree = ref<ImplTaskNode[]>([])
-const subtreeRoot = ref<ImplTaskNode | null>(null)
-
+// ============ 子树 ============
 async function loadSubtree() {
   try {
     const all = (await getTaskSubtree(taskId.value)) as ImplTaskNode[]
     subtree.value = all
-    // 找到当前任务作为根节点，构建嵌套结构
-    const root = all.find((t) => t.id === taskId.value)
-    if (root) {
-      subtreeRoot.value = buildNestedTree(all, taskId.value)
-    } else {
-      subtreeRoot.value = null
-    }
   } catch {
     subtree.value = []
-    subtreeRoot.value = null
   }
-}
-
-/** 把扁平子树列表组装成以 rootId 为根的嵌套结构 */
-function buildNestedTree(all: ImplTaskNode[], rootId: number): ImplTaskNode | null {
-  const map = new Map<number, ImplTaskNode>()
-  all.forEach((t) => map.set(t.id!, { ...t, children: [] }))
-  let root: ImplTaskNode | null = null
-  all.forEach((t) => {
-    const node = map.get(t.id!)
-    if (!node) return
-    if (t.id === rootId) {
-      root = node
-    } else if (t.parentTaskId && map.has(t.parentTaskId)) {
-      map.get(t.parentTaskId)!.children!.push(node)
-    }
-  })
-  // 清理空 children
-  const cleanup = (n: ImplTaskNode) => {
-    if (n.children && n.children.length === 0) {
-      delete n.children
-    } else if (n.children) {
-      n.children.forEach(cleanup)
-    }
-  }
-  if (root) cleanup(root)
-  return root
 }
 
 function handleNodeClick(id: number) {
   router.push(`/implementation/task/detail/${id}`)
 }
 
-function handleEditNode(id: number) {
-  router.push(`/implementation/task/detail/${id}`)
-}
-
-// ============ Tab 2: 新增子任务 ============
-const addChildVisible = ref(false)
-const addChildSubmitting = ref(false)
-const addChildFormRef = ref<FormInstance>()
-const addChildForm = reactive<Partial<ImplTask>>({
-  taskName: '',
-  projectId: undefined,
-  engineerId: undefined,
-  engineerName: '',
-  planStartDate: '',
-  planEndDate: ''
-})
-
-const addChildRules: FormRules = {
-  taskName: [{ required: true, message: '请输入子任务名称', trigger: 'blur' }],
-  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }]
-}
-
-function handleAddChild() {
-  if (!task.value) return
-  Object.assign(addChildForm, {
-    taskName: '',
-    projectId: task.value.projectId,
-    engineerId: undefined,
-    engineerName: '',
-    planStartDate: '',
-    planEndDate: '',
-    // parentTaskId 通过后端逻辑识别（此处不直接发，需要后端扩展 assignOemTask 支持 parentId）
-    parentTaskId: taskId.value
-  } as any)
-  addChildVisible.value = true
-}
-
-async function handleAddChildSubmit() {
-  if (!addChildFormRef.value) return
-  await addChildFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    addChildSubmitting.value = true
-    try {
-      // 注：assignOemTask 当前不直接接受 parentTaskId，但 ImplTask 实体已有该字段，
-      // 后端 insert 时会一并持久化。若后端对 parentTaskId 有特殊处理逻辑，需后端补 DTO。
-      await assignOemTask(addChildForm as ImplTask)
-      ElMessage.success('子任务已创建')
-      addChildVisible.value = false
-      await loadSubtree()
-    } catch {
-      /* handled by interceptor */
-    } finally {
-      addChildSubmitting.value = false
-    }
-  })
-}
-
-// ============ Tab 3: 检查项 ============
+// ============ 检查项：强制检查项拦截 ============
 const checklistReadonly = computed(() => {
   const s = task.value?.status
   return s === 'COMPLETED' || s === 'CONFIRMED'
@@ -294,7 +221,7 @@ function handleMandatoryChange(val: boolean) {
   hasUncheckedMandatory.value = val
 }
 
-// ============ Tab 4: 评论 ============
+// ============ 评论 ============
 const comments = ref<TaskCommentItem[]>([])
 const commentInput = ref('')
 const replyTo = ref<TaskCommentItem | null>(null)
@@ -310,18 +237,20 @@ async function loadComments() {
 
 /** 把扁平评论列表组装为顶级评论 + 二级回复 */
 const nestedComments = computed(() => {
-  const map = new Map<number, TaskCommentItem>()
-  const roots: TaskCommentItem[] = []
-  comments.value.forEach((c) => map.set(c.id!, { ...c, replies: [] } as any))
+  const map = new Map<number, TaskCommentItem & { replies: TaskCommentItem[] }>()
+  const roots: (TaskCommentItem & { replies: TaskCommentItem[] })[] = []
+  comments.value.forEach((c) => map.set(c.id!, { ...c, replies: [] }))
   comments.value.forEach((c) => {
     const node = map.get(c.id!)
     if (!node) return
     if (c.parentCommentId && map.has(c.parentCommentId)) {
-      ;(map.get(c.parentCommentId) as any).replies.push(node)
+      map.get(c.parentCommentId)!.replies.push(node)
     } else {
       roots.push(node)
     }
   })
+  // 按时间倒序
+  roots.sort((a, b) => (b.createTime || '').localeCompare(a.createTime || ''))
   return roots
 })
 
@@ -367,7 +296,7 @@ async function handleAddComment() {
 
 function handleDeleteComment(c: TaskCommentItem) {
   if (!c.id) return
-  ElMessageBox.confirm(`确定删除这条评论吗？`, '删除确认', { type: 'warning' })
+  ElMessageBox.confirm('确定删除这条评论吗？', '删除确认', { type: 'warning' })
     .then(async () => {
       await deleteComment(c.id!)
       ElMessage.success('删除成功')
@@ -378,7 +307,7 @@ function handleDeleteComment(c: TaskCommentItem) {
     })
 }
 
-// ============ Tab 5: 活动 ============
+// ============ 活动记录 ============
 const activities = ref<TaskActivityItem[]>([])
 
 const activityTypeMeta: Record<string, { label: string; tagType: EpTagType }> = {
@@ -410,27 +339,272 @@ async function loadActivities() {
   }
 }
 
-// ============ Tab 6: 依赖 ============
-const parentTask = computed<ImplTaskNode | null>(() => {
-  if (!task.value?.parentTaskId) return null
-  return subtree.value.find((t) => t.id === task.value!.parentTaskId) ?? null
+/** 状态流转历史（仅状态相关活动） */
+const statusHistory = computed<TaskActivityItem[]>(() =>
+  activities.value.filter((a) =>
+    ['CREATE', 'STATUS_CHANGE', 'SUBMIT_REVIEW', 'APPROVE', 'REJECT'].includes(a.activityType)
+  )
+)
+
+/** 操作历史卡片：最近 10 条 */
+const recentActivities = computed<TaskActivityItem[]>(() => activities.value.slice(0, 10))
+
+// ============ 依赖关系 ============
+const dependencies = ref<TaskDependency[]>([])
+const projectTasks = ref<ImplTaskNode[]>([])
+
+async function loadDependencies(projectId: number) {
+  try {
+    const [deps, tasks] = await Promise.all([
+      listDependencies(projectId),
+      getTasksByProject(projectId)
+    ])
+    dependencies.value = deps
+    projectTasks.value = tasks as ImplTaskNode[]
+  } catch {
+    dependencies.value = []
+    projectTasks.value = []
+  }
+}
+
+function taskNameById(id: number): string {
+  return projectTasks.value.find((t) => t.id === id)?.taskName ?? `#${id}`
+}
+
+/** 前置任务：当前任务为后置（successorTaskId === taskId） */
+const predecessors = computed<TaskDependency[]>(() =>
+  dependencies.value.filter((d) => d.successorTaskId === taskId.value)
+)
+
+/** 后置任务：当前任务为前置（predecessorTaskId === taskId） */
+const successors = computed<TaskDependency[]>(() =>
+  dependencies.value.filter((d) => d.predecessorTaskId === taskId.value)
+)
+
+function depTypeLabel(t?: DependencyType): string {
+  return t ? (dependencyTypeOptions.find((o) => o.value === t)?.desc ?? t) : '-'
+}
+
+// ============ 附件（本地暂存，后端 API 待实现） ============
+interface AttachmentItem {
+  name: string
+  size: number
+  uploadTime: string
+}
+const attachments = ref<AttachmentItem[]>([])
+
+function handleAttachmentChange(file: UploadFile) {
+  if (!file.raw) return
+  attachments.value.push({
+    name: file.name,
+    size: file.size ?? 0,
+    uploadTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
+  })
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function handleRemoveAttachment(idx: number) {
+  attachments.value.splice(idx, 1)
+}
+
+// ============ 顶部操作（开始 / 提交评审 / 验收完成 / 编辑 / 移动） ============
+const canStart = computed(() => {
+  const s = task.value?.status
+  return s === 'PENDING' || s === 'ACCEPTED'
+})
+const canSubmitReview = computed(() => {
+  const s = task.value?.status
+  return s === 'IN_PROGRESS' || s === 'BLOCKED'
+})
+const canApprove = computed(() => task.value?.status === 'REVIEW')
+const canComplete = computed(() => task.value?.status === 'IN_PROGRESS')
+const canEdit = computed(() => {
+  const s = task.value?.status
+  return s !== 'COMPLETED' && s !== 'CONFIRMED'
 })
 
-const directChildren = computed<ImplTaskNode[]>(() =>
-  subtree.value.filter((t) => t.parentTaskId === taskId.value)
-)
+async function handleStart() {
+  try {
+    await startTask(taskId.value)
+    ElMessage.success('任务已开始')
+    await loadTask()
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+async function handleSubmitReview() {
+  try {
+    const result: TaskReviewResult = await submitForReview(taskId.value)
+    if (result.success) {
+      ElMessage.success('已提交评审')
+      await loadTask()
+    } else if (result.errorCode === 'TASK_CHECKLIST_REQUIRED') {
+      const items = result.uncheckedMandatoryItems ?? []
+      const itemText = items.map((i) => `• ${i.title}`).join('\n')
+      ElMessageBox.alert(
+        `存在 ${items.length} 项未完成的强制检查项：\n\n${itemText}\n\n请先勾选这些检查项后再提交评审。`,
+        '无法提交评审',
+        { type: 'warning' }
+      )
+    } else {
+      ElMessage.error(result.errorMessage || '提交评审失败')
+    }
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+async function handleApprove() {
+  try {
+    await ElMessageBox.confirm(
+      `确定验收任务「${task.value?.taskName}」吗？`,
+      '验收确认',
+      { type: 'warning', confirmButtonText: '验收通过', cancelButtonText: '取消' }
+    )
+  } catch {
+    return /* cancelled */
+  }
+  try {
+    const result: TaskReviewResult = await approveTask(taskId.value)
+    if (result.success) {
+      ElMessage.success('任务已验收完成')
+      await loadTask()
+    } else {
+      ElMessage.error(result.errorMessage || '验收失败')
+    }
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+async function handleComplete() {
+  try {
+    await ElMessageBox.confirm(
+      `确定完成任务「${task.value?.taskName}」吗？`,
+      '完成确认',
+      { type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  try {
+    await completeTask(taskId.value)
+    ElMessage.success('任务已完成')
+    await loadTask()
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+// ============ 编辑任务 ============
+const editVisible = ref(false)
+const editSubmitting = ref(false)
+const editFormRef = ref<FormInstance>()
+const projectOptions = ref<Project[]>([])
+const editForm = reactive<Partial<ImplTask> & { priority?: TaskPriority }>({})
+
+const editRules: FormRules = {
+  taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }]
+}
+
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 100 })
+    projectOptions.value = res.records
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+function handleEdit() {
+  if (!task.value) return
+  Object.assign(editForm, task.value)
+  editVisible.value = true
+}
+
+async function handleEditSubmit() {
+  if (!editFormRef.value) return
+  await editFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    editSubmitting.value = true
+    try {
+      await assignOemTask(editForm as ImplTask)
+      ElMessage.success('保存成功')
+      editVisible.value = false
+      await loadTask()
+    } catch {
+      /* handled by interceptor */
+    } finally {
+      editSubmitting.value = false
+    }
+  })
+}
+
+// ============ 新增子任务 ============
+const addChildVisible = ref(false)
+const addChildSubmitting = ref(false)
+const addChildFormRef = ref<FormInstance>()
+const addChildForm = reactive<Partial<ImplTask>>({
+  taskName: '',
+  projectId: undefined,
+  engineerId: undefined,
+  engineerName: '',
+  planStartDate: '',
+  planEndDate: ''
+})
+
+const addChildRules: FormRules = {
+  taskName: [{ required: true, message: '请输入子任务名称', trigger: 'blur' }],
+  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }]
+}
+
+function handleAddChild() {
+  if (!task.value) return
+  Object.assign(addChildForm, {
+    taskName: '',
+    projectId: task.value.projectId,
+    engineerId: undefined,
+    engineerName: '',
+    planStartDate: '',
+    planEndDate: '',
+    parentTaskId: taskId.value
+  } as Partial<ImplTask>)
+  addChildVisible.value = true
+}
+
+async function handleAddChildSubmit() {
+  if (!addChildFormRef.value) return
+  await addChildFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    addChildSubmitting.value = true
+    try {
+      await assignOemTask(addChildForm as ImplTask)
+      ElMessage.success('子任务已创建')
+      addChildVisible.value = false
+      await loadSubtree()
+    } catch {
+      /* handled by interceptor */
+    } finally {
+      addChildSubmitting.value = false
+    }
+  })
+}
 
 // ============ 移动任务 ============
 const moveVisible = ref(false)
-const moveForm = reactive({
-  newParentId: undefined as number | undefined
-})
+const moveForm = reactive({ newParentId: undefined as number | undefined })
 const moveCandidates = ref<ImplTaskNode[]>([])
 
 function handleMove() {
   if (!task.value) return
   moveForm.newParentId = task.value.parentTaskId ?? undefined
-  // 候选父任务：同项目下的所有任务（不含自身及后代）
   if (task.value.projectId) {
     getTasksByProject(task.value.projectId)
       .then((all) => {
@@ -456,67 +630,138 @@ async function handleMoveSubmit() {
     ElMessage.success('任务已移动')
     moveVisible.value = false
     await loadTask()
-    await loadSubtree()
   } catch {
     /* handled by interceptor */
   }
 }
 
-// ============ 顶部操作 ============
-async function handleSubmitReview() {
-  try {
-    const result: TaskReviewResult = await submitForReview(taskId.value)
-    if (result.success) {
-      ElMessage.success('已提交评审')
-      await loadTask()
-    } else if (result.errorCode === 'TASK_CHECKLIST_REQUIRED') {
-      const items = result.uncheckedMandatoryItems ?? []
-      const itemText = items.map((i) => `• ${i.title}`).join('\n')
-      ElMessageBox.alert(
-        `存在 ${items.length} 项未完成的强制检查项：\n\n${itemText}\n\n请先勾选这些检查项后再提交评审。`,
-        '无法提交评审',
-        { type: 'warning' }
-      )
-      activeTab.value = 'checklist'
-    } else {
-      ElMessage.error(result.errorMessage || '提交评审失败')
-    }
-  } catch {
-    /* handled by interceptor */
-  }
-}
-
-async function handleApprove() {
-  ElMessageBox.confirm(`确定验收任务「${task.value?.taskName}」吗？`, '验收确认', {
-    type: 'warning',
-    confirmButtonText: '验收通过',
-    cancelButtonText: '取消'
-  })
-    .then(async () => {
-      try {
-        const result: TaskReviewResult = await approveTask(taskId.value)
-        if (result.success) {
-          ElMessage.success('任务已验收完成')
-          await loadTask()
-        } else {
-          ElMessage.error(result.errorMessage || '验收失败')
-        }
-      } catch {
-        /* handled by interceptor */
-      }
-    })
-    .catch(() => {
-      /* cancelled */
-    })
-}
-
-const canSubmitReview = computed(() => {
-  const s = task.value?.status
-  return s === 'IN_PROGRESS' || s === 'BLOCKED'
+// ============ 添加依赖 ============
+const addDepVisible = ref(false)
+const addDepSubmitting = ref(false)
+const addDepFormRef = ref<FormInstance>()
+const addDepForm = reactive<{
+  direction: 'predecessor' | 'successor'
+  relatedTaskId: number | undefined
+  dependencyType: DependencyType
+  lagDays: number
+}>({
+  direction: 'predecessor',
+  relatedTaskId: undefined,
+  dependencyType: 'FS',
+  lagDays: 0
 })
-const canApprove = computed(() => task.value?.status === 'REVIEW')
+
+const addDepRules: FormRules = {
+  relatedTaskId: [{ required: true, message: '请选择关联任务', trigger: 'change' }]
+}
+
+/** 候选关联任务：同项目下除自身以外的所有任务 */
+const depTaskCandidates = computed<ImplTaskNode[]>(() =>
+  projectTasks.value.filter((t) => t.id !== taskId.value)
+)
+
+function handleAddDependency() {
+  if (!task.value?.projectId) {
+    ElMessage.warning('当前任务缺少项目信息，无法添加依赖')
+    return
+  }
+  Object.assign(addDepForm, {
+    direction: 'predecessor',
+    relatedTaskId: undefined,
+    dependencyType: 'FS',
+    lagDays: 0
+  })
+  addDepVisible.value = true
+}
+
+async function handleAddDepSubmit() {
+  if (!addDepFormRef.value || !addDepForm.relatedTaskId || !task.value?.projectId) return
+  await addDepFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    addDepSubmitting.value = true
+    try {
+      const payload: TaskDependency = {
+        projectId: task.value!.projectId,
+        predecessorTaskId:
+          addDepForm.direction === 'predecessor'
+            ? addDepForm.relatedTaskId
+            : taskId.value,
+        successorTaskId:
+          addDepForm.direction === 'predecessor'
+            ? taskId.value
+            : addDepForm.relatedTaskId,
+        dependencyType: addDepForm.dependencyType,
+        lagDays: addDepForm.lagDays
+      }
+      const result = await saveDependency(payload)
+      if (result && typeof result === 'object' && 'success' in result && result.success === false) {
+        // 循环依赖检测命中
+        const cycle = result.cyclePath?.map((n) => n.taskName ?? `#${n.taskId}`).join(' → ')
+        ElMessageBox.alert(
+          `检测到循环依赖：\n\n${cycle || result.errorMessage}`,
+          '无法保存依赖',
+          { type: 'error' }
+        )
+      } else {
+        ElMessage.success('依赖已添加')
+        addDepVisible.value = false
+        await loadDependencies(task.value!.projectId)
+      }
+    } catch {
+      /* handled by interceptor */
+    } finally {
+      addDepSubmitting.value = false
+    }
+  })
+}
+
+async function handleDeleteDependency(id: number) {
+  try {
+    await ElMessageBox.confirm('确定删除这条依赖关系吗？', '删除确认', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await deleteDependency(id)
+    ElMessage.success('依赖已删除')
+    if (task.value?.projectId) await loadDependencies(task.value.projectId)
+  } catch {
+    /* handled by interceptor */
+  }
+}
+
+// ============ 强制检查项未完成弹窗 ============
+const checklistDialogVisible = ref(false)
+const uncheckedItems = computed(
+  () => task.value?.checklistItems?.filter((i: any) => i.mandatory && !i.checked) ?? []
+)
+watch(hasUncheckedMandatory, (v) => {
+  if (v && task.value?.status === 'IN_PROGRESS') {
+    // 仅在用户尝试提交时通过 handleSubmitReview 弹出，此处不自动弹
+  }
+})
+
+// ============ 主区滚动定位（侧栏"查看全部"切换活动区） ============
+const activeSection = ref<'basic' | 'checklist' | 'comment' | 'activity'>('basic')
+function scrollToActivity() {
+  activeSection.value = 'activity'
+  nextTick(() => {
+    const el = document.querySelector('.activity-section')
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
 
 // ============ 初始化 ============
+watch(
+  () => route.query,
+  (q) => {
+    if (q.tab && typeof q.tab === 'string') {
+      activeSection.value = q.tab as typeof activeSection.value
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(async () => {
   await loadProjectOptions()
   await loadTask()
@@ -524,292 +769,541 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page-container" v-loading="loading">
-    <!-- 顶部任务概要 -->
-    <el-card shadow="never" class="header-card">
-      <div class="header-row">
-        <el-button :icon="'ArrowLeft'" link @click="router.back()">返回</el-button>
-        <h2 class="task-title">{{ task?.taskName }}</h2>
-        <el-tag :type="statusTagType(task?.status)" effect="plain">
-          {{ statusLabel(task?.status) }}
-        </el-tag>
-        <el-tag
-          v-if="task?.priority"
-          :type="priorityTagType(task.priority)"
-          size="small"
-          effect="plain"
-        >
-          优先级：{{ priorityLabel(task.priority) }}
-        </el-tag>
-        <el-tag v-if="task?.taskType" size="small" effect="plain">
-          {{ task.taskType === 'AGENT' ? '代理商' : '原厂' }}
-        </el-tag>
-        <div class="header-actions">
-          <el-button v-if="canSubmitReview" type="warning" @click="handleSubmitReview">
-            提交评审
-          </el-button>
-          <el-button v-if="canApprove" type="success" @click="handleApprove">
-            验收通过
-          </el-button>
-          <el-button :icon="'Edit'" @click="handleEdit">编辑</el-button>
-          <el-button :icon="'Position'" @click="handleMove">移动任务</el-button>
+  <div class="task-detail-page">
+    <PageHeader>
+      <template #title>
+        <div class="title-row">
+          <el-button link :icon="'ArrowLeft'" @click="router.back()">返回</el-button>
+          <span class="task-name">{{ task?.taskName || '任务详情' }}</span>
+          <el-tag v-if="task" :type="statusTagType(task.status)" size="small" effect="plain">
+            {{ statusLabel(task.status) }}
+          </el-tag>
+          <TaskPriorityTag v-if="task?.priority" :priority="task.priority" size="small" />
+          <el-tag v-if="task?.taskType" size="small" effect="plain" type="info">
+            {{ task.taskType === 'AGENT' ? '代理商' : '原厂' }}
+          </el-tag>
         </div>
-      </div>
+      </template>
+      <template #actions>
+        <el-button v-if="canStart" type="primary" @click="handleStart">开始</el-button>
+        <el-button v-if="canSubmitReview" type="warning" @click="handleSubmitReview">
+          提交评审
+        </el-button>
+        <el-button v-if="canApprove" type="success" @click="handleApprove">验收完成</el-button>
+        <el-button v-if="canComplete" @click="handleComplete">完成</el-button>
+        <el-button v-if="canEdit" :icon="'Edit'" @click="handleEdit">编辑</el-button>
+        <el-button :icon="'Position'" @click="handleMove">移动</el-button>
+      </template>
+    </PageHeader>
 
-      <el-descriptions :column="4" border size="small" class="header-desc">
-        <el-descriptions-item label="项目">{{ task?.projectName || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="负责人">{{ assigneeText(task) }}</el-descriptions-item>
-        <el-descriptions-item label="进度">
-          <el-progress
-            :percentage="progressVO?.rolledUpProgress ?? task?.progress ?? 0"
-            :stroke-width="14"
-            :text-inside="true"
-            style="max-width: 200px"
-          />
-        </el-descriptions-item>
-        <el-descriptions-item label="子任务汇总">
-          <span v-if="progressVO">
-            {{ progressVO.completedSubtasks }} / {{ progressVO.totalSubtasks }} 完成
-          </span>
-          <span v-else>-</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="计划开始">{{ task?.planStartDate || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="计划结束">{{ task?.planEndDate || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="实际开始">{{ task?.actualStart || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="实际结束">{{ task?.actualEnd || '-' }}</el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+    <SkeletonCard :loading="loading" :rows="8">
+      <EmptyState
+        v-if="!task"
+        title="任务不存在或加载失败"
+        description="该任务可能已被删除，或您没有权限查看。"
+        icon="WarningFilled"
+      >
+        <template #action>
+          <el-button type="primary" @click="router.back()">返回上一页</el-button>
+        </template>
+      </EmptyState>
 
-    <!-- 6 Tab -->
-    <el-card shadow="never">
-      <el-tabs v-model="activeTab">
-        <!-- 1. 基本信息 -->
-        <el-tab-pane label="基本信息" name="basic">
-          <el-descriptions :column="2" border v-if="task">
-            <el-descriptions-item label="任务ID">{{ task.id }}</el-descriptions-item>
-            <el-descriptions-item label="任务名称">{{ task.taskName }}</el-descriptions-item>
-            <el-descriptions-item label="任务类型">
-              {{ task.taskType === 'AGENT' ? '代理商' : '原厂' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="状态">
-              {{ statusLabel(task.status) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="项目">{{ task.projectName || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="里程碑ID">{{ task.milestoneId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="工程师ID">{{ task.engineerId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="工程师姓名">{{ task.engineerName || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="代理商ID">{{ task.agentId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="代理商名称">{{ task.agentName || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="优先级">{{ priorityLabel(task.priority) }}</el-descriptions-item>
-            <el-descriptions-item label="进度">{{ task.progress ?? 0 }}%</el-descriptions-item>
-            <el-descriptions-item label="父任务ID">{{ task.parentTaskId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="任务路径">{{ task.taskPath || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="层级深度">{{ task.depth ?? 0 }}</el-descriptions-item>
-            <el-descriptions-item label="阶段ID">{{ task.phaseId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="实际工时">{{ task.actualHours ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="剩余工时">{{ task.remainingHours ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="任务权重">{{ task.taskWeight ?? 1 }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ formatDateTime(task.createTime) }}</el-descriptions-item>
-            <el-descriptions-item label="描述" :span="2">{{ task.description || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{ task.remark || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </el-tab-pane>
+      <div v-else class="task-body">
+        <!-- ===================== 主区 (70%) ===================== -->
+        <main class="task-main">
+          <!-- 1. 基本信息 -->
+          <el-card shadow="never" class="section-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">基本信息</span>
+                <el-tag size="small" effect="plain">ID: {{ task.id }}</el-tag>
+              </div>
+            </template>
+            <el-descriptions :column="2" border size="small">
+              <el-descriptions-item label="任务编号">
+                {{ task.id }}
+              </el-descriptions-item>
+              <el-descriptions-item label="所属项目">
+                {{ task.projectName || '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="所属阶段">
+                {{ task.phaseId ? `#${task.phaseId}` : '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="任务路径">
+                {{ task.taskPath || '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="计划开始">
+                {{ formatDate(task.planStartDate) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="计划结束">
+                {{ formatDate(task.planEndDate) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="实际开始">
+                {{ formatDate(task.actualStart) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="实际结束">
+                {{ formatDate(task.actualEnd) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="计划工时">
+                {{ plannedHours != null ? `${plannedHours}h` : '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="实际工时">
+                {{ task.actualHours != null ? `${task.actualHours}h` : '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="负责人">
+                {{ assigneeText(task) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="优先级">
+                {{ priorityLabel(task.priority) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="描述" :span="2">
+                {{ task.description || '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="备注" :span="2">
+                {{ task.remark || '-' }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-card>
 
-        <!-- 2. 子任务 -->
-        <el-tab-pane label="子任务" name="subtasks">
-          <div class="tab-toolbar">
-            <el-button type="primary" :icon="'Plus'" @click="handleAddChild">新增子任务</el-button>
-            <el-button :icon="'Refresh'" @click="loadSubtree">刷新</el-button>
-          </div>
-          <div v-if="subtreeRoot" class="subtree-container">
-            <TaskTree
-              :task="subtreeRoot"
-              :default-expanded="true"
-              @node-click="handleNodeClick"
-              @edit="handleEditNode"
-              @add-child="handleAddChild"
-            />
-          </div>
-          <el-empty v-else description="暂无子任务" />
-        </el-tab-pane>
-
-        <!-- 3. 检查项 -->
-        <el-tab-pane label="检查项" name="checklist">
-          <TaskChecklist
-            v-if="task"
-            :task-id="taskId"
-            :readonly="checklistReadonly"
-            @mandatory-change="handleMandatoryChange"
-          />
-          <el-alert
-            v-if="hasUncheckedMandatory && canSubmitReview"
-            type="warning"
-            :closable="false"
-            show-icon
-            title="存在未完成的强制检查项，提交评审将被拦截"
-            description="请先勾选所有标记为「强制」的检查项，再点击「提交评审」按钮。"
-            class="checklist-alert"
-          />
-        </el-tab-pane>
-
-        <!-- 4. 评论 -->
-        <el-tab-pane label="评论" name="comments">
-          <div class="comment-input-area">
-            <div v-if="replyTo" class="reply-banner">
-              回复 @{{ replyTo.userName || '匿名' }}：
-              <span class="reply-content">{{ replyTo.content }}</span>
-              <el-button link type="primary" size="small" @click="cancelReply">取消回复</el-button>
-            </div>
-            <el-input
-              v-model="commentInput"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入评论内容"
-              maxlength="1000"
-              show-word-limit
-            />
-            <div class="comment-actions">
-              <el-button
-                type="primary"
-                :loading="commentSubmitting"
-                :disabled="!commentInput.trim()"
-                @click="handleAddComment"
-              >
-                {{ replyTo ? '回复' : '评论' }}
-              </el-button>
-            </div>
-          </div>
-
-          <div class="comment-list">
-            <div v-for="c in nestedComments" :key="c.id" class="comment-item">
-              <div class="comment-main">
-                <div class="comment-header">
-                  <span class="comment-author">{{ c.userName || '匿名' }}</span>
-                  <span class="comment-time">{{ formatDateTime(c.createTime) }}</span>
-                </div>
-                <div class="comment-content">{{ c.content }}</div>
-                <div class="comment-ops">
-                  <el-button link type="primary" size="small" @click="handleReply(c)">回复</el-button>
-                  <el-button
-                    v-if="isOwnComment(c)"
-                    link
-                    type="danger"
-                    size="small"
-                    @click="handleDeleteComment(c)"
-                  >
-                    删除
-                  </el-button>
+          <!-- 2. 任务进度 -->
+          <el-card shadow="never" class="section-card">
+            <template #header>
+              <span class="card-title">任务进度</span>
+            </template>
+            <div class="progress-grid">
+              <div class="progress-item">
+                <div class="progress-label">汇总进度</div>
+                <el-progress
+                  type="circle"
+                  :percentage="overallProgress"
+                  :width="90"
+                  :stroke-width="8"
+                />
+                <div class="progress-meta">
+                  {{ progressVO?.completedSubtasks ?? 0 }} / {{ progressVO?.totalSubtasks ?? 0 }} 子任务
                 </div>
               </div>
-              <!-- 二级回复 -->
-              <div v-if="(c as any).replies?.length" class="reply-list">
-                <div v-for="r in (c as any).replies" :key="r.id" class="comment-item reply-item">
-                  <div class="comment-main">
-                    <div class="comment-header">
-                      <span class="comment-author">{{ r.userName || '匿名' }}</span>
-                      <span class="comment-time">{{ formatDateTime(r.createTime) }}</span>
-                      <span v-if="r.userName" class="reply-to">
-                        回复 @{{ c.userName || '匿名' }}
-                      </span>
-                    </div>
-                    <div class="comment-content">{{ r.content }}</div>
-                    <div class="comment-ops">
-                      <el-button
-                        v-if="isOwnComment(r)"
-                        link
-                        type="danger"
-                        size="small"
-                        @click="handleDeleteComment(r)"
-                      >
-                        删除
-                      </el-button>
+              <div class="progress-item">
+                <div class="progress-label">子任务完成率</div>
+                <el-progress
+                  :percentage="subtaskCompletionRate"
+                  :stroke-width="14"
+                  :text-inside="true"
+                  status="success"
+                  class="bar-progress"
+                />
+                <div class="progress-meta">
+                  {{ progressVO?.completedSubtasks ?? 0 }} / {{ progressVO?.totalSubtasks ?? 0 }}
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="progress-label">工时消耗率</div>
+                <el-progress
+                  :percentage="hoursBurnRate"
+                  :stroke-width="14"
+                  :text-inside="true"
+                  :status="hoursBurnRate >= 90 ? 'warning' : undefined"
+                  class="bar-progress"
+                />
+                <div class="progress-meta">
+                  {{ task.actualHours ?? 0 }}h / {{ plannedHours ?? 0 }}h
+                </div>
+              </div>
+            </div>
+          </el-card>
+
+          <!-- 3. 检查项 -->
+          <el-card shadow="never" class="section-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">检查项</span>
+                <el-tag
+                  v-if="hasUncheckedMandatory"
+                  type="danger"
+                  size="small"
+                  effect="plain"
+                >
+                  存在未完成的强制检查项
+                </el-tag>
+              </div>
+            </template>
+            <TaskChecklist
+              :task-id="taskId"
+              :readonly="checklistReadonly"
+              @mandatory-change="handleMandatoryChange"
+            />
+            <el-alert
+              v-if="hasUncheckedMandatory && canSubmitReview"
+              type="warning"
+              :closable="false"
+              show-icon
+              title="存在未完成的强制检查项，提交评审将被拦截"
+              description="请先勾选所有标记为「强制」的检查项，再点击「提交评审」按钮。"
+              class="checklist-alert"
+            />
+          </el-card>
+
+          <!-- 4. 评论 -->
+          <el-card shadow="never" class="section-card">
+            <template #header>
+              <span class="card-title">评论 ({{ comments.length }})</span>
+            </template>
+            <div class="comment-input-area">
+              <div v-if="replyTo" class="reply-banner">
+                <span>回复 @{{ replyTo.userName || '匿名' }}：</span>
+                <span class="reply-content">{{ replyTo.content }}</span>
+                <el-button link type="primary" size="small" @click="cancelReply">取消</el-button>
+              </div>
+              <el-input
+                v-model="commentInput"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入评论内容，可使用 @ 提及他人"
+                maxlength="1000"
+                show-word-limit
+              />
+              <div class="comment-actions">
+                <el-button
+                  type="primary"
+                  :loading="commentSubmitting"
+                  :disabled="!commentInput.trim()"
+                  @click="handleAddComment"
+                >
+                  {{ replyTo ? '回复' : '发布评论' }}
+                </el-button>
+              </div>
+            </div>
+
+            <div class="comment-list">
+              <div
+                v-for="c in nestedComments"
+                :key="c.id"
+                class="comment-item"
+              >
+                <div class="comment-main">
+                  <div class="comment-header">
+                    <span class="comment-author">{{ c.userName || '匿名' }}</span>
+                    <span class="comment-time">{{ formatDateTime(c.createTime) }}</span>
+                  </div>
+                  <div class="comment-content">{{ c.content }}</div>
+                  <div class="comment-ops">
+                    <el-button link type="primary" size="small" @click="handleReply(c)">
+                      回复
+                    </el-button>
+                    <el-button
+                      v-if="isOwnComment(c)"
+                      link
+                      type="danger"
+                      size="small"
+                      @click="handleDeleteComment(c)"
+                    >
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+                <div v-if="c.replies?.length" class="reply-list">
+                  <div
+                    v-for="r in c.replies"
+                    :key="r.id"
+                    class="comment-item reply-item"
+                  >
+                    <div class="comment-main">
+                      <div class="comment-header">
+                        <span class="comment-author">{{ r.userName || '匿名' }}</span>
+                        <span class="comment-time">{{ formatDateTime(r.createTime) }}</span>
+                        <span class="reply-to">回复 @{{ c.userName || '匿名' }}</span>
+                      </div>
+                      <div class="comment-content">{{ r.content }}</div>
+                      <div class="comment-ops">
+                        <el-button
+                          v-if="isOwnComment(r)"
+                          link
+                          type="danger"
+                          size="small"
+                          @click="handleDeleteComment(r)"
+                        >
+                          删除
+                        </el-button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+              <EmptyState
+                v-if="nestedComments.length === 0"
+                title="暂无评论"
+                description="发表第一条评论吧。"
+                icon="ChatDotRound"
+              />
             </div>
-            <el-empty v-if="nestedComments.length === 0" description="暂无评论" />
-          </div>
-        </el-tab-pane>
+          </el-card>
 
-        <!-- 5. 活动 -->
-        <el-tab-pane label="活动" name="activity">
-          <el-timeline v-if="activities.length">
-            <el-timeline-item
-              v-for="a in activities"
-              :key="a.id"
-              :timestamp="formatDateTime(a.createTime)"
-              placement="top"
-            >
-              <el-card shadow="hover" class="activity-card">
-                <div class="activity-header">
+          <!-- 5. 活动时间轴 -->
+          <el-card shadow="never" class="section-card activity-section">
+            <template #header>
+              <span class="card-title">活动时间轴 ({{ activities.length }})</span>
+            </template>
+            <el-timeline v-if="activities.length">
+              <el-timeline-item
+                v-for="a in activities"
+                :key="a.id"
+                :timestamp="formatDateTime(a.createTime)"
+                placement="top"
+              >
+                <div class="activity-row">
                   <el-tag :type="activityTagType(a.activityType)" size="small" effect="plain">
                     {{ activityLabel(a.activityType) }}
                   </el-tag>
                   <span class="activity-user">{{ a.userName || '系统' }}</span>
+                  <span v-if="a.content" class="activity-content">{{ a.content }}</span>
                 </div>
-                <div v-if="a.content" class="activity-content">{{ a.content }}</div>
                 <div v-if="a.metadata" class="activity-metadata">
                   <pre>{{ a.metadata }}</pre>
                 </div>
-              </el-card>
-            </el-timeline-item>
-          </el-timeline>
-          <el-empty v-else description="暂无活动记录" />
-        </el-tab-pane>
+              </el-timeline-item>
+            </el-timeline>
+            <EmptyState
+              v-else
+              title="暂无活动记录"
+              description="任务的相关操作将记录在这里。"
+              icon="Clock"
+            />
+          </el-card>
+        </main>
 
-        <!-- 6. 依赖 -->
-        <el-tab-pane label="依赖" name="dependencies">
-          <div class="dependencies-section">
-            <h4>父任务</h4>
-            <div v-if="parentTask" class="dep-item">
+        <!-- ===================== 侧栏 (30%) ===================== -->
+        <aside class="task-sidebar">
+          <!-- 1. 任务状态 -->
+          <el-card shadow="never" class="sidebar-card">
+            <template #header>
+              <span class="card-title">任务状态</span>
+            </template>
+            <div class="status-current">
+              <span class="status-label">当前状态</span>
+              <el-tag :type="statusTagType(task.status)" effect="plain">
+                {{ statusLabel(task.status) }}
+              </el-tag>
+            </div>
+            <div class="status-history">
+              <div class="sub-title">状态流转</div>
+              <el-timeline v-if="statusHistory.length">
+                <el-timeline-item
+                  v-for="(s, idx) in statusHistory"
+                  :key="s.id ?? idx"
+                  :timestamp="formatDateTime(s.createTime)"
+                  placement="top"
+                  size="normal"
+                >
+                  <el-tag :type="activityTagType(s.activityType)" size="small" effect="plain">
+                    {{ activityLabel(s.activityType) }}
+                  </el-tag>
+                  <span class="status-actor">{{ s.userName || '系统' }}</span>
+                </el-timeline-item>
+              </el-timeline>
+              <div v-else class="empty-mini">暂无状态流转记录</div>
+            </div>
+          </el-card>
+
+          <!-- 2. 父子任务 -->
+          <el-card shadow="never" class="sidebar-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">父子任务</span>
+                <el-button
+                  v-if="canEdit"
+                  link
+                  type="primary"
+                  size="small"
+                  :icon="'Plus'"
+                  @click="handleAddChild"
+                >
+                  添加子任务
+                </el-button>
+              </div>
+            </template>
+            <div class="sub-title">父任务</div>
+            <div v-if="parentTask" class="related-task-item">
               <el-link type="primary" @click="handleNodeClick(parentTask.id!)">
                 {{ parentTask.taskName }}
               </el-link>
               <el-tag :type="statusTagType(parentTask.status)" size="small" effect="plain">
                 {{ statusLabel(parentTask.status) }}
               </el-tag>
-              <el-progress
-                :percentage="parentTask.progress ?? 0"
-                :stroke-width="10"
-                style="max-width: 200px"
-              />
             </div>
-            <el-empty v-else description="无父任务（顶层任务）" :image-size="60" />
+            <div v-else class="empty-mini">无父任务（顶层任务）</div>
 
-            <h4>直接子任务（{{ directChildren.length }}）</h4>
-            <el-table v-if="directChildren.length" :data="directChildren" border size="small">
-              <el-table-column prop="taskName" label="任务名称" min-width="200">
-                <template #default="{ row }">
-                  <el-link type="primary" @click="handleNodeClick(row.id)">{{ row.taskName }}</el-link>
-                </template>
-              </el-table-column>
-              <el-table-column label="状态" width="100" align="center">
-                <template #default="{ row }">
-                  <el-tag :type="statusTagType(row.status)" size="small" effect="plain">
-                    {{ statusLabel(row.status) }}
+            <div class="sub-title">直接子任务 ({{ directChildren.length }})</div>
+            <div v-if="directChildren.length" class="related-task-list">
+              <div
+                v-for="c in directChildren"
+                :key="c.id"
+                class="related-task-item"
+              >
+                <el-link type="primary" @click="handleNodeClick(c.id!)">
+                  {{ c.taskName }}
+                </el-link>
+                <el-tag :type="statusTagType(c.status)" size="small" effect="plain">
+                  {{ statusLabel(c.status) }}
+                </el-tag>
+                <el-progress
+                  :percentage="c.progress ?? 0"
+                  :stroke-width="6"
+                  :show-text="false"
+                  class="mini-progress"
+                />
+              </div>
+            </div>
+            <div v-else class="empty-mini">暂无子任务</div>
+          </el-card>
+
+          <!-- 3. 依赖关系 -->
+          <el-card shadow="never" class="sidebar-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">依赖关系</span>
+                <el-button
+                  v-if="canEdit"
+                  link
+                  type="primary"
+                  size="small"
+                  :icon="'Plus'"
+                  @click="handleAddDependency"
+                >
+                  添加依赖
+                </el-button>
+              </div>
+            </template>
+            <div class="sub-title">前置任务 ({{ predecessors.length }})</div>
+            <div v-if="predecessors.length" class="related-task-list">
+              <div
+                v-for="d in predecessors"
+                :key="d.id"
+                class="dep-item"
+              >
+                <el-link type="primary" @click="handleNodeClick(d.predecessorTaskId)">
+                  {{ taskNameById(d.predecessorTaskId) }}
+                </el-link>
+                <el-tag size="small" effect="plain">{{ depTypeLabel(d.dependencyType) }}</el-tag>
+                <span v-if="d.lagDays" class="lag-days">{{ d.lagDays > 0 ? '+' : '' }}{{ d.lagDays }}d</span>
+                <el-button
+                  v-if="canEdit"
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleDeleteDependency(d.id!)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </div>
+            <div v-else class="empty-mini">无前置任务</div>
+
+            <div class="sub-title">后置任务 ({{ successors.length }})</div>
+            <div v-if="successors.length" class="related-task-list">
+              <div
+                v-for="d in successors"
+                :key="d.id"
+                class="dep-item"
+              >
+                <el-link type="primary" @click="handleNodeClick(d.successorTaskId)">
+                  {{ taskNameById(d.successorTaskId) }}
+                </el-link>
+                <el-tag size="small" effect="plain">{{ depTypeLabel(d.dependencyType) }}</el-tag>
+                <span v-if="d.lagDays" class="lag-days">{{ d.lagDays > 0 ? '+' : '' }}{{ d.lagDays }}d</span>
+                <el-button
+                  v-if="canEdit"
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleDeleteDependency(d.id!)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </div>
+            <div v-else class="empty-mini">无后置任务</div>
+          </el-card>
+
+          <!-- 4. 附件 -->
+          <el-card shadow="never" class="sidebar-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">附件</span>
+                <el-upload
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  multiple
+                  @change="handleAttachmentChange"
+                >
+                  <el-button link type="primary" size="small" :icon="'Upload'">上传</el-button>
+                </el-upload>
+              </div>
+            </template>
+            <div v-if="attachments.length" class="attachment-list">
+              <div
+                v-for="(a, idx) in attachments"
+                :key="idx"
+                class="attachment-item"
+              >
+                <el-icon class="att-icon"><Document /></el-icon>
+                <div class="att-info">
+                  <div class="att-name">{{ a.name }}</div>
+                  <div class="att-meta">{{ formatFileSize(a.size) }} · {{ a.uploadTime }}</div>
+                </div>
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleRemoveAttachment(idx)"
+                >
+                  移除
+                </el-button>
+              </div>
+            </div>
+            <div v-else class="empty-mini">暂无附件</div>
+            <div class="att-hint">附件暂存于本地，后端持久化 API 待实现。</div>
+          </el-card>
+
+          <!-- 5. 操作历史 -->
+          <el-card shadow="never" class="sidebar-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">操作历史</span>
+                <el-button
+                  v-if="activities.length > 10"
+                  link
+                  type="primary"
+                  size="small"
+                  @click="scrollToActivity"
+                >
+                  查看全部
+                </el-button>
+              </div>
+            </template>
+            <el-timeline v-if="recentActivities.length">
+              <el-timeline-item
+                v-for="a in recentActivities"
+                :key="a.id"
+                :timestamp="formatDateTime(a.createTime)"
+                placement="top"
+                size="normal"
+              >
+                <div class="recent-row">
+                  <el-tag :type="activityTagType(a.activityType)" size="small" effect="plain">
+                    {{ activityLabel(a.activityType) }}
                   </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="进度" width="180">
-                <template #default="{ row }">
-                  <el-progress :percentage="row.progress ?? 0" :stroke-width="10" :text-inside="true" />
-                </template>
-              </el-table-column>
-              <el-table-column label="优先级" width="80" align="center">
-                <template #default="{ row }">{{ priorityLabel(row.priority) }}</template>
-              </el-table-column>
-              <el-table-column label="负责人" min-width="100">
-                <template #default="{ row }">{{ assigneeText(row) }}</template>
-              </el-table-column>
-            </el-table>
-            <el-empty v-else description="暂无子任务" :image-size="60" />
-          </div>
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
+                  <span class="recent-content">{{ a.content || a.userName || '系统' }}</span>
+                </div>
+              </el-timeline-item>
+            </el-timeline>
+            <div v-else class="empty-mini">暂无操作记录</div>
+          </el-card>
+        </aside>
+      </div>
+    </SkeletonCard>
 
-    <!-- 编辑任务弹窗 -->
+    <!-- ===================== Dialogs ===================== -->
+    <!-- 编辑任务 -->
     <el-dialog v-model="editVisible" title="编辑任务" width="640px" destroy-on-close>
       <el-form
         ref="editFormRef"
@@ -877,7 +1371,7 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
-    <!-- 新增子任务弹窗 -->
+    <!-- 新增子任务 -->
     <el-dialog v-model="addChildVisible" title="新增子任务" width="560px" destroy-on-close>
       <el-form
         ref="addChildFormRef"
@@ -925,11 +1419,13 @@ onMounted(async () => {
       </el-form>
       <template #footer>
         <el-button @click="addChildVisible = false">取消</el-button>
-        <el-button type="primary" :loading="addChildSubmitting" @click="handleAddChildSubmit">创建</el-button>
+        <el-button type="primary" :loading="addChildSubmitting" @click="handleAddChildSubmit">
+          创建
+        </el-button>
       </template>
     </el-dialog>
 
-    <!-- 移动任务弹窗 -->
+    <!-- 移动任务 -->
     <el-dialog v-model="moveVisible" title="移动任务" width="520px" destroy-on-close>
       <el-form label-width="100px">
         <el-form-item label="当前任务">
@@ -957,55 +1453,176 @@ onMounted(async () => {
         <el-button type="primary" @click="handleMoveSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 添加依赖 -->
+    <el-dialog v-model="addDepVisible" title="添加依赖关系" width="520px" destroy-on-close>
+      <el-form
+        ref="addDepFormRef"
+        :model="addDepForm"
+        :rules="addDepRules"
+        label-width="100px"
+      >
+        <el-form-item label="依赖方向">
+          <el-radio-group v-model="addDepForm.direction">
+            <el-radio value="predecessor">前置任务</el-radio>
+            <el-radio value="successor">后置任务</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="关联任务" prop="relatedTaskId">
+          <el-select
+            v-model="addDepForm.relatedTaskId"
+            placeholder="请选择关联任务"
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="t in depTaskCandidates"
+              :key="t.id"
+              :label="t.taskName"
+              :value="t.id!"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="依赖类型">
+          <el-select v-model="addDepForm.dependencyType" style="width: 100%">
+            <el-option
+              v-for="o in dependencyTypeOptions"
+              :key="o.value"
+              :label="`${o.value} (${o.desc})`"
+              :value="o.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="滞后天数">
+          <el-input-number
+            v-model="addDepForm.lagDays"
+            :min="-365"
+            :max="365"
+            controls-position="right"
+            style="width: 100%"
+          />
+          <div class="form-hint">正数表示滞后，负数表示提前。</div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addDepVisible = false">取消</el-button>
+        <el-button type="primary" :loading="addDepSubmitting" @click="handleAddDepSubmit">
+          保存
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 强制检查项未完成弹窗（保留备用，主要走 handleSubmitReview 内的提示） -->
+    <el-dialog v-model="checklistDialogVisible" title="强制检查项未完成" width="500px">
+      <p>以下强制检查项尚未勾选，无法提交评审：</p>
+      <ul>
+        <li v-for="(item, idx) in uncheckedItems" :key="idx">{{ (item as any).title }}</li>
+      </ul>
+      <template #footer>
+        <el-button type="primary" @click="checklistDialogVisible = false">知道了</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
-.page-container {
+.task-detail-page {
+  display: flex;
+  flex-direction: column;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.task-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--pms-color-text-primary);
+}
+.task-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.task-main {
+  flex: 0 0 70%;
+  max-width: 70%;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.header-card :deep(.el-card__body) {
-  padding: 16px 20px;
-}
-.header-row {
+.task-sidebar {
+  flex: 0 0 calc(30% - 16px);
+  max-width: calc(30% - 16px);
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section-card,
+.sidebar-card {
+  border-radius: var(--pms-radius-lg);
+}
+.section-card :deep(.el-card__body),
+.sidebar-card :deep(.el-card__body) {
+  padding: 16px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pms-color-text-regular);
+}
+.sub-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pms-color-text-secondary);
+  margin: 12px 0 6px;
+}
+.sub-title:first-child {
+  margin-top: 0;
+}
+
+/* 进度区 */
+.progress-grid {
+  display: flex;
+  gap: 24px;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 12px;
 }
-.task-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+.progress-item {
   flex: 1;
-  min-width: 200px;
-}
-.header-actions {
+  min-width: 180px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
-.header-desc {
-  margin-top: 8px;
+.progress-label {
+  font-size: 13px;
+  color: var(--pms-color-text-secondary);
+  font-weight: 500;
 }
-.tab-toolbar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+.progress-meta {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary);
 }
-.subtree-container {
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 4px;
-  padding: 8px;
+.bar-progress {
+  width: 100%;
 }
 .checklist-alert {
   margin-top: 12px;
 }
+
+/* 评论 */
 .comment-input-area {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .reply-banner {
   background: var(--el-fill-color-light);
@@ -1033,7 +1650,7 @@ onMounted(async () => {
 .comment-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .comment-item {
   padding: 12px;
@@ -1087,14 +1704,13 @@ onMounted(async () => {
   background: #fff;
   padding: 8px 12px;
 }
-.activity-card :deep(.el-card__body) {
-  padding: 10px 14px;
-}
-.activity-header {
+
+/* 活动时间轴 */
+.activity-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 .activity-user {
   font-size: 13px;
@@ -1102,9 +1718,8 @@ onMounted(async () => {
   font-weight: 600;
 }
 .activity-content {
-  font-size: 14px;
+  font-size: 13px;
   color: #303133;
-  line-height: 1.5;
 }
 .activity-metadata pre {
   margin: 6px 0 0;
@@ -1116,17 +1731,128 @@ onMounted(async () => {
   white-space: pre-wrap;
   word-break: break-all;
 }
-.dependencies-section h4 {
-  margin: 16px 0 8px;
-  font-size: 14px;
-  color: #303133;
+
+/* 侧栏：状态卡 */
+.status-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.status-label {
+  font-size: 13px;
+  color: var(--pms-color-text-secondary);
+}
+.status-actor {
+  font-size: 12px;
+  color: #909399;
+  margin-left: 8px;
+}
+
+/* 侧栏：父子任务 / 依赖 */
+.related-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+.related-task-item .mini-progress {
+  width: 80px;
+}
+.related-task-list {
+  display: flex;
+  flex-direction: column;
 }
 .dep-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #fafafa;
+  gap: 8px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+  border-bottom: 1px dashed var(--el-border-color-lighter);
+}
+.dep-item:last-child {
+  border-bottom: none;
+}
+.lag-days {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary);
+}
+.empty-mini {
+  font-size: 12px;
+  color: var(--pms-color-text-placeholder);
+  padding: 8px 0;
+}
+
+/* 侧栏：附件 */
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 4px;
+}
+.att-icon {
+  color: var(--pms-color-text-secondary);
+}
+.att-info {
+  flex: 1;
+  min-width: 0;
+}
+.att-name {
+  font-size: 13px;
+  color: var(--pms-color-text-regular);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.att-meta {
+  font-size: 11px;
+  color: var(--pms-color-text-secondary);
+}
+.att-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--pms-color-text-placeholder);
+}
+
+/* 侧栏：操作历史 */
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.recent-content {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 响应式：窄屏堆叠 */
+@media (max-width: 1200px) {
+  .task-body {
+    flex-direction: column;
+  }
+  .task-main,
+  .task-sidebar {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
 }
 </style>
