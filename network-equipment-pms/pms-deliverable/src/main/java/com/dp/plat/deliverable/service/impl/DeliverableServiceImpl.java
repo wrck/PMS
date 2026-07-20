@@ -2,7 +2,9 @@ package com.dp.plat.deliverable.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dp.plat.common.dto.DeliverableViolation;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.spi.MandatoryDeliverableValidator;
 import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableReference;
@@ -29,12 +31,15 @@ import java.util.stream.Collectors;
  *
  * <p>关联设计文档：§3.4 交付件状态机（行 393-428）、§4.5 事务边界
  * （交付件修订为单事务：新建版本 + 更新交付件）。</p>
+ *
+ * <p>TD-P8-012：实现 {@link MandatoryDeliverableValidator} SPI，供 {@code pms-project}
+ * 的 {@code validateExitGate} 跨模块复用 {@code validateMandatoryDeliverables} 校验逻辑。</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliverable>
-        implements DeliverableService {
+        implements DeliverableService, MandatoryDeliverableValidator {
 
     private final DeliverableVersionMapper deliverableVersionMapper;
     private final DeliverableSignatureMapper deliverableSignatureMapper;
@@ -262,6 +267,35 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
                 .allApproved(allApproved)
                 .items(unmet)
                 .build();
+    }
+
+    /**
+     * TD-P8-012：MandatoryDeliverableValidator SPI 实现。
+     *
+     * <p>委托给 {@link DeliverableService#validateMandatoryDeliverables(Long)} 并将结果转换为
+     * {@link DeliverableViolation} 列表，供 {@code pms-project} 的 {@code validateExitGate}
+     * 跨模块复用本模块已实现的集合判断逻辑（避免两套并行校验）。</p>
+     */
+    @Override
+    public List<DeliverableViolation> findMandatoryDeliverableViolations(Long phaseId) {
+        // 复用既有 MandatoryDeliverableValidator 风格的校验：phaseId 为空时直接返回空列表
+        // （SPI 调用方 advancePhase 已在前面校验过 phase 非空，这里防御性处理）
+        if (phaseId == null) {
+            return java.util.Collections.emptyList();
+        }
+        MandatoryDeliverableValidationResult result = ((DeliverableService) this).validateMandatoryDeliverables(phaseId);
+        if (result == null || result.getItems() == null) {
+            return java.util.Collections.emptyList();
+        }
+        return result.getItems().stream()
+                .map(item -> DeliverableViolation.builder()
+                        .deliverableId(item.getDeliverableId())
+                        .deliverableName(item.getDeliverableName())
+                        .expectedStatus(item.getExpectedStatus())
+                        .actualStatus(item.getActualStatus())
+                        .approved(item.getApproved())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     // ==================== 签名管理 ====================

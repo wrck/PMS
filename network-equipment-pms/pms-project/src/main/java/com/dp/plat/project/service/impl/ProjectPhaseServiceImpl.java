@@ -1,9 +1,11 @@
 package com.dp.plat.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.common.dto.DeliverableViolation;
+import com.dp.plat.common.dto.PhaseExitGate;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.common.dto.PhaseExitGate;
+import com.dp.plat.common.spi.MandatoryDeliverableValidator;
 import com.dp.plat.project.dao.ProjectPhaseMapper;
 import com.dp.plat.project.dto.PhaseExitGateViolation;
 import com.dp.plat.project.entity.Deliverable;
@@ -17,6 +19,7 @@ import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IProjectPhaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,16 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
     private final DeliverableMapper deliverableMapper;
     private final MilestoneMapper milestoneMapper;
     private final ProjectMapper projectMapper;
+
+    /**
+     * 必需交付件校验 SPI（TD-P8-012）。
+     *
+     * <p>由 {@code pms-deliverable} 模块实现并注册为 Spring Bean。若该模块未加载
+     * （bean 不存在），fallback 到本类内联的集合判断逻辑（已按 TD-P8-011 修复）。
+     * 通过 SPI 复用 {@code validateMandatoryDeliverables} 的集合判断，避免两套并行逻辑。</p>
+     */
+    @Autowired(required = false)
+    private MandatoryDeliverableValidator mandatoryDeliverableValidator;
 
     /** 阶段状态常量（关联设计文档 §3.2） */
     private static final String PHASE_NOT_STARTED = "NOT_STARTED";
@@ -153,46 +166,68 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
         }
 
         // 1. 必需交付件：状态须满足 requiredStatus 语义
-        //    TD-P8-011：当 requiredStatus 属于「已批准集合」（PUBLISHED/REFERENCED/ARCHIVED）时，
-        //    按集合判断 d.getStatus() 是否也在已批准集合中（与 DeliverableStatus.isApproved() 一致）；
-        //    否则（如 DRAFT/SUBMITTED/REVIEWED/SIGNED）保持精确匹配。
+        //    TD-P8-012：优先通过 MandatoryDeliverableValidator SPI 复用 pms-deliverable 的
+        //    validateMandatoryDeliverables 逻辑（基于 mandatory 标志 + isApproved 集合判断）。
+        //    若 SPI bean 不存在（pms-deliverable 未加载），fallback 到本类内联逻辑：
+        //    TD-P8-011：当 requiredStatus 属于「已批准集合」时按集合判断，否则精确匹配。
         if (gate.getRequiredDeliverables() != null) {
-            for (PhaseExitGate.RequiredDeliverable req : gate.getRequiredDeliverables()) {
-                Deliverable d = deliverableMapper.selectById(req.getDeliverableId());
-                if (d == null) {
-                    violations.add(PhaseExitGateViolation.builder()
-                            .gateType("DELIVERABLE")
-                            .message("必需交付件不存在")
-                            .businessId(req.getDeliverableId())
-                            .businessName(req.getDeliverableName())
-                            .expectedStatus(req.getRequiredStatus())
-                            .actualStatus(null)
-                            .build());
-                    continue;
+            if (mandatoryDeliverableValidator != null) {
+                // SPI 路径：复用 pms-deliverable 的集合判断逻辑
+                List<DeliverableViolation> spiViolations =
+                        mandatoryDeliverableValidator.findMandatoryDeliverableViolations(phase.getId());
+                if (spiViolations != null) {
+                    for (DeliverableViolation dv : spiViolations) {
+                        violations.add(PhaseExitGateViolation.builder()
+                                .gateType("DELIVERABLE")
+                                .message("必需交付件未达到已批准状态")
+                                .businessId(dv.getDeliverableId())
+                                .businessName(dv.getDeliverableName())
+                                .expectedStatus(dv.getExpectedStatus() != null
+                                        ? dv.getExpectedStatus()
+                                        : "已批准（PUBLISHED/REFERENCED/ARCHIVED）")
+                                .actualStatus(dv.getActualStatus())
+                                .build());
+                    }
                 }
-                if (req.getRequiredStatus() == null) {
-                    continue;
-                }
-                boolean satisfied;
-                String expectedDisplay;
-                if (DELIVERABLE_APPROVED_SET.contains(req.getRequiredStatus())) {
-                    // 集合判断：达到任一已批准状态即可
-                    satisfied = DELIVERABLE_APPROVED_SET.contains(d.getStatus());
-                    expectedDisplay = "已批准（PUBLISHED/REFERENCED/ARCHIVED）";
-                } else {
-                    // 精确匹配：DRAFT/SUBMITTED/REVIEWED/SIGNED 等
-                    satisfied = req.getRequiredStatus().equals(d.getStatus());
-                    expectedDisplay = req.getRequiredStatus();
-                }
-                if (!satisfied) {
-                    violations.add(PhaseExitGateViolation.builder()
-                            .gateType("DELIVERABLE")
-                            .message("必需交付件未达到要求状态")
-                            .businessId(d.getId())
-                            .businessName(d.getDeliverableName())
-                            .expectedStatus(expectedDisplay)
-                            .actualStatus(d.getStatus())
-                            .build());
+            } else {
+                // Fallback 路径：本类内联集合判断（TD-P8-011 已修复）
+                for (PhaseExitGate.RequiredDeliverable req : gate.getRequiredDeliverables()) {
+                    Deliverable d = deliverableMapper.selectById(req.getDeliverableId());
+                    if (d == null) {
+                        violations.add(PhaseExitGateViolation.builder()
+                                .gateType("DELIVERABLE")
+                                .message("必需交付件不存在")
+                                .businessId(req.getDeliverableId())
+                                .businessName(req.getDeliverableName())
+                                .expectedStatus(req.getRequiredStatus())
+                                .actualStatus(null)
+                                .build());
+                        continue;
+                    }
+                    if (req.getRequiredStatus() == null) {
+                        continue;
+                    }
+                    boolean satisfied;
+                    String expectedDisplay;
+                    if (DELIVERABLE_APPROVED_SET.contains(req.getRequiredStatus())) {
+                        // 集合判断：达到任一已批准状态即可
+                        satisfied = DELIVERABLE_APPROVED_SET.contains(d.getStatus());
+                        expectedDisplay = "已批准（PUBLISHED/REFERENCED/ARCHIVED）";
+                    } else {
+                        // 精确匹配：DRAFT/SUBMITTED/REVIEWED/SIGNED 等
+                        satisfied = req.getRequiredStatus().equals(d.getStatus());
+                        expectedDisplay = req.getRequiredStatus();
+                    }
+                    if (!satisfied) {
+                        violations.add(PhaseExitGateViolation.builder()
+                                .gateType("DELIVERABLE")
+                                .message("必需交付件未达到要求状态")
+                                .businessId(d.getId())
+                                .businessName(d.getDeliverableName())
+                                .expectedStatus(expectedDisplay)
+                                .actualStatus(d.getStatus())
+                                .build());
+                    }
                 }
             }
         }
