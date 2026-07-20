@@ -9,11 +9,13 @@ import com.dp.plat.baseline.mapper.BaselineSnapshotMapper;
 import com.dp.plat.baseline.service.BaselineService;
 import com.dp.plat.common.dto.TaskPlanSnapshot;
 import com.dp.plat.common.exception.BusinessException;
+import com.dp.plat.common.spi.ApprovalTrigger;
 import com.dp.plat.implementation.entity.ImplTask;
 import com.dp.plat.implementation.mapper.ImplTaskMapper;
 import com.dp.plat.project.service.ProjectConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,8 +41,15 @@ public class BaselineServiceImpl extends ServiceImpl<BaselineSnapshotMapper, Bas
 
     private static final DateTimeFormatter NAME_FMT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmm");
 
+    /** 审批类型常量（参见 §6.9 审批类型表）。 */
+    private static final String APPROVAL_TYPE_BASELINE_CHANGE = "BASELINE_CHANGE";
+
     private final ImplTaskMapper implTaskMapper;
     private final ProjectConfigService projectConfigService;
+
+    /** TD-P8-008：审批触发 SPI（可选注入，pms-workflow 未加载时跳过审批触发并 log.warn）。 */
+    @Autowired(required = false)
+    private ApprovalTrigger approvalTrigger;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -235,14 +244,21 @@ public class BaselineServiceImpl extends ServiceImpl<BaselineSnapshotMapper, Bas
         result.setApprovalReason(approvalReason);
 
         if (needsApproval) {
-            // 触发 BASELINE_CHANGE 审批：Phase 7 实现具体审批流程与 ApprovalRecord 落库。
-            // TODO(Phase 7): approvalRecordService.create("BASELINE_CHANGE",
-            //               baseline.getProjectId(), baselineId, changeReason, ...)
-            //               并将返回的 approvalRecordId 回填到 baseline.approvalRecordId。
+            // TD-P8-008：触发 BASELINE_CHANGE 审批流程，回填 approvalRecordId 到 baseline。
+            // 通过 ApprovalTrigger SPI 跨模块调用 pms-workflow 的 ApprovalCenterService.createApproval，
+            // 落库 ApprovalRecord（状态 PENDING，round=1），由 ApprovalDispatcher 启动 Flowable 流程实例。
             baseline.setChangeReason(changeReason);
+            Long approvalRecordId = triggerBaselineChangeApproval(baseline, approvalReason);
+            if (approvalRecordId != null) {
+                baseline.setApprovalRecordId(approvalRecordId);
+                log.info("基线 {} 偏差超阈值，已触发 BASELINE_CHANGE 审批 approvalRecordId={} reason={}",
+                        baselineId, approvalRecordId, changeReason);
+            } else {
+                // SPI 未加载或触发失败：保留 changeReason 但不阻断流程（log.warn 已在内部记录）
+                log.warn("基线 {} 偏差超阈值，但审批触发失败（SPI 未加载或异常），保留 changeReason 等待后续触发",
+                        baselineId);
+            }
             this.updateById(baseline);
-            log.warn("基线 {} 偏差超阈值，需触发 BASELINE_CHANGE 审批（Phase 7 实现）。reason={}",
-                    baselineId, changeReason);
         } else {
             // 未超阈值 → 直接 APPROVED
             baseline.setStatus("APPROVED");
@@ -257,6 +273,54 @@ public class BaselineServiceImpl extends ServiceImpl<BaselineSnapshotMapper, Bas
         }
 
         return result;
+    }
+
+    /**
+     * 触发 BASELINE_CHANGE 审批流程（TD-P8-008）。
+     *
+     * <p>通过 {@link ApprovalTrigger} SPI 跨模块调用 pms-workflow 的审批中心：
+     * <ul>
+     *   <li>approvalType = {@value #APPROVAL_TYPE_BASELINE_CHANGE}</li>
+     *   <li>businessId = baseline.id（基线ID）</li>
+     *   <li>projectId = baseline.projectId</li>
+     *   <li>title = 「基线变更审批：{baselineName}」</li>
+     *   <li>reason = changeReason（拼接 approvalReason 偏差说明）</li>
+     * </ul>
+     * </p>
+     *
+     * @param baseline       基线快照
+     * @param approvalReason 偏差原因（days/percent/count 阈值说明）
+     * @return 审批记录ID；SPI 未加载或触发失败返回 null（已 log.warn）
+     */
+    private Long triggerBaselineChangeApproval(BaselineSnapshot baseline, String approvalReason) {
+        if (approvalTrigger == null) {
+            log.warn("基线 {} 审批触发跳过：ApprovalTrigger SPI 未加载（pms-workflow 模块未启用）",
+                    baseline.getId());
+            return null;
+        }
+        String title = "基线变更审批：" + baseline.getBaselineName();
+        String reason = joinReason(baseline.getChangeReason(), approvalReason);
+        return approvalTrigger.triggerApproval(
+                APPROVAL_TYPE_BASELINE_CHANGE,
+                baseline.getId(),
+                baseline.getProjectId(),
+                title,
+                reason);
+    }
+
+    /** 拼接变更原因与偏差原因（任一为空返回另一个）。 */
+    private static String joinReason(String changeReason, String approvalReason) {
+        StringBuilder sb = new StringBuilder();
+        if (approvalReason != null && !approvalReason.isBlank()) {
+            sb.append(approvalReason);
+        }
+        if (changeReason != null && !changeReason.isBlank()) {
+            if (sb.length() > 0) {
+                sb.append("；");
+            }
+            sb.append("变更说明：").append(changeReason);
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     /** LocalDate → ISO 字符串（null 返回 null）。 */
