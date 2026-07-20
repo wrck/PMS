@@ -139,8 +139,8 @@ public class ApprovalCenterController {
         // 3. 脱敏业务数据
         Map<String, Object> maskedData = sensitiveFieldMasker.maskMap(businessData, perms);
 
-        // 4. 构建脱敏字段元数据
-        List<MaskedFieldVO> maskedFields = buildMaskedFields(businessData, perms);
+        // 4. 构建脱敏字段元数据（TD-P8-013 修复：复用 maskedData 中已脱敏的值）
+        List<MaskedFieldVO> maskedFields = buildMaskedFields(maskedData, perms);
 
         // 5. 加载历史
         List<ApprovalHistory> history = approvalCenterService.listHistory(id);
@@ -249,8 +249,17 @@ public class ApprovalCenterController {
         return new LinkedHashMap<>();
     }
 
-    /** 构建脱敏字段元数据列表（仅 MASKED / HIDDEN 字段）。 */
-    private List<MaskedFieldVO> buildMaskedFields(Map<String, Object> businessData,
+    /**
+     * 构建脱敏字段元数据列表（仅 MASKED 字段）。
+     *
+     * <p>TD-P8-013 修复：参数由原始 {@code businessData} 改为已脱敏的 {@code maskedData}，
+     * 避免对同一批 MASKED 字段重复调用 {@code sensitiveFieldMasker.mask}（maskMap 已脱敏）。</p>
+     *
+     * <p>TD-P8-014 修复：跳过 HIDDEN 字段。HIDDEN 字段已被 {@code maskMap} 从
+     * {@code maskedData} 中移除，前端不会渲染，故 {@code maskedFields} 中无需为
+     * HIDDEN 字段生成冗余元数据项。</p>
+     */
+    private List<MaskedFieldVO> buildMaskedFields(Map<String, Object> maskedData,
                                                    List<ApprovalFieldPermission> perms) {
         List<MaskedFieldVO> result = new ArrayList<>();
         if (perms == null) {
@@ -260,17 +269,13 @@ public class ApprovalCenterController {
             if (perm.getFieldName() == null) {
                 continue;
             }
+            // TD-P8-014：跳过 HIDDEN 字段，不生成元数据项（前端无消费者）
             if ("HIDDEN".equalsIgnoreCase(perm.getPermission())) {
-                result.add(MaskedFieldVO.builder()
-                        .fieldName(perm.getFieldName())
-                        .permission("HIDDEN")
-                        .maskedValue(null)
-                        .maskPattern(perm.getMaskPattern())
-                        .build());
-            } else if ("MASKED".equalsIgnoreCase(perm.getPermission())) {
-                Object original = businessData.get(perm.getFieldName());
-                Object masked = sensitiveFieldMasker.mask(
-                        perm.getEntityType(), perm.getFieldName(), original, perm);
+                continue;
+            }
+            if ("MASKED".equalsIgnoreCase(perm.getPermission())) {
+                // TD-P8-013：直接复用 maskedData 中已脱敏的值，避免重复脱敏计算
+                Object masked = maskedData == null ? null : maskedData.get(perm.getFieldName());
                 result.add(MaskedFieldVO.builder()
                         .fieldName(perm.getFieldName())
                         .permission("MASKED")
