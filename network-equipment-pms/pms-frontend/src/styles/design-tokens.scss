@@ -104,6 +104,48 @@ $breakpoint-xl: 1920px;
 // 保留 xxl 变量向后兼容，但建议使用 xl（1920）
 $breakpoint-xxl: 1920px;
 
+// ===== 项目管理专属令牌 =====
+
+// 项目状态色板
+$project-status-planning: #8b5cf6;     // 紫色 - 规划中
+$project-status-executing: #3b82f6;    // 蓝色 - 执行中
+$project-status-closing: #f59e0b;      // 橙色 - 收尾中
+$project-status-closed: #10b981;       // 绿色 - 已关闭
+$project-status-suspended: #6b7280;    // 灰色 - 暂停
+$project-status-cancelled: #ef4444;    // 红色 - 已取消
+
+// 阶段状态色板
+$phase-status-not-started: #9ca3af;
+$phase-status-in-progress: #3b82f6;
+$phase-status-completed: #10b981;
+$phase-status-skipped: #f59e0b;
+
+// 任务优先级色板
+$task-priority-low: #6b7280;
+$task-priority-medium: #3b82f6;
+$task-priority-high: #f59e0b;
+$task-priority-critical: #ef4444;
+
+// 交付件 7 态色板
+$deliverable-status-draft: #9ca3af;
+$deliverable-status-submitted: #3b82f6;
+$deliverable-status-reviewed: #8b5cf6;
+$deliverable-status-signed: #06b6d4;
+$deliverable-status-published: #10b981;
+$deliverable-status-referenced: #6366f1;
+$deliverable-status-archived: #6b7280;
+
+// 卡片间距（Linear 风格 - 更紧凑）
+$card-padding-sm: 12px;
+$card-padding-base: 16px;
+$card-padding-lg: 24px;
+$card-gap: 12px;
+
+// 阴影层级（更柔和）
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+$shadow-card-hover: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.06);
+$shadow-popover: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+
 // =============================================================================
 // CSS 自定义属性导出（可在 JS / 内联样式 / 第三方组件中通过 var(--pms-*) 消费）
 // =============================================================================
@@ -186,4 +228,44 @@ $breakpoint-xxl: 1920px;
   --pms-bp-md: #{$breakpoint-md};
   --pms-bp-lg: #{$breakpoint-lg};
   --pms-bp-xl: #{$breakpoint-xl};
+
+  // 项目管理专属令牌 - 项目状态色板
+  --pms-project-status-planning: #{$project-status-planning};
+  --pms-project-status-executing: #{$project-status-executing};
+  --pms-project-status-closing: #{$project-status-closing};
+  --pms-project-status-closed: #{$project-status-closed};
+  --pms-project-status-suspended: #{$project-status-suspended};
+  --pms-project-status-cancelled: #{$project-status-cancelled};
+
+  // 阶段状态色板
+  --pms-phase-status-not-started: #{$phase-status-not-started};
+  --pms-phase-status-in-progress: #{$phase-status-in-progress};
+  --pms-phase-status-completed: #{$phase-status-completed};
+  --pms-phase-status-skipped: #{$phase-status-skipped};
+
+  // 任务优先级色板
+  --pms-task-priority-low: #{$task-priority-low};
+  --pms-task-priority-medium: #{$task-priority-medium};
+  --pms-task-priority-high: #{$task-priority-high};
+  --pms-task-priority-critical: #{$task-priority-critical};
+
+  // 交付件 7 态色板
+  --pms-deliverable-status-draft: #{$deliverable-status-draft};
+  --pms-deliverable-status-submitted: #{$deliverable-status-submitted};
+  --pms-deliverable-status-reviewed: #{$deliverable-status-reviewed};
+  --pms-deliverable-status-signed: #{$deliverable-status-signed};
+  --pms-deliverable-status-published: #{$deliverable-status-published};
+  --pms-deliverable-status-referenced: #{$deliverable-status-referenced};
+  --pms-deliverable-status-archived: #{$deliverable-status-archived};
+
+  // 卡片间距（Linear 风格）
+  --pms-card-padding-sm: #{$card-padding-sm};
+  --pms-card-padding-base: #{$card-padding-base};
+  --pms-card-padding-lg: #{$card-padding-lg};
+  --pms-card-gap: #{$card-gap};
+
+  // 阴影层级（更柔和）
+  --pms-shadow-card: #{$shadow-card};
+  --pms-shadow-card-hover: #{$shadow-card-hover};
+  --pms-shadow-popover: #{$shadow-popover};
 }
