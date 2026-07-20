@@ -101,10 +101,12 @@
 // =============================================================================
 .el-dialog {
   border-radius: $radius-lg;
+  overflow: hidden;
 
   .el-dialog__header {
     border-bottom: 1px solid $color-border-light;
     padding: $spacing-4 $spacing-6;
+    margin-right: 0;
   }
 
   .el-dialog__body {
@@ -115,6 +117,22 @@
     border-top: 1px solid $color-border-light;
     padding: $spacing-4 $spacing-6;
   }
+}
+
+// 弹窗动画升级：钉飞风格的淡入 + 轻微缩放（覆盖 Element Plus 默认 dialog-fade）
+.dialog-fade-enter-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dialog-fade-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dialog-fade-enter-from {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+.dialog-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.98);
 }
 
 // =============================================================================
@@ -136,4 +154,92 @@
 
 ::-webkit-scrollbar-track {
   background: $color-bg-page;
+}
+
+// =============================================================================
+// 10. 表格行 hover 高亮 + 行间距优化（钉飞风格）
+// =============================================================================
+.el-table {
+  .el-table__row {
+    transition: background-color 0.15s ease;
+
+    &:hover > td.el-table__cell {
+      background-color: $color-primary-light-9 !important;
+    }
+  }
+
+  // 单元格 padding 收紧，更紧凑
+  .el-table__cell {
+    padding: 8px 12px;
+  }
+}
+
+// =============================================================================
+// 11. 按钮扁平化 + hover 浮起
+// =============================================================================
+.el-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:not(.is-disabled):not(.is-loading):hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+
+  &:not(.is-disabled):not(.is-loading):active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  // 主要按钮特殊处理：默认带轻微阴影
+  &.el-button--primary:not(.is-disabled):not(.is-loading) {
+    box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba(64, 158, 255, 0.3);
+    }
+  }
+}
+
+// =============================================================================
+// 12. 输入框 focus 过渡（钉飞风格）
+// =============================================================================
+.el-input__wrapper,
+.el-textarea__inner {
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// =============================================================================
+// 13. Tabs 顶部线条动画 + 字重过渡
+// =============================================================================
+.el-tabs {
+  .el-tabs__item {
+    transition: color 0.2s, font-weight 0.2s;
+
+    &.is-active {
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  .el-tabs__active-bar {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// =============================================================================
+// 14. 卡片 hover 浮起增强（钉飞风格）
+// =============================================================================
+.el-card {
+  &.is-hover-shadow,
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// =============================================================================
+// 15. 抽屉动画升级（钉飞风格）
+// =============================================================================
+.el-drawer {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
