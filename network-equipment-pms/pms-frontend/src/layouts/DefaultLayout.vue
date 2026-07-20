@@ -10,6 +10,8 @@ import TagsView from '@/components/TagsView/index.vue'
 import NotificationBell from '@/components/NotificationBell/index.vue'
 import UserGuide from '@/components/UserGuide/index.vue'
 import FeedbackButton from '@/components/FeedbackButton/index.vue'
+import ProjectTreeSidebar from '@/components/project/ProjectTreeSidebar.vue'
+import { provideProjectContext } from '@/composables/useProjectContext'
 
 interface MenuLeaf {
   title: string
@@ -28,6 +30,9 @@ const userStore = useUserStore()
 const websocketStore = useWebSocketStore()
 const route = useRoute()
 const router = useRouter()
+
+// 在 Layout 根节点提供项目上下文，供项目树侧栏 / 工作区 / 阶段面板注入
+provideProjectContext()
 
 // ===== 移动端响应式检测 =====
 const MOBILE_BREAKPOINT = 768
@@ -207,6 +212,17 @@ const visibleMenuGroups = computed<(MenuGroup | MenuLeaf)[]>(() =>
 )
 
 const activeMenu = computed(() => route.path)
+
+/**
+ * 是否在主内容区左侧显示项目树侧栏。
+ * 优先看 route.meta.showProjectSidebar 显式声明，否则 fallback 到 /project 前缀。
+ * 其他业务模块路由（资产 / 实施管理等）不受影响。
+ */
+const showProjectSidebar = computed<boolean>(() => {
+  const meta = route.meta as { showProjectSidebar?: boolean }
+  if (typeof meta.showProjectSidebar === 'boolean') return meta.showProjectSidebar
+  return route.path.startsWith('/project')
+})
 
 // Breadcrumb derived from the matched route records
 const breadcrumbs = computed(() =>
@@ -424,13 +440,17 @@ onBeforeUnmount(() => {
       <!-- 标签栏在移动端隐藏 -->
       <TagsView v-if="!isMobile" />
 
-      <el-main class="layout-main">
-        <router-view v-slot="{ Component }">
-          <transition name="fade-transform" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
-      </el-main>
+      <!-- 主内容区：项目管理相关路由左侧额外渲染项目树侧栏 -->
+      <div class="main-wrapper">
+        <ProjectTreeSidebar v-if="showProjectSidebar && !isMobile" />
+        <el-main class="layout-main">
+          <router-view v-slot="{ Component }">
+            <transition name="fade-transform" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </el-main>
+      </div>
     </el-container>
 
     <!-- 用户引导：首次登录自动触发，也可通过顶部「引导」按钮手动触发 -->
@@ -549,6 +569,18 @@ onBeforeUnmount(() => {
   background-color: #f0f2f5;
   padding: 16px;
   overflow-y: auto;
+}
+
+/* 主内容区包裹：当项目管理路由展示项目树侧栏时，水平排列侧栏 + 主区域 */
+.main-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-wrapper > .layout-main {
+  flex: 1;
 }
 
 /* Route transition */
