@@ -35,7 +35,7 @@ public Result<TaskReviewResult> submitForReview(@PathVariable Long id) {
 }
 ```
 
-**校验**：API 路径 `/api/impl/task/{id}/submit-review` 与设计文档 §9.1 一致。OK
+**校验**：API 路径 `/api/implementation/task/{id}/submit-review` 与设计文档 §9.1 一致。OK（TD-P8-015 已修复，路径统一为长路径）
 
 #### (2) 后端 Service — submitForReview
 
@@ -84,7 +84,7 @@ public TaskReviewResult submitForReview(Long taskId, Long operatorId) {
 
 ```typescript
 export function submitForReview(id: number): Promise<TaskReviewResult> {
-  return post<TaskReviewResult>(`/api/impl/task/${id}/submit-review`)
+  return post<TaskReviewResult>(`/api/implementation/task/${id}/submit-review`)
 }
 ```
 
@@ -222,7 +222,7 @@ public Result<Map<String, Object>> getProjectProgress(Long id) {
 
 ```typescript
 export function getTaskProgress(id: number): Promise<TaskProgressVO> {
-  return get<TaskProgressVO>(`/api/impl/task/${id}/progress`)
+  return get<TaskProgressVO>(`/api/implementation/task/${id}/progress`)
 }
 ```
 

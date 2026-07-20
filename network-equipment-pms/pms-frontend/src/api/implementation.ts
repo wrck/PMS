@@ -66,19 +66,19 @@ export interface AgentAssignPayload {
 }
 
 export function assignOemTask(data: OemAssignPayload): Promise<ImplTask> {
-  return post<ImplTask>('/api/impl/task/oem/assign', data)
+  return post<ImplTask>('/api/implementation/task/oem/assign', data)
 }
 
 export function assignAgentTask(data: AgentAssignPayload): Promise<ImplTask> {
-  return post<ImplTask>('/api/impl/task/agent/assign', data)
+  return post<ImplTask>('/api/implementation/task/agent/assign', data)
 }
 
 export function acceptTask(id: number): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/accept`)
+  return post<void>(`/api/implementation/task/${id}/accept`)
 }
 
 export function startTask(id: number): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/start`)
+  return post<void>(`/api/implementation/task/${id}/start`)
 }
 
 export interface ProgressReportPayload {
@@ -88,31 +88,31 @@ export interface ProgressReportPayload {
 }
 
 export function reportTaskProgress(id: number, data: ProgressReportPayload): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/progress`, data)
+  return post<void>(`/api/implementation/task/${id}/progress`, data)
 }
 
 export function completeTask(id: number, description?: string): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/complete`, { description })
+  return post<void>(`/api/implementation/task/${id}/complete`, { description })
 }
 
 export function confirmTask(id: number, opinion?: string): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/confirm`, { opinion })
+  return post<void>(`/api/implementation/task/${id}/confirm`, { opinion })
 }
 
 export function rejectTask(id: number, opinion?: string): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/reject`, { opinion })
+  return post<void>(`/api/implementation/task/${id}/reject`, { opinion })
 }
 
 export function getTaskDetail(id: number): Promise<ImplTask> {
-  return get<ImplTask>(`/api/impl/task/${id}`)
+  return get<ImplTask>(`/api/implementation/task/${id}`)
 }
 
 export function getTaskPage(params: TaskPageQuery): Promise<PageResult<ImplTask>> {
-  return get<PageResult<ImplTask>>('/api/impl/task/list', params)
+  return get<PageResult<ImplTask>>('/api/implementation/task/list', params)
 }
 
 export function getTasksByProject(projectId: number): Promise<ImplTask[]> {
-  return get<ImplTask[]>(`/api/impl/task/project/${projectId}`)
+  return get<ImplTask[]>(`/api/implementation/task/project/${projectId}`)
 }
 
 // ===================== Task Progress =====================
@@ -309,34 +309,34 @@ export interface TaskProgressVO {
 
 /** 查询任务子树（含自身及所有后代） */
 export function getTaskSubtree(id: number): Promise<ImplTaskNode[]> {
-  return get<ImplTaskNode[]>(`/api/impl/task/${id}/subtree`)
+  return get<ImplTaskNode[]>(`/api/implementation/task/${id}/subtree`)
 }
 
 /** 移动任务（变更父任务，newParentId 为空表示提升为顶层） */
 export function moveTask(id: number, newParentId?: number | null): Promise<void> {
-  return post<void>(`/api/impl/task/${id}/move`, undefined, {
+  return post<void>(`/api/implementation/task/${id}/move`, undefined, {
     params: { newParentId: newParentId ?? '' }
   })
 }
 
 /** 提交评审（含强制检查项校验） */
 export function submitForReview(id: number): Promise<TaskReviewResult> {
-  return post<TaskReviewResult>(`/api/impl/task/${id}/submit-review`)
+  return post<TaskReviewResult>(`/api/implementation/task/${id}/submit-review`)
 }
 
 /** 验收任务（评审通过） */
 export function approveTask(id: number): Promise<TaskReviewResult> {
-  return post<TaskReviewResult>(`/api/impl/task/${id}/approve`)
+  return post<TaskReviewResult>(`/api/implementation/task/${id}/approve`)
 }
 
 /** 查询任务进度（含子任务加权汇总） */
 export function getTaskProgress(id: number): Promise<TaskProgressVO> {
-  return get<TaskProgressVO>(`/api/impl/task/${id}/progress`)
+  return get<TaskProgressVO>(`/api/implementation/task/${id}/progress`)
 }
 
 /** 顶层任务列表（分页，复用已有 list 接口） */
 export function listTasks(params: TaskPageQuery): Promise<PageResult<ImplTaskNode>> {
-  return get<PageResult<ImplTaskNode>>('/api/impl/task/list', params)
+  return get<PageResult<ImplTaskNode>>('/api/implementation/task/list', params)
 }
 
 // 任务评论 API：见 ./task-comment.ts

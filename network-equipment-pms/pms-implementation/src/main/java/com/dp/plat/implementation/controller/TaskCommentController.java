@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Tag(name = "任务评论管理", description = "Task comment APIs")
 @RestController
-@RequestMapping("/api/impl/task/comment")
+@RequestMapping("/api/implementation/task/comment")
 @RequiredArgsConstructor
 public class TaskCommentController {
 

@@ -163,7 +163,7 @@ async function handleEditSubmit() {
     editSubmitting.value = true
     try {
       // 复用 assignOemTask（后端按 id 走 update 分支）— 仅基础字段更新
-      // 注：实际更新接口应使用专用 PUT /api/impl/task，此处先复用现有 API 保存基础字段
+      // 注：实际更新接口应使用专用 PUT /api/implementation/task，此处先复用现有 API 保存基础字段
       await assignOemTask(editForm as ImplTask)
       ElMessage.success('保存成功')
       editVisible.value = false

@@ -32,8 +32,8 @@
 | 编号 | 问题 | 严重度 | 关联技术债 |
 |---|---|---|---|
 | 1 | 前端 `project.ts` 未封装 `subproject`/`close`/`cancel` 三个端点（后端已实现） | 中 | 扩展 TD-P8-006 |
-| 2 | 任务管理模块路径命名不一致：`/api/impl/task/...`（任务/检查项/评论/活动）vs `/api/implementation/task/dependency`（依赖） | 中 | TD-P8-015（新） |
-| 3 | 设计文档 §5.4 路径 `/api/implementation/task/...` 与实现 `/api/impl/task/...` 不符（文档勘误） | 低 | TD-P8-016（新） |
+| 2 | ~~任务管理模块路径命名不一致~~ **已修复（TD-P8-015）**：4 个 Controller 类级路径统一为 `/api/implementation/task/...` 长路径 | 中 | TD-P8-015（已修复） |
+| 3 | ~~设计文档 §5.4 路径与实现不符~~ **已修复（TD-P8-016 联动）**：路径统一后设计文档与实现一致 | 低 | TD-P8-016（已修复） |
 
 ---
 
@@ -87,26 +87,26 @@
 
 ## 4. §5.4 任务管理 API（Story 3）— 11 端点
 
-后端 Controller：`ImplTaskController`（类级 `/api/impl/task`）、`TaskChecklistController`（类级 `/api/impl/task/checklist`）
+后端 Controller：`ImplTaskController`（类级 `/api/implementation/task`）、`TaskChecklistController`（类级 `/api/implementation/task/checklist`）
 前端封装：`pms-frontend/src/api/implementation.ts`、`pms-frontend/src/api/task-checklist.ts`
 
-> ⚠️ **路径差异**：设计文档 §5.4 定义路径为 `/api/implementation/task/...`，后端实际实现为 `/api/impl/task/...`（短路径）。前端跟随后端使用短路径，前后端连通正常，但与设计文档不符（文档勘误，见 TD-P8-016）。
+> ✅ **路径统一**（TD-P8-015 / TD-P8-016 已修复）：设计文档 §5.4 定义路径与后端实现均为 `/api/implementation/task/...`（长路径），前端跟随后端使用长路径，前后端连通正常。
 
 | # | Method | 设计文档路径 | 后端实际路径 | 前端封装 | 连通 | 说明 |
 |---|---|---|---|---|---|---|
-| 1 | GET | `/api/implementation/task/list` | `/api/impl/task/list` ✅ 行 115 | ✅ `listTasks` 行 338 | ✅ | 分页查询任务 |
-| 2 | GET | `/api/implementation/task/{id}/subtree` | `/api/impl/task/{id}/subtree` ✅ 行 131 | ✅ `getTaskSubtree` 行 311 | ✅ | 查询任务子树 |
-| 3 | POST | `/api/implementation/task/{id}/move` | `/api/impl/task/{id}/move` ✅ 行 137 | ✅ `moveTask` 行 316 | ✅ | 移动任务 |
-| 4 | POST | `/api/implementation/task/{id}/submit-review` | `/api/impl/task/{id}/submit-review` ✅ 行 146 | ✅ `submitForReview` 行 323 | ✅ | 提交评审 |
-| 5 | POST | `/api/implementation/task/{id}/approve` | `/api/impl/task/{id}/approve` ✅ 行 154 | ✅ `approveTask` 行 328 | ✅ | 验收任务 |
-| 6 | GET | `/api/implementation/task/{id}/progress` | `/api/impl/task/{id}/progress` ✅ 行 162 | ✅ `getTaskProgress` 行 333 | ✅ | 任务进度汇总 |
-| 7 | GET | `/api/implementation/task/checklist/{taskId}` | `/api/impl/task/checklist/{taskId}` ✅ 行 37 | ✅ `listChecklist` 行 37 | ✅ | 检查项列表 |
-| 8 | POST | `/api/implementation/task/checklist` | `/api/impl/task/checklist` ✅ `@PostMapping` | ✅ `createChecklist` 行 42 | ✅ | 新增检查项 |
-| 9 | PUT | `/api/implementation/task/checklist` | `/api/impl/task/checklist` ✅ `@PutMapping` | ✅ `updateChecklist` 行 47 | ✅ | 更新检查项 |
-| 10 | POST | `/api/implementation/task/checklist/{id}/check` | `/api/impl/task/checklist/{id}/check` ✅ 行 59 | ✅ `toggleCheck` 行 52 | ✅ | 勾选/取消 |
-| 11 | DELETE | `/api/implementation/task/checklist/{id}` | `/api/impl/task/checklist/{id}` ✅ 行 68 | ✅ `deleteChecklist` 行 59 | ✅ | 删除检查项 |
+| 1 | GET | `/api/implementation/task/list` | `/api/implementation/task/list` ✅ 行 115 | ✅ `listTasks` 行 338 | ✅ | 分页查询任务 |
+| 2 | GET | `/api/implementation/task/{id}/subtree` | `/api/implementation/task/{id}/subtree` ✅ 行 131 | ✅ `getTaskSubtree` 行 311 | ✅ | 查询任务子树 |
+| 3 | POST | `/api/implementation/task/{id}/move` | `/api/implementation/task/{id}/move` ✅ 行 137 | ✅ `moveTask` 行 316 | ✅ | 移动任务 |
+| 4 | POST | `/api/implementation/task/{id}/submit-review` | `/api/implementation/task/{id}/submit-review` ✅ 行 146 | ✅ `submitForReview` 行 323 | ✅ | 提交评审 |
+| 5 | POST | `/api/implementation/task/{id}/approve` | `/api/implementation/task/{id}/approve` ✅ 行 154 | ✅ `approveTask` 行 328 | ✅ | 验收任务 |
+| 6 | GET | `/api/implementation/task/{id}/progress` | `/api/implementation/task/{id}/progress` ✅ 行 162 | ✅ `getTaskProgress` 行 333 | ✅ | 任务进度汇总 |
+| 7 | GET | `/api/implementation/task/checklist/{taskId}` | `/api/implementation/task/checklist/{taskId}` ✅ 行 37 | ✅ `listChecklist` 行 37 | ✅ | 检查项列表 |
+| 8 | POST | `/api/implementation/task/checklist` | `/api/implementation/task/checklist` ✅ `@PostMapping` | ✅ `createChecklist` 行 42 | ✅ | 新增检查项 |
+| 9 | PUT | `/api/implementation/task/checklist` | `/api/implementation/task/checklist` ✅ `@PutMapping` | ✅ `updateChecklist` 行 47 | ✅ | 更新检查项 |
+| 10 | POST | `/api/implementation/task/checklist/{id}/check` | `/api/implementation/task/checklist/{id}/check` ✅ 行 59 | ✅ `toggleCheck` 行 52 | ✅ | 勾选/取消 |
+| 11 | DELETE | `/api/implementation/task/checklist/{id}` | `/api/implementation/task/checklist/{id}` ✅ 行 68 | ✅ `deleteChecklist` 行 59 | ✅ | 删除检查项 |
 
-**Story 3 连通性：11/11 = 100% ✅**（路径用短路径 `impl`，前后端一致）
+**Story 3 连通性：11/11 = 100% ✅**（路径已统一为长路径 `/api/implementation/task`，前后端一致）
 
 ---
 
@@ -115,7 +115,7 @@
 后端 Controller：`TaskDependencyController`（类级 `/api/implementation/task/dependency`）、`BaselineController`（类级 `/api/baseline`）
 前端封装：`pms-frontend/src/api/task-dependency.ts`、`pms-frontend/src/api/baseline.ts`
 
-> ⚠️ **路径不一致**：`TaskDependencyController` 使用长路径 `/api/implementation/task/dependency`，与同模块的 `ImplTaskController`（`/api/impl/task`）短路径不一致（见 TD-P8-015）。
+> ✅ **路径一致**（TD-P8-015 已修复）：`TaskDependencyController` 与同模块的 `ImplTaskController` 均使用长路径 `/api/implementation/task/...`，模块内路径命名统一。
 
 | # | Method | 设计文档路径 | 后端实现 | 前端封装 | 连通 | 说明 |
 |---|---|---|---|---|---|---|
@@ -182,8 +182,8 @@
 |---|---|---|---|---|---|
 | 1 | 项目成员 | `ProjectMemberController` `/api/project/member` ✅ | `project-member.ts` ✅（4 端点） | ✅ | 成员 CRUD |
 | 2 | 项目配置 | `ProjectConfigController` `/api/project/config` ✅ | `project-config.ts` ✅（2 端点） | ✅ | 配置读写 |
-| 3 | 任务评论 | `TaskCommentController` `/api/impl/task/comment` ✅ | `task-comment.ts` ✅（3 端点） | ✅ | 二级回复评论 |
-| 4 | 任务活动 | `TaskActivityController` `/api/impl/task/activity` ✅ | `task-activity.ts` ✅ | ✅ | 活动记录 |
+| 3 | 任务评论 | `TaskCommentController` `/api/implementation/task/comment` ✅ | `task-comment.ts` ✅（3 端点） | ✅ | 二级回复评论 |
+| 4 | 任务活动 | `TaskActivityController` `/api/implementation/task/activity` ✅ | `task-activity.ts` ✅ | ✅ | 活动记录 |
 | 5 | 字段权限 | `ApprovalFieldPermissionController` `/api/workflow/field-perm` ✅ | `approval-field-perm.ts` ✅（4 端点） | ✅ | 敏感字段权限 CRUD |
 | 6 | 里程碑 | `MilestoneController` `/api/project/milestone` ✅ | `project.ts` ✅（4 端点） | ✅ | 里程碑 CRUD + 进度 |
 | 7 | 终验 | `FinalAcceptanceController` `/api/project/acceptance` ✅ | `project.ts` ✅（4 端点） | ✅ | 终验申请/审批 |
@@ -212,30 +212,26 @@
 
 **建议**：在 `project.ts` 补充 `createSubproject`/`closeProject`/`cancelProject` 三个封装函数。
 
-### 9.2 TD-P8-015（新，中）：任务管理模块路径命名不一致
+### 9.2 TD-P8-015（已修复，中）：任务管理模块路径命名不一致
 
-**位置**：
-- `ImplTaskController` 类级 `/api/impl/task`（行 32）
-- `TaskChecklistController` 类级 `/api/impl/task/checklist`
-- `TaskCommentController` 类级 `/api/impl/task/comment`
-- `TaskActivityController` 类级 `/api/impl/task/activity`
-- `TaskDependencyController` 类级 `/api/implementation/task/dependency`（行 38）← 长路径
+**位置**（修复前 → 修复后）：
+- `ImplTaskController` 类级 ~~`/api/impl/task`~~ → `/api/implementation/task`（行 32）
+- `TaskChecklistController` 类级 ~~`/api/impl/task/checklist`~~ → `/api/implementation/task/checklist`
+- `TaskCommentController` 类级 ~~`/api/impl/task/comment`~~ → `/api/implementation/task/comment`
+- `TaskActivityController` 类级 ~~`/api/impl/task/activity`~~ → `/api/implementation/task/activity`
+- `TaskDependencyController` 类级 `/api/implementation/task/dependency`（行 38，原本即长路径）
 
-**现象**：同一实施模块下，任务/检查项/评论/活动使用短路径 `/api/impl/task/...`，而任务依赖使用长路径 `/api/implementation/task/dependency`。前端跟随后端，前后端连通正常，但模块内部路径命名不统一。
+**原现象**：同一实施模块下，任务/检查项/评论/活动使用短路径 `/api/impl/task/...`，而任务依赖使用长路径 `/api/implementation/task/dependency`。前端跟随后端，前后端连通正常，但模块内部路径命名不统一。
 
-**影响**：API 路径风格不一致，增加维护认知成本。`TaskDependencyController` 位于 `pms-baseline` 模块（非 `pms-implementation`），可能是跨模块开发时路径前缀选择不一致导致。
+**修复**（Phase 9 / 批次 B）：将 4 个 Controller 的类级 `@RequestMapping` 从 `/api/impl/task` 统一为 `/api/implementation/task`，前端 4 个 API 文件（`implementation.ts`、`task-checklist.ts`、`task-comment.ts`、`task-activity.ts`）及 1 个 Vue 注释同步更新。模块内路径命名现已统一。
 
-**建议**：统一任务相关端点路径前缀。考虑到 `TaskDependencyController` 在 `pms-baseline` 模块且设计文档 §5.5 明确使用 `/api/implementation/task/dependency`，可保留长路径；同时将 `ImplTask` 等改为长路径 `/api/implementation/task/...` 以统一风格。需评估前端改动量。
-
-### 9.3 TD-P8-016（新，低）：设计文档 §5.4 路径与实现不符（文档勘误）
+### 9.3 TD-P8-016（已修复，低）：设计文档 §5.4 路径与实现不符（文档勘误）
 
 **位置**：设计文档 §5.4 行 906-925
 
-**现象**：设计文档 §5.4 任务管理 API 表格中所有路径使用 `/api/implementation/task/...`（长路径），但后端 `ImplTaskController` 实际实现为 `/api/impl/task/...`（短路径）。前端 `implementation.ts`/`task-checklist.ts` 跟随后端使用短路径。
+**原现象**：设计文档 §5.4 任务管理 API 表格中所有路径使用 `/api/implementation/task/...`（长路径），但后端 `ImplTaskController` 实际实现为 `/api/impl/task/...`（短路径）。前端 `implementation.ts`/`task-checklist.ts` 跟随后端使用短路径。
 
-**影响**：文档与实现不符，可能误导开发者。前后端连通正常（前端跟随后端）。
-
-**建议**：更新设计文档 §5.4 路径为 `/api/impl/task/...`，或更新后端为长路径（与 TD-P8-015 联动）。
+**修复**（与 TD-P8-015 联动）：后端 4 个 Controller 路径统一为 `/api/implementation/task/...` 长路径后，与设计文档 §5.4 完全一致，文档勘误自动消解。
 
 ---
 
@@ -246,8 +242,8 @@
 | 后端端点实现完整性 | **70/70 = 100%** ✅ — 设计文档定义的全部 70 个端点后端均已实现 |
 | 前端封装完整性 | **67/70 = 95.7%** ⚠️ — 缺失 3 个项目生命周期端点（subproject/close/cancel） |
 | 前后端连通性 | **67/70 = 95.7%** ✅ — 已封装的 67 个端点前后端路径全部匹配，可正常调用 |
-| 路径命名一致性 | ⚠️ — 任务管理模块存在 `impl` vs `implementation` 短长路径混用（TD-P8-015） |
-| 设计文档准确性 | ⚠️ — §5.4 路径与实现不符（TD-P8-016，文档勘误） |
+| 路径命名一致性 | ✅ — 任务管理模块路径已统一为 `/api/implementation/task/...` 长路径（TD-P8-015 / TD-P8-016 已修复） |
+| 设计文档准确性 | ✅ — §5.4 路径与实现一致（TD-P8-016 已与 TD-P8-015 联动修复） |
 
 **总体验收结论：✅ 基本通过（连通率 95.7%）**
 
@@ -274,10 +270,10 @@
 | pms-project | FinalAcceptanceController | `/api/project/acceptance` |
 | pms-project | PunchListController | `/api/project/punch-list` |
 | pms-project | DeliverableChecklistController | `/api/project/deliverable-checklist` |
-| pms-implementation | ImplTaskController | `/api/impl/task` |
-| pms-implementation | TaskChecklistController | `/api/impl/task/checklist` |
-| pms-implementation | TaskCommentController | `/api/impl/task/comment` |
-| pms-implementation | TaskActivityController | `/api/impl/task/activity` |
+| pms-implementation | ImplTaskController | `/api/implementation/task` |
+| pms-implementation | TaskChecklistController | `/api/implementation/task/checklist` |
+| pms-implementation | TaskCommentController | `/api/implementation/task/comment` |
+| pms-implementation | TaskActivityController | `/api/implementation/task/activity` |
 | pms-baseline | TaskDependencyController | `/api/implementation/task/dependency` |
 | pms-baseline | BaselineController | `/api/baseline` |
 | pms-deliverable | DeliverableController | `/api/deliverable` |

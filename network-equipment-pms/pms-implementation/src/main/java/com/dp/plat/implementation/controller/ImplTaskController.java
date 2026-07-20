@@ -29,7 +29,7 @@ import java.util.List;
  */
 @Tag(name = "实施任务管理", description = "Implementation task management APIs")
 @RestController
-@RequestMapping("/api/impl/task")
+@RequestMapping("/api/implementation/task")
 @RequiredArgsConstructor
 public class ImplTaskController {
 

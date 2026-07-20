@@ -28,8 +28,8 @@
 | TD-P8-012 | `validateMandatoryDeliverables` 未被 `advancePhase` 复用 + 前端无视图调用 | 中 | Task 10 | 待修复 |
 | TD-P8-013 | `buildMaskedFields` 对 MASKED 字段重复脱敏计算 | 低 | Task 11 | 可接受 |
 | TD-P8-014 | HIDDEN 字段在 `maskedFields` 元数据中冗余 | 低 | Task 11 | 可接受 |
-| TD-P8-015 | 任务管理模块路径命名不一致（`impl` vs `implementation`） | 中 | Task 12 | 待修复 |
-| TD-P8-016 | 设计文档 §5.4 路径与实现不符（文档勘误） | 低 | Task 12 | 待修复（文档） |
+| TD-P8-015 | 任务管理模块路径命名不一致（`impl` vs `implementation`） | 中 | Task 12 | 已修复 |
+| TD-P8-016 | 设计文档 §5.4 路径与实现不符（文档勘误） | 低 | Task 12 | 已修复（与 TD-P8-015 联动） |
 
 ---
 
@@ -144,6 +144,13 @@
 - **根因**：`TaskDependencyController` 位于 `pms-baseline` 模块（非 `pms-implementation`），跨模块开发时路径前缀选择不一致。
 - **影响**：API 路径风格不一致，增加维护认知成本。
 - **建议**：统一任务相关端点路径前缀为 `/api/implementation/task/...`（与设计文档一致），或全部统一为 `/api/impl/task/...`。需同步更新前端封装与设计文档。
+- **状态**：已修复（Phase 9 / 批次 B）。将 4 个 Controller 的类级 `@RequestMapping` 从 `/api/impl/task` 统一为 `/api/implementation/task`：
+  - `pms-implementation/.../controller/ImplTaskController.java`
+  - `pms-implementation/.../controller/TaskChecklistController.java`
+  - `pms-implementation/.../controller/TaskCommentController.java`
+  - `pms-implementation/.../controller/TaskActivityController.java`
+  - 前端 4 个 API 文件（`implementation.ts` 16 处、`task-checklist.ts` 6 处、`task-comment.ts` 4 处、`task-activity.ts` 2 处）+ 1 个 Vue 注释（`views/task/detail/index.vue`）同步更新
+  - 同步更新 `docs/superpowers/acceptance/story3-acceptance.md`、`api-endpoints.md`
 
 ---
 
@@ -202,6 +209,7 @@
 - **现象**：设计文档 §5.4 任务管理 API 表格中所有路径使用 `/api/implementation/task/...`（长路径），但后端 `ImplTaskController` 实际实现为 `/api/impl/task/...`（短路径）。前端跟随后端使用短路径，前后端连通正常。
 - **影响**：文档与实现不符，可能误导开发者。
 - **建议**：更新设计文档 §5.4 路径为 `/api/impl/task/...`，或与 TD-P8-015 联动统一为长路径。优先级低。
+- **状态**：已修复（Phase 9 / 批次 B，与 TD-P8-015 联动）。后端 4 个 Controller 路径统一为 `/api/implementation/task/...` 长路径后，与设计文档 §5.4 完全一致，文档勘误自动消解。
 
 ---
 

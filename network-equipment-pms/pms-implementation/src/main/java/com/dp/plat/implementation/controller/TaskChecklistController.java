@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Tag(name = "任务检查项管理", description = "Task checklist APIs")
 @RestController
-@RequestMapping("/api/impl/task/checklist")
+@RequestMapping("/api/implementation/task/checklist")
 @RequiredArgsConstructor
 public class TaskChecklistController {
 

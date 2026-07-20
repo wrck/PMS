@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Tag(name = "任务活动记录", description = "Task activity APIs")
 @RestController
-@RequestMapping("/api/impl/task/activity")
+@RequestMapping("/api/implementation/task/activity")
 @RequiredArgsConstructor
 public class TaskActivityController {
 
