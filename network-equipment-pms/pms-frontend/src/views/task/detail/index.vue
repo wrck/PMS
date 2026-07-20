@@ -158,7 +158,55 @@ const overallProgress = computed<number>(
 )
 
 // ============ 加载任务详情 ============
+/** 是否为新建模式：taskId=0 且 query.action=create */
+const isCreateMode = computed(
+  () => taskId.value === 0 && route.query.action === 'create'
+)
+
+/** 从 URL 查询参数初始化一个空任务（用于新建模式） */
+function buildEmptyTaskFromQuery(): ImplTask {
+  const projectIdRaw = route.query.projectId
+  const projectId =
+    projectIdRaw != null && projectIdRaw !== ''
+      ? Number(projectIdRaw)
+      : NaN
+  const taskName =
+    typeof route.query.taskName === 'string'
+      ? decodeURIComponent(route.query.taskName)
+      : ''
+  const priority =
+    typeof route.query.priority === 'string'
+      ? (route.query.priority as TaskPriority)
+      : undefined
+  return {
+    id: undefined,
+    taskName,
+    taskType: 'OEM',
+    projectId: Number.isNaN(projectId) ? (0 as unknown as number) : projectId,
+    status: 'PENDING',
+    progress: 0,
+    priority,
+    parentTaskId: null,
+    description: '',
+    remark: ''
+  }
+}
+
 async function loadTask() {
+  // 新建模式：跳过后端加载，直接用查询参数初始化空任务并打开编辑弹窗
+  if (isCreateMode.value) {
+    task.value = buildEmptyTaskFromQuery()
+    progressVO.value = null
+    parentTask.value = null
+    subtree.value = []
+    comments.value = []
+    activities.value = []
+    dependencies.value = []
+    loading.value = false
+    nextTick(() => handleEdit())
+    return
+  }
+
   loading.value = true
   try {
     task.value = await getTaskDetail(taskId.value)
@@ -535,9 +583,14 @@ async function handleEditSubmit() {
     if (!valid) return
     editSubmitting.value = true
     try {
-      await assignOemTask(editForm as ImplTask)
+      const created = await assignOemTask(editForm as ImplTask)
       ElMessage.success('保存成功')
       editVisible.value = false
+      // 新建模式：跳转到新任务的详情页（脱离 ?action=create 状态）
+      if (isCreateMode.value && created?.id) {
+        router.replace(`/implementation/task/detail/${created.id}`)
+        return
+      }
       await loadTask()
     } catch {
       /* handled by interceptor */
@@ -774,25 +827,35 @@ onMounted(async () => {
       <template #title>
         <div class="title-row">
           <el-button link :icon="'ArrowLeft'" @click="router.back()">返回</el-button>
-          <span class="task-name">{{ task?.taskName || '任务详情' }}</span>
-          <el-tag v-if="task" :type="statusTagType(task.status)" size="small" effect="plain">
-            {{ statusLabel(task.status) }}
-          </el-tag>
-          <TaskPriorityTag v-if="task?.priority" :priority="task.priority" size="small" />
-          <el-tag v-if="task?.taskType" size="small" effect="plain" type="info">
-            {{ task.taskType === 'AGENT' ? '代理商' : '原厂' }}
-          </el-tag>
+          <span class="task-name">{{
+            isCreateMode ? '新建任务' : task?.taskName || '任务详情'
+          }}</span>
+          <el-tag v-if="isCreateMode" type="primary" size="small" effect="plain">新建</el-tag>
+          <template v-else>
+            <el-tag v-if="task" :type="statusTagType(task.status)" size="small" effect="plain">
+              {{ statusLabel(task.status) }}
+            </el-tag>
+            <TaskPriorityTag v-if="task?.priority" :priority="task.priority" size="small" />
+            <el-tag v-if="task?.taskType" size="small" effect="plain" type="info">
+              {{ task.taskType === 'AGENT' ? '代理商' : '原厂' }}
+            </el-tag>
+          </template>
         </div>
       </template>
       <template #actions>
-        <el-button v-if="canStart" type="primary" @click="handleStart">开始</el-button>
-        <el-button v-if="canSubmitReview" type="warning" @click="handleSubmitReview">
-          提交评审
-        </el-button>
-        <el-button v-if="canApprove" type="success" @click="handleApprove">验收完成</el-button>
-        <el-button v-if="canComplete" @click="handleComplete">完成</el-button>
-        <el-button v-if="canEdit" :icon="'Edit'" @click="handleEdit">编辑</el-button>
-        <el-button :icon="'Position'" @click="handleMove">移动</el-button>
+        <template v-if="isCreateMode">
+          <el-button type="primary" :icon="'Edit'" @click="handleEdit">填写信息</el-button>
+        </template>
+        <template v-else>
+          <el-button v-if="canStart" type="primary" @click="handleStart">开始</el-button>
+          <el-button v-if="canSubmitReview" type="warning" @click="handleSubmitReview">
+            提交评审
+          </el-button>
+          <el-button v-if="canApprove" type="success" @click="handleApprove">验收完成</el-button>
+          <el-button v-if="canComplete" @click="handleComplete">完成</el-button>
+          <el-button v-if="canEdit" :icon="'Edit'" @click="handleEdit">编辑</el-button>
+          <el-button :icon="'Position'" @click="handleMove">移动</el-button>
+        </template>
       </template>
     </PageHeader>
 

@@ -752,7 +752,10 @@ onMounted(async () => {
 
 <style scoped>
 .project-config-page {
+  height: 100%;
   padding: 16px 24px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .config-groups {
@@ -763,6 +766,10 @@ onMounted(async () => {
 
 .config-card {
   border-radius: var(--pms-radius-lg);
+}
+
+.config-card :deep(.el-card__body) {
+  overflow: visible;
 }
 
 .card-title-row {

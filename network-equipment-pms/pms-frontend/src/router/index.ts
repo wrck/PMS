@@ -219,7 +219,7 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '待办中心', icon: 'Bell' } },
       { path: 'approval-center', name: 'ApprovalCenter',
         component: () => import('@/views/workflow/approval-center/index.vue'),
-        meta: { title: '统一审批中心', icon: 'Checked', perms: 'workflow:approval:handle' } },
+        meta: { title: '统一审批中心', icon: 'Checked', perms: 'workflow:approval:list' } },
       { path: 'approval-detail/:id', name: 'ApprovalDetail',
         component: () => import('@/views/workflow/approval-detail/index.vue'),
         meta: { title: '审批详情', hidden: true } },

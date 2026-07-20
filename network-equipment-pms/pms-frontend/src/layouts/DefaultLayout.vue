@@ -109,7 +109,7 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     icon: 'Connection',
     children: [
       { title: '待办中心', path: '/workflow/todo', icon: 'Bell' },
-      { title: '统一审批中心', path: '/workflow/approval-center', icon: 'Checked', permissions: ['workflow:approval:handle'] },
+      { title: '统一审批中心', path: '/workflow/approval-center', icon: 'Checked', permissions: ['workflow:approval:list'] },
       { title: '字段权限配置', path: '/workflow/field-perm', icon: 'Lock', permissions: ['workflow:field:perm'] }
     ]
   },

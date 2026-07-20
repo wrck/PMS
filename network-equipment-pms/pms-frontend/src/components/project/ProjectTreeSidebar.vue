@@ -8,12 +8,17 @@
 // - 中部：el-tree 递归展示主子项目树（含 ProjectStatusTag 状态标签）
 // - 底部：全部折叠 / 全部展开 控制
 // 点击项目节点：调用 useProjectContext().setProject 并跳转到 /project/workspace/:id
+//
+// 数据源说明：
+// 后端 getProjectTree(id) 要求 id 为真实项目 ID，传 0 会抛"项目不存在"。
+// 因此侧栏改用 listProjects 拉取全量项目（size=500 足够），前端按 parentProjectId
+// 构建树。这样不依赖后端递归接口，且能展示所有顶层项目。
 // =============================================================================
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElTree, ElMessage } from 'element-plus'
+import { ElTree } from 'element-plus'
 import { Search, Plus, Expand, Fold, Refresh } from '@element-plus/icons-vue'
-import { getProjectTree, type ProjectTreeNode } from '@/api/project'
+import { listProjects, type Project, type ProjectTreeNode } from '@/api/project'
 import ProjectStatusTag from '@/components/common/ProjectStatusTag.vue'
 import { useProjectContext } from '@/composables/useProjectContext'
 
@@ -44,20 +49,84 @@ const filterNode = (value: string, data: ProjectTreeNode) => {
   )
 }
 
-/** 加载主子项目树根节点（id = 0 表示根） */
+/**
+ * 读取项目名称：兼容后端 projectName 和前端接口 name 两种字段名。
+ * 后端 Project 实体字段是 projectName/projectCode/projectType，
+ * 前端 TypeScript 接口是 name/code/type，无 @JsonProperty 映射。
+ */
+function readProjectName(p: Project): string {
+  return (p as any).projectName || p.name || ''
+}
+function readProjectCode(p: Project): string {
+  return (p as any).projectCode || p.code || ''
+}
+
+/**
+ * 将扁平 Project[] 按 parentProjectId 构建为递归树。
+ * - parentProjectId 为 null/undefined/0 的作为根节点
+ */
+function buildTreeFromList(projects: Project[]): ProjectTreeNode[] {
+  const nodeMap = new Map<number, ProjectTreeNode>()
+  const roots: ProjectTreeNode[] = []
+
+  // 第一遍：创建所有节点
+  projects.forEach((p) => {
+    if (!p.id) return
+    nodeMap.set(p.id, {
+      id: p.id,
+      projectCode: readProjectCode(p),
+      projectName: readProjectName(p),
+      status: p.status,
+      parentProjectId: undefined,
+      children: []
+    })
+  })
+
+  // 第二遍：组装父子关系
+  // 后端 Project 实体有 parentProjectId 字段，但前端接口未声明，用 any 读取
+  projects.forEach((p) => {
+    if (!p.id) return
+    const node = nodeMap.get(p.id)!
+    const parentId = (p as any).parentProjectId as number | null | undefined
+    if (parentId && nodeMap.has(parentId)) {
+      nodeMap.get(parentId)!.children!.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+
+  // 清理空 children 数组（el-tree 据此判断是否显示展开箭头）
+  const cleanup = (node: ProjectTreeNode) => {
+    if (node.children && node.children.length === 0) {
+      delete node.children
+    } else if (node.children) {
+      node.children.forEach(cleanup)
+    }
+  }
+  roots.forEach(cleanup)
+  return roots
+}
+
+/** 加载项目列表并构建树 */
 const loadTree = async () => {
   loading.value = true
   loadError.value = false
   try {
-    const data = await getProjectTree(0)
-    // API 返回单个 ProjectTreeNode；包成数组喂给 el-tree
-    treeData.value = data ? [data] : []
-    projectList.value = treeData.value
+    const res = await listProjects({ page: 1, size: 500 })
+    const projects = res?.records ?? []
+    treeData.value = buildTreeFromList(projects)
+    // projectList 保持扁平结构供其他组件使用
+    projectList.value = projects.map((p) => ({
+      id: p.id!,
+      projectCode: readProjectCode(p),
+      projectName: readProjectName(p),
+      status: p.status,
+      children: []
+    }))
   } catch (e) {
     treeData.value = []
     projectList.value = []
     loadError.value = true
-    // 不弹 ElMessage 避免与其他页面错误重复；侧栏内显示重试按钮
   } finally {
     loading.value = false
   }
