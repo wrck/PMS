@@ -735,7 +735,7 @@ project:template:publish      发布模板版本
 project:template:use          从模板创建项目
 project:create                创建项目
 project:edit                  编辑项目
-project:advance:phase         推进阶段
+project:phase:advance         推进阶段
 project:close                 关闭项目
 project:subproject:manage     管理子项目
 project:task:add              新增任务
@@ -862,7 +862,7 @@ workflow:approval:field:perm  配置敏感字段权限
 | POST | `/api/project/{id}/close` | **关闭主项目**（含子项目校验） | `project:close` |
 | POST | `/api/project/{id}/cancel` | 取消项目 | `project:close` |
 | GET | `/api/project/{id}/progress` | 项目进度汇总（含子项目） | - |
-| POST | `/api/project/phase/{phaseId}/advance` | **推进阶段** | `project:advance:phase` |
+| POST | `/api/project/phase/{phaseId}/advance` | **推进阶段** | `project:phase:advance` |
 
 #### Story 2 验收 1：阶段推进被阻止
 

@@ -2555,19 +2555,19 @@ public class ProjectPhaseController {
     }
 
     @PostMapping
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<ProjectPhase> create(@RequestBody ProjectPhase phase) {
         return Result.ok(phaseService.create(phase));
     }
 
     @PutMapping
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<ProjectPhase> update(@RequestBody ProjectPhase phase) {
         return Result.ok(phaseService.update(phase));
     }
 
     @DeleteMapping("/{id}")
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<Void> delete(@PathVariable Long id) {
         phaseService.delete(id);
         return Result.ok();

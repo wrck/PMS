@@ -17,7 +17,7 @@
 | TD-P8-001 | pms-project ↔ pms-workflow 双向依赖环 | 高 | Task 3 | 待修复 |
 | TD-P8-002 | 前端权限码 `workflow:*` vs 后端 `approval:center:*` 命名不一致 | 中 | Task 5 | 已修复 |
 | TD-P8-003 | `createProjectFromTemplate` 仅深拷贝阶段，未含任务/交付件/依赖 | 高 | Task 6 | 待修复 |
-| TD-P8-004 | 权限码 `project:advance:phase` vs `project:phase:advance` 不一致 | 中 | Task 7 | 待修复 |
+| TD-P8-004 | 权限码 `project:advance:phase` vs `project:phase:advance` 不一致 | 中 | Task 7 | 已修复 |
 | TD-P8-005 | TASK/APPROVAL 两类阶段退出条件未实现 | 中 | Task 7 | 待修复 |
 | TD-P8-006 | 前端 `api/project.ts` 未封装 subproject/close/cancel 三个端点 | 高 | Task 7/12 | 待修复 |
 | TD-P8-007 | 异步进度汇总失败仅日志记录不重试 | 低 | Task 8 | 可接受 |
@@ -106,6 +106,11 @@
 - **现象**：设计文档 §5.3 定义推进阶段权限码为 `project:advance:phase`，后端实际为 `project:phase:advance`（语序不同）。
 - **影响**：权限码不一致可能导致权限配置混乱。
 - **建议**：统一为一种语序（建议 `project:phase:advance`，与资源层级一致），更新设计文档或后端注解。
+- **状态**：已修复（Phase 9 / 批次 B）。经核查，后端 `ProjectPhaseController` 实际使用 `project:advance:phase`，V72 数据库迁移脚本使用 `project:phase:advance`。已统一为 `project:phase:advance`（与 V72 + 资源层级一致）：
+  - `pms-project/.../controller/ProjectPhaseController.java` 4 处 `@RequiresPermissions` 改为 `project:phase:advance`
+  - 设计文档 §5.3 行 738、865 改为 `project:phase:advance`
+  - `docs/superpowers/acceptance/story2-acceptance.md` 同步更新
+  - `docs/superpowers/plans/2026-07-17-pm-phase1-infrastructure-and-story1-template.md` 同步更新
 
 ### TD-P8-005：TASK/APPROVAL 两类阶段退出条件未实现
 

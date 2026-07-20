@@ -34,19 +34,19 @@ public class ProjectPhaseController {
     }
 
     @PostMapping
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<ProjectPhase> create(@RequestBody ProjectPhase phase) {
         return Result.ok(phaseService.create(phase));
     }
 
     @PutMapping
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<ProjectPhase> update(@RequestBody ProjectPhase phase) {
         return Result.ok(phaseService.update(phase));
     }
 
     @DeleteMapping("/{id}")
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     public Result<Void> delete(@PathVariable Long id) {
         phaseService.delete(id);
         return Result.ok();
@@ -61,7 +61,7 @@ public class ProjectPhaseController {
      */
     @Operation(summary = "推进阶段（含退出条件校验）")
     @PostMapping("/{phaseId}/advance")
-    @RequiresPermissions("project:advance:phase")
+    @RequiresPermissions("project:phase:advance")
     @OperLog(title = "项目阶段-推进", businessType = 2)
     @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<ProjectPhase> advance(@PathVariable Long phaseId) {
