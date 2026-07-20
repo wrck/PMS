@@ -2,6 +2,10 @@ import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
+// 启用数据集成校验对象：导入 registry 与 validator（导入即注册）
+import '@/validators/project'
+import { findRequestValidator, findResponseValidator } from '@/validators/registry'
+import { formatErrors } from '@/validators'
 
 /** localStorage key for the JWT token */
 export const TOKEN_KEY = 'pms_token'
@@ -11,6 +15,19 @@ export const IDEMPOTENT_KEY_HEADER = 'X-Idempotent-Key'
 
 /** 需要注入幂等键的 HTTP 方法（写操作） */
 const IDEMPOTENT_METHODS = ['post', 'put', 'delete', 'patch']
+
+/** 写操作的 HTTP 方法（请求体需要校验） */
+const WRITE_METHODS = ['post', 'put', 'patch']
+
+/**
+ * 开关：是否启用数据集成校验对象。
+ *
+ * - true（默认）：写操作请求体校验失败时阻止请求发送，避免触发后端 400。
+ * - false：跳过校验（仅在调试时使用，生产环境不应关闭）。
+ *
+ * 也可在请求 config 中通过 `skipValidate: true` 单次跳过校验。
+ */
+export const VALIDATOR_ENABLED = true
 
 /**
  * Backend unified response envelope: { code, message, data }.
@@ -59,6 +76,7 @@ const service: AxiosInstance = axios.create({
 })
 
 // Request interceptor: inject the JWT token + idempotent key for write operations
+// + 数据集成校验：写操作请求体先经 validator 校验，失败则阻止请求
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(TOKEN_KEY)
@@ -71,18 +89,73 @@ service.interceptors.request.use(
     if (IDEMPOTENT_METHODS.includes(method) && !config.headers[IDEMPOTENT_KEY_HEADER]) {
       config.headers[IDEMPOTENT_KEY_HEADER] = generateIdempotentKey()
     }
+
+    // ============ 数据集成校验对象 ============
+    // 写操作（POST/PUT/PATCH）：根据 method + url 从 registry 查找 request validator，
+    // 校验请求体。校验失败 → ElMessage.error + reject，不发请求。
+    // 这一层校验是后端 @Valid 的前端镜像，能在网络往返前捕获字段名缺失/必填/类型/范围错误。
+    if (
+      VALIDATOR_ENABLED &&
+      WRITE_METHODS.includes(method) &&
+      config.data != null &&
+      !(config as AxiosRequestConfig & { skipValidate?: boolean }).skipValidate
+    ) {
+      const url = config.url || ''
+      const validator = findRequestValidator(method, url)
+      if (validator) {
+        const result = validator(config.data)
+        if (!result.valid) {
+          const msg = `请求数据校验失败：${formatErrors(result.errors)}`
+          // 控制台输出完整错误，方便开发者定位
+          console.warn(`[validator] 请求被拦截: ${method.toUpperCase()} ${url}`, {
+            errors: result.errors,
+            data: config.data
+          })
+          ElMessage.error(msg)
+          return Promise.reject(new Error(msg))
+        }
+        // 校验通过：用 normalize 后的数据替换原请求体
+        // normalize 会做字段白名单过滤 + 旧字段名映射，确保发到后端的是规范数据
+        if (result.data) {
+          config.data = result.data
+        }
+      }
+    }
+
     return config
   },
   (error) => Promise.reject(error)
 )
 
 // Response interceptor: unwrap the unified envelope and handle business errors
+// + 数据集成校验：可选对响应 data 做字段白名单过滤
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data as ApiResult
     // Success: return the data payload directly (cast because axios types
     // expect an AxiosResponse, but the helpers below unwrap it to <T>)
     if (res.code === 200) {
+      // ============ 数据集成校验对象（响应侧） ============
+      // 若该 URL 注册了 response validator，对 Result.data 做白名单过滤，
+      // 防止后端返回前端未预期的字段污染 store/视图状态。
+      // 响应校验失败不阻断流程（仅控制台 warn），避免后端字段微调导致前端瘫痪。
+      if (VALIDATOR_ENABLED && res.data != null) {
+        const method = (response.config.method || '').toLowerCase()
+        const url = response.config.url || ''
+        const respValidator = findResponseValidator(method, url)
+        if (respValidator && !(response.config as AxiosRequestConfig & { skipValidate?: boolean }).skipValidate) {
+          const result = respValidator(res.data)
+          if (!result.valid) {
+            console.warn(`[validator] 响应数据校验失败: ${method.toUpperCase()} ${url}`, {
+              errors: result.errors,
+              data: res.data
+            })
+          } else if (result.data) {
+            // 校验通过：用 normalize 后的数据替换（白名单过滤）
+            res.data = result.data
+          }
+        }
+      }
       return res.data as unknown as AxiosResponse
     }
     // Unauthorized: clear token and redirect to login
