@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -113,24 +111,24 @@ public class TaskDependencyServiceImpl extends ServiceImpl<TaskDependencyMapper,
      * 若能到达 {@code target}（predecessor）则返回从 start 到 target 的路径（含两端），
      * 并在末尾追加 start 形成闭合路径；未找到返回空列表。
      *
+     * <p>实现说明（TD-P8-009 修复）：采用按需加载邻接节点的增量 DFS，不再一次性
+     * 全量加载项目所有依赖到内存。仅对 DFS 实际访问到的节点查询其后继列表，
+     * 减小大规模项目（>1000 任务）下的内存与首屏延迟压力。</p>
+     *
+     * <p>性能注记：当前实现为逐节点查询，最坏情况下 DFS 访问 N 个节点则触发 N 次
+     * 数据库查询。对于超大规模项目（>1000 任务且依赖密集），可进一步优化为
+     * 「批量加载」（每次按 N 个节点 ID 批量查询后继，N 推荐 50-200），
+     * 在数据库往返次数与单次结果集大小间取得平衡。</p>
+     *
      * @param start     起点（=新增边的 successor）
      * @param target    目标（=新增边的 predecessor）
      * @param projectId 项目ID（限定依赖图范围）
      * @return 闭合路径任务ID列表（首尾相同），或空列表
      */
     private List<Long> detectCycle(Long start, Long target, Long projectId) {
-        // 构建邻接表：predecessor -> [successor...]
-        List<TaskDependency> deps = this.list(new LambdaQueryWrapper<TaskDependency>()
-                .eq(TaskDependency::getProjectId, projectId));
-        Map<Long, List<Long>> adjacency = new LinkedHashMap<>();
-        for (TaskDependency dep : deps) {
-            adjacency.computeIfAbsent(dep.getPredecessorTaskId(), k -> new ArrayList<>())
-                    .add(dep.getSuccessorTaskId());
-        }
-
         Set<Long> visited = new HashSet<>();
         List<Long> path = new ArrayList<>();
-        if (dfs(start, target, adjacency, visited, path)) {
+        if (dfs(start, target, projectId, visited, path)) {
             // path 为 start...target，追加 start 闭合
             path.add(start);
             return path;
@@ -139,20 +137,28 @@ public class TaskDependencyServiceImpl extends ServiceImpl<TaskDependencyMapper,
     }
 
     /**
-     * DFS 查找从 {@code current} 到 {@code target} 的路径。
+     * DFS 查找从 {@code current} 到 {@code target} 的路径（增量按需加载后继）。
+     *
+     * <p>每次进入节点时按 {@code predecessorTaskId = current} 查询其后继列表，
+     * 仅查询当前 DFS 路径所需节点，避免全量加载邻接表。</p>
      *
      * @return true 表示找到路径（结果存入 {@code path}，含 current...target）
      */
-    private boolean dfs(Long current, Long target, Map<Long, List<Long>> adjacency,
+    private boolean dfs(Long current, Long target, Long projectId,
                         Set<Long> visited, List<Long> path) {
         path.add(current);
         if (current.equals(target)) {
             return true;
         }
         visited.add(current);
-        for (Long next : adjacency.getOrDefault(current, Collections.emptyList())) {
+        // 按需加载：仅查询当前节点的直接后继，避免全量加载邻接表
+        List<TaskDependency> successors = this.list(new LambdaQueryWrapper<TaskDependency>()
+                .eq(TaskDependency::getProjectId, projectId)
+                .eq(TaskDependency::getPredecessorTaskId, current));
+        for (TaskDependency dep : successors) {
+            Long next = dep.getSuccessorTaskId();
             if (!visited.contains(next)) {
-                if (dfs(next, target, adjacency, visited, path)) {
+                if (dfs(next, target, projectId, visited, path)) {
                     return true;
                 }
             }
