@@ -61,12 +61,14 @@ export const routes: RouteRecordRaw[] = [
       }
     ]
   },
-  // ============ 项目管理（嵌套） ============
+  // ============ 项目管理（嵌套，以 workspace/:id 为枢纽） ============
+  // 父级 meta.showProjectSidebar: true 由 Vue Router 合并继承到所有子路由，
+  // 让 DefaultLayout 中的 ProjectTreeSidebar 在项目管理相关路由常驻显示。
   {
     path: '/project',
     component: Layout,
     redirect: '/project/list',
-    meta: { title: '项目管理', icon: 'Folder', requiresAuth: true },
+    meta: { title: '项目管理', icon: 'Folder', requiresAuth: true, showProjectSidebar: true },
     children: [
       {
         path: 'list',
@@ -74,12 +76,15 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/project/list/index.vue'),
         meta: { title: '项目列表', icon: 'Folder' }
       },
+      // 兼容旧路径 /project/detail/:id —— 重定向到工作区枢纽
+      // (detail/index.vue 组件内部 onMounted 执行 router.replace)
       {
         path: 'detail/:id',
         name: 'ProjectDetail',
         component: () => import('@/views/project/detail/index.vue'),
         meta: { title: '项目详情', hidden: true }
       },
+      // ★ 项目工作区枢纽（8 Tab 通过组件内部动态组件加载，不占用独立路由）
       {
         path: 'workspace/:id',
         name: 'ProjectWorkspace',
