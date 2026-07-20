@@ -9,7 +9,7 @@ import com.dp.plat.workflow.entity.ApprovalRecord;
 import com.dp.plat.workflow.mapper.ApprovalFieldPermissionMapper;
 import com.dp.plat.workflow.mapper.ApprovalNodeMapper;
 import com.dp.plat.workflow.service.ApprovalCenterService;
-import com.dp.plat.workflow.service.BusinessDataLoader;
+import com.dp.plat.common.spi.BusinessDataLoader;
 import com.dp.plat.workflow.service.SensitiveFieldMasker;
 import com.dp.plat.workflow.vo.ApprovalDetailVO;
 import com.dp.plat.workflow.vo.ApprovalStatisticsVO;

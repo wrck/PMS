@@ -23,11 +23,11 @@
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-integration</artifactId>
         </dependency>
-        <!-- 项目配置（审批超时策略读取 ProjectConfigService） -->
-        <dependency>
-            <groupId>com.dp.plat</groupId>
-            <artifactId>pms-project</artifactId>
-        </dependency>
+        <!--
+            TD-P8-001：移除对 pms-project 的依赖以打破双向依赖环。
+            审批超时策略所需的项目配置通过 pms-common 中的 SPI 接口在运行时注入，
+            业务数据加载通过 com.dp.plat.common.spi.BusinessDataLoader SPI 由各业务模块实现。
+        -->
         <dependency>
             <groupId>org.flowable</groupId>
             <artifactId>flowable-spring-boot-starter</artifactId>

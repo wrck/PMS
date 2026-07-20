@@ -1,13 +1,14 @@
 package com.dp.plat.workflow.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.dp.plat.project.service.ProjectConfigService;
+import com.dp.plat.common.spi.ProjectConfigProvider;
 import com.dp.plat.workflow.entity.ApprovalHistory;
 import com.dp.plat.workflow.entity.ApprovalRecord;
 import com.dp.plat.workflow.mapper.ApprovalHistoryMapper;
 import com.dp.plat.workflow.mapper.ApprovalRecordMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +25,14 @@ import java.util.List;
  *   <li>{@code NOTIFY_ONLY}（默认）：仅标记 escalated 并记录日志，等待人工处理</li>
  * </ul>
  *
- * <p>配置键 {@code approval.timeout.action}（读取 {@link ProjectConfigService}，按项目维度）。
+ * <p>配置键 {@code approval.timeout.action}（通过 {@link ProjectConfigProvider} SPI 读取，按项目维度）。
  * 每次处理都追加 {@link ApprovalHistory}（action=TIMEOUT）。</p>
  *
  * <p>关联设计文档：§3.5 审批中心统一规则（行 429-500）、§5.7。需 {@code @EnableScheduling}
  * （pms-admin 已启用）。</p>
+ *
+ * <p>TD-P8-001：原直接依赖 {@code pms-project} 模块的 {@code ProjectConfigService}，
+ * 改为通过 {@link ProjectConfigProvider} SPI 解耦，由 {@code pms-project} 实现并注入。</p>
  */
 @Slf4j
 @Component
@@ -43,7 +47,12 @@ public class ApprovalTimeoutScheduler {
 
     private final ApprovalRecordMapper approvalRecordMapper;
     private final ApprovalHistoryMapper approvalHistoryMapper;
-    private final ProjectConfigService projectConfigService;
+    /**
+     * 项目配置读取 SPI（TD-P8-001 解耦）。
+     * 通过构造器注入；若 pms-project 模块未加载则为 null，{@link #readTimeoutAction(Long)} 回退默认值。
+     */
+    @Autowired(required = false)
+    private ProjectConfigProvider projectConfigProvider;
 
     /**
      * 每小时整点执行超时扫描（cron: 0 0 * * * ?）。
@@ -100,10 +109,10 @@ public class ApprovalTimeoutScheduler {
     }
 
     private String readTimeoutAction(Long projectId) {
-        if (projectId == null) {
+        if (projectId == null || projectConfigProvider == null) {
             return DEFAULT_TIMEOUT_ACTION;
         }
-        String value = projectConfigService.get(projectId, null, CFG_TIMEOUT_ACTION);
+        String value = projectConfigProvider.get(projectId, null, CFG_TIMEOUT_ACTION);
         if (value == null || value.isBlank()) {
             return DEFAULT_TIMEOUT_ACTION;
         }
