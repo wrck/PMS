@@ -136,7 +136,7 @@ onMounted(loadData)
     <PageHeader title="项目模板" description="管理项目模板，支持版本化发布">
       <template #actions>
         <el-button :icon="Refresh" @click="loadData">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="goCreate">新建模板</el-button>
+        <el-button v-permission="'project:template:add'" type="primary" :icon="Plus" @click="goCreate">新建模板</el-button>
       </template>
     </PageHeader>
 
@@ -172,7 +172,7 @@ onMounted(loadData)
       :description="templates.length === 0 ? '点击右上角「新建模板」开始创建' : '没有符合筛选条件的模板'"
     >
       <template #action>
-        <el-button v-if="templates.length === 0" type="primary" :icon="Plus" @click="goCreate">
+        <el-button v-if="templates.length === 0" v-permission="'project:template:add'" type="primary" :icon="Plus" @click="goCreate">
           新建模板
         </el-button>
       </template>
@@ -215,10 +215,10 @@ onMounted(loadData)
         </div>
 
         <div class="card-actions" @click.stop>
-          <el-button text size="small" :icon="Edit" @click="goEdit(tpl.id)">编辑</el-button>
+          <el-button v-permission="'project:template:add'" text size="small" :icon="Edit" @click="goEdit(tpl.id)">编辑</el-button>
           <el-button text size="small" :icon="Clock" @click="goVersion(tpl.id)">版本</el-button>
-          <el-button text size="small" :icon="CopyDocument" @click="handleCopy(tpl)">复制</el-button>
-          <el-button text size="small" type="danger" :icon="Delete" @click="handleDelete(tpl)">
+          <el-button v-permission="'project:template:add'" text size="small" :icon="CopyDocument" @click="handleCopy(tpl)">复制</el-button>
+          <el-button v-permission="'project:template:add'" text size="small" type="danger" :icon="Delete" @click="handleDelete(tpl)">
             删除
           </el-button>
         </div>

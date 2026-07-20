@@ -291,6 +291,7 @@ onMounted(loadData)
         <el-button :icon="ArrowLeft" @click="router.push('/project/template')">返回列表</el-button>
         <el-button :icon="DCaret" @click="openCompare">版本对比</el-button>
         <el-button
+          v-permission="'project:template:publish'"
           type="primary"
           :icon="Plus"
           @click="publishDialogVisible = true"
@@ -308,7 +309,7 @@ onMounted(loadData)
       description="该模板尚未发布任何版本"
     >
       <template #action>
-        <el-button type="primary" :icon="Plus" @click="publishDialogVisible = true">
+        <el-button v-permission="'project:template:publish'" type="primary" :icon="Plus" @click="publishDialogVisible = true">
           发布第一个版本
         </el-button>
       </template>
@@ -350,6 +351,7 @@ onMounted(loadData)
                 查看详情
               </el-button>
               <el-button
+                v-permission="'project:template:publish'"
                 text
                 size="small"
                 :icon="Back"

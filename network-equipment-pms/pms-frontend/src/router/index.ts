@@ -131,13 +131,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'template/form/:id?',
         name: 'ProjectTemplateForm',
         component: () => import('@/views/project/template/form.vue'),
-        meta: { title: '模板编辑', hidden: true }
+        // 进入表单页至少需要模板查看权限；保存/发布按钮在 form.vue 内通过 v-permission 单独控制
+        meta: { title: '模板编辑', hidden: true, perms: 'project:template:list' }
       },
       {
         path: 'template/version/:id',
         name: 'ProjectTemplateVersion',
         component: () => import('@/views/project/template/version.vue'),
-        meta: { title: '版本管理', hidden: true }
+        meta: { title: '版本管理', hidden: true, perms: 'project:template:list' }
       },
       {
         path: 'config/:id',

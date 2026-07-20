@@ -391,11 +391,11 @@ onMounted(() => {
     <PageHeader :title="isEdit ? '编辑模板' : '新建模板'" description="按 7 步分步配置模板内容">
       <template #actions>
         <el-button :icon="RefreshLeft" @click="router.back()">取消</el-button>
-        <el-button :icon="Check" :loading="submitting" @click="handleSaveDraft">保存草稿</el-button>
-        <el-button v-if="form.id" type="success" :icon="Promotion" @click="publishDialogVisible = true">
+        <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">保存草稿</el-button>
+        <el-button v-if="form.id" v-permission="'project:template:publish'" type="success" :icon="Promotion" @click="publishDialogVisible = true">
           发布版本
         </el-button>
-        <el-button type="primary" :icon="Check" :loading="submitting" @click="handleSave">保存</el-button>
+        <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">保存</el-button>
       </template>
     </PageHeader>
 
