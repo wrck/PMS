@@ -350,14 +350,15 @@ export function inferActiveTabGroup(path: string): string {
 }
 
 /**
- * 根据顶级 Tab group 过滤可见菜单。
+ * 根据顶级 Tab group 过滤可见菜单（响应式）。
  *
- * @param group 顶级 Tab group 标识
- * @returns 该 group 下的所有可见菜单项（含分组与叶子）
+ * @param groupRef 顶级 Tab group 标识的 getter 函数（推荐用 () => activeTabGroup.value 形式）
+ * @returns 该 group 下的所有可见菜单项（含分组与叶子），ComputedRef 自动响应 group 变化
  */
-export function useMenuByGroup(group: string): ComputedRef<MenuItem[]> {
+export function useMenuByGroup(groupRef: () => string): ComputedRef<MenuItem[]> {
+  const visible = useVisibleMenuGroups()
   return computed<MenuItem[]>(() => {
-    const visible = useVisibleMenuGroups()
+    const group = groupRef()
     return visible.value.filter((item) => {
       const itemGroup = 'group' in item && item.group ? item.group : item.title
       return itemGroup === group
