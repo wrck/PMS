@@ -504,15 +504,19 @@ ORDER BY round ASC, operated_at ASC;
 
 ```java
 public Result<?> saveDependency(TaskDependency dep) {
-    // 1. 自环检测
+    // 1. 自环检测（抛 BusinessException，由全局异常处理器统一拦截）
     if (dep.getPredecessorTaskId().equals(dep.getSuccessorTaskId())) {
-        return Result.fail("SELF_DEPENDENCY", "任务不能依赖自身");
+        throw new BusinessException("SELF_DEPENDENCY", "任务不能依赖自身");
     }
     
     // 2. 闭环检测：检查 successor → predecessor 是否存在路径
+    //    检测到闭环时抛出 CycleDetectedException，由 BaselineExceptionHandler 捕获
+    //    并转换为 HTTP 200 + Result.ok(DependencyCycleResult{success=false, ...})
+    //    （与下方 §5.5 Story 4 验收 1 响应样例一致，便于前端响应拦截器按
+    //    code=200 判断 HTTP 成功、按 data.success 判断业务结果）
     List<Long> cyclePath = detectCycle(dep.getSuccessorTaskId(), dep.getPredecessorTaskId(), dep.getProjectId());
     if (!cyclePath.isEmpty()) {
-        return Result.fail("CYCLE_DETECTED", "形成循环依赖，闭环路径: " + cyclePath, cyclePath);
+        throw new CycleDetectedException(buildCyclePathNodes(cyclePath));
     }
     
     dependencyMapper.insert(dep);
@@ -972,9 +976,15 @@ workflow:approval:field:perm  配置敏感字段权限
 
 #### Story 4 验收 1：循环依赖被拒绝
 
+> 响应 data 字段对应 DTO `DependencyCycleResult`，cyclePath 元素对应 `CycleNode`。
+> 实现要点：检测到闭环时 service 抛 `CycleDetectedException`，由
+> `BaselineExceptionHandler` 捕获并包装为 `Result.ok(DependencyCycleResult{success=false, ...})`
+> 即 HTTP 200 + `data.success=false`（伪代码见 §3.6 行 519）。
+
 ```json
 {
   "code": 200,
+  "message": "成功",
   "data": {
     "success": false,
     "errorCode": "CYCLE_DETECTED",
@@ -991,9 +1001,13 @@ workflow:approval:field:perm  配置敏感字段权限
 
 #### Story 4 验收 2：基线偏差分析
 
+> 响应 data 字段对应 DTO `BaselineDiffResult`，baseline 字段对应其内嵌
+> `BaselineDiffResult.BaselineInfo`，diffs 元素对应 `TaskDiff`。
+
 ```json
 {
   "code": 200,
+  "message": "成功",
   "data": {
     "baseline": {
       "id": 7001,
