@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -41,6 +42,16 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
 
     /** 项目生命周期状态常量（关联设计文档 §3.1） */
     private static final String PROJECT_CLOSING = "CLOSING";
+
+    /**
+     * 交付件「已批准」状态集合（TD-P8-011）。
+     *
+     * <p>关联设计文档 §3.4 行 427：阶段退出条件判断「必需交付件是否达到
+     * PUBLISHED/REFERENCED/ARCHIVED（即已批准）」。当 {@code requiredStatus} 属于此集合时，
+     * 校验 {@code d.getStatus()} 是否也在此集合中（集合判断），而非精确匹配单一状态。
+     * 与 {@code DeliverableStatus.isApproved()} 保持语义一致。</p>
+     */
+    private static final Set<String> DELIVERABLE_APPROVED_SET = Set.of("PUBLISHED", "REFERENCED", "ARCHIVED");
 
     @Override
     public List<ProjectPhase> listByProjectId(Long projectId) {
@@ -141,7 +152,10 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
             return violations; // 未配置退出条件，直接通过
         }
 
-        // 1. 必需交付件：状态须等于 requiredStatus
+        // 1. 必需交付件：状态须满足 requiredStatus 语义
+        //    TD-P8-011：当 requiredStatus 属于「已批准集合」（PUBLISHED/REFERENCED/ARCHIVED）时，
+        //    按集合判断 d.getStatus() 是否也在已批准集合中（与 DeliverableStatus.isApproved() 一致）；
+        //    否则（如 DRAFT/SUBMITTED/REVIEWED/SIGNED）保持精确匹配。
         if (gate.getRequiredDeliverables() != null) {
             for (PhaseExitGate.RequiredDeliverable req : gate.getRequiredDeliverables()) {
                 Deliverable d = deliverableMapper.selectById(req.getDeliverableId());
@@ -154,14 +168,29 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
                             .expectedStatus(req.getRequiredStatus())
                             .actualStatus(null)
                             .build());
-                } else if (req.getRequiredStatus() != null
-                        && !req.getRequiredStatus().equals(d.getStatus())) {
+                    continue;
+                }
+                if (req.getRequiredStatus() == null) {
+                    continue;
+                }
+                boolean satisfied;
+                String expectedDisplay;
+                if (DELIVERABLE_APPROVED_SET.contains(req.getRequiredStatus())) {
+                    // 集合判断：达到任一已批准状态即可
+                    satisfied = DELIVERABLE_APPROVED_SET.contains(d.getStatus());
+                    expectedDisplay = "已批准（PUBLISHED/REFERENCED/ARCHIVED）";
+                } else {
+                    // 精确匹配：DRAFT/SUBMITTED/REVIEWED/SIGNED 等
+                    satisfied = req.getRequiredStatus().equals(d.getStatus());
+                    expectedDisplay = req.getRequiredStatus();
+                }
+                if (!satisfied) {
                     violations.add(PhaseExitGateViolation.builder()
                             .gateType("DELIVERABLE")
                             .message("必需交付件未达到要求状态")
                             .businessId(d.getId())
                             .businessName(d.getDeliverableName())
-                            .expectedStatus(req.getRequiredStatus())
+                            .expectedStatus(expectedDisplay)
                             .actualStatus(d.getStatus())
                             .build());
                 }
