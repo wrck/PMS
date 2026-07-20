@@ -306,9 +306,14 @@ onBeforeUnmount(() => {
         <div class="main-wrapper">
           <ProjectTreeSidebar v-if="showProjectSidebar && !isMobile" />
           <el-main class="layout-main">
-            <router-view v-slot="{ Component }">
-              <transition name="fade-transform" mode="out-in">
-                <component :is="Component" />
+            <router-view v-slot="{ Component, route }">
+              <transition
+                :name="(route.meta.transitionName as string) || 'fade-transform'"
+                mode="out-in"
+              >
+                <keep-alive :max="10">
+                  <component :is="Component" :key="route.fullPath" />
+                </keep-alive>
               </transition>
             </router-view>
           </el-main>

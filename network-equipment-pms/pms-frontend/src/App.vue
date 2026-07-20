@@ -32,5 +32,47 @@ watch(isOnline, (online, prev) => {
 </script>
 
 <template>
-  <router-view />
+  <router-view v-slot="{ Component, route }">
+    <transition
+      :name="route.meta.transitionName || 'fade-slide'"
+      mode="out-in"
+    >
+      <component :is="Component" :key="route.path" />
+    </transition>
+  </router-view>
 </template>
+
+<style>
+/* ============ 全局路由切换动画 ============ */
+/* fade-slide：钉飞风格的轻微上移 + 渐显，比 fade-transform 更柔和 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* 保留原 fade-transform 兼容（DefaultLayout 内部使用） */
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+</style>
