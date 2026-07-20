@@ -73,7 +73,9 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     icon: 'Folder',
     children: [
       { title: '项目列表', path: '/project/list', icon: 'Folder' },
-      { title: '交付看板', path: '/project/kanban', icon: 'Grid' }
+      { title: '主子项目树', path: '/project/tree', icon: 'Share' },
+      { title: '交付看板', path: '/project/kanban', icon: 'Grid' },
+      { title: '项目模板', path: '/project/template', icon: 'Files', permissions: ['project:template:list'] }
     ]
   },
   {
@@ -90,14 +92,26 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     icon: 'Tools',
     children: [
       { title: '实施任务', path: '/implementation/task', icon: 'Tickets' },
+      { title: '任务树列表', path: '/implementation/task/list', icon: 'Connection' },
       { title: '服务商管理', path: '/implementation/agent', icon: 'OfficeBuilding' },
       { title: '结算管理', path: '/implementation/settlement', icon: 'Money' }
     ]
   },
   {
+    title: '计划基线',
+    icon: 'Histogram',
+    children: [
+      { title: '基线管理', path: '/baseline/list', icon: 'Histogram' }
+    ]
+  },
+  {
     title: '工作流',
     icon: 'Connection',
-    children: [{ title: '待办中心', path: '/workflow/todo', icon: 'Bell' }]
+    children: [
+      { title: '待办中心', path: '/workflow/todo', icon: 'Bell' },
+      { title: '统一审批中心', path: '/workflow/approval-center', icon: 'Checked', permissions: ['workflow:approval:handle'] },
+      { title: '字段权限配置', path: '/workflow/field-perm', icon: 'Lock', permissions: ['workflow:field:perm'] }
+    ]
   },
   {
     title: '交付治理',
@@ -106,7 +120,8 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
       { title: 'Punch List', path: '/punch-list', icon: 'WarningFilled' },
       { title: 'RMA 返修', path: '/rma', icon: 'RefreshRight' },
       { title: '质保期管理', path: '/warranty', icon: 'Timer' },
-      { title: '终验交付物', path: '/deliverable', icon: 'Document' }
+      { title: '终验交付物', path: '/deliverable', icon: 'Document' },
+      { title: '交付件全生命周期', path: '/deliverable/lifecycle', icon: 'Files' }
     ]
   },
   {

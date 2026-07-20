@@ -433,18 +433,38 @@ router.beforeEach(async (to, _from, next) => {
   if (!userStore.userInfo) {
     try {
       await userStore.fetchUserInfo()
-    } catch {
-      userStore.reset()
-      next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+    } catch (err: any) {
+      // 401/403 表示认证失效，必须重新登录；其他错误（网络抖动/5xx）不强制登出，
+      // 让用户在页面上看到错误提示后可手动重试，避免临时故障丢权限。
+      const status = err?.response?.status ?? err?.status
+      if (status === 401 || status === 403) {
+        userStore.reset()
+        next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+        return
+      }
+      // 非认证错误：放行到目标页（页面内 API 会再次失败并提示），保留 token 避免反复跳登录
+      next()
       return
     }
   }
 
+  // 校验低代码路由权限
   const requiredPermissions = requiredLowCodePermissions(to.path)
   if (requiredPermissions.length > 0 && !userStore.hasAnyPermission(requiredPermissions)) {
     ElMessage.error('您没有访问该低代码功能的权限')
     next('/dashboard')
     return
+  }
+
+  // 校验路由 meta.perms（单字符串权限码，与菜单 canAccessMenu 逻辑对齐）
+  const metaPerm = to.meta.perms as string | string[] | undefined
+  if (metaPerm) {
+    const perms = Array.isArray(metaPerm) ? metaPerm : [metaPerm]
+    if (!userStore.hasAnyPermission(perms)) {
+      ElMessage.error('您没有访问该功能的权限')
+      next('/dashboard')
+      return
+    }
   }
 
   next()

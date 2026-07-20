@@ -12,7 +12,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElTree, ElMessage } from 'element-plus'
-import { Search, Plus, Expand, Fold } from '@element-plus/icons-vue'
+import { Search, Plus, Expand, Fold, Refresh } from '@element-plus/icons-vue'
 import { getProjectTree, type ProjectTreeNode } from '@/api/project'
 import ProjectStatusTag from '@/components/common/ProjectStatusTag.vue'
 import { useProjectContext } from '@/composables/useProjectContext'
@@ -26,6 +26,7 @@ const searchKeyword = ref('')
 const treeRef = ref<InstanceType<typeof ElTree> | null>(null)
 const treeData = ref<ProjectTreeNode[]>([])
 const loading = ref(false)
+const loadError = ref(false)
 
 const treeProps = { label: 'projectName', children: 'children' }
 
@@ -46,6 +47,7 @@ const filterNode = (value: string, data: ProjectTreeNode) => {
 /** 加载主子项目树根节点（id = 0 表示根） */
 const loadTree = async () => {
   loading.value = true
+  loadError.value = false
   try {
     const data = await getProjectTree(0)
     // API 返回单个 ProjectTreeNode；包成数组喂给 el-tree
@@ -54,7 +56,8 @@ const loadTree = async () => {
   } catch (e) {
     treeData.value = []
     projectList.value = []
-    ElMessage.error('加载项目树失败')
+    loadError.value = true
+    // 不弹 ElMessage 避免与其他页面错误重复；侧栏内显示重试按钮
   } finally {
     loading.value = false
   }
@@ -124,7 +127,34 @@ onMounted(loadTree)
 
     <!-- 中部：项目树 -->
     <div v-loading="loading" class="sidebar-tree-wrap">
+      <!-- 加载失败状态：显示错误提示 + 重试按钮 -->
+      <div v-if="loadError && !loading" class="sidebar-error">
+        <el-icon :size="32" color="#909399"><Refresh /></el-icon>
+        <p class="error-text">加载项目树失败</p>
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Refresh"
+          @click="loadTree"
+        >
+          重试
+        </el-button>
+      </div>
+      <!-- 空数据状态（加载成功但无项目） -->
+      <div v-else-if="!loading && treeData.length === 0" class="sidebar-empty">
+        <p class="empty-text">暂无项目</p>
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Plus"
+          @click="handleCreate"
+        >
+          新建项目
+        </el-button>
+      </div>
+      <!-- 项目树 -->
       <el-tree
+        v-else
         ref="treeRef"
         :data="treeData"
         :props="treeProps"
@@ -198,6 +228,24 @@ onMounted(loadTree)
   flex: 1;
   overflow: auto;
   padding: $spacing-2 $spacing-1;
+}
+
+.sidebar-error,
+.sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+  padding: $spacing-6 $spacing-3;
+  text-align: center;
+}
+
+.sidebar-error .error-text,
+.sidebar-empty .empty-text {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
 }
 
 .project-tree {
